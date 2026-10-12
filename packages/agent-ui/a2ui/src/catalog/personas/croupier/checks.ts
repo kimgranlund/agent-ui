@@ -21,10 +21,16 @@
 //   revealed for settlement). One finding names both faults. A player hand the check cannot resolve is
 //   never a natural; a dealer hand it cannot resolve is never judged for a hole card.
 //
+// - HAND_BINDING (ADR-0243): a CardTable's `dealerHand`/`playerHand` must be a `{path}` binding to
+//   `/dealerHand` (resp. `/playerHand`), so a draw is a list append. A literal list or another pointer fails.
+//
 // A hand container is a component whose children are PlayingCards: static ids that resolve to
 // PlayingCard, or a template whose `componentId` is a PlayingCard. It belongs to `<p>` when its id or its
-// template path names `<p>` (and not the other participant). A value the check cannot resolve (a function
-// call, a relative path outside a template, an unknown rank) makes that hand indeterminate, never a finding.
+// template path names `<p>` (and not the other participant). A CardTable is two hand containers, one per
+// `<p>Hand` prop (the participant comes from the prop name): an absolute `{path}` renders the list it reads, a
+// literal list renders its items, and its `<p>Total` props are that participant's readouts. A value the check
+// cannot resolve (a function call, a relative path outside a template, an unknown rank) makes that hand
+// indeterminate, never a finding.
 
 import type { A2uiComponent } from '../../../protocol.ts'
 import { readPointer } from '../../semantic-check.ts'
@@ -49,6 +55,8 @@ interface HandContainer {
   cards: Card[] | undefined
   /** How many cards it renders (a template over a non-array renders none). */
   rendered: number
+  /** A CardTable hand prop: the pointer it binds, or `undefined` for a literal list. */
+  table?: { path: string | undefined }
 }
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
@@ -72,6 +80,36 @@ function cardOf(comp: A2uiComponent, dataModel: unknown, scope: string | undefin
   return { rank, faceDown: resolveProp(comp['faceDown'], dataModel, scope) === true }
 }
 
+/** A data-model list item's card (a CardTable hand): its own `rank` and `faceDown`, or `undefined`. */
+function itemCard(item: unknown): Card | undefined {
+  if (!isRecord(item)) return undefined
+  const rank = item['rank']
+  if (typeof rank !== 'string' || RANK_VALUE[rank] === undefined) return undefined
+  return { rank, faceDown: item['faceDown'] === true }
+}
+
+/** A CardTable's hand for `p`: a literal list, or an absolute `{path}` read off the data model. A relative
+ *  path, a function call or an absent prop is indeterminate (`undefined`). */
+function tableHand(comp: A2uiComponent, p: Participant, dataModel: unknown): HandContainer | undefined {
+  const v = comp[`${p}Hand`]
+  let list: unknown[]
+  let path: string | undefined
+  if (Array.isArray(v)) list = v
+  else if (isRecord(v) && typeof v['path'] === 'string' && v['path'].startsWith('/')) {
+    path = v['path']
+    const read = readPointer(dataModel, path)
+    list = Array.isArray(read) ? read : []
+  } else return undefined
+  const cards = list.map(itemCard)
+  return {
+    id: comp.id,
+    participant: p,
+    cards: cards.every((c) => c !== undefined) ? (cards as Card[]) : undefined,
+    rendered: list.length,
+    table: { path },
+  }
+}
+
 /** `dealer`/`player` when exactly one of them is named by `text` (case-insensitive), else `undefined`. */
 function participantNamedBy(...texts: string[]): Participant | undefined {
   const joined = texts.join(' ').toLowerCase()
@@ -82,6 +120,13 @@ function participantNamedBy(...texts: string[]): Participant | undefined {
 function handContainers(view: SurfaceView): HandContainer[] {
   const out: HandContainer[] = []
   for (const comp of view.components.values()) {
+    if (comp.component === 'CardTable') {
+      for (const p of PARTICIPANTS) {
+        const hand = tableHand(comp, p, view.dataModel)
+        if (hand !== undefined) out.push(hand)
+      }
+      continue
+    }
     const children = comp.children
     if (Array.isArray(children)) {
       const cardComps = children.map((id) => view.components.get(id)).filter((c): c is A2uiComponent => c?.component === 'PlayingCard')
@@ -161,6 +206,15 @@ function readouts(view: SurfaceView, p: Participant): Readout[] {
   }
   const idPattern = new RegExp(`^${p}[-_]?total$`, 'i')
   for (const comp of view.components.values()) {
+    if (comp.component === 'CardTable') {
+      const raw = comp[`${p}Total`]
+      if (raw === undefined) continue
+      if (isRecord(raw) && typeof raw['path'] === 'string' && totalPaths.includes(raw['path'])) continue
+      const value = resolveProp(raw, view.dataModel, undefined)
+      const where = `${comp.id}.${p}Total`
+      out.push({ where, label: `${where} ("${typeof value === 'string' ? value : JSON.stringify(value)}")`, numbers: statedNumbers(value, view.dataModel) })
+      continue
+    }
     if (!idPattern.test(comp.id)) continue
     const prop = READOUT_PROPS.find((k) => comp[k] !== undefined)
     if (prop === undefined) continue
@@ -247,17 +301,31 @@ function checkSurface(view: SurfaceView): SemanticFinding[] {
   const containers = handContainers(view)
   for (const p of PARTICIPANTS) {
     const mine = containers.filter((c) => c.participant === p)
+    for (const c of mine) {
+      if (c.table === undefined || c.table.path === `/${p}Hand`) continue
+      const bound = c.table.path === undefined ? 'a literal list' : `{"path":"${c.table.path}"}`
+      findings.push({
+        code: 'HAND_BINDING',
+        path: `${view.surfaceId}:${c.id}`,
+        message:
+          `${c.id} gives ${p}Hand ${bound}. Write the ${p}'s cards at /${p}Hand in the data model and bind ` +
+          `"${p}Hand":{"path":"/${p}Hand"} so a draw appends to the list.`,
+      })
+    }
     const listed = listedHand(view, p)
     if (listed !== undefined) {
       for (const c of mine) {
         if (c.rendered === listed.length) continue
+        const fix =
+          c.table === undefined
+            ? `give ${c.id} "children":{"path":"${listed.path}","componentId":<one PlayingCard>}`
+            : `bind ${c.id}'s "${p}Hand":{"path":"${listed.path}"}`
         findings.push({
           code: 'HAND_COUNT',
           path: `${view.surfaceId}:${c.id}`,
           message:
             `${c.id} renders ${c.rendered} card${c.rendered === 1 ? '' : 's'} but ${listed.path} lists ${listed.length}. ` +
-            `Draw the hand from that list: give ${c.id} "children":{"path":"${listed.path}","componentId":<one PlayingCard>} ` +
-            `so the cards shown are the cards listed.`,
+            `Draw the hand from that list: ${fix} so the cards shown are the cards listed.`,
         })
       }
     }

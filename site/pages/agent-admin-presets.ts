@@ -143,11 +143,11 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'croupier',
     category: 'games', // GH #143 — a card table, thematically a game even though it predates the games-roster wave
-    seedVersion: 7, // T-0020: a natural blackjack ends the round on the deal (surfaceStyle, round-loop and the blackjack rules entry); no mini-skill carries it, so a pre-v7 store would never hear it; migrates pre-v7 stores. 6: one surface per round (Kim 2026-10-04), supersedes #525's one-persistent-surface surfaceStyle; #525's bankroll opt-in + cross-session resume carry over; migrates pre-v6 stores. T-0016 (GH #1795) edited the hand/total seed text WITHOUT a bump: existing stores get the data-driven hand teaching from the server-composed card-layout/game-table-chrome mini-skills and the ADR-0238 hand check, so no store needs dropping. T-0072 (R1) edited the game-hud skill text WITHOUT a bump; P1 (CardTable) carries the seedVersion 8 bump
+    seedVersion: 8, // T-0073 (ADR-0243): the blackjack table is one CardTable, taught by the card-layout and game-table-chrome skills; migrates pre-v8 stores. 7, T-0020: a natural blackjack ends the round on the deal (surfaceStyle, round-loop and the blackjack rules entry); no mini-skill carries it, so a pre-v7 store would never hear it; migrates pre-v7 stores. 6: one surface per round (Kim 2026-10-04), supersedes #525's one-persistent-surface surfaceStyle; #525's bankroll opt-in + cross-session resume carry over; migrates pre-v6 stores. T-0016 (GH #1795) edited the hand/total seed text WITHOUT a bump: existing stores get the data-driven hand teaching from the server-composed card-layout/game-table-chrome mini-skills and the ADR-0238 hand check, so no store needs dropping
     label: 'The Croupier',
     tagline: 'Card games — Blackjack, Poker, and their variants — one table per round, each a new step in the dialog',
     config: { name: 'The Croupier', model: 'claude-sonnet-5', temperature: 0.6, toolsEnabled: true }, // rev.4: fable retired from the roster
-    localPatterns: 'croupier', // GH #497 — PlayingCard closes the glyph-formatting idiom structurally
+    localPatterns: 'croupier', // GH #497: PlayingCard closes the glyph-formatting idiom structurally; T-0073 (ADR-0243): the CardTable composite draws the whole blackjack table
     bankroll: true, // GH #525 — opts into the persistent cross-session bankroll capability, croupier enabled first
     foundation:
       'You are The Croupier, a card-table dealer. You deal whatever game the table calls for — Blackjack ' +
@@ -180,26 +180,32 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'count carries across a whole session exactly like it carries across rounds.',
     skills: [
       {
-        // GH #497 — the glyph-formatting/face-down half retired: `PlayingCard` (the croupier local
-        // pattern set, seeded via `localPatterns` above) now closes that idiom structurally (rank/suit
-        // enums, a `faceDown` boolean) rather than by prose — mirrors the SAME trim in the byte-pinned
-        // `card-layout.md` mini-skill (`a2ui-prompt-author`'s recapture flow). The hand-arrangement half
-        // stays prose (§1's table: a pure `Row` arrangement, no new schema surface). GH #1795 (T-0016):
-        // the hand is DATA, a list rendered through one templated Row, so the cards shown and the total
-        // stated come from one list and cannot diverge; mirrors the byte-pinned `card-layout.md`.
+        // GH #497: the glyph-formatting/face-down half retired, since `PlayingCard` (the croupier local
+        // pattern set, seeded via `localPatterns` above) closes that idiom structurally (rank/suit enums, a
+        // `faceDown` boolean). GH #1795 (T-0016): the hand is DATA, a list, so the cards shown and the
+        // total stated come from one list and cannot diverge. T-0073 (ADR-0243): the blackjack table is the
+        // CardTable composite, which binds both hand lists, the totals, bankroll, bet and status and takes
+        // the action Buttons as children; card-layout and game-table-chrome teach it. CardTable holds a
+        // dealer and a player hand only, so poker keeps the Card frame with PlayingCard hands. Mirrors the
+        // byte-pinned `card-layout.md` and `game-table-chrome.md` mini-skills (the recapture flow).
         id: 'card-layout',
         label: 'card-layout',
-        description: 'A hand is a data list drawn by one templated Row; each total comes from the listed cards.',
+        description: 'A hand is a data list the CardTable binds; each total comes from the listed cards.',
         content:
-          'Each hand is a list at /dealerHand or /playerHand, drawn by one Row templated over it (a draw appends ' +
-          'to the list, never a new card component); compute each total from the cards you list and write it ' +
-          'at /dealerTotal or /playerTotal.',
+          'Each hand is a list at /dealerHand or /playerHand (a draw appends to the list); compute each total ' +
+          'from the cards you list and write it at /dealerTotal or /playerTotal. The CardTable draws both hands ' +
+          'from those lists: "dealerHand":{"path":"/dealerHand"} and "playerHand":{"path":"/playerHand"}, never ' +
+          'a literal list.',
       },
       {
         id: 'game-table-chrome',
         label: 'game-table-chrome',
-        description: 'The table frame — header title+badges, full-width zones per player, footer actions.',
-        content: 'One Card is the table: CardHeader title + status badges, CardContent zones (dealer, player) spanning the width, each zone stating its total bound to /dealerTotal or /playerTotal, CardFooter = a Row of the action Buttons (never a Column).',
+        description: 'The blackjack table is one CardTable: hands, totals, bankroll, bet, status and the action Buttons.',
+        content:
+          'A blackjack round is ONE CardTable: title, status with statusIntent, bet, bankroll bound to /bankroll, ' +
+          'each total bound to /dealerTotal or /playerTotal, and the action Buttons as its children (Hit, Stand, ' +
+          'Double; a lone Deal again once settled); never rebuild it from Card, Row and Text. Other games keep ' +
+          'the Card frame with PlayingCard hands.',
       },
       {
         id: 'game-hud',

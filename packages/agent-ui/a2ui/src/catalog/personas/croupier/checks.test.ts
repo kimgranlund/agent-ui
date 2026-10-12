@@ -16,6 +16,7 @@ import type { SurfaceSeed } from '../../../renderer/validate.ts'
 import { composeCatalog } from '../../compose.ts'
 import { defaultCatalog } from '../../default/index.ts'
 import { croupierFragment } from './manifest.ts'
+import { personaCroupierCardTableSeed } from '../../../examples/persona-exemplars.ts'
 
 const catalog = composeCatalog(defaultCatalog, croupierFragment, 'croupier')
 const dealSession: Session = {
@@ -303,6 +304,88 @@ describe('croupier hand check: a natural blackjack ends the round (T-0020, NATUR
     expect(findings).toHaveLength(1)
     expect(findings[0]!.message).toContain('hitBtn (hit)')
     expect(findings[0]!.message).not.toContain('face-down')
+  })
+})
+
+describe('croupier hand check: the CardTable arm (ADR-0243)', () => {
+  type Comp = Record<string, unknown>
+  /** A copy of the agent-ui CardTable seed with `edit` applied to its CardTable root and data model. */
+  function table(edit: (root: Comp, data: Record<string, unknown>) => void = () => {}): A2uiOutput {
+    const out = JSON.parse(JSON.stringify(personaCroupierCardTableSeed.messages)) as A2uiOutput
+    const root = tableComponents(out).find((c) => c['id'] === 'root')!
+    edit(root, (out[2] as { updateDataModel: { value: Record<string, unknown> } }).updateDataModel.value)
+    return out
+  }
+  const tableComponents = (out: A2uiOutput): Comp[] =>
+    (out[1] as { updateComponents: { components: Comp[] } }).updateComponents.components
+
+  it('CardTable: the bound seed table passes, structurally and semantically', () => {
+    expect(validateA2ui(table(), catalog, undefined, { atFinalize: true })).toEqual({ valid: true, failures: [] })
+    expect(judge({ turns: [] }, table())).toEqual([])
+  })
+
+  it('CardTable: HAND_BINDING for a literal hand list', () => {
+    const literal = table((root) => {
+      root['playerHand'] = [{ rank: 'K', suit: 'hearts' }, { rank: '7', suit: 'spades' }]
+    })
+    const findings = judge({ turns: [] }, literal)
+    expect(findings).toHaveLength(1)
+    expect(findings[0]).toMatchObject({ code: 'HAND_BINDING', path: 'card-table:root' })
+    expect(findings[0]!.message).toContain('root gives playerHand a literal list')
+    expect(findings[0]!.message).toContain('at /playerHand')
+    expect(findings[0]!.message).toContain('"playerHand":{"path":"/playerHand"} so a draw appends to the list')
+  })
+
+  it('CardTable: HAND_BINDING for a pointer other than /dealerHand', () => {
+    const elsewhere = table((root, data) => {
+      root['dealerHand'] = { path: '/dealerCards' }
+      data['dealerCards'] = data['dealerHand']
+      delete data['dealerHand']
+    })
+    const findings = judge({ turns: [] }, elsewhere)
+    expect(findings).toHaveLength(1)
+    expect(findings[0]).toMatchObject({ code: 'HAND_BINDING', path: 'card-table:root' })
+    expect(findings[0]!.message).toContain('root gives dealerHand {"path":"/dealerCards"}')
+    expect(findings[0]!.message).toContain('"dealerHand":{"path":"/dealerHand"}')
+  })
+
+  it('CardTable: HAND_COUNT on a literal hand shorter than the listed one tells the model to bind the list', () => {
+    const short = table((root) => {
+      root['playerHand'] = [{ rank: 'K', suit: 'hearts' }]
+      root['playerTotal'] = 10
+    })
+    const findings = judge({ turns: [] }, short)
+    expect(findings.map((f) => f.code)).toEqual(['HAND_BINDING', 'HAND_COUNT', 'HAND_TOTAL'])
+    expect(findings[1]!.message).toContain('root renders 1 card but /playerHand lists 2')
+    expect(findings[1]!.message).toContain('bind root\'s "playerHand":{"path":"/playerHand"}')
+  })
+
+  it('CardTable: HAND_TOTAL on a literal CardTable total', () => {
+    const findings = judge({ turns: [] }, table((root) => (root['playerTotal'] = 'Total 19')))
+    expect(findings).toHaveLength(1)
+    expect(findings[0]).toMatchObject({ code: 'HAND_TOTAL', path: 'card-table:root.playerTotal' })
+    expect(findings[0]!.message).toContain('root.playerTotal ("Total 19") states 19')
+    expect(findings[0]!.message).toContain("the player's cards in root (K, 7) total 17")
+  })
+
+  it('CardTable: HAND_TOTAL on a bound /playerTotal that disagrees with the hand', () => {
+    const findings = judge({ turns: [] }, table((_, data) => (data['playerTotal'] = 18)))
+    expect(findings).toHaveLength(1)
+    expect(findings[0]).toMatchObject({ code: 'HAND_TOTAL', path: 'card-table:/playerTotal' })
+    expect(findings[0]!.message).toContain("states 18, but the player's cards in root (K, 7) total 17")
+  })
+
+  it('CardTable: NATURAL_ACTIONS for a natural that still has a Hit Button child', () => {
+    const natural = table((_, data) => {
+      data['playerHand'] = [{ rank: 'A', suit: 'spades' }, { rank: 'K', suit: 'hearts' }]
+      data['playerTotal'] = 21
+    })
+    const findings = judge({ turns: [] }, natural)
+    expect(findings).toHaveLength(1)
+    expect(findings[0]).toMatchObject({ code: 'NATURAL_ACTIONS', path: 'card-table:hitBtn' })
+    expect(findings[0]!.message).toContain("The player's cards in root (A, K) are a natural blackjack")
+    expect(findings[0]!.message).toContain('hitBtn (hit), standBtn (stand), doubleBtn (double)')
+    expect(findings[0]!.message).toContain('a face-down card in root')
   })
 })
 

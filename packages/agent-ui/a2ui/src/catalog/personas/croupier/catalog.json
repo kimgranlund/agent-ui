@@ -15,6 +15,54 @@
         "faceDown": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "faceDown" },
         "size": { "type": { "type": "string", "enum": ["sm", "md", "lg"] }, "bindable": true, "mapsTo": "size" }
       }
+    },
+    "CardTable": {
+      "properties": {
+        "title": { "type": { "type": "string" }, "bindable": true, "mapsTo": "title" },
+        "dealerHand": {
+          "type": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "rank": { "type": "string", "enum": ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"] },
+                "suit": { "type": "string", "enum": ["spades", "hearts", "diamonds", "clubs"] },
+                "faceDown": { "type": "boolean" }
+              },
+              "required": ["rank", "suit"]
+            }
+          },
+          "bindable": true,
+          "mapsTo": "dealerHand"
+        },
+        "playerHand": {
+          "type": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "rank": { "type": "string", "enum": ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"] },
+                "suit": { "type": "string", "enum": ["spades", "hearts", "diamonds", "clubs"] },
+                "faceDown": { "type": "boolean" }
+              },
+              "required": ["rank", "suit"]
+            }
+          },
+          "bindable": true,
+          "mapsTo": "playerHand"
+        },
+        "dealerTotal": { "type": { "type": ["string", "number"] }, "bindable": true, "mapsTo": "dealerTotal" },
+        "playerTotal": { "type": { "type": ["string", "number"] }, "bindable": true, "mapsTo": "playerTotal" },
+        "bankroll": { "type": { "type": "number" }, "bindable": true, "mapsTo": "bankroll" },
+        "bet": { "type": { "type": "number" }, "bindable": true, "mapsTo": "bet" },
+        "status": { "type": { "type": "string" }, "bindable": true, "mapsTo": "status" },
+        "statusIntent": {
+          "type": { "type": "string", "enum": ["neutral", "info", "success", "warning", "danger"] },
+          "bindable": true,
+          "mapsTo": "statusIntent"
+        }
+      },
+      "children": "ChildList"
     }
   },
   "functions": {}

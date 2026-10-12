@@ -290,11 +290,11 @@ describe('personas: the loader list equals the shipped manifests, and the views 
     }
   })
 
-  it('the croupier view holds every default type plus PlayingCard, with base and persona guidance', () => {
+  it('the croupier view holds every default type plus PlayingCard and CardTable, with base and persona guidance', () => {
     const view = registryViewFor(REGISTRY, 'agent-ui--croupier')
     const base = registryViewFor(REGISTRY, 'agent-ui')
-    expect(view.types.length).toBe(base.types.length + 1)
-    expect(view.personaOnlyTypes).toEqual(['PlayingCard'])
+    expect(view.types.length).toBe(base.types.length + 2)
+    expect(view.personaOnlyTypes).toEqual(['CardTable', 'PlayingCard'])
     expect(view.types.find((r) => r.name === 'PlayingCard')!.intents).toEqual(selectionGuidanceForId('agent-ui--croupier').PlayingCard!.intents)
     expect(view.types.find((r) => r.name === 'Button')!.intents).toEqual(selectionGuidanceForId('agent-ui').Button!.intents)
   })
