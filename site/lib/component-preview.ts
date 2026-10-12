@@ -1325,6 +1325,10 @@ const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
   'ui-grid': { gap: 'md', min: '8rem' },
   'ui-field': { label: 'Email' },
   'ui-stat': { label: 'Revenue', figure: '48200', delta: '12' },
+  // ui-game-hud (ADR-0243): only `status` is seeded as a knob; title, statusIntent, stats and progress are set
+  // as properties in COMPONENT_SAMPLE_INIT (knob names are applied with setAttribute, and `title`/`statusIntent`
+  // would write the wrong attribute).
+  'ui-game-hud': { status: 'Your turn' },
   'ui-badge': { label: '3 failing', intent: 'danger' },
   'ui-disclosure': { summary: 'Full log' },
   // ui-form-popover (GH #294 F4): `label` is a real string knob defaulting to '' — the same demonstrability
@@ -1494,6 +1498,18 @@ const COMPONENT_SAMPLE_INIT: Record<string, (el: HTMLElement) => void> = {
       { row: 4, col: 4, mark: '○', intent: 'neutral', disabled: true },
     ]
   },
+  // ui-game-hud (ADR-0243): the representative blackjack HUD, written as properties (see COMPONENT_INITIAL).
+  'ui-game-hud': (el) =>
+    Object.assign(el, {
+      title: 'Table 4 · Blackjack',
+      statusIntent: 'success',
+      stats: [
+        { label: 'Chips', value: 1240, delta: 60, intent: 'success' },
+        { label: 'Bet', value: 50 },
+        { label: 'Shoe', value: '3.1' },
+      ],
+      progress: { value: 3, max: 6, label: 'Hands' },
+    }),
 }
 
 // ── SLOT_TEXT gating — component mode (the fleet-wide hardening) ──────────────────────────────────────────────
@@ -1554,6 +1570,7 @@ export const NO_SLOT_TEXT = new Set([
   'ui-gauge', // ADR-0229 cl.4: component-built rings svg + legend rows (replaceChildren) — the ui-pie-chart precedent, a data-driven mark, not authored text (slots: [] — gauge.md)
   'ui-disclosure', // #ensureParts(): the details/summary/chevron chrome — host children are ADOPTED into a nested body PART, never left as direct host children (unlike a STRUCTURAL container), so a host-level SLOT_TEXT write would destroy the whole part tree
   'ui-stat', // connected() builds four spans once (replaceChildren) from label/value/delta/caption PROPS — no light-DOM content model at all (slots: [] — stat.md)
+  'ui-game-hud', // every part is control-built from props and patched in place; no light-DOM content model (slots: [], the ui-playing-card precedent)
   'ui-description-list', // connected() builds row/label/value spans (replaceChildren) from the rows PROP — no light-DOM content model at all (slots: [] — description-list.md, ADR-0201)
   'ui-source-list', // connected() builds row/index/title/snippet spans (replaceChildren) from the sources PROP — no light-DOM content model at all (slots: [] — source-list.md, ADR-0214)
   'ui-table', // connected() builds the scroll/table/thead/tbody skeleton — fully columns/rows-prop-driven, no light-DOM content model at all (slots: [] — table.md)

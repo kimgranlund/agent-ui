@@ -253,6 +253,15 @@
       "group": "Form composition"
     },
     {
+      "name": "Game Hud",
+      "tag": "ui-game-hud",
+      "url": "./game-hud-demo.html",
+      "description": "A game score and status strip with a title, a status badge, an optional progress bar and up to six stat tiles with signed deltas.",
+      "level": "L1",
+      "section": "Components",
+      "group": "Data & reporting"
+    },
+    {
       "name": "Gauge",
       "tag": "ui-gauge",
       "url": "./gauge-demo.html",

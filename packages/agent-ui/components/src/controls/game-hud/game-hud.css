@@ -1,0 +1,250 @@
+/* game-hud.css: ui-game-hud, the game score and status strip (ADR-0243, GameHud fork sheet).
+ *
+ *   [1] TOKEN BLOCK: `:where(ui-game-hud)` (specificity 0,0,0) declares the --ui-game-hud-* chain from the
+ *       colour roles and the dimensional ramps. The per-intent stat ink repoints live here too, keyed on
+ *       the control-written `[data-intent]` of each stat part, so the styles block below reads only its
+ *       own chain.
+ *   [2] STYLES BLOCK: `@scope (ui-game-hud)` consumes only --ui-game-hud-* (plus the private `--_fill`
+ *       ratio game-hud.ts writes on the progress fill, the stat `--_ring-pct` idiom). The host is a quiet
+ *       surface strip: header row, optional progress bar, then the stat tiles in a wrapping grid.
+ *
+ * Intent never tints a tile. A stat with an intent carries a shape glyph (the badge clip-paths, copied
+ * verbatim, ADR-0057's non-color signifier) and an intent ink on its glyph and delta; the delta's sign is
+ * text and never picks the color. No interaction states: the HUD is a read-out with no focus or hover.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK: :where(ui-game-hud) declares --ui-game-hud-* ════════════════ */
+
+/* uses: synced from game-hud.md by scripts/codemod-uses.mjs */
+@import '../badge/badge.css';
+
+:where(ui-game-hud) {
+  /* Host surface */
+  --ui-game-hud-surface: var(--md-sys-color-neutral-surface);
+  --ui-game-hud-outline: var(--md-sys-color-neutral-outline-variant);
+  --ui-game-hud-radius: var(--md-sys-shape-corner-base);
+  --ui-game-hud-pad-block: var(--md-sys-space-md); /* mockup 12px */
+  --ui-game-hud-pad-inline: var(--md-sys-space-md); /* mockup 14px, nearest ramp step */
+  --ui-game-hud-gap: var(--md-sys-space-sm); /* mockup 10px between header, progress and stats */
+  --ui-game-hud-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-game-hud-muted-ink: var(--md-sys-color-neutral-on-surface-variant);
+
+  /* Header */
+  --ui-game-hud-header-gap: var(--md-sys-space-sm); /* mockup 8px */
+  --ui-game-hud-title-size: var(--md-sys-typescale-title-medium-size); /* mockup .9375rem */
+  --ui-game-hud-title-line-height: var(--md-sys-typescale-title-medium-line-height);
+
+  /* Stats grid and tiles */
+  --ui-game-hud-stats-gap: var(--md-sys-space-sm); /* mockup 8px */
+  --ui-game-hud-stat-min: 84px; /* the tile floor the auto-fit grid wraps on */
+  --ui-game-hud-stat-pad-block: var(--md-sys-space-sm); /* mockup 8px */
+  --ui-game-hud-stat-pad-inline: var(--md-sys-space-sm); /* mockup 10px, nearest ramp step */
+  --ui-game-hud-stat-radius: calc(var(--md-sys-shape-corner-base) - 2px); /* mockup 10px */
+  --ui-game-hud-stat-gap: 2px;
+  --ui-game-hud-stat-surface: var(--md-sys-color-neutral-container-low); /* always; an intent never tints the tile */
+  --ui-game-hud-label-size: var(--md-sys-typescale-label-small-size); /* mockup .6875rem */
+  --ui-game-hud-label-tracking: 0.06em;
+  /* The value rides the stat type step (ADR-0243: the same row stat.css's value uses). */
+  --ui-game-hud-value-size: var(--md-sys-typescale-headline-small-size);
+  --ui-game-hud-value-line-height: var(--md-sys-typescale-headline-small-line-height);
+  --ui-game-hud-value-weight: 700;
+  --ui-game-hud-delta-size: var(--md-sys-typescale-label-medium-size); /* mockup .75rem */
+  --ui-game-hud-delta-weight: 650;
+  --ui-game-hud-glyph-size: 0.6em;
+  --ui-game-hud-glyph-gap: var(--md-sys-space-xs);
+
+  /* Per-stat intent ink: no intent means the quiet on-surface-variant ink and no glyph. */
+  --ui-game-hud-intent-ink: var(--md-sys-color-neutral-on-surface-variant);
+
+  /* Progress */
+  --ui-game-hud-progress-size: var(--md-sys-typescale-label-medium-size); /* mockup .75rem */
+  --ui-game-hud-track-height: var(--md-sys-space-sm); /* mockup 8px */
+  --ui-game-hud-track: var(--md-sys-color-neutral-container);
+  --ui-game-hud-fill: var(--md-sys-color-primary); /* one colour always: progress carries no intent */
+}
+
+/* Intent repoints, keyed on the stat part's control-written [data-intent]. */
+:where(ui-game-hud [data-part='stat'][data-intent='success']) {
+  --ui-game-hud-intent-ink: var(--md-sys-color-success-high);
+}
+:where(ui-game-hud [data-part='stat'][data-intent='danger']) {
+  --ui-game-hud-intent-ink: var(--md-sys-color-danger-high);
+}
+:where(ui-game-hud [data-part='stat'][data-intent='warning']) {
+  --ui-game-hud-intent-ink: var(--md-sys-color-warning-high);
+}
+:where(ui-game-hud [data-part='stat'][data-intent='info']) {
+  --ui-game-hud-intent-ink: var(--md-sys-color-info-high);
+}
+
+/* ════════════════ [2] STYLES BLOCK: @scope (ui-game-hud) consumes only --ui-game-hud-* ════════════════ */
+
+@scope (ui-game-hud) {
+  /* Fill by default (ADR-0223): block-level, no width opinion of its own. */
+  :scope {
+    display: grid;
+    gap: var(--ui-game-hud-gap);
+    box-sizing: border-box;
+    padding-block: var(--ui-game-hud-pad-block);
+    padding-inline: var(--ui-game-hud-pad-inline);
+    border: 1px solid var(--ui-game-hud-outline);
+    border-radius: var(--ui-game-hud-radius);
+    background: var(--ui-game-hud-surface);
+    color: var(--ui-game-hud-ink);
+  }
+  :scope[inline] {
+    display: inline-grid; /* ADR-0223: the one sizing opt-out, hugs its content */
+  }
+
+  :scope [data-part='header'] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ui-game-hud-header-gap);
+    min-inline-size: 0;
+  }
+  :scope [data-part='title'] {
+    font-size: var(--ui-game-hud-title-size);
+    line-height: var(--ui-game-hud-title-line-height);
+    font-weight: 700;
+    min-inline-size: 0;
+  }
+  :scope [data-part='status'] {
+    flex: none;
+    margin-inline-start: auto; /* stays at the end when the title is absent */
+  }
+
+  :scope [data-part='progress'] {
+    display: grid;
+    gap: var(--ui-game-hud-stat-gap);
+  }
+  :scope [data-part='progress-text'] {
+    color: var(--ui-game-hud-muted-ink);
+    font-size: var(--ui-game-hud-progress-size);
+    font-variant-numeric: tabular-nums;
+  }
+  :scope [data-part='progress-track'] {
+    block-size: var(--ui-game-hud-track-height);
+    border-radius: var(--ui-game-hud-track-height);
+    background: var(--ui-game-hud-track);
+    overflow: hidden;
+  }
+  :scope [data-part='progress-fill'] {
+    block-size: 100%;
+    inline-size: calc(var(--_fill, 0) * 100%);
+    border-radius: inherit;
+    background: var(--ui-game-hud-fill);
+  }
+
+  :scope [data-part='stats'] {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(var(--ui-game-hud-stat-min), 1fr));
+    gap: var(--ui-game-hud-stats-gap);
+  }
+  :scope [data-part='stat'] {
+    /* Glyph and label share the first line; value and delta each take a full line. */
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    align-content: start;
+    column-gap: var(--ui-game-hud-glyph-gap);
+    row-gap: var(--ui-game-hud-stat-gap);
+    min-inline-size: 0;
+    padding-block: var(--ui-game-hud-stat-pad-block);
+    padding-inline: var(--ui-game-hud-stat-pad-inline);
+    border-radius: var(--ui-game-hud-stat-radius);
+    background: var(--ui-game-hud-stat-surface);
+  }
+  :scope [data-part='stat'] [data-part='label'] {
+    flex: 1 1 0;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+  :scope [data-part='stat'] [data-part='value'],
+  :scope [data-part='stat'] [data-part='delta'] {
+    flex: 1 0 100%;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+  :scope [data-part='stat'] [data-part='label'] {
+    color: var(--ui-game-hud-muted-ink);
+    font-size: var(--ui-game-hud-label-size);
+    letter-spacing: var(--ui-game-hud-label-tracking);
+    text-transform: uppercase;
+  }
+  :scope [data-part='stat'] [data-part='value'] {
+    font-size: var(--ui-game-hud-value-size);
+    line-height: var(--ui-game-hud-value-line-height);
+    font-weight: var(--ui-game-hud-value-weight);
+    font-variant-numeric: tabular-nums;
+  }
+  :scope [data-part='stat'] [data-part='delta'] {
+    color: var(--ui-game-hud-intent-ink);
+    font-size: var(--ui-game-hud-delta-size);
+    font-weight: var(--ui-game-hud-delta-weight);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The glyph sits beside the label, painted in the intent ink. Hidden by default and opted in per known
+     intent, so an unknown [data-intent] degrades to no glyph, never a shapeless square. */
+  :scope [data-part='stat'] [data-part='glyph'] {
+    display: none;
+    flex: none;
+    inline-size: var(--ui-game-hud-glyph-size);
+    block-size: var(--ui-game-hud-glyph-size);
+    background-color: var(--ui-game-hud-intent-ink);
+  }
+  :scope [data-part='stat'][data-intent='success'] [data-part='glyph'] {
+    /* tick, badge.css verbatim */
+    display: inline-block;
+    clip-path: polygon(14% 44%, 0% 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  }
+  :scope [data-part='stat'][data-intent='danger'] [data-part='glyph'] {
+    /* cross, badge.css verbatim */
+    display: inline-block;
+    clip-path: polygon(
+      20% 8%,
+      8% 20%,
+      38% 50%,
+      8% 80%,
+      20% 92%,
+      50% 62%,
+      80% 92%,
+      92% 80%,
+      62% 50%,
+      92% 20%,
+      80% 8%,
+      50% 38%
+    );
+  }
+  :scope [data-part='stat'][data-intent='warning'] [data-part='glyph'] {
+    display: inline-block;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%); /* triangle, badge.css verbatim */
+  }
+  :scope [data-part='stat'][data-intent='info'] [data-part='glyph'] {
+    display: inline-block;
+    clip-path: circle(50%); /* disc, badge.css verbatim */
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :scope [data-part='progress-fill'] {
+      transition: inline-size 200ms ease-out;
+    }
+  }
+
+  /* Forced colors: a background-painted fill or clip-path glyph would otherwise flatten to Canvas and
+     vanish (the badge.css note), so both paint in a system ink. */
+  @media (forced-colors: active) {
+    :scope {
+      border-color: CanvasText;
+    }
+    :scope [data-part='progress-track'] {
+      border: 1px solid CanvasText;
+    }
+    :scope [data-part='progress-fill'],
+    :scope [data-part='stat'] [data-part='glyph'] {
+      forced-color-adjust: none;
+      background-color: CanvasText;
+    }
+  }
+}

@@ -569,6 +569,14 @@ export const NAV: readonly NavGroup[] = [
       { href: './stat-doc.html', label: 'API' },
     ],
   },
+  // ADR-0243 (T-0071): the game score and status strip, tier=pattern {doc, demo}.
+  {
+    label: 'ui-game-hud',
+    links: [
+      { href: './game-hud-demo.html', label: 'Demo' },
+      { href: './game-hud-doc.html', label: 'API' },
+    ],
+  },
   // ADR-0201 (GH #1185) — the key–value receipt primitive, same Display-class {doc}-only shape.
   {
     label: 'ui-description-list',
@@ -928,7 +936,7 @@ export const NAV: readonly NavGroup[] = [
 ]
 
 // ── the NAV taxonomy — GH #1600, Kim's ruling (2026-08-23): "add the taxonomy to NAV itself, then derive" ────
-// A semantic cluster narrower than `section`, so neither "Components (84)" nor "Guides (44)" reads as one flat
+// A semantic cluster narrower than `section`, so neither "Components (85)" nor "Guides (44)" reads as one flat
 // list. `tags` covers a Components (L1) `ui-*` custom-element tag; `guideLabels` covers a Guides (L2)
 // site-manifest.json row by its exact `label`. This is the ONE place the grouping is authored — the sitemap
 // generator (`scripts/generate-sitemap.mjs`'s `L1_TAXONOMY`) mirrors the `tags` half byte-identical (a Node
@@ -991,8 +999,8 @@ export const NAV_TAXONOMY: readonly NavTaxonomyGroup[] = [
   {
     label: 'Data & reporting',
     tags: [
-      'ui-table', 'ui-stat', 'ui-description-list', 'ui-source-list', 'ui-badge', 'ui-pagination',
-      'ui-suggestions', 'ui-breadcrumb',
+      'ui-table', 'ui-stat', 'ui-game-hud', 'ui-description-list', 'ui-source-list', 'ui-badge',
+      'ui-pagination', 'ui-suggestions', 'ui-breadcrumb',
     ],
   },
   { label: 'Content & code', tags: ['ui-code', 'ui-code-editor', 'ui-markdown', 'ui-disclosure'] },
@@ -1045,7 +1053,7 @@ export const NAV_TAXONOMY: readonly NavTaxonomyGroup[] = [
 // One rail entry per sitemap.json entry, grouped by the sitemap's own `group` axis where the entry carries
 // one (NAV_TAXONOMY above), falling back to `section` otherwise. The derivation INVERTED (TKT-0029): the rail
 // reads the build-time index, not the hand array. `section`/`group` are exactly the sitemap's own fields —
-// Components (86 L1, name|tag rows, 12 groups) / Guides (44 L2, 8 groups) / A2UI/A2A/GenUI/Records ungrouped
+// Components (87 L1, name|tag rows, 12 groups) / Guides (44 L2, 8 groups) / A2UI/A2A/GenUI/Records ungrouped
 // (already narrow) — no curated re-grouping happens in this file beyond what the sitemap already carries.
 interface SitemapEntry {
   readonly name: string

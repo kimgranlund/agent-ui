@@ -72,6 +72,8 @@
     "./controls/form-popover.css": "./src/controls/form-popover/form-popover.css",
     "./controls/form-provider": "./src/controls/form-provider/form-provider.ts",
     "./controls/form-provider.css": "./src/controls/form-provider/form-provider.css",
+    "./controls/game-hud": "./src/controls/game-hud/game-hud.ts",
+    "./controls/game-hud.css": "./src/controls/game-hud/game-hud.css",
     "./controls/gauge": "./src/controls/gauge/gauge.ts",
     "./controls/gauge.css": "./src/controls/gauge/gauge.css",
     "./controls/grid": "./src/controls/grid/grid.ts",

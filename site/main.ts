@@ -1162,6 +1162,22 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // ADR-0243 (T-0071): the game score and status strip, tier=pattern {doc, demo}.
+  {
+    label: 'ui-game-hud',
+    cards: [
+      {
+        href: './game-hud-demo.html',
+        title: 'Demo',
+        blurb: 'Three game HUDs (a blackjack table, a quiz round, a dungeon room) with status badges, progress bars, signed deltas and a live score update patched in place.',
+      },
+      {
+        href: './game-hud-doc.html',
+        title: 'API reference',
+        blurb: 'The game score and status strip: title, status badge, optional progress bar and up to six stat tiles, generated from game-hud.md.',
+      },
+    ],
+  },
   // ADR-0201 (GH #1185) — the key–value receipt primitive, same Display-class {doc}-only shape.
   {
     label: 'ui-description-list',
