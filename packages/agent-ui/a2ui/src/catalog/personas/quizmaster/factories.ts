@@ -1,12 +1,15 @@
-// factories.ts: the `quizmaster` persona's factory table (ADR-0243 cl.2, T-0074). One composite factory,
-// `QuestionCard`, over `ui-card`: a progress bar, the question text, a radio group of the choices and a
-// disclosure holding the explanation. The concierge `BookingForm` precedent for the two-way bind: `value`
-// is an ordinary bindable prop (read direction: `applyProp('value')` selects the radio) with a `value`
-// mark whose `readProp` getter returns the inner group's `value`; `ui-radio-group` re-emits a bubbling
-// `change` on every user commit, which the root `ui-card` sees and `installInputBinding` writes back.
+// factories.ts: the `quizmaster` persona's factory table (ADR-0243 cl.2, T-0074; the approved look, ADR-0243
+// Amendment 1, T-0082). One composite factory, `QuestionCard`, over `ui-card`: a header row (a `ui-badge` pill and
+// a right-aligned meta line), the question text, a radio group of the choices drawn as bordered rows with a
+// circular letter badge, and an explanation panel. The concierge `BookingForm` precedent for the two-way bind:
+// `value` is an ordinary bindable prop (read direction: `applyProp('value')` selects the radio) with a `value`
+// mark whose `readProp` getter returns the inner group's `value`; `ui-radio-group` re-emits a bubbling `change`
+// on every user commit, which the root `ui-card` sees and `installInputBinding` writes back.
 //
-// `revealed` true disables the group and opens the explanation in place; false re-enables and closes it.
-// Styling goes through `el.style` only (each radio a 44px minimum block size); no host ARIA attributes.
+// `revealed` true disables the group and opens the explanation in place; with `answer` naming an option it also
+// marks the correct row (a check glyph and "Correct") and a wrong pick (a cross glyph and "Your answer"), so no
+// state rests on color alone. The producer's own children (the Check answer Button) are appended by the renderer
+// after the explanation. Styling goes through `el.style` only, with no border-left anywhere; no host ARIA.
 
 import type { WidgetFactory } from '../../types.ts'
 
@@ -37,37 +40,49 @@ interface RadioGroupLike extends HTMLElement {
 
 interface RadioLike extends HTMLElement {
   value: string
+  disabled: boolean
 }
 
-interface ProgressLike extends HTMLElement {
-  current: number | null
-  max: number
-}
-
-interface DisclosureLike extends HTMLElement {
-  open: boolean
-  summary: string
+interface BadgeLike extends HTMLElement {
+  label: string
 }
 
 interface TextLike extends HTMLElement {
   as: string
   variant: string
   size: string
+  emphasis: boolean
+}
+
+/** One option row's look. Each state carries a glyph and (once revealed) a label, never color alone. */
+type OptionState = 'idle' | 'selected' | 'correct' | 'wrong'
+
+const OPTION_LOOK: Record<OptionState, { glyph: string | null; result: string; background: string; border: string }> = {
+  idle: { glyph: null, result: '', background: 'var(--md-sys-color-neutral-surface)', border: 'var(--md-sys-color-neutral-outline-variant)' },
+  selected: { glyph: '●', result: '', background: 'var(--md-sys-color-primary-container)', border: 'var(--md-sys-color-primary)' },
+  correct: { glyph: '✓', result: 'Correct', background: 'var(--md-sys-color-success-container)', border: 'var(--md-sys-color-success)' },
+  wrong: { glyph: '✕', result: 'Your answer', background: 'var(--md-sys-color-danger-container)', border: 'var(--md-sys-color-danger)' },
 }
 
 interface QuestionCardParts {
-  progressEl: ProgressLike
+  headEl: HTMLElement
+  labelEl: BadgeLike
+  metaEl: HTMLElement
   questionEl: HTMLElement
   groupEl: RadioGroupLike
-  explanationEl: DisclosureLike
+  explanationEl: HTMLElement
   explanationTextEl: HTMLElement
   /** The last bound `value`, re-asserted after an options rebuild (a value can arrive before its options). */
   value: string | null
+  answer: string | null
+  revealed: boolean
+  label: string
+  progress: { value: number; max: number } | undefined
 }
 
 const questionCardParts = new WeakMap<HTMLElement, QuestionCardParts>()
 
-function text(as: string, variant: string, size: string): HTMLElement {
+function text(as: string, variant: string, size: string): TextLike {
   const el = document.createElement('ui-text') as unknown as TextLike
   el.as = as
   el.variant = variant
@@ -75,62 +90,214 @@ function text(as: string, variant: string, size: string): HTMLElement {
   return el
 }
 
-/** Reuse the group's radios by index, add or remove the difference, label each as its text content. */
+function span(part: string): HTMLElement {
+  const el = document.createElement('span')
+  el.setAttribute('data-part', part)
+  return el
+}
+
+/** A, B, C ... Z, then 27, 28 ... for a longer list. */
+const letterFor = (i: number): string => (i < 26 ? String.fromCharCode(65 + i) : String(i + 1))
+
+/** Mint one option row: a radio drawn as a bordered, tap-sized row holding the key badge, the label and the result. */
+function mintOption(): RadioLike {
+  const radio = document.createElement('ui-radio') as unknown as RadioLike
+  radio.setAttribute('data-part', 'option')
+  const s = radio.style
+  // The radio's own ring and dot collapse to nothing (per-instance token overrides); the key badge replaces them.
+  s.setProperty('--ui-radio-box', '0px')
+  s.setProperty('--ui-radio-border', 'transparent')
+  s.setProperty('--ui-radio-ink', 'transparent')
+  s.setProperty('--ui-radio-dot', 'transparent')
+  s.setProperty('--ui-radio-gap', '0px')
+  s.setProperty('min-block-size', '44px')
+  s.boxSizing = 'border-box'
+  s.paddingBlock = 'var(--md-sys-space-sm)'
+  // The collapsed ring still spans its two 2px border sides, so the start padding gives those 4px back.
+  s.paddingInline = 'calc(var(--md-sys-space-md) - 4px) var(--md-sys-space-md)'
+  s.borderWidth = '1px'
+  s.borderStyle = 'solid'
+  s.borderRadius = 'calc(var(--md-sys-shape-corner-base, 12px) - 2px)'
+  s.lineHeight = '1.35'
+
+  const key = span('key')
+  key.setAttribute('aria-hidden', 'true') // the letter or glyph is decoration; checked state and the result text carry meaning
+  const k = key.style
+  k.display = 'grid'
+  k.placeItems = 'center'
+  k.flex = 'none'
+  k.inlineSize = '22px'
+  k.blockSize = '22px'
+  k.boxSizing = 'border-box'
+  k.borderRadius = '50%'
+  k.borderWidth = '1.5px'
+  k.borderStyle = 'solid'
+  k.borderColor = 'var(--md-sys-color-neutral-outline)'
+  k.fontSize = 'var(--md-sys-typescale-label-medium-size)'
+  k.fontWeight = '700'
+  k.lineHeight = '1'
+  k.marginInlineEnd = 'var(--md-sys-space-sm)'
+
+  const result = span('result')
+  const r = result.style
+  r.marginInlineStart = 'auto'
+  r.paddingInlineStart = 'var(--md-sys-space-sm)'
+  r.fontSize = 'var(--md-sys-typescale-label-medium-size)'
+  r.fontWeight = '700'
+
+  radio.append(key, span('label'), result)
+  return radio
+}
+
+function optionState(optValue: string, picked: string | null, answer: string | null, revealed: boolean): OptionState {
+  if (revealed && answer !== null) {
+    if (optValue === answer) return 'correct'
+    return optValue === picked ? 'wrong' : 'idle'
+  }
+  return optValue === picked ? 'selected' : 'idle'
+}
+
+const optionsOf = (parts: QuestionCardParts): RadioLike[] =>
+  [...parts.groupEl.children].filter((c) => c.tagName.toLowerCase() === 'ui-radio') as RadioLike[]
+
+/** Repaint every row from the current pick, `answer` and `revealed`: `data-state`, glyph, result text and colors. */
+function paintOptions(parts: QuestionCardParts): void {
+  // The group's own value once it holds one; the bound value while it is still pending on a radio connecting.
+  const picked = parts.groupEl.value ?? parts.value
+  optionsOf(parts).forEach((radio, i) => {
+    const state = optionState(radio.value, picked, parts.answer, parts.revealed)
+    const look = OPTION_LOOK[state]
+    radio.setAttribute('data-state', state)
+    // Each radio too, not only the group: a disabled group swallows a click's change but the radio still checks.
+    radio.disabled = parts.revealed
+    radio.style.background = look.background
+    radio.style.borderColor = look.border
+    const key = radio.querySelector('[data-part="key"]')
+    const result = radio.querySelector('[data-part="result"]') as HTMLElement | null
+    if (key !== null) key.textContent = look.glyph ?? letterFor(i)
+    if (result !== null) {
+      result.textContent = look.result
+      result.style.display = look.result === '' ? 'none' : ''
+    }
+  })
+}
+
+/** Reuse the group's radios by index, add or remove the difference, label each in its label span. */
 function syncOptions(parts: QuestionCardParts, options: QuestionOption[]): void {
-  const radios = [...parts.groupEl.children].filter((c) => c.tagName.toLowerCase() === 'ui-radio') as RadioLike[]
+  const radios = optionsOf(parts)
   for (let i = options.length; i < radios.length; i++) radios[i]!.remove()
   options.forEach((opt, i) => {
     let radio = radios[i]
     if (radio === undefined) {
-      radio = document.createElement('ui-radio') as unknown as RadioLike
-      radio.style.setProperty('min-block-size', '44px')
+      radio = mintOption()
       parts.groupEl.appendChild(radio)
     }
     radio.value = opt.value
-    radio.textContent = opt.label
+    const label = radio.querySelector('[data-part="label"]')
+    if (label !== null) label.textContent = opt.label
   })
   parts.groupEl.value = parts.value
+  paintOptions(parts)
 }
 
-function applyProgress(parts: QuestionCardParts, value: unknown): void {
+/** The pill reads `label`, else `Question n of m` from `progress`; the header hides when it has nothing to show. */
+function paintHeader(parts: QuestionCardParts): void {
+  const p = parts.progress
+  const pill = parts.label !== '' ? parts.label : p !== undefined ? `Question ${p.value} of ${p.max}` : ''
+  parts.labelEl.label = pill
+  parts.labelEl.style.display = pill === '' ? 'none' : ''
+  const meta = parts.metaEl.textContent ?? ''
+  parts.metaEl.style.display = meta === '' ? 'none' : ''
+  parts.headEl.style.display = pill === '' && meta === '' ? 'none' : 'flex'
+}
+
+/** The explanation panel opens in place once revealed, and only when there is an explanation to show. */
+function paintExplanation(parts: QuestionCardParts): void {
+  const empty = (parts.explanationTextEl.textContent ?? '') === ''
+  parts.explanationEl.style.display = parts.revealed && !empty ? '' : 'none'
+}
+
+function readProgress(value: unknown): { value: number; max: number } | undefined {
   const p = typeof value === 'object' && value !== null ? (value as { value?: unknown; max?: unknown }) : undefined
-  if (p === undefined || typeof p.value !== 'number' || typeof p.max !== 'number') {
-    parts.progressEl.style.display = 'none'
-    return
-  }
-  parts.progressEl.max = p.max
-  parts.progressEl.current = p.value
-  parts.progressEl.style.display = ''
+  return p !== undefined && typeof p.value === 'number' && typeof p.max === 'number' ? { value: p.value, max: p.max } : undefined
 }
 
-function applyRevealed(parts: QuestionCardParts, revealed: boolean): void {
-  parts.groupEl.disabled = revealed
-  parts.explanationEl.open = revealed
-}
+const str = (value: unknown): string => (value == null ? '' : String(value))
 
 /**
- * `QuestionCard` → `ui-card` holding the progress, question, options and explanation parts, in that order
- * (ADR-0243 cl.2). Every part exists from `create()`, so a payload with every prop absent still mounts.
+ * `QuestionCard` → `ui-card` holding the head, question, options and explanation parts, in that order
+ * (ADR-0243 cl.2 and Amendment 1). Every part exists from `create()`, so a payload with every prop absent
+ * still mounts.
  */
 export const questionCardFactory: WidgetFactory = {
   tag: 'ui-card',
-  uses: ['ui-disclosure', 'ui-progress', 'ui-radio', 'ui-radio-group', 'ui-text'], // ADR-0233: the controls it mints
+  uses: ['ui-badge', 'ui-radio', 'ui-radio-group', 'ui-text'], // ADR-0233: the controls it mints
   create: () => {
     const el = document.createElement('ui-card')
-    const progressEl = document.createElement('ui-progress') as unknown as ProgressLike
-    progressEl.setAttribute('data-part', 'progress')
-    progressEl.style.display = 'none'
+    const s = el.style
+    s.display = 'flex'
+    s.flexDirection = 'column'
+    s.gap = 'var(--md-sys-space-xs)' // plus the card's own 8px inset margin on each control: 12px between parts
+    s.padding = 'var(--md-sys-space-md) var(--md-sys-space-lg) var(--md-sys-space-lg)'
+
+    const headEl = document.createElement('div')
+    headEl.setAttribute('data-part', 'head')
+    headEl.style.display = 'none'
+    headEl.style.justifyContent = 'space-between'
+    headEl.style.alignItems = 'center'
+    headEl.style.gap = 'var(--md-sys-space-sm)'
+    const labelEl = document.createElement('ui-badge') as unknown as BadgeLike
+    labelEl.setAttribute('data-part', 'label')
+    labelEl.style.display = 'none'
+    // The approved pill: info-tinted, neutral ink, no intent glyph (it is a counter, not a status).
+    labelEl.style.setProperty('--ui-badge-fill', 'var(--md-sys-color-info-container)')
+    labelEl.style.setProperty('--ui-badge-ink', 'var(--md-sys-color-neutral-on-surface)')
+    labelEl.style.setProperty('--ui-badge-outline', 'transparent')
+    labelEl.style.fontWeight = '600'
+    const metaEl = text('none', 'body', 'md')
+    metaEl.setAttribute('data-part', 'meta')
+    metaEl.style.display = 'none'
+    metaEl.style.marginInlineStart = 'auto'
+    metaEl.style.color = 'var(--md-sys-color-neutral-on-surface-variant)'
+    headEl.append(labelEl, metaEl)
+
     const questionEl = text('h4', 'title', 'md')
+    questionEl.emphasis = true
     questionEl.setAttribute('data-part', 'question')
     const groupEl = document.createElement('ui-radio-group') as unknown as RadioGroupLike
     groupEl.setAttribute('data-part', 'options')
-    const explanationEl = document.createElement('ui-disclosure') as unknown as DisclosureLike
+
+    const explanationEl = document.createElement('div')
     explanationEl.setAttribute('data-part', 'explanation')
-    explanationEl.summary = 'Explanation'
+    const x = explanationEl.style
+    x.display = 'none'
+    x.padding = 'var(--md-sys-space-sm) var(--md-sys-space-md)'
+    x.borderRadius = 'calc(var(--md-sys-shape-corner-base, 12px) - 2px)'
+    x.background = 'var(--md-sys-color-neutral-container-low)'
     const explanationTextEl = text('p', 'body', 'md')
     explanationEl.appendChild(explanationTextEl)
-    el.append(progressEl, questionEl, groupEl, explanationEl)
-    questionCardParts.set(el, { progressEl, questionEl, groupEl, explanationEl, explanationTextEl, value: null })
+
+    // The card's own parts span its width; the producer's children (the action Buttons) keep their content width.
+    s.alignItems = 'flex-start'
+    for (const part of [headEl, questionEl, groupEl, explanationEl]) part.style.alignSelf = 'stretch'
+    el.append(headEl, questionEl, groupEl, explanationEl)
+    const parts: QuestionCardParts = {
+      headEl,
+      labelEl,
+      metaEl,
+      questionEl,
+      groupEl,
+      explanationEl,
+      explanationTextEl,
+      value: null,
+      answer: null,
+      revealed: false,
+      label: '',
+      progress: undefined,
+    }
+    questionCardParts.set(el, parts)
+    // A user commit (click, Space, arrow keys) repaints the rows; the event keeps bubbling to the input binding.
+    groupEl.addEventListener('change', () => paintOptions(parts))
     // The live selection for `installInputBinding` (LLD-C8): read on the group's bubbling `change`.
     Object.defineProperty(el, 'a2uiQuestionValue', {
       configurable: true,
@@ -143,13 +310,14 @@ export const questionCardFactory: WidgetFactory = {
     if (parts === undefined) return
     switch (prop) {
       case 'question':
-        parts.questionEl.textContent = value == null ? '' : String(value)
+        parts.questionEl.textContent = str(value)
         break
       case 'explanation':
-        parts.explanationTextEl.textContent = value == null ? '' : String(value)
+        parts.explanationTextEl.textContent = str(value)
+        paintExplanation(parts)
         break
       case 'name':
-        parts.groupEl.name = value == null ? '' : String(value)
+        parts.groupEl.name = str(value)
         break
       case 'options':
         syncOptions(parts, readOptions(value))
@@ -157,12 +325,29 @@ export const questionCardFactory: WidgetFactory = {
       case 'value':
         parts.value = value == null || value === '' ? null : String(value)
         parts.groupEl.value = parts.value
+        paintOptions(parts)
+        break
+      case 'answer':
+        parts.answer = value == null || value === '' ? null : String(value)
+        paintOptions(parts)
         break
       case 'revealed':
-        applyRevealed(parts, value === true)
+        parts.revealed = value === true
+        parts.groupEl.disabled = parts.revealed
+        paintExplanation(parts)
+        paintOptions(parts)
+        break
+      case 'label':
+        parts.label = str(value)
+        paintHeader(parts)
+        break
+      case 'meta':
+        parts.metaEl.textContent = str(value)
+        paintHeader(parts)
         break
       case 'progress':
-        applyProgress(parts, value)
+        parts.progress = readProgress(value)
+        paintHeader(parts)
         break
       default:
         break // an unknown prop is a no-op

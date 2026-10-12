@@ -1,4 +1,4 @@
-// index.test.ts: the `quizmaster` persona local pattern set (T-0074), the croupier precedent.
+// index.test.ts: the `quizmaster` persona local pattern set (T-0074, widened by T-0082), the croupier precedent.
 
 import { describe, it, expect } from 'vitest'
 import { quizmasterFragment, quizmasterTargetCatalogs, quizmasterPersona, QUIZMASTER_PERSONA_ID } from './index.ts'
@@ -15,11 +15,12 @@ describe('quizmaster persona: QuestionCard fragment', () => {
     expect(quizmasterPersona.personaId).toBe(QUIZMASTER_PERSONA_ID)
   })
 
-  it('QuestionCard: the fragment loads through the structural gate with exactly the one type and its seven props', () => {
+  it('QuestionCard: the fragment loads through the structural gate with exactly the one type, its ten props and a ChildList', () => {
     expect(Object.keys(quizmasterFragment.components)).toEqual(['QuestionCard'])
     const props = quizmasterFragment.components.QuestionCard!.properties
-    expect(Object.keys(props).sort()).toEqual(['explanation', 'name', 'options', 'progress', 'question', 'revealed', 'value'])
-    expect(quizmasterFragment.components.QuestionCard!.children).toBeUndefined()
+    expect(Object.keys(props).sort()).toEqual(['answer', 'explanation', 'label', 'meta', 'name', 'options', 'progress', 'question', 'revealed', 'value'])
+    // ADR-0243 Amendment 1 (T-0082): the producer's action Buttons sit inside the card, the CardTable slot.
+    expect(quizmasterFragment.components.QuestionCard!.children).toBe('ChildList')
     expect(quizmasterFragment.functions).toEqual({})
   })
 

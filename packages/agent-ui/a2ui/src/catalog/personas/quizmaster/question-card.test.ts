@@ -1,8 +1,8 @@
 // question-card.test.ts: QuestionCard through the real renderer in jsdom (T-0074, the croupier
-// `templated-hand.test.ts` pattern). The derived `agent-ui--quizmaster` id is a lazy record (ADR-0241), so
-// each render awaits its load before ingesting. jsdom lacks `ElementInternals.setFormValue`/`setValidity`,
-// which the connected `ui-radio-group`/`ui-radio` call, so the suite stubs them (the `persona-exemplars.test.ts`
-// precedent) and restores them after.
+// `templated-hand.test.ts` pattern; the approved-mockup states, T-0082). The derived `agent-ui--quizmaster` id
+// is a lazy record (ADR-0241), so each render awaits its load before ingesting. jsdom lacks
+// `ElementInternals.setFormValue`/`setValidity`, which the connected `ui-radio-group`/`ui-radio` call, so the
+// suite stubs them (the `persona-exemplars.test.ts` precedent) and restores them after.
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import '@agent-ui/components/all' // ADR-0233: the catalog factories import no control; the test defines the fleet
@@ -30,18 +30,23 @@ const isError = (m: A2uiClientMessage): boolean => 'error' in m
 const OPTIONS = [
   { value: 'mercury', label: 'Mercury' },
   { value: 'venus', label: 'Venus' },
+  { value: 'earth', label: 'Earth' },
   { value: 'mars', label: 'Mars' },
 ]
 
 interface RadioEl extends HTMLElement {
   value: string
   checked: boolean
+  disabled: boolean
 }
 
 const line = (msg: unknown): string => JSON.stringify(msg)
 const write = (path: string, value: unknown): string => line({ version: 'v1.0', updateDataModel: { surfaceId: SID, path, value } })
 
-async function render(card: Record<string, unknown>): Promise<{ mount: HTMLElement; ingest: (l: string) => void; errors: () => A2uiClientMessage[]; cleanup: () => void }> {
+async function render(
+  card: Record<string, unknown>,
+  extra: Record<string, unknown>[] = [],
+): Promise<{ mount: HTMLElement; ingest: (l: string) => void; errors: () => A2uiClientMessage[]; cleanup: () => void }> {
   const sent: A2uiClientMessage[] = []
   const r = createRenderer()
   await r.preload(CATALOG)
@@ -61,6 +66,7 @@ async function render(card: Record<string, unknown>): Promise<{ mount: HTMLEleme
           { id: 'root', component: 'Column', children: ['card', 'echo'] },
           { id: 'card', component: 'QuestionCard', ...card },
           { id: 'echo', component: 'Text', text: { path: '/answer' } },
+          ...extra,
         ],
       },
     }),
@@ -78,70 +84,152 @@ async function render(card: Record<string, unknown>): Promise<{ mount: HTMLEleme
 }
 
 const BOUND = {
+  label: 'Question 4 of 10',
+  meta: 'Science · medium',
   question: 'Which planet is closest to the Sun?',
   options: OPTIONS,
   name: 'round1',
   value: { path: '/answer' },
+  answer: 'mercury',
   revealed: { path: '/revealed' },
   explanation: 'Mercury orbits closest to the Sun.',
-  progress: { value: 1, max: 5 },
 }
 
 const radiosIn = (mount: HTMLElement): RadioEl[] => [...mount.querySelectorAll('ui-radio')] as RadioEl[]
+const states = (mount: HTMLElement): (string | null)[] => radiosIn(mount).map((r) => r.getAttribute('data-state'))
+const partText = (row: HTMLElement, name: string): string => row.querySelector(`[data-part="${name}"]`)?.textContent ?? ''
+const click = (el: HTMLElement): void => void el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
 
 describe('QuestionCard through the real renderer', () => {
-  it('QuestionCard renders one radio per option, in order, labelled by text content', async () => {
+  it('QuestionCard renders one lettered row per option, in order, labelled in its label span', async () => {
     const { mount, errors, cleanup } = await render(BOUND)
     expect(errors()).toEqual([])
     const radios = radiosIn(mount)
-    expect(radios.map((r) => [r.value, r.textContent])).toEqual(OPTIONS.map((o) => [o.value, o.label]))
+    expect(radios.map((r) => [r.value, partText(r, 'label')])).toEqual(OPTIONS.map((o) => [o.value, o.label]))
+    expect(radios.map((r) => partText(r, 'key'))).toEqual(['A', 'B', 'C', 'D'])
+    expect(states(mount)).toEqual(['idle', 'idle', 'idle', 'idle'])
     expect(mount.querySelector('[data-part="question"]')?.textContent).toBe(BOUND.question)
     expect((mount.querySelector('[data-part="options"]') as unknown as { name: string }).name).toBe('round1')
     cleanup()
   })
 
-  it('QuestionCard: a radio click commits value to the bound data-model path', async () => {
-    const { mount, errors, cleanup } = await render(BOUND)
-    radiosIn(mount)[2]!.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
-    await whenFlushed()
-    expect(errors()).toEqual([])
-    expect((mount.querySelector('[data-part="options"]') as unknown as { value: string }).value).toBe('mars')
-    // the sibling Text bound to the same /answer path reads the committed value back
-    const echo = [...mount.querySelectorAll('ui-text')].find((t) => t.closest('ui-card') === null)
-    expect(echo?.textContent).toBe('mars')
+  it('QuestionCard: the header carries the label pill and the right-aligned meta', async () => {
+    const { mount, cleanup } = await render(BOUND)
+    const head = mount.querySelector('[data-part="head"]') as HTMLElement
+    expect(head.style.display).toBe('flex')
+    expect((mount.querySelector('[data-part="label"]') as unknown as { label: string }).label).toBe('Question 4 of 10')
+    expect(mount.querySelector('[data-part="label"]')?.tagName.toLowerCase()).toBe('ui-badge')
+    expect(mount.querySelector('[data-part="meta"]')?.textContent).toBe('Science · medium')
     cleanup()
   })
 
-  it('QuestionCard: a data-model write selects the matching radio', async () => {
+  it('QuestionCard: with no label, progress fills the pill as Question n of m', async () => {
+    const { label: _label, ...rest } = BOUND
+    const { mount, cleanup } = await render({ ...rest, progress: { value: 3, max: 10 } })
+    expect((mount.querySelector('[data-part="label"]') as unknown as { label: string }).label).toBe('Question 3 of 10')
+    cleanup()
+  })
+
+  it('QuestionCard: a radio click commits value to the bound data-model path and marks that row selected', async () => {
+    const { mount, errors, cleanup } = await render(BOUND)
+    click(radiosIn(mount)[2]!)
+    await whenFlushed()
+    expect(errors()).toEqual([])
+    expect((mount.querySelector('[data-part="options"]') as unknown as { value: string }).value).toBe('earth')
+    // the sibling Text bound to the same /answer path reads the committed value back
+    const echo = [...mount.querySelectorAll('ui-text')].find((t) => t.closest('ui-card') === null)
+    expect(echo?.textContent).toBe('earth')
+    expect(states(mount)).toEqual(['idle', 'idle', 'selected', 'idle'])
+    expect(radiosIn(mount).map((r) => partText(r, 'key'))).toEqual(['A', 'B', '●', 'D'])
+    cleanup()
+  })
+
+  it('QuestionCard: a data-model write selects the matching radio and paints its row', async () => {
     const { mount, ingest, errors, cleanup } = await render(BOUND)
     ingest(write('/answer', 'venus'))
     await whenFlushed()
     expect(errors()).toEqual([])
-    expect(radiosIn(mount).map((r) => r.checked)).toEqual([false, true, false])
+    expect(radiosIn(mount).map((r) => r.checked)).toEqual([false, true, false, false])
+    expect(states(mount)).toEqual(['idle', 'selected', 'idle', 'idle'])
     cleanup()
   })
 
-  it('QuestionCard: revealed disables the options and opens the explanation, and false undoes both', async () => {
+  it('QuestionCard: revealed after a wrong pick marks the correct row and the pick, disables every option and opens the explanation', async () => {
     const { mount, ingest, errors, cleanup } = await render(BOUND)
     const group = mount.querySelector('[data-part="options"]') as unknown as { disabled: boolean }
-    const fold = mount.querySelector('[data-part="explanation"]') as unknown as { open: boolean; textContent: string }
-    expect(group.disabled).toBe(false)
-    expect(fold.open).toBe(false)
+    const panel = mount.querySelector('[data-part="explanation"]') as HTMLElement
+    expect(panel.style.display).toBe('none')
+    ingest(write('/answer', 'venus'))
     ingest(write('/revealed', true))
     await whenFlushed()
+    expect(states(mount)).toEqual(['correct', 'wrong', 'idle', 'idle'])
+    expect(radiosIn(mount).map((r) => partText(r, 'key'))).toEqual(['✓', '✕', 'C', 'D'])
+    expect(radiosIn(mount).map((r) => partText(r, 'result'))).toEqual(['Correct', 'Your answer', '', ''])
     expect(group.disabled).toBe(true)
-    expect(fold.open).toBe(true)
-    expect(fold.textContent).toContain(BOUND.explanation)
+    expect(radiosIn(mount).every((r) => r.disabled)).toBe(true)
+    expect(panel.style.display).toBe('')
+    expect(panel.textContent).toContain(BOUND.explanation)
     ingest(write('/revealed', false))
     await whenFlushed()
+    expect(states(mount)).toEqual(['idle', 'selected', 'idle', 'idle'])
     expect(group.disabled).toBe(false)
-    expect(fold.open).toBe(false)
+    expect(radiosIn(mount).some((r) => r.disabled)).toBe(false)
+    expect(panel.style.display).toBe('none')
     expect(errors()).toEqual([])
     cleanup()
   })
 
-  it('QuestionCard: no element style carries border-left, and each radio keeps a 44px minimum block size', async () => {
-    const { mount, cleanup } = await render(BOUND)
+  it('QuestionCard: revealed after the right pick marks one correct row and no wrong one', async () => {
+    const { mount, ingest, cleanup } = await render(BOUND)
+    ingest(write('/answer', 'mercury'))
+    ingest(write('/revealed', true))
+    await whenFlushed()
+    expect(states(mount)).toEqual(['correct', 'idle', 'idle', 'idle'])
+    expect(radiosIn(mount).map((r) => partText(r, 'result'))).toEqual(['Correct', '', '', ''])
+    cleanup()
+  })
+
+  it('QuestionCard: once revealed, a click on another option changes neither the pick nor any row', async () => {
+    const { mount, ingest, cleanup } = await render(BOUND)
+    ingest(write('/answer', 'venus'))
+    ingest(write('/revealed', true))
+    await whenFlushed()
+    click(radiosIn(mount)[3]!)
+    await whenFlushed()
+    expect(radiosIn(mount).map((r) => r.checked)).toEqual([false, true, false, false])
+    expect((mount.querySelector('[data-part="options"]') as unknown as { value: string }).value).toBe('venus')
+    expect(states(mount)).toEqual(['correct', 'wrong', 'idle', 'idle'])
+    cleanup()
+  })
+
+  it('QuestionCard: the producer children sit after the explanation, and a required check holds the Button disabled until a pick', async () => {
+    const button = {
+      id: 'checkBtn',
+      component: 'Button',
+      variant: 'solid',
+      label: 'Check answer',
+      action: { action: 'checkAnswer', context: { answer: { path: '/answer' } } },
+      checks: [{ call: 'required', args: { value: { path: '/answer' } }, message: 'Pick an answer first' }],
+    }
+    const { mount, errors, cleanup } = await render({ ...BOUND, children: ['checkBtn'] }, [button])
+    expect(errors()).toEqual([])
+    const card = mount.querySelector('ui-card') as HTMLElement
+    const kids = [...card.children]
+    const btn = kids.at(-1) as HTMLElement & { disabled: boolean }
+    expect(btn.tagName.toLowerCase()).toBe('ui-button')
+    expect(kids.at(-2)?.getAttribute('data-part')).toBe('explanation')
+    expect(btn.disabled).toBe(true)
+    click(radiosIn(mount)[0]!)
+    await whenFlushed()
+    expect(btn.disabled).toBe(false)
+    cleanup()
+  })
+
+  it('QuestionCard: no element style carries border-left, and each option row keeps a 44px minimum block size', async () => {
+    const { mount, ingest, cleanup } = await render(BOUND)
+    ingest(write('/answer', 'venus'))
+    ingest(write('/revealed', true))
+    await whenFlushed()
     const all = [mount, ...mount.querySelectorAll('*')]
     expect(all.filter((e) => (e.getAttribute('style') ?? '').includes('border-left'))).toEqual([])
     for (const r of radiosIn(mount)) expect(r.style.getPropertyValue('min-block-size')).toBe('44px')
@@ -154,7 +242,8 @@ describe('QuestionCard through the real renderer', () => {
     const card = mount.querySelector('ui-card')
     expect(card).not.toBeNull()
     expect(radiosIn(mount)).toEqual([])
-    expect((mount.querySelector('[data-part="progress"]') as HTMLElement).style.display).toBe('none')
+    expect((mount.querySelector('[data-part="head"]') as HTMLElement).style.display).toBe('none')
+    expect((mount.querySelector('[data-part="explanation"]') as HTMLElement).style.display).toBe('none')
     cleanup()
   })
 })

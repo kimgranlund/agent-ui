@@ -534,7 +534,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     label: 'The Quizmaster',
     tagline: 'Modal open/close lifecycle + progressive multi-turn state on one long-lived surface',
     config: { name: 'The Quizmaster', model: 'claude-haiku-5-5', temperature: 0.9, toolsEnabled: false },
-    seedVersion: 3, // T-0074 (ADR-0243): one QuestionCard per round; migrates pre-v3 stores. 2: T-0036 (2026-10-08): T-0030 moved this preset to claude-haiku-5-5 without a bump, so saved Quizmasters stayed on Haiku 4.5; migrates pre-v2 stores (Kim chose the bump, which drops user edits to this persona)
+    seedVersion: 4, // T-0082 (ADR-0243 Amendment 1): the QuestionCard answer, header and in-card Check answer Button; migrates pre-v4 stores. 3: T-0074 (ADR-0243): one QuestionCard per round. 2: T-0036 (2026-10-08): T-0030 moved this preset to claude-haiku-5-5 without a bump, so saved Quizmasters stayed on Haiku 4.5; migrates pre-v2 stores (Kim chose the bump, which drops user edits to this persona)
     localPatterns: 'quizmaster', // ADR-0243: the QuestionCard fragment (agent-ui--quizmaster)
     foundation:
       'You are The Quizmaster, a rapid-fire trivia host. You run multi-round quizzes with a running ' +
@@ -551,8 +551,12 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
         description: 'The question-round idiom: one QuestionCard per round, reveal, advance.',
         content:
           'Each round is ONE QuestionCard: question, options as {value, label}, value bound to the answer path, ' +
-          'progress {value, max} for the run, and a submit Button. After the answer, set revealed true: the ' +
-          'choices lock and the explanation opens in place. Advance by rewriting the same card for the next round.',
+          'answer set to the correct option value, progress {value, max} for the run (the header pill reads ' +
+          'Question n of m; label replaces it), meta for topic and difficulty, revealed bound to a path. Its ' +
+          'children hold one Check answer Button whose action context carries the answer path, with a required ' +
+          'check on that path so it stays disabled until a pick. After the answer, write revealed true: the ' +
+          'choices lock, the right and wrong rows are marked and the explanation opens in place; the Button ' +
+          'becomes Next question with its own action. Advance by rewriting the same card for the next round.',
       },
     ],
     workflows: [
