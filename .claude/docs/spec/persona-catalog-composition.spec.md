@@ -1,6 +1,9 @@
 # SPEC — Persona Catalog Composition (M-D)
 
-> Status: accepted · v0.7 · 2026-10-08 (v0.6 2026-10-07; v0.5 2026-10-06; v0.4 2026-10-06; v0.2 2026-08-06; v0.3 2026-10-05 adds SPEC-R1's optional `controls` records, `ControlRecord`, and SPEC-R2 AC7, the derived entry's control loader, ADR-0233, accepted) · Layer: SPEC (execution contract)
+> Status: accepted · v0.8 · 2026-10-12 (v0.7 2026-10-08; v0.6 2026-10-07; v0.5 2026-10-06; v0.4 2026-10-06; v0.2 2026-08-06; v0.3 2026-10-05 adds SPEC-R1's optional `controls` records, `ControlRecord`, and SPEC-R2 AC7, the derived entry's control loader, ADR-0233, accepted) · Layer: SPEC (execution contract)
+> **v0.8 (2026-10-12):** SPEC-R6 gains AC4 and AC2 is narrowed: the mini-skill and exemplar `catalogId` scope
+> matches on the base segment of a derived id ([ADR-0243](../adr/0243-preset-widgets-admission-placement-derived-inheritance.md)
+> cl.3). No other clause moves.
 > **v0.7 (2026-10-08):** both bases are lazy records too: the default `agent-ui` catalog joins a2ui-basic behind
 > one ([ADR-0241](../adr/0241-lazy-catalog-bodies-behind-an-eager-manifest.md) Amendment 1, ratified), so a
 > derived record's load fetches its base body first. §2's *Base catalog* definition is edited in place for that
@@ -321,7 +324,7 @@ pass `deps.catalog.catalogId` — the SAME value line `:762`'s `queryOf` already
 - **AC1** *Given* the nine shipped `MINI_SKILLS` entries post-fix, *when* loaded, *then* every
   entry carries `catalogId: 'agent-ui'` and `mini-skills.test.ts`'s existing per-module assertions
   extend to check the field is present and equals `'agent-ui'` for all nine.
-- **AC2** *Given* a turn whose `deps.catalog.catalogId` is `'a2ui-basic'` (or any derived id,
+- **AC2** *Given* a turn whose `deps.catalog.catalogId` is `'a2ui-basic'` (or a derived id on that base,
   SPEC-R2), *when* `selectMiniSkills` runs, *then* it returns `[]` — the SAME accepted
   zero-content degrade `retrieve.ts`'s own catalogId-scoped filter already has for a Basic turn
   (`produce.ts:292`'s own comment: "a Basic turn retrieves zero exemplars... no `a2ui-basic` shard
@@ -331,6 +334,14 @@ pass `deps.catalog.catalogId` — the SAME value line `:762`'s `queryOf` already
   *when* `selectMiniSkills` runs, *then* its selection is BYTE-IDENTICAL to today's (all nine
   modules eligible, ranked the same way) — this clause is additive scoping, not a ranking-behavior
   change for the one catalog every module already targets.
+- **AC4** *(amended by [ADR-0243](../adr/0243-preset-widgets-admission-placement-derived-inheritance.md)
+  cl.3, 2026-10-12)* *Given* a derived `<base>--<persona>` id, *when* `selectMiniSkills` or
+  `corpus/retrieve.ts` scopes by catalog, *then* it matches on the BASE segment (`baseCatalogId`,
+  the first `--` split, the way `selectionGuidanceForId` does), so a derived turn selects exactly the
+  mini-skills and retrieves exactly the exemplars its base would. This replaces the exact-id match
+  this clause first ruled (OF2, 2026-08-06) and ADR-0237 recorded as unchanged (2026-10-05); the
+  `agent-ui` and `a2ui-basic` ids contain no `--` and are unaffected. The Croupier recorded turns
+  replay unchanged, and a derived turn's bare prompt is the same size as before (the K6 probe).
 
 **SPEC-R7: Each agent preset is pinned by one agent manifest, held by a drift gate**
 *(realizes [ADR-0235](../adr/0235-agent-manifest-drift-gate.md), proposed; the ADR amends ADR-0172 cl.1)*.

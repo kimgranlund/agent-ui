@@ -148,9 +148,8 @@ describe('registryViewFor', () => {
   it('an unknown persona half is the base view; an unknown base half is empty', () => {
     const base = registryViewFor(reg, 'agent-ui')
     const nobody = registryViewFor(reg, 'agent-ui--nobody')
-    // the emittable surface equals the base view; retrieval stays keyed to the exact id (SPEC-R6), so it differs
-    expect({ ...nobody, retrievable: [], catalogId: 'agent-ui' }).toEqual({ ...base, retrievable: [] })
-    expect(nobody.retrievable).toEqual([])
+    // the emittable surface and retrieval both equal the base view (retrieval matches the base segment, ADR-0243 cl.3)
+    expect({ ...nobody, catalogId: 'agent-ui' }).toEqual(base)
     expect(base.personaId).toBeNull()
     expect(base.personaOnlyTypes).toEqual([])
     const unknown = registryViewFor(reg, 'nobody--croupier')
@@ -170,9 +169,9 @@ describe('registryViewFor', () => {
     expect(registryViewFor(reg, 'agent-ui--croupier--extra').personaId).toBeNull() // persona "croupier--extra" is unknown
   })
 
-  it("retrievable is the EXACT catalog id (the ruled SPEC-R6 filter): a derived id retrieves none of its base's skills", () => {
+  it("retrievable is the BASE id (ADR-0243 cl.3): a derived id retrieves its base's skills, never a row scoped to a derived id", () => {
     expect(names(registryViewFor(reg, 'agent-ui').retrievable)).toEqual(['login-form'])
-    expect(names(registryViewFor(reg, 'agent-ui--croupier').retrievable)).toEqual(['table-felt'])
-    expect(registryViewFor(reg, 'agent-ui--solo').retrievable).toEqual([])
+    expect(names(registryViewFor(reg, 'agent-ui--croupier').retrievable)).toEqual(['login-form'])
+    expect(names(registryViewFor(reg, 'agent-ui--solo').retrievable)).toEqual(['login-form'])
   })
 })

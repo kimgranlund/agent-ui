@@ -96,6 +96,15 @@ describe('retrieve — TF-IDF top-k ranking (SPEC-R11 AC1)', () => {
 })
 
 describe('retrieve — scoping to catalogId/protocolVersion', () => {
+  it('ADR-0243 cl.3, a derived `<base>--<persona>` query retrieves the BASE catalog exemplars', () => {
+    const base = exemplar({ name: 'ex-base', promptText: 'a login form' })
+    const other = exemplar({ name: 'ex-other-base', promptText: 'a login form', catalogId: 'a2ui-basic' })
+
+    const result = retrieve([base, other], query({ intent: 'a login form', catalogId: 'agent-ui--croupier' }))
+
+    expect(result.map((r) => r.name)).toEqual(['ex-base'])
+  })
+
   it('excludes a perfect textual match from a different catalogId', () => {
     const inScope = exemplar({ name: 'ex-in-scope', promptText: 'a login form' })
     const outOfScope = exemplar({ name: 'ex-out-of-scope', promptText: 'a login form', catalogId: 'other-catalog' })

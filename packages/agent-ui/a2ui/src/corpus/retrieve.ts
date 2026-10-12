@@ -23,9 +23,12 @@
 //
 // Zero-dep, platform-neutral (SPEC-N5/ADR-0062): no imports beyond the local `record.ts` types and the
 // shared `text-similarity.ts` tokenizer/cosine primitives (ADR-0091 §2 — extracted so there is exactly
-// ONE implementation of the math; `selectMiniSkills` is the other caller).
+// ONE implementation of the math; `selectMiniSkills` is the other caller). Also the pure `base-id.ts`:
+// ADR-0243 cl.3 matches the catalog scope on the BASE segment of `query.catalogId`, so a derived
+// `<base>--<persona>` turn retrieves its base's exemplars.
 
 import type { CorpusRecord, ModelVisibleFacet } from './record.ts'
+import { baseCatalogId } from './base-id.ts'
 import { topKByCosine } from './text-similarity.ts'
 
 export interface RetrieveQuery {
@@ -58,9 +61,10 @@ export function retrieve(records: readonly CorpusRecord[], query: RetrieveQuery)
   if (query.k <= 0) return []
 
   const facet: ModelVisibleFacet = query.facet ?? 'exemplar'
+  const base = baseCatalogId(query.catalogId) // ADR-0243 cl.3: a derived `<base>--<persona>` query draws from the base shard
   const scope = records.filter(
     (r) =>
-      r.meta.catalogId === query.catalogId &&
+      r.meta.catalogId === base &&
       r.meta.protocolVersion === query.protocolVersion &&
       r.meta.facet === facet &&
       r.meta.status !== 'quarantined',
