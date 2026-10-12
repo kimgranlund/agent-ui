@@ -2572,12 +2572,21 @@
       "name": "Button",
       "scope": "a2ui-basic",
       "intents": [
-        "run an action on click"
+        "run an action on click",
+        "submit a form"
       ],
       "notFor": [
         {
           "type": "Text",
           "why": "static words"
+        },
+        {
+          "type": "CheckBox",
+          "why": "a persistent yes/no state"
+        },
+        {
+          "type": "Icon",
+          "why": "a glyph with no action"
         }
       ]
     },
@@ -2599,7 +2608,8 @@
       "name": "Card",
       "scope": "a2ui-basic",
       "intents": [
-        "a bounded surface around one child"
+        "a bounded surface around one child",
+        "group a related block on a surface"
       ],
       "notFor": [
         {
@@ -2630,12 +2640,17 @@
       "name": "CheckBox",
       "scope": "a2ui-basic",
       "intents": [
-        "one yes/no answer"
+        "one yes/no answer",
+        "an opt-in or agreement"
       ],
       "notFor": [
         {
           "type": "ChoicePicker",
           "why": "picking among options"
+        },
+        {
+          "type": "Button",
+          "why": "a one-shot action, not a stored state"
         }
       ]
     },
@@ -2657,7 +2672,8 @@
       "name": "ChoicePicker",
       "scope": "a2ui-basic",
       "intents": [
-        "pick one or more from options"
+        "pick one or more from options",
+        "a short list of mutually exclusive choices"
       ],
       "notFor": [
         {
@@ -2667,6 +2683,10 @@
         {
           "type": "CheckBox",
           "why": "a single yes/no"
+        },
+        {
+          "type": "Slider",
+          "why": "a continuous numeric range"
         }
       ]
     },
@@ -2702,6 +2722,10 @@
         {
           "type": "Card",
           "why": "a bounded surface"
+        },
+        {
+          "type": "Divider",
+          "why": "a visible rule between parts"
         }
       ]
     },
@@ -2723,7 +2747,8 @@
       "name": "DateTimeInput",
       "scope": "a2ui-basic",
       "intents": [
-        "pick a date or time"
+        "pick a date or time",
+        "a deadline or appointment time"
       ],
       "notFor": [
         {
@@ -2756,6 +2781,10 @@
         {
           "type": "Card",
           "why": "grouping on a surface"
+        },
+        {
+          "type": "Column",
+          "why": "a stack with no visible line"
         }
       ]
     },
@@ -2777,12 +2806,17 @@
       "name": "Icon",
       "scope": "a2ui-basic",
       "intents": [
-        "a small glyph"
+        "a small glyph",
+        "a decorative or status marker"
       ],
       "notFor": [
         {
           "type": "Image",
           "why": "a photo or picture"
+        },
+        {
+          "type": "Button",
+          "why": "a click that runs an action"
         }
       ]
     },
@@ -2804,7 +2838,8 @@
       "name": "Image",
       "scope": "a2ui-basic",
       "intents": [
-        "a photo or picture"
+        "a photo or picture",
+        "a banner or illustration"
       ],
       "notFor": [
         {
@@ -2831,12 +2866,17 @@
       "name": "List",
       "scope": "a2ui-basic",
       "intents": [
-        "a run of like items"
+        "a run of like items",
+        "repeat one template per data item"
       ],
       "notFor": [
         {
           "type": "Column",
           "why": "mixed children"
+        },
+        {
+          "type": "Row",
+          "why": "one horizontal line of children"
         }
       ]
     },
@@ -2858,12 +2898,17 @@
       "name": "Row",
       "scope": "a2ui-basic",
       "intents": [
-        "lay children side by side"
+        "lay children side by side",
+        "a button group or a label beside a value"
       ],
       "notFor": [
         {
           "type": "Column",
           "why": "stacking vertically"
+        },
+        {
+          "type": "List",
+          "why": "a run of like items from data"
         }
       ]
     },
@@ -2885,12 +2930,17 @@
       "name": "Slider",
       "scope": "a2ui-basic",
       "intents": [
-        "set a number by dragging"
+        "set a number by dragging",
+        "a bounded numeric range"
       ],
       "notFor": [
         {
           "type": "TextField",
           "why": "typing an exact value"
+        },
+        {
+          "type": "ChoicePicker",
+          "why": "a few discrete options"
         }
       ]
     },
@@ -2912,12 +2962,17 @@
       "name": "Text",
       "scope": "a2ui-basic",
       "intents": [
-        "headings, body text or captions"
+        "headings, body text or captions",
+        "a label beside a control"
       ],
       "notFor": [
         {
           "type": "Button",
           "why": "a click that runs an action"
+        },
+        {
+          "type": "TextField",
+          "why": "typed input from the user"
         }
       ]
     },
@@ -2939,7 +2994,8 @@
       "name": "TextField",
       "scope": "a2ui-basic",
       "intents": [
-        "typed text input"
+        "typed text input",
+        "a name, email or short answer"
       ],
       "notFor": [
         {
@@ -2953,6 +3009,10 @@
         {
           "type": "Slider",
           "why": "dragging within a range"
+        },
+        {
+          "type": "Text",
+          "why": "static copy the user cannot edit"
         }
       ]
     },
@@ -5530,12 +5590,21 @@
         "name": "BookingConfirmation",
         "scope": "concierge",
         "intents": [
-          "confirm a completed booking"
+          "confirm a completed booking",
+          "summary rows of a finished booking"
         ],
         "notFor": [
           {
             "type": "BookingForm",
             "why": "collecting booking details"
+          },
+          {
+            "type": "Card",
+            "why": "a generic bounded surface"
+          },
+          {
+            "type": "Text",
+            "why": "a one-line status message"
           }
         ]
       },
@@ -5557,7 +5626,8 @@
         "name": "BookingForm",
         "scope": "concierge",
         "intents": [
-          "collect booking details"
+          "collect booking details",
+          "date, option and consent fields in one form"
         ],
         "notFor": [
           {
@@ -5567,6 +5637,10 @@
           {
             "type": "TextField",
             "why": "one loose input outside a booking"
+          },
+          {
+            "type": "Column",
+            "why": "an ad hoc stack of unrelated inputs"
           }
         ]
       }
@@ -5610,12 +5684,21 @@
         "scope": "croupier",
         "tag": "ui-playing-card",
         "intents": [
-          "show one playing card"
+          "show one playing card",
+          "a face-up or face-down card in a hand"
         ],
         "notFor": [
           {
             "type": "Card",
             "why": "a content surface"
+          },
+          {
+            "type": "Image",
+            "why": "a card picture; PlayingCard draws its own face"
+          },
+          {
+            "type": "Text",
+            "why": "a rank or suit written as words"
           }
         ]
       }
@@ -5658,12 +5741,17 @@
         "name": "FixtureBanner",
         "scope": "fixture-demo",
         "intents": [
-          "the demo persona banner line"
+          "the demo persona banner line",
+          "a test-fixture status line"
         ],
         "notFor": [
           {
             "type": "Text",
             "why": "ordinary copy"
+          },
+          {
+            "type": "Card",
+            "why": "a surface around real content"
           }
         ]
       }

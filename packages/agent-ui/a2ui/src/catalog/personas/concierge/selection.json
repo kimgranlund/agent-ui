@@ -3,7 +3,8 @@
   "types": {
     "BookingForm": {
       "intents": [
-        "collect booking details"
+        "collect booking details",
+        "date, option and consent fields in one form"
       ],
       "notFor": [
         {
@@ -13,17 +14,30 @@
         {
           "type": "TextField",
           "why": "one loose input outside a booking"
+        },
+        {
+          "type": "Column",
+          "why": "an ad hoc stack of unrelated inputs"
         }
       ]
     },
     "BookingConfirmation": {
       "intents": [
-        "confirm a completed booking"
+        "confirm a completed booking",
+        "summary rows of a finished booking"
       ],
       "notFor": [
         {
           "type": "BookingForm",
           "why": "collecting booking details"
+        },
+        {
+          "type": "Card",
+          "why": "a generic bounded surface"
+        },
+        {
+          "type": "Text",
+          "why": "a one-line status message"
         }
       ]
     }

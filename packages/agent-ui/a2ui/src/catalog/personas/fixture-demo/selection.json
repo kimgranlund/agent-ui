@@ -3,12 +3,17 @@
   "types": {
     "FixtureBanner": {
       "intents": [
-        "the demo persona banner line"
+        "the demo persona banner line",
+        "a test-fixture status line"
       ],
       "notFor": [
         {
           "type": "Text",
           "why": "ordinary copy"
+        },
+        {
+          "type": "Card",
+          "why": "a surface around real content"
         }
       ]
     }

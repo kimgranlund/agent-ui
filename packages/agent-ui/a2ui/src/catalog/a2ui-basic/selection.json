@@ -3,18 +3,24 @@
   "types": {
     "Text": {
       "intents": [
-        "headings, body text or captions"
+        "headings, body text or captions",
+        "a label beside a control"
       ],
       "notFor": [
         {
           "type": "Button",
           "why": "a click that runs an action"
+        },
+        {
+          "type": "TextField",
+          "why": "typed input from the user"
         }
       ]
     },
     "Image": {
       "intents": [
-        "a photo or picture"
+        "a photo or picture",
+        "a banner or illustration"
       ],
       "notFor": [
         {
@@ -25,23 +31,33 @@
     },
     "Icon": {
       "intents": [
-        "a small glyph"
+        "a small glyph",
+        "a decorative or status marker"
       ],
       "notFor": [
         {
           "type": "Image",
           "why": "a photo or picture"
+        },
+        {
+          "type": "Button",
+          "why": "a click that runs an action"
         }
       ]
     },
     "Row": {
       "intents": [
-        "lay children side by side"
+        "lay children side by side",
+        "a button group or a label beside a value"
       ],
       "notFor": [
         {
           "type": "Column",
           "why": "stacking vertically"
+        },
+        {
+          "type": "List",
+          "why": "a run of like items from data"
         }
       ]
     },
@@ -61,23 +77,33 @@
         {
           "type": "Card",
           "why": "a bounded surface"
+        },
+        {
+          "type": "Divider",
+          "why": "a visible rule between parts"
         }
       ]
     },
     "List": {
       "intents": [
-        "a run of like items"
+        "a run of like items",
+        "repeat one template per data item"
       ],
       "notFor": [
         {
           "type": "Column",
           "why": "mixed children"
+        },
+        {
+          "type": "Row",
+          "why": "one horizontal line of children"
         }
       ]
     },
     "Card": {
       "intents": [
-        "a bounded surface around one child"
+        "a bounded surface around one child",
+        "group a related block on a surface"
       ],
       "notFor": [
         {
@@ -98,23 +124,37 @@
         {
           "type": "Card",
           "why": "grouping on a surface"
+        },
+        {
+          "type": "Column",
+          "why": "a stack with no visible line"
         }
       ]
     },
     "Button": {
       "intents": [
-        "run an action on click"
+        "run an action on click",
+        "submit a form"
       ],
       "notFor": [
         {
           "type": "Text",
           "why": "static words"
+        },
+        {
+          "type": "CheckBox",
+          "why": "a persistent yes/no state"
+        },
+        {
+          "type": "Icon",
+          "why": "a glyph with no action"
         }
       ]
     },
     "TextField": {
       "intents": [
-        "typed text input"
+        "typed text input",
+        "a name, email or short answer"
       ],
       "notFor": [
         {
@@ -128,23 +168,33 @@
         {
           "type": "Slider",
           "why": "dragging within a range"
+        },
+        {
+          "type": "Text",
+          "why": "static copy the user cannot edit"
         }
       ]
     },
     "CheckBox": {
       "intents": [
-        "one yes/no answer"
+        "one yes/no answer",
+        "an opt-in or agreement"
       ],
       "notFor": [
         {
           "type": "ChoicePicker",
           "why": "picking among options"
+        },
+        {
+          "type": "Button",
+          "why": "a one-shot action, not a stored state"
         }
       ]
     },
     "ChoicePicker": {
       "intents": [
-        "pick one or more from options"
+        "pick one or more from options",
+        "a short list of mutually exclusive choices"
       ],
       "notFor": [
         {
@@ -154,23 +204,33 @@
         {
           "type": "CheckBox",
           "why": "a single yes/no"
+        },
+        {
+          "type": "Slider",
+          "why": "a continuous numeric range"
         }
       ]
     },
     "Slider": {
       "intents": [
-        "set a number by dragging"
+        "set a number by dragging",
+        "a bounded numeric range"
       ],
       "notFor": [
         {
           "type": "TextField",
           "why": "typing an exact value"
+        },
+        {
+          "type": "ChoicePicker",
+          "why": "a few discrete options"
         }
       ]
     },
     "DateTimeInput": {
       "intents": [
-        "pick a date or time"
+        "pick a date or time",
+        "a deadline or appointment time"
       ],
       "notFor": [
         {
