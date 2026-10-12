@@ -13,13 +13,17 @@
 // item i, so a draw appends one element and a hole card turned up flips the same element (ADR-0225 cl.6). The
 // action Buttons are the producer's own children, appended by the renderer after the readout, and sized at the
 // button's `lg` step by `largeActionButtons` (ADR-0243 Amendment 2). The hands deal at the card's `md` size.
-// Styling is inline (`el.style`): the a2ui package ships no CSS file.
+// Styling is inline (`el.style`): the a2ui package ships no CSS file. The spacing is the ADR-0046 box model
+// (`boxRegionCard`, ADR-0046 Amendment 7): the head, each zone and the readout row sit one region apart, the
+// region-to-region distance of a stock card (block padding, box inset, block padding), and a zone's label and
+// felt, and the readout and the Buttons, keep the 8px region gap.
 //
 // `targetCatalogs` (both shipped bases): both factories build directly against `@agent-ui/components`, never
 // through either base's own dialect, the same reasoning as `concierge/index.ts`.
 
 import type { WidgetFactory } from '../../types.ts'
 import { largeActionButtons } from '../action-row.ts'
+import { BOX, boxRegionCard } from '../box-region.ts'
 
 export const playingCardFactory: WidgetFactory = {
   tag: 'ui-playing-card',
@@ -92,7 +96,7 @@ function zone(participant: Participant, name: string): { el: HTMLElement; parts:
   el.setAttribute('data-zone', participant)
   el.style.display = 'flex'
   el.style.flexDirection = 'column'
-  el.style.gap = 'var(--md-sys-space-sm)'
+  el.style.gap = BOX.gap
   el.style.flex = '1 0 100%'
   const label = row('zone-label')
   const total = text('label', 'md')
@@ -164,7 +168,9 @@ export const cardTableFactory: WidgetFactory = {
     s.display = 'flex'
     s.flexWrap = 'wrap'
     s.alignItems = 'center'
-    s.gap = 'var(--md-sys-space-md)'
+    boxRegionCard(el)
+    s.rowGap = `calc(${BOX.inset} + 2 * ${BOX.padBlock})` // region to region: 6 + 6 + 6
+    s.columnGap = BOX.gap
 
     const head = row('head')
     head.style.flex = '1 0 100%'

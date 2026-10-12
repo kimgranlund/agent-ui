@@ -473,3 +473,64 @@ carried out under ADR-0140. Every prose reference to `--ui-space` / `--ui-radius
 at time of writing and is left as originally authored, per ADR mutability rules — this amendment
 is the current-names restatement of record. `dimensions.css` itself has carried the renamed
 declarations since ADR-0140 landed; no code change accompanies this amendment.
+
+## Amendment 7: the canvas gutter rule, and the ADR-0243 widgets conform to the box model (2026-10-12, T-0084)
+
+> Status: recorded by T-0084 from the 2026-10-12 gutter audit of the five merged ADR-0243 widgets (ProductCard,
+> BoardGrid, GameHud, CardTable, QuestionCard). Append-only; the Decision and Amendments 1 to 6 are unchanged.
+> The canvas tokens below already exist and do not change. The ticket named this "Amendment 3"; that number is
+> taken (the scroll affordance), so it lands as the next free one.
+
+**The canvas gutter rule.** A rendered A2UI surface is two layers with one owner each:
+
+- The canvas owns the outer gutter and the gap between top-level roots. `.ui-artboard-surface`
+  (`app/src/controls/surface-host/artboard.css`, ADR-0129 Amendment 2): padding `--ui-artboard-pad`
+  (`--md-sys-space-lg`, 16px), gap `--ui-artboard-gap` (`--md-sys-space-md`, 12px) between top-level roots,
+  content width `min(32rem, 100% - --md-sys-space-2xl)`. A widget never sets its own outer margin.
+- Each container owns everything inside it, per this ADR: ink sits the 6px `--ui-box-inset` plus the region
+  padding (12px inline, 6px block) in from the border (19px inline and 13px block from the outer edge with a
+  1px border, a stock `ui-card` region), and a region's children sit 8px apart (`--ui-box-gap`). Fixed rem,
+  no density scaling.
+- A root fills the canvas content width. `applyRootStretch` (`artboard.ts`) already stretched a `ui-column`
+  root and any `UIContainerElement` root; it now also stretches the ADR-0243 widget roots `ui-product-card`,
+  `ui-board-grid` and `ui-game-hud` (they extend `UIElement`, so a GameHud root hugged 248px beside 480px
+  siblings), named by tag so no other intrinsic root changes width. A widget root carrying `inline` keeps
+  hugging (ADR-0223 R2), and a lone Button root still keeps its natural width.
+
+**The widgets conform.** None of these hosts is a `[data-box]`, so each reads the shared `--ui-box-*` tokens
+with their literal fallbacks, the `card.css` idiom (`var(--ui-box-inset, 0.375rem)`):
+
+- **GameHud**: the HUD's content is one region. Host padding is the inset plus the region padding per axis
+  (`calc(--ui-game-hud-inset + --ui-game-hud-pad-*)`), header, progress and stats 8px apart. Was 12px all
+  round on `--md-sys-space-md`.
+- **ProductCard**: the body is one region under the full-bleed media: inset plus region padding per axis, rows
+  8px apart (was 12px padding and a 4px row gap). The icon header aligns to the body ink. The rating's own
+  stars-to-number gap stays 4px (`--ui-product-card-rating-gap`, an inline gap within one row).
+- **BoardGrid**: the frame is the 6px inset (was 4px on `--md-sys-space-xs`). The cell-to-cell gap stays the
+  tight 4px of the approved mockup: a board is a data grid that reads as one unit, and the 8px region gap
+  would spread a 6 by 6 board by 20px. The 8px rhythm applies at the container level, between the board and
+  its siblings. This replaces the frame half of ADR-0243's BoardGrid Geometry row ("gap and frame off
+  `--md-sys-space` x density"); the gap half stands.
+- **CardTable and QuestionCard** are region-less `ui-card` composites whose producer Buttons stay root
+  children (ADR-0243 Amendment 2), so real header, content and footer regions cannot hold them.
+  `personas/box-region.ts` pads each card by the inset plus the region padding per axis and zeroes the card's
+  ADR-0056 loose-child margin on that instance (`--ui-card-content-gap: 0px`), so the composite's own flex
+  `gap` is the one rhythm and a hidden part leaves no gap. CardTable's head, each zone and the readout row sit
+  one region apart (block padding, inset, block padding: 18px), a zone's label and felt and the readout and
+  its Buttons 8px apart; the felt zones and the 36px action row are unchanged. QuestionCard's 12/16/16/16
+  padding and mixed 4px gap plus 8px margins become the region padding and one 8px gap. This is the "full
+  margin plus padding parity" reading Amendment 2 flagged for ADR-0056, applied to these two composites only;
+  the stock region-less card default is unchanged.
+
+**Measured** (headless Chromium, 1400px viewport, each seed through `createCanvasSurface`, 480px canvas content):
+
+| Widget | Before | After |
+|---|---|---|
+| GameHud | root 248px wide; ink 13px inline; padding 12px | root 480px; ink 19px inline, 13px block; padding 12px 18px; gap 8px |
+| ProductCard | body ink 13px inline; padding 12px; row gap 4px | ink 19px inline; padding 12px 18px; row gap 8px |
+| BoardGrid | frame 4px; cell gap 4px | frame 6px; cell gap 4px |
+| CardTable | ink 13px inline; padding 6px 12px; 20px between head and zones | ink 19px inline; padding 12px 18px; 18px between head, zones and readout row |
+| QuestionCard | ink 17px inline; padding 12px 16px 16px; 12px between parts | ink 19px inline; padding 12px 18px; 8px between parts |
+
+Each widget was compared side by side with its approved mockup before and after; the spacing moves by the
+6px inset and the look is the approved one.

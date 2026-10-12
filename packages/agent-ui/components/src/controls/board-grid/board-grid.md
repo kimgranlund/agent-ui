@@ -87,9 +87,9 @@ geometry:
   sizeClass: pattern
   cellSize: var(--ui-board-grid-cell-size)   # 46px, the approved mockup's cell (ADR-0243 Amendment 2): square cells, each track minmax(--ui-board-grid-cell-min, cell-size)
   cellMin: var(--ui-board-grid-cell-min)     # 34px, the target-size floor a cell never goes under in a narrow container
-  gap: var(--ui-board-grid-gap)              # --md-sys-space-xs, density-responsive
-  frame: var(--ui-board-grid-frame)          # --md-sys-space-xs, density-responsive
-  note: Block-level FILL by default (ADR-0223); the board's tracks are up to cell-size wide (down to cell-min when the container is narrow) and pack to the start. The `inline` boolean flips to inline-grid and the host hugs the board.
+  gap: var(--ui-board-grid-gap)              # --md-sys-space-xs, density-responsive: the tight data-grid gap between cells (the approved mockup's 4px)
+  frame: var(--ui-board-grid-frame)          # --ui-box-inset (6px), the ADR-0046 box inset (Amendment 7)
+  note: Block-level FILL by default (ADR-0223); the board's tracks are up to cell-size wide (down to cell-min when the container is narrow) and pack to the start. The `inline` boolean flips to inline-grid and the host hugs the board. The cell gap stays tight on purpose, a board reads as one unit; the 8px rhythm applies at the container level, between the board and its siblings. As a surface root the board fills the canvas width (applyRootStretch, ADR-0046 Amendment 7).
 
 forcedColors: A dedicated `@media (forced-colors: active)` block. Every cell keeps a `CanvasText` border, an intent cell's corner glyph stays real text, and a disabled cell steps to `GrayText`, so no state rides color alone.
 ---

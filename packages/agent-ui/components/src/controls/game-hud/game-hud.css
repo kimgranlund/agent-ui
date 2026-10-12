@@ -1,7 +1,7 @@
 /* game-hud.css: ui-game-hud, the game score and status strip (ADR-0243, GameHud fork sheet).
  *
  *   [1] TOKEN BLOCK: `:where(ui-game-hud)` (specificity 0,0,0) declares the --ui-game-hud-* chain from the
- *       colour roles and the dimensional ramps. The per-intent stat ink repoints live here too, keyed on
+ *       colour roles, the dimensional ramps and the ADR-0046 box tokens. The per-intent stat ink repoints live here too, keyed on
  *       the control-written `[data-intent]` of each stat part, so the styles block below reads only its
  *       own chain.
  *   [2] STYLES BLOCK: `@scope (ui-game-hud)` consumes only --ui-game-hud-* (plus the private `--_fill`
@@ -19,13 +19,17 @@
 @import '../badge/badge.css';
 
 :where(ui-game-hud) {
-  /* Host surface */
+  /* Host surface. The spacing is the ADR-0046 container box model (fixed rem, no density scaling, ADR-0046
+     Amendment 7): the HUD's content is one region, so its ink sits the 6px box inset plus the region padding
+     (12px inline, 6px block) in from the border, and header, progress and stats keep the 8px region gap. The
+     shared --ui-box-* tokens with their literal fallbacks, the card.css idiom (the host is not a [data-box]). */
   --ui-game-hud-surface: var(--md-sys-color-neutral-surface);
   --ui-game-hud-outline: var(--md-sys-color-neutral-outline-variant);
   --ui-game-hud-radius: var(--md-sys-shape-corner-base);
-  --ui-game-hud-pad-block: var(--md-sys-space-md); /* mockup 12px */
-  --ui-game-hud-pad-inline: var(--md-sys-space-md); /* mockup 14px, nearest ramp step */
-  --ui-game-hud-gap: var(--md-sys-space-sm); /* mockup 10px between header, progress and stats */
+  --ui-game-hud-inset: var(--ui-box-inset, 0.375rem); /* 6px */
+  --ui-game-hud-pad-block: var(--ui-box-pad-block, 0.375rem); /* 6px */
+  --ui-game-hud-pad-inline: var(--ui-box-pad-inline, 0.75rem); /* 12px */
+  --ui-game-hud-gap: var(--ui-box-gap, 0.5rem); /* 8px between header, progress and stats */
   --ui-game-hud-ink: var(--md-sys-color-neutral-on-surface);
   --ui-game-hud-muted-ink: var(--md-sys-color-neutral-on-surface-variant);
 
@@ -85,8 +89,8 @@
     display: grid;
     gap: var(--ui-game-hud-gap);
     box-sizing: border-box;
-    padding-block: var(--ui-game-hud-pad-block);
-    padding-inline: var(--ui-game-hud-pad-inline);
+    padding-block: calc(var(--ui-game-hud-inset) + var(--ui-game-hud-pad-block));
+    padding-inline: calc(var(--ui-game-hud-inset) + var(--ui-game-hud-pad-inline));
     border: 1px solid var(--ui-game-hud-outline);
     border-radius: var(--ui-game-hud-radius);
     background: var(--ui-game-hud-surface);
