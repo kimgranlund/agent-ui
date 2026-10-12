@@ -201,7 +201,8 @@ export const HOSPITALITY_PLAYBOOKS: readonly NewEntryInput[] = [
     description: 'Travel domain — multi-leg trip planning: compare legs, choose, accumulate an itinerary, summarize.',
     content:
       'Compare 4 or more legs in a Table (mode, duration, price) with a choose action Button per row; ' +
-      'for 2-3 legs use comparison Cards in a Row with a Badge for the price. The user picks via the ' +
+      'for 2-3 legs use one ProductCard per leg in a Row (title the mode, subtitle the duration, price ' +
+      'the fare, actionLabel Choose with the leg id in the action context). The user picks via the ' +
       'row or card action; chosen legs accumulate into an itinerary-timeline surface updated in place. End ' +
       'with a summary Card + total, bound to the accumulated data model.',
   },
@@ -214,18 +215,20 @@ export const GAMES_SKILLS: readonly NewEntryInput[] = [
     label: 'board-grid',
     description: 'battleship, minesweeper, grid targeting, cell board',
     content:
-      'A game board is a Grid of cell Buttons (ghost variant), each with action:{action:"cell", context:' +
-      '{row, col}} — the coordinates ride the action context, never the label. Keep boards ≤ 6×6 per ' +
-      'surface; mark hits/misses by swapping the cell label to a glyph (✕ / ●) via the data model, and ' +
-      'disable resolved cells rather than removing them. End state: when a fleet is sunk, show a win or ' +
+      'A board the player CLICKS is a Grid of cell Buttons (ghost variant), each with action:{action:"cell", ' +
+      'context:{row, col}}: the coordinates ride the action context, never the label. A board that is only ' +
+      'READ (your own fleet, a revealed board) is ONE BoardGrid: rows, cols, a label, and cells = the marked ' +
+      'positions [{row, col, mark, intent}] bound to the data model, so a hit or miss patches one entry ' +
+      'instead of re-minting cells. Keep boards ≤ 6×6 per surface; mark hits/misses with a glyph (✕ / ●) ' +
+      'and disable resolved cells rather than removing them. End state: when a fleet is sunk, show a win or ' +
       'lose Badge and a Play again Button.',
   },
   {
     label: 'guess-hud',
     description: 'twenty questions, guessing progress, confidence, question log',
     content:
-      'A guessing game runs on one HUD surface: a Timeline of asked questions (status done/active), a ' +
-      'Progress bar for questions used, a Stat for confidence (update its delta each round), and a ' +
+      'A guessing game runs on one HUD surface: a Timeline of asked questions (status done/active), ONE ' +
+      'GameHud (stats: confidence with a signed delta each round; progress: questions used out of 20), and a ' +
       'SegmentedControl for the answer (Yes / No / Sort of). The final guess opens a Modal via the data ' +
       'model; the player closes it. End state: the reveal says win or lose, with a Play again Button.',
   },
@@ -233,8 +236,9 @@ export const GAMES_SKILLS: readonly NewEntryInput[] = [
     label: 'word-tiles',
     description: 'wordle, letter grid, word guess, spelling game',
     content:
-      'Word guesses render as a Grid of Badge tiles — one row per guess, one Badge per letter, intent ' +
-      'success (right spot) / warning (wrong spot) / neutral (absent). The input is ONE TextField with a ' +
+      'Word guesses render as ONE BoardGrid (rows = the guess limit, cols = the word length) with cells ' +
+      'bound to the data model: one entry per letter {row, col, mark, intent}, intent success (right spot) ' +
+      '/ warning (wrong spot) / neutral (absent). The input is ONE TextField with a ' +
       'regex check (^[a-z]{5}$) gating the Submit button. Show the used-letter state as a compact List, ' +
       'never a full keyboard. End state: solved or out of guesses shows win or lose plus a Play again ' +
       'Button.',
@@ -245,15 +249,16 @@ export const GAMES_SKILLS: readonly NewEntryInput[] = [
     content:
       'A color round shows the target as a Swatch, takes the guess through a ColorPicker (oklch), and ' +
       'scores in coarse closeness BANDS (perfect / close / warm / cold — never numeric distance math). ' +
-      'Show the reveal as a Ramp between target and guess, the running score as a Stat, rounds as ' +
-      'Progress. End state: after the last round show the final score and a Play again Button.',
+      'Show the reveal as a Ramp between target and guess; the running score and the rounds ride ONE ' +
+      'GameHud (a score stat, progress = rounds played). End state: after the last round show the final ' +
+      'score and a Play again Button.',
   },
   {
     label: 'deal-sheet',
     description: 'haggling, offers, negotiation state, trade',
     content:
-      'A negotiation runs on one deal-sheet surface: the item as a Card, asking price and current offer ' +
-      'as Stats (mood carries a signed delta), a two-way Slider for the player’s offer with ONE Offer ' +
+      'A negotiation runs on one deal-sheet surface: the item as a Card, ONE GameHud for asking price, ' +
+      'current offer and mood (the mood stat carries a signed delta), a two-way Slider for the player’s offer with ONE Offer ' +
       'action Button, a price-history Sparkline, and Accept / Walk-away actions. A closed deal disables ' +
       'the offer controls — never remove them. End state: Accept reads as a win, Walk-away as a loss; ' +
       'either offers a Play again Button.',
@@ -263,7 +268,7 @@ export const GAMES_SKILLS: readonly NewEntryInput[] = [
     description: 'adventure, dungeon, narrative quest, inventory, HP',
     content:
       'An adventure runs on one surface: a Timeline quest log (append one item per scene, cap ~8 and ' +
-      'summarize older ones), a compact HUD Row of Stats (HP, Gold), an inventory List (≤6 items), and ' +
+      'summarize older ones), ONE GameHud (stats HP and Gold with signed deltas, status = the scene), an inventory List (≤6 items), and ' +
       '2-3 choice Buttons per scene. Lore goes in a Disclosure, never inline walls of text. Narration ' +
       'stays in chat; the surface carries STATE. End state: HP at 0 or the quest done shows a lose or win ' +
       'Badge and a Play again Button.',
@@ -295,10 +300,10 @@ export const GAMES_PLAYBOOKS: readonly NewEntryInput[] = [
       // GH #144: the opening turn is ONE board only (theirs — the one the player fires on); yours joins
       // the turn after the first shot lands. Keeps the heaviest turn of the game inside a small, reliable
       // self-correct budget instead of asking for 72 cells across two boards at once.
-      'Two 6×6 board-grid surfaces, phased in: turn one is theirs (hidden) ONLY — the player fires by ' +
-      'clicking a cell (the action context carries coordinates); resolve, mark the cell, then take YOUR ' +
-      'shot and narrate it in chat. Add yours (revealed) as a second board from turn two onward. Track ' +
-      'ships remaining as Stats; announce a round’s outcome (a ship sunk, a miss streak broken) as an ' +
+      'Two 6×6 board-grid surfaces, phased in: turn one is theirs (hidden) ONLY, a Grid of cell Buttons: ' +
+      'the player fires by clicking a cell (the action context carries coordinates); resolve, mark the ' +
+      'cell, then take YOUR shot and narrate it in chat. Add yours (revealed, read-only) as a BoardGrid ' +
+      'from turn two onward. Track ships remaining as GameHud stats; announce a round’s outcome (a ship sunk, a miss streak broken) as an ' +
       'ephemeral Toast, and declare victory honestly the moment a fleet is sunk.',
   },
 ]

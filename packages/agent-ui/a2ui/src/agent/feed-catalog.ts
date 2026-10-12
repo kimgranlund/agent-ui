@@ -128,7 +128,7 @@ export interface FeedExclusion {
 }
 
 /**
- * The 43 catalog types a feed ask MAY NEVER host (ADR-0097 §3's ratified 11 + the chart-family pair —
+ * The 46 catalog types a feed ask MAY NEVER host (ADR-0097 §3's ratified 11 + the chart-family pair,
  * the ADR-0097 Amendment / ADR-0107 Amendment 2 — + the chart family's third member, `LineChart`
  * [ADR-0205 cl.8] — + the report/content/feed catalog wave's five:
  * `Stat`/`Table` [ADR-0111], `Disclosure` [ADR-0113], `Progress`/`Attachment` [ADR-0112] — + the
@@ -155,7 +155,9 @@ export interface FeedExclusion {
  * (the Drill Fork D2 precedent verbatim — no catalog `action` prop maps to it, factories.ts); `available`
  * binds forward only, so an ask embedding this card could never learn what a click resolved to]) + the
  * svg-charts wave 4's two: `ColumnChart`/`Gauge` [ADR-0229 cl.7, GH #1568 — the chart family's fifth/sixth
- * members, the same display-only/no-value-mark reasoning as Sparkline/BarChart/LineChart/PieChart].
+ * members, the same display-only/no-value-mark reasoning as Sparkline/BarChart/LineChart/PieChart]
+ * + the ADR-0243 preset-widgets wave's three: `ProductCard`/`BoardGrid`/`GameHud` [T-0072, canvas-scale
+ * content and game surfaces, never an ask affordance; see each entry's reason].
  * Composite-closure note: a composite's children are excluded ALONGSIDE their parent for the SAME
  * reason (Tab/TabPanel with Tabs; MenuItem with Menu) — `feed-catalog.test.ts` asserts this closure
  * holds, both here and for the IN composites (RadioGroup/Radio, SegmentedControl/Segment, Card/its
@@ -334,6 +336,21 @@ export const FEED_EXCLUDED: readonly FeedExclusion[] = [
     type: 'ServiceCard',
     reason:
       'report/dashboard content, not an ask affordance (ADR-0224, GH #1429) — a gateway service-list card is canvas-scale report content, the Stat/Table/chart-family reasoning applied to an availability-stated launch card; its Open action does not round-trip to the server this pass (the Drill Fork D2 precedent verbatim — no catalog `action` prop maps to it, serviceCardFactory doc comment), and `available` binds forward only, so an ask embedding this card could never learn what a click resolved to.',
+  },
+  {
+    type: 'ProductCard',
+    reason:
+      'catalog and offer content, not an ask affordance (ADR-0243, T-0072) - a product or room card is canvas-scale display content (the ServiceCard and Image reasoning), and an ask carries ONE commit affordance: a card with its own price, rating and Book action is a second, competing one, with no value mark to commit a choice back.',
+  },
+  {
+    type: 'BoardGrid',
+    reason:
+      'a game board, not an ask affordance (ADR-0243, T-0072) - a grid of marked cells is canvas-scale game surface, not light ask furniture; it declares no value mark, and its cell activation is not catalog-reachable this pass (boardGridFactory doc comment), so an ask embedding one could never learn a pick.',
+  },
+  {
+    type: 'GameHud',
+    reason:
+      'a game readout, not an ask affordance (ADR-0243, T-0072) - a score and status strip is dashboard-class display content (the Stat/Table/chart-family reasoning applied to a game); display-only, no value mark and no action, so nothing in it can be committed by an ask.',
   },
 ] as const
 

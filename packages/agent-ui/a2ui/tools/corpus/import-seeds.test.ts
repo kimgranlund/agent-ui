@@ -672,8 +672,8 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
    *  honest" test's own precedent, above) then PRUNES the resulting shard back down to just the
    *  currently-live disposition-allowlisted rows (the `plantDrift` doctoring technique, applied in
    *  reverse) — restoring the "everything else still needs judging" premise this test's guard targets. */
-  const admitOnlyLiveDispositionedFromEmpty = (): void => {
-    if (LIVE_DISPOSITIONED_NAMES.length === 0) return
+  const admitOnlyLiveDispositionedFromEmpty = (): number | null => {
+    if (LIVE_DISPOSITIONED_NAMES.length === 0) return null
     const verdicts: Record<string, unknown> = {}
     for (const seed of SHELF) verdicts[seed.name] = { passed: true, qualityScore: 5 }
     const verdictsPath = writeVerdicts('pre-admit-whole-shelf.json', { date: '2026-08-19', verdicts })
@@ -682,10 +682,14 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
       throw new Error(`admitOnlyLiveDispositionedFromEmpty setup failed: ${result.stderr}`)
     }
     const shardPath = join(sandbox, SHARD)
-    const keptRows = readFileSync(shardPath, 'utf8')
+    const storedRows = readFileSync(shardPath, 'utf8')
       .split('\n')
-      .filter((line) => line !== '' && LIVE_DISPOSITIONED_NAMES.some((name) => line.includes(`"name":"${name}"`)))
+      .filter((line) => line !== '')
+    const keptRows = storedRows.filter((line) => LIVE_DISPOSITIONED_NAMES.some((name) => line.includes(`"name":"${name}"`)))
     writeFileSync(shardPath, keptRows.length > 0 ? `${keptRows.join('\n')}\n` : '')
+    // The whole-shelf run stores only the seeds that clear dedup (T-0072 found 11 of 91 that do not), and the
+    // pruned seeds carry an archived verdict, so the candidates left for the guard are exactly the pruned rows.
+    return storedRows.length - keptRows.length
   }
 
   const run = (args: string[]): { status: number | null; stdout: string; stderr: string } => {
@@ -807,6 +811,12 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     'frontier-column-chart-revenue': { passed: false, qualityScore: 2 },
     'frontier-gauge-system-load': { passed: false, qualityScore: 2 },
     'frontier-line-chart-axes-weekly-sales': { passed: false, qualityScore: 2 },
+    // ADR-0243/T-0072 - the ProductCard, BoardGrid and GameHud coverage-gap seeds (catalog-frontier.ts); refused
+    // here for the same zero-admission reason as every row above; their real disposition is
+    // DISPOSITION_ALLOWLIST's pending "NO VERDICT SOUGHT YET" entries (a later judged wave runs the real pipeline).
+    'frontier-product-card-rooms': { passed: false, qualityScore: 2 },
+    'frontier-board-grid-guesses': { passed: false, qualityScore: 2 },
+    'frontier-game-hud-quest': { passed: false, qualityScore: 2 },
   }
 
   it('clause 1 — a judged run that reaches saveStore archives its verdicts file BYTE-IDENTICALLY at <date>--<slug>.json, and a second identical run is a no-op', () => {
@@ -1176,9 +1186,9 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
       // Any LIVE disposition-allowlist name is a DIFFERENT, dispositionGuard-owned candidate class (it
       // halts BEFORE the judge-tier count ever accumulates, main()'s per-seed loop) — pre-admit them so
       // "every shelf seed" here means every NON-dispositioned one, the guard this test actually targets.
-      admitOnlyLiveDispositionedFromEmpty()
+      const prunedRows = admitOnlyLiveDispositionedFromEmpty()
       const preAdmittedShard = existsSync(join(sandbox, SHARD)) ? readFileSync(join(sandbox, SHARD), 'utf8') : ''
-      const expectedCandidateCount = SHELF.length - LIVE_DISPOSITIONED_NAMES.length
+      const expectedCandidateCount = prunedRows ?? SHELF.length
 
       const result = run([])
 

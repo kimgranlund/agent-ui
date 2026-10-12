@@ -351,6 +351,12 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   // bare default state.
   ColumnChart: { label: 'Revenue by month', projected: '1', highlight: '4' },
   Gauge: { label: 'System load' },
+  // ProductCard/BoardGrid/GameHud (ADR-0243, T-0072): the string/number/enum knobs are seeded HERE so a knob
+  // edit then revert has a static value to revert TO; the object/array props (`action`, `cells`, `stats`,
+  // `progress`) ride SAMPLE_TREES rootRef below. The ProductCard image is the shared inline sample.
+  ProductCard: { title: 'Harbour View Suite', subtitle: 'King bed, sleeps 2, free cancellation', image: IMAGE_SAMPLE_SRC, imageAlt: 'Suite with a harbour view', price: '$312', priceNote: 'per night', rating: '4.8', badge: 'Best rate', badgeIntent: 'success', actionLabel: 'Book' },
+  BoardGrid: { rows: '6', cols: '6', label: 'Enemy waters' },
+  GameHud: { title: 'Dungeon level 3', status: 'Your turn', statusIntent: 'info' },
 }
 
 /** A sensible default-slot label for a component-mode control — its title-cased tag stem (`ui-button` → `Button`). */
@@ -870,6 +876,35 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
       { id: 's_gr4l', component: 'Text', variant: 'caption', text: 'Refunds' },
       { id: 's_gr4v', component: 'Text', variant: 'h3', text: '12' },
     ],
+  }),
+  // ProductCard (ADR-0243): the Book action rides rootRef (an object prop). An explicit empty entry, never the
+  // generic "Sample content" child fallback, because the card's `child` slot is an OPTIONAL extra block and a
+  // stray Text after the body would misrepresent the real job.
+  ProductCard: () => ({ rootRef: { action: { action: 'book_room', context: { room: 'harbour' } } }, extras: [] }),
+  // BoardGrid (ADR-0243): a battleship-style target board with two resolved shots (frontier-board-grid-guesses'
+  // cousin); read-only on the wire, so no action.
+  BoardGrid: () => ({
+    rootRef: {
+      cells: [
+        { row: 1, col: 1, mark: 'X', intent: 'danger' },
+        { row: 1, col: 2, mark: 'O', intent: 'neutral' },
+        { row: 3, col: 4, mark: 'X', intent: 'danger' },
+        { row: 4, col: 0, mark: 'O', intent: 'neutral' },
+      ],
+    },
+    extras: [],
+  }),
+  // GameHud (ADR-0243): the quest-strip idiom (catalog-frontier.ts's frontier-game-hud-quest).
+  GameHud: () => ({
+    rootRef: {
+      stats: [
+        { label: 'HP', value: '34 / 50', delta: -6, intent: 'danger' },
+        { label: 'Gold', value: 120, delta: 40, intent: 'success' },
+        { label: 'Keys', value: 2 },
+      ],
+      progress: { value: 3, max: 8, label: 'Rooms cleared' },
+    },
+    extras: [],
   }),
   // Breadcrumb (GH #1515): a realistic 4-level path (the site doc/demo pages' own reference shape) — three
   // linked crumbs (Text.href, ADR-0114) + a plain current-page leaf (no href) — the real job, not the

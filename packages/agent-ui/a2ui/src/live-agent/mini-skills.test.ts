@@ -483,10 +483,13 @@ describe('product-presentation — the GH #1377 flagship product/listing card mo
     expect(result.map((m) => m.id)).not.toContain('product-presentation')
   })
 
-  it('teaches the Card+Image+Stat+Badge composition and the metric-AND-flag routing rule', () => {
+  // ADR-0243 (T-0072): the hand-built Card+Image+Stat+Badge composition is replaced by the ProductCard type.
+  it('teaches ONE ProductCard (never the hand-built Card+Image+Stat+Badge parts) and the omit-what-you-lack exhibit rule', () => {
     const skill = MINI_SKILLS.find((m) => m.id === 'product-presentation')!
-    expect(skill.body).toMatch(/hero Image \(usageHint:'hero', alt required\) as Card's own child/)
-    expect(skill.body).toMatch(/Use ONLY when the tile ALSO carries a quantified metric AND a status flag/)
+    expect(skill.body).toMatch(/is ONE ProductCard: title, subtitle, image/)
+    expect(skill.body).toMatch(/Never rebuild it from Card, Image, Stat, Badge and Button/)
+    expect(skill.body).toMatch(/no price and no action is an exhibit tile/)
+    expect(skill.body, 'the old hand composition is gone').not.toMatch(/hero Image/)
   })
 })
 
@@ -648,6 +651,11 @@ describe('game-table-chrome + game-hud: status badges ride the CardHeader traili
     expect(body('game-table-chrome')).toMatch(/ONE status Badge \(bankroll, bet or round\) with slot "trailing", both direct children/)
     expect(body('game-table-chrome')).toMatch(/Never wrap them in a Row, never put status Badges in CardContent/)
     expect(body('game-table-chrome'), 'the old Row-of-Badges header is gone').not.toMatch(/CardHeader = Row/)
+  })
+
+  it('game-hud teaches ONE GameHud for a standalone status strip (ADR-0243, T-0072)', () => {
+    expect(body('game-hud')).toMatch(/is ONE GameHud: title, status \+ statusIntent, stats \[\{label, value, delta, intent\}\]/)
+    expect(body('game-hud')).toMatch(/progress \{value, max, label\}/)
   })
 
   it('game-hud puts the bankroll Badge and a zone-Card score Badge in the trailing slot', () => {

@@ -2087,3 +2087,142 @@ describe('default catalog — Button icon mechanism (ADR-0226, GH #1504)', () =>
     expect(validateA2ui(message, defaultCatalog)).toEqual({ valid: true, failures: [] })
   })
 })
+
+// ADR-0243 (T-0072, R1): the ProductCard / BoardGrid / GameHud rows
+//
+// Drains the three TEMPORARY EXCLUSION_ALLOWLIST seeds the control-mint waves (T-0069/T-0070/T-0071) left.
+// Each row maps its props 1:1 onto the control's accessors (plain accessorFactory, see the factory doc
+// comments). The negative controls plant a defect the static validator must catch, so a vacuous row cannot pass.
+const validateOne = (component: Record<string, unknown>): ReturnType<typeof validateA2ui> =>
+  validateA2ui(
+    { version: 'v1.0', updateComponents: { surfaceId: 's1', components: [{ id: 'root', ...component }] } },
+    defaultCatalog,
+  )
+
+describe('default catalog - ProductCard via the shared validator (ADR-0243, T-0072)', () => {
+  it('a representative offer card validates 0 failures, with literals and bound props', () => {
+    expect(
+      validateOne({
+        component: 'ProductCard',
+        title: { path: 'title' },
+        subtitle: 'King bed, sleeps 2',
+        image: '/rooms/harbour.jpg',
+        imageAlt: 'Harbour view',
+        price: '$312',
+        priceNote: 'per night',
+        rating: 4.8,
+        badge: 'Best rate',
+        badgeIntent: 'success',
+        actionLabel: 'Book',
+        action: { action: 'book_room', context: { room: { path: 'id' } } },
+      }),
+    ).toEqual({ valid: true, failures: [] })
+  })
+
+  it('an exhibit tile (icon, no price, no action) validates', () => {
+    expect(validateOne({ component: 'ProductCard', title: 'Lobby mural', icon: 'image' }).valid).toBe(true)
+  })
+
+  it('every prop but actionLabel and action is bindable; the action prop maps to the renderer action wiring', () => {
+    const props = defaultCatalog.components.ProductCard.properties
+    for (const p of ['title', 'subtitle', 'image', 'imageAlt', 'icon', 'price', 'priceNote', 'rating', 'badge', 'badgeIntent']) {
+      expect(props[p]?.bindable, p).toBe(true)
+      expect(props[p]?.mapsTo, p).toBe(p)
+    }
+    expect(props.actionLabel?.bindable).toBeFalsy()
+    expect(props.action?.mapsTo).toBe('action')
+    expect(props.action?.bindable).toBeFalsy()
+  })
+
+  it('declares no value mark and one optional child slot (the Field shape)', () => {
+    expect(defaultCatalog.components.ProductCard.value).toBeUndefined()
+    expect(defaultCatalog.components.ProductCard.children).toBe('child')
+    expect(defaultFactories.ProductCard.value).toBeUndefined()
+    expect(defaultFactories.ProductCard.tag).toBe('ui-product-card')
+  })
+
+  // The static validator judges top-level props only (it does not descend into nested object or array shapes,
+  // the ADR-0214 Context fact 2), so a malformed `action` is the renderer's concern, not asserted here.
+  it('NEGATIVE CONTROL: a malformed badgeIntent, a non-numeric rating and an unexposed `inline` knob all fail', () => {
+    expect(validateOne({ component: 'ProductCard', title: 'x', badgeIntent: 'loud' }).valid).toBe(false)
+    expect(validateOne({ component: 'ProductCard', title: 'x', rating: 'great' }).valid).toBe(false)
+    expect(validateOne({ component: 'ProductCard', title: 'x', inline: true }).valid).toBe(false)
+  })
+})
+
+describe('default catalog - BoardGrid via the shared validator (ADR-0243, T-0072)', () => {
+  it('a representative read-only board validates 0 failures, with a bound cells array', () => {
+    expect(
+      validateOne({ component: 'BoardGrid', rows: 6, cols: 6, label: 'Enemy waters', cells: { path: '/board/cells' } }),
+    ).toEqual({ valid: true, failures: [] })
+    expect(
+      validateOne({
+        component: 'BoardGrid',
+        rows: 2,
+        cols: 2,
+        cells: [{ row: 0, col: 1, mark: 'X', intent: 'danger', disabled: true }],
+      }).valid,
+    ).toBe(true)
+  })
+
+  it('cells and label are bindable; rows and cols are not; no value mark, no children', () => {
+    const props = defaultCatalog.components.BoardGrid.properties
+    expect(props.cells?.bindable).toBe(true)
+    expect(props.label?.bindable).toBe(true)
+    expect(props.rows?.bindable).toBeFalsy()
+    expect(props.cols?.bindable).toBeFalsy()
+    expect(defaultCatalog.components.BoardGrid.value).toBeUndefined()
+    expect(defaultCatalog.components.BoardGrid.children).toBeUndefined()
+    expect(defaultFactories.BoardGrid.tag).toBe('ui-board-grid')
+  })
+
+  it('actionName is NOT wire-exposed this pass: the renderer cannot forward the control DOM action event', () => {
+    expect(defaultCatalog.components.BoardGrid.properties.actionName).toBeUndefined()
+    expect(validateOne({ component: 'BoardGrid', rows: 2, cols: 2, actionName: 'fire' }).valid).toBe(false)
+  })
+
+  // Cell shape (row and col required, intent in the badge set) is hardened by the control (`cleanCells`), not the
+  // static validator, which does not descend into array items.
+  it('NEGATIVE CONTROL: a string rows and a non-array cells both fail', () => {
+    expect(validateOne({ component: 'BoardGrid', rows: '6', cols: 6 }).valid).toBe(false)
+    expect(validateOne({ component: 'BoardGrid', rows: 2, cols: 2, cells: 'X' }).valid).toBe(false)
+  })
+})
+
+describe('default catalog - GameHud via the shared validator (ADR-0243, T-0072)', () => {
+  it('a representative HUD validates 0 failures, with literals and bound props', () => {
+    expect(
+      validateOne({
+        component: 'GameHud',
+        title: 'Dungeon level 3',
+        status: { path: '/hud/status' },
+        statusIntent: 'info',
+        stats: [
+          { label: 'HP', value: '34 / 50', delta: -6, intent: 'danger' },
+          { label: 'Gold', value: 120, delta: '+40' },
+        ],
+        progress: { value: 3, max: 8, label: 'Rooms cleared' },
+      }),
+    ).toEqual({ valid: true, failures: [] })
+    expect(validateOne({ component: 'GameHud', stats: { path: '/hud/stats' }, progress: { path: '/hud/progress' } }).valid).toBe(true)
+  })
+
+  it('all five props are bindable and map 1:1; no value mark, no action, no children', () => {
+    const props = defaultCatalog.components.GameHud.properties
+    for (const p of ['title', 'status', 'statusIntent', 'stats', 'progress']) {
+      expect(props[p]?.bindable, p).toBe(true)
+      expect(props[p]?.mapsTo, p).toBe(p)
+    }
+    expect(Object.values(props).some((d) => d.mapsTo === 'action')).toBe(false)
+    expect(defaultCatalog.components.GameHud.value).toBeUndefined()
+    expect(defaultCatalog.components.GameHud.children).toBeUndefined()
+    expect(defaultFactories.GameHud.tag).toBe('ui-game-hud')
+  })
+
+  // Stat and progress item shapes are hardened by the control (`cleanStats`, `cleanProgress`), not the static validator.
+  it('NEGATIVE CONTROL: a bad statusIntent, a non-array stats and a non-object progress all fail', () => {
+    expect(validateOne({ component: 'GameHud', statusIntent: 'loud' }).valid).toBe(false)
+    expect(validateOne({ component: 'GameHud', stats: 'many' }).valid).toBe(false)
+    expect(validateOne({ component: 'GameHud', progress: 5 }).valid).toBe(false)
+  })
+})

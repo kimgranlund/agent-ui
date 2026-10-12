@@ -1430,6 +1430,67 @@ export const serviceCardFactory: WidgetFactory = accessorFactory('ui-service-car
  */
 export const breadcrumbFactory: WidgetFactory = accessorFactory('ui-breadcrumb')
 
+/**
+ * `ProductCard` to `ui-product-card` (ADR-0243, T-0072). Every catalog property is a 1:1 reflecting accessor
+ * (verified against `product-card.md` attributes), so `applyProp` is the plain `setProp`. Everything is
+ * bindable except `actionLabel` (set once per card) and `action`. No `value` mark: the card is not an input.
+ *
+ * The `action` prop is the one bespoke part. It rides the generic host click wiring (`mapsTo: 'action'`, the
+ * `Button` and `Suggestions` precedent): the renderer withholds it from `applyProp` and attaches ONE click
+ * listener, carrying an abort signal, to the card host. But the control draws its action button only when its
+ * own `action` prop is non-null, and a factory never sees the node, so the static spec cannot be copied across.
+ * `create()` therefore watches for the renderer's host click listener: when one is attached the card gets a
+ * non-null placeholder `action` (so the labelled button renders), and when its signal aborts (a re-wire or a
+ * teardown) the placeholder is cleared again. A card whose node has no `action` never gets a listener, so it
+ * stays an exhibit tile with no button. The placeholder is never dispatched: the renderer's listener resolves
+ * the real action name and context from the node. Because that listener is on the host, a click anywhere on the
+ * card (image, title, price) dispatches the action, not only a click on the button; the control's own DOM
+ * `action` event is a separate channel the renderer never reads. `children: 'child'` (the `Field` shape) lets
+ * one extra block sit after the body; the control prepends its media and body on connect, so the block stays
+ * last. `inline` is not wire-exposed (the `ServiceCard` precedent: sizing posture is a layout concern).
+ */
+export const productCardFactory: WidgetFactory = {
+  tag: 'ui-product-card',
+  create: () => {
+    const el = document.createElement('ui-product-card') as HTMLElement & { action: unknown }
+    const attach = el.addEventListener.bind(el) as HTMLElement['addEventListener']
+    el.addEventListener = ((type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions) => {
+      attach(type, listener, options)
+      const signal = typeof options === 'object' ? options.signal : undefined
+      if (type !== 'click' || signal === undefined) return
+      el.action = { action: 'wired' }
+      signal.addEventListener('abort', () => { el.action = null }, { once: true })
+    }) as HTMLElement['addEventListener']
+    return el
+  },
+  applyProp: setProp,
+}
+
+/**
+ * `BoardGrid` to `ui-board-grid` (ADR-0243, T-0072). `rows`/`cols`/`cells`/`label` are 1:1 reflecting
+ * accessors (verified against `board-grid.md`); `cells` is the one bindable array, patched in place by the
+ * control so a mark update never re-mounts the board. Display-only on the wire: no `value` mark, no children.
+ *
+ * `actionName` is deliberately NOT wire-exposed this pass. With it set the control emits a DOM `action`
+ * event carrying `{action, context: {row, col}}`, but the renderer wires A2UI actions only from a catalog
+ * prop whose `mapsTo` is `'action'` through a host `click` listener and a static `context`; it never reads a
+ * component's own `action` event detail, so the clicked cell could not reach the agent (the `ServiceCard`
+ * Open button precedent, verbatim). Exposing the prop would teach the agent a board whose cells fire nothing.
+ * An interactive board stays a Grid of cell Buttons until the renderer forwards the DOM event; `actionName`
+ * can then be added to the row additively. `inline` is not wire-exposed either.
+ */
+export const boardGridFactory: WidgetFactory = accessorFactory('ui-board-grid')
+
+/**
+ * `GameHud` to `ui-game-hud` (ADR-0243, T-0072). Every property is a 1:1 reflecting accessor (verified against
+ * `game-hud.md`; `title` keeps its prop name while the control reflects it as `hud-title`, so the HTML
+ * `title` tooltip never fires). All five are bindable, so each move repaints the strip in place. The control
+ * hardens `stats` (at most six, malformed entries dropped) and `progress` (no bar when `max` is not above
+ * zero) itself, so a bound value that never passed the static validator cannot break the render. Display-only:
+ * no `value` mark, no `action`, no children. `inline` is not wire-exposed.
+ */
+export const gameHudFactory: WidgetFactory = accessorFactory('ui-game-hud')
+
 /** The default catalog's factory table — keyed by A2UI component type (catalog LLD-C5, consumed by the
  *  host at `registry.register`; the renderer resolves a node's control via `factories[type]`). Every type
  *  declared in `catalog.json` MUST appear here — a gap is a `CATALOG_FACTORY_MISSING` at register (SPEC-R7 AC1). */
@@ -1514,4 +1575,7 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   Toggle: toggleFactory,
   ServiceCard: serviceCardFactory,
   Breadcrumb: breadcrumbFactory,
+  ProductCard: productCardFactory,
+  BoardGrid: boardGridFactory,
+  GameHud: gameHudFactory,
 }

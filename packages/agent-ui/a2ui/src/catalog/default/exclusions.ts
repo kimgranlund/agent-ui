@@ -36,9 +36,10 @@
  *  §4 Catalog posture row: A2UI-EMITTABLE, "row-or-allowlist at ship time" — the row itself was the S3
  *  slice's job, by the intake's own 3-slice build plan) — this S3 wave lands the `Breadcrumb` row +
  *  factory and DRAINS that seed too, the same way every wave above was drained.
- *  ADR-0243 (T-0070, `ui-product-card`) re-seeds this SAME "shipped ahead of its catalog row" shape, the
- *  ADR-0224 service-card S1 precedent: the control ships first, and T-0072 (R1) lands the `ProductCard`
- *  row and DRAINS the seed (the residue guard fails if it is left in place). */
+ *  ADR-0243 (T-0069/T-0070/T-0071, `ui-board-grid`/`ui-product-card`/`ui-game-hud`) re-seeded this SAME
+ *  "shipped ahead of its catalog row" shape three times over, the ADR-0224 service-card S1 precedent: each
+ *  control shipped first. T-0072 (R1) lands the `ProductCard`, `BoardGrid` and `GameHud` rows + factories
+ *  and DRAINS all three seeds (the residue guard fails if one is left in place). */
 //
 // `ToastRegion`/`ThemeProvider`/`StatusStream`/`SwiperPagination`/`SwiperPaddles`/`SwiperLabel`/`CommandModal` are
 // the only PERMANENT entries — NOT catalogue-bound AT ALL (app-surface/theming/live-streaming/chrome-anchor
@@ -92,15 +93,4 @@ export const EXCLUSION_ALLOWLIST: ReadonlyMap<string, string> = new Map<string, 
     'fragment + mini-skills teach it; a default-catalog row would hand every generic agent a casino-' +
     'domain object with no teaching context. Widening to the default catalog is a separate, later ' +
     'intake (the mint-vs-compose TYPE arm), never a drive-by row.'],
-  ['ProductCard',
-    'ADR-0243 ProductCard ships its control ahead of its default catalog row; T-0072 (R1) lands the row ' +
-    'and drains this seed.'],
-  ['BoardGrid',
-    'ADR-0243 (BoardGrid fork sheet), TEMPORARY seed: ui-board-grid shipped ahead of its default catalog ' +
-    'row (T-0069 C1 mints the control). T-0072 (R1) lands the BoardGrid row and factory and drains this ' +
-    'seed, the same way every "shipped ahead of its catalog row" seed above was drained.'],
-  ['GameHud',
-    'ADR-0243 / T-0072: temporary seed, the ui-game-hud control shipped ahead of its default catalog row. ' +
-    'R1 either lands the GameHud row and drains this seed, or, under the preset-widgets design section 9 ' +
-    'kill switch, rewrites it as a permanent exclusion with its own reason.'],
 ])

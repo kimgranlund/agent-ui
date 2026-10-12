@@ -143,7 +143,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'croupier',
     category: 'games', // GH #143 — a card table, thematically a game even though it predates the games-roster wave
-    seedVersion: 7, // T-0020: a natural blackjack ends the round on the deal (surfaceStyle, round-loop and the blackjack rules entry); no mini-skill carries it, so a pre-v7 store would never hear it; migrates pre-v7 stores. 6: one surface per round (Kim 2026-10-04), supersedes #525's one-persistent-surface surfaceStyle; #525's bankroll opt-in + cross-session resume carry over; migrates pre-v6 stores. T-0016 (GH #1795) edited the hand/total seed text WITHOUT a bump: existing stores get the data-driven hand teaching from the server-composed card-layout/game-table-chrome mini-skills and the ADR-0238 hand check, so no store needs dropping
+    seedVersion: 7, // T-0020: a natural blackjack ends the round on the deal (surfaceStyle, round-loop and the blackjack rules entry); no mini-skill carries it, so a pre-v7 store would never hear it; migrates pre-v7 stores. 6: one surface per round (Kim 2026-10-04), supersedes #525's one-persistent-surface surfaceStyle; #525's bankroll opt-in + cross-session resume carry over; migrates pre-v6 stores. T-0016 (GH #1795) edited the hand/total seed text WITHOUT a bump: existing stores get the data-driven hand teaching from the server-composed card-layout/game-table-chrome mini-skills and the ADR-0238 hand check, so no store needs dropping. T-0072 (R1) edited the game-hud skill text WITHOUT a bump; P1 (CardTable) carries the seedVersion 8 bump
     label: 'The Croupier',
     tagline: 'Card games — Blackjack, Poker, and their variants — one table per round, each a new step in the dialog',
     config: { name: 'The Croupier', model: 'claude-sonnet-5', temperature: 0.6, toolsEnabled: true }, // rev.4: fable retired from the roster
@@ -205,7 +205,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
         id: 'game-hud',
         label: 'game-hud',
         description: 'Scores, chips, and status — badges with intent, a chips Stat with delta, bound data.',
-        content: 'Score badges turn success/danger/warning with the hand; chips are a Stat with a signed delta; every figure is data-bound so moves update in place.',
+        content: 'Score badges turn success/danger/warning with the hand; the chip count, bet and round status are ONE GameHud (a stat with a signed delta, a status badge with intent); every figure is data-bound so moves update in place.',
       },
     ],
     workflows: [

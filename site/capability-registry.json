@@ -151,17 +151,20 @@
         "path": "packages/agent-ui/components/src/controls/board-grid/board-grid.md"
       },
       "status": {
-        "state": "excluded",
-        "reason": "ADR-0243 (BoardGrid fork sheet), TEMPORARY seed: ui-board-grid shipped ahead of its default catalog row (T-0069 C1 mints the control). T-0072 (R1) lands the BoardGrid row and factory and drains this seed, the same way every \"shipped ahead of its catalog row\" seed above was drained."
+        "state": "catalogued"
       },
       "consumers": [
+        "prompt",
+        "renderer",
         "site"
       ],
       "tag": "ui-board-grid",
       "tier": "pattern",
       "description": "A board of cells to target or mark, with one roving tab stop.",
       "uses": [],
-      "catalogs": []
+      "catalogs": [
+        "agent-ui"
+      ]
     },
     {
       "id": "control:ui-breadcrumb",
@@ -632,10 +635,11 @@
         "path": "packages/agent-ui/components/src/controls/game-hud/game-hud.md"
       },
       "status": {
-        "state": "excluded",
-        "reason": "ADR-0243 / T-0072: temporary seed, the ui-game-hud control shipped ahead of its default catalog row. R1 either lands the GameHud row and drains this seed, or, under the preset-widgets design section 9 kill switch, rewrites it as a permanent exclusion with its own reason."
+        "state": "catalogued"
       },
       "consumers": [
+        "prompt",
+        "renderer",
         "site"
       ],
       "tag": "ui-game-hud",
@@ -644,7 +648,9 @@
       "uses": [
         "ui-badge"
       ],
-      "catalogs": []
+      "catalogs": [
+        "agent-ui"
+      ]
     },
     {
       "id": "control:ui-gauge",
@@ -977,10 +983,11 @@
         "path": "packages/agent-ui/components/src/controls/product-card/product-card.md"
       },
       "status": {
-        "state": "excluded",
-        "reason": "ADR-0243 ProductCard ships its control ahead of its default catalog row; T-0072 (R1) lands the row and drains this seed."
+        "state": "catalogued"
       },
       "consumers": [
+        "prompt",
+        "renderer",
         "site"
       ],
       "tag": "ui-product-card",
@@ -990,7 +997,9 @@
         "ui-badge",
         "ui-icon"
       ],
-      "catalogs": []
+      "catalogs": [
+        "agent-ui"
+      ]
     },
     {
       "id": "control:ui-progress",
@@ -3255,6 +3264,35 @@
       ]
     },
     {
+      "id": "type:agent-ui/BoardGrid",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "BoardGrid"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "a game board, not an ask affordance (ADR-0243, T-0072) - a grid of marked cells is canvas-scale game surface, not light ask furniture; it declares no value mark, and its cell activation is not catalog-reachable this pass (boardGridFactory doc comment), so an ask embedding one could never learn a pick."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "BoardGrid",
+      "scope": "agent-ui",
+      "tag": "ui-board-grid",
+      "intents": [
+        "a board of cells to target or mark"
+      ],
+      "notFor": [
+        {
+          "type": "Grid",
+          "why": "a layout of components"
+        }
+      ]
+    },
+    {
       "id": "type:agent-ui/Breadcrumb",
       "kind": "type",
       "source": {
@@ -3380,6 +3418,10 @@
         {
           "type": "ServiceCard",
           "why": "a launchable service entry"
+        },
+        {
+          "type": "ProductCard",
+          "why": "a product or offer with a price and an action"
         }
       ]
     },
@@ -3980,6 +4022,39 @@
       ]
     },
     {
+      "id": "type:agent-ui/GameHud",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "GameHud"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "a game readout, not an ask affordance (ADR-0243, T-0072) - a score and status strip is dashboard-class display content (the Stat/Table/chart-family reasoning applied to a game); display-only, no value mark and no action, so nothing in it can be committed by an ask."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "GameHud",
+      "scope": "agent-ui",
+      "tag": "ui-game-hud",
+      "intents": [
+        "a game score and status strip"
+      ],
+      "notFor": [
+        {
+          "type": "Stat",
+          "why": "one metric outside a game"
+        },
+        {
+          "type": "Toolbar",
+          "why": "actions, not readouts"
+        }
+      ]
+    },
+    {
       "id": "type:agent-ui/Gauge",
       "kind": "type",
       "source": {
@@ -4051,6 +4126,10 @@
         {
           "type": "Swiper",
           "why": "one slide at a time"
+        },
+        {
+          "type": "BoardGrid",
+          "why": "a board of marked cells"
         }
       ]
     },
@@ -4478,6 +4557,39 @@
       ]
     },
     {
+      "id": "type:agent-ui/ProductCard",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "ProductCard"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "catalog and offer content, not an ask affordance (ADR-0243, T-0072) - a product or room card is canvas-scale display content (the ServiceCard and Image reasoning), and an ask carries ONE commit affordance: a card with its own price, rating and Book action is a second, competing one, with no value mark to commit a choice back."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "ProductCard",
+      "scope": "agent-ui",
+      "tag": "ui-product-card",
+      "intents": [
+        "one product, room or offer to buy or book"
+      ],
+      "notFor": [
+        {
+          "type": "Card",
+          "why": "content with no price or action"
+        },
+        {
+          "type": "ServiceCard",
+          "why": "a thing to open, not buy"
+        }
+      ]
+    },
+    {
       "id": "type:agent-ui/Progress",
       "kind": "type",
       "source": {
@@ -4631,10 +4743,6 @@
         {
           "type": "Slider",
           "why": "any number in a range"
-        },
-        {
-          "type": "Stat",
-          "why": "showing a metric"
         }
       ]
     },
@@ -4800,6 +4908,10 @@
         {
           "type": "Card",
           "why": "any content, not a launchable entry"
+        },
+        {
+          "type": "ProductCard",
+          "why": "a product or room to buy or book"
         }
       ]
     },
@@ -5009,10 +5121,6 @@
       ],
       "notFor": [
         {
-          "type": "Rating",
-          "why": "a score the user gives"
-        },
-        {
           "type": "Sparkline",
           "why": "the shape of a series"
         },
@@ -5023,6 +5131,10 @@
         {
           "type": "DescriptionList",
           "why": "many label-value pairs"
+        },
+        {
+          "type": "GameHud",
+          "why": "a game score with its status"
         }
       ]
     },
@@ -5563,6 +5675,10 @@
         {
           "type": "Row",
           "why": "children laid out with no command semantics"
+        },
+        {
+          "type": "GameHud",
+          "why": "readouts, not commands"
         }
       ]
     },

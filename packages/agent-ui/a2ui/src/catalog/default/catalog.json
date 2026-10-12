@@ -967,6 +967,100 @@
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" }
       },
       "children": "ChildList"
+    },
+
+    "ProductCard": {
+      "properties": {
+        "title": { "type": { "type": "string" }, "bindable": true, "mapsTo": "title" },
+        "subtitle": { "type": { "type": "string" }, "bindable": true, "mapsTo": "subtitle" },
+        "image": { "type": { "type": "string" }, "bindable": true, "mapsTo": "image" },
+        "imageAlt": { "type": { "type": "string" }, "bindable": true, "mapsTo": "imageAlt" },
+        "icon": { "type": { "type": "string" }, "bindable": true, "mapsTo": "icon" },
+        "price": { "type": { "type": "string" }, "bindable": true, "mapsTo": "price" },
+        "priceNote": { "type": { "type": "string" }, "bindable": true, "mapsTo": "priceNote" },
+        "rating": { "type": { "type": "number" }, "bindable": true, "mapsTo": "rating" },
+        "badge": { "type": { "type": "string" }, "bindable": true, "mapsTo": "badge" },
+        "badgeIntent": { "type": { "type": "string", "enum": ["neutral", "info", "success", "warning", "danger"] }, "bindable": true, "mapsTo": "badgeIntent" },
+        "actionLabel": { "type": { "type": "string" }, "mapsTo": "actionLabel" },
+        "action": {
+          "type": {
+            "type": "object",
+            "properties": {
+              "action": { "type": "string" },
+              "context": { "type": "object" },
+              "wantResponse": { "type": "boolean" },
+              "submit": { "type": "boolean" }
+            },
+            "required": ["action"]
+          },
+          "mapsTo": "action"
+        }
+      },
+      "children": "child"
+    },
+
+    "BoardGrid": {
+      "properties": {
+        "rows": { "type": { "type": "number" }, "mapsTo": "rows" },
+        "cols": { "type": { "type": "number" }, "mapsTo": "cols" },
+        "cells": {
+          "type": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "row": { "type": "number" },
+                "col": { "type": "number" },
+                "mark": { "type": "string" },
+                "intent": { "type": "string", "enum": ["neutral", "info", "success", "warning", "danger"] },
+                "disabled": { "type": "boolean" }
+              },
+              "required": ["row", "col"]
+            }
+          },
+          "bindable": true,
+          "mapsTo": "cells"
+        },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" }
+      }
+    },
+
+    "GameHud": {
+      "properties": {
+        "title": { "type": { "type": "string" }, "bindable": true, "mapsTo": "title" },
+        "status": { "type": { "type": "string" }, "bindable": true, "mapsTo": "status" },
+        "statusIntent": { "type": { "type": "string", "enum": ["neutral", "info", "success", "warning", "danger"] }, "bindable": true, "mapsTo": "statusIntent" },
+        "stats": {
+          "type": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": { "type": "string" },
+                "value": { "type": ["string", "number"] },
+                "delta": { "type": ["string", "number"] },
+                "intent": { "type": "string", "enum": ["neutral", "info", "success", "warning", "danger"] }
+              },
+              "required": ["label", "value"]
+            }
+          },
+          "bindable": true,
+          "mapsTo": "stats"
+        },
+        "progress": {
+          "type": {
+            "type": "object",
+            "properties": {
+              "value": { "type": "number" },
+              "max": { "type": "number" },
+              "label": { "type": "string" }
+            },
+            "required": ["value", "max"]
+          },
+          "bindable": true,
+          "mapsTo": "progress"
+        }
+      }
     }
   },
 
