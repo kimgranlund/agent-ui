@@ -2,6 +2,8 @@
   "components": {
     "QuestionCard": {
       "properties": {
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
+        "meta": { "type": { "type": "string" }, "bindable": true, "mapsTo": "meta" },
         "question": { "type": { "type": "string" }, "bindable": true, "mapsTo": "question" },
         "explanation": { "type": { "type": "string" }, "bindable": true, "mapsTo": "explanation" },
         "name": { "type": { "type": "string" }, "bindable": true, "mapsTo": "name" },
@@ -18,6 +20,7 @@
           "mapsTo": "options"
         },
         "value": { "type": { "type": "string" }, "bindable": true, "mapsTo": "value" },
+        "answer": { "type": { "type": "string" }, "bindable": true, "mapsTo": "answer" },
         "revealed": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "revealed" },
         "progress": {
           "type": {
@@ -28,6 +31,7 @@
           "mapsTo": "progress"
         }
       },
+      "children": "ChildList",
       "value": { "prop": "value", "event": "change", "readProp": "a2uiQuestionValue" }
     }
   },

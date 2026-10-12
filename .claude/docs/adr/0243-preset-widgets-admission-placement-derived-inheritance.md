@@ -224,3 +224,38 @@ keeps the options live, true disables the options and opens the explanation.
 - **Leave derived catalogs untaught and put idioms in each fragment.** Rejected: it duplicates the
   base's mini-skills per persona and drifts; the base-segment match is one rule that every present and
   future fragment inherits.
+
+## Amendment 1: QuestionCard matches the approved mockup (2026-10-12, T-0082)
+
+> Status: recorded by T-0082 from Kim's review of the widget styling mockup, the open item in
+> Consequences ("the sheets bind the contract ... not the final look"). Append-only; the Decision and the
+> Persona composites paragraph above are unchanged, and this section extends the QuestionCard contract.
+
+The built card (T-0074) drew plain radios under a progress bar and a closed disclosure, and its reveal only
+disabled the options, because the wire carried neither the correct answer nor the header text. The
+approved mockup needs both.
+
+1. **Three wire props and a children slot.** `answer` (string, the correct option's `value`), `label`
+   (string, the header pill text) and `meta` (string, the right-aligned header text such as topic and
+   difficulty) join the row, all bindable. The row gains `children: "ChildList"`, the CardTable slot: the
+   producer's action Buttons (a Check answer Button) are appended inside the card after the explanation,
+   at their content width. The value and change contract (`a2uiQuestionValue`) is unchanged.
+2. **Composition.** The factory mints `ui-badge`, `ui-radio-group`, `ui-radio` and `ui-text` inside
+   `ui-card`; it no longer mints `ui-progress` or `ui-disclosure`. `progress` `{value, max}` fills the pill
+   as `Question n of m` when `label` is absent, and the explanation is a plain panel under the options,
+   shown in place only while `revealed` is true and the text is not empty. No element carries a
+   border-left (Kim's ruling on the mockup's explanation panel).
+3. **Option rows.** Each option stays a `ui-radio`, so keyboard, roving focus and checked state still come
+   from the group. It is drawn as a bordered row at least 44px tall with a circular letter badge A, B, C,
+   D. States: idle; selected (a dot glyph, primary tint); and, once `revealed` with `answer` set, correct
+   (a check glyph and the label "Correct", success tint) and wrong for a pick that is not the answer (a
+   cross glyph and "Your answer", danger tint), with the other rows idle. No state rests on color alone.
+   `revealed` disables the group and each radio (a disabled group alone still let a click check a radio).
+   Without `answer`, `revealed` keeps the pick selected and marks nothing.
+4. **Seeds and teaching.** Both quizmaster seeds and the `quiz-round` skill carry `answer`, `meta`,
+   `progress`, `revealed` bound to a path, and the in-card Check answer Button whose action context
+   carries the answer path, held disabled by a `required` check on that path until a pick. The
+   Quizmaster preset's `seedVersion` moves to 4 so a saved store picks up the new teaching.
+5. **Budget.** The props live only in the quizmaster fragment, so the default turn does not move: K6
+   (default `agent-ui` composition plus the tool) measures 45,377 chars, 1,053 under the 46,430 bound.
+   The `agent-ui--quizmaster` default composition grows from 45,151 to 45,224 chars (+73).

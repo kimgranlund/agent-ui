@@ -415,75 +415,92 @@ const QUIZ_OPTIONS = [
   { value: 'mars', label: 'Mars' },
 ]
 
-/** The QuestionCard both quizmaster seeds share: round 3 of 10, its answer bound to `/answer`, not yet revealed. */
+/** The QuestionCard both quizmaster seeds share: round 3 of 10, its pick bound to `/answer`, its reveal to
+ *  `/revealed`, the correct option named by `answer` so the reveal can mark the right and wrong rows. */
 const QUIZ_CARD = {
   id: 'card',
   component: 'QuestionCard',
+  progress: { value: 3, max: 10 },
+  meta: 'Science \u00b7 easy',
   question: 'Which planet is closest to the Sun?',
   options: QUIZ_OPTIONS,
   name: 'round3',
   value: { path: '/answer' },
-  revealed: false,
+  answer: 'mercury',
+  revealed: { path: '/revealed' },
   explanation: 'Mercury orbits closest to the Sun, at about 58 million km.',
-  progress: { value: 3, max: 10 },
+  children: ['checkBtn'],
 }
 
-/** The quizmaster persona over agent-ui: one QuestionCard round and a submit Button. */
+/** The round's data: nothing picked, not yet revealed. */
+const QUIZ_DATA = { answer: '', revealed: false }
+
+/** The quizmaster persona over agent-ui: one QuestionCard round holding its Check answer Button. */
 export const personaQuizmasterQuestionSeed: PersonaExampleSeed = {
   name: 'persona-quizmaster-question',
   description:
-    'The quizmaster persona over the agent-ui base: a QuestionCard at round 3 of 10 asking which planet is ' +
-    'closest to the Sun, four planet choices whose picked value is bound to /answer, the explanation held ' +
-    'closed until revealed; below it a Lock in Button submitting the answer.',
+    'The quizmaster persona over the agent-ui base: a QuestionCard headed Question 3 of 10 with Science \u00b7 easy ' +
+    'beside it, asking which planet is closest to the Sun, four lettered planet choices whose pick is bound to ' +
+    '/answer, mercury named as the answer and the reveal bound to /revealed; inside the card a Check answer ' +
+    'Button, disabled by a required check until a choice is picked, sends the pick.',
   promptText: 'Quiz me on the solar system, one question at a time.',
   surfaceId: QUIZ_SID,
   protocolVersion: 'v1.0',
   catalogId: 'agent-ui--quizmaster',
   messages: [
     { version: 'v1.0', createSurface: { surfaceId: QUIZ_SID, catalogId: 'agent-ui--quizmaster' } },
-    { version: 'v1.0', updateDataModel: { surfaceId: QUIZ_SID, path: '/answer', value: '' } },
+    { version: 'v1.0', updateDataModel: { surfaceId: QUIZ_SID, value: QUIZ_DATA } },
     {
       version: 'v1.0',
       updateComponents: {
         surfaceId: QUIZ_SID,
         components: [
-          { id: 'root', component: 'Column', gap: 'md', children: ['card', 'submitBtn'] },
+          { id: 'root', component: 'Column', gap: 'md', children: ['card'] },
           QUIZ_CARD,
-          { id: 'submitBtn', component: 'Button', variant: 'solid', label: 'Lock in', action: { action: 'submitAnswer' } },
+          {
+            id: 'checkBtn',
+            component: 'Button',
+            variant: 'solid',
+            label: 'Check answer',
+            action: { action: 'checkAnswer', context: { answer: { path: '/answer' } } },
+            checks: [{ call: 'required', args: { value: { path: '/answer' } }, message: 'Pick an answer first' }],
+          },
         ],
       },
     },
   ],
 }
 
-/** The quizmaster persona over a2ui-basic: the same round, the submit as a Basic event Button. */
+/** The quizmaster persona over a2ui-basic: the same round, the Check answer Button as a Basic event Button. */
 export const personaBasicQuizmasterQuestionSeed: PersonaExampleSeed = {
   name: 'persona-basic-quizmaster-question',
   description:
-    'The quizmaster persona over the a2ui-basic base: the same QuestionCard round bound to /answer inside a ' +
-    'Basic Column, then a Basic Button whose child Text label reads Lock in and whose submit_answer event ' +
-    'sends the round.',
+    'The quizmaster persona over the a2ui-basic base: the same QuestionCard round inside a Basic Column, its pick ' +
+    'bound to /answer and its reveal to /revealed; inside the card a Basic Button whose child Text label reads ' +
+    'Check answer, held disabled by a required check until a choice is picked, sends the pick as its ' +
+    'check_answer event.',
   promptText: 'Quiz me on the solar system, one question at a time.',
   surfaceId: QUIZ_SID,
   protocolVersion: 'v1.0',
   catalogId: 'a2ui-basic--quizmaster',
   messages: [
     { version: 'v1.0', createSurface: { surfaceId: QUIZ_SID, catalogId: 'a2ui-basic--quizmaster' } },
-    { version: 'v1.0', updateDataModel: { surfaceId: QUIZ_SID, path: '/answer', value: '' } },
+    { version: 'v1.0', updateDataModel: { surfaceId: QUIZ_SID, value: QUIZ_DATA } },
     {
       version: 'v1.0',
       updateComponents: {
         surfaceId: QUIZ_SID,
         components: [
-          { id: 'root', component: 'Column', justify: 'start', align: 'stretch', children: ['card', 'submitBtn'] },
+          { id: 'root', component: 'Column', justify: 'start', align: 'stretch', children: ['card'] },
           QUIZ_CARD,
-          { id: 'submitLabel', component: 'Text', text: 'Lock in' },
+          { id: 'checkLabel', component: 'Text', text: 'Check answer' },
           {
-            id: 'submitBtn',
+            id: 'checkBtn',
             component: 'Button',
             variant: 'primary',
-            child: 'submitLabel',
-            action: { event: { name: 'submit_answer', context: {} } },
+            child: 'checkLabel',
+            action: { event: { name: 'check_answer', context: { answer: { path: '/answer' } } } },
+            checks: [{ condition: { call: 'required', args: { value: { path: '/answer' } } }, message: 'Pick an answer first' }],
           },
         ],
       },
