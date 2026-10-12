@@ -1,0 +1,35 @@
+{
+  "components": {
+    "QuestionCard": {
+      "properties": {
+        "question": { "type": { "type": "string" }, "bindable": true, "mapsTo": "question" },
+        "explanation": { "type": { "type": "string" }, "bindable": true, "mapsTo": "explanation" },
+        "name": { "type": { "type": "string" }, "bindable": true, "mapsTo": "name" },
+        "options": {
+          "type": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": { "value": { "type": "string" }, "label": { "type": "string" } },
+              "required": ["value", "label"]
+            }
+          },
+          "bindable": true,
+          "mapsTo": "options"
+        },
+        "value": { "type": { "type": "string" }, "bindable": true, "mapsTo": "value" },
+        "revealed": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "revealed" },
+        "progress": {
+          "type": {
+            "type": "object",
+            "properties": { "value": { "type": "number" }, "max": { "type": "number" } }
+          },
+          "bindable": true,
+          "mapsTo": "progress"
+        }
+      },
+      "value": { "prop": "value", "event": "change", "readProp": "a2uiQuestionValue" }
+    }
+  },
+  "functions": {}
+}

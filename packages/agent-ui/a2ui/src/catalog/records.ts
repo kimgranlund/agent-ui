@@ -74,6 +74,7 @@ const PERSONAS: readonly (readonly [string, readonly (keyof typeof BASES)[], rea
   ['fixture-demo', ['agent-ui', 'a2ui-basic'], []],
   ['concierge', ['agent-ui', 'a2ui-basic'], ['ui-form-provider']],
   ['croupier', ['agent-ui', 'a2ui-basic'], []],
+  ['quizmaster', ['agent-ui', 'a2ui-basic'], []],
 ]
 
 /** A derived record: the base's functions (a shipped fragment declares none), the union of both gate lists. */

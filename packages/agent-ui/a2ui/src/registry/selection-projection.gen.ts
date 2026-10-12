@@ -119,5 +119,8 @@ export const SELECTION_PROJECTION: SelectionProjection = {
     "fixture-demo": {
       "FixtureBanner": {"intents":["the demo persona banner line","a test-fixture status line"],"notFor":[{"type":"Text","why":"ordinary copy"},{"type":"Card","why":"a surface around real content"}]},
     },
+    "quizmaster": {
+      "QuestionCard": {"intents":["one quiz question with its choices"],"notFor":[{"type":"Card","why":"a content surface"},{"type":"Text","why":"a question written as plain prose"}]},
+    },
   },
 }

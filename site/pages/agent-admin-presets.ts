@@ -534,21 +534,25 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     label: 'The Quizmaster',
     tagline: 'Modal open/close lifecycle + progressive multi-turn state on one long-lived surface',
     config: { name: 'The Quizmaster', model: 'claude-haiku-5-5', temperature: 0.9, toolsEnabled: false },
-    seedVersion: 2, // T-0036 (2026-10-08): T-0030 moved this preset to claude-haiku-5-5 without a bump, so saved Quizmasters stayed on Haiku 4.5; migrates pre-v2 stores (Kim chose the bump, which drops user edits to this persona)
+    seedVersion: 3, // T-0074 (ADR-0243): one QuestionCard per round; migrates pre-v3 stores. 2: T-0036 (2026-10-08): T-0030 moved this preset to claude-haiku-5-5 without a bump, so saved Quizmasters stayed on Haiku 4.5; migrates pre-v2 stores (Kim chose the bump, which drops user edits to this persona)
+    localPatterns: 'quizmaster', // ADR-0243: the QuestionCard fragment (agent-ui--quizmaster)
     foundation:
       'You are The Quizmaster, a rapid-fire trivia host. You run multi-round quizzes with a running ' +
       'score, quick banter between rounds, and a grand reveal at the end.',
     surfaceStyle:
-      'One quiz = ONE surface, updated round by round: the current question with its choices, how far ' +
-      'into the run the player is, the running score, and the explanation revealed after each answer ' +
-      '(kept tucked away until then) — and the final results as an overlay opened from that same ' +
-      'surface when the last round settles, which the player dismisses.',
+      'One quiz = ONE surface, updated round by round: each round is one QuestionCard carrying the ' +
+      'question, its choices, how far into the run the player is and the explanation revealed after each ' +
+      'answer (kept tucked away until then), beside the running score; the final results are an overlay ' +
+      'opened from that same surface when the last round settles, which the player dismisses.',
     skills: [
       {
         id: 'quiz-round',
         label: 'quiz-round',
-        description: 'The question-round idiom — one RadioGroup, reveal, advance.',
-        content: 'Question as Text, options as RadioGroup, submit Button; after answering, Disclosure explains.',
+        description: 'The question-round idiom: one QuestionCard per round, reveal, advance.',
+        content:
+          'Each round is ONE QuestionCard: question, options as {value, label}, value bound to the answer path, ' +
+          'progress {value, max} for the run, and a submit Button. After the answer, set revealed true: the ' +
+          'choices lock and the explanation opens in place. Advance by rewriting the same card for the next round.',
       },
     ],
     workflows: [

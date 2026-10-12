@@ -267,7 +267,7 @@ describe('the Quizmaster seedVersion bump (T-0036): saved stores move to Haiku 5
     localStorage.setItem(`${PREFIX}.quizmaster.seedVersion`, String(persona.seedVersion))
     localStorage.setItem(`${PREFIX}.quizmaster.temperature`, JSON.stringify(0.1))
     localStorage.setItem(`${PREFIX}.quizmaster.model`, JSON.stringify('claude-sonnet-4-5'))
-    expect(persona.seedVersion).toBe(2)
+    expect(persona.seedVersion).toBe(3)
     const store = personaStore(persona)
     expect(store.get('temperature')).toBe(0.1)
     expect(store.get('model')).toBe('claude-sonnet-4-5')

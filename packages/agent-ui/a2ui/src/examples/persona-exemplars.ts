@@ -8,7 +8,7 @@
 // An `a2ui-basic--*` seed writes its base types in the Basic dialect (`basic-exemplars.ts` module header): a
 // Button carries its label as a `child` Text and its action as `{ event: { name, context } }`, and Row/Column
 // take `justify`/`align`, never `gap`. The fragment types (FixtureBanner, BookingForm, BookingConfirmation,
-// PlayingCard, CardTable) read the same on either base.
+// PlayingCard, CardTable, QuestionCard) read the same on either base.
 //
 // These are page and gate fixtures, never corpus candidates: no corpus shelf, shard or import-seeds table reads
 // this module.
@@ -405,6 +405,93 @@ export const personaBasicCroupierCardTableSeed: PersonaExampleSeed = {
 }
 
 /** Every persona seed, in shelf order. */
+const QUIZ_SID = 'quiz-round'
+
+/** One quiz round's choices, the QuestionCard `options` shape. */
+const QUIZ_OPTIONS = [
+  { value: 'mercury', label: 'Mercury' },
+  { value: 'venus', label: 'Venus' },
+  { value: 'earth', label: 'Earth' },
+  { value: 'mars', label: 'Mars' },
+]
+
+/** The QuestionCard both quizmaster seeds share: round 3 of 10, its answer bound to `/answer`, not yet revealed. */
+const QUIZ_CARD = {
+  id: 'card',
+  component: 'QuestionCard',
+  question: 'Which planet is closest to the Sun?',
+  options: QUIZ_OPTIONS,
+  name: 'round3',
+  value: { path: '/answer' },
+  revealed: false,
+  explanation: 'Mercury orbits closest to the Sun, at about 58 million km.',
+  progress: { value: 3, max: 10 },
+}
+
+/** The quizmaster persona over agent-ui: one QuestionCard round and a submit Button. */
+export const personaQuizmasterQuestionSeed: PersonaExampleSeed = {
+  name: 'persona-quizmaster-question',
+  description:
+    'The quizmaster persona over the agent-ui base: a QuestionCard at round 3 of 10 asking which planet is ' +
+    'closest to the Sun, four planet choices whose picked value is bound to /answer, the explanation held ' +
+    'closed until revealed; below it a Lock in Button submitting the answer.',
+  promptText: 'Quiz me on the solar system, one question at a time.',
+  surfaceId: QUIZ_SID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui--quizmaster',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: QUIZ_SID, catalogId: 'agent-ui--quizmaster' } },
+    { version: 'v1.0', updateDataModel: { surfaceId: QUIZ_SID, path: '/answer', value: '' } },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: QUIZ_SID,
+        components: [
+          { id: 'root', component: 'Column', gap: 'md', children: ['card', 'submitBtn'] },
+          QUIZ_CARD,
+          { id: 'submitBtn', component: 'Button', variant: 'solid', label: 'Lock in', action: { action: 'submitAnswer' } },
+        ],
+      },
+    },
+  ],
+}
+
+/** The quizmaster persona over a2ui-basic: the same round, the submit as a Basic event Button. */
+export const personaBasicQuizmasterQuestionSeed: PersonaExampleSeed = {
+  name: 'persona-basic-quizmaster-question',
+  description:
+    'The quizmaster persona over the a2ui-basic base: the same QuestionCard round bound to /answer inside a ' +
+    'Basic Column, then a Basic Button whose child Text label reads Lock in and whose submit_answer event ' +
+    'sends the round.',
+  promptText: 'Quiz me on the solar system, one question at a time.',
+  surfaceId: QUIZ_SID,
+  protocolVersion: 'v1.0',
+  catalogId: 'a2ui-basic--quizmaster',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: QUIZ_SID, catalogId: 'a2ui-basic--quizmaster' } },
+    { version: 'v1.0', updateDataModel: { surfaceId: QUIZ_SID, path: '/answer', value: '' } },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: QUIZ_SID,
+        components: [
+          { id: 'root', component: 'Column', justify: 'start', align: 'stretch', children: ['card', 'submitBtn'] },
+          QUIZ_CARD,
+          { id: 'submitLabel', component: 'Text', text: 'Lock in' },
+          {
+            id: 'submitBtn',
+            component: 'Button',
+            variant: 'primary',
+            child: 'submitLabel',
+            action: { event: { name: 'submit_answer', context: {} } },
+          },
+        ],
+      },
+    },
+  ],
+}
+
+/** Every persona seed, in shelf order. */
 export const personaExemplarSeeds: readonly PersonaExampleSeed[] = [
   personaFixtureDemoSeed,
   personaBasicFixtureDemoSeed,
@@ -415,4 +502,6 @@ export const personaExemplarSeeds: readonly PersonaExampleSeed[] = [
   personaBasicCroupierHandSeed,
   personaCroupierCardTableSeed,
   personaBasicCroupierCardTableSeed,
+  personaQuizmasterQuestionSeed,
+  personaBasicQuizmasterQuestionSeed,
 ]

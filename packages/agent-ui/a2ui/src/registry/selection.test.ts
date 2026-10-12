@@ -38,7 +38,7 @@ function divergentIds(projection: SelectionProjection, ids: readonly string[]): 
 describe('selection projection: the committed module is a real, complete copy of the sidecars', () => {
   it('anti-vacuous: the projection carries both bases and every shipped persona, with real entries', () => {
     expect(Object.keys(SELECTION_PROJECTION.base).sort()).toEqual(['a2ui-basic', 'agent-ui'])
-    expect(Object.keys(SELECTION_PROJECTION.persona).sort()).toEqual(['concierge', 'croupier', 'fixture-demo'])
+    expect(Object.keys(SELECTION_PROJECTION.persona).sort()).toEqual(['concierge', 'croupier', 'fixture-demo', 'quizmaster'])
     expect(Object.keys(SELECTION_PROJECTION.base['agent-ui']!).length).toBeGreaterThanOrEqual(80)
     expect(Object.keys(SELECTION_PROJECTION.base['a2ui-basic']!).length).toBeGreaterThanOrEqual(14)
     expect(SELECTION_PROJECTION.base['agent-ui']!.Button!.intents.length).toBeGreaterThan(0)

@@ -30,6 +30,7 @@ import { EXCLUSION_ALLOWLIST } from '../catalog/default/exclusions.ts'
 import { conciergeFactories } from '../catalog/personas/concierge/factories.ts'
 import { croupierFactories } from '../catalog/personas/croupier/factories.ts'
 import { fixtureDemoFactories } from '../catalog/personas/fixture-demo/factories.ts'
+import { quizmasterFactories } from '../catalog/personas/quizmaster/factories.ts'
 import { SHIPPED_PERSONA_CATALOGS } from '../catalog/personas/index.ts'
 import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from '../catalog/personas/manifests.ts'
 import { BUILTIN_CONTROL_RECORDS } from '../catalog/controls.ts'
@@ -107,6 +108,7 @@ describe('tag parity: the pure rule equals the factory tag', () => {
     ['concierge', conciergeFactories],
     ['croupier', croupierFactories],
     ['fixture-demo', fixtureDemoFactories],
+    ['quizmaster', quizmasterFactories],
   ] as const)('every %s persona type the registry tags renders exactly that tag', (persona, table) => {
     const rows = (REGISTRY.personas[persona] ?? []).filter((r) => r.kind === 'type')
     expect(rows.length).toBeGreaterThan(0)
@@ -118,6 +120,12 @@ describe('tag parity: the pure rule equals the factory tag', () => {
     const tagged = Object.values(REGISTRY.personas).flat().filter((r) => r.kind === 'type' && r.tag !== undefined).map((r) => r.name)
     expect(tagged).toEqual(['PlayingCard'])
     expect(Object.keys(conciergeFactories).sort()).toEqual(['BookingConfirmation', 'BookingForm'])
+  })
+
+  it('the QuestionCard key: the quizmaster table holds exactly QuestionCard, an untagged ui-card composite', () => {
+    expect(Object.keys(quizmasterFactories)).toEqual(['QuestionCard'])
+    expect(quizmasterFactories.QuestionCard!.tag).toBe('ui-card')
+    expect((REGISTRY.personas['quizmaster'] ?? []).find((r) => r.name === 'QuestionCard')!.tag).toBeUndefined()
   })
 
   it('NEGATIVE: a planted type with a wrong tag, a wrong null, and a variant that lacks the rule tag are all reported', () => {
@@ -164,7 +172,7 @@ describe('fleet join: the registry joins descriptors, the components registry an
   })
 
   it('every `ui-*` tag an a2ui-basic or persona factory mints is a fleet control', () => {
-    for (const table of [a2uiBasicFactories, conciergeFactories, croupierFactories, fixtureDemoFactories]) {
+    for (const table of [a2uiBasicFactories, conciergeFactories, croupierFactories, fixtureDemoFactories, quizmasterFactories]) {
       expect(unknownTags(table, controlTags)).toEqual([])
     }
   })
@@ -297,6 +305,15 @@ describe('personas: the loader list equals the shipped manifests, and the views 
     expect(view.personaOnlyTypes).toEqual(['CardTable', 'PlayingCard'])
     expect(view.types.find((r) => r.name === 'PlayingCard')!.intents).toEqual(selectionGuidanceForId('agent-ui--croupier').PlayingCard!.intents)
     expect(view.types.find((r) => r.name === 'Button')!.intents).toEqual(selectionGuidanceForId('agent-ui').Button!.intents)
+  })
+
+  it('the quizmaster view holds every default type plus QuestionCard, with base and persona guidance', () => {
+    const view = registryViewFor(REGISTRY, 'agent-ui--quizmaster')
+    const base = registryViewFor(REGISTRY, 'agent-ui')
+    expect(view.types.length).toBe(base.types.length + 1)
+    expect(view.personaOnlyTypes).toEqual(['QuestionCard'])
+    expect(view.types.find((r) => r.name === 'QuestionCard')!.intents).toEqual(selectionGuidanceForId('agent-ui--quizmaster').QuestionCard!.intents)
+    expect(base.types.map((r) => r.name)).not.toContain('QuestionCard')
   })
 
   it('an unknown persona is the base view, and persona-only types never leak into the base', () => {
