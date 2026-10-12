@@ -3967,12 +3967,17 @@ plus one control-height action row.
 - **`title`**, **`subtitle`** (string): the heading and one supporting line. The title clamps at two lines.
 - **`image`** (string, src), **`imageAlt`** (string, attribute `image-alt`): empty alt is decorative.
 - **`icon`** (string): an icon glyph for the image-free header. `image` wins when both are set.
-- **`price`**, **`priceNote`** (string, attribute `price-note`): the price is rendered verbatim.
-- **`rating`** (number): 0 renders nothing; otherwise "4.8" with a star and a hidden "out of 5".
+- **`price`**, **`priceOld`** (string, attribute `price-old`), **`priceNote`** (string, attribute
+  `price-note`): the price is rendered verbatim; the old price follows it, struck through.
+- **`rating`** (number): 0 renders nothing; otherwise five stars (to the nearest half), "4.8" and a hidden
+  "out of 5". **`ratingCount`** (number, attribute `rating-count`): a count such as "(318)" after it.
 - **`badge`**, **`badgeIntent`** (string; enum `neutral|info|success|warning|danger`, attribute
   `badge-intent`): forwarded to an internal `ui-badge`.
 - **`actionLabel`** (string, default `Select`, attribute `action-label`).
 - **`action`** (the Button action shape, or `null`): non-null renders the action button.
+- **`selected`** (boolean, reflected): a primary outline and a ghost action; write the state into
+  `actionLabel` (for example "Selected").
+- **`disabled`** (boolean, reflected): the media desaturates and the action button is disabled.
 - **`inline`** (boolean, reflected): the ADR-0223 sizing opt-out.
 
 ## Events
@@ -3983,7 +3988,8 @@ plus one control-height action row.
 
 - `role="group"` via `ElementInternals`, `internals.ariaLabel` mirroring `title`.
 - The action is a real button named "{actionLabel} {title}".
-- The rating reads as text, "4.8 out of 5", never stars alone.
+- The rating reads as text, "4.8 out of 5", never stars alone; the old price reads "was $120".
+- Selected is never the outline alone: the action's label says it. Disabled is the native button state.
 
 ---
 

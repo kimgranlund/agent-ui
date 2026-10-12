@@ -356,7 +356,7 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   // `progress`) ride SAMPLE_TREES rootRef below. The ProductCard image is the shared inline sample.
   ProductCard: { title: 'Harbour View Suite', subtitle: 'King bed, sleeps 2, free cancellation', image: IMAGE_SAMPLE_SRC, imageAlt: 'Suite with a harbour view', price: '$312', priceNote: 'per night', rating: '4.8', badge: 'Best rate', badgeIntent: 'success', actionLabel: 'Book' },
   BoardGrid: { rows: '6', cols: '6', label: 'Enemy waters' },
-  GameHud: { title: 'Dungeon level 3', status: 'Your turn', statusIntent: 'info' },
+  GameHud: { title: 'Dungeon level 3', status: 'Your turn', statusIntent: 'success' },
 }
 
 /** A sensible default-slot label for a component-mode control — its title-cased tag stem (`ui-button` → `Button`). */
@@ -881,15 +881,19 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
   // generic "Sample content" child fallback, because the card's `child` slot is an OPTIONAL extra block and a
   // stray Text after the body would misrepresent the real job.
   ProductCard: () => ({ rootRef: { action: { action: 'book_room', context: { room: 'harbour' } } }, extras: [] }),
-  // BoardGrid (ADR-0243): a battleship-style target board with two resolved shots (frontier-board-grid-guesses'
-  // cousin); read-only on the wire, so no action.
+  // BoardGrid (ADR-0243 and its Amendment 2): the approved mockup's battle board, the same sea as
+  // frontier-board-grid-guesses' second board: hit (a filled dot, danger), miss (a ring, neutral) and a sunk
+  // ship (boxed squares, success). Read-only on the wire, so no action.
   BoardGrid: () => ({
     rootRef: {
       cells: [
-        { row: 1, col: 1, mark: 'X', intent: 'danger' },
-        { row: 1, col: 2, mark: 'O', intent: 'neutral' },
-        { row: 3, col: 4, mark: 'X', intent: 'danger' },
-        { row: 4, col: 0, mark: 'O', intent: 'neutral' },
+        { row: 0, col: 1, mark: '\u25A3', intent: 'success' },
+        { row: 0, col: 2, mark: '\u25A3', intent: 'success' },
+        { row: 0, col: 3, mark: '\u25A3', intent: 'success' },
+        { row: 1, col: 1, mark: '\u25CB', intent: 'neutral' },
+        { row: 2, col: 4, mark: '\u25CF', intent: 'danger' },
+        { row: 3, col: 2, mark: '\u25CB', intent: 'neutral' },
+        { row: 4, col: 4, mark: '\u25CB', intent: 'neutral' },
       ],
     },
     extras: [],

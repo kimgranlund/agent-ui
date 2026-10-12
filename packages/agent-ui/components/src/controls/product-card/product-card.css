@@ -3,12 +3,14 @@
  *
  *   [1] TOKEN BLOCK: `:where(ui-product-card)` (specificity 0) declares the `--ui-product-card-*` chain
  *       from the colour roles, the type matrix, the space ladder and the control ramp (the action row's
- *       height, the pattern tier's one control-height row, ADR-0224 cl.1).
+ *       height at the ramp's `lg` step, the pattern tier's one control-height row, ADR-0224 cl.1; the
+ *       approved mockup, ADR-0243 Amendment 2).
  *   [2] STYLES BLOCK: `@scope (ui-product-card)` consumes ONLY `--ui-product-card-*` (plus the sanctioned
  *       fleet constants: focus ring, motion, `--md-sys-control-line-height`). The host is a block-level
  *       flex column (fill by default, ADR-0223); `[inline]` flips to `inline-flex` with no hug floor (the
  *       card's own content gives it a shrink-to-fit width). Optional parts are present or absent in the
- *       DOM (product-card.ts), so an absent part adds no box and no phantom gap.
+ *       DOM (product-card.ts), so an absent part adds no box and no phantom gap. The reflected `[selected]`
+ *       and `[disabled]` states repoint the outline, the action and the media (ADR-0243 Amendment 2).
  *
  * Standalone stylesheet, linked per control or via shared-styles.css (ADR-0233, no barrel); never injected
  * from product-card.ts.
@@ -36,7 +38,8 @@
   --ui-product-card-title-ink: var(--md-sys-color-neutral-on-surface);
   --ui-product-card-muted-ink: var(--md-sys-color-neutral-on-surface-variant);
   --ui-product-card-price-ink: var(--md-sys-color-neutral-on-surface);
-  --ui-product-card-rating-glyph-ink: var(--md-sys-color-primary);
+  --ui-product-card-rating-star-ink: var(--md-sys-color-warning); /* the approved mockup's star colour */
+  --ui-product-card-rating-star-gap: 2px; /* the mockup's star letter-spacing, a mark-geometry constant */
 
   /* Type: title on the title-medium row at weight 650, clamped at two lines; the price on the
      title-large row, bold, the strongest text in the card. */
@@ -57,14 +60,36 @@
   --ui-product-card-inline-gap: var(--md-sys-space-sm); /* price, note and action within the row */
   --ui-product-card-badge-inset: var(--md-sys-space-sm); /* the badge's offset over the image corner */
 
-  /* The action row: the control height (button.css `sm` ramp), a filled primary pill. */
-  --ui-product-card-action-height: var(--md-sys-height-sm);
-  --ui-product-card-action-font: var(--md-sys-font-sm);
+  /* The action row: the control height at the ramp's large step (button.css `lg`, 36px at the default
+     scale; the approved mockup, ADR-0243 Amendment 2), a filled primary pill. */
+  --ui-product-card-action-height: var(--md-sys-height-lg);
+  --ui-product-card-action-font: var(--md-sys-font-lg);
   --ui-product-card-action-bg: var(--md-sys-color-primary);
   --ui-product-card-action-bg-hover: var(--md-sys-color-primary-high);
   --ui-product-card-action-bg-active: var(--md-sys-color-primary-dim);
   --ui-product-card-action-ink: var(--md-sys-color-primary-on-primary);
+  --ui-product-card-action-border: transparent;
+
+  /* Selected: a primary outline around the card, the action a ghost (transparent, neutral ink, an
+     outline-variant border, a low wash on hover). */
+  --ui-product-card-selected-outline: var(--md-sys-color-primary);
+  --ui-product-card-selected-outline-width: 2px;
+
+  /* Disabled: the media desaturated and dimmed, the action a faded pill that keeps its own colours (the
+     mockup's sold-out card; the fleet's neutral disabled fill would vanish into this card's own plane). */
+  --ui-product-card-disabled-media-filter: grayscale(1);
+  --ui-product-card-disabled-media-opacity: 0.6;
+  --ui-product-card-disabled-action-opacity: 0.45;
 }
+
+:where(ui-product-card[selected]) {
+  --ui-product-card-action-bg: transparent;
+  --ui-product-card-action-bg-hover: var(--md-sys-color-neutral-container-low);
+  --ui-product-card-action-bg-active: var(--md-sys-color-neutral-container);
+  --ui-product-card-action-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-product-card-action-border: var(--md-sys-color-neutral-outline-variant);
+}
+
 
 /* ════════════════ [2] STYLES BLOCK: @scope (ui-product-card) consumes ONLY --ui-product-card-* ════════════════ */
 
@@ -86,6 +111,18 @@
   /* [inline]: the ONE sizing opt-out (ADR-0223 R2). */
   :scope[inline] {
     display: inline-flex;
+  }
+
+  /* [selected]: the primary outline outside the border (no layout shift; the host's own overflow never clips
+     its outline). */
+  :scope[selected] {
+    outline: var(--ui-product-card-selected-outline-width) solid var(--ui-product-card-selected-outline);
+  }
+
+  /* [disabled]: the media (image or icon header) desaturates. */
+  :scope[disabled] > [data-part='media'] {
+    filter: var(--ui-product-card-disabled-media-filter);
+    opacity: var(--ui-product-card-disabled-media-opacity);
   }
 
   /* Media holding an image reserves its 16:10 box, so a late image never shifts layout. */
@@ -139,6 +176,7 @@
 
   :scope [data-part='subtitle'],
   :scope [data-part='rating'],
+  :scope [data-part='price-old'],
   :scope [data-part='price-note'] {
     font-size: var(--ui-product-card-body-size);
     line-height: var(--ui-product-card-body-line-height);
@@ -151,11 +189,26 @@
     gap: var(--ui-product-card-row-gap);
     font-variant-numeric: tabular-nums;
   }
-  :scope [data-part='rating-glyph'] {
-    color: var(--ui-product-card-rating-glyph-ink);
+  :scope [data-part='rating-stars'] {
+    display: inline-flex;
+    gap: var(--ui-product-card-rating-star-gap);
+    color: var(--ui-product-card-rating-star-ink);
+  }
+  /* A half star: the empty glyph under a full glyph clipped to its inline-start half. */
+  :scope [data-part='rating-star'][data-fill='half'] {
+    position: relative;
+  }
+  :scope [data-part='rating-star'][data-fill='half']::before {
+    content: '\2605';
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    inline-size: 50%;
+    overflow: hidden;
   }
   /* Visually hidden but announced (the service-card status-text clip technique). */
-  :scope [data-part='rating-text'] {
+  :scope [data-part='rating-text'],
+  :scope [data-part='price-old-text'] {
     position: absolute;
     inline-size: 1px;
     block-size: 1px;
@@ -193,6 +246,11 @@
     color: var(--ui-product-card-price-ink);
   }
 
+  :scope [data-part='price-old'] {
+    font-variant-numeric: tabular-nums;
+    text-decoration: line-through;
+  }
+
   /* The action: a real native button (the service-card.ts precedent), a trailing pill. */
   :scope [data-part='action'] {
     margin-inline-start: auto;
@@ -212,7 +270,7 @@
 
     background: var(--ui-product-card-action-bg);
     color: var(--ui-product-card-action-ink);
-    border: none;
+    border: 1px solid var(--ui-product-card-action-border);
     border-radius: calc(var(--ui-product-card-action-height) / 2);
     cursor: pointer;
     -webkit-user-select: none;
@@ -223,6 +281,12 @@
   }
   :scope [data-part='action']:active {
     background: var(--ui-product-card-action-bg-active);
+  }
+  /* Disabled holds at idle: no hover or press paint, the pill faded. */
+  :scope [data-part='action']:disabled {
+    background: var(--ui-product-card-action-bg);
+    opacity: var(--ui-product-card-disabled-action-opacity);
+    cursor: not-allowed;
   }
   :scope [data-part='action']:focus-visible {
     /* The shared fleet ring (ADR-0009), the sanctioned direct read every control shares. */
@@ -241,8 +305,15 @@
     :scope {
       border-color: CanvasText;
     }
+    :scope[selected] {
+      outline-color: Highlight;
+    }
     :scope [data-part='action'] {
       border: 1px solid ButtonText;
+    }
+    :scope [data-part='action']:disabled {
+      border-color: GrayText;
+      color: GrayText;
     }
   }
 }

@@ -40,6 +40,10 @@ describe('UIProductCardElement: upgrade and typed props', () => {
     expect(el.actionLabel).toBe('Select')
     expect(el.action).toBeNull()
     expect(el.inline).toBe(false)
+    expect(el.priceOld).toBe('')
+    expect(el.ratingCount).toBe(0)
+    expect(el.selected).toBe(false)
+    expect(el.disabled).toBe(false)
   })
 
   it('self-defines as ui-product-card, guarded against double-define', () => {
@@ -66,6 +70,17 @@ describe('UIProductCardElement: upgrade and typed props', () => {
   it('inline reflects as boolean presence (ADR-0223 R2)', async () => {
     const el = await make({ inline: true })
     expect(el.hasAttribute('inline')).toBe(true)
+  })
+
+  it('selected and disabled reflect as boolean presence; price-old and rating-count coerce in (ADR-0243 Amendment 2)', async () => {
+    const el = await make({ selected: true, disabled: true })
+    expect(el.hasAttribute('selected')).toBe(true)
+    expect(el.hasAttribute('disabled')).toBe(true)
+    el.setAttribute('price-old', '$120')
+    el.setAttribute('rating-count', '318')
+    await el.updateComplete
+    expect(el.priceOld).toBe('$120')
+    expect(el.ratingCount).toBe(318)
   })
 })
 
@@ -131,15 +146,75 @@ describe('UIProductCardElement: anatomy and presence', () => {
     expect(order).toEqual(['title', 'subtitle', 'rating', 'badge', 'price-row'])
   })
 
-  it('rating text reads "4.8" plus "out of 5", the star is aria-hidden, and rating 0 renders no rating part', async () => {
+  it('rating text reads "4.8" plus "out of 5", the stars are aria-hidden, and rating 0 renders no rating part', async () => {
     const el = await make({ title: 'Suite', rating: 4.8 })
     const rating = q(el, 'rating')!
     expect(q(rating, 'rating-value')!.textContent).toBe('4.8')
     expect(rating.textContent).toContain('out of 5')
-    expect(q(rating, 'rating-glyph')!.getAttribute('aria-hidden')).toBe('true')
+    expect(q(rating, 'rating-stars')!.getAttribute('aria-hidden')).toBe('true')
     el.rating = 0
     await el.updateComplete
     expect(q(el, 'rating')).toBeNull()
+  })
+
+  it('rating draws five stars filled to the nearest half: full, half or empty (ADR-0243 Amendment 2)', async () => {
+    const fills = (el: Element): string => [...el.querySelectorAll('[data-part="rating-star"]')].map((s) => s.getAttribute('data-fill')![0]).join('')
+    const glyphs = (el: Element): string => q(el, 'rating-stars')!.textContent!
+    const el = await make({ title: 'Suite', rating: 4.8 })
+    expect(fills(el)).toBe('fffff')
+    expect(glyphs(el)).toBe('\u2605\u2605\u2605\u2605\u2605')
+    el.rating = 4.2
+    await el.updateComplete
+    expect(fills(el)).toBe('ffffe')
+    expect(glyphs(el)).toBe('\u2605\u2605\u2605\u2605\u2606')
+    el.rating = 3.5
+    await el.updateComplete
+    expect(fills(el)).toBe('fffhe')
+    el.rating = 0.4
+    await el.updateComplete
+    expect(fills(el)).toBe('heeee')
+    el.rating = 9
+    await el.updateComplete
+    expect(fills(el)).toBe('fffff')
+  })
+
+  it('rating-count renders "(318)" after the number only when above zero', async () => {
+    const el = await make({ title: 'Sweater', rating: 4.2 })
+    expect(q(el, 'rating-count')).toBeNull()
+    el.ratingCount = 1318
+    await el.updateComplete
+    const count = q(el, 'rating-count')!
+    expect(count.textContent).toBe('(1,318)')
+    expect(q(el, 'rating')!.lastElementChild).toBe(count)
+    el.ratingCount = 0
+    await el.updateComplete
+    expect(q(el, 'rating-count')).toBeNull()
+  })
+
+  it('price-old renders a struck <s> after the price, announced with a hidden "was", only when set', async () => {
+    const el = await make({ title: 'Sweater', price: '$89', priceNote: 'today', action: ACTION })
+    expect(q(el, 'price-old')).toBeNull()
+    el.priceOld = '$120'
+    await el.updateComplete
+    const old = q(el, 'price-old')!
+    expect(old.tagName).toBe('S')
+    expect(old.textContent).toBe('was $120')
+    expect(q(old, 'price-old-text')!.textContent).toBe('was ')
+    expect([...q(el, 'price-row')!.children].map((c) => c.getAttribute('data-part'))).toEqual(['price', 'price-old', 'price-note', 'action'])
+    el.priceOld = ''
+    await el.updateComplete
+    expect(q(el, 'price-old')).toBeNull()
+  })
+
+  it('disabled disables the real action button and clears it again; selected leaves the button enabled', async () => {
+    const el = await make({ title: 'Penthouse', price: '$640', action: ACTION, actionLabel: 'Unavailable', disabled: true })
+    const button = q(el, 'action') as HTMLButtonElement
+    expect(button.disabled).toBe(true)
+    el.disabled = false
+    el.selected = true
+    await el.updateComplete
+    expect(button.disabled).toBe(false)
+    expect(button.textContent).toBe('Unavailable')
   })
 
   it('badge label and intent are forwarded to the internal ui-badge', async () => {
@@ -187,6 +262,14 @@ describe('UIProductCardElement: ARIA and events', () => {
     expect(seen).toEqual([])
     ;(q(el, 'action') as HTMLButtonElement).click()
     expect(seen).toEqual([ACTION])
+  })
+
+  it('a disabled card emits no action from its button', async () => {
+    const el = await make({ title: 'Penthouse', price: '$640', action: ACTION, disabled: true })
+    let count = 0
+    el.addEventListener('action', () => count++)
+    ;(q(el, 'action') as HTMLButtonElement).click()
+    expect(count).toBe(0)
   })
 
   it('emits action exactly once per click across a reconnect', async () => {

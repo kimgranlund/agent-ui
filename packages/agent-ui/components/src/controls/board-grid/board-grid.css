@@ -9,18 +9,22 @@
  *       fleet constants: focus-ring, motion, `--md-sys-control-line-height`).
  *
  * Geometry (pattern tier): the host is a block-level grid that fills its container (ADR-0223); its tracks
- * are `--ui-board-grid-cols` columns of the cell side, packed to the start. `[inline]` flips to
- * inline-grid, so the host hugs the board. The cell side is the control-height row floored at the 34px
- * target size: square cells (`aspect-ratio: 1`). board-grid.ts sets `--ui-board-grid-cols` on the host.
+ * are `--ui-board-grid-cols` columns, packed to the start. `[inline]` flips to inline-grid, so the host hugs
+ * the board. Each track is `minmax(34px, 46px)`, the approved mockup's board (ADR-0243 Amendment 2): a cell
+ * is 46px wide where the container has room and gives way down to the 34px target-size floor where it does
+ * not, never below. Cells are square (`aspect-ratio: 1`). board-grid.ts sets `--ui-board-grid-cols` on the
+ * host.
  * Each row part is `display: contents`, so the cells sit straight on the host grid.
  */
 
 /* ════════════════ [1] TOKEN BLOCK: :where(ui-board-grid) declares --ui-board-grid-* ════════════════ */
 
 :where(ui-board-grid) {
-  /* Shape: the column count (board-grid.ts writes the live value) and the square cell side. */
+  /* Shape: the column count (board-grid.ts writes the live value) and the square cell side: the mockup's
+     46px where there is room, the 34px target-size floor where there is not (ADR-0243 Amendment 2). */
   --ui-board-grid-cols: 1;
-  --ui-board-grid-cell-size: max(34px, var(--md-sys-height-md)); /* the control-height row, never under the 34px target floor */
+  --ui-board-grid-cell-size: 46px;
+  --ui-board-grid-cell-min: 34px;
   --ui-board-grid-gap: var(--md-sys-space-xs);
   --ui-board-grid-frame: var(--md-sys-space-xs);
   --ui-board-grid-cell-radius: calc(var(--md-sys-shape-corner-base) * 2 / 3);
@@ -81,8 +85,7 @@
   :scope {
     /* FILL BY DEFAULT (ADR-0223): block-level grid, no intrinsic width; the tracks pack to the start. */
     display: grid;
-    grid-template-columns: repeat(var(--ui-board-grid-cols), var(--ui-board-grid-cell-size));
-    grid-auto-rows: var(--ui-board-grid-cell-size);
+    grid-template-columns: repeat(var(--ui-board-grid-cols), minmax(var(--ui-board-grid-cell-min), var(--ui-board-grid-cell-size)));
     justify-content: start;
     gap: var(--ui-board-grid-gap);
     padding: var(--ui-board-grid-frame);
@@ -103,7 +106,8 @@
     display: grid;
     place-items: center;
     box-sizing: border-box;
-    inline-size: var(--ui-board-grid-cell-size);
+    inline-size: auto; /* the track's width, between the floor and the cell side */
+    min-inline-size: var(--ui-board-grid-cell-min);
     aspect-ratio: 1;
     margin: 0;
     padding: 0;

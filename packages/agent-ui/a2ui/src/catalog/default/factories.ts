@@ -1434,6 +1434,8 @@ export const breadcrumbFactory: WidgetFactory = accessorFactory('ui-breadcrumb')
  * `ProductCard` to `ui-product-card` (ADR-0243, T-0072). Every catalog property is a 1:1 reflecting accessor
  * (verified against `product-card.md` attributes), so `applyProp` is the plain `setProp`. Everything is
  * bindable except `actionLabel` (set once per card) and `action`. No `value` mark: the card is not an input.
+ * ADR-0243 Amendment 2 (T-0083) adds `priceOld`, `ratingCount`, `selected` and `disabled`, all plain accessors;
+ * `disabled` is the host prop the renderer's click guard reads, so a disabled card dispatches nothing.
  *
  * The `action` prop is the one bespoke part. It rides the generic host click wiring (`mapsTo: 'action'`, the
  * `Button` and `Suggestions` precedent): the renderer withholds it from `applyProp` and attaches ONE click

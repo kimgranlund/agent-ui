@@ -25,8 +25,8 @@ const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 
 const PARTS = [
-  'media', 'image', 'icon', 'body', 'title', 'subtitle', 'rating', 'rating-glyph', 'rating-value',
-  'rating-text', 'badge', 'price-row', 'price', 'price-note', 'action',
+  'media', 'image', 'icon', 'body', 'title', 'subtitle', 'rating', 'rating-stars', 'rating-star', 'rating-value',
+  'rating-text', 'rating-count', 'badge', 'price-row', 'price', 'price-old', 'price-old-text', 'price-note', 'action',
 ]
 
 describe('product-card.md descriptor', () => {
@@ -43,7 +43,7 @@ describe('product-card.md descriptor', () => {
   })
 
   it('validateComponentDescriptor reports zero structural failures', () => {
-    expect(parsed.attributes.length).toBe(13)
+    expect(parsed.attributes.length).toBe(17)
     expect(validateComponentDescriptor(parsed)).toEqual([])
   })
 

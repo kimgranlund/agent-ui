@@ -225,6 +225,16 @@ describe('QuestionCard through the real renderer', () => {
     cleanup()
   })
 
+  it('QuestionCard: the producer Check answer Button sits at the button lg step (ADR-0243 Amendment 2)', async () => {
+    const button = { id: 'checkBtn', component: 'Button', variant: 'solid', label: 'Check answer', action: { action: 'checkAnswer' } }
+    const { mount, errors, cleanup } = await render({ ...BOUND, children: ['checkBtn'] }, [button])
+    expect(errors()).toEqual([])
+    const btn = mount.querySelector('ui-card > ui-button') as HTMLElement & { size: string }
+    expect(btn.getAttribute('size')).toBe('lg')
+    expect(btn.size).toBe('lg')
+    cleanup()
+  })
+
   it('QuestionCard: no element style carries border-left, and each option row keeps a 44px minimum block size', async () => {
     const { mount, ingest, cleanup } = await render(BOUND)
     ingest(write('/answer', 'venus'))

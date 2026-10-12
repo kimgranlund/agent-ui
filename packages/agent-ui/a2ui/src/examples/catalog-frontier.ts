@@ -1472,15 +1472,16 @@ export const lineChartAxesWeeklySalesSeed: ExampleSeed = {
 
 const PRODUCT_CARD_ROOMS_ID = 'frontier-product-card-rooms'
 /** Frontier 28 (ADR-0243, T-0072): `ProductCard`, the room-offer card. A templated Grid of offer cards (image,
- *  rating, a bound badge, the nightly rate with its note, one Book action whose context carries the room id,
- *  resolved per item) plus one exhibit tile (an `icon` header, no price and no action, so no empty price row
+ *  rating with its count, a bound badge, the nightly rate with its note and, on a deal, the struck old rate,
+ *  one Book action whose context carries the room id, resolved per item; a sold-out room is `disabled`, ADR-0243
+ *  Amendment 2) plus one exhibit tile (an `icon` header, no price and no action, so no empty price row
  *  renders). It replaces the 9 to 10 hand-built components per card the product-presentation idiom spends. The
  *  action rides the generic host click wiring (`productCardFactory` doc comment). Corpus admission is a SEPARATE
  *  judged wave (disposition-allowlist.ts, ADR-0068's never-self-judged discipline: this authoring session assigns
  *  no rubric score to its own seed). */
 export const productCardRoomsSeed: ExampleSeed = {
   name: 'frontier-product-card-rooms',
-  description: 'Three room offers as ProductCards in a templated Grid (image, rating, badge, rate, a Book action carrying the room id) beside one exhibit tile with an icon header and no price or action.',
+  description: 'Four room offers as ProductCards in a templated Grid (image, rating and count, badge, rate with a struck old rate on a deal, a Book action carrying the room id, the sold-out room disabled) beside one exhibit tile with an icon header and no price or action.',
   promptText: 'Show me the rooms available at the harbour hotel for next weekend, and tell me about the lobby mural.',
   surfaceId: PRODUCT_CARD_ROOMS_ID,
   protocolVersion: 'v1.0',
@@ -1493,9 +1494,10 @@ export const productCardRoomsSeed: ExampleSeed = {
         surfaceId: PRODUCT_CARD_ROOMS_ID,
         value: {
           rooms: [
-            { id: 'harbour', title: 'Harbour View Suite', subtitle: 'King bed, sleeps 2, free cancellation', photo: '/rooms/harbour.jpg', alt: 'Suite with a harbour view', rate: '$312', note: 'per night', rating: 4.8, badge: 'Best rate', tone: 'success' },
-            { id: 'garden', title: 'Garden Room', subtitle: 'Queen bed, courtyard access', photo: '/rooms/garden.jpg', alt: 'Room opening onto the courtyard garden', rate: '$189', note: 'per night', rating: 4.5, badge: 'Only 2 left', tone: 'warning' },
-            { id: 'loft', title: 'Skyline Loft', subtitle: 'Two beds, sleeps 4, kitchenette', photo: '/rooms/loft.jpg', alt: 'Loft with floor-to-ceiling windows', rate: '$428', note: 'per night', rating: 4.9, badge: 'New', tone: 'info' },
+            { id: 'harbour', title: 'Harbour View Suite', subtitle: 'King bed, sleeps 2, free cancellation', photo: '/rooms/harbour.jpg', alt: 'Suite with a harbour view', rate: '$312', was: '', note: 'per night', rating: 4.8, reviews: 412, badge: 'Best rate', tone: 'success', soldOut: false },
+            { id: 'garden', title: 'Garden Room', subtitle: 'Queen bed, courtyard access', photo: '/rooms/garden.jpg', alt: 'Room opening onto the courtyard garden', rate: '$189', was: '$229', note: 'per night', rating: 4.5, reviews: 128, badge: 'Only 2 left', tone: 'warning', soldOut: false },
+            { id: 'loft', title: 'Skyline Loft', subtitle: 'Two beds, sleeps 4, kitchenette', photo: '/rooms/loft.jpg', alt: 'Loft with floor-to-ceiling windows', rate: '$428', was: '', note: 'per night', rating: 4.2, reviews: 36, badge: 'New', tone: 'info', soldOut: false },
+            { id: 'penthouse', title: 'Penthouse', subtitle: 'Two bedrooms, sleeps 4, roof terrace', photo: '/rooms/penthouse.jpg', alt: 'Penthouse terrace over the harbour', rate: '$640', was: '', note: 'per night', rating: 4.9, reviews: 57, badge: 'Sold out', tone: 'neutral', soldOut: true },
           ],
         },
       },
@@ -1512,8 +1514,8 @@ export const productCardRoomsSeed: ExampleSeed = {
             id: 'room_card', component: 'ProductCard',
             title: { path: 'title' }, subtitle: { path: 'subtitle' },
             image: { path: 'photo' }, imageAlt: { path: 'alt' },
-            rating: { path: 'rating' }, badge: { path: 'badge' }, badgeIntent: { path: 'tone' },
-            price: { path: 'rate' }, priceNote: { path: 'note' },
+            rating: { path: 'rating' }, ratingCount: { path: 'reviews' }, badge: { path: 'badge' }, badgeIntent: { path: 'tone' },
+            price: { path: 'rate' }, priceOld: { path: 'was' }, priceNote: { path: 'note' }, disabled: { path: 'soldOut' },
             actionLabel: 'Book', action: { action: 'book_room', context: { room: { path: 'id' } } },
           },
           // The exhibit tile: an icon header, no price and no action, so the card renders no price row.
@@ -1529,12 +1531,15 @@ const BOARD_GRID_GUESSES_ID = 'frontier-board-grid-guesses'
  *  5-column board, 4 rows) with a bound `cells` array of marked positions, so a new guess patches the board in
  *  place instead of re-minting a Grid of Badge tiles. Each mark carries an intent (success right spot, warning
  *  wrong spot, neutral absent) and the control adds a corner glyph, so the result never rides colour alone.
+ *  A second board is the approved mockup's battle board (ADR-0243 Amendment 2, T-0083): a 6 by 6 sea whose
+ *  shots read hit (a filled dot, danger), miss (a ring, neutral) and sunk (a boxed square, success), the
+ *  danger-high and success-high inks Kim asked for, again with the corner glyph beside the colour.
  *  Read-only on purpose: cell activation is not catalog-reachable this pass (`boardGridFactory` doc comment), so
  *  the row exposes no `actionName`. Corpus admission is a SEPARATE judged wave (disposition-allowlist.ts). */
 export const boardGridGuessesSeed: ExampleSeed = {
   name: 'frontier-board-grid-guesses',
-  description: 'A five-letter word guess board: one BoardGrid with a bound `cells` array of marked letters, intent showing right spot, wrong spot and absent. Read-only.',
-  promptText: 'Start a five-letter word game. My first two guesses were CRANE and SLATE.',
+  description: 'Two read-only game boards: a five-letter word guess BoardGrid with a bound `cells` array of marked letters (intent showing right spot, wrong spot and absent), and a 6 by 6 battle BoardGrid whose bound shots read hit, miss and sunk.',
+  promptText: 'Show my two game boards: the five-letter word game where I guessed CRANE and SLATE, and the battleship sea after my shots.',
   surfaceId: BOARD_GRID_GUESSES_ID,
   protocolVersion: 'v1.0',
   catalogId: 'agent-ui',
@@ -1559,6 +1564,17 @@ export const boardGridGuessesSeed: ExampleSeed = {
               { row: 1, col: 4, mark: 'E', intent: 'success' },
             ],
           },
+          battle: {
+            cells: [
+              { row: 0, col: 1, mark: '\u25A3', intent: 'success' },
+              { row: 0, col: 2, mark: '\u25A3', intent: 'success' },
+              { row: 0, col: 3, mark: '\u25A3', intent: 'success' },
+              { row: 1, col: 1, mark: '\u25CB', intent: 'neutral' },
+              { row: 2, col: 4, mark: '\u25CF', intent: 'danger' },
+              { row: 3, col: 2, mark: '\u25CB', intent: 'neutral' },
+              { row: 4, col: 4, mark: '\u25CB', intent: 'neutral' },
+            ],
+          },
         },
       },
     },
@@ -1567,9 +1583,11 @@ export const boardGridGuessesSeed: ExampleSeed = {
       updateComponents: {
         surfaceId: BOARD_GRID_GUESSES_ID,
         components: [
-          { id: 'root', component: 'Column', gap: 'sm', children: ['status', 'board'] },
+          { id: 'root', component: 'Column', gap: 'sm', children: ['status', 'board', 'battleStatus', 'battle'] },
           { id: 'status', component: 'Text', variant: 'caption', text: 'Guess 2 of 4: _ _ A T E' },
           { id: 'board', component: 'BoardGrid', rows: 4, cols: 5, label: 'Word guesses', cells: { path: '/guesses/cells' } },
+          { id: 'battleStatus', component: 'Text', variant: 'caption', text: 'Enemy waters: one ship sunk, one hit, three misses' },
+          { id: 'battle', component: 'BoardGrid', rows: 6, cols: 6, label: 'Enemy waters', cells: { path: '/battle/cells' } },
         ],
       },
     },
@@ -1616,7 +1634,7 @@ export const gameHudQuestSeed: ExampleSeed = {
         components: [
           {
             id: 'root', component: 'GameHud',
-            title: { path: '/hud/level' }, status: { path: '/hud/status' }, statusIntent: 'info',
+            title: { path: '/hud/level' }, status: { path: '/hud/status' }, statusIntent: 'success',
             stats: { path: '/hud/stats' }, progress: { path: '/hud/progress' },
           },
         ],

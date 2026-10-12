@@ -29,8 +29,12 @@ export const PROMPT_CHAR_BUDGET_BASE = 140_000
  *  against 138 971 at ff5271ad before the three default-catalog rows (ProductCard, BoardGrid, GameHud) joined every
  *  inventory: +1 513 chars. The 2026-10-05 figure above is stale. Budget 140 800 (measured rounded up to the next
  *  100, plus 300, the formula the sidecar budgets use). Later persona rows (CardTable, QuestionCard) re-measure and
- *  raise it themselves. BASE is untouched (139 749 against 140 000). */
-export const PROMPT_CHAR_BUDGET_DERIVED = 140_800
+ *  raise it themselves. BASE is untouched (139 749 against 140 000).
+ *  RE-MEASURED 2026-10-12 (T-0083, ADR-0243 Amendment 2): the worst case is 140 801 chars (`agent-ui--croupier`, mode
+ *  default; 140 647 before), +154 from the four ProductCard wire props (`priceOld`, `ratingCount`, `selected`,
+ *  `disabled`), 77 on the catalog inventory line and 77 on the dogfood row. Budget 141 200 by the same formula.
+ *  BASE is untouched (139 883 against 140 000). */
+export const PROMPT_CHAR_BUDGET_DERIVED = 141_200
 
 /** The declared budget for `catalogId`: DERIVED for a `<base>--<persona>` id, else BASE. */
 export function promptBudgetFor(catalogId: string): number {

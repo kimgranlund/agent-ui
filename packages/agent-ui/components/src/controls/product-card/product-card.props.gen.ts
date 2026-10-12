@@ -15,10 +15,14 @@ export const props = {
   icon: prop.string(''),
   // The display price, rendered verbatim; empty renders no price. — generated from product-card.md attributes.price — edit the descriptor, not this file.
   price: prop.string(''),
-  // A muted qualifier beside the price (per night, was $120); empty renders no box. — generated from product-card.md attributes.priceNote — edit the descriptor, not this file.
+  // The previous price, rendered verbatim and struck through after the price (ADR-0243 Amendment 2); empty renders no box. — generated from product-card.md attributes.priceOld — edit the descriptor, not this file.
+  priceOld: { ...prop.string(''), attribute: 'price-old' },
+  // A muted qualifier beside the price (per night); empty renders no box. — generated from product-card.md attributes.priceNote — edit the descriptor, not this file.
   priceNote: { ...prop.string(''), attribute: 'price-note' },
-  // A 0 to 5 rating, rendered as text plus a numeric label; 0 renders no rating part. — generated from product-card.md attributes.rating — edit the descriptor, not this file.
+  // A 0 to 5 rating, rendered as five stars (full, half or empty, to the nearest half) plus the number; 0 renders no rating part. — generated from product-card.md attributes.rating — edit the descriptor, not this file.
   rating: prop.number(0),
+  // How many ratings the score rests on, shown in parentheses after the number (ADR-0243 Amendment 2); 0 renders no count. — generated from product-card.md attributes.ratingCount — edit the descriptor, not this file.
+  ratingCount: { ...prop.number(0), attribute: 'rating-count' },
   // A short status label forwarded to an internal ui-badge; empty renders no badge. — generated from product-card.md attributes.badge — edit the descriptor, not this file.
   badge: prop.string(''),
   // The badge intent, forwarded to ui-badge (which hardens an out-of-enum runtime write to neutral). — generated from product-card.md attributes.badgeIntent — edit the descriptor, not this file.
@@ -27,6 +31,10 @@ export const props = {
   actionLabel: { ...prop.string('Select'), attribute: 'action-label' },
   // The Button action shape; non-null renders the action button, whose click emits it as the action event detail. — generated from product-card.md attributes.action — edit the descriptor, not this file.
   action: prop.json<{ action: string; context?: Record<string, unknown>; wantResponse?: boolean; submit?: boolean } | null>(null),
+  // The chosen offer (ADR-0243 Amendment 2). A primary outline around the card and the action drawn as a ghost; the action keeps actionLabel, which carries the state in words. — generated from product-card.md attributes.selected — edit the descriptor, not this file.
+  selected: { ...prop.boolean(false), reflect: true },
+  // An offer that cannot be taken (ADR-0243 Amendment 2). The media desaturates and the action button is disabled, so neither it nor a host click emits. — generated from product-card.md attributes.disabled — edit the descriptor, not this file.
+  disabled: { ...prop.boolean(false), reflect: true },
   // ADR-0223 R2, the one sizing opt-out (hug instead of fill). — generated from product-card.md attributes.inline — edit the descriptor, not this file.
   inline: { ...prop.boolean(false), reflect: true },
 } satisfies PropsSchema

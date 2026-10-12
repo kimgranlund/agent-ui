@@ -7,7 +7,7 @@
 # PropConfig, the source-list `sourcesProp` shape reused verbatim).
 tag: ui-board-grid
 description: A board of cells to target or mark, with one roving tab stop.
-tier: pattern          # geometry size-class: container spacing plus ONE control-height row (the cell side), ADR-0243 BoardGrid Geometry row
+tier: pattern          # geometry size-class: container spacing plus ONE square cell row (46px, floored at 34px), ADR-0243 BoardGrid Geometry row and Amendment 2
 extends: UIElement     # a display primitive with data-props: not a container, not form-associated (no value), ADR-0243 shared rows
 uses: []
 # marginal: not yet measured via `npm run size` (new control; measured at the integration wave, manual by Kim's ruling).
@@ -85,10 +85,11 @@ keyboard:
 
 geometry:
   sizeClass: pattern
-  cellSize: var(--ui-board-grid-cell-size)   # max(34px, --md-sys-height-md): square cells on the control-height row, never under the 34px target floor
+  cellSize: var(--ui-board-grid-cell-size)   # 46px, the approved mockup's cell (ADR-0243 Amendment 2): square cells, each track minmax(--ui-board-grid-cell-min, cell-size)
+  cellMin: var(--ui-board-grid-cell-min)     # 34px, the target-size floor a cell never goes under in a narrow container
   gap: var(--ui-board-grid-gap)              # --md-sys-space-xs, density-responsive
   frame: var(--ui-board-grid-frame)          # --md-sys-space-xs, density-responsive
-  note: Block-level FILL by default (ADR-0223); the board's tracks are cell-size wide and pack to the start. The `inline` boolean flips to inline-grid and the host hugs the board.
+  note: Block-level FILL by default (ADR-0223); the board's tracks are up to cell-size wide (down to cell-min when the container is narrow) and pack to the start. The `inline` boolean flips to inline-grid and the host hugs the board.
 
 forcedColors: A dedicated `@media (forced-colors: active)` block. Every cell keeps a `CanvasText` border, an intent cell's corner glyph stays real text, and a disabled cell steps to `GrayText`, so no state rides color alone.
 ---
