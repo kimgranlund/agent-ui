@@ -1,0 +1,20 @@
+{
+  "personaId": "quizmaster",
+  "types": {
+    "QuestionCard": {
+      "intents": [
+        "one quiz question with its choices"
+      ],
+      "notFor": [
+        {
+          "type": "Card",
+          "why": "a content surface"
+        },
+        {
+          "type": "Text",
+          "why": "a question written as plain prose"
+        }
+      ]
+    }
+  }
+}

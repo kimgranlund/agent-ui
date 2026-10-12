@@ -5984,6 +5984,58 @@
           }
         ]
       }
+    ],
+    "quizmaster": [
+      {
+        "id": "fragment:quizmaster",
+        "kind": "fragment",
+        "source": {
+          "path": "packages/agent-ui/a2ui/src/catalog/personas/quizmaster/catalog.json"
+        },
+        "status": {
+          "state": "shipped"
+        },
+        "consumers": [
+          "prompt",
+          "renderer"
+        ],
+        "name": "quizmaster",
+        "targetCatalogs": [
+          "agent-ui",
+          "a2ui-basic"
+        ]
+      },
+      {
+        "id": "type:quizmaster/QuestionCard",
+        "kind": "type",
+        "source": {
+          "path": "packages/agent-ui/a2ui/src/catalog/personas/quizmaster/catalog.json",
+          "record": "QuestionCard"
+        },
+        "status": {
+          "state": "emittable"
+        },
+        "consumers": [
+          "prompt",
+          "renderer",
+          "eval"
+        ],
+        "name": "QuestionCard",
+        "scope": "quizmaster",
+        "intents": [
+          "one quiz question with its choices"
+        ],
+        "notFor": [
+          {
+            "type": "Card",
+            "why": "a content surface"
+          },
+          {
+            "type": "Text",
+            "why": "a question written as plain prose"
+          }
+        ]
+      }
     ]
   }
 }
