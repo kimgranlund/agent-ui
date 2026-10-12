@@ -69,13 +69,13 @@ function withRoot(edit: (root: Record<string, unknown>) => void): A2uiOutput {
 }
 
 describe('CardTable renders through the real renderer (ADR-0243)', () => {
-  it('CardTable renders one ui-playing-card per bound item, at size sm, in list order', async () => {
+  it('CardTable renders one ui-playing-card per bound item, at size md, in list order', async () => {
     const { table, errors, cleanup } = await render()
     expect(errors()).toEqual([])
     expect(table).not.toBeNull()
     expect(cardsIn(table, 'dealer').map(face)).toEqual(['9c', '4d*'])
     expect(cardsIn(table, 'player').map(face)).toEqual(['Kh', '7s'])
-    for (const c of table.querySelectorAll('ui-playing-card')) expect((c as CardEl).size).toBe('sm')
+    for (const c of table.querySelectorAll('ui-playing-card')) expect((c as CardEl).size).toBe('md')
     cleanup()
   })
 
@@ -114,6 +114,22 @@ describe('CardTable renders through the real renderer (ADR-0243)', () => {
     cleanup()
   })
 
+  it('CardTable: Hit, Stand and Double sit at the button lg step, and a Button that arrives later does too (ADR-0243 Amendment 2)', async () => {
+    const late = withRoot((root) => {
+      root['children'] = ['hitBtn', 'standBtn', 'doubleBtn', 'splitBtn'] // splitBtn is a forward ref, sent below
+    })
+    const { table, ingest, errors, cleanup } = await render(late)
+    const sizes = (): (string | null)[] => [...table.querySelectorAll('ui-button')].map((b) => b.getAttribute('size'))
+    expect(sizes()).toEqual(['lg', 'lg', 'lg'])
+    await ingest({
+      version: 'v1.0',
+      updateComponents: { surfaceId: SID, components: [{ id: 'splitBtn', component: 'Button', variant: 'soft', label: 'Split', action: { action: 'split' } }] },
+    })
+    expect(errors()).toEqual([])
+    expect(sizes()).toEqual(['lg', 'lg', 'lg', 'lg'])
+    cleanup()
+  })
+
   it('CardTable: totals, readout and status repaint from the data model', async () => {
     const bound = withRoot((root) => {
       root['status'] = { path: '/status' }
@@ -123,7 +139,7 @@ describe('CardTable renders through the real renderer (ADR-0243)', () => {
     const total = (z: string): string => table.querySelector(`[data-zone="${z}"] [data-part="total"]`)!.textContent ?? ''
     const readout = table.querySelector<HTMLElement>('[data-part="readout"]')!
     const status = table.querySelector<HTMLElement>('[data-part="status"]')! as HTMLElement & { label: string; intent: string }
-    expect(total('dealer')).toBe('Total 9')
+    expect(total('dealer')).toBe('showing 9') // a string total reads as given (the seed's face-down deal)
     expect(total('player')).toBe('Total 17')
     expect(readout.textContent).toBe('Bankroll 1,000 · Bet 50')
     expect(status.style.display).toBe('none') // /status is not written yet

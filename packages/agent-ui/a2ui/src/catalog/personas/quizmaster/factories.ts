@@ -9,9 +9,11 @@
 // `revealed` true disables the group and opens the explanation in place; with `answer` naming an option it also
 // marks the correct row (a check glyph and "Correct") and a wrong pick (a cross glyph and "Your answer"), so no
 // state rests on color alone. The producer's own children (the Check answer Button) are appended by the renderer
-// after the explanation. Styling goes through `el.style` only, with no border-left anywhere; no host ARIA.
+// after the explanation, sized at the button's `lg` step by `largeActionButtons` (ADR-0243 Amendment 2). Styling
+// goes through `el.style` only, with no border-left anywhere; no host ARIA.
 
 import type { WidgetFactory } from '../../types.ts'
+import { largeActionButtons } from '../action-row.ts'
 
 interface QuestionOption {
   value: string
@@ -281,6 +283,7 @@ export const questionCardFactory: WidgetFactory = {
     s.alignItems = 'flex-start'
     for (const part of [headEl, questionEl, groupEl, explanationEl]) part.style.alignSelf = 'stretch'
     el.append(headEl, questionEl, groupEl, explanationEl)
+    largeActionButtons(el)
     const parts: QuestionCardParts = {
       headEl,
       labelEl,

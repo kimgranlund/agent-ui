@@ -11,13 +11,15 @@
 // `ui-playing-card`, the concierge `BookingForm` shape (a WeakMap of parts, an `applyProp` switch). The two
 // hands are whole-array bindable props (`/dealerHand`, `/playerHand`); the factory reuses the i-th card for
 // item i, so a draw appends one element and a hole card turned up flips the same element (ADR-0225 cl.6). The
-// action Buttons are the producer's own children, appended by the renderer after the readout. Styling is
-// inline (`el.style`): the a2ui package ships no CSS file.
+// action Buttons are the producer's own children, appended by the renderer after the readout, and sized at the
+// button's `lg` step by `largeActionButtons` (ADR-0243 Amendment 2). The hands deal at the card's `md` size.
+// Styling is inline (`el.style`): the a2ui package ships no CSS file.
 //
 // `targetCatalogs` (both shipped bases): both factories build directly against `@agent-ui/components`, never
 // through either base's own dialect, the same reasoning as `concierge/index.ts`.
 
 import type { WidgetFactory } from '../../types.ts'
+import { largeActionButtons } from '../action-row.ts'
 
 export const playingCardFactory: WidgetFactory = {
   tag: 'ui-playing-card',
@@ -126,7 +128,7 @@ function renderHand(felt: HTMLElement, list: unknown): void {
     let el = cards[i]
     if (el === undefined) {
       el = document.createElement('ui-playing-card')
-      ;(el as unknown as { size: string }).size = 'sm'
+      ;(el as unknown as { size: string }).size = 'md'
       felt.appendChild(el)
     }
     const card = readCard(item)
@@ -188,6 +190,7 @@ export const cardTableFactory: WidgetFactory = {
     readoutEl.appendChild(readoutText)
 
     el.append(head, dealer.el, player.el, readoutEl)
+    largeActionButtons(el)
     cardTableParts.set(el, {
       titleEl,
       statusEl,

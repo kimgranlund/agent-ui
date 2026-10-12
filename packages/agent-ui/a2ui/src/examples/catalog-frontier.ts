@@ -1616,7 +1616,7 @@ export const gameHudQuestSeed: ExampleSeed = {
         components: [
           {
             id: 'root', component: 'GameHud',
-            title: { path: '/hud/level' }, status: { path: '/hud/status' }, statusIntent: 'info',
+            title: { path: '/hud/level' }, status: { path: '/hud/status' }, statusIntent: 'success',
             stats: { path: '/hud/stats' }, progress: { path: '/hud/progress' },
           },
         ],
