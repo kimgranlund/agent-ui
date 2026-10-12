@@ -28,6 +28,8 @@
     "./controls/badge.css": "./src/controls/badge/badge.css",
     "./controls/bar-chart": "./src/controls/bar-chart/bar-chart.ts",
     "./controls/bar-chart.css": "./src/controls/bar-chart/bar-chart.css",
+    "./controls/board-grid": "./src/controls/board-grid/board-grid.ts",
+    "./controls/board-grid.css": "./src/controls/board-grid/board-grid.css",
     "./controls/breadcrumb": "./src/controls/breadcrumb/breadcrumb.ts",
     "./controls/breadcrumb.css": "./src/controls/breadcrumb/breadcrumb.css",
     "./controls/button": "./src/controls/button/button.ts",

@@ -291,9 +291,10 @@ describe('site coverage — every shipped component has its required per-tier pa
     // authored crumb stops carry their own geometry, no new geometry row — the ADR-0163 cl.6 reasoning
     // verbatim). Its {doc, demo} site pages landed in the docs-writer seat's S3 slice — no longer parked
     // in KNOWN_UNDOCUMENTED.
+    // ui-board-grid (ADR-0243, T-0069 C1): a board of cells to target or mark, its {doc, demo} pages ship with the control.
     expect(COMPONENTS.filter((c) => c.tier === 'pattern').map((c) => c.name).sort()).toEqual(
       [
-        'breadcrumb', 'calendar', 'color-picker', 'combo-box', 'command-modal', 'disclosure', 'drill', 'file-drop', 'form-popover', 'menu', 'modal',
+        'board-grid', 'breadcrumb', 'calendar', 'color-picker', 'combo-box', 'command-modal', 'disclosure', 'drill', 'file-drop', 'form-popover', 'menu', 'modal',
         'multi-select', 'pagination', 'popover', 'product-card', 'segmented-control', 'select', 'service-card', 'status-stream', 'suggestions', 'swiper',
         'swiper-paddles', 'swiper-pagination', 'tabs', 'timeline', 'timeline-item', 'toast', 'toolbar', 'tooltip',
       ],

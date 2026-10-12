@@ -18,6 +18,7 @@ export const CONTROLS: Readonly<Record<string, ControlRecord>> = {
   'ui-avatar': { tag: 'ui-avatar', load: () => import('./avatar/avatar.ts'), css: './avatar/avatar.css', uses: ['ui-icon'] },
   'ui-badge': { tag: 'ui-badge', load: () => import('./badge/badge.ts'), css: './badge/badge.css', uses: [] },
   'ui-bar-chart': { tag: 'ui-bar-chart', load: () => import('./bar-chart/bar-chart.ts'), css: './bar-chart/bar-chart.css', uses: [] },
+  'ui-board-grid': { tag: 'ui-board-grid', load: () => import('./board-grid/board-grid.ts'), css: './board-grid/board-grid.css', uses: [] },
   'ui-breadcrumb': { tag: 'ui-breadcrumb', load: () => import('./breadcrumb/breadcrumb.ts'), css: './breadcrumb/breadcrumb.css', uses: ['ui-menu'] },
   'ui-button': { tag: 'ui-button', load: () => import('./button/button.ts'), css: './button/button.css', uses: [] },
   'ui-calendar': { tag: 'ui-calendar', load: () => import('./calendar/calendar.ts'), css: './calendar/calendar.css', uses: [] },

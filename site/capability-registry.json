@@ -145,6 +145,25 @@
       ]
     },
     {
+      "id": "control:ui-board-grid",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/board-grid/board-grid.md"
+      },
+      "status": {
+        "state": "excluded",
+        "reason": "ADR-0243 (BoardGrid fork sheet), TEMPORARY seed: ui-board-grid shipped ahead of its default catalog row (T-0069 C1 mints the control). T-0072 (R1) lands the BoardGrid row and factory and drains this seed, the same way every \"shipped ahead of its catalog row\" seed above was drained."
+      },
+      "consumers": [
+        "site"
+      ],
+      "tag": "ui-board-grid",
+      "tier": "pattern",
+      "description": "A board of cells to target or mark, with one roving tab stop.",
+      "uses": [],
+      "catalogs": []
+    },
+    {
       "id": "control:ui-breadcrumb",
       "kind": "control",
       "source": {

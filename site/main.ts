@@ -659,6 +659,22 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    // ADR-0243: the board of cells to target or mark (tier=pattern).
+    label: 'ui-board-grid',
+    cards: [
+      {
+        href: './board-grid-demo.html',
+        title: 'Demo',
+        blurb: 'A targetable 6x6 board that writes each hit back into `cells` and logs the `action` detail, a read-only word board with corner glyphs, and a 72-cell 8x9 board rendered in one pass.',
+      },
+      {
+        href: './board-grid-doc.html',
+        title: 'API reference',
+        blurb: 'A board of cells to target or mark: marks are text plus intent, one roving tab stop, arrow keys by cell and row, Enter and Space emit `action`. From board-grid.md.',
+      },
+    ],
+  },
+  {
     // ADR-0095 (supersedes ADR-0086's ui-radio-group[variant='segmented'], hard cutover): the child leaf.
     label: 'ui-segment',
     cards: [

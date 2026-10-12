@@ -1,0 +1,172 @@
+/* board-grid.css: ui-board-grid, the single-file component stylesheet (ADR-0003; ADR-0243, the BoardGrid
+ * fork sheet). Two clearly-SECTIONED blocks, mirroring button.css/service-card.css:
+ *
+ *   [1] TOKEN BLOCK: `:where(ui-board-grid)` (specificity 0,0,0) declares the `--ui-board-grid-*` chain
+ *       from the color roles, the space ladder (already density-responsive) and the control-height row.
+ *       The per-intent legs repoint the cell's bg and ink to `--md-sys-color-{intent}-container` and
+ *       `--md-sys-color-{intent}-high` on a cell carrying `data-intent`.
+ *   [2] STYLES BLOCK: `@scope (ui-board-grid)` consumes ONLY `--ui-board-grid-*` (plus the sanctioned
+ *       fleet constants: focus-ring, motion, `--md-sys-control-line-height`).
+ *
+ * Geometry (pattern tier): the host is a block-level grid that fills its container (ADR-0223); its tracks
+ * are `--ui-board-grid-cols` columns of the cell side, packed to the start. `[inline]` flips to
+ * inline-grid, so the host hugs the board. The cell side is the control-height row floored at the 34px
+ * target size: square cells (`aspect-ratio: 1`). board-grid.ts sets `--ui-board-grid-cols` on the host.
+ * Each row part is `display: contents`, so the cells sit straight on the host grid.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK: :where(ui-board-grid) declares --ui-board-grid-* ════════════════ */
+
+:where(ui-board-grid) {
+  /* Shape: the column count (board-grid.ts writes the live value) and the square cell side. */
+  --ui-board-grid-cols: 1;
+  --ui-board-grid-cell-size: max(34px, var(--md-sys-height-md)); /* the control-height row, never under the 34px target floor */
+  --ui-board-grid-gap: var(--md-sys-space-xs);
+  --ui-board-grid-frame: var(--md-sys-space-xs);
+  --ui-board-grid-cell-radius: calc(var(--md-sys-shape-corner-base) * 2 / 3);
+
+  /* A cell with no intent: the neutral surface, on-surface ink and an outline-variant border. */
+  --ui-board-grid-cell-bg: var(--md-sys-color-neutral-surface);
+  --ui-board-grid-cell-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-board-grid-cell-border: var(--md-sys-color-neutral-outline-variant);
+  --ui-board-grid-cell-bg-hover: var(--md-sys-color-primary-container);
+
+  /* Per-intent roles: the family container behind the mark, the family high ink on mark and corner. */
+  --ui-board-grid-neutral-bg: var(--md-sys-color-neutral-container);
+  --ui-board-grid-neutral-ink: var(--md-sys-color-neutral-high);
+  --ui-board-grid-info-bg: var(--md-sys-color-info-container);
+  --ui-board-grid-info-ink: var(--md-sys-color-info-high);
+  --ui-board-grid-success-bg: var(--md-sys-color-success-container);
+  --ui-board-grid-success-ink: var(--md-sys-color-success-high);
+  --ui-board-grid-warning-bg: var(--md-sys-color-warning-container);
+  --ui-board-grid-warning-ink: var(--md-sys-color-warning-high);
+  --ui-board-grid-danger-bg: var(--md-sys-color-danger-container);
+  --ui-board-grid-danger-ink: var(--md-sys-color-danger-high);
+
+  /* Type: the mark reads the control-band large font, bold; the corner glyph the label-small row. */
+  --ui-board-grid-mark-size: var(--md-sys-font-lg);
+  --ui-board-grid-mark-weight: 700;
+  --ui-board-grid-corner-size: var(--md-sys-typescale-label-small-size);
+  --ui-board-grid-corner-weight: 700;
+  --ui-board-grid-corner-inset-inline: 3px;
+  --ui-board-grid-corner-inset-block: 1px;
+}
+
+/* The intent legs: a cell carrying data-intent repoints its own bg and ink (declared on the cell, so they
+   override the host's inherited no-intent pair). */
+:where(ui-board-grid [data-part='cell'][data-intent='neutral']) {
+  --ui-board-grid-cell-bg: var(--ui-board-grid-neutral-bg);
+  --ui-board-grid-cell-ink: var(--ui-board-grid-neutral-ink);
+}
+:where(ui-board-grid [data-part='cell'][data-intent='info']) {
+  --ui-board-grid-cell-bg: var(--ui-board-grid-info-bg);
+  --ui-board-grid-cell-ink: var(--ui-board-grid-info-ink);
+}
+:where(ui-board-grid [data-part='cell'][data-intent='success']) {
+  --ui-board-grid-cell-bg: var(--ui-board-grid-success-bg);
+  --ui-board-grid-cell-ink: var(--ui-board-grid-success-ink);
+}
+:where(ui-board-grid [data-part='cell'][data-intent='warning']) {
+  --ui-board-grid-cell-bg: var(--ui-board-grid-warning-bg);
+  --ui-board-grid-cell-ink: var(--ui-board-grid-warning-ink);
+}
+:where(ui-board-grid [data-part='cell'][data-intent='danger']) {
+  --ui-board-grid-cell-bg: var(--ui-board-grid-danger-bg);
+  --ui-board-grid-cell-ink: var(--ui-board-grid-danger-ink);
+}
+
+/* ════════════════ [2] STYLES BLOCK: @scope (ui-board-grid) consumes ONLY --ui-board-grid-* ════════════════ */
+
+@scope (ui-board-grid) {
+  :scope {
+    /* FILL BY DEFAULT (ADR-0223): block-level grid, no intrinsic width; the tracks pack to the start. */
+    display: grid;
+    grid-template-columns: repeat(var(--ui-board-grid-cols), var(--ui-board-grid-cell-size));
+    grid-auto-rows: var(--ui-board-grid-cell-size);
+    justify-content: start;
+    gap: var(--ui-board-grid-gap);
+    padding: var(--ui-board-grid-frame);
+    box-sizing: border-box;
+  }
+
+  /* [inline]: the ONE sizing opt-out (ADR-0223 R2). The host hugs the board's own tracks. */
+  :scope[inline] {
+    display: inline-grid;
+  }
+
+  :scope > [data-part='row'] {
+    display: contents;
+  }
+
+  :scope [data-part='cell'] {
+    position: relative; /* the corner glyph's containing block */
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    inline-size: var(--ui-board-grid-cell-size);
+    aspect-ratio: 1;
+    margin: 0;
+    padding: 0;
+    font: inherit;
+    font-size: var(--ui-board-grid-mark-size);
+    font-weight: var(--ui-board-grid-mark-weight);
+    line-height: var(--md-sys-control-line-height); /* the fleet single-line control standard, ADR-0036 */
+    color: var(--ui-board-grid-cell-ink);
+    background: var(--ui-board-grid-cell-bg);
+    border: 1px solid var(--ui-board-grid-cell-border);
+    border-radius: var(--ui-board-grid-cell-radius);
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  :scope button[data-part='cell'] {
+    cursor: pointer;
+  }
+  :scope button[data-part='cell']:disabled {
+    cursor: default;
+  }
+
+  /* Hover tint only on enabled interactive cells. */
+  :scope button[data-part='cell']:not(:disabled):hover {
+    background: var(--ui-board-grid-cell-bg-hover);
+  }
+
+  /* The fleet focus ring (ADR-0009), read directly: the sanctioned constant every control shares. */
+  :scope [data-part='cell']:focus-visible {
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
+    z-index: 1;
+  }
+
+  /* The corner glyph: aria-hidden, bottom-right, the intent's non-color signifier. */
+  :scope [data-part='intent'] {
+    position: absolute;
+    inset-inline-end: var(--ui-board-grid-corner-inset-inline);
+    inset-block-end: var(--ui-board-grid-corner-inset-block);
+    font-size: var(--ui-board-grid-corner-size);
+    font-weight: var(--ui-board-grid-corner-weight);
+    line-height: var(--md-sys-control-line-height);
+  }
+
+  /* Motion: paint only, enumerated, and only when the user has not asked for reduced motion. */
+  @media (prefers-reduced-motion: no-preference) {
+    :scope [data-part='cell'] {
+      transition:
+        background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+        color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
+    }
+  }
+
+  /* forced-colors: every cell keeps a real border; a disabled cell steps to GrayText. The mark and the
+     corner glyph are real text, so intent survives without color. */
+  @media (forced-colors: active) {
+    :scope [data-part='cell'] {
+      border-color: CanvasText;
+    }
+    :scope [data-part='cell']:disabled,
+    :scope [data-part='cell'][aria-disabled='true'] {
+      border-color: GrayText;
+      color: GrayText;
+    }
+  }
+}

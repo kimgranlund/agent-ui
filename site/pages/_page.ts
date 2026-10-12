@@ -319,6 +319,14 @@ export const NAV: readonly NavGroup[] = [
     ],
   },
   {
+    // ADR-0243: the board of cells to target or mark (tier=pattern).
+    label: 'ui-board-grid',
+    links: [
+      { href: './board-grid-demo.html', label: 'Demo' },
+      { href: './board-grid-doc.html', label: 'API' },
+    ],
+  },
+  {
     // ADR-0095 (supersedes ADR-0086's ui-radio-group[variant='segmented'], hard cutover): the standalone
     // segmented control + its child leaf — tag-labelled, same as every other per-component group.
     label: 'ui-segment',
@@ -969,7 +977,7 @@ export const NAV_TAXONOMY: readonly NavTaxonomyGroup[] = [
     label: 'Containers & chrome',
     tags: [
       'ui-card', 'ui-tabs', 'ui-modal', 'ui-drawer', 'ui-toolbar', 'ui-service-card', 'ui-product-card',
-      'ui-playing-card', 'ui-drill',
+      'ui-playing-card', 'ui-board-grid', 'ui-drill',
     ],
   },
   {
@@ -1037,7 +1045,7 @@ export const NAV_TAXONOMY: readonly NavTaxonomyGroup[] = [
 // One rail entry per sitemap.json entry, grouped by the sitemap's own `group` axis where the entry carries
 // one (NAV_TAXONOMY above), falling back to `section` otherwise. The derivation INVERTED (TKT-0029): the rail
 // reads the build-time index, not the hand array. `section`/`group` are exactly the sitemap's own fields —
-// Components (84 L1, name|tag rows, 12 groups) / Guides (44 L2, 8 groups) / A2UI/A2A/GenUI/Records ungrouped
+// Components (86 L1, name|tag rows, 12 groups) / Guides (44 L2, 8 groups) / A2UI/A2A/GenUI/Records ungrouped
 // (already narrow) — no curated re-grouping happens in this file beyond what the sitemap already carries.
 interface SitemapEntry {
   readonly name: string
