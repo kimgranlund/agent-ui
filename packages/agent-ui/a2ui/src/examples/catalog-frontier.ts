@@ -53,6 +53,12 @@
 // never lorem. Corpus admission is a SEPARATE, later judged wave (disposition-allowlist.ts carries the
 // pending entries) — not this slice's job.
 
+// Frontier 28-30 (ADR-0243, T-0072 R1 of the preset-widgets campaign): `ProductCard` (28), `BoardGrid` (29)
+// and `GameHud` (30) close their own GH #729 coverage gaps the moment their default-catalog rows exist
+// (drains the three TEMPORARY `EXCLUSION_ALLOWLIST` seeds). Real board-shape content (a hotel room offer
+// grid, a word-guess board, a dungeon status strip), never lorem. Corpus admission is a SEPARATE, later
+// judged wave (disposition-allowlist.ts carries the pending entries).
+
 import type { ExampleSeed } from './types.ts'
 
 const TRIP_ID = 'frontier-trip-card'
@@ -1464,4 +1470,159 @@ export const lineChartAxesWeeklySalesSeed: ExampleSeed = {
   ],
 }
 
-export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed]
+const PRODUCT_CARD_ROOMS_ID = 'frontier-product-card-rooms'
+/** Frontier 28 (ADR-0243, T-0072): `ProductCard`, the room-offer card. A templated Grid of offer cards (image,
+ *  rating, a bound badge, the nightly rate with its note, one Book action whose context carries the room id,
+ *  resolved per item) plus one exhibit tile (an `icon` header, no price and no action, so no empty price row
+ *  renders). It replaces the 9 to 10 hand-built components per card the product-presentation idiom spends. The
+ *  action rides the generic host click wiring (`productCardFactory` doc comment). Corpus admission is a SEPARATE
+ *  judged wave (disposition-allowlist.ts, ADR-0068's never-self-judged discipline: this authoring session assigns
+ *  no rubric score to its own seed). */
+export const productCardRoomsSeed: ExampleSeed = {
+  name: 'frontier-product-card-rooms',
+  description: 'Three room offers as ProductCards in a templated Grid (image, rating, badge, rate, a Book action carrying the room id) beside one exhibit tile with an icon header and no price or action.',
+  promptText: 'Show me the rooms available at the harbour hotel for next weekend, and tell me about the lobby mural.',
+  surfaceId: PRODUCT_CARD_ROOMS_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: PRODUCT_CARD_ROOMS_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: PRODUCT_CARD_ROOMS_ID,
+        value: {
+          rooms: [
+            { id: 'harbour', title: 'Harbour View Suite', subtitle: 'King bed, sleeps 2, free cancellation', photo: '/rooms/harbour.jpg', alt: 'Suite with a harbour view', rate: '$312', note: 'per night', rating: 4.8, badge: 'Best rate', tone: 'success' },
+            { id: 'garden', title: 'Garden Room', subtitle: 'Queen bed, courtyard access', photo: '/rooms/garden.jpg', alt: 'Room opening onto the courtyard garden', rate: '$189', note: 'per night', rating: 4.5, badge: 'Only 2 left', tone: 'warning' },
+            { id: 'loft', title: 'Skyline Loft', subtitle: 'Two beds, sleeps 4, kitchenette', photo: '/rooms/loft.jpg', alt: 'Loft with floor-to-ceiling windows', rate: '$428', note: 'per night', rating: 4.9, badge: 'New', tone: 'info' },
+          ],
+        },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: PRODUCT_CARD_ROOMS_ID,
+        components: [
+          { id: 'root', component: 'Column', gap: 'md', children: ['heading', 'offers', 'mural'] },
+          { id: 'heading', component: 'Text', variant: 'h4', text: 'Available next weekend' },
+          { id: 'offers', component: 'Grid', gap: 'md', min: '16rem', children: { path: '/rooms', componentId: 'room_card' } },
+          {
+            id: 'room_card', component: 'ProductCard',
+            title: { path: 'title' }, subtitle: { path: 'subtitle' },
+            image: { path: 'photo' }, imageAlt: { path: 'alt' },
+            rating: { path: 'rating' }, badge: { path: 'badge' }, badgeIntent: { path: 'tone' },
+            price: { path: 'rate' }, priceNote: { path: 'note' },
+            actionLabel: 'Book', action: { action: 'book_room', context: { room: { path: 'id' } } },
+          },
+          // The exhibit tile: an icon header, no price and no action, so the card renders no price row.
+          { id: 'mural', component: 'ProductCard', title: 'Lobby mural', subtitle: 'Painted by a local artist in 2019', icon: 'image' },
+        ],
+      },
+    },
+  ],
+}
+
+const BOARD_GRID_GUESSES_ID = 'frontier-board-grid-guesses'
+/** Frontier 29 (ADR-0243, T-0072): `BoardGrid`, a read-only word-guess board. One node holds all 20 cells (a
+ *  5-column board, 4 rows) with a bound `cells` array of marked positions, so a new guess patches the board in
+ *  place instead of re-minting a Grid of Badge tiles. Each mark carries an intent (success right spot, warning
+ *  wrong spot, neutral absent) and the control adds a corner glyph, so the result never rides colour alone.
+ *  Read-only on purpose: cell activation is not catalog-reachable this pass (`boardGridFactory` doc comment), so
+ *  the row exposes no `actionName`. Corpus admission is a SEPARATE judged wave (disposition-allowlist.ts). */
+export const boardGridGuessesSeed: ExampleSeed = {
+  name: 'frontier-board-grid-guesses',
+  description: 'A five-letter word guess board: one BoardGrid with a bound `cells` array of marked letters, intent showing right spot, wrong spot and absent. Read-only.',
+  promptText: 'Start a five-letter word game. My first two guesses were CRANE and SLATE.',
+  surfaceId: BOARD_GRID_GUESSES_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: BOARD_GRID_GUESSES_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: BOARD_GRID_GUESSES_ID,
+        value: {
+          guesses: {
+            cells: [
+              { row: 0, col: 0, mark: 'C', intent: 'neutral' },
+              { row: 0, col: 1, mark: 'R', intent: 'warning' },
+              { row: 0, col: 2, mark: 'A', intent: 'success' },
+              { row: 0, col: 3, mark: 'N', intent: 'neutral' },
+              { row: 0, col: 4, mark: 'E', intent: 'warning' },
+              { row: 1, col: 0, mark: 'S', intent: 'neutral' },
+              { row: 1, col: 1, mark: 'L', intent: 'neutral' },
+              { row: 1, col: 2, mark: 'A', intent: 'success' },
+              { row: 1, col: 3, mark: 'T', intent: 'success' },
+              { row: 1, col: 4, mark: 'E', intent: 'success' },
+            ],
+          },
+        },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: BOARD_GRID_GUESSES_ID,
+        components: [
+          { id: 'root', component: 'Column', gap: 'sm', children: ['status', 'board'] },
+          { id: 'status', component: 'Text', variant: 'caption', text: 'Guess 2 of 4: _ _ A T E' },
+          { id: 'board', component: 'BoardGrid', rows: 4, cols: 5, label: 'Word guesses', cells: { path: '/guesses/cells' } },
+        ],
+      },
+    },
+  ],
+}
+
+const GAME_HUD_QUEST_ID = 'frontier-game-hud-quest'
+/** Frontier 30 (ADR-0243, T-0072): `GameHud`, a quest status strip. One node carries the title, a status badge
+ *  with intent, three stat tiles (HP with a signed negative delta, gold with a positive one, keys) and a
+ *  progress readout, every figure bound to the data model so each move repaints the strip in place. It replaces
+ *  the hand-built Row of Stat plus Badge plus Progress the game-hud idiom spent. Corpus admission is a SEPARATE
+ *  judged wave (disposition-allowlist.ts). */
+export const gameHudQuestSeed: ExampleSeed = {
+  name: 'frontier-game-hud-quest',
+  description: 'A dungeon quest status strip: one GameHud with a status badge, HP, gold and keys stat tiles with signed deltas, and a rooms-cleared progress bar, all bound to the data model.',
+  promptText: 'I step through the iron door into the third level of the dungeon. Show my character status.',
+  surfaceId: GAME_HUD_QUEST_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: GAME_HUD_QUEST_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: GAME_HUD_QUEST_ID,
+        value: {
+          hud: {
+            level: 'Dungeon level 3',
+            status: 'Your turn',
+            stats: [
+              { label: 'HP', value: '34 / 50', delta: -6, intent: 'danger' },
+              { label: 'Gold', value: 120, delta: 40, intent: 'success' },
+              { label: 'Keys', value: 2 },
+            ],
+            progress: { value: 3, max: 8, label: 'Rooms cleared' },
+          },
+        },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: GAME_HUD_QUEST_ID,
+        components: [
+          {
+            id: 'root', component: 'GameHud',
+            title: { path: '/hud/level' }, status: { path: '/hud/status' }, statusIntent: 'info',
+            stats: { path: '/hud/stats' }, progress: { path: '/hud/progress' },
+          },
+        ],
+      },
+    },
+  ],
+}
+
+export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed, productCardRoomsSeed, boardGridGuessesSeed, gameHudQuestSeed]

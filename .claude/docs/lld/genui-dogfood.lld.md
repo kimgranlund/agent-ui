@@ -181,8 +181,8 @@
   > planting seam; an edge to a type no taught tag names (`Option`, `MenuItem`) throws `UNRESOLVED`. A
   > restricted `tags` call drops edges whose target tag is outside `tags`, the same rule as family
   > members. Gates: `prompt-drift.test.ts` holds the clause shape, the clause-less set and the sum at or
-  > under `DOGFOOD_GUIDANCE_CHAR_BUDGET` (8 800; measured 8 479), the whole inventory at or under
-  > `DOGFOOD_INVENTORY_CHAR_BUDGET` (28 200; measured 27 820), and the `UNRESOLVED` negative control. The
+  > under `DOGFOOD_GUIDANCE_CHAR_BUDGET` (9 500; measured 9 189), the whole inventory at or under
+  > `DOGFOOD_INVENTORY_CHAR_BUDGET` (29 600; measured 29 227), and the `UNRESOLVED` negative control. The
   > parity leg in `dogfood-inventory-parity.test.ts` holds `catalogTypeForTag` equal to every `ui-*`
   > `WidgetFactory.tag` in `defaultFactories`. The output is still NEVER byte-captured: a sidecar edit
   > moves it with no baseline recapture.

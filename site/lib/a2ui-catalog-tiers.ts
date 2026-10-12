@@ -160,6 +160,11 @@ export const TIER_OF: Readonly<Record<string, Tier>> = {
   // children + an injected separator + an optional composed overflow ui-menu fold) — the same
   // Drill/Tabs/ServiceCard "composite, multi-part" class, not a WIDGET display leaf.
   Breadcrumb: 'PATTERN',
+  // ProductCard/BoardGrid/GameHud (ADR-0243, T-0072): all three are `tier: pattern` in their fork sheets and
+  // descriptors, multi-part constructs (media/body/action, a cell grid, header/stats/progress), not WIDGET leaves.
+  ProductCard: 'PATTERN',
+  BoardGrid: 'PATTERN',
+  GameHud: 'PATTERN',
   Split: 'PATTERN',
   SplitPane: 'PATTERN',
   Swiper: 'PATTERN',

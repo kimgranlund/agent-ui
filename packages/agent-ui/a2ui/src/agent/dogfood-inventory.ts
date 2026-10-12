@@ -87,13 +87,19 @@ import type { SelectionEntry } from './selection-guidance.ts'
 // MEASURED 2026-10-12: 28 359 chars after the ui-product-card descriptor row (T-0070, ADR-0243); budget
 // 28 700 (measured rounded up to the next 100, plus 300), per the SPEC-R13(b) v0.13 amendment in
 // genui-surface.spec.md.
-export const DOGFOOD_INVENTORY_CHAR_BUDGET = 28_700
+// MEASURED 2026-10-12: 29 227 chars after the `ProductCard`, `BoardGrid` and `GameHud` selection clauses ride
+// their rows (T-0072, ADR-0243); budget 29 600 (measured rounded up to the next 100, plus 300), per the
+// SPEC-R13(b) v0.14 amendment in genui-surface.spec.md.
+export const DOGFOOD_INVENTORY_CHAR_BUDGET = 29_600
 
 /** The character budget for the selection clauses the dogfood inventory carries: the sum of the clause
  *  lengths `dogfoodInventory()` appends to its rows. Held by a `prompt-drift.test.ts` leg, never by runtime
  *  truncation: an over-budget sidecar is re-authored tersely, never silently clipped.
- *  MEASURED 2026-10-05: 8 479 chars over 72 rows (144 notFor edges); budget 8 800 (Kim 2026-10-05; ADR-0232 cl.5 formula) */
-export const DOGFOOD_GUIDANCE_CHAR_BUDGET = 8_800
+ *  MEASURED 2026-10-05: 8 479 chars over 72 rows (144 notFor edges); budget 8 800 (Kim 2026-10-05; ADR-0232 cl.5 formula)
+ *  RE-MEASURED 2026-10-12 (T-0072, ADR-0243): 9 189 chars after the `ProductCard`, `BoardGrid` and `GameHud`
+ *  clauses and their reciprocal edges; budget 9 500 (measured rounded up to the next 100, plus 300), per the
+ *  SPEC-R13(b) v0.14 amendment in genui-surface.spec.md. A deliberate re-measure for new catalog types. */
+export const DOGFOOD_GUIDANCE_CHAR_BUDGET = 9_500
 
 /** Every tag the inventory TEACHES, tag-sorted — each descriptor's own `tag:` scalar PLUS the family
  *  siblings that ride its row (GH #346). The "inventory-taught tags" half of SPEC-R13 AC2's set-equality

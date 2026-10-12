@@ -137,7 +137,7 @@ import {
 } from '../../src/examples/catalog-coverage.ts'
 import { kpiPanelLifecycleSeed } from '../../src/examples/message-lifecycle.ts'
 import { feedbackFormSeed, elevationScaleSeed, triviaRoundResumeSeed } from '../../src/examples/corpus-growth.ts'
-import { tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed } from '../../src/examples/catalog-frontier.ts'
+import { tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed, productCardRoomsSeed, boardGridGuessesSeed, gameHudQuestSeed } from '../../src/examples/catalog-frontier.ts'
 import { structuredContainerSeed } from '../../src/examples/structured-container.ts'
 import {
   supportTicketCloseThenNewSeed,
@@ -346,6 +346,9 @@ const SEEDS_BY_MODULE: ReadonlyArray<SeedGroup<'agent-ui'>> = [
       columnChartRevenueSeed, // ADR-0229 cl.1/cl.2, GH #1568 — the ColumnChart coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
       gaugeSystemLoadSeed, // ADR-0229 cl.4, GH #1568 — the Gauge coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
       lineChartAxesWeeklySalesSeed, // ADR-0229 cl.3, GH #1568 — the LineChart axes-state coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
+      productCardRoomsSeed, // ADR-0243/T-0072 - the ProductCard coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
+      boardGridGuessesSeed, // ADR-0243/T-0072 - the BoardGrid coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
+      gameHudQuestSeed, // ADR-0243/T-0072 - the GameHud coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
     ],
   },
   { module: 'structured-container.ts', seeds: [structuredContainerSeed] }, // GH #808 S5 — SPEC-R9's exemplar

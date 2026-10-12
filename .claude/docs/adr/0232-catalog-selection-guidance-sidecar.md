@@ -183,3 +183,20 @@ The "Worker registration" bullet no longer applies once ADR-0236 lands. Sidecars
 `assets.gen.ts`; `fs-shim-content.ts` and `fs-shim.test.ts` are deleted, and the persona list derives
 from the embedded `catalog/personas/*/selection.json` keys. A new sidecar needs a regeneration, which the
 freshness gate enforces, not a manual registration.
+
+## Amendment: the clause budgets re-measured for the ADR-0243 default rows (2026-10-12, T-0072)
+
+> Status: a measured re-budget recorded by T-0072 under [ADR-0243](./0243-preset-widgets-admission-placement-derived-inheritance.md).
+> Append-only; this does not edit the Decision above.
+
+Three new default-catalog types (`ProductCard`, `BoardGrid`, `GameHud`) each carry a sidecar clause, and the
+sidecar gate's reciprocity rule adds the reverse edges on `Card`, `ServiceCard`, `Grid`, `Stat` and `Toolbar`.
+The `Stat`-to-`Rating` pair left, because `Stat` was at the four-edge cap. The budgets in clauses 5 and 3 of the
+Decision are re-measured by the formula they already state (measured rounded up to the next 100, plus 300):
+
+- `SELECTION_GUIDANCE_CHAR_BUDGET`: 8 600 to 9 300, measured 8 957 chars over 83 types.
+- `DOGFOOD_GUIDANCE_CHAR_BUDGET`: 8 800 to 9 500, measured 9 189 chars.
+
+The ceiling clause 5 names (the `## Available components` section the clauses annotate) is about 10 000 chars
+without clauses today, so 9 300 stays under it. The records repaired with this change are SPEC-R13 in
+`../spec/genui-surface.spec.md` (v0.14) and the LLD-C3 note in `../lld/genui-dogfood.lld.md`.
