@@ -1,6 +1,9 @@
 # SPEC — Persona Catalog Composition (M-D)
 
-> Status: accepted · v0.8 · 2026-10-12 (v0.7 2026-10-08; v0.6 2026-10-07; v0.5 2026-10-06; v0.4 2026-10-06; v0.2 2026-08-06; v0.3 2026-10-05 adds SPEC-R1's optional `controls` records, `ControlRecord`, and SPEC-R2 AC7, the derived entry's control loader, ADR-0233, accepted) · Layer: SPEC (execution contract)
+> Status: accepted · v0.9 · 2026-10-12 (v0.8 2026-10-12; v0.7 2026-10-08; v0.6 2026-10-07; v0.5 2026-10-06; v0.4 2026-10-06; v0.2 2026-08-06; v0.3 2026-10-05 adds SPEC-R1's optional `controls` records, `ControlRecord`, and SPEC-R2 AC7, the derived entry's control loader, ADR-0233, accepted) · Layer: SPEC (execution contract)
+> **v0.9 (2026-10-12):** SPEC-R6 AC1 and AC2 repaired for T-0077: `a2ui-basic` now has its own `basic-dialect`
+> mini-skill (`catalogId: a2ui-basic`), so AC1 carries that one exception and AC2 no longer returns `[]` for a
+> Basic turn. No other clause moves.
 > **v0.8 (2026-10-12):** SPEC-R6 gains AC4 and AC2 is narrowed: the mini-skill and exemplar `catalogId` scope
 > matches on the base segment of a derived id ([ADR-0243](../adr/0243-preset-widgets-admission-placement-derived-inheritance.md)
 > cl.3). No other clause moves.
@@ -321,15 +324,15 @@ BEFORE ranking: the exact hard-equality pattern `corpus/retrieve.ts:47,63`'s `me
 filter already uses, reused rather than re-invented. `produce.ts`'s one call site (`:764`) MUST
 pass `deps.catalog.catalogId` — the SAME value line `:762`'s `queryOf` already threads into
 `retrieve`'s own query, zero new catalog-resolution logic.
-- **AC1** *Given* the nine shipped `MINI_SKILLS` entries post-fix, *when* loaded, *then* every
-  entry carries `catalogId: 'agent-ui'` and `mini-skills.test.ts`'s existing per-module assertions
-  extend to check the field is present and equals `'agent-ui'` for all nine.
+- **AC1** *Given* the shipped `MINI_SKILLS` entries, *when* loaded, *then* every entry carries
+  `catalogId: 'agent-ui'` except `basic-dialect` (T-0077, the `a2ui-basic` dialect teaching), which
+  carries `catalogId: 'a2ui-basic'`, and `mini-skills.test.ts` checks the field is present and equals
+  that value for every module.
 - **AC2** *Given* a turn whose `deps.catalog.catalogId` is `'a2ui-basic'` (or a derived id on that base,
-  SPEC-R2), *when* `selectMiniSkills` runs, *then* it returns `[]` — the SAME accepted
-  zero-content degrade `retrieve.ts`'s own catalogId-scoped filter already has for a Basic turn
-  (`produce.ts:292`'s own comment: "a Basic turn retrieves zero exemplars... no `a2ui-basic` shard
-  yet"), never wrong-dialect `agent-ui` vocabulary teaching on a non-`agent-ui` turn — the exact
-  defect ADR-0172 cl.3 names, closed.
+  SPEC-R2), *when* `selectMiniSkills` runs, *then* it returns only modules whose
+  `catalogId` is `'a2ui-basic'` (today `basic-dialect`, or `[]` when the intent matches none of its
+  triggers), never wrong-dialect `agent-ui` vocabulary teaching on a non-`agent-ui` turn: the exact
+  defect ADR-0172 cl.3 names, closed. (A Basic turn still retrieves zero exemplars, `produce.ts:292`.)
 - **AC3** *Given* a turn whose `deps.catalog.catalogId` is `'agent-ui'` (the default, unchanged),
   *when* `selectMiniSkills` runs, *then* its selection is BYTE-IDENTICAL to today's (all nine
   modules eligible, ranked the same way) — this clause is additive scoping, not a ranking-behavior

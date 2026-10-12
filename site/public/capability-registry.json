@@ -2235,6 +2235,22 @@
       "name": "interactive-widgets"
     },
     {
+      "id": "mini-skill:basic-dialect",
+      "kind": "mini-skill",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/mini-skills/basic-dialect.md"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "basic-dialect",
+      "scope": "a2ui-basic"
+    },
+    {
       "id": "mini-skill:card-game-sheet",
       "kind": "mini-skill",
       "source": {

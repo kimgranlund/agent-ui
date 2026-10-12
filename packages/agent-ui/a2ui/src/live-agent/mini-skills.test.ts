@@ -94,12 +94,12 @@ describe('MINI_SKILLS registry — the per-module token budget (ADR-0091 §3)', 
         'comparison-table',
       ]),
     )
-    expect(MINI_SKILLS).toHaveLength(20)
+    expect(MINI_SKILLS).toHaveLength(21)
   })
 
-  it('SPEC-R6 AC1 — every one of the twenty shipped modules carries catalogId: \'agent-ui\'', () => {
-    expect(MINI_SKILLS).toHaveLength(20)
-    for (const skill of MINI_SKILLS) expect(skill.catalogId, skill.id).toBe('agent-ui')
+  it('SPEC-R6 AC1: every shipped module carries catalogId: \'agent-ui\' except the a2ui-basic dialect module', () => {
+    expect(MINI_SKILLS).toHaveLength(21)
+    for (const skill of MINI_SKILLS) expect(skill.catalogId, skill.id).toBe(skill.id === 'basic-dialect' ? 'a2ui-basic' : 'agent-ui')
   })
 })
 
@@ -152,8 +152,8 @@ describe('selectMiniSkills — TF-IDF top-cap selection over the registry (ADR-0
 // SPEC-R6 (`persona-catalog-composition.spec.md`, ADR-0172 cl.3) — the `catalogId` hard filter, applied
 // BEFORE ranking (mirrors `corpus/retrieve.ts:47,63`'s own `meta.catalogId` filter).
 describe('selectMiniSkills — SPEC-R6 catalogId scoping', () => {
-  it('AC2: a catalogId outside agent-ui (a2ui-basic, or a derived id on a non-agent-ui base) returns [] even for a strong-match intent', () => {
-    expect(selectMiniSkills('build me a settings screen with toggles', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'a2ui-basic')).toEqual([])
+  it('AC2: a catalogId outside agent-ui never receives an agent-ui module; a2ui-basic receives only basic-dialect', () => {
+    expect(selectMiniSkills('build me a settings screen with toggles', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'a2ui-basic').map((m) => m.id)).toEqual(['basic-dialect'])
     expect(selectMiniSkills('deal me in', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'a2ui-basic--croupier')).toEqual([])
   })
 
@@ -178,6 +178,26 @@ describe('selectMiniSkills — SPEC-R6 catalogId scoping', () => {
     ]
     const result = selectMiniSkills('login form password submit', registry, 5, 'agent-ui')
     expect(result.map((m) => m.id)).toEqual(['in-scope'])
+  })
+})
+
+describe('basic-dialect: the a2ui-basic teaching module (T-0077)', () => {
+  it.each(['build a contact form with a send button', 'a booking flow with a date picker', 'show a list of results with an add button'])(
+    'a2ui-basic turn %j selects the mini-skill, and an agent-ui turn never does',
+    (intent) => {
+      expect(selectMiniSkills(intent, MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'a2ui-basic').map((m) => m.id)).toEqual(['basic-dialect'])
+      expect(selectMiniSkills(intent, MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui').map((m) => m.id)).not.toContain('basic-dialect')
+    },
+  )
+  it('a derived a2ui-basic--<persona> turn inherits basic-dialect from its base (ADR-0243 cl.3)', () => {
+    const intent = 'build a contact form with a send button'
+    expect(selectMiniSkills(intent, MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'a2ui-basic--croupier').map((m) => m.id)).toEqual(['basic-dialect'])
+  })
+  it('carries the three dialect rules the basic seeds used to hold in a header comment', () => {
+    const body = MINI_SKILLS.find((m) => m.id === 'basic-dialect')!.body
+    expect(body).toMatch(/child Text/)
+    expect(body).toMatch(/event/)
+    expect(body).toMatch(/string ARRAY/)
   })
 })
 
