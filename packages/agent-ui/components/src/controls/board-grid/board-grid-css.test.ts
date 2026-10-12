@@ -55,8 +55,12 @@ describe('board-grid.css: structure + token hygiene', () => {
     }
   })
 
-  it('cells are square and floored at 34px on the control-height row', () => {
-    expect(tokenBlock).toMatch(/--ui-board-grid-cell-size:\s*max\(34px,\s*var\(--md-sys-height-md\)\)/)
+  it('cells are square: 46px tracks that give way to the 34px floor, never below (ADR-0243 Amendment 2)', () => {
+    expect(tokenBlock).toMatch(/--ui-board-grid-cell-size:\s*46px;/)
+    expect(tokenBlock).toMatch(/--ui-board-grid-cell-min:\s*34px;/)
+    expect(bare(stylesBlock)).toMatch(
+      /grid-template-columns:\s*repeat\(var\(--ui-board-grid-cols\),\s*minmax\(var\(--ui-board-grid-cell-min\),\s*var\(--ui-board-grid-cell-size\)\)\);/,
+    )
     expect(bare(stylesBlock)).toMatch(/aspect-ratio:\s*1;/)
   })
 

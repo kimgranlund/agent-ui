@@ -61,6 +61,20 @@ describe('ui-board-grid: whole shape', () => {
     expect(rect(all[9]!).top).toBeGreaterThan(rect(all[0]!).bottom - 0.5)
   })
 
+  it('a board with room paints the 46px mockup cell; a narrow one gives way to the 34px floor and no further (ADR-0243 Amendment 2)', () => {
+    const roomy = mount('<ui-board-grid rows="6" cols="6"></ui-board-grid>')
+    for (const c of cells(roomy)) {
+      expect(rect(c).width).toBeCloseTo(46, 1)
+      expect(rect(c).height).toBeCloseTo(46, 1)
+    }
+    const narrow = mount('<ui-board-grid rows="2" cols="8"></ui-board-grid>') // 8 x 46 + gaps overflows the 328px column
+    const side = rect(cells(narrow)[0]!).width
+    expect(side).toBeLessThan(46)
+    expect(side).toBeGreaterThanOrEqual(34)
+    const tight = mount('<ui-board-grid rows="1" cols="12"></ui-board-grid>') // even 12 x 34 overflows: the floor holds
+    for (const c of cells(tight)) expect(rect(c).width).toBeCloseTo(34, 1)
+  })
+
   it('fills its container by default; inline hugs the board', () => {
     const fill = mount('<ui-board-grid rows="3" cols="3"></ui-board-grid>')
     const container = fill.parentElement!

@@ -977,10 +977,14 @@
         "imageAlt": { "type": { "type": "string" }, "bindable": true, "mapsTo": "imageAlt" },
         "icon": { "type": { "type": "string" }, "bindable": true, "mapsTo": "icon" },
         "price": { "type": { "type": "string" }, "bindable": true, "mapsTo": "price" },
+        "priceOld": { "type": { "type": "string" }, "bindable": true, "mapsTo": "priceOld" },
         "priceNote": { "type": { "type": "string" }, "bindable": true, "mapsTo": "priceNote" },
         "rating": { "type": { "type": "number" }, "bindable": true, "mapsTo": "rating" },
+        "ratingCount": { "type": { "type": "number" }, "bindable": true, "mapsTo": "ratingCount" },
         "badge": { "type": { "type": "string" }, "bindable": true, "mapsTo": "badge" },
         "badgeIntent": { "type": { "type": "string", "enum": ["neutral", "info", "success", "warning", "danger"] }, "bindable": true, "mapsTo": "badgeIntent" },
+        "selected": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "selected" },
+        "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
         "actionLabel": { "type": { "type": "string" }, "mapsTo": "actionLabel" },
         "action": {
           "type": {

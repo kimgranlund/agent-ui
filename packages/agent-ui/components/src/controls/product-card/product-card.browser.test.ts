@@ -64,6 +64,37 @@ describe('ui-product-card: rendered geometry', () => {
     expect(hug.card.getBoundingClientRect().width).toBeGreaterThan(0)
   })
 
+  it('the action sits at the control ramp lg step: 36px tall, the 16px lg font (ADR-0243 Amendment 2)', async () => {
+    const { card } = await mount(`<ui-product-card title="Suite" price="$312" action-label="Book" action='{"action":"book"}'></ui-product-card>`)
+    const action = part(card, 'action')
+    expect(action.getBoundingClientRect().height).toBe(36)
+    expect(getComputedStyle(action).fontSize).toBe('16px')
+  })
+
+  it('selected draws a 2px primary outline and a transparent ghost action; disabled greys the media', async () => {
+    const IMG = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="10"><rect width="16" height="10" fill="#6b8fb3"/></svg>')
+    const { card } = await mount(`<ui-product-card title="Suite" image="${IMG}" price="$198" action-label="Selected" action='{"action":"book"}' selected></ui-product-card>`)
+    const cs = getComputedStyle(card)
+    expect(cs.outlineStyle).toBe('solid')
+    expect(cs.outlineWidth).toBe('2px')
+    expect(getComputedStyle(part(card, 'action')).backgroundColor).toBe('rgba(0, 0, 0, 0)')
+    expect(getComputedStyle(part(card, 'media')).filter).toBe('none')
+    card.selected = false
+    card.disabled = true
+    await card.updateComplete
+    expect(getComputedStyle(card).outlineStyle).toBe('none')
+    expect(getComputedStyle(part(card, 'media')).filter).toBe('grayscale(1)')
+    expect((part(card, 'action') as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it('a half star paints a full glyph clipped to half its own width', async () => {
+    const { card } = await mount(`<ui-product-card title="Suite" rating="3.5"></ui-product-card>`)
+    const half = card.querySelector('[data-part="rating-star"][data-fill="half"]') as HTMLElement
+    const before = getComputedStyle(half, '::before')
+    expect(before.content).toBe('"\u2605"')
+    expect(Number.parseFloat(before.width)).toBeCloseTo(half.getBoundingClientRect().width / 2, 0)
+  })
+
   it('a real click on the action button emits action with the action payload', async () => {
     const payload = { action: 'book', context: { room: 'harbour' } }
     const { card } = await mount(`<ui-product-card title="Suite" price="$312" action-label="Book"></ui-product-card>`)

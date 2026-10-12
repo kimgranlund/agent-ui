@@ -83,4 +83,33 @@ describe('ProductCard action on the wire (ADR-0243, T-0072)', () => {
     expect(sent.filter((m) => m.action !== undefined)).toHaveLength(0)
     cleanup()
   })
+
+  it('a disabled card bound to the data model emits nothing, and emits again once re-enabled (ADR-0243 Amendment 2)', async () => {
+    const { r, mount, sent, cleanup } = harness()
+    r.ingestMessage({ version: 'v1.0', updateDataModel: { surfaceId: 's1', value: { soldOut: true } } })
+    r.ingestMessage({
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: 's1',
+        components: [
+          { id: 'root', component: 'ProductCard', title: 'Penthouse', price: '$640', priceOld: '$720', ratingCount: 12, selected: false, disabled: { path: '/soldOut' }, actionLabel: 'Unavailable', action: { action: 'book_room' } },
+        ],
+      },
+    })
+    await settle()
+    const card = mount.querySelector('ui-product-card') as HTMLElement & { disabled: boolean; priceOld: string; ratingCount: number }
+    expect(card.disabled).toBe(true)
+    expect(card.priceOld).toBe('$720')
+    expect(card.ratingCount).toBe(12)
+    expect((card.querySelector('button[data-part="action"]') as HTMLButtonElement).disabled).toBe(true)
+    card.click()
+    await settle()
+    expect(sent.filter((m) => m.action !== undefined)).toHaveLength(0)
+    r.ingestMessage({ version: 'v1.0', updateDataModel: { surfaceId: 's1', path: '/soldOut', value: false } })
+    await settle()
+    card.click()
+    await settle()
+    expect(sent.filter((m) => m.action !== undefined)).toHaveLength(1)
+    cleanup()
+  })
 })

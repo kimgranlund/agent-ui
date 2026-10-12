@@ -5,7 +5,9 @@
 //
 // Anatomy: an optional `[data-part="media"]` (an image in a reserved 16:10 box, or the icon header when
 // there is no image) and a `[data-part="body"]` (title, subtitle, rating, badge, then the price row with
-// price, price note and the real native action button). Every part is built ONCE by an idempotent
+// price, struck-through old price, price note and the real native action button). Two reflected states follow
+// the approved mockup (ADR-0243 Amendment 2): `selected` (a primary outline, the action drawn as a ghost) and
+// `disabled` (the media desaturated, the action disabled; the renderer's host click guard reads the same prop). Every part is built ONCE by an idempotent
 // `#ensureParts` and kept live by small per-part effects that only attach or detach nodes, never create
 // them, so an unrelated prop change never destroys the action button's focus or hover state. An empty
 // optional value renders no box (the ADR-0201 valueless-row law): with no price and no action there is
@@ -25,6 +27,12 @@ import '../icon/icon.ts'
 // Generated from product-card.md's `attributes[]` (ADR-0173): `node scripts/generate-props.mjs
 // product-card` to regenerate; never hand-edit product-card.props.gen.ts.
 import { props } from './product-card.props.gen.ts'
+
+/** The five star fills for a 0 to 5 rating, rounded to the nearest half star. */
+function starFills(rating: number): readonly ('full' | 'half' | 'empty')[] {
+  const halves = Math.round(Math.min(Math.max(rating, 0), 5) * 2)
+  return [0, 1, 2, 3, 4].map((i) => (halves >= 2 * i + 2 ? 'full' : halves === 2 * i + 1 ? 'half' : 'empty'))
+}
 
 /** Attach `node` under `parent` in its fixed `order` slot when `show`, detach it otherwise. Insert-only:
  *  a node already in place is never moved, so a focused descendant keeps focus. */
@@ -55,10 +63,14 @@ export class UIProductCardElement extends UIElement {
   #title!: HTMLDivElement
   #subtitle!: HTMLDivElement
   #rating!: HTMLDivElement
+  #ratingStars!: HTMLSpanElement[]
   #ratingValue!: HTMLSpanElement
+  #ratingCount!: HTMLSpanElement
   #badge!: UIBadgeElement
   #priceRow!: HTMLDivElement
   #price!: HTMLSpanElement
+  #priceOld!: HTMLElement
+  #priceOldValue!: Text
   #priceNote!: HTMLSpanElement
   #action!: HTMLButtonElement
 
@@ -71,7 +83,7 @@ export class UIProductCardElement extends UIElement {
     this.listen(this.#action, 'click', () => this.emit('action', this.action))
 
     const bodyOrder = [this.#title, this.#subtitle, this.#rating, this.#badge, this.#priceRow]
-    const rowOrder = [this.#price, this.#priceNote, this.#action]
+    const rowOrder = [this.#price, this.#priceOld, this.#priceNote, this.#action]
 
     this.effect(() => {
       const title = this.title
@@ -106,8 +118,19 @@ export class UIProductCardElement extends UIElement {
 
     this.effect(() => {
       const rating = this.rating
+      const count = this.ratingCount
       const show = rating !== null && rating > 0
-      if (show) this.#ratingValue.textContent = rating.toFixed(1)
+      if (show) {
+        this.#ratingValue.textContent = rating.toFixed(1)
+        starFills(rating).forEach((fill, i) => {
+          const star = this.#ratingStars[i]!
+          star.setAttribute('data-fill', fill)
+          star.textContent = fill === 'full' ? '\u2605' : '\u2606' // a half star overlays a clipped full star in CSS
+        })
+      }
+      const showCount = count !== null && count > 0
+      if (showCount) this.#ratingCount.textContent = `(${count.toLocaleString('en-US')})`
+      place(this.#ratingCount, showCount, this.#rating, [this.#ratingCount])
       place(this.#rating, show, this.#body, bodyOrder)
     })
 
@@ -120,18 +143,27 @@ export class UIProductCardElement extends UIElement {
 
     this.effect(() => {
       const price = this.price
+      const old = this.priceOld
       const note = this.priceNote
       const action = this.action
       const label = this.actionLabel
       const title = this.title
       this.#price.textContent = price
+      this.#priceOldValue.data = old
       this.#priceNote.textContent = note
       this.#action.textContent = label
       this.#action.setAttribute('aria-label', title === '' ? label : `${label} ${title}`)
       place(this.#price, price !== '', this.#priceRow, rowOrder)
+      place(this.#priceOld, old !== '', this.#priceRow, rowOrder)
       place(this.#priceNote, note !== '', this.#priceRow, rowOrder)
       place(this.#action, action !== null, this.#priceRow, rowOrder)
       place(this.#priceRow, price !== '' || action !== null, this.#body, bodyOrder)
+    })
+
+    // `disabled` reaches the real button (no click, no focus, announced disabled); the media and the button's
+    // look follow the reflected attribute in CSS. `selected` is CSS only: the actionLabel carries its words.
+    this.effect(() => {
+      this.#action.disabled = this.disabled
     })
   }
 
@@ -146,21 +178,30 @@ export class UIProductCardElement extends UIElement {
     this.#title = part<HTMLDivElement>('div', 'title')
     this.#subtitle = part<HTMLDivElement>('div', 'subtitle')
 
-    // Rating: the star is decorative, the number is visible, and a visually hidden " out of 5" makes the
-    // accessible text read "4.8 out of 5" (never stars alone, the ADR-0243 A11y row).
+    // Rating: five decorative stars (full, half or empty), the visible number, a visually hidden " out of 5"
+    // so the accessible text reads "4.8 out of 5" (never stars alone, the ADR-0243 A11y row), then the
+    // optional count in parentheses.
     this.#rating = part<HTMLDivElement>('div', 'rating')
-    const glyph = part<HTMLSpanElement>('span', 'rating-glyph')
-    glyph.setAttribute('aria-hidden', 'true')
-    glyph.textContent = '★'
+    const stars = part<HTMLSpanElement>('span', 'rating-stars')
+    stars.setAttribute('aria-hidden', 'true')
+    this.#ratingStars = [0, 1, 2, 3, 4].map(() => part<HTMLSpanElement>('span', 'rating-star'))
+    stars.append(...this.#ratingStars)
     this.#ratingValue = part<HTMLSpanElement>('span', 'rating-value')
     const ratingText = part<HTMLSpanElement>('span', 'rating-text')
     ratingText.textContent = ' out of 5'
-    this.#rating.append(glyph, this.#ratingValue, ratingText)
+    this.#ratingCount = part<HTMLSpanElement>('span', 'rating-count')
+    this.#rating.append(stars, this.#ratingValue, ratingText)
 
     this.#badge = part<UIBadgeElement>('ui-badge', 'badge')
 
     this.#priceRow = part<HTMLDivElement>('div', 'price-row')
     this.#price = part<HTMLSpanElement>('span', 'price')
+    // The old price is struck through; a visually hidden "was" keeps the strike from riding on looks alone.
+    this.#priceOld = part<HTMLElement>('s', 'price-old')
+    const was = part<HTMLSpanElement>('span', 'price-old-text')
+    was.textContent = 'was '
+    this.#priceOldValue = document.createTextNode('')
+    this.#priceOld.append(was, this.#priceOldValue)
     this.#priceNote = part<HTMLSpanElement>('span', 'price-note')
     this.#action = part<HTMLButtonElement>('button', 'action')
     this.#action.type = 'button'

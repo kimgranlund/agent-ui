@@ -44,17 +44,29 @@ attributes:             # attributes-as-API: the GENERATION SOURCE for UIProduct
     default: ''
     reflect: false
     description: The display price, rendered verbatim; empty renders no price.
+  - name: priceOld
+    type: string
+    default: ''
+    attribute: price-old
+    reflect: false
+    description: The previous price, rendered verbatim and struck through after the price (ADR-0243 Amendment 2); empty renders no box.
   - name: priceNote
     type: string
     default: ''
     attribute: price-note
     reflect: false
-    description: A muted qualifier beside the price (per night, was $120); empty renders no box.
+    description: A muted qualifier beside the price (per night); empty renders no box.
   - name: rating
     type: number
     default: 0
     reflect: false
-    description: A 0 to 5 rating, rendered as text plus a numeric label; 0 renders no rating part.
+    description: A 0 to 5 rating, rendered as five stars (full, half or empty, to the nearest half) plus the number; 0 renders no rating part.
+  - name: ratingCount
+    type: number
+    default: 0
+    attribute: rating-count
+    reflect: false
+    description: How many ratings the score rests on, shown in parentheses after the number (ADR-0243 Amendment 2); 0 renders no count.
   - name: badge
     type: string
     default: ''
@@ -79,18 +91,28 @@ attributes:             # attributes-as-API: the GENERATION SOURCE for UIProduct
     default: null
     reflect: false
     description: The Button action shape; non-null renders the action button, whose click emits it as the action event detail.
+  - name: selected
+    type: boolean
+    default: false
+    reflect: true
+    description: The chosen offer (ADR-0243 Amendment 2). A primary outline around the card and the action drawn as a ghost; the action keeps actionLabel, which carries the state in words.
+  - name: disabled
+    type: boolean
+    default: false
+    reflect: true
+    description: An offer that cannot be taken (ADR-0243 Amendment 2). The media desaturates and the action button is disabled, so neither it nor a host click emits.
   - name: inline
     type: boolean
     default: false
     reflect: true
     description: ADR-0223 R2, the one sizing opt-out (hug instead of fill).
 
-properties: []          # no manual accessors beyond the thirteen typed props
+properties: []          # no manual accessors beyond the seventeen typed props
 
 events:
   - name: action
     detail: 'the current `action` prop value'
-    description: Fired when the user activates the action button, with the bound `action` payload as detail. A click anywhere else in the card emits nothing; no change or input.
+    description: Fired when the user activates the action button, with the bound `action` payload as detail. A click anywhere else in the card emits nothing; a disabled card's button emits nothing; no change or input.
 
 slots:
   - name: default
@@ -110,23 +132,31 @@ parts:
   - name: subtitle
     description: The supporting line, present only when `subtitle` is non-empty.
   - name: rating
-    description: The rating line, present only when `rating > 0`. Text plus a numeric label, never stars alone.
-  - name: rating-glyph
-    description: The `aria-hidden` star glyph inside rating.
+    description: The rating line, present only when `rating > 0`. Stars plus a numeric label, never stars alone.
+  - name: rating-stars
+    description: The `aria-hidden` run of five stars inside rating.
+  - name: rating-star
+    description: One star inside rating-stars, `data-fill` full, half or empty (the rating rounded to the nearest half). A half star is an empty star under a full star clipped to its inline-start half.
   - name: rating-value
     description: The visible number inside rating (`rating.toFixed(1)`).
   - name: rating-text
     description: The visually hidden " out of 5" inside rating, so the accessible text reads "4.8 out of 5".
+  - name: rating-count
+    description: The count in parentheses after the number, present only when `ratingCount > 0`.
   - name: badge
     description: The internal `<ui-badge data-part="badge">` (label `badge`, intent `badgeIntent`), present only when `badge` is non-empty. Overlays the image's top-start corner when the media holds an image, otherwise sits in flow.
   - name: price-row
     description: The bottom row, present only when `price` is non-empty or `action` is non-null. Holds price, price note and the action button. Absent on an exhibit tile.
   - name: price
     description: The price text, the strongest text in the card (tabular numerals). Present only when `price` is non-empty.
+  - name: price-old
+    description: The `<s data-part="price-old">` after the price, muted and struck through, present only when `priceOld` is non-empty.
+  - name: price-old-text
+    description: The visually hidden "was " inside price-old, so the old price is announced as such and not by its strike alone.
   - name: price-note
     description: The muted price qualifier, present only when `priceNote` is non-empty.
   - name: action
-    description: The real native `<button type="button" data-part="action">`, present only when `action` is non-null. Visible text `actionLabel`; aria-label `{actionLabel} {title}`.
+    description: The real native `<button type="button" data-part="action">`, present only when `action` is non-null. Visible text `actionLabel`; aria-label `{actionLabel} {title}`. At the control ramp's large step (`--md-sys-height-lg`, 36px at the default scale); a ghost when `selected`, natively disabled when `disabled`.
 
 customStates: []        # no custom state; presence is DOM add/remove, never a state flag
 
@@ -147,7 +177,7 @@ geometry:
   paddingInline: var(--ui-product-card-pad-inline)     # = --md-sys-space-md
   paddingBlock: var(--ui-product-card-pad-block)       # = --md-sys-space-md
   rowGap: var(--ui-product-card-row-gap)               # = --md-sys-space-xs
-  actionHeight: var(--ui-product-card-action-height)   # = --md-sys-height-sm, the one control-height row a pattern-tier card owns
+  actionHeight: var(--ui-product-card-action-height)   # = --md-sys-height-lg (ADR-0243 Amendment 2, the approved mockup), the one control-height row a pattern-tier card owns
   radius: var(--ui-product-card-radius)                # = --md-sys-shape-corner-base
   mediaAspect: 16 / 10
   note: Block-level fill by default, no intrinsic width (ADR-0223); `inline` flips to inline-flex and hugs.
@@ -190,12 +220,17 @@ plus one control-height action row.
 - **`title`**, **`subtitle`** (string): the heading and one supporting line. The title clamps at two lines.
 - **`image`** (string, src), **`imageAlt`** (string, attribute `image-alt`): empty alt is decorative.
 - **`icon`** (string): an icon glyph for the image-free header. `image` wins when both are set.
-- **`price`**, **`priceNote`** (string, attribute `price-note`): the price is rendered verbatim.
-- **`rating`** (number): 0 renders nothing; otherwise "4.8" with a star and a hidden "out of 5".
+- **`price`**, **`priceOld`** (string, attribute `price-old`), **`priceNote`** (string, attribute
+  `price-note`): the price is rendered verbatim; the old price follows it, struck through.
+- **`rating`** (number): 0 renders nothing; otherwise five stars (to the nearest half), "4.8" and a hidden
+  "out of 5". **`ratingCount`** (number, attribute `rating-count`): a count such as "(318)" after it.
 - **`badge`**, **`badgeIntent`** (string; enum `neutral|info|success|warning|danger`, attribute
   `badge-intent`): forwarded to an internal `ui-badge`.
 - **`actionLabel`** (string, default `Select`, attribute `action-label`).
 - **`action`** (the Button action shape, or `null`): non-null renders the action button.
+- **`selected`** (boolean, reflected): a primary outline and a ghost action; write the state into
+  `actionLabel` (for example "Selected").
+- **`disabled`** (boolean, reflected): the media desaturates and the action button is disabled.
 - **`inline`** (boolean, reflected): the ADR-0223 sizing opt-out.
 
 ## Events
@@ -206,4 +241,5 @@ plus one control-height action row.
 
 - `role="group"` via `ElementInternals`, `internals.ariaLabel` mirroring `title`.
 - The action is a real button named "{actionLabel} {title}".
-- The rating reads as text, "4.8 out of 5", never stars alone.
+- The rating reads as text, "4.8 out of 5", never stars alone; the old price reads "was $120".
+- Selected is never the outline alone: the action's label says it. Disabled is the native button state.

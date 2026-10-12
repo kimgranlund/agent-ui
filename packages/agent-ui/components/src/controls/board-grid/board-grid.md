@@ -85,10 +85,11 @@ keyboard:
 
 geometry:
   sizeClass: pattern
-  cellSize: var(--ui-board-grid-cell-size)   # max(34px, --md-sys-height-md): square cells on the control-height row, never under the 34px target floor
+  cellSize: var(--ui-board-grid-cell-size)   # 46px, the approved mockup's cell (ADR-0243 Amendment 2): square cells, each track minmax(--ui-board-grid-cell-min, cell-size)
+  cellMin: var(--ui-board-grid-cell-min)     # 34px, the target-size floor a cell never goes under in a narrow container
   gap: var(--ui-board-grid-gap)              # --md-sys-space-xs, density-responsive
   frame: var(--ui-board-grid-frame)          # --md-sys-space-xs, density-responsive
-  note: Block-level FILL by default (ADR-0223); the board's tracks are cell-size wide and pack to the start. The `inline` boolean flips to inline-grid and the host hugs the board.
+  note: Block-level FILL by default (ADR-0223); the board's tracks are up to cell-size wide (down to cell-min when the container is narrow) and pack to the start. The `inline` boolean flips to inline-grid and the host hugs the board.
 
 forcedColors: A dedicated `@media (forced-colors: active)` block. Every cell keeps a `CanvasText` border, an intent cell's corner glyph stays real text, and a disabled cell steps to `GrayText`, so no state rides color alone.
 ---
