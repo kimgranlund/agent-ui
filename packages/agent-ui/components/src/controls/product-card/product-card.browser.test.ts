@@ -71,7 +71,7 @@ describe('ui-product-card: rendered geometry', () => {
     expect(getComputedStyle(action).fontSize).toBe('16px')
   })
 
-  it('selected draws a 2px primary outline and a transparent ghost action; disabled greys the media', async () => {
+  it('selected draws a 2px primary outline and a transparent ghost action; disabled greys the media and fades the action', async () => {
     const IMG = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="10"><rect width="16" height="10" fill="#6b8fb3"/></svg>')
     const { card } = await mount(`<ui-product-card title="Suite" image="${IMG}" price="$198" action-label="Selected" action='{"action":"book"}' selected></ui-product-card>`)
     const cs = getComputedStyle(card)
@@ -85,6 +85,8 @@ describe('ui-product-card: rendered geometry', () => {
     expect(getComputedStyle(card).outlineStyle).toBe('none')
     expect(getComputedStyle(part(card, 'media')).filter).toBe('grayscale(1)')
     expect((part(card, 'action') as HTMLButtonElement).disabled).toBe(true)
+    expect(getComputedStyle(part(card, 'action')).opacity).toBe('0.45') // the faded pill, still a visible primary fill
+    expect(getComputedStyle(part(card, 'action')).backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
   })
 
   it('a half star paints a full glyph clipped to half its own width', async () => {

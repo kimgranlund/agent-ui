@@ -7,7 +7,7 @@
 # PropConfig, the source-list `sourcesProp` shape reused verbatim).
 tag: ui-board-grid
 description: A board of cells to target or mark, with one roving tab stop.
-tier: pattern          # geometry size-class: container spacing plus ONE control-height row (the cell side), ADR-0243 BoardGrid Geometry row
+tier: pattern          # geometry size-class: container spacing plus ONE square cell row (46px, floored at 34px), ADR-0243 BoardGrid Geometry row and Amendment 2
 extends: UIElement     # a display primitive with data-props: not a container, not form-associated (no value), ADR-0243 shared rows
 uses: []
 # marginal: not yet measured via `npm run size` (new control; measured at the integration wave, manual by Kim's ruling).

@@ -259,3 +259,47 @@ approved mockup needs both.
 5. **Budget.** The props live only in the quizmaster fragment, so the default turn does not move: K6
    (default `agent-ui` composition plus the tool) measures 45,377 chars, 1,053 under the 46,430 bound.
    The `agent-ui--quizmaster` default composition grows from 45,151 to 45,224 chars (+73).
+
+## Amendment 2: the merged widgets match the approved mockups (2026-10-12, T-0083)
+
+> Status: recorded by T-0083 from Kim's review of the widget styling mockup against the merged ProductCard,
+> BoardGrid, GameHud and CardTable (QuestionCard was Amendment 1). Append-only; the Decision, the fork sheets
+> above and Amendment 1 are unchanged, and this section extends the ProductCard and BoardGrid contracts and
+> replaces one Geometry row.
+
+The built widgets passed their behaviour gates but not mockup parity: the action buttons sat at 24px (the
+ProductCard `sm` row) and 28px (the producer Buttons in CardTable and QuestionCard, the button's default `md`),
+the card showed one star and none of the mockup's offer states, board cells were 34px, and the seeds used an
+info pill where the mockup was green.
+
+1. **Action buttons at the large step.** The primary actions render at the button ramp's `lg` step (36px and
+   the 16px `lg` font at the default scale), never a custom height. The mockup drew them at 39px, 14px, weight
+   600, which is not a ramp step; the weight stays the button's own. ProductCard's native action reads
+   `--md-sys-height-lg` and `--md-sys-font-lg`. CardTable's Hit, Stand and Double and QuestionCard's Check
+   answer are the producer's own Buttons, and neither base's `Button` row carries a size, so each composite
+   stamps `size="lg"` on every `ui-button` the renderer appends inside it (`personas/action-row.ts`, a
+   subtree observer); no Button wire prop is added. QuestionCard option rows stay at least 44px.
+2. **ProductCard rating and states.** The rating draws five stars rounded to the nearest half (full, half or
+   empty, the warning ink), then the number and the hidden "out of 5". Four bindable wire props join the
+   default row and the descriptor, additively: `priceOld` (string, struck through after the price, announced
+   with a hidden "was"), `ratingCount` (number, "(318)" after the number, 0 shows none), `selected` (boolean,
+   reflected: a 2px primary outline and the action drawn as a ghost; `actionLabel` carries the words, so the
+   state never rests on the outline) and `disabled` (boolean, reflected: the media desaturates and the action
+   button is natively disabled; the renderer's host click guard reads the same host prop, so a disabled card
+   dispatches nothing). The sidecar is unchanged: it holds intents and `notFor` edges, never props. The rooms
+   seed carries a struck rate, rating counts and a sold-out room.
+3. **BoardGrid cell side.** This replaces the BoardGrid Geometry row's "cell side is the control-height row
+   at the active `[size]`": each track is `minmax(34px, 46px)`, so a cell is the mockup's 46px where the
+   container has room and gives way to the 34px target-size floor where it does not. One side serves both
+   modes. The mockup's battle cells measure 46px and its word tiles 48px (46px plus a border); the 52px the
+   T-0083 ticket named for tiles is not in the mockup (52px is its playing-card width), and the default row
+   has no field that tells a battle board from a word board. The board seed gains the mockup's battle board:
+   hit (a filled dot, danger), miss (a ring, neutral) and sunk (a boxed square, success), the danger-high and
+   success-high inks Kim asked for, each with the control's corner glyph.
+4. **Seed payloads.** The GameHud and CardTable seeds show "Your turn" on the success pill. CardTable deals at
+   the playing card's `md` size (wider than the mockup's 52px card, which the old `sm` matched). The dealer
+   total reads "showing 9" while the hole card is face down, a string total the factory renders verbatim.
+5. **Budget.** K6 (the default `agent-ui` composition plus the tool) measures 45,454 chars, +77 for the four
+   props on the inventory line, 976 under the 46,430 bound. The worst-case derived prompt (ADR-0234) measures
+   140,801 chars (`agent-ui--croupier`, +154 with the dogfood row), so `PROMPT_CHAR_BUDGET_DERIVED` is
+   re-measured to 141,200 by its own formula; BASE holds at 139,883 against 140,000.

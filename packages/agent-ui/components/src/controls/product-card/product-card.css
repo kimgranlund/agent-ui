@@ -75,10 +75,11 @@
   --ui-product-card-selected-outline: var(--md-sys-color-primary);
   --ui-product-card-selected-outline-width: 2px;
 
-  /* Disabled: the media desaturated and dimmed (the mockup's sold-out image), the action on the fleet's
-     muted disabled roles (button.css `[disabled]`). */
+  /* Disabled: the media desaturated and dimmed, the action a faded pill that keeps its own colours (the
+     mockup's sold-out card; the fleet's neutral disabled fill would vanish into this card's own plane). */
   --ui-product-card-disabled-media-filter: grayscale(1);
   --ui-product-card-disabled-media-opacity: 0.6;
+  --ui-product-card-disabled-action-opacity: 0.45;
 }
 
 :where(ui-product-card[selected]) {
@@ -89,13 +90,6 @@
   --ui-product-card-action-border: var(--md-sys-color-neutral-outline-variant);
 }
 
-:where(ui-product-card[disabled]) {
-  --ui-product-card-action-bg: var(--md-sys-color-neutral-surface-high);
-  --ui-product-card-action-bg-hover: var(--md-sys-color-neutral-surface-high);
-  --ui-product-card-action-bg-active: var(--md-sys-color-neutral-surface-high);
-  --ui-product-card-action-ink: var(--md-sys-color-neutral-on-surface-variant);
-  --ui-product-card-action-border: transparent;
-}
 
 /* ════════════════ [2] STYLES BLOCK: @scope (ui-product-card) consumes ONLY --ui-product-card-* ════════════════ */
 
@@ -288,7 +282,10 @@
   :scope [data-part='action']:active {
     background: var(--ui-product-card-action-bg-active);
   }
+  /* Disabled holds at idle: no hover or press paint, the pill faded. */
   :scope [data-part='action']:disabled {
+    background: var(--ui-product-card-action-bg);
+    opacity: var(--ui-product-card-disabled-action-opacity);
     cursor: not-allowed;
   }
   :scope [data-part='action']:focus-visible {
