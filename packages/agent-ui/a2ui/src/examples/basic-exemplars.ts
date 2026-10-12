@@ -3,14 +3,10 @@
 // held only agent-ui exemplars, so a producer targeting Basic had nothing to imitate.
 //
 // Each seed is ONE surface (ADR-0064) and uses only Basic catalog rows (`src/catalog/a2ui-basic/catalog.json`),
-// in the Basic dialect, which differs from agent-ui in ways a producer must copy exactly:
-//   - a Button carries its label as a `child` Text node and its action as `{ event: { name, context } }`;
-//   - every input labels itself (`label` on TextField / CheckBox / ChoicePicker / Slider / DateTimeInput),
-//     there is no Field wrapper;
-//   - ChoicePicker `value` is a string ARRAY even when `mutuallyExclusive`;
-//   - computed text is a `{ call, args, returnType }` function call (`formatString`, `formatCurrency`,
-//     `formatNumber`, `pluralize`), the upstream `product-card` fixture's shape;
-//   - `createSurface.catalogId` is the LOCAL short id `a2ui-basic`, never the upstream URL (ADR-0169 cl.13).
+// in the Basic dialect, which differs from agent-ui in ways a producer must copy exactly. The dialect rules
+// (Button child Text and event action, self-labelled inputs, ChoicePicker string-array value, function-call
+// text, the local `a2ui-basic` catalogId) are TAUGHT by the `basic-dialect` mini-skill
+// (`agent/prompts/mini-skills/basic-dialect.md`); these seeds are the worked examples of that teaching.
 // The four seeds span a form, a templated result list, a settings panel, and a booking flow, so together
 // they exercise all 14 Basic rows except `Card` (which wraps one child and has no header/footer slots).
 
