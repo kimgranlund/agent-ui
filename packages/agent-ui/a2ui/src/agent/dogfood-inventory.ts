@@ -84,7 +84,10 @@ import type { SelectionEntry } from './selection-guidance.ts'
 // MEASURED 2026-10-05: 27 820 chars after the selection clause rides each catalog-mapped row (T-0008, the
 // mover; ADR-0232 amendment); budget 28 200 (measured rounded up to the next 100, plus 300), per the
 // SPEC-R13(b) v0.11 amendment in genui-surface.spec.md.
-export const DOGFOOD_INVENTORY_CHAR_BUDGET = 28_200
+// MEASURED 2026-10-12: 28 359 chars after the ui-product-card descriptor row (T-0070, ADR-0243); budget
+// 28 700 (measured rounded up to the next 100, plus 300), per the SPEC-R13(b) v0.13 amendment in
+// genui-surface.spec.md.
+export const DOGFOOD_INVENTORY_CHAR_BUDGET = 28_700
 
 /** The character budget for the selection clauses the dogfood inventory carries: the sum of the clause
  *  lengths `dogfoodInventory()` appends to its rows. Held by a `prompt-drift.test.ts` leg, never by runtime

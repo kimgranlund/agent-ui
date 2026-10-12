@@ -303,6 +303,14 @@ export const NAV: readonly NavGroup[] = [
     ],
   },
   {
+    // ADR-0243: one product, room or offer to buy or book (tier=pattern, so {doc, demo}).
+    label: 'ui-product-card',
+    links: [
+      { href: './product-card-demo.html', label: 'Demo' },
+      { href: './product-card-doc.html', label: 'API' },
+    ],
+  },
+  {
     // ADR-0225 (GH #1478) — the true card-face/back display leaf (tier=display).
     label: 'ui-playing-card',
     links: [
@@ -959,7 +967,10 @@ export const NAV_TAXONOMY: readonly NavTaxonomyGroup[] = [
   },
   {
     label: 'Containers & chrome',
-    tags: ['ui-card', 'ui-tabs', 'ui-modal', 'ui-drawer', 'ui-toolbar', 'ui-service-card', 'ui-playing-card', 'ui-drill'],
+    tags: [
+      'ui-card', 'ui-tabs', 'ui-modal', 'ui-drawer', 'ui-toolbar', 'ui-service-card', 'ui-product-card',
+      'ui-playing-card', 'ui-drill',
+    ],
   },
   {
     label: 'Overlays & pickers',

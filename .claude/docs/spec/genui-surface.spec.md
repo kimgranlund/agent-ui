@@ -1,6 +1,9 @@
 # SPEC — GenUI surface (sandboxed free-form generative UI): wire · frame · bridge · producer
 
-> Status: proposed · v0.12 · 2026-10-06 · Layer: SPEC (execution contract)
+> Status: proposed · v0.13 · 2026-10-12 · Layer: SPEC (execution contract)
+> **v0.13 amendment (T-0070, ADR-0243, 2026-10-12):** SPEC-R13(b)'s inventory budget is revised
+> ≤ 28 200 → ≤ 28 700 chars (measured 28 359 after the new `ui-product-card` descriptor row), by the
+> same measured-plus-headroom formula. No requirement, clause budget or AC changes. Full text: §13.
 > **v0.12 amendment (ADR-0236, accepted, 2026-10-06, GH #1808):** SPEC-R9's packs and SPEC-R13(a)'s
 > teaching prose load from the generated `assets.gen.ts` through `asset-source.ts`, and SPEC-R13(b)'s
 > inventory composes from the generated `DOGFOOD_FLEET` rows (`dogfood-fleet.gen.ts`), not a
@@ -779,8 +782,9 @@ byte-identical to its v0.10 form.
 - **Source.** `selectionGuidanceForId('agent-ui')` reads the guidance and `renderSelectionClauseWith`
   formats it, the same formatter the catalog inventory uses (`src/agent/selection-guidance.ts`). Base
   guidance only: persona sidecars stay out, and family siblings get no clause of their own.
-- **Budgets.** The whole inventory is held at ≤ 28 200 chars (`DOGFOOD_INVENTORY_CHAR_BUDGET`, revised
-  from ≤ 19 600; measured 27 820 on 2026-10-05). The summed clause length is held at ≤ 8 800 chars
+- **Budgets.** The whole inventory is held at ≤ 28 700 chars (`DOGFOOD_INVENTORY_CHAR_BUDGET`, revised
+  from ≤ 28 200 by the v0.13 amendment, measured 28 359 on 2026-10-12 after the `ui-product-card` row,
+  T-0070; ≤ 28 200 itself was revised from ≤ 19 600, measured 27 820 on 2026-10-05). The summed clause length is held at ≤ 8 800 chars
   (`DOGFOOD_GUIDANCE_CHAR_BUDGET`; measured 8 479 over 72 rows, 144 edges). Both are enforced by
   `prompt-drift.test.ts`, never by runtime truncation; an over-budget sidecar is re-authored tersely. The
   named fallback if a later wave blows the clause budget is the use-only clause.

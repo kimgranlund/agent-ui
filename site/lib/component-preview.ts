@@ -1362,6 +1362,19 @@ const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
   // honest but uninstructive here). `available` already carries a non-empty descriptor default (`true`)
   // auto-seeded by #seedState()'s descriptor-default loop — no entry needed for it.
   'ui-service-card': { name: 'Claims Agent', path: '/claims-agent-service', description: 'Handles first-notice-of-loss intake and triage.' },
+  // ADR-0243: ui-product-card's title, price and action all default to empty or null (product-card.md), so an
+  // unseeded specimen renders a bare untitled card with no price row; seed the offer mode.
+  'ui-product-card': {
+    title: 'Harbour View Suite, king bed',
+    subtitle: 'Sleeps 2, 42 m², free cancellation',
+    price: '$312',
+    priceNote: '/ night',
+    rating: '4.8',
+    badge: 'Best rate',
+    badgeIntent: 'info',
+    actionLabel: 'Book',
+    action: '{"action":"book"}',
+  },
   // ADR-0225 — ui-playing-card: `rank`/`suit` default to '' (playing-card.md, the blank-face graceful-
   // empty state) — the same demonstrability gap as ui-badge's `label`/ui-stat's `label` above; an
   // unseeded bare specimen still paints the card outline (a real background/border box), but with no
@@ -1576,6 +1589,8 @@ export const NO_SLOT_TEXT = new Set([
   // write would land nowhere useful (the card owns no default-slot content model to overwrite in the
   // first place, the ui-stat/ui-description-list "no light-DOM content model at all" precedent).
   'ui-service-card',
+  // ADR-0243: ui-product-card builds its visible content from props, and a textContent write would clobber the built parts.
+  'ui-product-card',
   // ADR-0225 — ui-playing-card builds its ENTIRE visible content (flipper/face/back/index/pips) from
   // rank/suit/faceDown PROPS alone, replaceChildren-driven — no light-DOM content model at all (slots:
   // [] — playing-card.md), the ui-stat/ui-pie-chart "no light-DOM content model at all" precedent.

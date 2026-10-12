@@ -1,0 +1,248 @@
+/* product-card.css: ui-product-card, the single-file component stylesheet (ADR-0003; ADR-0243). Two
+ * sectioned blocks, the service-card.css shape:
+ *
+ *   [1] TOKEN BLOCK: `:where(ui-product-card)` (specificity 0) declares the `--ui-product-card-*` chain
+ *       from the colour roles, the type matrix, the space ladder and the control ramp (the action row's
+ *       height, the pattern tier's one control-height row, ADR-0224 cl.1).
+ *   [2] STYLES BLOCK: `@scope (ui-product-card)` consumes ONLY `--ui-product-card-*` (plus the sanctioned
+ *       fleet constants: focus ring, motion, `--md-sys-control-line-height`). The host is a block-level
+ *       flex column (fill by default, ADR-0223); `[inline]` flips to `inline-flex` with no hug floor (the
+ *       card's own content gives it a shrink-to-fit width). Optional parts are present or absent in the
+ *       DOM (product-card.ts), so an absent part adds no box and no phantom gap.
+ *
+ * Standalone stylesheet, linked per control or via shared-styles.css (ADR-0233, no barrel); never injected
+ * from product-card.ts.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK: :where(ui-product-card) declares --ui-product-card-* ════════════════ */
+
+/* uses: synced from product-card.md by scripts/codemod-uses.mjs */
+@import '../badge/badge.css';
+@import '../icon/icon.css';
+
+:where(ui-product-card) {
+  /* Surface: a neutral card plane with an outline-variant border and the base corner radius. */
+  --ui-product-card-bg: var(--md-sys-color-neutral-surface-high);
+  --ui-product-card-outline: var(--md-sys-color-neutral-outline-variant);
+  --ui-product-card-radius: var(--md-sys-shape-corner-base);
+
+  /* Media: the 16:10 image box (a placeholder plane until the image paints) and the icon header. */
+  --ui-product-card-media-aspect: 16 / 10;
+  --ui-product-card-media-bg: var(--md-sys-color-neutral-surface-higher);
+  --ui-product-card-icon-ink: var(--md-sys-color-primary);
+  --ui-product-card-icon-size: var(--md-sys-icon-lg);
+
+  /* Ink */
+  --ui-product-card-title-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-product-card-muted-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-product-card-price-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-product-card-rating-glyph-ink: var(--md-sys-color-primary);
+
+  /* Type: title on the title-medium row at weight 650, clamped at two lines; the price on the
+     title-large row, bold, the strongest text in the card. */
+  --ui-product-card-title-size: var(--md-sys-typescale-title-medium-size);
+  --ui-product-card-title-line-height: var(--md-sys-typescale-title-medium-line-height);
+  --ui-product-card-title-weight: 650;
+  --ui-product-card-body-size: var(--md-sys-typescale-body-medium-size);
+  --ui-product-card-body-line-height: var(--md-sys-typescale-body-medium-line-height);
+  --ui-product-card-price-size: var(--md-sys-typescale-title-large-size);
+  --ui-product-card-price-line-height: var(--md-sys-typescale-title-large-line-height);
+  --ui-product-card-price-weight: 700;
+
+  /* Spacing off the --md-sys-space ladder (density-responsive by the token chain itself). */
+  --ui-product-card-pad-inline: var(--md-sys-space-md);
+  --ui-product-card-pad-block: var(--md-sys-space-md);
+  --ui-product-card-row-gap: var(--md-sys-space-xs);
+  --ui-product-card-row-pad: var(--md-sys-space-sm); /* space above the price row */
+  --ui-product-card-inline-gap: var(--md-sys-space-sm); /* price, note and action within the row */
+  --ui-product-card-badge-inset: var(--md-sys-space-sm); /* the badge's offset over the image corner */
+
+  /* The action row: the control height (button.css `sm` ramp), a filled primary pill. */
+  --ui-product-card-action-height: var(--md-sys-height-sm);
+  --ui-product-card-action-font: var(--md-sys-font-sm);
+  --ui-product-card-action-bg: var(--md-sys-color-primary);
+  --ui-product-card-action-bg-hover: var(--md-sys-color-primary-high);
+  --ui-product-card-action-bg-active: var(--md-sys-color-primary-dim);
+  --ui-product-card-action-ink: var(--md-sys-color-primary-on-primary);
+}
+
+/* ════════════════ [2] STYLES BLOCK: @scope (ui-product-card) consumes ONLY --ui-product-card-* ════════════════ */
+
+@scope (ui-product-card) {
+  :scope {
+    /* FILL BY DEFAULT (ADR-0223): block-level flex column, no intrinsic width. */
+    display: flex;
+    flex-direction: column;
+    position: relative; /* the containing block for the badge over the image corner */
+    overflow: hidden;
+    box-sizing: border-box;
+
+    background: var(--ui-product-card-bg);
+    border: 1px solid var(--ui-product-card-outline);
+    border-radius: var(--ui-product-card-radius);
+    color: var(--ui-product-card-title-ink);
+  }
+
+  /* [inline]: the ONE sizing opt-out (ADR-0223 R2). */
+  :scope[inline] {
+    display: inline-flex;
+  }
+
+  /* Media holding an image reserves its 16:10 box, so a late image never shifts layout. */
+  :scope > [data-part='media'] {
+    flex: none;
+  }
+  :scope > [data-part='media']:has(> [data-part='image']) {
+    aspect-ratio: var(--ui-product-card-media-aspect);
+    background: var(--ui-product-card-media-bg);
+  }
+  :scope > [data-part='media'] > [data-part='image'] {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+
+  /* The icon header: no aspect box, a top-start glyph in the primary colour. */
+  :scope > [data-part='media']:has(> [data-part='icon']) {
+    padding-inline: var(--ui-product-card-pad-inline);
+    padding-block-start: var(--ui-product-card-pad-block);
+  }
+  :scope > [data-part='media'] > [data-part='icon'] {
+    inline-size: var(--ui-product-card-icon-size);
+    block-size: var(--ui-product-card-icon-size);
+    color: var(--ui-product-card-icon-ink);
+  }
+
+  /* The body: title, subtitle, rating, badge, price row, in DOM order. It grows so the price row can sit
+     at the bottom of a stretched card in a grid. */
+  :scope > [data-part='body'] {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    gap: var(--ui-product-card-row-gap);
+    min-inline-size: 0;
+    padding-inline: var(--ui-product-card-pad-inline);
+    padding-block: var(--ui-product-card-pad-block);
+  }
+
+  :scope [data-part='title'] {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    font-size: var(--ui-product-card-title-size);
+    line-height: var(--ui-product-card-title-line-height);
+    font-weight: var(--ui-product-card-title-weight);
+    color: var(--ui-product-card-title-ink);
+  }
+
+  :scope [data-part='subtitle'],
+  :scope [data-part='rating'],
+  :scope [data-part='price-note'] {
+    font-size: var(--ui-product-card-body-size);
+    line-height: var(--ui-product-card-body-line-height);
+    color: var(--ui-product-card-muted-ink);
+  }
+
+  :scope [data-part='rating'] {
+    display: flex;
+    align-items: baseline;
+    gap: var(--ui-product-card-row-gap);
+    font-variant-numeric: tabular-nums;
+  }
+  :scope [data-part='rating-glyph'] {
+    color: var(--ui-product-card-rating-glyph-ink);
+  }
+  /* Visually hidden but announced (the service-card status-text clip technique). */
+  :scope [data-part='rating-text'] {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* The badge stays in the body in DOM order; it hugs its own content in flow. */
+  :scope [data-part='badge'] {
+    align-self: flex-start;
+  }
+  /* With an image, the badge overlays the media's top-start corner. */
+  :scope:has(> [data-part='media'] > [data-part='image']) [data-part='badge'] {
+    position: absolute;
+    inset-block-start: var(--ui-product-card-badge-inset);
+    inset-inline-start: var(--ui-product-card-badge-inset);
+  }
+
+  /* The price row: pushed to the bottom of the body, the action at its inline end. */
+  :scope [data-part='price-row'] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: var(--ui-product-card-inline-gap);
+    row-gap: var(--ui-product-card-row-gap);
+    margin-block-start: auto;
+    padding-block-start: var(--ui-product-card-row-pad);
+  }
+  :scope [data-part='price'] {
+    font-size: var(--ui-product-card-price-size);
+    line-height: var(--ui-product-card-price-line-height);
+    font-weight: var(--ui-product-card-price-weight);
+    font-variant-numeric: tabular-nums;
+    color: var(--ui-product-card-price-ink);
+  }
+
+  /* The action: a real native button (the service-card.ts precedent), a trailing pill. */
+  :scope [data-part='action'] {
+    margin-inline-start: auto;
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+
+    block-size: var(--ui-product-card-action-height);
+    padding-inline: calc(var(--ui-product-card-action-height) / 2);
+
+    font: inherit;
+    font-size: var(--ui-product-card-action-font);
+    line-height: var(--md-sys-control-line-height); /* the fleet single-line control standard, a sanctioned direct read */
+    white-space: nowrap;
+
+    background: var(--ui-product-card-action-bg);
+    color: var(--ui-product-card-action-ink);
+    border: none;
+    border-radius: calc(var(--ui-product-card-action-height) / 2);
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  :scope [data-part='action']:hover {
+    background: var(--ui-product-card-action-bg-hover);
+  }
+  :scope [data-part='action']:active {
+    background: var(--ui-product-card-action-bg-active);
+  }
+  :scope [data-part='action']:focus-visible {
+    /* The shared fleet ring (ADR-0009), the sanctioned direct read every control shares. */
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
+
+  /* Motion: colour paint only, enumerated, and only when the user has not asked for reduced motion. */
+  @media (prefers-reduced-motion: no-preference) {
+    :scope [data-part='action'] {
+      transition: background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
+    }
+  }
+
+  @media (forced-colors: active) {
+    :scope {
+      border-color: CanvasText;
+    }
+    :scope [data-part='action'] {
+      border: 1px solid ButtonText;
+    }
+  }
+}

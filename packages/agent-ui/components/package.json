@@ -100,6 +100,8 @@
     "./controls/playing-card.css": "./src/controls/playing-card/playing-card.css",
     "./controls/popover": "./src/controls/popover/popover.ts",
     "./controls/popover.css": "./src/controls/popover/popover.css",
+    "./controls/product-card": "./src/controls/product-card/product-card.ts",
+    "./controls/product-card.css": "./src/controls/product-card/product-card.css",
     "./controls/progress": "./src/controls/progress/progress.ts",
     "./controls/progress.css": "./src/controls/progress/progress.css",
     "./controls/radio": "./src/controls/radio/radio.ts",

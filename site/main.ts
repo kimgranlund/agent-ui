@@ -627,6 +627,22 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    // ADR-0243: one product, room or offer to buy or book.
+    label: 'ui-product-card',
+    cards: [
+      {
+        href: './product-card-demo.html',
+        title: 'Demo',
+        blurb: 'Three specimens: an offer with image, badge, rating, price and Book; a shop tile whose long title clamps at two lines; and an icon-header exhibit tile with no price row. With an action event log.',
+      },
+      {
+        href: './product-card-doc.html',
+        title: 'API reference',
+        blurb: 'One product, room or offer to buy or book: optional image or icon header, rating, badge, price and a single action whose click emits the bound action payload. From product-card.md.',
+      },
+    ],
+  },
+  {
     // ADR-0225 (GH #1478) — the true card-face/back display leaf.
     label: 'ui-playing-card',
     cards: [

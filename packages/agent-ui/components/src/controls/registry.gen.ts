@@ -54,6 +54,7 @@ export const CONTROLS: Readonly<Record<string, ControlRecord>> = {
   'ui-pie-chart': { tag: 'ui-pie-chart', load: () => import('./pie-chart/pie-chart.ts'), css: './pie-chart/pie-chart.css', uses: [] },
   'ui-playing-card': { tag: 'ui-playing-card', load: () => import('./playing-card/playing-card.ts'), css: './playing-card/playing-card.css', uses: [] },
   'ui-popover': { tag: 'ui-popover', load: () => import('./popover/popover.ts'), css: './popover/popover.css', uses: [] },
+  'ui-product-card': { tag: 'ui-product-card', load: () => import('./product-card/product-card.ts'), css: './product-card/product-card.css', uses: ['ui-badge', 'ui-icon'] },
   'ui-progress': { tag: 'ui-progress', load: () => import('./progress/progress.ts'), css: './progress/progress.css', uses: [] },
   'ui-radio': { tag: 'ui-radio', load: () => import('./radio/radio.ts'), css: './radio/radio.css', uses: [] },
   'ui-radio-group': { tag: 'ui-radio-group', load: () => import('./radio/radio-group.ts'), css: './radio/radio-group.css', uses: ['ui-radio'] },
