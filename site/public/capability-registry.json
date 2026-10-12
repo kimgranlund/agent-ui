@@ -931,6 +931,28 @@
       ]
     },
     {
+      "id": "control:ui-product-card",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/product-card/product-card.md"
+      },
+      "status": {
+        "state": "excluded",
+        "reason": "ADR-0243 ProductCard ships its control ahead of its default catalog row; T-0072 (R1) lands the row and drains this seed."
+      },
+      "consumers": [
+        "site"
+      ],
+      "tag": "ui-product-card",
+      "tier": "pattern",
+      "description": "One product, room or offer to buy or book, with optional image or icon header, rating, badge, price and a single action.",
+      "uses": [
+        "ui-badge",
+        "ui-icon"
+      ],
+      "catalogs": []
+    },
+    {
       "id": "control:ui-progress",
       "kind": "control",
       "source": {

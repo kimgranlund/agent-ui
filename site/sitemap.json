@@ -388,6 +388,15 @@
       "group": "Overlays & pickers"
     },
     {
+      "name": "Product Card",
+      "tag": "ui-product-card",
+      "url": "./product-card-demo.html",
+      "description": "One product, room or offer to buy or book, with optional image or icon header, rating, badge, price and a single action.",
+      "level": "L1",
+      "section": "Components",
+      "group": "Containers & chrome"
+    },
+    {
       "name": "Progress",
       "tag": "ui-progress",
       "url": "./progress-demo.html",

@@ -67,8 +67,8 @@ const L1_TAXONOMY = {
     'ui-swiper-item',
   ],
   'Containers & chrome': [
-    'ui-card', 'ui-tabs', 'ui-modal', 'ui-drawer', 'ui-toolbar', 'ui-service-card', 'ui-playing-card',
-    'ui-drill',
+    'ui-card', 'ui-tabs', 'ui-modal', 'ui-drawer', 'ui-toolbar', 'ui-service-card', 'ui-product-card',
+    'ui-playing-card', 'ui-drill',
   ],
   'Overlays & pickers': [
     'ui-popover', 'ui-tooltip', 'ui-menu', 'ui-select', 'ui-multi-select', 'ui-form-popover',

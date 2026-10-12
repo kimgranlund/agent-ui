@@ -294,7 +294,7 @@ describe('site coverage — every shipped component has its required per-tier pa
     expect(COMPONENTS.filter((c) => c.tier === 'pattern').map((c) => c.name).sort()).toEqual(
       [
         'breadcrumb', 'calendar', 'color-picker', 'combo-box', 'command-modal', 'disclosure', 'drill', 'file-drop', 'form-popover', 'menu', 'modal',
-        'multi-select', 'pagination', 'popover', 'segmented-control', 'select', 'service-card', 'status-stream', 'suggestions', 'swiper',
+        'multi-select', 'pagination', 'popover', 'product-card', 'segmented-control', 'select', 'service-card', 'status-stream', 'suggestions', 'swiper',
         'swiper-paddles', 'swiper-pagination', 'tabs', 'timeline', 'timeline-item', 'toast', 'toolbar', 'tooltip',
       ],
     )
