@@ -103,7 +103,7 @@ export const MINI_SKILLS: MiniSkill[] = loadMiniSkills()
  * Basic-catalog turn's retrieval already has, `produce.ts:292`'s own comment) — a mini-skill whose body
  * hardcodes a DIFFERENT catalog's vocabulary can never surface on this turn, closing the ADR-0172 cl.3 gap.
  * ADR-0243 cl.3: the match is on the BASE segment of `catalogId` (`baseCatalogId`, the first `--` split), so a
- * derived `<base>--<persona>` turn inherits its base's modules; an `a2ui-basic` id carries no `--` and stays clean.
+ * derived `<base>--<persona>` turn inherits its base's modules; an `a2ui-basic` turn selects only the `a2ui-basic` modules (`basic-dialect`).
  *
  * Degrades to `[]` — mirroring `retrieve.ts`'s zero-vocabulary rule and `fewShot`'s empty return
  * (`system-prompt.ts:93`) — when `intent` shares no idiom vocabulary with any IN-SCOPE registry entry, OR

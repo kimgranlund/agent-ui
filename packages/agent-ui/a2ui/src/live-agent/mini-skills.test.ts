@@ -189,6 +189,10 @@ describe('basic-dialect: the a2ui-basic teaching module (T-0077)', () => {
       expect(selectMiniSkills(intent, MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui').map((m) => m.id)).not.toContain('basic-dialect')
     },
   )
+  it('a derived a2ui-basic--<persona> turn inherits basic-dialect from its base (ADR-0243 cl.3)', () => {
+    const intent = 'build a contact form with a send button'
+    expect(selectMiniSkills(intent, MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'a2ui-basic--croupier').map((m) => m.id)).toEqual(['basic-dialect'])
+  })
   it('carries the three dialect rules the basic seeds used to hold in a header comment', () => {
     const body = MINI_SKILLS.find((m) => m.id === 'basic-dialect')!.body
     expect(body).toMatch(/child Text/)
