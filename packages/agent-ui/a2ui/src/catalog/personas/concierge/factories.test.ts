@@ -68,6 +68,36 @@ describe('bookingFormFactory — applyProp (detached, jsdom-safe)', () => {
     expect(checkbox?.textContent).toBe('Breakfast included') // self-labeled, indicatorFactory precedent
   })
 
+  it('"text" and "number" kinds mint a ui-text-field with the matching type, name, label and required', () => {
+    const el = bookingFormFactory.create()
+    bookingFormFactory.applyProp(el, 'fields', [
+      { kind: 'text', path: 'guestName', label: 'Guest name', required: true },
+      { kind: 'number', path: 'guests', label: 'Guests' },
+    ])
+    const fields = [...el.querySelectorAll('[data-part="fields"] ui-text-field')] as unknown as Array<{
+      name: string
+      type: string
+      label: string
+      required: boolean
+    }>
+    expect(fields.map((f) => f.type)).toEqual(['text', 'number'])
+    expect(fields.map((f) => f.name)).toEqual(['guestName', 'guests'])
+    expect(fields.map((f) => f.label)).toEqual(['Guest name', 'Guests'])
+    expect(fields.map((f) => f.required)).toEqual([true, false])
+  })
+
+  it('"value" prefills text and number fields from the aggregate as strings', () => {
+    const el = bookingFormFactory.create()
+    bookingFormFactory.applyProp(el, 'fields', [
+      { kind: 'text', path: 'guestName', label: 'Guest name' },
+      { kind: 'number', path: 'guests', label: 'Guests' },
+    ])
+    bookingFormFactory.applyProp(el, 'value', { guestName: 'Ada', guests: 2 })
+    const [name, guests] = [...el.querySelectorAll('ui-text-field')] as unknown as Array<{ value: string }>
+    expect(name!.value).toBe('Ada')
+    expect(guests!.value).toBe('2')
+  })
+
   it('a later "fields" apply REPLACES the prior control set (not additive)', () => {
     const el = bookingFormFactory.create()
     bookingFormFactory.applyProp(el, 'fields', [{ kind: 'checkbox', path: 'a', label: 'A' }])

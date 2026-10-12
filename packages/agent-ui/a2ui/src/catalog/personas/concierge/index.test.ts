@@ -25,6 +25,13 @@ describe('concierge persona (SPEC-R1, GH #497)', () => {
     expect(conciergeFragment.functions).toEqual({})
   })
 
+  it('BookingForm.fields kind enum admits dateSingle, select, checkbox, text and number (T-0079)', () => {
+    const fields = conciergeFragment.components.BookingForm?.properties.fields?.type as unknown as {
+      items: { properties: { kind: { enum: string[] } } }
+    }
+    expect(fields.items.properties.kind.enum).toEqual(['dateSingle', 'select', 'checkbox', 'text', 'number'])
+  })
+
   it('AC3 — the fragment declares a factory for every component it declares (the FACTORY_MISSING precondition)', () => {
     for (const type of Object.keys(conciergeFragment.components)) {
       expect(Object.hasOwn(conciergeFactories, type), type).toBe(true)

@@ -9,7 +9,7 @@
             "items": {
               "type": "object",
               "properties": {
-                "kind": { "type": "string", "enum": ["dateSingle", "select", "checkbox"] },
+                "kind": { "type": "string", "enum": ["dateSingle", "select", "checkbox", "text", "number"] },
                 "path": { "type": "string" },
                 "label": { "type": "string" },
                 "required": { "type": "boolean" },

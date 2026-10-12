@@ -71,7 +71,7 @@ export const personaBasicFixtureDemoSeed: PersonaExampleSeed = {
 
 const BOOKING_SID = 'concierge-booking'
 
-/** The booking form's three field kinds, shared by both concierge seeds. */
+/** The booking form's three field kinds (dateSingle, select, checkbox), shared by both booking seeds. */
 const BOOKING_FIELDS = [
   { kind: 'dateSingle', path: 'checkIn', label: 'Check-in', required: true },
   {
@@ -161,6 +161,60 @@ export const personaBasicConciergeBookingSeed: PersonaExampleSeed = {
             action: { event: { name: 'confirm_booking', context: { booking: { path: '/booking' } } } },
           },
           { id: 'summary', component: 'BookingConfirmation', title: 'Your booking', rows: BOOKING_ROWS, data: { path: '/booking' } },
+        ],
+      },
+    },
+  ],
+}
+
+const STAY_SID = 'concierge-stay'
+
+/** The stay form's fields: a text name, a number guest count, and a date range as two dateSingle fields. */
+const STAY_FIELDS = [
+  { kind: 'text', path: 'guestName', label: 'Guest name', required: true },
+  { kind: 'number', path: 'guests', label: 'Number of guests', required: true },
+  { kind: 'dateSingle', path: 'checkIn', label: 'Check-in', required: true },
+  { kind: 'dateSingle', path: 'checkOut', label: 'Check-out', required: true },
+]
+
+const STAY_ROWS = [
+  { label: 'Guest', path: 'guestName' },
+  { label: 'Guests', path: 'guests' },
+  { label: 'Check-in', path: 'checkIn' },
+  { label: 'Check-out', path: 'checkOut' },
+]
+
+/** The concierge persona over agent-ui: a BookingForm using the text and number kinds and a two-field date range. */
+export const personaConciergeStaySeed: PersonaExampleSeed = {
+  name: 'persona-concierge-stay-details',
+  description:
+    'The concierge persona over the agent-ui base: a BookingForm titled "Your stay" with a required text guest ' +
+    'name, a required number guest count and the date range as two required dateSingle fields (check-in, ' +
+    'check-out), its aggregate bound to /stay and its child a submit Button; beside it a BookingConfirmation ' +
+    'whose rows read the four values back from the same /stay object.',
+  promptText: 'Book a stay for two guests: take the guest name, the number of guests, and the check-in and check-out dates.',
+  surfaceId: STAY_SID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui--concierge',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: STAY_SID, catalogId: 'agent-ui--concierge' } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: STAY_SID,
+        path: '/stay',
+        value: { guestName: 'Ada Lovelace', guests: '2', checkIn: '2026-11-14', checkOut: '2026-11-17' },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: STAY_SID,
+        components: [
+          { id: 'root', component: 'Column', gap: 'md', children: ['form', 'summary'] },
+          { id: 'form', component: 'BookingForm', title: 'Your stay', fields: STAY_FIELDS, value: { path: '/stay' }, child: 'submitBtn' },
+          { id: 'submitBtn', component: 'Button', variant: 'solid', label: 'Reserve', action: { action: 'reserveStay', submit: true } },
+          { id: 'summary', component: 'BookingConfirmation', title: 'Stay summary', rows: STAY_ROWS, data: { path: '/stay' } },
         ],
       },
     },
@@ -262,6 +316,7 @@ export const personaExemplarSeeds: readonly PersonaExampleSeed[] = [
   personaBasicFixtureDemoSeed,
   personaConciergeBookingSeed,
   personaBasicConciergeBookingSeed,
+  personaConciergeStaySeed,
   personaCroupierHandSeed,
   personaBasicCroupierHandSeed,
 ]
