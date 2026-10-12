@@ -15,7 +15,7 @@
     "digest": "sha256:95ebf36fbc95ca0c53816f3095a5340e38530309151e6dc334145e2955abb77d"
   },
   "selection": {
-    "digest": "sha256:82d25e88fc7ff1da2c8e529f35446d2ca76a3c945dab96649fbfa6ee4eed72d1"
+    "digest": "sha256:0464bfbc1e028e9335d07498f2c5784caff44cd61b24838966d67a3657a18c63"
   },
   "noPreset": {
     "why": "Mechanism-only fragment: persona-catalog-composition SPEC-N6 ships fixture-demo to exercise the composition seam, so no agent preset stands behind it."

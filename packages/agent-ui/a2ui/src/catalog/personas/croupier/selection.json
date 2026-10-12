@@ -3,12 +3,21 @@
   "types": {
     "PlayingCard": {
       "intents": [
-        "show one playing card"
+        "show one playing card",
+        "a face-up or face-down card in a hand"
       ],
       "notFor": [
         {
           "type": "Card",
           "why": "a content surface"
+        },
+        {
+          "type": "Image",
+          "why": "a card picture; PlayingCard draws its own face"
+        },
+        {
+          "type": "Text",
+          "why": "a rank or suit written as words"
         }
       ]
     }
