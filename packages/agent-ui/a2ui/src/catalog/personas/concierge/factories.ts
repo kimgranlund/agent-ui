@@ -42,8 +42,8 @@
 // bubbling to the composite ROOT was tried and rejected: `el`'s own click listener would fire on EVERY
 // descendant click, including picking a calendar day, silently emitting the submit action early).
 //
-// Field kinds (§2.1 sketch named "range Calendar" — narrowed at build): `dateSingle | select | checkbox`
-// only. `ui-calendar`'s `mode="range"` commits via a two-ENTRY `FormData` (`calendar.ts` — start+end
+// Field kinds (§2.1 sketch named "range Calendar" — narrowed at build): `dateSingle | select | checkbox |
+// text | number` (T-0079 added the last two, both a `ui-text-field` with `type` text/number). `ui-calendar`'s `mode="range"` commits via a two-ENTRY `FormData` (`calendar.ts` — start+end
 // under one `name`), which `ui-form-provider`'s native `values()`/`entries()` aggregation (FormData
 // parity) does not flatten into the single scalar-per-path shape `BookingConfirmation.rows` needs — a
 // verified fit gap, not a guess. A date RANGE is authored as two ordinary `dateSingle` fields instead
@@ -147,6 +147,25 @@ function buildFieldControl(field: BookingField): HTMLElement {
       wrap.appendChild(el)
       return wrap
     }
+    case 'text':
+    case 'number': {
+      // Self-labeled (`label` is the visible caption) - no caption wrap. `type=number` brings the stepper,
+      // the numeric codec and native range validity; the committed value is the field's string form.
+      const el = document.createElement('ui-text-field') as unknown as FieldControlLike & {
+        label: string
+        placeholder: string
+        type: string
+      }
+      el.name = field.path
+      el.required = Boolean(field.required)
+      el.label = field.label
+      el.placeholder = field.label
+      el.type = field.kind
+      const wrap = document.createElement('div')
+      wrap.setAttribute('data-a2ui-booking-field', field.path)
+      wrap.appendChild(el)
+      return wrap
+    }
     case 'dateSingle':
     default: {
       const el = document.createElement('ui-calendar') as unknown as FieldControlLike
@@ -172,7 +191,15 @@ function findByAttr(container: HTMLElement, attr: string, value: string): HTMLEl
 
 /** Set one control's CURRENT value from the bound aggregate — read direction (`applyProp('value', …)`). */
 function prefillFieldControl(wrap: HTMLElement, field: BookingField, raw: unknown): void {
-  const control = wrap.querySelector(field.kind === 'checkbox' ? 'ui-checkbox' : field.kind === 'select' ? 'ui-select' : 'ui-calendar')
+  const control = wrap.querySelector(
+    field.kind === 'checkbox'
+      ? 'ui-checkbox'
+      : field.kind === 'select'
+        ? 'ui-select'
+        : field.kind === 'text' || field.kind === 'number'
+          ? 'ui-text-field'
+          : 'ui-calendar',
+  )
   if (control === null) return
   if (field.kind === 'checkbox') (control as unknown as { checked: boolean }).checked = Boolean(raw)
   else (control as unknown as { value: string }).value = raw == null ? '' : String(raw)
@@ -189,7 +216,7 @@ function rebuildFields(parts: BookingFormParts, fields: BookingField[]): void {
  */
 export const bookingFormFactory: WidgetFactory = {
   tag: 'ui-form-provider',
-  uses: ['ui-calendar', 'ui-checkbox', 'ui-select', 'ui-text'], // ADR-0233: the field controls it mints
+  uses: ['ui-calendar', 'ui-checkbox', 'ui-select', 'ui-text', 'ui-text-field'], // ADR-0233: the field controls it mints
   create: () => {
     const el = document.createElement('ui-form-provider') as unknown as FormProviderLike
     const titleEl = document.createElement('ui-text')
