@@ -40,6 +40,7 @@ export const CONTROLS: Readonly<Record<string, ControlRecord>> = {
   'ui-file-drop': { tag: 'ui-file-drop', load: () => import('./file-drop/file-drop.ts'), css: './file-drop/file-drop.css', uses: ['ui-attachment', 'ui-button', 'ui-icon'] },
   'ui-form-popover': { tag: 'ui-form-popover', load: () => import('./form-popover/form-popover.ts'), css: './form-popover/form-popover.css', uses: [] },
   'ui-form-provider': { tag: 'ui-form-provider', load: () => import('./form-provider/form-provider.ts'), css: './form-provider/form-provider.css', uses: [] },
+  'ui-game-hud': { tag: 'ui-game-hud', load: () => import('./game-hud/game-hud.ts'), css: './game-hud/game-hud.css', uses: ['ui-badge'] },
   'ui-gauge': { tag: 'ui-gauge', load: () => import('./gauge/gauge.ts'), css: './gauge/gauge.css', uses: [] },
   'ui-grid': { tag: 'ui-grid', load: () => import('./grid/grid.ts'), css: './grid/grid.css', uses: [] },
   'ui-icon': { tag: 'ui-icon', load: () => import('./icon/icon.ts'), css: './icon/icon.css', uses: [] },

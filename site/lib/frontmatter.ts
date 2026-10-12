@@ -98,6 +98,8 @@ import gaugeMd from '../../packages/agent-ui/components/src/controls/gauge/gauge
 import tableMd from '../../packages/agent-ui/components/src/controls/table/table.md?raw'
 import statMd from '../../packages/agent-ui/components/src/controls/stat/stat.md?raw'
 import badgeMd from '../../packages/agent-ui/components/src/controls/badge/badge.md?raw'
+// ADR-0243 (T-0071) - ui-game-hud, the game score and status strip (tier=pattern => {doc, demo}).
+import gameHudMd from '../../packages/agent-ui/components/src/controls/game-hud/game-hud.md?raw'
 // ADR-0201 — ui-description-list, the key–value receipt primitive (tier=display ⇒ {doc}).
 import descriptionListMd from '../../packages/agent-ui/components/src/controls/description-list/description-list.md?raw'
 // ADR-0214/GH #1394 — ui-source-list, the source-attribution aggregate leaf (tier=display ⇒ {doc}).
@@ -259,6 +261,8 @@ export const loadGaugeDoc = (): ComponentDoc => parseDoc(gaugeMd)
 export const loadTableDoc = (): ComponentDoc => parseDoc(tableMd)
 export const loadStatDoc  = (): ComponentDoc => parseDoc(statMd)
 export const loadBadgeDoc = (): ComponentDoc => parseDoc(badgeMd)
+// ADR-0243 (T-0071) - ui-game-hud, the game score and status strip (tier=pattern => {doc, demo}).
+export const loadGameHudDoc = (): ComponentDoc => parseDoc(gameHudMd)
 export const loadDescriptionListDoc = (): ComponentDoc => parseDoc(descriptionListMd)
 // ADR-0214/GH #1394 — ui-source-list, the source-attribution aggregate leaf (tier=display ⇒ {doc}).
 export const loadSourceListDoc = (): ComponentDoc => parseDoc(sourceListMd)

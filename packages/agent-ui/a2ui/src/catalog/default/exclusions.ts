@@ -99,4 +99,8 @@ export const EXCLUSION_ALLOWLIST: ReadonlyMap<string, string> = new Map<string, 
     'ADR-0243 (BoardGrid fork sheet), TEMPORARY seed: ui-board-grid shipped ahead of its default catalog ' +
     'row (T-0069 C1 mints the control). T-0072 (R1) lands the BoardGrid row and factory and drains this ' +
     'seed, the same way every "shipped ahead of its catalog row" seed above was drained.'],
+  ['GameHud',
+    'ADR-0243 / T-0072: temporary seed, the ui-game-hud control shipped ahead of its default catalog row. ' +
+    'R1 either lands the GameHud row and drains this seed, or, under the preset-widgets design section 9 ' +
+    'kill switch, rewrites it as a permanent exclusion with its own reason.'],
 ])

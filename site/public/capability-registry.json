@@ -626,6 +626,27 @@
       ]
     },
     {
+      "id": "control:ui-game-hud",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/game-hud/game-hud.md"
+      },
+      "status": {
+        "state": "excluded",
+        "reason": "ADR-0243 / T-0072: temporary seed, the ui-game-hud control shipped ahead of its default catalog row. R1 either lands the GameHud row and drains this seed, or, under the preset-widgets design section 9 kill switch, rewrites it as a permanent exclusion with its own reason."
+      },
+      "consumers": [
+        "site"
+      ],
+      "tag": "ui-game-hud",
+      "tier": "pattern",
+      "description": "A game score and status strip with a title, a status badge, an optional progress bar and up to six stat tiles with signed deltas.",
+      "uses": [
+        "ui-badge"
+      ],
+      "catalogs": []
+    },
+    {
       "id": "control:ui-gauge",
       "kind": "control",
       "source": {
