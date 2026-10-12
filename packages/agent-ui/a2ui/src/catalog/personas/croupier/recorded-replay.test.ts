@@ -11,6 +11,7 @@ import { croupierHandConsistency } from './checks.ts'
 import { semanticSurfaceViews } from '../../semantic-check.ts'
 import type { Session } from '../../../agent/agent-transport.ts'
 import type { A2uiOutput, A2uiServerMessage } from '../../../protocol.ts'
+import { personaBasicCroupierCardTableSeed, personaCroupierCardTableSeed } from '../../../examples/persona-exemplars.ts'
 
 const dir = join(import.meta.dirname, '__fixtures__')
 const messages = (file: string): A2uiOutput =>
@@ -58,5 +59,21 @@ describe('recorded Haiku 5.5 Croupier turns replay offline', () => {
   it('turn 2 (stand with no hand in play) is a note only: no surface, no finding', () => {
     expect(turn2).toEqual([])
     expect(findings(sessionFor(turn1), turn2)).toEqual([])
+  })
+})
+
+describe('a CardTable deal against the recorded 27-component deal', () => {
+  const componentCount = (out: readonly A2uiServerMessage[]): number =>
+    out.reduce((n, m) => n + ('updateComponents' in m ? m.updateComponents.components.length : 0), 0)
+
+  it('CardTable: the recorded Haiku 4.5 deal spends 27 components (24 plus 3), the CardTable seed 4', () => {
+    expect(componentCount(messages('haiku-4-5-blackjack-turn1.jsonl'))).toBe(27)
+    expect(componentCount(personaCroupierCardTableSeed.messages)).toBe(4)
+  })
+
+  it('CardTable: both CardTable seeds pass the hand check with no finding', () => {
+    for (const seed of [personaCroupierCardTableSeed, personaBasicCroupierCardTableSeed]) {
+      expect(findings({ turns: [] }, [...seed.messages]), seed.name).toEqual([])
+    }
   })
 })

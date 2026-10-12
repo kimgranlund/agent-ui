@@ -1,11 +1,10 @@
-// index.ts — the `croupier` persona-scoped local pattern set (SPEC-R1, GH #497). Promotes the ONE
-// croupier idiom the decomp note's promotion table rules a real validation-enforceability win —
-// `card rendering` — into one catalog type, `PlayingCard` (see `factories.ts`'s header). The table-frame
-// arrangement and the game-HUD idiom stay prose, untouched, per the note's own ruling — nothing else
-// ships here, and `game-table-chrome.md`/`game-hud.md` are NOT touched by this build.
+// index.ts: the `croupier` persona-scoped local pattern set (SPEC-R1, GH #497; ADR-0243). Two catalog types:
+// `PlayingCard`, the one card idiom promoted to an enum-constrained row, and `CardTable`, the composite table
+// over it (both hands, the totals, the bankroll and bet readout, the producer's action Buttons as children;
+// see `factories.ts`'s header). The table-frame and game-HUD idioms stay prose in their mini-skills.
 //
-// `targetCatalogs`: BOTH shipped bases — see `factories.ts`'s header (no dialect-fit question; this
-// factory never routes through either base's own dialect).
+// `targetCatalogs`: both shipped bases, see `factories.ts`'s header (no dialect-fit question; neither
+// factory routes through either base's own dialect).
 //
 // The browser-only, factory-bearing PersonaCatalogPackage (`renderer.ts`'s constructor consumes this
 // directly). `manifest.ts` carries the SAME `personaId`/`fragment`/`targetCatalogs` data, factory-free

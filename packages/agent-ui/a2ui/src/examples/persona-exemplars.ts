@@ -8,7 +8,7 @@
 // An `a2ui-basic--*` seed writes its base types in the Basic dialect (`basic-exemplars.ts` module header): a
 // Button carries its label as a `child` Text and its action as `{ event: { name, context } }`, and Row/Column
 // take `justify`/`align`, never `gap`. The fragment types (FixtureBanner, BookingForm, BookingConfirmation,
-// PlayingCard) read the same on either base.
+// PlayingCard, CardTable) read the same on either base.
 //
 // These are page and gate fixtures, never corpus candidates: no corpus shelf, shard or import-seeds table reads
 // this module.
@@ -310,6 +310,100 @@ export const personaBasicCroupierHandSeed: PersonaExampleSeed = {
   ],
 }
 
+const CARD_TABLE_SID = 'card-table'
+
+/** The opening deal both CardTable seeds write: the dealer's hole card face down, the player on 17. */
+const CARD_TABLE_DATA = {
+  dealerHand: [
+    { rank: '9', suit: 'clubs' },
+    { rank: '4', suit: 'diamonds', faceDown: true },
+  ],
+  playerHand: [
+    { rank: 'K', suit: 'hearts' },
+    { rank: '7', suit: 'spades' },
+  ],
+  dealerTotal: 9,
+  playerTotal: 17,
+  bankroll: 1000,
+  bet: 50,
+}
+
+/** The CardTable node both seeds share: every table figure bound to its data-model path (ADR-0243). */
+const CARD_TABLE_ROOT = {
+  id: 'root',
+  component: 'CardTable',
+  title: 'Blackjack',
+  status: 'Your move',
+  statusIntent: 'info',
+  dealerHand: { path: '/dealerHand' },
+  playerHand: { path: '/playerHand' },
+  dealerTotal: { path: '/dealerTotal' },
+  playerTotal: { path: '/playerTotal' },
+  bankroll: { path: '/bankroll' },
+  bet: { path: '/bet' },
+  children: ['hitBtn', 'standBtn', 'doubleBtn'],
+}
+
+/** The croupier persona over agent-ui: the opening deal on the fragment's CardTable, the moves as children. */
+export const personaCroupierCardTableSeed: PersonaExampleSeed = {
+  name: 'persona-croupier-card-table',
+  description:
+    'The croupier persona over the agent-ui base: one CardTable titled Blackjack whose hands, totals, bankroll ' +
+    'and bet are bound to the data model (a 9 of clubs up and a face-down hole card for the dealer, a king of ' +
+    'hearts and a 7 of spades for the player, total 17), with Hit, Stand and Double Buttons as its children.',
+  promptText: 'Deal me a hand of blackjack.',
+  surfaceId: CARD_TABLE_SID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui--croupier',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: CARD_TABLE_SID, catalogId: 'agent-ui--croupier' } },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: CARD_TABLE_SID,
+        components: [
+          CARD_TABLE_ROOT,
+          { id: 'hitBtn', component: 'Button', variant: 'solid', label: 'Hit', action: { action: 'hit' } },
+          { id: 'standBtn', component: 'Button', variant: 'soft', label: 'Stand', action: { action: 'stand' } },
+          { id: 'doubleBtn', component: 'Button', variant: 'soft', label: 'Double', action: { action: 'double' } },
+        ],
+      },
+    },
+    { version: 'v1.0', updateDataModel: { surfaceId: CARD_TABLE_SID, value: CARD_TABLE_DATA } },
+  ],
+}
+
+/** The croupier persona over a2ui-basic: the same CardTable, the moves as Basic event Buttons. */
+export const personaBasicCroupierCardTableSeed: PersonaExampleSeed = {
+  name: 'persona-basic-croupier-card-table',
+  description:
+    'The croupier persona over the a2ui-basic base: the same bound CardTable and opening deal, with Basic ' +
+    'Buttons whose child Text labels read Hit, Stand and Double and whose events name the move.',
+  promptText: 'Deal me a hand of blackjack.',
+  surfaceId: CARD_TABLE_SID,
+  protocolVersion: 'v1.0',
+  catalogId: 'a2ui-basic--croupier',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: CARD_TABLE_SID, catalogId: 'a2ui-basic--croupier' } },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: CARD_TABLE_SID,
+        components: [
+          CARD_TABLE_ROOT,
+          { id: 'hitLabel', component: 'Text', text: 'Hit' },
+          { id: 'hitBtn', component: 'Button', variant: 'primary', child: 'hitLabel', action: { event: { name: 'hit', context: {} } } },
+          { id: 'standLabel', component: 'Text', text: 'Stand' },
+          { id: 'standBtn', component: 'Button', variant: 'default', child: 'standLabel', action: { event: { name: 'stand', context: {} } } },
+          { id: 'doubleLabel', component: 'Text', text: 'Double' },
+          { id: 'doubleBtn', component: 'Button', variant: 'default', child: 'doubleLabel', action: { event: { name: 'double', context: {} } } },
+        ],
+      },
+    },
+    { version: 'v1.0', updateDataModel: { surfaceId: CARD_TABLE_SID, value: CARD_TABLE_DATA } },
+  ],
+}
+
 /** Every persona seed, in shelf order. */
 export const personaExemplarSeeds: readonly PersonaExampleSeed[] = [
   personaFixtureDemoSeed,
@@ -319,4 +413,6 @@ export const personaExemplarSeeds: readonly PersonaExampleSeed[] = [
   personaConciergeStaySeed,
   personaCroupierHandSeed,
   personaBasicCroupierHandSeed,
+  personaCroupierCardTableSeed,
+  personaBasicCroupierCardTableSeed,
 ]

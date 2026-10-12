@@ -18,6 +18,25 @@
         {
           "type": "Text",
           "why": "a rank or suit written as words"
+        },
+        {
+          "type": "CardTable",
+          "why": "a whole table with both hands and the moves"
+        }
+      ]
+    },
+    "CardTable": {
+      "intents": [
+        "a card table with both hands and the actions"
+      ],
+      "notFor": [
+        {
+          "type": "PlayingCard",
+          "why": "one card"
+        },
+        {
+          "type": "Card",
+          "why": "a content surface"
         }
       ]
     }

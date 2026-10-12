@@ -16,8 +16,8 @@ describe('croupier persona (SPEC-R1, GH #497)', () => {
     expect(croupierPersona.personaId).toBe(CROUPIER_PERSONA_ID)
   })
 
-  it('AC2 — the fragment loads through the SAME structural gate a whole catalog runs — exactly the one promoted type', () => {
-    expect(Object.keys(croupierFragment.components)).toEqual(['PlayingCard'])
+  it('AC2: the fragment loads through the SAME structural gate a whole catalog runs, PlayingCard plus the CardTable composite', () => {
+    expect(Object.keys(croupierFragment.components)).toEqual(['PlayingCard', 'CardTable'])
     expect(croupierFragment.components.PlayingCard?.properties.rank?.type).toEqual({
       type: 'string',
       enum: ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'],
@@ -39,11 +39,13 @@ describe('croupier persona (SPEC-R1, GH #497)', () => {
     expect(croupierTargetCatalogs).toEqual(['agent-ui', 'a2ui-basic'])
   })
 
-  it('PlayingCard does not collide with either shipped base catalog\'s own names', () => {
-    expect(Object.hasOwn(defaultCatalog.components, 'PlayingCard')).toBe(false)
-    expect(Object.hasOwn(defaultFactories, 'PlayingCard')).toBe(false)
-    expect(Object.hasOwn(a2uiBasicCatalog.components, 'PlayingCard')).toBe(false)
-    expect(Object.hasOwn(a2uiBasicFactories, 'PlayingCard')).toBe(false)
+  it('PlayingCard and CardTable do not collide with either shipped base catalog\'s own names', () => {
+    for (const type of ['PlayingCard', 'CardTable']) {
+      expect(Object.hasOwn(defaultCatalog.components, type), type).toBe(false)
+      expect(Object.hasOwn(defaultFactories, type), type).toBe(false)
+      expect(Object.hasOwn(a2uiBasicCatalog.components, type), type).toBe(false)
+      expect(Object.hasOwn(a2uiBasicFactories, type), type).toBe(false)
+    }
   })
 
   it('a stand-alone Registry composes the croupier fragment onto EITHER shipped base with zero throw', () => {

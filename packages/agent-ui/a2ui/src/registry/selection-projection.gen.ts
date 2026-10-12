@@ -113,7 +113,8 @@ export const SELECTION_PROJECTION: SelectionProjection = {
       "BookingConfirmation": {"intents":["confirm a completed booking","summary rows of a finished booking"],"notFor":[{"type":"BookingForm","why":"collecting booking details"},{"type":"Card","why":"a generic bounded surface"},{"type":"Text","why":"a one-line status message"}]},
     },
     "croupier": {
-      "PlayingCard": {"intents":["show one playing card","a face-up or face-down card in a hand"],"notFor":[{"type":"Card","why":"a content surface"},{"type":"Image","why":"a card picture; PlayingCard draws its own face"},{"type":"Text","why":"a rank or suit written as words"}]},
+      "PlayingCard": {"intents":["show one playing card","a face-up or face-down card in a hand"],"notFor":[{"type":"Card","why":"a content surface"},{"type":"Image","why":"a card picture; PlayingCard draws its own face"},{"type":"Text","why":"a rank or suit written as words"},{"type":"CardTable","why":"a whole table with both hands and the moves"}]},
+      "CardTable": {"intents":["a card table with both hands and the actions"],"notFor":[{"type":"PlayingCard","why":"one card"},{"type":"Card","why":"a content surface"}]},
     },
     "fixture-demo": {
       "FixtureBanner": {"intents":["the demo persona banner line","a test-fixture status line"],"notFor":[{"type":"Text","why":"ordinary copy"},{"type":"Card","why":"a surface around real content"}]},

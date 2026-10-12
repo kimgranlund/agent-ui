@@ -4,7 +4,7 @@
 // connected would both be safe); kept detached anyway for parity with the fixture-demo precedent.
 
 import { describe, it, expect } from 'vitest'
-import { playingCardFactory, croupierFactories } from './factories.ts'
+import { cardTableFactory, playingCardFactory, croupierFactories } from './factories.ts'
 import { croupierFragment } from './index.ts'
 
 describe('croupier factories — table parity (mirrors fixture-demo/factories.test.ts)', () => {
@@ -72,5 +72,27 @@ describe('playingCardFactory — applyProp (direct prop pass-through, ADR-0225)'
   it('has no value mark and no submitGate — a display-only leaf', () => {
     expect(playingCardFactory.value).toBeUndefined()
     expect(playingCardFactory.submitGate).toBeUndefined()
+  })
+})
+
+describe('cardTableFactory: the CardTable composite (ADR-0243)', () => {
+  it('CardTable mints a ui-card root and names every tag it mints inside it (ADR-0233)', () => {
+    expect(cardTableFactory.tag).toBe('ui-card')
+    expect(cardTableFactory.uses).toEqual(['ui-badge', 'ui-playing-card', 'ui-text'])
+    const el = cardTableFactory.create()
+    expect(el.tagName.toLowerCase()).toBe('ui-card')
+    expect(el.parentNode).toBeNull()
+  })
+
+  it('CardTable ignores an unrecognized prop: a no-op that never throws', () => {
+    const el = cardTableFactory.create()
+    const before = el.innerHTML
+    expect(() => cardTableFactory.applyProp(el, 'unknownProp', 'x')).not.toThrow()
+    expect(el.innerHTML).toBe(before)
+  })
+
+  it('CardTable has no value mark and no submitGate: a display composite', () => {
+    expect(cardTableFactory.value).toBeUndefined()
+    expect(cardTableFactory.submitGate).toBeUndefined()
   })
 })

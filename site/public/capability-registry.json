@@ -5860,6 +5860,37 @@
         ]
       },
       {
+        "id": "type:croupier/CardTable",
+        "kind": "type",
+        "source": {
+          "path": "packages/agent-ui/a2ui/src/catalog/personas/croupier/catalog.json",
+          "record": "CardTable"
+        },
+        "status": {
+          "state": "emittable"
+        },
+        "consumers": [
+          "prompt",
+          "renderer",
+          "eval"
+        ],
+        "name": "CardTable",
+        "scope": "croupier",
+        "intents": [
+          "a card table with both hands and the actions"
+        ],
+        "notFor": [
+          {
+            "type": "PlayingCard",
+            "why": "one card"
+          },
+          {
+            "type": "Card",
+            "why": "a content surface"
+          }
+        ]
+      },
+      {
         "id": "type:croupier/PlayingCard",
         "kind": "type",
         "source": {
@@ -5893,6 +5924,10 @@
           {
             "type": "Text",
             "why": "a rank or suit written as words"
+          },
+          {
+            "type": "CardTable",
+            "why": "a whole table with both hands and the moves"
           }
         ]
       }

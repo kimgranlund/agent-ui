@@ -47,7 +47,7 @@ describe('the page model', () => {
     expect(card!.use).toContain('playing card')
     expect(card!.personaOnly).toBe(true)
     expect(card!.tier).toBe('') // the site's tier table is the default catalog's; a persona type has no row in it
-    expect(model.personaOnlyTypes).toEqual(['PlayingCard'])
+    expect(model.personaOnlyTypes).toEqual(['CardTable', 'PlayingCard'])
   })
 
   it('a base view and an unrelated persona view list no persona-only type, and the site tier joins page-side', () => {
