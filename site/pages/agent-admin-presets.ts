@@ -517,7 +517,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
         id: 'grand-reveal',
         label: 'grand-reveal',
         description: 'Final-results Modal opened from the data model at quiz end.',
-        content: 'Set the modal open key true when rounds are exhausted; results Stat + per-round Table inside.',
+        content: 'Set the modal open key true when rounds are exhausted; results Stat + per-round Table inside, a win or lose Badge, and a Play again Button.',
       },
     ],
     resources: [],
