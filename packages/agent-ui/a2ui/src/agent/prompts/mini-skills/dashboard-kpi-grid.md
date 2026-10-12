@@ -3,4 +3,4 @@ id: dashboard-kpi-grid
 triggers: dashboard summary kpi stats metrics analytics overview report numbers grid
 catalogId: agent-ui
 ---
-A dashboard / summary. Parts: 3-7 KPI stats. Map: Grid(min) of Cards, each a Column of Text variant="caption" (label) + Text variant="h2" (value). Wall: real charts/sparklines are not hosted — offer the numeric grid, name the missing chart.
+A dashboard / summary. Parts: 3-7 KPI Stats, then one chart, then a Table of the detail. Map: Grid(min) of Stat (label, value, delta, caption), then BarChart / ColumnChart / LineChart / PieChart (Gauge for one bounded value, Sparkline inline in a tile), then Table(columns, rows). Keep the Stat row, chart and Table under one Card.
