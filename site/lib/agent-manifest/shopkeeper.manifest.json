@@ -1,0 +1,11 @@
+{
+  "id": "shopkeeper",
+  "preset": "shopkeeper",
+  "seedVersion": 1,
+  "seedDigest": "sha256:dcfc3efdfcc1ba3b23e6368d0294ebcc7a8430e197d323eefd069bb74b9c59ff",
+  "fragment": null,
+  "selection": null,
+  "noFragment": {
+    "why": "Its idioms use Grid, ProductCard, List, Stat and Button, each a default-catalog row (ProductCard from ADR-0243), so the idiom stays prose and earns no fragment under the promotion bar at .claude/docs/decompositions/md-content-concierge-croupier-promotion.decomp.md:21-25 (proposed, GH #497)."
+  }
+}

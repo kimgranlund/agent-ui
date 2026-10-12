@@ -52,9 +52,9 @@ const SUPPORTED_MODEL_IDS = new Set(['claude-sonnet-5', 'claude-haiku-5-5']) // 
 const ALL_ENTRY_KEYS = Object.values(ENTRY_KINDS).map((kind) => entriesStoreKey(kind))
 
 describe('AGENT_PRESETS — data integrity (TKT-0074)', () => {
-  it('fourteen presets, unique ids, non-empty labels/taglines', () => {
-    expect(AGENT_PRESETS).toHaveLength(14) // six showcases + the GH #46 trio additions + the six-game roster
-    expect(new Set(AGENT_PRESETS.map((p) => p.id)).size).toBe(14)
+  it('fifteen presets, unique ids, non-empty labels/taglines', () => {
+    expect(AGENT_PRESETS).toHaveLength(15) // six showcases + the GH #46 trio additions + the six-game roster + the T-0075 Shopkeeper
+    expect(new Set(AGENT_PRESETS.map((p) => p.id)).size).toBe(15)
     for (const p of AGENT_PRESETS) {
       expect(p.label.length, p.id).toBeGreaterThan(0)
       expect(p.tagline.length, p.id).toBeGreaterThan(0)
@@ -1027,7 +1027,7 @@ describe('librariesForCategory — GH #143 per-preset library scoping', () => {
     const { librariesForCategory } = await import('./agent-admin-libraries.ts')
     const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
     const scoped = librariesForCategory('hospitality')
-    expect(scoped[ENTRY_KINDS.skill]!.map((p) => p.id).sort()).toEqual(['a2ui-idioms', 'hospitality'])
+    expect(scoped[ENTRY_KINDS.skill]!.map((p) => p.id).sort()).toEqual(['a2ui-idioms', 'commerce', 'hospitality'])
     expect(scoped[ENTRY_KINDS.workflow]!.map((p) => p.id).sort()).toEqual(['playbooks-core', 'playbooks-hospitality'])
     expect(scoped[ENTRY_KINDS.resource]!.map((p) => p.id)).toEqual([])
     expect(scoped[ENTRY_KINDS.tool]!.map((p) => p.id)).toEqual(['integrations'])
@@ -1037,7 +1037,7 @@ describe('librariesForCategory — GH #143 per-preset library scoping', () => {
     const { librariesForCategory } = await import('./agent-admin-libraries.ts')
     const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
     const scoped = librariesForCategory('games')
-    expect(scoped[ENTRY_KINDS.skill]!.map((p) => p.id).sort()).toEqual(['a2ui-idioms', 'games'])
+    expect(scoped[ENTRY_KINDS.skill]!.map((p) => p.id).sort()).toEqual(['a2ui-idioms', 'commerce', 'games'])
     expect(scoped[ENTRY_KINDS.workflow]!.map((p) => p.id).sort()).toEqual(['playbooks-core', 'playbooks-games'])
     expect(scoped[ENTRY_KINDS.resource]!.map((p) => p.id)).toEqual(['game-rules'])
     expect(scoped[ENTRY_KINDS.tool]!.map((p) => p.id)).toEqual(['integrations'])
@@ -1047,7 +1047,7 @@ describe('librariesForCategory — GH #143 per-preset library scoping', () => {
     const { librariesForCategory } = await import('./agent-admin-libraries.ts')
     const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
     const scoped = librariesForCategory(undefined)
-    expect(scoped[ENTRY_KINDS.skill]!.map((p) => p.id)).toEqual(['a2ui-idioms'])
+    expect(scoped[ENTRY_KINDS.skill]!.map((p) => p.id)).toEqual(['a2ui-idioms', 'commerce'])
     expect(scoped[ENTRY_KINDS.workflow]!.map((p) => p.id)).toEqual(['playbooks-core'])
     expect(scoped[ENTRY_KINDS.resource]!.map((p) => p.id)).toEqual([])
     expect(scoped[ENTRY_KINDS.tool]!.map((p) => p.id)).toEqual(['integrations'])
@@ -1061,7 +1061,7 @@ describe('librariesForCategory — GH #143 per-preset library scoping', () => {
   it('every preset carries the category its own roster placement implies (hospitality trio, games roster + Croupier/Quizmaster, the rest generic-only)', () => {
     const HOSPITALITY_IDS = ['concierge', 'restaurant', 'travel']
     const GAMES_IDS = ['croupier', 'quizmaster', 'mentalist', 'negotiator', 'lexicographer', 'admiral', 'alchemist', 'dungeon-master']
-    const GENERIC_ONLY_IDS = ['quant', 'curator', 'stylist']
+    const GENERIC_ONLY_IDS = ['quant', 'curator', 'stylist', 'shopkeeper']
     expect(HOSPITALITY_IDS.length + GAMES_IDS.length + GENERIC_ONLY_IDS.length).toBe(AGENT_PRESETS.length)
     for (const id of HOSPITALITY_IDS) {
       expect(AGENT_PRESETS.find((p) => p.id === id)?.category, id).toBe('hospitality')
