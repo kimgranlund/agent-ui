@@ -368,6 +368,17 @@ describe('ui-otp-field — C10 zero-residue reconnect (both engines)', () => {
 
 const px = (v: string): number => Number.parseFloat(v)
 
+/** The height token resolved to px. The token is a derived `calc(... * 4px)` (ADR-0245), and a custom
+ *  property's computed value keeps the unevaluated expression, so it is read through a probe's `block-size`. */
+function heightTokenPx(el: HTMLElement): number {
+  const probe = document.createElement('div')
+  probe.style.cssText = 'position:absolute;visibility:hidden;inline-size:0;block-size:var(--ui-otp-field-height)'
+  el.append(probe)
+  const h = probe.getBoundingClientRect().height
+  probe.remove()
+  return h
+}
+
 /** Measures the actual rendered glyph (the cell's own text node), not the padded cell box — a Range over
  *  the text node gives the real ink rect, distinct from `cell.getBoundingClientRect()`. */
 function glyphRectOf(cell: HTMLElement): DOMRect {
@@ -385,7 +396,7 @@ describe('ui-otp-field — geometry (GEO-LAW: cell inline = block = height off t
     const rect = cell.getBoundingClientRect()
     expect(rect.width, `${server.browser}: cell collapsed`).toBeGreaterThan(0)
     expect(rect.width, `${server.browser}: cell is not square — GEO-LAW violation`).toBeCloseTo(rect.height, 1)
-    const heightToken = px(getComputedStyle(el).getPropertyValue('--ui-otp-field-height'))
+    const heightToken = heightTokenPx(el)
     expect(rect.width).toBeCloseTo(heightToken, 1)
 
     // GH #634 displacement gap: the cell's own square-ness is pinned above, but never where the DIGIT
@@ -482,7 +493,7 @@ describe('ui-otp-field — visible inline-validation message never displaces the
     const { el } = mount('<ui-otp-field label="Code" required></ui-otp-field>')
     const editor = editorOf(el)
     await el.updateComplete
-    const heightToken = px(getComputedStyle(el).getPropertyValue('--ui-otp-field-height'))
+    const heightToken = heightTokenPx(el)
 
     await userEvent.click(editor)
     await userEvent.click(document.body) // blur — arms :state(user-invalid)
