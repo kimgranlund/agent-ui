@@ -55,10 +55,16 @@ describe('button.css — structure + token hygiene (s7)', () => {
     expect(refs.some((v) => sharedFleet.has(v as string))).toBe(true) // anti-vacuous: the fleet tokens ARE consumed
   })
 
-  it('geometry per the LAW: block-size off the ramp, padding-block 0, slotless inline-pad = h/2', () => {
+  it('geometry per the LAW: block-size off the ramp, padding-block 0, and the control rule (box margin n, label inset n - c on the label part)', () => {
     expect(stylesBlock).toMatch(/block-size:\s*var\(--ui-button-height\)/)
     expect(stylesBlock).toMatch(/padding-block:\s*0/)
-    expect(stylesBlock).toMatch(/padding-inline:\s*calc\(var\(--ui-button-height\)\s*\/\s*2\)/)
+    // ADR-0245 Amendment 4: the host pads the box margin (n derived, h/2 under the legacy opt-out) and the label
+    // part carries the label inset (n - c derived, 0 under the opt-out), so the text edge is 2n - c.
+    expect(stylesBlock).toMatch(/padding-inline:\s*var\(--ui-button-edge\)/)
+    expect(tokenBlock).toMatch(/--ui-button-edge:\s*var\(--md-sys-inset,\s*calc\(var\(--ui-button-height\)\s*\/\s*2\)\)/)
+    expect(tokenBlock).toMatch(/--ui-button-label-inset:\s*var\(--md-sys-label-inset,\s*0px\)/)
+    expect(stylesBlock).toMatch(/:scope > \[data-part='label'\]\s*\{[^}]*padding-inline:\s*var\(--ui-button-label-inset\)/)
+    expect(tokenBlock).toMatch(/--ui-button-gap:\s*var\(--md-sys-c,\s*var\(--md-sys-gap-md\)\)/) // the control gutter c
   })
 
   it('host-as-grid (ADR-0006): a presence-driven :has() leading slot + the density-bearing column-gap', () => {
@@ -81,22 +87,22 @@ describe('button.css — structure + token hygiene (s7)', () => {
     // NOT text-align: center — that pitfall breaks end-anchored text-overflow: ellipsis once both edges overflow.
     expect(rule).not.toMatch(/text-align/)
 
-    // ADR-0171 amended (GH #450): the shared two-arm rule SPLITS — the selectors are reused verbatim from the
-    // auto 1fr / 1fr auto template selectors, each :not([icon-only])-excluded so the fifth structure can never
-    // catch a stray label rule, but each arm now carries its OWN declaration: leading-only spreads to `end`
-    // (icon at start edge, label at end edge), trailing-only stays `start` (label at start edge, adornment at
-    // end — shipped bytes unchanged).
-    const leadingOnlyMatch = stylesBlock.match(
-      /:scope:has\(>\s*\[slot='leading'\]\):not\(:has\(>\s*\[slot='trailing'\]\)\):not\(\[icon-only\]\)\s*>\s*\[data-part='label'\]\s*\{([^}]*)\}/,
-    )
+    // ADR-0171 amended (GH #450), written since ADR-0245 Amendment 4 as the skill's three selectors on the label
+    // itself, no :has(): a label that is the LAST of several children has only leading content and spreads to
+    // `end` (icon at start edge, label at end edge); one that is the FIRST of several has only trailing content
+    // and stays `start`. The base rule above centers a label alone or between two adornments.
+    const leadingOnlyMatch = stylesBlock.match(/:scope > \[data-part='label'\]:last-child:not\(:only-child\)\s*\{([^}]*)\}/)
     expect(leadingOnlyMatch, 'leading-only label override rule missing').not.toBeNull()
     expect((leadingOnlyMatch as RegExpMatchArray)[1]).toMatch(/justify-self:\s*end/)
 
-    const trailingOnlyMatch = stylesBlock.match(
-      /:scope:has\(>\s*\[slot='trailing'\]\):not\(:has\(>\s*\[slot='leading'\]\)\):not\(\[icon-only\]\)\s*>\s*\[data-part='label'\]\s*\{([^}]*)\}/,
-    )
+    const trailingOnlyMatch = stylesBlock.match(/:scope > \[data-part='label'\]:first-child:not\(:only-child\)\s*\{([^}]*)\}/)
     expect(trailingOnlyMatch, 'trailing-only label override rule missing').not.toBeNull()
     expect((trailingOnlyMatch as RegExpMatchArray)[1]).toMatch(/justify-self:\s*start/)
+    // the alignment selectors carry no :has(): every rule that sets justify-self selects the label part alone
+    const rules = stylesBlock.replace(/\/\*[\s\S]*?\*\//g, '') // comments out: the prose names :has() freely
+    const alignment = [...rules.matchAll(/([^{}]*)\{[^}]*justify-self:[^}]*\}/g)].map((m) => m[1].trim())
+    expect(alignment, 'the base rule and the two overrides').toHaveLength(3)
+    for (const selector of alignment) expect(selector, 'an alignment rule uses :has()').not.toMatch(/:has\(/)
   })
 })
 

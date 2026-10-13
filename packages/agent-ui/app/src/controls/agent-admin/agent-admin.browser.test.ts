@@ -86,7 +86,7 @@ function goToPlace(el: HTMLElement, place: 'Chat' | 'Author' | 'Settings'): void
  *  geometry (getBoundingClientRect, .focus()) reads zero/no-ops until its tab is selected — style-only
  *  reads (getComputedStyle of a cascade value like border-width/font-size) are unaffected either way and
  *  need no activation. */
-function activateTab(el: HTMLElement, tab: 'Agent' | 'Capabilities' | 'Surface' | 'Context: System' | 'Context: Dialog'): void {
+function activateTab(el: HTMLElement, tab: 'Agent' | 'Capabilities' | 'Surface' | 'System' | 'Dialog'): void {
   goToPlace(el, 'Settings')
   const sectionTab = [...el.querySelectorAll('[data-part="settings-nav"] ui-tab')].find((t) => t.textContent === tab) as HTMLElement
   sectionTab.click()
@@ -297,7 +297,7 @@ describe('ui-agent-admin cross-engine smoke — the three-place shell grammar (G
     const pane = el.querySelector('[data-part="settings-pane"]') as HTMLElement
     expect(pane.getBoundingClientRect().width).toBeGreaterThan(0)
     const tabs = [...pane.querySelectorAll('[data-part="settings-nav"] ui-tab')]
-    expect(tabs.map((t) => t.textContent)).toEqual(['Agent', 'Capabilities', 'Surface', 'Context: System', 'Context: Dialog'])
+    expect(tabs.map((t) => t.textContent)).toEqual(['Agent', 'Capabilities', 'Surface', 'System', 'Dialog'])
     // LLD-P6 (GH #656) — the strip runs `overflow="menu"` now, so a tab that doesn't fit this rail is
     // `[data-overflowed]` (display:none) and reachable through the menu instead. The claim this probe was
     // always making — no tab is a collapsed zero-box stub — is repointed onto the ones actually laid out;
@@ -311,7 +311,7 @@ describe('ui-agent-admin cross-engine smoke — the three-place shell grammar (G
     expect(agentHeading.getBoundingClientRect().width).toBeGreaterThan(0)
 
     // Clicking Context: System switches to a real, visible section carrying ONLY the System context sections.
-    const systemTab = tabs.find((t) => t.textContent === 'Context: System') as HTMLElement
+    const systemTab = tabs.find((t) => t.textContent === 'System') as HTMLElement
     systemTab.click()
     await new Promise((r) => requestAnimationFrame(r))
     const systemContent = pane.querySelector('[data-role="context-system-content"]') as HTMLElement
@@ -325,7 +325,7 @@ describe('ui-agent-admin cross-engine smoke — the three-place shell grammar (G
     expect(systemContent.querySelector('[data-part="context-turns"]')).toBeNull()
 
     // Clicking Context: Dialog switches to a DIFFERENT, real, visible section carrying ONLY Dialog Turns.
-    const dialogTab = tabs.find((t) => t.textContent === 'Context: Dialog') as HTMLElement
+    const dialogTab = tabs.find((t) => t.textContent === 'Dialog') as HTMLElement
     dialogTab.click()
     await new Promise((r) => requestAnimationFrame(r))
     const dialogContent = pane.querySelector('[data-role="context-dialog-content"]') as HTMLElement
@@ -374,8 +374,8 @@ describe('ui-agent-admin cross-engine smoke — the three-place shell grammar (G
     }
 
     for (const { label, role, jsonSelector } of [
-      { label: 'Context: System', role: 'context-system-content', jsonSelector: '[data-part="context-item"][data-item="agent"] [data-part="context-json"]' },
-      { label: 'Context: Dialog', role: 'context-dialog-content', jsonSelector: '[data-part="context-turn"] [data-part="context-json"]' },
+      { label: 'System', role: 'context-system-content', jsonSelector: '[data-part="context-item"][data-item="agent"] [data-part="context-json"]' },
+      { label: 'Dialog', role: 'context-dialog-content', jsonSelector: '[data-part="context-turn"] [data-part="context-json"]' },
     ]) {
       ;(tabs.find((t) => t.textContent === label) as HTMLElement).click()
       await new Promise((r) => requestAnimationFrame(r))
@@ -432,14 +432,14 @@ describe('ui-agent-admin cross-engine smoke — the three-place shell grammar (G
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
     oneVisible(widthsOf(), 2)
     const sectionTabs = [...el.querySelectorAll('[data-part="settings-nav"] ui-tab')] as HTMLElement[]
-    ;(sectionTabs.find((t) => t.textContent === 'Context: System') as HTMLElement).click()
+    ;(sectionTabs.find((t) => t.textContent === 'System') as HTMLElement).click()
     await new Promise((r) => requestAnimationFrame(r))
     const systemContent = el.querySelector('[data-role="context-system-content"]') as HTMLElement
     expect(systemContent.hidden).toBe(false)
     expect(systemContent.getBoundingClientRect().width).toBeGreaterThan(0)
     expect(systemContent.querySelector('[data-part="context-turns"]')).toBeNull()
 
-    ;(sectionTabs.find((t) => t.textContent === 'Context: Dialog') as HTMLElement).click()
+    ;(sectionTabs.find((t) => t.textContent === 'Dialog') as HTMLElement).click()
     await new Promise((r) => requestAnimationFrame(r))
     const dialogContent = el.querySelector('[data-role="context-dialog-content"]') as HTMLElement
     expect(dialogContent.hidden).toBe(false)
@@ -1685,14 +1685,14 @@ describe('ui-agent-admin — segment content wins its OWN display:flex, not supe
     const pane = el.querySelector('[data-part="settings-pane"]') as HTMLElement
     const tabs = [...pane.querySelectorAll('[data-part="settings-nav"] ui-tab')]
 
-    const systemTab = tabs.find((t) => t.textContent === 'Context: System') as HTMLElement
+    const systemTab = tabs.find((t) => t.textContent === 'System') as HTMLElement
     systemTab.click()
     await new Promise((r) => requestAnimationFrame(r))
     const systemContent = pane.querySelector('[data-role="context-system-content"]') as HTMLElement
     expect(systemContent.hidden).toBe(false)
     expect(getComputedStyle(systemContent).display).toBe('flex')
 
-    const dialogTab = tabs.find((t) => t.textContent === 'Context: Dialog') as HTMLElement
+    const dialogTab = tabs.find((t) => t.textContent === 'Dialog') as HTMLElement
     dialogTab.click()
     await new Promise((r) => requestAnimationFrame(r))
     const dialogContent = pane.querySelector('[data-role="context-dialog-content"]') as HTMLElement
@@ -2074,8 +2074,8 @@ describe('ui-agent-admin cross-engine smoke — the settings sub-nav grouping (L
     ['Agent', 'agent-content'],
     ['Capabilities', 'capabilities-content'],
     ['Surface', 'surface-content'],
-    ['Context: System', 'context-system-content'],
-    ['Context: Dialog', 'context-dialog-content'],
+    ['System', 'context-system-content'],
+    ['Dialog', 'context-dialog-content'],
   ] as const
 
   function strip(el: UIAgentAdminElement): HTMLElement & { selected: string } {
@@ -3758,7 +3758,7 @@ describe('ui-agent-admin cross-engine smoke — GH #867: the context-json card s
   it('overflows for real, scrolls (scrollTop moves), and computes the thin/at-rest-transparent/reveal-on-hover treatment', async () => {
     const { el } = mountAgentAdminAt(900)
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
-    activateTab(el, 'Context: System')
+    activateTab(el, 'System')
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
 
     const agentJson = el.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]') as HTMLElement
@@ -3806,7 +3806,7 @@ describe('ui-agent-admin cross-engine smoke — GH #867: the context-json card s
       if (Date.now() - start > 8000) throw new Error('stub turn never logged')
       await new Promise((r) => setTimeout(r, 50))
     }
-    activateTab(el, 'Context: Dialog')
+    activateTab(el, 'Dialog')
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
 
     const turnJson = el.querySelector('[data-part="context-turn"] [data-part="context-json"]') as HTMLElement

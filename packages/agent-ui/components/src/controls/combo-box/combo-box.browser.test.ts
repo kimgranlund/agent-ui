@@ -796,11 +796,14 @@ describe('ui-combo-box — whole-shape assertion (Test-the-whole-shape DoD law)'
 
     const editorPad = px(getComputedStyle(editor).paddingInlineStart)
     const optionCs = getComputedStyle(option)
-    const sum = px(optionCs.marginInlineStart) + px(optionCs.paddingInlineStart)
+    // The placement rule (ADR-0245 Amendment 4): the panel sits c OUTSIDE the editor (the listbox is a group
+    // around control rows), so the panel's outset is part of the sum: inset + row pad - outset == editor pad.
+    const outset = -(px(getComputedStyle(listbox).translate) || 0)
+    const sum = px(optionCs.marginInlineStart) + px(optionCs.paddingInlineStart) - outset
 
     expect(
       sum,
-      `${server.browser}: panel-inset+option-inline (${sum}px) should equal the editor's own inline pad (${editorPad}px)`,
+      `${server.browser}: panel-inset+option-inline-outset (${sum}px) should equal the editor's own inline pad (${editorPad}px)`,
     ).toBeCloseTo(editorPad, 1)
   })
 
@@ -834,7 +837,7 @@ describe('ui-combo-box — whole-shape assertion (Test-the-whole-shape DoD law)'
   //  padding-inline is really h/2 (not just internally self-consistent), and the option text still
   //  lines up under the editor text at the new, wider offset.
   // ────────────────────────────────────────────────────────────────────────────────────────────
-  it('editor computed padding-inline == n (ADR-0245 cl.3 frame class: inline padding n = h/4 at the root register)', async () => {
+  it('editor computed padding-inline == 2n - c (the control rule, ADR-0245 Amendment 4: margin n + label inset n - c on the one editor box)', async () => {
     const { el } = mount(`
       <ui-combo-box placeholder="Search…">
         <div role="option" value="apple">Apple</div>
@@ -844,14 +847,15 @@ describe('ui-combo-box — whole-shape assertion (Test-the-whole-shape DoD law)'
     const editorH = editor.getBoundingClientRect().height
     const editorPad = px(getComputedStyle(editor).paddingInlineStart)
 
+    const r = resolve('product', 'sm', 'md')
     expect(
       editorPad,
-      `${server.browser}: editor padding-inline (${editorPad}px) should equal n (${resolve('product', 'sm', 'md').n}px)`,
-    ).toBeCloseTo(resolve('product', 'sm', 'md').n, 0)
+      `${server.browser}: editor padding-inline (${editorPad}px) should equal 2n - c (${r.control.margin + r.labelMargin}px)`,
+    ).toBeCloseTo(r.control.margin + r.labelMargin, 0)
     expect(editorH, `${server.browser}: editor frame is the derived height 4n`).toBeCloseTo(resolve('product', 'sm', 'md').h, 0)
   })
 
-  it("an open option's text inline offset (from the panel edge) equals the editor's text inline offset (from the editor edge) — alignment law holds under h/2", async () => {
+  it("an open option's text lines up under the editor's text: the alignment law, measured from the editor edge with the panel's c outset (ADR-0245 Amendment 4)", async () => {
     const { el } = mount(`
       <ui-combo-box placeholder="Search…">
         <div role="option" value="apple">Apple</div>
@@ -866,11 +870,17 @@ describe('ui-combo-box — whole-shape assertion (Test-the-whole-shape DoD law)'
     // The editor's own text edge, relative to the editor's box: padding-inline-start (h/2 now).
     const editorTextInset = px(getComputedStyle(editor).paddingInlineStart)
 
-    // The option's text edge, relative to the PANEL's box: the option's own margin-inline-start
-    // (the box-model inset, h/4) PLUS its padding-inline-start (h/4) — h/4 + h/4 == h/2, so this
-    // must equal the editor's own inset exactly (both engines, browser-measured).
+    // The option's text edge, relative to the EDITOR's box: the panel sits c outside the editor (the placement
+    // rule, ADR-0245 Amendment 4), so it is the option's margin-inline-start (c) plus its padding-inline-start
+    // (2n - c) minus that outset; under the legacy opt-out the outset is 0 and h/4 + h/4 == h/2. It must equal
+    // the editor's own inset exactly (both engines, browser-measured), and the rendered x agrees.
     const optionCs = getComputedStyle(option)
-    const optionTextInset = px(optionCs.marginInlineStart) + px(optionCs.paddingInlineStart)
+    const outset = -(px(getComputedStyle(listbox).translate) || 0)
+    const optionTextInset = px(optionCs.marginInlineStart) + px(optionCs.paddingInlineStart) - outset
+    expect(listbox.getBoundingClientRect().left + px(optionCs.marginInlineStart) + px(optionCs.paddingInlineStart), 'the rendered option text x').toBeCloseTo(
+      editor.getBoundingClientRect().left + editorTextInset,
+      0,
+    )
 
     expect(
       optionTextInset,

@@ -37,6 +37,11 @@
      `md` register; an ancestor [scale] re-tables the row for free (ADR-0038). */
   --ui-segmented-control-segment-height: var(--md-sys-height, var(--md-sys-height-md));
   --ui-segmented-control-segment-font: var(--md-sys-type-control, var(--md-sys-font-md));
+  /* The control rule (ADR-0245 Amendment 4): a segment is a control, margin n + label inset n - c on each inline
+     side (text edge 2n - c; the label is anonymous segment content). Undefined under the legacy opt-out, where
+     the h/2 edge holds. */
+  --ui-segmented-control-segment-pad: var(--ui-segmented-control-segment-pad-derived, calc(var(--ui-segmented-control-segment-height) / 2));
+  --ui-segmented-control-segment-pad-derived: calc(var(--md-sys-inset) + var(--md-sys-label-inset));
 
   /* The outer rounded track (segments carry NO divider borders — Kim's ruling, see the styles block). */
   --ui-segmented-control-track: var(--md-sys-color-neutral-outline);
@@ -184,7 +189,9 @@ ui-segmented-control ui-segment {
 
   block-size: var(--ui-segmented-control-segment-height); /* Control-height ramp */
   padding-block: 0; /* block-size is the vertical lever */
-  padding-inline: calc(var(--ui-segmented-control-segment-height) / 2); /* slotless-edge pad h/2 = 2n at 4n (ADR-0245 cl.3), derived with the height */
+  padding-inline: var(--ui-segmented-control-segment-pad); /* margin n + label inset n - c = 2n - c (ADR-0245 Amendment 4) */
+  /* No explicit 4n floor: it would replace the automatic content minimum of the 1fr cells, and a nowrap label
+     would then spill into its neighbour in a narrow track. The rule already gives 4n - 2c plus the text. */
   font-size: var(--ui-segmented-control-segment-font);
   line-height: var(--md-sys-control-line-height); /* single-line control standard, ADR-0036 */
   white-space: nowrap; /* a segment is a single-line control — labels never wrap (GH #1178) */

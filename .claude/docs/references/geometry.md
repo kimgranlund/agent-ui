@@ -53,15 +53,26 @@ height.
 
 ## Inline padding and radius, by control class
 
-- **Entry and trigger controls** (text-field, select, combo-box, multi-select, otp-field): padding `n`; a
-  leading icon or caret slot is `2n`; radius `n`. A field label sits above with gap `ceil(n/2)`.
-- **Button and toggle**: the **pill**, radius `2n` (equal to h/2, now a formula of n, not a special case).
-  Padding is `2n` beside a label and `n` beside an icon; an icon-only button is a `4n` square (the
-  ADR-0223 R3(a) squareness floor, `min-inline-size: var(--ui-{name}-height)`, now resolving to 4n).
-- **Indicators**: checkbox box `2n` (radius `n/2`, check glyph `2n - 2c`), radio `2n` circle (dot
+- **The control rule** (ADR-0245 Amendment 4), one geometry for every control: box margin `n`
+  (`--md-sys-inset`), gutter `c`, and the text slot carries the label inset `n - c` (`--md-sys-label-inset`).
+  So an icon sits `n` from the edge and `n` from the text, the **text edge is `2n - c`** (8 / 10 / 12 at the
+  root), and a control is never narrower than `4n` (`min-inline-size: var(--ui-{name}-height)`, the ADR-0223
+  R3(a) form, on the button, the entry hosts and the tab; a toggle and a segment keep the automatic content
+  minimum, and the rule's own `4n - 2c` plus text keeps them at `4n`). Where the label is anonymous host content (toggle, segment, tab, menu and listbox rows) the host
+  edge beside it carries margin plus inset. Icons, carets and other boxed items take no inset.
+- **Entry and trigger controls** (text-field, textarea, select, combo-box): the control rule, the editor or the
+  trigger label being the text slot; a leading icon or caret slot is `2n`; radius `n`. `ui-otp-field`'s cells
+  hold one centered character and take no inset. A field label sits above with gap `ceil(n/2)`.
+- **Button and toggle**: the **pill**, radius `2n` (equal to h/2, now a formula of n, not a special case), and
+  the control rule; an icon-only button is a `4n` square. A button label aligns per the skill's table
+  (centered alone or between adornments, start with only trailing content, end with only leading content);
+  a toggle label stays centered (`toggle.md`).
+- **Tabs, segments, menu and listbox rows**: the control rule; tabs touch with the tight gutter `c`.
+- **Indicators**: checkbox box `2n` (radius `ceil(n/2)`, check glyph `2n - 2c`), radio `2n` circle (dot
   `glyph - 2` = `2n - 2c - 2`, which never shrinks as n grows), switch track `2n` tall with padding `c` and
-  thumb `2n - 2c`, slider rail `2c` and thumb `2n - 2c`, progress track `2c` (radius `c`), badge height `2n`
-  (padding `2c`, radius `n/2`).
+  thumb `2n - 2c`, slider rail `2c` and thumb `2n - 2c`, progress track `2c` (radius `c`).
+- **Chips** (badge; the level `--md-sys-chip-{margin,gutter,radius}`): height `2n + 2c`, margin `c`, gutter
+  `c`, label margin `c` (text edge `2c`), radius `ceil(n/2)`.
 - **Avatar** is a `4n` circle, stood beside controls at control height; an avatar inline inside a tag or a
   control row is the skill's `2n`.
 - **Derived marks and tiles** (Amendment 3): gauge ring stroke `4c`; swatch a `4n` square with radius `n`
@@ -137,7 +148,7 @@ Read ADR-0223 for the exemption tables and cite them, never copy them.
 | Class | Examples | Lever |
 |---|---|---|
 | **Control** (full height) | button · text-field · select · field | `block-size: var(--ui-{cmp}-height)` off `--md-sys-height` (4n); `line-height: 1`; padding per class above |
-| **Indicator** (smaller box) | checkbox · radio · switch · slider · badge | box `2n` (badge height `2n`), a thumb `2n - 2c`; the old 14/16/18 widget ramp and the flat 2px inset retired |
+| **Indicator** (smaller box) | checkbox · radio · switch · slider · badge | box `2n` (a badge is a chip, `2n + 2c` tall), a thumb `2n - 2c`; the old 14/16/18 widget ramp and the flat 2px inset retired |
 | **Pattern** (container plus control-height rows) | tabs · segmented-control · toolbar · menu · dialog | interactive rows are `4n`; the shell takes its container level |
 | **Container/layout** | row · column · grid · card | margin, gutter and radius from the level tokens; no control height |
 | **Display** | divider · icon · glyph · spinner · progress · tooltip · **text** | text reads the derived `--md-sys-type-*` roles; icon and glyph take their own boxes; no control height, no `padding-block` law |

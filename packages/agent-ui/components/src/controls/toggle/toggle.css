@@ -42,8 +42,14 @@
   --ui-toggle-height: var(--md-sys-height, var(--md-sys-height-md));
   --ui-toggle-radius: calc(2 * var(--md-sys-radius, calc(var(--ui-toggle-height) / 4))); /* the pill, 2n (ADR-0245 Amendment 3); h/2 under the legacy opt-out */
   --ui-toggle-font: var(--md-sys-type-control, var(--md-sys-font-md));
-  --ui-toggle-gap: var(--md-sys-inset, var(--md-sys-gap-md));
+  --ui-toggle-gap: var(--md-sys-inset, var(--md-sys-gap-md)); /* icon to text n: the control gutter c plus the label inset n - c */
   --ui-toggle-icon: var(--md-sys-icon-box, var(--md-sys-icon-md));
+
+  /* The control rule (ADR-0245 Amendment 4): box margin n, label inset n - c, text edge 2n - c. The label is
+     anonymous content with no wrapper (toggle.md), so the host edge beside the label carries both: margin +
+     inset. Under the legacy opt-out the derived half is undefined and the h/2 fallback wins. */
+  --ui-toggle-label-edge: var(--ui-toggle-label-edge-derived, calc(var(--ui-toggle-height) / 2));
+  --ui-toggle-label-edge-derived: calc(var(--md-sys-inset) + var(--md-sys-label-inset));
 }
 
 /* [size] → Control-band dimensional ramp repoint (the button.css precedent). */
@@ -105,7 +111,10 @@
 
     block-size: var(--ui-toggle-height); /* the vertical lever — geometry.md */
     padding-block: 0; /* NEVER block-padding */
-    padding-inline: calc(var(--ui-toggle-height) / 2); /* slotless edge = h/2 */
+    padding-inline: var(--ui-toggle-label-edge); /* label edge: margin n + label inset n - c = 2n - c */
+    /* No explicit 4n floor: it would replace the automatic content minimum, and this anonymous nowrap label
+       cannot clip, so a tight flex or grid row would push the text out of the pill. The rule already gives
+       4n - 2c plus the text, at least 4n from 2c of text up (ADR-0245 Amendment 4). */
 
     font-size: var(--ui-toggle-font);
     line-height: var(--md-sys-control-line-height); /* single-line control standard — ADR-0036 */
@@ -142,19 +151,19 @@
     box-sizing: border-box;
   }
 
-  /* [icon | label] (no state-icon): auto 1fr — icon slot edge ½(h−icon), trailing label edge h/2. */
+  /* [icon | label] (no state-icon): auto 1fr. Icon slot edge ½(h−icon) = n, trailing label edge 2n - c. */
   :scope:has(> [slot='icon']):not(:has(> [slot='state-icon'])) {
     grid-template-columns: auto 1fr;
     column-gap: var(--ui-toggle-gap);
     padding-inline-start: calc((var(--ui-toggle-height) - var(--ui-toggle-icon)) / 2);
-    padding-inline-end: calc(var(--ui-toggle-height) / 2);
+    padding-inline-end: var(--ui-toggle-label-edge);
   }
 
-  /* [label | state-icon] (no icon): 1fr auto — leading label edge h/2, state-icon slot edge ½(h−icon). */
+  /* [label | state-icon] (no icon): 1fr auto. Leading label edge 2n - c, state-icon slot edge ½(h−icon) = n. */
   :scope:has(> [slot='state-icon']):not(:has(> [slot='icon'])) {
     grid-template-columns: 1fr auto;
     column-gap: var(--ui-toggle-gap);
-    padding-inline-start: calc(var(--ui-toggle-height) / 2);
+    padding-inline-start: var(--ui-toggle-label-edge);
     padding-inline-end: calc((var(--ui-toggle-height) - var(--ui-toggle-icon)) / 2);
   }
 

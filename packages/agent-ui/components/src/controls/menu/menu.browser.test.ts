@@ -891,23 +891,25 @@ describe('ui-menu — selectable items: real-engine roving + commit-managed aria
       `${server.browser}: an UNCHECKED row painted a checkmark — should stay transparent`,
     ).toBe(0)
 
-    // GH #634 displacement gap: the glyph slot's SIZE + paint are pinned above, but never its POSITION —
-    // menu.css's `inset-inline-start: var(--ui-menu-item-pad-inline)` governs placement and nothing here
-    // reads it, so dropping that value would misalign the checkmark against the label while width/height/
-    // alpha stay green. A pseudo-element has no real box for getBoundingClientRect, so read the USED
-    // inset value and compare it against the SAME token resolved through a throwaway probe (repoint-safe
-    // — no hard-coded px) rather than a pixel literal.
+    // GH #634 displacement gap: the glyph slot's SIZE + paint are pinned above, but never its POSITION.
+    // Since ADR-0245 Amendment 4 the check box is a boxed item pinned at the row's edge, the box margin n
+    // (menu.css's `inset-inline-start: var(--ui-menu-item-edge)`), while --ui-menu-item-pad-inline is the text
+    // edge 2n - c. A pseudo-element has no real box for getBoundingClientRect, so read the USED inset value and
+    // compare it against the SAME row edge token resolved through a throwaway probe (repoint-safe, no px literal).
     const probe = document.createElement('div')
-    probe.style.paddingInlineStart = 'var(--ui-menu-item-pad-inline)'
+    probe.style.paddingInlineStart = 'var(--ui-menu-item-edge)'
     items[1]!.append(probe)
     const expectedInset = px(getComputedStyle(probe).paddingInlineStart)
     probe.remove()
-    expect(expectedInset, 'the shared --ui-menu-item-pad-inline token resolves').toBeGreaterThan(0)
+    expect(expectedInset, 'the shared --ui-menu-item-edge token resolves').toBeGreaterThan(0)
     const checkedInset = px(checkedStyle.insetInlineStart)
     expect(
       checkedInset,
-      `${server.browser}: checkmark glyph inset did not track the --ui-menu-item-pad-inline token — misaligned against the label`,
+      `${server.browser}: checkmark glyph inset did not track the --ui-menu-item-edge token, misaligned against the row edge`,
     ).toBeCloseTo(expectedInset, 1)
+    // and the label starts n past the box: box edge + box + (gutter c + label inset n - c)
+    const checkSize = px(checkedStyle.inlineSize)
+    expect(px(getComputedStyle(items[1]!).paddingInlineStart) - (checkedInset + checkSize), `${server.browser}: box to text is n`).toBeCloseTo(checkedInset, 1)
   })
 })
 

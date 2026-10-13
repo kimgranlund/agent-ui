@@ -138,7 +138,7 @@ geometry:
   editor:
     blockSize: var(--ui-combo-box-height)  # = var(--md-sys-height) 4n (--md-sys-height-md bridge alias until W7) — Control-class height (the trigger field)
     font: var(--ui-combo-box-font)         # = var(--md-sys-type-control) (--md-sys-font-md bridge alias until W7) — matches the control type
-    paddingInline: var(--ui-combo-box-padding-inline)  # = n (--md-sys-inset, ADR-0245 cl.3; h/2 is the legacy fallback) — the fleet Control-class value-edge standard
+    paddingInline: var(--ui-combo-box-value-edge)  # = 2n - c: the editor is frame and text slot in one, box margin n (--ui-combo-box-padding-inline) + label inset n - c (ADR-0245 Amendment 4; h/2 is the legacy fallback)
     radius: var(--ui-combo-box-radius)     # = var(--md-sys-shape-corner-base) — shared fleet radius
     minInlineSize: var(--ui-combo-box-min-inline-size) # 20ch floor, ACTIVE IN THE [inline] HUG STATE ONLY (ADR-0223 cl.3(b), superseding ADR-0021's default-state placement) — the fill default needs no floor
   panel:
@@ -150,7 +150,7 @@ geometry:
   options:
     sizeClass: legacy item-pad (ROV-C5 / §4.6/5.1) — numbers DERIVED off the editor's n (ADR-0245), superseding the fixed --md-sys-space-xs/sm px
     paddingBlock: var(--ui-combo-box-option-padding-block)    # = (editor height − option font)/2 — row height == editor height
-    paddingInline: var(--ui-combo-box-option-padding-inline)  # = c-based, pairs with panel padding so option text aligns under the editor edge (the alignment law), same as ui-select
+    paddingInline: var(--ui-combo-box-option-padding-inline)  # = 2n - c: a row is a control, margin n + label inset n - c (ADR-0245 Amendment 4); the panel sits c outside the editor (--ui-combo-box-panel-outset), so option text lines up under the editor text, same as ui-select
     font: var(--ui-combo-box-option-font)  # = --ui-combo-box-font (was size-blind; bug fix)
     note: ui-combo-box has NO `[size]` attribute today (structural divergence from ui-select, flagged not forced) — these tokens are n-DERIVED so a future `[size]` addition (its own ADR/decomp) would repoint them for free
 

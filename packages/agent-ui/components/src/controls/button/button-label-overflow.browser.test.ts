@@ -38,13 +38,15 @@ const label = (btn: HTMLElement): HTMLElement => btn.querySelector('[data-part="
 const tick = (): Promise<void> => new Promise((resolve) => queueMicrotask(resolve))
 
 describe('ui-button label-wrapper geometry regression (ADR-0133) — the label FITS', () => {
-  it('a fitting label renders the SAME frame the pre-wrapper law specified: h=24, h/2=12 pads, no clipping engaged', () => {
+  it('a fitting label renders the frame the control rule specifies: h = 4n, box margin n, the label inset n - c on the wrapper, no clipping engaged', () => {
     const { btn } = mount('<ui-button>Save</ui-button>') // md default, wide (unconstrained) container
-    expect(frameHeight(btn), 'md frame height (geometry.md §1 row)').toBeCloseTo(resolve('product', 'sm', 'md').h, 0)
-    expect(padStartPx(btn), 'slotless h/2 leading pad').toBeCloseTo(resolve('product', 'sm', 'md').h / 2, 0)
-    expect(padEndPx(btn), 'slotless h/2 trailing pad').toBeCloseTo(resolve('product', 'sm', 'md').h / 2, 0)
+    const r = resolve('product', 'sm', 'md')
+    expect(frameHeight(btn), 'md frame height (geometry.md §1 row)').toBeCloseTo(r.h, 0)
+    expect(padStartPx(btn), 'leading box margin n').toBeCloseTo(r.control.margin, 0)
+    expect(padEndPx(btn), 'trailing box margin n').toBeCloseTo(r.control.margin, 0)
 
     const el = label(btn)
+    expect(Number.parseFloat(getComputedStyle(el).paddingInlineStart), 'the wrapper carries the label inset n - c (ADR-0245 Amendment 4)').toBeCloseTo(r.labelMargin, 0)
     expect(el, 'the label wrapper must exist').not.toBeNull()
     expect(el.tagName).toBe('SPAN')
     // anti-vacuous: the wrapper is NOT currently clipping anything — scrollWidth <= clientWidth (+1 rounding
@@ -58,9 +60,11 @@ describe('ui-button label-wrapper geometry regression (ADR-0133) — the label F
     )
     const h = frameHeight(btn)
     expect(h).toBeCloseTo(resolve('product', 'sm', 'md').h, 0)
-    // leading slot edge = ½(h−icon); trailing (label) edge = h/2 — the wrapper must not perturb either.
+    // leading slot edge = ½(h−icon) = n; the label edge is the box margin n, and the wrapper adds its own inset
+    // n - c (ADR-0245 Amendment 4).
     expect(padStartPx(btn)).toBeCloseTo((h - resolve('product', 'sm', 'md').icon) / 2, 0)
-    expect(padEndPx(btn)).toBeCloseTo(h / 2, 0)
+    expect(padEndPx(btn)).toBeCloseTo(resolve('product', 'sm', 'md').control.margin, 0)
+    expect(Number.parseFloat(getComputedStyle(label(btn)).paddingInlineEnd)).toBeCloseTo(resolve('product', 'sm', 'md').labelMargin, 0)
     expect(label(btn).textContent).toBe('Download')
     // the leading adornment stays a DIRECT host child, not swept into the label wrapper.
     expect(btn.children[0]?.getAttribute('slot')).toBe('leading')

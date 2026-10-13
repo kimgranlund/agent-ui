@@ -116,7 +116,7 @@ geometry:
   sizeClass: control
   blockSize: var(--ui-textarea-min-block-size)   # a GROWABLE MINIMUM (rows × line-box + 2·block-padding), never a fixed §1-row height — ADR-0134's own multi-line law, NOT geometry.md's single-line Control-class lookup
   paddingBlock: var(--ui-textarea-padding-block)   # REAL block padding — the inversion of the single-line law's padding-block:0
-  inlinePad: var(--ui-textarea-padding-inline)
+  inlinePad: var(--ui-textarea-padding-inline)   # the box margin n; the editor part adds the label inset n - c, so the text edge is 2n - c (ADR-0245 Amendment 4)
   gap: n/a                # no adornment slots — no slot↔editor gap
   radius: var(--md-sys-shape-corner-base)            # fixed rounded-rect — the container-fleet referent, entry-control class (geometry.md "Corner radius")
   posture: fill (block-level, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-block + hug   # Fill by Default — slice 1 (entry family)

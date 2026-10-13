@@ -537,7 +537,7 @@ pixel-indistinguishable from a cluster — the adornment⟷label separation is e
 A real slotted adornment with **no label content at all** needs the `icon-only` attribute. CSS alone
 cannot tell an empty label apart from a real one — `:has()` only matches *elements*, so the common
 `<svg slot="leading">…</svg>Download` pattern's `Download` label is a bare *text node*, invisible to a
-selector. Without `icon-only`, that structure still reserves the `1fr` label track and its `h/2` trailing
+selector. Without `icon-only`, that structure still reserves the `1fr` label track and its box-margin trailing
 pad, rendering wider than tall with dead space on the end. Setting `icon-only` swaps in the fifth,
 mutually-exclusive structure: **one** column with its `inline-size` set explicitly equal to the control
 height (mirroring `block-size`, so a true square holds regardless of border width), content-centered via
@@ -6364,8 +6364,9 @@ edge (the edge facing the panel — the same pairing the horizontal bottom edge 
 re-align **start** (a list reads left-aligned; center is a horizontal-strip convention). The `[data-part=tablist]`
 strip also carries `aria-orientation="vertical"` (absent under the default horizontal — byte-identical
 default DOM). `--ui-tabs-strip-gap` is unchanged — flex `gap` follows whichever axis is main, so the same
-16px-at-density-1 token spaces rows instead of columns. `#536`'s zero-`padding-inline` law stands unchanged:
-the row's full-width hit area comes from the column's default cross-axis stretch, never per-tab padding.
+token spaces rows instead of columns. Each tab keeps the control rule's inline padding (ADR-0245 Amendment 4,
+superseding `#536`'s zero-`padding-inline` law); the row's full-width hit area still comes from the column's
+default cross-axis stretch.
 `orientation` is reflected and default `'horizontal'`, so every existing consumer stays byte-identical.
 
 `[fill]` composes with vertical (§ below): the shell stays a flex row filling its bounded parent, the strip
@@ -6722,7 +6723,7 @@ inserts no newline (single-line). The placeholder shows via a control-toggled `d
 `size` selects a step on the dimensional ramp (`sm` · `md` (default) · `lg`), setting the control height
 and font; an ancestor `data-tier` and `data-scale` (ADR-0245) set the n the ramp derives from, and an
 ancestor `data-density` moves the adornment↔editor gap. The geometry follows the **Control size-class** in `geometry.md`: the block-size is
-the vertical lever (`padding-block` is always `0`), the value/text edge sits at `h/2`, and a leading/trailing
+the vertical lever (`padding-block` is always `0`), the value/text edge sits at `2n - c` (the box margin `n` plus the editor's label inset `n - c`, ADR-0245 Amendment 4), and a leading/trailing
 slot edge at the emergent `½(h − icon)`. The field frame (border + radius) is drawn **on the host** so a
 slotted adornment sits inside the box; the corner is the fixed `--md-sys-shape-corner-base` rounded-rect (the
 container-fleet referent an entry control takes, not the action family's `h/2` pill — ADR-0015 cl.5).

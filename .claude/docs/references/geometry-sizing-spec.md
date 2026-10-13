@@ -86,13 +86,13 @@ alone moves with `data-density` (m), never a control (Amendment 3).
 
 ### 1.5 · Slot-presence padding
 
-Each inline edge pads by what is at it:
-- a **slot** edge (icon or glyph in its `2n` slot): the slot sits flush at the control's own padding, and the
-  mark centers inside it (an icon fills it, a glyph leaves `c` clear on each side);
-- a **slotless** edge (a bare label): the entry controls pad `n`, a pill button pads `2n` (and `n` beside an
-  icon), so a label never jams the edge.
+Every inline edge pads `n`, the box margin, whatever sits at it (the control rule, ADR-0245 Amendment 4):
+- a **slot** edge (icon or glyph in its `2n` slot): the slot sits flush at the margin, and the mark centers
+  inside it (an icon fills it, a glyph leaves `c` clear on each side);
+- a **label** edge: the text slot adds its own label inset `n - c`, so the text sits `2n - c` from the edge and
+  never jams it. Slot to text is the gutter `c` plus that inset, `n`.
 
-A `[label · caret]` control is asymmetric by design. The grid is presence-driven (`:has()`), so an absent slot
+A `[label · caret]` control therefore reads `2n - c` to its text and `n` to its caret slot. The grid is presence-driven (`:has()`), so an absent slot
 leaves no phantom gap: `lead+trail → auto 1fr auto` · `lead-only → auto 1fr` · `trail-only → 1fr auto` ·
 `none → 1fr` · `icon-only (no label) → square`, `4n` on a side.
 
@@ -146,13 +146,13 @@ box (10 / 12 / 14 at the root). The standalone `<ui-icon>` is the same box.
 
 ### 4.3 · Padding
 
-Per class (see `geometry.md`): entry and trigger controls pad `n`; a pill button `2n` beside a label and `n`
-beside an icon. `padding-block: 0` always.
+The control rule (ADR-0245 Amendment 4, see `geometry.md`): every control pads `n`, and its text slot adds
+the label inset `n - c`, so the text edge is `2n - c` and an icon edge is `n`. `padding-block: 0` always.
 
 ### 4.4 · Gap
 
-Mark-to-label gap is `n` (it was `font/2`); a field label sits above with gap `ceil(n/2)`; a boxed indicator to
-its label is `n`.
+Mark-to-label distance is `n`: the control gutter `c` plus the label inset `n - c` (it was a gap of `n`, and
+`font/2` before that); a field label sits above with gap `ceil(n/2)`; a boxed indicator to its label is `n`.
 
 ### 4.5 · `--md-sys-space-*` is LAYOUT spacing, a generated alias layer
 

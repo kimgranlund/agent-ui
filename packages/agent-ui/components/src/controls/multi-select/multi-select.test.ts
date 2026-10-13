@@ -679,7 +679,11 @@ describe('multi-select.css — geometry trip-wire (ms-geometry-tokens)', () => {
     expect(multiSelectCss).toMatch(
       /--ui-multi-select-option-block:\s*calc\(\(var\(--ui-multi-select-height\) - var\(--ui-multi-select-font\)\) \/ 2\)/,
     )
-    expect(multiSelectCss).toMatch(/--ui-multi-select-option-inline:\s*var\(--ui-multi-select-option-inline-derived, calc\(var\(--ui-multi-select-height\) \/ 4\)\)/)
+    // ADR-0245 Amendment 4: a row is a control, so its box margin is n (h/4 under the legacy opt-out) and the
+    // trailing text edge adds the label inset n - c (0 under the opt-out).
+    expect(multiSelectCss).toMatch(/--ui-multi-select-option-inline:\s*var\(--md-sys-inset, calc\(var\(--ui-multi-select-height\) \/ 4\)\)/)
+    expect(multiSelectCss).toMatch(/--ui-multi-select-option-label-inset:\s*var\(--md-sys-label-inset, 0px\)/)
+    expect(multiSelectCss).toMatch(/padding-inline-end:\s*calc\(var\(--ui-multi-select-option-inline\) \+ var\(--ui-multi-select-option-label-inset\)\)/)
   })
 
   it('ms-geometry-tokens: tokens declared in the :where() token block, consumed only in @scope', () => {

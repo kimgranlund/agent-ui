@@ -637,6 +637,7 @@
     }
     ui-button[data-picker] [data-part='label'] {
       max-inline-size: 0;
+      padding-inline: 0; /* the label inset (ADR-0245 Amendment 4) collapses with the label, or it would hold 2(n - c) of width */
       overflow: hidden;
     }
     /* Measured, both engines: at the triple's own tightest real column (the composer pinned near its 20ch

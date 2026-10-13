@@ -47,6 +47,8 @@ const fontPx = (btn: HTMLElement): number => px(getComputedStyle(btn).fontSize)
 const gapPx = (btn: HTMLElement): number => px(getComputedStyle(btn).columnGap) // the icon↔label rhythm
 const padStartPx = (btn: HTMLElement): number => px(getComputedStyle(btn).paddingInlineStart)
 const padEndPx = (btn: HTMLElement): number => px(getComputedStyle(btn).paddingInlineEnd)
+/** The label part's own inset (the control rule, ADR-0245 Amendment 4): n - c on each inline side. */
+const labelInsetPx = (btn: HTMLElement): number => px(getComputedStyle(btn.querySelector('[data-part="label"]') as HTMLElement).paddingInlineStart)
 
 /** Alpha channel of a computed colour — 0 ⇒ the ink/border has VANISHED, > 0 ⇒ it is still painted. */
 const alphaOf = (color: string): number => {
@@ -129,25 +131,31 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
     }
   })
 
-  it('a region data-scale moves the icon↔label gap with n (the [density] axis retired into it) — the icon+label variant', () => {
+  it('a region data-scale moves the icon to label distance with n: the gutter c plus the label inset n - c (the icon+label variant)', () => {
     const { wrap, btn } = mount(ICON) // md size
-    const gaps: number[] = []
+    const gutters: number[] = []
+    const distances: number[] = []
     for (const scale of ['sm', 'md', 'lg'] as const) {
       wrap.setAttribute('data-scale', scale)
-      gaps.push(gapPx(btn))
+      gutters.push(gapPx(btn))
+      distances.push(gapPx(btn) + labelInsetPx(btn))
     }
-    expect(gaps).toEqual((['sm', 'md', 'lg'] as const).map((s) => resolve('product', s, 'md').control.margin))
-    expect(allDistinct(gaps), `gap did not change across data-scale: ${gaps.join()}`).toBe(true)
+    // ADR-0245 Amendment 4: the column-gap is the control gutter c, and the label inset n - c makes icon to text n
+    expect(gutters).toEqual((['sm', 'md', 'lg'] as const).map((s) => resolve('product', s, 'md').control.gutter))
+    expect(distances).toEqual((['sm', 'md', 'lg'] as const).map((s) => resolve('product', s, 'md').control.margin))
+    expect(allDistinct(distances), `icon to label did not change across data-scale: ${distances.join()}`).toBe(true)
   })
 
-  it('a region data-scale moves the bare-label FRAME too: block-size 4n and the 2n label pads (one n, ADR-0245 cl.3)', () => {
+  it('a region data-scale moves the bare-label FRAME too: block-size 4n, the box margin n and the label inset n - c (one n, ADR-0245 Amendment 4)', () => {
     const { wrap, btn } = mount(BARE) // md size
     for (const scale of ['sm', 'md', 'lg'] as const) {
       wrap.setAttribute('data-scale', scale)
       const r = resolve('product', scale, 'md')
       expect(frameHeight(btn), `height @ ${scale}`).toBeCloseTo(r.h, 0)
-      expect(padStartPx(btn), `leading pad @ ${scale}`).toBeCloseTo(2 * r.n, 0)
-      expect(padEndPx(btn), `trailing pad @ ${scale}`).toBeCloseTo(2 * r.n, 0)
+      expect(padStartPx(btn), `leading box margin @ ${scale}`).toBeCloseTo(r.control.margin, 0)
+      expect(padEndPx(btn), `trailing box margin @ ${scale}`).toBeCloseTo(r.control.margin, 0)
+      expect(labelInsetPx(btn), `label inset @ ${scale}`).toBeCloseTo(r.labelMargin, 0)
+      expect(padStartPx(btn) + labelInsetPx(btn), `text edge 2n - c @ ${scale}`).toBeCloseTo(2 * r.n - r.c, 0)
     }
   })
 
@@ -281,14 +289,22 @@ describe('ui-button [icon-only]: a slotted adornment with NO label renders a gen
     expect(insetStart, 'icon-only insets are not symmetric').toBeCloseTo(insetEnd, 0)
   })
 
-  it('REGRESSION GUARD — the pre-existing [leading | label]-with-real-text structure is UNCHANGED: still asymmetric, still wider than tall', () => {
+  it('REGRESSION GUARD: the [leading | label]-with-real-text structure keeps the control rule: equal host pads n, a label edge of n + the label inset, still wider than tall', () => {
+    // Re-derived for ADR-0245 Amendment 4. The old law read "asymmetric host pads" (½(h−icon) against h/2); the
+    // host pads are equal at n now and the asymmetry lives on the text: the icon sits n from its edge, the label
+    // text n + labelMargin = 2n - c from its edge.
     const { btn } = mount(ICON) // real text label, no icon-only attribute
     const h = frameHeight(btn)
     const w = frameWidth(btn)
     const start = padStartPx(btn)
     const end = padEndPx(btn)
+    const n = h / 4
+    const c = Math.ceil(n / 4)
     expect(w, 'the real-label case must stay WIDER than the square frame (it carries a label)').toBeGreaterThan(h)
-    expect(start, 'the real-label leading pad must stay the ½(h−icon) slot edge').not.toBeCloseTo(end, 1)
-    expect(end, 'the real-label trailing (label) edge must stay h/2').toBeCloseTo(h / 2, 1)
+    expect(start, 'the leading pad is the ½(h−icon) slot edge, n').toBeCloseTo(n, 1)
+    expect(end, 'the label edge is the box margin, n').toBeCloseTo(n, 1)
+    expect(labelInsetPx(btn), 'the label part carries the inset n - c').toBeCloseTo(n - c, 1)
+    expect(end + labelInsetPx(btn), 'the text edge is n + labelMargin = 2n - c').toBeCloseTo(2 * n - c, 1)
+    expect(end + labelInsetPx(btn), 'the text edge still differs from the icon edge').not.toBeCloseTo(start, 1)
   })
 })

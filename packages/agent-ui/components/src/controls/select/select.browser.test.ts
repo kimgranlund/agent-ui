@@ -754,7 +754,7 @@ describe('ui-select — panel/option geometry carries [size] (B5, the size-carry
     return el
   }
 
-  it('panel inset (margin) + option inline-pad sum to n (the frame inline padding, h/4) at sm/md/lg — the alignment law, browser-measured', async () => {
+  it('panel inset (margin) + option inline-pad - the panel outset equals the trigger text edge 2n - c at sm/md/lg: the alignment law, browser-measured (ADR-0245 Amendment 4)', async () => {
     const sums: Record<string, number> = {}
     for (const size of ['sm', 'md', 'lg']) {
       const wrap = document.createElement('div')
@@ -769,13 +769,22 @@ describe('ui-select — panel/option geometry carries [size] (B5, the size-carry
       const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
       const option = listbox.querySelector<HTMLElement>('[role="option"]')!
       const cs = getComputedStyle(option)
-      const sum = px(cs.marginInlineStart) + px(cs.paddingInlineStart)
+      // The placement rule (ADR-0245 Amendment 4): the panel sits c OUTSIDE the trigger (a group around control
+      // rows), so its outset comes off the sum; the result is the trigger's own text edge, margin n + label
+      // inset n - c, and the two texts share one x.
+      const outset = -(px(getComputedStyle(listbox).translate) || 0)
+      const sum = px(cs.marginInlineStart) + px(cs.paddingInlineStart) - outset
       sums[size] = sum
+      const r = resolve('product', 'sm', size as 'sm' | 'md' | 'lg')
+      const trigger = el.querySelector<HTMLElement>('[data-part="trigger"]')!
+      const triggerText = px(getComputedStyle(trigger).paddingInlineStart) + px(getComputedStyle(trigger.querySelector('[data-part="label"]')!).paddingInlineStart)
 
+      expect(outset, `${server.browser}: [size=${size}] the panel outset is c`).toBeCloseTo(r.c, 1)
       expect(
         sum,
-        `${server.browser}: [size=${size}] panel-inset+option-inline (${sum}px) should equal n (${resolve('product', 'sm', size as 'sm' | 'md' | 'lg').n}px)`,
-      ).toBeCloseTo(resolve('product', 'sm', size as 'sm' | 'md' | 'lg').n, 1)
+        `${server.browser}: [size=${size}] panel-inset+option-inline-outset (${sum}px) should equal the trigger text edge 2n - c (${r.control.margin + r.labelMargin}px)`,
+      ).toBeCloseTo(r.control.margin + r.labelMargin, 1)
+      expect(sum, `${server.browser}: [size=${size}] and the measured trigger text edge`).toBeCloseTo(triggerText, 1)
     }
 
     // Anti-vacuous: the three sizes must NOT collapse to the same inset (browser-measured, not

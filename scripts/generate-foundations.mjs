@@ -7,7 +7,8 @@
 //
 // The sheet is the skill's tokens.css form under ADR-0140 names: the tier inputs on `[data-tier="…"]`,
 // scale, size and density on their attributes, and one derived block (`--md-sys-n`, the container unit
-// `--md-sys-m`, the box values as multiples of n or c, the type roles, the four container levels) re-declared
+// `--md-sys-m`, the box values as multiples of n or c, the label inset n - c of the control rule (Amendment 4),
+// the type roles, the chip level and the four container levels) re-declared
 // wherever an input changes, so each element computes its own n and m. ROOT_DEFAULT is the cut (clause 10a): true, so `:root` takes ROOT_INPUTS (product at
 // scale sm) and the full recompute list. Set it to false to roll the cut back: every declaration then sits
 // inside an opt-in `[data-tier]` region and each `var(<derived>, <today>)` resolves to today's value again.
@@ -52,8 +53,8 @@ const LEVEL_TOKEN = { widget: 'widget', card: 'card', page: 'layout' }
 /**
  * The roomy levels as multiples of m, walked off CFG.levels the way scale.mjs `at()` walks them: a roomy level
  * is one m more than its child (the control counts as m), with the child's span as its gutter. Yields widget
- * 2m / m / 2m, card 3m / 2m / 3m, page 4m / 3m / 4m; the reserved levels (tray, lane, shell) and the chip
- * level have no token here.
+ * 2m / m / 2m, card 3m / 2m / 3m, page 4m / 3m / 4m; the reserved levels (tray, lane, shell) have no token,
+ * and the chip level (a tight wrap of a mark, on n) is declared beside the group level below.
  */
 function roomyLevels() {
   const span = { control: 1 }
@@ -81,6 +82,8 @@ function derivedDeclarations() {
     ['--md-sys-c', `calc(round(up, ${N} / 4, 1) * 1px)`],
     ['--md-sys-height', `calc(${N} * 4px)`],
     ['--md-sys-inset', `calc(${N} * 1px)`],
+    // The control rule (Amendment 4): the text slot carries the label inset n - c, so gutter c + inset = margin n.
+    ['--md-sys-label-inset', `calc(var(--md-sys-inset) - ${C})`],
     ['--md-sys-radius', `calc(${N} * 1px)`],
     ['--md-sys-icon-box', `calc(${N} * 2px)`],
     ['--md-sys-glyph-box', `calc(${N} * 2px - 2 * ${C})`],
@@ -96,6 +99,10 @@ function derivedDeclarations() {
     ['--md-sys-type-field-label', lin(CFG.linear.fieldLabel)],
     ['--md-sys-type-group-label', lin(CFG.linear.groupLabel)],
     ['--md-sys-type-floor', `${CFG.floor}px`],
+    // The chip level (tag, badge, kbd): margin c, gutter c, radius ceil(n/2); the checkbox box shares the radius.
+    ['--md-sys-chip-margin', C],
+    ['--md-sys-chip-gutter', C],
+    ['--md-sys-chip-radius', `calc(round(up, ${N} / 2, 1) * 1px)`],
     ['--md-sys-group-margin', `calc(var(--md-sys-inset) + ${C})`],
     ['--md-sys-group-gutter', C],
     ['--md-sys-group-radius', `calc(var(--md-sys-radius) + ${C})`],

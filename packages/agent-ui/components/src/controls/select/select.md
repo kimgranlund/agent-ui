@@ -155,7 +155,7 @@ geometry:
   options:
     sizeClass: legacy item-pad (ROV-C5 / §5.1) — numbers DERIVED off the trigger's n (ADR-0245), not the fixed px this superseded
     paddingBlock: var(--ui-select-option-block)    # = (h − font)/2 — row height == trigger height
-    paddingInline: var(--ui-select-option-inline)  # = c-based, pairs with listbox padding (option text aligns under the trigger label)
+    paddingInline: var(--ui-select-option-inline)  # = 2n - c: a row is a control, margin n + label inset n - c (ADR-0245 Amendment 4); the panel sits c outside the trigger (--ui-select-listbox-outset, the placement rule), so option text lines up under the trigger label
     font: var(--ui-select-option-font)             # = --ui-select-font (was size-blind; bug fix)
 
 forcedColors: A `@media (forced-colors: active)` block keeps the trigger (ButtonText/ButtonBorder/ButtonFace), the listbox panel (Canvas/CanvasText), and the option hover/selected/focus states (Highlight/HighlightText) visible in Windows High Contrast Mode.

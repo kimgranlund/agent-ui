@@ -108,13 +108,15 @@ describe('foundations: generated-file drift and the cut (ADR-0245 clause 10a)', 
     expect(densityRules.join('\n')).not.toContain('--md-sys-scale-s')
   })
 
-  it('declares every ADR-0245 clause 1 output name (Amendment 3: m, and the section and group labels)', () => {
+  it('declares every ADR-0245 clause 1 output name (Amendment 3: m, and the section and group labels; Amendment 4: the label inset and the chip level)', () => {
     const names = [
-      'n', 'm', 'c', 'height', 'inset', 'radius', 'icon-box', 'glyph-box', 'glyph-stroke', 'corner-shape',
+      'n', 'm', 'c', 'height', 'inset', 'label-inset', 'radius', 'icon-box', 'glyph-box', 'glyph-stroke', 'corner-shape',
       ...['display', 'heading', 'subhead', 'section-label', 'title', 'body', 'control', 'field-label', 'group-label'].map((r) => `type-${r}`),
-      ...['group', 'widget', 'card', 'layout'].flatMap((l) => ['margin', 'gutter', 'radius'].map((q) => `${l}-${q}`)),
+      ...['chip', 'group', 'widget', 'card', 'layout'].flatMap((l) => ['margin', 'gutter', 'radius'].map((q) => `${l}-${q}`)),
     ]
     for (const name of names) expect(committed, `--md-sys-${name}`).toMatch(new RegExp(`\\n  --md-sys-${name}: `))
     expect(`${committed}${bridge}`).not.toMatch(/--md-sys-type-(?:section|group)-kicker/) // renamed to the labels
+    // the legacy opt-out resets the new names too, so a control's `var(--md-sys-label-inset, 0px)` reads 0 there
+    for (const name of ['label-inset', 'chip-margin', 'chip-gutter', 'chip-radius']) expect(bridge).toContain(`  --md-sys-${name}: initial;`)
   })
 })

@@ -84,6 +84,7 @@
   --md-sys-c: initial;
   --md-sys-height: initial;
   --md-sys-inset: initial;
+  --md-sys-label-inset: initial;
   --md-sys-radius: initial;
   --md-sys-icon-box: initial;
   --md-sys-glyph-box: initial;
@@ -99,6 +100,9 @@
   --md-sys-type-field-label: initial;
   --md-sys-type-group-label: initial;
   --md-sys-type-floor: initial;
+  --md-sys-chip-margin: initial;
+  --md-sys-chip-gutter: initial;
+  --md-sys-chip-radius: initial;
   --md-sys-group-margin: initial;
   --md-sys-group-gutter: initial;
   --md-sys-group-radius: initial;
