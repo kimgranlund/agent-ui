@@ -57,7 +57,7 @@ describe('text-field.css — STATIC geometry law (s9)', () => {
 
   it('0 < glyph ≤ box: the §1-SET icon ramp is positive and fits the height box at every size (the ADR-0245 root register)', () => {
     // anti-vacuous: the root register's 2n icon box (ADR-0245), NOT an empty value silently passing the relation.
-    expect(iconBySize).toEqual({ sm: 12, md: 14, lg: 16 }) // 2n at n 6 / 7 / 8
+    expect(iconBySize).toEqual({ sm: 10, md: 12, lg: 14 }) // 2n at n 5 / 6 / 7
 
     for (const size of ['sm', 'md', 'lg'] as const) {
       const icon = iconBySize[size]
@@ -78,8 +78,8 @@ describe('text-field.css — STATIC geometry law (s9)', () => {
     expect(whereBlock(":where(ui-text-field[size='lg'])")).toMatch(/--ui-text-field-icon:\s*var\(--md-sys-icon-box, var\(--md-sys-icon-lg\)\)/)
     // the old local calc is gone (ADR-0035 conformance gap closed)
     expect(whereBlock(':where(ui-text-field) {')).not.toMatch(/--ui-text-field-icon:\s*calc\(/)
-    // the frame is 4n at the root register (ADR-0245): 24 / 28 / 32
-    expect([heightPx('sm'), heightPx('md'), heightPx('lg')]).toEqual([24, 28, 32])
+    // the frame is 4n at the root register (ADR-0245): 20 / 24 / 28
+    expect([heightPx('sm'), heightPx('md'), heightPx('lg')]).toEqual([20, 24, 28])
   })
 
   it('the slot IS the square cell: [slot=leading] AND [slot=trailing] are sized to --ui-text-field-icon on BOTH axes', () => {
