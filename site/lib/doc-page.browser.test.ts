@@ -1,4 +1,5 @@
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, beforeAll, afterAll } from 'vitest'
+import { page } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 // The GLOBAL inline-code chip rule lives in the page sheet (`_page.css`'s `code { … }`); `doc-page.ts`
@@ -131,6 +132,12 @@ const RAGGED_ATTRS = [
 ]
 
 describe('GH #881 — the Attributes table lays out on shared column tracks (never per-row-sized)', () => {
+  // The four-track grid is the WIDE layout. Below 32rem (512px) the table stacks and self-labels its cells and the
+  // header row hides, so this leg runs wide; the fleet default viewport is 414px (ADR-0150 cl.5) and, before T-0130
+  // fixed the invalid `max-inline-size` media query, the stacked branch never applied here. The narrow branch is
+  // pinned by demo-overflow-400.browser.test.ts.
+  beforeAll(async () => { await page.viewport(1024, 800) })
+  afterAll(async () => { await page.viewport(414, 896) })
   it('every row\'s Type/Default/Flags cell starts at the SAME x-offset as every other row\'s AND the header\'s', () => {
     const section = renderApiTable(RAGGED_ATTRS)
     mount(section)

@@ -127,7 +127,7 @@
 }
 
 /* ── narrow: stack name-over-detail (no dead horizontal gap at any width) ───────────────────────────────────── */
-@media (max-inline-size: 32rem) {
+@media (max-width: 32rem) {
   .api-row {
     grid-template-columns: 1fr;
     gap: 0.4rem;
@@ -194,7 +194,7 @@
  * column LABEL strip, meaningless stacked) hides, and each cell instead prints its own `data-label` above its
  * value — the same "no dead horizontal gap, self-label instead" discipline the `.api-field-label` design above
  * already follows for the sequence tables. */
-@media (max-inline-size: 32rem) {
+@media (max-width: 32rem) {
   .api-rows--attributes {
     grid-template-columns: 1fr;
   }

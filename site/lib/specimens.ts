@@ -15,10 +15,27 @@ import '@agent-ui/icons/phosphor' // registers + activates the Phosphor default 
  * ADR-0021), so a bare field is hittable rather than collapsed — but the width ABOVE that floor is the layout's
  * job, so a specimen still gets an explicit width here for a consistent, tidy demo. Other containers fill their
  * parent and are sized here only for the same reason. The width rationale lives here, once — call sites just
- * pass a width.
+ * pass a width. The width is a TARGET, never a floor on the page: `max-inline-size: 100%` caps it at the content
+ * column, so a 26rem form never pushes past the right edge of a 400px viewport (T-0130).
  */
 export function applyDemoWidth(element: HTMLElement, width: string): void {
   element.style.inlineSize = width
+  element.style.maxInlineSize = '100%'
+}
+
+/**
+ * scrollX: wrap a genuinely wide specimen (a many-column data table) in an `overflow-x: auto` frame and give the
+ * specimen a `min-inline-size` floor, so on a narrow viewport the table scrolls INSIDE the frame at a readable
+ * width instead of squeezing its cells until words break mid-letter (T-0130). Above the floor it fills the
+ * column exactly as before. The frame's own `min-inline-size: 0` lets it shrink below the specimen's floor.
+ */
+export function scrollX(element: HTMLElement, minInlineSize: string): HTMLElement {
+  element.style.minInlineSize = minInlineSize
+  const frame = document.createElement('div')
+  frame.style.overflowX = 'auto'
+  frame.style.minInlineSize = '0'
+  frame.append(element)
+  return frame
 }
 
 /**
