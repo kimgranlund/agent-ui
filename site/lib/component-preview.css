@@ -269,7 +269,7 @@ component-preview {
 }
 
 /* ── narrow: stack the columns ────────────────────────────────────────────────────────────────────────────── */
-@media (max-inline-size: 42rem) {
+@media (max-width: 42rem) {
   .preview {
     grid-template-columns: 1fr;
   }
