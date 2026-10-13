@@ -36,8 +36,8 @@
   /* the own chain — @scope consumes ONLY these (+ the --ui-container-* seam), never a raw --md-sys-color-* role */
   --ui-drawer-ink: var(--md-sys-color-neutral-on-surface);
   --ui-drawer-outline: var(--md-sys-color-neutral-outline-variant); /* the exposed-edge hairline */
-  --ui-drawer-radius: var(--md-sys-shape-corner-base); /* the shared fleet radius, on non-docked corners only */
-  --ui-drawer-padding: var(--md-sys-space-lg); /* the shell pad off the density-responsive ladder (NOT a control height) */
+  --ui-drawer-radius: var(--md-sys-card-radius, var(--md-sys-shape-corner-base)); /* the shared fleet radius, on non-docked corners only */
+  --ui-drawer-padding: var(--md-sys-card-margin, var(--md-sys-space-lg)); /* the shell pad off the density-responsive ladder (NOT a control height) */
   --ui-drawer-scrim: var(--md-sys-color-dialog-backdrop); /* the ::backdrop blocking wash — modal's TKT-0019 wash, reused */
   --ui-drawer-inline-size: min(92vw, 26rem); /* the inline-edge (start/end) docked width */
   --ui-drawer-max-block-size: 85svh; /* the bottom-edge docked content-height cap */
@@ -62,15 +62,15 @@
      scrolled BEHIND it; a static border on an unscrolled drawer would be pure decoration. Cheap: it reuses
      the `data-fade-top`/`data-fade-bottom` flags `scrollFade` already toggles on this same dialog
      (unconditional, wired in .ts) rather than a second scroll listener — pure CSS, zero new JS. */
-  --ui-drawer-pad-inline: var(--md-sys-space-md); /* header/footer/content inline padding — the drawer's own rhythm */
-  --ui-drawer-pad-block: var(--md-sys-space-sm); /* header/footer block padding */
-  --ui-drawer-gap: var(--md-sys-space-sm); /* the vertical rhythm between a content region's own stacked children */
+  --ui-drawer-pad-inline: var(--md-sys-card-gutter, var(--md-sys-space-md)); /* header/footer/content inline padding — the drawer's own rhythm */
+  --ui-drawer-pad-block: var(--md-sys-inset, var(--md-sys-space-sm)); /* header/footer block padding */
+  --ui-drawer-gap: var(--md-sys-card-gutter, var(--md-sys-space-sm)); /* the vertical rhythm between a content region's own stacked children */
   --ui-drawer-region-border: var(--ui-drawer-outline); /* the header/footer hairline colour — the same frame role, one edge over */
   /* GH #920 — content-scroll-mode's inter-region gap (header↔content, content↔footer): consumes the SAME
      shared --ui-box-inset container-box.css already uses for the frame↔region/region↔region margin, minted
      as the drawer's own chain so @scope (below) never reads a raw --ui-box-* directly (the token-hygiene law
      this file's own test enforces) — a flex `gap` reproduces the BFC's collapsed 6px exactly. */
-  --ui-drawer-region-gap: var(--ui-box-inset, 0.375rem);
+  --ui-drawer-region-gap: var(--md-sys-inset, var(--ui-box-inset, 0.375rem));
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-drawer) consumes ONLY --ui-drawer-* + the --ui-container-* seam ════════════════ */
