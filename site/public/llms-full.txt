@@ -127,7 +127,7 @@ Exactly one link renders at a time (SPEC-R5) — **never a broken-image box, nev
 2. **Initials** — derived from `name` by a pure, grapheme-safe function (`avatar-initials.ts`): the first
    grapheme of the first word + the first grapheme of the last word (a single word yields one grapheme),
    locale-uppercased. Empty/whitespace `name` skips straight to the glyph.
-3. **Glyph** — the vendored person icon (`<ui-icon glyph="user">`), decorative by its own default.
+3. **Glyph** — the vendored person icon (`<ui-icon symbol="user">`), decorative by its own default.
 
 ## Accessibility
 
@@ -783,7 +783,7 @@ descriptor here would break); its contract is this prose + `card-header.ts`'s `s
 ```html
 <ui-card>
   <ui-card-header format="structured">
-    <ui-icon slot="leading" glyph="calendar"></ui-icon>
+    <ui-icon slot="leading" symbol="calendar"></ui-icon>
     Date selection
     <ui-badge slot="trailing" intent="success" label="Confirmed"></ui-badge>
   </ui-card-header>
@@ -1729,8 +1729,8 @@ active-descendant filter pattern (ADR-0085) — typing filters the list; Arrow k
 <ui-command-modal label="Command palette" placeholder="Type a command…">
   <div role="group" aria-labelledby="cmd-nav">
     <div id="cmd-nav" data-role="group-label">Navigation</div>
-    <div role="option" value="home"><ui-icon glyph="house" data-role="icon"></ui-icon>Go Home<span data-role="shortcut" aria-hidden="true">⌘H</span></div>
-    <div role="option" value="settings"><ui-icon glyph="gear" data-role="icon"></ui-icon>Settings<span data-role="shortcut" aria-hidden="true">⌘,</span></div>
+    <div role="option" value="home"><ui-icon symbol="house" data-role="icon"></ui-icon>Go Home<span data-role="shortcut" aria-hidden="true">⌘H</span></div>
+    <div role="option" value="settings"><ui-icon symbol="gear" data-role="icon"></ui-icon>Settings<span data-role="shortcut" aria-hidden="true">⌘,</span></div>
   </div>
   <div role="option" value="logout" data-keywords="sign out exit">Log out</div>
   <div slot="empty">No commands match — try a different search.</div>
@@ -4909,7 +4909,7 @@ bindable boolean, `available`. It extends `UIElement` (not a container, not form
   action-label="Open"
 >
   <ui-button slot="menu" icon-only variant="ghost" aria-label="More actions">
-    <ui-icon glyph="dots-three"></ui-icon>
+    <ui-icon symbol="dots-three"></ui-icon>
   </ui-button>
 </ui-service-card>
 ```
@@ -7131,7 +7131,7 @@ At connect, any light-DOM children present on the host (typically message text) 
 moved, not cloned — into a component-built `<span data-part="message">`. This is a **one-time** move:
 children added to the host after connect are not adopted (out of scope v1). The affordance cluster is
 appended alongside it: an `<ui-button data-part="action">` **only** when `action` is non-empty at
-connect, and an icon-only `<ui-button data-part="close" icon-only>` (`<ui-icon glyph="x">`, `aria-label="Dismiss"`)
+connect, and an icon-only `<ui-button data-part="close" icon-only>` (`<ui-icon symbol="x">`, `aria-label="Dismiss"`)
 **always**. Both affordances are `ui-button` instances — native `<button>` is banned (fleet law) — and
 are reachable in normal Tab order via `ui-button`'s own `tabbable` trait; no tabindex games, no
 autofocus.
@@ -7259,9 +7259,9 @@ fleet had no toggle-button primitive before this — `ui-switch` is a track-and-
 no pressed state at all (the amendment's own survey, ADR-0179 GH #686).
 
 ```html
-<ui-toggle><ui-icon slot="icon" glyph="chats-circle"></ui-icon>Chat</ui-toggle>
-<ui-toggle pressed><ui-icon slot="icon" glyph="gear-six"></ui-icon>Settings<ui-icon slot="state-icon" glyph="eye"></ui-icon></ui-toggle>
-<ui-toggle disabled><ui-icon slot="icon" glyph="robot"></ui-icon>Co-pilot</ui-toggle>
+<ui-toggle><ui-icon slot="icon" symbol="chats-circle"></ui-icon>Chat</ui-toggle>
+<ui-toggle pressed><ui-icon slot="icon" symbol="gear-six"></ui-icon>Settings<ui-icon slot="state-icon" symbol="eye"></ui-icon></ui-toggle>
+<ui-toggle disabled><ui-icon slot="icon" symbol="robot"></ui-icon>Co-pilot</ui-toggle>
 ```
 
 ## Refused toggle — the cancelable-before-commit design (LLD §16.2's min-one invariant)
