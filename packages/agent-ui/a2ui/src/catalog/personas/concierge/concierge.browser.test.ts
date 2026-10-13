@@ -16,6 +16,10 @@ import '@agent-ui/components/all' // self-defines ui-* controls (the real fleet 
 import { createRenderer } from '../../../renderer/renderer.ts'
 import type { A2uiClientMessage } from '../../../renderer/renderer.ts'
 import type { A2uiActionMessage } from '../../../renderer/action.ts'
+import { resolve } from '../../../../../shared/src/tokens/scale.mjs'
+
+// The A2UI canvas register (ADR-0245 Amendment 2): widget at scale md, n 6; the card margin and gutter read from it.
+const CANVAS = resolve('widget', 'md', 'md')
 
 const isAction = (m: A2uiClientMessage): m is A2uiActionMessage => 'action' in m
 
@@ -212,7 +216,7 @@ const wrapOf = (mount: HTMLElement, path: string): HTMLElement =>
   [...mount.querySelectorAll<HTMLElement>('[data-a2ui-booking-field]')].find((w) => w.getAttribute('data-a2ui-booking-field') === path)!
 
 describe('BookingForm and BookingConfirmation: labelled fields, compact dates, a summary card (T-0085)', () => {
-  it('every field shows its visible label, no month grid renders inline, ink sits 22px in and Reserve is 28px', async () => {
+  it('every field shows its visible label, no month grid renders inline, ink sits 19px in and Reserve is 24px', async () => {
     const { mount, r } = await mountStay(480)
     const form = mount.querySelector('ui-form-provider')!
     for (const [path, label] of [
@@ -226,15 +230,15 @@ describe('BookingForm and BookingConfirmation: labelled fields, compact dates, a
       expect(box(own).height, `${path}: the label is rendered, not just named`).toBeGreaterThan(0)
     }
     for (const cal of mount.querySelectorAll('ui-calendar')) expect(box(cal).height, 'no inline month grid').toBe(0)
-    // 1px frame + the 21px card margin (ADR-0245 Amendment 2, scale.mjs resolve('widget','md','md').card.margin), the same 22px a stock card's regions put their ink at.
-    expect(box(wrapOf(mount, 'guestName')).left - box(form).left).toBeCloseTo(22, 0)
+    // 1px frame + the 18px card margin (ADR-0245 Amendment 2, scale.mjs resolve('widget','md','md').card.margin), the same 19px a stock card's regions put their ink at.
+    expect(box(wrapOf(mount, 'guestName')).left - box(form).left).toBeCloseTo(1 + CANVAS.card.margin, 0)
     const button = mount.querySelector('ui-form-provider > ui-button')!
-    expect(box(button).left - box(form).left).toBeCloseTo(22, 0)
-    expect(box(button).height, 'the form steps down to the md button, 28px on the canvas register').toBeCloseTo(28, 0)
+    expect(box(button).left - box(form).left).toBeCloseTo(1 + CANVAS.card.margin, 0)
+    expect(box(button).height, 'the form steps down to the md button, 24px on the canvas register').toBeCloseTo(CANVAS.h, 0)
     const card = mount.querySelector('ui-card')!
-    expect(box(card.querySelector('[data-part="title"]')).left - box(card).left).toBeCloseTo(22, 0)
-    // 14px between fields (the card gutter at the canvas register, resolve('widget','md','md').card.gutter).
-    expect(box(wrapOf(mount, 'guests')).top - box(wrapOf(mount, 'guestName')).bottom).toBeCloseTo(14, 0)
+    expect(box(card.querySelector('[data-part="title"]')).left - box(card).left).toBeCloseTo(1 + CANVAS.card.margin, 0)
+    // 12px between fields (the card gutter at the canvas register, resolve('widget','md','md').card.gutter).
+    expect(box(wrapOf(mount, 'guests')).top - box(wrapOf(mount, 'guestName')).bottom).toBeCloseTo(CANVAS.card.gutter, 0)
     r.dispose()
     mount.remove()
   })
@@ -243,13 +247,13 @@ describe('BookingForm and BookingConfirmation: labelled fields, compact dates, a
     const wide = await mountStay(480)
     const [inW, outW] = [box(wrapOf(wide.mount, 'checkIn')), box(wrapOf(wide.mount, 'checkOut'))]
     expect(outW.top, 'side by side: same row').toBeCloseTo(inW.top, 0)
-    expect(outW.left - inW.right, 'the 14px gap between them').toBeCloseTo(14, 0)
+    expect(outW.left - inW.right, 'the 12px gap between them').toBeCloseTo(CANVAS.card.gutter, 0)
     wide.r.dispose()
     wide.mount.remove()
 
     const narrow = await mountStay(336)
     const [inN, outN] = [box(wrapOf(narrow.mount, 'checkIn')), box(wrapOf(narrow.mount, 'checkOut'))]
-    expect(outN.top - inN.bottom, 'stacked: departure below arrival, 14px apart').toBeCloseTo(14, 0)
+    expect(outN.top - inN.bottom, 'stacked: departure below arrival, 12px apart').toBeCloseTo(CANVAS.card.gutter, 0)
     expect(outN.left).toBeCloseTo(inN.left, 0)
     narrow.r.dispose()
     narrow.mount.remove()
@@ -288,7 +292,7 @@ describe('BookingForm date fields: arrival and departure inputs, each with a sma
     const wide = await mountStay(480)
     const [a, d] = [fieldOf(wide.mount, 'checkIn'), fieldOf(wide.mount, 'checkOut')]
     expect(box(d).top, 'side by side').toBeCloseTo(box(a).top, 0)
-    expect(box(d).left - box(a).right, 'the 14px gap between fields').toBeCloseTo(14, 0)
+    expect(box(d).left - box(a).right, 'the 12px gap between fields').toBeCloseTo(CANVAS.card.gutter, 0)
     expect(wide.mount.querySelector('ui-form-provider ui-card'), 'no card inside the form card').toBeNull()
     for (const field of [a, d]) {
       expect(buttonOf(field).getAttribute('size'), 'the sm step').toBe('sm')
@@ -296,7 +300,7 @@ describe('BookingForm date fields: arrival and departure inputs, each with a sma
       expect(box(buttonOf(field)).height).toBeGreaterThan(0)
       expect(box(buttonOf(field)).height).toBeLessThanOrEqual(24)
       expect(box(buttonOf(field)).right).toBeLessThanOrEqual(box(inputOf(field)).right)
-      expect(box(inputOf(field)).height, 'the input at the md step, 28px on the canvas register').toBeCloseTo(28, 0)
+      expect(box(inputOf(field)).height, 'the input at the md step, 24px on the canvas register').toBeCloseTo(CANVAS.h, 0)
       expect(box(field.querySelector('[data-part="label"]')).height).toBeGreaterThan(0)
     }
     expect(inputOf(a).value).toBe(
@@ -308,7 +312,7 @@ describe('BookingForm date fields: arrival and departure inputs, each with a sma
 
     const narrow = await mountStay(336)
     const [an, dn] = [fieldOf(narrow.mount, 'checkIn'), fieldOf(narrow.mount, 'checkOut')]
-    expect(box(dn).top - box(an).bottom, 'stacked, 14px apart').toBeCloseTo(14, 0)
+    expect(box(dn).top - box(an).bottom, 'stacked, 12px apart').toBeCloseTo(CANVAS.card.gutter, 0)
     expect(box(dn).left).toBeCloseTo(box(an).left, 0)
     narrow.r.dispose()
     narrow.mount.remove()

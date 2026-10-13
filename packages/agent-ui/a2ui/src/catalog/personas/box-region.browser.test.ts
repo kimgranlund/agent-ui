@@ -4,7 +4,7 @@
 // the 6px box inset, the region padding), the card's loose-child margin gone, and the composite's own rhythm
 // (CardTable one region apart, 18px; QuestionCard one 8px gap). jsdom cannot see a computed box, so this is
 // the geometry proof; card-table.test.ts and question-card.test.ts own the DOM shape. The CardTable betting seed
-// (ADR-0243 Amendment 3, T-0088) adds the bet row: its chips, stepper and Clear at 32px (the lg step on the canvas register, widget
+// (ADR-0243 Amendment 3, T-0088) adds the bet row: its chips, stepper and Clear at 28px (the lg step on the canvas register, widget
 // at scale md, ADR-0245 Amendment 2), 8px apart,
 // one region between the felt and the Deal row.
 
@@ -13,6 +13,7 @@ import { describe, it, expect, afterEach } from 'vitest'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { createRenderer } from '../../renderer/renderer.ts'
 import { personaExemplarSeeds } from '../../examples/persona-exemplars.ts'
 
@@ -61,7 +62,7 @@ describe('the persona composites on the ADR-0046 box model (Amendment 7)', () =>
     expect(getComputedStyle(part(card, 'zone')).marginBlockStart).toBe('0px') // the card's loose-child margin is gone
   })
 
-  it('CardTable betting (Amendment 3): the bet row sits one region (18px) between the felt and the Deal row; chips, stepper and Clear at 32px (lg on the canvas register), 8px apart', async () => {
+  it('CardTable betting (Amendment 3): the bet row sits one region (18px) between the felt and the Deal row; chips, stepper and Clear at 28px (lg on the canvas register), 8px apart', async () => {
     const card = await renderSeed('persona-croupier-card-table-betting')
     const host = rect(card)
     const player = rect(card.querySelectorAll('[data-part="zone"]')[1]!)
@@ -71,7 +72,7 @@ describe('the persona composites on the ADR-0046 box model (Amendment 7)', () =>
     const clear = rect(part(card, 'clear'))
     const dealBtn = rect(card.querySelector(':scope > ui-button') as HTMLElement)
     expect(chips).toHaveLength(4)
-    for (const r of [...chips, stake, clear, dealBtn]) expect(r.height).toBeCloseTo(32, 0)
+    for (const r of [...chips, stake, clear, dealBtn]) expect(r.height).toBeCloseTo(resolve('widget', 'md', 'lg').h, 0) // 28: the lg step at the canvas register
     // The chips on the first line, 8px apart; the stepper and Clear on the second, 8px below and 8px apart.
     for (let i = 1; i < chips.length; i++) {
       expect(chips[i]!.left - chips[i - 1]!.right).toBeCloseTo(8, 0)
