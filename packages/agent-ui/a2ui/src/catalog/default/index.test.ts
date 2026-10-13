@@ -2176,9 +2176,21 @@ describe('default catalog - BoardGrid via the shared validator (ADR-0243, T-0072
     expect(defaultFactories.BoardGrid.tag).toBe('ui-board-grid')
   })
 
-  it('actionName is NOT wire-exposed this pass: the renderer cannot forward the control DOM action event', () => {
-    expect(defaultCatalog.components.BoardGrid.properties.actionName).toBeUndefined()
-    expect(validateOne({ component: 'BoardGrid', rows: 2, cols: 2, actionName: 'fire' }).valid).toBe(false)
+  it('actionName is wire-exposed and forwards the control own action event (T-0081, ADR-0243 Amendment 4)', () => {
+    const pd = defaultCatalog.components.BoardGrid.properties.actionName
+    expect(pd?.mapsTo).toBe('actionName')
+    expect(pd?.actionEvent).toBe('action')
+    expect(pd?.bindable).toBeFalsy()
+    expect(validateOne({ component: 'BoardGrid', rows: 2, cols: 2, actionName: 'fire' }).valid).toBe(true)
+    // the mark is opt-in: no other default-catalog prop forwards a control event (ProductCard's own event stays unread)
+    const marked = Object.entries(defaultCatalog.components).flatMap(([type, def]) =>
+      Object.entries(def.properties).filter(([, p]) => p.actionEvent !== undefined).map(([prop]) => `${type}.${prop}`),
+    )
+    expect(marked).toEqual(['BoardGrid.actionName'])
+  })
+
+  it('NEGATIVE CONTROL: a non-string actionName fails the shared validator', () => {
+    expect(validateOne({ component: 'BoardGrid', rows: 2, cols: 2, actionName: 5 }).valid).toBe(false)
   })
 
   // Cell shape (row and col required, intent in the badge set) is hardened by the control (`cleanCells`), not the

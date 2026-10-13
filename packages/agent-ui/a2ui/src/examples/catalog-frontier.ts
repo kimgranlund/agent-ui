@@ -1534,8 +1534,8 @@ const BOARD_GRID_GUESSES_ID = 'frontier-board-grid-guesses'
  *  A second board is the approved mockup's battle board (ADR-0243 Amendment 2, T-0083): a 6 by 6 sea whose
  *  shots read hit (a filled dot, danger), miss (a ring, neutral) and sunk (a boxed square, success), the
  *  danger-high and success-high inks Kim asked for, again with the corner glyph beside the colour.
- *  Read-only on purpose: cell activation is not catalog-reachable this pass (`boardGridFactory` doc comment), so
- *  the row exposes no `actionName`. Corpus admission is a SEPARATE judged wave (disposition-allowlist.ts). */
+ *  Read-only here: neither board sets `actionName`, so no cell fires (the row exposes `actionName` since T-0081,
+ *  ADR-0243 Amendment 4, for a clickable board). Corpus admission is a SEPARATE judged wave (disposition-allowlist.ts). */
 export const boardGridGuessesSeed: ExampleSeed = {
   name: 'frontier-board-grid-guesses',
   description: 'Two read-only game boards: a five-letter word guess BoardGrid with a bound `cells` array of marked letters (intent showing right spot, wrong spot and absent), and a 6 by 6 battle BoardGrid whose bound shots read hit, miss and sunk.',

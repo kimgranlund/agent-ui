@@ -87,7 +87,7 @@ export const SELECTION_PROJECTION: SelectionProjection = {
       "ServiceCard": {"intents":["a service or agent to open"],"notFor":[{"type":"Card","why":"any content, not a launchable entry"},{"type":"ProductCard","why":"a product or room to buy or book"}]},
       "Breadcrumb": {"intents":["the path to the current page"],"notFor":[{"type":"Drill","why":"moving between levels"}]},
       "ProductCard": {"intents":["one product, room or offer to buy or book"],"notFor":[{"type":"Card","why":"content with no price or action"},{"type":"ServiceCard","why":"a thing to open, not buy"}]},
-      "BoardGrid": {"intents":["a board of cells to target or mark"],"notFor":[{"type":"Grid","why":"a layout of components"}]},
+      "BoardGrid": {"intents":["a board of cells to target or mark","a board with clickable cells"],"notFor":[{"type":"Grid","why":"a layout of components"}]},
       "GameHud": {"intents":["a game score and status strip"],"notFor":[{"type":"Stat","why":"one metric outside a game"},{"type":"Toolbar","why":"actions, not readouts"},{"type":"ResultCard","why":"the settled outcome once play ends"}]},
       "ResultCard": {"intents":["a settled game, deal or booking outcome and its next action"],"notFor":[{"type":"GameHud","why":"the live score while play goes on"},{"type":"Toast","why":"a passing round result"}]},
     },

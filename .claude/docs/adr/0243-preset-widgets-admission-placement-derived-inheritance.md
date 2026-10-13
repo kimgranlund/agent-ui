@@ -348,3 +348,32 @@ pill. A round has three steps, and the table now carries each one.
    inventory line). The worst-case derived prompt (ADR-0234) measures 140,891 chars (`agent-ui--croupier`,
    +90) against 141,200, and BASE 139,911 (+28, the two re-authored modules) against 140,000; neither budget
    moves.
+
+## Amendment 4: the renderer forwards a control's own action event, so BoardGrid cells fire on the wire (2026-10-13, T-0081)
+
+> Status: recorded by T-0081 from the T-0072 R1 verifier finding that BoardGrid shipped read-only on the wire.
+> Append-only; the Decision, the BoardGrid fork sheet, and Amendments 1 to 3 are unchanged, and this section
+> extends the BoardGrid contract and the renderer's action wiring additively.
+
+BoardGrid emits a DOM `action` event with `{action, context: {row, col}}` once `actionName` is set, but the
+renderer wired A2UI actions only from a catalog prop whose `mapsTo` is `'action'` (a host `click` listener with
+a static `context`), so a clicked cell never reached the agent and the row held `actionName` back.
+
+1. **One catalog mark, `PropDef.actionEvent`.** A prop may name a DOM event the control fires on its own host.
+   Where `mapsTo: 'action'` strips the prop and answers a click, an `actionEvent` prop is applied to the control
+   as usual (it is what turns BoardGrid's cells into buttons) and the renderer additionally listens for the named
+   event on the element. The mark is opt-in per prop and validated at load as a non-empty string. Only
+   `BoardGrid.actionName` carries it (`'action'`); ProductCard's own `action` event stays unread, as before.
+2. **Forwarding.** The listener emits one A2UI action per event: `name` is `detail.action`, `context` is
+   `detail.context` as the control built it (BoardGrid: the cell's 0-based `row` and `col`), `wantResponse`
+   absent. It counts only an event fired on the host itself, drops a detail with no action name, and never
+   emits for a disabled host. It shares the `#actionWiring` abort controller, so a structural resend re-wires
+   without stacking (GH #1164) and surface or list-item teardown removes it.
+3. **The row.** `BoardGrid` gains the non-bindable string `actionName`. Unset, the board stays read-only and
+   fires nothing, so every existing payload and corpus record is unchanged.
+4. **Corpus grounding.** `checkActionGrounding` accepts an action whose source component carries an
+   `actionEvent` prop whose string value equals the action name, alongside the `mapsTo: 'action'` rule.
+5. **Teaching.** The BoardGrid sidecar gains the intent "a board with clickable cells" (cut to fit the dogfood
+   clause and derived-prompt budgets, no ceiling moved); the prop itself rides the inventory line as
+   `actionName: string`. Presets that still build a Grid of cell Buttons (the Admiral) are unchanged here; moving
+   them to `actionName` is a separate ticket.

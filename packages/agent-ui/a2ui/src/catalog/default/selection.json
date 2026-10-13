@@ -1167,7 +1167,8 @@
     },
     "BoardGrid": {
       "intents": [
-        "a board of cells to target or mark"
+        "a board of cells to target or mark",
+        "a board with clickable cells"
       ],
       "notFor": [
         {

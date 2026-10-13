@@ -26,7 +26,7 @@ preset is seeded with, not observed live: only the Croupier has recorded fixture
   a Table, a Badge and a Button, 5 (`site/pages/agent-admin-presets.ts:567`). A slot picker is a ChoiceGroup
   over a `/slots` template of ChoiceCard with two Texts, 4, once per booking. The one candidate that clears
   the test, the Admiral's clickable board (a Grid of 36 cell Buttons, `agent-admin-libraries.ts:244`), is
-  already the BoardGrid type; what it lacks is wire forwarding of its own `action` event (T-0081, proposed).
+  already the BoardGrid type; what it lacks is wire forwarding of its own `action` event (T-0081, since shipped: ADR-0243 Amendment 4).
 - **The component-design doctrine already names two other routes.** `mint-vs-compose.md` carries the TYPE
   arm (ADR-0220: a type is earned when its semantics and behaviour are inexpressible with the shipped
   catalog) and the enforcement-locus signal (ADR-0201: a composition whose law only prompt discipline upholds

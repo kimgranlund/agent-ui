@@ -346,7 +346,8 @@ export function priorSurfaceSeeds(prior: A2uiOutput): Map<string, SurfaceSeed> {
  * Action grounding (ADR-0231 cl.2, E_IDGRAPH, the dangling-reference class): the action's
  * `sourceComponentId` must name a component live on the action's surface after the prior turn, and that
  * component must declare an action prop (catalog `mapsTo: 'action'`, the renderer's own trigger rule)
- * whose name, read by the renderer's `readActionSpec`, equals `action.name`. An action no prior component
+ * whose name, read by the renderer's `readActionSpec`, equals `action.name`, or a prop with the catalog's
+ * `actionEvent` mark (T-0081) whose string value is `action.name`. An action no prior component
  * can emit is a fabricated turn.
  */
 function checkActionGrounding(record: CorpusRecord, catalog: Catalog): AdmitRejection | null {
@@ -364,7 +365,10 @@ function checkActionGrounding(record: CorpusRecord, catalog: Catalog): AdmitReje
   }
   const props = catalog.components[source.component]?.properties ?? {}
   const emits = Object.entries(props).some(
-    ([prop, def]) => def.mapsTo === 'action' && source[prop] !== undefined && readActionSpec(source[prop]).name === action.name,
+    ([prop, def]) =>
+      (def.mapsTo === 'action' && source[prop] !== undefined && readActionSpec(source[prop]).name === action.name) ||
+      // T-0081: a prop that forwards the control's own event (`PropDef.actionEvent`) carries the action name itself.
+      (def.actionEvent !== undefined && source[prop] === action.name),
   )
   if (emits) return null
   return {

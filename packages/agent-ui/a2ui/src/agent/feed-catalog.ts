@@ -346,7 +346,7 @@ export const FEED_EXCLUDED: readonly FeedExclusion[] = [
   {
     type: 'BoardGrid',
     reason:
-      'a game board, not an ask affordance (ADR-0243, T-0072) - a grid of marked cells is canvas-scale game surface, not light ask furniture; it declares no value mark, and its cell activation is not catalog-reachable this pass (boardGridFactory doc comment), so an ask embedding one could never learn a pick.',
+      'a game board, not an ask affordance (ADR-0243, T-0072) - a grid of marked cells is canvas-scale game surface, not light ask furniture; it declares no value mark, and a cell click reports as a free-standing action (T-0081) rather than a committed value, so an ask embedding one could never commit a pick.',
   },
   {
     type: 'GameHud',

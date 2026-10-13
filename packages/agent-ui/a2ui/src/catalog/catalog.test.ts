@@ -72,6 +72,12 @@ describe('loadCatalog — structural validation (catalog LLD-C1, SPEC-R1/R4)', (
   )
 
   throws(
+    'an actionEvent that is not a non-empty string',
+    { catalogId: 'c', protocolVersion: 'v1.0', components: { A: { properties: { x: { type: {}, mapsTo: 'x', actionEvent: '' } } } } },
+    CatalogLoadCode.MALFORMED,
+  )
+
+  throws(
     'a reserved @ component name',
     { catalogId: 'c', protocolVersion: 'v1.0', components: { '@index': { properties: {} } } },
     CatalogLoadCode.NAME_INVALID,
@@ -115,6 +121,26 @@ describe('loadCatalog — PropDef.requires (ADR-0226 cl.3)', () => {
   it('a property that does not declare requires stays undefined (byte-identical for every non-opted-in prop)', () => {
     const cat = loadCatalog(demoCatalogDoc)
     expect(cat.components.Button.properties.label!.requires).toBeUndefined()
+  })
+})
+
+// T-0081 (ADR-0243 Amendment 4): the opt-in `PropDef.actionEvent` (the control's own event the renderer forwards).
+describe('loadCatalog, PropDef.actionEvent (T-0081)', () => {
+  it('a declared actionEvent survives loading; an undeclared prop stays undefined', () => {
+    const cat = loadCatalog({
+      catalogId: 'c',
+      protocolVersion: 'v1.0',
+      components: {
+        A: {
+          properties: {
+            actionName: { type: { type: 'string' }, mapsTo: 'actionName', actionEvent: 'action' },
+            label: { type: { type: 'string' }, mapsTo: 'label' },
+          },
+        },
+      },
+    })
+    expect(cat.components.A.properties.actionName!.actionEvent).toBe('action')
+    expect(cat.components.A.properties.label!.actionEvent).toBeUndefined()
   })
 })
 

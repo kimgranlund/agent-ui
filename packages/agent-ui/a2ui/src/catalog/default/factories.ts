@@ -1485,13 +1485,10 @@ export const productCardFactory: WidgetFactory = {
  * accessors (verified against `board-grid.md`); `cells` is the one bindable array, patched in place by the
  * control so a mark update never re-mounts the board. Display-only on the wire: no `value` mark, no children.
  *
- * `actionName` is deliberately NOT wire-exposed this pass. With it set the control emits a DOM `action`
- * event carrying `{action, context: {row, col}}`, but the renderer wires A2UI actions only from a catalog
- * prop whose `mapsTo` is `'action'` through a host `click` listener and a static `context`; it never reads a
- * component's own `action` event detail, so the clicked cell could not reach the agent (the `ServiceCard`
- * Open button precedent, verbatim). Exposing the prop would teach the agent a board whose cells fire nothing.
- * An interactive board stays a Grid of cell Buttons until the renderer forwards the DOM event; `actionName`
- * can then be added to the row additively. `inline` is not wire-exposed either.
+ * `actionName` is wire-exposed (T-0081, ADR-0243 Amendment 4) and rides the generic own-event forwarding: the row
+ * marks it `actionEvent: 'action'`, so the renderer still applies it (the control turns its cells into buttons)
+ * and additionally listens for the control's DOM `action` event, sending `{action, context: {row, col}}` to the
+ * agent as one A2UI action per activated cell. No bespoke factory code is needed. `inline` is not wire-exposed.
  */
 export const boardGridFactory: WidgetFactory = accessorFactory('ui-board-grid')
 
