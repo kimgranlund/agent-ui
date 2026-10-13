@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-10-12 |
 > | **Proposed by** | the sdlc-lite solo run `widget-patterns-next` (design spike T-0087), on Kim's request for the next shared widget patterns after the 2026-10-12 preset review. Number 0244 claimed against the file tree (0243 the highest), every sibling worktree under `.claude/worktrees/` and the history of every ref |
-> | **Ratified by** | pending (Kim comments `ratify ADR-0244` on the PR; `scripts/adr_ratify.py` flips it, ADR-0149) |
+> | **Ratified by** | kimgranlund (repo owner), 2026-10-13, via the [`ratify ADR-0244` utterance](https://github.com/kimgranlund/agent-ui/pull/1909#issuecomment-6136020438) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | on ratification: [ADR-0243](./0243-preset-widgets-admission-placement-derived-inheritance.md)'s header cell gains `Extended by ADR-0244` (the two-way Extension link; ADR-0243's body is not edited) · on build: [`../spec/a2ui-catalog.spec.md`](../spec/a2ui-catalog.spec.md) (one default row) · the PRD `response-type-selection` K6 row (re-measured) · [`../spec/persona-catalog-composition.spec.md`](../spec/persona-catalog-composition.spec.md) (one new fragment) · code: `packages/agent-ui/components/src/controls/result-card/**`, `packages/agent-ui/a2ui/src/catalog/default/{catalog.json,selection.json}`, `src/catalog/personas/stylist/**`, `src/catalog/records.ts`, `site/pages/agent-admin-{presets,libraries}.ts` |
 > | **Supersedes / Superseded by** | none · **Extends** [ADR-0243](./0243-preset-widgets-admission-placement-derived-inheritance.md) cl.1 (two admission routes beside its composition test; cl.2 placement and cl.4 budget unchanged) · **Composes** [ADR-0220](./0220-choice-group-rich-card-selection-container.md) (the TYPE arm) · [ADR-0201](./0201-ui-description-list-key-value-receipt-primitive.md) (enforcement locus) · [ADR-0217](./0217-price-currency-formatting-catalog-function.md) (the FUNCTION arm) · [ADR-0225](./0225-ui-playing-card-mint-persona-scoped.md) (promotion on a second preset) · [ADR-0087](./0087-a2ui-whole-fleet-catalog-scope-policy.md) · [ADR-0232](./0232-catalog-selection-guidance-sidecar.md) · [ADR-0223](./0223-fill-by-default-fleet-sizing-contract.md) · [ADR-0046](./0046-container-box-model.md) · [ADR-0238](./0238-persona-semantic-checks-in-the-repair-loop.md) · [ADR-0234](./0234-turn-trace-prompt-budget-and-token-usage.md) |
 
