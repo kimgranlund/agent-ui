@@ -90,7 +90,10 @@ import type { SelectionEntry } from './selection-guidance.ts'
 // MEASURED 2026-10-12: 29 227 chars after the `ProductCard`, `BoardGrid` and `GameHud` selection clauses ride
 // their rows (T-0072, ADR-0243); budget 29 600 (measured rounded up to the next 100, plus 300), per the
 // SPEC-R13(b) v0.14 amendment in genui-surface.spec.md.
-export const DOGFOOD_INVENTORY_CHAR_BUDGET = 29_600
+// MEASURED 2026-10-12: 29 767 chars after the ui-result-card descriptor row, the `ResultCard` selection clause and
+// its reciprocal edges on `GameHud` and `Toast` (T-0089, ADR-0244; 29 304 before, +463); budget 30 100 (measured
+// rounded up to the next 100, plus 300), per the SPEC-R13(b) v0.15 amendment in genui-surface.spec.md.
+export const DOGFOOD_INVENTORY_CHAR_BUDGET = 30_100
 
 /** The character budget for the selection clauses the dogfood inventory carries: the sum of the clause
  *  lengths `dogfoodInventory()` appends to its rows. Held by a `prompt-drift.test.ts` leg, never by runtime

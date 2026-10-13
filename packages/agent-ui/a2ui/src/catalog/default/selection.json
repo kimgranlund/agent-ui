@@ -325,6 +325,10 @@
         {
           "type": "Badge",
           "why": "a status that persists"
+        },
+        {
+          "type": "ResultCard",
+          "why": "a final outcome that stays with its next action"
         }
       ]
     },
@@ -1184,6 +1188,25 @@
         {
           "type": "Toolbar",
           "why": "actions, not readouts"
+        },
+        {
+          "type": "ResultCard",
+          "why": "the settled outcome once play ends"
+        }
+      ]
+    },
+    "ResultCard": {
+      "intents": [
+        "a settled game, deal or booking outcome and its next action"
+      ],
+      "notFor": [
+        {
+          "type": "GameHud",
+          "why": "the live score while play goes on"
+        },
+        {
+          "type": "Toast",
+          "why": "a passing round result"
         }
       ]
     }

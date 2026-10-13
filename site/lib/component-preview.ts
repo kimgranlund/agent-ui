@@ -357,6 +357,8 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   ProductCard: { title: 'Harbour View Suite', subtitle: 'King bed, sleeps 2, free cancellation', image: IMAGE_SAMPLE_SRC, imageAlt: 'Suite with a harbour view', price: '$312', priceNote: 'per night', rating: '4.8', badge: 'Best rate', badgeIntent: 'success', actionLabel: 'Book' },
   BoardGrid: { rows: '6', cols: '6', label: 'Enemy waters' },
   GameHud: { title: 'Dungeon level 3', status: 'Your turn', statusIntent: 'success' },
+  // ResultCard (ADR-0244, T-0089): the string and enum knobs here; `stats` and the Play again child ride SAMPLE_TREES.
+  ResultCard: { outcome: 'win', title: 'Blackjack, hand 12', summary: 'You beat the dealer 20 to 18. Your stack is up for the night.' },
 }
 
 /** A sensible default-slot label for a component-mode control — its title-cased tag stem (`ui-button` → `Button`). */
@@ -909,6 +911,21 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
       progress: { value: 3, max: 8, label: 'Rooms cleared' },
     },
     extras: [],
+  }),
+  // ResultCard (ADR-0244): the blackjack win (catalog-frontier.ts's frontier-result-card-win), with its Play again
+  // Button child whose action context carries newGame true.
+  ResultCard: () => ({
+    rootRef: {
+      stats: [
+        { label: 'Chips', value: 1290, delta: 50, intent: 'success' },
+        { label: 'Hands', value: 12 },
+        { label: 'Win rate', value: '58%' },
+      ],
+      children: ['s_rc_again'],
+    },
+    extras: [
+      { id: 's_rc_again', component: 'Button', variant: 'solid', label: 'Play again', action: { action: 'new_game', context: { newGame: true } } },
+    ],
   }),
   // Breadcrumb (GH #1515): a realistic 4-level path (the site doc/demo pages' own reference shape) — three
   // linked crumbs (Text.href, ADR-0114) + a plain current-page leaf (no href) — the real job, not the
