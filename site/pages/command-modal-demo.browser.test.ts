@@ -62,8 +62,15 @@ describe('command-modal-demo: the mock row is byte-identical outside a data-tier
     await raf()
     const mock = document.querySelector('.demo-modal-mock') as HTMLElement
     expect(mock.closest('[data-tier]'), 'the default page must not sit inside an opt-in region').toBeNull()
-    expect(getComputedStyle(search()).minBlockSize).toBe('28px')
-    expect(getComputedStyle(search()).fontSize).toBe('14px')
+    // ADR-0245 cl.10e (T-0116): the cut made the derived system the page default, so today's ramp is the
+    // data-foundations="legacy" opt-out.
+    mock.setAttribute('data-foundations', 'legacy')
+    try {
+      expect(getComputedStyle(search()).minBlockSize).toBe('28px')
+      expect(getComputedStyle(search()).fontSize).toBe('14px')
+    } finally {
+      mock.removeAttribute('data-foundations')
+    }
   })
 
   it('inside data-tier="product" data-scale="md" the same row measures 4n tall at n 9 (36px, 15px type)', async () => {

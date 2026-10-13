@@ -80,7 +80,9 @@ describe('drill-demo — the columns specimen loads 2 columns wide, fully intera
     expect(categories.inert, 'columns never marks a painted ancestor inert').toBe(false)
     const categoriesRect = categories.getBoundingClientRect()
     const electronicsRect = electronics.getBoundingClientRect()
-    expect(electronicsRect.left).toBeGreaterThanOrEqual(categoriesRect.right) // side by side, not overlapping
+    // side by side, not overlapping; the derived column widths are fractional (ADR-0245 cut, T-0116), so the seam
+    // may round a sub-pixel (under 0.5px) either way between engines
+    expect(electronicsRect.left).toBeGreaterThanOrEqual(categoriesRect.right - 0.5)
   })
 
   it('clicking "Laptops" inside the Electronics column drills a 3rd column in, logged by the demo', async () => {
