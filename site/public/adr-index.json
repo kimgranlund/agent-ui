@@ -1671,5 +1671,12 @@
     "description": "Preset widgets: a widget earns a type only when its hand composition is large and re-minted, data-driven controls join the default catalog, one-preset composit…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0244",
+    "url": "./adr-index.html#adr-0244",
+    "description": "The next preset widgets: a widget is also admitted when its type is inexpressible or its law lives only in prompt text, ResultCard joins the default catalog, C…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
