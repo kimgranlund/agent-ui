@@ -391,7 +391,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'travel', // GH #46 — NEW
     category: 'hospitality', // GH #143
-    seedVersion: 2, // GH #148 — added a Resources entry (was empty); migrates pre-#148 stores
+    seedVersion: 3, // T-0089 (ADR-0244): the trip-plan close is ONE ResultCard (outcome done); migrates pre-v3 stores. 2: GH #148, added a Resources entry (was empty)
     label: 'The Travel Agent',
     tagline: 'Multi-leg trip planning — comparison cards, an accumulating itinerary, live weather/FX (GH #46/#49)',
     config: { name: 'The Travel Agent', model: 'claude-sonnet-5', temperature: 0.6, toolsEnabled: true },
@@ -542,7 +542,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     label: 'The Quizmaster',
     tagline: 'Modal open/close lifecycle + progressive multi-turn state on one long-lived surface',
     config: { name: 'The Quizmaster', model: 'claude-haiku-5-5', temperature: 0.9, toolsEnabled: false },
-    seedVersion: 4, // T-0082 (ADR-0243 Amendment 1): the QuestionCard answer, header and in-card Check answer Button; migrates pre-v4 stores. 3: T-0074 (ADR-0243): one QuestionCard per round. 2: T-0036 (2026-10-08): T-0030 moved this preset to claude-haiku-5-5 without a bump, so saved Quizmasters stayed on Haiku 4.5; migrates pre-v2 stores (Kim chose the bump, which drops user edits to this persona)
+    seedVersion: 5, // T-0089 (ADR-0244): the grand-reveal Modal holds ONE ResultCard; migrates pre-v5 stores. 4: T-0082 (ADR-0243 Amendment 1): the QuestionCard answer, header and in-card Check answer Button; migrates pre-v4 stores. 3: T-0074 (ADR-0243): one QuestionCard per round. 2: T-0036 (2026-10-08): T-0030 moved this preset to claude-haiku-5-5 without a bump, so saved Quizmasters stayed on Haiku 4.5; migrates pre-v2 stores (Kim chose the bump, which drops user edits to this persona)
     localPatterns: 'quizmaster', // ADR-0243: the QuestionCard fragment (agent-ui--quizmaster)
     foundation:
       'You are The Quizmaster, a rapid-fire trivia host. You run multi-round quizzes with a running ' +
@@ -572,7 +572,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
         id: 'grand-reveal',
         label: 'grand-reveal',
         description: 'Final-results Modal opened from the data model at quiz end.',
-        content: 'Set the modal open key true when rounds are exhausted; results Stat + per-round Table inside, a win or lose Badge, and a Play again Button.',
+        content: 'Set the modal open key true when rounds are exhausted; the Modal holds ONE ResultCard (outcome win or lose, a title, a one-line summary, the final score and rounds in its stats) whose child is a Play again Button with newGame true in its action context.',
       },
     ],
     resources: [],
@@ -584,6 +584,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'mentalist',
     category: 'games', // GH #143
+    seedVersion: 2, // T-0089 (ADR-0244): the guess-hud End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores
     label: 'The Mentalist',
     tagline: 'Twenty Questions — the purest chat×surface mix: prose interrogation + a live HUD (Timeline · SegmentedControl · Modal)',
     config: { name: 'The Mentalist', model: 'claude-sonnet-5', temperature: 0.7, toolsEnabled: false },
@@ -605,6 +606,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'negotiator',
     category: 'games', // GH #143
+    seedVersion: 2, // T-0089 (ADR-0244): the deal-sheet End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores
     label: 'The Negotiator',
     tagline: 'Market-stall haggling — two-way Slider offers, mood Stat deltas, a price-history Sparkline (the economy family as a game)',
     config: { name: 'The Negotiator', model: 'claude-sonnet-5', temperature: 0.8, toolsEnabled: false }, // rev.4
@@ -625,6 +627,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'lexicographer',
     category: 'games', // GH #143
+    seedVersion: 2, // T-0089 (ADR-0244): the word-tiles End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores
     label: 'The Lexicographer',
     tagline: 'Wordle-style word forge — Badge tile grids via list templates + a regex-checked TextField (the checks machinery as a game)',
     config: { name: 'The Lexicographer', model: 'claude-sonnet-5', temperature: 0.2, toolsEnabled: false },
@@ -647,6 +650,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'admiral',
     category: 'games', // GH #143
+    seedVersion: 2, // T-0089 (ADR-0244): the board-grid End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores
     label: 'The Admiral',
     tagline: 'Battleship — 6×6 cell-Button Grids whose action.context carries coordinates (the context-payload pattern’s first showcase)',
     config: { name: 'The Admiral', model: 'claude-sonnet-5', temperature: 0.4, toolsEnabled: false },
@@ -675,6 +679,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'alchemist',
     category: 'games', // GH #143
+    seedVersion: 2, // T-0089 (ADR-0244): the color-duel End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores
     label: 'The Alchemist',
     tagline: 'Color Duel — Swatch targets, an oklch ColorPicker, Ramp reveals (the fleet-unique ADR-0118 token surfaces as game pieces)',
     config: { name: 'The Alchemist', model: 'claude-sonnet-5', temperature: 0.6, toolsEnabled: false },
@@ -696,6 +701,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'dungeon-master',
     category: 'games', // GH #143
+    seedVersion: 2, // T-0089 (ADR-0244): the quest-log End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores
     label: 'The Dungeon Master',
     tagline: 'A pocket dungeon crawl — Timeline quest log + HP/Gold Stats + inventory List (the longest multi-turn state horizon)',
     config: { name: 'The Dungeon Master', model: 'claude-sonnet-5', temperature: 0.9, toolsEnabled: false }, // rev.4

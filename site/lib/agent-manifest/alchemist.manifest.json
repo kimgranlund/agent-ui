@@ -1,8 +1,8 @@
 {
   "id": "alchemist",
   "preset": "alchemist",
-  "seedVersion": 1,
-  "seedDigest": "sha256:2db7959b5977a423c8339e51627689455c019f078fd87604d4fb94cce5353c5d",
+  "seedVersion": 2,
+  "seedDigest": "sha256:f858bfb3a56df6b8c08b02c23204043a659faf941f5cc3796942a9ae69d64cbc",
   "fragment": null,
   "selection": null,
   "noFragment": {

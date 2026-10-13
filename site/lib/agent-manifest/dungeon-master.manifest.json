@@ -1,8 +1,8 @@
 {
   "id": "dungeon-master",
   "preset": "dungeon-master",
-  "seedVersion": 1,
-  "seedDigest": "sha256:d90e2c50a129d9395000f25afc743194a862679e30df6e6e736946ca89958a37",
+  "seedVersion": 2,
+  "seedDigest": "sha256:bf4c2acb94fdb0eb8602050720fd516ac6cacb6450f08c0cb3117b3e12bd884f",
   "fragment": null,
   "selection": null,
   "noFragment": {

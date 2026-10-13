@@ -230,7 +230,9 @@ export const HOSPITALITY_PLAYBOOKS: readonly NewEntryInput[] = [
       'for 2-3 legs use one ProductCard per leg in a Row (title the mode, subtitle the duration, price ' +
       'the fare, actionLabel Choose with the leg id in the action context). The user picks via the ' +
       'row or card action; chosen legs accumulate into an itinerary-timeline surface updated in place. End ' +
-      'with a summary Card + total, bound to the accumulated data model.',
+      'with ONE ResultCard on that surface: outcome done, the trip as its title, a one-line summary, nights ' +
+      'and total in its stats bound to the accumulated data model, and the next action (view or share the ' +
+      'itinerary) as its Button children.',
   },
 ]
 
@@ -246,8 +248,8 @@ export const GAMES_SKILLS: readonly NewEntryInput[] = [
       'READ (your own fleet, a revealed board) is ONE BoardGrid: rows, cols, a label, and cells = the marked ' +
       'positions [{row, col, mark, intent}] bound to the data model, so a hit or miss patches one entry ' +
       'instead of re-minting cells. Keep boards ≤ 6×6 per surface; mark hits/misses with a glyph (✕ / ●) ' +
-      'and disable resolved cells rather than removing them. End state: when a fleet is sunk, show a win or ' +
-      'lose Badge and a Play again Button.',
+      'and disable resolved cells rather than removing them. End state: when a fleet is sunk, show ONE ' +
+      'ResultCard (outcome win or lose, a title, a one-line summary, the final stats) whose child is a Play again Button with newGame true in its action context.',
   },
   {
     label: 'guess-hud',
@@ -256,7 +258,8 @@ export const GAMES_SKILLS: readonly NewEntryInput[] = [
       'A guessing game runs on one HUD surface: a Timeline of asked questions (status done/active), ONE ' +
       'GameHud (stats: confidence with a signed delta each round; progress: questions used out of 20), and a ' +
       'SegmentedControl for the answer (Yes / No / Sort of). The final guess opens a Modal via the data ' +
-      'model; the player closes it. End state: the reveal says win or lose, with a Play again Button.',
+      'model; the player closes it. End state: the reveal Modal holds ONE ResultCard (outcome win or lose, a ' +
+      'title, a one-line summary, the final stats) whose child is a Play again Button with newGame true in its action context.',
   },
   {
     label: 'word-tiles',
@@ -266,8 +269,8 @@ export const GAMES_SKILLS: readonly NewEntryInput[] = [
       'bound to the data model: one entry per letter {row, col, mark, intent}, intent success (right spot) ' +
       '/ warning (wrong spot) / neutral (absent). The input is ONE TextField with a ' +
       'regex check (^[a-z]{5}$) gating the Submit button. Show the used-letter state as a compact List, ' +
-      'never a full keyboard. End state: solved or out of guesses shows win or lose plus a Play again ' +
-      'Button.',
+      'never a full keyboard. End state: solved or out of guesses shows ONE ResultCard (outcome win or lose, ' +
+      'a title, a one-line summary, the final stats) whose child is a Play again Button with newGame true in its action context.',
   },
   {
     label: 'color-duel',
@@ -276,8 +279,9 @@ export const GAMES_SKILLS: readonly NewEntryInput[] = [
       'A color round shows the target as a Swatch, takes the guess through a ColorPicker (oklch), and ' +
       'scores in coarse closeness BANDS (perfect / close / warm / cold — never numeric distance math). ' +
       'Show the reveal as a Ramp between target and guess; the running score and the rounds ride ONE ' +
-      'GameHud (a score stat, progress = rounds played). End state: after the last round show the final ' +
-      'score and a Play again Button.',
+      'GameHud (a score stat, progress = rounds played). End state: after the last round show ONE ' +
+      'ResultCard (outcome win, lose or draw, a title, a one-line summary, the final score in its stats) ' +
+      'whose child is a Play again Button with newGame true in its action context.',
   },
   {
     label: 'deal-sheet',
@@ -287,7 +291,8 @@ export const GAMES_SKILLS: readonly NewEntryInput[] = [
       'current offer and mood (the mood stat carries a signed delta), a two-way Slider for the player’s offer with ONE Offer ' +
       'action Button, a price-history Sparkline, and Accept / Walk-away actions. A closed deal disables ' +
       'the offer controls — never remove them. End state: Accept reads as a win, Walk-away as a loss; ' +
-      'either offers a Play again Button.',
+      'either ends on ONE ResultCard (outcome win or lose, a title, a one-line summary, the final stats) ' +
+      'whose child is a Play again Button with newGame true in its action context.',
   },
   {
     label: 'quest-log',
@@ -296,8 +301,8 @@ export const GAMES_SKILLS: readonly NewEntryInput[] = [
       'An adventure runs on one surface: a Timeline quest log (append one item per scene, cap ~8 and ' +
       'summarize older ones), ONE GameHud (stats HP and Gold with signed deltas, status = the scene), an inventory List (≤6 items), and ' +
       '2-3 choice Buttons per scene. Lore goes in a Disclosure, never inline walls of text. Narration ' +
-      'stays in chat; the surface carries STATE. End state: HP at 0 or the quest done shows a lose or win ' +
-      'Badge and a Play again Button.',
+      'stays in chat; the surface carries STATE. End state: HP at 0 or the quest done shows ONE ResultCard ' +
+      '(outcome lose or win, a title, a one-line summary, the final stats) whose child is a Play again Button with newGame true in its action context.',
   },
 ]
 
