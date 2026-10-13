@@ -84,6 +84,7 @@
   "packages/agent-ui/components/src/controls/radio/radio.css#tokens": "lane a02 migrates it in Wave 1 (tokens)",
   "packages/agent-ui/components/src/controls/ramp/ramp.css#px": "outside the Wave 1 lane partition; the lane-plan step assigns it before dispatch (ADR-0245 cl.10b), px",
   "packages/agent-ui/components/src/controls/rating/rating.css#tokens": "lane a01 migrates it in Wave 1 (tokens)",
+  "packages/agent-ui/components/src/controls/result-card/result-card.css#px": "lane a06 migrates it in Wave 1 (px; ui-result-card landed after Wave 0 was written, outcome pill radius 999px)",
   "packages/agent-ui/components/src/controls/row/row.browser.test.ts#axes": "lane a04 migrates it in Wave 1 (axes)",
   "packages/agent-ui/components/src/controls/sandbox-frame/sandbox-frame.css#tokens": "lane a05 migrates it in Wave 1 (tokens)",
   "packages/agent-ui/components/src/controls/segmented-control/segmented-control.css#tokens": "lane a01 migrates it in Wave 1 (tokens)",
