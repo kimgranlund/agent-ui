@@ -27,7 +27,7 @@ export const SELECTION_PROJECTION: SelectionProjection = {
       "TabPanel": {"intents":["the content of one tab"],"notFor":[]},
       "Modal": {"intents":["a blocking dialog or task"],"notFor":[{"type":"Drawer","why":"a panel from an edge"},{"type":"Popover","why":"a non-blocking panel at its trigger"},{"type":"Toast","why":"a passing notice"}]},
       "Drawer": {"intents":["a panel sliding over from an edge"],"notFor":[{"type":"Modal","why":"a centered blocking task"},{"type":"Split","why":"panes that stay on screen"}]},
-      "Toast": {"intents":["a brief notice that fades"],"notFor":[{"type":"Modal","why":"a blocking dialog the user must answer"},{"type":"Badge","why":"a status that persists"}]},
+      "Toast": {"intents":["a brief notice that fades"],"notFor":[{"type":"Modal","why":"a blocking dialog the user must answer"},{"type":"Badge","why":"a status that persists"},{"type":"ResultCard","why":"a final outcome that stays with its next action"}]},
       "Icon": {"intents":["a small glyph"],"notFor":[{"type":"Image","why":"a photo or picture"}]},
       "Menu": {"intents":["a list of commands from a trigger"],"notFor":[{"type":"Button","why":"a single action"},{"type":"Select","why":"a form value"},{"type":"Popover","why":"arbitrary panel content, not a command list"}]},
       "MenuItem": {"intents":["one command in a Menu"],"notFor":[]},
@@ -88,7 +88,8 @@ export const SELECTION_PROJECTION: SelectionProjection = {
       "Breadcrumb": {"intents":["the path to the current page"],"notFor":[{"type":"Drill","why":"moving between levels"}]},
       "ProductCard": {"intents":["one product, room or offer to buy or book"],"notFor":[{"type":"Card","why":"content with no price or action"},{"type":"ServiceCard","why":"a thing to open, not buy"}]},
       "BoardGrid": {"intents":["a board of cells to target or mark"],"notFor":[{"type":"Grid","why":"a layout of components"}]},
-      "GameHud": {"intents":["a game score and status strip"],"notFor":[{"type":"Stat","why":"one metric outside a game"},{"type":"Toolbar","why":"actions, not readouts"}]},
+      "GameHud": {"intents":["a game score and status strip"],"notFor":[{"type":"Stat","why":"one metric outside a game"},{"type":"Toolbar","why":"actions, not readouts"},{"type":"ResultCard","why":"the settled outcome once play ends"}]},
+      "ResultCard": {"intents":["a settled game, deal or booking outcome and its next action"],"notFor":[{"type":"GameHud","why":"the live score while play goes on"},{"type":"Toast","why":"a passing round result"}]},
     },
     "a2ui-basic": {
       "Text": {"intents":["headings, body text or captions","a label beside a control"],"notFor":[{"type":"Button","why":"a click that runs an action"},{"type":"TextField","why":"typed input from the user"}]},

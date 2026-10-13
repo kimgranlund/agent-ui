@@ -62,6 +62,7 @@ export const CONTROLS: Readonly<Record<string, ControlRecord>> = {
   'ui-radio-group': { tag: 'ui-radio-group', load: () => import('./radio/radio-group.ts'), css: './radio/radio-group.css', uses: ['ui-radio'] },
   'ui-ramp': { tag: 'ui-ramp', load: () => import('./ramp/ramp.ts'), css: './ramp/ramp.css', uses: [] },
   'ui-rating': { tag: 'ui-rating', load: () => import('./rating/rating.ts'), css: './rating/rating.css', uses: [] },
+  'ui-result-card': { tag: 'ui-result-card', load: () => import('./result-card/result-card.ts'), css: './result-card/result-card.css', uses: [] },
   'ui-row': { tag: 'ui-row', load: () => import('./row/row.ts'), css: './row/row.css', uses: [] },
   'ui-sandbox-frame': { tag: 'ui-sandbox-frame', load: () => import('./sandbox-frame/sandbox-frame.ts'), css: './sandbox-frame/sandbox-frame.css', uses: [] },
   'ui-segment': { tag: 'ui-segment', load: () => import('./segment/segment.ts'), css: './segment/segment.css', uses: ['ui-radio'] },

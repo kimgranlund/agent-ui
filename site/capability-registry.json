@@ -1112,6 +1112,28 @@
       ]
     },
     {
+      "id": "control:ui-result-card",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/result-card/result-card.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-result-card",
+      "tier": "pattern",
+      "description": "A settled outcome card for a game end or a finished booking, with an outcome pill, a title, a summary, up to four stat tiles and the producer's own action buttons.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
       "id": "control:ui-row",
       "kind": "control",
       "source": {
@@ -4051,6 +4073,10 @@
         {
           "type": "Toolbar",
           "why": "actions, not readouts"
+        },
+        {
+          "type": "ResultCard",
+          "why": "the settled outcome once play ends"
         }
       ]
     },
@@ -4743,6 +4769,39 @@
         {
           "type": "Slider",
           "why": "any number in a range"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/ResultCard",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "ResultCard"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "a settled outcome, not an ask affordance (ADR-0244, T-0089) - a game end or booking summary is canvas-scale display content (the GameHud reasoning); no value mark, and its only actions are the producer's own child Buttons, so the card itself commits nothing an ask could collect."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "ResultCard",
+      "scope": "agent-ui",
+      "tag": "ui-result-card",
+      "intents": [
+        "a settled game, deal or booking outcome and its next action"
+      ],
+      "notFor": [
+        {
+          "type": "GameHud",
+          "why": "the live score while play goes on"
+        },
+        {
+          "type": "Toast",
+          "why": "a passing round result"
         }
       ]
     },
@@ -5614,6 +5673,10 @@
         {
           "type": "Badge",
           "why": "a status that persists"
+        },
+        {
+          "type": "ResultCard",
+          "why": "a final outcome that stays with its next action"
         }
       ]
     },

@@ -17,8 +17,12 @@ import type { PromptBudgetReport, PromptSection } from './meta-line.ts'
  *  max over modes default, specific and blue-sky; the 3 judged exemplars of `corpus/exemplar/v1_0/agent-ui.jsonl` with the largest
  *  single-record prompt; the `DEFAULT_MINI_SKILL_CAP` (3) largest mini-skill bodies scoped to the base
  *  catalog; genui `{enabled: true, dogfood: true}` with a 16,384-char `sourceBody`; a 16,384-char
- *  `personaSystem`; `authoringSurface`, `builderMission` and `a2uiEnabled` all true. */
-export const PROMPT_CHAR_BUDGET_BASE = 140_000
+ *  `personaSystem`; `authoringSurface`, `builderMission` and `a2uiEnabled` all true.
+ *  RE-MEASURED 2026-10-12 (T-0089, ADR-0244): the worst case is 140 735 chars (`agent-ui`, mode default), against
+ *  139 883 before the `ResultCard` default row: +852 chars, the row and its clause on the catalog inventory line
+ *  plus the ui-result-card dogfood row (+463), each with the reciprocal `GameHud` and `Toast` edges. The first raise
+ *  of BASE: budget 141 100 (measured rounded up to the next 100, plus 300, the formula the sidecar budgets use). */
+export const PROMPT_CHAR_BUDGET_BASE = 141_100
 
 /** The budget for a DERIVED `<base>--<persona>` catalog (`compose.ts` `derivedCatalogId`): the same matrix
  *  over every `SHIPPED_PERSONA_CATALOGS` entry composed onto each of its target bases (mini-skills scoped
@@ -33,8 +37,11 @@ export const PROMPT_CHAR_BUDGET_BASE = 140_000
  *  RE-MEASURED 2026-10-12 (T-0083, ADR-0243 Amendment 2): the worst case is 140 801 chars (`agent-ui--croupier`, mode
  *  default; 140 647 before), +154 from the four ProductCard wire props (`priceOld`, `ratingCount`, `selected`,
  *  `disabled`), 77 on the catalog inventory line and 77 on the dogfood row. Budget 141 200 by the same formula.
- *  BASE is untouched (139 883 against 140 000). */
-export const PROMPT_CHAR_BUDGET_DERIVED = 141_200
+ *  BASE is untouched (139 883 against 140 000).
+ *  RE-MEASURED 2026-10-12 (T-0089, ADR-0244): the worst case is 141 653 chars (`agent-ui--croupier`, mode default;
+ *  140 801 before), +852 from the `ResultCard` default row, the same rows BASE pays. Budget 142 000 by the same
+ *  formula; BASE is re-measured above in the same change. */
+export const PROMPT_CHAR_BUDGET_DERIVED = 142_000
 
 /** The declared budget for `catalogId`: DERIVED for a `<base>--<persona>` id, else BASE. */
 export function promptBudgetFor(catalogId: string): number {

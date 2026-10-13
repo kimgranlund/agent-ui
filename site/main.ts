@@ -1178,6 +1178,22 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // ADR-0244 (T-0089): the settled outcome card, tier=pattern {doc, demo}.
+  {
+    label: 'ui-result-card',
+    cards: [
+      {
+        href: './result-card-demo.html',
+        title: 'Demo',
+        blurb: 'A win, a loss, a draw and a done summary, each with its outcome pill, final figures and action buttons, plus the empty-box law and an outcome change patched in place.',
+      },
+      {
+        href: './result-card-doc.html',
+        title: 'API reference',
+        blurb: 'The settled outcome card: outcome pill (word plus glyph), title, summary, up to four stat tiles and the producer\'s buttons at the lg step, generated from result-card.md.',
+      },
+    ],
+  },
   // ADR-0201 (GH #1185) — the key–value receipt primitive, same Display-class {doc}-only shape.
   {
     label: 'ui-description-list',

@@ -1,6 +1,10 @@
 # SPEC — GenUI surface (sandboxed free-form generative UI): wire · frame · bridge · producer
 
-> Status: proposed · v0.14 · 2026-10-12 · Layer: SPEC (execution contract)
+> Status: proposed · v0.15 · 2026-10-12 · Layer: SPEC (execution contract)
+> **v0.15 amendment (T-0089, ADR-0244, 2026-10-12):** SPEC-R13(b)'s inventory budget is revised
+> ≤ 29 600 → ≤ 30 100 chars (measured 29 767), by the same measured-plus-headroom formula, after the
+> `ui-result-card` descriptor row, the `ResultCard` selection clause and its reciprocal `GameHud` and `Toast`
+> edges joined the dogfood rows. The clause budget holds. No requirement or AC changes. Full text: §13.
 > **v0.14 amendment (T-0072, ADR-0243, 2026-10-12):** SPEC-R13(b)'s inventory budget is revised
 > ≤ 28 700 → ≤ 29 600 chars (measured 29 227) and its clause budget ≤ 8 800 → ≤ 9 500 chars (measured
 > 9 189), by the same measured-plus-headroom formula, after the `ProductCard`, `BoardGrid` and `GameHud`
@@ -787,9 +791,10 @@ byte-identical to its v0.10 form.
 - **Source.** `selectionGuidanceForId('agent-ui')` reads the guidance and `renderSelectionClauseWith`
   formats it, the same formatter the catalog inventory uses (`src/agent/selection-guidance.ts`). Base
   guidance only: persona sidecars stay out, and family siblings get no clause of their own.
-- **Budgets.** The whole inventory is held at ≤ 29 600 chars (`DOGFOOD_INVENTORY_CHAR_BUDGET`, revised
-  from ≤ 28 700 by the v0.14 amendment, measured 29 227 on 2026-10-12 after the `ProductCard`, `BoardGrid` and
-  `GameHud` clauses, T-0072; ≤ 28 700 was revised from ≤ 28 200 by v0.13, measured 28 359 after the
+- **Budgets.** The whole inventory is held at ≤ 30 100 chars (`DOGFOOD_INVENTORY_CHAR_BUDGET`, revised
+  from ≤ 29 600 by the v0.15 amendment, measured 29 767 on 2026-10-12 after the `ui-result-card` row and the
+  `ResultCard` clause, T-0089; ≤ 29 600 was revised from ≤ 28 700 by v0.14, measured 29 227 after the
+  `ProductCard`, `BoardGrid` and `GameHud` clauses, T-0072; ≤ 28 700 was revised from ≤ 28 200 by v0.13, measured 28 359 after the
   `ui-product-card` row, T-0070; ≤ 28 200 itself was revised from ≤ 19 600, measured 27 820 on 2026-10-05).
   The summed clause length is held at ≤ 9 500 chars (`DOGFOOD_GUIDANCE_CHAR_BUDGET`, revised from ≤ 8 800 by
   v0.14, measured 9 189 on 2026-10-12; 8 479 over 72 rows, 144 edges on 2026-10-05). Both are enforced by

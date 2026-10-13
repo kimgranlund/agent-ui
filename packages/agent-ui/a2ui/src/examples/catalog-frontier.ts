@@ -1643,4 +1643,53 @@ export const gameHudQuestSeed: ExampleSeed = {
   ],
 }
 
-export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed, productCardRoomsSeed, boardGridGuessesSeed, gameHudQuestSeed]
+const RESULT_CARD_WIN_ID = 'frontier-result-card-win'
+/** Frontier 31 (ADR-0244, T-0089): `ResultCard`, a finished blackjack hand. One node states the outcome (win, drawn
+ *  as a word and a glyph), the title, a one-line summary and three final figures bound to the data model, and holds
+ *  the producer's own Play again Button as its child; that Button's action context carries `newGame: true`. It
+ *  replaces the hand-built Badge plus Button the End state packs spent. Corpus admission is a SEPARATE judged wave
+ *  (disposition-allowlist.ts). */
+export const resultCardWinSeed: ExampleSeed = {
+  name: 'frontier-result-card-win',
+  description: 'A finished blackjack hand: one ResultCard with the win outcome, a title, a summary and chips, hands and win-rate stat tiles bound to the data model, holding a Play again Button whose action starts a new game.',
+  promptText: 'I stand on 20 and the dealer stops on 18. Show me how the hand ended.',
+  surfaceId: RESULT_CARD_WIN_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: RESULT_CARD_WIN_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: RESULT_CARD_WIN_ID,
+        value: {
+          result: {
+            title: 'Blackjack, hand 12',
+            summary: 'You beat the dealer 20 to 18. Your stack is up for the night.',
+            stats: [
+              { label: 'Chips', value: 1290, delta: 50, intent: 'success' },
+              { label: 'Hands', value: 12 },
+              { label: 'Win rate', value: '58%' },
+            ],
+          },
+        },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: RESULT_CARD_WIN_ID,
+        components: [
+          {
+            id: 'root', component: 'ResultCard', outcome: 'win',
+            title: { path: '/result/title' }, summary: { path: '/result/summary' }, stats: { path: '/result/stats' },
+            children: ['play_again'],
+          },
+          { id: 'play_again', component: 'Button', variant: 'solid', label: 'Play again', action: { action: 'new_game', context: { newGame: true } } },
+        ],
+      },
+    },
+  ],
+}
+
+export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed, productCardRoomsSeed, boardGridGuessesSeed, gameHudQuestSeed, resultCardWinSeed]

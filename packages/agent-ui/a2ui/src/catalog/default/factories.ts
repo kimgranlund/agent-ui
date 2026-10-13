@@ -1493,6 +1493,31 @@ export const boardGridFactory: WidgetFactory = accessorFactory('ui-board-grid')
  */
 export const gameHudFactory: WidgetFactory = accessorFactory('ui-game-hud')
 
+/** The most stats `ui-result-card` renders (`MAX_STATS` in result-card-model.ts; a factory never imports a control). */
+const RESULT_CARD_MAX_STATS = 4
+
+/**
+ * `ResultCard` to `ui-result-card` (ADR-0244, T-0089). `outcome`, `title`, `summary` and `stats` are 1:1
+ * reflecting accessors (verified against `result-card.md`; `title` keeps its prop name while the control
+ * observes `result-title`, so the HTML `title` tooltip never fires). All four are bindable. The control hardens
+ * `stats` itself (at most four, valueless entries dropped, ADR-0201), so a bound value that never passed the
+ * static validator cannot break the render; this factory adds the catalog warning when a producer sends more
+ * than four. `children: 'ChildList'` carries the producer's own action Buttons (the CardTable precedent): the
+ * card stamps each direct `ui-button` at the lg step, and there is no row `action` prop (ADR-0244 Alternatives:
+ * the renderer wires a row action to any host click, so a click on the summary would restart the game).
+ * Display plus children only: no `value` mark. `inline` is not wire-exposed.
+ */
+export const resultCardFactory: WidgetFactory = {
+  tag: 'ui-result-card',
+  create: () => document.createElement('ui-result-card'),
+  applyProp: (el, prop, value) => {
+    if (prop === 'stats' && Array.isArray(value) && value.length > RESULT_CARD_MAX_STATS) {
+      console.warn(`[a2ui] ResultCard stats: ${value.length} entries, the card shows the first ${RESULT_CARD_MAX_STATS}`)
+    }
+    setProp(el, prop, value)
+  },
+}
+
 /** The default catalog's factory table — keyed by A2UI component type (catalog LLD-C5, consumed by the
  *  host at `registry.register`; the renderer resolves a node's control via `factories[type]`). Every type
  *  declared in `catalog.json` MUST appear here — a gap is a `CATALOG_FACTORY_MISSING` at register (SPEC-R7 AC1). */
@@ -1580,4 +1605,5 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   ProductCard: productCardFactory,
   BoardGrid: boardGridFactory,
   GameHud: gameHudFactory,
+  ResultCard: resultCardFactory,
 }

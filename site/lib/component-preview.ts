@@ -357,6 +357,8 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   ProductCard: { title: 'Harbour View Suite', subtitle: 'King bed, sleeps 2, free cancellation', image: IMAGE_SAMPLE_SRC, imageAlt: 'Suite with a harbour view', price: '$312', priceNote: 'per night', rating: '4.8', badge: 'Best rate', badgeIntent: 'success', actionLabel: 'Book' },
   BoardGrid: { rows: '6', cols: '6', label: 'Enemy waters' },
   GameHud: { title: 'Dungeon level 3', status: 'Your turn', statusIntent: 'success' },
+  // ResultCard (ADR-0244, T-0089): the string and enum knobs here; `stats` and the Play again child ride SAMPLE_TREES.
+  ResultCard: { outcome: 'win', title: 'Blackjack, hand 12', summary: 'You beat the dealer 20 to 18. Your stack is up for the night.' },
 }
 
 /** A sensible default-slot label for a component-mode control — its title-cased tag stem (`ui-button` → `Button`). */
@@ -910,6 +912,21 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
     },
     extras: [],
   }),
+  // ResultCard (ADR-0244): the blackjack win (catalog-frontier.ts's frontier-result-card-win), with its Play again
+  // Button child whose action context carries newGame true.
+  ResultCard: () => ({
+    rootRef: {
+      stats: [
+        { label: 'Chips', value: 1290, delta: 50, intent: 'success' },
+        { label: 'Hands', value: 12 },
+        { label: 'Win rate', value: '58%' },
+      ],
+      children: ['s_rc_again'],
+    },
+    extras: [
+      { id: 's_rc_again', component: 'Button', variant: 'solid', label: 'Play again', action: { action: 'new_game', context: { newGame: true } } },
+    ],
+  }),
   // Breadcrumb (GH #1515): a realistic 4-level path (the site doc/demo pages' own reference shape) — three
   // linked crumbs (Text.href, ADR-0114) + a plain current-page leaf (no href) — the real job, not the
   // generic "Sample content" fallback (the GH #971/#978 idiom).
@@ -1368,6 +1385,9 @@ const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
   // as properties in COMPONENT_SAMPLE_INIT (knob names are applied with setAttribute, and `title`/`statusIntent`
   // would write the wrong attribute).
   'ui-game-hud': { status: 'Your turn' },
+  // ui-result-card (ADR-0244): only `summary` is seeded as a knob; outcome, title and stats are set as properties
+  // in COMPONENT_SAMPLE_INIT (`title` would write the global attribute, not `result-title`).
+  'ui-result-card': { summary: 'You beat the dealer 20 to 18.' },
   'ui-badge': { label: '3 failing', intent: 'danger' },
   'ui-disclosure': { summary: 'Full log' },
   // ui-form-popover (GH #294 F4): `label` is a real string knob defaulting to '' — the same demonstrability
@@ -1549,6 +1569,23 @@ const COMPONENT_SAMPLE_INIT: Record<string, (el: HTMLElement) => void> = {
       ],
       progress: { value: 3, max: 6, label: 'Hands' },
     }),
+  // ui-result-card (ADR-0244): the representative blackjack win, written as properties (see COMPONENT_INITIAL),
+  // with the producer's Play again button the card stamps at the lg step.
+  'ui-result-card': (el) => {
+    Object.assign(el, {
+      outcome: 'win',
+      title: 'Blackjack, hand 12',
+      stats: [
+        { label: 'Chips', value: 1290, delta: 50, intent: 'success' },
+        { label: 'Hands', value: 12 },
+      ],
+    })
+    if (el.querySelector(':scope > ui-button') === null) {
+      const again = document.createElement('ui-button')
+      again.textContent = 'Play again'
+      el.append(again)
+    }
+  },
 }
 
 // ── SLOT_TEXT gating — component mode (the fleet-wide hardening) ──────────────────────────────────────────────
@@ -1610,6 +1647,7 @@ export const NO_SLOT_TEXT = new Set([
   'ui-disclosure', // #ensureParts(): the details/summary/chevron chrome — host children are ADOPTED into a nested body PART, never left as direct host children (unlike a STRUCTURAL container), so a host-level SLOT_TEXT write would destroy the whole part tree
   'ui-stat', // connected() builds four spans once (replaceChildren) from label/value/delta/caption PROPS — no light-DOM content model at all (slots: [] — stat.md)
   'ui-game-hud', // every part is control-built from props and patched in place; no light-DOM content model (slots: [], the ui-playing-card precedent)
+  'ui-result-card', // the parts are control-built from props and patched in place; its only children are the producer's buttons (slots: [] in result-card.md), so a host-level SLOT_TEXT write would destroy the part tree
   'ui-description-list', // connected() builds row/label/value spans (replaceChildren) from the rows PROP — no light-DOM content model at all (slots: [] — description-list.md, ADR-0201)
   'ui-source-list', // connected() builds row/index/title/snippet spans (replaceChildren) from the sources PROP — no light-DOM content model at all (slots: [] — source-list.md, ADR-0214)
   'ui-table', // connected() builds the scroll/table/thead/tbody skeleton — fully columns/rows-prop-driven, no light-DOM content model at all (slots: [] — table.md)

@@ -460,6 +460,15 @@
       "group": "Text & value entry"
     },
     {
+      "name": "Result Card",
+      "tag": "ui-result-card",
+      "url": "./result-card-demo.html",
+      "description": "A settled outcome card for a game end or a finished booking, with an outcome pill, a title, a summary, up to four stat tiles and the producer's own action buttons.",
+      "level": "L1",
+      "section": "Components",
+      "group": "Data & reporting"
+    },
+    {
       "name": "Row",
       "tag": "ui-row",
       "url": "./row-demo.html",

@@ -250,4 +250,10 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
     'T-0072 - NO VERDICT SOUGHT YET, not a refusal. Closes the GH #729 catalog-coverage gap for the new ' +
     '`GameHud` type; corpus admission is a separate, later judged import wave (ADR-0068\'s never-' +
     'self-judged discipline - this authoring session assigns no rubric score to its own seed).'],
+  // T-0089 (2026-10-12), ADR-0244: `frontier-result-card-win`, the same pending-state shape for the new
+  // `ResultCard` default row. DELETE it when the judged pipeline lands.
+  ['frontier-result-card-win',
+    'T-0089 - NO VERDICT SOUGHT YET, not a refusal. Closes the GH #729 catalog-coverage gap for the new ' +
+    '`ResultCard` type; corpus admission is a separate, later judged import wave (ADR-0068\'s never-' +
+    'self-judged discipline - this authoring session assigns no rubric score to its own seed).'],
 ])

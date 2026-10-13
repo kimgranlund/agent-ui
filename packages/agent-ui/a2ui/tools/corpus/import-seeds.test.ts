@@ -817,6 +817,8 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     'frontier-product-card-rooms': { passed: false, qualityScore: 2 },
     'frontier-board-grid-guesses': { passed: false, qualityScore: 2 },
     'frontier-game-hud-quest': { passed: false, qualityScore: 2 },
+    // ADR-0244/T-0089 - the ResultCard coverage-gap seed, refused here for the same zero-admission reason.
+    'frontier-result-card-win': { passed: false, qualityScore: 2 },
   }
 
   it('clause 1 — a judged run that reaches saveStore archives its verdicts file BYTE-IDENTICALLY at <date>--<slug>.json, and a second identical run is a no-op', () => {

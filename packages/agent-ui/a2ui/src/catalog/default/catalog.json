@@ -1065,6 +1065,31 @@
           "mapsTo": "progress"
         }
       }
+    },
+    "ResultCard": {
+      "properties": {
+        "outcome": { "type": { "type": "string", "enum": ["win", "lose", "draw", "done"] }, "bindable": true, "mapsTo": "outcome" },
+        "title": { "type": { "type": "string" }, "bindable": true, "mapsTo": "title" },
+        "summary": { "type": { "type": "string" }, "bindable": true, "mapsTo": "summary" },
+        "stats": {
+          "type": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": { "type": "string" },
+                "value": { "type": ["string", "number"] },
+                "delta": { "type": ["string", "number"] },
+                "intent": { "type": "string", "enum": ["neutral", "info", "success", "warning", "danger"] }
+              },
+              "required": ["label", "value"]
+            }
+          },
+          "bindable": true,
+          "mapsTo": "stats"
+        }
+      },
+      "children": "ChildList"
     }
   },
 
