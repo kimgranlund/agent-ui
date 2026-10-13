@@ -212,7 +212,7 @@ const wrapOf = (mount: HTMLElement, path: string): HTMLElement =>
   [...mount.querySelectorAll<HTMLElement>('[data-a2ui-booking-field]')].find((w) => w.getAttribute('data-a2ui-booking-field') === path)!
 
 describe('BookingForm and BookingConfirmation: labelled fields, compact dates, a summary card (T-0085)', () => {
-  it('every field shows its visible label, no month grid renders inline, ink sits 28px in and Reserve is 36px', async () => {
+  it('every field shows its visible label, no month grid renders inline, ink sits 28px in and Reserve is 28px', async () => {
     const { mount, r } = await mountStay(480)
     const form = mount.querySelector('ui-form-provider')!
     for (const [path, label] of [
@@ -230,7 +230,7 @@ describe('BookingForm and BookingConfirmation: labelled fields, compact dates, a
     expect(box(wrapOf(mount, 'guestName')).left - box(form).left).toBeCloseTo(28, 0)
     const button = mount.querySelector('ui-form-provider > ui-button')!
     expect(box(button).left - box(form).left).toBeCloseTo(28, 0)
-    expect(box(button).height, 'the form steps down to the md button').toBeCloseTo(36, 0)
+    expect(box(button).height, 'the form steps down to the sm button, 28px on the canvas register').toBeCloseTo(28, 0)
     const card = mount.querySelector('ui-card')!
     expect(box(card.querySelector('[data-part="title"]')).left - box(card).left).toBeCloseTo(28, 0)
     // 18px between fields (the card gutter at the canvas register, resolve('product','md','md').card.gutter).
@@ -284,7 +284,7 @@ describe('BookingForm date fields: arrival and departure inputs, each with a sma
     field.querySelector('[data-a2ui-date-input]') as HTMLElement & { value: string }
   const monthTitle = (field: HTMLElement): string => field.querySelector('ui-calendar [data-part="title"]')?.textContent ?? ''
 
-  it('shows two input fields with no nested card, side by side at 480px and stacked at 336px, buttons at sm and md only', async () => {
+  it('shows two input fields with no nested card, side by side at 480px and stacked at 336px, buttons at sm only (28px on the canvas register)', async () => {
     const wide = await mountStay(480)
     const [a, d] = [fieldOf(wide.mount, 'checkIn'), fieldOf(wide.mount, 'checkOut')]
     expect(box(d).top, 'side by side').toBeCloseTo(box(a).top, 0)
@@ -296,7 +296,7 @@ describe('BookingForm date fields: arrival and departure inputs, each with a sma
       expect(box(buttonOf(field)).height).toBeGreaterThan(0)
       expect(box(buttonOf(field)).height).toBeLessThanOrEqual(24)
       expect(box(buttonOf(field)).right).toBeLessThanOrEqual(box(inputOf(field)).right)
-      expect(box(inputOf(field)).height, 'the input at the md step').toBeCloseTo(36, 0)
+      expect(box(inputOf(field)).height, 'the input at the sm step, 28px on the canvas register').toBeCloseTo(28, 0)
       expect(box(field.querySelector('[data-part="label"]')).height).toBeGreaterThan(0)
     }
     expect(inputOf(a).value).toBe(
