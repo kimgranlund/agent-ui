@@ -108,7 +108,7 @@ describe('checkbox multi-select ask card — real-engine geometry (GH #1125)', (
     const children = [...parent.children] as HTMLElement[]
     const tops = children.map((c) => c.getBoundingClientRect().top)
     // every unwrapped inline-flex sibling sits on the SAME line as the first (the exact bug shape). Baseline
-    // alignment puts a checkbox's top a few px off a button's (2.5px at the derived canvas register, ADR-0245),
+    // alignment puts a checkbox's top a few px off a button's (the offset moves with the canvas register's n, ADR-0245),
     // so "same line" is within half a control height; a stacked row sits a full height or more below.
     const half = children[0]!.getBoundingClientRect().height / 2
     for (const top of tops) expect(Math.abs(top - tops[0]!)).toBeLessThan(half)

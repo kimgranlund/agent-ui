@@ -17,8 +17,9 @@
 - **Size** z = a control's reflected `size` prop (`sm` / `md` / `lg`), or `data-size` on any other element → -1 / 0 / +1.
 
 The nearest ancestor wins on each axis. **The root is `product` at scale `sm`**: sizes sm / md / lg are
-n 6 / 7 / 8, so heights **24 / 28 / 32**. A2UI surfaces sit at `data-scale="md"` (the canvas register,
-28 / 36 / 44), so a widget action at md stays 36px. A page opts a region into another register with
+n 6 / 7 / 8, so heights **24 / 28 / 32**. A2UI surfaces sit at `data-tier="widget" data-scale="md"` (the canvas
+register, the same 24 / 28 / 32; ADR-0245 Amendment 2), so a catalog size means what it says: a composite's
+`lg` action is 32px. A page opts a region into another register with
 `data-tier` / `data-scale`; `[scale]` and `[density]` were retired into those two attributes (the bridge maps
 them for one release, W7 removes it) and `[data-foundations="legacy"]` opts a region out for the same release.
 

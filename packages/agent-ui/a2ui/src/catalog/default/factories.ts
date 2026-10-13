@@ -197,21 +197,10 @@ function clearLabelText(el: HTMLElement): void {
  * bound-label rebind proof — a naive direct-text-only clear left the heal wrapper's OLD text behind
  * under a freshly-appended stray, concatenating old+new instead of replacing).
  */
-/**
- * A catalog Button created at `sm`: an unsized Button keeps 28px on the canvas register (the surface root's
- * `data-scale="md"`, sm / md / lg = 28 / 36 / 44; ADR-0245, Kim's cut ruling 2026-10-13). A size the payload
- * supplies or a persona action-row stamp lands after `create()`, so either still wins.
- */
-export function createCatalogButton(): HTMLElement {
-  const el = document.createElement('ui-button')
-  el.setAttribute('size', 'sm')
-  return el
-}
-
 export const buttonFactory: WidgetFactory = {
   tag: 'ui-button',
   uses: ['ui-icon'], // ADR-0233: the `icon` prop mints a leading ui-icon
-  create: createCatalogButton,
+  create: () => document.createElement('ui-button'),
   applyProp: (el, prop, value) => {
     switch (prop) {
       case 'variant':

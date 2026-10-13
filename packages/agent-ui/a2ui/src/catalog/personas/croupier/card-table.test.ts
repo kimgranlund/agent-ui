@@ -139,19 +139,19 @@ describe('CardTable renders through the real renderer (ADR-0243)', () => {
     cleanup()
   })
 
-  it('CardTable: Hit, Stand and Double sit at the 36px action step (md on the canvas register), and a Button that arrives later does too (ADR-0243 Amendment 2, ADR-0245)', async () => {
+  it('CardTable: Hit, Stand and Double sit at the button lg step (32px on the canvas register), and a Button that arrives later does too (ADR-0243 Amendment 2, ADR-0245 Amendment 2)', async () => {
     const late = withRoot((root) => {
       root['children'] = ['hitBtn', 'standBtn', 'doubleBtn', 'splitBtn'] // splitBtn is a forward ref, sent below
     })
     const { table, ingest, errors, cleanup } = await render(late)
     const sizes = (): (string | null)[] => [...table.querySelectorAll(':scope > ui-button')].map((b) => b.getAttribute('size'))
-    expect(sizes()).toEqual(['md', 'md', 'md'])
+    expect(sizes()).toEqual(['lg', 'lg', 'lg'])
     await ingest({
       version: 'v1.0',
       updateComponents: { surfaceId: SID, components: [{ id: 'splitBtn', component: 'Button', variant: 'soft', label: 'Split', action: { action: 'split' } }] },
     })
     expect(errors()).toEqual([])
-    expect(sizes()).toEqual(['md', 'md', 'md', 'md'])
+    expect(sizes()).toEqual(['lg', 'lg', 'lg', 'lg'])
     cleanup()
   })
 
@@ -223,17 +223,17 @@ async function press(el: HTMLElement): Promise<void> {
 }
 
 describe('CardTable: the hand lifecycle (ADR-0243 Amendment 3)', () => {
-  it('betting: the felt is empty, the bet row shows md chips (36px on the canvas register), an exact-amount stepper and Clear, and Deal is live at bet 50', async () => {
+  it('betting: the felt is empty, the bet row shows lg chips (32px on the canvas register), an exact-amount stepper and Clear, and Deal is live at bet 50', async () => {
     const { table, errors, cleanup } = await render(personaCroupierCardTableBettingSeed.messages)
     expect(errors()).toEqual([])
     expect(part(table, 'bet').style.display).toBe('flex')
     expect(visibleCards(table, 'dealer')).toHaveLength(0)
     expect(visibleCards(table, 'player')).toHaveLength(0)
     expect(chips(table).map((c) => c.textContent)).toEqual(['+10', '+25', '+50', '+100'])
-    expect(chips(table).map((c) => c.size)).toEqual(['md', 'md', 'md', 'md'])
+    expect(chips(table).map((c) => c.size)).toEqual(['lg', 'lg', 'lg', 'lg'])
     const field = stake(table)
     expect(field.tagName.toLowerCase()).toBe('ui-text-field')
-    expect([field.type, field.min, field.max, field.step, field.value, field.size]).toEqual(['number', '1', '1000', 5, '50', 'md'])
+    expect([field.type, field.min, field.max, field.step, field.value, field.size]).toEqual(['number', '1', '1000', 5, '50', 'lg'])
     expect(part(table, 'clear').textContent).toBe('Clear')
     expect(readout(table)).toBe('Bankroll 1,000 · Bet 50')
     expect(deal(table).disabled).toBe(false)

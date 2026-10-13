@@ -63,9 +63,10 @@
 // tokens on `el.style`) and a `[data-box]`, so every child, the producer's action Buttons included, takes the
 // shared 6px inset; the root carries the region padding (12 inline, 6 block), the ADR-0056 region-less card
 // reading, so ink sits 19px in like a stock card's regions. Every field but the self-labelled checkbox wears a
-// `ui-field` (the fleet's visible label), fields stack at the region gap, and the form steps down from the other
-// composites' 36px actions: its inputs and the producer's Buttons are `sm` (28px on the ADR-0245 canvas register,
-// the old `md`; T-0106) and the date picker buttons stay `sm` (28px, 24px on the old ramp). `BookingConfirmation` is a
+// `ui-field` (the fleet's visible label), fields stack at the region gap, and the form uses the `sm` and `md`
+// steps only: its inputs and the producer's Buttons are `md` (28px on the A2UI canvas register, widget at scale md,
+// ADR-0245 Amendment 2; T-0106) and the date picker buttons are `sm`, one step below (the other composites' actions
+// stay `lg`, 32px, ADR-0243 Amendment 2, via `sizedActionButtons`). `BookingConfirmation` is a
 // `ui-card` with real `ui-card-header`/`ui-card-content` regions and one label (muted, start) / value
 // (emphasis, end) row per entry, hairline dividers between rows.
 
@@ -174,7 +175,6 @@ function buildFieldControl(field: BookingField): HTMLElement {
       el.required = Boolean(field.required)
       el.label = field.label
       el.placeholder = 'Choose one'
-      el.setAttribute('size', 'sm') // 28px on the canvas register, the old md (ADR-0245)
       for (const opt of field.options ?? []) {
         const optEl = document.createElement('div')
         optEl.setAttribute('role', 'option')
@@ -209,7 +209,6 @@ function buildFieldControl(field: BookingField): HTMLElement {
       el.required = Boolean(field.required)
       el.label = field.label
       el.type = field.kind === 'number' ? 'number' : 'text'
-      el.setAttribute('size', 'sm') // 28px on the canvas register, the old md (ADR-0245)
       return labelledField(field, el)
     }
   }
@@ -276,12 +275,11 @@ function buildDateField(field: BookingField, onPick: () => void): DateField {
   input.setAttribute('data-a2ui-date-input', '') // not data-part: the popover claims it for the trigger
   input.readonly = true
   input.placeholder = 'Choose date'
-  input.setAttribute('size', 'sm') // 28px on the canvas register, the old md (ADR-0245)
   const button = document.createElement('ui-button') as HTMLElement & { size: string }
   button.setAttribute('data-a2ui-date-button', '')
   button.setAttribute('slot', 'trailing')
   button.setAttribute('icon-only', '')
-  button.size = 'sm' // the library's small step: 28px on the canvas register (24px before the ADR-0245 cut)
+  button.size = 'sm' // the library's small step
   const icon = document.createElement('ui-icon') as HTMLElement & { symbol: string }
   icon.setAttribute('slot', 'leading')
   icon.setAttribute('data-role', 'icon')
@@ -451,7 +449,7 @@ export const bookingFormFactory: WidgetFactory = {
     fieldsEl.style.gap = 'var(--ui-box-gap)' // 8px between fields
     fieldsEl.style.marginBlock = 'var(--ui-box-gap)' // collapses with its neighbours' 6px inset: 8px to the title and actions
     el.append(titleEl, fieldsEl)
-    sizedActionButtons(el, 'sm', '[data-a2ui-date-button]') // the form's own Reserve steps down: sm, 28px on the canvas register (T-0106, ADR-0245)
+    sizedActionButtons(el, 'md', '[data-a2ui-date-button]') // the form's own Reserve steps down to md (T-0106)
     bookingFormParts.set(el, { titleEl, fieldsEl, fields: [], dateFields: new Map(), dateRuns: [] })
     // Expose the LIVE aggregate as a plain readable property — a getter proxying the form-provider's
     // OWN native `values()` (name → committed FormValue, form-registry.ts). `installInputBinding`

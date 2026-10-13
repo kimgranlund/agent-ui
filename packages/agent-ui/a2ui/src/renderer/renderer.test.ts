@@ -145,6 +145,10 @@ describe('renderer host — streamed render of the default catalog (renderer LLD
     expect((btn as UIButtonElement).variant).toBe('soft') // static prop applied
     expect(btn!.textContent).toBe('Click me') // label → textContent
     expect(btn!.hasAttribute('action')).toBe(false) // the action object was NOT stringified onto the DOM
+    // The surface root is the canvas register, widget at scale md (ADR-0245 Amendment 2), and an unsized catalog
+    // Button carries no size of its own, so it reads the register's md step (28px).
+    expect([btn!.getAttribute('data-tier'), btn!.getAttribute('data-scale')]).toEqual(['widget', 'md'])
+    expect(btn!.hasAttribute('size')).toBe(false)
 
     expect(sent.filter(isError)).toEqual([]) // 0 errors at all — and so 0 CATALOG
 

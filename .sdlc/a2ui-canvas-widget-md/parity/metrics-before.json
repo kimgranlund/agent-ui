@@ -1,0 +1,342 @@
+{
+ "400": {
+  "bookingform": {
+   "register": "-/md",
+   "n": "calc(calc(9 + 2 * 0 + 2 * 0 + 1 * 0 * 0) * 4px)",
+   "cardRadius": "27px",
+   "cardPadInline": "18px",
+   "controls": [
+    {
+     "tag": "ui-text-field",
+     "label": "Ada Lovelace",
+     "size": "sm",
+     "height": 28
+    },
+    {
+     "tag": "ui-text-field",
+     "label": "2",
+     "size": "sm",
+     "height": 28
+    },
+    {
+     "tag": "ui-text-field",
+     "label": "Sat, Nov 14, 2026",
+     "size": "sm",
+     "height": 28
+    },
+    {
+     "tag": "ui-button",
+     "label": "Change arrival date",
+     "size": "sm",
+     "height": 14
+    },
+    {
+     "tag": "ui-text-field",
+     "label": "Tue, Nov 17, 2026",
+     "size": "sm",
+     "height": 28
+    },
+    {
+     "tag": "ui-button",
+     "label": "Change departure date",
+     "size": "sm",
+     "height": 14
+    },
+    {
+     "tag": "ui-button",
+     "label": "Reserve",
+     "size": "sm",
+     "height": 28
+    }
+   ]
+  },
+  "cardtable": {
+   "register": "-/md",
+   "n": "calc(calc(9 + 2 * 0 + 2 * 0 + 1 * 0 * 0) * 4px)",
+   "cardRadius": "27px",
+   "cardPadInline": "18px",
+   "controls": [
+    {
+     "tag": "ui-button",
+     "label": "+10",
+     "size": "md",
+     "height": 36
+    },
+    {
+     "tag": "ui-button",
+     "label": "+25",
+     "size": "md",
+     "height": 36
+    },
+    {
+     "tag": "ui-button",
+     "label": "+50",
+     "size": "md",
+     "height": 36
+    },
+    {
+     "tag": "ui-button",
+     "label": "+100",
+     "size": "md",
+     "height": 36
+    },
+    {
+     "tag": "ui-text-field",
+     "label": "50",
+     "size": "md",
+     "height": 36
+    },
+    {
+     "tag": "ui-button",
+     "label": "Clear",
+     "size": "md",
+     "height": 36
+    },
+    {
+     "tag": "ui-button",
+     "label": "Deal",
+     "size": "md",
+     "height": 36
+    }
+   ]
+  },
+  "cardtable-hand": {
+   "register": "-/md",
+   "n": "calc(calc(9 + 2 * 0 + 2 * 0 + 1 * 0 * 0) * 4px)",
+   "cardRadius": "27px",
+   "cardPadInline": "18px",
+   "controls": [
+    {
+     "tag": "ui-button",
+     "label": "Hit",
+     "size": "md",
+     "height": 36
+    },
+    {
+     "tag": "ui-button",
+     "label": "Stand",
+     "size": "md",
+     "height": 36
+    },
+    {
+     "tag": "ui-button",
+     "label": "Double",
+     "size": "md",
+     "height": 36
+    }
+   ]
+  },
+  "questioncard": {
+   "register": "-/md",
+   "n": "calc(calc(9 + 2 * 0 + 2 * 0 + 1 * 0 * 0) * 4px)",
+   "cardRadius": "27px",
+   "cardPadInline": "18px",
+   "controls": [
+    {
+     "tag": "ui-button",
+     "label": "Check answer",
+     "size": "md",
+     "height": 36
+    }
+   ]
+  },
+  "productcard": {
+   "register": "-/md",
+   "n": "calc(calc(9 + 2 * 0 + 2 * 0 + 1 * 0 * 0) * 4px)",
+   "cardRadius": "27px",
+   "cardPadInline": "0px",
+   "controls": []
+  },
+  "resultcard": {
+   "register": "-/md",
+   "n": "calc(calc(9 + 2 * 0 + 2 * 0 + 1 * 0 * 0) * 4px)",
+   "cardRadius": "27px",
+   "cardPadInline": "18px",
+   "controls": [
+    {
+     "tag": "ui-button",
+     "label": "Play again",
+     "size": "lg",
+     "height": 44
+    }
+   ]
+  },
+  "contrastpair": {
+   "register": "-/md",
+   "n": "calc(calc(9 + 2 * 0 + 2 * 0 + 1 * 0 * 0) * 4px)",
+   "cardRadius": "27px",
+   "cardPadInline": "18px",
+   "controls": []
+  }
+ },
+ "1000": {
+  "bookingform": {
+   "register": "-/md",
+   "n": "calc(calc(9 + 2 * 0 + 2 * 0 + 1 * 0 * 0) * 4px)",
+   "cardRadius": "27px",
+   "cardPadInline": "18px",
+   "controls": [
+    {
+     "tag": "ui-text-field",
+     "label": "Ada Lovelace",
+     "size": "sm",
+     "height": 28
+    },
+    {
+     "tag": "ui-text-field",
+     "label": "2",
+     "size": "sm",
+     "height": 28
+    },
+    {
+     "tag": "ui-text-field",
+     "label": "Sat, Nov 14, 2026",
+     "size": "sm",
+     "height": 28
+    },
+    {
+     "tag": "ui-button",
+     "label": "Change arrival date",
+     "size": "sm",
+     "height": 14
+    },
+    {
+     "tag": "ui-text-field",
+     "label": "Tue, Nov 17, 2026",
+     "size": "sm",
+     "height": 28
+    },
+    {
+     "tag": "ui-button",
+     "label": "Change departure date",
+     "size": "sm",
+     "height": 14
+    },
+    {
+     "tag": "ui-button",
+     "label": "Reserve",
+     "size": "sm",
+     "height": 28
+    }
+   ]
+  },
+  "cardtable": {
+   "register": "-/md",
+   "n": "calc(calc(9 + 2 * 0 + 2 * 0 + 1 * 0 * 0) * 4px)",
+   "cardRadius": "27px",
+   "cardPadInline": "18px",
+   "controls": [
+    {
+     "tag": "ui-button",
+     "label": "+10",
+     "size": "md",
+     "height": 36
+    },
+    {
+     "tag": "ui-button",
+     "label": "+25",
+     "size": "md",
+     "height": 36
+    },
+    {
+     "tag": "ui-button",
+     "label": "+50",
+     "size": "md",
+     "height": 36
+    },
+    {
+     "tag": "ui-button",
+     "label": "+100",
+     "size": "md",
+     "height": 36
+    },
+    {
+     "tag": "ui-text-field",
+     "label": "50",
+     "size": "md",
+     "height": 36
+    },
+    {
+     "tag": "ui-button",
+     "label": "Clear",
+     "size": "md",
+     "height": 36
+    },
+    {
+     "tag": "ui-button",
+     "label": "Deal",
+     "size": "md",
+     "height": 36
+    }
+   ]
+  },
+  "cardtable-hand": {
+   "register": "-/md",
+   "n": "calc(calc(9 + 2 * 0 + 2 * 0 + 1 * 0 * 0) * 4px)",
+   "cardRadius": "27px",
+   "cardPadInline": "18px",
+   "controls": [
+    {
+     "tag": "ui-button",
+     "label": "Hit",
+     "size": "md",
+     "height": 36
+    },
+    {
+     "tag": "ui-button",
+     "label": "Stand",
+     "size": "md",
+     "height": 36
+    },
+    {
+     "tag": "ui-button",
+     "label": "Double",
+     "size": "md",
+     "height": 36
+    }
+   ]
+  },
+  "questioncard": {
+   "register": "-/md",
+   "n": "calc(calc(9 + 2 * 0 + 2 * 0 + 1 * 0 * 0) * 4px)",
+   "cardRadius": "27px",
+   "cardPadInline": "18px",
+   "controls": [
+    {
+     "tag": "ui-button",
+     "label": "Check answer",
+     "size": "md",
+     "height": 36
+    }
+   ]
+  },
+  "productcard": {
+   "register": "-/md",
+   "n": "calc(calc(9 + 2 * 0 + 2 * 0 + 1 * 0 * 0) * 4px)",
+   "cardRadius": "27px",
+   "cardPadInline": "0px",
+   "controls": []
+  },
+  "resultcard": {
+   "register": "-/md",
+   "n": "calc(calc(9 + 2 * 0 + 2 * 0 + 1 * 0 * 0) * 4px)",
+   "cardRadius": "27px",
+   "cardPadInline": "18px",
+   "controls": [
+    {
+     "tag": "ui-button",
+     "label": "Play again",
+     "size": "lg",
+     "height": 44
+    }
+   ]
+  },
+  "contrastpair": {
+   "register": "-/md",
+   "n": "calc(calc(9 + 2 * 0 + 2 * 0 + 1 * 0 * 0) * 4px)",
+   "cardRadius": "27px",
+   "cardPadInline": "18px",
+   "controls": []
+  }
+ }
+}
