@@ -6,6 +6,7 @@ import type { UICodeEditorElement } from './editor.ts'
 // strings). Imported here so the test asserts against the SAME constants the fix imports, not a
 // coincidentally-matching literal.
 import { LINK_TARGET, LINK_REL } from '@agent-ui/components/controls/text'
+import { resolve } from '../../../shared/src/tokens/scale.mjs'
 
 /** Minimal CDP surface (the button-states.browser.test.ts precedent) — `cdp()`'s public type is empty; the
  *  playwright provider gives `.send` at runtime. Chromium-only (WebKit exposes no CDP forced-colors emulation). */
@@ -1177,5 +1178,32 @@ describe('ui-code-editor — GH #867: the entry-content box scrolls with an unob
     expect(getComputedStyle(scroller, '::-webkit-scrollbar-thumb').backgroundColor, `${server.browser}: .cm-scroller thumb transparent at rest`).toBe(
       'rgba(0, 0, 0, 0)',
     )
+  })
+})
+
+describe('ui-code-editor — derived foundations geometry (ADR-0245 cl.3, dark launch, both engines)', () => {
+  const px = (v: string): number => parseFloat(v)
+
+  it('inside a data-tier region: padding n - 1 (the border is inside the box), radius n, the toggle a 4n square', async () => {
+    const { wrap, field } = mount(`<div data-tier="product" data-scale="sm"><ui-code-editor language="markdown" ${SIZED}></ui-code-editor></div>`)
+    const r = resolve('product', 'sm', 'md')
+    await expect.poll(() => field.querySelector('[data-part="mode-toggle"]') !== null, { timeout: 5000 }).toBe(true)
+    const cs = getComputedStyle(field)
+    expect(px(cs.paddingTop), `${server.browser}: padding-block`).toBe(r.inset - 1)
+    expect(px(cs.paddingLeft), `${server.browser}: padding-inline`).toBe(r.inset - 1)
+    expect(px(cs.borderTopLeftRadius), `${server.browser}: radius`).toBe(r.radius)
+    const box = (wrap.querySelector('[data-part="mode-toggle"]') as HTMLElement).getBoundingClientRect()
+    expect(box.height, `${server.browser}: toggle block size`).toBe(r.h)
+  })
+
+  it('outside any region: today\'s geometry holds (font * 0.5 / 0.75 padding, the 24px toggle)', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => field.querySelector('[data-part="mode-toggle"]') !== null, { timeout: 5000 }).toBe(true)
+    const cs = getComputedStyle(field)
+    const font = px(cs.fontSize)
+    expect(px(cs.paddingTop), `${server.browser}: padding-block`).toBeCloseTo(font * 0.5, 5)
+    expect(px(cs.paddingLeft), `${server.browser}: padding-inline`).toBeCloseTo(font * 0.75, 5)
+    const box = (field.querySelector('[data-part="mode-toggle"]') as HTMLElement).getBoundingClientRect()
+    expect(box.height, `${server.browser}: toggle block size`).toBe(24)
   })
 })
