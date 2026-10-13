@@ -1,5 +1,4 @@
 {
-  "packages/agent-ui/a2ui/src/agent/prompts/genui-dogfood-teaching.md#glyph": "lane a08 migrates it in Wave 1 (glyph)",
   "packages/agent-ui/app/src/controls/agent-admin/admin-help.test.ts#glyph": "lane a07 migrates it in Wave 1 (glyph)",
   "packages/agent-ui/app/src/controls/agent-admin/admin-help.ts#glyph": "lane a07 migrates it in Wave 1 (glyph)",
   "packages/agent-ui/app/src/controls/agent-admin/agent-admin.ts#glyph": "lane a07 migrates it in Wave 1 (glyph)",
