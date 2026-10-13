@@ -143,7 +143,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'croupier',
     category: 'games', // GH #143 — a card table, thematically a game even though it predates the games-roster wave
-    seedVersion: 8, // T-0073 (ADR-0243): the blackjack table is one CardTable, taught by the card-layout and game-table-chrome skills; migrates pre-v8 stores. 7, T-0020: a natural blackjack ends the round on the deal (surfaceStyle, round-loop and the blackjack rules entry); no mini-skill carries it, so a pre-v7 store would never hear it; migrates pre-v7 stores. 6: one surface per round (Kim 2026-10-04), supersedes #525's one-persistent-surface surfaceStyle; #525's bankroll opt-in + cross-session resume carry over; migrates pre-v6 stores. T-0016 (GH #1795) edited the hand/total seed text WITHOUT a bump: existing stores get the data-driven hand teaching from the server-composed card-layout/game-table-chrome mini-skills and the ADR-0238 hand check, so no store needs dropping
+    seedVersion: 9, // T-0088 (ADR-0243 Amendment 3): each round runs the CardTable's phases (betting on the table's own chips and a Deal Button, playing, settled with the result line and Deal again), taught by the card-layout and game-table-chrome skills and round-loop; migrates pre-v9 stores. 8, T-0073 (ADR-0243): the blackjack table is one CardTable, taught by the card-layout and game-table-chrome skills; migrates pre-v8 stores. 7, T-0020: a natural blackjack ends the round on the deal (surfaceStyle, round-loop and the blackjack rules entry); no mini-skill carries it, so a pre-v7 store would never hear it; migrates pre-v7 stores. 6: one surface per round (Kim 2026-10-04), supersedes #525's one-persistent-surface surfaceStyle; #525's bankroll opt-in + cross-session resume carry over; migrates pre-v6 stores. T-0016 (GH #1795) edited the hand/total seed text WITHOUT a bump: existing stores get the data-driven hand teaching from the server-composed card-layout/game-table-chrome mini-skills and the ADR-0238 hand check, so no store needs dropping
     label: 'The Croupier',
     tagline: 'Card games — Blackjack, Poker, and their variants — one table per round, each a new step in the dialog',
     config: { name: 'The Croupier', model: 'claude-sonnet-5', temperature: 0.6, toolsEnabled: true }, // rev.4: fable retired from the roster
@@ -186,8 +186,9 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
         // total stated come from one list and cannot diverge. T-0073 (ADR-0243): the blackjack table is the
         // CardTable composite, which binds both hand lists, the totals, bankroll, bet and status and takes
         // the action Buttons as children; card-layout and game-table-chrome teach it. CardTable holds a
-        // dealer and a player hand only, so poker keeps the Card frame with PlayingCard hands. Mirrors the
-        // byte-pinned `card-layout.md` and `game-table-chrome.md` mini-skills (the recapture flow).
+        // dealer and a player hand only, so poker keeps the Card frame with PlayingCard hands. T-0088 (ADR-0243
+        // Amendment 3): the table's `phase` runs betting, playing and settled, the bet two-way bound to /bet.
+        // Mirrors the byte-pinned `card-layout.md` and `game-table-chrome.md` mini-skills (the recapture flow).
         id: 'card-layout',
         label: 'card-layout',
         description: 'A hand is a data list the CardTable binds; each total comes from the listed cards.',
@@ -195,16 +196,18 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
           'Each hand is a list at /dealerHand or /playerHand (a draw appends to the list); compute each total ' +
           'from the cards you list and write it at /dealerTotal or /playerTotal. The CardTable draws both hands ' +
           'from those lists: "dealerHand":{"path":"/dealerHand"} and "playerHand":{"path":"/playerHand"}, never ' +
-          'a literal list.',
+          'a literal list. While the table is betting both lists are [], until the deal writes the cards.',
       },
       {
         id: 'game-table-chrome',
         label: 'game-table-chrome',
-        description: 'The blackjack table is one CardTable: hands, totals, bankroll, bet, status and the action Buttons.',
+        description: 'The blackjack table is one CardTable: phase, hands, totals, bankroll, bet, status and the action Buttons.',
         content:
-          'A blackjack round is ONE CardTable: title, status with statusIntent, bet, bankroll bound to /bankroll, ' +
-          'each total bound to /dealerTotal or /playerTotal, and the action Buttons as its children (Hit, Stand, ' +
-          'Double; a lone Deal again once settled); never rebuild it from Card, Row and Text. Other games keep ' +
+          'A blackjack round is ONE CardTable: title, status with statusIntent, phase bound to /phase, bet bound to ' +
+          '/bet, bankroll bound to /bankroll, each total bound to /dealerTotal or /playerTotal, and the action ' +
+          'Buttons as its children; never rebuild it from Card, Row and Text. Its phase runs betting (the table ' +
+          'draws its own chips and stepper; a lone Deal Button whose context carries {"bet":{"path":"/bet"}}), ' +
+          'playing (Hit, Stand, Double) and settled (the result line and a lone Deal again). Other games keep ' +
           'the Card frame with PlayingCard hands.',
       },
       {
@@ -218,8 +221,8 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       {
         id: 'round-loop',
         label: 'round-loop',
-        description: 'Deal → hits/stands → settle on one round surface; Deal again opens the next round on a fresh surface.',
-        content: 'One fresh table id per round; each move is an updateDataModel on that round’s surface, settlement updates the chip Stat; a natural (two-card 21) settles on the deal, hole card up, 3:2 or a push, Deal again only; the Deal again Button carries context newRound:true and starts the next round on a new table id, seeded with the settled bankroll.',
+        description: 'Bet → deal → hits/stands → settle on one round surface; Deal again opens the next round on a fresh surface.',
+        content: 'One fresh table id per round, opened in phase betting: the player sets the bet on the table and presses Deal, whose action carries /bet; the deal writes both hands and phase playing; each move is an updateDataModel on that round’s surface; settlement writes phase settled, the result line and /bankroll; a natural (two-card 21) settles on the deal, hole card up, 3:2 or a push, Deal again only; the Deal again Button carries context newRound:true and starts the next round on a new table id, seeded with the settled bankroll.',
       },
     ],
     // Every GAMES_RULES entry seeds enabled — the random pick draws from the ENABLED rules resources,

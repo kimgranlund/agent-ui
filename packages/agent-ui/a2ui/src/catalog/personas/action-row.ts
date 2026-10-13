@@ -3,8 +3,9 @@
 // producer's own children, appended by the renderer after `create()`, and neither the default nor the a2ui-basic
 // `Button` row carries a size. So the composite watches its own subtree and stamps `size="lg"` (36px at the
 // default scale, the button's own `[size]` ramp, never a custom height) on every `ui-button` that lands inside
-// it, the late-child adoption shape of `ui-select`'s TKT-0026 observer. The composites mint no `ui-button` of
-// their own, so only producer Buttons are touched.
+// it, the late-child adoption shape of `ui-select`'s TKT-0026 observer. The only `ui-button`s a composite mints
+// itself, CardTable's bet-row chips and Clear (ADR-0243 Amendment 3), are `lg` by design, so the stamp never
+// changes their size.
 
 function stamp(node: Node): void {
   if (node.nodeType !== Node.ELEMENT_NODE) return

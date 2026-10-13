@@ -5,7 +5,7 @@
 // (ADR-0241), so `render()` awaits its load before ingesting. The hand lifecycle (ADR-0243 Amendment 3) runs
 // on the betting and settled seeds of both bases: the bet row, the two-way bet, the Deal gate, the result line.
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import '@agent-ui/components/all' // ADR-0233: the catalog factories import no control; the test defines the fleet
 import { whenFlushed } from '@agent-ui/components'
 import { createRenderer } from '../../../renderer/renderer.ts'
@@ -18,6 +18,21 @@ import {
   personaCroupierCardTableSeed,
   personaCroupierCardTableSettledSeed,
 } from '../../../examples/persona-exemplars.ts'
+
+// jsdom has no `ElementInternals.setFormValue`/`setValidity`, which the bet row's form-associated `ui-text-field`
+// calls on connect (the question-card.test.ts precedent): stubbed on the shared prototype for this file only.
+let savedSetFormValue: unknown
+let savedSetValidity: unknown
+beforeAll(() => {
+  savedSetFormValue = ElementInternals.prototype.setFormValue
+  savedSetValidity = ElementInternals.prototype.setValidity
+  if (typeof ElementInternals.prototype.setFormValue !== 'function') ElementInternals.prototype.setFormValue = function (): void {}
+  if (typeof ElementInternals.prototype.setValidity !== 'function') ElementInternals.prototype.setValidity = function (): void {}
+})
+afterAll(() => {
+  ElementInternals.prototype.setFormValue = savedSetFormValue as typeof ElementInternals.prototype.setFormValue
+  ElementInternals.prototype.setValidity = savedSetValidity as typeof ElementInternals.prototype.setValidity
+})
 
 const SID = personaCroupierCardTableSeed.surfaceId
 const isError = (m: A2uiClientMessage): boolean => 'error' in m
