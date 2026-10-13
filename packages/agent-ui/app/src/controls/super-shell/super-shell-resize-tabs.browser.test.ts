@@ -239,7 +239,7 @@ describe('ui-super-shell — SPEC-R7a pane segments (AC10, wide)', () => {
     el.style.cssText = 'position:fixed;inset-block-start:0;inset-inline-start:0;inline-size:900px;block-size:400px'
     el.setAttribute('narrow-end', 'tabs')
     const content = document.createElement('div'); content.setAttribute('data-slot', 'content'); content.textContent = 'C'
-    const labels = ['Settings', 'Context: System', 'Context: Dialog'] // agent-admin's real trio (GH #221)
+    const labels = ['Settings', 'System', 'Dialog'] // the GH #221 trio at its short labels (Kim, 2026-10-13: a tab carries the control rule's padding, so the row fits the pane with short names)
     const segs = labels.map((label) => {
       const seg = document.createElement('div')
       seg.setAttribute('data-slot', 'options-pane')

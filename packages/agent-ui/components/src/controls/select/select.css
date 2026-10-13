@@ -112,15 +112,21 @@
      ramp the trigger already repoints at `[size=sm|lg]`) instead of hand-picked fixed px, so the
      panel inset + option row scale WITH the trigger — no new sm/lg blocks needed; the calc()s
      below repoint for free.
-       • Alignment law (the legacy opt-out only): listbox-padding + option-inline == h/2, so option
-         text starts at the trigger label's inline offset, split evenly (h/4 + h/4). Derived
-         (ADR-0245 Amendment 4) a row is a control with its own margin n and label inset n - c, so
-         its text sits c inside the trigger's text (the listbox margin).
+       • Alignment law: option text starts at the trigger label's inline offset. Under the legacy
+         opt-out listbox-padding + option-inline == h/2, split evenly (h/4 + h/4). Derived
+         (ADR-0245 Amendment 4) a row is a control with its own margin n and label inset n - c, and
+         the panel sits c outside the trigger (--ui-select-listbox-outset), so the two text edges
+         still share one x: c + (2n - c) - c == 2n - c.
        • Row-height law: option-block == (h − font)/2 — the SAME (height−glyph)/2 centering law
          (geometry.md), applied on the block axis to the option's own text (glyph = font here) —
          so the option row's rendered content-box height == the trigger height exactly, and both
          grow together under [size]. */
   --ui-select-listbox-padding: var(--md-sys-c, calc(var(--ui-select-height) / 4)); /* panel-edge inset + inter-row gap (feeds --ui-box-inset below) */
+  /* The placement rule (ADR-0245 Amendment 4): a boxed child sits at offset = container margin - child margin.
+     The listbox is a group (margin n + c) and the trigger a control (margin n), so the panel sits c outside the
+     trigger on each side and option text lines up under the trigger text. 0 under the legacy opt-out, where the
+     h/4 + h/4 split already lines them up. */
+  --ui-select-listbox-outset: var(--md-sys-c, 0px);
   --ui-select-listbox-min-inline-size: 12ch;       /* floor: at least as wide as a short option */
 
   /* Panel max-block-size (TKT-0027) — public dial, default min(50vh, 12 real option rows): the
@@ -145,7 +151,7 @@
      radius is inset from the listbox shell radius (nested-radius: shell − padding, ADR-0018). */
   --ui-select-option-block: calc((var(--ui-select-height) - var(--ui-select-font)) / 2); /* (h−font)/2 — row height == trigger height */
   --ui-select-option-inline: var(--ui-select-option-inline-derived, calc(var(--ui-select-height) / 4));            /* h/4 — pairs with listbox-padding to total h/2 */
-  --ui-select-option-inline-derived: calc(var(--md-sys-inset) + var(--md-sys-label-inset)); /* a row is a control (Amendment 4): margin n + label inset n - c, so its text edge is 2n - c and sits c inside the trigger's; undefined under the legacy opt-out, so the h/4 fallback above wins */
+  --ui-select-option-inline-derived: calc(var(--md-sys-inset) + var(--md-sys-label-inset)); /* a row is a control (Amendment 4): margin n + label inset n - c, text edge 2n - c from the row edge; undefined under the legacy opt-out, so the h/4 fallback above wins */
   --ui-select-option-font: var(--ui-select-font);   /* options were size-blind on FONT too (bug fix) — now the ramp */
   --ui-select-option-radius: calc(var(--ui-select-listbox-radius) - var(--ui-select-listbox-padding)); /* nested-radius off the REAL inset (was a hardcoded 4px, ADR-0018) */
   --ui-select-option-bg-hover: var(--md-sys-color-neutral-surface-high);
@@ -375,10 +381,14 @@
   :scope > [data-part='listbox'] {
     box-sizing: border-box;
     margin: 0;
+    /* The outset, as a translate: the overlay controller owns the insets and zeroes the margin inline, so the
+       c shift rides the one channel it leaves alone. An end-aligned panel (the flip) steps out the other way. */
+    translate: calc(-1 * var(--ui-select-listbox-outset)) 0;
     min-inline-size: var(--ui-select-listbox-min-inline-size);
     /* Matching the trigger width is done in JS (see select.ts model→overlay effect): in the
        Popover API top layer `100%` resolves to 100vw (the viewport), NOT the trigger width.
-       select.ts stamps `listbox.style.minInlineSize = triggerWidth + 'px'` before showPopover(). */
+       select.ts stamps the trigger width plus the outset on each side as `listbox.style.minInlineSize`
+       before showPopover(). */
     max-block-size: var(--ui-select-listbox-max-block-size); /* TKT-0027 — public dial, default min(50vh, 12 option rows) */
     overflow-y: auto;
     /* GH #906 — thin, auto-hiding scrollbar: transparent at rest, reveals the thumb only on
@@ -399,6 +409,10 @@
        below, instead of the shared fleet-wide 6px fallback every [data-box] otherwise gets). */
     --ui-box-inset: var(--ui-select-listbox-padding);
     font-size: var(--ui-select-option-font); /* was unset (inherited ambient) — options + the group label now read the ramp */
+  }
+
+  :scope > [data-part='listbox'][data-placement$='-end'] {
+    translate: var(--ui-select-listbox-outset) 0;
   }
 
   :scope > [data-part='listbox']:hover,

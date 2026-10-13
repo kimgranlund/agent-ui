@@ -297,7 +297,9 @@ export class UISelectElement extends UIFormElement {
       const isOpen = this.open
       if (isOpen) {
         const tw = trigger.getBoundingClientRect().width
-        if (tw > 0) listbox.style.minInlineSize = `${tw}px`
+        // The panel sits c outside the trigger on each side (select.css's --ui-select-listbox-outset, the
+        // placement rule of ADR-0245 Amendment 4), so its floor is the trigger width plus both outsets.
+        if (tw > 0) listbox.style.minInlineSize = `calc(${tw}px + 2 * var(--ui-select-listbox-outset, 0px))`
         // Open-time selection centering + focus (GH #1100, the ui-menu sibling wiring — ui-select
         // does NOT share menu's panel code, so it gets the same two helpers wired directly).
         // Seed the tab stop on the aria-selected option BEFORE handle.open() so moveFocusIn()

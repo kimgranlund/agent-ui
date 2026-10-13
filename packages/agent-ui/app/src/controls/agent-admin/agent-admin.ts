@@ -1661,6 +1661,7 @@ export class UIAgentAdminElement extends UIElement {
     const contextSystemContent = document.createElement('div')
     contextSystemContent.setAttribute('data-role', 'context-system-content')
     contextSystemContent.setAttribute('data-segment', 'Context: System')
+    contextSystemContent.setAttribute('data-tab-label', 'System') // the strip's short label; the segment keeps its full name
     const contextSystemHost = document.createElement('div')
     contextSystemHost.setAttribute('data-part', 'context-system')
     this.#contextSystemHost = contextSystemHost
@@ -1669,6 +1670,7 @@ export class UIAgentAdminElement extends UIElement {
     const contextDialogContent = document.createElement('div')
     contextDialogContent.setAttribute('data-role', 'context-dialog-content')
     contextDialogContent.setAttribute('data-segment', 'Context: Dialog')
+    contextDialogContent.setAttribute('data-tab-label', 'Dialog')
     const contextTurnsHost = document.createElement('div')
     contextTurnsHost.setAttribute('data-part', 'context-turns')
     this.#contextTurnsHost = contextTurnsHost
@@ -1713,7 +1715,16 @@ export class UIAgentAdminElement extends UIElement {
     for (const section of settingsSections) {
       const tab = document.createElement('ui-tab') as UITabElement
       tab.setAttribute('key', section.getAttribute('data-role') ?? '')
-      tab.textContent = section.getAttribute('data-segment') ?? ''
+      // The tab's TEXT is the section's short `data-tab-label` where it has one (Kim, 2026-10-13: a tab carries
+      // the control rule's padding since ADR-0245 Amendment 4, so the two `Context: …` tabs read System and
+      // Dialog); the segment's full `data-segment` name stays the accessible name and the tooltip.
+      const segmentName = section.getAttribute('data-segment') ?? ''
+      const tabLabel = section.getAttribute('data-tab-label') ?? segmentName
+      tab.textContent = tabLabel
+      if (tabLabel !== segmentName) {
+        tab.setAttribute('aria-label', segmentName)
+        tab.setAttribute('title', segmentName)
+      }
       // aria-controls → the section this tab reveals (panel-less element-reflection, the pane-tabs
       // precedent: the sections are NOT `ui-tab-panel`s, and visibility stays this element's own).
       tab.link(section, this.#nextId('settings-nav'))

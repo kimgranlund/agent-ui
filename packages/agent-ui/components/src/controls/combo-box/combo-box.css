@@ -134,6 +134,10 @@
      this is still worth deriving off the ramp now so a future `[size]` addition (its own ADR/decomp,
      a new-attribute contract change) would make this repoint for free, same as ui-select. */
   --ui-combo-box-listbox-padding: var(--md-sys-c, calc(var(--ui-combo-box-padding-inline) / 2));
+  /* The placement rule (ADR-0245 Amendment 4): the listbox is a group (margin n + c) around rows that are
+     controls (margin n), so the panel sits c outside the editor and option text lines up under the editor
+     text. 0 under the legacy opt-out, where the halves already line them up. */
+  --ui-combo-box-panel-outset: var(--md-sys-c, 0px);
 
   /* Panel max-block-size (TKT-0027) — public dial, default min(50vh, 12 real option rows), same
      shape as ui-select's listbox dial (the family precedent — combo-box's option row height IS
@@ -355,6 +359,8 @@
   :scope > [data-part='listbox'] {
     box-sizing: border-box;
     margin: 0; /* JS positioning controller sets position:fixed + top/left; no UA margin */
+    /* The outset, as a translate: the overlay controller owns the insets and zeroes the margin inline. */
+    translate: calc(-1 * var(--ui-combo-box-panel-outset)) 0;
     min-inline-size: var(--ui-combo-box-panel-min-inline-size);
 
     background-color: var(--ui-combo-box-panel-bg);
@@ -377,6 +383,10 @@
        not this part's own, plus a plain :hover for mouse/trackpad. */
     scrollbar-width: thin;
     scrollbar-color: transparent transparent;
+  }
+
+  :scope > [data-part='listbox'][data-placement$='-end'] {
+    translate: var(--ui-combo-box-panel-outset) 0;
   }
 
   :scope > [data-part='listbox']:hover,

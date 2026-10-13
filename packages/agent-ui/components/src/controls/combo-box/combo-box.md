@@ -150,7 +150,7 @@ geometry:
   options:
     sizeClass: legacy item-pad (ROV-C5 / §4.6/5.1) — numbers DERIVED off the editor's n (ADR-0245), superseding the fixed --md-sys-space-xs/sm px
     paddingBlock: var(--ui-combo-box-option-padding-block)    # = (editor height − option font)/2 — row height == editor height
-    paddingInline: var(--ui-combo-box-option-padding-inline)  # = 2n - c: a row is a control, margin n + label inset n - c (ADR-0245 Amendment 4), same as ui-select
+    paddingInline: var(--ui-combo-box-option-padding-inline)  # = 2n - c: a row is a control, margin n + label inset n - c (ADR-0245 Amendment 4); the panel sits c outside the editor (--ui-combo-box-panel-outset), so option text lines up under the editor text, same as ui-select
     font: var(--ui-combo-box-option-font)  # = --ui-combo-box-font (was size-blind; bug fix)
     note: ui-combo-box has NO `[size]` attribute today (structural divergence from ui-select, flagged not forced) — these tokens are n-DERIVED so a future `[size]` addition (its own ADR/decomp) would repoint them for free
 

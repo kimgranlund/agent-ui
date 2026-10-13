@@ -898,9 +898,14 @@ row; the body and its appendices stay as written.
    - **GH #536, zero inline padding on a tab.** A tab is a control: it carries `2n - c` on each inline side and
      the `4n` floor, and the tabs then touch with the tight gutter: `--ui-tabs-strip-gap` is `c` (it was
      `xs + md`, the spacing #536 moved onto the gap). Label to label is `4n - c`: 10 to 22 at the root md.
-   - **"Option text lines up under the trigger text"** (`select.css`, `combo-box.css`). A row is a control with its
-     own margin and inset, so its text sits `c` inside the trigger's text, the listbox margin. Lining them up again
-     means offsetting the panel by `-c`, a positioning change this amendment does not make.
+     The agent-admin settings strip shortens its two long labels to `System` and `Dialog` for it (the full
+     `Context: …` names stay the segment names, the accessible names and the tooltips).
+   - **"Option text lines up under the trigger text"** (`select.css`, `combo-box.css`) holds, by the
+     placement rule (Kim, 2026-10-13): a row is a control with its own margin and inset, and the listbox is
+     a group, so the panel sits at offset = group margin - control margin = `c` outside the trigger on each
+     side (`--ui-select-listbox-outset`, `--ui-combo-box-panel-outset`; a `translate`, since the overlay
+     controller owns the insets and the margin). `c + (2n - c) - c = 2n - c`: the two text edges share one
+     x. A select panel's floor is the trigger width plus `2c`.
    - **`menu.css`'s own item-pad register.** A menu row reads the control rule like every other row.
 5. **The chip level.** The generator emits `--md-sys-chip-margin` (`c`), `--md-sys-chip-gutter` (`c`) and
    `--md-sys-chip-radius` (`ceil(n/2)`). `ui-badge` is a chip: height **`2n + 2c`** (`parts.badge`, 12 to 16 at
@@ -922,8 +927,7 @@ row; the body and its appendices stay as written.
    floor where one is set, the alignment table and the legacy opt-out. The census counts the new tokens as derived.
 9. **Not adopted here.** The skill subtracts a border from the margin; the fleet still writes padding equal to the
    rule and draws its 1px border outside it, so a text edge measured from the outer edge is `2n - c + 1`
-   (unchanged practice, clause 3 notwithstanding). The toggle's alignment and the listbox offset are item 3 and
-   item 4 above.
+   (unchanged practice, clause 3 notwithstanding). The toggle's alignment is item 3 above.
 
 The px that move, at the root sm · md · lg (`derive.out.md` section 18 has every row):
 

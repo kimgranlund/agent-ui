@@ -183,6 +183,31 @@ for (const [name, tier, scale, attrs] of REGISTERS) {
         near(px(row, 'padding-inline-end'), edge, 'listbox row text edge, end')
       })
 
+      it(`an open select and combo-box at ${at}: the panel sits c outside the trigger, so option text and trigger text share one x`, async () => {
+        const wrap = await mount(attrs, size, `
+          <ui-select size="${size}" value="a"><div role="option" value="a">Value</div><div role="option" value="b">Other</div></ui-select>
+          <ui-combo-box value="Value"><div role="option" value="Value">Value</div></ui-combo-box>`, '240px')
+        const select = q(wrap, 'ui-select') as HTMLElement & { open: boolean }
+        select.open = true
+        await frame()
+        const trigger = q(select, '[data-part="trigger"]')
+        near(textRect(q(select, '[role="option"]')).left, textRect(q(trigger, '[data-part="label"]')).left, 'select: option text x equals trigger text x')
+        const panel = q(select, '[data-part="listbox"]').getBoundingClientRect()
+        const box = trigger.getBoundingClientRect()
+        near(box.left - panel.left, r.c, 'select: the panel starts c outside the trigger')
+        near(panel.right - box.right, r.c, 'select: and ends c past it (the floor is the trigger width plus 2c)')
+        select.open = false
+        await frame()
+
+        const combo = q(wrap, 'ui-combo-box') as HTMLElement & { open: boolean }
+        const editor = q(combo, '[data-part="editor"]')
+        combo.open = true
+        await frame()
+        near(textRect(q(combo, '[role="option"]')).left, textRect(editor).left, 'combo-box: option text x equals editor text x')
+        near(editor.getBoundingClientRect().left - q(combo, '[data-part="listbox"]').getBoundingClientRect().left, r.c, 'combo-box: the panel starts c outside the editor')
+        combo.open = false
+      })
+
       it(`the chip level at ${at}: ui-badge 2n + 2c tall with text edge 2c, and the ceil(n/2) radius it shares with ui-checkbox`, async () => {
         const wrap = await mount(attrs, size, `
           <ui-badge label="beta"></ui-badge>

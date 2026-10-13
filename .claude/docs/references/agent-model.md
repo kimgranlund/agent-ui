@@ -138,7 +138,8 @@ header pointing here.
   the server log (T-0024). Not the terminal `error` meta arm itself, which carries this text.
 - **Context: System**: the settings segment showing the compiled agent-system JSON, including the
   composed prompt; the read-only truth of what the next turn will send. Its sibling **Context: Dialog**
-  is the per-turn payload log.
+  is the per-turn payload log. Their tabs in the settings strip read `System` and `Dialog`; the full
+  names are the segment names, the tabs' accessible names and their tooltips.
 - **admin flow**: one scripted, keyless agent-admin scenario run by `npm run e2e:admin`
   (`scripts/e2e-admin`) in headless Chromium. Always qualified: bare "flow" already names ask-flows and
   the guided-authoring flow.

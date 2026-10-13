@@ -936,10 +936,13 @@ describe('UIAgentAdminElement — shell composition (ADR-0179): the three places
     const contextSystem = settingsPane.querySelector('[data-segment="Context: System"]') as HTMLElement
     expect([agent.hidden, contextSystem.hidden], 'the first section opens active').toEqual([false, true])
     const tabs = [...settingsPane.querySelectorAll('[data-part="settings-nav"] ui-tab')]
-    expect(tabs.map((t) => t.textContent), 'scaffolded mechanically from the kept data-segment labels, in today\'s order').toEqual([
+    expect(tabs.map((t) => t.textContent), 'scaffolded mechanically from the sections, in today\'s order; the two Context tabs read their short labels').toEqual([
+      'Agent', 'Capabilities', 'Surface', 'System', 'Dialog',
+    ])
+    expect(tabs.map((t) => t.getAttribute('aria-label') ?? t.textContent), 'the full segment name stays the accessible name').toEqual([
       'Agent', 'Capabilities', 'Surface', 'Context: System', 'Context: Dialog',
     ])
-    ;(tabs.find((t) => t.textContent === 'Context: System') as HTMLElement).click()
+    ;(tabs.find((t) => t.textContent === 'System') as HTMLElement).click()
     expect([agent.hidden, contextSystem.hidden]).toEqual([true, false])
     expect(agent.isConnected, 'switching sections never reparents').toBe(true)
   })
@@ -958,9 +961,10 @@ describe('UIAgentAdminElement — shell composition (ADR-0179): the three places
     const visible = (): string[] => sections.filter((s) => !s.hidden).map((s) => s.getAttribute('data-segment')!)
 
     expect(visible(), 'entry: the first section alone').toEqual(['Agent'])
-    for (const label of ['Agent', 'Capabilities', 'Surface', 'Context: System', 'Context: Dialog']) {
+    // [the tab's visible label, the segment it reveals]: the two Context tabs read a short label
+    for (const [label, segment] of [['Agent', 'Agent'], ['Capabilities', 'Capabilities'], ['Surface', 'Surface'], ['System', 'Context: System'], ['Dialog', 'Context: Dialog']] as const) {
       tabs.find((t) => t.textContent === label)!.click()
-      expect(visible(), `${label} selected ⇒ ${label} alone`).toEqual([label])
+      expect(visible(), `${label} selected, ${segment} alone`).toEqual([segment])
     }
     // …and back to the first, so the table is closed rather than one-way.
     tabs[0].click()
@@ -977,7 +981,7 @@ describe('UIAgentAdminElement — shell composition (ADR-0179): the three places
       'agent-content', 'capabilities-content', 'surface-content', 'context-system-content', 'context-dialog-content',
     ])
     expect(tabs.map((t) => t.textContent), 'labels are the human copy, in GH #574`s ranked order').toEqual([
-      'Agent', 'Capabilities', 'Surface', 'Context: System', 'Context: Dialog',
+      'Agent', 'Capabilities', 'Surface', 'System', 'Dialog',
     ])
     expect(tabs.map((t) => t.getAttribute('key')), 'key ↔ section pairing is positional and total').toEqual(
       sections.map((s) => s.getAttribute('data-role')),
@@ -1019,7 +1023,7 @@ describe('UIAgentAdminElement — shell composition (ADR-0179): the three places
     const skillsFold = el.querySelector('[data-part="settings-item"][data-item="skill"]') as HTMLElement & { open: boolean }
     skillsFold.open = false
 
-    goToSection('Context: Dialog')
+    goToSection('Dialog')
     goToSection('Agent')
     goToSection('Capabilities')
 
@@ -1061,7 +1065,7 @@ describe('UIAgentAdminElement — shell composition (ADR-0179): the three places
     // whole triple, back to the entry default — plus a settings sub-nav flip along the way (a SEPARATE
     // visibility axis, one level down, that must survive the outer flips too).
     seam(['copilot'], 'copilot')
-    sections.find((t) => t.textContent === 'Context: System')!.click()
+    sections.find((t) => t.textContent === 'System')!.click()
     seam(['settings'], 'settings')
     sections.find((t) => t.textContent === 'Agent')!.click()
     seam(['chat', 'settings', 'copilot'], 'chat')
