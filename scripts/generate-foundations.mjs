@@ -1,0 +1,122 @@
+#!/usr/bin/env node
+// generate-foundations.mjs: writes packages/agent-ui/shared/src/tokens/foundations.gen.css from the vendored
+// skill config `scale.mjs` beside it (ADR-0245 clause 1). Changing the system means editing CFG in
+// scale.mjs, never the generated sheet. The generator refuses to emit when `check()` returns any failure
+// (M1 to M10), so a broken config can never reach a stylesheet.
+//
+// The sheet is the skill's tokens.css form under ADR-0140 names: the tier inputs on `[data-tier="…"]`,
+// scale and size on their attributes, and one derived block (`--md-sys-n`, the box values as multiples of
+// n or c, the type roles, the four container levels) re-declared wherever an input changes, so each element
+// computes its own n. Until the cut (clause 10a) ROOT_DEFAULT is false: every declaration sits inside an
+// opt-in `[data-tier]` region, nothing reaches `:root`, and a page without `data-tier` sees no derived token
+// at all, so each lane's `var(<derived>, <today>)` still resolves to today's value there. The cut flips
+// ROOT_DEFAULT to true: `:root` takes ROOT_INPUTS (product at scale sm) and the full recompute list.
+//
+// Usage:
+//   node scripts/generate-foundations.mjs           rewrite the sheet when it is stale
+//   node scripts/generate-foundations.mjs --check   write nothing; exit 1 when the sheet is stale or check() fails
+
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
+import { CFG, check } from '../packages/agent-ui/shared/src/tokens/scale.mjs'
+
+export const OUT_REL = 'packages/agent-ui/shared/src/tokens/foundations.gen.css'
+export const ROOT_DEFAULT = false
+export const ROOT_INPUTS = { tier: 'product', scale: 'sm' }
+
+const STEP = { sm: -1, md: 0, lg: 1 }
+const N = 'var(--md-sys-n)'
+const C = 'var(--md-sys-c)'
+// scale.mjs measures the linear type anchors and Q from n = 5 (its `n - 5`), independent of the ladder.
+const lin = ([at5, perStep]) => `calc((${at5} + ${perStep} * (${N} - 5)) * 1px)`
+const q = `(${CFG.Q[0]} + ${CFG.Q[1]} * (${N} - 5))`
+const headingRole = (power) => `round(nearest, var(--md-sys-type-body) * pow(${q}, ${power}), 1px)`
+
+/** The derived block: every quantity scale.mjs `at()` returns, as a formula of this element's n. */
+function derivedDeclarations() {
+  const levels = Object.entries(CFG.levels).flatMap(([level, [margin, gutter, radius]]) => [
+    [`--md-sys-${level}-margin`, `calc(${N} * ${margin}px)`],
+    [`--md-sys-${level}-gutter`, `calc(${N} * ${gutter}px)`],
+    [`--md-sys-${level}-radius`, `calc(${N} * ${radius}px)`],
+  ])
+  return [
+    ['--md-sys-n', 'calc(var(--md-sys-tier-n0) + var(--md-sys-tier-a) * var(--md-sys-scale-s, 0) + var(--md-sys-tier-k) * var(--md-sys-size-z, 0) + var(--md-sys-tier-g) * var(--md-sys-scale-s, 0) * var(--md-sys-size-z, 0))'],
+    ['--md-sys-c', `calc(round(up, ${N} / 4, 1) * 1px)`],
+    ['--md-sys-height', `calc(${N} * 4px)`],
+    ['--md-sys-inset', `calc(${N} * 1px)`],
+    ['--md-sys-radius', `calc(${N} * 1px)`],
+    ['--md-sys-icon-box', `calc(${N} * 2px)`],
+    ['--md-sys-glyph-box', `calc(${N} * 2px - 2 * ${C})`],
+    ['--md-sys-glyph-stroke', `max(1.5px, ${C} / 2)`],
+    ['--md-sys-corner-shape', 'squircle'],
+    ['--md-sys-type-display', headingRole(3)],
+    ['--md-sys-type-heading', headingRole(2)],
+    ['--md-sys-type-subhead', headingRole(1)],
+    ['--md-sys-type-section-kicker', 'round(nearest, var(--md-sys-type-body) * var(--md-sys-tier-ratio), 1px)'],
+    ['--md-sys-type-title', `calc(var(--md-sys-type-body) + var(--md-sys-title-bump, ${CFG.titleBump.md}) * 1px)`],
+    ['--md-sys-type-body', lin(CFG.linear.body)],
+    ['--md-sys-type-control', lin(CFG.linear.control)],
+    ['--md-sys-type-field-label', lin(CFG.linear.fieldLabel)],
+    ['--md-sys-type-group-kicker', lin(CFG.linear.groupKicker)],
+    ['--md-sys-group-margin', `calc(var(--md-sys-inset) + ${C})`],
+    ['--md-sys-group-gutter', C],
+    ['--md-sys-group-radius', `calc(var(--md-sys-radius) + ${C})`],
+    ...levels,
+  ]
+}
+
+const tierInputs = ([n0, a, k, g]) =>
+  `--md-sys-tier-n0: ${n0}; --md-sys-tier-a: ${a}; --md-sys-tier-k: ${k}; --md-sys-tier-g: ${g}; --md-sys-tier-ratio: ${CFG.kicker};`
+
+/** Render the whole sheet. Throws (writes nothing) when check() reports a failure. */
+export function renderFoundationsCss({ rootDefault = ROOT_DEFAULT } = {}) {
+  const failures = check()
+  if (failures.length) throw new Error(`scale.mjs check() failed, refusing to emit:\n  ${failures.join('\n  ')}`)
+  // Scoped: an attribute counts only on a region root or inside one. Unscoped (the cut): anywhere.
+  const scoped = (sel) => (rootDefault ? sel : `[data-tier]${sel}, [data-tier] ${sel}`)
+  const recompute = rootDefault
+    ? ':root, [data-tier], [data-scale], [data-size], [size]'
+    : '[data-tier], [data-tier] :is([data-scale], [data-size], [size])'
+  const out = [
+    '/* foundations.gen.css: GENERATED by scripts/generate-foundations.mjs from scale.mjs (ADR-0245). DO NOT EDIT. */',
+    '/* n = n0 + a*s + k*z + g*s*z per element (s = data-scale, z = data-size or a control\'s size, each -1 / 0 / +1). */',
+    `/* ${rootDefault ? 'Root default: every element derives from one n.' : 'Dark launch: tokens exist only inside an opt-in [data-tier] region; nothing is declared on :root.'} */`,
+  ]
+  if (rootDefault) {
+    const [n0, a, k, g] = CFG.tiers[ROOT_INPUTS.tier]
+    out.push(`:root { ${tierInputs([n0, a, k, g])} --md-sys-scale-s: ${STEP[ROOT_INPUTS.scale]}; }`)
+  }
+  for (const [tier, constants] of Object.entries(CFG.tiers)) out.push(`[data-tier='${tier}'] { ${tierInputs(constants)} }`)
+  for (const [step, s] of Object.entries(STEP)) out.push(`${scoped(`[data-scale='${step}']`)} { --md-sys-scale-s: ${s}; }`)
+  for (const [step, z] of Object.entries(STEP)) {
+    out.push(`${scoped(`:is([data-size='${step}'], [size='${step}'])`)} { --md-sys-size-z: ${z}; --md-sys-title-bump: ${CFG.titleBump[step]}; }`)
+  }
+  out.push(`${recompute} {`)
+  for (const [name, value] of derivedDeclarations()) out.push(`  ${name}: ${value};`)
+  out.push('}')
+  return `${out.join('\n')}\n`
+}
+
+function main() {
+  const root = fileURLToPath(new URL('..', import.meta.url))
+  const outPath = join(root, OUT_REL)
+  let fresh
+  try {
+    fresh = renderFoundationsCss()
+  } catch (err) {
+    console.error(`generate-foundations: ${err.message}`)
+    process.exit(1)
+  }
+  const committed = existsSync(outPath) ? readFileSync(outPath, 'utf8') : undefined
+  if (process.argv.includes('--check')) {
+    if (committed === fresh) return
+    console.error(`generate-foundations: ${OUT_REL} is stale; run node scripts/generate-foundations.mjs`)
+    process.exit(1)
+  }
+  if (committed === fresh) return console.log(`generate-foundations: ${OUT_REL} already fresh`)
+  writeFileSync(outPath, fresh)
+  console.log(`generate-foundations: wrote ${OUT_REL}`)
+}
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main()
