@@ -32,10 +32,10 @@
 
   /* Frame */
   --ui-popover-outline: var(--md-sys-color-neutral-outline-variant);
-  --ui-popover-radius: var(--md-sys-shape-corner-base); /* the shared fleet radius (ADR-0015 cl.5) */
+  --ui-popover-radius: var(--md-sys-widget-radius, var(--md-sys-shape-corner-base)); /* the shared fleet radius (ADR-0015 cl.5) */
 
   /* Shell spacing — panel-class geometry (Container/surface, NOT a control height) */
-  --ui-popover-padding: var(--md-sys-space-md);
+  --ui-popover-padding: var(--md-sys-widget-margin, var(--md-sys-space-md));
 
   /* Size floor — prevents collapse when content is absent or narrow (the ADR-0021 lesson:
      a surface that can be empty needs a min-inline-size; the overlay JS positions against

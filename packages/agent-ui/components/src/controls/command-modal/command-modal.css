@@ -22,9 +22,9 @@
 :where(ui-command-modal) {
   /* The search field borrows the entry-control height register (the combo-box/select trigger precedent) — no
      new geometry row (Pattern class, geometry.md; no §1 control-height row of its own). */
-  --ui-command-modal-search-block-size: var(--md-sys-height-md);
-  --ui-command-modal-search-font: var(--md-sys-font-md);
-  --ui-command-modal-search-padding-inline: calc(var(--ui-command-modal-search-block-size) / 2); /* the fleet h/2 value-edge standard */
+  --ui-command-modal-search-block-size: var(--md-sys-height, var(--md-sys-height-md));
+  --ui-command-modal-search-font: var(--md-sys-type-control, var(--md-sys-font-md));
+  --ui-command-modal-search-padding-inline: var(--md-sys-inset, calc(var(--ui-command-modal-search-block-size) / 2)); /* the fleet h/2 value-edge standard */
 
   /* Frame — the §1b entry-control law applied DEGENERATELY (TKT-0068 item 4 ruling): the palette search
      is always focused while the modal is open, so it wears §1b's FOCUS row permanently — container-low
@@ -55,16 +55,19 @@
   --ui-command-modal-block-anchor: 15svh;
 
   /* Item/group geometry off the --md-sys-space ladder (ambient under [scale]/[density] — no new geometry row). */
-  --ui-command-modal-item-pad-inline: var(--md-sys-space-sm);
-  --ui-command-modal-item-pad-block: var(--md-sys-space-xs);
-  --ui-command-modal-item-gap: var(--md-sys-space-xs);
-  --ui-command-modal-group-gap: var(--md-sys-space-sm);
-  --ui-command-modal-caption-font: var(--md-sys-font-sm); /* group-label + shortcut display — a caption-weight read, off the live ramp (--ui-type-* is retired, ADR-0078 cl.2) */
+  --ui-command-modal-item-pad-inline: var(--md-sys-inset, var(--md-sys-space-sm));
+  --ui-command-modal-item-pad-block: var(--md-sys-c, var(--md-sys-space-xs));
+  /* ADR-0245 cl.3 listbox: options are 4n controls stacked edge to edge inside a c-padded panel; both read nothing outside an opt-in region. */
+  --ui-command-modal-item-block-size: var(--md-sys-height, auto);
+  --ui-command-modal-list-padding: var(--md-sys-c, 0px);
+  --ui-command-modal-item-gap: var(--md-sys-c, var(--md-sys-space-xs));
+  --ui-command-modal-group-gap: var(--md-sys-c, var(--md-sys-space-sm));
+  --ui-command-modal-caption-font: var(--md-sys-type-field-label, var(--md-sys-font-sm)); /* group-label + shortcut display — a caption-weight read, off the live ramp (--ui-type-* is retired, ADR-0078 cl.2) */
 
   --ui-command-modal-ink: var(--md-sys-color-neutral-on-surface);
   --ui-command-modal-muted-ink: var(--md-sys-color-neutral-on-surface-variant);
   --ui-command-modal-group-label-ink: var(--md-sys-color-neutral-on-surface-variant);
-  --ui-command-modal-radius: var(--md-sys-shape-corner-base);
+  --ui-command-modal-radius: var(--md-sys-radius, var(--md-sys-shape-corner-base));
 
   /* The [data-active] active-descendant highlight — a background treatment paired with the ARIA/attribute
      signifier itself (never color-only intent, ADR-0057). */
@@ -76,14 +79,14 @@
      surface-container register — no new --md-sys-* token. */
   --ui-command-modal-footer-border: var(--md-sys-color-neutral-outline-variant); /* the top hairline vs the list */
   --ui-command-modal-footer-ink: var(--ui-command-modal-muted-ink);              /* alias the existing muted role */
-  --ui-command-modal-footer-pad-inline: var(--md-sys-space-sm);
-  --ui-command-modal-footer-pad-block: var(--md-sys-space-xs);
-  --ui-command-modal-footer-gap: var(--md-sys-space-sm);                         /* between the three hints */
-  --ui-command-modal-hint-gap: var(--md-sys-space-xs);                           /* kbd ↔ label inside a hint */
+  --ui-command-modal-footer-pad-inline: var(--md-sys-inset, var(--md-sys-space-sm));
+  --ui-command-modal-footer-pad-block: var(--md-sys-c, var(--md-sys-space-xs));
+  --ui-command-modal-footer-gap: var(--md-sys-inset, var(--md-sys-space-sm));                         /* between the three hints */
+  --ui-command-modal-hint-gap: var(--md-sys-c, var(--md-sys-space-xs));                           /* kbd ↔ label inside a hint */
   --ui-command-modal-kbd-border: var(--md-sys-color-neutral-outline-variant);
   --ui-command-modal-kbd-bg: var(--md-sys-color-neutral-container-low);          /* the search field's own surface-container register */
   --ui-command-modal-kbd-ink: var(--ui-command-modal-muted-ink);
-  --ui-command-modal-kbd-radius: calc(var(--md-sys-shape-corner-base) / 2);      /* the reference's smaller pill radius, derived, no new shape token */
+  --ui-command-modal-kbd-radius: calc(var(--md-sys-radius, var(--md-sys-shape-corner-base)) / 2);      /* the reference's smaller pill radius, derived, no new shape token */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-command-modal) ════════════════ */
@@ -142,7 +145,7 @@
        instead, plus a plain :hover for mouse/trackpad. */
     scrollbar-width: var(--ui-command-modal-scrollbar-width);
     scrollbar-color: transparent transparent;
-    padding: 0;
+    padding: var(--ui-command-modal-list-padding);
     margin: 0;
     list-style: none;
   }
@@ -196,6 +199,7 @@
     gap: var(--ui-command-modal-item-gap);
     padding-inline: var(--ui-command-modal-item-pad-inline);
     padding-block: var(--ui-command-modal-item-pad-block);
+    min-block-size: var(--ui-command-modal-item-block-size);
     border-radius: var(--ui-command-modal-radius);
     color: var(--ui-command-modal-ink);
     cursor: pointer;

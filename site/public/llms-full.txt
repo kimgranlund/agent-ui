@@ -783,7 +783,7 @@ descriptor here would break); its contract is this prose + `card-header.ts`'s `s
 ```html
 <ui-card>
   <ui-card-header format="structured">
-    <ui-icon slot="leading" glyph="calendar"></ui-icon>
+    <ui-icon slot="leading" symbol="calendar"></ui-icon>
     Date selection
     <ui-badge slot="trailing" intent="success" label="Confirmed"></ui-badge>
   </ui-card-header>
@@ -1729,8 +1729,8 @@ active-descendant filter pattern (ADR-0085) — typing filters the list; Arrow k
 <ui-command-modal label="Command palette" placeholder="Type a command…">
   <div role="group" aria-labelledby="cmd-nav">
     <div id="cmd-nav" data-role="group-label">Navigation</div>
-    <div role="option" value="home"><ui-icon glyph="house" data-role="icon"></ui-icon>Go Home<span data-role="shortcut" aria-hidden="true">⌘H</span></div>
-    <div role="option" value="settings"><ui-icon glyph="gear" data-role="icon"></ui-icon>Settings<span data-role="shortcut" aria-hidden="true">⌘,</span></div>
+    <div role="option" value="home"><ui-icon symbol="house" data-role="icon"></ui-icon>Go Home<span data-role="shortcut" aria-hidden="true">⌘H</span></div>
+    <div role="option" value="settings"><ui-icon symbol="gear" data-role="icon"></ui-icon>Settings<span data-role="shortcut" aria-hidden="true">⌘,</span></div>
   </div>
   <div role="option" value="logout" data-keywords="sign out exit">Log out</div>
   <div slot="empty">No commands match — try a different search.</div>
@@ -7131,7 +7131,7 @@ At connect, any light-DOM children present on the host (typically message text) 
 moved, not cloned — into a component-built `<span data-part="message">`. This is a **one-time** move:
 children added to the host after connect are not adopted (out of scope v1). The affordance cluster is
 appended alongside it: an `<ui-button data-part="action">` **only** when `action` is non-empty at
-connect, and an icon-only `<ui-button data-part="close" icon-only>` (`<ui-icon glyph="x">`, `aria-label="Dismiss"`)
+connect, and an icon-only `<ui-button data-part="close" icon-only>` (`<ui-icon symbol="x">`, `aria-label="Dismiss"`)
 **always**. Both affordances are `ui-button` instances — native `<button>` is banned (fleet law) — and
 are reachable in normal Tab order via `ui-button`'s own `tabbable` trait; no tabindex games, no
 autofocus.

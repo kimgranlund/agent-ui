@@ -96,8 +96,8 @@ geometry:
     height: var(--ui-form-popover-height)     # Control class — off the §1-row ramp (ADR-0038)
     font: var(--ui-form-popover-font)
     icon: var(--ui-form-popover-icon)         # the caret CELL is icon-wide
-    glyph: var(--ui-form-popover-glyph)       # = font, the §4.1 caret law
-    radius: var(--ui-form-popover-radius)     # = --md-sys-shape-corner-base (shared fleet radius)
+    glyph: var(--ui-form-popover-glyph)       # = var(--md-sys-glyph-box) 2n - 2c under data-tier (the icon cell is the 2n slot), = font elsewhere (the §4.1 caret law)
+    radius: var(--ui-form-popover-radius)     # = var(--md-sys-radius) n under data-tier (ADR-0245 cl.3), --md-sys-shape-corner-base elsewhere
     minInlineSize: var(--ui-form-popover-min-inline-size)  # the 10ch CONTENT floor, ACTIVE IN THE [inline] HUG STATE ONLY (ADR-0223 §E ruling); the R3(a) squareness floor (min-inline-size: height) survives ALL states so an empty-label trigger stays hittable
   panel:
     sizeClass: Container/surface

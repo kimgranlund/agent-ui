@@ -51,11 +51,11 @@ describe('disclosure.css — structure + sectioning', () => {
     }
     // Pattern-class split (geometry.md): the summary row is the CONTROL band (frame, density-invariant);
     // the body padding is the --md-sys-space LAYOUT ladder (density-responsive) — never interchanged.
-    expect(tokenBlock).toMatch(/--ui-disclosure-height:\s*var\(--md-sys-height-md\)/)
-    expect(tokenBlock).toMatch(/--ui-disclosure-font:\s*var\(--md-sys-font-md\)/)
-    expect(tokenBlock).toMatch(/--ui-disclosure-glyph:\s*var\(--ui-disclosure-font\)/) // = font, the inline-affordance law
-    expect(tokenBlock).toMatch(/--ui-disclosure-body-pad-block:\s*var\(--md-sys-space-/)
-    expect(tokenBlock).toMatch(/--ui-disclosure-body-pad-inline:\s*var\(--md-sys-space-/)
+    expect(tokenBlock).toMatch(/--ui-disclosure-height:\s*var\(--md-sys-height,\s*var\(--md-sys-height-md\)\)/)
+    expect(tokenBlock).toMatch(/--ui-disclosure-font:\s*var\(--md-sys-type-control,\s*var\(--md-sys-font-md\)\)/)
+    expect(tokenBlock).toMatch(/--ui-disclosure-glyph:\s*var\(--md-sys-glyph-box,\s*var\(--ui-disclosure-font\)\)/) // = font, the inline-affordance law
+    expect(tokenBlock).toMatch(/--ui-disclosure-body-pad-block:\s*var\(--md-sys-inset,\s*var\(--md-sys-space-/)
+    expect(tokenBlock).toMatch(/--ui-disclosure-body-pad-inline:\s*var\(--md-sys-widget-gutter,\s*var\(--md-sys-space-/)
   })
 
   it('NO [size]/[scale] attribute-selector ramp (ui-disclosure exposes no `size` axis, family-coherence A2b)', () => {
@@ -70,7 +70,8 @@ describe('disclosure.css — the @scope geometry law (Pattern-class split)', () 
     const rule = (m as RegExpMatchArray)[1]
     expect(rule).toMatch(/block-size:\s*var\(--ui-disclosure-height\)/)
     expect(rule).toMatch(/padding-block:\s*0/) // NEVER block-padding as the sizing lever
-    expect(rule).toMatch(/padding-inline-start:\s*calc\(var\(--ui-disclosure-height\)\s*\/\s*2\)/) // h/2 slotless edge
+    expect(rule).toMatch(/padding-inline-start:\s*var\(--ui-disclosure-pad-inline\)/) // h/2 slotless edge (derived: n under data-tier)
+    expect(tokenBlock).toMatch(/--ui-disclosure-pad-inline:\s*var\(--md-sys-inset,\s*calc\(var\(--ui-disclosure-height\)\s*\/\s*2\)\)/)
     expect(rule).toMatch(/line-height:\s*var\(--md-sys-control-line-height\)/) // ADR-0036 single-line control standard
   })
 
@@ -78,8 +79,9 @@ describe('disclosure.css — the @scope geometry law (Pattern-class split)', () 
     const m = stylesBlock.match(/:scope \[data-part='chevron'\]\s*\{([^}]*)\}/)
     expect(m, 'the chevron rule is missing').not.toBeNull()
     const rule = (m as RegExpMatchArray)[1]
-    expect(rule).toMatch(/inline-size:\s*var\(--ui-disclosure-glyph\)/)
-    expect(rule).toMatch(/block-size:\s*var\(--ui-disclosure-glyph\)/)
+    expect(rule).toMatch(/inline-size:\s*var\(--ui-disclosure-slot\)/) // the 2n slot (= the glyph box outside a region)
+    expect(rule).toMatch(/block-size:\s*var\(--ui-disclosure-slot\)/)
+    expect(tokenBlock).toMatch(/--ui-disclosure-glyph:\s*var\(--md-sys-glyph-box,\s*var\(--ui-disclosure-font\)\)/)
     expect(css).not.toMatch(/--ui-disclosure-glyph:\s*var\(--md-sys-icon-/) // never the content-icon ramp (geometry.md bug class)
   })
 
@@ -117,7 +119,7 @@ describe('disclosure.css — the @scope geometry law (Pattern-class split)', () 
 describe("disclosure.css — the [contained] chrome (GH #1283: surface bg + the shared fleet radius, ADR-0015 cl.5)", () => {
   it('declares --ui-disclosure-bg (a surface role) and --ui-disclosure-radius (the ONE shared radius constant)', () => {
     expect(tokenBlock).toMatch(/--ui-disclosure-bg:\s*var\(--md-sys-color-neutral-surface\)/)
-    expect(tokenBlock).toMatch(/--ui-disclosure-radius:\s*var\(--md-sys-shape-corner-base\)/) // the fleet radius constant, never a bespoke px
+    expect(tokenBlock).toMatch(/--ui-disclosure-radius:\s*var\(--md-sys-radius,\s*var\(--md-sys-shape-corner-base\)\)/) // the fleet radius constant, never a bespoke px
   })
 
   it('the host paints bg + border-radius under [contained] ONLY (the default fold has no chrome)', () => {

@@ -50,7 +50,7 @@ parts:
   - name: action
     description: An optional <ui-button data-part="action"> rendered ONLY when the action prop is non-empty at connect time (read once — a later action prop change does not retroactively add/remove this part). Its label is the action prop's text. Activating it emits select, then closes the toast.
   - name: close
-    description: The ALWAYS-present icon-only <ui-button data-part="close" variant="ghost" icon-only>, containing a decorative <ui-icon glyph="x"> and carrying aria-label="Dismiss" (the icon-only-button idiom — the accessible name has nothing to read from textContent; `icon-only` opts into ui-button's square fifth structure, geometry.md). Pinned to the card's grid-column 3 explicitly (toast.css), so its optical inset from the card's right edge always matches the message's inset from the left edge, whether or not the action part is present (TKT-0014). Activating it closes the toast.
+    description: The ALWAYS-present icon-only <ui-button data-part="close" variant="ghost" icon-only>, containing a decorative <ui-icon symbol="x"> and carrying aria-label="Dismiss" (the icon-only-button idiom — the accessible name has nothing to read from textContent; `icon-only` opts into ui-button's square fifth structure, geometry.md). Pinned to the card's grid-column 3 explicitly (toast.css), so its optical inset from the card's right edge always matches the message's inset from the left edge, whether or not the action part is present (TKT-0014). Activating it closes the toast.
 
 customStates: []           # no :state() hooks — the LLD ships no entrance/exit animation in v1 (a fade/slide-in is a named foreseen extension)
 
@@ -70,10 +70,10 @@ keyboard:
 geometry:
   sizeClass: pattern                                  # a fixed-width notification card — Container/surface geometry, not a control-height ramp
   inlineSize: var(--ui-toast-inline-size)              # = 20em, fixed (max-inline-size:100% floors small viewports) — the ui-menu panel's fixed-surface precedent, NOT a [size]/[scale] control ramp
-  paddingInline: var(--md-sys-space-md)
-  paddingBlock: var(--md-sys-space-sm)
+  paddingInline: var(--md-sys-space-md)   # = var(--md-sys-widget-margin) 2n under data-tier (ADR-0245 cl.6, widget level)
+  paddingBlock: var(--md-sys-space-sm)    # = var(--md-sys-widget-gutter) n under data-tier
   gap: var(--md-sys-space-sm)                              # message | action | close column gap
-  radius: var(--md-sys-shape-corner-base)                        # the shared fleet radius (ui-menu/ui-card precedent)
+  radius: var(--md-sys-shape-corner-base)                        # = var(--md-sys-widget-radius) 2n under data-tier; the shared fleet radius elsewhere (ui-menu/ui-card precedent)
   note: No [size] attribute (SPEC-R19) — a notification card has no size axis; family-coherence A2b holds trivially (toast.css declares no [size] selector).
 
 forcedColors: A forced-colors block keeps the card bordered in CanvasText once the box-shadow (an arbitrary-alpha rgb() literal, flattened away under WHCM) vanishes — the border alone carries the card's edge (the bar-chart fill lesson); the ui-button/ui-icon affordance children carry their own independent forced-colors treatment.
@@ -130,7 +130,7 @@ At connect, any light-DOM children present on the host (typically message text) 
 moved, not cloned — into a component-built `<span data-part="message">`. This is a **one-time** move:
 children added to the host after connect are not adopted (out of scope v1). The affordance cluster is
 appended alongside it: an `<ui-button data-part="action">` **only** when `action` is non-empty at
-connect, and an icon-only `<ui-button data-part="close" icon-only>` (`<ui-icon glyph="x">`, `aria-label="Dismiss"`)
+connect, and an icon-only `<ui-button data-part="close" icon-only>` (`<ui-icon symbol="x">`, `aria-label="Dismiss"`)
 **always**. Both affordances are `ui-button` instances — native `<button>` is banned (fleet law) — and
 are reachable in normal Tab order via `ui-button`'s own `tabbable` trait; no tabindex games, no
 autofocus.

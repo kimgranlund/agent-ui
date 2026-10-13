@@ -105,7 +105,7 @@ describe('ui-toast — anatomy: message adoption + the affordance cluster (toast
     el.remove()
   })
 
-  it('ALWAYS renders an icon-only data-part="close" ui-button with aria-label="Dismiss" and a ui-icon[glyph="x"]', () => {
+  it('ALWAYS renders an icon-only data-part="close" ui-button with aria-label="Dismiss" and a ui-icon[symbol="x"]', () => {
     const el = makeToast()
     document.body.appendChild(el)
     const closeBtn = closeBtnOf(el)
@@ -113,7 +113,7 @@ describe('ui-toast — anatomy: message adoption + the affordance cluster (toast
     expect(closeBtn.getAttribute('aria-label')).toBe('Dismiss')
     expect(closeBtn.hasAttribute('icon-only')).toBe(true) // opts into button.css's square fifth structure
     const icon = closeBtn.querySelector('ui-icon')
-    expect(icon?.getAttribute('glyph')).toBe('x')
+    expect(icon?.getAttribute('symbol')).toBe('x')
     el.remove()
   })
 

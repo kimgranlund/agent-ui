@@ -83,7 +83,7 @@ geometry:
   summary:
     height: var(--ui-disclosure-height)   # Pattern-class interactive row — off the §1-row ramp; density-INVARIANT frame
     font: var(--ui-disclosure-font)
-    glyph: var(--ui-disclosure-glyph)     # = font, the inline-affordance law (geometry.md)
+    glyph: var(--ui-disclosure-glyph)     # = var(--md-sys-glyph-box) 2n - 2c under data-tier (centred in the 2n slot, --ui-disclosure-slot), = font elsewhere (geometry.md)
     gap: var(--ui-disclosure-gap)         # the density-bearing chevron↔label rhythm
   body:
     shellClass: layout-shell
@@ -91,7 +91,7 @@ geometry:
     padInline: var(--ui-disclosure-body-pad-inline)   # = --md-sys-space-md, density-RESPONSIVE — [contained] only
   contained:                                          # the [contained] chrome (GH #1283)
     bg: var(--ui-disclosure-bg)                       # = --md-sys-color-neutral-surface — the contained surface paint
-    radius: var(--ui-disclosure-radius)               # = --md-sys-shape-corner-base, the ONE shared fleet radius constant (ADR-0015 cl.5)
+    radius: var(--ui-disclosure-radius)               # = var(--md-sys-radius) n under data-tier (ADR-0245 cl.3), --md-sys-shape-corner-base elsewhere (ADR-0015 cl.5)
 
 forcedColors: A `@media (forced-colors: active)` block keeps the summary/body ink and the chevron (currentColor) visible as system inks (CanvasText); every value already resolves through a role carrying the WHCM mapping at the token layer, so this is explicit belt-and-suspenders, not new colour. The shared focus ring survives via `--md-sys-color-focus-ring → Highlight`.
 ---
