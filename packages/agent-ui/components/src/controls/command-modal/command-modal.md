@@ -106,10 +106,10 @@ keyboard:
 
 geometry:
   sizeClass: pattern       # no §1 control-height row of its own — the search field borrows the entry-control register
-  searchBlockSize: var(--ui-command-modal-search-block-size)   # = var(--md-sys-height-md), the entry-control register
+  searchBlockSize: var(--ui-command-modal-search-block-size)   # = var(--md-sys-height) 4n under data-tier (ADR-0245 cl.3), var(--md-sys-height-md) elsewhere, the entry-control register
   listMaxBlock: var(--ui-command-modal-list-max-block)         # bounded scroll viewport (50vh, scroll-fade wired)
   scrollbarSeam: --ui-command-modal-scrollbar-width            # declared `thin` in the token block (GH #906, superseding the earlier `none` default) — the #874 fleet idiom: transparent-at-rest, reveals --ui-command-modal-scrollbar-thumb{,-hover} on hover or while the sibling search field has real focus ([data-part='search']:focus ~ [data-part='list'] — a native <dialog>'s top-layer boundary blocks :focus-within from reaching an ancestor outside it, MEASURED both engines); the scroll-fade stays a complementary affordance; a consumer repoints to `none`/`auto`
-  itemGap: var(--ui-command-modal-item-gap)                    # off the --md-sys-space ladder — ambient under [scale]/[density]
+  itemGap: var(--ui-command-modal-item-gap)                    # var(--md-sys-c) under data-tier (options are 4n rows in a c-padded panel), else off the --md-sys-space ladder
 
 forcedColors: A `@media (forced-colors: active)` block keeps the search field frame and the active-option highlight legible as system colours (Field/FieldText, Highlight/HighlightText) — the aria-activedescendant + [data-active] pairing is the non-color signifier, so no color-only intent exists (the combo-box [data-active] precedent). The nested modal's own forced-colors block covers the dialog surface/backdrop.
 

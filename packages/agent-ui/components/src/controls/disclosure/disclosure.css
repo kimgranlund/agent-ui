@@ -48,6 +48,7 @@
   /* The chevron — an INLINE AFFORDANCE (geometry.md §"Affordance vs content-icon"): `= font`, never the
      icon ramp (`--ui-ind`) — the named oversize-caret bug class this law fixes. */
   --ui-disclosure-glyph: var(--md-sys-glyph-box, var(--ui-disclosure-font));
+  --ui-disclosure-pad-inline: var(--md-sys-inset, calc(var(--ui-disclosure-height) / 2)); /* h/2 slotless edge; derived: n (ADR-0245 cl.3) */
   --ui-disclosure-slot: var(--md-sys-icon-box, var(--ui-disclosure-glyph)); /* the 2n slot the mark sits centred in (ADR-0245 cl.4) */
 
   /* Summary row inline layout — the icon↔label gap (rhythm family, ∝ font × density; geometry.md). */
@@ -84,8 +85,8 @@
     box-sizing: border-box;
     block-size: var(--ui-disclosure-height);
     padding-block: 0;
-    padding-inline-start: var(--md-sys-inset, calc(var(--ui-disclosure-height) / 2)); /* slotless-edge law, h/2 (geometry.md) */
-    padding-inline-end: var(--md-sys-inset, calc(var(--ui-disclosure-height) / 2));
+    padding-inline-start: var(--ui-disclosure-pad-inline); /* slotless-edge law, h/2 (geometry.md) */
+    padding-inline-end: var(--ui-disclosure-pad-inline);
     font-size: var(--ui-disclosure-font);
     line-height: var(--md-sys-control-line-height); /* single-line control standard (ADR-0036) */
     color: var(--ui-disclosure-ink);

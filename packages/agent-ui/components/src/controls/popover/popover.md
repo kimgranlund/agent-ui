@@ -71,8 +71,8 @@ keyboard:
 
 geometry:
   sizeClass: pattern    # Container/surface geometry — the panel uses --md-sys-space padding; NO control height (--md-sys-height-* is never read)
-  padding: var(--ui-popover-padding)    # = var(--md-sys-space-md) — density-responsive layout spacing
-  radius: var(--ui-popover-radius)      # = var(--md-sys-shape-corner-base), the shared fleet radius
+  padding: var(--ui-popover-padding)    # = var(--md-sys-widget-margin) 2n under data-tier (ADR-0245 cl.6), var(--md-sys-space-md) elsewhere
+  radius: var(--ui-popover-radius)      # = var(--md-sys-widget-radius) 2n under data-tier, var(--md-sys-shape-corner-base) elsewhere
   minInlineSize: var(--ui-popover-min-inline-size)  # floor to prevent collapse (ADR-0021 lesson)
   surface: var(--ui-popover-bg)         # opaque neutral-surface plane
 

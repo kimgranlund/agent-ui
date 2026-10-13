@@ -45,17 +45,17 @@ describe('drawer.css — structure + sectioning', () => {
       expect(tokenBlock).toMatch(new RegExp(`--ui-drawer-${slot}:`))
     }
     expect(tokenBlock).toMatch(/--ui-drawer-scrim:\s*var\(--md-sys-color-dialog-backdrop\)/) // the modal TKT-0019 wash, reused
-    expect(tokenBlock).toMatch(/--ui-drawer-radius:\s*var\(--md-sys-shape-corner-base\)/) // the shared fleet radius
-    expect(tokenBlock).toMatch(/--ui-drawer-padding:\s*var\(--md-sys-space-/) // the density-responsive layout spacing
+    expect(tokenBlock).toMatch(/--ui-drawer-radius:\s*var\(--md-sys-card-radius,\s*var\(--md-sys-shape-corner-base\)\)/) // the shared fleet radius
+    expect(tokenBlock).toMatch(/--ui-drawer-padding:\s*var\(--md-sys-card-margin,\s*var\(--md-sys-space-/) // the density-responsive layout spacing
   })
 
   it('GH #918 — declares the drawer’s OWN region spacing rhythm + the region hairline colour', () => {
     for (const slot of ['pad-inline', 'pad-block', 'gap', 'region-border']) {
       expect(tokenBlock).toMatch(new RegExp(`--ui-drawer-${slot}:`))
     }
-    expect(tokenBlock).toMatch(/--ui-drawer-pad-inline:\s*var\(--md-sys-space-/)
-    expect(tokenBlock).toMatch(/--ui-drawer-pad-block:\s*var\(--md-sys-space-/)
-    expect(tokenBlock).toMatch(/--ui-drawer-gap:\s*var\(--md-sys-space-/)
+    expect(tokenBlock).toMatch(/--ui-drawer-pad-inline:\s*var\(--md-sys-card-gutter,\s*var\(--md-sys-space-/)
+    expect(tokenBlock).toMatch(/--ui-drawer-pad-block:\s*var\(--md-sys-inset,\s*var\(--md-sys-space-/)
+    expect(tokenBlock).toMatch(/--ui-drawer-gap:\s*var\(--md-sys-card-gutter,\s*var\(--md-sys-space-/)
     // the hairline colour reuses the SAME frame role already declared for the dialog's own outline — no new role
     expect(tokenBlock).toMatch(/--ui-drawer-region-border:\s*var\(--ui-drawer-outline\)/)
   })
