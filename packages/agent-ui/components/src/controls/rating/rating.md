@@ -225,7 +225,7 @@ strictly precedes the event on both paths (Fork-T1/D1-safe, PR #1363's disciplin
 ## Sizes
 
 `size` selects from the widget-box ramp (`sm` · `md` (default) · `lg`), sourcing `--md-sys-compact-{size}`
-(ADR-0041) — each star's own box. An ancestor `[scale]` attribute re-tables the ramp for its subtree.
+(ADR-0041) — each star's own box. An ancestor `data-tier` / `data-scale` (ADR-0245) re-derives the ramp for its subtree.
 
 ## Accessibility
 

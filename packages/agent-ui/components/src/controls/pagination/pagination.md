@@ -116,6 +116,6 @@ consumer-owned list: bind `pages` to the list's own page count and listen for `c
 
 ## Sizing
 
-No `[size]`/`[scale]` attribute and no geometry row of its own — every composed `ui-button` stop is stamped
+No `size`/`data-scale` attribute and no geometry row of its own — every composed `ui-button` stop is stamped
 at `size="sm"` and carries its own §1 control-height geometry (`geometry.md`); `ui-pagination` contributes
-only the inter-stop `gap` (off the `--md-sys-space` ladder, responding to an ancestor `[density]` for free).
+only the inter-stop `gap` (off the `--md-sys-space` ladder, responding to an ancestor `data-density` for free).

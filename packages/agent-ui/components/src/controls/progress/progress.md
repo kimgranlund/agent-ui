@@ -82,7 +82,7 @@ forcedColors: An explicit `@media (forced-colors: active)` block repoints the fi
 
 `ui-progress` is the **Display**-class thin-rail progress bar (feed family v1, ADR-0112) — bar-only task
 progress with a native-`<progress>`-shaped value model. It is **not** interactive and **not**
-form-associated: no events, no keyboard contract, no `[size]`/`[scale]` control geometry.
+form-associated: no events, no keyboard contract, no `size`/`data-scale` control geometry.
 
 ```html
 <ui-progress current="42" label="Indexing"></ui-progress>
@@ -146,4 +146,4 @@ announces as "progressbar, busy" via the platform's own indeterminate handling.
 The host floors at `--ui-progress-min-inline-size` (`8em` default) in an unstyled flex row
 (test-the-whole-shape) — override the token, or set `inline-size` directly, to size the bar to a layout.
 The rail thickness (`--ui-progress-track-size`, `4px` default) is a fixed, density-invariant constant — a
-bar is a rail, not a `[size]`/`[scale]` widget box (the slider-rail precedent).
+bar is a rail, not a `size`/`data-scale` widget box (the slider-rail precedent).

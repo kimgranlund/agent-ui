@@ -111,6 +111,21 @@ const MEDIA_SAMPLE_SRC = 'data:audio/wav;base64,' + MEDIA_SAMPLE_WAV_B64
 const VIDEO_SAMPLE_LABEL = 'Sample clip: a short chime'
 const AUDIO_SAMPLE_LABEL = 'Sample clip: a short chime'
 
+// The audio specimen's width floor. `ui-audio` fills its container (audio.css), and the artboard column beside the
+// code view is narrow at a laptop viewport (about 213px of content), where the UA audio bar keeps only a stub of
+// its timeline and reads as squashed. A floor of 16rem gives the native bar room for a real scrubber; the
+// artboard surface scrolls the few px of overflow rather than clipping it. Specimen content, never the control
+// or the renderer: keyed by the rendered root's tag, applied after every (re)build.
+const SPECIMEN_MIN_INLINE_SIZE: Readonly<Record<string, string>> = { 'ui-audio': '16rem' }
+
+/** applySpecimenWidth: set the root's width floor from SPECIMEN_MIN_INLINE_SIZE; call beside applyRootStretch. */
+function applySpecimenWidth(surface: HTMLElement): void {
+  const root = surface.firstElementChild
+  if (!(root instanceof HTMLElement)) return
+  const floor = SPECIMEN_MIN_INLINE_SIZE[root.tagName.toLowerCase()]
+  if (floor) root.style.minInlineSize = floor
+}
+
 // ── BATCH A — one control per enum knob, routed by fit (no doubled PROPS knob + VARIANTS chip-row) ───────────
 // A small closed enum reads best fully exposed (every option visible, one click to pick) — `ui-segmented-control`
 // (ADR-0095; was `ui-radio-group[variant="segmented"]` under the retired ADR-0086) — but ONLY while it fits the
@@ -2297,6 +2312,7 @@ class ComponentPreview extends HTMLElement {
     this.#host.finalize('preview')
     this.#armLiveDirty(surface)
     applyRootStretch(surface)
+    applySpecimenWidth(surface)
     this.#updateEmptyHint()
   }
 
@@ -2389,6 +2405,7 @@ class ComponentPreview extends HTMLElement {
     for (const knob of this.#knobs) this.#applyKnob(el, knob) // no SLOT_TEXT knob at all for a NO_SLOT_TEXT/STRUCTURAL target (above)
     for (const evt of ['change', 'input', 'toggle', 'select']) el.addEventListener(evt, () => this.#readBackComponent())
     applyRootStretch(surface)
+    applySpecimenWidth(surface)
     this.#updateEmptyHint()
   }
 

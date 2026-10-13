@@ -107,7 +107,7 @@ forcedColors: An explicit `@media (forced-colors: active)` block repoints the ca
 
 `ui-attachment` is the **Display**-class, FilePart-aligned compact file card (ADR-0112, feed family v1)
 — a category glyph plus a name/size cell, real selectable DOM text throughout. It is **not** interactive
-and **not** form-associated: no events, no keyboard contract, no `[size]`/`[scale]` control geometry.
+and **not** form-associated: no events, no keyboard contract, no `size`/`data-scale` control geometry.
 
 ```html
 <ui-attachment filename="report.pdf" mime-type="application/pdf" size-bytes="48200"></ui-attachment>
@@ -160,4 +160,4 @@ into this type.
 Either posture floors at `--ui-attachment-min-inline-size` (`12em` default) in an unstyled flex row
 (test-the-whole-shape) — a ratified whole-shape floor (ADR-0223 clause 3(d)) that **survives both the fill
 default and the `[inline]` hug state**. The glyph rides the fixed content-icon register (`--md-sys-icon-md`)
-— there is no `[size]`/`[scale]` axis on this Display-class leaf.
+— there is no `size`/`data-scale` axis on this Display-class leaf.

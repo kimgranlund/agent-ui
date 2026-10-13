@@ -113,5 +113,5 @@ captions are a named future intake needing their own design pass. Each absence i
 
 ## Sizing
 
-Display-class (geometry.md): no `[size]`/`[scale]` row, no `--md-sys-height-*` — the lever is `aspect-ratio`
+Display-class (geometry.md): no `size`/`data-scale` row, no `--md-sys-height-*` — the lever is `aspect-ratio`
 plus the layout track. The host defaults to `inline-size: 100%` (the responsive-media reset).

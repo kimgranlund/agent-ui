@@ -5,7 +5,7 @@
 # (data/label) — the contract<->props trip-wire (bar-chart-descriptor.test.ts) targets this fence.
 tag: ui-bar-chart
 description: An axis-free horizontal bar list that compares magnitudes with a printed value, no ticks or legend.
-tier: display          # geometry size-class (Display band — NO control frame/height/[size]/[scale]; SPEC-R12/ADR-0107 cl.5)
+tier: display          # geometry size-class (Display band — NO control frame/height/size/data-scale; SPEC-R12/ADR-0107 cl.5)
 extends: UIElement     # a non-interactive, non-form-associated display LEAF (SPEC-R5)
 uses: []
 # marginal: 447 B gz — within the 2048 B gz per-control budget (ADR-0080 clause 3); solo 5067 B gz
@@ -127,7 +127,7 @@ The host defaults to a `16em` `min-inline-size` floor (`--ui-bar-chart-min-inlin
 unstyled chart in a flex row still paints a visible, non-collapsed, proportionally-correct box with zero
 consumer CSS (ADR-0102 Lane A). Bar/track thickness (`--ui-bar-chart-bar-size`) is density-**invariant**;
 row/column gap (`--ui-bar-chart-row-gap`/`-col-gap`) rides the `--md-sys-space` ladder and responds to an
-ancestor `[density]` for free. There is no `[size]`/`[scale]` attribute and no `--md-sys-height-*` lever
+ancestor `data-density` for free. There is no `size`/`data-scale` attribute and no `--md-sys-height-*` lever
 (SPEC-R12 AC2) — labels/values read the `--md-sys-typescale-body-medium-*` row directly.
 
 ## RTL

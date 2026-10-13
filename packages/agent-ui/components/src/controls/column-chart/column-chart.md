@@ -6,7 +6,7 @@
 # targets this fence.
 tag: ui-column-chart
 description: A category-major stacked (or dense single-series) column chart with a nice-number axis, a projected/ghost trailing column, a now-marker, and a static highlight callout.
-tier: display          # geometry size-class (Display band — NO control frame/height/[size]/[scale]; ADR-0229, mirrors ui-bar-chart/ui-line-chart/ui-pie-chart)
+tier: display          # geometry size-class (Display band — NO control frame/height/size/data-scale; ADR-0229, mirrors ui-bar-chart/ui-line-chart/ui-pie-chart)
 extends: UIElement     # a non-interactive, non-form-associated display LEAF
 uses: []
 
@@ -195,7 +195,7 @@ The host defaults to a `16em` `min-inline-size`/`min-block-size` floor (ADR-0229
 row) — a bare, unstyled chart in a flex row still paints a visible, non-collapsed, proportionally-correct
 box with zero consumer CSS. Mark geometry (segment radius, column gap) is density-**responsive** where
 tokened to `--md-sys-space`, density-**invariant** where it is a fixed shape constant (the chip pill
-radius). There is no `[size]`/`[scale]` attribute — chip/label text reads the
+radius). There is no `size`/`data-scale` attribute — chip/label text reads the
 `--md-sys-typescale-label-medium-*` row directly.
 
 ## Forced colors (WHCM)

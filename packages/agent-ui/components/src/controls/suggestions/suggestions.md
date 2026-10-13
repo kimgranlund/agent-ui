@@ -155,4 +155,4 @@ accepted residual matching `ui-table`'s own unlabeled-table posture.
 directly, alongside checkbox/switch/tag/badge): `--md-sys-compact-lg` for the box, the compact pad law
 (`2px + box·ratio·density`, never `h/2`) for the inline padding — deliberately lighter than a full
 Control-height `ui-button`, per ADR-0213's own "a suggestion is a conversational offer … deliberately
-lighter" framing. No `[size]`/`[scale]` attribute in v1 (ADR-0213 names no size axis).
+lighter" framing. No `size`/`data-scale` attribute in v1 (ADR-0213 names no size axis).

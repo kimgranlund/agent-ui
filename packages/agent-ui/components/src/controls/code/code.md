@@ -5,7 +5,7 @@
 # (language) — the contract↔props trip-wire (code-descriptor.test.ts) targets this fence.
 tag: ui-code
 description: A zero-machinery block that displays verbatim, whitespace-preserved code with its own horizontal scroll.
-tier: display          # geometry size-class (Display band — NO control frame/height/[size]/[scale]; SPEC-R20)
+tier: display          # geometry size-class (Display band — NO control frame/height/size/data-scale; SPEC-R20)
 extends: UIElement     # a non-interactive, non-form-associated, ZERO-MACHINERY display LEAF (SPEC-R1)
 uses: []
 # marginal: measured at the build wave (`npm run size`, manual discipline, ADR-0040/SPEC-N4) once
@@ -137,7 +137,7 @@ evidence, not a rider).
 
 ## Sizing
 
-Display-class (`geometry.md`): no control height, no `[size]`/`[scale]` attribute, no `[density]` legs —
+Display-class (`geometry.md`): no control height, no `size`/`data-scale` attribute, no `data-density` legs —
 every frame quantity (`--ui-code-pad-inline`/`-pad-block`, `--ui-code-radius`) is density-**invariant**
 (ADR-0113 cl.2), unlike a Pattern control's space-ladder rhythm. The type lever is the fixed
 `--md-sys-typescale-body-medium-*` row, not a size ramp.

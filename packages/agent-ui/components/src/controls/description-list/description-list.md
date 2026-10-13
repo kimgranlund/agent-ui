@@ -6,7 +6,7 @@
 # by BEHAVIOUR (component-descriptor.ts `kindOf`) as `json`: its codec's `from(null)` is `[]` (an array),
 # the tableRowsProp shape verbatim.
 tag: ui-description-list
-tier: display          # geometry size-class (Display band — NO control frame/height/[size]/[scale]; the ui-stat/ui-table posture, ADR-0201 cl.1) — the levers are the type matrix + the space ladder
+tier: display          # geometry size-class (Display band — NO control frame/height/size/data-scale; the ui-stat/ui-table posture, ADR-0201 cl.1) — the levers are the type matrix + the space ladder
 extends: UIElement     # a non-interactive, non-form-associated display LEAF (no events, no keyboard, no focus)
 uses: []
 # marginal: ui-description-list adds 209 B gz to the self-defining ui-* family (measured 2026-08-17 via

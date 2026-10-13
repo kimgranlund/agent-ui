@@ -5,7 +5,7 @@
 # the contract↔props trip-wire (ladder-descriptor.test.ts) targets this fence.
 tag: ui-ladder
 description: A labeled list of dimensional tiers shown as literal-length bars alongside their printed values.
-tier: display          # Display band — no control frame/height/[size]/[scale] (SPEC-R16/ADR-0118 cl.5)
+tier: display          # Display band — no control frame/height/size/data-scale (SPEC-R16/ADR-0118 cl.5)
 extends: UIElement     # a non-interactive display LEAF — NOT form-associated (SPEC-R9)
 uses: []
 # marginal: 282 B gz — within the 2048 B gz per-control budget (ADR-0080 clause 3); solo 5062 B gz
@@ -121,8 +121,8 @@ a color-only signifier.
 The host defaults to a `16em` `min-inline-size` floor (`--ui-ladder-min-inline-size`) — a bare, unstyled
 ladder in a flex row still paints a visible, non-collapsed list with zero consumer CSS (ADR-0102 Lane A).
 Bar thickness (`--ui-ladder-bar-size`) is density-**invariant**; row/column gap
-(`--ui-ladder-row-gap`/`-col-gap`) rides the `--md-sys-space` ladder and responds to an ancestor `[density]` for
-free. There is no `[size]`/`[scale]` attribute and no `--md-sys-height-*` lever (SPEC-R16 AC2).
+(`--ui-ladder-row-gap`/`-col-gap`) rides the `--md-sys-space` ladder and responds to an ancestor `data-density` for
+free. There is no `size`/`data-scale` attribute and no `--md-sys-height-*` lever (SPEC-R16 AC2).
 
 ## RTL
 

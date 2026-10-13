@@ -42,7 +42,7 @@ agent-ui realization. Worked exemplars:
 4. **Own exactly one scroll region** — [[composition-patterns]]'s scroll-ownership
    row owns this law (TKT-0004's settle-deferral lesson included); the one-line shape: decide
    the ONE overflowing element, target scroll-to code at it, sticky rides the box-model.
-5. **Set the axes on containers** — `[scale]` and `[density]` cascade; set them at region
+5. **Set the axes on containers** — `data-tier`, `data-scale` and `data-density` cascade (ADR-0245); set them at region
    roots so a whole area sizes together (`site/pages/sizing.ts` shows the tiers live).
    Theming a region = a `ui-theme-provider` boundary (mind the ink re-root — the patterns
    map's theming row). The fleet's ONE viewport-responsive token is ADR-0150's compact-body
@@ -54,7 +54,7 @@ agent-ui realization. Worked exemplars:
    needs them (the entry-control frame law is precedent, not license to hardcode).
 7. **Prove the WHOLE shape** — a `.browser.test.ts` asserting the screen's gestalt in a
    realistic viewport: the regions' bounding boxes are real (not 0×0/sliver), the scroll
-   region actually overflows and scrolls, `[scale]`/`[density]` changes move real pixels.
+   region actually overflows and scrolls, `data-tier`/`data-scale`/`data-density` changes move real pixels.
    Per-part assertions alone are the documented trap
    ([[component-testing]]'s whole-shape law).
 

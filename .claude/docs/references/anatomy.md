@@ -152,7 +152,7 @@ This doc carries no decisions of its own; it applies these ratified ADRs. Consul
 alternatives, and open questions:
 
 - [**ADR-0006**](../adr/0006-button-anatomy-optional-icon-slot-density-acceptance.md) — the optional leading slot,
-  the presence-driven `:has()` host-as-grid, and the law-true `[density]` acceptance (the gap is the one
+  the presence-driven `:has()` host-as-grid, and the law-true density acceptance (`data-density` today) (the gap is the one
   density-bearing quantity; the frame is density-invariant).
 - [**ADR-0012**](../adr/0012-button-anatomy-trailing-adornment-slot.md) — position slots × `data-role` roles as
   the **family** adornment standard: `leading`/`label`/`trailing`; `icon`/`caret` active + `tag`/`badge` reserved;

@@ -131,7 +131,7 @@ spillover overflow *menu* is a fenced, additive v2 — not built in v1.
 `ui-toolbar` owns **no `size` prop** — the Pattern-class geometry (`geometry.md`): its items take their own
 control height, and the toolbar's own contribution is padding + gap off the `--md-sys-space` ladder plus a
 **min-block-size floor** tied to the control-height register, so an empty or short bar still reads as a bar.
-`[scale]`/`[density]` ride ambiently (inherited), never as toolbar props.
+`data-tier`/`data-scale`/`data-density` ride ambiently (inherited), never as toolbar props.
 
 ## Posture — floating vs embedded
 

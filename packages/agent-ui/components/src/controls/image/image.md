@@ -12,7 +12,7 @@ tag: ui-image
 description: A URL-sourced image with a reserved aspect-ratio box (zero CLS), native lazy-loading, and an optional bottom scrim for overlay caption content.
 tier: display          # geometry size-class (Display band, geometry.md's "five size-classes" table: "non-text
                         # display ... intrinsic structural sizing" — a media box has no --md-sys-height-* control
-                        # frame, no [size]/[scale] control-band row; its lever is aspect-ratio + the layout track
+                        # frame, no size/data-scale control-band row; its lever is aspect-ratio + the layout track
                         # sizing it, the SAME posture as ui-avatar's box-off-the-widget-ramp would be wrong here
                         # because ui-image's box is arbitrary/author-sized, not a small fixed compact-ramp step)
 extends: UIElement     # a non-interactive, non-form-associated display LEAF (no events, no keyboard, no focus —
@@ -142,7 +142,7 @@ box at all.
 
 ## Sizing
 
-`ui-image` is a Display-class leaf (geometry.md): no `[size]`/`[scale]` control-band row, no
+`ui-image` is a Display-class leaf (geometry.md): no `size`/`data-scale` control-band row, no
 `--md-sys-height-*` consumption — the box's lever is `aspect-ratio` plus the layout track sizing it. The host
 defaults to `inline-size: 100%` (the common responsive-image reset), so a bare `<ui-image>` dropped into a card
 or hero slot fills its container's inline size and derives its block size from `aspect-ratio` alone.

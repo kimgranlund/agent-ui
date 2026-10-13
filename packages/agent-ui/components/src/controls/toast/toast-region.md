@@ -44,7 +44,7 @@ geometry:
   sizeClass: layout
   inset: var(--ui-toast-region-inset)      # = var(--md-sys-space-lg) — the fixed block-end/inline-end inset once popover-open
   gap: var(--ui-toast-region-gap)          # = var(--md-sys-space-sm) — the inter-toast stacking gap
-  note: ui-toast-region declares NO surface/radius/colour token chain (LLD-C8 — a pure layout element has no colour voice of its own, the ui-form-provider precedent) — each contained ui-toast supplies its own surface. No [size]/[scale] axis.
+  note: ui-toast-region declares NO surface/radius/colour token chain (LLD-C8 — a pure layout element has no colour voice of its own, the ui-form-provider precedent) — each contained ui-toast supplies its own surface. No size/data-scale axis.
 
 forcedColors: No forced-colors rule needed — the region paints nothing of its own (transparent background, pointer-events:none over the empty area); each contained ui-toast carries its own independent WHCM treatment.
 ---

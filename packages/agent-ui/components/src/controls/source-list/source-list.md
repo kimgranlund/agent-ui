@@ -10,7 +10,7 @@
 # byte-identical.
 tag: ui-source-list
 description: Source attribution as one aggregate leaf — a numbered list of {href, title, snippet?} sources, index markers assigned by array position, each entry's href gated by the fleet's safe-href scheme allowlist.
-tier: display          # geometry size-class (Display band — NO control frame/height/[size]/[scale]; the ui-description-list/ui-stat posture, ADR-0214 Decision cl.2 "Display-only leaf: no value mark, no action, no children")
+tier: display          # geometry size-class (Display band — NO control frame/height/size/data-scale; the ui-description-list/ui-stat posture, ADR-0214 Decision cl.2 "Display-only leaf: no value mark, no action, no children")
 extends: UIElement     # a non-interactive, non-form-associated display LEAF (no events, no keyboard contract of its own — the ONE exception is the platform-native link behaviour an allowed per-entry href stamps, ADR-0114 verbatim)
 uses: []
 # marginal: measured at the ADR-0214 build wave (`npm run size`) — one render effect + one hardened JSON

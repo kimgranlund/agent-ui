@@ -221,8 +221,8 @@ inserts no newline (single-line). The placeholder shows via a control-toggled `d
 ## Sizes
 
 `size` selects a step on the dimensional ramp (`sm` · `md` (default) · `lg`), setting the control height
-and font; an ancestor `[scale]` multiplies the frame and an ancestor `[density]` multiplies the
-adornment↔editor gap. The geometry follows the **Control size-class** in `geometry.md`: the block-size is
+and font; an ancestor `data-tier` and `data-scale` (ADR-0245) set the n the ramp derives from, and an
+ancestor `data-density` moves the adornment↔editor gap. The geometry follows the **Control size-class** in `geometry.md`: the block-size is
 the vertical lever (`padding-block` is always `0`), the value/text edge sits at `h/2`, and a leading/trailing
 slot edge at the emergent `½(h − icon)`. The field frame (border + radius) is drawn **on the host** so a
 slotted adornment sits inside the box; the corner is the fixed `--md-sys-shape-corner-base` rounded-rect (the

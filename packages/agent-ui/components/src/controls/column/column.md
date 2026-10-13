@@ -100,7 +100,7 @@ the element's **identity** (the tag names the main axis, A2UI-faithfully) — no
 
 - **`align`** (cross axis = inline) → `align-items`: `stretch` (default — children fill the column's width) · `start` (shrink-wrap to content width) · `end` · `baseline`. **`center` is NOT allowed on `ui-column`** — a column centers its children only by shrink-wrapping them, which defeats the fill-width default and is an anti-pattern for stacked content; an `align="center"` snaps back to `stretch` and has no `[align='center']` CSS rule. Use a `ui-row` (or wrap the content) for horizontal centering. (ADR-0030: default `start`→`stretch`.)
 - **`justify`** (main axis = block) → `justify-content`: `start` (default) · `center` · `end` · `between` · `around` · `evenly` (the `between`/`around`/`evenly` keywords map to `space-*`).
-- **`gap`** → `gap: var(--md-sys-space-{step})`: `none` (default) · `xs` · `sm` · `md` · `lg` · `xl` · `2xl` — the density-responsive layout-spacing ladder (ADR-0015 cl.4), **never** a control dimension. An ancestor `[density]` (`compact/comfortable/spacious`) re-multiplies the gap; `[scale]` (the `ui-sm…content-lg` tier, ADR-0032) does not touch it (spacing is rhythm, not frame).
+- **`gap`** → `gap: var(--md-sys-space-{step})`: `none` (default) · `xs` · `sm` · `md` · `lg` · `xl` · `2xl` — the density-responsive layout-spacing ladder (ADR-0015 cl.4), **never** a control dimension. An ancestor `data-density` (`compact/comfortable/spacious`) re-multiplies the gap; `data-scale` (the `ui-sm…content-lg` tier, ADR-0032) does not touch it (spacing is rhythm, not frame).
 - **`wrap`** → `flex-wrap` (boolean presence): present ⇒ children wrap onto multiple lines.
 
 ## Sizing
@@ -140,5 +140,5 @@ corruption (ADR-0100 cl.2).
 ## Geometry
 
 A layout primitive has **no control height** (`geometry.md`'s Container/layout class): the block-size is
-content-driven and spacing rides `--md-sys-space` × `[density]`, never `--md-sys-height-*`. A `forced-colors` block
+content-driven and spacing rides `--md-sys-space` × `data-density`, never `--md-sys-height-*`. A `forced-colors` block
 drops the tonal wash so a column never paints over system text.
