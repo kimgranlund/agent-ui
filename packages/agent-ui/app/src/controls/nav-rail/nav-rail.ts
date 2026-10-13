@@ -55,6 +55,7 @@ import { UIElement, prop, type PropsSchema, type ReactiveProps } from '@agent-ui
 // measured +945 B gz on the reactive+dom foundation row every consumer pays for (7442 → 8387 against a
 // 7680 B gz budget, GH #368). Same shape as the `controls/menu` import below.
 import { overlay } from '@agent-ui/components/traits/overlay'
+import '@agent-ui/components/controls/glyph' // the trigger chevron, a caret-down functional mark (ADR-0245 cl.5)
 import type { UIMenuElement } from '@agent-ui/components/controls/menu'
 import { SHELL_NARROW_BREAKPOINT_REM } from '../../shell-breakpoint.ts'
 import './nav-rail-group.ts'
@@ -97,6 +98,7 @@ export class UINavRailElement extends UIElement {
   // The `collapse="menu"` DOM parts — created ONCE (persist across reconnect, the parts-created-once
   // precedent). NOT the guard for listener/effect (re)registration — see `connected()`'s own comment.
   #trigger: HTMLButtonElement | null = null
+  #triggerLabel: HTMLElement | null = null
   #list: HTMLElement | null = null
 
   protected connected(): void {
@@ -172,6 +174,13 @@ export class UINavRailElement extends UIElement {
     const trigger = document.createElement('button')
     trigger.type = 'button'
     trigger.setAttribute('data-part', 'trigger')
+    const label = document.createElement('span')
+    label.setAttribute('data-part', 'trigger-label')
+    const chevron = document.createElement('ui-glyph')
+    chevron.setAttribute('symbol', 'caret-down')
+    chevron.setAttribute('data-part', 'trigger-chevron')
+    trigger.append(label, chevron)
+    this.#triggerLabel = label
     const list = document.createElement('div')
     list.setAttribute('data-part', 'list')
     list.id = `ui-nav-rail-list-${++_nextListId}`
@@ -193,7 +202,7 @@ export class UINavRailElement extends UIElement {
    *  and must be re-armed every time the element reconnects. */
   #wireMenu(trigger: HTMLButtonElement, list: HTMLElement): void {
     this.effect(() => {
-      trigger.textContent = this.#currentLabel()
+      if (this.#triggerLabel) this.#triggerLabel.textContent = this.#currentLabel()
     })
 
     // GH #378 — the menu arm's content model is LIVE, not frozen at first build. `#ensureMenuParts` moves

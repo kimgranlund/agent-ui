@@ -79,7 +79,8 @@
   --ui-nav-rail-context-pad-block-start-first: var(--md-sys-space-md);
   --ui-nav-rail-flyout-pad: var(--md-sys-space-xs);
   --ui-nav-rail-flyout-radius: var(--md-sys-shape-corner-base);
-  --ui-nav-rail-chevron-size: var(--md-sys-space-sm); /* SPEC-R11c/AC19 — the trigger's own chevron glyph */
+  /* SPEC-R11c/AC19: the trigger's chevron is a <ui-glyph symbol="caret-down"> child since the ADR-0245 cut (clause 5),
+     so its box is the shared 2n slot with the 2n - 2c mark inside, sized by glyph.css, never a token here. */
 
   /* GH #368 — the open `collapse="menu"` flyout's own sizing dials. The panel is a shrink-to-fit
      position:fixed box in the top layer, so this floor/ceiling pair is the ONLY thing that sizes it: it is
@@ -271,20 +272,16 @@
       outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
       outline-offset: calc(-1 * var(--md-sys-state-focus-ring-width)); /* inset — the row sits at the rail's own edge */
     }
-    :scope > [data-part='trigger']::after {
-      content: '';
+    /* The chevron (ADR-0245 clause 5): one caret-down mark from the ui-glyph path table, replacing the rotated
+       border trick, so it draws at the library glyph box and stroke like every other caret. */
+    :scope > [data-part='trigger'] > [data-part='trigger-chevron'] {
       flex: none;
-      inline-size: var(--ui-nav-rail-chevron-size);
-      block-size: var(--ui-nav-rail-chevron-size);
-      border-inline-end: 1.5px solid currentColor;
-      border-block-end: 1.5px solid currentColor;
-      transform: rotate(45deg);
       transition: transform var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
     }
     /* Re-keyed off the trigger's OWN expanded state (nav-rail.ts keeps `aria-expanded` truthful on every
-       path) — the UA `[open]` state it used to read no longer exists. */
-    :scope > [data-part='trigger'][aria-expanded='true']::after {
-      transform: rotate(-135deg);
+       path); the UA `[open]` state it used to read no longer exists. */
+    :scope > [data-part='trigger'][aria-expanded='true'] > [data-part='trigger-chevron'] {
+      transform: rotate(180deg);
     }
     /* Narrow + not yet armed (the frame between first paint and the band observer's first callback):
        nothing in flow, so the full list never flashes under the trigger. */
@@ -325,7 +322,7 @@
      transition (it targeted a `[data-part='group-chevron']` that exists nowhere in the family, so it zeroed
      nothing — a check that could never bite). */
   @media (prefers-reduced-motion: reduce) {
-    :scope > [data-part='trigger']::after {
+    :scope > [data-part='trigger'] > [data-part='trigger-chevron'] {
       transition: none;
     }
   }
