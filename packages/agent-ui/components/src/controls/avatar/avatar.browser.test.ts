@@ -57,11 +57,11 @@ describe('ui-avatar — control-height square box (SPEC-R20 AC1; ADR-0112 Amendm
     expect(el.getBoundingClientRect().width).toBe(36)
   })
 
-  it('ui-avatar and ui-button share the same height row: the avatar box equals --md-sys-height-md', () => {
+  it('ui-avatar and ui-button share the same height row: the avatar box equals the derived control height (4n, ADR-0245)', () => {
     const el = mount('<ui-avatar identity="Ada Lovelace"></ui-avatar>')
-    // --md-sys-height-md is an unregistered calc() since ADR-0245: the raw text parses as NaN, so read it through a probe box
+    // --md-sys-height is an unregistered calc() (4n): the raw text parses as NaN, so read it through a probe box
     const probe = document.createElement('div')
-    probe.style.cssText = 'position:absolute;visibility:hidden;inline-size:1px;block-size:var(--md-sys-height-md)'
+    probe.style.cssText = 'position:absolute;visibility:hidden;inline-size:1px;block-size:var(--md-sys-height)'
     el.parentElement!.append(probe)
     const row = probe.getBoundingClientRect().height
     probe.remove()
