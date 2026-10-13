@@ -87,28 +87,31 @@ const contrastOf = (a: string, b: string): number => {
 // ── S3 browser smoke: dot box = --md-sys-compact (exact-px per [size] + [scale]×[size]) ─────────────
 
 describe('ui-radio browser smoke — box geometry (exact px, ADR-0041)', () => {
-  it('radio-box-md: ::before circle = 16px (--md-sys-compact-md at default ui-md scale)', () => {
+  it('radio-box-md: ::before circle = 14px (--md-sys-compact-md, the derived compact ramp)', () => {
     const el = mount(document.createElement('ui-radio') as UIRadioElement)
     el.textContent = 'Test'
-    // --md-sys-compact-md = 16px at the default ui-md scale (ADR-0041 clause 2)
-    expect(Number.parseFloat(getComputedStyle(el, '::before').width)).toBe(16)
-    expect(Number.parseFloat(getComputedStyle(el, '::before').height)).toBe(16)
+    // --md-sys-compact-md = 14px on the derived ramp (ADR-0041 clause 2, ADR-0245)
+    expect(Number.parseFloat(getComputedStyle(el, '::before').width)).toBe(14)
+    expect(Number.parseFloat(getComputedStyle(el, '::before').height)).toBe(14)
   })
 
-  it('radio-box-sm: [size=sm] → 14px circle; [size=lg] → 18px circle (the compact ramp)', () => {
+  it('radio-box-sm: [size=sm] → 12px circle; [size=lg] → 16px circle (the compact ramp)', () => {
     const sm = mount(document.createElement('ui-radio') as UIRadioElement)
     sm.setAttribute('size', 'sm')
     sm.textContent = 'Small'
-    expect(Number.parseFloat(getComputedStyle(sm, '::before').width)).toBe(14) // --md-sys-compact-sm
+    expect(Number.parseFloat(getComputedStyle(sm, '::before').width)).toBe(12) // --md-sys-compact-sm
 
     const lg = mount(document.createElement('ui-radio') as UIRadioElement)
     lg.setAttribute('size', 'lg')
     lg.textContent = 'Large'
-    expect(Number.parseFloat(getComputedStyle(lg, '::before').width)).toBe(18) // --md-sys-compact-lg
+    expect(Number.parseFloat(getComputedStyle(lg, '::before').width)).toBe(16) // --md-sys-compact-lg
   })
 
   it('outside any region the dot keeps today\'s 56% of the box (22% inset)', () => {
-    const el = mount(document.createElement('ui-radio') as UIRadioElement)
+    const wrapper = mount(document.createElement('div'))
+    wrapper.setAttribute('data-foundations', 'legacy') // ADR-0245 cl.10e: the opt-out renders today's geometry
+    const el = document.createElement('ui-radio') as UIRadioElement
+    wrapper.append(el)
     el.setAttribute('checked', '')
     el.textContent = 'Test'
     const dot = getComputedStyle(el, '::after')
