@@ -328,6 +328,44 @@ describe('valueCodec — TKT-0023 unfocused-write resync', () => {
     host.remove()
   })
 
+  it('date + formatOnWrite (T-0135): an unfocused ISO write shows as the locale date, canonical stays the ISO', async () => {
+    const { host } = makeHost()
+    const opts = dateCodecOptions('en-US')
+    const codec = valueCodec(host, { ...opts, formatOnWrite: true })
+
+    host.value = '2024-07-04'
+    await whenFlushed()
+
+    expect(host.value).toBe(opts.format('2024-07-04'))
+    expect(codec.canonical.value).toBe('2024-07-04')
+    expect(codec.hasError.value).toBe(false)
+    host.remove()
+  })
+
+  it('date without formatOnWrite leaves an unfocused ISO write as typed (only blur reformats)', async () => {
+    const { host } = makeHost()
+    valueCodec(host, dateCodecOptions('en-US'))
+
+    host.value = '2024-07-04'
+    await whenFlushed()
+
+    expect(host.value).toBe('2024-07-04')
+    host.remove()
+  })
+
+  it('the display of the current canonical is known-good: no re-parse, so a format the parser cannot read back is no error', async () => {
+    const { host } = makeHost()
+    const unreadable = { parse: (v: string) => (/^\d+$/.test(v) ? v : null), format: (v: string) => `#${v}`, errorMessage: 'x' }
+    const codec = valueCodec(host, unreadable)
+    codec.setCanonical('42')
+    host.value = '#42'
+    await whenFlushed()
+
+    expect(codec.hasError.value).toBe(false)
+    expect(codec.canonical.value).toBe('42')
+    host.remove()
+  })
+
   it('time: an unfocused programmatic write reaches canonical with NO blur dispatched', async () => {
     const { host } = makeHost()
     const codec = valueCodec(host, timeCodecOptions('en-US'))
