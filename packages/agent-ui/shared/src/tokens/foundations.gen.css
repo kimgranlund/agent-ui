@@ -22,6 +22,7 @@
   --md-sys-c: calc(round(up, var(--md-sys-n) / 4, 1) * 1px);
   --md-sys-height: calc(var(--md-sys-n) * 4px);
   --md-sys-inset: calc(var(--md-sys-n) * 1px);
+  --md-sys-label-inset: calc(var(--md-sys-inset) - var(--md-sys-c));
   --md-sys-radius: calc(var(--md-sys-n) * 1px);
   --md-sys-icon-box: calc(var(--md-sys-n) * 2px);
   --md-sys-glyph-box: calc(var(--md-sys-n) * 2px - 2 * var(--md-sys-c));
@@ -37,6 +38,9 @@
   --md-sys-type-field-label: max(9px, calc((9 + 1 * (var(--md-sys-n) - 5)) * 1px));
   --md-sys-type-group-label: max(9px, calc((9 + 0.5 * (var(--md-sys-n) - 5)) * 1px));
   --md-sys-type-floor: 9px;
+  --md-sys-chip-margin: var(--md-sys-c);
+  --md-sys-chip-gutter: var(--md-sys-c);
+  --md-sys-chip-radius: calc(round(up, var(--md-sys-n) / 2, 1) * 1px);
   --md-sys-group-margin: calc(var(--md-sys-inset) + var(--md-sys-c));
   --md-sys-group-gutter: var(--md-sys-c);
   --md-sys-group-radius: calc(var(--md-sys-radius) + var(--md-sys-c));
