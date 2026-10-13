@@ -53,7 +53,7 @@
      --md-sys-shape-corner-base rung), consumer-repointable (conversation.css repoints it to the exact
      bubble radius on inline mounts — the TKT-0062 repoint pattern). Never a literal beyond the
      standard corner-base fallback. */
-  --ui-surface-host-working-radius: var(--md-sys-shape-corner-base, 12px);
+  --ui-surface-host-working-radius: var(--md-sys-card-radius, var(--md-sys-shape-corner-base, 12px));
   /* GH 1150 — STRUCTURAL containment for the [bare] chat mount. GH 241's original "chromeless" contract
      made containment producer-dependent: a payload rooted in a bare Column (no Card) rendered its title/
      buttons flush against the surface edge with nothing around it, and the ADR-0199 :state(working) glow

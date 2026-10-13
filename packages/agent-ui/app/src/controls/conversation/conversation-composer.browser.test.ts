@@ -204,7 +204,7 @@ describe('ui-conversation-composer — GH #891 SPEC-R9: the chip is label + a RE
     expect(el.querySelector('[data-part="reference-chip-sigil"]'), 'the sigil node is gone from the DOM').toBeNull()
 
     const icon = chip.querySelector<HTMLElement>('[data-part="reference-chip-icon"]')!
-    expect(icon.getAttribute('glyph')).toBe('star')
+    expect(icon.getAttribute('symbol')).toBe('star')
     // The glyph really RESOLVED against the curated pack (an unknown name renders data-icon-missing) and
     // paints a non-zero box inside the pill, left of the label.
     expect(icon.hasAttribute('data-icon-missing'), `${server.browser}: 'star' must exist in the curated set`).toBe(false)
