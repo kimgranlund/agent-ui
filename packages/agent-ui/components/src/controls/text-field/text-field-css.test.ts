@@ -63,7 +63,7 @@ describe('text-field.css — structure + sectioning (s9)', () => {
       const b = whereBlock(`:where(ui-text-field[size='${size}'])`)
       expect(b).toMatch(/--ui-text-field-height:/)
       // ADR-0038 / ADR-0035 conformance: icon is now the shared §1-SET --md-sys-icon-* table (not calc × --md-sys-scale)
-      expect(b).toMatch(new RegExp(`--ui-text-field-icon:\\s*var\\(--md-sys-icon-${size}\\)`))
+      expect(b).toMatch(new RegExp(`--ui-text-field-icon:\\s*var\\(--md-sys-icon-box, var\\(--md-sys-icon-${size}\\)\\)`))
     }
   })
 })
@@ -394,7 +394,7 @@ describe('text-field.css — Wave-5A numeric adornment rules (ADR-0047 CSS struc
 // passes because the new scope refs are `--ui-text-field-message-*` (the own chain).
 describe('text-field.css — visible message node (ADR-0029 A1, extends ADR-0014)', () => {
   it('declares the --ui-text-field-message-font and --ui-text-field-message-ink tokens in the :where() block', () => {
-    expect(tokenBlock).toMatch(/--ui-text-field-message-font:\s*var\(--md-sys-font-sm\)/)
+    expect(tokenBlock).toMatch(/--ui-text-field-message-font:\s*var\(--md-sys-type-field-label, var\(--md-sys-font-sm\)\)/)
     expect(tokenBlock).toMatch(/--ui-text-field-message-ink:\s*var\(--md-sys-color-danger-on-surface-variant\)/) // AA-gated danger TEXT ink (2026-07-02 audit item 1; bare --md-sys-color-danger is 4.05:1 light, an AA text fail)
   })
 

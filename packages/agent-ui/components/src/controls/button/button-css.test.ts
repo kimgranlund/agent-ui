@@ -169,7 +169,7 @@ describe('button.css — the shared focus ring (ADR-0009)', () => {
 // lands at the emergent ½(h−font) edge — NOT --ui-ind (an inline affordance at icon size is the oversize bug).
 describe('button.css — role-driven glyph sizing, caret = font (ADR-0012)', () => {
   it('--ui-button-glyph is declared = the font (the inline-affordance ramp; --ui-glyph-ratio 1)', () => {
-    expect(tokenBlock).toMatch(/--ui-button-glyph:\s*var\(--ui-button-font\)/)
+    expect(tokenBlock).toMatch(/--ui-button-glyph:\s*var\(--md-sys-glyph-box, var\(--ui-button-font\)\)/)
   })
 
   it('the CELL stays icon-sized for BOTH slots (border-box, so a role inset stays within the icon cell)', () => {

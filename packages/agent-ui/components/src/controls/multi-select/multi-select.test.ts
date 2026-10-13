@@ -664,22 +664,22 @@ const multiSelectCss = readFileSync(`${MULTI_SELECT_DIR}/multi-select.css`, 'utf
 
 describe('multi-select.css — geometry trip-wire (ms-geometry-tokens)', () => {
   it('ms-geometry-tokens: the virtual lever resolves off the §1-row ramp (ADR-0038), no ad hoc size value', () => {
-    expect(multiSelectCss).toMatch(/--ui-multi-select-height:\s*var\(--md-sys-height-md\)/)
-    expect(multiSelectCss).toMatch(/--ui-multi-select-font:\s*var\(--md-sys-font-md\)/)
-    expect(multiSelectCss).toMatch(/--ui-multi-select-icon:\s*var\(--md-sys-icon-md\)/)
-    expect(multiSelectCss).toMatch(/--ui-multi-select-glyph:\s*var\(--ui-multi-select-font\)/) // = font, §4.1
+    expect(multiSelectCss).toMatch(/--ui-multi-select-height:\s*var\(--md-sys-height, var\(--md-sys-height-md\)\)/)
+    expect(multiSelectCss).toMatch(/--ui-multi-select-font:\s*var\(--md-sys-type-control, var\(--md-sys-font-md\)\)/)
+    expect(multiSelectCss).toMatch(/--ui-multi-select-icon:\s*var\(--md-sys-icon-box, var\(--md-sys-icon-md\)\)/)
+    expect(multiSelectCss).toMatch(/--ui-multi-select-glyph:\s*var\(--md-sys-glyph-box, var\(--ui-multi-select-font\)\)/) // = font, §4.1
   })
 
   it('ms-geometry-tokens: [size=sm]/[size=lg] repoint the SAME three tokens (the ramp, not a multiplier)', () => {
-    expect(multiSelectCss).toMatch(/ui-multi-select\[size='sm'\][\s\S]{0,200}--ui-multi-select-height:\s*var\(--md-sys-height-sm\)/)
-    expect(multiSelectCss).toMatch(/ui-multi-select\[size='lg'\][\s\S]{0,200}--ui-multi-select-height:\s*var\(--md-sys-height-lg\)/)
+    expect(multiSelectCss).toMatch(/ui-multi-select\[size='sm'\][\s\S]{0,200}--ui-multi-select-height:\s*var\(--md-sys-height, var\(--md-sys-height-sm\)\)/)
+    expect(multiSelectCss).toMatch(/ui-multi-select\[size='lg'\][\s\S]{0,200}--ui-multi-select-height:\s*var\(--md-sys-height, var\(--md-sys-height-lg\)\)/)
   })
 
   it('ms-geometry-tokens: option padding is DERIVED off the lever (the legacy item-pad formula, not a literal)', () => {
     expect(multiSelectCss).toMatch(
       /--ui-multi-select-option-block:\s*calc\(\(var\(--ui-multi-select-height\) - var\(--ui-multi-select-font\)\) \/ 2\)/,
     )
-    expect(multiSelectCss).toMatch(/--ui-multi-select-option-inline:\s*calc\(var\(--ui-multi-select-height\) \/ 4\)/)
+    expect(multiSelectCss).toMatch(/--ui-multi-select-option-inline:\s*var\(--ui-multi-select-option-inline-derived, calc\(var\(--ui-multi-select-height\) \/ 4\)\)/)
   })
 
   it('ms-geometry-tokens: tokens declared in the :where() token block, consumed only in @scope', () => {

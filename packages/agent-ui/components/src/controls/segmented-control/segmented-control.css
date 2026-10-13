@@ -40,7 +40,12 @@
 
   /* The outer rounded track (segments carry NO divider borders — Kim's ruling, see the styles block). */
   --ui-segmented-control-track: var(--md-sys-color-neutral-outline);
-  --ui-segmented-control-radius: var(--md-sys-shape-corner-base);
+  --ui-segmented-control-radius: var(--md-sys-group-radius, var(--md-sys-shape-corner-base)); /* group level n + c (ADR-0245 cl.6) */
+  /* Track padding and segment gap are c inside a data-tier region (ADR-0245 cl.3); outside one there is
+     none, and the indicator sits 1px inside the track outline as before. */
+  --ui-segmented-control-pad: var(--md-sys-c, 0px);
+  --ui-segmented-control-gap: var(--md-sys-c, 0px);
+  --ui-segmented-control-inner-inset: var(--md-sys-c, 1px);
 
   /* The shared moving indicator's fill — the AA-safe accent role minted for the calendar (ADR-0048/0058),
      reused here as the strongest fill-presence non-color signal (ADR-0057). */
@@ -90,6 +95,8 @@ ui-segmented-control:dir(rtl) {
    own z-depth scope"), letting surrounding page content interleave with the control's own layers. */
 ui-segmented-control {
   display: grid;
+  gap: var(--ui-segmented-control-gap);
+  padding: var(--ui-segmented-control-pad);
   position: relative;
   isolation: isolate;
   box-sizing: border-box;
@@ -136,10 +143,10 @@ ui-segmented-control::before {
   content: '';
   position: absolute;
   z-index: 0; /* behind the segment text + focus ring (z-index:1 below) */
-  inset-block-start: 0;
-  inset-inline-start: 0;
+  inset-block-start: var(--ui-segmented-control-pad);
+  inset-inline-start: var(--ui-segmented-control-pad);
   background: var(--ui-segmented-control-fill);
-  border-radius: calc(var(--ui-segmented-control-radius) - 1px); /* the inner radius; ends align to the track */
+  border-radius: calc(var(--ui-segmented-control-radius) - var(--ui-segmented-control-inner-inset)); /* the inner radius; ends align to the track */
   transition: transform var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard); /* consumed, not hardcoded */
 }
 @media (prefers-reduced-motion: reduce) {
@@ -148,17 +155,17 @@ ui-segmented-control::before {
   }
 }
 ui-segmented-control[orientation='horizontal']::before {
-  inline-size: calc(100% / var(--ui-segmented-control-count, 1));
-  block-size: 100%;
+  inline-size: calc((100% - 2 * var(--ui-segmented-control-pad) - (var(--ui-segmented-control-count, 1) - 1) * var(--ui-segmented-control-gap)) / var(--ui-segmented-control-count, 1));
+  block-size: calc(100% - 2 * var(--ui-segmented-control-pad));
   /* the anchor (inset-inline-start) already flips under RTL via logical properties; `translateX` is
      PHYSICAL, so the direction sign must flip too (bug #1380) — otherwise a positive index slides
      the indicator further right in RTL, off the RIGHT-anchored first cell and outside the track. */
-  transform: translateX(calc(var(--ui-segmented-control-direction, 1) * var(--ui-segmented-control-index, 0) * 100%));
+  transform: translateX(calc(var(--ui-segmented-control-direction, 1) * var(--ui-segmented-control-index, 0) * (100% + var(--ui-segmented-control-gap))));
 }
 ui-segmented-control[orientation='vertical']::before {
-  inline-size: 100%;
-  block-size: calc(100% / var(--ui-segmented-control-count, 1));
-  transform: translateY(calc(var(--ui-segmented-control-index, 0) * 100%));
+  inline-size: calc(100% - 2 * var(--ui-segmented-control-pad));
+  block-size: calc((100% - 2 * var(--ui-segmented-control-pad) - (var(--ui-segmented-control-count, 1) - 1) * var(--ui-segmented-control-gap)) / var(--ui-segmented-control-count, 1));
+  transform: translateY(calc(var(--ui-segmented-control-index, 0) * (100% + var(--ui-segmented-control-gap))));
 }
 /* No segment checked → hide the indicator entirely (it appears instantly on the first selection and only
    slides between subsequent ones). */
@@ -177,7 +184,7 @@ ui-segmented-control ui-segment {
 
   block-size: var(--ui-segmented-control-segment-height); /* Control-height ramp */
   padding-block: 0; /* block-size is the vertical lever */
-  padding-inline: calc(var(--ui-segmented-control-segment-height) / 2); /* slotless-edge pad, geometry.md */
+  padding-inline: calc(var(--ui-segmented-control-segment-height) / 2); /* slotless-edge pad h/2 = 2n at 4n (ADR-0245 cl.3), derived with the height */
   font-size: var(--ui-segmented-control-segment-font);
   line-height: var(--md-sys-control-line-height); /* single-line control standard, ADR-0036 */
   white-space: nowrap; /* a segment is a single-line control — labels never wrap (GH #1178) */

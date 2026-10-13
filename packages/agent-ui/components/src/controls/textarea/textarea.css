@@ -72,18 +72,19 @@
   --ui-textarea-line-height: 1.5; /* prose line-height — NEVER the single-line control's line-height:1 (geometry.md) */
   --ui-textarea-line-box: calc(var(--ui-textarea-font) * var(--ui-textarea-line-height)); /* one rendered text row */
   --ui-textarea-padding-block: calc(var(--ui-textarea-font) * 0.5); /* a comfortable text inset (ADR-0134) — never 0 */
-  --ui-textarea-padding-inline: calc(var(--ui-textarea-font) * 0.75);
+  --ui-textarea-padding-inline: var(--md-sys-inset, calc(var(--ui-textarea-font) * 0.75)); /* n in a data-tier region (ADR-0245 cl.3) */
   --ui-textarea-rows: 3; /* the JS-set --ui-textarea-rows inline custom property overrides this per-instance (textarea.ts) */
   --ui-textarea-min-block-size: calc(var(--ui-textarea-rows) * var(--ui-textarea-line-box) + 2 * var(--ui-textarea-padding-block));
 
   /* Size-INVARIANT frame quantities — the entry-control class referents (geometry.md "Frame quantities that
      split by control class"), the SAME fleet tokens ui-text-field's #71/#21 amendments introduced. */
-  --ui-textarea-radius: var(--md-sys-shape-corner-base); /* fixed rounded-rect — the container-fleet referent, not the action h/2 pill */
+  --ui-textarea-corner-shape: var(--md-sys-corner-shape, round); /* squircle in a data-tier region (ADR-0245 cl.3) */
+  --ui-textarea-radius: var(--md-sys-radius, var(--md-sys-shape-corner-base)); /* fixed rounded-rect — the container-fleet referent, not the action h/2 pill */
   --ui-textarea-min-inline-size: 20ch; /* the [inline] hug-state typing-width floor (ADR-0223 clause 3(b), superseding ADR-0021's default-state placement) — native <textarea> parity so a hugging textarea is hittable. The FILL default needs no floor: the container is the floor. Token name + default unchanged. */
 
   /* Visible inline-validation message tokens (ADR-0029 A1, the text-field precedent) — the .ui-textarea-message
      node (control-managed, aria-describedby target) becomes VISIBLE when non-empty under :state(user-invalid). */
-  --ui-textarea-message-font: var(--md-sys-type-control, var(--md-sys-font-sm));
+  --ui-textarea-message-font: var(--md-sys-type-field-label, var(--md-sys-font-sm));
   --ui-textarea-message-ink: var(--md-sys-color-danger-on-surface-variant); /* AA-gated on-surface danger text ink */
 }
 
@@ -137,6 +138,7 @@
 
     border: 1px solid var(--ui-textarea-border);
     border-radius: var(--ui-textarea-radius);
+    corner-shape: var(--ui-textarea-corner-shape);
     cursor: text;
   }
 

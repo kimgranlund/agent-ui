@@ -63,7 +63,9 @@
   --ui-select-ink-filled: var(--md-sys-color-neutral-on-surface-variant);
   --ui-select-ink-hover: var(--md-sys-color-neutral-on-surface-variant);
   --ui-select-ink-focus: var(--md-sys-color-neutral-on-surface);
-  --ui-select-radius: var(--md-sys-shape-corner-base); /* fixed rounded-rect radius, like text-field */
+  --ui-select-edge: var(--md-sys-inset, calc(var(--ui-select-height) / 2)); /* the label edge: n in a data-tier region (ADR-0245 cl.3), h/2 outside */
+  --ui-select-corner-shape: var(--md-sys-corner-shape, round); /* squircle in a data-tier region */
+  --ui-select-radius: var(--md-sys-radius, var(--md-sys-shape-corner-base)); /* fixed rounded-rect radius, like text-field */
 
   /* ── Trigger geometry (Control class, default size = md) — off the §1-row ramp (ADR-0038).
      height/font/icon from the explicit per-[scale] table; gap = font/2 × density (on `*`).
@@ -73,7 +75,7 @@
   --ui-select-font: var(--md-sys-type-control, var(--md-sys-font-md));
   --ui-select-gap: var(--md-sys-inset, var(--md-sys-gap-md));          /* the density-bearing column-gap */
   --ui-select-icon: var(--md-sys-icon-box, var(--md-sys-icon-md));        /* the icon-cell size (caret CELL is icon-wide) */
-  --ui-select-glyph: var(--ui-select-font);   /* caret GLYPH = font (§4.1 caret law) */
+  --ui-select-glyph: var(--md-sys-glyph-box, var(--ui-select-font));   /* caret GLYPH = font (§4.1 caret law) */
 
   /* ── Sizing floor — the [inline] hug-state floor (ADR-0223 cl.3(b), superseding ADR-0021's
      default-state placement): a HUGGING select with no selection or an empty placeholder needs a
@@ -95,7 +97,7 @@
   --ui-select-listbox-bg: var(--md-sys-color-neutral-surface);
   --ui-select-listbox-ink: var(--md-sys-color-neutral-on-surface);
   --ui-select-listbox-outline: var(--md-sys-color-neutral-outline-variant);
-  --ui-select-listbox-radius: var(--md-sys-shape-corner-base);
+  --ui-select-listbox-radius: var(--md-sys-group-radius, var(--md-sys-shape-corner-base));
   /* GH #906 — the #874 fleet unobtrusive-scrollbar idiom (own-chain off the shared dimensional
      constant + colour roles, TKT-0066 item 5 law): this panel was fully untreated before (raw
      platform default), painting the chunky always-visible scrollbar the issue reports. */
@@ -116,7 +118,7 @@
          (geometry.md), applied on the block axis to the option's own text (glyph = font here) —
          so the option row's rendered content-box height == the trigger height exactly, and both
          grow together under [size]. */
-  --ui-select-listbox-padding: calc(var(--ui-select-height) / 4); /* panel-edge inset + inter-row gap (feeds --ui-box-inset below) */
+  --ui-select-listbox-padding: var(--md-sys-c, calc(var(--ui-select-height) / 4)); /* panel-edge inset + inter-row gap (feeds --ui-box-inset below) */
   --ui-select-listbox-min-inline-size: 12ch;       /* floor: at least as wide as a short option */
 
   /* Panel max-block-size (TKT-0027) — public dial, default min(50vh, 12 real option rows): the
@@ -134,13 +136,14 @@
      computed the CONTENT box (12 rows + 13 insets, no border term) — without this the 12th row
      would overflow its own cap by exactly the 1px+1px border width (FIXED 2026-07-12, TKT-0027
      browser-leg finding, same shape as ui-menu). */
-  --ui-select-listbox-max-block-size: min(50vh, calc(12 * var(--ui-select-height) + 13 * var(--ui-select-listbox-padding) + 2px));
+  --ui-select-listbox-max-block-size: min(50vh, calc(12 * var(--ui-select-height) + 13 * var(--ui-select-listbox-padding) + 1px + 1px)); /* the two hairline borders */
 
   /* ── Option rows — legacy item-pad (§5.1 / ROV-C5): padding-based row height, NOT a fixed
      --md-sys-compact widget box. Options are text list items, not stand-alone widgets. The row
      radius is inset from the listbox shell radius (nested-radius: shell − padding, ADR-0018). */
   --ui-select-option-block: calc((var(--ui-select-height) - var(--ui-select-font)) / 2); /* (h−font)/2 — row height == trigger height */
-  --ui-select-option-inline: calc(var(--ui-select-height) / 4);            /* h/4 — pairs with listbox-padding to total h/2 */
+  --ui-select-option-inline: var(--ui-select-option-inline-derived, calc(var(--ui-select-height) / 4));            /* h/4 — pairs with listbox-padding to total h/2 */
+  --ui-select-option-inline-derived: calc(var(--md-sys-inset) - var(--md-sys-c)); /* undefined outside a data-tier region, so the h/4 fallback above wins */
   --ui-select-option-font: var(--ui-select-font);   /* options were size-blind on FONT too (bug fix) — now the ramp */
   --ui-select-option-radius: calc(var(--ui-select-listbox-radius) - var(--ui-select-listbox-padding)); /* nested-radius off the REAL inset (was a hardcoded 4px, ADR-0018) */
   --ui-select-option-bg-hover: var(--md-sys-color-neutral-surface-high);
@@ -225,7 +228,7 @@
 
     block-size: var(--ui-select-height);
     padding-block: 0; /* NEVER block padding — geometry law */
-    padding-inline-start: calc(var(--ui-select-height) / 2);   /* h/2 label edge */
+    padding-inline-start: var(--ui-select-edge);   /* h/2 label edge */
     padding-inline-end: calc((var(--ui-select-height) - var(--ui-select-icon)) / 2); /* ½(h−icon) caret edge */
     min-inline-size: 0; /* allow the trigger to shrink within a narrow host (the host sets the floor) */
 
@@ -235,6 +238,7 @@
     color: var(--ui-select-ink);
     border: 1px solid var(--ui-select-border);
     border-radius: var(--ui-select-radius);
+    corner-shape: var(--ui-select-corner-shape);
     cursor: pointer;
     text-align: start;
     -webkit-user-select: none;
