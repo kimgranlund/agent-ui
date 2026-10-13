@@ -89,9 +89,9 @@ geometry:
   sizeClass: indicator
   posture: fill (block-level flex host, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-flex + hug   # Fill by Default — slice 2 (action/selection); the pill track below keeps its fixed size either way
   blockSize: var(--ui-switch-box)                               # the widget box height = --md-sys-compact-{size} (ADR-0041 widget ramp)
-  inlineSize: calc(var(--ui-switch-box) * 1.8)                 # the pill track ≈ 1.8× the box (density-invariant)
+  inlineSize: calc(2 * var(--ui-switch-box) - 2 * var(--md-sys-c))   # the pill track = 2 thumb + 2c inside an opt-in data-tier region (ADR-0245 cl.3); ≈ 1.8× the box outside (c falls back to box/10)
   radius: calc(var(--ui-switch-box) / 2)                       # pill radius = box/2 (the track border-radius)
-  thumbSize: calc(var(--ui-switch-box) - 2 * var(--md-sys-widget-inset))   # ADR-0041 cl.3: thumb = box − 4px
+  thumbSize: calc(var(--ui-switch-box) - 2 * var(--md-sys-c))   # 2n − 2c inside a region (ADR-0245 cl.3); box − 4px outside (ADR-0041 cl.3, c falls back to --md-sys-widget-inset)
 
 forcedColors: A `@media (forced-colors: active)` block renders the track as Canvas + ButtonText border (unchecked) or Highlight + Highlight border (checked), and the thumb as ButtonText / HighlightText. The `:focus-visible` ring survives via `--md-sys-color-focus-ring → Highlight` (the token layer's FC mapping) without a per-control rule.
 ---

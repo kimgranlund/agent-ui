@@ -33,7 +33,7 @@
   /* Label gap — the rhythm between the box and the optional label text (density-bearing, via --md-sys-gap-md). */
   --ui-checkbox-gap: var(--md-sys-inset, var(--md-sys-gap-md));
 
-  /* Mark box — the check and the dash span 2n - 2c (--md-sys-glyph-box, ADR-0245 cl.3/4) inside an opt-in region,
+  /* Mark box: the check and the dash span 2n - 2c (--md-sys-glyph-box, ADR-0245 cl.3/4) inside an opt-in region,
      centred in the 2n box (inset c); outside, today's 60% of the box inset 20%. The pseudo-element marks stay
      (a ui-glyph child would swap the filled clip-path tick for a stroke and move the default render). */
   --ui-checkbox-mark: var(--md-sys-glyph-box, calc(var(--ui-checkbox-box) * 0.6));
@@ -175,7 +175,7 @@
     clip-path: polygon(14% 44%, 0% 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
   }
 
-  /* Indeterminate dash — a thin horizontal bar centered within the box (glyph-stroke tall, the mark box wide). */
+  /* Indeterminate dash: a thin horizontal bar centered within the box (glyph-stroke tall, the mark box wide). */
   :scope:state(indeterminate)::after {
     background-color: var(--ui-checkbox-ink);
     inset-inline-start: var(--ui-checkbox-mark-inset);

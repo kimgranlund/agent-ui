@@ -13,6 +13,7 @@ import { server, cdp } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css'
 import './progress.css'
 import './progress.ts'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 const mounted: HTMLElement[] = []
 const mount = (markup: string): HTMLElement => {
@@ -246,4 +247,32 @@ describe('ui-progress — forced colors (SPEC-R19 AC1)', () => {
       await session.send('Emulation.setEmulatedMedia', { features: [] })
     }
   })
+})
+
+// ADR-0245 clause 3: the track is 2c thick and the cell gap c inside an opt-in region (today's 4px and 2px outside).
+describe('ui-progress: track and cell gap geometry', () => {
+  const track = (el: HTMLElement): HTMLElement => el.querySelector('[data-part="track"]') as HTMLElement
+
+  it('outside any region the track is 4px, the pill radius 2px, the cell gap 2px', () => {
+    const el = mount('<ui-progress current="2" segments="4" style="inline-size: 400px"></ui-progress>')
+    expect(px(getComputedStyle(track(el)).height)).toBe(4)
+    expect(px(getComputedStyle(track(el)).borderTopLeftRadius)).toBe(2)
+    expect(px(getComputedStyle(el.querySelector('[data-part="cells"]') as HTMLElement).columnGap)).toBe(2)
+  })
+
+  for (const scale of ['sm', 'md'] as const) {
+    it(`product / ${scale}: track 2c, pill radius c, cell gap c`, () => {
+      const r = resolve('product', scale, 'md')
+      const wrap = document.createElement('div')
+      wrap.setAttribute('data-tier', 'product')
+      wrap.setAttribute('data-scale', scale)
+      wrap.innerHTML = '<ui-progress current="2" segments="4" style="inline-size: 400px"></ui-progress>'
+      document.body.append(wrap)
+      mounted.push(wrap)
+      const el = wrap.querySelector('ui-progress') as HTMLElement
+      expect(px(getComputedStyle(track(el)).height)).toBe(2 * r.c)
+      expect(px(getComputedStyle(track(el)).borderTopLeftRadius)).toBe(r.c)
+      expect(px(getComputedStyle(el.querySelector('[data-part="cells"]') as HTMLElement).columnGap)).toBe(r.c)
+    })
+  }
 })

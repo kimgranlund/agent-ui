@@ -106,8 +106,9 @@ geometry:
   posture: fill (block-level flex host, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-flex + hug   # Fill by Default — slice 2 (action/selection); the widget BOX below keeps its fixed square either way
   inlineSize: var(--ui-checkbox-box)   # square widget box — the Indicator-class lever (ADR-0041)
   blockSize: var(--ui-checkbox-box)
-  boxRamp: --md-sys-compact-{size}          # 14/16/18 px at ui-md scale for sm/md/lg (ADR-0041 clause 2)
-  radius: calc(--ui-checkbox-box / 5)  # proportional slight rounding (~3px at 16px default)
+  boxRamp: --md-sys-icon-box (2n) with fallback --md-sys-compact-{size}   # inside an opt-in data-tier region the box is 2n; outside, 14/16/18 px at ui-md scale (ADR-0041 clause 2, ADR-0245 cl.3)
+  radius: calc(var(--md-sys-radius) / 2) with fallback box/5   # n/2 inside a region (3.5px at md of the root); box/5 outside (~3px at 16px default)
+  markBox: --md-sys-glyph-box (2n - 2c) with fallback 60% of the box   # the check and dash width; centred, inset c (ADR-0245 cl.4); the dash is --md-sys-glyph-stroke tall
 
 forcedColors: A `@media (forced-colors: active)` block maps unchecked to ButtonText border on ButtonFace; checked/indeterminate to Highlight fill with HighlightText glyph. The :focus-visible ring is free via --md-sys-color-focus-ring → Highlight from the token layer (ADR-0009).
 ---

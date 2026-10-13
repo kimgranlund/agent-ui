@@ -20,6 +20,7 @@ import '@agent-ui/components/foundation-styles.css'
 import './choice-card.css'
 import './choice-card.ts'
 import type { UIChoiceCardElement } from './choice-card.ts'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 interface CdpSession {
   send(method: string, params?: Record<string, unknown>): Promise<unknown>
@@ -247,4 +248,40 @@ describe('ui-choice-card — forced-colors (Chromium CDP emulation; WebKit basel
       await session.send('Emulation.setEmulatedMedia', { features: [] })
     }
   })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//  [5] Badge + tick geometry (ADR-0245 cl.4): 2n slot and 2n - 2c mark box inside an opt-in region
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-choice-card: badge and tick geometry', () => {
+  const REM = 16
+  const centreX = (cs: CSSStyleDeclaration): number => px(cs.right) + px(cs.width) / 2
+
+  it('outside any region the badge is 1.25rem, the tick 0.75rem x 0.65rem, centred on the badge', () => {
+    const { card } = mount()
+    expect([px(after(card).width), px(after(card).height)]).toEqual([1.25 * REM, 1.25 * REM])
+    expect(px(before(card).width)).toBeCloseTo(0.75 * REM, 1)
+    expect(px(before(card).height)).toBeCloseTo(0.65 * REM, 1)
+    expect(centreX(before(card))).toBeCloseTo(centreX(after(card)), 1)
+  })
+
+  for (const scale of ['sm', 'md'] as const) {
+    it(`product / ${scale}: badge 2n, tick 2n - 2c, centred on the badge`, () => {
+      const r = resolve('product', scale, 'md')
+      const region = document.createElement('div')
+      region.setAttribute('data-tier', 'product')
+      region.setAttribute('data-scale', scale)
+      document.body.append(region)
+      mounted.push(region)
+      const card = document.createElement('ui-choice-card') as UIChoiceCardElement
+      card.setAttribute('value', 'deluxe')
+      card.innerHTML = '<strong>Deluxe</strong><span>$185/night</span>'
+      region.append(card)
+      expect([px(after(card).width), px(after(card).height)]).toEqual([r.icon, r.icon])
+      expect(px(before(card).width)).toBeCloseTo(r.glyph, 1)
+      expect(px(before(card).height)).toBeCloseTo((r.glyph * 13) / 15, 1)
+      expect(centreX(before(card))).toBeCloseTo(centreX(after(card)), 1)
+    })
+  }
 })
