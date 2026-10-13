@@ -6,8 +6,8 @@
 //     emittable type without guidance reds, and so does an orphan entry for a removed type.
 //  3. Every edge renders: each clause resolves its notFor targets against its own catalog.
 //  4. Reciprocity: inside default, inside a2ui-basic, and inside each persona fragment, an edge A -> B
-//     implies B -> A (each direction carries its own why). A persona edge to a type present in BOTH bases
-//     is exempt, since a base cannot name persona types.
+//     implies B -> A (each direction carries its own why). A persona edge to a type present in EVERY base
+//     that persona targets is exempt, since a base cannot name persona types.
 //  5. Personas: for every shipped manifest and every base it targets, the derived catalog's guidance
 //     covers every fragment type and every clause renders. This also holds the loader's hard-coded persona
 //     list equal to `SHIPPED_PERSONA_CATALOG_MANIFESTS`, together with the orphan leg below.
@@ -35,10 +35,9 @@ const CATALOG_DIR = `${process.cwd()}/packages/agent-ui/a2ui/src/catalog`
 
 const BASES: Readonly<Record<string, Catalog>> = { 'agent-ui': defaultCatalog, 'a2ui-basic': a2uiBasicCatalog }
 
-/** Types present in both bases: the only base types a persona edge may target one-way. */
-const SHARED_BASE_TYPES: ReadonlySet<string> = new Set(
-  Object.keys(defaultCatalog.components).filter((t) => Object.hasOwn(a2uiBasicCatalog.components, t)),
-)
+/** Types present in every base in `targets`: the only base types a persona edge may target one-way. */
+const baseTypesIn = (targets: readonly string[]): ReadonlySet<string> =>
+  new Set(Object.keys(defaultCatalog.components).filter((t) => targets.every((id) => Object.hasOwn(BASES[id]!.components, t))))
 
 const PERSONA_DIRS = SHIPPED_PERSONA_CATALOG_MANIFESTS.map((m) => `personas/${m.personaId}`)
 const SIDECAR_DIRS = ['default', 'a2ui-basic', ...PERSONA_DIRS]
@@ -93,14 +92,14 @@ describe('persona fragments: every shipped manifest, every targeted base', () =>
   for (const m of SHIPPED_PERSONA_CATALOG_MANIFESTS) {
     const fragmentTypes = Object.keys(m.fragment.components)
 
+    // Absent or empty `targetCatalogs` means `['agent-ui']` alone (compose.ts `targetsFor`).
+    const targets = m.targetCatalogs !== undefined && m.targetCatalogs.length > 0 ? m.targetCatalogs : ['agent-ui']
+
     it(`${m.personaId}: its sidecar is a bijection with the fragment and reciprocal inside it`, () => {
       const own = loadSelectionGuidance(readDoc(`personas/${m.personaId}`))
       expect(bijectionDefects(own, fragmentTypes)).toEqual([])
-      expect(reciprocityDefects(own, SHARED_BASE_TYPES)).toEqual([])
+      expect(reciprocityDefects(own, baseTypesIn(targets))).toEqual([])
     })
-
-    // Absent or empty `targetCatalogs` means `['agent-ui']` alone (compose.ts `targetsFor`).
-    const targets = m.targetCatalogs !== undefined && m.targetCatalogs.length > 0 ? m.targetCatalogs : ['agent-ui']
     for (const baseId of targets) {
       it(`${m.personaId} on ${baseId}: the derived guidance covers every fragment type and renders`, () => {
         const base = BASES[baseId]
@@ -168,7 +167,8 @@ describe('negative controls', () => {
     const t = Object.keys(m.fragment.components)[0]!
     planted[t] = { ...planted[t]!, notFor: [{ type: 'Badge', why: 'a status chip' }] }
     expect(renderDefects(planted, derived)).toHaveLength(1)
-    expect(reciprocityDefects({ [t]: planted[t]! }, SHARED_BASE_TYPES)).toEqual([`${t} -> Badge has no Badge -> ${t} edge`])
+    expect(m.targetCatalogs).toEqual(['agent-ui', 'a2ui-basic'])
+    expect(reciprocityDefects({ [t]: planted[t]! }, baseTypesIn(m.targetCatalogs!))).toEqual([`${t} -> Badge has no Badge -> ${t} edge`])
   })
 
   it('NEGATIVE CONTROL (orphan): a sidecar under an unshipped persona dir reds the orphan predicate', () => {
