@@ -37,13 +37,13 @@
 :where(ui-combo-box) {
   /* ── Editor (Control-class) ─────────────────────────────────────────── */
   /* Geometry: control height off the md-scale ramp (the combo-box trigger is the editor). */
-  --ui-combo-box-height: var(--md-sys-height-md);
-  --ui-combo-box-font: var(--md-sys-font-md);
+  --ui-combo-box-height: var(--md-sys-height, var(--md-sys-height-md));
+  --ui-combo-box-font: var(--md-sys-type-control, var(--md-sys-font-md));
   /* (2026-07-06) h/2 — the fleet Control-class value-edge standard (text-field.css:119,
      select.css trigger padding-inline-start), replacing the earlier fixed --md-sys-space-sm.
      The editor was the lone entry-control outlier still anchored to a space token instead
      of the frame-law h/2 inset; this brings it into line. */
-  --ui-combo-box-padding-inline: calc(var(--ui-combo-box-height) / 2);
+  --ui-combo-box-padding-inline: var(--md-sys-inset, calc(var(--ui-combo-box-height) / 2)); /* n in a data-tier region (ADR-0245 cl.3), h/2 outside */
 
   /* Frame — Kim's filled/container state law (TKT-0062), SUPERSEDING the earlier border-only
      channel: THREE channels now repoint per state (background, border, text-ink), keyed off five
@@ -98,7 +98,8 @@
   --ui-combo-box-ink-answered: var(--ui-answered-ink);
 
   /* Frame shape */
-  --ui-combo-box-radius: var(--md-sys-shape-corner-base);
+  --ui-combo-box-corner-shape: var(--md-sys-corner-shape, round); /* squircle in a data-tier region (ADR-0245 cl.3) */
+  --ui-combo-box-radius: var(--md-sys-radius, var(--md-sys-shape-corner-base));
 
   /* Min-inline-size floor — the [inline] hug-state typing-width floor (ADR-0223 cl.3(b),
      superseding ADR-0021's default-state placement — must NOT be 0 in the hug state or the editor
@@ -110,7 +111,7 @@
   --ui-combo-box-panel-bg: var(--md-sys-color-neutral-surface);
   --ui-combo-box-panel-ink: var(--md-sys-color-neutral-on-surface);
   --ui-combo-box-panel-outline: var(--md-sys-color-neutral-outline-variant);
-  --ui-combo-box-panel-radius: var(--md-sys-shape-corner-base);
+  --ui-combo-box-panel-radius: var(--md-sys-group-radius, var(--md-sys-shape-corner-base));
   --ui-combo-box-panel-min-inline-size: 12rem; /* prevent empty-panel collapse (ADR-0021) */
   /* GH #906 — the #874 fleet unobtrusive-scrollbar idiom (own-chain off the shared dimensional
      constant + colour roles, TKT-0066 item 5 law): this panel was fully untreated before (raw
@@ -127,7 +128,7 @@
      has no `[size]` attribute yet (a structural divergence from ui-select — flagged, not forced);
      this is still worth deriving off the ramp now so a future `[size]` addition (its own ADR/decomp,
      a new-attribute contract change) would make this repoint for free, same as ui-select. */
-  --ui-combo-box-listbox-padding: calc(var(--ui-combo-box-padding-inline) / 2);
+  --ui-combo-box-listbox-padding: var(--md-sys-c, calc(var(--ui-combo-box-padding-inline) / 2));
 
   /* Panel max-block-size (TKT-0027) — public dial, default min(50vh, 12 real option rows), same
      shape as ui-select's listbox dial (the family precedent — combo-box's option row height IS
@@ -140,14 +141,15 @@
      (box-sizing: border-box below), but the row math above computed the CONTENT box (12 rows + 13
      insets, no border term) — without this the 12th row would overflow its own cap by exactly the
      1px+1px border width (FIXED 2026-07-12, TKT-0027 browser-leg finding, same shape as ui-menu). */
-  --ui-combo-box-panel-max-block-size: min(50vh, calc(12 * var(--ui-combo-box-height) + 13 * var(--ui-combo-box-listbox-padding) + 2px));
+  --ui-combo-box-panel-max-block-size: min(50vh, calc(12 * var(--ui-combo-box-height) + 13 * var(--ui-combo-box-listbox-padding) + 1px + 1px)); /* the two hairline borders */
 
   /* ── Option rows (legacy item-pad — ROV-C5 / §4.6/5.1) — DERIVED (2026-07-06), same model as
      ui-select: block-pad = (editor height − option font)/2 (the row's rendered height == the
      editor's own height); inline-pad pairs with --ui-combo-box-listbox-padding above to total the
      editor's own inline pad (the alignment law). Supersedes the earlier fixed --md-sys-space-xs/sm px. */
   --ui-combo-box-option-padding-block: calc((var(--ui-combo-box-height) - var(--ui-combo-box-font)) / 2);
-  --ui-combo-box-option-padding-inline: calc(var(--ui-combo-box-padding-inline) / 2);
+  --ui-combo-box-option-padding-inline: var(--ui-combo-box-option-padding-inline-derived, calc(var(--ui-combo-box-padding-inline) / 2));
+  --ui-combo-box-option-padding-inline-derived: calc(var(--md-sys-inset) - var(--md-sys-c)); /* undefined outside a data-tier region, so the fallback above wins */
   --ui-combo-box-option-font: var(--ui-combo-box-font); /* options were size-blind on FONT too (bug fix) */
   --ui-combo-box-option-active-bg: var(--md-sys-color-neutral-tint-dim); /* active-descendant highlight — 5% neutral overlay (was the undefined -tint-5) */
   --ui-combo-box-option-active-ink: var(--md-sys-color-neutral-on-surface);
@@ -229,6 +231,7 @@
     color: var(--ui-combo-box-ink);
     border: 1px solid var(--ui-combo-box-border);
     border-radius: var(--ui-combo-box-radius);
+    corner-shape: var(--ui-combo-box-corner-shape);
     cursor: text;
     outline: none; /* focus ring handled via :focus-visible outline on this element */
 

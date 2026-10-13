@@ -35,7 +35,7 @@
 :where(ui-rating) {
   /* Box geometry — the compact widget-box ramp step (ADR-0041; default size = md), the checkbox/switch/
      slider precedent. Each star glyph paints at this size; `[size]` repoints below. */
-  --ui-rating-box: var(--md-sys-compact-md);
+  --ui-rating-box: var(--md-sys-icon-box, var(--md-sys-compact-md));
 
   /* Mark ink — the `currentColor` source both star rows inherit (ADR-0216 cl.3: the mark is owned SVG,
      `currentColor` fill, NOT an icons-pack glyph). Page-ink role, AA-verified against every surface
@@ -49,24 +49,24 @@
 
   /* Star-to-star rhythm — off `--md-sys-space-xs`, the slider.css `--ui-slider-layout-gap` precedent (the
      smallest step on the space ramp; a tight row, not a spaced-out list). */
-  --ui-rating-gap: var(--md-sys-space-xs);
+  --ui-rating-gap: var(--md-sys-c, var(--md-sys-space-xs));
 
   /* Label — the SUBDUED half of the label/star pair (the slider.css label-vs-value emphasis precedent;
      here there is no separate "value" text, so the star mark itself is the emphasized half). */
   --ui-rating-label-ink: var(--md-sys-color-neutral-on-surface-variant);
-  --ui-rating-label-font: var(--md-sys-font-sm);
+  --ui-rating-label-font: var(--md-sys-type-field-label, var(--md-sys-font-sm));
 
   /* The label↔stars row/column rhythm (the slider.css `--ui-slider-layout-gap` precedent, reused verbatim
      for this control's own chain). */
-  --ui-rating-layout-gap: var(--md-sys-space-xs);
+  --ui-rating-layout-gap: var(--md-sys-c, var(--md-sys-space-xs));
 }
 
 /* [size] → compact widget ramp repoint (ADR-0041). */
 :where(ui-rating[size='sm']) {
-  --ui-rating-box: var(--md-sys-compact-sm);
+  --ui-rating-box: var(--md-sys-icon-box, var(--md-sys-compact-sm));
 }
 :where(ui-rating[size='lg']) {
-  --ui-rating-box: var(--md-sys-compact-lg);
+  --ui-rating-box: var(--md-sys-icon-box, var(--md-sys-compact-lg));
 }
 
 /* [disabled] → muted ink + label (SC 1.4.11-exempt — a disabled/inactive component). The state holds at

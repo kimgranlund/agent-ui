@@ -1782,7 +1782,7 @@ describe('combo-box.css — TKT-0027 panel max-block-size dial (combo-box-max-bl
 
   it('combo-box-max-block-size-token-chain: --ui-combo-box-panel-max-block-size defaults to min(50vh, 12 option rows + 13 insets + the 2px border compensation)', () => {
     expect(comboCss).toMatch(
-      /--ui-combo-box-panel-max-block-size:\s*min\(50vh,\s*calc\(12 \* var\(--ui-combo-box-height\) \+ 13 \* var\(--ui-combo-box-listbox-padding\) \+ 2px\)\)/,
+      /--ui-combo-box-panel-max-block-size:\s*min\(50vh,\s*calc\(12 \* var\(--ui-combo-box-height\) \+ 13 \* var\(--ui-combo-box-listbox-padding\) \+ 1px \+ 1px\)\)/,
     )
   })
 

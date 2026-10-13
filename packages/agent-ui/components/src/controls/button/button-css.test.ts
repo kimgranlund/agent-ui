@@ -26,7 +26,7 @@ describe('button.css — structure + token hygiene (s7)', () => {
       expect(tokenBlock).toMatch(new RegExp(`--ui-button-${slot}:`))
     }
     expect(tokenBlock).toContain('var(--md-sys-color-primary') // colour roles (default family = primary)
-    expect(tokenBlock).toContain('var(--md-sys-height-md)') // the s6 dimensional ramp
+    expect(tokenBlock).toContain('var(--md-sys-height, var(--md-sys-height-md))') // the s6 dimensional ramp
   })
 
   it('[variant] repoints the colour channel; [size] repoints the geometry', () => {
@@ -169,7 +169,7 @@ describe('button.css — the shared focus ring (ADR-0009)', () => {
 // lands at the emergent ½(h−font) edge — NOT --ui-ind (an inline affordance at icon size is the oversize bug).
 describe('button.css — role-driven glyph sizing, caret = font (ADR-0012)', () => {
   it('--ui-button-glyph is declared = the font (the inline-affordance ramp; --ui-glyph-ratio 1)', () => {
-    expect(tokenBlock).toMatch(/--ui-button-glyph:\s*var\(--ui-button-font\)/)
+    expect(tokenBlock).toMatch(/--ui-button-glyph:\s*var\(--md-sys-glyph-box, var\(--ui-button-font\)\)/)
   })
 
   it('the CELL stays icon-sized for BOTH slots (border-box, so a role inset stays within the icon cell)', () => {
