@@ -32,6 +32,10 @@ import '@agent-ui/app/super-shell'
 import '@agent-ui/components/all.css' // the [hidden] panel rule + tab chrome (Batch C tabs legs)
 import '@agent-ui/components/all' // self-defines ui-tabs / ui-tab / ui-tab-panel
 import './a2ui-live.css'
+import { resolve } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
+
+// The page gutter `--md-sys-space-xl` is the card margin at the root register (scale.mjs resolve('product', 'sm', 'md')).
+const GUTTER = resolve('product', 'sm', 'md').card.margin
 
 const mounted: HTMLElement[] = []
 afterEach(() => {
@@ -67,10 +71,10 @@ describe('a2ui-live chrome re-host (ADR-0156) — wide resting shape', () => {
   // added border, unlike the old ui-app-shell-region measurement), canvas filling the remainder minus the
   // shell's own 18px gap. Re-capture these (mountChrome + getBoundingClientRect()) if this test ever needs
   // to be re-baselined; do not hand-tune them to pass.
-  // ADR-0245 cut (T-0116): the page gutter `--md-sys-space-xl` is the derived 3n = 21px at the root register
-  // (product / sm, n 7), was 24px, so the shell x/right shift 3px in and the canvas gains the 6px.
-  const EXPECTED_CHAT = { x: 21, y: 20, width: 416, height: 560, right: 437 }
-  const EXPECTED_CANVAS = { x: 455, y: 20, width: 724, height: 560, right: 1179 }
+  // ADR-0245 cut (T-0116): the page gutter `--md-sys-space-xl` is the derived 3n = 18px at the root register
+  // (product / sm, n 6), was 24px, so the shell x/right shift 6px in and the canvas gains the 12px.
+  const EXPECTED_CHAT = { x: GUTTER, y: 20, width: 416, height: 560, right: GUTTER + 416 }
+  const EXPECTED_CANVAS = { x: GUTTER + 416 + 18, y: 20, width: WIDTH - 2 * GUTTER - 416 - 18, height: 560, right: WIDTH - GUTTER }
 
   it('the ui-super-shell composition renders the re-baselined rects', () => {
     const { chat, canvas } = mountChrome(WIDTH)
@@ -124,8 +128,8 @@ describe('a2ui-live chrome re-host (ADR-0156) — mid-band (~900px): the fixed s
   // (unaffected by content width), canvas fills what's left of the shell's content slot minus the gap.
   // Re-capture the same way (mount at WIDTH, read getBoundingClientRect()) if this ever needs re-baselining;
   // do not hand-tune to pass.
-  const EXPECTED_CHAT = { x: 21, y: 20, width: 416, height: 560, right: 437 }
-  const EXPECTED_CANVAS = { x: 455, y: 20, width: 424, height: 560, right: 879 }
+  const EXPECTED_CHAT = { x: GUTTER, y: 20, width: 416, height: 560, right: GUTTER + 416 }
+  const EXPECTED_CANVAS = { x: GUTTER + 416 + 18, y: 20, width: WIDTH - 2 * GUTTER - 416 - 18, height: 560, right: WIDTH - GUTTER }
 
   it('the chat pane stays pinned at its fixed 26rem width — it does not shrink with content width', () => {
     const { chat, canvas } = mountChrome(WIDTH)
