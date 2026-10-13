@@ -931,7 +931,7 @@ describe('surface-host.css — the :state(working) breathing block (ADR-0199 pin
     expect(css).toMatch(/--ui-surface-host-working-color:\s*var\(--ui-working-color\)/)
     expect(css).toMatch(/--ui-surface-host-working-easing:\s*var\(--md-sys-motion-easing-standard\)/)
     // GH 1104 refinement — the overlay's rounded-card radius rides the fleet shape chain, never a bare literal.
-    expect(css).toMatch(/--ui-surface-host-working-radius:\s*var\(--md-sys-shape-corner-base, 12px\)/)
+    expect(css).toMatch(/--ui-surface-host-working-radius:\s*var\(--md-sys-card-radius, var\(--md-sys-shape-corner-base, 12px\)\)/)
   })
 
   it("the working rule is a ::before overlay (never ::after — ADR-0187 owns the surface ::after channel) with :not() precedence guards", () => {

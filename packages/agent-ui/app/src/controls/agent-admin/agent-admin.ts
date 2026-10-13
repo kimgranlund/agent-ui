@@ -2728,7 +2728,7 @@ export class UIAgentAdminElement extends UIElement {
    * called once from within `#compose()` before any pill exists — the SAME "reflect is safe whenever it
    * runs" shape `#applyMasterStates` already relies on elsewhere in this file.
    *
-   * Every write here is PROGRAMMATIC (`.pressed =` / `.value =` / `.glyph =`, never `.click()` or a
+   * Every write here is PROGRAMMATIC (`.pressed =` / `.value =` / `.symbol =`, never `.click()` or a
    * synthesized `toggle`/`change`) — ADR-0019's law, and the reason this can run unconditionally on every
    * visibility change without the mirror itself re-triggering the very handlers that call
    * `#setPanesShown`/`#setPanePrimary` in the first place — EXCEPT `skipPillPressedFor`'s own one pane
