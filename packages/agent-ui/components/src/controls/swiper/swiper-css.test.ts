@@ -64,10 +64,10 @@ describe('swiper.css (PRIMARY) — structure + sectioning', () => {
     expect(primaryToken).toMatch(/--ui-swiper-gap:\s*var\(--md-sys-space-md\)/)
     expect(primaryToken).toMatch(/--ui-swiper-duration:\s*var\(--md-sys-motion-duration-fast\)/)
     expect(primaryToken).toMatch(/--ui-swiper-easing:\s*var\(--md-sys-motion-easing-standard\)/)
-    expect(primaryToken).toMatch(/--ui-swiper-dot-size:\s*var\(--md-sys-compact-sm\)/)
+    expect(primaryToken).toMatch(/--ui-swiper-dot-size:\s*var\(--md-sys-icon-box,\s*var\(--md-sys-compact-sm\)\)/)
     expect(primaryToken).toMatch(/--ui-swiper-dot-color-active:\s*var\(--md-sys-color-primary\)/)
     // GH #1330: the paddle band tracks the stamped icon-only md ui-button square (button.css --ui-button-height).
-    expect(primaryToken).toMatch(/--ui-swiper-paddle-band:\s*var\(--md-sys-height-md\)/)
+    expect(primaryToken).toMatch(/--ui-swiper-paddle-band:\s*var\(--md-sys-height,\s*var\(--md-sys-height-md\)\)/)
   })
 
   it('never uses color-mix or opacity (components hold zero colour opinion; ADR-0008)', () => {

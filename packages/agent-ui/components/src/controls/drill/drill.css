@@ -56,7 +56,7 @@
 
 :where(ui-drill) {
   /* Header row geometry — the CONTROL band (interactive: the Back button lives here). */
-  --ui-drill-header-height: var(--md-sys-height-md);
+  --ui-drill-header-height: var(--md-sys-height, var(--md-sys-height-md));
   --ui-drill-header-pad-inline: var(--md-sys-space-md);
   --ui-drill-header-gap: var(--md-sys-space-sm);
 
@@ -71,8 +71,8 @@
   /* The Back button — a SQUARE icon affordance off the sm control-height row (component-checker geometry
      fix: a hand-rolled asymmetric pad/font previously drifted from the fleet icon-button law). */
   --ui-drill-back-radius: var(--md-sys-shape-corner-base);
-  --ui-drill-back-font-size: var(--md-sys-font-sm);
-  --ui-drill-heading-font-size: var(--md-sys-font-md);
+  --ui-drill-back-font-size: var(--md-sys-type-control, var(--md-sys-font-sm));
+  --ui-drill-heading-font-size: var(--md-sys-type-control, var(--md-sys-font-md));
 
   /* ADR-0195 Amendment cl.A5 — the contained card's own corner radius (consumes the SAME base role the Back
      button's own corner already uses; a distinct token because the two surfaces — the whole card vs. the
@@ -171,8 +171,8 @@
     box-sizing: border-box;
     /* SQUARE: inline-size = block-size (the fleet icon-button law) — no ad-hoc inline padding, which
        previously drifted the glyph off-center and pulled font-size off the sm row's own ramp. */
-    inline-size: var(--md-sys-height-sm);
-    block-size: var(--md-sys-height-sm);
+    inline-size: var(--md-sys-height, var(--md-sys-height-sm));
+    block-size: var(--md-sys-height, var(--md-sys-height-sm));
     border-radius: var(--ui-drill-back-radius);
     color: var(--ui-drill-ink-muted);
     cursor: pointer;

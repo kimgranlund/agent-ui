@@ -195,9 +195,16 @@ describe('GH #722 — the header-marker literals mirror timeline-item\'s default
       expect(m, `${prop} must be declared`).not.toBeNull()
       return m![1]!.trim()
     }
+    // The literal is the fallback of the derived token (ADR-0245 dark launch): `var(--md-sys-icon-box, 16px)`.
+    const fallback = (v: string): string => v.replace(/^var\(--md-sys-[\w-]+,\s*(.+)\)$/, '$1')
     // timeline-item's DEFAULT register is its bare :root block (the FIRST declaration of each row var).
-    expect(pick(streamCss, '--ui-status-stream-header-marker-box')).toBe(pick(itemCss, '--ui-timeline-item-marker-box-md'))
-    expect(pick(streamCss, '--ui-status-stream-header-dot-size')).toBe(pick(itemCss, '--ui-timeline-item-dot-size-md'))
+    expect(fallback(pick(streamCss, '--ui-status-stream-header-marker-box'))).toBe(pick(itemCss, '--ui-timeline-item-marker-box-md'))
+    expect(fallback(pick(streamCss, '--ui-status-stream-header-dot-size'))).toBe(pick(itemCss, '--ui-timeline-item-dot-size-md'))
+    // and inside a region the two controls read the SAME derived tokens, so the rail still aligns
+    expect(pick(streamCss, '--ui-status-stream-header-marker-box')).toMatch(/^var\(--md-sys-icon-box,/)
+    expect(pick(streamCss, '--ui-status-stream-header-dot-size')).toMatch(/^var\(--md-sys-glyph-box,/)
+    expect(itemCss).toMatch(/--ui-timeline-item-marker-box: var\(--md-sys-icon-box,/)
+    expect(itemCss).toMatch(/--ui-timeline-item-dot-size: var\(--md-sys-glyph-box,/)
   })
 })
 
