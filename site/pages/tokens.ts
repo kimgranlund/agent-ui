@@ -20,7 +20,11 @@ import './tokens.css'
 import { heading } from '../lib/doc-page.ts'
 import { familiesOf, parseColorPrimitives, parseColorRoles, parseDimensionRamp, parseTypescale, type ColorRole } from '../lib/token-parse.ts'
 import tokensCss from '../../packages/agent-ui/shared/src/tokens/tokens.css?raw'
-import dimensionsCss from '../../packages/agent-ui/shared/src/tokens/dimensions.css?raw'
+import dimensionsSheet from '../../packages/agent-ui/shared/src/tokens/dimensions.css?raw'
+import bridgeSheet from '../../packages/agent-ui/shared/src/tokens/foundations-bridge.gen.css?raw'
+
+// Since the ADR-0245 cut the ramp names are the bridge's aliases of the derived values; the parsers read both.
+const dimensionsCss = `${dimensionsSheet}\n${bridgeSheet}`
 
 const ROLES = parseColorRoles(tokensCss)
 if (ROLES.length === 0) {

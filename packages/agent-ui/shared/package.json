@@ -12,6 +12,7 @@
     "./tokens.css": "./src/tokens/tokens.css",
     "./dimensions.css": "./src/tokens/dimensions.css",
     "./foundations.css": "./src/tokens/foundations.gen.css",
+    "./foundations-bridge.css": "./src/tokens/foundations-bridge.gen.css",
     "./base.css": "./src/tokens/base.css",
     "./themes/*": "./src/tokens/themes/*",
     "./testing/dialog-polyfill": "./src/testing/dialog-polyfill.ts"

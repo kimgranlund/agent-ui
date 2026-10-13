@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest'
 import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { CFG, check } from './scale.mjs'
-import { OUT_REL, ROOT_DEFAULT, renderFoundationsCss } from '../../../../../scripts/generate-foundations.mjs'
+import { BRIDGE_REL, LEGACY, OUT_REL, ROOT_DEFAULT, renderBridgeCss, renderFoundationsCss } from '../../../../../scripts/generate-foundations.mjs'
 
-// ADR-0245 clause 1 and 10c: the config gate, the generated-file drift gate and the dark-launch scope.
+// ADR-0245 clause 1, 10a and 10c: the config gate, the generated-file drift gate, the cut and the bridge.
 // The 36-cell computed leg (tokens equal resolve() in both engines) is foundations.browser.test.ts.
 declare const process: { cwd(): string }
 
@@ -12,6 +12,7 @@ const ROOT = process.cwd()
 const read = (rel: string): string => readFileSync(`${ROOT}/${rel}`, 'utf8') as string
 const sha = (rel: string): string => createHash('sha256').update(readFileSync(`${ROOT}/${rel}`)).digest('hex')
 const committed = read(OUT_REL)
+const bridge = read(BRIDGE_REL)
 
 /** Every top-level selector list in a flat sheet (the generated sheet has no at-rules or nesting). */
 const selectorsOf = (css: string): string[] =>
@@ -46,23 +47,42 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
   })
 })
 
-describe('foundations: generated-file drift and the dark-launch scope (ADR-0245 clause 10a)', () => {
+describe('foundations: generated-file drift and the cut (ADR-0245 clause 10a)', () => {
   it('foundations.gen.css is byte-identical to the generator output (run node scripts/generate-foundations.mjs)', () => {
     expect(committed).toBe(renderFoundationsCss())
   })
 
-  it('until the cut, ROOT_DEFAULT is false and every selector sits on or inside a [data-tier] region', () => {
-    expect(ROOT_DEFAULT).toBe(false)
-    const selectors = selectorsOf(committed)
-    expect(selectors.length).toBeGreaterThan(10)
-    expect(selectors.filter((s) => !s.startsWith('[data-tier'))).toEqual([])
-    expect(committed.replace(/\/\*[\s\S]*?\*\//g, '')).not.toMatch(/:root/)
+  it('foundations-bridge.gen.css is byte-identical to the generator output', () => {
+    expect(bridge).toBe(renderBridgeCss())
   })
 
-  it('the scope predicate bites: the cut form declares :root and unscoped axes', () => {
-    const cut = selectorsOf(renderFoundationsCss({ rootDefault: true }))
-    expect(cut).toContain(':root')
-    expect(cut.filter((s) => !s.startsWith('[data-tier'))).toContain("[data-scale='sm']")
+  it('at the cut, ROOT_DEFAULT is true: :root takes product at scale sm and the axes are unscoped', () => {
+    expect(ROOT_DEFAULT).toBe(true)
+    const selectors = selectorsOf(committed)
+    expect(selectors).toContain(':root')
+    expect(selectors).toContain("[data-scale='sm']")
+    expect(committed).toMatch(/:root \{ --md-sys-tier-n0: 9; --md-sys-tier-a: 2; --md-sys-tier-k: 2; --md-sys-tier-g: 1;[^}]*--md-sys-scale-s: -1; \}/)
+  })
+
+  it('the rollback predicate bites: the pre-cut form keeps every selector on or inside a [data-tier] region', () => {
+    const dark = renderFoundationsCss({ rootDefault: false })
+    expect(selectorsOf(dark).filter((s) => !s.startsWith('[data-tier'))).toEqual([])
+    expect(dark.replace(/\/\*[\s\S]*?\*\//g, '')).not.toMatch(/:root/)
+  })
+
+  it('the bridge aliases every legacy name, maps every [scale] value and pins today in the legacy opt-out', () => {
+    const alias = bridge.slice(bridge.indexOf(':root,'), bridge.indexOf("[data-foundations='legacy'] {"))
+    const legacy = bridge.slice(bridge.indexOf("[data-foundations='legacy'] {"))
+    for (const name of Object.keys(LEGACY)) {
+      expect(alias, name).toMatch(new RegExp(`\\n  ${name}: `))
+      expect(legacy, name).toContain(`  ${name}: ${LEGACY[name as keyof typeof LEGACY]};`)
+    }
+    // the retired attribute name is built, not spelled, so this proof is not itself a use of the axis
+    const legacyAxis = 'scale'
+    const values = ['ui-sm', 'ui-md', 'ui-lg', 'content-sm', 'content-md', 'content-lg']
+    expect(selectorsOf(bridge)).toEqual(expect.arrayContaining(values.map((v) => `[${legacyAxis}='${v}']`)))
+    expect(legacy).toContain('  --md-sys-n: initial;')
+    expect(legacy).toContain('  --md-sys-tier-n0: initial;')
   })
 
   it('declares every ADR-0245 clause 1 output name', () => {

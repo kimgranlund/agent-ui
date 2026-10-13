@@ -24,7 +24,8 @@ declare const process: { cwd(): string }
 const ROOT = process.cwd()
 const read = (p: string): string => readFileSync(p, 'utf8')
 const tokensCss = read(`${ROOT}/packages/agent-ui/shared/src/tokens/tokens.css`)
-const dimensionsCss = read(`${ROOT}/packages/agent-ui/shared/src/tokens/dimensions.css`)
+// Since the ADR-0245 cut the ramp names are the bridge's aliases (foundations-bridge.gen.css); the parsers read both.
+const dimensionsCss = `${read(`${ROOT}/packages/agent-ui/shared/src/tokens/dimensions.css`)}\n${read(`${ROOT}/packages/agent-ui/shared/src/tokens/foundations-bridge.gen.css`)}`
 
 describe('tokens.html source — color roles', () => {
   const roles = parseColorRoles(tokensCss)
@@ -113,9 +114,9 @@ describe('tokens.html source — dimensional ramps', () => {
     expect(tiers.every((t) => t.value.length > 0)).toBe(true)
   })
 
-  it('the ui-height ramp reads the default (:root) tiers, not a [scale] override', () => {
+  it('the ui-height ramp reads the bridge alias (4n at the md step), not a [scale] row or the legacy pin', () => {
     const tiers = parseDimensionRamp(dimensionsCss, 'md-sys-height')
-    expect(tiers.find((t) => t.tier === 'md')?.value).toBe('28px') // the ui-md default (dimensions.css:48)
+    expect(tiers.find((t) => t.tier === 'md')?.value).toBe('calc(var(--md-sys-bridge-n-md) * 4px)')
   })
 
   it('a prefix absent from the sheet parses to zero tiers (the negative control — proves the regex bites)', () => {
@@ -141,9 +142,9 @@ describe('tokens.html source — the type scale', () => {
     expect([...new Set(rows.map((r) => r.role))]).toEqual(['display', 'headline', 'title', 'body', 'label', 'kicker', 'overline', 'lead', 'quote'])
   })
 
-  it('the -size leg rides --md-sys-scale (the one surviving display consumer) — M3-verbatim spot check', () => {
+  it('the -size leg is the bridge alias of the derived display role at the lg step (ADR-0245 clause 7)', () => {
     const displayLarge = rows.find((r) => r.role === 'display' && r.size === 'large')
-    expect(displayLarge?.sizeValue).toBe('calc(57px * var(--md-sys-scale))') // the canonical MD3 57px anchor
+    expect(displayLarge?.sizeValue).toMatch(/^round\(nearest, var\(--md-sys-bridge-body-lg\) \* pow\(.*, 3\), 1px\)$/)
     expect(displayLarge?.weight).toBe('400')
   })
 

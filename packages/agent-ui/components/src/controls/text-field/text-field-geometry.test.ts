@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 // Read text-field.css + the shared dimensions ramp as TEXT (same approach as the
 // button s11 geometry probe). jsdom can NOT compute layout px, so these are STATIC structural/formula checks on
 // the DECLARED calc()s; the rendered-px CHANGE (sm→md→lg, [scale]) is s11's cross-engine browser smoke, NOT here.
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 
@@ -14,7 +15,6 @@ const tfCss = readFileSync(
   `${process.cwd()}/packages/agent-ui/components/src/controls/text-field/text-field.css`,
   'utf8',
 ) as string
-const dimCss = readFileSync(`${process.cwd()}/packages/agent-ui/shared/src/tokens/dimensions.css`, 'utf8') as string
 
 const stylesBlock = tfCss.slice(tfCss.indexOf('@scope (ui-text-field) {'))
 
@@ -25,25 +25,11 @@ const whereBlock = (marker: string): string => {
   return tfCss.slice(start, tfCss.indexOf('}', start))
 }
 
-/** The comment-stripped `:root` block of dimensions.css (the ui-md default tier, ADR-0038 explicit table). */
-const dimRoot = ((): string => {
-  const noComments = dimCss.replace(/\/\*[\s\S]*?\*\//g, '')
-  return (noComments.match(/:root\s*\{[^}]*\}/) ?? [''])[0]
-})()
+/** The root register's derived boxes (ADR-0245 clause 2: product at scale sm). Since the cut the icon is the
+ *  2n icon box and the height the 4n frame; scale.mjs resolve() is their one source. */
+const iconPx = (size: 'sm' | 'md' | 'lg'): number => resolve('product', 'sm', size).icon
+const heightPx = (size: 'sm' | 'md' | 'lg'): number => resolve('product', 'sm', size).h
 
-/** Parse `--md-sys-icon-{size}: <n>px` from dimensions.css :root (ADR-0038 / ADR-0035 §1-SET table). */
-const iconPx = (size: string): number | null => {
-  const m = dimRoot.match(new RegExp(`--md-sys-icon-${size}:\\s*(\\d+(?:\\.\\d+)?)px\\s*;`))
-  return m ? Number(m[1]) : null
-}
-
-/** Parse `--md-sys-height-{size}: <n>px` from dimensions.css :root (ADR-0038 explicit literal table, no × --md-sys-scale). */
-const heightPx = (size: string): number | null => {
-  const m = dimRoot.match(new RegExp(`--md-sys-height-${size}:\\s*(\\d+(?:\\.\\d+)?)px\\s*;`))
-  return m ? Number(m[1]) : null
-}
-
-// The §1-SET icon ramp's ui-md default (dimensions.css :root, ADR-0038 clause 2): sm·md·lg = 16·18·20.
 const iconBySize: Record<string, number | null> = {
   sm: iconPx('sm'),
   md: iconPx('md'),
@@ -69,16 +55,15 @@ describe('text-field.css — STATIC geometry law (s9)', () => {
     expect(paddingBlockIsZero(planted)).toBe(false)
   })
 
-  it('0 < glyph ≤ box: the §1-SET icon ramp is positive and fits the height box at every size (ADR-0038 ui-md defaults)', () => {
-    // anti-vacuous: the parse found the explicit §1-SET icon ramp from dimensions.css :root (ADR-0038 clause 2,
-    // the ui-md default tier): sm=16, md=18, lg=20 — NOT an empty match silently passing the relation below.
-    expect(iconBySize).toEqual({ sm: 16, md: 18, lg: 20 })
+  it('0 < glyph ≤ box: the §1-SET icon ramp is positive and fits the height box at every size (the ADR-0245 root register)', () => {
+    // anti-vacuous: the root register's 2n icon box (ADR-0245), NOT an empty value silently passing the relation.
+    expect(iconBySize).toEqual({ sm: 12, md: 14, lg: 16 }) // 2n at n 6 / 7 / 8
 
     for (const size of ['sm', 'md', 'lg'] as const) {
       const icon = iconBySize[size]
       const box = heightPx(size)
-      expect(icon, `--md-sys-icon-${size} did not parse from dimensions.css :root`).not.toBeNull()
-      expect(box, `--md-sys-height-${size} did not parse from dimensions.css :root`).not.toBeNull()
+      expect(icon, `--md-sys-icon-${size} did not resolve`).not.toBeNull()
+      expect(box, `--md-sys-height-${size} did not resolve`).not.toBeNull()
       expect(icon as number).toBeGreaterThan(0) //                  0 < glyph
       expect(icon as number).toBeLessThanOrEqual(box as number) //  glyph ≤ box
     }
@@ -87,17 +72,14 @@ describe('text-field.css — STATIC geometry law (s9)', () => {
   it('ADR-0038 / ADR-0035 wiring: icon reads the shared §1-SET --md-sys-icon-* table (not a local calc); height is an explicit literal (not × --md-sys-scale)', () => {
     // ADR-0038 supersedes the multiplier: text-field.css drops calc(Npx × --md-sys-scale) for icon and reads the
     // shared --md-sys-icon-* table (ADR-0035 conformance gap now closed — button adopted the table first).
-    // dimensions.css :root has explicit `<n>px` literals for height (no × --md-sys-scale — ADR-0038 clause 5).
     // text-field.css icon wiring
     expect(whereBlock(':where(ui-text-field) {')).toMatch(/--ui-text-field-icon:\s*var\(--md-sys-icon-box, var\(--md-sys-icon-md\)\)/)
     expect(whereBlock(":where(ui-text-field[size='sm'])")).toMatch(/--ui-text-field-icon:\s*var\(--md-sys-icon-box, var\(--md-sys-icon-sm\)\)/)
     expect(whereBlock(":where(ui-text-field[size='lg'])")).toMatch(/--ui-text-field-icon:\s*var\(--md-sys-icon-box, var\(--md-sys-icon-lg\)\)/)
     // the old local calc is gone (ADR-0035 conformance gap closed)
     expect(whereBlock(':where(ui-text-field) {')).not.toMatch(/--ui-text-field-icon:\s*calc\(/)
-    // dimensions.css :root: height is now a literal px (no multiplier), confirmed by the `heightPx` parse above
-    expect(heightPx('sm'), '--md-sys-height-sm :root literal parse returned null').not.toBeNull()
-    expect(heightPx('md'), '--md-sys-height-md :root literal parse returned null').not.toBeNull()
-    expect(heightPx('lg'), '--md-sys-height-lg :root literal parse returned null').not.toBeNull()
+    // the frame is 4n at the root register (ADR-0245): 24 / 28 / 32
+    expect([heightPx('sm'), heightPx('md'), heightPx('lg')]).toEqual([24, 28, 32])
   })
 
   it('the slot IS the square cell: [slot=leading] AND [slot=trailing] are sized to --ui-text-field-icon on BOTH axes', () => {

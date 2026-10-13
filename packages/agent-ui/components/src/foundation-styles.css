@@ -2,11 +2,13 @@
  * foundation layer from `@agent-ui/shared`: the colour `tokens.css` FIRST, then the dimensional ramp
  * `dimensions.css` (authored to load AFTER tokens). A host page links this BEFORE shared-styles.css and the control sheets (ADR-0233 cl.3), so
  * the `--md-sys-color-*` roles + `--ui-{height,font,gap}-*` ramp exist when a control's `:where()` block resolves them.
- * The derived foundations `foundations.gen.css` load last (ADR-0245): opt-in `[data-tier]` regions only, so
- * a page without one sees no change.
+ * The derived foundations `foundations.gen.css` load after them (ADR-0245): since the cut every element derives
+ * from one n, the root at product / scale sm. Then `foundations-bridge.gen.css`: the old ramp names as aliases
+ * of the derived values, `[scale]` / `[density]`, and the `[data-foundations="legacy"]` opt-out (clause 10e).
  * Exposed as the package `./foundation-styles.css` export. `@agent-ui/shared` is the one allowed
  * cross-package dependency (ADR-0003 / the import-layering law). Order is load-bearing — do not reorder.
  */
 @import '@agent-ui/shared/tokens.css';
 @import '@agent-ui/shared/dimensions.css';
 @import '@agent-ui/shared/foundations.css';
+@import '@agent-ui/shared/foundations-bridge.css';
