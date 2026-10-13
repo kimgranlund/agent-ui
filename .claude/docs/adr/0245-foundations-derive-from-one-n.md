@@ -75,7 +75,7 @@ the functional-mark box from the icon box with a new `ui-glyph` element and rena
 the placement rule; derive `ui-text` sizes behind its unchanged nine-variant API; and migrate the
 whole foundation by dark launch: derived tokens live only inside opt-in `data-tier` regions while
 file-disjoint family lanes rewrite each rule as `var(<derived>, <today's value>)`, then one config
-line makes the root opt in, after a step 0 mockup Kim approves.** The A2UI wire and the K6 prompt
+line makes the root opt in, after the step 0 mockup Kim approved on 2026-10-12.** The A2UI wire and the K6 prompt
 budget move zero bytes. Eleven clauses.
 
 ### 1. One config, one generator, one gate
@@ -128,6 +128,9 @@ budget move zero bytes. Eleven clauses.
   screen is product made dense with scale, not a tool panel), and because one attribute,
   `data-scale="md"`, then gives the skill's own default 28 / 36 / 44 for a roomier region.
   product/md was rejected as the root: it grows every default control by 8px.
+- **A2UI surfaces sit at `data-scale="md"`** (Kim's step 0 ruling, 2026-10-12): the canvas register
+  is product/md, sizes sm / md / lg = 28 / 36 / 44, so a widget action at md stays 36px. The
+  renderer's surface root carries the attribute; no catalog row changes.
 - **`[scale]` retires.** Its six values map by purpose, with derived heights (deltas against
   today's tables); the bridge of clause 10 applies this mapping to pages that still set it, for one
   release after the cut:
@@ -157,8 +160,8 @@ rules are:
 
 | class | rule |
 |---|---|
-| all controls | height 4n · inset n · gap n · radius n with `corner-shape: squircle` · type n + 6 · borders inside the box (padding = rule - border width) |
-| button, toggle | padding 2n beside a label, n beside an icon; icon-only is a 4n square (the ADR-0223 R3(a) floor, unchanged form) |
+| all controls | height 4n · inset n · gap n · radius n with `corner-shape: squircle` (button and toggle excepted, below) · type n + 6 · borders inside the box (padding = rule - border width) |
+| button, toggle | radius h/2 = 2n (the pill); padding 2n beside a label, n beside an icon; icon-only is a 4n square (the ADR-0223 R3(a) floor, unchanged form) |
 | text-field, select, combo-box, multi-select, otp-field | padding n; a leading icon or caret slot is 2n |
 | field | label above, gap ceil(n/2) |
 | checkbox | 2n box, radius n/2, check glyph 2n - 2c |
@@ -171,17 +174,22 @@ rules are:
 | table | rows at least 4n + 2c, text cells n + c, a boxed child's cell n + c - its inset, header in group-kicker type, the table extends n + c past its card on each side |
 | progress | track 2c, radius c |
 
-Three deviations, each named so the mockup can confirm or reverse them:
+Four deviations from the skill. Kim ruled the first two at step 0 (2026-10-12, the approval note
+`.sdlc/foundations-mockup/approval.md`):
 
-- **`ui-avatar` stays 4n**, the skill's icon-tile rule. The skill's 2n avatar is an avatar inside a
-  control row; in the fleet `ui-avatar` stands beside controls at control height (24 / 28 / 36
-  today), and 2n would shrink it by half (Appendix B).
+- **Button and toggle keep the pill**, radius h/2 = 2n: 12 / 14 / 16 at the root, 14 / 18 / 22 in
+  the A2UI canvas. It is the one documented exception to radius = n. A pill at a container's
+  corner is not concentric with it; Kim accepted that.
+- **`ui-avatar` is 4n** (24 / 28 / 32 at the root), the skill's icon-tile rule. The skill's 2n
+  avatar is an avatar inside a control row; in the fleet `ui-avatar` stands beside controls at
+  control height, and 2n would shrink it by half (Appendix B).
 - **`ui-slider` has no skill rule.** It takes the progress rule for its rail (2c) and the switch rule
   for its thumb (2n - 2c).
 - **ADR-0036 stands.** A single-line control keeps line-height 1 inside its 4n frame; the skill's
   1.2 applies to control text that wraps.
 
-The pill radius retires: a button or toggle at md goes from 14 (h/2) to 7 (n). The squareness
+The pill stays, so a button or toggle keeps radius 14 at md and follows its height at lg (18 to
+16). Every other control's radius moves to n (a field at md: 12 to 7). The squareness
 floor `min-inline-size: var(--ui-{name}-height)` keeps its form and resolves to 4n.
 
 ### 4. Icon and glyph: two boxes, two elements, one renamed prop
@@ -221,7 +229,8 @@ floor `min-inline-size: var(--ui-{name}-height)` keeps its form and resolves to 
   Each mark is a stroke path in a fixed square viewBox, drawn `fill="none" stroke="currentColor"`
   with `vector-effect: non-scaling-stroke`, so stroke width is a token:
   `--md-sys-glyph-stroke = max(1.5px, c/2)` (1.5 / 1.5 / 2 / 2.5 for c = 2 / 3 / 4 / 5). `dot` and
-  `more` are filled. The stroke rule is this record's proposal; the step 0 mockup confirms it.
+  `more` are filled. Kim approved the rule as drawn at step 0 (1.5px at the root's 8, 10 and 12px
+  boxes).
 - **Two consumption paths, one source.** A control with a child slot renders `<ui-glyph>` (select
   caret, text-field stepper and clear, toast and file-drop dismiss, calendar and swiper carets,
   disclosure caret, tabs and breadcrumb overflow, composer and status-stream marks, timeline status,
@@ -246,7 +255,8 @@ floor `min-inline-size: var(--ui-{name}-height)` keeps its form and resolves to 
   (skill rule 9). A button in a card footer sits 21 - 7 = 14px from the card edge, so its label
   lines up with the card's text at 21.
 - **Concentric by construction.** A container's radius equals its margin and a control's radius
-  equals its inset, so nested corners stay concentric. ADR-0018's `max(0, r - pad)` chain and ADR-0046
+  equals its inset, so nested corners stay concentric (the button and toggle pill, clause 3, is the
+  one control that is not). ADR-0018's `max(0, r - pad)` chain and ADR-0046
   Amendment 2's zero-radius consequence both retire.
 - **What ADR-0046 keeps:** `[data-box]` as the opt-in, the flow-root BFC, sticky header and footer,
   `hr` full-bleed, and the scroll-fade mask and card scroll model of Amendments 3 to 6. **What it
@@ -330,7 +340,7 @@ goldens re-run in the release wave.
 | option | how it lands | verdict |
 |---|---|---|
 | Big-bang | one change repoints every token and rewrites every control | rejected: 124 package stylesheets, 42 test files and 66 goldens in one review, no partial rollback, no parallel lanes |
-| Forward token shim alone | the old `--md-sys-*` and `--ui-box-*` names alias the derived tokens; control CSS untouched | rejected as the plan: heights, type, icons and gaps move, but control-local formulas (pill h/2, input padding h/2, checkbox box/5, the 0.6 check) keep today's shape, so the fleet lands half-derived. Kept as the consumer bridge |
+| Forward token shim alone | the old `--md-sys-*` and `--ui-box-*` names alias the derived tokens; control CSS untouched | rejected as the plan: heights, type, icons and gaps move, but control-local formulas (input padding h/2, checkbox box/5, the 0.6 check) keep today's shape, so the fleet lands half-derived. Kept as the consumer bridge |
 | Per-control waves alone | each family rewrites its stylesheet onto the derived tokens | rejected alone: during the train every default page on `main` mixes two systems |
 | **Dark launch (recommended)** | derived tokens exist only inside opt-in `data-tier` regions until the cut; each family lane rewrites every geometry rule as `var(<derived>, <today's expression>)`; a scoped forward shim aliases the old names inside opt-in regions; the cut is one config field that makes the root opt in | adopted |
 
@@ -350,9 +360,8 @@ How it works:
 - **Undefined outside, defined inside.** Until the cut the generator's `rootDefault` field is false
   and the derived block is declared only on `[data-tier]` and `[data-tier] :is([data-scale],
   [data-size], [size])`. Outside an opt-in region every derived token is undefined, so each
-  `var(<derived>, <today>)` resolves to today's expression. A migrated button reads
-  `border-radius: var(--md-sys-radius, calc(var(--ui-button-height) / 2))`: a pill outside, n
-  inside.
+  `var(<derived>, <today>)` resolves to today's expression. A migrated text-field reads
+  `border-radius: var(--md-sys-radius, var(--md-sys-shape-corner-base))`: 12 outside, n inside.
 - **The bridge** (`foundations-bridge.gen.css`, generated with the tokens) aliases the old names
   to derived values inside opt-in regions, and on `:root` from the cut: `--md-sys-height-{sm,md,lg}`
   to the height one size step down, at and up (`calc` over the tier step k + g·s);
@@ -376,7 +385,7 @@ parallel up to the seat-map concurrency ceiling.
 
 | wave | lane | files (folders under `controls/` unless a path is given) | size | depends on |
 |---|---|---|---|---|
-| Step 0 | mockup | `.sdlc/foundations-mockup/` only | L2 | ratification |
+| Step 0 | mockup (done: Kim approved it as drawn, 2026-10-12) | `.sdlc/foundations-mockup/` only | L2 | none |
 | W1 tokens, generator, gate | 1 | `packages/agent-ui/shared/src/tokens/**`, `scripts/generate-foundations.mjs`, `package.json` (`check:scripts`), `AGENTS.md` | L3 | Kim's mockup approval |
 | W2 icon and glyph containers | 2 | `icon/`, new `glyph/` (the mark path table), `packages/agent-ui/icons/src/glyph-usage-coverage.test.ts`; `ui-icon` gains `symbol` and keeps `glyph`; no call site moves | L3 | W1 |
 | W3 controls by family | 3a entry | `text-field`, `textarea`, `select`, `combo-box`, `multi-select`, `otp-field`, `field`, `color-picker`, `form-provider`, `suggestions` | L3 | W1, W2 |
@@ -387,8 +396,8 @@ parallel up to the seat-map concurrency ceiling.
 | | 3f data display | `table`, `list`, `description-list`, `timeline`, `timeline-item`, `status-stream`, `ladder`, `ramp`, `code`, `_chart` and the four chart folders, `_token-surface`, app `entry-list` | L2 | W1, W2 |
 | | 3g type | `text` | L2 | W1 |
 | W4 containers and widgets | 4a containers | `_surface`, `card`, `modal`, `drawer`, `popover`, `toast`, `tooltip`, `command-modal`, `form-popover`, `row`, `column`, `grid`, `sandbox-frame`, `theme-provider`, app `super-shell`, `chat-shell`, `workspace-shell`, `master-detail`, `surface-host`, `settings` | L3 | W3 |
-| | 4b preset widgets | `product-card`, `board-grid`, `game-hud`, `service-card`, `playing-card`, `packages/agent-ui/a2ui/src/catalog/personas/**` | L2 | W3 |
-| W5 A2UI, site, docs | 5a A2UI catalog | `packages/agent-ui/a2ui/src/catalog/{default,a2ui-basic}/**` (`mapsTo` glyph to symbol, the Button icon child), renderer tests, `eval:catalog` under opt-in | L2 | W2 |
+| | 4b preset widgets | `product-card`, `board-grid`, `game-hud`, `service-card`, `playing-card`, `packages/agent-ui/a2ui/src/catalog/personas/**`; the persona action row stops stamping `size="lg"` and reads the derived md height with today's lg as its fallback, so actions stay 36px on both sides of the cut | L2 | W3 |
+| W5 A2UI, site, docs | 5a A2UI catalog | `packages/agent-ui/a2ui/src/catalog/{default,a2ui-basic}/**` (`mapsTo` glyph to symbol, the Button icon child), `packages/agent-ui/a2ui/src/renderer/**` (the surface root carries `data-scale="md"`, the canvas register; no `data-tier`, so it stays dark until the cut), renderer tests, `eval:catalog` under opt-in | L2 | W2 |
 | | 5b site | `site/**`: preview knobs from `[scale]`/`[density]` to the data axes, site call sites, reading columns at `data-tier="content"` | L2 | W3, W4 |
 | | 5c app surfaces | app `agent-admin`, `conversation` (the remaining `setAttribute('glyph', …)` call sites) | L2 | W2 |
 | | 5d records | `.claude/docs/**`, `.claude/skills/**` (clause 11's law records) | L2 | W3, W4 |
@@ -441,19 +450,20 @@ geometry pin and records its opt-in goldens.
 - **W7 is the one irreversible step,** and it runs only after a release in which no rollback was
   used.
 
-Step 0's mockup is a static page in the step-0 ticket folder (`.sdlc/foundations-mockup/mockup.html`,
-published as an artifact for review), approved by Kim before W1: one control row per root step
-(sm, md, lg) and per `data-scale="md"`, each control drawn with its icon slot (2n) and glyph box
-(2n - 2c) outlined; a listbox, popover, card and page frame at each level; the `ui-text` ladder;
-the pill-to-n radius change and the avatar deviation beside today's look. It settles the open
-items below.
+Step 0's mockup, a static page reviewed as an artifact (the PNGs and Kim's approval note sit in
+`.sdlc/foundations-mockup/`), drew one control row per root step (sm, md, lg) and per
+`data-scale="md"`, each control with its icon slot (2n) and glyph box (2n - 2c) outlined; a
+listbox, popover, card and page frame at each level; the `ui-text` ladder; the radius and avatar
+choices beside today's look. Kim approved it as drawn on 2026-10-12; the rulings follow clause
+11.
 
 ### 11. Records this invalidates (stale, re-verified per wave)
 
 171 files outside the ADR log name a replaced law or token (`git grep -l -E
 'md-sys-height-|md-sys-icon-|md-sys-compact-|ADR-0038|ADR-0041|geometry\.md|ui-box-pad|md-sys-typescale|ADR-0046|ADR-0078'`),
 each repaired by the wave that changes what it describes. The ones that state a law and not a
-value: `references/geometry.md` (frame/rhythm split, h/2 padding, pill radius),
+value: `references/geometry.md` (frame/rhythm split, h/2 padding; its pill radius survives for button
+and toggle only),
 `references/geometry-sizing-spec.md` (the hand-tabled ramp), `references/tokens.md`,
 `references/naming.md` §12 (the `glyph` entry), `references/dimensional-standard.md` (already
 superseded; its stale tier note goes), `rubrics/component.md`, the `component-standards`,
@@ -462,26 +472,29 @@ superseded; its stale tier note goes), `rubrics/component.md`, the `component-st
 Inner loop line "Controls take the library ramp (sm 24 / md 28 / lg 36 px)", which becomes 24 /
 28 / 32.
 
-## Open for the step 0 mockup
+## Step 0 rulings (Kim, 2026-10-12)
 
-1. **The A2UI canvas register.** T-0083 put widget actions at 36px (size lg). At the root they
-   become 32. A canvas root carrying `data-scale="md"` would make md actions 36 and every other md
-   control 36 too. The mockup shows both.
-2. **The icon shrink** (Appendix B row 2), which is the largest visible change after the radius.
-3. **The glyph stroke** `max(1.5px, c/2)` at 8, 10 and 12px boxes.
-4. **The avatar deviation** (clause 3).
-5. **Container growth** in cards (block inset 12 to 21, region gap 6 to 14, radius 12 to 21).
+The items this record left open for the mockup are closed (`.sdlc/foundations-mockup/approval.md`):
+
+1. **The mockup is approved as drawn:** icon 18 to 14 at md, caret 14 to 10, card radius 21,
+   listbox padding 2, container growth as in Appendix B.
+2. **The A2UI canvas register is `data-scale="md"`:** A2UI surfaces read 28 / 36 / 44, and widget
+   actions stay 36px (clause 2; lanes 4b and 5a).
+3. **Button and toggle keep the pill** (h/2), the one documented exception to radius = n (clause 3).
+4. **The avatar is 4n** (24 / 28 / 32 at the root), not the skill's 2n (clause 3).
+5. **The glyph stroke stays as drawn,** `max(1.5px, c/2)` (clause 5).
 
 ## Consequences
 
 - **One derivation instead of four tables.** A new control computes its geometry from its n; a
   density or scale change is one attribute; nested corners are concentric without a chain.
-- **Visible, fleet-wide look change.** The biggest moves at the default md, in order: control
-  radius 14 to 7 (pills become squircle rectangles); icons 18 to 14; input inline padding 14 to 7;
+- **Visible, fleet-wide look change.** The biggest moves at the default md, in order: icons 18 to
+  14; input inline padding 14 to 7; field radius 12 to 7 (buttons and toggles keep the pill);
   card block inset 12 to 21 and radius 12 to 21; listbox padding 7 to 2 with option rows 22 to
   28; `display` type 45 to 32; `kicker` 12 to 16. Appendix B has every row.
-- **lg controls shrink 36 to 32,** including the tabs strip (36 today, 28 at the default md) and
-  T-0083's widget actions, unless the mockup picks the md canvas register.
+- **lg controls shrink 36 to 32 at the root,** and the tabs strip goes from 36 to 28 at the
+  default md. A2UI surfaces sit at `data-scale="md"` (28 / 36 / 44), so T-0083's widget actions
+  stay 36px as md actions there.
 - **No 40, no 48 and no XL in product.** A request for one is answered with the nearest steps
   (32 or 36, 44), never a one-off.
 - **Density changes meaning:** a region's density now moves heights too, not only gaps.
@@ -499,7 +512,7 @@ Inner loop line "Controls take the library ramp (sm 24 / md 28 / lg 36 px)", whi
 
 | risk | likelihood | mitigation |
 |---|---|---|
-| The overhaul reads as a different product (radius, icon size, container air) | high, by design | step 0 mockup before any build; Kim's sign-off before the release cut |
+| The overhaul reads as a different product (radius, icon size, container air) | high, by design | the step 0 mockup, approved as drawn on 2026-10-12; Kim's sign-off before the release cut |
 | `round()` / `pow()` / `corner-shape` engine gaps | low for the first two, high for `corner-shape` outside Chromium | the 36-cell browser leg in both engines; `corner-shape` is paint-only and falls back to circular corners |
 | A region's `data-size` never reaches a control that reflects its default | low (reflection is setter-driven) | W1 test on a bare control under `data-size="sm"` |
 | The dark launch leaks: a derived token resolves outside an opt-in region before the cut | medium | the 10c leak gate (default goldens and `dimensions.test.ts` byte-identical through W5) and the outside-opt-in leg of every per-control pin |
@@ -529,6 +542,8 @@ touched folders' tests and `test:browser` for CSS waves.
   tier to CFG for one step.
 - **Map library sizes to mixed rungs** (sm and md from widget, lg from product). Rejected: it sets n
   per size by hand, which the skill forbids (rule 2), and breaks scale/size commutation.
+- **Radius n for button and toggle too (the skill's rule).** Rejected by Kim at step 0: buttons
+  and toggles keep the pill, at the cost of concentric corners for a pill at a container corner.
 - **Rename `ui-icon.glyph` back to `name`.** Rejected: `name` is reserved fleet-wide for form
   identifiers (TKT-0069).
 - **Keep `glyph` on `ui-icon` and call the mark element something else (`ui-mark`).** Rejected: Kim
@@ -569,7 +584,7 @@ stylesheets at the default (no `[scale]`, no `[density]`).
 | button label padding (h/2 today) | 2n | 12 → 12 (0) · 14 → 14 (0) · 18 → 16 (-2) |
 | button icon-side padding ((h - icon)/2 today) | n | 4 → 6 (+2) · 5 → 7 (+2) · 8 → 8 (0) |
 | input inline padding (h/2 today) | n | 12 → 6 (-6) · 14 → 7 (-7) · 18 → 8 (-10) |
-| button / toggle radius (pill h/2 today) | n | 12 → 6 (-6) · 14 → 7 (-7) · 18 → 8 (-10) |
+| button / toggle radius (the pill, kept at step 0) | h/2 = 2n | 12 → 12 (0) · 14 → 14 (0) · 18 → 16 (-2) |
 | field radius (corner-base today) | n | 12 → 6 (-6) · 12 → 7 (-5) · 12 → 8 (-4) |
 | checkbox / radio / switch / slider box (compact today) | 2n | 14 → 12 (-2) · 16 → 14 (-2) · 18 → 16 (-2) |
 | checkbox radius (box/5 today) | n/2 | 2.8 → 3 (+0.2) · 3.2 → 3.5 (+0.3) · 3.6 → 4 (+0.4) |
@@ -579,8 +594,8 @@ stylesheets at the default (no `[scale]`, no `[density]`).
 | switch track width (1.8 box today) | 2 thumb + 2c | 25.2 → 20 (-5.2) · 28.8 → 24 (-4.8) · 32.4 → 28 (-4.4) |
 | switch track padding (widget-inset today) | c | 2 → 2 (0) · 2 → 2 (0) · 2 → 2 (0) |
 | field label gap (space-xs today) | ceil(n/2) | 4 → 3 (-1) · 4 → 4 (0) · 4 → 4 (0) |
-| avatar, the skill's 2n | 2n | 24 → 12 (-12) · 28 → 14 (-14) · 36 → 16 (-20) |
-| avatar, the recommended icon-tile reading | 4n | 24 → 24 (0) · 28 → 28 (0) · 36 → 32 (-4) |
+| avatar, the skill's 2n (not adopted) | 2n | 24 → 12 (-12) · 28 → 14 (-14) · 36 → 16 (-20) |
+| avatar, 4n (ruled at step 0) | 4n | 24 → 24 (0) · 28 → 28 (0) · 36 → 32 (-4) |
 | menu item row (font + 8 today) | 4n | 22 → 24 (+2) · 22 → 28 (+6) · 22 → 32 (+10) |
 | table row (about 28 + 1px today) | 4n + 2c | 29 → 28 (-1) · 29 → 32 (+3) · 29 → 36 (+7) |
 | table text cell inline padding (space-sm today) | n + c | 8 → 8 (0) · 8 → 9 (+1) · 8 → 10 (+2) |
@@ -598,14 +613,14 @@ the W6 cut for default pages, and earlier inside opt-in regions as its lane land
 
 | control | moves at md (px) | lane |
 |---|---|---|
-| button, toggle | radius -7 · icon -4 · icon-side padding +2 · type -1 | 3b |
+| button, toggle | radius 0 (the pill) · icon -4 · icon-side padding +2 · type -1 | 3b |
 | text-field, select, combo-box, multi-select, otp-field | inline padding -7 · radius -5 · icon or caret box -4 (caret becomes a 10px glyph) · type -1 | 3a |
 | checkbox | box -2 · check +0.4 | 3c |
 | radio | box -2 · dot -2.96 | 3c |
 | switch | box -2 · thumb -2 · track width -4.8 | 3c |
 | slider | box -2 | 3c |
 | badge | height -4 · padding -4.75 · radius -5.5 · type -2 | 3d |
-| avatar | 0 with the 4n deviation (-14 under the skill's 2n) | 3d |
+| avatar | 0 (4n, ruled at step 0; -14 under the skill's 2n) | 3d |
 | menu | item rows +6 · panel padding 6 → 2 · panel radius -3 | 3e |
 | select listbox | padding -5 · option radius +2 · panel radius -3 | 3a |
 | segmented-control | padding +2 | 3b |
@@ -657,5 +672,9 @@ Containers at the root md (n 7, c 2):
 | `quote` | subhead | 16 → 17 (+1) · 18 → 18 (0) · 22 → 20 (-2) |
 
 The rejected root product/md, the same quantities at md: height 28 → 36 (+8) · icon box 18 → 18
-(0) · glyph box 14 → 12 (-2) · control type 14 → 15 (+1) · body 14 → 16 (+2) · button radius 14 → 9
-(-5) · card margin 18 → 27 (+9) · card radius 12 → 27 (+15).
+(0) · glyph box 14 → 12 (-2) · control type 14 → 15 (+1) · body 14 → 16 (+2) · button radius (pill) 14 → 18
+(+4) · card margin 18 → 27 (+9) · card radius 12 → 27 (+15).
+
+The A2UI canvas register product/md (ruled at step 0), size sm / md / lg: height 28 / 36 / 44 ·
+icon box 14 / 18 / 22 · glyph box 10 / 12 / 16 · control type 13 / 15 / 17 · button radius (pill)
+14 / 18 / 22.

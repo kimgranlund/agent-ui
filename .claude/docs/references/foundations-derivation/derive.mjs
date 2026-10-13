@@ -58,7 +58,7 @@ const rows = [
   ['button label padding (h/2 today)', [12, 14, 18], (r) => 2 * r.n, '2n'],
   ['button icon-side padding ((h - icon)/2 today)', [4, 5, 8], (r) => r.n, 'n'],
   ['input inline padding (h/2 today)', [12, 14, 18], (r) => r.n, 'n'],
-  ['button / toggle radius (pill h/2 today)', [12, 14, 18], (r) => r.radius, 'n'],
+  ['button / toggle radius (the pill, kept at step 0)', [12, 14, 18], (r) => r.h / 2, 'h/2 = 2n'],
   ['field radius (corner-base today)', [12, 12, 12], (r) => r.radius, 'n'],
   ['checkbox / radio / switch / slider box (compact today)', [14, 16, 18], (r) => r.icon, '2n'],
   ['checkbox radius (box/5 today)', [2.8, 3.2, 3.6], (r) => r.n / 2, 'n/2'],
@@ -68,8 +68,8 @@ const rows = [
   ['switch track width (1.8 box today)', [25.2, 28.8, 32.4], (r) => 2 * r.glyph + 2 * r.c, '2 thumb + 2c'],
   ['switch track padding (widget-inset today)', [2, 2, 2], (r) => r.c, 'c'],
   ['field label gap (space-xs today)', [4, 4, 4], (r) => Math.ceil(r.n / 2), 'ceil(n/2)'],
-  ['avatar, the skill\'s 2n', [24, 28, 36], (r) => r.icon, '2n'],
-  ['avatar, the recommended icon-tile reading', [24, 28, 36], (r) => r.h, '4n'],
+  ['avatar, the skill\'s 2n (not adopted)', [24, 28, 36], (r) => r.icon, '2n'],
+  ['avatar, 4n (ruled at step 0)', [24, 28, 36], (r) => r.h, '4n'],
   ['menu item row (font + 8 today)', [22, 22, 22], (r) => r.h, '4n'],
   ['table row (about 28 + 1px today)', [29, 29, 29], (r) => r.h + 2 * r.c, '4n + 2c'],
   ['table text cell inline padding (space-sm today)', [8, 8, 8], (r) => r.n + r.c, 'n + c'],
@@ -133,8 +133,14 @@ for (const [t, s] of [['content', 'md'], ['brand', 'md']]) {
 
 p('## 9. Rejected root product/md (the skill default), same quantities at md');
 const a = resolve('product', 'md', 'md');
-for (const [label, t, v] of [['height', 28, a.h], ['icon box', 18, a.icon], ['glyph box', 14, a.glyph], ['control type', 14, a.type.control], ['body', 14, a.type.body], ['button radius', 14, a.radius], ['card margin', 18, a.card.margin], ['card radius', 12, a.card.radius]]) {
+for (const [label, t, v] of [['height', 28, a.h], ['icon box', 18, a.icon], ['glyph box', 14, a.glyph], ['control type', 14, a.type.control], ['body', 14, a.type.body], ['button radius (pill)', 14, a.h / 2], ['card margin', 18, a.card.margin], ['card radius', 12, a.card.radius]]) {
   p(`- ${label}: ${t} → ${v} (${d(t, v)})`);
+}
+
+p('## 9b. The A2UI canvas register product/md (ruled at step 0), size sm / md / lg');
+const cv = SZ.map((z) => resolve('product', 'md', z));
+for (const [label, f] of [['height', (r) => r.h], ['icon box', (r) => r.icon], ['glyph box', (r) => r.glyph], ['control type', (r) => r.type.control], ['button radius (pill)', (r) => r.h / 2]]) {
+  p(`- ${label}: ${cv.map(f).join(' / ')}`);
 }
 
 p('## 10. Check values (SKILL.md section 9) recomputed');
