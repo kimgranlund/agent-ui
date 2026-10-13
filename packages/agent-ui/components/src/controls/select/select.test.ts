@@ -1610,7 +1610,7 @@ describe('select.css — TKT-0027 listbox max-block-size dial (select-max-block-
 
   it('select-max-block-size-token-chain: --ui-select-listbox-max-block-size defaults to min(50vh, 12 option rows + 13 insets + the 2px border compensation)', () => {
     expect(selectCss).toMatch(
-      /--ui-select-listbox-max-block-size:\s*min\(50vh,\s*calc\(12 \* var\(--ui-select-height\) \+ 13 \* var\(--ui-select-listbox-padding\) \+ 2px\)\)/,
+      /--ui-select-listbox-max-block-size:\s*min\(50vh,\s*calc\(12 \* var\(--ui-select-height\) \+ 13 \* var\(--ui-select-listbox-padding\) \+ 1px \+ 1px\)\)/,
     )
   })
 

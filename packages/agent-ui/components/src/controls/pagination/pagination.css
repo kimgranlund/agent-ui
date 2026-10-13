@@ -20,7 +20,7 @@
 @import '../button/button.css';
 
 :where(ui-pagination) {
-  --ui-pagination-gap: var(--md-sys-space-xs); /* the inter-stop rhythm — rides [density] free (ADR-0103) */
+  --ui-pagination-gap: var(--md-sys-c, var(--md-sys-space-xs)); /* the inter-stop rhythm — rides [density] free (ADR-0103) */
   --ui-pagination-ellipsis-ink: var(--md-sys-color-neutral-on-surface-variant); /* a passive marker, not an intent */
 }
 

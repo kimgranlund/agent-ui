@@ -41,7 +41,7 @@
   --ui-button-font: var(--md-sys-type-control, var(--md-sys-font-md));
   --ui-button-gap: var(--md-sys-inset, var(--md-sys-gap-md));
   --ui-button-icon: var(--md-sys-icon-box, var(--md-sys-icon-md)); /* content-icon = the shared §1-SET icon table (ADR-0035 4a hoist, dimensions.css), per-[scale]-tier; was pow(scale,0.58) */
-  --ui-button-glyph: var(--ui-button-font); /* inline-affordance (caret) ramp = font (--ui-glyph-ratio 1, §4.1) */
+  --ui-button-glyph: var(--md-sys-glyph-box, var(--ui-button-font)); /* inline-affordance (caret): the glyph box 2n - 2c in a data-tier region, the font outside (ADR-0245 cl.4) */
 }
 
 /* variant → colour roles (the channel pattern, tokens.md). Per-state bg steps the matching ladder:

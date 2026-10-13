@@ -19,9 +19,9 @@
 :where(ui-toolbar) {
   --ui-toolbar-align: center; /* align (cross-axis) → align-items; center is the toolbar's OWN default (the bar look — differs from ui-row's start) */
   --ui-toolbar-justify: start; /* justify (main-axis distribution) → justify-content */
-  --ui-toolbar-gap: var(--md-sys-space-sm); /* gap default 'sm' — toolbars are tight (differs from ui-row's 'none') */
-  --ui-toolbar-pad-inline: var(--md-sys-space-sm);
-  --ui-toolbar-pad-block: var(--md-sys-space-xs);
+  --ui-toolbar-gap: var(--md-sys-inset, var(--md-sys-space-sm)); /* gap default 'sm' — toolbars are tight (differs from ui-row's 'none') */
+  --ui-toolbar-pad-inline: var(--md-sys-inset, var(--md-sys-space-sm));
+  --ui-toolbar-pad-block: var(--md-sys-c, var(--md-sys-space-xs));
   --ui-toolbar-min-block-size: var(--md-sys-height, var(--md-sys-height-md)); /* the whole-shape bar floor (SPEC-R7 AC2) — the control-height register, NOT a --md-sys-space quantity */
 
   box-sizing: border-box;
@@ -67,19 +67,19 @@
   --ui-toolbar-gap: var(--md-sys-space-none);
 }
 :where(ui-toolbar[gap='xs']) {
-  --ui-toolbar-gap: var(--md-sys-space-xs);
+  --ui-toolbar-gap: var(--md-sys-c, var(--md-sys-space-xs));
 }
 :where(ui-toolbar[gap='md']) {
-  --ui-toolbar-gap: var(--md-sys-space-md);
+  --ui-toolbar-gap: var(--md-sys-group-margin, var(--md-sys-space-md));
 }
 :where(ui-toolbar[gap='lg']) {
-  --ui-toolbar-gap: var(--md-sys-space-lg);
+  --ui-toolbar-gap: var(--md-sys-widget-margin, var(--md-sys-space-lg));
 }
 :where(ui-toolbar[gap='xl']) {
-  --ui-toolbar-gap: var(--md-sys-space-xl);
+  --ui-toolbar-gap: var(--md-sys-card-margin, var(--md-sys-space-xl));
 }
 :where(ui-toolbar[gap='2xl']) {
-  --ui-toolbar-gap: var(--md-sys-space-2xl);
+  --ui-toolbar-gap: var(--md-sys-layout-margin, var(--md-sys-space-2xl));
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-toolbar) consumes ONLY --ui-toolbar-* ════════════════ */
