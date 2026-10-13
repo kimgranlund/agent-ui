@@ -26,7 +26,7 @@ describe('button.css — structure + token hygiene (s7)', () => {
       expect(tokenBlock).toMatch(new RegExp(`--ui-button-${slot}:`))
     }
     expect(tokenBlock).toContain('var(--md-sys-color-primary') // colour roles (default family = primary)
-    expect(tokenBlock).toContain('var(--md-sys-height-md)') // the s6 dimensional ramp
+    expect(tokenBlock).toContain('var(--md-sys-height, var(--md-sys-height-md))') // the s6 dimensional ramp
   })
 
   it('[variant] repoints the colour channel; [size] repoints the geometry', () => {

@@ -16,8 +16,8 @@ import '@agent-ui/icons/phosphor' // registers the Phosphor pack so <ui-icon gly
 
 // ── markup ───────────────────────────────────────────────────────────────────────────────────────────
 const BARE = '<ui-toggle>Chat</ui-toggle>'
-const ICON = '<ui-toggle><ui-icon slot="icon" glyph="chats-circle"></ui-icon>Chat</ui-toggle>'
-const BOTH = '<ui-toggle><ui-icon slot="icon" glyph="gear-six"></ui-icon>Settings<ui-icon slot="state-icon" glyph="eye"></ui-icon></ui-toggle>'
+const ICON = '<ui-toggle><ui-icon slot="icon" symbol="chats-circle"></ui-icon>Chat</ui-toggle>'
+const BOTH = '<ui-toggle><ui-icon slot="icon" symbol="gear-six"></ui-icon>Settings<ui-icon slot="state-icon" symbol="eye"></ui-icon></ui-toggle>'
 
 // ── mount/cleanup ────────────────────────────────────────────────────────────────────────────────────
 const mounted: HTMLElement[] = []

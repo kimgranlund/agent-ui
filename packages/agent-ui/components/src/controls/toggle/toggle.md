@@ -58,13 +58,13 @@ events:
 slots:
   - name: icon
     optional: true
-    description: The identity icon — a light-DOM child in the start cell (e.g. `<ui-icon slot="icon" glyph="chats-circle">`). Named for its FIXED role (unlike ui-button's position-named leading/trailing, which can hold any data-role) — this slot holds exactly one thing, the toggle's identity glyph. Absent ⇒ the slotless bare-label layout.
+    description: The identity icon — a light-DOM child in the start cell (e.g. `<ui-icon slot="icon" symbol="chats-circle">`). Named for its FIXED role (unlike ui-button's position-named leading/trailing, which can hold any data-role) — this slot holds exactly one thing, the toggle's identity glyph. Absent ⇒ the slotless bare-label layout.
   - name: label
     optional: true
     description: The label — the default/unnamed children (an explicit `slot="label"` is equivalent); the accessible name, filling the centre cell. Anonymous grid text (no control-created wrapper, no overflow/ellipsis handling — unlike ui-button's ADR-0133 wrapper, out of scope here: every named consumer usage is a single short word, "Chat"/"Settings"/"Co-pilot").
   - name: state-icon
     optional: true
-    description: An optional orthogonal state indicator in the end cell (e.g. the Eye/EyeSlash visibility glyph the agent-admin header pills carry, `<ui-icon slot="state-icon" glyph="eye">`). Named for its fixed role, same rationale as `icon`. Purely presentational — toggling `pressed` never touches this slot's content; a consumer swaps its `glyph` itself in response to whatever state it represents.
+    description: An optional orthogonal state indicator in the end cell (e.g. the Eye/EyeSlash visibility glyph the agent-admin header pills carry, `<ui-icon slot="state-icon" symbol="eye">`). Named for its fixed role, same rationale as `icon`. Purely presentational — toggling `pressed` never touches this slot's content; a consumer swaps its `glyph` itself in response to whatever state it represents.
 
 parts: []               # light-DOM host, no control-created wrapper — see the `label` slot note above
 
@@ -111,9 +111,9 @@ fleet had no toggle-button primitive before this — `ui-switch` is a track-and-
 no pressed state at all (the amendment's own survey, ADR-0179 GH #686).
 
 ```html
-<ui-toggle><ui-icon slot="icon" glyph="chats-circle"></ui-icon>Chat</ui-toggle>
-<ui-toggle pressed><ui-icon slot="icon" glyph="gear-six"></ui-icon>Settings<ui-icon slot="state-icon" glyph="eye"></ui-icon></ui-toggle>
-<ui-toggle disabled><ui-icon slot="icon" glyph="robot"></ui-icon>Co-pilot</ui-toggle>
+<ui-toggle><ui-icon slot="icon" symbol="chats-circle"></ui-icon>Chat</ui-toggle>
+<ui-toggle pressed><ui-icon slot="icon" symbol="gear-six"></ui-icon>Settings<ui-icon slot="state-icon" symbol="eye"></ui-icon></ui-toggle>
+<ui-toggle disabled><ui-icon slot="icon" symbol="robot"></ui-icon>Co-pilot</ui-toggle>
 ```
 
 ## Refused toggle — the cancelable-before-commit design (LLD §16.2's min-one invariant)

@@ -37,10 +37,10 @@
   --ui-button-border: transparent;
 
   /* Geometry — off the s6 dimensional ramp (default size = md). [size] repoints below. */
-  --ui-button-height: var(--md-sys-height-md);
-  --ui-button-font: var(--md-sys-font-md);
-  --ui-button-gap: var(--md-sys-gap-md);
-  --ui-button-icon: var(--md-sys-icon-md); /* content-icon = the shared §1-SET icon table (ADR-0035 4a hoist, dimensions.css), per-[scale]-tier; was pow(scale,0.58) */
+  --ui-button-height: var(--md-sys-height, var(--md-sys-height-md));
+  --ui-button-font: var(--md-sys-type-control, var(--md-sys-font-md));
+  --ui-button-gap: var(--md-sys-inset, var(--md-sys-gap-md));
+  --ui-button-icon: var(--md-sys-icon-box, var(--md-sys-icon-md)); /* content-icon = the shared §1-SET icon table (ADR-0035 4a hoist, dimensions.css), per-[scale]-tier; was pow(scale,0.58) */
   --ui-button-glyph: var(--ui-button-font); /* inline-affordance (caret) ramp = font (--ui-glyph-ratio 1, §4.1) */
 }
 
@@ -62,16 +62,16 @@
 
 /* size → dimensional ramp */
 :where(ui-button[size='sm']) {
-  --ui-button-height: var(--md-sys-height-sm);
-  --ui-button-font: var(--md-sys-font-sm);
-  --ui-button-gap: var(--md-sys-gap-sm);
-  --ui-button-icon: var(--md-sys-icon-sm); /* §1-SET icon table (ADR-0035) */
+  --ui-button-height: var(--md-sys-height, var(--md-sys-height-sm));
+  --ui-button-font: var(--md-sys-type-control, var(--md-sys-font-sm));
+  --ui-button-gap: var(--md-sys-inset, var(--md-sys-gap-sm));
+  --ui-button-icon: var(--md-sys-icon-box, var(--md-sys-icon-sm)); /* §1-SET icon table (ADR-0035) */
 }
 :where(ui-button[size='lg']) {
-  --ui-button-height: var(--md-sys-height-lg);
-  --ui-button-font: var(--md-sys-font-lg);
-  --ui-button-gap: var(--md-sys-gap-lg);
-  --ui-button-icon: var(--md-sys-icon-lg); /* §1-SET icon table (ADR-0035) */
+  --ui-button-height: var(--md-sys-height, var(--md-sys-height-lg));
+  --ui-button-font: var(--md-sys-type-control, var(--md-sys-font-lg));
+  --ui-button-gap: var(--md-sys-inset, var(--md-sys-gap-lg));
+  --ui-button-icon: var(--md-sys-icon-box, var(--md-sys-icon-lg)); /* §1-SET icon table (ADR-0035) */
 }
 
 /* disabled → muted neutral roles (overrides the family). HOLDS at idle: -bg-hover/-bg-active repoint to the

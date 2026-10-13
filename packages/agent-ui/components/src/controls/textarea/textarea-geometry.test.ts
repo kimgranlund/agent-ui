@@ -46,7 +46,7 @@ describe('textarea.css — structure + sectioning', () => {
       expect(tokenBlock).toMatch(new RegExp(`--ui-textarea-${slot}:`))
     }
     expect(tokenBlock).toContain('var(--md-sys-color-neutral') // the field-frame roles (family = neutral)
-    expect(tokenBlock).toContain('var(--md-sys-font-md)') // the font ramp (NOT --md-sys-height-* — no fixed height lever)
+    expect(tokenBlock).toContain('var(--md-sys-type-control, var(--md-sys-font-md))') // the font ramp (NOT --md-sys-height-* — no fixed height lever)
   })
 
   it('[size] repoints ONLY the font token (padding/line-box derive from it via calc — no separate repoint needed)', () => {

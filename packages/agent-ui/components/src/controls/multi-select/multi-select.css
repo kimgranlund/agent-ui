@@ -23,11 +23,11 @@
 
 :where(ui-multi-select) {
   /* ── The virtual row-height lever (LLD-C5) — off the §1-row ramp (ADR-0038), default size = md. ── */
-  --ui-multi-select-height: var(--md-sys-height-md);
-  --ui-multi-select-font: var(--md-sys-font-md);
-  --ui-multi-select-icon: var(--md-sys-icon-md);
+  --ui-multi-select-height: var(--md-sys-height, var(--md-sys-height-md));
+  --ui-multi-select-font: var(--md-sys-type-control, var(--md-sys-font-md));
+  --ui-multi-select-icon: var(--md-sys-icon-box, var(--md-sys-icon-md));
   --ui-multi-select-glyph: var(--ui-multi-select-font); /* checkmark = font (the §4.1 caret law) */
-  --ui-multi-select-gap: var(--md-sys-gap-md); /* icon-cell ↔ label rhythm gap, = font/2 (§4.4) */
+  --ui-multi-select-gap: var(--md-sys-inset, var(--md-sys-gap-md)); /* icon-cell ↔ label rhythm gap, = font/2 (§4.4) */
 
   /* ── Listbox surface — Container/surface (always visible; no overlay/top-layer, LLD-C5). ── */
   --ui-multi-select-bg: var(--md-sys-color-neutral-surface);
@@ -86,17 +86,17 @@
 /* ── size → dimensional ramp repoint (ADR-0038) ──────────────────────────────────────────────────── */
 
 :where(ui-multi-select[size='sm']) {
-  --ui-multi-select-height: var(--md-sys-height-sm);
-  --ui-multi-select-font: var(--md-sys-font-sm);
-  --ui-multi-select-icon: var(--md-sys-icon-sm);
-  --ui-multi-select-gap: var(--md-sys-gap-sm);
+  --ui-multi-select-height: var(--md-sys-height, var(--md-sys-height-sm));
+  --ui-multi-select-font: var(--md-sys-type-control, var(--md-sys-font-sm));
+  --ui-multi-select-icon: var(--md-sys-icon-box, var(--md-sys-icon-sm));
+  --ui-multi-select-gap: var(--md-sys-inset, var(--md-sys-gap-sm));
 }
 
 :where(ui-multi-select[size='lg']) {
-  --ui-multi-select-height: var(--md-sys-height-lg);
-  --ui-multi-select-font: var(--md-sys-font-lg);
-  --ui-multi-select-icon: var(--md-sys-icon-lg);
-  --ui-multi-select-gap: var(--md-sys-gap-lg);
+  --ui-multi-select-height: var(--md-sys-height, var(--md-sys-height-lg));
+  --ui-multi-select-font: var(--md-sys-type-control, var(--md-sys-font-lg));
+  --ui-multi-select-icon: var(--md-sys-icon-box, var(--md-sys-icon-lg));
+  --ui-multi-select-gap: var(--md-sys-inset, var(--md-sys-gap-lg));
 }
 
 /* ── disabled → muted neutral roles ──────────────────────────────────────────────────────────────── */
