@@ -15,7 +15,7 @@ const after = JSON.parse(await readFile(path.join(HERE, 'metrics-after.json'), '
 const R = resolve('product', 'sm', 'md') // the root register (foundations.gen.css :root)
 
 const bar = R.h + 2 * R.widget.margin
-const pane = 9 * R.page.margin
+const pane = 252 // --ui-super-shell-pane-size 15.75rem: a named content measure, not a level (Kim 2026-10-13)
 const floor = 6 * R.page.margin
 const COMPACT = 840 // SHELL_COMPACT_BREAKPOINT 52.5rem: below it the docs nav pane is an overlay, not in flow
 const canvasX = (w) => (w >= COMPACT ? pane + R.page.gutter : 0)
@@ -28,7 +28,7 @@ const ROWS = [
   ['shellRadius', 'Shell card radius', 'card.radius (3n)', () => R.card.radius],
   ['overlayInset', 'Overlay pane inset', 'widget.margin (2n)', () => R.widget.margin],
   ['narrowTabsSeam', 'Narrow-tabs seam, pane-tabs pad', 'control.margin (n)', () => R.control.margin],
-  ['paneSize', 'Pane width', '9 x page.margin (36n)', () => pane],
+  ['paneSize', 'Pane width', 'named content measure 15.75rem', () => pane],
   ['canvasFloor', 'Canvas and pane floor', '6 x page.margin (24n)', () => floor],
   ['adminShellGutter', 'Agent-admin shell gutter', 'widget.margin (2n)', () => R.widget.margin],
   ['toggleX', 'Docs header: nav toggle box x', 'page.margin - control.margin', () => R.page.margin - R.control.margin],

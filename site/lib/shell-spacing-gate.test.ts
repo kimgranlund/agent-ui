@@ -24,7 +24,7 @@ import { describe, it, expect } from 'vitest'
 // mint written with raw literals (`--ui-x: 0.5rem 0.75rem`) matched neither of round 1's whole-value
 // regexes and passed unseen — the arm split catches it, scanning each dimension-shaped arm on its
 // own (var() arms, fallback included, stay excluded — GH #213's fallback-exclusion rule held
-// consistent in multi-value position). So `calc(var(--md-sys-layout-margin) * 9)` passes (no
+// consistent in multi-value position). So `calc(var(--md-sys-layout-margin) * 6)` passes (no
 // literal arm), `calc(0.4375rem * 2)` fails, and `0.4375rem 0.875rem` fails on BOTH arms.
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
@@ -111,8 +111,9 @@ const LEVEL_PX = [
   ...[REGISTER.control, REGISTER.group, REGISTER.widget, REGISTER.card, REGISTER.page].flatMap((l) => [l.margin, l.gutter]),
 ]
 // super-shell.css's token block, in resolve()'s own terms (the CSS names the page level `layout`): bars and
-// rails a control row plus two widget margins (8n), the floors six page margins (24n), panes nine (36n).
-const SHELL_PX = [REGISTER.h + 2 * REGISTER.widget.margin, 6 * REGISTER.page.margin, 9 * REGISTER.page.margin]
+// rails a control row plus two widget margins (8n), the floors six page margins (24n). The pane width is a
+// named content measure (15.75rem), not a level, so it is no rung.
+const SHELL_PX = [REGISTER.h + 2 * REGISTER.widget.margin, 6 * REGISTER.page.margin]
 const LADDER_PX = [...new Set([...LEVEL_PX, ...SHELL_PX])]
 
 // AC19(c), the allowlist: an explicit (file, declaration, reason) list. Growing it is a reviewed act,
@@ -322,9 +323,12 @@ describe('AC19 — the shell-family spacing-literal drift gate (SPEC-R11c/AC19)'
     // n at the root register comes off foundations.gen.css's own :root rule; every level is a multiple of it.
     const n = REGISTER.n
     expect(n, 'the root register resolves to an n on the ladder').toBeGreaterThanOrEqual(CFG.ladder[0])
-    for (const px of [REGISTER.c, n, n + REGISTER.c, 2 * n, 3 * n, 4 * n, 8 * n, 24 * n, 36 * n]) {
+    for (const px of [REGISTER.c, n, n + REGISTER.c, 2 * n, 3 * n, 4 * n, 8 * n, 24 * n]) {
       expect(LADDER_PX, `${px}px is a rung`).toContain(px)
     }
+    // the pane width is a named content measure (15.75rem), not a level: neither it nor the retired 36n pane is a rung
+    expect(LADDER_PX).not.toContain(252)
+    expect(LADDER_PX).not.toContain(36 * n)
     // the retired 18px module is no rung of its own any more (it survives only where it equals a level)
     if (18 % n !== 0) expect(LADDER_PX).not.toContain(18)
   })
@@ -337,7 +341,7 @@ describe('AC19 — the shell-family spacing-literal drift gate (SPEC-R11c/AC19)'
     expect(hits(`${REGISTER.control.margin}px ${rem(REGISTER.page.margin)}`), 'both arms of a two-value mint').toEqual([REGISTER.control.margin, REGISTER.page.margin])
     expect(hits(`calc(var(--ui-x) - var(--md-sys-c, ${REGISTER.c}px))`), "a foundations token's own fallback is not a mint").toEqual([])
     expect(hits(`var(--ui-x, ${rem(margin)})`), 'a fallback of any other var() is still scanned').toEqual([margin])
-    expect(hits('calc(var(--md-sys-layout-margin) * 9)'), 'a level token with a unitless multiplier has no literal').toEqual([])
+    expect(hits('calc(var(--md-sys-layout-margin) * 6)'), 'a level token with a unitless multiplier has no literal').toEqual([])
   })
 
   it('no raw px/rem literal in a spacing-/box-dimension declaration, OR in a minted --ui-* custom-property value, equals a shipped ladder rung, unless allowlisted', () => {

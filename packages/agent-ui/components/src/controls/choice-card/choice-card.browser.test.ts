@@ -1,5 +1,5 @@
-import { describe, it, expect, afterEach } from 'vitest'
-import { server, cdp } from 'vitest/browser'
+import { describe, it, expect, afterEach, beforeEach } from 'vitest'
+import { server, cdp, userEvent } from 'vitest/browser'
 
 // choice-card.browser.test.ts — the real-engine proof for ui-choice-card (ADR-0220, GH #1368; the
 // pinned browser-shard debt named in choice-card.test.ts/choice-card.ts's NAMED DEBT comments,
@@ -29,6 +29,18 @@ interface CdpSession {
 const mounted: HTMLElement[] = []
 afterEach(() => {
   while (mounted.length) mounted.pop()?.remove()
+})
+
+// Park the REAL pointer off the card before each test's idle-paint read. The pointer outlives a test file: a file
+// that ran earlier in the same page leaves it wherever its last real click landed (status-stream's Retry
+// click, at about 376,11), and every card here mounts at the top of the body. An idle card under the pointer
+// paints its own :hover frame, the selected border, so the idle asserts failed in that file order only.
+beforeEach(async () => {
+  const park = document.createElement('div')
+  park.style.cssText = 'position:fixed;inset-block-end:0;inset-inline-end:0;inline-size:8px;block-size:8px'
+  document.body.append(park)
+  await userEvent.hover(park)
+  park.remove()
 })
 
 /** Mount a populated card (realistic content — the whole-shape law needs non-trivial children, never a

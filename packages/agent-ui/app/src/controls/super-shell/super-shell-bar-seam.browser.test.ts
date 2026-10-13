@@ -32,7 +32,7 @@ const BAR = ROOT.h + 2 * ROOT.widget.margin // bars and rails: a control row plu
 const GAP = ROOT.page.gutter // the inter-card gap: the layout gutter 3n
 const SEAM = ROOT.control.margin // the strip seams: the control inset n
 const ROUND = `${ROOT.card.radius}px` // a carded part's round corner: the card radius 3n
-const PANE = ROOT.page.margin * 9 // the default pane: nine layout margins, 36n
+const PANE = 252 // the default pane: the named content measure 15.75rem, not an n multiple (Kim 2026-10-13)
 
 const mounted: HTMLElement[] = []
 afterEach(() => { for (const el of mounted.splice(0)) el.remove() })
@@ -556,7 +556,7 @@ describe('GH #381 — a floating overlay card is bordered on ALL FOUR sides, off
     // would have rendered 56px wide — silently breaking R9d's "the far-edge canvas gap stays exactly one
     // bar wide" cap. NC: delete `box-sizing: border-box` from the narrow overlay arm and the rail reads two pixels wider.
     const { pane } = await openNarrowOverlay()
-    expect(Math.round(pane.getBoundingClientRect().width), 'the overlaid pane keeps its 36n outer width').toBe(PANE)
+    expect(Math.round(pane.getBoundingClientRect().width), 'the overlaid pane keeps its 252px outer width').toBe(PANE)
 
     const railShell = mount(['header', 'global-nav', 'content', 'footer'], { width: 360, attrs: { 'narrow-start': 'collapse' } })
     await railShell.updateComplete

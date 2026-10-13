@@ -105,7 +105,7 @@ describe('a2ui-live chrome re-host (ADR-0156) — wide resting shape', () => {
   it("negative control: mounting the SAME slots without the page's [data-page-content] ancestor drops the pane-size override — the assertion above bites", () => {
     // No `[data-page-content]` wrapper this time, so a2ui-live.css's `[data-page-content] > ui-super-shell`
     // token-override selector never matches — the chat pane falls through to the component's OWN default
-    // pane size (nine layout margins, 36n), genuinely different from the page's 26rem (416px) override.
+    // pane size (the 15.75rem content measure), genuinely different from the page's 26rem (416px) override.
     const shell = document.createElement('ui-super-shell')
     const chat = document.createElement('div')
     chat.setAttribute('data-slot', 'nav-pane')

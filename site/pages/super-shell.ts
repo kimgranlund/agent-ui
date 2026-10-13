@@ -97,7 +97,7 @@ content.append(
   demoShell([
     slot('header', 'header', 'Permanent chrome — hosts the collapse toggles.'),
     slot('global-nav', 'global-nav', 'Outer rail: 8n (48px).'),
-    slot('nav-pane', 'nav-pane', 'Outer pane: 36n (216px).'),
+    slot('nav-pane', 'nav-pane', 'Outer pane: 252px (15.75rem).'),
     slot('section-nav', 'section-nav', 'Second outer pane — stacks after nav-pane, same side.'),
     slot('content', 'content', 'The mandatory slot — flexible, fills the rest.'),
     slot('options-section', 'options-section', 'Second options pane — stacks before options-pane, mirrors section-nav.'),
@@ -133,8 +133,8 @@ content.append(demoShell([slot('header', 'header', 'The only bar.'), slot('nav-p
 content.append(
   pageLead(
     'Every dimension is a level token of the derived system (SPEC-R1c, ADR-0245): bars/rails are 8n (',
-    code('--ui-super-shell-bar-size'), '), the gap between cards is the layout gutter 3n, panes are 36n, ' +
-      'realized as tokens, never literals, so the whole frame moves with n like the controls it holds.',
+    code('--ui-super-shell-bar-size'), '), the gap between cards is the layout gutter 3n, ' +
+      'realized as tokens, never literals, so the frame moves with n like the controls it holds. The pane width is the one named content measure (15.75rem).',
   ),
 )
 

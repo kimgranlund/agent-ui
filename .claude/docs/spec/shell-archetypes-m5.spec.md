@@ -38,7 +38,8 @@ A **shell** is `[ header? | side-L? | content | side-R? | footer? ]` where:
   chained onto the fleet's dimensional roles — never literals in consumer CSS.
   *REV 2026-10-13 (T-0121, ADR-0245 cl.6): the module is RETIRED. The frame is a layout-level region
   and every dimension is a level token that moves with n: bars and rails `height + 2 × widget margin`
-  = 8n (48px at the root register, n 6); panes nine layout margins = 36n (216px); the inter-card gap
+  = 8n (48px at the root register, n 6); panes stay 252px (15.75rem), a named content measure that
+  does not move with n (Kim 2026-10-13); the inter-card gap
   the layout gutter 3n (18px); card radius the card radius 3n (18px); the overlay inset the widget
   margin 2n (12px); the strip seams the control inset n (6px); the pane and canvas floors six layout
   margins = 24n (144px). The token names are unchanged except `--ui-super-shell-module`, which no
@@ -227,8 +228,8 @@ amendment substitutes for it.
   and the shell's own module math lands within one 18px module of it (dual full sides + canvas
   floor: 2·(54+252) + 162 + 4·18 ≈ 846px ≈ 52.9rem). One number, two mechanisms (viewport media
   there, container query here), both citing the same named line.
-  *REV 2026-10-13 (T-0121): on the derived levels the same sum is 2·(8n+36n) + 24n + 4·3n = 124n,
-  744px at the root register (n 6), four layout margins below the line; the line itself does not move.*
+  *REV 2026-10-13 (T-0121): on the derived levels the same sum is 2·(8n+252) + 24n + 4·3n = 52n + 504,
+  816px at the root register (n 6), one layout margin below the line; the line itself does not move.*
 - **R8b — `collapse-band`, per shell.** A new reflected enum prop
   `collapse-band ∈ 'narrow' (default) | 'compact'` names which line auto-collapses the shell's
   **collapse-mode sides** (R4 semantics otherwise unchanged: query-only hiding, overlay

@@ -38,13 +38,14 @@ import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 const mounted: HTMLElement[] = []
 afterEach(() => { for (const el of mounted.splice(0)) el.remove() })
 
-// T-0121: the frame is sized off the shell's own level tokens (scale.mjs at the root register), the smallest
-// frame the uncapped overlay fits: one default pane (36n), one bar's width of canvas left visible (R9d's cap) and
-// the floating inset on both sides. Far under the 40rem/640px narrow line, so the band overlay arm is the one
-// under test, and the card stays the majority of the shot (gate 3 below) at any n. It was a fixed 320px while
-// the pane was a fixed 252px.
+// T-0121: the frame is sized off the shell's own tokens (scale.mjs at the root register), the smallest
+// frame the uncapped overlay fits: one default pane (the 252px content measure), one bar's width of canvas left
+// visible (R9d's cap) and the floating inset on both sides. Far under the 40rem/640px narrow line, so the band
+// overlay arm is the one under test, and the card stays the majority of the shot (gate 3 below) at any n. It
+// was a fixed 320px on the retired 18px module.
 const ROOT = resolve('product', 'sm', 'md')
-const SHELL_INLINE = ROOT.page.margin * 9 + (ROOT.h + 2 * ROOT.widget.margin) + 2 * ROOT.widget.margin
+const SHELL_PANE = 252 // --ui-super-shell-pane-size: the named content measure 15.75rem
+const SHELL_INLINE = SHELL_PANE + (ROOT.h + 2 * ROOT.widget.margin) + 2 * ROOT.widget.margin
 const SHELL_BLOCK = 260
 
 /** Layout, the shell's own band/fit observers, and the queued overlay state, all settled before capture. */
