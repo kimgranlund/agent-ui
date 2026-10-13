@@ -407,6 +407,170 @@ export const personaBasicCroupierCardTableSeed: PersonaExampleSeed = {
   ],
 }
 
+/** The hand lifecycle (ADR-0243 Amendment 3): every phase seed binds `phase` and the table figures to /phase and
+ *  the same paths, so a round moves bet, deal, play, settle by data writes on one table. */
+const CARD_TABLE_PHASE_BINDS = {
+  phase: { path: '/phase' },
+  dealerHand: { path: '/dealerHand' },
+  playerHand: { path: '/playerHand' },
+  bankroll: { path: '/bankroll' },
+  bet: { path: '/bet' },
+}
+
+/** The betting step: empty hands, the last bet carried over, the bet two-way bound to /bet. */
+const CARD_TABLE_BETTING_DATA = { phase: 'betting', dealerHand: [], playerHand: [], bankroll: 1000, bet: 50 }
+
+const CARD_TABLE_BETTING_ROOT = {
+  id: 'root',
+  component: 'CardTable',
+  title: 'Blackjack',
+  status: 'Place your bet',
+  statusIntent: 'info',
+  ...CARD_TABLE_PHASE_BINDS,
+  children: ['dealBtn'],
+}
+
+/** The croupier persona over agent-ui: the betting step on the CardTable, a lone Deal Button that sends the bet. */
+export const personaCroupierCardTableBettingSeed: PersonaExampleSeed = {
+  name: 'persona-croupier-card-table-betting',
+  description:
+    'The croupier persona over the agent-ui base: one CardTable titled Blackjack in its betting phase, empty felt for ' +
+    'the dealer and the player, the bet row (chips, a stepper and Clear) with the bet two-way bound to /bet at 50 of a ' +
+    '1,000 bankroll, and one Deal Button child whose action carries the bet.',
+  promptText: 'Let me place a bet, then deal.',
+  surfaceId: CARD_TABLE_SID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui--croupier',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: CARD_TABLE_SID, catalogId: 'agent-ui--croupier' } },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: CARD_TABLE_SID,
+        components: [
+          CARD_TABLE_BETTING_ROOT,
+          { id: 'dealBtn', component: 'Button', variant: 'solid', label: 'Deal', action: { action: 'deal', context: { bet: { path: '/bet' } } } },
+        ],
+      },
+    },
+    { version: 'v1.0', updateDataModel: { surfaceId: CARD_TABLE_SID, value: CARD_TABLE_BETTING_DATA } },
+  ],
+}
+
+/** The settled step: the hole card turned up, the dealer drew to 18, the player stood on 20 and won the 50 bet. */
+const CARD_TABLE_SETTLED_DATA = {
+  phase: 'settled',
+  dealerHand: [
+    { rank: '9', suit: 'clubs' },
+    { rank: '4', suit: 'diamonds' },
+    { rank: '5', suit: 'spades' },
+  ],
+  playerHand: [
+    { rank: 'K', suit: 'hearts' },
+    { rank: '7', suit: 'spades' },
+    { rank: '3', suit: 'clubs' },
+  ],
+  dealerTotal: 18,
+  playerTotal: 20,
+  bankroll: 1050,
+  bet: 50,
+  result: 'You win, 20 against the dealer’s 18: +50',
+}
+
+const CARD_TABLE_SETTLED_ROOT = {
+  id: 'root',
+  component: 'CardTable',
+  title: 'Blackjack',
+  status: 'You win',
+  statusIntent: 'success',
+  ...CARD_TABLE_PHASE_BINDS,
+  dealerTotal: { path: '/dealerTotal' },
+  playerTotal: { path: '/playerTotal' },
+  result: { path: '/result' },
+  children: ['againBtn'],
+}
+
+/** The croupier persona over agent-ui: the settled step on the CardTable, the result line and a Deal again Button. */
+export const personaCroupierCardTableSettledSeed: PersonaExampleSeed = {
+  name: 'persona-croupier-card-table-settled',
+  description:
+    'The croupier persona over the agent-ui base: one CardTable titled Blackjack in its settled phase, both hands face ' +
+    'up (the dealer drew to 18, the player stood on 20), the result line naming the winner and the +50 delta, the ' +
+    'bankroll at 1,050, and one Deal again Button child that starts the next round.',
+  promptText: 'Stand.',
+  surfaceId: CARD_TABLE_SID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui--croupier',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: CARD_TABLE_SID, catalogId: 'agent-ui--croupier' } },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: CARD_TABLE_SID,
+        components: [
+          CARD_TABLE_SETTLED_ROOT,
+          { id: 'againBtn', component: 'Button', variant: 'solid', label: 'Deal again', action: { action: 'dealAgain', context: { newRound: true } } },
+        ],
+      },
+    },
+    { version: 'v1.0', updateDataModel: { surfaceId: CARD_TABLE_SID, value: CARD_TABLE_SETTLED_DATA } },
+  ],
+}
+
+/** The croupier persona over a2ui-basic: the betting step, Deal as a Basic event Button. */
+export const personaBasicCroupierCardTableBettingSeed: PersonaExampleSeed = {
+  name: 'persona-basic-croupier-card-table-betting',
+  description:
+    'The croupier persona over the a2ui-basic base: the same betting-phase CardTable, the bet bound to /bet, with a ' +
+    'Basic Button whose child Text label reads Deal and whose deal event carries the bet.',
+  promptText: 'Let me place a bet, then deal.',
+  surfaceId: CARD_TABLE_SID,
+  protocolVersion: 'v1.0',
+  catalogId: 'a2ui-basic--croupier',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: CARD_TABLE_SID, catalogId: 'a2ui-basic--croupier' } },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: CARD_TABLE_SID,
+        components: [
+          CARD_TABLE_BETTING_ROOT,
+          { id: 'dealLabel', component: 'Text', text: 'Deal' },
+          { id: 'dealBtn', component: 'Button', variant: 'primary', child: 'dealLabel', action: { event: { name: 'deal', context: { bet: { path: '/bet' } } } } },
+        ],
+      },
+    },
+    { version: 'v1.0', updateDataModel: { surfaceId: CARD_TABLE_SID, value: CARD_TABLE_BETTING_DATA } },
+  ],
+}
+
+/** The croupier persona over a2ui-basic: the settled step, Deal again as a Basic event Button. */
+export const personaBasicCroupierCardTableSettledSeed: PersonaExampleSeed = {
+  name: 'persona-basic-croupier-card-table-settled',
+  description:
+    'The croupier persona over the a2ui-basic base: the same settled-phase CardTable with its result line, with a ' +
+    'Basic Button whose child Text label reads Deal again and whose deal_again event starts the next round.',
+  promptText: 'Stand.',
+  surfaceId: CARD_TABLE_SID,
+  protocolVersion: 'v1.0',
+  catalogId: 'a2ui-basic--croupier',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: CARD_TABLE_SID, catalogId: 'a2ui-basic--croupier' } },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: CARD_TABLE_SID,
+        components: [
+          CARD_TABLE_SETTLED_ROOT,
+          { id: 'againLabel', component: 'Text', text: 'Deal again' },
+          { id: 'againBtn', component: 'Button', variant: 'primary', child: 'againLabel', action: { event: { name: 'deal_again', context: { newRound: true } } } },
+        ],
+      },
+    },
+    { version: 'v1.0', updateDataModel: { surfaceId: CARD_TABLE_SID, value: CARD_TABLE_SETTLED_DATA } },
+  ],
+}
+
 /** Every persona seed, in shelf order. */
 const QUIZ_SID = 'quiz-round'
 
@@ -522,6 +686,10 @@ export const personaExemplarSeeds: readonly PersonaExampleSeed[] = [
   personaBasicCroupierHandSeed,
   personaCroupierCardTableSeed,
   personaBasicCroupierCardTableSeed,
+  personaCroupierCardTableBettingSeed,
+  personaCroupierCardTableSettledSeed,
+  personaBasicCroupierCardTableBettingSeed,
+  personaBasicCroupierCardTableSettledSeed,
   personaQuizmasterQuestionSeed,
   personaBasicQuizmasterQuestionSeed,
 ]

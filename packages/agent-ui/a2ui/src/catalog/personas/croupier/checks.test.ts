@@ -16,7 +16,11 @@ import type { SurfaceSeed } from '../../../renderer/validate.ts'
 import { composeCatalog } from '../../compose.ts'
 import { defaultCatalog } from '../../default/index.ts'
 import { croupierFragment } from './manifest.ts'
-import { personaCroupierCardTableSeed } from '../../../examples/persona-exemplars.ts'
+import {
+  personaCroupierCardTableBettingSeed,
+  personaCroupierCardTableSeed,
+  personaCroupierCardTableSettledSeed,
+} from '../../../examples/persona-exemplars.ts'
 
 const catalog = composeCatalog(defaultCatalog, croupierFragment, 'croupier')
 const dealSession: Session = {
@@ -386,6 +390,43 @@ describe('croupier hand check: the CardTable arm (ADR-0243)', () => {
     expect(findings[0]!.message).toContain("The player's cards in root (A, K) are a natural blackjack")
     expect(findings[0]!.message).toContain('hitBtn (hit), standBtn (stand), doubleBtn (double)')
     expect(findings[0]!.message).toContain('a face-down card in root')
+  })
+})
+
+describe('croupier hand check: the CardTable arm in every phase (ADR-0243 Amendment 3)', () => {
+  type Comp = Record<string, unknown>
+  /** A copy of a phase seed with `edit` applied to its CardTable root and data model. */
+  function phased(seed: typeof personaCroupierCardTableSeed, edit: (root: Comp, data: Record<string, unknown>) => void = () => {}): A2uiOutput {
+    const out = JSON.parse(JSON.stringify(seed.messages)) as A2uiOutput
+    const root = (out[1] as { updateComponents: { components: Comp[] } }).updateComponents.components.find((c) => c['id'] === 'root')!
+    edit(root, (out[2] as { updateDataModel: { value: Record<string, unknown> } }).updateDataModel.value)
+    return out
+  }
+
+  it('betting and settled: the bound seed tables pass, structurally and semantically', () => {
+    for (const seed of [personaCroupierCardTableBettingSeed, personaCroupierCardTableSettledSeed]) {
+      expect(validateA2ui(phased(seed), catalog, undefined, { atFinalize: true }), seed.name).toEqual({ valid: true, failures: [] })
+      expect(judge({ turns: [] }, phased(seed)), seed.name).toEqual([])
+    }
+  })
+
+  it('betting: HAND_BINDING still fires on a literal empty hand', () => {
+    const findings = judge({ turns: [] }, phased(personaCroupierCardTableBettingSeed, (root) => (root['dealerHand'] = [])))
+    expect(findings).toHaveLength(1)
+    expect(findings[0]).toMatchObject({ code: 'HAND_BINDING', path: 'card-table:root' })
+    expect(findings[0]!.message).toContain('root gives dealerHand a literal list')
+  })
+
+  it('settled: HAND_BINDING and HAND_COUNT on a literal hand shorter than the list, HAND_TOTAL on a wrong bound total', () => {
+    const short = phased(personaCroupierCardTableSettledSeed, (root) => {
+      root['playerHand'] = [{ rank: 'K', suit: 'hearts' }, { rank: '7', suit: 'spades' }]
+    })
+    expect(judge({ turns: [] }, short).map((f) => f.code)).toEqual(['HAND_BINDING', 'HAND_COUNT', 'HAND_TOTAL'])
+    const wrong = phased(personaCroupierCardTableSettledSeed, (_, data) => (data['dealerTotal'] = 17))
+    const findings = judge({ turns: [] }, wrong)
+    expect(findings).toHaveLength(1)
+    expect(findings[0]).toMatchObject({ code: 'HAND_TOTAL', path: 'card-table:/dealerTotal' })
+    expect(findings[0]!.message).toContain("the dealer's cards in root (9, 4, 5) total 18")
   })
 })
 

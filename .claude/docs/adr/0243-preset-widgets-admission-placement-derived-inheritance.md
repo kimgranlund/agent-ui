@@ -303,3 +303,48 @@ info pill where the mockup was green.
    props on the inventory line, 976 under the 46,430 bound. The worst-case derived prompt (ADR-0234) measures
    140,801 chars (`agent-ui--croupier`, +154 with the dogfood row), so `PROMPT_CHAR_BUDGET_DERIVED` is
    re-measured to 141,200 by its own formula; BASE holds at 139,883 against 140,000.
+
+## Amendment 3: CardTable runs the whole hand, betting included (2026-10-12, T-0088)
+
+> Status: recorded by T-0088 from Kim's ask (2026-10-12) that the blackjack table take the bet in its own step
+> of the hand, with chips plus a stepper as the chosen input. Append-only; the Decision, the Persona composites
+> paragraph and Amendments 1 and 2 are unchanged, and this section extends the CardTable contract additively.
+
+The built table showed a hand already dealt: the bet was a read-only number and the result lived in the status
+pill. A round has three steps, and the table now carries each one.
+
+1. **Three wire props and a value mark.** `phase` (`betting`, `playing` or `settled`; absent reads as
+   `playing`, so every earlier payload renders and behaves as before), `chips` (array of numbers, the chip
+   amounts; absent, empty or invalid falls back to 10, 25, 50, 100) and `result` (string, the settled result
+   line: winner, hands, chip delta) join the row, all bindable. The row gains the QuestionCard value contract on
+   `bet`: `{ prop: 'bet', event: 'change', readProp: 'a2uiCardTableBet' }`, so a bet bound to `/bet` is
+   two-way. The handoff's "existing result prop" did not exist on the row; `result` is that prop, added.
+2. **Betting.** The felt stays and empties (cards and totals hidden; the hand lists are not touched) and the
+   bet row shows: one soft `+n` `ui-button` per chip, a `ui-text-field type=number` stepper (min 1, max the
+   bankroll, step 5) for an exact amount, and a ghost Clear `ui-button`, all at the button and field `lg` step
+   (36px). The chips hug their labels (the ADR-0223 `inline` opt-out) on the first line; the stepper takes the
+   second line's slack beside Clear. A chip adds to the bet and stops at the bankroll (every chip goes inert
+   once the bet equals it), Clear sets 0, a stepper commit sets the amount clamped to 0 to the bankroll; each
+   sends one bubbling `change` the input binding reads. The readout keeps showing the bankroll and the live bet.
+3. **Deal gate.** The factory, not a Button `checks` entry, keeps Deal disabled while the bet is below 1 or
+   above the bankroll: the default base's only check function is `required`, which cannot state a range
+   against a bound bankroll. In `betting` the first producer Button root child (Deal) is disabled out of range
+   and restored to its own prior `disabled` when the bet comes back into range, the Button changes, or the
+   phase leaves `betting`. The factory never touches a Button in `playing` or `settled`. The producer gives
+   Deal no `checks`.
+4. **Playing and settled.** `playing` is the table as built, the bet read-only in the readout, the moves
+   (Double included) as children. `settled` shows the `result` line above the readout, tinted by
+   `statusIntent` (the words carry the result, never the tint alone), with a Deal again child.
+5. **Composition and the hand check.** `uses` adds `ui-button` and `ui-text-field` (ADR-0233). The root order
+   is head, the two zones, result, bet, readout, then the producer Buttons. The ADR-0238 hand check is
+   unchanged: HAND_BINDING, HAND_COUNT and HAND_TOTAL judge a betting or settled table exactly as a playing one.
+6. **Seeds and teaching.** Betting and settled seeds join the shelf on both bases, `phase` bound to `/phase`;
+   the playing seeds are unchanged. `card-layout` and `game-table-chrome` teach the phases within their
+   200-token module budget, and the Croupier preset's skills and `round-loop` teach bet, deal, play, settle. Its
+   `seedVersion` moves to 9.
+7. **Budget.** K6 (the default `agent-ui` composition plus the tool) measures 45,454 chars, unchanged (the
+   props live in the croupier fragment, and K6 composes no mini-skill), 976 under the 46,430 bound. The
+   `agent-ui--croupier` default composition grows from 45,729 to 45,791 chars (+62, the three props on the
+   inventory line). The worst-case derived prompt (ADR-0234) measures 140,891 chars (`agent-ui--croupier`,
+   +90) against 141,200, and BASE 139,911 (+28, the two re-authored modules) against 140,000; neither budget
+   moves.

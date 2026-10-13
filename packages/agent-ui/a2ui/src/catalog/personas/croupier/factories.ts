@@ -18,6 +18,15 @@
 // region-to-region distance of a stock card (block padding, box inset, block padding), and a zone's label and
 // felt, and the readout and the Buttons, keep the 8px region gap.
 //
+// The hand lifecycle (ADR-0243 Amendment 3, T-0088): `phase` is `betting`, `playing` (the default, so a payload
+// without it renders as before) or `settled`. `betting` empties the felt and shows the bet row: chip buttons
+// (`chips`, default 10/25/50/100) that add to the bet and stop at the bankroll, a `ui-text-field type=number`
+// stepper (min 1, max the bankroll, step 5) and a Clear button, all at the button's `lg` step. `bet` is two-way
+// (the QuestionCard shape): a chip, Clear or a stepper commit sends a bubbling `change` the input binding reads
+// through `a2uiCardTableBet`. The first producer Button (Deal) is disabled by the factory while the bet is
+// outside 1 to bankroll: the default base has no range check a Button `checks` entry could name. `settled`
+// shows the `result` line above the readout.
+//
 // `targetCatalogs` (both shipped bases): both factories build directly against `@agent-ui/components`, never
 // through either base's own dialect, the same reasoning as `concierge/index.ts`.
 
@@ -50,20 +59,57 @@ export const playingCardFactory: WidgetFactory = {
 
 type Participant = 'dealer' | 'player'
 
+type Phase = 'betting' | 'playing' | 'settled'
+
+const PHASES: readonly Phase[] = ['betting', 'playing', 'settled']
+const DEFAULT_CHIPS: readonly number[] = [10, 25, 50, 100]
+
 interface ZoneParts {
   total: HTMLElement
   felt: HTMLElement
+}
+
+// Structural duck-types over the minted controls' public props (the fleet's generic-cast convention).
+interface ButtonLike extends HTMLElement {
+  variant: string
+  size: string
+  disabled: boolean
+  inline: boolean
+}
+
+interface StakeFieldLike extends HTMLElement {
+  type: string
+  size: string
+  label: string
+  placeholder: string
+  value: string
+  min: string
+  max: string
+  step: number
 }
 
 interface CardTableParts {
   titleEl: HTMLElement
   statusEl: HTMLElement
   zones: Record<Participant, ZoneParts>
+  resultEl: HTMLElement
+  resultText: HTMLElement
+  betEl: HTMLElement
+  chipsEl: HTMLElement
+  stakeEl: StakeFieldLike
   readoutEl: HTMLElement
   readoutText: HTMLElement
   status: string
+  statusIntent: string
   bankroll: number | undefined
   bet: number | undefined
+  phase: Phase
+  chips: readonly number[]
+  result: string
+  /** The producer Button the bet gate disabled, and its own `disabled` before, restored when the gate lifts. */
+  gated: { button: ButtonLike; prev: boolean } | null
+  /** A chip press: add `amount` to the bet. */
+  onChip: (amount: number) => void
 }
 
 const cardTableParts = new WeakMap<HTMLElement, CardTableParts>()
@@ -159,9 +205,106 @@ function renderReadout(parts: CardTableParts): void {
   parts.readoutEl.style.display = halves.length === 0 ? 'none' : ''
 }
 
+/** A full-width flex row of the card's own parts (the result line, the bet row). */
+function band(part: string): HTMLElement {
+  const el = document.createElement('div')
+  el.setAttribute('data-part', part)
+  const s = el.style
+  s.display = 'none'
+  s.flex = '1 0 100%'
+  s.flexWrap = 'wrap'
+  s.alignItems = 'center'
+  s.gap = BOX.gap
+  return el
+}
+
+function button(variant: string, label: string): ButtonLike {
+  const el = document.createElement('ui-button') as ButtonLike
+  el.variant = variant
+  el.size = 'lg' // minted before `largeActionButtons` observes, so sized here (ADR-0243 Amendment 2)
+  el.inline = true // hug its label in the bet row (ADR-0223's one opt-out), never fill it
+  el.textContent = label
+  return el
+}
+
+/** Rebuild the chip buttons from `parts.chips`: one `+n` soft button per chip. */
+function renderChips(parts: CardTableParts): void {
+  parts.chipsEl.replaceChildren(
+    ...parts.chips.map((amount) => {
+      const chip = button('soft', `+${amount.toLocaleString('en-US')}`)
+      chip.setAttribute('data-part', 'chip')
+      chip.setAttribute('data-amount', String(amount))
+      chip.addEventListener('click', () => {
+        if (!chip.disabled) parts.onChip(amount)
+      })
+      return chip
+    }),
+  )
+  paintBet(parts)
+}
+
+/** A bet clamped to 0 to the bankroll (no cap while the bankroll is unknown). */
+function clampBet(parts: CardTableParts, n: number): number {
+  const capped = parts.bankroll === undefined ? n : Math.min(n, parts.bankroll)
+  return Math.max(0, capped)
+}
+
+/** Deal takes a bet of at least 1 and at most the bankroll. */
+const betInRange = (parts: CardTableParts): boolean =>
+  parts.bet !== undefined && parts.bet >= 1 && (parts.bankroll === undefined || parts.bet <= parts.bankroll)
+
+/** The stepper's value, max and the chips' disabled state follow the bet and the bankroll. */
+function paintBet(parts: CardTableParts): void {
+  const stake = parts.stakeEl
+  stake.max = parts.bankroll === undefined ? '' : String(parts.bankroll)
+  const shown = parts.bet === undefined || parts.bet === 0 ? '' : String(parts.bet)
+  if (stake.value !== shown) stake.value = shown
+  const full = parts.bankroll !== undefined && (parts.bet ?? 0) >= parts.bankroll
+  for (const chip of parts.chipsEl.children) (chip as ButtonLike).disabled = full
+}
+
+/** In `betting`, disable the first producer Button (Deal) while the bet is out of range; restore it otherwise. */
+function gateDeal(el: HTMLElement, parts: CardTableParts): void {
+  const first = el.querySelector<ButtonLike>(':scope > ui-button')
+  const shut = parts.phase === 'betting' && first !== null && !betInRange(parts)
+  const g = parts.gated
+  if (g !== null && (g.button !== first || !shut)) {
+    g.button.disabled = g.prev
+    parts.gated = null
+  }
+  if (shut && parts.gated === null) {
+    parts.gated = { button: first!, prev: first!.disabled }
+    first!.disabled = true
+  }
+}
+
+/** Betting empties the felt (cards and totals hidden, the data untouched); the other phases show them. */
+function paintZones(parts: CardTableParts): void {
+  const hide = parts.phase === 'betting' ? 'none' : ''
+  for (const z of Object.values(parts.zones)) {
+    z.total.style.display = hide
+    for (const card of z.felt.children) (card as HTMLElement).style.display = hide
+  }
+}
+
+/** The result line: `settled` only, tinted by `statusIntent` (the words carry the result, never the tint alone). */
+function paintResult(parts: CardTableParts): void {
+  parts.resultText.textContent = parts.result
+  const intent = ['info', 'success', 'warning', 'danger'].includes(parts.statusIntent) ? parts.statusIntent : 'neutral'
+  parts.resultEl.style.background = `var(--md-sys-color-${intent}-container-low)`
+  parts.resultEl.style.display = parts.phase === 'settled' && parts.result !== '' ? 'flex' : 'none'
+}
+
+function paintPhase(el: HTMLElement, parts: CardTableParts): void {
+  parts.betEl.style.display = parts.phase === 'betting' ? 'flex' : 'none'
+  paintZones(parts)
+  paintResult(parts)
+  gateDeal(el, parts)
+}
+
 export const cardTableFactory: WidgetFactory = {
   tag: 'ui-card',
-  uses: ['ui-badge', 'ui-playing-card', 'ui-text'], // ADR-0233: the parts it mints
+  uses: ['ui-badge', 'ui-button', 'ui-playing-card', 'ui-text', 'ui-text-field'], // ADR-0233: the parts it mints
   create: () => {
     const el = document.createElement('ui-card')
     const s = el.style
@@ -188,6 +331,37 @@ export const cardTableFactory: WidgetFactory = {
     const dealer = zone('dealer', 'Dealer')
     const player = zone('player', 'You')
 
+    // The settled result line (hidden until `settled` with a `result`).
+    const resultEl = band('result')
+    const r = resultEl.style
+    r.boxSizing = 'border-box' // padded inside its 100% flex basis, never past the card's ink edge
+    r.padding = 'var(--md-sys-space-sm) var(--md-sys-space-md)'
+    r.borderRadius = 'calc(var(--md-sys-shape-corner-base, 12px) - 2px)'
+    const resultText = text('title', 'sm')
+    ;(resultText as unknown as { emphasis: boolean }).emphasis = true
+    resultEl.appendChild(resultText)
+
+    // The bet row (hidden until `betting`): the chips, the exact-amount stepper, Clear.
+    const betEl = band('bet')
+    const chipsEl = document.createElement('div')
+    chipsEl.setAttribute('data-part', 'chips')
+    chipsEl.style.display = 'flex'
+    chipsEl.style.flexWrap = 'wrap'
+    chipsEl.style.gap = BOX.gap
+    chipsEl.style.flex = '1 0 100%' // the chips own the first line; the stepper and Clear share the second
+    const stakeEl = document.createElement('ui-text-field') as StakeFieldLike
+    stakeEl.setAttribute('data-part', 'stake')
+    stakeEl.type = 'number'
+    stakeEl.size = 'lg'
+    stakeEl.label = 'Bet'
+    stakeEl.placeholder = 'Bet'
+    stakeEl.min = '1'
+    stakeEl.step = 5
+    stakeEl.style.flex = '1 1 8rem'
+    const clearEl = button('ghost', 'Clear')
+    clearEl.setAttribute('data-part', 'clear')
+    betEl.append(chipsEl, stakeEl, clearEl)
+
     const readoutEl = document.createElement('div')
     readoutEl.setAttribute('data-part', 'readout')
     readoutEl.style.flex = '1 1 auto'
@@ -195,18 +369,54 @@ export const cardTableFactory: WidgetFactory = {
     const readoutText = text('body', 'md')
     readoutEl.appendChild(readoutText)
 
-    el.append(head, dealer.el, player.el, readoutEl)
+    el.append(head, dealer.el, player.el, resultEl, betEl, readoutEl)
     largeActionButtons(el)
-    cardTableParts.set(el, {
+    const parts: CardTableParts = {
       titleEl,
       statusEl,
       zones: { dealer: dealer.parts, player: player.parts },
+      resultEl,
+      resultText,
+      betEl,
+      chipsEl,
+      stakeEl,
       readoutEl,
       readoutText,
       status: '',
+      statusIntent: 'neutral',
       bankroll: undefined,
       bet: undefined,
+      phase: 'playing',
+      chips: DEFAULT_CHIPS,
+      result: '',
+      gated: null,
+      onChip: () => {},
+    }
+    cardTableParts.set(el, parts)
+
+    /** Take a new bet from the table's own controls; `notify` sends the bubbling `change` the input binding reads. */
+    const setBet = (n: number, notify: boolean): void => {
+      parts.bet = clampBet(parts, n)
+      renderReadout(parts)
+      paintBet(parts)
+      gateDeal(el, parts)
+      if (notify) el.dispatchEvent(new Event('change', { bubbles: true }))
+    }
+    parts.onChip = (amount) => setBet((parts.bet ?? 0) + amount, true)
+    renderChips(parts)
+    clearEl.addEventListener('click', () => setBet(0, true))
+    // The stepper's own `change` (a commit or a step) bubbles to the root on its own; this listener runs first.
+    stakeEl.addEventListener('change', () => {
+      const n = Number(stakeEl.value)
+      setBet(stakeEl.value.trim() === '' || !Number.isFinite(n) ? 0 : n, false)
     })
+    // The live bet for `installInputBinding` (LLD-C8), read on the root's bubbling `change`.
+    Object.defineProperty(el, 'a2uiCardTableBet', {
+      configurable: true,
+      get: () => parts.bet ?? null,
+    })
+    // The producer's Buttons land after `create()`: re-gate Deal whenever the root's children change.
+    new MutationObserver(() => gateDeal(el, parts)).observe(el, { childList: true })
     return el
   },
   applyProp: (el, prop, value) => {
@@ -222,13 +432,17 @@ export const cardTableFactory: WidgetFactory = {
         parts.statusEl.style.display = parts.status === '' ? 'none' : ''
         break
       case 'statusIntent':
-        ;(parts.statusEl as unknown as { intent: string }).intent = value == null ? 'neutral' : String(value)
+        parts.statusIntent = value == null ? 'neutral' : String(value)
+        ;(parts.statusEl as unknown as { intent: string }).intent = parts.statusIntent
+        paintResult(parts)
         break
       case 'dealerHand':
         renderHand(parts.zones.dealer.felt, value)
+        paintZones(parts)
         break
       case 'playerHand':
         renderHand(parts.zones.player.felt, value)
+        paintZones(parts)
         break
       case 'dealerTotal':
         parts.zones.dealer.total.textContent = totalText(value)
@@ -239,13 +453,32 @@ export const cardTableFactory: WidgetFactory = {
       case 'bankroll':
         parts.bankroll = finite(value)
         renderReadout(parts)
+        paintBet(parts)
+        gateDeal(el, parts)
         break
       case 'bet':
         parts.bet = finite(value)
         renderReadout(parts)
+        paintBet(parts)
+        gateDeal(el, parts)
+        break
+      case 'phase':
+        parts.phase = PHASES.find((p) => p === value) ?? 'playing'
+        paintPhase(el, parts)
+        break
+      case 'chips': {
+        const list = Array.isArray(value) ? value.filter((n): n is number => typeof n === 'number' && Number.isFinite(n) && n > 0) : []
+        parts.chips = list.length > 0 ? list : DEFAULT_CHIPS
+        renderChips(parts)
+        break
+      }
+      case 'result':
+        parts.result = value == null ? '' : String(value)
+        paintResult(parts)
         break
     }
   },
+  value: { prop: 'bet', event: 'change', readProp: 'a2uiCardTableBet' },
 }
 
 /** Every component the fragment's `catalog.json` declares MUST appear here (the FACTORY_MISSING
