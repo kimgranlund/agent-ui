@@ -79,20 +79,23 @@
     min-inline-size: 0; /* the slotted control brings its own ADR-0021 width floor; the field adds none */
   }
 
-  :scope [data-part='label'] {
+  /* Every part rule takes the child combinator: the field's OWN parts are direct children (field.ts), and a
+     descendant selector leaked onto a slotted control's same-named parts (ui-select's [data-part=label] value
+     span wore the label ink and the required ' *', T-0085). */
+  :scope > [data-part='label'] {
     color: var(--ui-field-label-ink);
     font-size: var(--ui-field-label-font);
     font-weight: var(--ui-field-label-weight);
   }
 
-  :scope [data-part='description'] {
+  :scope > [data-part='description'] {
     color: var(--ui-field-description-ink);
     font-size: var(--ui-field-description-font);
   }
 
   /* required affordance — pure CSS off the slotted control's reflected [required] attr (LLD-C4/C5); no
      field-side state duplication. */
-  :scope:has([required]) [data-part='label']::after {
+  :scope:has([required]) > [data-part='label']::after {
     content: ' *';
     color: var(--ui-field-required-ink); /* label-matched, NOT error ink — a static requiredness mark is not the dynamic error signifier (ADR-0057) */
   }
@@ -100,7 +103,7 @@
   /* Error visibility — default hidden; field.ts toggles the host's :state(user-invalid) custom state and
      the part's [hidden] attribute together (#renderValidity), but the CSS gate is the custom state (the
      part's own text emptiness is the content guard). Base rule at (0,2,0) carries the ink/font always. */
-  :scope [data-part='error'] {
+  :scope > [data-part='error'] {
     display: none;
     color: var(--ui-field-error-ink);
     font-size: var(--ui-field-error-font);
@@ -109,19 +112,19 @@
 
   /* Shown when the associated control's user-invalid gate is live (LLD-C1's userInvalid() read, mirrored
      onto this host's own :state(user-invalid) by field.ts's #renderValidity). */
-  :scope:state(user-invalid) [data-part='error'] {
+  :scope:state(user-invalid) > [data-part='error'] {
     display: block;
   }
 
   /* The explicit [hidden] guard — written AFTER the state rule above. Both compute specificity (0,3,0),
      so source order decides; this guard MUST win so field.ts's own hidden toggle (e.g. an empty
      validationMessage while user-invalid) can always suppress the box. Frozen m4 repair — do not reorder. */
-  :scope [data-part='error'][hidden] {
+  :scope > [data-part='error'][hidden] {
     display: none;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    :scope [data-part='error'] {
+    :scope > [data-part='error'] {
       transition: none; /* accessibility (non-negotiable) — reduced motion zeroes the error transition */
     }
   }
@@ -131,9 +134,9 @@
      alone (WCAG 1.4.1 — the text IS the cue; --md-sys-color-danger already degrades to CanvasText's fleet mapping
      via the token layer, this rule documents the intent rather than overriding a colour that survives). */
   @media (forced-colors: active) {
-    :scope [data-part='label'],
-    :scope [data-part='description'],
-    :scope [data-part='error'] {
+    :scope > [data-part='label'],
+    :scope > [data-part='description'],
+    :scope > [data-part='error'] {
       color: CanvasText;
     }
   }
