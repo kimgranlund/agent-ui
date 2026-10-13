@@ -48,8 +48,8 @@ describe('modal.css — structure + sectioning (s9)', () => {
     expect(tokenBlock).toMatch(/--ui-modal-scrim:\s*var\(--md-sys-color-dialog-backdrop\)/)
     // GH #1554 — the own-chain blur dial (opacity alone cannot defeat arbitrarily high-contrast page content).
     expect(tokenBlock).toMatch(/--ui-modal-scrim-blur:\s*\d/)
-    expect(tokenBlock).toMatch(/--ui-modal-radius:\s*var\(--md-sys-shape-corner-base\)/) // the shared fleet radius
-    expect(tokenBlock).toMatch(/--ui-modal-padding:\s*var\(--md-sys-space-/) // the density-responsive layout spacing
+    expect(tokenBlock).toMatch(/--ui-modal-radius:\s*var\(--md-sys-card-radius,\s*var\(--md-sys-shape-corner-base\)\)/) // the shared fleet radius
+    expect(tokenBlock).toMatch(/--ui-modal-padding:\s*var\(--md-sys-card-margin,\s*var\(--md-sys-space-/) // the density-responsive layout spacing
   })
 
   it('NO control height — the modal shell never reads --md-sys-height-* (geometry.md Pattern/container class)', () => {
