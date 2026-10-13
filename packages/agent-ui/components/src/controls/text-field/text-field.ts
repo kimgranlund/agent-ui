@@ -79,6 +79,8 @@ let messageSeq = 0
 
 // A practical email pattern (RFC 5321 simple form): local@domain.tld — no embedded whitespace or @.
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+// The ISO calendar-date shape type=date's canonical value and its min/max bounds take.
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 
 // ── type-resolver v2 (TYPE_CONFIG, Wave 5A ADR-0047 — the static as-const config map) ──────────────
 //
@@ -191,6 +193,10 @@ export class UITextFieldElement extends UIFormElement {
   // The model→surface effect below keeps its `value` synced to `this.value`.
   #colorSwatchPreview: UISwatchElement | null = null
 
+  // T-0135 — the type=date editor keys (Enter / Alt+ArrowDown open the calendar, Escape closes it), set by the
+  // type-effect's date branch for its run only. Returns true when it handled the key.
+  #calendarKeys: ((key: string, alt: boolean) => boolean) | null = null
+
   protected connected(): void {
     // Seed the reset baseline ONCE from the INITIAL `value` attribute (native `defaultValue` — the value
     // attribute is never reflected, so it stays the markup value and survives later property writes).
@@ -228,6 +234,12 @@ export class UITextFieldElement extends UIFormElement {
     })
     this.listen(editor, 'keydown', (event) => {
       const key = (event as KeyboardEvent).key
+      // type=date: Enter / Alt+ArrowDown open the calendar and Escape closes it (T-0135). Opening moves focus
+      // into the calendar, so a typed edit still commits through the editor's own blur.
+      if (this.#calendarKeys !== null && !this.#composing && this.#calendarKeys(key, (event as KeyboardEvent).altKey)) {
+        event.preventDefault()
+        return
+      }
       if (key === 'Enter') {
         if (this.#composing) return
         event.preventDefault() // single-line field — Enter never inserts a newline
@@ -235,9 +247,11 @@ export class UITextFieldElement extends UIFormElement {
         this.emit('change') // Enter commits (resets the baseline, so a following blur does not double-fire)
         return
       }
-      // ArrowUp/Down: step the numeric value when a codec is active (native type=number parity).
+      // ArrowUp/Down: step the numeric value (native type=number parity) — numeric codecs only, never the
+      // date/time/color codecs (a parseFloat of an ISO date would step the year into the value).
       // Never mid-composition; preventDefault prevents cursor movement / page scroll during stepping.
-      if ((key === 'ArrowUp' || key === 'ArrowDown') && this.#codec !== null && !this.#composing) {
+      const numeric = TYPE_CONFIG[this.type].validation === 'number'
+      if ((key === 'ArrowUp' || key === 'ArrowDown') && numeric && this.#codec !== null && !this.#composing) {
         event.preventDefault()
         this.#step(key === 'ArrowUp' ? 1 : -1)
       }
@@ -330,13 +344,23 @@ export class UITextFieldElement extends UIFormElement {
           // Wire the overlay controller. The connection-scoped `host.listen(popup, 'toggle', …)` inside
           // overlay() persists until disconnect; the explicit `calendarHandle.cleanup()` in the effect
           // cleanup fires on type-change (setting `cleaned=true` so the toggle handler becomes a no-op).
+          // T-0135: anchored to the FIELD (the host), not the trigger, so the panel sits under the input.
+          // Focus is managed here, not by the overlay (whose restore target is its anchor): open moves it
+          // to the calendar's day cursor, and any close (a pick, Escape, outside click) returns it to where
+          // the open came from, the editor (keyboard open) or the trigger (click).
           calendarHandle = overlay(this, {
             popup: calendarPopup,
-            anchor: calBtn,
+            anchor: this,
             placement: 'bottom-start',
             auto: true,
-            focusOnOpen: true,
+            focusOnOpen: false,
           })
+          // The overlay announces every real hide (close(), Escape, outside click) as a synchronous host `close`.
+          this.addEventListener('close', (event) => {
+            if (event.target !== this) return
+            const active = document.activeElement
+            if (active === null || active === document.body || calendarPopup!.contains(active)) returnTo.focus()
+          }, { signal: typeAc.signal })
 
           // Event-boundary guard (ADR-0048 §3 — B1): UIElement.emit() fires events with bubbles:true
           // composed:true, so the calendar's own `change` event bubbles out of <ui-calendar> and reaches
@@ -346,16 +370,17 @@ export class UITextFieldElement extends UIFormElement {
           calEl.addEventListener('change', (e) => { e.stopPropagation() }, { signal: typeAc.signal })
 
           // Calendar selection: `select` fires with the chosen ISO date in event.detail (ADR-0048 §2).
-          // The codec's setCanonical keeps the canonical in sync so blur-formatting starts from the new date.
+          // setCanonical keeps the form value in sync at once; the date codec's formatOnWrite then shows the
+          // ISO write as the locale text (T-0135), since focus is in the calendar, not the editor.
           calEl.addEventListener('select', (event) => {
             const iso = (event as CustomEvent<string>).detail
             if (iso) {
-              this.value = iso
               this.#codec?.setCanonical(iso)
+              this.value = iso
               this.emit('input')
               this.emit('change')
             }
-            calendarHandle!.close()
+            calendarHandle!.close({ restoreFocus: false })
           }, { signal: typeAc.signal })
 
           return { calEl, handle: calendarHandle }
@@ -374,23 +399,60 @@ export class UITextFieldElement extends UIFormElement {
         // context would require unregistering a custom element, which the spec forbids. The slow path
         // is correct by code-review (same try-free import chain as `calendarLoaded=true → open()`); the
         // limitation is documented in text-field.md.
-        calBtn.addEventListener('click', () => {
+        // T-0135: one open path for the trigger click and the editor keys (Enter, Alt+ArrowDown). The
+        // calendar takes the canonical ISO (never the locale display) and min/max are set OR removed each
+        // time, so a moved bound (a departure whose arrival changed) never goes stale. Re-inserting the
+        // calendar reconnects it, and ui-calendar seeds its displayed month only on connect, so every
+        // open lands on the current value's month.
+        let returnTo: HTMLElement = calBtn
+        const openCalendar = (from: HTMLElement): void => {
+          returnTo = from
           const { calEl, handle } = ensureCalendar()
-          calEl.setAttribute('value', this.value)
-          if (this.min) calEl.setAttribute('min', this.min)
-          if (this.max) calEl.setAttribute('max', this.max)
-
-          if (calendarLoaded || customElements.get('ui-calendar') !== undefined) {
+          const iso = this.#codec?.canonical.value ?? ''
+          calEl.setAttribute('value', iso)
+          for (const bound of ['min', 'max'] as const) {
+            if (this[bound]) calEl.setAttribute(bound, this[bound])
+            else calEl.removeAttribute(bound)
+          }
+          calendarPopup!.replaceChildren(calEl)
+          const show = (): void => {
             calendarLoaded = true
             handle.open()
-          } else {
-            // First open: dynamic import (NOT a static import — keeps ui-calendar out of the static graph).
-            import('../calendar/calendar.ts').then(() => {
-              calendarLoaded = true
-              handle.open()
-            })
+            calEl.querySelector<HTMLElement>('[role="gridcell"][tabindex="0"]')?.focus()
           }
+          if (calendarLoaded || customElements.get('ui-calendar') !== undefined) show()
+          // First open: dynamic import (NOT a static import — keeps ui-calendar out of the static graph).
+          else import('../calendar/calendar.ts').then(show)
+        }
+        // A press on the trigger while the panel is open light-dismisses it on pointerdown, before the
+        // click; remembering that keeps the click a close instead of an instant reopen.
+        const isOpen = (): boolean => {
+          try {
+            return calendarPopup?.matches(':popover-open') ?? false
+          } catch {
+            return false // an engine without :popover-open (jsdom)
+          }
+        }
+        let openAtPress = false
+        calBtn.addEventListener('pointerdown', () => { openAtPress = isOpen() }, { signal: typeAc.signal })
+        calBtn.addEventListener('click', () => {
+          const wasOpen = openAtPress || isOpen()
+          openAtPress = false
+          if (wasOpen) calendarHandle?.close({ restoreFocus: false })
+          else openCalendar(calBtn)
         }, { signal: typeAc.signal })
+        this.#calendarKeys = (key, alt) => {
+          if (isOpen()) {
+            if (key !== 'Escape') return false
+            calendarHandle?.close({ restoreFocus: false })
+            return true
+          }
+          if (key === 'Enter' || (alt && key === 'ArrowDown')) {
+            openCalendar(editor)
+            return true
+          }
+          return false
+        }
       }
 
       // Color-picker overlay (type=color only): a lazily-imported `<ui-color-picker>` in a popover popup —
@@ -480,7 +542,7 @@ export class UITextFieldElement extends UIFormElement {
             : codecKind === 'unit'
               ? valueCodec(this, unitCodecOptions(this.unit ?? ''), typeAc.signal)
               : codecKind === 'date'
-                ? valueCodec(this, dateCodecOptions(), typeAc.signal)
+                ? valueCodec(this, { ...dateCodecOptions(), formatOnWrite: true }, typeAc.signal) // T-0135: an ISO write shows as the locale date
                 : codecKind === 'time'
                   ? valueCodec(this, timeCodecOptions(), typeAc.signal)
                   : codecKind === 'color'
@@ -504,6 +566,7 @@ export class UITextFieldElement extends UIFormElement {
         colorPickerPopup?.remove()
         colorPickerHandle?.cleanup()
         this.#colorSwatchPreview = null
+        this.#calendarKeys = null
         codec?.release()
         this.#codec = null
       }
@@ -624,6 +687,9 @@ export class UITextFieldElement extends UIFormElement {
    * `this.value` IS the form value (the editor textContent is the submission value).
    */
   protected formValue(): FormValue {
+    // An empty display is an empty value at once (T-0135): a programmatic clear must not submit the last
+    // canonical until the codec's resync catches up on the next flush.
+    if (this.#codec !== null && this.value === '') return ''
     return this.#codec?.canonical.value ?? this.value
   }
 
@@ -694,6 +760,30 @@ export class UITextFieldElement extends UIFormElement {
                   anchor: this.#editor ?? undefined,
                 }
               }
+            }
+          }
+        }
+      }
+
+      // type=date range (T-0135): ISO YYYY-MM-DD bounds compare as strings, the same bounds the calendar
+      // disables days outside, so a typed date past min/max is invalid like a picked one is impossible.
+      if (type === 'date' && this.#codec !== null) {
+        const iso = this.#codec.canonical.value
+        if (ISO_DATE.test(iso)) {
+          if (ISO_DATE.test(this.min) && iso < this.min) {
+            return {
+              valid: false,
+              flags: { rangeUnderflow: true },
+              message: `Value must be ${this.min} or later.`,
+              anchor: this.#editor ?? undefined,
+            }
+          }
+          if (ISO_DATE.test(this.max) && iso > this.max) {
+            return {
+              valid: false,
+              flags: { rangeOverflow: true },
+              message: `Value must be ${this.max} or earlier.`,
+              anchor: this.#editor ?? undefined,
             }
           }
         }

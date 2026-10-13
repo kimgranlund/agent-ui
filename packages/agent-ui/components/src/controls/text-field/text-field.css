@@ -95,6 +95,13 @@
   --ui-text-field-font: var(--md-sys-type-control, var(--md-sys-font-md));
   --ui-text-field-gap: var(--md-sys-c, var(--md-sys-gap-md)); /* the control gutter c (ADR-0245 Amendment 4); the editor's label inset makes icon to text n */
   --ui-text-field-icon: var(--md-sys-icon-box, var(--md-sys-icon-md)); /* §1-SET icon per [scale]-tier (ADR-0038 / ADR-0035 conformance gap); repoints with [scale] from dimensions.css — was calc(18px * var(--md-sys-scale)) */
+  /* type=date's calendar trigger (T-0135): an icon-only button one control step below the field (a md field
+     carries the sm height), square and fully round, its glyph half its side (an icon-only control is a 4n square
+     with a 2n icon). One step is 4(k + g s) px, read from the tier, so it holds on every tier, scale and size. */
+  --ui-text-field-trigger: calc(var(--ui-text-field-height) - 4px * (var(--md-sys-tier-k, 1) + var(--md-sys-tier-g, 0) * var(--md-sys-scale-s, 0)));
+  --ui-text-field-trigger-ink: var(--md-sys-color-primary-high);
+  --ui-text-field-trigger-bg-hover: var(--md-sys-color-primary-container-low);
+  --ui-text-field-trigger-bg-active: var(--md-sys-color-primary-container);
 
   /* Size-INVARIANT frame quantities — declared ONCE in the base block (NOT in the per-[size] blocks below): */
   /* The slotless value edge is n inside a data-tier region (ADR-0245 cl.3), h/2 outside; the injected icon svgs
@@ -463,6 +470,30 @@
     inline-size: auto;
   }
 
+  /* type=date's calendar trigger (T-0135): the trailing cell is the trigger square, not the icon square, and the
+     host's trailing pad is ½(h − trigger) less the 1px frame border, so the round button sits concentric in the
+     frame's end (its block offset, centred in the box, already counts the border). */
+  :scope > [slot='trailing'][data-role='calendar'] {
+    inline-size: var(--ui-text-field-trigger);
+    block-size: var(--ui-text-field-trigger);
+  }
+  :scope:has(> [slot='trailing'][data-role='calendar']):has(> [data-part='editor']) {
+    padding-inline-end: calc((var(--ui-text-field-height) - var(--ui-text-field-trigger)) / 2 - 1px);
+  }
+  :scope [data-part='calendar-button'] {
+    inline-size: 100%;
+    block-size: 100%;
+    border-radius: 50%; /* fully round: half its own side */
+    color: var(--ui-text-field-trigger-ink);
+  }
+  :scope [data-part='calendar-button']:hover {
+    background: var(--ui-text-field-trigger-bg-hover);
+  }
+  /* a focused trigger needs no ring of its own: the host's :focus-within ring already frames the field */
+  :scope [data-part='calendar-button']:active {
+    background: var(--ui-text-field-trigger-bg-active);
+  }
+
   /* Wave 5B (ADR-0048): calendar popup wrapper (type=date). The `[data-part='calendar-popup']` div is
      the `[popover]` element that hosts the `<ui-calendar>`. Strip UA popover defaults (padding / border /
      background) so the calendar's own `[data-box]` panel owns all spacing and appearance — the wrapper
@@ -511,6 +542,10 @@
     display: block;
     inline-size: var(--ui-text-field-svg);
     block-size: var(--ui-text-field-svg);
+  }
+  :scope [data-part='calendar-button'] svg {
+    inline-size: calc(var(--ui-text-field-trigger) / 2);
+    block-size: calc(var(--ui-text-field-trigger) / 2);
   }
 
   /* forced-colors — keep the field border + ink + placeholder VISIBLE (they must not vanish). The focus ring

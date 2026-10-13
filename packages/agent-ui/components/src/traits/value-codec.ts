@@ -56,6 +56,11 @@ export interface ValueCodecOptions {
   format(value: string): string
   /** Validation message to expose when parse returns null; the control uses it in formValidity(). */
   errorMessage: string
+  /**
+   * Opt-in (T-0135, type=date): an UNFOCUSED write that parses is shown formatted at once (an ISO write
+   * reads as the locale date), where by default only blur reformats. Never applies mid-edit.
+   */
+  formatOnWrite?: boolean
 }
 
 export interface ValueCodecController {
@@ -165,7 +170,7 @@ export function valueCodec(host: CodecHost, opts: ValueCodecOptions, typeSignal?
     // type-effect), but the ordering costs nothing and removes the latent trap.
     if (firstRun) {
       firstRun = false
-      return
+      if (!opts.formatOnWrite) return // formatOnWrite also formats the seed (an ISO value attribute)
     }
     // Defense-in-depth for the no-typeSignal fallback path (this function's only caller without a real
     // control wrapping it is the trait-level unit test): host.listen()'s fallback listeners ride the
@@ -181,6 +186,12 @@ export function valueCodec(host: CodecHost, opts: ValueCodecOptions, typeSignal?
       hasError.value = false
       return
     }
+    // The display of the current canonical (blur's own reformat, or formatOnWrite's) is known-good: no
+    // re-parse, which a locale format the parser cannot read back would otherwise flag as an error.
+    if (canonical.value !== '' && v === opts.format(canonical.value)) {
+      hasError.value = false
+      return
+    }
     const parsed = opts.parse(v)
     if (parsed === null) {
       hasError.value = true // mirrors onBlur: canonical stays untouched, let the caller correct it
@@ -188,6 +199,10 @@ export function valueCodec(host: CodecHost, opts: ValueCodecOptions, typeSignal?
     }
     hasError.value = false
     canonical.value = parsed
+    if (opts.formatOnWrite) {
+      const shown = opts.format(parsed)
+      if (shown !== v) host.value = shown // re-runs this effect once; the known-good check above ends it
+    }
   })
 
   if (editor) {
