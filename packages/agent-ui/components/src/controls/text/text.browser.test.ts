@@ -98,7 +98,7 @@ describe('ui-text browser-truth harness — the role×size matrix resolves to re
     el.setAttribute('size', 'lg')
     el.textContent = 'no variant'
     document.body.append(el)
-    // body at size lg = 15px (vs. size md's 14px) — proves the :not([variant]) compound selector is live
+    // body at size lg = 15px (vs. size md's 14px) proves the :not([variant]) compound selector is live
     expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(resolve('product', 'sm', 'lg').type.body, 0)
     el.remove()
   })
@@ -165,7 +165,7 @@ describe('ui-text compact-window override — body 15/13/11 below the 52.5rem li
     return el
   }
 
-  it('body/md (the bare default) computes 14px below the line too — the 1px drop is retired (ADR-0245 cl.7)', () => {
+  it('body/md (the bare default) computes 14px below the line too, the 1px drop is retired (ADR-0245 cl.7)', () => {
     const el = mountText({})
     expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(resolve('product', 'sm', 'md').type.body, 0)
     el.remove()
