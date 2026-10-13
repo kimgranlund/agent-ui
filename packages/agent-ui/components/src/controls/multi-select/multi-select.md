@@ -121,7 +121,7 @@ geometry:
   options:
     sizeClass: legacy item-pad (ROV-C5 / §5.1) — numbers DERIVED off the lever (ui-select's options-token mechanism copied)
     paddingBlock: var(--ui-multi-select-option-block)   # = (h − font)/2
-    paddingInline: var(--ui-multi-select-option-inline) # = h/4
+    paddingInline: var(--ui-multi-select-option-inline) # = n, the row's box margin (the tick cell sits there, then n to the text); the trailing edge adds the label inset n - c (ADR-0245 Amendment 4; h/4 under the legacy opt-out)
     font: var(--ui-multi-select-option-font)            # = --ui-multi-select-font
 
 forcedColors: A `@media (forced-colors: active)` block keeps the listbox surface (Canvas/CanvasText), the option hover/selected/focus states (Highlight/HighlightText), and the checkmark glyph (HighlightText) visible in Windows High Contrast Mode.

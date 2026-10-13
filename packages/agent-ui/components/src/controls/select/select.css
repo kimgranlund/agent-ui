@@ -63,7 +63,8 @@
   --ui-select-ink-filled: var(--md-sys-color-neutral-on-surface-variant);
   --ui-select-ink-hover: var(--md-sys-color-neutral-on-surface-variant);
   --ui-select-ink-focus: var(--md-sys-color-neutral-on-surface);
-  --ui-select-edge: var(--md-sys-inset, calc(var(--ui-select-height) / 2)); /* the label edge: n in a data-tier region (ADR-0245 cl.3), h/2 outside */
+  --ui-select-edge: var(--md-sys-inset, calc(var(--ui-select-height) / 2)); /* the trigger's box margin: n derived (ADR-0245 cl.3), h/2 under the legacy opt-out */
+  --ui-select-label-inset: var(--md-sys-label-inset, 0px); /* the control rule (Amendment 4): the label carries n - c, text edge 2n - c */
   --ui-select-corner-shape: var(--md-sys-corner-shape, round); /* squircle in a data-tier region */
   --ui-select-radius: var(--md-sys-radius, var(--md-sys-shape-corner-base)); /* fixed rounded-rect radius, like text-field */
 
@@ -73,7 +74,7 @@
      not frame) → glyph is font-sized, centred in the icon cell by padding=(icon−glyph)/2. */
   --ui-select-height: var(--md-sys-height, var(--md-sys-height-md));
   --ui-select-font: var(--md-sys-type-control, var(--md-sys-font-md));
-  --ui-select-gap: var(--md-sys-inset, var(--md-sys-gap-md));          /* the density-bearing column-gap */
+  --ui-select-gap: var(--md-sys-c, var(--md-sys-gap-md)); /* the control gutter c (Amendment 4); gutter + label inset = n to the caret cell */
   --ui-select-icon: var(--md-sys-icon-box, var(--md-sys-icon-md));        /* the icon-cell size (caret CELL is icon-wide) */
   --ui-select-glyph: var(--md-sys-glyph-box, var(--ui-select-font));   /* caret GLYPH = font (§4.1 caret law) */
 
@@ -111,9 +112,10 @@
      ramp the trigger already repoints at `[size=sm|lg]`) instead of hand-picked fixed px, so the
      panel inset + option row scale WITH the trigger — no new sm/lg blocks needed; the calc()s
      below repoint for free.
-       • Alignment law: listbox-padding + option-inline == h/2, so option text starts at the same
-         inline offset from the panel's outer edge as the trigger label does from the trigger's
-         edge (h/2) — text lines up under text. Split evenly (h/4 + h/4).
+       • Alignment law (the legacy opt-out only): listbox-padding + option-inline == h/2, so option
+         text starts at the trigger label's inline offset, split evenly (h/4 + h/4). Derived
+         (ADR-0245 Amendment 4) a row is a control with its own margin n and label inset n - c, so
+         its text sits c inside the trigger's text (the listbox margin).
        • Row-height law: option-block == (h − font)/2 — the SAME (height−glyph)/2 centering law
          (geometry.md), applied on the block axis to the option's own text (glyph = font here) —
          so the option row's rendered content-box height == the trigger height exactly, and both
@@ -143,7 +145,7 @@
      radius is inset from the listbox shell radius (nested-radius: shell − padding, ADR-0018). */
   --ui-select-option-block: calc((var(--ui-select-height) - var(--ui-select-font)) / 2); /* (h−font)/2 — row height == trigger height */
   --ui-select-option-inline: var(--ui-select-option-inline-derived, calc(var(--ui-select-height) / 4));            /* h/4 — pairs with listbox-padding to total h/2 */
-  --ui-select-option-inline-derived: calc(var(--md-sys-inset) - var(--md-sys-c)); /* undefined outside a data-tier region, so the h/4 fallback above wins */
+  --ui-select-option-inline-derived: calc(var(--md-sys-inset) + var(--md-sys-label-inset)); /* a row is a control (Amendment 4): margin n + label inset n - c, so its text edge is 2n - c and sits c inside the trigger's; undefined under the legacy opt-out, so the h/4 fallback above wins */
   --ui-select-option-font: var(--ui-select-font);   /* options were size-blind on FONT too (bug fix) — now the ramp */
   --ui-select-option-radius: calc(var(--ui-select-listbox-radius) - var(--ui-select-listbox-padding)); /* nested-radius off the REAL inset (was a hardcoded 4px, ADR-0018) */
   --ui-select-option-bg-hover: var(--md-sys-color-neutral-surface-high);
@@ -162,14 +164,14 @@
 :where(ui-select[size='sm']) {
   --ui-select-height: var(--md-sys-height, var(--md-sys-height-sm));
   --ui-select-font: var(--md-sys-type-control, var(--md-sys-font-sm));
-  --ui-select-gap: var(--md-sys-inset, var(--md-sys-gap-sm));
+  --ui-select-gap: var(--md-sys-c, var(--md-sys-gap-sm));
   --ui-select-icon: var(--md-sys-icon-box, var(--md-sys-icon-sm));
 }
 
 :where(ui-select[size='lg']) {
   --ui-select-height: var(--md-sys-height, var(--md-sys-height-lg));
   --ui-select-font: var(--md-sys-type-control, var(--md-sys-font-lg));
-  --ui-select-gap: var(--md-sys-inset, var(--md-sys-gap-lg));
+  --ui-select-gap: var(--md-sys-c, var(--md-sys-gap-lg));
   --ui-select-icon: var(--md-sys-icon-box, var(--md-sys-icon-lg));
 }
 
@@ -192,6 +194,7 @@
      IS the floor. The trigger child fills the host width (width: 100%) either way. */
   :scope {
     display: block;
+    min-inline-size: var(--ui-select-height); /* min width 4n (the control rule, ADR-0245 Amendment 4) */
     /* GH #1297 — the containing block for the visually-hidden aria-label span below. Without this the
        span's `position: absolute` resolves against the nearest positioned ANCESTOR (measured: super-shell's
        `middle`, in ui-agent-admin), where its static position lands wherever the select sits inside a
@@ -228,7 +231,7 @@
 
     block-size: var(--ui-select-height);
     padding-block: 0; /* NEVER block padding — geometry law */
-    padding-inline-start: var(--ui-select-edge);   /* h/2 label edge */
+    padding-inline-start: var(--ui-select-edge); /* the box margin n; the label carries the inset */
     padding-inline-end: calc((var(--ui-select-height) - var(--ui-select-icon)) / 2); /* ½(h−icon) caret edge */
     min-inline-size: 0; /* allow the trigger to shrink within a narrow host (the host sets the floor) */
 
@@ -245,8 +248,9 @@
     user-select: none;
   }
 
-  /* The label span: fills the 1fr column; clipped for overflow. */
+  /* The label span: fills the 1fr column; clipped for overflow. A value label: start-aligned, one rule. */
   :scope > [data-part='trigger'] > [data-part='label'] {
+    padding-inline: var(--ui-select-label-inset); /* the text slot's label inset n - c (text edge 2n - c) */
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

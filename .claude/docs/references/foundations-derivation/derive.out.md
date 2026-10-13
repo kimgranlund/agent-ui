@@ -213,3 +213,32 @@ Registers, sm / md / lg heights, v1 → v2:
 | badge height | 2n → 2n + 2c | 10 → 14 (+4) · 12 → 16 (+4) · 14 → 18 (+4) |
 | checkbox and badge radius | n/2 → ceil(n/2) | 2.5 → 3 (+0.5) · 3 → 3 (0) · 3.5 → 4 (+0.5) |
 - The chip level (tag, badge, kbd: margin c, gutter c, radius ceil(n/2)) has no token yet: 2 / 2 / 3 · 2 / 2 / 3 · 2 / 2 / 4 at the root sm · md · lg. The reserved levels tray, lane and shell have none by design.
+
+## 18. Amendment 4: the control rule adopted, per control at the root product/sm, before → after (delta), sm · md · lg
+Section 17 listed these as not adopted; T-0122 adopts every row of it. Edges are measured from the padding edge (inside the 1px border).
+| control | quantity | rule, before → after | sm · md · lg |
+|---|---|---|---|
+| button | text edge of a label | 2n → 2n - c | 10 → 8 (-2) · 12 → 10 (-2) · 14 → 12 (-2) |
+| button | box margin beside a label (host padding) | 2n → n | 10 → 5 (-5) · 12 → 6 (-6) · 14 → 7 (-7) |
+| button, text-field, textarea, select trigger | label inset on the text slot | 0 → n - c | 0 → 3 (+3) · 0 → 4 (+4) · 0 → 5 (+5) |
+| button, text-field, select trigger | gutter (column-gap) | n → c | 5 → 2 (-3) · 6 → 2 (-4) · 7 → 2 (-5) |
+| button, toggle, text-field, select trigger | icon edge and icon to text | n → n | 5 → 5 (0) · 6 → 6 (0) · 7 → 7 (0) |
+| toggle, segment | text edge (anonymous label: margin + inset on the host) | 2n → 2n - c | 10 → 8 (-2) · 12 → 10 (-2) · 14 → 12 (-2) |
+| text-field, textarea, select trigger, combo-box | value or text edge | n → 2n - c | 5 → 8 (+3) · 6 → 10 (+4) · 7 → 12 (+5) |
+| select and combo-box option rows | text edge, from the row edge | n - c → 2n - c | 3 → 8 (+5) · 4 → 10 (+6) · 5 → 12 (+7) |
+| multi-select row | tick cell edge | n - c → n | 3 → 5 (+2) · 4 → 6 (+2) · 5 → 7 (+2) |
+| multi-select row | trailing text edge | n - c → 2n - c | 3 → 8 (+5) · 4 → 10 (+6) · 5 → 12 (+7) |
+| menu row | text edge | n + c → 2n - c | 7 → 8 (+1) · 8 → 10 (+2) · 9 → 12 (+3) |
+| menu check row | check box edge | n + c → n | 7 → 5 (-2) · 8 → 6 (-2) · 9 → 7 (-2) |
+| menu check row | check box to text | c → n | 2 → 5 (+3) · 2 → 6 (+4) · 2 → 7 (+5) |
+| tab | text edge (GH #536 had none) | 0 → 2n - c | 0 → 8 (+8) · 0 → 10 (+10) · 0 → 12 (+12) |
+| tab strip | gap between tabs | n + 2c → c | 9 → 2 (-7) · 10 → 2 (-8) · 11 → 2 (-9) |
+| tab strip | label to label distance | n + 2c → 4n - c | 9 → 18 (+9) · 10 → 22 (+12) · 11 → 26 (+15) |
+| toggle, text-field, select, combo-box, tab, segment | min width (button already had it) | none → 4n | 0 → 20 (+20) · 0 → 24 (+24) · 0 → 28 (+28) |
+| badge | height | 2n → 2n + 2c | 10 → 14 (+4) · 12 → 16 (+4) · 14 → 18 (+4) |
+| badge | text edge (host margin c + label margin c) | 2c → 2c | 4 → 4 (0) · 4 → 4 (0) · 4 → 4 (0) |
+| badge | glyph edge (the 2n mark box at the chip margin, glyph c inside it) | 2c → 2c | 4 → 4 (0) · 4 → 4 (0) · 4 → 4 (0) |
+| badge | glyph to text | n → 3c | 5 → 6 (+1) · 6 → 6 (0) · 7 → 6 (-1) |
+| badge, checkbox | radius | n/2 → ceil(n/2) | 2.5 → 3 (+0.5) · 3 → 3 (0) · 3.5 → 4 (+0.5) |
+- New tokens: `--md-sys-label-inset` (n - c: 3 / 4 / 5) and the chip level `--md-sys-chip-{margin,gutter,radius}` (2 / 2 / 3 · 2 / 2 / 3 · 2 / 2 / 4) at the root sm · md · lg.
+- The identity the rule rests on: gutter c + label inset (n - c) = margin n, so an icon stays n from the edge and n from the text while the text edge is 2n - c: 8 / 10 / 12 at the root, 12 at n 7.

@@ -94,8 +94,8 @@ geometry:
   posture: fill (block-level host, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-grid + hug   # Fill by Default — slice 2 (action/selection)
   blockSize: var(--ui-toggle-height)   # 4n off --md-sys-height (button.css's own), NOT the indicator 2n box
   paddingBlock: 0
-  inlinePad: h/2 = 2n (slotless bare label) · ½(h−icon) (icon and/or state-icon slot edge, symmetric when both present)   # the centering law, geometry.md — button.css's own host-as-grid anatomy, minus the position/role split (both icon slots are fixed-role, see Slots above)
-  gap: var(--ui-toggle-gap)             # icon/state-icon ↔ label column-gap — the one scale-bearing quantity (gap = n)
+  inlinePad: 2n - c beside the label (box margin n + label inset n - c on the host, the label is anonymous content; ADR-0245 Amendment 4; h/2 under the legacy opt-out) · ½(h−icon) = n (icon and/or state-icon slot edge, symmetric when both present)   # the control rule, geometry.md: button.css's own host-as-grid anatomy, minus the position/role split (both icon slots are fixed-role, see Slots above)
+  gap: var(--ui-toggle-gap)             # icon/state-icon ↔ label column-gap, n: the control gutter c plus the label inset n - c
 
 forcedColors: A `@media (forced-colors: active)` block keeps the ink + border visible under WHCM, and repaints the pressed fill to Highlight/HighlightText (the segmented-control indicator precedent) so the ON/OFF distinction survives high-contrast mode without relying on hue alone.
 ---

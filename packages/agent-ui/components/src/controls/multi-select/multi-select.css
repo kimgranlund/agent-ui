@@ -73,8 +73,11 @@
   /* ── Option rows — legacy item-pad (§5.1/ROV-C5): padding-based row height, not a fixed widget-box.
      Numbers DERIVED off the height/font lever (the `ui-select` options-token mechanism copied, LLD-C5). ── */
   --ui-multi-select-option-block: calc((var(--ui-multi-select-height) - var(--ui-multi-select-font)) / 2); /* (h−font)/2 */
-  --ui-multi-select-option-inline: var(--ui-multi-select-option-inline-derived, calc(var(--ui-multi-select-height) / 4)); /* h/4, n - c in a data-tier region */
-  --ui-multi-select-option-inline-derived: calc(var(--md-sys-inset) - var(--md-sys-c)); /* undefined outside a region, so the h/4 fallback wins */
+  /* The control rule (ADR-0245 Amendment 4): a row is a control, so its box margin is n (the tick cell sits there,
+     pinned with no inset) and the label's far edge adds the label inset n - c (text edge 2n - c). Under the
+     legacy opt-out the margin is h/4 and the inset 0. */
+  --ui-multi-select-option-inline: var(--md-sys-inset, calc(var(--ui-multi-select-height) / 4));
+  --ui-multi-select-option-label-inset: var(--md-sys-label-inset, 0px);
   --ui-multi-select-option-font: var(--ui-multi-select-font);
   --ui-multi-select-option-radius: calc(var(--ui-multi-select-radius) - var(--ui-multi-select-padding)); /* nested-radius, ADR-0018 */
   --ui-multi-select-option-bg-hover: var(--md-sys-color-neutral-surface-high);
@@ -195,7 +198,7 @@
     display: block;
     padding-block: var(--ui-multi-select-option-block);
     padding-inline-start: calc(var(--ui-multi-select-option-inline) + var(--ui-multi-select-icon) + var(--ui-multi-select-gap));
-    padding-inline-end: var(--ui-multi-select-option-inline);
+    padding-inline-end: calc(var(--ui-multi-select-option-inline) + var(--ui-multi-select-option-label-inset));
     line-height: 1; /* the row-height law: font + 2×block-pad == the trigger-equivalent height exactly */
     border-radius: var(--ui-multi-select-option-radius);
     cursor: pointer;

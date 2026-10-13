@@ -846,3 +846,99 @@ Repairs in the same change: `geometry.md`, `geometry-sizing-spec.md`, `tokens.md
 `dimensional-standard.md`, the `component-standards` skill, `CLAUDE.md`'s ramp line, the `avatar`, `radio`,
 `swatch` and `text` descriptors, the sizing page lead and the canvas comment in `action-row.ts`. Every test that
 pins a v1 pixel is re-pinned by its census lane.
+
+## Amendment 4 (2026-10-13, T-0122): the skill's control rule, the chip level, the badge height and the rounded-up radii
+
+Kim's ruling, 2026-10-13: adopt next what Amendment 3 point 7 left out, after T-0120 moved the anchors. `scale.mjs`
+is unchanged (sha256 `3c319761…6057ba5b`, still the skill's copy): it already carries `control.margin`,
+`control.gutter`, `labelMargin`, the `chip` level and `parts.*`, and this amendment changes what the fleet reads
+from them. It supersedes Amendment 3 point 7's first three bullets, clause 3's `button, toggle`, `badge` and
+`checkbox` rows, the `2n` segment padding of its `segmented-control` row and the "gap n" of its `all controls`
+row; the body and its appendices stay as written.
+
+1. **The control rule: one geometry for every control, whatever it holds.** The box margin is `n`
+   (`--md-sys-inset`) on every inline edge, the gutter is `c` (`--md-sys-c`), and the text slot (label, value or
+   editor) carries the **label inset** `n - c` on each inline side, the new token `--md-sys-label-inset`.
+   Gutter plus inset equals the margin, so an icon sits `n` from the edge and `n` from the text, and the text edge
+   is `n + (n - c) = 2n - c`: **8 / 10 / 12 at the root sm / md / lg** (12 at n 7), where it was `2n` on a button,
+   toggle and segment and `n` on a field. An icon, caret, tick cell or any other boxed item carries no inset and
+   stays pinned to its edge. A control is never narrower than `4n`: a label-only control is `4n - 2c` plus its
+   text, so the floor binds only under `2c` of text.
+2. **Where the inset sits.** On the text slot where the control has one; where the label is anonymous host
+   content the host edge beside it carries margin plus inset and the icon to text gap is written `n` (`c` plus
+   the inset), the same pixels. No wrapper is added: that is a parts contract change (`toggle.md` rules
+   `parts: []`).
+
+   | control | the text slot | how it is written |
+   |---|---|---|
+   | `ui-button` | `[data-part="label"]` | host padding `n`, column-gap `c`, label padding `n - c` |
+   | `ui-text-field`, `ui-textarea` | `[data-part="editor"]` | host padding `n`, column-gap `c`, editor padding `n - c` |
+   | `ui-select` trigger | `[data-part="label"]` | trigger padding `n`, column-gap `c`, label padding `n - c` |
+   | `ui-combo-box` | the editor, frame and slot in one | editor padding `n + (n - c)` |
+   | `ui-toggle`, `ui-segment`, `ui-tab` | anonymous label | the label edge of the host is `n + (n - c)`; icon to text `n` |
+   | menu rows, select and combo-box option rows | anonymous label | row padding `n + (n - c)`; a menu check box sits at `n`, then `n` to the text |
+   | `ui-multi-select` rows | anonymous label | tick cell at `n`, `n` to the text, trailing edge `n + (n - c)` |
+
+   A toolbar item is the button inside the bar: `ui-toolbar` itself does not change. `ui-otp-field`'s cells hold
+   one centered character and take no inset.
+3. **Action labels align per the skill's table**, with its three selectors on the label and no `:has()`:
+   centered alone or between leading and trailing content, start with only trailing content
+   (`:first-child:not(:only-child)`), end with only leading content (`:last-child:not(:only-child)`). `ui-button`
+   reads them on its label part (the same pixels as ADR-0171's spread, written without `:has()`; the grid template
+   keeps its `:has()` rules, which only choose the tracks). A value or row label is start-aligned. A tab, segment
+   and badge label has nothing beside it and stays centered. **`ui-toggle` keeps its centered label**: its label
+   is anonymous content, `toggle.md` rules no wrapper and no edge spread, and without a label element there is
+   nothing for the three selectors to match. That is a recorded deviation from the table's "only leading content:
+   end" row, not an oversight.
+4. **Rulings this supersedes.**
+   - **GH #536, zero inline padding on a tab.** A tab is a control: it carries `2n - c` on each inline side and
+     the `4n` floor, and the tabs then touch with the tight gutter: `--ui-tabs-strip-gap` is `c` (it was
+     `xs + md`, the spacing #536 moved onto the gap). Label to label is `4n - c`: 10 to 22 at the root md.
+   - **"Option text lines up under the trigger text"** (`select.css`, `combo-box.css`). A row is a control with its
+     own margin and inset, so its text sits `c` inside the trigger's text, the listbox margin. Lining them up again
+     means offsetting the panel by `-c`, a positioning change this amendment does not make.
+   - **`menu.css`'s own item-pad register.** A menu row reads the control rule like every other row.
+5. **The chip level.** The generator emits `--md-sys-chip-margin` (`c`), `--md-sys-chip-gutter` (`c`) and
+   `--md-sys-chip-radius` (`ceil(n/2)`). `ui-badge` is a chip: height **`2n + 2c`** (`parts.badge`, 12 to 16 at
+   the root md), the 2n icon size plus a c ring; host margin `c` and label margin `c`, so the text edge stays
+   `2c`; the glyph `2n - 2c` sits `c` inside its 2n mark box, with the gutter `c` and the label margin after it;
+   radius `ceil(n/2)`. The fleet has no tag or kbd control yet; the reserved levels (tray, lane, shell) still
+   have no token.
+6. **Checkbox and badge radius are `ceil(n/2)`** (`parts.checkboxRadius`, the chip radius token): 2.5 to 3 at the
+   root sm, 3.5 to 4 at lg, 3 at md unchanged. A half pixel never reaches a corner.
+7. **The legacy opt-out holds.** Every new read keeps the `var(<derived>, <today>)` form: under
+   `data-foundations="legacy"` the label inset is 0, a label edge is h/2, a tab has no padding and the #536 gap,
+   and the badge is the 18px compact box with the pill radius.
+8. **Gates.** `foundations.test.ts` pins the new names and their `initial` lines in the bridge, and
+   `foundations.browser.test.ts` reads `label-inset` and the chip level in all 36 cells against `resolve()`.
+   `scripts/foundations-probe.mjs` rules a text slot's inset beside the host margin (`pill`, `frame`, `trigger`,
+   `multiline`), splits the toggle into `barePill` (margin plus inset on the host), moves `segment` to `2n - c`
+   and the checkbox radius to `ceil(n/2)`. `controls/control-rule.browser.test.ts` measures every control above,
+   outside any region and inside one, in both engines: the text edge, the icon edge, icon to text, the `4n`
+   floor, the alignment table and the legacy opt-out. The census counts the new tokens as derived.
+9. **Not adopted here.** The skill subtracts a border from the margin; the fleet still writes padding equal to the
+   rule and draws its 1px border outside it, so a text edge measured from the outer edge is `2n - c + 1`
+   (unchanged practice, clause 3 notwithstanding). The toggle's alignment and the listbox offset are item 3 and
+   item 4 above.
+
+The px that move, at the root sm · md · lg (`derive.out.md` section 18 has every row):
+
+| control | quantity | rule, before → after | sm · md · lg |
+|---|---|---|---|
+| button, toggle, segment | label text edge | 2n → 2n - c | 10 → 8 (-2) · 12 → 10 (-2) · 14 → 12 (-2) |
+| text-field, textarea, select trigger, combo-box | value edge | n → 2n - c | 5 → 8 (+3) · 6 → 10 (+4) · 7 → 12 (+5) |
+| select and combo-box option rows | text edge, from the row edge | n - c → 2n - c | 3 → 8 (+5) · 4 → 10 (+6) · 5 → 12 (+7) |
+| multi-select row | tick cell edge | n - c → n | 3 → 5 (+2) · 4 → 6 (+2) · 5 → 7 (+2) |
+| menu row | text edge | n + c → 2n - c | 7 → 8 (+1) · 8 → 10 (+2) · 9 → 12 (+3) |
+| menu check row | check box edge · box to text | n + c → n · c → n | 7 → 5 (-2) · 8 → 6 (-2) · 9 → 7 (-2), then 2 → 5 (+3) · 2 → 6 (+4) · 2 → 7 (+5) |
+| tab | text edge | 0 → 2n - c | 0 → 8 (+8) · 0 → 10 (+10) · 0 → 12 (+12) |
+| tab strip | label to label | n + 2c → 4n - c | 9 → 18 (+9) · 10 → 22 (+12) · 11 → 26 (+15) |
+| every control with an icon | icon edge, icon to text | n → n | 5 → 5 (0) · 6 → 6 (0) · 7 → 7 (0) |
+| badge | height | 2n → 2n + 2c | 10 → 14 (+4) · 12 → 16 (+4) · 14 → 18 (+4) |
+| badge | text edge · glyph to text | 2c → 2c · n → 3c | 4 → 4 (0) throughout, then 5 → 6 (+1) · 6 → 6 (0) · 7 → 6 (-1) |
+| badge, checkbox | radius | n/2 → ceil(n/2) | 2.5 → 3 (+0.5) · 3 → 3 (0) · 3.5 → 4 (+0.5) |
+
+Repairs in the same change: `geometry.md`, `geometry-sizing-spec.md` §4.3 and §4.4, `tokens.md`, `derive.mjs`
+section 18, and the `button`, `toggle`, `text-field`, `textarea`, `select`, `combo-box`, `multi-select`, `tabs`,
+`menu`, `segmented-control`, `badge` and `checkbox` descriptors. Every test that pins an old edge is listed by
+census lane in `.sdlc/control-rule-adoption/repin-list.md` and re-pinned by its lane.

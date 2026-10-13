@@ -40,9 +40,16 @@
   --ui-button-height: var(--md-sys-height, var(--md-sys-height-md));
   --ui-button-radius: calc(2 * var(--md-sys-radius, calc(var(--ui-button-height) / 4))); /* the pill, 2n (ADR-0245 Amendment 3); h/2 under the legacy opt-out */
   --ui-button-font: var(--md-sys-type-control, var(--md-sys-font-md));
-  --ui-button-gap: var(--md-sys-inset, var(--md-sys-gap-md));
+  --ui-button-gap: var(--md-sys-c, var(--md-sys-gap-md)); /* the control gutter c (ADR-0245 Amendment 4); the label inset below makes icon to text n */
   --ui-button-icon: var(--md-sys-icon-box, var(--md-sys-icon-md)); /* content-icon = the shared §1-SET icon table (ADR-0035 4a hoist, dimensions.css), per-[scale]-tier; was pow(scale,0.58) */
   --ui-button-glyph: var(--md-sys-glyph-box, var(--ui-button-font)); /* inline-affordance (caret): the glyph box 2n - 2c in a data-tier region, the font outside (ADR-0245 cl.4) */
+
+  /* The control rule (ADR-0245 Amendment 4): the box margin is n on every edge and the label carries the inset
+     n - c, so the text edge is 2n - c and icon to text is c + (n - c) = n. Declared once here: both derive from
+     the height and n, so [size] repoints them for free. Under the legacy opt-out the margin is h/2 beside a
+     label and the inset is 0, today's geometry. */
+  --ui-button-edge: var(--md-sys-inset, calc(var(--ui-button-height) / 2));
+  --ui-button-label-inset: var(--md-sys-label-inset, 0px);
 }
 
 /* variant → colour roles (the channel pattern, tokens.md). Per-state bg steps the matching ladder:
@@ -65,13 +72,13 @@
 :where(ui-button[size='sm']) {
   --ui-button-height: var(--md-sys-height, var(--md-sys-height-sm));
   --ui-button-font: var(--md-sys-type-control, var(--md-sys-font-sm));
-  --ui-button-gap: var(--md-sys-inset, var(--md-sys-gap-sm));
+  --ui-button-gap: var(--md-sys-c, var(--md-sys-gap-sm));
   --ui-button-icon: var(--md-sys-icon-box, var(--md-sys-icon-sm)); /* §1-SET icon table (ADR-0035) */
 }
 :where(ui-button[size='lg']) {
   --ui-button-height: var(--md-sys-height, var(--md-sys-height-lg));
   --ui-button-font: var(--md-sys-type-control, var(--md-sys-font-lg));
-  --ui-button-gap: var(--md-sys-inset, var(--md-sys-gap-lg));
+  --ui-button-gap: var(--md-sys-c, var(--md-sys-gap-lg));
   --ui-button-icon: var(--md-sys-icon-box, var(--md-sys-icon-lg)); /* §1-SET icon table (ADR-0035) */
 }
 
@@ -101,8 +108,8 @@
 
     block-size: var(--ui-button-height); /* the vertical lever — geometry.md */
     padding-block: 0; /* NEVER block-padding */
-    padding-inline: calc(var(--ui-button-height) / 2); /* slotless edge = h/2 */
-    min-inline-size: var(--ui-button-height); /* frame: icon-only ≈ square */
+    padding-inline: var(--ui-button-edge); /* the box margin n; the label carries the inset (text edge 2n - c) */
+    min-inline-size: var(--ui-button-height); /* min width 4n: a short label never goes narrower than the square */
 
     font-size: var(--ui-button-font);
     line-height: var(--md-sys-control-line-height); /* single-line control standard — ADR-0036; tight line box centered in the fixed frame */
@@ -149,6 +156,8 @@
      here is the BASE (bare + double-adorned structures, rows 5/6/7) — the single-adornment structures
      override to `end`/`start` below (ADR-0171, GH #442, amended GH #450). */
   :scope > [data-part='label'] {
+    box-sizing: border-box; /* the inset counts inside the max-inline-size clamp below */
+    padding-inline: var(--ui-button-label-inset); /* the label inset n - c: the text slot carries it, icons carry none */
     overflow: hidden;
     text-overflow: ellipsis;
     min-inline-size: 0;
@@ -156,20 +165,22 @@
     justify-self: center;
   }
 
-  /* Alignment law (ADR-0171, GH #442, amended GH #450) — a SINGLE adornment and its label pin to
+  /* Alignment law (ADR-0171, GH #442, amended GH #450): a SINGLE adornment and its label pin to
      OPPOSITE edges of the inner row (spread), not a start-aligned cluster; center remains the base
-     for bare and double-adorned. Selectors reused verbatim from the auto 1fr / 1fr auto template
-     rules below, so alignment can never disagree with the structure that placed the track.
-     fit-content sizing + the max-inline-size clamp (GH #293) hold under `start`/`end` exactly as
-     under `center` — any non-stretch justify-self shrink-wraps the item. At CONTENT (hug) width the
-     `1fr` track resolves to the label's fit-content width, so start/end/center are
-     pixel-indistinguishable and the adornment⟷label separation is exactly `--ui-button-gap` — the
-     spread only manifests once the button's inline-size exceeds its content (ADR-0171 Amendment §A1). */
-  :scope:has(> [slot='leading']):not(:has(> [slot='trailing'])):not([icon-only]) > [data-part='label'] {
-    justify-self: end; /* spread: icon at start edge, label at end edge (ADR-0171 Amendment, GH #450) */
+     for bare and double-adorned. Written as the skill's three selectors on the label itself, no
+     :has() (ADR-0245 Amendment 4): the base rule above centers a label that is alone or between two
+     adornments, a label that is the first of several children has only trailing content, and one
+     that is the last of several has only leading content. button.ts keeps the wrapper between the
+     adornments, so child order is the structure. fit-content sizing + the max-inline-size clamp
+     (GH #293) hold under `start`/`end` exactly as under `center`. At CONTENT (hug) width the `1fr`
+     track resolves to the label's own width, so start/end/center are pixel-indistinguishable and
+     the adornment to text separation is exactly gap + label inset = n; the spread only shows once
+     the button's inline-size exceeds its content (ADR-0171 Amendment §A1). */
+  :scope > [data-part='label']:first-child:not(:only-child) {
+    justify-self: start; /* only trailing content: label at the start edge, adornment at the end */
   }
-  :scope:has(> [slot='trailing']):not(:has(> [slot='leading'])):not([icon-only]) > [data-part='label'] {
-    justify-self: start; /* spread, mirrored: label at start edge, adornment at end (unchanged bytes) */
+  :scope > [data-part='label']:last-child:not(:only-child) {
+    justify-self: end; /* only leading content: icon at the start edge, label at the end edge (GH #450) */
   }
 
   /* Anatomy (ADR-0006, extended by ADR-0012): host-as-grid with three POSITION regions — an OPTIONAL leading
@@ -178,8 +189,8 @@
      [label] · [leading | label] · [label | trailing] · [leading | label | trailing] · [icon-only, no label]
      (the last is an explicit author opt-in, `[icon-only]` — CSS cannot detect an empty/text-node label on its
      own; see the `:scope[icon-only]` rule below, geometry.md "icon-only (no label) → square"). Each adornment
-     gets a square, icon-sized CELL with edge-pad ½(h−icon); a bare (slotless) edge stays h/2; the column-gap is
-     the one density-bearing quantity (gap = font/2 × density).
+     gets a square, icon-sized CELL with edge-pad ½(h−icon) = n; a label edge is the box margin n plus the label's
+     own inset n - c (text edge 2n - c); the column-gap is the control gutter c (ADR-0245 Amendment 4).
      POSITION (the slot) PLACES; ROLE (`data-role` on the node — icon · caret now, tag · badge later) SIZES the
      glyph (ADR-0012 / geometry-sizing-spec §1.4, §4.6 — frame ∝ height vs rhythm ∝ font). Adornments are
      decorative (aria-hidden); popup/disclosure meaning belongs on the host via ARIA (ElementInternals). */
@@ -208,21 +219,22 @@
     padding: calc((var(--ui-button-icon) - var(--ui-button-glyph)) / 2); /* inset the font glyph, centered in the icon cell */
   }
 
-  /* [leading | label] (no trailing): auto 1fr — leading slot edge ½(h−icon), trailing label edge h/2.
-     :not([icon-only]) — the icon-only structure below is the mutually-exclusive fifth anatomy. */
+  /* [leading | label] (no trailing): auto 1fr. Leading slot edge ½(h−icon), which is n at icon 2n; the label
+     edge is the box margin (n derived, h/2 under the legacy opt-out).
+     :not([icon-only]): the icon-only structure below is the mutually-exclusive fifth anatomy. */
   :scope:has(> [slot='leading']):not(:has(> [slot='trailing'])):not([icon-only]) {
     grid-template-columns: auto 1fr;
     column-gap: var(--ui-button-gap);
     padding-inline-start: calc((var(--ui-button-height) - var(--ui-button-icon)) / 2);
-    padding-inline-end: calc(var(--ui-button-height) / 2);
+    padding-inline-end: var(--ui-button-edge);
   }
 
-  /* [label | trailing] (no leading): 1fr auto — leading label edge h/2, trailing slot edge ½(h−icon).
-     :not([icon-only]) — same exclusion. */
+  /* [label | trailing] (no leading): 1fr auto. The label edge is the box margin, the trailing slot edge ½(h−icon).
+     :not([icon-only]): same exclusion. */
   :scope:has(> [slot='trailing']):not(:has(> [slot='leading'])):not([icon-only]) {
     grid-template-columns: 1fr auto;
     column-gap: var(--ui-button-gap);
-    padding-inline-start: calc(var(--ui-button-height) / 2);
+    padding-inline-start: var(--ui-button-edge);
     padding-inline-end: calc((var(--ui-button-height) - var(--ui-button-icon)) / 2);
   }
 

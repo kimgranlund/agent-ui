@@ -2,6 +2,7 @@
 // implementation. Sections 1 to 10 (the ADR body and its appendices, frozen) run on scale-v1.mjs, the copy the
 // cut shipped (sha256 eca32879...); section 11 on (Amendment 3) runs on scale.mjs, the byte copy of the skill's
 // v2 ~/.claude/skills/mathematical-design-system/scale.mjs (sha256 3c319761...), and compares v2 against v1.
+// Section 18 (Amendment 4, T-0122) runs on the same v2 copy and gives the px the control rule moves per control.
 // v2 renamed keys: inset and radius are control.margin and control.radius, layout is page, the kicker roles are
 // sectionLabel and groupLabel, and the component sizes sit under parts.
 // "Today" values are read off the shipped stylesheets (file:line in the ADR appendix).
@@ -261,5 +262,41 @@ p(`| icon to label | n → gutter c + label margin n - c | ${cmp(v2.map((r) => r
 p(`| badge height | 2n → 2n + 2c | ${cmp(v2.map((r) => r.icon), v2.map((r) => r.parts.badge))} |`);
 p(`| checkbox and badge radius | n/2 → ceil(n/2) | ${cmp(v2.map((r) => r.n / 2), v2.map((r) => r.parts.checkboxRadius))} |`);
 p(`- The chip level (tag, badge, kbd: margin c, gutter c, radius ceil(n/2)) has no token yet: ${v2.map((r) => `${r.chip.margin} / ${r.chip.gutter} / ${r.chip.radius}`).join(' · ')} at the root sm · md · lg. The reserved levels tray, lane and shell have none by design.`);
+
+// ---- Amendment 4: the control rule, the chip level and the two rounded-up radii adopted (T-0122) ----------
+p('');
+p('## 18. Amendment 4: the control rule adopted, per control at the root product/sm, before → after (delta), sm · md · lg');
+p('Section 17 listed these as not adopted; T-0122 adopts every row of it. Edges are measured from the padding edge (inside the 1px border).');
+p('| control | quantity | rule, before → after | sm · md · lg |');
+p('|---|---|---|---|');
+{
+  const n = v2.map((r) => r.n), c = v2.map((r) => r.c), zero = v2.map(() => 0);
+  const inset = v2.map((r) => r.labelMargin), h = v2.map((r) => r.h);
+  const row = (control, quantity, rule, a, b) => p(`| ${control} | ${quantity} | ${rule} | ${cmp(a, b)} |`);
+  row('button', 'text edge of a label', '2n → 2n - c', n.map((x) => 2 * x), v2.map(edge));
+  row('button', 'box margin beside a label (host padding)', '2n → n', n.map((x) => 2 * x), n);
+  row('button, text-field, textarea, select trigger', 'label inset on the text slot', '0 → n - c', zero, inset);
+  row('button, text-field, select trigger', 'gutter (column-gap)', 'n → c', n, c);
+  row('button, toggle, text-field, select trigger', 'icon edge and icon to text', 'n → n', n, v2.map((r) => r.control.gutter + r.labelMargin));
+  row('toggle, segment', 'text edge (anonymous label: margin + inset on the host)', '2n → 2n - c', n.map((x) => 2 * x), v2.map(edge));
+  row('text-field, textarea, select trigger, combo-box', 'value or text edge', 'n → 2n - c', n, v2.map(edge));
+  row('select and combo-box option rows', 'text edge, from the row edge', 'n - c → 2n - c', inset, v2.map(edge));
+  row('multi-select row', 'tick cell edge', 'n - c → n', inset, n);
+  row('multi-select row', 'trailing text edge', 'n - c → 2n - c', inset, v2.map(edge));
+  row('menu row', 'text edge', 'n + c → 2n - c', v2.map((r) => r.group.margin), v2.map(edge));
+  row('menu check row', 'check box edge', 'n + c → n', v2.map((r) => r.group.margin), n);
+  row('menu check row', 'check box to text', 'c → n', c, n);
+  row('tab', 'text edge (GH #536 had none)', '0 → 2n - c', zero, v2.map(edge));
+  row('tab strip', 'gap between tabs', 'n + 2c → c', v2.map((r) => r.n + 2 * r.c), c);
+  row('tab strip', 'label to label distance', 'n + 2c → 4n - c', v2.map((r) => r.n + 2 * r.c), v2.map((r) => 2 * edge(r) + r.c));
+  row('toggle, text-field, select, combo-box, tab, segment', 'min width (button already had it)', 'none → 4n', zero, h);
+  row('badge', 'height', '2n → 2n + 2c', v2.map((r) => r.icon), v2.map((r) => r.parts.badge));
+  row('badge', 'text edge (host margin c + label margin c)', '2c → 2c', c.map((x) => 2 * x), v2.map((r) => r.chip.margin + r.c));
+  row('badge', 'glyph edge (the 2n mark box at the chip margin, glyph c inside it)', '2c → 2c', c.map((x) => 2 * x), v2.map((r) => r.chip.margin + r.c));
+  row('badge', 'glyph to text', 'n → 3c', n, c.map((x) => 3 * x));
+  row('badge, checkbox', 'radius', 'n/2 → ceil(n/2)', n.map((x) => x / 2), v2.map((r) => r.parts.checkboxRadius));
+}
+p(`- New tokens: \`--md-sys-label-inset\` (n - c: ${v2.map((r) => r.labelMargin).join(' / ')}) and the chip level \`--md-sys-chip-{margin,gutter,radius}\` (${v2.map((r) => `${r.chip.margin} / ${r.chip.gutter} / ${r.chip.radius}`).join(' · ')}) at the root sm · md · lg.`);
+p(`- The identity the rule rests on: gutter c + label inset (n - c) = margin n, so an icon stays n from the edge and n from the text while the text edge is 2n - c: ${v2.map(edge).join(' / ')} at the root, 12 at n 7.`);
 
 console.log(out.join('\n'));

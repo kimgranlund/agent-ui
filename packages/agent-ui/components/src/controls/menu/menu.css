@@ -67,7 +67,11 @@
      Adding a `[size]` axis to ui-menu would be a new-attribute contract change (its own decomp/ADR),
      not a CSS-only geometry fix. */
   --ui-menu-item-pad-block: var(--md-sys-space-xs);
-  --ui-menu-item-pad-inline: var(--md-sys-space-md);
+  /* The control rule (ADR-0245 Amendment 4): a row is a control, so its text edge is margin n + label inset
+     n - c (the label is anonymous row content). Undefined under the legacy opt-out, where the space-md pad holds. */
+  --ui-menu-item-pad-inline: var(--ui-menu-item-pad-inline-derived, var(--md-sys-space-md));
+  --ui-menu-item-pad-inline-derived: calc(var(--md-sys-inset) + var(--md-sys-label-inset));
+  --ui-menu-item-edge: var(--md-sys-inset, var(--ui-menu-item-pad-inline)); /* the row's box margin n: the check box is pinned here, no inset */
   --ui-menu-item-font: var(--md-sys-type-control, var(--md-sys-font-md));
 
   /* Item row block-size — the REAL rendered row height (font + 2×block-pad; `line-height: 1` on
@@ -117,7 +121,7 @@
      than a menu-specific magic number, and inked with the same "selected" accent ui-select's
      option rows already use (--md-sys-color-primary-high) — the fleet's one selected-row-ink role. */
   --ui-menu-check-size: var(--md-sys-icon-box, var(--md-sys-compact-sm));
-  --ui-menu-check-gap: var(--md-sys-space-xs);
+  --ui-menu-check-gap: var(--md-sys-inset, var(--md-sys-space-xs)); /* check box to text: gutter c + label inset n - c = n */
   --ui-menu-check-ink: var(--md-sys-color-primary-high);
 
   /* Item state colours — hover fill + disabled muted ink.
@@ -317,13 +321,13 @@
      to a single ::before here since the row itself already provides the box/background). */
   :scope :is([role='menuitemradio'], [role='menuitemcheckbox']) {
     position: relative;
-    padding-inline-start: calc(var(--ui-menu-item-pad-inline) + var(--ui-menu-check-size) + var(--ui-menu-check-gap));
+    padding-inline-start: calc(var(--ui-menu-item-edge) + var(--ui-menu-check-size) + var(--ui-menu-check-gap));
   }
 
   :scope :is([role='menuitemradio'], [role='menuitemcheckbox'])::before {
     content: '';
     position: absolute;
-    inset-inline-start: var(--ui-menu-item-pad-inline);
+    inset-inline-start: var(--ui-menu-item-edge);
     inset-block-start: 50%;
     transform: translateY(-50%);
     inline-size: var(--ui-menu-check-size);

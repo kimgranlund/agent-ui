@@ -43,7 +43,12 @@
      select.css trigger padding-inline-start), replacing the earlier fixed --md-sys-space-sm.
      The editor was the lone entry-control outlier still anchored to a space token instead
      of the frame-law h/2 inset; this brings it into line. */
-  --ui-combo-box-padding-inline: var(--md-sys-inset, calc(var(--ui-combo-box-height) / 2)); /* n in a data-tier region (ADR-0245 cl.3), h/2 outside */
+  --ui-combo-box-padding-inline: var(--md-sys-inset, calc(var(--ui-combo-box-height) / 2)); /* the box margin: n derived (ADR-0245 cl.3), h/2 under the legacy opt-out */
+  /* The control rule (ADR-0245 Amendment 4): the editor is the frame and the text slot in one element, so its
+     inline padding is margin n + label inset n - c (value edge 2n - c). Undefined under the legacy opt-out,
+     where the box margin above holds. */
+  --ui-combo-box-value-edge: var(--ui-combo-box-value-edge-derived, var(--ui-combo-box-padding-inline));
+  --ui-combo-box-value-edge-derived: calc(var(--md-sys-inset) + var(--md-sys-label-inset));
 
   /* Frame — Kim's filled/container state law (TKT-0062), SUPERSEDING the earlier border-only
      channel: THREE channels now repoint per state (background, border, text-ink), keyed off five
@@ -149,7 +154,7 @@
      editor's own inline pad (the alignment law). Supersedes the earlier fixed --md-sys-space-xs/sm px. */
   --ui-combo-box-option-padding-block: calc((var(--ui-combo-box-height) - var(--ui-combo-box-font)) / 2);
   --ui-combo-box-option-padding-inline: var(--ui-combo-box-option-padding-inline-derived, calc(var(--ui-combo-box-padding-inline) / 2));
-  --ui-combo-box-option-padding-inline-derived: calc(var(--md-sys-inset) - var(--md-sys-c)); /* undefined outside a data-tier region, so the fallback above wins */
+  --ui-combo-box-option-padding-inline-derived: calc(var(--md-sys-inset) + var(--md-sys-label-inset)); /* a row is a control (Amendment 4): margin n + label inset n - c; undefined under the legacy opt-out, so the fallback above wins */
   --ui-combo-box-option-font: var(--ui-combo-box-font); /* options were size-blind on FONT too (bug fix) */
   --ui-combo-box-option-active-bg: var(--md-sys-color-neutral-tint-dim); /* active-descendant highlight — 5% neutral overlay (was the undefined -tint-5) */
   --ui-combo-box-option-active-ink: var(--md-sys-color-neutral-on-surface);
@@ -178,6 +183,7 @@
   :scope {
     display: grid;
     grid-template-columns: 1fr;
+    min-inline-size: var(--ui-combo-box-height); /* min width 4n (the control rule, ADR-0245 Amendment 4) */
     position: relative; /* stacking context for any decorative caret pseudo */
   }
 
@@ -219,7 +225,7 @@
        ::before; the decorative caret glyph is a host pseudo), so no sibling needed a flex row. */
     display: block;
     padding-block: calc((var(--ui-combo-box-height) - var(--ui-combo-box-font)) / 2 - 1px);
-    padding-inline: var(--ui-combo-box-padding-inline);
+    padding-inline: var(--ui-combo-box-value-edge);
 
     /* FIXED (2026-07-06, found by the option-font trip-wire): `font: var(--ui-combo-box-font)` was
        an INVALID `font` shorthand (a single value — the shorthand requires font-size AND

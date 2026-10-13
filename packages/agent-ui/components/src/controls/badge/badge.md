@@ -74,11 +74,11 @@ keyboard: []             # NOT interactive and NOT focusable — no tabindex, no
 
 geometry:
   sizeClass: indicator
-  blockSize: var(--ui-badge-box)         # the 2n box (ADR-0245 cl.3; ADR-0041's widget ramp retired) — fixed, NEVER content-driven
+  blockSize: var(--ui-badge-box)         # the chip height 2n + 2c (ADR-0245 Amendment 4; ADR-0041's widget ramp retired): fixed, NEVER content-driven
   minInlineSize: var(--ui-badge-box)     # empty-label floor → a filled pill/dot, never a sliver (SPEC-R13 AC2)
-  boxRamp: --md-sys-icon-box, else --md-sys-compact-lg  # 2n (14px at the root md, ADR-0245 cl.3); the --md-sys-compact-lg bridge alias is the data-foundations="legacy" fallback until W7
-  padFormula: 2c  # 2c (ADR-0245 cl.3); the legacy fallback is the retired compact-realm pad law `2px + box * 0.375`
-  radius: var(--ui-badge-radius)         # n/2 inside an opt-in region (--md-sys-radius / 2); outside it the pill = box/2, the realm's "count pill" case
+  boxRamp: --md-sys-icon-box + 2c, else --md-sys-compact-lg  # 2n + 2c (16px at the root md, ADR-0245 Amendment 4); the --md-sys-compact-lg bridge alias is the data-foundations="legacy" fallback until W7
+  padFormula: c + c  # the chip margin c on the host plus the label margin c on the label part: text edge 2c (ADR-0245 Amendment 4); the legacy fallback is the retired compact-realm pad law `2px + box * 0.375`
+  radius: var(--ui-badge-radius)         # the chip radius ceil(n/2) (--md-sys-chip-radius, ADR-0245 Amendment 4); under the legacy opt-out the pill = box/2, the realm's "count pill" case
   noSizeAttribute: true                   # v1 ships no [size] axis (SPEC-R13 AC3) — a foreseen extension only
 
 forcedColors: A `@media (forced-colors: active)` block maps the host to a `Canvas` fill / `CanvasText` ink+border (the boxed identity survives), and the glyph to a `CanvasText` background (a background-drawn clip-path glyph is otherwise flattened to `Canvas` and vanishes — the bar-chart fill lesson, SPEC-R15 AC1).

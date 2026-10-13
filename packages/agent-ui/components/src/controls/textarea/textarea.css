@@ -73,6 +73,7 @@
   --ui-textarea-line-box: calc(var(--ui-textarea-font) * var(--ui-textarea-line-height)); /* one rendered text row */
   --ui-textarea-padding-block: calc(var(--ui-textarea-font) * 0.5); /* a comfortable text inset (ADR-0134) — never 0 */
   --ui-textarea-padding-inline: var(--md-sys-inset, calc(var(--ui-textarea-font) * 0.75)); /* n in a data-tier region (ADR-0245 cl.3) */
+  --ui-textarea-label-inset: var(--md-sys-label-inset, 0px); /* the control rule (Amendment 4): the editor carries n - c, text edge 2n - c */
   --ui-textarea-rows: 3; /* the JS-set --ui-textarea-rows inline custom property overrides this per-instance (textarea.ts) */
   --ui-textarea-min-block-size: calc(var(--ui-textarea-rows) * var(--ui-textarea-line-box) + 2 * var(--ui-textarea-padding-block));
 
@@ -154,6 +155,7 @@
 
   :scope > [data-part='editor'] {
     display: block;
+    padding-inline: var(--ui-textarea-label-inset); /* the text slot's label inset n - c */
     min-inline-size: 0;
     min-block-size: 100%;
     font-size: var(--ui-textarea-font);

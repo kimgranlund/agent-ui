@@ -96,11 +96,11 @@ geometry:
   scrollbarSeam: var(--ui-menu-scrollbar-width)    # declared `thin` in the token block (GH #906, superseding GH #166's `none` default) — the #874 fleet idiom: transparent-at-rest, reveals --ui-menu-scrollbar-thumb{,-hover} on hover/focus-within; the scroll-fade stays a complementary affordance; a consumer repoints to `none`/`auto`
   panelSurface: var(--ui-menu-bg)                  # opaque neutral-surface plane
   itemPadBlock: var(--ui-menu-item-pad-block)      # = var(--md-sys-space-xs) — legacy item-pad block axis
-  itemPadInline: var(--ui-menu-item-pad-inline)    # = var(--md-sys-space-md) — legacy item-pad inline axis
+  itemPadInline: var(--ui-menu-item-pad-inline)    # = 2n - c: a row is a control, margin n + label inset n - c (ADR-0245 Amendment 4); var(--md-sys-space-md) under the legacy opt-out
   itemBlockSize: var(--ui-menu-item-block-size)    # = font + 2×pad-block (line-height:1 makes it exact) — the real rendered row height, feeding panelMaxBlockSize
   itemRadius: var(--ui-menu-item-radius)           # nested-radius from panel corner = panelRadius − --ui-box-inset (FIXED 2026-07-06: was subtracting the unrelated --md-sys-space-xs, an ADR-0018 inset-inconsistency)
   checkSize: var(--ui-menu-check-size)             # GH #55 — the menuitemradio/menuitemcheckbox checkmark glyph slot, = var(--md-sys-icon-box) 2n (--md-sys-compact-sm bridge alias until W7; the checkbox.css indicator-box precedent, not a menu-specific magic number)
-  checkGap: var(--ui-menu-check-gap)               # = var(--md-sys-space-xs) — gap between the glyph slot and the item's own inline padding
+  checkGap: var(--ui-menu-check-gap)               # = n, check box to text (gutter c + label inset n - c); the box itself is pinned at the row's margin n (--ui-menu-item-edge); var(--md-sys-space-xs) under the legacy opt-out
   note: ui-menu has NO `[size]` attribute and renders no trigger geometry (the trigger is fully author-owned) — the select/combo-box family's size-carrying derivation (panel inset + option pad off the trigger's own height/font) does not apply here; flagged as a structural divergence, not forced (2026-07-06 pass)
 
 forcedColors: A `@media (forced-colors: active)` block keeps the panel surface (Canvas/CanvasText), frame (CanvasText border), and hovered/focused items (Highlight/HighlightText) visible. `forced-color-adjust: none` on hover/focus items commits to the system Highlight pair rather than letting the solid fill be discarded.

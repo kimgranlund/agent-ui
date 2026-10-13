@@ -21,6 +21,7 @@ const EXPECTED: ReadonlyArray<readonly [string, (r: Resolved) => number]> = [
   ['c', (r) => r.c],
   ['height', (r) => r.h],
   ['inset', (r) => r.control.margin],
+  ['label-inset', (r) => r.labelMargin], // the control rule (Amendment 4): gutter c + label inset = margin n
   ['radius', (r) => r.control.radius],
   ['icon-box', (r) => r.icon],
   ['glyph-box', (r) => r.glyph],
@@ -35,7 +36,7 @@ const EXPECTED: ReadonlyArray<readonly [string, (r: Resolved) => number]> = [
   ['type-field-label', (r) => r.type.fieldLabel],
   ['type-group-label', (r) => r.type.groupLabel],
   // the tokens keep the name `layout` (ADR-0140 names); the skill calls that level `page`
-  ...([['group', 'group'], ['widget', 'widget'], ['card', 'card'], ['layout', 'page']] as const).flatMap(([token, level]) =>
+  ...([['chip', 'chip'], ['group', 'group'], ['widget', 'widget'], ['card', 'card'], ['layout', 'page']] as const).flatMap(([token, level]) =>
     (['margin', 'gutter', 'radius'] as const).map((q) => [`${token}-${q}`, (r: Resolved) => r[level][q]] as const),
   ),
 ]

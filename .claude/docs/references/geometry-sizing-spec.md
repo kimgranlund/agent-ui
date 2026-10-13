@@ -146,13 +146,13 @@ box (10 / 12 / 14 at the root). The standalone `<ui-icon>` is the same box.
 
 ### 4.3 · Padding
 
-Per class (see `geometry.md`): entry and trigger controls pad `n`; a pill button `2n` beside a label and `n`
-beside an icon. `padding-block: 0` always.
+The control rule (ADR-0245 Amendment 4, see `geometry.md`): every control pads `n`, and its text slot adds
+the label inset `n - c`, so the text edge is `2n - c` and an icon edge is `n`. `padding-block: 0` always.
 
 ### 4.4 · Gap
 
-Mark-to-label gap is `n` (it was `font/2`); a field label sits above with gap `ceil(n/2)`; a boxed indicator to
-its label is `n`.
+Mark-to-label distance is `n`: the control gutter `c` plus the label inset `n - c` (it was a gap of `n`, and
+`font/2` before that); a field label sits above with gap `ceil(n/2)`; a boxed indicator to its label is `n`.
 
 ### 4.5 · `--md-sys-space-*` is LAYOUT spacing, a generated alias layer
 

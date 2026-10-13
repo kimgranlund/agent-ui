@@ -112,7 +112,7 @@ keyboard:
 geometry:
   sizeClass: pattern
   tabBlockSize: var(--ui-tabs-tab-height)   # the interactive tab rows take the CONTROL height (--md-sys-height 4n; the lg step, --md-sys-height-lg bridge alias until W7; GH #297)
-  stripGap: var(--ui-tabs-strip-gap)        # the inter-tab gap — --md-sys-space (scale-responsive); GH #536 — carries the spacing the removed per-tab inline padding used to (xs + md)
+  stripGap: var(--ui-tabs-strip-gap)        # the inter-tab gap: the tight gutter c (ADR-0245 Amendment 4, each tab now carries the control rule's padding, text edge 2n - c, min width 4n); under the legacy opt-out GH #536's xs + md with zero tab padding
   panelPadding: var(--ui-tabs-panel-pad)    # the panel body padding — --md-sys-space
   surface: --ui-container-bg                 # the shell plane (ADR-0015 surface seam); transparent by default (ADR-0104) — a plane is asked-for via `elevation`/`brightness`
   fillPanelScrollbarSeam: --ui-tabs-panel-scrollbar-width  # ADR-0144 Q1 cl.3 — consumer-INHERITED, var()-fallback ONLY (never declared in the :where() token block); a composing surface hides the filled panel's scrollbar by setting this on ITSELF (the ui-split-pane `--ui-split-pane-scrollbar-width` shape)
@@ -174,8 +174,9 @@ edge (the edge facing the panel — the same pairing the horizontal bottom edge 
 re-align **start** (a list reads left-aligned; center is a horizontal-strip convention). The `[data-part=tablist]`
 strip also carries `aria-orientation="vertical"` (absent under the default horizontal — byte-identical
 default DOM). `--ui-tabs-strip-gap` is unchanged — flex `gap` follows whichever axis is main, so the same
-16px-at-density-1 token spaces rows instead of columns. `#536`'s zero-`padding-inline` law stands unchanged:
-the row's full-width hit area comes from the column's default cross-axis stretch, never per-tab padding.
+token spaces rows instead of columns. Each tab keeps the control rule's inline padding (ADR-0245 Amendment 4,
+superseding `#536`'s zero-`padding-inline` law); the row's full-width hit area still comes from the column's
+default cross-axis stretch.
 `orientation` is reflected and default `'horizontal'`, so every existing consumer stays byte-identical.
 
 `[fill]` composes with vertical (§ below): the shell stays a flex row filling its bounded parent, the strip

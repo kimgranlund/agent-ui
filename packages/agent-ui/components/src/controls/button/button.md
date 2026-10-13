@@ -90,8 +90,8 @@ geometry:
   posture: fill (block-level host, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-grid + hug   # Fill by Default — slice 2 (action/selection); the squareness floor (min-inline-size = height) survives both states, R3(a)
   blockSize: var(--ui-button-height)   # the vertical lever, 4n off --md-sys-height (ADR-0245); padding-block is 0
   paddingBlock: 0
-  inlinePad: h/2 = 2n (slotless bare label) · ½(h−icon) (leading icon / trailing adornment slot edge) · ½(h−icon) BOTH edges via justify-content, no literal padding (icon-only, no label)   # the centering law, geometry.md
-  gap: var(--ui-button-gap)            # icon↔label column-gap — the one scale-bearing quantity (gap = n)
+  inlinePad: n = --md-sys-inset on every edge (the box margin; h/2 beside a label under the legacy opt-out) · the label part adds the label inset n - c, so the text edge is 2n - c (ADR-0245 Amendment 4) · ½(h−icon) = n (leading icon / trailing adornment slot edge) · ½(h−icon) BOTH edges via justify-content, no literal padding (icon-only, no label)   # the control rule, geometry.md
+  gap: var(--ui-button-gap)            # icon↔label column-gap: the control gutter c; with the label inset n - c, icon to text is n
 
 forcedColors: A `@media (forced-colors: active)` block keeps the ink + border visible (ButtonText) so the label/outline never vanishes.
 ---
@@ -197,7 +197,7 @@ pixel-indistinguishable from a cluster — the adornment⟷label separation is e
 A real slotted adornment with **no label content at all** needs the `icon-only` attribute. CSS alone
 cannot tell an empty label apart from a real one — `:has()` only matches *elements*, so the common
 `<svg slot="leading">…</svg>Download` pattern's `Download` label is a bare *text node*, invisible to a
-selector. Without `icon-only`, that structure still reserves the `1fr` label track and its `h/2` trailing
+selector. Without `icon-only`, that structure still reserves the `1fr` label track and its box-margin trailing
 pad, rendering wider than tall with dead space on the end. Setting `icon-only` swaps in the fifth,
 mutually-exclusive structure: **one** column with its `inline-size` set explicitly equal to the control
 height (mirroring `block-size`, so a true square holds regardless of border width), content-centered via
