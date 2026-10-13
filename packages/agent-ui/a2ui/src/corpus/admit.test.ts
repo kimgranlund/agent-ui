@@ -822,6 +822,29 @@ describe('admit: the multi-turn facet (ADR-0231 cl.2)', () => {
     expect(result.paths).toEqual(['clientInput[0].action.name'])
   })
 
+  // T-0081: a BoardGrid cell click is grounded by the `actionName` prop's own string (`PropDef.actionEvent`).
+  it('grounds a forwarded-event action on the source prop actionEvent value, and rejects a name it does not carry', async () => {
+    const boardPrior: A2uiOutput = [
+      { version: 'v1.0', createSurface: { surfaceId: 'login', catalogId: 'agent-ui' } },
+      {
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'login',
+          components: [{ id: 'root', component: 'BoardGrid', rows: 3, cols: 3, label: 'Enemy waters', actionName: 'fire' }],
+        },
+      },
+    ]
+    const fire = { ...LOGIN_ACTION, action: { ...LOGIN_ACTION.action, name: 'fire', sourceComponentId: 'root', context: { row: 1, col: 2 } } }
+    const record = (name: string): CorpusRecord =>
+      multiTurnRecord({ priorOutput: boardPrior, clientInput: [{ ...fire, action: { ...fire.action, name } }] })
+    expect((await admit(record('fire'), mkFacetDeps())).ok).toBe(true)
+    const rejected = await admit(record('hold'), mkFacetDeps())
+    expect(rejected.ok).toBe(false)
+    if (rejected.ok) return
+    expect(rejected.code).toBe('E_IDGRAPH')
+    expect(rejected.paths).toEqual(['clientInput[0].action.name'])
+  })
+
   it('a prior turn that fails tier-1 rejects with its own code, the path prefixed `priorOutput`', async () => {
     const prior = LOGIN_PRIOR.map((msg) =>
       'updateComponents' in msg

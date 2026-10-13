@@ -767,6 +767,97 @@ describe('renderer host: action context resolution (GH #1748, LLD-C9 collectCont
   })
 })
 
+// T-0081 (ADR-0243 Amendment 4): a control's OWN DOM `action` event forwarded as an A2UI action. The default
+// catalog's `BoardGrid.actionName` carries `actionEvent: 'action'`; the host listens on the element for that
+// event and emits `{ name: detail.action, context: detail.context }`, so a clicked cell reaches the agent
+// with its `{row, col}`. The prop is still applied (it turns the cells into buttons).
+describe('renderer host - a control own action event forwarded as an A2UI action (T-0081, ADR-0243 Amendment 4)', () => {
+  const board = (extra: Record<string, unknown> = {}): A2uiServerMessage => ({
+    version: 'v1.0',
+    updateComponents: {
+      surfaceId: 'sg',
+      components: [{ id: 'root', component: 'BoardGrid', rows: 3, cols: 3, label: 'Board', ...extra }],
+    },
+  })
+  const open = (): ReturnType<typeof harness> => {
+    const h = harness()
+    h.r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'sg', catalogId: 'agent-ui' } }))
+    return h
+  }
+  const cellAt = (mount: HTMLElement, row: number, col: number): HTMLElement =>
+    mount.querySelectorAll<HTMLElement>('[data-part="cell"]')[row * 3 + col]!
+
+  it('a BoardGrid cell click sends exactly one action carrying the cell row and col', async () => {
+    const { r, mount, sent, cleanup } = open()
+    r.ingest(line(board({ actionName: 'fire' })))
+    await whenFlushed()
+    expect(mount.querySelectorAll('button[data-part="cell"]')).toHaveLength(9) // actionName reached the control
+    cellAt(mount, 1, 2).click()
+    const actions = sent.filter(isAction)
+    expect(actions).toHaveLength(1)
+    expect(actions[0]!.action).toMatchObject({ surfaceId: 'sg', name: 'fire', sourceComponentId: 'root', context: { row: 1, col: 2 } })
+    cellAt(mount, 0, 0).click()
+    expect(sent.filter(isAction).map((a) => a.action.context)).toEqual([{ row: 1, col: 2 }, { row: 0, col: 0 }])
+    cleanup()
+  })
+
+  it('a structural resend does not stack listeners: one click is still one action (GH #1164 shape)', async () => {
+    const { r, mount, sent, cleanup } = open()
+    r.ingest(line(board({ actionName: 'fire' })))
+    await whenFlushed()
+    r.ingest(line(board({ actionName: 'fire', label: 'Board again' })))
+    r.ingest(line(board({ actionName: 'fire', label: 'Board thrice' })))
+    await whenFlushed()
+    cellAt(mount, 2, 2).click()
+    expect(sent.filter(isAction)).toHaveLength(1)
+    cleanup()
+  })
+
+  it('a read-only board (no actionName) and a disabled cell emit nothing', async () => {
+    const { r, mount, sent, cleanup } = open()
+    r.ingest(line(board()))
+    await whenFlushed()
+    cellAt(mount, 0, 0).click()
+    expect(sent.filter(isAction)).toHaveLength(0)
+    r.ingest(line(board({ actionName: 'fire', cells: [{ row: 0, col: 0, disabled: true }] })))
+    await whenFlushed()
+    cellAt(mount, 0, 0).click()
+    expect(sent.filter(isAction)).toHaveLength(0)
+    cleanup()
+  })
+
+  it('a torn-down surface forwards nothing: the listener dies with the surface ac', async () => {
+    const { r, mount, sent, cleanup } = open()
+    r.ingest(line(board({ actionName: 'fire' })))
+    await whenFlushed()
+    const cell = cellAt(mount, 0, 1)
+    r.ingest(line({ version: 'v1.0', deleteSurface: { surfaceId: 'sg' } }))
+    cell.click()
+    expect(sent.filter(isAction)).toHaveLength(0)
+    cleanup()
+  })
+
+  it('ProductCard own action event stays unread: only the host click wiring dispatches (the non-goal)', async () => {
+    const { r, mount, sent, cleanup } = open()
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'sg',
+          components: [{ id: 'root', component: 'ProductCard', title: 'Room', actionLabel: 'Book', action: { action: 'book' } }],
+        },
+      }),
+    )
+    await whenFlushed()
+    const card = mount.querySelector('ui-product-card') as HTMLElement
+    card.dispatchEvent(new CustomEvent('action', { detail: { action: 'x', context: {} }, bubbles: true }))
+    expect(sent.filter(isAction)).toHaveLength(0)
+    card.click()
+    expect(sent.filter(isAction)).toHaveLength(1)
+    cleanup()
+  })
+})
+
 // Per-item action-listener leak (ADR-0024 amendment 3). Each list item's Button registers its click→action
 // listener on a per-item AbortController (list.ts `appendInstance` → renderer.ts `#wireAction`). When the
 // item is removed (`removeLast` aborts that ac), the listener is torn down immediately so no click on the

@@ -646,17 +646,19 @@ class Renderer implements RendererHost {
     // ADR-0233: a placeholder minted for a control that failed to load stays inert (no props, actions or checks).
     if (isPlaceholder(el) && this.#registry.get(surface.catalogId)?.controls !== undefined) return
     const actionProps = this.#actionPropsOf(node, surface)
+    const forwarded = this.#forwardedActionEventsOf(node, surface)
     wireProps(el, actionProps.size === 0 ? node : withoutProps(node, actionProps), surface, scope, itemScope, ac, this.#widgetDeps)
     // GH #1164 (found by its superseded/revive real-engine test): a structural resend re-enters this
     // wire path for an ALREADY-WIRED element (`tree.ts`'s `#reconcileProps` → `rewireNode`), and each
     // pass used to ADD another click→action listener — N resends = N dispatches per click. Retire the
     // element's previous action listeners before wiring the new set, so re-wiring is idempotent.
     this.#actionWiring.get(el)?.abort()
-    if (actionProps.size > 0) {
+    if (actionProps.size > 0 || forwarded.size > 0) {
       const rewireAc = new AbortController()
       ac.signal.addEventListener('abort', () => rewireAc.abort(), { once: true, signal: rewireAc.signal })
       this.#actionWiring.set(el, rewireAc)
       for (const spec of actionProps.values()) this.#wireAction(el, node, surface, spec, itemScope, rewireAc)
+      for (const eventName of forwarded) this.#wireForwardedAction(el, node, surface, eventName, rewireAc)
     }
     // Wire the checks controller (ADR-0029): reads node.checks, installs one scope-owned effect that
     // evaluates each check via evaluate (LLD-C10) and drives setCustomValidity / el.disabled.
@@ -687,6 +689,45 @@ class Renderer implements RendererHost {
       if (pd.mapsTo === 'action' && node[prop] !== undefined) out.set(prop, node[prop])
     }
     return out
+  }
+
+  /** The DOM event names the node's catalog props ask the host to forward as A2UI actions (`PropDef.actionEvent`,
+   *  T-0081): the control's own event, for a prop the node carries. Unlike an action prop the value is NOT stripped. */
+  #forwardedActionEventsOf(node: A2uiComponent, surface: Surface): Set<string> {
+    const out = new Set<string>()
+    const def = this.#registry.get(surface.catalogId)?.catalog.components[node.component]
+    if (def === undefined) return out
+    for (const [prop, pd] of Object.entries(def.properties)) {
+      if (pd.actionEvent !== undefined && node[prop] !== undefined) out.add(pd.actionEvent)
+    }
+    return out
+  }
+
+  /**
+   * Forward a control's OWN DOM event (`detail: {action, context?}`) as an A2UI action (T-0081, ADR-0243
+   * Amendment 4): the name is `detail.action` (the control's configured action name), the context is
+   * `detail.context` as the control built it (`BoardGrid`: the cell's `{row, col}`). Same discipline as
+   * `#wireAction`: the listener is gated on `ac` (idempotent re-wire, item-granular teardown), and a disabled
+   * host never emits. Only an event fired ON the host counts, so a bubbling event from a descendant control
+   * never forwards through this path. A detail with no action name is dropped (nothing to name the action).
+   */
+  #wireForwardedAction(el: HTMLElement, node: A2uiComponent, surface: Surface, eventName: string, ac: AbortController): void {
+    el.addEventListener(
+      eventName,
+      (event) => {
+        if (event.target !== el) return
+        if ((el as Partial<{ disabled: boolean }>).disabled === true) return
+        const detail = (event as CustomEvent<{ action?: unknown; context?: unknown } | null>).detail
+        const name = detail?.action
+        if (typeof name !== 'string' || name === '') return
+        const context = detail?.context
+        void this.#actions.emitAction(node, surface, {
+          name,
+          context: typeof context === 'object' && context !== null && !Array.isArray(context) ? (context as Record<string, unknown>) : undefined,
+        })
+      },
+      { signal: ac.signal },
+    )
   }
 
   /**

@@ -112,6 +112,17 @@ export interface PropDef {
    * requires:["icon"]`); absent ⇒ today's behavior, byte-identical for every prop that doesn't opt in.
    */
   requires?: readonly string[]
+  /**
+   * A catalog-declared extension (T-0081, ADR-0243 Amendment 4): the control's OWN DOM event the renderer
+   * forwards as an A2UI action. The property's value is the action NAME the control is configured with
+   * (it is still applied to the control, unlike a `mapsTo:'action'` prop, which the host strips and answers
+   * with a `click` listener); the host listens for the named event on the element and emits
+   * `{ name: detail.action, context: detail.context }`, so a control that reports WHERE it was activated
+   * (`BoardGrid`'s `{row, col}`) reaches the agent. Declared only by `BoardGrid.actionName` (`'action'`);
+   * absent ⇒ no own-event forwarding, byte-identical for every other prop (`ProductCard`'s own `action`
+   * event stays unread).
+   */
+  actionEvent?: string
 }
 
 /**
@@ -328,6 +339,8 @@ function validatePropDef(key: string, prop: string, raw: unknown): PropDef {
     bad(`property "${key}.${prop}".required must be a boolean`)
   if (raw.requires !== undefined && (!Array.isArray(raw.requires) || raw.requires.some((r) => typeof r !== 'string')))
     bad(`property "${key}.${prop}".requires must be a string array`)
+  if (raw.actionEvent !== undefined && (typeof raw.actionEvent !== 'string' || raw.actionEvent === ''))
+    bad(`property "${key}.${prop}".actionEvent must be a non-empty string`)
 
   const pd: PropDef = { type: raw.type as JsonSchema, mapsTo: raw.mapsTo }
   if (raw.bindable !== undefined) pd.bindable = raw.bindable
@@ -335,6 +348,7 @@ function validatePropDef(key: string, prop: string, raw: unknown): PropDef {
   if (raw.rejectFunctionCall !== undefined) pd.rejectFunctionCall = raw.rejectFunctionCall
   if (raw.required !== undefined) pd.required = raw.required
   if (raw.requires !== undefined) pd.requires = raw.requires as readonly string[]
+  if (raw.actionEvent !== undefined) pd.actionEvent = raw.actionEvent
   return pd
 }
 

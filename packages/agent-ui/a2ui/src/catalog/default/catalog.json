@@ -1025,7 +1025,8 @@
           "bindable": true,
           "mapsTo": "cells"
         },
-        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" }
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
+        "actionName": { "type": { "type": "string" }, "mapsTo": "actionName", "actionEvent": "action" }
       }
     },
 
