@@ -1,7 +1,9 @@
 // derive.mjs: every derived number in ADR-0245 comes from this script, which calls the skill's reference
 // implementation. Sections 1 to 10 (the ADR body and its appendices, frozen) run on scale-v1.mjs, the copy the
 // cut shipped (sha256 eca32879...); section 11 on (Amendment 3) runs on scale.mjs, the byte copy of the skill's
-// v2 ~/.claude/skills/mathematical-design-system/scale.mjs (sha256 20f16caf...), and compares v2 against v1.
+// v2 ~/.claude/skills/mathematical-design-system/scale.mjs (sha256 3c319761...), and compares v2 against v1.
+// v2 renamed keys: inset and radius are control.margin and control.radius, layout is page, the kicker roles are
+// sectionLabel and groupLabel, and the component sizes sit under parts.
 // "Today" values are read off the shipped stylesheets (file:line in the ADR appendix).
 // Run: node .claude/docs/references/foundations-derivation/derive.mjs > .claude/docs/references/foundations-derivation/derive.out.md
 import { resolve, check, CFG } from './scale-v1.mjs';
@@ -195,15 +197,15 @@ const controls = [
   ['body', 'n + 7', (r) => r.type.body],
   ['title', 'body + 0/1/2', (r) => r.type.title],
   ['field label (`label`)', 'n + 4', (r) => r.type.fieldLabel],
-  ['group label (`overline`, table header)', 'n/2 + 6.5', (r) => r.type.groupKicker],
-  ['section label', 'round(body · 9/8)', (r) => r.type.sectionKicker],
+  ['group label (`overline`, table header)', 'n/2 + 6.5', (r) => r.type.groupKicker ?? r.type.groupLabel],
+  ['section label', 'round(body · 9/8)', (r) => r.type.sectionKicker ?? r.type.sectionLabel],
   ['subhead (`lead`, `quote`)', 'round(body · Q)', (r) => r.type.subhead],
   ['heading (`headline`)', 'round(body · Q²)', (r) => r.type.heading],
   ['display', 'round(body · Q³)', (r) => r.type.display],
 ];
 for (const [label, rule, f] of controls) p(`| ${label} | ${rule} | ${cmp(v1.map(f), v2.map(f))} |`);
-p(`| radio dot | 2n - 4c → glyph - 2 | ${cmp(v1.map((r) => 2 * r.n - 4 * r.c), v2.map((r) => r.glyph - 2))} |`);
-p(`| \`kicker\` variant | field label (Amendment 1) → group label | ${cmp(v1.map((r) => r.type.fieldLabel), v2.map((r) => r.type.groupKicker))} |`);
+p(`| radio dot | 2n - 4c → glyph - 2 | ${cmp(v1.map((r) => 2 * r.n - 4 * r.c), v2.map((r) => r.parts.radioDot))} |`);
+p(`| \`kicker\` variant | field label (Amendment 1) → group label | ${cmp(v1.map((r) => r.type.fieldLabel), v2.map((r) => r.type.groupLabel))} |`);
 
 const m1 = resolve('product', 'sm', 'md'), m2 = resolve2('product', 'sm', 'md');
 p(`## 14. Containers and the derived exceptions at the root md, v1 (n ${m1.n}, c ${m1.c}) → v2 (n ${m2.n}, c ${m2.c}, m ${m2.m})`);
@@ -212,10 +214,13 @@ p('|---|---|---|');
 const one = (a, b) => `${a} → ${b} (${d(a, b)})`;
 const QS = ['margin', 'gutter', 'radius'];
 for (const [q, rule] of [['margin', 'n + c'], ['gutter', 'c'], ['radius', 'n + c']]) p(`| group ${q} | ${rule} | ${one(m1.group[q], m2.group[q])} |`);
-for (const [level, ks] of Object.entries(CFG2.levels)) {
-  ks.forEach((k, i) => p(`| ${level} ${QS[i]} | ${k === 1 ? '' : k}n → ${k === 1 ? '' : k}m | ${one(m1[level][QS[i]], m2[level][QS[i]])} |`));
+// v1 kept its roomy levels as [margin, gutter, radius] multiples of n and named the last one layout; v2 walks them
+// off one ladder as multiples of m and names it page.
+for (const [level, ks] of Object.entries(CFG.levels)) {
+  const now = m2[level === 'layout' ? 'page' : level];
+  ks.forEach((k, i) => p(`| ${level} ${QS[i]} | ${k === 1 ? '' : k}n → ${k === 1 ? '' : k}m | ${one(m1[level][QS[i]], now[QS[i]])} |`));
 }
-const space2 = [['xs', (r) => r.c, 'c'], ['sm', (r) => r.n, 'n'], ['md', (r) => r.group.margin, 'n + c'], ['lg', (r) => r.widget.margin, '2n → 2m'], ['xl', (r) => r.card.margin, '3n → 3m'], ['2xl', (r) => r.layout.margin, '4n → 4m']];
+const space2 = [['xs', (r) => r.c, 'c'], ['sm', (r) => r.n, 'n'], ['md', (r) => r.group.margin, 'n + c'], ['lg', (r) => r.widget.margin, '2n → 2m'], ['xl', (r) => r.card.margin, '3n → 3m'], ['2xl', (r) => (r.layout ?? r.page).margin, '4n → 4m']];
 for (const [s, f, rule] of space2) p(`| \`--md-sys-space-${s}\` | ${rule} | ${one(f(m1), f(m2))} |`);
 p(`| gauge ring stroke | 0.5rem → 4c | ${one(8, 4 * m2.c)} |`);
 p(`| swatch box | 2rem → 4n (radius n) | ${one(32, m2.h)} |`);
@@ -229,7 +234,7 @@ p('| density | m | card | layout margin |');
 p('|---|---|---|---|');
 for (const dens of Object.keys(CFG2.density)) {
   const r = resolve2('product', 'sm', 'md', dens);
-  p(`| ${dens} | ${r.m} | ${r.card.margin} / ${r.card.gutter} / ${r.card.radius} | ${r.layout.margin} |`);
+  p(`| ${dens} | ${r.m} | ${r.card.margin} / ${r.card.gutter} / ${r.card.radius} | ${r.page.margin} |`);
 }
 const floor = resolve2('product', 'sm', 'sm', 'compact');
 p(`- The floor binds at product sm/sm compact: n ${floor.n}, m ${floor.m} (n - a = ${floor.n - 2}), widget ${floor.widget.margin} / ${floor.widget.gutter} / ${floor.widget.radius}, group ${floor.group.margin} / ${floor.group.gutter} / ${floor.group.radius}.`);
@@ -241,12 +246,15 @@ for (const [t, s] of [['product', 'md'], ['widget', 'md']]) {
   p(`- ${t}/${s} on v2: height ${rs.map((r) => r.h).join(' / ')} · icon ${rs.map((r) => r.icon).join(' / ')} · glyph ${rs.map((r) => r.glyph).join(' / ')} · control type ${rs.map((r) => r.type.control).join(' / ')} · pill radius ${rs.map((r) => 2 * r.n).join(' / ')}`);
 }
 
-p('## 17. Not adopted: the skill v2 control rule (box padding n, label inset n - c, text edge 2n - c)');
-p('| control text edge | today | under the control rule (delta), sm · md · lg at the root |');
+p('## 17. Not adopted from the skill v2: the control rule, and the sizes the fleet still holds at its own value');
+p('| quantity | fleet today → the skill v2 | today → skill (delta), sm · md · lg at the root |');
 p('|---|---|---|');
-p(`| entry and trigger controls (text-field, select, combo-box, multi-select, otp-field, textarea), menu and listbox rows, tabs | n | ${cmp(v2.map((r) => r.n), v2.map((r) => 2 * r.n - r.c))} |`);
-p(`| button, toggle, segment (label beside nothing) | 2n | ${cmp(v2.map((r) => 2 * r.n), v2.map((r) => 2 * r.n - r.c))} |`);
-p(`| icon to label | n | ${cmp(v2.map((r) => r.n), v2.map((r) => r.n))} |`);
-p(`| button min width (label-only) | 4n | ${cmp(v2.map((r) => r.h), v2.map((r) => r.minWidth))} |`);
+const edge = (r) => r.control.margin + r.labelMargin; // the control rule: margin n plus label margin n - c
+p(`| text edge of entry and trigger controls (text-field, select, combo-box, multi-select, otp-field, textarea), menu and listbox rows, tabs | n → 2n - c | ${cmp(v2.map((r) => r.n), v2.map(edge))} |`);
+p(`| text edge of button, toggle and segment labels | 2n → 2n - c | ${cmp(v2.map((r) => 2 * r.n), v2.map(edge))} |`);
+p(`| icon to label | n → gutter c + label margin n - c | ${cmp(v2.map((r) => r.n), v2.map((r) => r.control.gutter + r.labelMargin))} |`);
+p(`| badge height | 2n → 2n + 2c | ${cmp(v2.map((r) => r.icon), v2.map((r) => r.parts.badge))} |`);
+p(`| checkbox and badge radius | n/2 → ceil(n/2) | ${cmp(v2.map((r) => r.n / 2), v2.map((r) => r.parts.checkboxRadius))} |`);
+p(`- The chip level (tag, badge, kbd: margin c, gutter c, radius ceil(n/2)) has no token yet: ${v2.map((r) => `${r.chip.margin} / ${r.chip.gutter} / ${r.chip.radius}`).join(' · ')} at the root sm · md · lg. The reserved levels tray, lane and shell have none by design.`);
 
 console.log(out.join('\n'));

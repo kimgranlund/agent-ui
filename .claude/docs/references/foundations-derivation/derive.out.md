@@ -199,10 +199,12 @@ Registers, sm / md / lg heights, v1 → v2:
 ## 16. The A2UI canvas register, sm / md / lg
 - product/md on v2: height 24 / 32 / 40 · icon 12 / 16 / 20 · glyph 8 / 12 / 14 · control type 12 / 14 / 16 · pill radius 12 / 16 / 20
 - widget/md on v2: height 20 / 24 / 28 · icon 10 / 12 / 14 · glyph 6 / 8 / 10 · control type 11 / 12 / 13 · pill radius 10 / 12 / 14
-## 17. Not adopted: the skill v2 control rule (box padding n, label inset n - c, text edge 2n - c)
-| control text edge | today | under the control rule (delta), sm · md · lg at the root |
+## 17. Not adopted from the skill v2: the control rule, and the sizes the fleet still holds at its own value
+| quantity | fleet today → the skill v2 | today → skill (delta), sm · md · lg at the root |
 |---|---|---|
-| entry and trigger controls (text-field, select, combo-box, multi-select, otp-field, textarea), menu and listbox rows, tabs | n | 5 → 8 (+3) · 6 → 10 (+4) · 7 → 12 (+5) |
-| button, toggle, segment (label beside nothing) | 2n | 10 → 8 (-2) · 12 → 10 (-2) · 14 → 12 (-2) |
-| icon to label | n | 5 → 5 (0) · 6 → 6 (0) · 7 → 7 (0) |
-| button min width (label-only) | 4n | 20 → 20 (0) · 24 → 24 (0) · 28 → 28 (0) |
+| text edge of entry and trigger controls (text-field, select, combo-box, multi-select, otp-field, textarea), menu and listbox rows, tabs | n → 2n - c | 5 → 8 (+3) · 6 → 10 (+4) · 7 → 12 (+5) |
+| text edge of button, toggle and segment labels | 2n → 2n - c | 10 → 8 (-2) · 12 → 10 (-2) · 14 → 12 (-2) |
+| icon to label | n → gutter c + label margin n - c | 5 → 5 (0) · 6 → 6 (0) · 7 → 7 (0) |
+| badge height | 2n → 2n + 2c | 10 → 14 (+4) · 12 → 16 (+4) · 14 → 18 (+4) |
+| checkbox and badge radius | n/2 → ceil(n/2) | 2.5 → 3 (+0.5) · 3 → 3 (0) · 3.5 → 4 (+0.5) |
+- The chip level (tag, badge, kbd: margin c, gutter c, radius ceil(n/2)) has no token yet: 2 / 2 / 3 · 2 / 2 / 3 · 2 / 2 / 4 at the root sm · md · lg. The reserved levels tray, lane and shell have none by design.

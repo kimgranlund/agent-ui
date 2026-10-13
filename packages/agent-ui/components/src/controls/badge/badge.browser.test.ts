@@ -73,7 +73,7 @@ describe('ui-badge whole-shape (SPEC-R13/R14 AC1, test-the-whole-shape)', () => 
     const el = mount('<ui-badge label="status"></ui-badge>')
     const cs = getComputedStyle(el)
     // getComputedStyle serializes border-radius as a length (px); n/2 at the root register → 3.5px.
-    expect(px(cs.borderTopLeftRadius)).toBeCloseTo(root.radius / 2, 1)
+    expect(px(cs.borderTopLeftRadius)).toBeCloseTo(root.control.radius / 2, 1)
   })
 
   it('padding-block is ZERO (block-size is the vertical lever, never block-padding — geometry.md)', () => {

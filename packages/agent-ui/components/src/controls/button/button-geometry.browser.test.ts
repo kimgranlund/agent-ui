@@ -136,7 +136,7 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
       wrap.setAttribute('data-scale', scale)
       gaps.push(gapPx(btn))
     }
-    expect(gaps).toEqual((['sm', 'md', 'lg'] as const).map((s) => resolve('product', s, 'md').inset))
+    expect(gaps).toEqual((['sm', 'md', 'lg'] as const).map((s) => resolve('product', s, 'md').control.margin))
     expect(allDistinct(gaps), `gap did not change across data-scale: ${gaps.join()}`).toBe(true)
   })
 

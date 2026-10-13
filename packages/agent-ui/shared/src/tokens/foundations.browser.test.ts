@@ -20,22 +20,23 @@ const EXPECTED: ReadonlyArray<readonly [string, (r: Resolved) => number]> = [
   ['m', (r) => r.m],
   ['c', (r) => r.c],
   ['height', (r) => r.h],
-  ['inset', (r) => r.inset],
-  ['radius', (r) => r.radius],
+  ['inset', (r) => r.control.margin],
+  ['radius', (r) => r.control.radius],
   ['icon-box', (r) => r.icon],
   ['glyph-box', (r) => r.glyph],
   ['glyph-stroke', (r) => Math.max(1.5, r.c / 2)],
   ['type-display', (r) => r.type.display],
   ['type-heading', (r) => r.type.heading],
   ['type-subhead', (r) => r.type.subhead],
-  ['type-section-label', (r) => r.type.sectionKicker],
+  ['type-section-label', (r) => r.type.sectionLabel],
   ['type-title', (r) => r.type.title],
   ['type-body', (r) => r.type.body],
   ['type-control', (r) => r.type.control],
   ['type-field-label', (r) => r.type.fieldLabel],
-  ['type-group-label', (r) => r.type.groupKicker],
-  ...(['group', 'widget', 'card', 'layout'] as const).flatMap((level) =>
-    (['margin', 'gutter', 'radius'] as const).map((q) => [`${level}-${q}`, (r: Resolved) => r[level][q]] as const),
+  ['type-group-label', (r) => r.type.groupLabel],
+  // the tokens keep the name `layout` (ADR-0140 names); the skill calls that level `page`
+  ...([['group', 'group'], ['widget', 'widget'], ['card', 'card'], ['layout', 'page']] as const).flatMap(([token, level]) =>
+    (['margin', 'gutter', 'radius'] as const).map((q) => [`${token}-${q}`, (r: Resolved) => r[level][q]] as const),
   ),
 ]
 /** The unitless n and m read as a length through `* 1px`; every token falls back to 0.25px when undefined. */

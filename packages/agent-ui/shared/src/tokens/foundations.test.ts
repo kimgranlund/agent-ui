@@ -32,7 +32,7 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
     )
   })
 
-  it('check() returns no failure (M1 to M13), and neither does the whole contract with agent-ui M14', () => {
+  it('check() returns no failure (M1 to M16), and neither does the whole contract with M14 extended to agent-ui rules', () => {
     expect(check()).toEqual([])
     expect(contract()).toEqual([])
   })
@@ -49,11 +49,11 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
     expect(check()).toEqual([])
   })
 
-  it('M14 bites: the retired radio dot 2n - 4c shrinks as c steps up (8 to 6 at n 8 to 9), so neither sheet emits', () => {
+  it('the M14 extension bites: the retired radio dot 2n - 4c shrinks as c steps up (8 to 6 at n 8 to 9), so neither sheet emits', () => {
     const rules = CONTROL_RULES
     rules['radio dot 2n - 4c'] = (r) => r.icon - 4 * r.c
     try {
-      expect(contract()).toContain('M14 every tier: radio dot 2n - 4c shrinks from 8 at n 8 to 6 at n 9')
+      expect(contract()).toContain('M14 agent-ui rules: radio dot 2n - 4c shrinks from 8 at n 8 to 6 at n 9')
       expect(() => renderFoundationsCss()).toThrow(/contract failed/)
       expect(() => renderBridgeCss()).toThrow(/contract failed/)
     } finally {

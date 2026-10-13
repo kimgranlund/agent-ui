@@ -717,21 +717,26 @@ catalog-invisible rule and clause 8's zero prompt bytes stand: no catalog row or
 
 ## Amendment 3 (2026-10-13, T-0120): the skill's v2 constants, density on m, M14, the section and group labels, and the derived exceptions
 
-The skill owner published a v2 of `mathematical-design-system` (`scale.mjs` now carries `data-density` and the
-container unit m, a 9px type floor, the control rule and its contract M11 to M13). Kim's rulings, 2026-10-13:
-take the new `scale.mjs` byte for byte, tier anchors included, and accept the one-step shrink of every control;
-rename the kicker roles to section label and group label, with `ui-text`'s `kicker` kept as an alias; add the
-monotonic contract and make the radio dot the glyph minus 2; derive the hand-set exceptions; keep separate
-scaling laws for controls, content and type (no change); accept the half-pixel group label. This amendment
-supersedes the parts of the body named below; the body and its appendices stay as written.
+The skill owner published a v2 of `mathematical-design-system` on 2026-10-13 and took in agent-ui's peer review
+the same day: `scale.mjs` now carries `data-density` and the container unit m, a 9px type floor, one ladder of
+levels (chip, control, group, widget, card, page), the component sizes under `parts`, the control rule, and the
+contract M11 to M16. Kim's rulings, 2026-10-13: take the new `scale.mjs` byte for byte, tier anchors included,
+and accept the one-step shrink of every control; rename the kicker roles to section label and group label, with
+`ui-text`'s `kicker` kept as an alias; add the monotonic contract and make the radio dot the glyph minus 2;
+derive the hand-set exceptions; keep separate scaling laws for controls, content and type (no change); accept
+the half-pixel group label. This amendment supersedes the parts of the body named below; the body and its
+appendices stay as written.
 
 1. **The v2 constants, byte for byte.** `packages/agent-ui/shared/src/tokens/scale.mjs` and
-   `../references/foundations-derivation/scale.mjs` are the skill's v2 copy (sha256 `20f16caf…102b57b8`). The
-   cut's copy (sha256 `eca32879…a3fb8f4d9`) stays beside it as `scale-v1.mjs`, so `derive.mjs` still prints
-   the body's tables (its sections 1 to 10) and prints this amendment's from v2 (sections 11 to 17 of
-   `derive.out.md`). The anchors moved one n down: widget 6/1/1/0, product 8/2/2/1, content 10/2/2/1, brand
-   14/2/2/1, ladder n 4 to 24. Linear type never goes below 9px (field label and group label are held there at
-   n 4), and the generator's `lin()` carries the same `max(9px, …)`.
+   `../references/foundations-derivation/scale.mjs` are the skill's v2 copy (sha256 `3c319761…6057ba5b`, its
+   07:51 revision, the one that answers the peer review). The cut's copy (sha256 `eca32879…a3fb8f4d9`) stays
+   beside it as `scale-v1.mjs`, so `derive.mjs` still prints the body's tables (its sections 1 to 10) and
+   prints this amendment's from v2 (sections 11 to 17 of `derive.out.md`). The anchors moved one n down: widget
+   6/1/1/0, product 8/2/2/1, content 10/2/2/1, brand 14/2/2/1, ladder n 4 to 24. Linear type never goes below
+   9px (field label and group label are held there at n 4), and the generator's `lin()` carries the same
+   `max(9px, …)`. `resolve()` renamed its keys (`inset` and `radius` are `control.margin` and
+   `control.radius`, `layout` is `page`); the tokens keep their ADR-0140 names, `--md-sys-inset`,
+   `--md-sys-radius` and `--md-sys-layout-*`.
 2. **The root shrinks one step.** The root stays product at scale sm, now n 5 / 6 / 7: heights 24 / 28 / 32
    become **20 / 24 / 28**. The title's "the library root keeps 24 and 28 while lg moves to 32" and clause 2's
    root table describe v1. The A2UI canvas (widget at scale md, Amendment 2) keeps the root's n and reads
@@ -744,17 +749,19 @@ supersedes the parts of the body named below; the body and its appendices stay a
    the input `--md-sys-density-d` on `[data-density]`, the token `--md-sys-m`, and adds `[data-density]` to the
    recompute list; the bridge maps `[density="compact"]` and `[density="spacious"]` onto the same input. At the
    root md (n 6): compact m 5 (card 15 / 10 / 15), default m 6 (18 / 12 / 18), spacious m 8 (24 / 16 / 24).
-4. **M14: no derived px quantity shrinks as n grows.** The skill now numbers its own M11 (gap plus label inset
-   equals the inset), M12 (a label-only control is at least 4n wide) and M13 (margins nest at every density),
-   so agent-ui's monotonic rule is M14. `scripts/generate-foundations.mjs` `contract()` runs `check()` and then
-   M14 over every quantity `resolve()` returns and every formula in its `CONTROL_RULES` table (the
-   control-local formulas the stylesheets apply), at every reachable rung, within each tier for the m-based
-   levels at every density. Title is left out because it moves with size (M4 covers it). The generator refuses
-   to emit on any failure. **The radio dot becomes `glyph - 2` (2n - 2c - 2)**: the old 2n - 4c stepped down
-   each time c stepped up (4 to 2 at n 4 to 5, 8 to 6 at n 8 to 9, 12 to 10 at n 12 to 13), and M14 fails on it.
+4. **M14: no size that depends on n alone shrinks as n grows.** Kim's rule (asked for as "M11") is the skill's
+   own M14 since the peer review, beside its M11 (gutter plus label margin equals the control margin), M12 (a
+   label-only control is at least 4n wide), M13 (margins nest at every density), M15 and M16. It runs inside
+   `check()` on every n in the ladder, over every size `resolve()` returns and its `parts`.
+   `scripts/generate-foundations.mjs` `contract()` runs `check()` and then extends M14 to the formulas the skill
+   does not return, its `CONTROL_RULES` table (the pill radius, the glyph stroke, the gauge ring, the column
+   segment radius, and the two sizes the fleet holds at its own value, below), and to the m-based levels within
+   each tier at every density. The generator refuses to emit on any failure. **The radio dot becomes `glyph - 2`
+   (2n - 2c - 2)**: the old 2n - 4c stepped down each time c stepped up (4 to 2 at n 4 to 5, 8 to 6 at n 8 to 9,
+   12 to 10 at n 12 to 13), and M14 fails on it.
 5. **Section label and group label.** `--md-sys-type-section-kicker` is renamed `--md-sys-type-section-label`
-   and `--md-sys-type-group-kicker` is renamed `--md-sys-type-group-label` (the skill keeps its role keys
-   `sectionKicker` and `groupKicker`). `ui-text`'s `kicker` variant becomes an alias that reads the group label,
+   and `--md-sys-type-group-kicker` is renamed `--md-sys-type-group-label`, the skill's own names since the peer
+   review (`type.sectionLabel`, `type.groupLabel`). `ui-text`'s `kicker` variant becomes an alias that reads the group label,
    like `overline` (supersedes Amendment 1's field-label mapping); the bridge's `--md-sys-typescale-kicker-*-size`
    rows follow. At the root the kicker reads 9 / 9.5 / 10 (was 10 / 11 / 12 under Amendment 1 at v1).
 6. **The exceptions derive** (supersedes clause 3's deviations list and the Step 0 rulings 3 and 4 as
@@ -771,10 +778,14 @@ supersedes the parts of the body named below; the body and its appendices stay a
 
    Each keeps its `var(<derived>, <today>)` fallback, so `data-foundations="legacy"` still renders today's value.
    ADR-0036 and the slider rule stand.
-7. **Not adopted here: the skill's control rule** (box padding n, gap c, label inset n - c, text edge 2n - c).
-   It would move every control's text edge: entry and trigger controls, menu and listbox rows and tabs from n
-   to 2n - c (5 / 6 / 7 to 8 / 10 / 12 at the root, +3 / +4 / +5), and button, toggle and segment labels from
-   2n to 2n - c (10 / 12 / 14 to 8 / 10 / 12, -2). That is a separate decision.
+7. **Not adopted here** (each a separate decision; `derive.out.md` section 17 has the px):
+   - **The skill's control rule** (margin n, gutter c, label margin n - c, text edge 2n - c). It would move
+     every control's text edge: entry and trigger controls, menu and listbox rows and tabs from n to 2n - c
+     (5 / 6 / 7 to 8 / 10 / 12 at the root, +3 / +4 / +5), and button, toggle and segment labels from 2n to
+     2n - c (10 / 12 / 14 to 8 / 10 / 12, -2).
+   - **Badge height 2n + 2c** (the fleet keeps 2n: 12 against 16 at the root md) and **checkbox and badge radius
+     ceil(n/2)** (the fleet keeps n/2: 2.5 against 3 at sm, 3.5 against 4 at lg).
+   - **The chip level** (tag, badge, kbd) and the reserved levels (tray, lane, shell): no token is generated.
 
 The root controls, v1 → v2 at sm · md · lg (`derive.out.md` section 13):
 

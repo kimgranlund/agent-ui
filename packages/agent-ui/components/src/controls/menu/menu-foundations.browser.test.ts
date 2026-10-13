@@ -51,7 +51,7 @@ describe('ui-menu geometry inside an opt-in region', () => {
       const r = resolve('product', scale, 'md')
       expect(item.getBoundingClientRect().height).toBe(r.h)
       expect(margin(item)).toBe(r.c)
-      expect(radius(item)).toBe(r.radius)
+      expect(radius(item)).toBe(r.control.radius)
       expect(radius(panel)).toBe(r.group.radius)
     })
   }

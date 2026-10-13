@@ -2,9 +2,9 @@
 // generate-foundations.mjs: writes packages/agent-ui/shared/src/tokens/foundations.gen.css and its consumer bridge
 // foundations-bridge.gen.css from the vendored skill config `scale.mjs` beside them (ADR-0245 clauses 1 and 10a).
 // Changing the system means editing CFG in scale.mjs, never a generated sheet. The generator refuses to emit when
-// `contract()` returns any failure: the skill's `check()` (M1 to M13) plus agent-ui's M14 (no derived px quantity,
-// token or CONTROL_RULES formula, shrinks as n grows; ADR-0245 Amendment 3), so a broken config can never reach a
-// stylesheet.
+// `contract()` returns any failure: the skill's `check()` (M1 to M16), with its M14 (no size that depends on n
+// alone shrinks as n grows) extended to agent-ui's own control formulas (CONTROL_RULES) and to the m-based levels
+// (ADR-0245 Amendment 3), so a broken config can never reach a stylesheet.
 //
 // The sheet is the skill's tokens.css form under ADR-0140 names: the tier inputs on `[data-tier="…"]`,
 // scale, size and density on their attributes, and one derived block (`--md-sys-n`, the container unit
@@ -47,13 +47,33 @@ const headingRole = (power) => `round(nearest, var(--md-sys-type-body) * pow(${q
 
 const M = 'var(--md-sys-m)'
 
+/** The skill's roomy level -> its token name: the skill renamed `layout` to `page`; the tokens keep `layout`. */
+const LEVEL_TOKEN = { widget: 'widget', card: 'card', page: 'layout' }
+
+/**
+ * The roomy levels as multiples of m, walked off CFG.levels the way scale.mjs `at()` walks them: a roomy level
+ * is one m more than its child (the control counts as m), with the child's span as its gutter. Yields widget
+ * 2m / m / 2m, card 3m / 2m / 3m, page 4m / 3m / 4m; the reserved levels (tray, lane, shell) and the chip
+ * level have no token here.
+ */
+function roomyLevels() {
+  const span = { control: 1 }
+  const out = []
+  for (const [level, [wrap, child]] of Object.entries(CFG.levels)) {
+    if (wrap !== 'roomy') continue
+    span[level] = span[child] + 1
+    out.push([LEVEL_TOKEN[level], span[level], span[child]])
+  }
+  return out
+}
+
 /** The derived block: every quantity scale.mjs `at()` returns, as a formula of this element's n (and m for the
  *  widget, card and layout levels: density moves container spacing only, never a control or the group level). */
 function derivedDeclarations() {
-  const levels = Object.entries(CFG.levels).flatMap(([level, [margin, gutter, radius]]) => [
+  const levels = roomyLevels().flatMap(([level, margin, gutter]) => [
     [`--md-sys-${level}-margin`, `calc(${M} * ${margin}px)`],
     [`--md-sys-${level}-gutter`, `calc(${M} * ${gutter}px)`],
-    [`--md-sys-${level}-radius`, `calc(${M} * ${radius}px)`],
+    [`--md-sys-${level}-radius`, `calc(${M} * ${margin}px)`],
   ])
   return [
     ['--md-sys-n', 'calc(var(--md-sys-tier-n0) + var(--md-sys-tier-a) * var(--md-sys-scale-s, 0) + var(--md-sys-tier-k) * var(--md-sys-size-z, 0) + var(--md-sys-tier-g) * var(--md-sys-scale-s, 0) * var(--md-sys-size-z, 0))'],
@@ -75,7 +95,7 @@ function derivedDeclarations() {
     ['--md-sys-type-body', lin(CFG.linear.body)],
     ['--md-sys-type-control', lin(CFG.linear.control)],
     ['--md-sys-type-field-label', lin(CFG.linear.fieldLabel)],
-    ['--md-sys-type-group-label', lin(CFG.linear.groupKicker)],
+    ['--md-sys-type-group-label', lin(CFG.linear.groupLabel)],
     ['--md-sys-group-margin', `calc(var(--md-sys-inset) + ${C})`],
     ['--md-sys-group-gutter', C],
     ['--md-sys-group-radius', `calc(var(--md-sys-radius) + ${C})`],
@@ -84,7 +104,7 @@ function derivedDeclarations() {
 }
 
 const tierInputs = ([n0, a, k, g]) =>
-  `--md-sys-tier-n0: ${n0}; --md-sys-tier-a: ${a}; --md-sys-tier-k: ${k}; --md-sys-tier-g: ${g}; --md-sys-tier-ratio: ${CFG.kicker};`
+  `--md-sys-tier-n0: ${n0}; --md-sys-tier-a: ${a}; --md-sys-tier-k: ${k}; --md-sys-tier-g: ${g}; --md-sys-tier-ratio: ${CFG.sectionRatio};`
 
 /** The legacy axes join the recompute list at the cut so a `[scale]` / `[density]` element recomputes its n and m. */
 const LEGACY_AXES = '[scale], [density]'
@@ -95,45 +115,34 @@ export const recomputeList = (rootDefault = ROOT_DEFAULT) =>
     ? `:root, [data-tier], [data-scale], [data-size], [size], [data-density], ${LEGACY_AXES}`
     : '[data-tier], [data-tier] :is([data-scale], [data-size], [size], [data-density])'
 
-// ---- The contract: the skill's check() plus agent-ui's M14 ----------------------------------------------
+// ---- The contract: the skill's check(), with M14 extended to agent-ui's own formulas ---------------------
 
 /**
- * The control-local formulas the stylesheets apply over the derived tokens (ADR-0245 clause 3 and Amendment 3:
- * the exceptions derive). M14 holds each one to the same law as the tokens: it may not shrink as n grows. A rule
- * that steps down when c steps up (the radio dot 2n - 4c did, 8 to 6 at n 8 to 9) fails here, never in a control.
+ * The control-local formulas the stylesheets apply that scale.mjs does not return (ADR-0245 clause 3 and
+ * Amendment 3: the exceptions derive), and the two the fleet still holds at its own value where the skill moved
+ * on (checkbox radius n/2, badge height 2n). The skill's M14 covers every size `resolve()` returns from n alone;
+ * this table holds agent-ui's own rules to the same law: none may shrink as n grows. A rule that steps down when
+ * c steps up (the radio dot 2n - 4c did, 8 to 6 at n 8 to 9) fails here, never in a control.
  */
 export const CONTROL_RULES = {
   'pill radius 2n (button, toggle)': (r) => 2 * r.n,
-  'avatar inline 2n': (r) => r.icon,
   'checkbox radius n/2': (r) => r.n / 2,
-  'radio dot glyph - 2': (r) => r.glyph - 2,
-  'switch track width 2 thumb + 2c': (r) => 2 * r.glyph + 2 * r.c,
-  'field label gap ceil(n/2)': (r) => Math.ceil(r.n / 2),
   'badge height 2n': (r) => r.icon,
-  'table row 4n + 2c': (r) => r.h + 2 * r.c,
-  'progress track 2c': (r) => 2 * r.c,
   'glyph stroke max(1.5, c/2)': (r) => Math.max(1.5, r.c / 2),
   'gauge ring stroke 4c': (r) => 4 * r.c,
   'column segment radius n + c': (r) => r.group.radius,
 }
 
 const SIZES = Object.keys(STEP)
-/** Every quantity of a resolved rung that depends on n alone (title moves with size, M4; the levels with m). */
-const nQuantities = (r) => ({
-  h: r.h, 'min width': r.minWidth, inset: r.inset, icon: r.icon, radius: r.radius, c: r.c, glyph: r.glyph, gap: r.gap,
-  'label inset': r.labelInset,
-  ...Object.fromEntries(Object.entries(r.type).filter(([role]) => role !== 'title').map(([role, v]) => [`type ${role}`, v])),
-  ...Object.fromEntries(Object.entries(r.group).map(([q, v]) => [`group ${q}`, v])),
-  ...Object.fromEntries(Object.entries(CONTROL_RULES).map(([name, rule]) => [name, rule(r)])),
-})
+const controlRules = (r) => Object.fromEntries(Object.entries(CONTROL_RULES).map(([name, rule]) => [name, rule(r)]))
 /** The container quantities, which read m: they may not shrink as n grows inside one tier at one density. */
 const mQuantities = (r) => ({
   m: r.m,
-  ...Object.fromEntries(Object.keys(CFG.levels).flatMap((l) => Object.entries(r[l]).map(([q, v]) => [`${l} ${q}`, v]))),
+  ...Object.fromEntries(Object.keys(LEVEL_TOKEN).flatMap((l) => Object.entries(r[l]).map(([q, v]) => [`${l} ${q}`, v]))),
 })
 
-/** M14: no derived px quantity shrinks as n grows, at every reachable rung (all tiers) and every density. */
-function m14() {
+/** M14, extended: no agent-ui control formula and no m-based level shrinks as n grows, at every reachable rung. */
+function m14Extended() {
   const bad = new Set()
   const rungs = (tier, density) => SIZES.flatMap((s) => SIZES.map((z) => resolve(tier, s, z, density)))
   const grows = (where, cells, pick) => {
@@ -143,15 +152,15 @@ function m14() {
       for (const q of Object.keys(qa)) if (qb[q] < qa[q]) bad.add(`M14 ${where}: ${q} shrinks from ${qa[q]} at n ${a.n} to ${qb[q]} at n ${b.n}`)
     }
   }
-  grows('every tier', Object.keys(CFG.tiers).flatMap((t) => rungs(t, 'default')), nQuantities)
+  grows('agent-ui rules', Object.keys(CFG.tiers).flatMap((t) => rungs(t, 'default')), controlRules)
   for (const tier of Object.keys(CFG.tiers)) for (const d of Object.keys(CFG.density)) grows(`${tier} ${d}`, rungs(tier, d), mQuantities)
   return [...bad]
 }
 
-/** The whole contract: scale.mjs check() (M1 to M13), then M14 once the config itself is sound. */
+/** The whole contract: scale.mjs check() (M1 to M16), then the M14 extension once the config itself is sound. */
 export function contract() {
   const failures = check()
-  return failures.length ? failures : m14()
+  return failures.length ? failures : m14Extended()
 }
 
 const refuseOnFailure = () => {
@@ -198,7 +207,7 @@ const M3_SIZE = { small: 'sm', medium: 'md', large: 'lg' }
  */
 const TYPESCALE_ROLE = {
   display: 'display', headline: 'heading', title: 'title', body: 'body', label: 'fieldLabel',
-  kicker: 'groupKicker', overline: 'groupKicker', lead: 'subhead', quote: 'subhead',
+  kicker: 'groupLabel', overline: 'groupLabel', lead: 'subhead', quote: 'subhead',
 }
 
 /**
@@ -244,7 +253,7 @@ function roleAt(role, step) {
     case 'display': return heading(3)
     case 'heading': return heading(2)
     case 'subhead': return heading(1)
-    case 'sectionKicker': return `round(nearest, ${body} * ${CFG.kicker}, 1px)`
+    case 'sectionLabel': return `round(nearest, ${body} * ${CFG.sectionRatio}, 1px)`
     case 'title': return `calc(${body} + ${CFG.titleBump[step]}px)`
     case 'body': return body
     default: return lin(CFG.linear[role], n)

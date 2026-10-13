@@ -32,7 +32,7 @@ describe('ui-swatch geometry (ADR-0245 cl.3)', () => {
 
   it('inside a region the chip radius is n', () => {
     const wrap = mount('<ui-swatch color="#336699" label="Brand"></ui-swatch>')
-    expect(px(getComputedStyle(box(wrap)).borderTopLeftRadius)).toBeCloseTo(root.radius, 1)
+    expect(px(getComputedStyle(box(wrap)).borderTopLeftRadius)).toBeCloseTo(root.control.radius, 1)
   })
 
   it('under data-foundations=legacy the chip radius is the 12px corner base', () => {

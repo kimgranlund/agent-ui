@@ -893,7 +893,7 @@ describe('ui-calendar — container box-model inset (ADR-0046 Amendment 2, both 
 
     const nav = el.querySelector<HTMLElement>('[data-part="nav"]')!
     const cs  = getComputedStyle(nav)
-    const inset = `${resolve('product', 'sm', 'md').inset}px`
+    const inset = `${resolve('product', 'sm', 'md').control.margin}px`
 
     // At-rest margin: the SAME --ui-box-inset every other [data-box] child carries (n, ADR-0245 cl.6:
     // 7px at the root register, product / sm / md) — NOT the pre-revision full-bleed margin:0.
@@ -924,7 +924,7 @@ describe('ui-calendar — container box-model inset (ADR-0046 Amendment 2, both 
     await el.updateComplete
 
     const grid = el.querySelector<HTMLElement>('[data-part="grid"]')!
-    expect(getComputedStyle(grid).marginTop, `${server.browser}: grid margin is not the box inset`).toBe(`${resolve('product', 'sm', 'md').inset}px`)
+    expect(getComputedStyle(grid).marginTop, `${server.browser}: grid margin is not the box inset`).toBe(`${resolve('product', 'sm', 'md').control.margin}px`)
   })
 })
 

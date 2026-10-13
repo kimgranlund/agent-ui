@@ -33,7 +33,7 @@ describe('ui-badge geometry (ADR-0245 cl.3)', () => {
     const cs = getComputedStyle(badge)
     expect(badge.getBoundingClientRect().height).toBeCloseTo(root.icon, 1)
     expect(px(cs.paddingLeft)).toBeCloseTo(2 * root.c, 1)
-    expect(px(cs.borderTopLeftRadius)).toBeCloseTo(root.radius / 2, 1)
+    expect(px(cs.borderTopLeftRadius)).toBeCloseTo(root.control.radius / 2, 1)
     expect(px(cs.fontSize)).toBeCloseTo(root.type.fieldLabel, 1)
     const glyph = badge.querySelector('[data-part="glyph"]') as HTMLElement
     expect(glyph.getBoundingClientRect().width).toBeCloseTo(root.glyph, 1)

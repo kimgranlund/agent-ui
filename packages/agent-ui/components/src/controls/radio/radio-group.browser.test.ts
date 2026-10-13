@@ -87,15 +87,15 @@ describe('ui-radio-group browser smoke — component-owned layout (ADR-0103)', (
 
     const gapPx = (): number => px(getComputedStyle(el).rowGap)
     // --md-sys-space-sm is n at the region (ADR-0245 cl.6): 7 at the root, then a denser and a roomier region.
-    expect(gapPx()).toBe(resolve('product', 'sm', 'md').inset)
+    expect(gapPx()).toBe(resolve('product', 'sm', 'md').control.margin)
 
     wrap.setAttribute('data-tier', 'widget')
     wrap.setAttribute('data-scale', 'sm')
-    expect(gapPx()).toBe(resolve('widget', 'sm', 'md').inset)
+    expect(gapPx()).toBe(resolve('widget', 'sm', 'md').control.margin)
 
     wrap.setAttribute('data-tier', 'product')
     wrap.setAttribute('data-scale', 'lg')
-    expect(gapPx()).toBe(resolve('product', 'lg', 'md').inset)
+    expect(gapPx()).toBe(resolve('product', 'lg', 'md').control.margin)
   })
 
   it('one Tab stop, real focus (ADR-0121 amendment regression guard): exactly one ui-radio is Tab-reachable, not three', async () => {

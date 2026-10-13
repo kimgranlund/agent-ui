@@ -36,11 +36,11 @@ const TOLERANCE = 0.5
  * quantities clause 3 fixes for it, from scale.mjs resolve() at the control's own n.
  */
 export const CLASSES = {
-  frame: { rule: (r) => ({ height: r.h, padding: r.n, radius: r.radius }) }, // a field: height 4n, padding n, radius n
+  frame: { rule: (r) => ({ height: r.h, padding: r.n, radius: r.control.radius }) }, // a field: height 4n, padding n, radius n
   pill: { rule: (r) => ({ height: r.h, padding: 2 * r.n, radius: 2 * r.n }) }, // button, toggle: the pill radius 2n (Amendment 3)
-  trigger: { part: 'trigger', rule: (r) => ({ height: r.h, padding: r.n, radius: r.radius }) }, // a popup field's frame
-  cell: { part: 'cell', rule: (r) => ({ height: r.h, radius: r.radius }) }, // one frame per character cell
-  multiline: { rule: (r) => ({ padding: r.n, radius: r.radius }) }, // padding n and radius n; rows set the height
+  trigger: { part: 'trigger', rule: (r) => ({ height: r.h, padding: r.n, radius: r.control.radius }) }, // a popup field's frame
+  cell: { part: 'cell', rule: (r) => ({ height: r.h, radius: r.control.radius }) }, // one frame per character cell
+  multiline: { rule: (r) => ({ padding: r.n, radius: r.control.radius }) }, // padding n and radius n; rows set the height
   listbox: { rule: (r) => ({ padding: r.c, radius: r.group.radius }) }, // the group level: padding c, radius n + c
   // segments 4n, padding 2n; a segment's own size is unconsumed (segment.md), so the size goes on the group
   segment: { parent: 'ui-segmented-control', sizeOnParent: true, rule: (r) => ({ height: r.h, padding: 2 * r.n }) },
