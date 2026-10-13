@@ -57,6 +57,7 @@ geometry:
   sizeClass: display
   inlineSize: var(--ui-swatch-box-size)   # 2rem default box — NO [size] ramp, NO --md-sys-height-* (SPEC-R16 AC2)
   blockSize: var(--ui-swatch-box-size)
+  radius: var(--ui-swatch-radius)          # n (`--md-sys-radius`) inside an opt-in [data-tier] region (ADR-0245 cl.3); else --md-sys-shape-corner-base
 
 forcedColors: An explicit `@media (forced-colors: active)` block (SPEC-R14) — the box degrades to a `CanvasText` border with its `background` forced `transparent` (never a fake system color); the value/label text is real text and survives untouched.
 ---

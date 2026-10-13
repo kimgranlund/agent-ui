@@ -139,6 +139,7 @@ geometry:
   # own-chain off the `--space-*` ladder (TKT-0066 item 5); the browse/remove buttons size themselves via
   # their OWN `<ui-button size='sm'>` geometry; committed chips ride the compact realm via `<ui-attachment>`'s
   # own Display-class sizing.
+  radius: var(--ui-file-drop-radius)           # the card radius 3n (`--md-sys-card-radius`) inside an opt-in [data-tier] region (ADR-0245 cl.6); else --md-sys-shape-corner-base
   paddingBlock: var(--ui-file-drop-padding)   # the whole shell's own padding — not a control-height row law (Pattern-class shell, geometry.md)
   gap: var(--ui-file-drop-gap)                 # icon/hint/browse row spacing
   rowGap: var(--ui-file-drop-row-gap)          # chips-row wrap spacing

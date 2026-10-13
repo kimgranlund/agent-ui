@@ -25,7 +25,7 @@ class ProbeIcon extends UIIconElement {
 customElements.define('ui-icon-probe', ProbeIcon)
 
 describe('UIIconElement — upgrade + typed props', () => {
-  it('upgrades to the class; glyph and label default to empty string', () => {
+  it('upgrades to the class; symbol and label default to empty string', () => {
     const el = document.createElement('ui-icon') as UIIconElement
     expect(el).toBeInstanceOf(UIIconElement)
     expect(el.symbol).toBe('')
@@ -60,7 +60,7 @@ describe('UIIconElement: symbol, and glyph as its deprecated alias (ADR-0245 cl.
 
   it('symbol wins over the alias; the alias is read only while symbol is empty', async () => {
     const el = new ProbeIcon()
-    el.symbol = 'x'
+    el.glyph = 'x'
     el.symbol = 'check'
     document.body.append(el)
     expect(el.querySelector('path')?.getAttribute('data-icon')).toBe('check')

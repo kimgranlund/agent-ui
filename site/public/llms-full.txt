@@ -127,7 +127,7 @@ Exactly one link renders at a time (SPEC-R5) — **never a broken-image box, nev
 2. **Initials** — derived from `name` by a pure, grapheme-safe function (`avatar-initials.ts`): the first
    grapheme of the first word + the first grapheme of the last word (a single word yields one grapheme),
    locale-uppercased. Empty/whitespace `name` skips straight to the glyph.
-3. **Glyph** — the vendored person icon (`<ui-icon glyph="user">`), decorative by its own default.
+3. **Glyph** — the vendored person icon (`<ui-icon symbol="user">`), decorative by its own default.
 
 ## Accessibility
 
