@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll, afterEach } from 'vitest'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 // s-ui-icon-tests (icon-adapter.decomp.json) — the CELL-FIT PROOF (LLD §3, ADR-0065/0066). A jsdom test
 // can assert "an svg was injected"; only a real engine can prove the CONTENT-INTO-CELL geometry
@@ -48,7 +49,16 @@ afterEach(() => {
 })
 
 const px = (v: string): number => Number.parseFloat(v)
-const tokenPx = (btn: HTMLElement, name: string): number => px(getComputedStyle(btn).getPropertyValue(name))
+// ADR-0245: --ui-button-icon / --ui-button-glyph are derived calc() tokens (unregistered), so the raw custom-property
+// text parses as NaN; read the token through a probe box inside the button, which resolves it to real px.
+const tokenPx = (btn: HTMLElement, name: string): number => {
+  const probe = document.createElement('div')
+  probe.style.cssText = `position:absolute;visibility:hidden;inline-size:1px;block-size:var(${name})`
+  btn.append(probe)
+  const h = probe.getBoundingClientRect().height
+  probe.remove()
+  return h
+}
 
 describe('ui-icon cell-fit geometry (s-ui-icon-tests, LLD §3) — cross-engine', () => {
   it('an ui-icon in a [data-role="icon"] cell fills it: rendered svg box == --ui-button-icon (NO CSS edit)', () => {
@@ -123,12 +133,11 @@ describe('ui-icon missing-glyph HONESTY (GH #1508) — the host box is intrinsic
 
     const resolvedBox = resolved.getBoundingClientRect()
     const missingBox = missing.getBoundingClientRect()
-    // --md-sys-icon-size is `1em` (a relative token, icon.css §1) — getComputedStyle's custom-property
-    // read returns the literal string "1em", not a resolved px value; the resolved host's own computed
-    // `font-size` IS that resolved px (1em == font-size), the anti-vacuous real-px anchor.
-    const emPx = px(getComputedStyle(resolved).fontSize)
-    expect(emPx, 'anti-vacuous: the 1em icon size must resolve to a real px value').toBeGreaterThan(0)
-    expect(resolvedBox.width).toBeCloseTo(emPx, 0)
+    // Since ADR-0245 a plain page is the root register (product / sm), where the icon slot is the derived 2n
+    // (--md-sys-icon-size resolves to resolve().icon), no longer the host's own font-size.
+    const iconPx = resolve('product', 'sm', 'md').icon
+    expect(iconPx, 'anti-vacuous: the derived icon size must be a real px value').toBeGreaterThan(0)
+    expect(resolvedBox.width).toBeCloseTo(iconPx, 0)
     expect(missingBox.width, 'an unresolvable glyph must NOT collapse the ui-icon host box').toBeCloseTo(resolvedBox.width, 0)
     expect(missingBox.height, 'an unresolvable glyph must NOT collapse the ui-icon host box').toBeCloseTo(resolvedBox.height, 0)
   })
