@@ -24,6 +24,7 @@ import '@agent-ui/components/foundation-styles.css' // tokens (--md-sys-color-*)
 import './slider.css'                               // the control stylesheet (direct — pre-barrel)
 import './slider.ts'                                // self-define (registers ui-slider)
 import type { UISliderElement } from './slider.ts'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 // ── helpers ──────────────────────────────────────────────────────────────────────────────────────
 
@@ -271,17 +272,6 @@ describe('ui-slider browser smoke (AC1 — .rail block-size exact px per [size]�
     lg.remove()
   })
 
-  it('AC1 [scale=ui-lg] × [size=md] → 18px (the scale × size lookup, ADR-0041 clause 2)', () => {
-    const wrapper = document.createElement('div')
-    wrapper.setAttribute('scale', 'ui-lg')
-    const el = document.createElement('ui-slider') as UISliderElement
-    wrapper.append(el)
-    document.body.append(wrapper)
-    // ui-lg × md = 18px (ADR-0041 table: [scale=ui-lg] → --md-sys-compact-md = 18px)
-    expect(rail(el).getBoundingClientRect().height).toBe(18)
-    wrapper.remove()
-  })
-
   it('AC1 negative control: [size=sm] ≠ [size=md] (14px ≠ 16px — anti-vacuous box proof)', () => {
     const sm = document.createElement('ui-slider') as UISliderElement
     sm.setAttribute('size', 'sm')
@@ -331,34 +321,6 @@ describe('ui-slider browser smoke (AC2 — thumb = box − 4px, the ADR-0042 Ran
     expect(Number.parseFloat(cs.width)).toBe(14)
     expect(Number.parseFloat(cs.height)).toBe(14)
     el.remove()
-  })
-
-  it('AC2 [scale=ui-lg] × [size=lg] → thumb = 16px (20px − 4px)', () => {
-    const wrapper = document.createElement('div')
-    wrapper.setAttribute('scale', 'ui-lg')
-    const el = document.createElement('ui-slider') as UISliderElement
-    el.setAttribute('size', 'lg')
-    wrapper.append(el)
-    document.body.append(wrapper)
-    // ui-lg × lg = 20px → thumb = 20 − 4 = 16px
-    const cs = getComputedStyle(rail(el), '::after')
-    expect(Number.parseFloat(cs.width)).toBe(16)
-    expect(Number.parseFloat(cs.height)).toBe(16)
-    wrapper.remove()
-  })
-
-  it('AC2 [scale=content-lg] × [size=lg] → thumb = 24px (28px − 4px, not a calc result)', () => {
-    const wrapper = document.createElement('div')
-    wrapper.setAttribute('scale', 'content-lg')
-    const el = document.createElement('ui-slider') as UISliderElement
-    el.setAttribute('size', 'lg')
-    wrapper.append(el)
-    document.body.append(wrapper)
-    // content-lg × lg = 28px → thumb = 28 − 4 = 24px (the literal from the ADR-0041 table)
-    const cs = getComputedStyle(rail(el), '::after')
-    expect(Number.parseFloat(cs.width)).toBe(24)
-    expect(Number.parseFloat(cs.height)).toBe(24)
-    wrapper.remove()
   })
 
   it('AC2 negative control: [size=sm] thumb ≠ [size=lg] thumb (10px ≠ 14px — anti-vacuous)', () => {
@@ -716,4 +678,38 @@ describe('ui-slider browser smoke (GH #1162 — one visible label owner under ui
     field.remove()
     el.remove()
   })
+})
+
+// ADR-0245 clause 3: inside an opt-in region the hit area is 2n, the thumb 2n - 2c and the rail 2c thick (the
+// progress rule), against scale.mjs resolve(); outside, the rail keeps today's 3px.
+describe('ui-slider geometry inside an opt-in data-tier region (ADR-0245)', () => {
+  const railHeight = (el: Element): number => Number.parseFloat(getComputedStyle(rail(el), '::before').height)
+
+  it('outside any region the rail is 3px', () => {
+    const el = document.createElement('ui-slider') as UISliderElement
+    document.body.append(el)
+    expect(railHeight(el)).toBe(3)
+    el.remove()
+  })
+
+  for (const scale of ['sm', 'md'] as const) {
+    for (const size of ['sm', 'md', 'lg'] as const) {
+      it(`product / ${scale} / ${size}: hit area 2n, thumb 2n - 2c, rail 2c`, () => {
+        const r = resolve('product', scale, size)
+        const wrapper = document.createElement('div')
+        wrapper.setAttribute('data-tier', 'product')
+        wrapper.setAttribute('data-scale', scale)
+        const el = document.createElement('ui-slider') as UISliderElement
+        el.setAttribute('size', size)
+        wrapper.append(el)
+        document.body.append(wrapper)
+        expect(rail(el).getBoundingClientRect().height).toBe(r.icon)
+        const thumb = getComputedStyle(rail(el), '::after')
+        expect(Number.parseFloat(thumb.width)).toBe(r.icon - 2 * r.c)
+        expect(Number.parseFloat(thumb.height)).toBe(r.icon - 2 * r.c)
+        expect(railHeight(el)).toBe(2 * r.c)
+        wrapper.remove()
+      })
+    }
+  }
 })

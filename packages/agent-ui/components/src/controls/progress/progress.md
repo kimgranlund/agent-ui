@@ -72,7 +72,8 @@ geometry:
   sizeClass: display
   minInlineSize: var(--ui-progress-min-inline-size)  # 8em default — the whole-shape floor (SPEC-R18 AC1)
   # NO [size] attribute, NO [scale] geometry row, NO --md-sys-height-* consumption (SPEC-R20 AC2) — the rail
-  # thickness (--ui-progress-track-size) is a fixed, density-invariant px constant.
+  # thickness (--ui-progress-track-size) is 2c inside an opt-in data-tier region (ADR-0245 cl.3) and the fixed 4px
+  # constant outside; the discrete cell gap is c inside a region, 2px outside.
 
 forcedColors: An explicit `@media (forced-colors: active)` block repoints the fill (a `background`-drawn rectangle, including the indeterminate sweep) to `CanvasText`, and gives the track a `Canvas` background + `CanvasText` border (SPEC-R19 — the bar-chart fill lesson: a background-drawn shape is otherwise forced to `Canvas` and vanishes against the page). Discrete mode (SPEC-R1 Amendment v1): filled cells repoint to `CanvasText` and unfilled cells to `Canvas`, and every cell gets an explicit `CanvasText` inter-cell border — the separation is never left to ride an unstyled background alone.
 ---

@@ -41,11 +41,11 @@
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-progress) declares --ui-progress-* ════════════════ */
 
 :where(ui-progress) {
-  --ui-progress-track-size: 4px; /* thin rail — density-invariant constant (slider.css:76-79 kin) */
+  --ui-progress-track-size: calc(2 * var(--md-sys-c, 2px)); /* thin rail: track 2c inside an opt-in region (ADR-0245 cl.3), today's 4px outside */
   --ui-progress-min-inline-size: 8em; /* the whole-shape floor (SPEC-R18 AC1; the slider-dot lesson) */
   --ui-progress-track-ink: var(--md-sys-color-neutral-track); /* the ADR-0059 solid-track role */
   --ui-progress-fill-ink: var(--md-sys-color-primary);
-  --ui-progress-cell-gap: 2px; /* SPEC-R1 Amendment v1 — the inter-cell separation, discrete mode */
+  --ui-progress-cell-gap: var(--md-sys-c, 2px); /* SPEC-R1 Amendment v1, the inter-cell separation, discrete mode */
   /* component-checker F1 (2026-08-08): distinct from BOTH --ui-progress-track-ink and -fill-ink, so the
    * gap reads at every cell boundary — including unfilled<->unfilled, which a shared track/gap ink hid. */
   --ui-progress-cell-gap-ink: var(--md-sys-color-neutral-outline-variant);

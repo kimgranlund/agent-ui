@@ -13,6 +13,7 @@ import '@agent-ui/components/all.css'
 import type { UIRadioElement } from '@agent-ui/components/controls/radio'
 import type { UIRadioGroupElement } from '@agent-ui/components/controls/radio-group'
 import '@agent-ui/components/all'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 const mounted: Element[] = []
 afterEach(() => {
@@ -106,26 +107,40 @@ describe('ui-radio browser smoke — box geometry (exact px, ADR-0041)', () => {
     expect(Number.parseFloat(getComputedStyle(lg, '::before').width)).toBe(18) // --md-sys-compact-lg
   })
 
-  it('radio-box-scale: [scale=ui-lg]×[size=md] → 18px (the scale×size lookup, ADR-0041)', () => {
-    const wrapper = document.createElement('div')
-    wrapper.setAttribute('scale', 'ui-lg')
-    const el = document.createElement('ui-radio') as UIRadioElement
-    wrapper.append(el)
-    mount(wrapper)
-    // ui-lg × md = 18px (ADR-0041 table row ui-lg, column md)
-    expect(Number.parseFloat(getComputedStyle(el, '::before').width)).toBe(18)
+  it('outside any region the dot keeps today\'s 56% of the box (22% inset)', () => {
+    const el = mount(document.createElement('ui-radio') as UIRadioElement)
+    el.setAttribute('checked', '')
+    el.textContent = 'Test'
+    const dot = getComputedStyle(el, '::after')
+    expect(Number.parseFloat(dot.width)).toBeCloseTo(8.96, 1)
+    expect(Number.parseFloat(dot.height)).toBeCloseTo(8.96, 1)
   })
+})
 
-  it('radio-box-scale-lg: [scale=content-lg]×[size=lg] → 28px (not a CSS calc — explicit table value)', () => {
-    const wrapper = document.createElement('div')
-    wrapper.setAttribute('scale', 'content-lg')
-    const el = document.createElement('ui-radio') as UIRadioElement
-    el.setAttribute('size', 'lg')
-    wrapper.append(el)
-    mount(wrapper)
-    // content-lg × lg = 28px — literal from ADR-0041 table, NOT a multiplier
-    expect(Number.parseFloat(getComputedStyle(el, '::before').width)).toBe(28)
-  })
+// ADR-0245 clause 3: inside an opt-in region the circle is 2n and the dot 2n - 4c, against scale.mjs resolve().
+describe('ui-radio geometry inside an opt-in data-tier region (ADR-0245)', () => {
+  for (const scale of ['sm', 'md'] as const) {
+    for (const size of ['sm', 'md', 'lg'] as const) {
+      it(`product / ${scale} / ${size}: circle 2n, dot 2n - 4c`, () => {
+        const r = resolve('product', scale, size)
+        const wrapper = document.createElement('div')
+        wrapper.setAttribute('data-tier', 'product')
+        wrapper.setAttribute('data-scale', scale)
+        const el = document.createElement('ui-radio') as UIRadioElement
+        el.setAttribute('size', size)
+        el.setAttribute('checked', '')
+        el.textContent = 'Test'
+        wrapper.append(el)
+        mount(wrapper)
+        const ring = getComputedStyle(el, '::before')
+        expect(Number.parseFloat(ring.width)).toBe(r.icon)
+        expect(Number.parseFloat(ring.height)).toBe(r.icon)
+        const dot = getComputedStyle(el, '::after')
+        expect(Number.parseFloat(dot.width)).toBe(r.icon - 4 * r.c)
+        expect(Number.parseFloat(dot.height)).toBe(r.icon - 4 * r.c)
+      })
+    }
+  }
 })
 
 // ── S3 browser smoke: real focus roves the group ─────────────────────────────────────────────────
