@@ -50,7 +50,7 @@
 :where(ui-line-chart) {
   --ui-line-chart-min-inline-size: 16em; /* the whole-shape floor (mirrors --ui-bar-chart-min-inline-size) */
   --ui-line-chart-min-block-size: 9em; /* room for both label rows + a real plot area, not a sliver */
-  --ui-line-chart-line-stroke-width: 1.5px; /* density-invariant px (ADR-0107 cl.5 precedent) */
+  --ui-line-chart-line-stroke-width: var(--md-sys-glyph-stroke, 1.5px); /* density-invariant px (ADR-0107 cl.5 precedent) */
   --ui-line-chart-area-opacity: 0.15;
   --ui-line-chart-baseline-opacity: 0.35; /* a visibly SUBTLER reference than the data line, same ink */
   --ui-line-chart-text-ink: var(--md-sys-color-neutral-on-surface); /* label ink — the ONE role reference */

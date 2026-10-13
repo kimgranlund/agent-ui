@@ -56,7 +56,7 @@ describe('board-grid.css: structure + token hygiene', () => {
   })
 
   it('cells are square: 46px tracks that give way to the 34px floor, never below (ADR-0243 Amendment 2)', () => {
-    expect(tokenBlock).toMatch(/--ui-board-grid-cell-size:\s*46px;/)
+    expect(tokenBlock).toMatch(/--ui-board-grid-cell-size:\s*calc\(var\(--md-sys-height,\s*46px\)\s*\+\s*var\(--md-sys-icon-box,\s*0px\)\);/)
     expect(tokenBlock).toMatch(/--ui-board-grid-cell-min:\s*34px;/)
     expect(bare(stylesBlock)).toMatch(
       /grid-template-columns:\s*repeat\(var\(--ui-board-grid-cols\),\s*minmax\(var\(--ui-board-grid-cell-min\),\s*var\(--ui-board-grid-cell-size\)\)\);/,
