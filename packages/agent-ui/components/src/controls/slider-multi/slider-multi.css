@@ -31,7 +31,7 @@
 :where(ui-slider-multi) {
   /* Box geometry — the compact widget-box ramp step (ADR-0041; default size = md). `[size]` repoints.
      The box drives the thumb size (box − 4px) and the host's interactive-area height. */
-  --ui-slider-multi-box: var(--md-sys-compact-md);
+  --ui-slider-multi-box: var(--md-sys-icon-box, var(--md-sys-compact-md));
 
   /* Rail colour — the unfilled background track (muted neutral outline, same as switch unchecked track). */
   --ui-slider-multi-rail: var(--md-sys-color-neutral-outline-variant);
@@ -52,11 +52,11 @@
      column (Ruling 2 supersedes the GH #1126 transient pill-overlay design — see slider.css's file header
      + range-element.lld.md's Amendment). Plain text (no pill surface/padding/border-radius). */
   --ui-slider-multi-value-ink: var(--md-sys-color-neutral-on-surface);
-  --ui-slider-multi-value-font: var(--md-sys-font-sm);
+  --ui-slider-multi-value-font: var(--md-sys-type-control, var(--md-sys-font-sm));
 
   /* GH #1141 — the label part: plain text, the SUBDUED half of the label/value pair (matches ui-slider). */
   --ui-slider-multi-label-ink: var(--md-sys-color-neutral-on-surface-variant);
-  --ui-slider-multi-label-font: var(--md-sys-font-sm);
+  --ui-slider-multi-label-font: var(--md-sys-type-control, var(--md-sys-font-sm));
 
   /* GH #1141 — the label↔rail↔value row/column rhythm (matches ui-slider's --ui-slider-layout-gap). */
   --ui-slider-multi-layout-gap: var(--md-sys-space-xs);
@@ -64,8 +64,8 @@
 
 /* [size] → compact widget ramp repoint (ADR-0041: the LITERAL per-[scale] table in dimensions.css
    re-tables --md-sys-compact-{sm,md,lg}; `[size]` on the host picks which step the slider box targets). */
-:where(ui-slider-multi[size='sm']) { --ui-slider-multi-box: var(--md-sys-compact-sm); }
-:where(ui-slider-multi[size='lg']) { --ui-slider-multi-box: var(--md-sys-compact-lg); }
+:where(ui-slider-multi[size='sm']) { --ui-slider-multi-box: var(--md-sys-icon-box, var(--md-sys-compact-sm)); }
+:where(ui-slider-multi[size='lg']) { --ui-slider-multi-box: var(--md-sys-icon-box, var(--md-sys-compact-lg)); }
 
 /* [disabled] → muted neutral roles (overrides all states). HOLDS at idle: the disabled host is
    pointer-inert (styles block), so `:hover` never matches it (ADR-0008 disabled pattern). */
@@ -203,7 +203,7 @@
     position: absolute;
 
     /* ADR-0041 cl.3: thumb = box − 2×inset = box − 4px */
-    --ui-slider-multi-thumb-size: calc(var(--ui-slider-multi-box) - 2 * var(--md-sys-widget-inset));
+    --ui-slider-multi-thumb-size: calc(var(--ui-slider-multi-box) - 2 * var(--md-sys-c, var(--md-sys-widget-inset)));
     inline-size: var(--ui-slider-multi-thumb-size);
     block-size:  var(--ui-slider-multi-thumb-size);
     border-radius: 50%;                         /* circle */

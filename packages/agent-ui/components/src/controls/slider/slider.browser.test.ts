@@ -271,7 +271,7 @@ describe('ui-slider browser smoke (AC1 — .rail block-size exact px per [size]�
     lg.remove()
   })
 
-  it('AC1 [scale=ui-lg] × [size=md] → 18px (the scale × size lookup, ADR-0041 clause 2)', () => {
+  it('AC1 [data-tier=product][data-scale=md] × [size=md] → 18px (the scale × size lookup, ADR-0041 clause 2)', () => {
     const wrapper = document.createElement('div')
     wrapper.setAttribute('scale', 'ui-lg')
     const el = document.createElement('ui-slider') as UISliderElement
@@ -333,7 +333,7 @@ describe('ui-slider browser smoke (AC2 — thumb = box − 4px, the ADR-0042 Ran
     el.remove()
   })
 
-  it('AC2 [scale=ui-lg] × [size=lg] → thumb = 16px (20px − 4px)', () => {
+  it('AC2 [data-tier=product][data-scale=md] × [size=lg] → thumb = 16px (20px − 4px)', () => {
     const wrapper = document.createElement('div')
     wrapper.setAttribute('scale', 'ui-lg')
     const el = document.createElement('ui-slider') as UISliderElement
@@ -347,7 +347,7 @@ describe('ui-slider browser smoke (AC2 — thumb = box − 4px, the ADR-0042 Ran
     wrapper.remove()
   })
 
-  it('AC2 [scale=content-lg] × [size=lg] → thumb = 24px (28px − 4px, not a calc result)', () => {
+  it('AC2 [data-tier=content][data-scale=lg] × [size=lg] → thumb = 24px (28px − 4px, not a calc result)', () => {
     const wrapper = document.createElement('div')
     wrapper.setAttribute('scale', 'content-lg')
     const el = document.createElement('ui-slider') as UISliderElement

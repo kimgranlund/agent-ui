@@ -57,7 +57,7 @@
 
 :where(ui-slider) {
   /* Box geometry — the compact widget-box ramp step (ADR-0041; default size = md). `[size]` repoints. */
-  --ui-slider-box: var(--md-sys-compact-md);
+  --ui-slider-box: var(--md-sys-icon-box, var(--md-sys-compact-md));
 
   /* Rail colour — the unselected portion of the track. A state-bearing control part → the SOLID
      --md-sys-color-neutral-track (SC 1.4.11 3:1 vs every surface plane), NOT the old translucent
@@ -93,12 +93,12 @@
      page-ink role (AA vs every surface plane, tokens.test.ts) — the more EMPHASIZED of the label/value
      pair (the "current reading" is the more salient number). */
   --ui-slider-value-ink: var(--md-sys-color-neutral-on-surface);
-  --ui-slider-value-font: var(--md-sys-font-sm);
+  --ui-slider-value-font: var(--md-sys-type-control, var(--md-sys-font-sm));
 
   /* GH #1141 — the label part: plain text, the SUBDUED half of the label/value pair (the on-surface-
      variant ink role, the field.css label-vs-value emphasis precedent). */
   --ui-slider-label-ink: var(--md-sys-color-neutral-on-surface-variant);
-  --ui-slider-label-font: var(--md-sys-font-sm);
+  --ui-slider-label-font: var(--md-sys-type-control, var(--md-sys-font-sm));
 
   /* GH #1141 — the label↔rail↔value row/column rhythm. The ONE density-bearing spacing quantity this
      control's layouts need — off `--md-sys-space-xs`, the field.css `--ui-field-gap` precedent (the
@@ -109,10 +109,10 @@
 /* [size] → compact widget ramp repoint (ADR-0041: the per-[scale] table in dimensions.css re-tables
    --md-sys-compact-{sm,md,lg}; `[size]` on the host picks which step the slider box targets). */
 :where(ui-slider[size='sm']) {
-  --ui-slider-box: var(--md-sys-compact-sm);
+  --ui-slider-box: var(--md-sys-icon-box, var(--md-sys-compact-sm));
 }
 :where(ui-slider[size='lg']) {
-  --ui-slider-box: var(--md-sys-compact-lg);
+  --ui-slider-box: var(--md-sys-icon-box, var(--md-sys-compact-lg));
 }
 
 /* [disabled] → muted neutral roles for rail, fill, and thumb. The state holds at idle: the styles
@@ -274,7 +274,7 @@
     box-sizing: border-box;
 
     /* ADR-0041 cl.3: thumb = box − 2×inset = box − 4px */
-    --ui-slider-thumb-size: calc(var(--ui-slider-box) - 2 * var(--md-sys-widget-inset));
+    --ui-slider-thumb-size: calc(var(--ui-slider-box) - 2 * var(--md-sys-c, var(--md-sys-widget-inset)));
     inline-size: var(--ui-slider-thumb-size);
     block-size: var(--ui-slider-thumb-size);
     border-radius: 50%; /* circle */

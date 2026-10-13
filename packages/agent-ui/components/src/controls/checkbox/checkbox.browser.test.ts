@@ -41,7 +41,7 @@ describe('ui-checkbox browser smoke (S1 AC1–AC4)', () => {
     lg.remove()
   })
 
-  it('AC1 [scale=ui-lg] × [size=md] → 18px box (the scale × size lookup, ADR-0041 clause 2)', () => {
+  it('AC1 [data-tier=product][data-scale=md] × [size=md] → 18px box (the scale × size lookup, ADR-0041 clause 2)', () => {
     const wrapper = document.createElement('div')
     wrapper.setAttribute('scale', 'ui-lg')
     const el = document.createElement('ui-checkbox')
@@ -52,7 +52,7 @@ describe('ui-checkbox browser smoke (S1 AC1–AC4)', () => {
     wrapper.remove()
   })
 
-  it('AC4 no --md-sys-scale multiplier: [scale=content-lg] × [size=lg] → 28px (not a CSS calc result)', () => {
+  it('AC4 no --md-sys-scale multiplier: [data-tier=content][data-scale=lg] × [size=lg] → 28px (not a CSS calc result)', () => {
     const wrapper = document.createElement('div')
     wrapper.setAttribute('scale', 'content-lg')
     const el = document.createElement('ui-checkbox')

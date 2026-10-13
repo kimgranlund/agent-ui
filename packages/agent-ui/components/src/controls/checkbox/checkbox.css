@@ -19,7 +19,7 @@
 
 :where(ui-checkbox) {
   /* Widget-box size — the compact-class square, per ADR-0041. Default size = md (16px at ui-md scale). */
-  --ui-checkbox-box: var(--md-sys-compact-md);
+  --ui-checkbox-box: var(--md-sys-icon-box, var(--md-sys-compact-md));
 
   /* Colour channel: unchecked = neutral border on transparent; checked/indeterminate = primary fill + ink.
      The border-color and bg-checked ride the same --md-sys-color-primary ladder step as button.css's solid variant
@@ -31,7 +31,7 @@
   --ui-checkbox-ink: var(--md-sys-color-primary-on-primary); /* checkmark / indeterminate-dash fill */
 
   /* Label gap — the rhythm between the box and the optional label text (density-bearing, via --md-sys-gap-md). */
-  --ui-checkbox-gap: var(--md-sys-gap-md);
+  --ui-checkbox-gap: var(--md-sys-inset, var(--md-sys-gap-md));
 
   /* user-invalid (ADR-0051) — the danger border, appearing only AFTER the first interaction (the
      trackUserInvalid controller owns that timing; checkbox.ts toggles :state(user-invalid)). The
@@ -50,12 +50,12 @@
 
 /* [size] → widget-box tier (ADR-0041 clause 2: sm/md/lg at the default ui-md scale = 14/16/18 px). */
 :where(ui-checkbox[size='sm']) {
-  --ui-checkbox-box: var(--md-sys-compact-sm);
-  --ui-checkbox-gap: var(--md-sys-gap-sm);
+  --ui-checkbox-box: var(--md-sys-icon-box, var(--md-sys-compact-sm));
+  --ui-checkbox-gap: var(--md-sys-inset, var(--md-sys-gap-sm));
 }
 :where(ui-checkbox[size='lg']) {
-  --ui-checkbox-box: var(--md-sys-compact-lg);
-  --ui-checkbox-gap: var(--md-sys-gap-lg);
+  --ui-checkbox-box: var(--md-sys-icon-box, var(--md-sys-compact-lg));
+  --ui-checkbox-gap: var(--md-sys-inset, var(--md-sys-gap-lg));
 }
 
 /* [disabled] → mute the border + fill to neutral roles. The state holds at idle: pointer-events:none (below)

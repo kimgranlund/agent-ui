@@ -34,21 +34,21 @@
   --ui-switch-thumb: var(--md-sys-color-neutral-surface-brightest);
 
   /* Box geometry — the compact widget-box ramp step (ADR-0041; default size = md). `[size]` repoints. */
-  --ui-switch-box: var(--md-sys-compact-md);
+  --ui-switch-box: var(--md-sys-icon-box, var(--md-sys-compact-md));
 
   /* Label gap — the rhythm between the pill and the optional label text (density-bearing, via --md-sys-gap-md). */
-  --ui-switch-gap: var(--md-sys-gap-md);
+  --ui-switch-gap: var(--md-sys-inset, var(--md-sys-gap-md));
 }
 
 /* [size] → compact widget ramp repoint (ADR-0041: the LITERAL per-[scale] table in dimensions.css
    re-tables --md-sys-compact-{sm,md,lg}; `[size]` on the host picks which step the switch box targets). */
 :where(ui-switch[size='sm']) {
-  --ui-switch-box: var(--md-sys-compact-sm);
-  --ui-switch-gap: var(--md-sys-gap-sm);
+  --ui-switch-box: var(--md-sys-icon-box, var(--md-sys-compact-sm));
+  --ui-switch-gap: var(--md-sys-inset, var(--md-sys-gap-sm));
 }
 :where(ui-switch[size='lg']) {
-  --ui-switch-box: var(--md-sys-compact-lg);
-  --ui-switch-gap: var(--md-sys-gap-lg);
+  --ui-switch-box: var(--md-sys-icon-box, var(--md-sys-compact-lg));
+  --ui-switch-gap: var(--md-sys-inset, var(--md-sys-gap-lg));
 }
 
 /* :state(checked) — primary-family track + on-primary thumb: the ON state, solid primary fill.
@@ -141,7 +141,7 @@
     box-sizing: border-box;
 
     /* ADR-0041 cl.3: thumb = box − 2×inset = box − 4px */
-    --ui-switch-thumb-size: calc(var(--ui-switch-box) - 2 * var(--md-sys-widget-inset));
+    --ui-switch-thumb-size: calc(var(--ui-switch-box) - 2 * var(--md-sys-c, var(--md-sys-widget-inset)));
     inline-size: var(--ui-switch-thumb-size);
     block-size: var(--ui-switch-thumb-size);
     border-radius: 50%; /* circle */
@@ -149,7 +149,7 @@
     /* Unchecked starting position: 2px from inline-start + vertically centred in the host */
     inset-block-start: 50%;
     transform: translateY(-50%);
-    inset-inline-start: var(--md-sys-widget-inset);
+    inset-inline-start: var(--md-sys-c, var(--md-sys-widget-inset));
 
     background: var(--ui-switch-thumb);
     transition: translate var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
