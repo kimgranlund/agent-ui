@@ -1848,7 +1848,7 @@ export class UIAgentAdminElement extends UIElement {
       pill.setAttribute('data-pane', pane)
       const identityIcon = document.createElement('ui-icon')
       identityIcon.setAttribute('slot', 'icon')
-      identityIcon.setAttribute('glyph', glyph)
+      identityIcon.setAttribute('symbol', glyph)
       const stateIcon = document.createElement('ui-icon') as UIIconElement
       stateIcon.setAttribute('slot', 'state-icon')
       // The pill's own visible label text IS its accessible name (toggle.md's `label` slot) — no
@@ -1903,7 +1903,7 @@ export class UIAgentAdminElement extends UIElement {
       // ui-switch/ui-button, e.g. `agentSwitch`/`overflowTrigger` below) is the real name source.
       segment.setAttribute('aria-label', label)
       const segmentIcon = document.createElement('ui-icon')
-      segmentIcon.setAttribute('glyph', glyph)
+      segmentIcon.setAttribute('symbol', glyph)
       segment.append(segmentIcon)
       paneSegments.append(segment)
     }
@@ -1925,7 +1925,7 @@ export class UIAgentAdminElement extends UIElement {
     newAgentWide.setAttribute('variant', 'soft')
     const newAgentWideIcon = document.createElement('ui-icon')
     newAgentWideIcon.setAttribute('slot', 'leading')
-    newAgentWideIcon.setAttribute('glyph', 'plus')
+    newAgentWideIcon.setAttribute('symbol', 'plus')
     newAgentWide.append(newAgentWideIcon, document.createTextNode('New Agent'))
     newAgentWide.addEventListener('click', () => this.#newAgentRequest?.())
     this.#newAgentWideBtn = newAgentWide
@@ -1939,7 +1939,7 @@ export class UIAgentAdminElement extends UIElement {
     newAgentNarrow.setAttribute('aria-label', 'New Agent')
     const newAgentNarrowIcon = document.createElement('ui-icon')
     newAgentNarrowIcon.setAttribute('slot', 'leading')
-    newAgentNarrowIcon.setAttribute('glyph', 'plus')
+    newAgentNarrowIcon.setAttribute('symbol', 'plus')
     newAgentNarrow.append(newAgentNarrowIcon)
     newAgentNarrow.addEventListener('click', () => this.#newAgentRequest?.())
     this.#newAgentNarrowBtn = newAgentNarrow
@@ -1974,7 +1974,7 @@ export class UIAgentAdminElement extends UIElement {
     overflowTrigger.setAttribute('aria-label', 'More actions')
     const overflowIcon = document.createElement('ui-icon')
     overflowIcon.setAttribute('slot', 'leading')
-    overflowIcon.setAttribute('glyph', 'dots-three')
+    overflowIcon.setAttribute('symbol', 'dots-three')
     overflowTrigger.append(overflowIcon)
     this.#overflowTriggerBtn = overflowTrigger
     const overflowImportItem = document.createElement('div')
@@ -2741,7 +2741,7 @@ export class UIAgentAdminElement extends UIElement {
       const shown = this.#panesShown.has(pane)
       if (pane !== skipPillPressedFor) pill.pressed = shown
       const stateIcon = this.#panePillStateIcons.get(pane)
-      if (stateIcon) stateIcon.glyph = shown ? 'eye' : 'eye-slash'
+      if (stateIcon) stateIcon.symbol = shown ? 'eye' : 'eye-slash'
     }
     if (this.#paneSegments) this.#paneSegments.value = this.#panePrimary
   }

@@ -84,7 +84,7 @@ export function buildAdminHelp(key: AdminHelpKey): HTMLElement {
   const glyph = document.createElement('ui-icon')
   glyph.setAttribute('slot', 'leading')
   glyph.setAttribute('data-role', 'icon')
-  glyph.setAttribute('glyph', 'question')
+  glyph.setAttribute('symbol', 'question')
   icon.append(glyph)
   // A click on this icon must never ACTIVATE what the icon rides. On a fold's heading row the icon is a
   // `<summary>` descendant; `ui-disclosure`'s summary-slot guard (ADR-0158 cl.3, disclosure.ts:194-199)

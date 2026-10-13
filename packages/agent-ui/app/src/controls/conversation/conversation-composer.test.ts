@@ -885,7 +885,7 @@ describe('ui-conversation-composer — GH #891 SPEC-R9: the chip drops its sigil
     const chip = el.querySelector<HTMLElement>('[data-part="reference-chip"]')!
     const icon = chip.querySelector<HTMLElement>('[data-part="reference-chip-icon"]')!
     expect(icon.tagName.toLowerCase()).toBe('ui-icon')
-    expect(icon.getAttribute('glyph')).toBe('star')
+    expect(icon.getAttribute('symbol')).toBe('star')
     expect(icon.getAttribute('data-role'), 'the fleet adornment convention').toBe('icon')
     expect(chip.firstElementChild, 'the glyph is LEADING — before the label').toBe(icon)
     expect(chip.textContent, 'the icon adds no text: the visible text is still exactly the label').toBe('House style')
@@ -1099,8 +1099,8 @@ describe('ui-conversation-composer — GH #891 SPEC-R11: the capabilities panel 
     ])
     const trigger = triggerOf(el)
     expect(trigger.getAttribute('variant')).toBe('soft')
-    expect(trigger.querySelector('ui-icon[data-role="icon"]')?.getAttribute('glyph')).toBe('list')
-    expect(trigger.querySelector('ui-icon[data-role="caret"]')?.getAttribute('glyph')).toBe('caret-down')
+    expect(trigger.querySelector('ui-icon[data-role="icon"]')?.getAttribute('symbol')).toBe('list')
+    expect(trigger.querySelector('ui-icon[data-role="caret"]')?.getAttribute('symbol')).toBe('caret-down')
     expect(trigger.getAttribute('aria-expanded'), 'closed until clicked').toBe('false')
   })
 

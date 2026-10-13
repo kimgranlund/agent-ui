@@ -44,15 +44,15 @@
   /* GH #624 item 2 — the active-marker border's own width, named so the activator's left padding (below)
      can subtract it: the marker is `border-inline-start`, always taking inline space even transparent, so
      the label/icon column sat one border-width further right than a bare-padding row would read. */
-  --ui-nav-rail-active-border-width: 2px;
+  --ui-nav-rail-active-border-width: var(--md-sys-c, 2px);
 
-  --ui-nav-rail-height: var(--md-sys-height-md);
-  --ui-nav-rail-font: var(--md-sys-font-md);
-  --ui-nav-rail-icon: var(--md-sys-icon-md);
-  --ui-nav-rail-gap: var(--md-sys-gap-md);
+  --ui-nav-rail-height: var(--md-sys-height, var(--md-sys-height-md));
+  --ui-nav-rail-font: var(--md-sys-type-control, var(--md-sys-font-md));
+  --ui-nav-rail-icon: var(--md-sys-icon-box, var(--md-sys-icon-md));
+  --ui-nav-rail-gap: var(--md-sys-inset, var(--md-sys-gap-md));
 
   /* TKT-0066 item 5 ruling: dimensional constants route through the own chain, never read raw in @scope. */
-  --ui-nav-rail-label-font: var(--md-sys-font-sm); /* still consumed by the trailing [data-role='tag'] below */
+  --ui-nav-rail-label-font: var(--md-sys-type-field-label, var(--md-sys-font-sm)); /* one step under the row's control type (the codemod's own-n read would not be); still consumed by the trailing [data-role='tag'] below */
   /* The group section-label (`[data-part='context-label']`) reads the fleet's `kicker` typescale role
      (`@agent-ui/shared/dimensions.css`), not a bare font-size — a proper eyebrow header (small/regular/
      widely tracked/ALL CAPS since GH #370), matching the text.css `ui-text[variant='kicker']` consumption

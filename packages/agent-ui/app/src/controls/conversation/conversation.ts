@@ -750,7 +750,7 @@ export class UIConversationElement extends UIElement {
         const icon = document.createElement('ui-icon')
         icon.dataset.part = 'reference-tag-icon'
         icon.setAttribute('data-role', 'icon')
-        icon.setAttribute('glyph', reference.icon)
+        icon.setAttribute('symbol', reference.icon)
         tag.append(icon)
       }
       const label = document.createElement('span')
