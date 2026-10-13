@@ -39,6 +39,12 @@
      shared space ladder, minted into this control's own chain (never a raw --md-sys-space-* read
      inside @scope). */
   --ui-choice-card-padding: var(--md-sys-space-md);
+
+  /* Badge circle and its tick: the 2n icon slot and the 2n - 2c mark box inside an opt-in region (ADR-0245 cl.4);
+     outside, today's 1.25rem circle and 0.75rem tick. The pseudo-element tick stays (a ui-glyph child would swap
+     the filled clip-path for a stroke and move the default render). */
+  --ui-choice-card-badge-size: var(--md-sys-icon-box, 1.25rem);
+  --ui-choice-card-tick-size: var(--md-sys-glyph-box, 0.75rem);
 }
 
 /* [disabled] → mute the frame + kill the selected wash (SC 1.4.11-exempt, the `radio.css`/`checkbox.css`
@@ -92,8 +98,8 @@
     position: absolute;
     inset-block-start: calc(var(--ui-choice-card-padding) / 2);
     inset-inline-end: calc(var(--ui-choice-card-padding) / 2);
-    inline-size: 1.25rem;
-    block-size: 1.25rem;
+    inline-size: var(--ui-choice-card-badge-size);
+    block-size: var(--ui-choice-card-badge-size);
     border-radius: 50%;
     background-color: transparent;
     transform: scale(0);
@@ -116,10 +122,15 @@
   :scope::before {
     content: '';
     position: absolute;
-    inset-block-start: calc(var(--ui-choice-card-padding) / 2 + 0.3125rem);
-    inset-inline-end: calc(var(--ui-choice-card-padding) / 2 + 0.25rem);
-    inline-size: 0.75rem;
-    block-size: 0.65rem;
+    /* centred in the badge circle; the 0.0125rem is the tick's optical nudge, kept from today's offset */
+    inset-block-start: calc(
+      var(--ui-choice-card-padding) / 2 + (var(--ui-choice-card-badge-size) - var(--ui-choice-card-tick-size) * 13 / 15) / 2 + 0.0125rem
+    );
+    inset-inline-end: calc(
+      var(--ui-choice-card-padding) / 2 + (var(--ui-choice-card-badge-size) - var(--ui-choice-card-tick-size)) / 2
+    );
+    inline-size: var(--ui-choice-card-tick-size);
+    block-size: calc(var(--ui-choice-card-tick-size) * 13 / 15); /* the tick's 0.75 x 0.65 aspect */
     background-color: transparent;
     clip-path: polygon(14% 44%, 0% 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
     transform: scale(0);

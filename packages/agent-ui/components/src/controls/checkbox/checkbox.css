@@ -33,6 +33,13 @@
   /* Label gap — the rhythm between the box and the optional label text (density-bearing, via --md-sys-gap-md). */
   --ui-checkbox-gap: var(--md-sys-inset, var(--md-sys-gap-md));
 
+  /* Mark box — the check and the dash span 2n - 2c (--md-sys-glyph-box, ADR-0245 cl.3/4) inside an opt-in region,
+     centred in the 2n box (inset c); outside, today's 60% of the box inset 20%. The pseudo-element marks stay
+     (a ui-glyph child would swap the filled clip-path tick for a stroke and move the default render). */
+  --ui-checkbox-mark: var(--md-sys-glyph-box, calc(var(--ui-checkbox-box) * 0.6));
+  --ui-checkbox-mark-inset: var(--md-sys-c, calc(var(--ui-checkbox-box) * 0.2));
+  --ui-checkbox-dash: var(--md-sys-glyph-stroke, 2px);
+
   /* user-invalid (ADR-0051) — the danger border, appearing only AFTER the first interaction (the
      trackUserInvalid controller owns that timing; checkbox.ts toggles :state(user-invalid)). The
      text-field precedent, applied to the box's border channel. */
@@ -97,7 +104,8 @@
     inline-size: var(--ui-checkbox-box);
     block-size: var(--ui-checkbox-box);
     border: 2px solid var(--ui-checkbox-border);
-    border-radius: calc(var(--ui-checkbox-box) / 5); /* proportional slight rounding (~3px at 16px default) */
+    /* radius n/2 inside an opt-in region (--md-sys-radius is n, ADR-0245 cl.3); outside, the fallback 0.4 box halves to today's box/5 */
+    border-radius: calc(var(--md-sys-radius, calc(var(--ui-checkbox-box) * 0.4)) / 2);
     background-color: var(--ui-checkbox-bg);
     /* State-PAINT transition only — geometry never animates (geometry.md). */
     transition:
@@ -161,19 +169,19 @@
      base rule supplies position:absolute and the vertical centering (not repeated here). */
   :scope:state(checked)::after {
     background-color: var(--ui-checkbox-ink);
-    inset-inline-start: calc(var(--ui-checkbox-box) * 0.2);
-    inline-size: calc(var(--ui-checkbox-box) * 0.6);
-    block-size: calc(var(--ui-checkbox-box) * 0.55);
+    inset-inline-start: var(--ui-checkbox-mark-inset);
+    inline-size: var(--ui-checkbox-mark);
+    block-size: calc(var(--ui-checkbox-mark) * 11 / 12); /* the tick's 60% x 55% aspect */
     clip-path: polygon(14% 44%, 0% 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
   }
 
-  /* Indeterminate dash — a thin horizontal bar centered within the box (2px tall, 60% wide, 20% inset). */
+  /* Indeterminate dash — a thin horizontal bar centered within the box (glyph-stroke tall, the mark box wide). */
   :scope:state(indeterminate)::after {
     background-color: var(--ui-checkbox-ink);
-    inset-inline-start: calc(var(--ui-checkbox-box) * 0.2);
-    inline-size: calc(var(--ui-checkbox-box) * 0.6);
-    block-size: 2px;
-    border-radius: 1px;
+    inset-inline-start: var(--ui-checkbox-mark-inset);
+    inline-size: var(--ui-checkbox-mark);
+    block-size: var(--ui-checkbox-dash);
+    border-radius: calc(var(--ui-checkbox-dash) / 2);
   }
 
   /* Focus ring (ADR-0009) — the shared fleet ring: :focus-visible (keyboard-only) draws a layout-neutral

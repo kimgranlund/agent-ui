@@ -22,6 +22,7 @@ import { server, cdp } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 // ── mount/cleanup helpers ─────────────────────────────────────────────────────────────────────────────
 const mounted: HTMLElement[] = []
@@ -128,24 +129,39 @@ describe('ui-switch cross-engine browser smoke — track + thumb geometry (ADR-0
     expect(new Set(heights.map((v) => v.toFixed(0))).size, 'all three sizes should render different track heights').toBe(3)
   })
 
-  it('ADR-0041: [scale] re-tables the compact ramp; thumb = box − 4px holds at every (scale×size) cell', () => {
-    // ADR-0041 §compact: the [scale] selector re-tables --md-sys-compact-{sm,md,lg} to its §5.2 row.
-    // Sampled cells from the Kim's compact table (dimensions.css): ui-sm / ui-md / content-lg.
-    // Each cell: (scale, size) → expected compact box → thumb = box − 4px.
-    const CELLS: Array<[string, string, number]> = [
-      ['ui-sm', 'md', 14], // ui-sm row: compact-md = 14px
-      ['ui-md', 'md', 16], // ui-md (default): compact-md = 16px
-      ['ui-lg', 'sm', 16], // ui-lg row: compact-sm = 16px
-      ['content-lg', 'lg', 28], // content-lg row: compact-lg = 28px
-    ]
-    for (const [scale, size, expected] of CELLS) {
-      const { wrap, sw } = mount(`<ui-switch size="${size}"></ui-switch>`)
-      wrap.setAttribute('scale', scale)
-      const h = trackHeight(sw)
-      expect(h, `[scale="${scale}"][size="${size}"] box (${h}) ≠ compact-${size} expected (${expected}px)`).toBeCloseTo(expected, 0)
-      const tw = thumbWidth(sw)
-      expect(tw, `[scale="${scale}"][size="${size}"] thumb (${tw}) ≠ box − 4px (${expected - 4}px)`).toBeCloseTo(expected - 4, 0)
+  it('ADR-0245: inside an opt-in data-tier region the track is 2n, the thumb 2n - 2c, the width 2 thumb + 2c', () => {
+    // Against scale.mjs resolve() at the library root (product / sm) and the A2UI canvas register (product / md).
+    for (const scale of ['sm', 'md']) {
+      for (const size of ['sm', 'md', 'lg']) {
+        const r = resolve('product', scale, size)
+        const wrap = document.createElement('div')
+        wrap.setAttribute('data-tier', 'product')
+        wrap.setAttribute('data-scale', scale)
+        wrap.innerHTML = `<ui-switch inline size="${size}"></ui-switch>`
+        document.body.append(wrap)
+        mounted.push(wrap)
+        const sw = wrap.querySelector('ui-switch') as HTMLElement
+        const where = `product / ${scale} / ${size}`
+        expect(trackHeight(sw), `${where} track`).toBe(r.icon)
+        expect(thumbWidth(sw), `${where} thumb`).toBe(r.icon - 2 * r.c)
+        expect(px(getComputedStyle(sw).inlineSize), `${where} width`).toBe(2 * (r.icon - 2 * r.c) + 2 * r.c)
+      }
     }
+  })
+
+  it('ADR-0245: inside a region a checked thumb travels one thumb width and ends c from the track end', () => {
+    const r = resolve('product', 'sm', 'md')
+    const wrap = document.createElement('div')
+    wrap.setAttribute('data-tier', 'product')
+    wrap.setAttribute('data-scale', 'sm')
+    wrap.innerHTML = '<ui-switch inline checked></ui-switch>'
+    document.body.append(wrap)
+    mounted.push(wrap)
+    const sw = wrap.querySelector('ui-switch') as HTMLElement
+    const thumb = r.icon - 2 * r.c
+    expect(getComputedStyle(sw, '::after').translate).toBe(`${thumb}px`)
+    // start inset c + travel thumb + thumb + end inset c = the track width
+    expect(r.c + thumb + thumb + r.c).toBe(px(getComputedStyle(sw).inlineSize))
   })
 
   it('track inline-size ≈ 1.8× the box; the pill is wider than tall (density-invariant)', () => {
