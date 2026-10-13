@@ -64,7 +64,7 @@ slots:
     description: The label — the default/unnamed children (an explicit `slot="label"` is equivalent); the accessible name, filling the centre cell. Anonymous grid text (no control-created wrapper, no overflow/ellipsis handling — unlike ui-button's ADR-0133 wrapper, out of scope here: every named consumer usage is a single short word, "Chat"/"Settings"/"Co-pilot").
   - name: state-icon
     optional: true
-    description: An optional orthogonal state indicator in the end cell (e.g. the Eye/EyeSlash visibility glyph the agent-admin header pills carry, `<ui-icon slot="state-icon" symbol="eye">`). Named for its fixed role, same rationale as `icon`. Purely presentational — toggling `pressed` never touches this slot's content; a consumer swaps its `glyph` itself in response to whatever state it represents.
+    description: An optional orthogonal state indicator in the end cell (e.g. the Eye/EyeSlash visibility glyph the agent-admin header pills carry, `<ui-icon slot="state-icon" symbol="eye">`). Named for its fixed role, same rationale as `icon`. Purely presentational — toggling `pressed` never touches this slot's content; a consumer swaps its `symbol` itself in response to whatever state it represents.
 
 parts: []               # light-DOM host, no control-created wrapper — see the `label` slot note above
 
