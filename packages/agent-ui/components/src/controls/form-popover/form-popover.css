@@ -37,17 +37,17 @@
   --ui-form-popover-bg-active: var(--md-sys-color-neutral-container-high);
   --ui-form-popover-border: var(--md-sys-color-neutral-outline-variant);
   --ui-form-popover-ink: var(--md-sys-color-neutral-on-surface-variant);
-  --ui-form-popover-radius: var(--md-sys-shape-corner-base); /* the shared fleet radius (ADR-0015 cl.5) */
+  --ui-form-popover-radius: var(--md-sys-radius, var(--md-sys-shape-corner-base)); /* the shared fleet radius (ADR-0015 cl.5) */
 
   /* ── Trigger geometry (Control class, default size = md) — off the §1-row ramp (ADR-0038).
      height/font/icon from the explicit per-[scale] table; gap = the density-bearing column-gap.
      The caret (inline affordance) follows the §4.1 law: glyph size = font (RHYTHM family) →
      centred in the icon cell by padding = ½(icon−glyph). */
-  --ui-form-popover-height: var(--md-sys-height-md);
-  --ui-form-popover-font: var(--md-sys-font-md);
-  --ui-form-popover-gap: var(--md-sys-gap-md);
-  --ui-form-popover-icon: var(--md-sys-icon-md);
-  --ui-form-popover-glyph: var(--ui-form-popover-font); /* caret GLYPH = font (§4.1 caret law) */
+  --ui-form-popover-height: var(--md-sys-height, var(--md-sys-height-md));
+  --ui-form-popover-font: var(--md-sys-type-control, var(--md-sys-font-md));
+  --ui-form-popover-gap: var(--md-sys-inset, var(--md-sys-gap-md));
+  --ui-form-popover-icon: var(--md-sys-icon-box, var(--md-sys-icon-md));
+  --ui-form-popover-glyph: var(--md-sys-glyph-box, var(--ui-form-popover-font)); /* caret GLYPH = font (§4.1 caret law) */
 
   /* ── Sizing floor — the [inline] hug-state content floor (ADR-0223 Appendix §E ruling, slice 1:
      the 10ch is a CONTENT floor, so it moves to the `[inline]` hug context; the squareness floor —
@@ -62,7 +62,7 @@
   --ui-form-popover-panel-bg: var(--md-sys-color-neutral-surface);
   --ui-form-popover-panel-ink: var(--md-sys-color-neutral-on-surface);
   --ui-form-popover-panel-outline: var(--md-sys-color-neutral-outline-variant);
-  --ui-form-popover-panel-radius: var(--md-sys-shape-corner-base);
+  --ui-form-popover-panel-radius: var(--md-sys-widget-radius, var(--md-sys-shape-corner-base));
   --ui-form-popover-panel-min-inline-size: 20ch; /* the text-field 20ch-floor lesson — a panel of form fields needs a floor */
   --ui-form-popover-panel-max-inline-size: min(90vw, 28rem); /* a panel of arbitrary form content must not run edge-to-edge */
 }
@@ -70,17 +70,17 @@
 /* ── size → dimensional ramp repoint ────────────────────────────────────────────────────────── */
 
 :where(ui-form-popover[size='sm']) {
-  --ui-form-popover-height: var(--md-sys-height-sm);
-  --ui-form-popover-font: var(--md-sys-font-sm);
-  --ui-form-popover-gap: var(--md-sys-gap-sm);
-  --ui-form-popover-icon: var(--md-sys-icon-sm);
+  --ui-form-popover-height: var(--md-sys-height, var(--md-sys-height-sm));
+  --ui-form-popover-font: var(--md-sys-type-control, var(--md-sys-font-sm));
+  --ui-form-popover-gap: var(--md-sys-inset, var(--md-sys-gap-sm));
+  --ui-form-popover-icon: var(--md-sys-icon-box, var(--md-sys-icon-sm));
 }
 
 :where(ui-form-popover[size='lg']) {
-  --ui-form-popover-height: var(--md-sys-height-lg);
-  --ui-form-popover-font: var(--md-sys-font-lg);
-  --ui-form-popover-gap: var(--md-sys-gap-lg);
-  --ui-form-popover-icon: var(--md-sys-icon-lg);
+  --ui-form-popover-height: var(--md-sys-height, var(--md-sys-height-lg));
+  --ui-form-popover-font: var(--md-sys-type-control, var(--md-sys-font-lg));
+  --ui-form-popover-gap: var(--md-sys-inset, var(--md-sys-gap-lg));
+  --ui-form-popover-icon: var(--md-sys-icon-box, var(--md-sys-icon-lg));
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-form-popover) consumes ONLY --ui-form-popover-* ════════════════ */
@@ -110,7 +110,7 @@
 
     block-size: var(--ui-form-popover-height);
     padding-block: 0; /* NEVER block padding — geometry law */
-    padding-inline-start: calc(var(--ui-form-popover-height) / 2); /* h/2 label edge */
+    padding-inline-start: var(--md-sys-inset, calc(var(--ui-form-popover-height) / 2)); /* h/2 label edge */
     padding-inline-end: calc((var(--ui-form-popover-height) - var(--ui-form-popover-icon)) / 2); /* ½(h−icon) caret edge */
 
     font-size: var(--ui-form-popover-font);
@@ -119,6 +119,7 @@
     color: var(--ui-form-popover-ink);
     border: 1px solid var(--ui-form-popover-border);
     border-radius: var(--ui-form-popover-radius);
+    corner-shape: var(--md-sys-corner-shape, round);
     cursor: pointer;
     text-align: start;
     -webkit-user-select: none;
@@ -194,6 +195,12 @@
     border: 1px solid var(--ui-form-popover-panel-outline);
     border-radius: var(--ui-form-popover-panel-radius);
     padding: 0; /* the box-model child margins provide the inset (container-box.css) */
+    /* The [data-box] region tokens for the panel (ADR-0245 cl.6, widget level: margin n + pad n = the widget margin 2n);
+       outside an opt-in data-tier region each is container-box.css's own default. */
+    --ui-box-inset: var(--md-sys-inset, 0.375rem);
+    --ui-box-pad-inline: var(--md-sys-widget-gutter, 0.75rem);
+    --ui-box-pad-block: var(--md-sys-inset, 0.375rem);
+    --ui-box-gap: var(--md-sys-widget-gutter, 0.5rem);
   }
 
   /* ── Motion (state-PAINT only; geometry snaps — ADR-0008) ─────────────────────────────────── */

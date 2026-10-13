@@ -140,7 +140,7 @@ descriptor here would break); its contract is this prose + `card-header.ts`'s `s
 ```html
 <ui-card>
   <ui-card-header format="structured">
-    <ui-icon slot="leading" glyph="calendar"></ui-icon>
+    <ui-icon slot="leading" symbol="calendar"></ui-icon>
     Date selection
     <ui-badge slot="trailing" intent="success" label="Confirmed"></ui-badge>
   </ui-card-header>

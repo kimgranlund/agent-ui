@@ -131,8 +131,8 @@ active-descendant filter pattern (ADR-0085) — typing filters the list; Arrow k
 <ui-command-modal label="Command palette" placeholder="Type a command…">
   <div role="group" aria-labelledby="cmd-nav">
     <div id="cmd-nav" data-role="group-label">Navigation</div>
-    <div role="option" value="home"><ui-icon glyph="house" data-role="icon"></ui-icon>Go Home<span data-role="shortcut" aria-hidden="true">⌘H</span></div>
-    <div role="option" value="settings"><ui-icon glyph="gear" data-role="icon"></ui-icon>Settings<span data-role="shortcut" aria-hidden="true">⌘,</span></div>
+    <div role="option" value="home"><ui-icon symbol="house" data-role="icon"></ui-icon>Go Home<span data-role="shortcut" aria-hidden="true">⌘H</span></div>
+    <div role="option" value="settings"><ui-icon symbol="gear" data-role="icon"></ui-icon>Settings<span data-role="shortcut" aria-hidden="true">⌘,</span></div>
   </div>
   <div role="option" value="logout" data-keywords="sign out exit">Log out</div>
   <div slot="empty">No commands match — try a different search.</div>

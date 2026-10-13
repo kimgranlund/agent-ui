@@ -32,8 +32,14 @@
   /* the own chain — @scope consumes ONLY these (+ the --ui-container-* seam), never a raw --md-sys-color-* role */
   --ui-modal-ink: var(--md-sys-color-neutral-on-surface);
   --ui-modal-outline: var(--md-sys-color-neutral-outline-variant); /* the faint dialog frame */
-  --ui-modal-radius: var(--md-sys-shape-corner-base); /* the shared fleet radius (ADR-0015 cl.5) */
-  --ui-modal-padding: var(--md-sys-space-lg); /* the shell pad off the density-responsive ladder (NOT a control height) */
+  --ui-modal-radius: var(--md-sys-card-radius, var(--md-sys-shape-corner-base)); /* the shared fleet radius (ADR-0015 cl.5) */
+  --ui-modal-padding: var(--md-sys-card-margin, var(--md-sys-space-lg));
+  /* The [data-box] region tokens the dialog hands its regions (ADR-0245 cl.6, card level: margin n + pad 2n = the card margin 3n).
+     Outside an opt-in data-tier region each falls back to container-box.css's own default, so default pages are unchanged. */
+  --ui-modal-box-inset: var(--md-sys-inset, 0.375rem);
+  --ui-modal-box-pad-inline: var(--md-sys-card-gutter, 0.75rem);
+  --ui-modal-box-pad-block: var(--md-sys-inset, 0.375rem);
+  --ui-modal-box-gap: var(--md-sys-card-gutter, 0.5rem); /* the shell pad off the density-responsive ladder (NOT a control height) */
   --ui-modal-scrim: var(--md-sys-color-dialog-backdrop); /* the ::backdrop blocking wash — black 80% opacity (TKT-0019; was --md-sys-color-neutral-scrim, too light) */
   /* GH #1554 — opacity alone cannot defeat arbitrarily high-contrast page content: a near-black source pixel
      blended toward black stays near-black regardless of how high the scrim's opacity climbs (0 * (1 - a) is
@@ -100,6 +106,10 @@
        children carry the inset (author header/content/footer regions get the 12/6 region padding PLUS a 6px
        positional margin — regions are inset, not full-bleed; loose content gets the 6px box inset margin). */
     padding: 0;
+    --ui-box-inset: var(--ui-modal-box-inset);
+    --ui-box-pad-inline: var(--ui-modal-box-pad-inline);
+    --ui-box-pad-block: var(--ui-modal-box-pad-block);
+    --ui-box-gap: var(--ui-modal-box-gap);
   }
 
   :scope > [data-part='dialog']:hover,
