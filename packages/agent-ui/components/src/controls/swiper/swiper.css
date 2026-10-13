@@ -44,22 +44,22 @@
      the [data-default] paddles overlay is stamped (band rule in the @scope block below). Sized to the box
      the stamped paddles actually render: an icon-only md ui-button is a `--md-sys-height-md` square
      (button.css `--ui-button-height` → `inline-size`), so the band tracks density with the button. */
-  --ui-swiper-paddle-band: var(--md-sys-height-md);
+  --ui-swiper-paddle-band: var(--md-sys-height, var(--md-sys-height-md));
 
   /* Pagination dots — the compact widget ramp; the ACTIVE dot is size-larger (non-colour signifier, ADR-0057).
      Declared HERE (the family root) though only swiper-pagination.css consumes them — the family-root rule
      (ADR-0124 Consequences): a leaf never DECLARES another tag's private token, but MAY consume the primary's
      `--ui-swiper-*` prefix. The +2px bump is a flat literal (the compact-realm box is density-invariant,
      geometry.md — density rides the pad/gap, never the box), not a --md-sys-space step. */
-  --ui-swiper-dot-size: var(--md-sys-compact-sm);
-  --ui-swiper-dot-size-active: calc(var(--md-sys-compact-sm) + 2px);
+  --ui-swiper-dot-size: var(--md-sys-icon-box, var(--md-sys-compact-sm));
+  --ui-swiper-dot-size-active: calc(var(--md-sys-icon-box, var(--md-sys-compact-sm)) + 2px);
   --ui-swiper-dot-color: var(--md-sys-color-neutral-outline-variant);
   --ui-swiper-dot-color-active: var(--md-sys-color-primary);
   --ui-swiper-pagination-fraction-ink: var(--md-sys-color-neutral-on-surface-variant); /* TKT-0066: the fraction readout's ink — was a direct role read in swiper-pagination.css's @scope; declared HERE per the family token tunnel (pagination declares nothing of its own, its pin test enforces that) */
   /* TKT-0066 item 5 ruling: pagination's dimensional constants ALSO route through the tunnel. */
   --ui-swiper-pagination-gap: var(--md-sys-space-xs);
   --ui-swiper-pagination-margin-block-start: var(--md-sys-space-sm);
-  --ui-swiper-pagination-fraction-font: var(--md-sys-font-sm);
+  --ui-swiper-pagination-fraction-font: var(--md-sys-type-control, var(--md-sys-font-sm));
 }
 
 /* [slides-in-view="n"] — pin the visible column count (a numeric string; '' stays responsive-auto below). */

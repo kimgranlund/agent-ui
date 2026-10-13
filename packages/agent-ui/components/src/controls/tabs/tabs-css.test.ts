@@ -46,7 +46,7 @@ describe('tabs.css — structure + sectioning (s8)', () => {
 
   it('declares the --ui-tabs-* chain — control-height tab rows + the --md-sys-space shell + the ink/indicator roles', () => {
     // the interactive rows take the CONTROL height (geometry.md Pattern class), the shell uses --md-sys-space
-    expect(tokenBlock).toMatch(/--ui-tabs-tab-height:\s*var\(--md-sys-height-lg\)/) // GH #297 — repointed up the ramp
+    expect(tokenBlock).toMatch(/--ui-tabs-tab-height:\s*var\(--md-sys-height,\s*var\(--md-sys-height-lg\)\)/) // GH #297: repointed up the ramp
     // GH #536 — the per-tab inline padding is gone; the strip gap grew by one former padding unit (xs + md).
     expect(tokenBlock).not.toMatch(/--ui-tabs-tab-pad-inline/)
     expect(tokenBlock).toMatch(/--ui-tabs-strip-gap:\s*calc\(var\(--md-sys-space-xs\)\s*\+\s*var\(--md-sys-space-md\)\)/)
