@@ -38,8 +38,19 @@ describe('bookingFormFactory — create() (detached, jsdom-safe)', () => {
     expect((el.querySelector('[data-part="fields"]') as HTMLElement).style.gap).toBe('var(--ui-box-gap)')
   })
 
-  it('names every control tag it mints in `uses`, and no longer mints an inline ui-calendar (ADR-0233, T-0085)', () => {
-    expect([...(bookingFormFactory.uses ?? [])]).toEqual(['ui-checkbox', 'ui-field', 'ui-select', 'ui-text', 'ui-text-field'])
+  it('names every control tag it mints in `uses` (ADR-0233, T-0092)', () => {
+    expect([...(bookingFormFactory.uses ?? [])]).toEqual([
+      'ui-button',
+      'ui-calendar',
+      'ui-card',
+      'ui-field',
+      'ui-popover',
+      'ui-radio',
+      'ui-radio-group',
+      'ui-select',
+      'ui-text',
+      'ui-text-field',
+    ])
     expect([...(bookingConfirmationFactory.uses ?? [])]).toEqual(['ui-card-content', 'ui-card-header', 'ui-text'])
   })
 
@@ -70,19 +81,18 @@ describe('bookingFormFactory — applyProp (detached, jsdom-safe)', () => {
       { kind: 'checkbox', path: 'breakfast', label: 'Breakfast included' },
     ])
     const fieldsEl = el.querySelector('[data-part="fields"]')!
-    const date = fieldsEl.querySelector('ui-text-field') as unknown as { name: string; required: boolean; type: string } | null
+    const date = fieldsEl.querySelector('ui-calendar') as unknown as { name: string; required: boolean } | null
     const select = fieldsEl.querySelector('ui-select') as unknown as { name: string; required: boolean } | null
-    const checkbox = fieldsEl.querySelector('ui-checkbox') as unknown as (HTMLElement & { name: string; required: boolean }) | null
-    expect(fieldsEl.querySelector('ui-calendar')).toBeNull() // the compact date field, never an inline month grid
-    expect(date?.type).toBe('date')
+    const yesNo = fieldsEl.querySelector('ui-radio-group') as unknown as { name: string; required: boolean } | null
+    expect(fieldsEl.querySelector('ui-text-field')).toBeNull() // a date is a card with a calendar popover, no text field
+    expect(fieldsEl.querySelector('ui-checkbox')).toBeNull() // a boolean is a Yes / No choice
     expect(date?.name).toBe('checkIn')
     expect(date?.required).toBe(true)
     expect(select?.name).toBe('roomType')
     expect(select?.required).toBe(true)
     expect(select && (select as unknown as HTMLElement).querySelectorAll('[role="option"]').length).toBe(1)
-    expect(checkbox?.name).toBe('breakfast')
-    expect(checkbox?.required).toBe(false)
-    expect(checkbox?.textContent).toBe('Breakfast included') // self-labeled, indicatorFactory precedent
+    expect(yesNo?.name).toBe('breakfast')
+    expect(yesNo?.required).toBe(false)
   })
 
   it('"text" and "number" kinds mint a ui-text-field with the matching type, name, label and required', () => {
@@ -103,7 +113,7 @@ describe('bookingFormFactory — applyProp (detached, jsdom-safe)', () => {
     expect(fields.map((f) => f.required)).toEqual([true, false])
   })
 
-  it('every field but the checkbox wears a ui-field whose label is the field label (the visible label, T-0085)', () => {
+  it('every field but a date card wears a ui-field whose label is the field label (the visible label, T-0085)', () => {
     const el = bookingFormFactory.create()
     bookingFormFactory.applyProp(el, 'fields', [
       { kind: 'text', path: 'guestName', label: 'Guest name' },
@@ -113,10 +123,10 @@ describe('bookingFormFactory — applyProp (detached, jsdom-safe)', () => {
       { kind: 'checkbox', path: 'breakfast', label: 'Breakfast included' },
     ])
     const fieldWraps = [...el.querySelectorAll('ui-field')] as unknown as Array<HTMLElement & { label: string }>
-    expect(fieldWraps.map((f) => f.label)).toEqual(['Guest name', 'Guests', 'Check-in', 'Room type'])
-    expect(fieldWraps.map((f) => f.getAttribute('data-a2ui-booking-field'))).toEqual(['guestName', 'guests', 'checkIn', 'roomType'])
-    expect(fieldWraps.map((f) => f.firstElementChild?.localName)).toEqual(['ui-text-field', 'ui-text-field', 'ui-text-field', 'ui-select'])
-    expect(el.querySelector('ui-checkbox')?.closest('ui-field')).toBeNull() // self-labelled beside its box, never labelled twice
+    expect(fieldWraps.map((f) => f.label)).toEqual(['Guest name', 'Guests', 'Room type', 'Breakfast included'])
+    expect(fieldWraps.map((f) => f.getAttribute('data-a2ui-booking-field'))).toEqual(['guestName', 'guests', 'roomType', 'breakfast'])
+    expect(fieldWraps.map((f) => f.firstElementChild?.localName)).toEqual(['ui-text-field', 'ui-text-field', 'ui-select', 'ui-radio-group'])
+    expect(el.querySelector('ui-card[data-a2ui-booking-field="checkIn"]')?.closest('ui-field')).toBeNull() // the card carries its own label
   })
 
   it('a run of consecutive dateSingle fields shares one wrapping date row; other kinds stay one per line', () => {
@@ -137,6 +147,7 @@ describe('bookingFormFactory — applyProp (detached, jsdom-safe)', () => {
     const row = lines[1]!
     expect(row.style.flexWrap).toBe('wrap')
     expect([...row.children].map((c) => c.getAttribute('data-a2ui-booking-field'))).toEqual(['checkIn', 'checkOut'])
+    expect([...row.children].map((c) => c.localName)).toEqual(['ui-card', 'ui-card'])
     expect([...row.children].map((c) => (c as HTMLElement).style.flex)).toEqual(['1 1 12rem', '1 1 12rem'])
   })
 
@@ -152,13 +163,26 @@ describe('bookingFormFactory — applyProp (detached, jsdom-safe)', () => {
     expect(guests!.value).toBe('2')
   })
 
+  it('a boolean field is a Yes / No radio group; "value" answers it from a boolean or a yes-ish string, null leaves it open', () => {
+    const el = bookingFormFactory.create()
+    bookingFormFactory.applyProp(el, 'fields', [{ kind: 'checkbox', path: 'breakfast', label: 'Breakfast' }])
+    const group = el.querySelector('ui-radio-group') as unknown as HTMLElement & { value: string | null; orientation: string }
+    expect([...group.querySelectorAll('ui-radio')].map((r) => (r as unknown as { value: string }).value)).toEqual(['Yes', 'No'])
+    expect([...group.querySelectorAll('ui-radio')].map((r) => r.textContent)).toEqual(['Yes', 'No'])
+    expect(group.orientation).toBe('horizontal')
+    for (const [raw, answer] of [[true, 'Yes'], [false, 'No'], ['on', 'Yes'], ['No', 'No'], [null, null]] as const) {
+      bookingFormFactory.applyProp(el, 'value', { breakfast: raw })
+      expect(group.value, String(raw)).toBe(answer)
+    }
+  })
+
   it('a later "fields" apply REPLACES the prior control set (not additive)', () => {
     const el = bookingFormFactory.create()
     bookingFormFactory.applyProp(el, 'fields', [{ kind: 'checkbox', path: 'a', label: 'A' }])
     bookingFormFactory.applyProp(el, 'fields', [{ kind: 'checkbox', path: 'b', label: 'B' }])
     const fieldsEl = el.querySelector('[data-part="fields"]')!
-    expect(fieldsEl.querySelectorAll('ui-checkbox').length).toBe(1)
-    expect((fieldsEl.querySelector('ui-checkbox') as unknown as { name: string }).name).toBe('b')
+    expect(fieldsEl.querySelectorAll('ui-radio-group').length).toBe(1)
+    expect((fieldsEl.querySelector('ui-radio-group') as unknown as { name: string }).name).toBe('b')
   })
 
   it('"value" prefills each field control from the aggregate object, keyed by path', () => {
@@ -169,8 +193,8 @@ describe('bookingFormFactory — applyProp (detached, jsdom-safe)', () => {
     ])
     bookingFormFactory.applyProp(el, 'value', { checkIn: '2026-08-10', breakfast: true })
     const fieldsEl = el.querySelector('[data-part="fields"]')!
-    expect((fieldsEl.querySelector('ui-text-field') as unknown as { value: string }).value).toBe('2026-08-10')
-    expect((fieldsEl.querySelector('ui-checkbox') as unknown as { checked: boolean }).checked).toBe(true)
+    expect((fieldsEl.querySelector('ui-calendar') as unknown as { value: string }).value).toBe('2026-08-10')
+    expect((fieldsEl.querySelector('ui-radio-group') as unknown as { value: string }).value).toBe('Yes')
   })
 
   it('"value" reaches a date inside a date row (the prefill scan is not limited to direct children)', () => {
@@ -180,13 +204,111 @@ describe('bookingFormFactory — applyProp (detached, jsdom-safe)', () => {
       { kind: 'dateSingle', path: 'checkOut', label: 'Check-out' },
     ])
     bookingFormFactory.applyProp(el, 'value', { checkIn: '2026-11-14', checkOut: '2026-11-17' })
-    const dates = [...el.querySelectorAll('[data-part="date-row"] ui-text-field')] as unknown as Array<{ value: string }>
+    const dates = [...el.querySelectorAll('[data-part="date-row"] ui-calendar')] as unknown as Array<{ value: string }>
     expect(dates.map((d) => d.value)).toEqual(['2026-11-14', '2026-11-17'])
   })
 
   it('an unrecognized prop (e.g. a stripped "submitAction" that somehow still arrived) is a no-op — never throws', () => {
     const el = bookingFormFactory.create()
     expect(() => bookingFormFactory.applyProp(el, 'submitAction', { action: 'bookRoom' })).not.toThrow()
+  })
+})
+
+describe('bookingFormFactory — date cards (T-0092, detached, jsdom-safe)', () => {
+  const stay = [
+    { kind: 'dateSingle', path: 'checkIn', label: 'Arrival', required: true },
+    { kind: 'dateSingle', path: 'checkOut', label: 'Departure', required: true },
+  ]
+  const cardOf = (el: HTMLElement, path: string) => el.querySelector(`ui-card[data-a2ui-booking-field="${path}"]`) as HTMLElement
+  const textOf = (card: HTMLElement) => card.querySelector('[data-part="date-text"]')!.textContent
+  const buttonOf = (card: HTMLElement) => card.querySelector('[data-a2ui-date-button]') as HTMLElement & { size: string }
+  const calendarOf = (card: HTMLElement) => card.querySelector('ui-calendar') as unknown as HTMLElement & { value: string; min: string; required: boolean }
+  const pick = (card: HTMLElement, iso: string) => {
+    const cal = calendarOf(card)
+    cal.value = iso
+    cal.dispatchEvent(new Event('change', { bubbles: true, composed: true })) // what a day click emits
+  }
+  const localeOf = (y: number, m: number, d: number) =>
+    new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+
+  it('each date is a ui-card with its label, a date line, and one lg button inside a popover carrying the calendar', () => {
+    const el = bookingFormFactory.create()
+    bookingFormFactory.applyProp(el, 'fields', stay)
+    const card = cardOf(el, 'checkIn')
+    expect(card.querySelector('[data-part="label"]')?.textContent).toBe('Arrival *') // required: the marker follows the label
+    expect(cardOf(el, 'checkOut').querySelector('[data-part="label"] [aria-hidden]')).not.toBeNull()
+    expect(textOf(card)).toBe('No date chosen')
+    expect(buttonOf(card).textContent).toBe('Choose date')
+    expect(buttonOf(card).size).toBe('lg')
+    expect(buttonOf(card).parentElement?.localName).toBe('ui-popover')
+    expect(buttonOf(card).parentElement?.firstElementChild).toBe(buttonOf(card)) // the first child is the popover trigger
+    expect(calendarOf(card).required).toBe(true)
+    expect(card.querySelector('ui-text-field')).toBeNull()
+  })
+
+  it('shows the date in the reader\'s locale and relabels the button; the calendar keeps the ISO value', () => {
+    const el = bookingFormFactory.create()
+    bookingFormFactory.applyProp(el, 'fields', stay)
+    bookingFormFactory.applyProp(el, 'value', { checkIn: '2026-10-12', checkOut: '' })
+    expect(textOf(cardOf(el, 'checkIn'))).toBe(localeOf(2026, 10, 12))
+    expect(textOf(cardOf(el, 'checkIn'))).not.toContain('2026-10-12')
+    expect(calendarOf(cardOf(el, 'checkIn')).value).toBe('2026-10-12')
+    expect(buttonOf(cardOf(el, 'checkIn')).textContent).toBe('Change')
+    expect(textOf(cardOf(el, 'checkOut'))).toBe('No date chosen')
+    expect(buttonOf(cardOf(el, 'checkOut')).textContent).toBe('Choose date')
+  })
+
+  it('a pick updates the card text, closes the popover and takes the later card min from it', () => {
+    const el = bookingFormFactory.create()
+    bookingFormFactory.applyProp(el, 'fields', stay)
+    const popover = cardOf(el, 'checkIn').querySelector('ui-popover') as unknown as { open: boolean }
+    popover.open = true
+    pick(cardOf(el, 'checkIn'), '2026-11-14')
+    expect(textOf(cardOf(el, 'checkIn'))).toBe(localeOf(2026, 11, 14))
+    expect(popover.open).toBe(false)
+    expect(calendarOf(cardOf(el, 'checkOut')).min).toBe('2026-11-14')
+  })
+
+  it('departure cannot precede arrival: an arrival moved past a set departure clears it, one before keeps it', () => {
+    const el = bookingFormFactory.create()
+    bookingFormFactory.applyProp(el, 'fields', stay)
+    bookingFormFactory.applyProp(el, 'value', { checkIn: '2026-11-14', checkOut: '2026-11-17' })
+    pick(cardOf(el, 'checkIn'), '2026-11-15')
+    expect(calendarOf(cardOf(el, 'checkOut')).value).toBe('2026-11-17')
+    pick(cardOf(el, 'checkIn'), '2026-11-20')
+    expect(calendarOf(cardOf(el, 'checkOut')).value).toBe('')
+    expect(textOf(cardOf(el, 'checkOut'))).toBe('No date chosen')
+    expect(calendarOf(cardOf(el, 'checkOut')).min).toBe('2026-11-20')
+  })
+
+  it('a bound prefill sets the later card min but never clears a stored departure', () => {
+    const el = bookingFormFactory.create()
+    bookingFormFactory.applyProp(el, 'fields', stay)
+    bookingFormFactory.applyProp(el, 'value', { checkIn: '2026-11-20', checkOut: '2026-11-17' })
+    expect(calendarOf(cardOf(el, 'checkOut')).value).toBe('2026-11-17')
+    expect(calendarOf(cardOf(el, 'checkOut')).min).toBe('2026-11-20')
+  })
+
+  it('opening the popover mounts a fresh calendar carrying the booked value (so it opens on the booked month)', () => {
+    const el = bookingFormFactory.create()
+    bookingFormFactory.applyProp(el, 'fields', stay)
+    bookingFormFactory.applyProp(el, 'value', { checkIn: '2027-03-09' })
+    const card = cardOf(el, 'checkIn')
+    const before = calendarOf(card)
+    buttonOf(card).dispatchEvent(new Event('click', { bubbles: true }))
+    const after = calendarOf(card)
+    expect(after).not.toBe(before)
+    expect(after.value).toBe('2027-03-09')
+    expect(card.querySelectorAll('ui-calendar').length).toBe(1)
+  })
+
+  it('a clicked day inside the open panel never swaps the calendar (only the trigger button does)', () => {
+    const el = bookingFormFactory.create()
+    bookingFormFactory.applyProp(el, 'fields', stay)
+    const card = cardOf(el, 'checkIn')
+    const before = calendarOf(card)
+    before.dispatchEvent(new Event('click', { bubbles: true }))
+    expect(calendarOf(card)).toBe(before)
   })
 })
 
@@ -239,11 +361,27 @@ describe('bookingConfirmationFactory — create()/applyProp (jsdom-safe: ui-card
   it('"data" fills each row\'s value from the aggregate — NEVER a literal the row itself carries (§1 argument b)', () => {
     const el = bookingConfirmationFactory.create()
     bookingConfirmationFactory.applyProp(el, 'rows', [{ label: 'Check-in', path: 'checkIn' }])
-    bookingConfirmationFactory.applyProp(el, 'data', { checkIn: '2026-08-10' })
-    expect(el.querySelector('[data-a2ui-confirmation-row] [data-part="value"]')?.textContent).toBe('2026-08-10')
+    bookingConfirmationFactory.applyProp(el, 'data', { checkIn: 'Friday' })
+    expect(el.querySelector('[data-a2ui-confirmation-row] [data-part="value"]')?.textContent).toBe('Friday')
     // A later data change re-derives the SAME row — proving the row can only ever echo the bound object.
-    bookingConfirmationFactory.applyProp(el, 'data', { checkIn: '2026-08-12' })
-    expect(el.querySelector('[data-a2ui-confirmation-row] [data-part="value"]')?.textContent).toBe('2026-08-12')
+    bookingConfirmationFactory.applyProp(el, 'data', { checkIn: 'Saturday' })
+    expect(el.querySelector('[data-a2ui-confirmation-row] [data-part="value"]')?.textContent).toBe('Saturday')
+  })
+
+  it('"data" shows an ISO date in locale form and a boolean as Yes / No (the bound values stay ISO and boolean)', () => {
+    const el = bookingConfirmationFactory.create()
+    bookingConfirmationFactory.applyProp(el, 'rows', [
+      { label: 'Arrival', path: 'checkIn' },
+      { label: 'Breakfast', path: 'breakfast' },
+      { label: 'Notes', path: 'notes' },
+    ])
+    bookingConfirmationFactory.applyProp(el, 'data', { checkIn: '2026-10-12', breakfast: false, notes: '2026-13-45' })
+    const values = [...el.querySelectorAll('[data-part="value"]')].map((v) => v.textContent)
+    expect(values).toEqual([
+      new Date(2026, 9, 12).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }),
+      'No',
+      '2026-13-45', // not a real date: shown as authored
+    ])
   })
 
   it('a missing key in the aggregate falls back to the em-dash placeholder, never "undefined"/"null"', () => {
