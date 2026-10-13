@@ -71,7 +71,7 @@ keyboard: []           # not interactive — no keyboard contract
 geometry:
   sizeClass: layout
   blockSize: content   # NO control height (geometry.md Container/layout) — the block-size is content-driven
-  gap: var(--ui-column-gap)   # the child gap off --md-sys-space × [density] — the one density-bearing quantity
+  gap: var(--ui-column-gap)   # the child gap off --md-sys-space (a generated alias over n) — the one scale-bearing quantity
   containerQuery: 'inline-size: reflow="auto" spreads children to a row under a wide ANCESTOR container (ADR-0016 cl.4, gated by ADR-0096); default reflow="locked" never fires it. ui-column establishes NO container of its own (ADR-0100) — resolves against the nearest externally-sized boundary'
 
 forcedColors: A `@media (forced-colors: active)` block drops the tonal wash; the surface survives as a system colour via the shared container.css role layer.

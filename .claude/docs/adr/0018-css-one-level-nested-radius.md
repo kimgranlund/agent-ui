@@ -9,7 +9,7 @@
 > | **Proposed by** | planning-lead — the design seat, ratified G9 container-family session |
 > | **Ratified by** | Kim, 2026-07-12 — the repo-alignment Phase-0 checkpoint (all five June foundation ADRs ratified together; shipped law since late June) |
 > | **Repairs** | `goals §G9` (NEW — the `ui-card` nested-radius DoD) · `references/geometry.md` (the card radius rule) · **NEW** `controls/card/*` |
-> | **Supersedes / Superseded by** | Relates: **ADR-0015** (`--ui-radius-base` seeds the chain root) |
+> | **Supersedes / Superseded by** | **Partially superseded by [ADR-0245](./0245-foundations-derive-from-one-n.md)** (2026-10-13: the `max(0, r - pad)` chain). Relates: **ADR-0015** (`--ui-radius-base` seeds the chain root) |
 
 ## Context
 

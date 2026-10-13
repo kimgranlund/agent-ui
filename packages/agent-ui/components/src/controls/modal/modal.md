@@ -69,7 +69,7 @@ keyboard:
     action: Focus is TRAPPED within the dialog by the platform's showModal() (the modal top layer is inert to the page behind it). Focus is RESTORED to the opener on close (the one platform gap the control owns — ADR-0017 cl.4).
 
 geometry:
-  sizeClass: pattern      # geometry.md Pattern band — the shell spaces off --md-sys-space × density; NO control height (--md-sys-height-* is never read)
+  sizeClass: pattern      # geometry.md Pattern band — the shell spaces off the container levels and --md-sys-space (generated over n); NO control height (--md-sys-height-* is never read)
   padding: var(--ui-modal-padding)   # = var(--md-sys-card-margin) 3n under data-tier (ADR-0245 cl.6, card level: region margin n + pad 2n), var(--md-sys-space-lg) elsewhere
   radius: var(--ui-modal-radius)     # = var(--md-sys-card-radius) 3n under data-tier, var(--md-sys-shape-corner-base) elsewhere (ADR-0015 cl.5)
   surface: var(--ui-container-bg) + var(--ui-container-tint)   # the elevation×brightness surface seam (ADR-0015), inherited from the host onto the dialog part

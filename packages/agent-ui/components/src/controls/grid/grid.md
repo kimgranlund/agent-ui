@@ -54,9 +54,9 @@ aria:
 keyboard: []           # no keyboard interaction (a layout container)
 
 geometry:
-  sizeClass: layout      # Container/layout — gaps off --md-sys-space × [density], NO control height (geometry.md)
+  sizeClass: layout      # Container/layout — gaps off --md-sys-space (a generated alias over n), NO control height (geometry.md)
   trackFloor: var(--ui-grid-min)   # the minmax() track floor (default 16rem; the `min` prop repoints it per-instance)
-  gap: var(--ui-grid-gap)          # the inter-track gap off the --md-sys-space ladder (density-bearing); [scale] does NOT touch it (layout rhythm, not frame)
+  gap: var(--ui-grid-gap)          # the inter-track gap off the --md-sys-space ladder (scale-bearing: it derives from the region's n, so data-scale moves it)
 
 forcedColors: The surface survives forced-colors via the SHARED controls/_surface/container.css `@media (forced-colors: active)` block (surface → Canvas, the tonal wash dropped); grid.css owns layout only, which forced-colors does not affect.
 ---

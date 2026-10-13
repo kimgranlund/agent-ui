@@ -139,7 +139,7 @@ geometry:
   sizeClass: composite
   posture: fill (block-level host, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-block + hug   # Fill by Default — slice 1 (entry family)
   trigger:
-    height: var(--ui-select-height)           # Control class — off the §1-row ramp (ADR-0038)
+    height: var(--ui-select-height)           # Control class — 4n off --md-sys-height (ADR-0245 cl.3)
     font: var(--ui-select-font)
     icon: var(--ui-select-icon)               # the caret CELL is icon-wide
     glyph: var(--ui-select-glyph)             # = font, the §4.1 caret law
@@ -149,13 +149,13 @@ geometry:
     sizeClass: Container/surface
     bg: var(--ui-select-listbox-bg)
     radius: var(--ui-select-listbox-radius)
-    padding: var(--ui-select-listbox-padding)  # = h/4 (h = --ui-select-height) — DERIVED off the trigger ramp (2026-07-06), scales with [size]
+    padding: var(--ui-select-listbox-padding)  # = c (--md-sys-c, ADR-0245 cl.3; h/4 is the legacy fallback), scales with [size]
     minInlineSize: var(--ui-select-listbox-min-inline-size)
     maxBlockSize: var(--ui-select-listbox-max-block-size) (scrolls) # PUBLIC dial (TKT-0027), default min(50vh, calc(12 * var(--ui-select-height) + 13 * var(--ui-select-listbox-padding) + 2px)) — 12 real option rows (the row-height law makes a row == --ui-select-height exactly) + their insets + the panel's own 2px border (box-sizing: border-box) or half the viewport, whichever is smaller; was a flat 40vh
   options:
-    sizeClass: legacy item-pad (ROV-C5 / §5.1) — numbers DERIVED off the trigger ramp (2026-07-06), not the fixed px this superseded
+    sizeClass: legacy item-pad (ROV-C5 / §5.1) — numbers DERIVED off the trigger's n (ADR-0245), not the fixed px this superseded
     paddingBlock: var(--ui-select-option-block)    # = (h − font)/2 — row height == trigger height
-    paddingInline: var(--ui-select-option-inline)  # = h/4 — pairs with listbox padding to total h/2 (option text aligns under the trigger label)
+    paddingInline: var(--ui-select-option-inline)  # = c-based, pairs with listbox padding (option text aligns under the trigger label)
     font: var(--ui-select-option-font)             # = --ui-select-font (was size-blind; bug fix)
 
 forcedColors: A `@media (forced-colors: active)` block keeps the trigger (ButtonText/ButtonBorder/ButtonFace), the listbox panel (Canvas/CanvasText), and the option hover/selected/focus states (Highlight/HighlightText) visible in Windows High Contrast Mode.

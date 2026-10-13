@@ -114,7 +114,7 @@ reviewer must not re-flag as a finding.
 - **Pre-pass (build on first run):** a script over the existing `@agent-ui/components/descriptor`
   parser emitting the cross-control attribute MATRIX (name × control → type/reflect/default) — makes
   half this axis mechanical. Census exclusions minimal: every component has an API.
-- **Ledger:** `content-sm≡ui-md`,`content-md≡ui-lg` scale aliasing is deliberate (ADR-0038) ·
+- **Ledger:** `[scale]` retired into `data-tier` and `data-scale` (ADR-0245; the old `content-sm≡ui-md` aliasing of ADR-0038 went with it) ·
   `ui-textarea.rows` reflects by design (attr-based CSS repoint) · app-layer composer props are
   `attribute:false` by design (never author-composed) · **(campaign 1, TKT-0065):** `ui-column.align`'s
   4-member enum (no `center`) is a Kim ruling; `ui-swiper.align` is the 3-member scroll-snap dialect
@@ -129,10 +129,10 @@ reviewer must not re-flag as a finding.
   non-reflecting controls were converted; do not flag reflected labels) · `scheme` sentinel canon =
   `'auto'` (theme-provider's `''` is §12-recorded, ADR-0117 load-bearing) · `duration` canon =
   milliseconds number (swiper's CSS-time string §12-recorded) · the `name`/`value` repurposers are RENAMED
-  (executed 2026-07-16: icon.name→glyph · avatar.name→identity · attachment.name→filename ·
+  (executed 2026-07-16: icon.name→glyph, now `symbol` (ADR-0245 cl.4) · avatar.name→identity · attachment.name→filename ·
   stat.value→figure · swatch.value→color · swiper-item.value→key · progress.value→current ·
   tab.value→key) — flag any NEW repurposing as DRIFT · **the A2UI catalog's WIRE field names
-  deliberately DIVERGE from the renamed component props** (`Icon.name` wire → `glyph` prop, etc. —
+  deliberately DIVERGE from the renamed component props** (`Icon.name` wire → `symbol` prop, etc. —
   `catalog.json` `mapsTo` + `mappedAccessorFactory` translate; corpus stability is the reason;
   naming.md §12 records it) — a catalog-vs-descriptor attribute-name mismatch on these six wire
   props is the ruled design, not drift · **(campaign 2, TKT-0070, Kim-ratified 2026-07-16):**

@@ -129,18 +129,23 @@ The prefix IS the ownership boundary — no allowlist needed:
   (`--value-pct`) are the sanctioned dynamic hook, exempt from the token gate. `--ui-` on a
   declaration ALWAYS means "this control folder owns it" — never a foundation constant.
 - **System tier** `--md-sys-{family}-*`: everything global and shared — color (`--md-sys-color-*`),
-  typescale (`--md-sys-typescale-*`), and the dimensional foundation (`--md-sys-space-*`,
-  `--md-sys-height-*`, `--md-sys-font-*`, `--md-sys-icon-*`, `--md-sys-gap-*`, `--md-sys-compact-*`,
-  `--md-sys-shape-corner-base`, `--md-sys-motion-{duration-fast,easing-standard}`,
-  `--md-sys-state-focus-ring-{width,offset}`, `--md-sys-widget-inset`, `--md-sys-control-line-height`,
-  `--md-sys-typeface-{sans,mono}`, `--md-sys-scale`, `--md-sys-density`). Some families are real
+  typescale (`--md-sys-typescale-*`), and the dimensional foundation, which derives from one n per
+  element (ADR-0245): the inputs `--md-sys-tier-*`, `--md-sys-scale-s`, `--md-sys-size-z`, the outputs
+  `--md-sys-{n,c,height,inset,radius,icon-box,glyph-box,glyph-stroke,corner-shape}`,
+  `--md-sys-type-{display,heading,subhead,section-kicker,title,body,control,field-label,group-kicker}` and
+  `--md-sys-{group,widget,card,layout}-{margin,gutter,radius}`, all in the generated `foundations.gen.css`;
+  the old names `--md-sys-{height,font,icon,gap,compact,space}-*`, `--md-sys-shape-corner-base` and
+  `--md-sys-widget-inset` live on as bridge aliases until the W7 cleanup;
+  `--md-sys-motion-{duration-fast,easing-standard}`, `--md-sys-state-focus-ring-{width,offset}`,
+  `--md-sys-control-line-height` and `--md-sys-typeface-{sans,mono}` stay constants in `dimensions.css`.
+  Some families are real
   Material 3 vocabulary (color, typescale, shape, motion, state — a `--md-sys-{family}` M3 already
-  names); the dimensional-control families with no upstream M3 name (space/height/font/icon/gap/
-  compact/scale/density/widget-inset/control-line-height) are DELIBERATE agent-ui extensions of the
+  names); the dimensional-control families with no upstream M3 name (n/c/height/inset/icon-box/glyph-box/
+  tier/scale-s/size-z and the container levels) are DELIBERATE agent-ui extensions of the
   md-sys grammar — documented here as extensions, never presented as Material canon (the same
   extension discipline the typescale's four editorial voices already established). System-tier
-  declarations land in `tokens.css` (color) or `dimensions.css` (everything else) — never inside a
-  control folder.
+  declarations land in `tokens.css` (color), `dimensions.css` (the constants) or the generated
+  `foundations.gen.css` (every size), never inside a control folder.
 - **The `--ui-*`-vs-`--md-sys-*` split is PERMANENT** (Kim ruled 2026-07-12, reaffirmed + the
   BOUNDARY MOVED 2026-07-17 — see §12): this file §5 owns the boundary; `--ui-` is control-owned,
   `--md-sys-` is system-owned. No convergence, no third tier.
@@ -280,11 +285,13 @@ tokens to one prefix) still stands — that fork stays closed; only the FOUNDATI
 `ui-swiper.duration`'s CSS `<time>` string (canon: milliseconds number, §3) — feeds CSS timing,
 reflected for that reason, keep · **the `name`/`value` repurposers — RULED (Kim, 2026-07-16,
 TKT-0069 item 1) and EXECUTED same day: the fleet-wide §3 reservation STANDS; all EIGHT renamed**
-(`ui-icon.name`→`glyph` · `ui-avatar.name`→`identity` · `ui-attachment.name`→`filename` ·
+(`ui-icon.name`→`glyph`, later `symbol` (below) · `ui-avatar.name`→`identity` · `ui-attachment.name`→`filename` ·
 `ui-stat.value`→`figure` · `ui-swatch.value`→`color` · `ui-swiper-item.value`→`key` ·
 `ui-progress.value`→`current` · `ui-tab.value`→`key`, the eighth — found at execution, the
-swiper-item comment's own cited precedent; ADR-0245 cl.4 later renamed `ui-icon.glyph`→`symbol`, the prop the
-new `ui-glyph` takes too, with `glyph` a deprecated alias until the W7 cleanup). The A2UI catalog keeps its shipped WIRE field names
+swiper-item comment's own cited precedent; ADR-0245 cl.4 then renamed `ui-icon.glyph`→`symbol`, shipped at the
+2026-10-13 cut: `symbol` is the prop of `ui-icon` (pack art) and of the new `ui-glyph` (a functional mark from
+the closed twelve-mark set), `glyph` stays a deprecated alias on `ui-icon` until the W7 cleanup, and the word
+"glyph" now names one thing, the functional-mark element and its box (`--md-sys-glyph-box`)). The A2UI catalog keeps its shipped WIRE field names
 (`Icon.name`, `Stat.value`, …): `catalog.json`'s `mapsTo` + `mappedAccessorFactory` translate
 wire→prop at apply time, so every corpus record and taught idiom stays valid — the ONE catalog-vs-
 component naming divergence class, deliberate (§7's namespace is the protocol surface, §3's is the

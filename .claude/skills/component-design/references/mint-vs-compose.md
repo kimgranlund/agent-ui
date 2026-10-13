@@ -250,7 +250,7 @@ this sometime" placeholder.
 The condition fired on a live surface (the docs-site A2UI preview, 2026-08-23): the 16×16px default
 avatar sat beside 28px-tall controls, and Kim's ruling was verbatim "these are comically small."
 Amendment 3 re-ruled fork F3 on exactly that evidence — off the widget-box ramp, onto the existing
-`--md-sys-height-{sm,md,lg}` control-height ladder (the `ui-button` row), re-using rather than
+`--md-sys-height` control-height step (the `ui-button` row, `4n` since ADR-0245; the `--md-sys-height-{sm,md,lg}` names are bridge aliases), re-using rather than
 minting a register. The re-ruling was objective in the sense that mattered: the trigger sentence
 from 2026-07-08 could be checked against a real screenshot without re-litigating the original
 scoping argument — the fork's own text did the work.

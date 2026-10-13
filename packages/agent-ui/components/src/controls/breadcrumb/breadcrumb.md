@@ -62,8 +62,8 @@ keyboard:
 geometry:
   sizeClass: pattern
   posture: fill (block-level flex host, wraps and stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-flex + hug
-  crumbTypography: the label typescale row (`--md-sys-typescale-label-medium-*`), inherited by every light-DOM child — ui-breadcrumb owns no [size]/[scale] geometry row of its own (the intake's Geometry row, ADR-0163 cl.6 verbatim)
-  gap: var(--ui-breadcrumb-gap)   # off --md-sys-space (density-responsive)
+  crumbTypography: the label typescale row (`--md-sys-typescale-label-medium-*`), inherited by every light-DOM child — ui-breadcrumb owns no [size] geometry row of its own (the intake's Geometry row, ADR-0163 cl.6 verbatim)
+  gap: var(--ui-breadcrumb-gap)   # off --md-sys-space (scale-responsive)
   overflowTrigger: a compact square keyed to `1lh` (the crumb's own rendered line box) — no new control-height token, the tabs.css tab-height-trigger shape minus the grid dance (the composed `<ui-menu>` wrapper is `display:contents`, so the trigger is simply the next flex item at the fold's DOM position)
 
 forcedColors: S1's own anatomy has NO dedicated `@media (forced-colors: active)` block — every visible affordance is REAL TEXT (an author crumb's own content, the auto-stamped current-page span, a slotted-or-default separator glyph), never a background-image / alpha-only wash / color-only `::before` decoration, so nothing there is at risk of vanishing under `forced-colors` (breadcrumb.browser.test.ts proves the separator survives CDP forced-colors emulation on Chromium). S2 (GH #1515) pins one explicit rule for the overflow trigger's SVG glyph (an author `color` read via `currentColor`, not itself a real text node) — belt-and-braces certainty over the UA's automatic remap, browser-probed the same way.

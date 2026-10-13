@@ -89,7 +89,7 @@ geometry:
   aspectRatio: var(--_aspect, 16 / 9)  # per-instance style property (image-model.ts parseAspectRatio), NOT a
                                         # --ui-image-* token — arbitrary numeric data, the ui-progress --_pct
                                         # precedent (private, instance-computed, outside the token contract)
-  # NO --md-sys-height-* consumption, NO [size]/[scale] geometry row — the Display-band law (geometry.md):
+  # NO --md-sys-height consumption, NO [size] n rule — the Display-band law (geometry.md):
   # the lever is aspect-ratio + the layout track sizing the box (host defaults to inline-size:100%, matching
   # the common responsive-image reset), not a control-height ramp.
 

@@ -93,10 +93,10 @@ keyboard:              # NOT interactive/focusable for every `as` EXCEPT the gat
 geometry:
   sizeClass: display
   blockSize: content   # NO control height (geometry.md Display class) — block-size is content-driven; no padding-block law, no frame
-  fontSize: var(--ui-text-size)         # the --md-sys-typescale-{role}-{size}-size the [variant][size] matrix repoints to (ADR-0078 cl.3) — × var(--md-sys-scale), density-invariant; inside an opt-in [data-tier] region the derived role --md-sys-type-{role} (ADR-0245 cl.7: display, heading, title, body, field-label, group-kicker, subhead; `kicker` reads field-label, the small uppercase label over a group, not section-kicker, T-0117)
+  fontSize: var(--ui-text-size)         # the --md-sys-typescale-{role}-{size}-size the [variant][size] matrix repoints to (ADR-0078 cl.3) — a generated alias over the derived type roles since the cut (ADR-0245 cl.7); inside an opt-in [data-tier] region the derived role --md-sys-type-{role} (ADR-0245 cl.7: display, heading, title, body, field-label, group-kicker, subhead; `kicker` reads field-label, the small uppercase label over a group, not section-kicker, T-0117)
   fontWeight: var(--ui-text-weight)     # from --md-sys-typescale-{role}-{size}-weight (a :root constant)
   lineHeight: var(--ui-text-line-height)  # from --md-sys-typescale-{role}-{size}-line-height (a :root unitless constant)
-  tracking: var(--ui-text-tracking)     # from --md-sys-typescale-{role}-{size}-tracking (a :root em constant); NEW — ADR-0025's ramp had no tracking leg
+  tracking: var(--ui-text-tracking)     # from --md-sys-typescale-{role}-{size}-tracking (a :root em constant); NEW — ADR-0025's table had no tracking leg
 
 forcedColors: A `@media (forced-colors: active)` block keeps the text visible (CanvasText) so display text never vanishes in high-contrast; an allowed link additionally paints the system `LinkText` ink, underline intact (ADR-0114, SPEC-R13 AC2).
 ---

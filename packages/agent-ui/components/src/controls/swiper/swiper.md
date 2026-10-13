@@ -134,7 +134,7 @@ keyboard:
 geometry:
   sizeClass: pattern
   columns: var(--ui-swiper-columns)     # responsive-auto via @container when slides-in-view=''; pinned by [slides-in-view="n"]
-  gap: var(--ui-swiper-gap)             # inter-slide gap off the space ladder (density-responsive)
+  gap: var(--ui-swiper-gap)             # inter-slide gap off the space ladder (scale-responsive)
   align: var(--ui-swiper-align)         # the per-slide scroll-snap-align
   duration: var(--ui-swiper-duration)   # programmatic-advance timing
   easing: var(--ui-swiper-easing)       # programmatic-advance curve

@@ -67,7 +67,7 @@ keyboard: []           # no keyboard interaction — a list is a structural cont
 
 geometry:
   sizeClass: layout                    # Container/layout — NO control height (never reads --md-sys-height-*)
-  gap: var(--md-sys-space-{step})          # the inter-item row-gap, off the density-responsive layout ladder — the one [density]-bearing quantity (gap = base px × density)
+  gap: var(--md-sys-space-{step})          # the inter-item row-gap, off the scale-responsive layout ladder (a generated alias over n, ADR-0245 cl.6) — the one data-scale-bearing quantity
   flexDirection: column                # the vertical stack — the tag's identity (ADR-0016)
 
 forcedColors: Owned by the shared controls/_surface/container.css — its `@media (forced-colors: active)` block keeps any container surface as a system colour (Canvas) and drops the tonal wash. list.css carries no colour of its own, so it adds no forced-colors block.

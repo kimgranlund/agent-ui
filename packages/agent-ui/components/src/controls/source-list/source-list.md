@@ -58,9 +58,9 @@ keyboard:              # NOT interactive/focusable except the ONE per-entry exce
 
 geometry:
   sizeClass: display
-  rowGap: var(--ui-source-list-row-gap)          # between source rows — --md-sys-space ladder, density-responsive
+  rowGap: var(--ui-source-list-row-gap)          # between source rows — --md-sys-space ladder, scale-responsive
   indexGap: var(--ui-source-list-index-gap)      # index marker → title — --md-sys-space ladder
-  # NO [size] attribute, NO [scale] geometry row, NO --md-sys-height-* consumption — the levers are the
+  # NO [size] attribute, NO control n rule, NO --md-sys-height consumption — the levers are the
   # type matrix (--md-sys-typescale-*) + the space ladder (the Display-band law, the ui-description-list precedent).
 
 forcedColors: No dedicated block beyond the shared link treatment — every part is real text (only a background-drawn shape needs a forced-colors repoint); an allowed title link additionally paints the system LinkText ink under forced-colors (the ui-text ADR-0114 precedent, SPEC-R13 AC2), underline intact.

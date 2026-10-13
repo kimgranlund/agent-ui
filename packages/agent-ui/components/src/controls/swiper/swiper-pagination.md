@@ -45,7 +45,7 @@ keyboard:
 
 geometry:
   sizeClass: pattern
-  dotSize: var(--ui-swiper-dot-size)             # the compact widget ramp
+  dotSize: var(--ui-swiper-dot-size)             # the 2n indicator box (--md-sys-icon-box, ADR-0245 cl.3)
   dotSizeActive: var(--ui-swiper-dot-size-active) # the ACTIVE dot's size-larger non-colour signifier (ADR-0057)
   gap: var(--md-sys-space-xs)
 

@@ -74,10 +74,10 @@ keyboard: []             # NOT interactive and NOT focusable — no tabindex, no
 
 geometry:
   sizeClass: indicator
-  blockSize: var(--ui-badge-box)         # the compact-realm widget-box ramp (ADR-0041) — fixed, NEVER content-driven
+  blockSize: var(--ui-badge-box)         # the 2n box (ADR-0245 cl.3; ADR-0041's widget ramp retired) — fixed, NEVER content-driven
   minInlineSize: var(--ui-badge-box)     # empty-label floor → a filled pill/dot, never a sliver (SPEC-R13 AC2)
-  boxRamp: --md-sys-icon-box, else --md-sys-compact-lg  # 2n inside an opt-in [data-tier] region (14px at the root md, ADR-0245 cl.3); 18px @ default ui-md scale outside one, where an ancestor [scale] re-tables it for free
-  padFormula: 2c, else 2px + box * 0.375 * density  # 2c inside an opt-in region; outside it the compact-realm pad law (NOT h/2 — geometry.md's compact-realm exception)
+  boxRamp: --md-sys-icon-box, else --md-sys-compact-lg  # 2n (14px at the root md, ADR-0245 cl.3); the --md-sys-compact-lg bridge alias is the data-foundations="legacy" fallback until W7
+  padFormula: 2c  # 2c (ADR-0245 cl.3); the legacy fallback is the retired compact-realm pad law `2px + box * 0.375`
   radius: var(--ui-badge-radius)         # n/2 inside an opt-in region (--md-sys-radius / 2); outside it the pill = box/2, the realm's "count pill" case
   noSizeAttribute: true                   # v1 ships no [size] axis (SPEC-R13 AC3) — a foreseen extension only
 

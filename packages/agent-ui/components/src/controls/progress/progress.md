@@ -71,7 +71,7 @@ keyboard: []           # NOT interactive and NOT focusable — no tabindex, no k
 geometry:
   sizeClass: display
   minInlineSize: var(--ui-progress-min-inline-size)  # 8em default — the whole-shape floor (SPEC-R18 AC1)
-  # NO [size] attribute, NO [scale] geometry row, NO --md-sys-height-* consumption (SPEC-R20 AC2) — the rail
+  # NO [size] attribute, NO control n rule, NO --md-sys-height consumption (SPEC-R20 AC2) — the rail
   # thickness (--ui-progress-track-size) is 2c inside an opt-in data-tier region (ADR-0245 cl.3) and the fixed 4px
   # constant outside; the discrete cell gap is c inside a region, 2px outside.
 

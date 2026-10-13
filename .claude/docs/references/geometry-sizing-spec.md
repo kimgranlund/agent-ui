@@ -1,355 +1,195 @@
-# Geometry & Sizing Spec — the centering law + the size ramp
+# Geometry & Sizing Spec: one n, the centering law, the derived foundations
 
-**Status:** design-of-record — **LANDED (v4, 2026-06-18; §1 ramp extended to 8 rows, Kim-ratified
-2026-06-30).** **Authority:** the **§1 master table below** — the hand-tuned **eight-row height ramp
-(16→64)** and the **centering law** it encodes. (`component-sizes.md` was the working-name precursor for
-this ramp; it was never materialized as a file — its hand-tuned values are §1 here. Kim 2026-06-18: this
-file is the *reference/law*; the shipped `scale × size(sm/md/lg) × density` model **maps onto** it — there
-is no size-ramp migration. The job *was* to make the implementation obey the law; **it now does.** Kim
-2026-06-30: the ramp gained two rows below XS, 16·18 — forward-ready, unconsumed by the current grid.)
+**Status:** design-of-record. **Rewritten 2026-10-13 for ADR-0245**, shipped at the foundations cut (#1932):
+every size derives from **one integer n per element**. This replaces the hand-tuned eight-row ramp
+(16 to 64), the sublinear power law, the `(scale × size) → §1-row` lookup (ADR-0038), the compact box ramp
+(ADR-0041) and the `[density]` frame/rhythm split; their history lives in those superseded ADRs and in git.
+The section numbers (§1 to §7) are kept because ADR bodies cite them.
 
-**What landed (the §5 gap is closed):** `caret = font` globally (`--ui-glyph-ratio: 1`), for **both** mask
-glyphs **and** slotted `<ui-icon name=caret>` carets (§4.1/§4.6); the **comfortable controls** (button,
-select, all the input fields) on the **slot model + `h/2`** value edge (§1.5); the **compact/dense realm**
-(kbd/slider/slider-multi/radio/switch/tag/badge/chip/checkbox) on its own **two-band compact box ramp**
-(§5.2 — `ui-*` tight 12→20, `content-*` generous 18→32); density on the **gap, not the pad**. A **96-component geometry audit** (§6, 2026-06-18) then
-confirmed the law fleet-wide and caught the two stragglers (disclosure, slider-multi).
-
-**The thesis.** A control's box is `height` (the lever); every glyph it carries (icon, caret) sits in
-a **square cell of side = height** and is therefore centered by **edge padding = (height − glyph)/2**.
-The glyph sizes (icon, caret, font) are **not** a constant ratio of height — they scale *sublinearly*
-(a power law, exponent < 1; §1.1), so a glyph occupies a shrinking fraction of the box as it grows.
-That single rule generates the whole tabled ramp. *Geometry is arithmetic, not taste.*
+**The thesis.** Geometry is arithmetic, not taste: a control's box is `4n`, and every glyph it carries sits in
+a `2n` slot, centered. Tier, scale and size choose n; everything else is a formula over it, so a height and
+its font, icon, padding and radius pair by construction. One config owns the system: the skill's
+`scale.mjs` (CFG, `resolve()`, `check()`), vendored to `@agent-ui/shared/src/tokens/scale.mjs`, emitted as
+`foundations.gen.css` by `scripts/generate-foundations.mjs` (which refuses to write when `check()` returns a
+failure). Changing the system means editing CFG, never a stylesheet.
 
 ---
 
-## 1 · The ramp + the codified scaling law
+## 1 · The derivation
 
-Master table — the **eight-row height ramp** (Kim-ratified 2026-06-30). The ramp is keyed by **height**
-(the lever); every derived quantity comes from the §1.4 families + the §1.5 slot-presence pad model, so
-the table carries them directly: `caret = font` and `gap = font/2` (rhythm); the **value-edge pad** is
-`h/2`, the **slot-edge pad** `½(h − icon)`, the **slot** `= icon` (frame). `%` = glyph ÷ height (the
-*fraction of the box* the glyph occupies — the sublinear optical correction, §1.1):
+`n = n0 + a·s + k·z + g·s·z`. The tier supplies `(n0, a, k, g)`, the region supplies the scale s, and the
+control (or `data-size`) supplies the size z; s and z are each -1, 0 or +1.
 
-| height | font | caret `= font` | icon | gap `= f/2` | value-edge pad `= h/2` | slot-edge pad `= ½(h−icon)` | slot `= icon` | icon% | font% |
-|---|---|---|---|---|---|---|---|---|---|
-| **16** † | 11 | 11 | 12 | 5.5 | 8 | 2 | 12 | 75% | 69% |
-| **18** † | 11 | 11 | 14 | 5.5 | 9 | 2 | 14 | 78% | 61% |
-| 20 | 12 | 12 | 14 | 6 | 10 | 3 | 14 | 70% | 60% |
-| 24 | 13 | 13 | 16 | 6.5 | 12 | 4 | 16 | 67% | 54% |
-| 28 | 14 | 14 | 18 | 7 | 14 | 5 | 18 | 64% | 50% |
-| 36 | 16 | 16 | 20 | 8 | 18 | 8 | 20 | 56% | 44% |
-| 48 | 18 | 18 | 24 | 9 | 24 | 12 | 24 | 50% | 38% |
-| 64 | 20 | 20 | 28 | 10 | 32 | 18 | 28 | 44% | 31% |
-
-**† = the two new rows** (heights 16·18) extend the ramp **below** the legacy XS (20). They are
-**forward-ready / unconsumed**: the shipped `scale × size` grid's minimum effective height is **21**
-(snaps to row 20), so no current `[size]×[scale]` tier reaches 16/18 (ADR-0035; re-grounding the per-tier
-realization against this 8-row ramp changes **no** consumed value — proven byte-identical to the prior
-6-row grounding). Legacy enum, for traceability: 20 = XS · 24 = SM · 28 = MD · 36 = LG · 48 = XL · 64 = 2XL.
-
-**Live anatomy = the §1.5 presence-driven grid** (no authored trailing-pad): `| value-edge pad | [slot] |
-1fr | [slot] | value-edge pad |`, each edge taking `½(h − icon)` when a slot is present and `h/2` when it
-is slotless. The historical authored-anatomy columns (`lead-pad / spacer / trail-pad`) and the
-even-rounded **power-law caret column** are **retired** — superseded by §1.4 (`caret = font`, `gap = f/2`)
-and the §1.5 pad model above; see §1.3 for the retired caret's historical note.
-
-### 1.1 · The non-linearity, codified — glyphs scale **sublinearly** (the optical correction)
-
-A glyph does **not** grow in proportion to the box. As height grows, each glyph occupies a *shrinking
-fraction* of it (across the consumed 20→64 range: icon 70%→44% · font 60%→31%; `caret% ≡ font%` now,
-§1.4). This is the "not purely linear across the scales" Kim flagged, and it is a **power law of height
-with exponent < 1**:
-
-```
-icon  = 2.49 · height^0.58          font  = 3.16 · height^0.45   (≈ 2.65·√height)
-caret = 4.08 · height^0.35   (≈ √[3]{height}; tracks font a touch under)
-```
-
-These reproduce every tabled value to **±1px** — so the table is not eight hand-picked points, it is
-**one rule sampled eight times**. The practical payoff: the same rule gives the glyphs for *any* height,
-which is exactly the bridge that lets a shipped `scale × size` height **map onto the law** (§3) — feed
-the mapped height to the formula, get its tabled icon/caret/font. *(The two forward-ready sub-XS rows
-16·18 floor higher — icon ~75–78%, font ~61–69% — because a tiny box can't shrink its glyph below
-legibility; they sit below the consumed 20→64 range. The `caret = 4.08·h^0.35` formula is historical:
-`caret = font` now, §1.4.)*
-
-> **REALIZED UNDER `[scale]` (ADR-0033, 2026-06-30).** This sublinear law was honored across `[size]`
-> (the tabled sm/md/lg) but **not** under `[scale]`, which scaled font **linearly** (`× --md-sys-scale`) —
-> so `content-lg` md font was 24.5px (50% of a 49px box) instead of §1.1's ~18px (~37%). Now, under
-> `[scale]`, **height stays linear** (the frame lever) but **glyphs re-derive sublinearly from the scaled
-> height**: `--md-sys-font = base × pow(--md-sys-scale, 0.45)` and `--md-sys-icon = base × pow(--md-sys-scale, 0.58)`
-> (anchored on `--md-sys-scale`, so the hand-tuned base is exact at `scale = 1`); `caret = font` and
-> `gap = font/2` follow. So `[size]` and `[scale]` now agree — **any** final height gets this law's glyphs.
-> (Display type `--ui-type-*` stays **linear** — it has no box, so the in-box optical correction does not
-> apply; ADR-0033 / ADR-0025.)
->
-> **Update — superseded by ADR-0038 (Kim, 2026-06-30, "no multipliers").** The `pow` realization is gone:
-> glyphs now come **directly from the `(scale × size)`-selected §1 row** (§3) — no `pow`, no `× --md-sys-scale`.
-> The **sublinear OUTCOME stands** (the §1 ramp is sublinear *by construction*, and the lookup picks §1
-> rows, so a larger box still gets a proportionally smaller glyph). `caret = font` / `gap = font/2` follow
-> the selected row.
->
-> **Update 2026-07-08 — `--ui-type-*` retired (ADR-0078).** The Display type-scale family this section
-> named as `--md-sys-scale`'s one surviving consumer no longer exists: ADR-0078 replaced `--ui-type-*` with
-> the M3-verbatim `--md-sys-typescale-*` matrix (`dimensions.css:100+`), which does NOT scale with
-> `--md-sys-scale` — it is a fixed, spec-pinned table (Kim ratified both "fully M3-canonical" open knobs at
-> ADR-0078's ratification, declining the linear-scale-with-height fork). `--md-sys-scale`'s surviving
-> consumer is now `--md-sys-typescale-*-size` (`dimensions.css:224`), and it is linear for the same
-> reason stated above: Display has no box, so the in-box optical correction never applied to it.
-
-### 1.2 · The same law, read structurally — **two bands**
-
-The sublinearity reads structurally as two bands that change gear together at the **MD|LG seam**:
-
-| band | sizes | height | spacer | glyph step |
-|---|---|---|---|---|
-| **compact** | XS · SM · MD = 20 · 24 · 28 | `+4` linear | 4 | gentle (font +1, icon +2) |
-| **expressive** | LG · XL · 2XL = 36 · 48 · 64 | `×4/3` geometric | 8 | doubled (font +2, icon +4) |
-
-Height accelerates (geometric) while glyphs stay near-linear → the fraction shrinks. The spacer's
-`4→8` jump and the glyph-step doubling land on the **same seam** — that coincidence *is* the symmetry.
-
-### 1.3 · The generating rule (one rule — Kim ruled 2026-06-18)
-
-**The ramp is generated by one rule: round the power law — glyphs to nearest even, font to nearest
-integer.** That is exactly what the ratified 8-row ramp obeys: every **icon** is even
-(`12·14·14·16·18·20·24·28`) and every **font** is an integer (`11·11·12·13·14·16·18·20`). The icon tail
-stays capped at 28 (1px under the formula's 29 — a deliberate max-icon). The derived **§1.5 pads** then
-fall out monotonic in height — value-edge `h/2` (`8,9,10,12,14,18,24,32`) and slot-edge `½(h − icon)`
-(`2,2,3,4,5,8,12,18`). *(The new row 18 takes icon **14** by this even-rounding — the raw law gives 13.3,
-nearest-even 14, which also keeps the icon column all-even and shares row 18's icon with row 20; Kim
-ratified 2026-06-30, §1 fork 2.)*
-
-**Retired — the historical caret column.** The earlier ramp carried an even-rounded **power-law caret**
-column (`12·14·14·16·16·18` over the 6-row 20→64 ramp; `component-sizes.md` floor-rounded SM·LG to
-`12·14`). It is **retired**: `caret = font` now (§1.4 / §4.1, landed), so the master table's `caret`
-column simply restates `font`. The even-round figures are kept here only as the historical reference.
-
-### 1.4 · The two families + the slot-container model (Kim ruled 2026-06-18)
-
-The tabled values are *used* through **two families of relationships** plus a single slot mechanism
-that removes asymmetric padding entirely. Every derived quantity scales with one of two things:
-
-- **Frame — ∝ height** (the box): icon (`--md-sys-icon-*`), the slot, the padding, min-width, the pill radius.
-- **Rhythm — ∝ font** (the text-adjacent marks & spacing): the gap, the caret.
-
-| quantity | family | rule |
+| tier | n0 / a / k / g | use |
 |---|---|---|
-| slot (leading **and** trailing) | frame | `= icon` — **identical** squares that center their content |
-| inline-pad | frame | `= block-pad = ½(height − icon)` → every affordance sits in a **height² square** |
-| min-inline-size | frame | `= height` (icon-only = a square) |
-| pill radius | frame | `= height / 2` (else the flat `none/sm/md/lg` ladder) |
-| **gap** | rhythm | **`= font / 2`** (0.5em) |
-| **caret** | rhythm | **`= font`** (1:1 — the dropdown mark = text height) |
-| density | — | multiplies the **rhythm only**, never the frame (the frame is geometric; scaling it un-centers the icon and breaks the square) |
+| widget | 7 / 1 / 1 / 0 | tool panels, dense chrome |
+| product | 9 / 2 / 2 / 1 | app screens (the library root, at scale sm) |
+| content | 11 / 2 / 2 / 1 | reading and document surfaces |
+| brand | 14 / 2 / 2 / 1 | hero and marketing |
 
-**The slot mechanism — no trailing-pad.** Leading and trailing affordances each sit in the *same*
-`icon`-sized square slot that centers its content. The icon fills its slot; the smaller caret
-(`= font`, and `font < icon` across every scale row) centers in its slot and so lands further from the
-edge — reproducing the asymmetric trailing edge **for free**, with one uniform `inline-pad` and **no
-authored trailing-pad**. Because `inline-pad = block-pad`, the slot's cell is `height × height`; the
-icon-only control *is* that square.
+Reachable heights (`4n`) at sm / md / lg: **widget** 20 / 24 / 28 at scale sm and 24 / 28 / 32 at md, **product** 24 / 28 / 32 at
+scale sm (the root), 28 / 36 / 44 at md (the A2UI canvas) and 32 / 44 / 56 at lg; content and brand step up
+likewise (ADR-0245 Appendix B holds every cell). The retired `[scale]` values map by purpose (`ui-sm` to
+widget/sm, `ui-md` to product/sm, `ui-lg` to product/md, `content-*` to content/sm, md, lg); the bridge
+applies the map for one release.
 
-*Realized in code per-glyph, not as wrapper DOM:* each glyph is sized by its **type** — icon = `--md-sys-icon-*`,
-caret / affordance = font (the §4.6 taxonomy) — and centered in the height-cell by its own
-`½(h − glyph)` edge pad; the presence-driven `:has()` grid (§1.5) places the cells. This is equivalent to
-the icon-sized-slot framing above (the caret lands `½(h − font)` from the edge either way) and needs no
-wrapper element — the slotted `<ui-icon>` / mask glyph *is* the slot, sized to its type.
+With `c = ceil(n/4)` the derived quantities, all whole pixels (check M7), are:
 
-**Supersedes:** the rhythm rules replace the spacer band (§1.2 `4/8` → `gap = font/2`) and the tabled
-caret (§1.3 even-round, ≈0.9·font → `caret = font`). The font-relative rules deviate from
-`component-sizes.md`'s hand-tuned caret by ≤2px at large sizes — Kim chose the clean rule over the
-hand-tuning. The **frame** generators (`icon ≈ 2.49·h^0.58`, `font ≈ 2.65·√h`) are unchanged.
-*(`geometry.html` was the RCE-precursor live demo page for this law and was never ported into
-agent-ui — the claim it verified now lives as source-level `*-DIM`/`GEO*` probes + per-control
-`*-geometry.browser.test.ts` legs across all 6 `[scale]` contexts × 3 sizes, e.g.
-`button-geometry.browser.test.ts`; see §6.)*
+| quantity | rule | token |
+|---|---|---|
+| height | `4n` | `--md-sys-height` |
+| inset, gap | `n` | `--md-sys-inset` |
+| radius | `n` (`corner-shape: squircle`), pill `2n` | `--md-sys-radius` |
+| icon box | `2n` | `--md-sys-icon-box` |
+| glyph box | `2n - 2c` | `--md-sys-glyph-box` |
+| glyph stroke | `max(1.5px, c/2)` | `--md-sys-glyph-stroke` |
+| type | linear `n + 6` for controls, `pow` for display, heading and subhead | `--md-sys-type-*` |
+| container levels | group / widget / card / layout margin, gutter, radius | `--md-sys-{level}-{margin,gutter,radius}` |
 
-### 1.5 · Slot-presence padding — two cases (Kim ruled 2026-06-18, refined: slotless = h/2)
+n depends on three attributes that inherit independently, so the generated block is live `calc()` over the
+inputs `--md-sys-tier-*`, `--md-sys-scale-s`, `--md-sys-size-z`, declared on `:root, [data-tier], [data-scale],
+[data-size], [size]` (the recompute list that replaced ADR-0007's `*` ramp), never a literal table per
+combination.
 
-Each inline edge pads by **what's at it**, and there are exactly two cases:
-- a **slot** edge (icon / caret) → `½(height − icon)` — centers the icon-sized slot.
-- a **slotless** edge (bare label, no slot) → **`h / 2`** — the text pad `½(h − font)` **plus the absent
-  slot's gap** `½·font`; the two sum to `h/2`. So the content keeps the gap's worth of breathing room
-  whether or not a slot is there (Kim "we need a solution for adding gap when a slot is absent").
+### 1.1 · Why no multiplier and no power law
 
-So a control **provides leading padding when the leading slot is absent** — the label never jams the
-edge. The earlier `½(h − font)` (a label jammed to ≈10px at md) is superseded: a slotless edge is now
-`h/2` (≈16px at md). A `[label · caret]` control is therefore asymmetric by design — value at `h/2`
-(slotless), caret at `½(h − glyph)` (slot).
+ADR-0038 dropped the multiplier because scaling height and font by one factor broke the pairing of each
+height with its font and icon row. Here every quantity is a formula of the same n, so the pairing holds by
+construction, and the old sublinear glyph law (`icon ≈ 2.49·h^0.58`) is replaced by the linear `2n` icon box
+inside a `4n` height.
 
-**Implementation — presence-driven grid (`:has()`)** so an absent slot leaves **no phantom gap**:
+### 1.2 · What the derivation moved
 
-| leading | trailing | lead pad | trail pad | `grid-template-columns` |
-|---|---|---|---|---|
-| icon | caret | frame | frame | `auto 1fr auto` |
-| icon | — | frame | **h/2** | `auto 1fr` |
-| — | caret | **h/2** | frame | `1fr auto` |
-| — | — | h/2 | h/2 | `1fr` |
-| icon | — (no label) | frame both → **square** | | `auto` |
+Against the old ramp: sm and md keep 24 and 28 at the root, lg moves 36 to 32, the icon box moves 16 / 18 / 20
+to 12 / 14 / 16, the field radius 12 to n, the card radius to 3n. A2UI surfaces at scale md keep a 36px md
+action. The wire, the payloads and the K6 prompt budget move zero bytes (ADR-0245 cl.8).
 
-```css
-.ctl { --pad-frame: calc((var(--h) - var(--icon))/2); --pad-slotless: calc(var(--h) / 2);
-       display: inline-grid; grid-template-columns: 1fr; padding-inline: var(--pad-slotless); }
-.ctl:has(.slot--lead)  { padding-inline-start: var(--pad-frame); }
-.ctl:has(.slot--trail) { padding-inline-end:   var(--pad-frame); }
-.ctl:has(.slot--lead):has(.slot--trail) { grid-template-columns: auto 1fr auto; }
-/* lead-only → auto 1fr · trail-only → 1fr auto · icon-only(no label) → auto + square */
-```
+### 1.3 · The dark launch, and what is transitional
 
-Both pads are **geometric** (frame family) — not density-scaled; density rides the gap only (§1.4).
-*(The precursor `geometry.html`'s "Slot-presence model" demo was never ported; the 5 anatomy
-permutations × 3 sizes now live as the `button.css`/`text-field.css` slot-presence CSS + their
-`*.browser.test.ts` geometry legs.)*
+Control stylesheets until the W7 cleanup read `var(<derived>, <today's value>)`; the bridge
+(`foundations-bridge.gen.css`) aliases the old `--md-sys-{height,font,icon,gap,compact,space,typescale}-*`
+names, `--md-sys-widget-inset`, `--md-sys-shape-corner-base` and `--ui-box-*` onto the derived values, and
+`[data-foundations="legacy"]` pins a region to today's literals. All of it retires at W7 (one release after
+the cut, no rollback used); the law above does not.
+
+### 1.4 · The families, retired
+
+The old "frame ∝ height, rhythm ∝ font" split (and "density multiplies the rhythm only") retired with
+`[density]`: under one n the frame and the rhythm move together, and a denser or roomier region is one
+attribute, `data-scale`.
+
+### 1.5 · Slot-presence padding
+
+Each inline edge pads by what is at it:
+- a **slot** edge (icon or glyph in its `2n` slot): the slot sits flush at the control's own padding, and the
+  mark centers inside it (an icon fills it, a glyph leaves `c` clear on each side);
+- a **slotless** edge (a bare label): the entry controls pad `n`, a pill button pads `2n` (and `n` beside an
+  icon), so a label never jams the edge.
+
+A `[label · caret]` control is asymmetric by design. The grid is presence-driven (`:has()`), so an absent slot
+leaves no phantom gap: `lead+trail → auto 1fr auto` · `lead-only → auto 1fr` · `trail-only → 1fr auto` ·
+`none → 1fr` · `icon-only (no label) → square`, `4n` on a side.
 
 ---
 
 ## 2 · The centering law (the one rule)
 
-> **Edge padding for a glyph = (height − glyph) / 2** — each glyph centers in a square cell of side =
-> the control height.
+> A mark centers in a square slot; **`padding-block` is `0` and `block-size` is the lever.**
 
-- **inline-pad = (height − icon) / 2** — one uniform pad; the icon centers in a `height²` cell. *(ui-md/sm: (28−18)/2 = 5)*
-- **No separate trail-pad** — the caret centers in the **identical `icon`-sized slot** (§1.4), so it lands
-  at `pad + ½(icon − caret)` on its own; the asymmetric trailing edge is emergent, never authored.
-- **gap = font / 2** · **caret = font** — the *rhythm* family (§1.4); the pad/slot are the *frame* family.
-- **min-width = height** (the 1:1 floor): a glyph-only control is at least square; padding lives
-  *inside* the square, never widening it. Contents centered.
-- **density** multiplies the **rhythm** (gap) only — never the frame (pad/slot/icon), or the icon
-  un-centers and the square breaks.
-- **single-line Control text: `line-height = 1`** (the vertical-text companion — ADR-0036): the single line
-  centers in the fixed frame (`align-items: center`) with no extra leading, exactly as a glyph centers in its
-  square cell; `line-height 1` tightens the line box, never the box. A fleet `:root` constant
-  `--md-sys-control-line-height: 1`. **EXCLUDES** the Display class (`ui-text`), which keeps its multi-line
-  `--md-sys-typescale-*-line-height` (ADR-0078, superseding ADR-0025's retired `--ui-type-{level}-leading`).
-
-For a **label-only / slotless** edge (no glyph there), the law has no glyph to center; the edge takes
-**`h/2`** (§1.5 — the text pad `½(h − font)` plus the absent slot's gap `½·font`), not `(height − glyph)/2`.
+- A button or toggle (pill) and an entry control are `4n` tall; `padding-block: 0`; borders sit inside the
+  box (padding = rule minus border width).
+- The icon-only control is a `4n` square, the ADR-0223 R3(a) floor
+  (`min-inline-size: var(--ui-{name}-height)` resolving to `4n`).
+- **Single-line control text: `line-height = 1`** (ADR-0036, unchanged): the line centers in the frame with
+  no extra leading. `--md-sys-control-line-height: 1` is a `:root` constant in `dimensions.css`. It excludes
+  the display class (`ui-text`), which keeps its per-role line height; the skill's 1.2 applies only to control
+  text that wraps.
+- Concentric corners by construction: a container's radius equals its margin and a control's radius equals its
+  inset (§4.9); the pill is the one control that is not concentric.
 
 ---
 
-## 3 · How the shipped sizes map onto the law (reference/law-only — Kim's ruling)
+## 3 · How the shipped sizes map onto the law
 
-> **REALIZED — Kim's `(scale × size) → §1-row` lookup (ADR-0038, 2026-06-30; NO multipliers).** Kim ruled
-> *"let's not use multipliers."* The control ramp is an **explicit per-`[scale]` table**: each
-> `(scale × size)` cell names **one §1 row**, and `--ui-{height,font,icon}` (plus caret/gap/pad) **all come
-> from that one row** — height and glyphs are mutually consistent. `[scale]` re-tables the tokens (the
-> `--md-sys-compact` re-table mechanism, extended to height/font/icon); `[size]` selects sm/md/lg; descendants
-> inherit (no `--md-sys-scale` in the control path). The **default (`ui-md`) is byte-identical** (24·28·36 /
-> font 13·14·16 / icon 16·18·20). Kim's design is a **shift-by-one-row ladder**: the `content-*` band is the
-> `ui-*` band shifted up one §1 row, so `content-sm ≡ ui-md` and `content-md ≡ ui-lg` (the 6 `[scale]` names
-> render 4 distinct registers — deliberate). Kim's authoritative table is in **ADR-0038 clause 1**.
->
-> *(History — superseded by ADR-0038: the control ramp was a per-tier `--md-sys-scale` **multiplier**
-> (ADR-0032 `0.875…1.75`) with **sublinear `pow` glyphs** (ADR-0033), then **snapped to §1**
-> (ADR-0035/0037). Kim replaced the whole multiplier with the explicit lookup. `--md-sys-scale` survives for
-> Display's `--md-sys-typescale-*-size` only (formerly `--ui-type-*`, retired by ADR-0078) — the
-> ruled-linear fork, ADR-0025/0033. The §5.2 `--md-sys-compact-*` box ramp is a **separate** re-table,
-> unaffected.)*
-
-No size-ramp migration. The two-axis model:
-- `scale` (`ui-sm…content-lg`) × `size` (`sm/md/lg`) **selects a §1 row** (Kim's table, ADR-0038);
-  `--ui-{height,font,icon}-{size}` are that row's values, re-tabled per `[scale]` in `dimensions.css` (no
-  multiplier, no `pow`).
-- A control resolves its **height + font + icon** from the **one** selected row, then **obeys §1.4**:
-  the icon-sized slot; uniform `inline-pad = ½(height − icon)`; the rhythm rules `gap = font/2`,
-  `caret = font` — all from the same row.
-
-The ramp in §1 is the **reference** for choosing the tabled icon/caret/font at a given height (e.g. a
-28px control → MD row → icon 18 · caret 14 · font 14). The point is the *relationships*, not a forced
-6-step `size` enum.
+The old `[scale]` tiers, their literal tables and Kim's `(scale × size)` lookup (ADR-0038) are superseded by
+ADR-0245 and retired from `dimensions.css`, which now holds only constants (focus ring, scrollbar, motion,
+pending and working states, typefaces, the typescale weight, line-height and tracking legs). A control reads
+its size prop as z and inherits tier and scale from its region; nothing in a stylesheet names a height.
+The root is product at scale sm; an A2UI surface root carries `data-scale="md"`; a reading column sets
+`data-tier="content"`. `[scale]` and `[density]` survive one release as bridge aliases of those axes.
 
 ---
 
 ## 4 · Sub-systems, transposed onto the law
 
-### 4.1 · Caret / chevron — **`= font`** (rhythm family, §1.4) — LANDED
-The dropdown/disclosure caret is sized `= font` (1:1), not the old `font × 0.75` (ui-md/md 9.75 vs
-`font = 13` — too small). **Landed** via `--ui-glyph-ratio: 1`, so every `--ui-{cmp}-glyph = font × 1`.
-Two embodiments, **same size and same `½(h − font)` inset**:
-- a **mask** glyph (a registry SVG mask in `--ui-glyph-ink` → `CanvasText` in forced-colors) — `select`'s
-  ▾, the field stepper arrows, the clears, `disclosure`'s rotation chevron;
-- a **slotted** `<ui-icon name=caret>` — a button's caret: sized `var(--ui-{cmp}-font)`, edge pad
-  `½(h − font)` (`BTN-CARET`). A NON-caret content icon in the same button keeps `--md-sys-icon-*`.
+### 4.1 · Marks and carets: the glyph box (ADR-0245 cl.4 and cl.5)
 
-(The `½(h − icon)` slot edge with the caret centering *within* the icon-sized slot, and the direct
-`½(h − font)` pad, give the **same** result — the caret lands `½(h − font)` from the edge either way.)
-The full sizing taxonomy — affordance vs content-icon vs nav-button — is **§4.6**.
+A functional mark (a caret, check, plus, minus, dot, x, ellipsis, warning, info) is a `ui-glyph`, drawn from
+one path table in `components` as a stroke path in a fixed viewBox with `vector-effect: non-scaling-stroke`,
+so the stroke is the token `--md-sys-glyph-stroke`. Its box is `2n - 2c` (8 / 10 / 12 at the root's sm / md /
+lg), always inside a `2n` slot, so an icon and a glyph in neighbouring slots share the slot box and the centre
+line. A caret is no longer drawn at the control font. A control with a child slot renders `<ui-glyph>`; a
+control that drew on a pseudo-element either gains a `ui-glyph` child or reads a generated mask token from the
+same table, and never re-draws a mark by hand.
 
-### 4.2 · Icon (leading) — **tabled** from the ramp's icon column
-A leading icon (a field's `slot=icon`, a button's icon) is sized from the **icon** column
-(14/16/18/20/24/28); the icon-side inline padding = `(height − icon)/2`. The standalone `<ui-icon>`
-display element is the same box.
+### 4.2 · Icon (leading)
 
-### 4.3 · Padding — per-edge, by slot presence (§1.4 / §1.5)
-- a **slot** edge → `½(height − icon)`; a **slotless** edge → `h/2` (= text pad + the absent slot's gap,
-  §1.5). When both edges are slots the pad is uniform `½(height − icon)`; the trailing caret's deeper
-  inset comes from centering in the icon-sized slot, not a separate pad. The presence-driven grid leaves
-  no phantom gap on an absent slot.
-- `padding-block: 0` — **block-size is the lever** (§0 invariant), never block-padding; the glyph's
-  *effective* vertical margin (`½(height − glyph)`, from centering) equals the inline-pad → the
-  affordance occupies a `height²` square cell.
+A leading icon (a field's `slot=icon`, a button's icon) is pictorial pack art (ADR-0065/0066) in the `2n` icon
+box (12 / 14 / 16 at the root). The standalone `<ui-icon>` is the same box.
 
-### 4.4 · Gap — `= font / 2` (rhythm family, §1.4)
-Icon↔label and label↔caret gaps = `font / 2` (0.5em) × density — smooth across the ramp, and it tracks
-the text it spaces (superseding the earlier `4/8` spacer band).
+### 4.3 · Padding
 
-### 4.5 · `--space-*` is LAYOUT spacing — separate from control geometry (RESOLVED)
-The `--space-*` scale (page gutters, card/stack gaps, section rhythm) is a **different concern** from
-control padding (which is the law above). Control padding/spacers come from the ramp + §2; `--space-*`
-is for the space *between* components. The naming question this section once deferred is resolved:
-the fleet ships `--md-sys-space-{none,xs,sm,md,lg,xl}` (`dimensions.css`, density-scaled via
-`× --md-sys-density`), consumed fleet-wide (radio-group's inter-item gap, bar-chart's row rhythm,
-container regions). It sits alongside a THIRD spacing concern this law doesn't cover: a container's
-own interior rhythm (`--surface/container-box.css`, ADR-0046 — nested content padding 12→8→4 by
-descendant level). Three registers, not two: **control padding** (this document, the centering law)
-· **layout spacing** (`--md-sys-space-*`, between components) · **container interior** (ADR-0046, inside
-a region). None of the three derives from either of the others.
+Per class (see `geometry.md`): entry and trigger controls pad `n`; a pill button `2n` beside a label and `n`
+beside an icon. `padding-block: 0` always.
 
-### 4.6 · Affordance vs content-icon — the sizing taxonomy (the catalog audit, 2026-06-18)
-A glyph's size is decided by **what kind of glyph it is**, not where it sits:
+### 4.4 · Gap
 
-- **Inline affordance** — a caret · dropdown-chevron · disclosure-marker · stepper-arrow · clear `×` ·
-  calendar-nav `‹›`. Rides next to / within text → **`= font`** (`--ui-{cmp}-glyph = font × ratio`,
-  ratio 1). Mask glyph **or** slotted `<ui-icon name=caret>` — same size, `½(h − font)` inset (§4.1).
-- **Content icon** — a field's leading icon, a status icon (alert/callout/toast), an avatar, the search
-  magnifier. It is *content*, not an affordance → **`= --ui-ind`** (the indicator/icon ramp).
-- **Nav icon in a standalone control button** — a carousel prev/next; a pagination chevron next to the
-  page *numbers*. An icon-button, not an inline affordance → sized to **match its context** (pagination
-  `1em` next to the numbers; carousel a box-scaled glyph filling its round button). A deliberate
-  exception (recorded in the GEO opt-out notes), not the font rule.
+Mark-to-label gap is `n` (it was `font/2`); a field label sits above with gap `ceil(n/2)`; a boxed indicator to
+its label is `n`.
 
-**The bug class** (Kim caught the button caret; the audit caught `disclosure`): an *inline affordance
-sized to `--md-sys-icon-*`* renders ≈1.2–1.5× the text — visibly oversized. The fix is always the same — size
-it `= --ui-{cmp}-glyph` (font), not the indicator ramp. The `GEO` AFFORDANCE set (§6) mechanizes this
-for every masked affordance; `BTN-CARET` for the slotted button caret.
+### 4.5 · `--md-sys-space-*` is LAYOUT spacing, a generated alias layer
 
-### 4.7 · Display marks — no ramp row, type-context-derived boxes (2026-07-08)
+`--md-sys-space-{none,xs..2xl}` is a generated alias layer over the container values at the element's n
+(`xs` c, `sm` n, `md` n + c, `lg` 2n, `xl` 3n, `2xl` 4n), so the six A2UI `gap` enums keep their names. It is
+the space between components. Three registers remain: **control padding** (the n rules above), **layout
+spacing** (`--md-sys-space-*`), and **container interior** (the four container levels, ADR-0245 cl.6, which
+replaced ADR-0046's fixed 6 / 12 / 8 paddings and the nested 12 to 6 to 6 step-down).
+
+### 4.6 · Affordance vs content-icon, now icon vs glyph
+
+What a mark IS decides its box, not where it sits: an **icon** (a pictorial pack symbol: a field's leading
+icon, a status icon, the search magnifier) is the `2n` box; a **glyph** (a caret, chevron, stepper arrow, clear
+`x`, disclosure marker, calendar-nav caret) is the `2n - 2c` box. The old bug class, an inline affordance sized
+to the icon ramp so it renders about 1.3 times the text, is now closed by construction: a mark is a
+`<ui-glyph>` or a glyph-box token, never an icon-sized pack caret. A nav icon in a standalone control button
+(a swiper paddle, a pagination chevron) takes the glyph in its `2n` slot.
+
+### 4.7 · Display marks: no ramp row, type-context-derived boxes (2026-07-08)
 
 Not every Display-class member is text. `ui-icon` and the chart family (`ui-sparkline`,
-`ui-bar-chart`, ADR-0107) take **no** `[size]`/`[scale]` ramp row and **no** control height — they
+`ui-bar-chart`, ADR-0107) take **no** control height and no control row of the §1 ramp, they
 size relative to their own **type context** (em/lh-derived), the same "no control height" law §1's
 `geometry.md` five-class table states for Display, extended past text to marks:
 
-- `ui-icon` sizes `1em` (the type-context posture; ADR-0035).
-- `ui-sparkline` defaults to an explicit `8em × 1lh` box (SPEC-R9 AC1) — a deterministic floor, not
+- `ui-icon` is the `2n` icon box (`--md-sys-icon-box`, ADR-0245 cl.4; it was `1em`, ADR-0035) and `ui-glyph`
+  the `2n - 2c` glyph box, each a box of its own n and not a control row (§4.6).
+- `ui-sparkline` defaults to an explicit `8em × 1lh` box (SPEC-R9 AC1), a deterministic floor, not
   a derived one, because a zero-size default would make the whole-shape law (§ below) unenforceable
   on an inline mark with no intrinsic content size.
 - `ui-bar-chart` is text-bearing Display: its labels/values read `--md-sys-typescale-*` directly
-  (no repoint needed — it's already the fleet's font source), and row rhythm rides `--md-sys-space-*`
+  (no repoint needed, it's already the fleet's font source), and row rhythm rides `--md-sys-space-*`
   (density-responsive for free, the ADR-0103 radio-group precedent); only the mark geometry itself
   (bar thickness, the zero-baseline stroke) is density-invariant, per its own `--ui-{name}-*` tokens
   in the standard `:where()` block.
 
-None of the three consumes `--md-sys-height-*`, `--md-sys-font-*`, or `--md-sys-icon-*` (the CONTROL ramp) —
-they are a fourth register beside frame/rhythm/compact-box: **type-context**, governed by
-`references/geometry.md`'s Display row, not this document's §1 table.
+None of the three consumes `--md-sys-height` (the control height), and the charts read type and
+space only, they are a register beside the control frame: **type-context**, governed by
+`references/geometry.md`'s Display row, not this document's §1 derivation.
 
 ### 4.8 · The width-floor law family (test-the-whole-shape, 2026-07-08)
 
-§2's `min-width = height` square floor is the ORIGINAL width-floor law but not the only one shipped
-since — every one exists because a control with real content collapsed to near-nothing under a
+§2's `min-width = height` square floor (now `4n`) is the ORIGINAL width-floor law but not the only one shipped
+since, every one exists because a control with real content collapsed to near-nothing under a
 flex/grid parent with no intrinsic sizing pressure (the "ui-slider DOT" scar: every part-level px
 assertion passed while the whole control rendered as a point). The family, by mechanism:
 
@@ -362,109 +202,44 @@ assertion passed while the whole control rendered as a point). The family, by me
 
 The generating rule: **any control whose rendered width would otherwise derive from zero-or-near-zero
 intrinsic content (an icon-only frame, free-typed text, a track with no label, a mark with no glyph)
-needs an explicit floor** — and the floor is proven, never assumed, by measuring the REAL rendered
+needs an explicit floor**, and the floor is proven, never assumed, by measuring the REAL rendered
 bounding box in a realistic flex/grid container (a browser leg, jsdom cannot compute layout px). A
 control that only ever sits beside guaranteed-wide siblings does not need one; the audit is per-class,
 not universal.
 
+### 4.9 · Containers, placement and radius (ADR-0245 cl.6)
+
+Four levels at the container's own n (root md, n 7, c 2): **group** (margin and radius `n + c`, gutter `c`:
+listbox panels, segmented-control, table rows, tooltip), **widget** (`2n`, gutter `n`: popover, toast,
+form-popover panel), **card** (`3n`, gutter `2n`: card, modal, drawer, command-modal) and **layout** (`4n`,
+gutter `3n`: super-shell frame and bars, the docs page frame). A container pads with its margin; a boxed child
+at an edge sits at `margin - its own inset` via a negative margin of `--md-sys-inset` resolved on the child.
+ADR-0018's `max(0, r - pad)` chain retired. ADR-0046 keeps `[data-box]`, the flow-root BFC, sticky regions
+and the scroll-fade mask; it loses the fixed inset and paddings and density-invariance.
+
 ---
 
-## 5 · Implementation status — LANDED (the §5 gap is closed, 2026-06-18)
+## 5 · Implementation status
 
-The three gaps the shipped code once had are **all closed**:
+**LANDED 2026-10-13 (the cut, #1932).** The derived tokens are the default at `:root`; `dimensions.test.ts` is
+rewritten against `resolve()`; the per-control geometry pins, the 36-cell browser leg and the census gate
+(`scripts/foundations-census.mjs`) ride the gates; `scripts/foundations-probe.mjs` classes every sized control
+against its clause 3 rule. **Open:** the W7 cleanup (`var(<derived>, <today>)` collapses to `var(<derived>)`;
+the bridge, `[scale]`, `[density]`, the `glyph` alias and the `legacy` opt-out retire; the px-literal rule
+enforces), one release after the cut with no rollback used.
 
-1. **Caret = font** (was `font × 0.75`). Done globally — `--ui-glyph-ratio: 0.75 → 1`, so
-   `--ui-{cmp}-glyph = font`; both mask glyphs and the slotted button caret (§4.1/§4.6).
-2. **The slot model** — a presence-driven `:has()` grid, identical `icon`-sized leading/trailing slots,
-   `inline-pad = ½(h − icon)` on a slot edge / **`h/2`** on a slotless edge (§1.5). Shipped on button,
-   select, and (via the border-on-host field frame) every input field.
-3. **Inline padding = `h/2`** on the comfortable controls' value/text edge (was `2px + h·0.375·density`),
-   and **density moved off the pad onto the gap** — the `h/2` pad is density-invariant (§1.4).
+### 5.1 · Migration policy
 
-The min-width = height 1:1 floor + the icon-only square were already shipped on the button. Every facet
-is probe-locked (§6), and the migration is **complete for the comfortable controls + the compact realm**
-(§5.1) — verified fleet-wide by the 96-component audit.
+Each family lane rewrote its folders' geometry as `var(<derived>, <today>)`, renamed its `glyph` call sites to
+`symbol`, converted its marks to `ui-glyph`, repaired its descriptors' `geometry:` lines and recorded its
+goldens; the cut flipped the root with one config field. A consumer opts a region out for one release with
+`data-foundations="legacy"`.
 
-### 5.1 · Migration policy (Kim ruled 2026-06-18, refined to slotless = h/2) — the global standard
+### 5.2 · The compact box ramp, retired
 
-**Two edge cases, fleet-wide:** a **slot** edge → `½(h − icon)`; a **slotless** edge → **`h/2`** (§1.5).
-The earlier `½(h − font)` (≈ 9.5px at md) read tight on a slotless edge — adding the absent slot's gap
-gives `h/2` (≈ 16px), Kim's ruling "h/2 on every slotless edge" (2026-06-18).
-
-> **Scope note (2026-07-08):** this §5 migration narrative (v3→v4, 2026-06-18) predates `agent-ui` and
-> describes the **RCE-precursor fleet's** control roster — the law transferred to agent-ui in full;
-> some precursor NAMES did not. Mapping: `date-picker`/`date-range-picker` → `ui-text-field
-> type="date"` (which opens `ui-calendar` on first focus, ADR-0048) + `ui-calendar mode="range"`
-> (ADR-0093); `dropdown`/`listbox` → `ui-select` (native-select-parity) / `ui-combo-box` +
-> `ui-menu`/`ui-option`; `masked`/`pin`/`tags` → `ui-text-field`'s type union (the 12-type codec
-> family, ADR-0044/0047) does not (yet) carry a dedicated `pin`/`tags` type — read those two names as
-> historical, not shipped. The `h/2` law itself is unaffected; only the roster's proper nouns drifted.
-
-The `h/2` standard applies to the **comfortable controls** — `ui-button`, `ui-select`, the **fields**
-(text/number/currency/percent/unit/search/masked/email/url/tel/password/date/time/file),
-`ui-combo-box`, `ui-text-field type="date"` (opens `ui-calendar` — the date-picker/date-range-picker
-precursor names), `ui-menu`:
-- a slotless/text edge → **`h/2`** — *geometric* (NOT density-scaled).
-- a slot edge (icon/caret/adornment) → `½(h − icon)`, presence-driven (§1.5) — so `[label · caret]` is
-  value `h/2` / caret `½(h − glyph)` (asymmetric by design).
-
-**The compact/dense realm is a SEPARATE size system** (Kim 2026-06-18): `ui-slider`,
-`ui-slider-multi`, `ui-radio`, `ui-switch`, `ui-checkbox`, `ui-segmented-control`/`ui-segment`
-(shipped), plus `ui-kbd`/`ui-badge`/`ui-tag`/`ui-chip` (the precursor-fleet roster this realm was
-designed against — `ui-badge` is the report-family intake, ADR-0111; `kbd`/`tag`/`chip` stay
-unshipped) and siblings
-are *always compact and dense*. Two rules:
-- **keep the compact pad — NOT h/2** (`h/2` would over-pad a keycap / count pill / thumb): they keep
-  `2px + box·ratio·density`.
-- **size on the dedicated compact box ramp (§5.2)** — a **TWO-BAND ladder** (Kim 2026-06-19, no longer
-  the uniform 14→24): the `ui-*` scales are tight (`12·14·16·18·20`, 2px steps), the `content-*` scales
-  generous (`18→32`, 4px within-scale). Distinct from the comfortable controls' height ramp (18→64).
-
-Global everywhere: **`caret = font`** (done — `--ui-glyph-ratio: 1`; the `×`/chevron on the compact
-chips too), **`gap = font/2`**, **density on the gap, not the pad** (the `h/2` pad is density-invariant).
-
-A fleet-wide visual change to released v3 → **v4 — LANDED (2026-06-18).** The global mark = font (mask +
-slotted); `ui-button` (full per-edge slot model + `BTN-CARET`); `ui-select` (value `h/2`, caret slot);
-**all 15 input fields** (value edge `h/2` + the border-on-host frame so a slotted adornment sits inside
-the box); the **compact realm** on its two-band box ramp (§5.2; incl. `ui-slider-multi`, repointed in the audit).
-`ui-text-field type="date"`'s calendar trigger is an **icon-only square** (no value edge to halve —
-correct as-is); `ui-select`/`ui-menu` items keep the **legacy item-pad** (item rows are not
-"comfortable controls", §4.6).
-
-### 5.2 · The compact box ramp — the two-band ladder (Kim ruled 2026-06-19)
-
-> **REVISED — Kim's 8-value widget ramp (ADR-0041, Kim-ratified 2026-06-30).** The two-band §5.2 ladder is
-> replaced by Kim's **single 8-value widget ramp** `12·14·16·18·20·22·24·28` — the widget analog of the §1
-> control ramp — sized via the **same explicit per-`[scale]` lookup as ADR-0038** (no multiplier). The table
-> below is updated to it (the off-ramp `26`/`32` are dropped; the content band is now 2px-stepped, all 6
-> tiers DISTINCT). Default `ui-md` `14·16·18` byte-identical. **The realm becomes CONSUMED** — the Indicator
-> (checkbox/switch/radio) + Range (slider) controls build on `--md-sys-compact-*` (#49). Adds the **2px inset law**
-> (clause below) via `--md-sys-widget-inset: 2px`. *(Prior — ADR-0032 built the `--md-sys-compact-*` per-`[scale]`
-> re-table mechanism, forward-ready/unconsumed; that mechanism stays, the VALUES are revised here.)*
-
-The widget realm sizes its box on `--md-sys-compact-{sm,md,lg}` (`dimensions.css`) — Kim's 8-value ramp, distinct
-from the **glyph** ramp `--md-sys-icon-*` (ADR-0035 — the live name; earlier drafts of this ramp used the
-now-retired `--ui-ind` token name, both mean the same icon-size ramp) and from the
-comfortable **control-height** ramp (§1, ADR-0038). All 6 `[scale]` tiers resolve to **distinct** widget
-triples (the widget ramp is denser/more-linear than the sparse §1 control ramp, so — unlike ADR-0038's
-`content-sm≡ui-md` overlap — the widget tiers do not collapse):
-
-| scale | sm | md | lg |
-|---|---|---|---|
-| **ui-sm** | 12 | 14 | 16 |
-| **ui-md** (default `:root`) | 14 | 16 | 18 |
-| **ui-lg** | 16 | 18 | 20 |
-| **content-sm** | 18 | 20 | 22 |
-| **content-md** | 20 | 22 | 24 |
-| **content-lg** | 22 | 24 | 28 |
-
-Every cell ∈ Kim's ramp `12·14·16·18·20·22·24·28`; monotonic both axes; all 8 values used. The box is
-**density-invariant** (density rides the pad, not the box, §1.4); the compact pad stays `2px +
-box·ratio·density` (§5.1). **The 2px inset law (thumbed widgets — switch/range):** a thumb in a track insets
-`2px` on every edge → `thumb = box − 2×2px`, `track = the widget box`; **flat 2px** (a frame constant, like a
-1px border — not box-scaled), density-invariant (`--md-sys-widget-inset: 2px`). Mechanized: `DIM-COMPACT`
-(per-cell exact + **all-6-tiers-distinct** asserted — the widget box does NOT step) + the smoke
-`COMPACT_LANES` (the rendered box + the 2px inset in Chromium).
+ADR-0041's 14 / 16 / 18 widget ramp (`--md-sys-compact-*`, Kim's eight-value `12 to 28` ladder) and the flat
+2px `--md-sys-widget-inset` retired. An indicator's box is `2n`, its thumb `2n - 2c`, a progress track `2c`;
+`--md-sys-compact-*` and `--md-sys-widget-inset` survive only as bridge aliases (`2n` and `c`) until W7.
 
 ---
 
@@ -472,63 +247,29 @@ box·ratio·density` (§5.1). **The 2px inset law (thumbed widgets — switch/ra
 
 | Law | Probe |
 |---|---|
-| value edge `= h/2` (comfortable); slot edge `½(h − icon)` | per-field `*-DIM` source probes (the calc) + the smoke `CONTROL_LANES` (`SLOT_PAD` h/2, real Chromium) |
-| identical leading/trailing slot = `icon` square; icon-only square | `BTN-*` source + the icon-only-square Chromium measurement |
-| **mask affordance `= font`** (caret/chevron/clear/marker) | **`GEO1–3`** over the `AFFORDANCE` set (**17** components): `--ui-{cmp}-glyph = font × --ui-glyph-ratio`, referenced in styles, no eyeballed em |
-| **slotted button caret `= font`** (not `--md-sys-icon-*`); edge `½(h − font)` | **`BTN-CARET`** — the probe that would have caught the oversized caret |
-| compact realm on the `14→24` ramp (`--md-sys-compact-*`) | `DIM-COMPACT` (the ramp) + per-control `*-DIM` (e.g. **`MTS-DIM`**, which caught the slider-multi miss) |
-| `gap = font/2`; density on the gap, **not** the pad | source over the token chain; Chromium: icon-only stays square under `[density]` |
-| rendered px responds to size/scale/density | `DIM-R*` + per-control Chromium dim legs |
-| `0 < glyph ≤ box` in the real engine | `GEO-LAW` smoke |
-| **rendered gestalt** — paint, layering, wash continuity, ellipsis pixels (what a computed-style/bounding-box assertion structurally cannot see) | the pixel-diff harness (ADR-0110, 2026-07-08): `*.visual.browser.test.ts`, Chromium-only committed baselines under `__baselines__/`; numeric geometry claims stay on the probes above, on both engines — this row is for CLAIMS WORDED IN PIXELS ("matches baseline", "the wash continues across the endpoint") |
+| the config is coherent | `check()` M1 to M10: the generator refuses to emit, a vitest leg asserts `[]` |
+| the generated sheets are never hand-edited | `--check` on `check:scripts` (`foundations.test.ts`) |
+| computed tokens equal `resolve()` | the 36-cell browser leg (every tier, scale and size cell, both engines) |
+| each control obeys its clause 3 rule | `scripts/foundations-probe.mjs` (a class table, `--strict`) plus each control's geometry pin at sm, md and lg against `resolve()` |
+| no hand-tabled ramp, px geometry literal, old `glyph` prop or `[scale]` / `[density]` use | `scripts/foundations-census.mjs --gate` (empty allowlist after the cut) |
+| fill-by-default posture and the width floors | `sizing-gates.test.ts` (ADR-0223), untouched by ADR-0245 |
+| `0 < glyph ≤ box` and the glyph set | `glyph.browser.test.ts`, `glyph-usage-coverage.test.ts` |
+| rendered gestalt (paint, layering, ellipsis pixels) | the pixel-diff harness (ADR-0110): `*.visual.browser.test.ts`, goldens regenerated at the cut |
 
-Every law is a probe, or it isn't a law — new geometry lands with its probe. **Completeness:** the
-source probes only enforce what's *in their lists* — a masked affordance not in the `GEO` `AFFORDANCE`
-set, or a control not in a `*-DIM` probe, is unguarded. The **96-component render-aware audit**
-(2026-06-18) is the periodic completeness sweep that catches what the lists miss — it found `disclosure`
-(affordance sized to `--md-sys-icon-*`, now in the set) and `slider-multi` (off the compact ramp, now
-`MTS-DIM`-locked), with the rest of the catalog confirmed conformant.
+Every law is a probe, or it isn't a law; new geometry lands with its probe. The probes only enforce what is in
+their lists, so a sized control outside the class table fails `--strict` rather than passing unmeasured.
 
 ---
 
-## 7 · Ratified decisions (Kim, 2026-06-18)
+## 7 · Ratified decisions
 
-1. **The §1 master table (this document) is the authority** for the geometry **law** (the centering
-   padding + the tabled icon/caret/font ramp). *(`component-sizes.md` was a working-name precursor for
-   the hand-tuned ramp; it was never materialized as a file — its values live in §1 here, even-rounded.
-   References to `component-sizes.md` below are to that absorbed precursor, not a live file.)* **Reference/law
-   only** — the `scale × size(sm/md/lg)` model maps onto it; **no size-ramp migration**.
-1b. **The glyph ramp is codified as a sublinear power law** (§1.1): `icon = 2.49·h^0.58`,
-   `font = 3.16·h^0.45 (≈√h)`, `caret = 4.08·h^0.35` — reproduces the table to ±1px and generalizes to
-   any mapped height. The fraction-of-box shrinks as the box grows (the optical correction).
-   **One generating rule** (§1.3): round the power law — glyphs to even, font to nearest — so the
-   canonical caret is `12,14,14,16,16,18` (the even-round; `component-sizes.md` floor-rounds SM·LG).
-2. **Two families + the slot-container model** (§1.4): a **frame** that scales with height (icon, slot,
-   pad, min-width, pill) and a **rhythm** that scales with font (gap, caret). Leading/trailing slots are
-   the **identical `icon`-sized square**; one uniform `inline-pad = block-pad = ½(height − icon)` (the
-   `height²` cell) → **no trailing-pad**. **`gap = font/2`** · **`caret = font`** (1:1). Density
-   multiplies the **rhythm only**. Verified live per-control (§6's `*-DIM`/`GEO*` probes + browser legs
-   — the precursor `geometry.html` demo was never ported into agent-ui).
-2b. **Slot-presence padding** (§1.5): two edge cases — a **slot** edge → `½(h − icon)`, a **slotless**
-   edge → **`h/2`** (= text pad `½(h−font)` + the absent slot's gap `½·font`). A control gains the gap's
-   breathing room when a slot is absent (Kim 2026-06-18, "h/2 on every slotless edge"). A
-   presence-driven `:has()` grid leaves no phantom gap.
-3. **min-width = height** — the 1:1 floor; icon-only forced square (shipped: `BTN-CSS`).
-4. **pill radius = height/2** — the one size-linked radius; the `none/sm/md/lg/full` ladder is otherwise
-   flat (not size-linked).
-5. **content-\*** indicators carry their own authored rows (shipped: `DIM4`).
-6. **`--md-sys-space-*`** is layout spacing only (page/card/section), **not** control padding — shipped
-   and density-scaled (§4.5); a third register, container interior rhythm, is ADR-0046's.
-
-7. **Affordance taxonomy** (§4.6, the catalog-audit lesson): an **inline affordance** (caret / chevron /
-   marker / clear) `= font`; a **content icon** `= --ui-ind`; a **nav-icon-in-a-button** matches its
-   context (a deliberate opt-out). An inline affordance sized to `--md-sys-icon-*` is the oversize bug class —
-   `GEO`/`BTN-CARET` mechanize it.
-
-**Landed (v4, 2026-06-18):** the §5 gap is closed — the slot model + `h/2` value edge, `caret = font`
-(mask + slotted), `gap = font/2`, density on the gap — each with its §6 probe; the 96-component audit
-confirmed it fleet-wide (fixing `disclosure` + `slider-multi`). The two latent low-stakes cleanups the
-audit flagged are also landed: the dormant field-frame `[slot=caret]` box now sizes to font (split off
-the adornment `--md-sys-icon-*`, so an author-slotted field caret obeys §4.6), and the standalone
-`--ui-glyph-ratio` fallback is standardized to `1` across all affordance components (was a stale-`0.75` /
-no-fallback drift; runtime-tokens.css stays fallback-free per GEO1).
+1. **ADR-0245 (Kim, 2026-10-13)** is the authority: one n per element, root `product` at scale `sm` (sizes 24 / 28 /
+   32), the A2UI canvas at scale md, the pill kept for button and toggle, the avatar `4n`, the glyph stroke
+   `max(1.5px, c/2)`, `icon` and `glyph` as separate boxes and elements with the shared `symbol` prop, four
+   container levels, type derived behind `ui-text`'s unchanged API.
+2. **ADR-0036 stands:** single-line control text is `line-height: 1`.
+3. **ADR-0223 is extended, not amended:** fill-by-default, `inline` and R3(a) to (d) stand.
+4. **`--md-sys-space-*` is layout spacing only** (a generated alias layer), not control padding.
+5. **Superseded:** ADR-0038 (the per-`[scale]` tables), ADR-0041 (the widget ramp), ADR-0150 (the compact-window
+   body drop); partially superseded: ADR-0046 cl.1 and cl.3, ADR-0078 cl.2 and cl.2b, ADR-0007, ADR-0015 cl.5,
+   ADR-0018.

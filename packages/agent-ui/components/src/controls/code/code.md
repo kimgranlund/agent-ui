@@ -63,7 +63,7 @@ geometry:
   fontFamily: var(--ui-code-font)         # --md-sys-typeface-mono, the minted monospace constant
   fontSize: var(--ui-code-size)           # --md-sys-typescale-body-medium-size
   lineHeight: var(--ui-code-line-height)  # --md-sys-typescale-body-medium-line-height
-  padding: var(--ui-code-pad-block) var(--ui-code-pad-inline)  # density-INVARIANT frame (12px/8px, ADR-0113 cl.2 — not the --md-sys-space rhythm ladder)
+  padding: var(--ui-code-pad-block) var(--ui-code-pad-inline)  # scale-INVARIANT frame (12px/8px, ADR-0113 cl.2 — not the --md-sys-space rhythm ladder)
   radius: var(--ui-code-radius)           # the fleet --md-sys-shape-corner-base referent
 
 forcedColors: An explicit `@media (forced-colors: active)` block (SPEC-R19) — the host paints CanvasText on Canvas with a 1px CanvasText border, so the surface keeps a visible shape even when the container-seam fill is forced away.

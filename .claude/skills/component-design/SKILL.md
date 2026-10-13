@@ -57,7 +57,7 @@ Load the map skills as you go: [[component-standards]] (law),
    - **Size-class, recorded as the descriptor's `tier:` field** — ONE axis, not two: the
      schema's `SIZE_CLASSES` seven (`control · indicator · range · pattern · container ·
      layout · display`). The value picks the sizing lever (`geometry.md` owns each class's
-     law: §1 ramp row vs widget ramp vs none) AND drives the standing descriptor/site gates.
+     law: the control row at `4n`, the indicator box `2n`, or none) AND drives the standing descriptor/site gates.
    - **Catalog posture**: A2UI-emittable (a catalog row lands with the build, together with its
      `selection.json` entry: intents plus `notFor` confusable siblings, ADR-0232) or permanently
      excluded (`EXCLUSION_ALLOWLIST`) — the ADR-0087 catalog-or-allowlist gate is the law;
@@ -72,10 +72,10 @@ Load the map skills as you go: [[component-standards]] (law),
    | Anatomy | slots × `data-role` roles; host-as-grid vs rendered cell |
    | Props | typed `prop.enum` unions; which reflect; defaults (`''`-first for inherit-ambient semantics) |
    | Events | ⊂ the closed set CLAUDE.md §Conventions owns (`naming.md §4`, gated by `ALLOWED_EVENTS` — read it there; a copied list here drifted past `action`, GH #754) — a name OUTSIDE that set is a fleet-contract fork |
-   | Geometry | the (scale × size) → §1-row assignment, or the widget ramp; the control-class frame laws (floors, radius) |
+   | Geometry | the control's n rule (`height = 4n`, padding, radius, icon box `2n`, glyph box `2n - 2c`) or its indicator box, per ADR-0245 cl.3; the control-class frame laws (floors, radius) |
    | Tokens | the `--ui-{name}-*` roles and which `--md-sys-color-{family}-{role}` each consumes; non-color signifier for any intent |
    | A11y | `internals` role/states (never host attributes); keyboard map; focus behavior |
-   | Interaction states | hover/active/focus/disabled + `[density]` participation are LAW-owned (`interaction-states.md`) — a row here only when the design DEVIATES from the four-state standard (that deviation is a fork) |
+   | Interaction states | hover/active/focus/disabled + `data-scale` participation are LAW-owned (`interaction-states.md`) — a row here only when the design DEVIATES from the four-state standard (that deviation is a fork) |
    | Form participation | UIFormElement value/validity semantics; codec need; labelling-seam wiring |
    | Site surfaces | doc + demo pages, gallery/preview specimen, descriptor — and the standing gates they drag (see the testing map) |
 

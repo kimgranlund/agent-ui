@@ -93,7 +93,7 @@ geometry:
   sizeClass: composite
   posture: fill (the TRIGGER is block-level `grid`, stretching to the parent's inline space — the host generates no box; ADR-0223 §E) · `[inline]` = inline-grid + hug   # Fill by Default — slice 1
   trigger:
-    height: var(--ui-form-popover-height)     # Control class — off the §1-row ramp (ADR-0038)
+    height: var(--ui-form-popover-height)     # Control class — 4n off --md-sys-height (ADR-0245 cl.3)
     font: var(--ui-form-popover-font)
     icon: var(--ui-form-popover-icon)         # the caret CELL is icon-wide
     glyph: var(--ui-form-popover-glyph)       # = var(--md-sys-glyph-box) 2n - 2c under data-tier (the icon cell is the 2n slot), = font elsewhere (the §4.1 caret law)

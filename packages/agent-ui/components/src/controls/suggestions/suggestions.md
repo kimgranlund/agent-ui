@@ -94,9 +94,9 @@ keyboard:
 
 geometry:
   sizeClass: pattern
-  chipHeight: var(--ui-suggestions-chip-height)   # the compact-realm box (--md-sys-compact-lg) — geometry.md names `chip` in its compact-realm list; NOT the control-height ramp Pattern-class rows usually take (ADR-0213's own "deliberately lighter [than Button]" wording is exactly this deviation)
-  chipPad: var(--ui-suggestions-chip-pad)          # the compact-realm pad law `2px + box·ratio·density` (never h/2 — the badge.css precedent)
-  rowGap: var(--ui-suggestions-row-gap)            # between wrapped rows of chips — density-responsive
+  chipHeight: var(--ui-suggestions-chip-height)   # the 2n box (--md-sys-icon-box, ADR-0245 cl.3; --md-sys-compact-lg bridge alias until W7); NOT the 4n control height Pattern-class rows usually take (ADR-0213's own "deliberately lighter [than Button]" wording is exactly this deviation)
+  chipPad: var(--ui-suggestions-chip-pad)          # the chip pad (the badge.css precedent; the legacy fallback is the retired `2px + box·ratio` compact-realm law)
+  rowGap: var(--ui-suggestions-row-gap)            # between wrapped rows of chips — scale-responsive
   colGap: var(--ui-suggestions-col-gap)            # between chips on the same row
 
 forcedColors: A dedicated `@media (forced-colors: active)` block (suggestions.css) — every chip is a real bordered/filled box: idle chips repaint to `Canvas`/`ButtonText`, the taken chip inverts to `Highlight`/`HighlightText` (the segmented-control.css moving-fill precedent), and spent untaken siblings step to `GrayText` (the platform's own disabled-text convention).

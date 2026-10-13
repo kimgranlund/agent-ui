@@ -107,7 +107,7 @@ geometry:
   sizeClass: composite   # a two-part composite (LLD-C5): no trigger — a virtual row-height lever; listbox = Container/surface; rows = legacy item-pad
   posture: fill (block-level host, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-block + hug   # Fill by Default — slice 1 (entry family)
   lever:
-    height: var(--ui-multi-select-height)          # virtual — off the §1-row ramp (ADR-0038), the SAME lookup ui-select's trigger uses
+    height: var(--ui-multi-select-height)          # virtual — 4n off --md-sys-height (ADR-0245 cl.3), the SAME rule ui-select's trigger uses
     font: var(--ui-multi-select-font)
     icon: var(--ui-multi-select-icon)               # the checkmark's leading cell size
     glyph: var(--ui-multi-select-glyph)             # = font, the §4.1 caret law, applied to the checkmark

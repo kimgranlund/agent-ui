@@ -72,7 +72,7 @@ geometry:
   sizeClass: layout
   blockSize: auto                  # NO control height — a container has no frame; height is content-driven (geometry.md Container/layout)
   paddingBlock: 0                  # layout primitives add no padding; the gap is the spacing lever
-  gap: var(--ui-row-gap)           # → var(--md-sys-space-{step}) — the one density-bearing quantity (rides [density], never [scale])
+  gap: var(--ui-row-gap)           # → var(--md-sys-space-{step}) — the one scale-bearing quantity (rides data-scale)
   radius: var(--ui-row-radius)     # → var(--md-sys-shape-corner-base) — the shared fleet corner radius (rounds a surfaced row)
   containerQuery: 'inline-size: reflow="auto" (the default) stacks children to a column under a narrow ANCESTOR container (ADR-0016 cl.4); reflow="locked" pins flex-direction:row (ADR-0096). ui-row establishes NO container of its own (ADR-0100) — resolves against the nearest externally-sized boundary'
 

@@ -55,7 +55,7 @@ keyboard: []            # NOT interactive and NOT focusable — no tabindex, no 
 
 geometry:
   sizeClass: display
-  inlineSize: var(--ui-swatch-box-size)   # 2rem default box — NO [size] ramp, NO --md-sys-height-* (SPEC-R16 AC2)
+  inlineSize: var(--ui-swatch-box-size)   # 2rem default box — NO [size] n rule, NO --md-sys-height (SPEC-R16 AC2)
   blockSize: var(--ui-swatch-box-size)
   radius: var(--ui-swatch-radius)          # n (`--md-sys-radius`) inside an opt-in [data-tier] region (ADR-0245 cl.3); else --md-sys-shape-corner-base
 
