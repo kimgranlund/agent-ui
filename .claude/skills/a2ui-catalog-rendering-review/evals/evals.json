@@ -24,7 +24,7 @@
     },
     {
       "id": "t05",
-      "prompt": "eval every card across the Widgets, Primitives, Patterns, Features and Inputs tabs",
+      "prompt": "eval every card across the Widgets, Primitives, Compounds, Features and Inputs tabs",
       "expect": "trigger"
     },
     {

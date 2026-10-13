@@ -26,7 +26,7 @@ function clickTierTab(tier: string): void {
   tab!.click()
 }
 
-/** Reveal the FormPopover card (PATTERN tier) and return its live specimen parts. Clears any query an
+/** Reveal the FormPopover card (COMPOUND tier) and return its live specimen parts. Clears any query an
  * earlier test left in the shared page's filter first — a hidden `.catalog-item` section would leave
  * the card unrendered regardless of which tier tab is selected. */
 async function revealFormPopoverCard(): Promise<{ fp: HTMLElement & { open: boolean }; trigger: HTMLElement; panel: HTMLElement }> {
@@ -36,7 +36,7 @@ async function revealFormPopoverCard(): Promise<{ fp: HTMLElement & { open: bool
     filterEditor.dispatchEvent(new Event('input', { bubbles: true }))
     await raf()
   }
-  clickTierTab('PATTERN')
+  clickTierTab('COMPOUND')
   await raf()
   const preview = document.querySelector('component-preview[target="FormPopover"]')
   expect(preview, 'no FormPopover preview card on the catalog page').not.toBeNull()
@@ -123,7 +123,7 @@ describe('a2ui-catalog — the dogfooded ui-text-field filter narrows the sectio
   })
 })
 
-// GH #1002 — the tab-strip SHAPE: five tier tabs (WIDGET/PRIMITIVE/PATTERN/FEATURE/INPUT,
+// GH #1002 — the tab-strip SHAPE: five tier tabs (WIDGET/PRIMITIVE/COMPOUND/FEATURE/INPUT,
 // `site/lib/a2ui-catalog-tiers.ts`'s TIERS), exactly one unhidden panel at a time (ui-tabs' own
 // roving-visibility contract), and the "see it in real use" cross-links resolving to the gallery's
 // per-seed hash anchors — plus the label-count LIVE-update regression the code-checker flagged (the
@@ -138,7 +138,7 @@ describe('a2ui-catalog — the tab-strip shape (five tier tabs, one visible pane
     const stripTabs = document.querySelector('ui-tabs.catalog-tabs')?.querySelector(':scope > [data-part="tablist"]')
     expect(stripTabs, 'no tablist strip found on ui-tabs.catalog-tabs').not.toBeNull()
     const tabs = [...stripTabs!.querySelectorAll(':scope > ui-tab')]
-    expect(tabs.length, 'expected exactly 5 tier tabs (WIDGET/PRIMITIVE/PATTERN/FEATURE/INPUT)').toBe(5)
+    expect(tabs.length, 'expected exactly 5 tier tabs (WIDGET/PRIMITIVE/COMPOUND/FEATURE/INPUT)').toBe(5)
   })
 
   it('exactly one ui-tab-panel is unhidden at a time', async () => {
@@ -189,13 +189,13 @@ describe('a2ui-catalog — the tab-strip shape (five tier tabs, one visible pane
     fp.open = false
     await raf()
 
-    // Hide the PATTERN tier (the catalog's hidden-card build shape — most cards live in hidden tab
+    // Hide the COMPOUND tier (the catalog's hidden-card build shape — most cards live in hidden tab
     // panels), open the popover while nothing renders, then reveal via the tab switch.
     clickTierTab('WIDGET')
     await raf()
     fp.open = true // model-driven open inside a display:none subtree — no box, anchor() unresolvable
     await raf()
-    clickTierTab('PATTERN') // the reveal
+    clickTierTab('COMPOUND') // the reveal
     await raf()
     trigger.scrollIntoView({ block: 'center' }) // the user's vantage — see the anchored-open test above
 

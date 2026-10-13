@@ -11,7 +11,7 @@ should:
   - "grab screenshots of each example in a2ui-catalog.html and review them"
   - "does the rendered A2UI surface on the catalog page make sense for <Component>?"
   - "is the left side (props) ok and does the right side render correctly on the catalog card?"
-  - "eval every card across the Widgets, Primitives, Patterns, Features and Inputs tabs"
+  - "eval every card across the Widgets, Primitives, Compounds, Features and Inputs tabs"
   - "check the catalog playground for <Component> — knobs vs rendered surface"
   - "fix the <Component> catalog card / its seeds / its catalog row" (2026-08-18 widening)
   - "add a prop or a new type/pattern to the A2UI catalog"

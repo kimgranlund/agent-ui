@@ -6,7 +6,7 @@
 // renderer via one <component-preview mode="a2ui"> per component (a full live-knobs playground: edit any prop and
 // the canvas re-renders through a fresh renderer). The list is DERIVED from `defaultCatalog.components`, so a new
 // catalog type appears here automatically; sub-part helper types (Option, Tab/TabPanel, the Card regions) render
-// only nested under their owner. GH #970 groups the list into five page-level tier tabs (Widget/Primitive/Pattern/
+// only nested under their owner. GH #970 groups the list into five page-level tier tabs (Widget/Primitive/Compound/
 // Feature/Input, `../lib/a2ui-catalog-tiers.ts`) via `ui-tabs`; the name filter stays orthogonal to the active tab,
 // and each entry cross-links to the A2UI gallery seeds that render it, derived from the seed shelf.
 //

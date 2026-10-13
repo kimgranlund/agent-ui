@@ -39,7 +39,7 @@ review that scores B4 without that record scored the control, not the demonstrat
 
 ## Procedure
 
-1. **Scope.** `` names one component, one tier key (`WIDGET|PRIMITIVE|PATTERN|FEATURE|INPUT`),
+1. **Scope.** `` names one component, one tier key (`WIDGET|PRIMITIVE|COMPOUND|FEATURE|INPUT`),
    or `all` (default). Dev server: the runner defaults to `http://localhost:5174`; vite's own default
    is 5173 — pass `--base` to whichever answers 200. When the page 404s → the report opens with the
    blocker (which port, `npm run dev`) and stops there. The page has a catalog selector
