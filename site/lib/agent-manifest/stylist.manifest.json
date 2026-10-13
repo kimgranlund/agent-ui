@@ -1,11 +1,19 @@
 {
   "id": "stylist",
   "preset": "stylist",
-  "seedVersion": 1,
-  "seedDigest": "sha256:8455687cec10497f5b0af7574eaa6cd6dc2def9edb2f69409ef58e12b7b5952f",
-  "fragment": null,
-  "selection": null,
-  "noFragment": {
-    "why": "Its idioms use Swatch and Ramp, each already a validated default-catalog row, so the idiom stays prose and earns no fragment under the promotion bar at .claude/docs/decompositions/md-content-concierge-croupier-promotion.decomp.md:21-25 (proposed, GH #497)."
+  "seedVersion": 2,
+  "seedDigest": "sha256:6691240ae6c1df8857585e2981d1815e6bf8acf293a6f6b61f7db42c9ae3f486",
+  "fragment": {
+    "personaId": "stylist",
+    "types": [
+      "ContrastPair"
+    ],
+    "targetCatalogs": [
+      "agent-ui"
+    ],
+    "digest": "sha256:e5dc0cd5e93cd3c50cefeea703c05597f5315877765367fe44985867f1215e33"
+  },
+  "selection": {
+    "digest": "sha256:a99bf3a21ec688ea8169fe20ff25faf46f29255fbebed017aaf510897c9bcf5f"
   }
 }

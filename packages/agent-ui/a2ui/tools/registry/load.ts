@@ -47,6 +47,7 @@ export const PERSONA_FRAGMENTS: readonly { readonly personaId: string; readonly 
   { personaId: 'croupier', targetCatalogs: ['agent-ui', 'a2ui-basic'] },
   { personaId: 'fixture-demo', targetCatalogs: ['agent-ui', 'a2ui-basic'] },
   { personaId: 'quizmaster', targetCatalogs: ['agent-ui', 'a2ui-basic'] },
+  { personaId: 'stylist', targetCatalogs: ['agent-ui'] },
 ]
 
 /** The corpus shard kinds, one folder each under `corpus/`. */

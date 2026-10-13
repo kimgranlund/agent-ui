@@ -122,5 +122,8 @@ export const SELECTION_PROJECTION: SelectionProjection = {
     "quizmaster": {
       "QuestionCard": {"intents":["one quiz question with its choices"],"notFor":[{"type":"Card","why":"a content surface"},{"type":"Text","why":"a question written as plain prose"}]},
     },
+    "stylist": {
+      "ContrastPair": {"intents":["a text color on a background with its contrast rating"],"notFor":[{"type":"Swatch","why":"one color alone"}]},
+    },
   },
 }
