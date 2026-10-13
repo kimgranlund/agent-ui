@@ -69,10 +69,11 @@ describe('ui-text browser-truth harness — the role×size matrix resolves to re
       sizes.add(Number.parseFloat(getComputedStyle(el).fontSize))
       el.remove()
     }
-    // One group collapses by DESIGN: quote ≡ lead (both the derived subhead role, ADR-0245 cl.7). The other
-    // eight roles are distinct at the root register, so 9 variants land on exactly 8 distinct sizes: display 32 ·
-    // headline 24 · title 15 · body 14 · label 11 · kicker 16 · overline 10 · {quote,lead} 18.
-    expect(sizes.size).toBe(8)
+    // Two groups collapse by DESIGN: quote ≡ lead (both the derived subhead role, ADR-0245 cl.7) and
+    // label ≡ kicker (both the field-label role, T-0117). The other six roles are distinct at the root register,
+    // so 9 variants land on exactly 7 distinct sizes: display 32 · headline 24 · title 15 · body 14 ·
+    // {label,kicker} 11 · overline 10 · {quote,lead} 18.
+    expect(sizes.size).toBe(7)
   })
 
   it('size=sm/lg repoint within ONE role produce a strictly ascending triple (sm < md < lg)', () => {

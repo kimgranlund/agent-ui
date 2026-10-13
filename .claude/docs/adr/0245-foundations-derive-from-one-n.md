@@ -678,3 +678,18 @@ The rejected root product/md, the same quantities at md: height 28 → 36 (+8) �
 The A2UI canvas register product/md (ruled at step 0), size sm / md / lg: height 28 / 36 / 44 ·
 icon box 14 / 18 / 22 · glyph box 10 / 12 / 16 · control type 13 / 15 / 17 · button radius (pill)
 14 / 18 / 22.
+
+## Amendment 1 (2026-10-13, T-0117): the `kicker` variant reads the field-label role
+
+Kim's screenshot of the docs nav after the cut showed the group labels (Feed & status, Typography & media
+primitives) shouting and wrapping. Cause: clause 7 mapped `kicker` to the section-kicker role, so the
+variant and every `--md-sys-typescale-kicker-*` consumer (nav-rail group labels, gauge and select
+captions, status-stream and card-header labels) went from 11 / 12 / 14px to 15 / 16 / 17px. Those readers
+are small uppercase labels over a group, not eyebrows above a heading.
+
+Ruling: the `kicker` variant and the bridge's `--md-sys-typescale-kicker-*-size` rows derive from the
+field-label role (n + 4 at n; 10 / 11 / 12px at n 6 / 7 / 8). Weight (400) and tracking (0.2em) stay as
+Kim's GH #370 ruling. The section-kicker role (`--md-sys-type-section-kicker`) stays derived and named
+for a future eyebrow consumer; no stylesheet reads it today. The `kicker` row of Appendix B now reads
+`11 → 10 (-1) · 12 → 11 (-1) · 14 → 12 (-2)`, the same as `label`; the original row above is left as
+written. The lg step lands 2px under today's 14px, the same delta `label` already carries.
