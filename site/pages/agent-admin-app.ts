@@ -896,7 +896,7 @@ drawerClose.setAttribute('aria-label', 'Close')
 drawerClose.className = 'roster-drawer-close'
 const drawerCloseIcon = document.createElement('ui-icon')
 drawerCloseIcon.setAttribute('slot', 'leading')
-drawerCloseIcon.setAttribute('glyph', 'x')
+drawerCloseIcon.setAttribute('symbol', 'x')
 drawerClose.append(drawerCloseIcon)
 drawerClose.addEventListener('click', () => {
   drawer.open = false
@@ -917,7 +917,7 @@ const reorderToggle = document.createElement('ui-toggle') as UIToggleElement
 reorderToggle.className = 'roster-drawer-reorder-toggle'
 const reorderToggleIcon = document.createElement('ui-icon')
 reorderToggleIcon.setAttribute('slot', 'icon')
-reorderToggleIcon.setAttribute('glyph', 'list')
+reorderToggleIcon.setAttribute('symbol', 'list')
 reorderToggle.append(reorderToggleIcon, document.createTextNode('Reorganize'))
 reorderToggle.addEventListener('toggle', () => {
   // `toggle` fires BEFORE `pressed` commits (ui-toggle's own cancelable-before-commit contract): the
@@ -1046,7 +1046,7 @@ function rowIconButton(glyph: string, label: string, disabled: boolean, onClick:
   if (disabled) button.setAttribute('disabled', '')
   const icon = document.createElement('ui-icon')
   icon.setAttribute('slot', 'leading')
-  icon.setAttribute('glyph', glyph)
+  icon.setAttribute('symbol', glyph)
   button.append(icon)
   button.addEventListener('click', onClick)
   return button
@@ -1065,7 +1065,7 @@ function rowVerbButton(text: string, className: string, ariaLabel: string, glyph
   if (glyph !== undefined) {
     const icon = document.createElement('ui-icon')
     icon.setAttribute('slot', 'leading')
-    icon.setAttribute('glyph', glyph)
+    icon.setAttribute('symbol', glyph)
     button.append(icon)
   }
   button.append(document.createTextNode(text))
@@ -1160,7 +1160,7 @@ function rosterRow(persona: Persona, index: number): HTMLElement {
     handle.className = 'roster-row-drag-handle'
     handle.setAttribute('aria-hidden', 'true') // pointer-only — the ^/v buttons below are the real keyboard/AT path
     const handleIcon = document.createElement('ui-icon')
-    handleIcon.setAttribute('glyph', 'list')
+    handleIcon.setAttribute('symbol', 'list')
     handle.append(handleIcon)
     row.append(handle)
     // GH #952 — the drag GESTURE itself is wired once, globally, by the `listReorder` call below (it
@@ -1430,7 +1430,7 @@ packsClose.setAttribute('icon-only', '')
 packsClose.setAttribute('aria-label', 'Close')
 const packsCloseIcon = document.createElement('ui-icon')
 packsCloseIcon.setAttribute('slot', 'leading')
-packsCloseIcon.setAttribute('glyph', 'x')
+packsCloseIcon.setAttribute('symbol', 'x')
 packsClose.append(packsCloseIcon)
 packsClose.addEventListener('click', () => {
   packsDrawer.open = false
@@ -1450,7 +1450,7 @@ const importPackButton = document.createElement('ui-button') as UIButtonElement
 importPackButton.setAttribute('variant', 'soft')
 const importPackIcon = document.createElement('ui-icon')
 importPackIcon.setAttribute('slot', 'leading')
-importPackIcon.setAttribute('glyph', 'plus')
+importPackIcon.setAttribute('symbol', 'plus')
 importPackButton.append(importPackIcon, document.createTextNode('Import pack…'))
 importPackButton.addEventListener('click', () => skillPackInput.click())
 const packsToolbar = document.createElement('div')

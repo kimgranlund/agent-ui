@@ -48,7 +48,7 @@ function commandOption(value: string, icon: string, label: string, shortcut: str
   const attrs: Record<string, string> = { role: 'option', value }
   if (keywords) attrs['data-keywords'] = keywords
   return el('div', attrs, [
-    el('ui-icon', { glyph: icon, 'data-role': 'icon' }),
+    el('ui-icon', { symbol: icon, 'data-role': 'icon' }),
     text(label),
     el('span', { 'data-role': 'shortcut', 'aria-hidden': 'true' }, [text(shortcut)]),
   ])
@@ -84,7 +84,7 @@ function paletteChildren(): HTMLElement[] {
 // control's look via plain divs (styled once in containers.css, `.demo-modal-mock*`), never a real `<dialog>`
 // — so it cannot block anything. `aria-hidden` because it is decorative (not a real listbox).
 function mockOption(icon: string, label: string, shortcut: string): HTMLElement {
-  const children: Node[] = [el('ui-icon', { glyph: icon, 'data-role': 'icon' }), text(label)]
+  const children: Node[] = [el('ui-icon', { symbol: icon, 'data-role': 'icon' }), text(label)]
   if (shortcut) children.push(el('span', { 'data-role': 'shortcut' }, [text(shortcut)]))
   return el('div', { class: 'demo-modal-mock-option' }, children)
 }

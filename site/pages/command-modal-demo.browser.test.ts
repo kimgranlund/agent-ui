@@ -51,3 +51,33 @@ describe('command-modal-demo — GH #1555: the "opened palette" illustration mus
     expect(dialogs[0]!.open, 'the hotkey palette should now be open — the real click reached it').toBe(true)
   })
 })
+
+// ADR-0245 dark launch (lane a10): the mock's rows read the derived token with today's ramp value as the fallback,
+// so the same stylesheet measures today's geometry on the default page and the derived geometry inside an opt-in
+// region (height 4n, label type n + 6 at the region's n; product/md is n = 9).
+describe('command-modal-demo: the mock row is byte-identical outside a data-tier region and derived inside', () => {
+  const search = (): HTMLElement => document.querySelector('.demo-modal-mock-search') as HTMLElement
+
+  it('outside an opt-in region the search row keeps today\'s md ramp (28px tall, 14px type)', async () => {
+    await raf()
+    const mock = document.querySelector('.demo-modal-mock') as HTMLElement
+    expect(mock.closest('[data-tier]'), 'the default page must not sit inside an opt-in region').toBeNull()
+    expect(getComputedStyle(search()).minBlockSize).toBe('28px')
+    expect(getComputedStyle(search()).fontSize).toBe('14px')
+  })
+
+  it('inside data-tier="product" data-scale="md" the same row measures 4n tall at n 9 (36px, 15px type)', async () => {
+    await raf()
+    const mock = document.querySelector('.demo-modal-mock') as HTMLElement
+    mock.setAttribute('data-tier', 'product')
+    mock.setAttribute('data-scale', 'md')
+    try {
+      await raf()
+      expect(getComputedStyle(search()).minBlockSize).toBe('36px')
+      expect(getComputedStyle(search()).fontSize).toBe('15px')
+    } finally {
+      mock.removeAttribute('data-tier')
+      mock.removeAttribute('data-scale')
+    }
+  })
+})

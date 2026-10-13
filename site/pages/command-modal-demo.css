@@ -19,9 +19,9 @@
 .demo-modal-mock-search {
   display: flex;
   align-items: center;
-  min-block-size: var(--md-sys-height-md);
-  padding-inline: calc(var(--md-sys-height-md) / 2);
-  font-size: var(--md-sys-font-md);
+  min-block-size: var(--md-sys-height, var(--md-sys-height-md));
+  padding-inline: calc(var(--md-sys-height, var(--md-sys-height-md)) / 2);
+  font-size: var(--md-sys-type-control, var(--md-sys-font-md));
   background: var(--md-sys-color-neutral-container-low);
   color: var(--md-sys-color-neutral-on-surface);
 }
@@ -46,7 +46,7 @@
 .demo-modal-mock-group-label {
   padding-inline: var(--md-sys-space-sm);
   padding-block: var(--md-sys-space-xs);
-  font-size: var(--md-sys-font-sm);
+  font-size: var(--md-sys-type-group-kicker, var(--md-sys-font-sm));
   color: var(--md-sys-color-neutral-on-surface-variant);
 }
 
@@ -62,5 +62,5 @@
 .demo-modal-mock-option [data-role='shortcut'] {
   margin-inline-start: auto;
   color: var(--md-sys-color-neutral-on-surface-variant);
-  font-size: var(--md-sys-font-sm);
+  font-size: var(--md-sys-type-field-label, var(--md-sys-font-sm));
 }

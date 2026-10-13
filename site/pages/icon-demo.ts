@@ -19,9 +19,9 @@ const { content } = mountPage({
 
 const text = (s: string): Text => document.createTextNode(s)
 
-/** icon — a decorative <ui-icon glyph> (no label ⇒ aria-hidden), optionally slotted into a control's cell. */
+/** icon — a decorative <ui-icon symbol> (no label ⇒ aria-hidden), optionally slotted into a control's cell. */
 function icon(glyph: string, attrs: Record<string, string> = {}): HTMLElement {
-  return el('ui-icon', { glyph, ...attrs })
+  return el('ui-icon', { symbol: glyph, ...attrs })
 }
 
 /** iconButton — a real ui-button with a leading/trailing icon adornment (slot = POSITION, data-role = CONTENT). */

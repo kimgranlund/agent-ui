@@ -10,7 +10,7 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.9em;
   padding: 0.05em 0.35em;
-  border-radius: 5px;
+  border-radius: var(--md-sys-radius, 5px);
   background: var(--md-sys-color-neutral-surface-high);
   color: var(--md-sys-color-neutral-on-surface);
 }
@@ -23,7 +23,7 @@
   margin-block: var(--md-sys-space-sm) var(--md-sys-space-xl);
   padding: 0.9rem 1.1rem;
   overflow-x: auto;
-  border-radius: 10px;
+  border-radius: var(--md-sys-group-radius, 10px);
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
   background: var(--md-sys-color-neutral-surface-low);
   color: var(--md-sys-color-neutral-on-surface);
@@ -36,10 +36,10 @@
 /* A definite block-size makes the nav-pane/content row visible; the frame + radius give the demo an edge.
  * ui-chat-shell is already display:flex/flex-direction:column from chat-shell.css — we only frame it. */
 ui-chat-shell.cs-demo {
-  block-size: 380px;
+  block-size: 23.75rem;
   margin-block: var(--md-sys-space-lg) 1.75rem;
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: 12px;
+  border-radius: var(--md-sys-widget-radius, 12px);
   overflow: hidden;
   background: var(--md-sys-color-neutral-surface-lowest);
   padding: var(--md-sys-space-sm);
@@ -82,7 +82,7 @@ ui-chat-shell.cs-demo {
   flex-direction: column;
   gap: 0.1rem;
   padding: 0.4rem 0.55rem;
-  border-radius: 8px;
+  border-radius: var(--md-sys-group-radius, 8px);
   background: var(--md-sys-color-neutral-surface);
 }
 .cs-session--active {
@@ -112,7 +112,7 @@ ui-chat-shell.cs-demo {
   flex-direction: column;
   gap: 0.1rem;
   padding: 0.4rem 0.6rem;
-  border-radius: 10px;
+  border-radius: var(--md-sys-group-radius, 10px);
   background: var(--md-sys-color-neutral-surface-high);
 }
 .cs-bubble--user {

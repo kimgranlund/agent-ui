@@ -8,7 +8,7 @@
   max-inline-size: 100%;
   padding: 1rem;
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: 12px;
+  border-radius: var(--md-sys-widget-radius, 12px);
   background: var(--md-sys-color-neutral-surface-lowest);
 }
 
