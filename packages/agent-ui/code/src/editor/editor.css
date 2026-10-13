@@ -44,7 +44,7 @@
 
   /* Geometry — the MULTI-LINE law (ADR-0134). Fixed font (this control carries no [size] lever); padding /
      line-box DERIVE from it via calc(). rows is a growable MINIMUM, never a fixed §1-row height. */
-  --ui-code-editor-font: var(--md-sys-font-md);
+  --ui-code-editor-font: var(--md-sys-type-control, var(--md-sys-font-md));
   /* SOURCE mode is raw markdown syntax (#, **, tables, fences) — monospace by default, matching every
      mainstream code editor, regardless of the host page's own ambient font. Richtext mode is meant to READ
      like prose, so it repoints to the fleet sans below. Repoint the TOKEN per [mode] (the entry-control
@@ -53,15 +53,15 @@
   --ui-code-editor-font-family: var(--md-sys-typeface-mono);
   --ui-code-editor-line-height: 1.5; /* prose line-height — NEVER the single-line control's line-height:1 */
   --ui-code-editor-line-box: calc(var(--ui-code-editor-font) * var(--ui-code-editor-line-height));
-  --ui-code-editor-padding-block: calc(var(--ui-code-editor-font) * 0.5);
-  --ui-code-editor-padding-inline: calc(var(--ui-code-editor-font) * 0.75);
+  --ui-code-editor-padding-block: calc(var(--md-sys-inset, calc(var(--ui-code-editor-font) * 0.5 + 1px)) - 1px); /* ADR-0245 cl.3: inset n minus the 1px border; the +1px in the fallback cancels it, so a default page keeps font * 0.5 */
+  --ui-code-editor-padding-inline: calc(var(--md-sys-inset, calc(var(--ui-code-editor-font) * 0.75 + 1px)) - 1px);
   --ui-code-editor-rows: 4; /* the JS-set inline --ui-code-editor-rows overrides this per-instance (editor.ts) */
   --ui-code-editor-min-block-size: calc(var(--ui-code-editor-rows) * var(--ui-code-editor-line-box) + 2 * var(--ui-code-editor-padding-block));
-  --ui-code-editor-radius: var(--md-sys-shape-corner-base);
+  --ui-code-editor-radius: var(--md-sys-radius, var(--md-sys-shape-corner-base)); /* ADR-0245 cl.3: radius n inside a data-tier region */
   --ui-code-editor-min-inline-size: 20ch; /* the entry-control typing-width floor (ADR-0021), textarea parity */
 
   /* Visible inline-validation message tokens (ADR-0029 A1, the textarea precedent). */
-  --ui-code-editor-message-font: var(--md-sys-font-sm);
+  --ui-code-editor-message-font: var(--md-sys-type-field-label, var(--md-sys-font-sm));
   --ui-code-editor-message-ink: var(--md-sys-color-danger-on-surface-variant);
 
   /* Highlight token roles — the markdown constructs' colours, fed from --md-sys-color-* ROLES (the
@@ -92,7 +92,7 @@
   --ui-code-editor-toggle-ink-active: var(--md-sys-color-primary-on-surface);
   --ui-code-editor-toggle-ink-disabled: var(--md-sys-color-neutral-low);
   --ui-code-editor-toggle-bg-hover: var(--md-sys-color-neutral-container);
-  --ui-code-editor-toggle-size: 24px; /* WCAG 2.5.8 minimum target size (the ui-split --ui-split-hit-slop precedent) — this control carries no [scale]/[size] lever, so a fixed own-chain token, not --md-sys-height-sm */
+  --ui-code-editor-toggle-size: var(--md-sys-height, 24px); /* WCAG 2.5.8 minimum target size (the ui-split --ui-split-hit-slop precedent) — this control carries no [scale]/[size] lever, so the 24px floor is the fallback and a data-tier region reads its own 4n square (ADR-0245 cl.3, 28 at the library root) */
 
   /* GH #867 — the unobtrusive-scrollbar own-chain: the fleet dimensional constant + the fleet colour role,
      repointed here (TKT-0066 item 5's own-chain law) rather than a direct `@scope` read of either. Consumed
@@ -136,6 +136,7 @@
     color: var(--ui-code-editor-ink);
     border: 1px solid var(--ui-code-editor-border);
     border-radius: var(--ui-code-editor-radius);
+    corner-shape: var(--md-sys-corner-shape, round); /* ADR-0245 cl.3: squircle inside a data-tier region, the initial value (round) outside */
     cursor: text;
     /* GH #867 — unobtrusive scrolling: THIN + invisible-at-rest, painting the thumb only on hover/focus-
        within (the agent-admin.css context-json precedent, same shared tokens). Scrolling itself (the
