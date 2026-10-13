@@ -38,11 +38,11 @@ const label = (btn: HTMLElement): HTMLElement => btn.querySelector('[data-part="
 const tick = (): Promise<void> => new Promise((resolve) => queueMicrotask(resolve))
 
 describe('ui-button label-wrapper geometry regression (ADR-0133) — the label FITS', () => {
-  it('a fitting label renders the SAME frame the pre-wrapper law specified: h=28, h/2=14 pads, no clipping engaged', () => {
+  it('a fitting label renders the SAME frame the pre-wrapper law specified: h=24, h/2=12 pads, no clipping engaged', () => {
     const { btn } = mount('<ui-button>Save</ui-button>') // md default, wide (unconstrained) container
-    expect(frameHeight(btn), 'md frame height (geometry.md §1 row)').toBeCloseTo(28, 0)
-    expect(padStartPx(btn), 'slotless h/2 leading pad').toBeCloseTo(14, 0)
-    expect(padEndPx(btn), 'slotless h/2 trailing pad').toBeCloseTo(14, 0)
+    expect(frameHeight(btn), 'md frame height (geometry.md §1 row)').toBeCloseTo(resolve('product', 'sm', 'md').h, 0)
+    expect(padStartPx(btn), 'slotless h/2 leading pad').toBeCloseTo(resolve('product', 'sm', 'md').h / 2, 0)
+    expect(padEndPx(btn), 'slotless h/2 trailing pad').toBeCloseTo(resolve('product', 'sm', 'md').h / 2, 0)
 
     const el = label(btn)
     expect(el, 'the label wrapper must exist').not.toBeNull()
@@ -57,7 +57,7 @@ describe('ui-button label-wrapper geometry regression (ADR-0133) — the label F
       '<ui-button><svg slot="leading" data-role="icon"><rect width="18" height="18"/></svg>Download</ui-button>',
     )
     const h = frameHeight(btn)
-    expect(h).toBeCloseTo(28, 0)
+    expect(h).toBeCloseTo(resolve('product', 'sm', 'md').h, 0)
     // leading slot edge = ½(h−icon); trailing (label) edge = h/2 — the wrapper must not perturb either.
     expect(padStartPx(btn)).toBeCloseTo((h - resolve('product', 'sm', 'md').icon) / 2, 0)
     expect(padEndPx(btn)).toBeCloseTo(h / 2, 0)

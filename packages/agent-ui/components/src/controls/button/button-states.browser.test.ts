@@ -255,7 +255,9 @@ describe('ui-button BTN-CARET — caret = font, icon = icon (ADR-0012 §6, both 
     // the ordering law: 0 < caret(=font) < icon ≤ box.
     expect(caretContent, 'caret content box is not positive').toBeGreaterThan(0)
     expect(caretContent, 'caret is not strictly smaller than the icon').toBeLessThan(iconContent)
-    expect(font, 'font is not strictly smaller than the icon cell').toBeLessThan(iconCell)
+    // font <= icon cell, not <: at the root md the control type (n + 6 = 12) TIES the 2n icon box (12) at n 6;
+    // the strict form held only from n 7 up (skill v2). The caret < icon line above still proves the glyph order.
+    expect(font, 'font exceeds the icon cell').toBeLessThanOrEqual(iconCell)
     expect(iconCell, 'the icon cell exceeds the box height').toBeLessThanOrEqual(box + 0.5)
 
     // centering: the caret glyph is inset ½(icon−font) within its icon-sized cell (symmetric), so it lands the

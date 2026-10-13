@@ -145,7 +145,7 @@ describe('ui-toggle cross-engine geometry (s13-shaped)', () => {
     const wBare = frameWidth(bare)
     const wIcon = frameWidth(icon)
     const wBoth = frameWidth(both)
-    expect(frameHeight(bare)).toBeCloseTo(28, 0) // md default height
+    expect(frameHeight(bare)).toBeCloseTo(resolve('product', 'sm', 'md').h, 0) // md default height
     expect(wIcon, 'adding a leading icon must widen the frame').toBeGreaterThan(wBare)
     expect(wBoth, 'adding BOTH icon + state-icon must widen it further still').toBeGreaterThan(wIcon)
     // anti-vacuous whole-shape floor: never a near-zero collapsed box

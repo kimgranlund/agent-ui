@@ -133,7 +133,7 @@ describe('ui-segmented-control — grid track + segment geometry (both engines)'
     const seg = segments[0]!
     const cs = getComputedStyle(seg)
     const height = px(cs.blockSize)
-    expect(height).toBeCloseTo(28, 0) // --md-sys-height-md default
+    expect(height).toBeCloseTo(resolve('product', 'sm', 'md').h, 0) // --md-sys-height-md default
     expect(px(cs.paddingInlineStart)).toBeCloseTo(height / 2, 0)
     expect(px(cs.paddingInlineEnd)).toBeCloseTo(height / 2, 0)
     expect(px(cs.paddingBlockStart)).toBe(0)
