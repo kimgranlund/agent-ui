@@ -41,12 +41,14 @@ describe('drawer.css — structure + sectioning', () => {
   it('the :where() block sets the drawer’s OWN default surface + DECLARES the --ui-drawer-* chain from roles/dimensions', () => {
     // ui-drawer is an OPAQUE plane — it repoints the container base default (transparent) to a surface role.
     expect(tokenBlock).toMatch(/--ui-container-bg:\s*var\(--md-sys-color-neutral-surface\)/)
-    for (const slot of ['ink', 'outline', 'radius', 'padding', 'scrim', 'inline-size', 'max-block-size']) {
+    for (const slot of ['ink', 'outline', 'radius', 'scrim', 'inline-size', 'max-block-size']) {
       expect(tokenBlock).toMatch(new RegExp(`--ui-drawer-${slot}:`))
     }
     expect(tokenBlock).toMatch(/--ui-drawer-scrim:\s*var\(--md-sys-color-dialog-backdrop\)/) // the modal TKT-0019 wash, reused
     expect(tokenBlock).toMatch(/--ui-drawer-radius:\s*var\(--md-sys-card-radius,\s*var\(--md-sys-shape-corner-base\)\)/) // the shared fleet radius
-    expect(tokenBlock).toMatch(/--ui-drawer-padding:\s*var\(--md-sys-card-margin,\s*var\(--md-sys-space-/) // the density-responsive layout spacing
+    // T-0121: `--ui-drawer-padding` was declared and never consumed (the dialog is `padding: 0`; its regions
+    // pad through --ui-drawer-pad-inline / -pad-block). The dead token is deleted and must not come back.
+    expect(css).not.toMatch(/--ui-drawer-padding/)
   })
 
   it('GH #918 — declares the drawer’s OWN region spacing rhythm + the region hairline colour', () => {
@@ -54,7 +56,7 @@ describe('drawer.css — structure + sectioning', () => {
       expect(tokenBlock).toMatch(new RegExp(`--ui-drawer-${slot}:`))
     }
     expect(tokenBlock).toMatch(/--ui-drawer-pad-inline:\s*var\(--md-sys-card-gutter,\s*var\(--md-sys-space-/)
-    expect(tokenBlock).toMatch(/--ui-drawer-pad-block:\s*var\(--md-sys-inset,\s*var\(--md-sys-space-/)
+    expect(tokenBlock).toMatch(/--ui-drawer-pad-block:\s*var\(--md-sys-card-gutter,\s*var\(--md-sys-space-/) // T-0121: the card level on the block axis too
     expect(tokenBlock).toMatch(/--ui-drawer-gap:\s*var\(--md-sys-card-gutter,\s*var\(--md-sys-space-/)
     // the hairline colour reuses the SAME frame role already declared for the dialog's own outline — no new role
     expect(tokenBlock).toMatch(/--ui-drawer-region-border:\s*var\(--ui-drawer-outline\)/)

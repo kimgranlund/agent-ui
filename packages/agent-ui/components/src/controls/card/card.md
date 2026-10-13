@@ -74,7 +74,7 @@ keyboard: []           # ui-card itself is not interactive — no keyboard contr
 geometry:
   sizeClass: container   # Container/layout — spacing off the container levels and --md-sys-space (generated over n); a card has NO control height (never reads --md-sys-height-*)
   padding: var(--ui-card-padding)        # ALWAYS 0 (ADR-0046 box-model) — the card itself holds no padding; each region carries its own fixed regionPadding + regionMargin instead
-  regionPadding: var(--ui-card-region-pad-inline) / var(--ui-card-region-pad-block)   # under data-tier (ADR-0245 cl.6): the card gutter 2n inline + n block; elsewhere 12px inline + 6px block, rem-based (scale-INVARIANT) — REVISED 2026-07-04: card now reads container-box.css's shared ADR-0046 defaults straight (the card-only 6px override is rescinded); identical to modal/select/menu/combo-box
+  regionPadding: var(--ui-card-region-pad-inline) / var(--ui-card-region-pad-block)   # derived (ADR-0245 cl.6): the card gutter 2n on BOTH axes (T-0121: region margin n + pad 2n = the card margin 3n all round; the block pad was n); under data-foundations=legacy 12px inline + 6px block, rem-based (scale-INVARIANT), REVISED 2026-07-04: card now reads container-box.css's shared ADR-0046 defaults straight (the card-only 6px override is rescinded); identical to modal/select/menu/combo-box
   regionMargin: var(--ui-card-region-margin)   # n under data-tier (region margin n + pad 2n = the card margin 3n), else a 6px uniform inset margin around each region (REVISED 2026-07-04: regions are no longer full-bleed). The DEFAULT (non-scroll) shell is BLOCK FLOW (flow-root, not grid/flex, per Kim's "containers should not use grid or flex"), so adjacent region margins COLLAPSE to a clean 6px gutter and the 1px frame border blocks collapse-through at the edges — one uniform margin, no grid gap or first/last split. SCROLL MODE (REVISED 2026-07-07) keeps the shell as a (sizing-only) flex column, but only `ui-card-content` is a flex item now — header/footer are `position:absolute` overlays that KEEP this same margin (unzeroed) as their own inset-from-edge; `ui-card-content` gets its margin zeroed on the BLOCK axis only (so it can fill "100% of parent height") — its INLINE margin is KEPT (REVISED 2026-07-08, ADR-0046 Amendment 6 refinement) so its text stays aligned with the header/footer's
   radius: var(--ui-card-radius, var(--md-sys-shape-corner-base))   # under data-tier = var(--md-sys-card-radius) 3n and the region radius is the widget radius 2n (concentric by construction, the ADR-0018 chain retires); elsewhere root radius = the shared --md-sys-shape-corner-base; a nested card decrements one level (ADR-0018)
   nestedRadius: r_child = max(0, r_parent − pad_parent)  # the concentric-corner law, published as --ui-card-child-radius (ONE level; deeper nesting is manual). REVISED 2026-07-04: pad_parent is now 12px (was the card-only 6px override) — with the default --md-sys-shape-corner-base of 12px, an unreseeded root card's inner radius now floors at EXACTLY 0 (a knife-edge, not the old 6px-positive headroom); reseed --ui-card-radius larger than 12px for a visibly rounded nested corner
@@ -291,9 +291,11 @@ consumer.
 ## Region padding + margin — the shared model, uniform across the family (ADR-0046, revised 2026-07-04)
 
 The card itself holds **no** padding (the box-model law). Each region (`ui-card-header` / `ui-card-content` /
-`ui-card-footer`) now reads the **shared** `container-box.css` region model straight — **inline 12px / block
-6px** padding, plus a **6px inset margin** — identical to `ui-modal` and the `ui-select`/`ui-menu`/`ui-combo-box`
-overlay panels. (An earlier card-only 6px-inline override, and a full-bleed-region default, are both **rescinded**
+`ui-card-footer`) now reads the **shared** `container-box.css` region model straight, the card gutter **2n**
+padding on both axes plus an **n inset margin**, so the ink sits the card margin 3n from the frame on every
+side (T-0121; the px figures in this section are the pre-cut values, inline 12px / block 6px padding plus a 6px
+inset margin, which a `data-foundations="legacy"` region still renders), the same region model as `ui-modal`
+and the `ui-select`/`ui-menu`/`ui-combo-box` overlay panels. (An earlier card-only 6px-inline override, and a full-bleed-region default, are both **rescinded**
 by this revision — one spacing vocabulary across the whole container family, restoring ADR-0046's original intent.)
 
 A region is **inset**, not full-bleed: it floats inside the card frame with a uniform 6px gutter (frame↔region

@@ -41,9 +41,9 @@
   --ui-entry-list-row-gap: var(--md-sys-space-sm); /* a tight gap between adjacent inline parts within ONE row (entry-header) */
   --ui-entry-list-list-gap: var(--md-sys-space-sm); /* vertical rhythm between stacked rows (entry-section/entry-list) */
   --ui-entry-list-card-pad: var(--md-sys-space-sm) var(--md-sys-space-md); /* the shared card chrome padding (entry/entry-add-form) */
-  /* No `--ui-super-shell-module` concept exists in this standalone mechanism (unlike agent-admin.css's
-     compact-gap, chained off the composed ui-super-shell instance) — derived from this file's OWN
-     row-gap instead, at the same rendered value (8px × 0.75 = 6px = today's module/3 value, verbatim). */
+  /* This standalone mechanism reads no shell token (agent-admin.css's retired compact-gap chained off the
+     composed ui-super-shell instance), derived from this file's OWN row-gap instead (three quarters of
+     it). */
   --ui-entry-list-compact-gap: calc(var(--ui-entry-list-row-gap) * 0.75);
   --ui-entry-list-spacer-min-size: var(--md-sys-space-sm); /* SPEC-R11c/AC19 — the entry-spacer flex-spacer floor */
   /* GH #865 — the entry-label truncation floor: at the settings pane's real narrow width (measured: the

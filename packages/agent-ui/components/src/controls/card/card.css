@@ -88,7 +88,7 @@
   --ui-card-padding: 0;
   --ui-card-region-margin: var(--md-sys-inset, var(--ui-box-inset, 0.375rem)); /* 6px — the uniform inset margin around each region; derived: n (ADR-0245 cl.6, margin + pad = the card margin 3n) */
   --ui-card-region-pad-inline: var(--md-sys-card-gutter, var(--ui-box-pad-inline, 0.75rem)); /* 12px — shared region inline padding; derived: the card gutter 2n = card margin 3n - inset n */
-  --ui-card-region-pad-block: var(--md-sys-inset, var(--ui-box-pad-block, 0.375rem)); /* 6px — shared region block padding; derived: n */
+  --ui-card-region-pad-block: var(--md-sys-card-gutter, var(--ui-box-pad-block, 0.375rem)); /* 6px before the cut, shared region block padding; derived: the card gutter 2n, so margin n + pad 2n = the card margin 3n on the block axis too (T-0121; n before) */
   --ui-card-content-gap: var(--md-sys-card-gutter, var(--ui-box-gap, 0.5rem)); /* 8px region rhythm between content children; derived: the card gutter 2n */
 
   /* Frame: the neutral hairline border + the corner radius. The radius reads the inherited
@@ -393,8 +393,9 @@
   border-radius: var(--ui-card-inner-radius); /* a region floats inset inside the frame (@scope margin rules
                                                   above) — round it like the small concentric surface it now is,
                                                   not clipped to the outer card radius (REVISED 2026-07-04) */
-  /* Box-model region padding — inline 12 / block 6, the shared container-box.css default (no card override
-     anymore); this is the region's OWN ink inset, separate from its 6px positional margin set in @scope above. */
+  /* Box-model region padding, the shared container-box.css default (no card override anymore): the card
+     gutter 2n on both axes since T-0121 (inline 12 / block 6 before the cut); this is the region's OWN ink
+     inset, separate from its one-inset positional margin set in @scope above. */
   padding-inline: var(--ui-card-region-pad-inline);
   padding-block: var(--ui-card-region-pad-block);
 }
@@ -461,8 +462,9 @@
 
 :where(ui-card-content) {
   /* Box-model content region — inset (its 6px positional margin is set in @scope (ui-card) above), with the
-     region's OWN inline 12 / block 6 padding — REVISED 2026-07-04: the card-only 6/6 override is gone; content
-     reads the shared container-box.css 12/6 default like every other family member. `display: block` is the
+     region's OWN padding (the card gutter 2n on both axes since T-0121; inline 12 / block 6 before the cut),
+     REVISED 2026-07-04: the card-only 6/6 override is gone; content reads the shared container-box.css
+     default like every other family member. `display: block` is the
      DEFAULT (non-scroll) shape — a normal block region that stacks in the card's flow. SCROLL MODE (REVISED
      2026-07-07 — supersedes the short-lived WRAPPER MODEL) repoints `display`/`overflow`/the block-padding per
      @scope (ui-card) above: content becomes the shell's sole flex item (`flex: 1 1 auto`, filling the whole

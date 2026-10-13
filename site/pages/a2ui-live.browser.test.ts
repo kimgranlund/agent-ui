@@ -22,7 +22,7 @@
 //     border on top, so its measured OUTER width is now 416px (26rem, box-sizing: border-box) rather than
 //     the OLD 418px (416px content-box + 1px border × 2, content-box) — a genuine, expected 2px shift.
 //   - The two panes are no longer edge-to-edge: `ui-super-shell`'s middle row separates its parts with a
-//     REAL `gap` (`--ui-super-shell-gap`, 18px) instead of a shared border — so the canvas pane's `x` shifts
+//     REAL `gap` (`--ui-super-shell-gap`, the layout gutter) instead of a shared border, so the canvas pane's `x` shifts
 //     right by the gap width relative to the old adjacent layout, and there is no more "single owner
 //     divider" to arbitrate (see the re-keyed describe block below).
 import { describe, it, expect, afterEach } from 'vitest'
@@ -36,6 +36,9 @@ import { resolve } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
 
 // The page gutter `--md-sys-space-xl` is the card margin at the root register (scale.mjs resolve('product', 'sm', 'md')).
 const GUTTER = resolve('product', 'sm', 'md').card.margin
+// T-0121: the shell's inter-card gap `--ui-super-shell-gap` is the layout gutter (resolve()'s page level),
+// derived, never a literal.
+const SHELL_GAP = resolve('product', 'sm', 'md').page.gutter
 
 const mounted: HTMLElement[] = []
 afterEach(() => {
@@ -69,12 +72,12 @@ describe('a2ui-live chrome re-host (ADR-0156) — wide resting shape', () => {
   // Measured against the POST-ADR-0156 `ui-super-shell` markup/CSS at WIDTH=1200, box-sizing border-box,
   // padding 1.25rem/1.5rem: chat pinned to its 26rem token override (416px, box-sizing: border-box — no
   // added border, unlike the old ui-app-shell-region measurement), canvas filling the remainder minus the
-  // shell's own 18px gap. Re-capture these (mountChrome + getBoundingClientRect()) if this test ever needs
+  // shell's own gap (the layout gutter). Re-capture these (mountChrome + getBoundingClientRect()) if this test ever needs
   // to be re-baselined; do not hand-tune them to pass.
   // ADR-0245 cut (T-0116): the page gutter `--md-sys-space-xl` is the derived 3n = 18px at the root register
   // (product / sm, n 6), was 24px, so the shell x/right shift 6px in and the canvas gains the 12px.
   const EXPECTED_CHAT = { x: GUTTER, y: 20, width: 416, height: 560, right: GUTTER + 416 }
-  const EXPECTED_CANVAS = { x: GUTTER + 416 + 18, y: 20, width: WIDTH - 2 * GUTTER - 416 - 18, height: 560, right: WIDTH - GUTTER }
+  const EXPECTED_CANVAS = { x: GUTTER + 416 + SHELL_GAP, y: 20, width: WIDTH - 2 * GUTTER - 416 - SHELL_GAP, height: 560, right: WIDTH - GUTTER }
 
   it('the ui-super-shell composition renders the re-baselined rects', () => {
     const { chat, canvas } = mountChrome(WIDTH)
@@ -102,7 +105,7 @@ describe('a2ui-live chrome re-host (ADR-0156) — wide resting shape', () => {
   it("negative control: mounting the SAME slots without the page's [data-page-content] ancestor drops the pane-size override — the assertion above bites", () => {
     // No `[data-page-content]` wrapper this time, so a2ui-live.css's `[data-page-content] > ui-super-shell`
     // token-override selector never matches — the chat pane falls through to the component's OWN default
-    // pane size (14 modules = 252px), genuinely different from the page's 26rem (416px) override.
+    // pane size (the 15.75rem content measure), genuinely different from the page's 26rem (416px) override.
     const shell = document.createElement('ui-super-shell')
     const chat = document.createElement('div')
     chat.setAttribute('data-slot', 'nav-pane')
@@ -129,7 +132,7 @@ describe('a2ui-live chrome re-host (ADR-0156) — mid-band (~900px): the fixed s
   // Re-capture the same way (mount at WIDTH, read getBoundingClientRect()) if this ever needs re-baselining;
   // do not hand-tune to pass.
   const EXPECTED_CHAT = { x: GUTTER, y: 20, width: 416, height: 560, right: GUTTER + 416 }
-  const EXPECTED_CANVAS = { x: GUTTER + 416 + 18, y: 20, width: WIDTH - 2 * GUTTER - 416 - 18, height: 560, right: WIDTH - GUTTER }
+  const EXPECTED_CANVAS = { x: GUTTER + 416 + SHELL_GAP, y: 20, width: WIDTH - 2 * GUTTER - 416 - SHELL_GAP, height: 560, right: WIDTH - GUTTER }
 
   it('the chat pane stays pinned at its fixed 26rem width — it does not shrink with content width', () => {
     const { chat, canvas } = mountChrome(WIDTH)
@@ -182,9 +185,9 @@ describe('a2ui-live chrome re-host (ADR-0156) — the two panes are independent 
     const { chat, canvas } = mountChrome(1200)
     const chatRect = chat.getBoundingClientRect()
     const canvasRect = canvas.getBoundingClientRect()
-    // --ui-super-shell-gap === --ui-super-shell-module === 18px (super-shell.css's token block) — a REAL
-    // gap, not the old adjacent shared edge.
-    expect(canvasRect.left - chatRect.right).toBeCloseTo(18, 0)
+    // --ui-super-shell-gap is the layout gutter 3n (super-shell.css's token block), a REAL gap, not the old
+    // adjacent shared edge.
+    expect(canvasRect.left - chatRect.right).toBeCloseTo(SHELL_GAP, 0)
 
     for (const style of [getComputedStyle(chat), getComputedStyle(canvas)]) {
       expect(style.borderTopWidth).toBe('1px')

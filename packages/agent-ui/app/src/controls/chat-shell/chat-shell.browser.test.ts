@@ -120,7 +120,7 @@ describe('GH #575 — ui-chat-shell narrow-tabs strip inline inset', () => {
   // suite never actually measured before (the fixture above always authors one). Split the rule on
   // header presence: headerless falls back to the shell's own generic module-scaled rhythm instead of
   // the (nonexistent) header's fleet-bar-content role.
-  it('narrow, HEADERLESS (the real ui-agent-admin shape): the strip falls back to the shell\'s own module-scaled rhythm, NOT the fleet header-bar role', async () => {
+  it('narrow, HEADERLESS (the real ui-agent-admin shape): the strip falls back to the widget margin, NOT the fleet header-bar role', async () => {
     const { el } = mountChatShellNoHeaderAt(500)
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
     const strip = el.querySelector('[data-part="narrow-tabs"]') as HTMLElement
@@ -130,7 +130,7 @@ describe('GH #575 — ui-chat-shell narrow-tabs strip inline inset', () => {
     // Resolved through a probe (the same idiom as the header-bearing test above): an unregistered custom
     // property computes to its substituted token stream, which never string-equals a used padding value.
     const modProbe = document.createElement('div')
-    modProbe.style.paddingInline = 'calc(var(--ui-super-shell-module) * 2 / 3)'
+    modProbe.style.paddingInline = 'var(--md-sys-widget-margin)'
     strip.append(modProbe)
     const moduleInset = getComputedStyle(modProbe).paddingInlineStart
     modProbe.remove()
@@ -140,11 +140,11 @@ describe('GH #575 — ui-chat-shell narrow-tabs strip inline inset', () => {
     const barInset = getComputedStyle(barProbe).paddingInlineStart
     barProbe.remove()
 
-    expect(moduleInset, 'the module-scaled role resolves').not.toBe('0px')
+    expect(moduleInset, 'the widget margin resolves').not.toBe('0px')
     // Anti-vacuous: the two roles must genuinely differ under the default token values, or this test
     // could pass even if the fallback silently regressed to the header role.
-    expect(moduleInset, 'the module role and the fleet bar-content role are NOT the same value by default').not.toBe(barInset)
-    expect(getComputedStyle(strip).paddingInlineStart, "the strip's inline-start inset reads the module-scaled role").toBe(moduleInset)
-    expect(getComputedStyle(strip).paddingInlineEnd, "the strip's inline-end inset reads the module-scaled role").toBe(moduleInset)
+    expect(moduleInset, 'the widget margin and the fleet bar-content role are NOT the same value by default').not.toBe(barInset)
+    expect(getComputedStyle(strip).paddingInlineStart, "the strip's inline-start inset reads the widget margin").toBe(moduleInset)
+    expect(getComputedStyle(strip).paddingInlineEnd, "the strip's inline-end inset reads the widget margin").toBe(moduleInset)
   })
 })

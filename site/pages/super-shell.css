@@ -43,7 +43,7 @@
  * ui-super-shell is already display:flex/container-type:inline-size from super-shell.css — we only frame it. */
 ui-super-shell.ss-demo {
   block-size: 20rem;
-  margin-block: var(--md-sys-space-lg) 1.75rem;
+  margin-block: var(--md-sys-space-lg) var(--md-sys-layout-margin);
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
   border-radius: var(--md-sys-widget-radius, 12px);
   /* min-size-floors census (GH #185 follow-up) — a dual-sided demo (sections 1/2/4 below) can pass

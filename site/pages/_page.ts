@@ -20,7 +20,7 @@ import '@agent-ui/components/all' // [3] self-defining ui-* controls (registers 
 import '@agent-ui/app/nav-rail' // [3a] the shared ui-nav-rail family (@agent-ui/app) the site nav composes (ADR-0130, mode 1)
 import '@agent-ui/app/nav-rail.css' // [3a] its stylesheet — the rail's grouped vertical anatomy, after the foundation
 import '@agent-ui/app/super-shell' // [3c] M5 (GH #84): the site chrome now RIDES the shell system — ui-super-shell owns the frame
-import '@agent-ui/app/super-shell.css' // [3c] its stylesheet (the 18px module ladder + per-side collapse)
+import '@agent-ui/app/super-shell.css' // [3c] its stylesheet (the level-token frame + per-side collapse)
 import '@agent-ui/icons/phosphor' // [3b] activate the Phosphor default pack (ADR-0065/0066): the controls above render their
 // affordances (select caret, text-field clear/reveal/steppers, calendar nav) through the app-owned icon pack — pack-agnostic
 // by design, so the SHELL that self-defines them must activate the default pack, else those glyphs resolve to an empty <svg>.

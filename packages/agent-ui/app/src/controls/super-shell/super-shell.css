@@ -1,6 +1,7 @@
 /* super-shell.css — ui-super-shell (M5, GH #83; shell-archetypes-m5.spec.md).
- *   [1] TOKEN BLOCK — :where(ui-super-shell) declares ONLY --ui-super-shell-*: the 18px module
- *       ladder (SPEC-R1c: bars/rails = 3 modules, panes = 14) chained onto fleet roles.
+ *   [1] TOKEN BLOCK: :where(ui-super-shell) declares ONLY --ui-super-shell-*, each one a level token
+ *       of the derived system (ADR-0245 cl.6, SPEC-R1c as amended by T-0121): bars/rails = 8n, the
+ *       inter-card gap = the layout gutter 3n, panes = 36n. The fixed 18px rem module is retired.
  *   [2] STYLES BLOCK — @scope (ui-super-shell) consumes ONLY --ui-super-shell-*. Collapse rides the
  *       host's reflected [collapsed-start]/[collapsed-end] (SPEC-R2d); narrow (<40rem container — LLD-C7/
  *       GH #99's `shell-breakpoint.ts` is the shell family's one named source of truth for this literal,
@@ -15,13 +16,20 @@
  *       attribute VALUES they key off changed from left/right to start/end. */
 
 :where(ui-super-shell) {
-  --ui-super-shell-module: 1.125rem; /* 18px — the ONE module every dimension derives from (SPEC-R1c) */
-  --ui-super-shell-bar-size: calc(var(--ui-super-shell-module) * 3); /* 54px bars + rails */
-  --ui-super-shell-pane-size: calc(var(--ui-super-shell-module) * 14); /* 252px panes */
+  /* T-0121 (ADR-0245 cl.6): the frame is a LAYOUT-level region, so every dimension below but one reads a
+     level token and moves with n. A bar is one control row (height 4n) with the widget margin 2n above and
+     below it: 8n, 48px at the root register (n 6). The one exception is the pane width, a named CONTENT
+     measure (15.75rem, 252px): the inline room a nav label column needs, like a page measure and never an
+     n multiple (Kim 2026-10-13; a 36n pane, 216px, truncated the docs nav's "Description List").
+     Each fallback is the retired 18px module's value for that dimension, so a `[data-foundations='legacy']`
+     region (ADR-0245 cl.10e), where the level tokens are unset, keeps the pre-cut frame. */
+  --ui-super-shell-bar-size: calc(var(--md-sys-height, 1.875rem) + 2 * var(--md-sys-widget-margin, 0.75rem)); /* 8n bars + rails */
+  --ui-super-shell-pane-size: 15.75rem; /* 252px panes: a content measure, not a level */
   /* ADR-0166 cl.1 — INLINE-axis only now: the frame declares no gap at all, so this token spaces
      middle's inter-card seams (and a bar's own item row) and nothing else. Deliberately NOT renamed
-     (the ADR's own Rejected list) — a rename forks every consumer override for zero gain. */
-  --ui-super-shell-gap: var(--ui-super-shell-module);
+     (the ADR's own Rejected list), a rename forks every consumer override for zero gain. The value is
+     the layout gutter 3n: the space between cards on a layout. */
+  --ui-super-shell-gap: var(--md-sys-layout-gutter, 1.125rem);
   /* ADR-0166 cl.2 — the bar↔body seam, drawn by the BAR inside its own border box now that the frame
      inserts no space. ONE composite value, not a width/style/color trio: the TKT-0062 law is "repoint
      the token, not the host property", so a consumer wanting a 2px seam, a dashed seam, or none at all
@@ -30,7 +38,7 @@
      and out of AC19's scope twice over (border properties are not a SPACING_PROPERTIES family, and the
      `solid` arm is not dimension-shaped, so isMintedDimensionValue returns false). */
   --ui-super-shell-bar-seam: 1px solid var(--md-sys-color-neutral-outline-variant);
-  --ui-super-shell-radius: var(--md-sys-shape-corner-lg, var(--ui-super-shell-module));
+  --ui-super-shell-radius: var(--md-sys-card-radius, 1.125rem); /* 3n: rail, pane and resizer are cards on the layout */
   /* ADR-0166 cl.4 — the block-axis corner pair every carded part (rail/pane/pane-resizer) consumes as
      its four LOGICAL radius longhands. The frame zeroes one or both per bar presence (cl.3's `:has()`
      rules); three postures where a card's block edge faces something other than a bar restore them by
@@ -64,25 +72,23 @@
   --ui-super-shell-overlay-outline: 1px solid var(--md-sys-color-neutral-outline-variant);
   /* the floating overlay pane's margin from the viewport/container edges (Kim's shell-polish S2 ask):
      it read as a docked, corner-clipped card flush to inset-block/inline edges — floats as a popover-
-     style panel instead. SPEC-R11a — overlay insets are FRAME-tier geometry, so this spells off the
-     module (×2/3, one of R11a's own shipped fractions), never the fleet's --md-sys-space-* ladder,
-     even though the two land on the same 0.75rem rung (R11a's "one sanctioned junction" — the
-     spelling is a declaration of ownership, not a pixel match). */
-  --ui-super-shell-overlay-inset: calc(var(--ui-super-shell-module) * 2 / 3); /* 0.75rem at the 18px module */
+     style panel instead. SPEC-R11a as amended by T-0121: the overlay floats one widget margin (2n)
+     inside the frame, the level token, never a --md-sys-space-* enum. */
+  --ui-super-shell-overlay-inset: var(--md-sys-widget-margin, 0.75rem); /* 2n */
   /* SPEC-R6c (LLD-C1, ADR-0154) — the two-sided resize clamp: neither floor moves without a consumer
      override (agent-admin's migration sets 20rem/16rem, its shipped ui-split's own floors). ONE
      override author per shell instance: a second consumer stylesheet repointing the same instance's
      floor makes cascade order (not intent) the tiebreaker — silently, since both compile clean. */
-  --ui-super-shell-pane-min-size: calc(var(--ui-super-shell-module) * 9); /* 162px */
-  --ui-super-shell-canvas-min-size: calc(var(--ui-super-shell-module) * 9); /* 162px */
+  --ui-super-shell-pane-min-size: calc(var(--md-sys-layout-margin, 1.6875rem) * 6); /* 24n: six layout margins, 144px at the root register */
+  --ui-super-shell-canvas-min-size: calc(var(--md-sys-layout-margin, 1.6875rem) * 6); /* 24n */
   /* SPEC-R15 (GH #260) — a SEPARATE block-size floor, deliberately NOT the same token as
      `--ui-super-shell-canvas-min-size` above. That token is SPEC-R13a's INLINE-size floor only
      (a consumer, e.g. agent-admin.css, overrides it to 16rem for its own width reason) — reusing
      it as a height floor too would silently turn that 16rem WIDTH override into a 256px HEIGHT
      floor on every ui-chat-shell/ui-agent-admin instance (both default `narrow-start='stack'`), a
-     cross-axis surprise no consumer asked for. Same 9-module default as its inline-size sibling
+     cross-axis surprise no consumer asked for. Same 24n default as its inline-size sibling
      (the sensible starting floor), independently overridable per axis. */
-  --ui-super-shell-canvas-min-block-size: calc(var(--ui-super-shell-module) * 9); /* 162px */
+  --ui-super-shell-canvas-min-block-size: calc(var(--md-sys-layout-margin, 1.6875rem) * 6); /* 24n */
   /* SPEC-R10a (ADR-0155) — hidden scroller, live scroll: the fleet's command-modal.css / ui-menu (GH #166)
      seam applied to the shell's OWN scroll regions (pane · active segment · the tab strips' tablist
      viewports, chained via --ui-tabs-strip-scrollbar-width since GH #221 · the overlay-restored side,
@@ -102,15 +108,16 @@
      not set its own outer margin; spacing BETWEEN pieces is the parent's gap / region grid." Minted
      here and consumed as `padding-block-start` (absorbed INSIDE the strip's box, the same mold cl.2's
      `--ui-super-shell-bar-seam` uses for the bar) so the strip's own border-box sits flush against
-     the box above it — no outer margin — while the visible tab row still starts the same 6px lower.
-     Same `/3` value, so agent-admin's rendered spacing (the −12px, MEASURED by the REV 2026-07-30 and
-     ACCEPTED by Kim in the GH #380 Findings comment, 2026-07-31) is unchanged: `margin(6) + box(37)`
-     and `box(37 + padding 6)` are the same 43px footprint.
+     the box above it, no outer margin, while the visible tab row still starts one seam lower.
+     The move kept the value, so agent-admin's rendered spacing (the −12px, MEASURED by the REV 2026-07-30
+     and ACCEPTED by Kim in the GH #380 Findings comment, 2026-07-31) did not change with it: a margin
+     outside the box and the same padding inside it are one footprint. T-0121 repoints the value from a
+     third of the retired module to the control inset n (6px at the root register, as before).
      GH #626 — this is a BLOCK-axis seam and nothing else. It briefly had a second, inline-axis consumer
-     (chat-shell.css's narrow-tabs `padding-inline`, GH #575) that reused it only because `/3` numerically
+     (chat-shell.css's narrow-tabs `padding-inline`, GH #575) that reused it only because the value
      equalled the bar's then-`padding-inline`; that coincidence ended when the bar became a padding-less
      rail, and that consumer now reads `--ui-bar-inline-inset` — the role it actually meant. */
-  --ui-super-shell-narrow-tabs-seam: calc(var(--ui-super-shell-module) / 3);
+  --ui-super-shell-narrow-tabs-seam: var(--md-sys-inset, 0.375rem);
 }
 
 /* `to (ui-super-shell)` sets the scope's LOWER boundary at any NESTED ui-super-shell (SPEC-R1b depth-2
@@ -182,13 +189,13 @@
      re-affirms that clause of #253 untouched (`super-shell.browser.test.ts`'s bar-radius assertion
      stays green unedited).
      `box-sizing: border-box` below is now doubly load-bearing: with `min-block-size:
-     var(--ui-super-shell-bar-size)`, it is what ABSORBS the seam's 1px inside the 54px (the bar's outer
-     height does not change; its content box becomes 53px). Flipping it to `content-box` makes the bar
-     read 55px — the negative control the seam suite runs.
+     var(--ui-super-shell-bar-size)`, it is what ABSORBS the seam's 1px inside the bar size (the bar's
+     outer height does not change; its content box is one pixel shorter). Flipping it to `content-box`
+     makes the bar read one pixel taller, the negative control the seam suite runs.
      GH #1328 — the `:where([data-bar])` discriminator is LOAD-BEARING, not decoration: this @scope's
      lower bound is only nested shells (`to (ui-super-shell)`), so an unqualified `[data-part='bar']`
      matched every part named "bar" ANYWHERE in shell-hosted content — on the docs site (whose whole
-     page lives inside the shell) it stamped 54px min-block-size + flex onto `ui-ladder`'s magnitude
+     page lives inside the shell) it stamped the bar's min-block-size + flex onto `ui-ladder`'s magnitude
      bars (ADR-0118), turning its 12px pills into full-row-height slabs. The shell's own two bars
      ALWAYS carry `data-bar` (super-shell.ts:307-308/411-412 sets it in the same breath as
      `data-part`); content-side parts never do. `:where(…)` (zero specificity) keeps this rule at its
@@ -205,7 +212,7 @@
   }
   /* GH #626 — the bar carries NO `padding-inline`. It is a RAIL: background + seam, edge-to-edge, and
      its CONTENTS own every inset (`ui-tabs`' tablist precedent, GH #543, generalised). The retired
-     `padding-inline: calc(var(--ui-super-shell-module) / 3)` (6px) was a third, uncoordinated inset
+     `padding-inline` (6px, a third of the then-module) was a third, uncoordinated inset
      mechanism: content nested in `bar-content` started 6px further in than the same consumer's content
      in `canvas` directly below, which is exactly the docs site's pager↔footer misalignment. It also
      produced ADR-0166's deferred "sliver" — a consumer painting its own background on the bar's content
@@ -230,14 +237,14 @@
      overflow (e.g. a `justify-content:space-between` row) instead of forcing the bar wider than the shell. */
   /* GH #626 (Kim, 2026-08-09) — `align-self: stretch` is the BLOCK-axis mirror of the `flex: 1 1 auto`
      above, and it exists for the same reason. The bar sizes off `min-block-size`, so it is routinely
-     TALLER than the content it holds — at its 54px default with a single text row, or grown past that
+     TALLER than the content it holds, at its 8n default with a single text row, or grown past that
      minimum by a taller sibling (a side toggle) or a consumer repointing `--ui-super-shell-bar-size`.
      The bar's `align-items: center` then sized `bar-content` to its own content and floated it in the
      middle, so a consumer's full-height header content (a background, a bottom-aligned row, a
      stretch-to-fill child of its own) had no box to fill: it was laying out inside a shrink-wrapped
      ~18px box, not the bar. Declared as `align-self` on THIS child rather than flipping the bar to
      `align-items: stretch`: the bar's other children are the side toggles, which are centred square
-     affordances by design — stretching a 54px icon button to a 120px bar is a defect, not a fix.
+     affordances by design, stretching a square icon button to a 120px bar is a defect, not a fix.
 
      The column-flex pair below is the OTHER HALF of that fill, and it is not optional (GH #626 review,
      MEASURED: 0px top / 35px bottom in both engines, ~4.5px of live upward shift on the docs header).
@@ -312,12 +319,12 @@
      OWN data-side, so the EXISTING collapse (R2a) and narrow (R4) selectors below already hide/restore
      it with the rest of its side (R6e) — zero new selectors needed for that half of the contract.
      GH #214 — the resizer OWNS the gap it sits in instead of stacking a second gap around itself
-     (gap + 4px + gap = 40px vs the 18px every resizer-less seam gets): its hit-box is sized to exactly
+     (gap + 4px + gap against the one gap every resizer-less seam gets): its hit-box is sized to exactly
      one `--ui-super-shell-gap` (a BETTER drag target than the old 4px sliver), the 4px ink is drawn
      CENTERED via `padding-inline` + `background-clip: content-box` (never touching layout), and
      `margin-inline: calc(-1 * gap)` pulls both neighbors back in by one gap each — net footprint =
      exactly one gap, byte-identical to a resizer-less seam (verified: the dual-resizable natural-fit
-     arithmetic simplifies from ~890px to 846px, the same as the resizer-less R13b number). `box-sizing:
+     arithmetic equals the resizer-less R13b number). `box-sizing:
      border-box` is required for the padding-inline math below (no universal reset in
      foundation-styles.css) — `inline-size` must be the padding-inclusive TOTAL, or the box grows past
      the gap it's meant to replace. */
@@ -326,7 +333,7 @@
     box-sizing: border-box;
     inline-size: var(--ui-super-shell-gap);
     margin-inline: calc(-1 * var(--ui-super-shell-gap));
-    padding-inline: calc((var(--ui-super-shell-gap) - 0.25rem) / 2); /* the 4px ink (AC19's allowlisted literal, relocated to this property) */
+    padding-inline: calc((var(--ui-super-shell-gap) - 0.25rem) / 2); /* the 4px ink: a control dimension, equal to no derived level (it left AC19's allowlist with T-0121) */
     cursor: col-resize;
     touch-action: none;
     background: var(--ui-super-shell-resizer-ink);
@@ -380,14 +387,14 @@
   /* GH #221 — the strip is the fleet ui-tabs control: its OWN sheet (tabs.css) owns the row layout,
      gap, tab anatomy, and the tablist part's overflow-x scroll (labels never clip mid-word at pane
      widths — the strip scrolls). This rule keeps only the SHELL-tier facts: the flex posture in the
-     segmented pane column, one module-fraction of breathing room below the strip, and the R10a
+     segmented pane column, one control inset (n) of breathing room below the strip, and the R10a
      scrollbar seam CHAINED onto the control's own consumer-inherited token (the tablist part is the
      live horizontal viewport now, so the shell's hidden-scroller intent rides --ui-tabs-strip-
      scrollbar-width down to it). The `ui-tabs` type prefix is CASCADE-LOAD-BEARING: tabs.css's own
      `@scope (ui-tabs)` rules tie a bare attribute selector on specificity, and scope proximity would
      then hand the win to the control's sheet — the type prefix keeps shell-tier declarations ahead. */
   ui-tabs[data-part='pane-tabs'] {
-    padding-block-end: calc(var(--ui-super-shell-module) / 3);
+    padding-block-end: var(--md-sys-inset, 0.375rem);
     flex: 0 0 auto;
     --ui-tabs-strip-scrollbar-width: var(--ui-super-shell-scrollbar-width); /* SPEC-R10a — the strip's tablist viewport */
   }
@@ -422,10 +429,9 @@
      The `ui-tabs` type prefix out-specifies tabs.css's `:scope { display: block }` (0,1,1 beats 0,1,0
      — scope proximity would otherwise un-hide the strip at wide). */
   /* ADR-0166 cl.7 (posture exception C, the strip's half) — the strip lost the frame gap that used to
-     space it, so the strip OWNS its own block-start seam. `/3` is one of R11a's named shipped fractions
-     and is the one this file already uses for shell-tier breathing room that is not a full inter-card
-     gap (`pane-tabs`'s `padding-block-end`; the bar's `padding-inline` was the other until GH #626
-     retired it): a full `--ui-super-shell-gap`
+     space it, so the strip OWNS its own block-start seam. The control inset n is the value this file
+     already uses for shell-tier breathing room that is not a full inter-card gap (`pane-tabs`'s
+     `padding-block-end`): a full `--ui-super-shell-gap`
      would read as an inter-card gap the strip is not (it is chrome spanning the frame, like a bar), and
      `0` would butt the strip's first tab against the box above it. Declared on the base (wide) rule
      rather than inside the narrow query because it is a static property of the strip; the strip is
@@ -562,12 +568,12 @@
        cl.2 uses for the bar seam — so the R9d/R14 `max-inline-size` cap keeps meaning the OUTER width and
        the far-edge canvas gap stays exactly one bar wide. A `[data-part='pane']` already declares
        `border-box`; a `[data-part='rail']` overlay (the `global-nav` slot) does not, and would otherwise
-       render 56px wide off its 54px `inline-size`. The `border` shorthand resets `border-image`, NOT
+       render two pixels wider than its `inline-size`. The `border` shorthand resets `border-image`, NOT
        `border-radius` — cl.6's restore below is untouched, and the browser suite pins that. */
     border: var(--ui-super-shell-overlay-outline);
     box-sizing: border-box;
     /* ADR-0166 cl.6 (mid-window overlay arms 1+2 of six) — an overlaid card is INSET, not flush: its
-       `inset-block` holds it 0.75rem inside middle's own edges, so it touches no bar and stays FULLY
+       `inset-block` holds it one overlay inset inside middle's own edges, so it touches no bar and stays FULLY
        round. Declared on the CARD, which beats the frame's inherited value with no specificity
        arms-race against three container-query blocks. */
     --ui-super-shell-radius-block-start: var(--ui-super-shell-radius);
@@ -578,8 +584,8 @@
   /* GH #778 (all three overlay arms) — COMPOSED-PAIR overlay for a side that stacks a RAIL outboard of a
      PANE (R5b: `global-nav` + `nav-pane`, or `global-options` + `options-pane`). The base per-side inset
      rule above lands EVERY part on that side — rail AND pane — at the same `--ui-super-shell-overlay-inset`,
-     so both go `position:absolute` at the identical edge inset and STACK: the 54px rail paints on top of the
-     252px pane's outer edge, its label wrapping to a sliver (the "popover overlap", capture #19). The fix is
+     so both go `position:absolute` at the identical edge inset and STACK: the rail paints on top of the
+     pane's outer edge, its label wrapping to a sliver (the "popover overlap", capture #19). The fix is
      an inset OFFSET, not a hide: the rail stays flush at the edge, and each pane on a rail-bearing side is
      pushed inboard by exactly one rail width so the overlay reads `[ pane | rail ]` flush to the edge — the
      SAME inboard-to-outboard order the wide row draws (R5b: rail outermost). No content is dropped and no
@@ -706,7 +712,7 @@
       position: absolute;
       inset-block: var(--ui-super-shell-overlay-inset);
       z-index: 2;
-      /* SPEC-R9d — cap the overlay so a canvas edge stays visible on the smallest screens (a 252px pane
+      /* SPEC-R9d: cap the overlay so a canvas edge stays visible on the smallest screens (a full pane
          never spans a 320px viewport): its own pane-size, but never wider than the container minus a bar
          AND the near-edge floating inset below (so the far-edge canvas gap stays exactly one bar wide,
          unchanged by the new margin). */

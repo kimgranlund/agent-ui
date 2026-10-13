@@ -25,7 +25,7 @@
  * DIVIDER → GAP (mechanism change, not a visual regression): the old shell placed the two regions
  * EDGE-TO-EDGE, so exactly one of them could own the shared border (the "single owner" rule this file used
  * to carry). `ui-super-shell`'s middle row separates its parts with a REAL `gap` (`--ui-super-shell-gap`,
- * 18px) instead — the two cards are no longer adjacent, so there is no shared edge to arbitrate: each pane
+ * the layout gutter 3n) instead, the two cards are no longer adjacent, so there is no shared edge to arbitrate: each pane
  * now owns a complete border on all four sides (a2ui-live.browser.test.ts's re-baselined "gapped cards"
  * describe block covers this).
  *

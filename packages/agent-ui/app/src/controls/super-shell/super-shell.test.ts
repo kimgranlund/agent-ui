@@ -300,7 +300,7 @@ describe('ui-super-shell — the bar-seam contract, source-pinned (ADR-0166, GH 
 
   it('cl.1 — [data-part="frame"] declares NO gap, and the three inline-axis gap owners are untouched', () => {
     expect(ruleBody("[data-part='frame'] {")).not.toMatch(/\bgap:/)
-    expect(tokenBlock).toMatch(/--ui-super-shell-gap:\s*var\(--ui-super-shell-module\);/)
+    expect(tokenBlock).toMatch(/--ui-super-shell-gap:\s*var\(--md-sys-layout-gutter, 1\.125rem\);/) // T-0121: the layout gutter 3n (the legacy fallback is the retired module's 18px)
     expect(ruleBody("[data-part='bar']:where([data-bar]) {")).toMatch(/gap:\s*var\(--ui-super-shell-gap\);/)
     expect(ruleBody("[data-part='middle'] {")).toMatch(/gap:\s*var\(--ui-super-shell-gap\);/)
   })
@@ -312,7 +312,7 @@ describe('ui-super-shell — the bar-seam contract, source-pinned (ADR-0166, GH 
     expect(ruleBody("[data-part='bar']:where([data-bar]) {")).not.toMatch(/radius/)
   })
 
-  it('cl.2 — the bar keeps box-sizing: border-box (what ABSORBS the seam inside the 54px instead of growing the bar)', () => {
+  it('cl.2: the bar keeps box-sizing: border-box (what ABSORBS the seam inside the bar size instead of growing the bar)', () => {
     expect(ruleBody("[data-part='bar']:where([data-bar]) {")).toMatch(/box-sizing:\s*border-box;/)
     expect(ruleBody("[data-part='bar']:where([data-bar]) {")).toMatch(/min-block-size:\s*var\(--ui-super-shell-bar-size\);/)
   })
@@ -368,11 +368,11 @@ describe('ui-super-shell — the bar-seam contract, source-pinned (ADR-0166, GH 
     expect(endArm).not.toMatch(/--ui-super-shell-radius-block-end:/)
   })
 
-  it('cl.7 exception C — the narrow-tabs strip owns its own block-start seam at one module THIRD, absorbed INSIDE its box (GH #380 — no self-owned outer margin)', () => {
+  it('cl.7 exception C: the narrow-tabs strip owns its own block-start seam at one control inset, absorbed INSIDE its box (GH #380: no self-owned outer margin)', () => {
     const body = ruleBody("ui-tabs[data-part='narrow-tabs'] {")
     expect(body).toMatch(/padding-block-start:\s*var\(--ui-super-shell-narrow-tabs-seam\);/)
     expect(body).not.toMatch(/margin-block-start:/)
-    expect(tokenBlock).toMatch(/--ui-super-shell-narrow-tabs-seam:\s*calc\(var\(--ui-super-shell-module\) \/ 3\);/)
+    expect(tokenBlock).toMatch(/--ui-super-shell-narrow-tabs-seam:\s*var\(--md-sys-inset, 0\.375rem\);/) // T-0121: n (the legacy fallback is the retired module's third)
   })
 
   it("cl.7 exception C — the strip composes ABOVE middle, and the active narrow-tab pane restores its block-START pair (GH #380's coordinated repair)", () => {

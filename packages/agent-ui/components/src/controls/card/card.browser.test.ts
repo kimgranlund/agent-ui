@@ -280,12 +280,12 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     expect(headerToContent, 'between-region gap doubled (12px) instead of reconciling to one inset (6px)').toBeLessThan(frameToHeader * 1.5)
   })
 
-  it('NESTED card-content padding stays FLAT (2n / n, derived) at every depth — no stepping law at all (REVISED 2026-07-04)', () => {
+  it('NESTED card-content padding stays FLAT (2n on both axes, derived) at every depth, no stepping law at all (REVISED 2026-07-04)', () => {
     // The shared container-box.css model (modal/select/menu/combo-box) steps a NESTED [data-region='content']'s
     // inline padding IN one inset per level (12 → 6 → 6, floored). But `ui-card-content` is a bespoke tag,
     // never marked `[data-region='content']` or `[data-box]` — the shared stepping selectors
     // (`:where([data-region='content'], main) :where(...)`) never match it, so ui-card-content carries NO
-    // padding-stepping law at all: every level reads the SAME flat --ui-card-region-pad-inline/-block (12/6),
+    // padding-stepping law at all: every level reads the SAME flat --ui-card-region-pad-inline/-block (the card gutter 2n on both axes since T-0121),
     // independent of nesting depth. Proven here 3 levels deep (card > content > card > content > card >
     // content) — flat, never a decreasing ladder — is the correct, deliberate resolution for card (only the
     // RADIUS chain steps, ADR-0018).
@@ -302,7 +302,7 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     const padsInline = contents.map((c) => px(getComputedStyle(c).paddingLeft))
     const padsBlock = contents.map((c) => px(getComputedStyle(c).paddingTop))
     for (const [i, p] of padsInline.entries()) expect(p, `L${i + 1} inline padding is not ~2n px (a stepping law leaked in)`).toBeCloseTo(DERIVED.card.gutter, 0)
-    for (const [i, p] of padsBlock.entries()) expect(p, `L${i + 1} block padding is not ~n px (a stepping law leaked in)`).toBeCloseTo(DERIVED.n, 0)
+    for (const [i, p] of padsBlock.entries()) expect(p, `L${i + 1} block padding is not ~2n px (a stepping law leaked in)`).toBeCloseTo(DERIVED.card.gutter, 0)
     // anti-vacuous: every level reads the identical value (flat, NOT a decreasing ladder) — a stepping bug
     // (accidentally inheriting the shared container-box.css formula) would make these diverge.
     expect(new Set(padsInline).size, 'padding is not flat across nesting depth').toBe(1)
@@ -316,7 +316,7 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     const bare = mount('<ui-card><div>First</div><div>Second</div></ui-card>')
     const bareStyle = getComputedStyle(bare)
     expect(px(bareStyle.paddingLeft), 'bare card inline padding is not ~2n px').toBeCloseTo(DERIVED.card.gutter, 0)
-    expect(px(bareStyle.paddingTop), 'bare card block padding is not ~n px').toBeCloseTo(DERIVED.n, 0)
+    expect(px(bareStyle.paddingTop), 'bare card block padding is not ~2n px (the card gutter on both axes, T-0121)').toBeCloseTo(DERIVED.card.gutter, 0)
     // REVISED 2026-07-04: the loose-child rhythm is an adjacent-sibling margin now (the shell is block flow, not
     // a grid/flex `gap` — `rowGap` computes to 'normal'). Measure the RENDERED gap between the two children.
     const [first, second] = [...bare.children] as HTMLElement[]

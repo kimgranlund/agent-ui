@@ -16,8 +16,9 @@ export const SHELL_NARROW_BREAKPOINT = `${SHELL_NARROW_BREAKPOINT_REM}rem`
 // The COMPACT line (SPEC-R8/ADR-0155): the second named band boundary, joining the narrow line above.
 // 52.5rem is deliberately ADR-0150's number — the M3 compact-window boundary (840px) the fleet already
 // owns for the body typescale — reused here so the shell family cuts its band ladder at one fleet-named
-// line rather than inventing a third magic number (the shell's own module math — dual full sides + canvas
-// floor, 2·(54+252)+162+4·18 ≈ 846px — lands within one 18px module of it). One number, two mechanisms:
+// line rather than inventing a third magic number (on the retired 18px module the shell's own math, dual
+// full sides plus the canvas floor, landed at 846px, within one module of it; on the level tokens the same
+// sum is 2·(8n+252)+24n+4·3n = 52n + 504, 816px at the root register n 6). One number, two mechanisms:
 // a viewport `@media` there, a container `@container` here (super-shell.css's compact arms, guarded by
 // `collapse-band='compact'`); shell-breakpoint.test.ts sweeps BOTH literals against their named source.
 export const SHELL_COMPACT_BREAKPOINT_REM = 52.5

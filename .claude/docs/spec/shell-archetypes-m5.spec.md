@@ -1,6 +1,9 @@
 # SPEC — Shell archetypes M5: `ui-super-shell` (the two-level recursive shell grammar)
 
-> Status: accepted · v0.8 · 2026-07-30 · Layer: app chrome (`@agent-ui/app`)
+> Status: accepted · v0.9 · 2026-10-13 · Layer: app chrome (`@agent-ui/app`)
+> v0.9 (2026-10-13): T-0121, under [ADR-0245](../adr/0245-foundations-derive-from-one-n.md) clause 6:
+> the fixed 18px module is retired and every frame dimension reads a derived level token. R1c, R8's
+> fit arithmetic, R11a, R11b, R11d (C) and AC19 each carry a REV note; the older text stays as the record.
 > v0.8 (2026-07-30) — [ADR-0166](../adr/0166-super-shell-bars-own-their-seam.md)'s amendment sheet
 > applied at the build gate (GH #371): R11a's frame-geometry enumeration gains its block-axis
 > carve-out, R11c gains a THIRD disposition (a border WIDTH is outside the literal law's scope),
@@ -33,6 +36,14 @@ A **shell** is `[ header? | side-L? | content | side-R? | footer? ]` where:
 - **R1c — the 18px module.** Bars (header/footer) and rails are 3 modules (54px); panes are 14
   modules (252px); gaps/radius/padding are 1 module (18px). Realized as `--ui-super-shell-*` tokens
   chained onto the fleet's dimensional roles — never literals in consumer CSS.
+  *REV 2026-10-13 (T-0121, ADR-0245 cl.6): the module is RETIRED. The frame is a layout-level region
+  and every dimension is a level token that moves with n: bars and rails `height + 2 × widget margin`
+  = 8n (48px at the root register, n 6); panes stay 252px (15.75rem), a named content measure that
+  does not move with n (Kim 2026-10-13); the inter-card gap
+  the layout gutter 3n (18px); card radius the card radius 3n (18px); the overlay inset the widget
+  margin 2n (12px); the strip seams the control inset n (6px); the pane and canvas floors six layout
+  margins = 24n (144px). The token names are unchanged except `--ui-super-shell-module`, which no
+  longer exists; the resizer's keyboard step reads `--ui-super-shell-gap`.*
 
 Slot vocabulary (the frame's own names): outer `header · global-nav · nav-pane · content ·
 options-pane · global-options · footer`; inner `header · selections-pane · canvas ·
@@ -217,6 +228,8 @@ amendment substitutes for it.
   and the shell's own module math lands within one 18px module of it (dual full sides + canvas
   floor: 2·(54+252) + 162 + 4·18 ≈ 846px ≈ 52.9rem). One number, two mechanisms (viewport media
   there, container query here), both citing the same named line.
+  *REV 2026-10-13 (T-0121): on the derived levels the same sum is 2·(8n+252) + 24n + 4·3n = 52n + 504,
+  816px at the root register (n 6), one layout margin below the line; the line itself does not move.*
 - **R8b — `collapse-band`, per shell.** A new reflected enum prop
   `collapse-band ∈ 'narrow' (default) | 'compact'` names which line auto-collapses the shell's
   **collapse-mode sides** (R4 semantics otherwise unchanged: query-only hiding, overlay
@@ -327,11 +340,20 @@ mechanism — R13 states the requirement that build must clear, not its mechanis
   junction: a box sitting on it takes the spelling of the system it belongs to (frame boxes spell
   it off the module, content boxes off the space token) — the spelling is a declaration of
   ownership, so a mixed spelling on one box is a classification error even when the pixels agree.
+  *REV 2026-10-13 (T-0121, ADR-0245 cl.6): the two ladders are ONE now. Frame geometry reads the
+  derived level tokens directly (R1c's REV lists each), so there is no module, no shipped multiple or
+  fraction, and no junction rung: the corner radius reads `--md-sys-card-radius` (the
+  `--md-sys-shape-corner-lg` role this clause names was never defined, so the module fallback was the
+  live value). A frame box still mints its own `--ui-super-shell-*` token; what it chains to is a level,
+  with the retired module's value kept only as that level token's fallback for a
+  `[data-foundations='legacy']` region.*
 - **R11b — cross-family aliases are minted on the boundary element.** A consumer family needing a
   shell-derived length mints ONE named alias in its own namespace, declared ON the composed shell
   element itself — the `--ui-agent-admin-shell-gutter` pattern (agent-admin.css's
   `ui-super-shell { … }` alias rule, PR #191):
-  the alias chains from `--ui-super-shell-module` on the very element that token is declared on.
+  the alias chains from `--ui-super-shell-module` on the very element that token is declared on
+  (*REV 2026-10-13, T-0121: the alias now reads the widget margin, a level token that resolves on any
+  element; it stays declared on the composed shell so its site does not move*).
   Never in the consumer's ancestor-scoped token block: custom properties resolve at their
   DECLARING element, so a `var()` chained onto a descendant's token computes guaranteed-invalid
   when minted on the ancestor (agent-admin.css's inheritance-direction rationale — proven there by
@@ -406,7 +428,8 @@ mechanism — R13 states the requirement that build must clear, not its mechanis
   squared and restores block-end, `narrow-end='stack'` inverts. `:first-child`/`:last-child` cannot
   express this (`scrim` is unconditionally `middle`'s first child, and a collapsed sibling keeps its
   child index while `display: none`). (C) the narrow-tabs STRIP owns its own block-start seam at
-  `calc(var(--ui-super-shell-module) / 3)`, one of R11a's named shipped fractions.
+  `calc(var(--ui-super-shell-module) / 3)`, one of R11a's named shipped fractions (*REV 2026-10-13,
+  T-0121: the control inset n, `var(--md-sys-inset)`*).
   **Axis qualification, and it is load-bearing:** the reading that `rail`/`pane`/`pane-resizer` are
   separate floating cards with gaps between them (stated in `super-shell.css`'s own GH #253
   rationale, not previously in this SPEC) holds on the INLINE axis within `middle`, verbatim — gaps
@@ -511,6 +534,12 @@ the entry (GH #213 appends a second: `--ui-super-shell-module`'s own root defini
 literal — the head of the token block has no var() to chain to) · (d) **baseline** — born ZERO: the
 gate lands with (or after) the mop-up wave's conversions, never with a red or grandfathered count ·
 (e) the test's header cites SPEC-R11c/AC19, so a future red reads as law, not lint noise.
+
+*REV 2026-10-13 (T-0121, ADR-0245 cl.6): the ladder (b) tests against is the derived levels at the
+root register (c, n, the group, widget, card and layout margins and gutters, the control height 4n)
+plus the shell's n multiples (8n, 24n, 36n), computed from `scale.mjs`; a foundations token's own
+fallback is not a mint; the allowlist (c) is EMPTY (the module's root literal is gone, and the
+resizer's 4px ink equals no derived level).*
 
 *NOTE 2026-07-30 (ADR-0166, GH #371) — no predicate change, no allowlist change, recorded because
 "the gate stayed green" is otherwise indistinguishable from "the gate was never in scope."* The
