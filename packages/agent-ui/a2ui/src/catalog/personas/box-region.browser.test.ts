@@ -3,7 +3,9 @@
 // painted spacing matches a stock card region: ink 19px inline and 13px block from the outer edge (border 1px,
 // the 6px box inset, the region padding), the card's loose-child margin gone, and the composite's own rhythm
 // (CardTable one region apart, 18px; QuestionCard one 8px gap). jsdom cannot see a computed box, so this is
-// the geometry proof; card-table.test.ts and question-card.test.ts own the DOM shape.
+// the geometry proof; card-table.test.ts and question-card.test.ts own the DOM shape. The CardTable betting seed
+// (ADR-0243 Amendment 3, T-0088) adds the bet row: its chips, stepper and Clear on the 36px lg step, 8px apart,
+// one region between the felt and the Deal row.
 
 import { describe, it, expect, afterEach } from 'vitest'
 // Side-effect CSS first (foundation, then the shipped control sheets), then the self-defining controls.
@@ -56,6 +58,34 @@ describe('the persona composites on the ADR-0046 box model (Amendment 7)', () =>
     expect(host.right - buttons.at(-1)!.right).toBeCloseTo(19, 0)
     expect(host.bottom - buttons.at(-1)!.bottom).toBeCloseTo(13, 0)
     expect(getComputedStyle(part(card, 'zone')).marginBlockStart).toBe('0px') // the card's loose-child margin is gone
+  })
+
+  it('CardTable betting (Amendment 3): the bet row sits one region (18px) between the felt and the Deal row; chips, stepper and Clear at 36px lg, 8px apart', async () => {
+    const card = await renderSeed('persona-croupier-card-table-betting')
+    const host = rect(card)
+    const player = rect(card.querySelectorAll('[data-part="zone"]')[1]!)
+    const bet = rect(part(card, 'bet'))
+    const chips = [...card.querySelectorAll('[data-part="chip"]')].map(rect)
+    const stake = rect(part(card, 'stake'))
+    const clear = rect(part(card, 'clear'))
+    const dealBtn = rect(card.querySelector(':scope > ui-button') as HTMLElement)
+    expect(chips).toHaveLength(4)
+    for (const r of [...chips, stake, clear, dealBtn]) expect(r.height).toBeCloseTo(36, 0)
+    // The chips on the first line, 8px apart; the stepper and Clear on the second, 8px below and 8px apart.
+    for (let i = 1; i < chips.length; i++) {
+      expect(chips[i]!.left - chips[i - 1]!.right).toBeCloseTo(8, 0)
+      expect(chips[i]!.top).toBeCloseTo(chips[0]!.top, 0)
+    }
+    expect(chips[0]!.left - host.left).toBeCloseTo(19, 0)
+    expect(stake.top - chips[0]!.bottom).toBeCloseTo(8, 0)
+    expect(stake.left - host.left).toBeCloseTo(19, 0)
+    expect(clear.left - stake.right).toBeCloseTo(8, 0)
+    expect(clear.top).toBeCloseTo(stake.top, 0)
+    expect(host.right - clear.right).toBeCloseTo(19, 0) // the stepper takes the line's slack
+    expect(bet.top - player.bottom).toBeCloseTo(18, 0)
+    expect(dealBtn.top - bet.bottom).toBeCloseTo(18, 0)
+    expect(host.right - dealBtn.right).toBeCloseTo(19, 0)
+    expect(host.bottom - dealBtn.bottom).toBeCloseTo(13, 0)
   })
 
   it('QuestionCard: ink 19px inline and 13px block; one 8px gap between parts', async () => {

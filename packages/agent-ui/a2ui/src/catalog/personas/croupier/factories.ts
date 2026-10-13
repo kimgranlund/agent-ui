@@ -74,6 +74,7 @@ interface ButtonLike extends HTMLElement {
   variant: string
   size: string
   disabled: boolean
+  inline: boolean
 }
 
 interface StakeFieldLike extends HTMLElement {
@@ -221,6 +222,7 @@ function button(variant: string, label: string): ButtonLike {
   const el = document.createElement('ui-button') as ButtonLike
   el.variant = variant
   el.size = 'lg' // minted before `largeActionButtons` observes, so sized here (ADR-0243 Amendment 2)
+  el.inline = true // hug its label in the bet row (ADR-0223's one opt-out), never fill it
   el.textContent = label
   return el
 }
@@ -345,6 +347,7 @@ export const cardTableFactory: WidgetFactory = {
     chipsEl.style.display = 'flex'
     chipsEl.style.flexWrap = 'wrap'
     chipsEl.style.gap = BOX.gap
+    chipsEl.style.flex = '1 0 100%' // the chips own the first line; the stepper and Clear share the second
     const stakeEl = document.createElement('ui-text-field') as StakeFieldLike
     stakeEl.setAttribute('data-part', 'stake')
     stakeEl.type = 'number'
