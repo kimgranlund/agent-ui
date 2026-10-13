@@ -31,7 +31,7 @@
 
 :where(ui-radio) {
   /* Box size from the widget ramp (ADR-0041). Default = md. */
-  --ui-radio-box: var(--md-sys-compact-md);
+  --ui-radio-box: var(--md-sys-icon-box, var(--md-sys-compact-md));
 
   /* Dot geometry: the SAME 22%-inset law as before (unchanged diameter maths), now sizing a real
      `::after` circle instead of an inset box-shadow annulus — the fix touches COLOUR, not proportion. */
@@ -50,17 +50,17 @@
   --ui-radio-dot: var(--md-sys-color-primary-on-primary);
 
   /* Gap: between the circle and the label slot (font/2, the anatomy gap law — density-bearing). */
-  --ui-radio-gap: var(--md-sys-gap-md);
+  --ui-radio-gap: var(--md-sys-inset, var(--md-sys-gap-md));
 }
 
 /* [size] → compact ramp repoint (ADR-0041). Gap follows the font-size tier (density gap = font/2). */
 :where(ui-radio[size='sm']) {
-  --ui-radio-box: var(--md-sys-compact-sm);
-  --ui-radio-gap: var(--md-sys-gap-sm);
+  --ui-radio-box: var(--md-sys-icon-box, var(--md-sys-compact-sm));
+  --ui-radio-gap: var(--md-sys-inset, var(--md-sys-gap-sm));
 }
 :where(ui-radio[size='lg']) {
-  --ui-radio-box: var(--md-sys-compact-lg);
-  --ui-radio-gap: var(--md-sys-gap-lg);
+  --ui-radio-box: var(--md-sys-icon-box, var(--md-sys-compact-lg));
+  --ui-radio-gap: var(--md-sys-inset, var(--md-sys-gap-lg));
 }
 
 /* disabled → muted neutral roles. Holds at idle (pointer-inert below). Disabled is SC 1.4.11-EXEMPT

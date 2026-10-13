@@ -127,7 +127,7 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
 
   // ── AC4: content-lg × lg → exact px from the ADR-0041 literal table ───────────────────────────
 
-  it('AC4 no --md-sys-scale multiplier: [scale=content-lg] × [size=lg] → thumb = 28px − 4 = 24px (literal table)', () => {
+  it('AC4 no --md-sys-scale multiplier: [data-tier=content][data-scale=lg] × [size=lg] → thumb = 28px − 4 = 24px (literal table)', () => {
     const wrapper = document.createElement('div')
     wrapper.setAttribute('scale', 'content-lg')
     const el = document.createElement('ui-slider-multi')
@@ -141,7 +141,7 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
     wrapper.remove()
   })
 
-  it('AC4 [scale=ui-lg] × [size=md] → thumb = 18px − 4 = 14px (literal table, not multiplier)', () => {
+  it('AC4 [data-tier=product][data-scale=md] × [size=md] → thumb = 18px − 4 = 14px (literal table, not multiplier)', () => {
     const wrapper = document.createElement('div')
     wrapper.setAttribute('scale', 'ui-lg')
     const el = document.createElement('ui-slider-multi')

@@ -106,7 +106,7 @@ describe('ui-radio browser smoke — box geometry (exact px, ADR-0041)', () => {
     expect(Number.parseFloat(getComputedStyle(lg, '::before').width)).toBe(18) // --md-sys-compact-lg
   })
 
-  it('radio-box-scale: [scale=ui-lg]×[size=md] → 18px (the scale×size lookup, ADR-0041)', () => {
+  it('radio-box-scale: [data-tier=product][data-scale=md]×[size=md] → 18px (the scale×size lookup, ADR-0041)', () => {
     const wrapper = document.createElement('div')
     wrapper.setAttribute('scale', 'ui-lg')
     const el = document.createElement('ui-radio') as UIRadioElement
@@ -116,7 +116,7 @@ describe('ui-radio browser smoke — box geometry (exact px, ADR-0041)', () => {
     expect(Number.parseFloat(getComputedStyle(el, '::before').width)).toBe(18)
   })
 
-  it('radio-box-scale-lg: [scale=content-lg]×[size=lg] → 28px (not a CSS calc — explicit table value)', () => {
+  it('radio-box-scale-lg: [data-tier=content][data-scale=lg]×[size=lg] → 28px (not a CSS calc — explicit table value)', () => {
     const wrapper = document.createElement('div')
     wrapper.setAttribute('scale', 'content-lg')
     const el = document.createElement('ui-radio') as UIRadioElement
