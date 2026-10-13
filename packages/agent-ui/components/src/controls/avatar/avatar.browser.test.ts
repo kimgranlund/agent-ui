@@ -94,6 +94,16 @@ describe('ui-avatar — whole-shape: every fallback link actually paints (test-t
     expect(rect.height).toBeGreaterThan(0)
   })
 
+  it('sm initials hold the 9px type floor (0.42 of the 20px sm box alone reads 8.4px); lg keeps the 0.42 ratio', () => {
+    const sm = mount('<ui-avatar identity="Ada Lovelace" size="sm"></ui-avatar>')
+    const smBox = sm.getBoundingClientRect().width
+    expect(smBox * 0.42, 'anti-vacuous: the bare ratio lands under the floor on the sm box').toBeLessThan(9)
+    expect(parseFloat(getComputedStyle(sm.querySelector('[data-part="initials"]') as HTMLElement).fontSize)).toBeGreaterThanOrEqual(9)
+    const lg = mount('<ui-avatar identity="Ada Lovelace" size="lg"></ui-avatar>')
+    const lgBox = lg.getBoundingClientRect().width
+    expect(parseFloat(getComputedStyle(lg.querySelector('[data-part="initials"]') as HTMLElement).fontSize)).toBeCloseTo(lgBox * 0.42, 1)
+  })
+
   it('the image fills the whole box (object-fit: cover)', () => {
     const el = mount('<ui-avatar identity="Ada Lovelace" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7"></ui-avatar>')
     const img = el.querySelector('img') as HTMLElement

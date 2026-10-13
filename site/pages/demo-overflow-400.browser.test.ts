@@ -38,6 +38,8 @@ const PAGES: Record<string, () => Promise<unknown>> = {
   'card-demo (the composed card)': () => import('./card-demo.ts'),
   'table-demo (the report and single-select tables)': () => import('./table-demo.ts'),
   'card-doc (the Attributes table)': () => import('./card-doc.ts'),
+  'badge-demo (the count pills row)': () => import('./badge-demo.ts'),
+  'icon-demo (the sizing ramp row)': () => import('./icon-demo.ts'),
 }
 
 /** table-demo's wide report table scrolls in its own frame at a readable width instead of squeezing its cells. */

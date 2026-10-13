@@ -9,7 +9,7 @@
 // this page only stages, wires the log, and asks for validation.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
-import { applyDemoWidth, captioned, el, exampleSection, searchIcon, uiButton } from '../lib/specimens.ts'
+import { applyDemoWidth, captioned, el, exampleSection, uiButton } from '../lib/specimens.ts'
 import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 
 const { content } = mountPage({
@@ -78,9 +78,9 @@ const commercialNote = el('p', {}, [
   code('rangeUnderflow'), text('/'), code('rangeOverflow'), text(' — try 900 seats, then Tab away.'),
 ])
 
-// ── [3] account — masked password with the reveal button (the `toggle` emitter) + a leading-icon search ─────
+// ── [3] account — masked password with the reveal button (the `toggle` emitter) + a search (built-in magnifier) ─────
 const password = field({ label: 'Portal password', name: 'password', type: 'password', required: '', placeholder: 'at least 12 characters' })
-const search = field({ label: 'Find a vendor', type: 'search', placeholder: 'Search vendors' }, searchIcon('leading'))
+const search = field({ label: 'Find a vendor', type: 'search', placeholder: 'Search vendors' })
 const account = el('ui-column', { gap: 'sm' }, [password, search])
 applyDemoWidth(account, '26rem')
 

@@ -7,7 +7,7 @@
 // leaf) — the runtime status specimen logs the WRITES this page makes, so the hardening is visibly proven.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
-import { applyDemoWidth, captioned, el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { applyDemoWidth, captioned, el, exampleSection, scrollX, uiButton } from '../lib/specimens.ts'
 import { whenFlushed } from '@agent-ui/components' // the kernel's microtask flush — effects (incl. the hardening) settle before the log reads
 
 const { content } = mountPage({
@@ -102,5 +102,5 @@ content.append(
   exampleSection('A run list — status + count tokens', runList, listNote),
   exampleSection('A bound status, written live', el('ui-row', { gap: 'md', align: 'center' }, [live]), writes, liveNote),
   exampleSection('write log', log),
-  exampleSection('Count pills + the empty-label floor', counts),
+  exampleSection('Count pills + the empty-label floor', scrollX(counts, '40rem')),
 )

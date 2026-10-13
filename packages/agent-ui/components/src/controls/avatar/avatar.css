@@ -80,7 +80,7 @@
   }
 
   :scope [data-part='initials'] {
-    font-size: calc(var(--ui-avatar-size) * 0.42);
+    font-size: max(var(--md-sys-type-floor, 9px), calc(var(--ui-avatar-size) * 0.42)); /* the type floor: 0.42 alone reads 8.4px on the 20px sm box */
     font-weight: var(--md-sys-typescale-label-medium-weight);
     line-height: 1; /* single-line, centers like a glyph (geometry.md's control line-height law) */
     user-select: none;
