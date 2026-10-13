@@ -1,1 +1,0 @@
-K6 bound 46430 (42,209 * 1.1). Default agent-ui + tool: 45843 (587 spare); ResultCard row present: true
