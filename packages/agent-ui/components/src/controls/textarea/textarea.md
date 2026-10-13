@@ -118,7 +118,7 @@ geometry:
   paddingBlock: var(--ui-textarea-padding-block)   # REAL block padding — the inversion of the single-line law's padding-block:0
   inlinePad: var(--ui-textarea-padding-inline)   # the box margin n; the editor part adds the label inset n - c, so the text edge is 2n - c (ADR-0245 Amendment 4)
   gap: n/a                # no adornment slots — no slot↔editor gap
-  radius: var(--md-sys-shape-corner-base)            # fixed rounded-rect — the container-fleet referent, entry-control class (geometry.md "Corner radius")
+  radius: var(--ui-textarea-radius)                  # the single-line control radius 2n with circular corners (--md-sys-control-radius, ADR-0245 Amendment 5); corner-base under the legacy opt-out
   posture: fill (block-level, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-block + hug   # Fill by Default — slice 1 (entry family)
   minInlineSize: var(--ui-textarea-min-inline-size) (~20ch — typing-width floor, native <textarea> parity), ACTIVE IN THE [inline] HUG STATE ONLY (ADR-0223 cl.3(b), superseding ADR-0021's default-state placement)   # the fill default needs no floor — the container is the floor
 
@@ -172,8 +172,8 @@ control-toggled `data-empty` attribute, not `:empty`.
 per-row line-box all **derive from that font** via `calc()`, so one repoint cascades through all three. This
 is deliberately **not** the `(scale × size) → §1-row` lookup `ui-text-field`/`ui-select` ride — a multi-line
 box has no single fixed height to look up (ADR-0134). The frame (border + radius) is drawn **on the host**,
-the same fixed `--md-sys-shape-corner-base` rounded-rect entry-control class `ui-text-field` uses (geometry.md "Corner
-radius"). A bare textarea carries a default minimum typing width (`min-inline-size: ~20ch`) so it stays
+with the single-line control radius `2n` and circular corners, so it matches the `ui-text-field` beside it (ADR-0245
+Amendment 5; the `--md-sys-shape-corner-base` rounded-rect under the legacy opt-out). A bare textarea carries a default minimum typing width (`min-inline-size: ~20ch`) so it stays
 hittable; layout owns width above the floor.
 
 ## States

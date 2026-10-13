@@ -41,7 +41,7 @@ describe('ui-multi-select foundations (ADR-0245 lane a01)', () => {
       const r = resolve('product', 'sm', size)
       const el = mount(true, size)
       expect(read(el, 'padding-inline-start'), 'padding').toBeCloseTo(r.c, 1)
-      expect(read(el, 'border-top-left-radius'), 'radius').toBeCloseTo(r.group.radius, 1)
+      expect(read(el, 'border-top-left-radius'), 'radius').toBeCloseTo(r.h / 2 + r.c, 1) // concentric: the row pill 2n plus the inset c (Amendment 5)
     })
   }
 })

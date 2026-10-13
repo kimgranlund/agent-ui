@@ -28,13 +28,13 @@ const px = (v: string): number => Number.parseFloat(v)
 const root = resolve('product', 'sm', 'md')
 
 describe('ui-badge geometry (ADR-0245 cl.3)', () => {
-  it('inside a region, the chip level (ADR-0245 Amendment 4): height 2n + 2c, margin c plus the label margin c, radius ceil(n/2), field-label type, glyph box 2n - 2c', () => {
+  it('inside a region, the chip level (ADR-0245 Amendment 4): height 2n + 2c, margin c plus the label margin c, the chip pill n + c (Amendment 5), field-label type, glyph box 2n - 2c', () => {
     const badge = mount('<ui-badge intent="success">New</ui-badge>').querySelector('ui-badge') as HTMLElement
     const cs = getComputedStyle(badge)
     expect(badge.getBoundingClientRect().height).toBeCloseTo(root.parts.badge, 1)
     expect(px(cs.paddingLeft)).toBeCloseTo(root.chip.margin, 1)
     expect(px(getComputedStyle(badge.querySelector('[data-part="label"]') as HTMLElement).paddingLeft), 'the label margin c: text edge 2c').toBeCloseTo(root.c, 1)
-    expect(px(cs.borderTopLeftRadius)).toBeCloseTo(root.chip.radius, 1)
+    expect(px(cs.borderTopLeftRadius)).toBeCloseTo(root.n + root.c, 1) // h/2 of the 2n + 2c chip
     expect(px(cs.fontSize)).toBeCloseTo(root.type.fieldLabel, 1)
     const glyph = badge.querySelector('[data-part="glyph"]') as HTMLElement
     expect(glyph.getBoundingClientRect().width).toBeCloseTo(root.glyph, 1)

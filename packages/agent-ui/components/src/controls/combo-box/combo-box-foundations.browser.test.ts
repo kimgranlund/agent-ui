@@ -43,7 +43,7 @@ describe('ui-combo-box foundations (ADR-0245 lane a01)', () => {
       // the control rule (ADR-0245 Amendment 4): the editor is the frame and the text slot in one, so it pads
       // the box margin plus the label inset, 2n - c
       expect(read(el, 'padding-inline-start'), 'padding').toBeCloseTo(r.control.margin + r.labelMargin, 1)
-      expect(read(el, 'border-top-left-radius'), 'radius').toBeCloseTo(r.control.radius, 1)
+      expect(read(el, 'border-top-left-radius'), 'radius').toBeCloseTo(r.h / 2, 1) // the pill 2n (ADR-0245 Amendment 5)
     })
   }
 })

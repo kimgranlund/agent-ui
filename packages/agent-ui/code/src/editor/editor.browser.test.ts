@@ -1184,14 +1184,14 @@ describe('ui-code-editor — GH #867: the entry-content box scrolls with an unob
 describe('ui-code-editor — derived foundations geometry (ADR-0245 cl.3, dark launch, both engines)', () => {
   const px = (v: string): number => parseFloat(v)
 
-  it('inside a data-tier region: padding n - 1 (the border is inside the box), radius n, the toggle a 4n square', async () => {
+  it('inside a data-tier region: padding n - 1 (the border is inside the box), radius 2n (textarea parity, Amendment 5), the toggle a 4n square', async () => {
     const { wrap, field } = mount(`<div data-tier="product" data-scale="sm"><ui-code-editor language="markdown" ${SIZED}></ui-code-editor></div>`)
     const r = resolve('product', 'sm', 'md')
     await expect.poll(() => field.querySelector('[data-part="mode-toggle"]') !== null, { timeout: 5000 }).toBe(true)
     const cs = getComputedStyle(field)
     expect(px(cs.paddingTop), `${server.browser}: padding-block`).toBe(r.control.margin - 1)
     expect(px(cs.paddingLeft), `${server.browser}: padding-inline`).toBe(r.control.margin - 1)
-    expect(px(cs.borderTopLeftRadius), `${server.browser}: radius`).toBe(r.control.radius)
+    expect(px(cs.borderTopLeftRadius), `${server.browser}: radius`).toBe(r.h / 2)
     const box = (wrap.querySelector('[data-part="mode-toggle"]') as HTMLElement).getBoundingClientRect()
     expect(box.height, `${server.browser}: toggle block size`).toBe(r.h)
   })

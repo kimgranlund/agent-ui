@@ -104,8 +104,8 @@
      the value edge is 2n - c while a slotted adornment stays pinned at the box margin n. 0 under the legacy opt-out. */
   --ui-text-field-label-inset: var(--md-sys-label-inset, 0px);
   --ui-text-field-svg: var(--md-sys-icon-box, 1em);
-  --ui-text-field-corner-shape: var(--md-sys-corner-shape, round);
-  --ui-text-field-radius: var(--md-sys-radius, var(--md-sys-shape-corner-base)); /* fixed --md-sys-shape-corner-base rounded-rect — the container-fleet referent an ENTRY control takes (NOT the action family's h/2 pill); overridable per-field; ADR-0015 cl.5 / #71 amendment. */
+  --ui-text-field-corner-shape: round; /* the pill takes circular corners, like button and toggle (ADR-0245 Amendment 5); the squircle stays with the radius-n surfaces */
+  --ui-text-field-radius: var(--md-sys-control-radius, var(--md-sys-shape-corner-base)); /* the pill h/2 = 2n (ADR-0245 Amendment 5, every single-line control); the fixed --md-sys-shape-corner-base rounded-rect under the legacy opt-out; overridable per-field. */
   --ui-text-field-min-inline-size: 20ch; /* the [inline] hug-state typing-width floor (ADR-0223 clause 3(b), superseding ADR-0021's default-state placement) — ch is font-relative so one ~20ch already scales with --ui-text-field-font across [size]; native <input size> parity so a hugging field is hittable. The FILL default needs no floor: the container is the floor. Token name + default unchanged (the GH #1407 overrides keep working). */
 
   /* Visible inline-validation message tokens (ADR-0029 A1 — extends ADR-0014): the .ui-text-field-message
@@ -169,9 +169,8 @@
     color: var(--ui-text-field-ink);
 
     /* the BORDER-ON-HOST field frame (§5): border + radius on the host, so a slotted adornment sits INSIDE the
-       box. The radius is the fixed --md-sys-shape-corner-base rounded-rect — the SAME referent the container fleet (card /
-       modal) uses, because a field is an entry SURFACE kin to a container, NOT the action/keyboard family's
-       press-affordance h/2 pill (ADR-0015 cl.5 / the #71 amendment; geometry.md "Corner radius"). It reads the
+       box. The radius is the pill h/2 = 2n, like every single-line control (ADR-0245 Amendment 5; the fixed
+       --md-sys-shape-corner-base rounded-rect under the legacy opt-out). It reads the
        component --ui-text-field-radius token (role-purity + per-field override). The browser clamps border-radius
        to ≤ h/2, so a very dense/short field degrades gracefully to the pill — never overflows. */
     border: 1px solid var(--ui-text-field-border);

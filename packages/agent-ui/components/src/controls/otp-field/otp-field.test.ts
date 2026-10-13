@@ -1084,9 +1084,9 @@ describe('otp-field.css — geometry trip-wire (otp-geometry-tokens)', () => {
     expect(otpFieldCss).toMatch(/--ui-otp-field-cell-inline-size:\s*var\(--ui-otp-field-height\)/)
   })
 
-  it('radius is the FIXED entry-class corner, never h/2 (§7)', () => {
-    expect(otpFieldCss).toMatch(/--ui-otp-field-radius:\s*var\(--md-sys-radius, var\(--md-sys-shape-corner-base\)\)/)
-    expect(otpFieldCss).not.toMatch(/--ui-otp-field-radius:\s*calc\(/) // never a computed h/2 pill
+  it('radius is the control pill 2n (ADR-0245 Amendment 5), the fixed entry corner under the legacy opt-out', () => {
+    expect(otpFieldCss).toMatch(/--ui-otp-field-radius:\s*var\(--md-sys-control-radius, var\(--md-sys-shape-corner-base\)\)/)
+    expect(otpFieldCss).not.toMatch(/--ui-otp-field-radius:\s*calc\(/) // the derived token, never a local h/2 calc
   })
 
   it('ships NO min-inline-size token (the deliberate no-floor deviation, §7 — the N-cell grid IS the floor)', () => {

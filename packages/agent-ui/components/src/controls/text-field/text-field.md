@@ -184,7 +184,7 @@ geometry:
   paddingBlock: 0
   inlinePad: n = --md-sys-inset (the box margin on every edge; h/2 under the legacy opt-out) · the editor part adds the label inset n - c, so the value edge is 2n - c (ADR-0245 Amendment 4) · ½(h−icon) = n (leading / trailing slot edge)   # the control rule, geometry.md
   gap: var(--ui-text-field-gap)            # adornment↔editor column-gap: the control gutter c; with the editor's label inset, icon to text is n
-  radius: var(--md-sys-shape-corner-base)            # rounded-rect, radius n (--md-sys-radius, squircle), NOT the h/2 pill; entry-control class, geometry.md "Corner radius" / ADR-0015 cl.5 (#71 amendment)
+  radius: var(--ui-text-field-radius)                # the pill h/2 = 2n with circular corners (--md-sys-control-radius, ADR-0245 Amendment 5); corner-base under the legacy opt-out
   posture: fill (block-level grid, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-grid + hug   # Fill by Default — the slice-0 pilot
   minInlineSize: var(--ui-text-field-min-inline-size) (~20ch — typing-width floor, native <input size> parity), ACTIVE IN THE [inline] HUG STATE ONLY (ADR-0223 cl.3(b), superseding ADR-0021's default-state placement)   # the fill default needs no floor — the container is the floor; size-invariant (ch is font-relative)
 
@@ -225,8 +225,8 @@ and font; an ancestor `data-tier` and `data-scale` (ADR-0245) set the n the ramp
 ancestor `data-density` moves the adornment↔editor gap. The geometry follows the **Control size-class** in `geometry.md`: the block-size is
 the vertical lever (`padding-block` is always `0`), the value/text edge sits at `2n - c` (the box margin `n` plus the editor's label inset `n - c`, ADR-0245 Amendment 4), and a leading/trailing
 slot edge at the emergent `½(h − icon)`. The field frame (border + radius) is drawn **on the host** so a
-slotted adornment sits inside the box; the corner is the fixed `--md-sys-shape-corner-base` rounded-rect (the
-container-fleet referent an entry control takes, not the action family's `h/2` pill — ADR-0015 cl.5).
+slotted adornment sits inside the box; the corner is the pill `h/2 = 2n` with circular corners, like every
+single-line control (ADR-0245 Amendment 5; the `--md-sys-shape-corner-base` rounded-rect under the legacy opt-out).
 The field **fills by default** (ADR-0223): the host is block-level and stretches to the parent's inline
 space — a bare field in block flow is always hittable because the container is the floor. The single
 opt-out is the boolean `inline` attribute, which flips the host to inline-level **hug** posture; in that

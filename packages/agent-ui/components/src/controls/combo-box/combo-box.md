@@ -139,11 +139,11 @@ geometry:
     blockSize: var(--ui-combo-box-height)  # = var(--md-sys-height) 4n (--md-sys-height-md bridge alias until W7) — Control-class height (the trigger field)
     font: var(--ui-combo-box-font)         # = var(--md-sys-type-control) (--md-sys-font-md bridge alias until W7) — matches the control type
     paddingInline: var(--ui-combo-box-value-edge)  # = 2n - c: the editor is frame and text slot in one, box margin n (--ui-combo-box-padding-inline) + label inset n - c (ADR-0245 Amendment 4; h/2 is the legacy fallback)
-    radius: var(--ui-combo-box-radius)     # = var(--md-sys-shape-corner-base) — shared fleet radius
+    radius: var(--ui-combo-box-radius)     # the pill 2n, circular corners (--md-sys-control-radius, ADR-0245 Amendment 5); corner-base under the legacy opt-out
     minInlineSize: var(--ui-combo-box-min-inline-size) # 20ch floor, ACTIVE IN THE [inline] HUG STATE ONLY (ADR-0223 cl.3(b), superseding ADR-0021's default-state placement) — the fill default needs no floor
   panel:
     surface: var(--ui-combo-box-panel-bg)  # = var(--md-sys-color-neutral-surface) — opaque neutral surface
-    radius: var(--ui-combo-box-panel-radius)  # = var(--md-sys-shape-corner-base)
+    radius: var(--ui-combo-box-panel-radius)  # concentric: --ui-combo-box-option-radius (the row pill 2n) plus the panel padding c (Amendment 5)
     minInlineSize: var(--ui-combo-box-panel-min-inline-size)  # 12rem panel collapse floor
     maxBlockSize: var(--ui-combo-box-panel-max-block-size) (scrolls) # PUBLIC dial (TKT-0027), default min(50vh, calc(12 * var(--ui-combo-box-height) + 13 * var(--ui-combo-box-listbox-padding) + 2px)) — 12 real option rows (the row-height law makes a row == --ui-combo-box-height exactly) + their insets + the panel's own 2px border (box-sizing: border-box) or half the viewport, whichever is smaller; was a flat 40vh (REVISED 2026-07-04: before that, `overflow: hidden`, unbounded/unscrollable) — gets the shared edge-aware scroll-fade by default (traits/scroll-fade.ts, container-box.css)
     padding: var(--ui-combo-box-listbox-padding)  # = c (--md-sys-c, ADR-0245 cl.3; editor-padding-inline/2 is the legacy fallback), same mechanism as ui-select

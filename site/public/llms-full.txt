@@ -197,7 +197,8 @@ span's text.
 
 The box rides the **compact-realm** widget-box ramp (`--md-sys-compact-lg`, ADR-0041) — fixed regardless of
 label length or an ancestor `[density]`; the pad follows the compact-realm law (`2px + box·ratio·density`,
-never `h/2`); the radius is `box/2` (a pill). There is no `[size]` attribute in v1. The label text itself
+never `h/2`); the radius is `box/2` (a pill). Derived, the badge is a chip `2n + 2c` tall and its radius the chip
+pill `n + c`, still `box/2` (ADR-0245 Amendment 5). There is no `[size]` attribute in v1. The label text itself
 rides the fleet font ramp (`--md-sys-font-sm`) at `line-height: 1`, centering like a glyph. An empty label
 still floors at `min-inline-size = box` — a filled dot/pill, never a collapsed sliver.
 
@@ -6725,8 +6726,8 @@ and font; an ancestor `data-tier` and `data-scale` (ADR-0245) set the n the ramp
 ancestor `data-density` moves the adornment↔editor gap. The geometry follows the **Control size-class** in `geometry.md`: the block-size is
 the vertical lever (`padding-block` is always `0`), the value/text edge sits at `2n - c` (the box margin `n` plus the editor's label inset `n - c`, ADR-0245 Amendment 4), and a leading/trailing
 slot edge at the emergent `½(h − icon)`. The field frame (border + radius) is drawn **on the host** so a
-slotted adornment sits inside the box; the corner is the fixed `--md-sys-shape-corner-base` rounded-rect (the
-container-fleet referent an entry control takes, not the action family's `h/2` pill — ADR-0015 cl.5).
+slotted adornment sits inside the box; the corner is the pill `h/2 = 2n` with circular corners, like every
+single-line control (ADR-0245 Amendment 5; the `--md-sys-shape-corner-base` rounded-rect under the legacy opt-out).
 The field **fills by default** (ADR-0223): the host is block-level and stretches to the parent's inline
 space — a bare field in block flow is always hittable because the container is the floor. The single
 opt-out is the boolean `inline` attribute, which flips the host to inline-level **hug** posture; in that
@@ -6858,8 +6859,8 @@ control-toggled `data-empty` attribute, not `:empty`.
 per-row line-box all **derive from that font** via `calc()`, so one repoint cascades through all three. This
 is deliberately **not** the `(scale × size) → §1-row` lookup `ui-text-field`/`ui-select` ride — a multi-line
 box has no single fixed height to look up (ADR-0134). The frame (border + radius) is drawn **on the host**,
-the same fixed `--md-sys-shape-corner-base` rounded-rect entry-control class `ui-text-field` uses (geometry.md "Corner
-radius"). A bare textarea carries a default minimum typing width (`min-inline-size: ~20ch`) so it stays
+with the single-line control radius `2n` and circular corners, so it matches the `ui-text-field` beside it (ADR-0245
+Amendment 5; the `--md-sys-shape-corner-base` rounded-rect under the legacy opt-out). A bare textarea carries a default minimum typing width (`min-inline-size: ~20ch`) so it stays
 hittable; layout owns width above the floor.
 
 ## States

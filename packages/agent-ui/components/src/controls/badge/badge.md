@@ -78,7 +78,7 @@ geometry:
   minInlineSize: var(--ui-badge-box)     # empty-label floor → a filled pill/dot, never a sliver (SPEC-R13 AC2)
   boxRamp: --md-sys-icon-box + 2c, else --md-sys-compact-lg  # 2n + 2c (16px at the root md, ADR-0245 Amendment 4); the --md-sys-compact-lg bridge alias is the data-foundations="legacy" fallback until W7
   padFormula: c + c  # the chip margin c on the host plus the label margin c on the label part: text edge 2c (ADR-0245 Amendment 4); the legacy fallback is the retired compact-realm pad law `2px + box * 0.375`
-  radius: var(--ui-badge-radius)         # the chip radius ceil(n/2) (--md-sys-chip-radius, ADR-0245 Amendment 4); under the legacy opt-out the pill = box/2, the realm's "count pill" case
+  radius: var(--ui-badge-radius)         # the chip pill n + c = h/2 of the 2n + 2c chip (--md-sys-chip-radius, ADR-0245 Amendment 5); box/2 under the legacy opt-out
   noSizeAttribute: true                   # v1 ships no [size] axis (SPEC-R13 AC3) — a foreseen extension only
 
 forcedColors: A `@media (forced-colors: active)` block maps the host to a `Canvas` fill / `CanvasText` ink+border (the boxed identity survives), and the glyph to a `CanvasText` background (a background-drawn clip-path glyph is otherwise flattened to `Canvas` and vanishes — the bar-chart fill lesson, SPEC-R15 AC1).
@@ -119,7 +119,8 @@ span's text.
 
 The box rides the **compact-realm** widget-box ramp (`--md-sys-compact-lg`, ADR-0041) — fixed regardless of
 label length or an ancestor `[density]`; the pad follows the compact-realm law (`2px + box·ratio·density`,
-never `h/2`); the radius is `box/2` (a pill). There is no `[size]` attribute in v1. The label text itself
+never `h/2`); the radius is `box/2` (a pill). Derived, the badge is a chip `2n + 2c` tall and its radius the chip
+pill `n + c`, still `box/2` (ADR-0245 Amendment 5). There is no `[size]` attribute in v1. The label text itself
 rides the fleet font ramp (`--md-sys-font-sm`) at `line-height: 1`, centering like a glyph. An empty label
 still floors at `min-inline-size = box` — a filled dot/pill, never a collapsed sliver.
 

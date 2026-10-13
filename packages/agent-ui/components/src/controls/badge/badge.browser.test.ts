@@ -69,11 +69,11 @@ describe('ui-badge whole-shape (SPEC-R13/R14 AC1, test-the-whole-shape)', () => 
     expect(rect.height).toBeGreaterThan(0)
   })
 
-  it('border-radius resolves to the chip radius ceil(n/2) (ADR-0245 Amendment 4; the pre-cut pill was box/2)', () => {
+  it('border-radius resolves to the chip pill n + c, h/2 of the 2n + 2c box (ADR-0245 Amendment 5)', () => {
     const el = mount('<ui-badge label="status"></ui-badge>')
     const cs = getComputedStyle(el)
-    // getComputedStyle serializes border-radius as a length (px); ceil(n/2) at the root register md is 3px.
-    expect(px(cs.borderTopLeftRadius)).toBeCloseTo(root.chip.radius, 1)
+    // getComputedStyle serializes border-radius as a length (px); n + c at the root register md is 8px.
+    expect(px(cs.borderTopLeftRadius)).toBeCloseTo(root.n + root.c, 1)
   })
 
   it('padding-block is ZERO (block-size is the vertical lever, never block-padding — geometry.md)', () => {
