@@ -79,7 +79,7 @@ keyboard: []           # NOT interactive and NOT focusable — no tabindex, no k
 
 geometry:
   sizeClass: indicator
-  boxSize: var(--ui-avatar-size)  # a SQUARE off the control-height ladder `--md-sys-height-{sm,md,lg}`
+  boxSize: var(--ui-avatar-size)  # a SQUARE: 4n (`--md-sys-height`, 24 / 28 / 32 at the root) inside an opt-in [data-tier] region (ADR-0245 cl.3, Kim's step 0 ruling); else off the control-height ladder `--md-sys-height-{sm,md,lg}`
                                     # (ADR-0038's row lookup — the same root tokens ui-button's block-size /
                                     # min-inline-size ride; ADR-0112 Amendment 3, 2026-08-23, re-ruling fork F3);
                                     # `[size]` repoints the tier; `[scale]` on an ancestor re-tables the

@@ -51,6 +51,7 @@
   "packages/agent-ui/components/src/controls/gauge/gauge.css#px": "lane a02 migrates it in Wave 1 (px)",
   "packages/agent-ui/components/src/controls/grid/grid.browser.test.ts#axes": "lane a04 migrates it in Wave 1 (axes)",
   "packages/agent-ui/components/src/controls/icon/icon.md#glyph": "the deprecated glyph alias, its descriptor row and the proofs that it still resolves; they stay until the W7 cleanup (ADR-0245 cl.10d)",
+  "packages/agent-ui/components/src/controls/icon/icon.test.ts#glyph": "the deprecated glyph alias, its descriptor row and the proofs that it still resolves; they stay until the W7 cleanup (ADR-0245 cl.10d)",
   "packages/agent-ui/components/src/controls/ladder/ladder.css#px": "lane a04 migrates it in Wave 1 (px)",
   "packages/agent-ui/components/src/controls/ladder/ladder.test.ts#tokens": "lane a04 migrates it in Wave 1 (tokens)",
   "packages/agent-ui/components/src/controls/line-chart/line-chart.css#px": "lane a06 migrates it in Wave 1 (px)",
