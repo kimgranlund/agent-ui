@@ -79,7 +79,7 @@ keyboard: []           # NOT interactive and NOT focusable — no tabindex, no k
 
 geometry:
   sizeClass: indicator
-  boxSize: var(--ui-avatar-size)  # a SQUARE off the control-height ladder `--md-sys-height-{sm,md,lg}`
+  boxSize: var(--ui-avatar-size)  # a SQUARE: 4n (`--md-sys-height`, 24 / 28 / 32 at the root) inside an opt-in [data-tier] region (ADR-0245 cl.3, Kim's step 0 ruling); else off the control-height ladder `--md-sys-height-{sm,md,lg}`
                                     # (ADR-0038's row lookup — the same root tokens ui-button's block-size /
                                     # min-inline-size ride; ADR-0112 Amendment 3, 2026-08-23, re-ruling fork F3);
                                     # `[size]` repoints the tier; `[scale]` on an ancestor re-tables the
@@ -111,7 +111,7 @@ Exactly one link renders at a time (SPEC-R5) — **never a broken-image box, nev
 2. **Initials** — derived from `name` by a pure, grapheme-safe function (`avatar-initials.ts`): the first
    grapheme of the first word + the first grapheme of the last word (a single word yields one grapheme),
    locale-uppercased. Empty/whitespace `name` skips straight to the glyph.
-3. **Glyph** — the vendored person icon (`<ui-icon glyph="user">`), decorative by its own default.
+3. **Glyph** — the vendored person icon (`<ui-icon symbol="user">`), decorative by its own default.
 
 ## Accessibility
 

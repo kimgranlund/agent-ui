@@ -53,7 +53,7 @@ describe('UIAttachmentElement — DOM shape (SPEC-R8/R9/R10, LLD-C5)', () => {
     const parts = [...el.children].map((c) => c.getAttribute('data-part'))
     expect(parts).toEqual(['glyph', 'body'])
     expect(el.querySelector('[data-part="glyph"]')?.tagName.toLowerCase()).toBe('ui-icon')
-    expect(el.querySelector('[data-part="glyph"]')?.getAttribute('glyph')).toBe('file-pdf')
+    expect(el.querySelector('[data-part="glyph"]')?.getAttribute('symbol')).toBe('file-pdf')
     expect(el.querySelector('[data-part="name"]')?.textContent).toBe('report.pdf')
     expect(el.querySelector('[data-part="meta"]')?.textContent).toBe('48.2 KB')
     el.remove()
@@ -82,7 +82,7 @@ describe('UIAttachmentElement — DOM shape (SPEC-R8/R9/R10, LLD-C5)', () => {
     const el = document.createElement('ui-attachment') as UIAttachmentElement
     expect(() => document.body.append(el)).not.toThrow()
     await el.updateComplete
-    expect(el.querySelector('[data-part="glyph"]')?.getAttribute('glyph')).toBe('file')
+    expect(el.querySelector('[data-part="glyph"]')?.getAttribute('symbol')).toBe('file')
     expect(el.querySelector('[data-part="name"]')?.textContent).toBe('File')
     el.remove()
   })

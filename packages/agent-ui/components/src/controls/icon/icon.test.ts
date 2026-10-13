@@ -25,10 +25,10 @@ class ProbeIcon extends UIIconElement {
 customElements.define('ui-icon-probe', ProbeIcon)
 
 describe('UIIconElement — upgrade + typed props', () => {
-  it('upgrades to the class; glyph and label default to empty string', () => {
+  it('upgrades to the class; symbol and label default to empty string', () => {
     const el = document.createElement('ui-icon') as UIIconElement
     expect(el).toBeInstanceOf(UIIconElement)
-    expect(el.glyph).toBe('')
+    expect(el.symbol).toBe('')
     expect(el.label).toBe('')
   })
 

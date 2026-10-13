@@ -76,9 +76,9 @@ geometry:
   sizeClass: indicator
   blockSize: var(--ui-badge-box)         # the compact-realm widget-box ramp (ADR-0041) — fixed, NEVER content-driven
   minInlineSize: var(--ui-badge-box)     # empty-label floor → a filled pill/dot, never a sliver (SPEC-R13 AC2)
-  boxRamp: --md-sys-compact-lg               # 18px @ default ui-md scale; an ancestor [scale] re-tables it for free
-  padFormula: 2px + box * 0.375 * density  # the compact-realm pad law (NOT h/2 — geometry.md's compact-realm exception)
-  radius: calc(--ui-badge-box / 2)       # the pill = box/2, the realm's "count pill" case
+  boxRamp: --md-sys-icon-box, else --md-sys-compact-lg  # 2n inside an opt-in [data-tier] region (14px at the root md, ADR-0245 cl.3); 18px @ default ui-md scale outside one, where an ancestor [scale] re-tables it for free
+  padFormula: 2c, else 2px + box * 0.375 * density  # 2c inside an opt-in region; outside it the compact-realm pad law (NOT h/2 — geometry.md's compact-realm exception)
+  radius: var(--ui-badge-radius)         # n/2 inside an opt-in region (--md-sys-radius / 2); outside it the pill = box/2, the realm's "count pill" case
   noSizeAttribute: true                   # v1 ships no [size] axis (SPEC-R13 AC3) — a foreseen extension only
 
 forcedColors: A `@media (forced-colors: active)` block maps the host to a `Canvas` fill / `CanvasText` ink+border (the boxed identity survives), and the glyph to a `CanvasText` background (a background-drawn clip-path glyph is otherwise flattened to `Canvas` and vanishes — the bar-chart fill lesson, SPEC-R15 AC1).
