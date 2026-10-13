@@ -22,7 +22,7 @@ const whereBlock = (marker: string): string => {
 }
 
 const cardTokens = whereBlock(':where(ui-card) {')
-const publishBlock = whereBlock(':where(ui-card) > * {')
+const publishBlock = whereBlock(':where(ui-card) > :where(:not(ui-card)) {') // a direct nested card is skipped (the WebKit cycle, ADR-0245)
 const regionTokens = whereBlock(':where(ui-card-header, ui-card-footer) {')
 
 describe('card.css — the concentric-corner radius chain (ADR-0018, cycle-free)', () => {
@@ -55,7 +55,9 @@ describe('card.css — the concentric-corner radius chain (ADR-0018, cycle-free)
     // ADR-0018: a card both reading AND declaring --ui-card-child-radius is a CSS cycle. The card's own
     // :where(ui-card) token block must NOT declare --ui-card-child-radius; only the `> *` child rule does.
     expect(cardTokens).not.toMatch(/--ui-card-child-radius:/)
-    expect(css).toMatch(/:where\(ui-card\)\s*>\s*\*\s*\{/) // the descendant publish rule exists
+    // the descendant publish rule exists, and skips a directly nested ui-card: declared there it would read its
+    // own inner radius, the cycle WebKit enforces even through an unused fallback (ADR-0245 cut)
+    expect(css).toMatch(/:where\(ui-card\)\s*>\s*:where\(:not\(ui-card\)\)\s*\{/)
   })
 })
 
