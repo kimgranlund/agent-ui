@@ -114,7 +114,7 @@ events:
 slots:                 # leading/trailing name a POSITION in the host-as-grid (anatomy.md); the EDITOR is a control PART, not a user slot (see parts)
   - name: leading
     optional: true
-    description: Optional leading adornment — a light-DOM `[slot="leading"]` child placed in the start cell by the presence-driven host-as-grid (anatomy.md / ADR-0006); commonly a `data-role="icon"`. Absent ⇒ the bare editor layout.
+    description: Optional leading adornment — a light-DOM `[slot="leading"]` child placed in the start cell by the presence-driven host-as-grid (anatomy.md / ADR-0006); commonly a `data-role="icon"`. Absent ⇒ the bare editor layout. Not supported on type=search or type=currency: the control already fills the start cell with its `leading-adornment` part, and a second leading child takes the editor's 1fr track.
   - name: trailing
     optional: true
     description: Optional trailing adornment — a light-DOM `[slot="trailing"]` child placed in the end cell (a status glyph / unit). Layout only; mark decorative glyphs aria-hidden — the editor keeps the accessible name.

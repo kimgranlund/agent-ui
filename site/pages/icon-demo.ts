@@ -7,7 +7,7 @@
 // (the full ICON_NAMES gallery lives THERE). ui-icon emits no events, so there is no event log.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003) — also activates the Phosphor pack
 import './containers.css' // shared demo chrome (section spacing + .demo-figure/.demo-caption)
-import { captioned, el, exampleSection } from '../lib/specimens.ts'
+import { captioned, el, exampleSection, scrollX } from '../lib/specimens.ts'
 
 const { content } = mountPage({
   title: 'ui-icon — demo',
@@ -102,6 +102,6 @@ const statusNote = el('p', {}, [
 content.append(
   exampleSection('Inside buttons', buttonRow, buttonNote),
   exampleSection('Beside list rows', fileList),
-  exampleSection('Sizing — the ambient font-size ramp', ramp, rampNote),
+  exampleSection('Sizing — the ambient font-size ramp', scrollX(ramp, '40rem'), rampNote),
   exampleSection('Meaningful icons + ink inheritance', statusRow, statusNote),
 )
