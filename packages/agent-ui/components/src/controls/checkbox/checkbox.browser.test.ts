@@ -15,6 +15,9 @@ import { userEvent } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css' // tokens (--md-sys-color-*) + dimensions (--md-sys-compact-*)
 import './checkbox.css'                             // the control stylesheet (direct — pre-barrel)
 import './checkbox.ts'                             // self-define (registers ui-checkbox)
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+
+const num = (v: string): number => Number.parseFloat(v)
 
 describe('ui-checkbox browser smoke (S1 AC1–AC4)', () => {
   it('AC1 default: ::before box = 16×16 px (--md-sys-compact-md at ui-md scale)', () => {
@@ -41,29 +44,6 @@ describe('ui-checkbox browser smoke (S1 AC1–AC4)', () => {
     lg.remove()
   })
 
-  it('AC1 [data-tier=product][data-scale=md] × [size=md] → 18px box (the scale × size lookup, ADR-0041 clause 2)', () => {
-    const wrapper = document.createElement('div')
-    wrapper.setAttribute('scale', 'ui-lg')
-    const el = document.createElement('ui-checkbox')
-    wrapper.append(el)
-    document.body.append(wrapper)
-    // ui-lg × md = 18px (ADR-0041 table row ui-lg, column md)
-    expect(Number.parseFloat(getComputedStyle(el, '::before').width)).toBe(18)
-    wrapper.remove()
-  })
-
-  it('AC4 no --md-sys-scale multiplier: [data-tier=content][data-scale=lg] × [size=lg] → 28px (not a CSS calc result)', () => {
-    const wrapper = document.createElement('div')
-    wrapper.setAttribute('scale', 'content-lg')
-    const el = document.createElement('ui-checkbox')
-    el.setAttribute('size', 'lg')
-    wrapper.append(el)
-    document.body.append(wrapper)
-    // content-lg × lg = 28px — the literal from the ADR-0041 table, NOT a scale multiplier
-    expect(Number.parseFloat(getComputedStyle(el, '::before').width)).toBe(28)
-    wrapper.remove()
-  })
-
   it('checked: ::after glyph is visible — has a positive computed width (checkmark renders)', () => {
     const el = document.createElement('ui-checkbox')
     el.setAttribute('checked', '') // boolean attribute → checked=true
@@ -81,6 +61,23 @@ describe('ui-checkbox browser smoke (S1 AC1–AC4)', () => {
     const afterW = Number.parseFloat(getComputedStyle(el, '::after').width)
     expect(afterW).toBe(0)
     el.remove()
+  })
+
+  it('outside any region the marks keep today\'s shape: radius box/5, check 60% x 55% inset 20%, dash 2px', () => {
+    const el = document.createElement('ui-checkbox') as HTMLElement & { indeterminate: boolean }
+    el.setAttribute('checked', '')
+    document.body.append(el)
+    expect(num(getComputedStyle(el, '::before').borderTopLeftRadius)).toBeCloseTo(3.2, 1)
+    const check = getComputedStyle(el, '::after')
+    expect([num(check.width), num(check.height), num(check.left)].map((v) => Number(v.toFixed(1)))).toEqual([9.6, 8.8, 3.2])
+    el.remove()
+
+    const dash = document.createElement('ui-checkbox') as HTMLElement & { indeterminate: boolean }
+    dash.indeterminate = true
+    document.body.append(dash)
+    const d = getComputedStyle(dash, '::after')
+    expect([num(d.width), num(d.height), num(d.borderTopLeftRadius)].map((v) => Number(v.toFixed(1)))).toEqual([9.6, 2, 1])
+    dash.remove()
   })
 
   it('C10 connect→disconnect zero-residue: reconnect produces exactly one toggle per click', () => {
@@ -209,4 +206,49 @@ describe('ui-checkbox -- ADR-0223 two postures (fill default / [inline] hug, bot
     expect(getComputedStyle(host).display, 'the [inline] host is not inline-level').toBe('inline-flex')
     wrap.remove()
   })
+})
+
+// ADR-0245 clauses 3 and 4: inside an opt-in region the box is 2n, the radius n/2, and the check and dash span the
+// 2n - 2c glyph box centred in the box (inset c); the dash is max(1.5px, c/2) tall. Against scale.mjs resolve().
+describe('ui-checkbox geometry inside an opt-in data-tier region (ADR-0245)', () => {
+  const mountIn = (scale: string, size: string, props: Record<string, boolean> = {}): { wrap: HTMLElement; el: HTMLElement } => {
+    const wrap = document.createElement('div')
+    wrap.setAttribute('data-tier', 'product')
+    wrap.setAttribute('data-scale', scale)
+    const el = document.createElement('ui-checkbox') as HTMLElement & { indeterminate: boolean }
+    el.setAttribute('size', size)
+    if (props.checked) el.setAttribute('checked', '')
+    if (props.indeterminate) el.indeterminate = true
+    wrap.append(el)
+    document.body.append(wrap)
+    return { wrap, el }
+  }
+
+  for (const scale of ['sm', 'md'] as const) {
+    for (const size of ['sm', 'md', 'lg'] as const) {
+      it(`product / ${scale} / ${size}: box 2n, radius n/2, check 2n - 2c inset c`, () => {
+        const r = resolve('product', scale, size)
+        const { wrap, el } = mountIn(scale, size, { checked: true })
+        const box = getComputedStyle(el, '::before')
+        expect(num(box.width)).toBe(r.icon)
+        expect(num(box.height)).toBe(r.icon)
+        expect(num(box.borderTopLeftRadius)).toBeCloseTo(r.n / 2, 1)
+        const check = getComputedStyle(el, '::after')
+        expect(num(check.width)).toBeCloseTo(r.glyph, 1)
+        expect(num(check.height)).toBeCloseTo((r.glyph * 11) / 12, 1)
+        expect(num(check.left)).toBeCloseTo(r.c, 1)
+        wrap.remove()
+      })
+
+      it(`product / ${scale} / ${size}: dash 2n - 2c wide, max(1.5px, c/2) tall`, () => {
+        const r = resolve('product', scale, size)
+        const { wrap, el } = mountIn(scale, size, { indeterminate: true })
+        const dash = getComputedStyle(el, '::after')
+        expect(num(dash.width)).toBeCloseTo(r.glyph, 1)
+        expect(num(dash.height)).toBeCloseTo(Math.max(1.5, r.c / 2), 1)
+        expect(num(dash.left)).toBeCloseTo(r.c, 1)
+        wrap.remove()
+      })
+    }
+  }
 })

@@ -33,6 +33,10 @@
      The box drives the thumb size (box − 4px) and the host's interactive-area height. */
   --ui-slider-multi-box: var(--md-sys-icon-box, var(--md-sys-compact-md));
 
+  /* Rail thickness — 2c inside an opt-in region (the progress rule, ADR-0245 cl.3); outside, c falls back to box/8
+     so the rail stays today's box/4. The pill radius is half of it. */
+  --ui-slider-multi-rail-size: calc(2 * var(--md-sys-c, calc(var(--ui-slider-multi-box) / 8)));
+
   /* Rail colour — the unfilled background track (muted neutral outline, same as switch unchecked track). */
   --ui-slider-multi-rail: var(--md-sys-color-neutral-outline-variant);
 
@@ -159,8 +163,8 @@
     justify-self: stretch;
     align-self: center;
     position: relative;
-    block-size: calc(var(--ui-slider-multi-box) / 4);
-    border-radius: 999px;                       /* pill — fully rounded ends */
+    block-size: var(--ui-slider-multi-rail-size);
+    border-radius: calc(var(--ui-slider-multi-rail-size) / 2); /* pill — fully rounded ends */
     background: var(--ui-slider-multi-rail);
     overflow: visible;                          /* thumbs extend beyond the rail's block-size */
     cursor: pointer;
@@ -181,7 +185,7 @@
     /* inline-size spans from lo% to hi% of the rail */
     inline-size: calc((var(--value-pct-hi, 100) - var(--value-pct-lo, 0)) * 1%);
     background: var(--ui-slider-multi-fill);
-    border-radius: 999px;
+    border-radius: calc(var(--ui-slider-multi-rail-size) / 2);
     pointer-events: none;                       /* the fill is purely decorative — thumbs capture pointer */
     transition:
       inset-inline-start var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),

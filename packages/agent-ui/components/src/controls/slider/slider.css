@@ -84,7 +84,7 @@
   /* Rail height — thin constant, NOT derived from the widget box (ADR-0041 geometry: the inset law
      governs the THUMB size only; the rail is a separate cosmetic layer). 3px reads cleanly at all
      widget-box sizes (12–28 px). */
-  --ui-slider-rail-height: 3px;
+  --ui-slider-rail-height: calc(2 * var(--md-sys-c, 1.5px)); /* rail 2c inside an opt-in region (the progress rule, ADR-0245 cl.3); outside, today's 3px */
 
   /* GH #1141 — the value part is now an ALWAYS-VISIBLE-AT-REST plain text node in its own layout row/
      column (Ruling 2 supersedes the GH #1126 transient pill-overlay design — see the Amendment in

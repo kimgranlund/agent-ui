@@ -35,7 +35,9 @@
 
   /* Dot geometry: the SAME 22%-inset law as before (unchanged diameter maths), now sizing a real
      `::after` circle instead of an inset box-shadow annulus — the fix touches COLOUR, not proportion. */
-  --ui-radio-dot-inset: calc(var(--ui-radio-box) * 0.22);
+  /* Dot inset 2c inside an opt-in region (dot = 2n - 4c, ADR-0245 cl.3); outside, c falls back to 0.11 box so the
+     inset stays today's 22% of the box. */
+  --ui-radio-dot-inset: calc(2 * var(--md-sys-c, calc(var(--ui-radio-box) * 0.11)));
   --ui-radio-dot-size: calc(var(--ui-radio-box) - 2 * var(--ui-radio-dot-inset));
 
   /* Border: idle ring colour. */

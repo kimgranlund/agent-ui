@@ -116,7 +116,9 @@
     box-sizing: border-box;
 
     block-size: var(--ui-switch-box);
-    inline-size: calc(var(--ui-switch-box) * 1.8);
+    /* width 2 thumb + 2c = 2 box - 2c inside an opt-in region (ADR-0245 cl.3); outside, c falls back to 0.1 box so
+       the width stays today's 1.8 box. */
+    inline-size: calc(2 * var(--ui-switch-box) - 2 * var(--md-sys-c, calc(var(--ui-switch-box) * 0.1)));
     border-radius: calc(var(--ui-switch-box) / 2); /* pill radius = box/2 */
 
     background: var(--ui-switch-track);
@@ -159,7 +161,8 @@
    * The end-side inset = track_width − (inset_start + 0.8×box + thumb_size) = 2px = --md-sys-widget-inset ✓
    * (the 2px inset law holds on BOTH edges and in BOTH states — the ADR-0041 rendered-px proof). */
   :scope:state(checked)::after {
-    translate: calc(var(--ui-switch-box) * 0.8) 0;
+    /* travel = the thumb (box - 2c) inside an opt-in region; outside, c falls back to 0.1 box, today's 0.8 box. */
+    translate: calc(var(--ui-switch-box) - 2 * var(--md-sys-c, calc(var(--ui-switch-box) * 0.1))) 0;
   }
 
   /* Hover — repoints `background` of the track from the per-state token (ADR-0008). Disabled is
