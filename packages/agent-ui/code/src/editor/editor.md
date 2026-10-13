@@ -132,7 +132,7 @@ geometry:
   paddingBlock: var(--ui-code-editor-padding-block)   # REAL block padding — the inversion of the single-line law's padding-block:0
   inlinePad: var(--ui-code-editor-padding-inline)
   gap: n/a                # no adornment slots — no slot↔editor gap
-  radius: var(--md-sys-radius, var(--md-sys-shape-corner-base))   # fixed rounded-rect (the container-fleet referent, entry-control class); n inside a data-tier region (ADR-0245 cl.3)
+  radius: var(--md-sys-control-radius, var(--md-sys-shape-corner-base))   # textarea parity: the control radius 2n (ADR-0245 Amendment 5); the fixed rounded-rect under the legacy opt-out
   minInlineSize: var(--ui-code-editor-min-inline-size) (~20ch — entry-control typing-width floor, native <textarea> parity; ADR-0021)
 
 forcedColors: A `@media (forced-colors: active)` block keeps the idle frame border, ink, and placeholder visible (CanvasText) and degrades every highlight token to plain ink (SPEC-C5 AC2 — a token is never invisible); the :focus-within outline ring survives via --md-sys-color-focus-ring → Highlight.
