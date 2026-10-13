@@ -8,7 +8,8 @@
 // An `a2ui-basic--*` seed writes its base types in the Basic dialect (`basic-exemplars.ts` module header): a
 // Button carries its label as a `child` Text and its action as `{ event: { name, context } }`, and Row/Column
 // take `justify`/`align`, never `gap`. The fragment types (FixtureBanner, BookingForm, BookingConfirmation,
-// PlayingCard, CardTable, QuestionCard) read the same on either base.
+// PlayingCard, CardTable, QuestionCard) read the same on either base. The stylist fragment (ContrastPair) targets
+// `agent-ui` alone, so it has one seed.
 //
 // These are page and gate fixtures, never corpus candidates: no corpus shelf, shard or import-seeds table reads
 // this module.
@@ -675,6 +676,45 @@ export const personaBasicQuizmasterQuestionSeed: PersonaExampleSeed = {
   ],
 }
 
+const PAIR_SID = 'palette-contrast'
+
+/** The stylist persona over agent-ui: the approved mockup's pairs, one ContrastPair each, the caption bound. */
+export const personaStylistContrastSeed: PersonaExampleSeed = {
+  name: 'persona-stylist-contrast',
+  description:
+    'The stylist persona over the agent-ui base: a Column of four ContrastPairs, each painting its text color on ' +
+    'its background with the computed ratio and three verdict pills: Heading on page (#0b3d2e on #e8f5ee, 10.88:1, ' +
+    'all pass), Muted caption bound to /caption (#777777 on #ffffff, 4.47:1, AA body fails), Body on white (21.00:1) ' +
+    'and a Translucent overlay whose half-transparent background leaves it Unrated, with no ratio and no pills.',
+  promptText: 'Check the contrast of my palette pairings.',
+  surfaceId: PAIR_SID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui--stylist',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: PAIR_SID, catalogId: 'agent-ui--stylist' } },
+    { version: 'v1.0', updateDataModel: { surfaceId: PAIR_SID, value: { caption: { ink: '#777777', paper: '#ffffff' } } } },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: PAIR_SID,
+        components: [
+          { id: 'root', component: 'Column', gap: 'md', children: ['heading', 'caption', 'body', 'overlay'] },
+          { id: 'heading', component: 'ContrastPair', label: 'Heading on page', foreground: '#0b3d2e', background: '#e8f5ee' },
+          {
+            id: 'caption',
+            component: 'ContrastPair',
+            label: 'Muted caption',
+            foreground: { path: '/caption/ink' },
+            background: { path: '/caption/paper' },
+          },
+          { id: 'body', component: 'ContrastPair', label: 'Body on white', foreground: '#000000', background: '#ffffff' },
+          { id: 'overlay', component: 'ContrastPair', label: 'Translucent overlay', foreground: '#ffffff99', background: '#14142880' },
+        ],
+      },
+    },
+  ],
+}
+
 /** Every persona seed, in shelf order. */
 export const personaExemplarSeeds: readonly PersonaExampleSeed[] = [
   personaFixtureDemoSeed,
@@ -692,4 +732,5 @@ export const personaExemplarSeeds: readonly PersonaExampleSeed[] = [
   personaBasicCroupierCardTableSettledSeed,
   personaQuizmasterQuestionSeed,
   personaBasicQuizmasterQuestionSeed,
+  personaStylistContrastSeed,
 ]

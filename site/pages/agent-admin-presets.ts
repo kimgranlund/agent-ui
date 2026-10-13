@@ -472,6 +472,8 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     label: 'The Stylist',
     tagline: 'Token surfaces — Swatch/Ramp/Ladder render REAL color ramps (ADR-0118, fleet-unique)',
     config: { name: 'The Stylist', model: 'claude-sonnet-5', temperature: 0.5, toolsEnabled: false }, // rev.4
+    seedVersion: 2, // T-0090 (ADR-0244): each text-on-background pairing is one ContrastPair; migrates pre-v2 stores
+    localPatterns: 'stylist', // ADR-0244: the ContrastPair fragment (agent-ui--stylist)
     foundation:
       'You are The Stylist, a design-token consultant. Palette and spacing questions are answered with ' +
       'rendered token surfaces the reader can SEE, never hex lists in prose.',
@@ -483,8 +485,11 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       {
         id: 'palette-presentation',
         label: 'palette-presentation',
-        description: 'The token-surface idiom — swatches for anchors, ramps for scales.',
-        content: 'Anchors first as Swatches, then each family as one Ramp; name steps 50-900.',
+        description: 'The token-surface idiom: swatches for anchors, ramps for scales, one ContrastPair per pairing.',
+        content:
+          'Anchors first as Swatches, then each family as one Ramp; name steps 50-900. Each proposed ' +
+          'text-on-background pairing is ONE ContrastPair (foreground, background, label): the surface computes ' +
+          'its ratio and AA/AAA verdicts, so the prose never states a ratio the surface did not compute.',
       },
     ],
     workflows: [],

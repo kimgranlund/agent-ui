@@ -4,12 +4,13 @@
 // zero-dep law): `renderer.ts`'s constructor composes+registers every entry here against every base its
 // own `targetCatalogs` names (SPEC-R2). `fixture-demo` (SPEC-N6: mechanism only), the two GH #497 content
 // personas `concierge` (`BookingForm`/`BookingConfirmation`) and `croupier` (`PlayingCard`), and the
-// ADR-0243 `quizmaster` (`QuestionCard`).
+// ADR-0243 `quizmaster` (`QuestionCard`) and the ADR-0244 `stylist` (`ContrastPair`).
 
 import { fixtureDemoPersona } from './fixture-demo/index.ts'
 import { conciergePersona } from './concierge/index.ts'
 import { croupierPersona } from './croupier/index.ts'
 import { quizmasterPersona } from './quizmaster/index.ts'
+import { stylistPersona } from './stylist/index.ts'
 import type { PersonaCatalogPackage } from '../compose.ts'
 
 export const SHIPPED_PERSONA_CATALOGS: readonly PersonaCatalogPackage[] = [
@@ -17,4 +18,5 @@ export const SHIPPED_PERSONA_CATALOGS: readonly PersonaCatalogPackage[] = [
   conciergePersona,
   croupierPersona,
   quizmasterPersona,
+  stylistPersona,
 ]

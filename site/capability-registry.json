@@ -6036,6 +6036,53 @@
           }
         ]
       }
+    ],
+    "stylist": [
+      {
+        "id": "fragment:stylist",
+        "kind": "fragment",
+        "source": {
+          "path": "packages/agent-ui/a2ui/src/catalog/personas/stylist/catalog.json"
+        },
+        "status": {
+          "state": "shipped"
+        },
+        "consumers": [
+          "prompt",
+          "renderer"
+        ],
+        "name": "stylist",
+        "targetCatalogs": [
+          "agent-ui"
+        ]
+      },
+      {
+        "id": "type:stylist/ContrastPair",
+        "kind": "type",
+        "source": {
+          "path": "packages/agent-ui/a2ui/src/catalog/personas/stylist/catalog.json",
+          "record": "ContrastPair"
+        },
+        "status": {
+          "state": "emittable"
+        },
+        "consumers": [
+          "prompt",
+          "renderer",
+          "eval"
+        ],
+        "name": "ContrastPair",
+        "scope": "stylist",
+        "intents": [
+          "a text color on a background with its contrast rating"
+        ],
+        "notFor": [
+          {
+            "type": "Swatch",
+            "why": "one color alone"
+          }
+        ]
+      }
     ]
   }
 }

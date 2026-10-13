@@ -5,12 +5,13 @@
 // process, `worker/index.ts`'s Workers runtime) — see `compose.ts`'s `PersonaCatalogManifest` header
 // for why that import boundary is load-bearing. A static, explicit list (the `index.ts` precedent) so
 // the set stays browser-safe-AND-server-safe without a filesystem glob. The shipped set: `fixture-demo`,
-// `concierge`, `croupier` and `quizmaster` (ADR-0243).
+// `concierge`, `croupier`, `quizmaster` (ADR-0243) and `stylist` (ADR-0244).
 
 import { fixtureDemoManifest } from './fixture-demo/manifest.ts'
 import { conciergeManifest } from './concierge/manifest.ts'
 import { croupierManifest } from './croupier/manifest.ts'
 import { quizmasterManifest } from './quizmaster/manifest.ts'
+import { stylistManifest } from './stylist/manifest.ts'
 import type { PersonaCatalogManifest } from '../compose.ts'
 
 export const SHIPPED_PERSONA_CATALOG_MANIFESTS: readonly PersonaCatalogManifest[] = [
@@ -18,4 +19,5 @@ export const SHIPPED_PERSONA_CATALOG_MANIFESTS: readonly PersonaCatalogManifest[
   conciergeManifest,
   croupierManifest,
   quizmasterManifest,
+  stylistManifest,
 ]

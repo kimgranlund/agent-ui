@@ -1,0 +1,16 @@
+{
+  "personaId": "stylist",
+  "types": {
+    "ContrastPair": {
+      "intents": [
+        "a text color on a background with its contrast rating"
+      ],
+      "notFor": [
+        {
+          "type": "Swatch",
+          "why": "one color alone"
+        }
+      ]
+    }
+  }
+}

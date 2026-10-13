@@ -1,0 +1,13 @@
+{
+  "components": {
+    "ContrastPair": {
+      "properties": {
+        "foreground": { "type": { "type": "string" }, "bindable": true, "mapsTo": "foreground" },
+        "background": { "type": { "type": "string" }, "bindable": true, "mapsTo": "background" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
+        "sample": { "type": { "type": "string" }, "bindable": true, "mapsTo": "sample" }
+      }
+    }
+  },
+  "functions": {}
+}
