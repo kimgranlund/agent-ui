@@ -40,7 +40,7 @@ describe('UIIconElement — upgrade + typed props', () => {
   })
 })
 
-describe('UIIconElement — symbol, and glyph as its deprecated alias (ADR-0245 cl.4)', () => {
+describe('UIIconElement: symbol, and glyph as its deprecated alias (ADR-0245 cl.4)', () => {
   it('symbol defaults to empty and resolves + injects the pack svg', () => {
     const el = new ProbeIcon()
     expect(el.symbol).toBe('')

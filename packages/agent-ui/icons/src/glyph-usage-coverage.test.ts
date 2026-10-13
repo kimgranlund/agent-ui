@@ -1,4 +1,4 @@
-// glyph-usage-coverage.test.ts — the GH #1508 fleet gate: every icon name a real consumer under `site/` or
+// glyph-usage-coverage.test.ts: the GH #1508 fleet gate: every icon name a real consumer under `site/` or
 // any `packages/agent-ui/*/src/` actually asks `ui-icon` to resolve must exist in the vendored
 // Phosphor pack roster (`phosphor/icons.gen.ts`'s own exported keys, not just the `ICON_NAMES` type
 // list — the two CAN drift, exactly `sign-out`/`share`'s bug class: a name gets typed but the vendor
@@ -13,7 +13,7 @@
 // Test files are not consumers (they plant unresolvable names on purpose) and are skipped.
 //
 // Extraction is grep-derived, in two tiers:
-//   (1) DIRECT literals — `glyph: 'name'` (object-property call sites, the `el()` specimen idiom),
+//   (1) DIRECT literals: `glyph: 'name'` (object-property call sites, the `el()` specimen idiom),
 //       `glyph="name"` (template/HTML-string call sites), `setAttribute('glyph', 'name')` and
 //       `.glyph = 'name'`, each also spelled `symbol`. `data-glyph` (an unrelated CSS-hook attribute some
 //       controls use, e.g. ui-super-shell's toggle) is explicitly excluded.

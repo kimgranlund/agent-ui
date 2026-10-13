@@ -3,11 +3,11 @@
 // SVG body and injects it via `setIcon` (the cross-package edge the layering trip-wire admits — icons
 // as a second lower-tier sibling, mirroring components → shared). Light-DOM, self-defining, no traits.
 //
-// Three props, two connected() effects — nothing else:
-//   • `symbol` — the icon name (ADR-0245 cl.4 renamed it from `glyph`, so the word glyph names only the
+// Three props, two connected() effects, nothing else:
+//   • `symbol`: the icon name (ADR-0245 cl.4 renamed it from `glyph`, so the word glyph names only the
 //     functional-mark element ui-glyph, which takes the same `symbol` prop). `glyph` stays a deprecated
 //     alias for one release after the cut: the effect resolves `symbol || glyph`. It re-runs setIcon on
-//     every change; empty clears the host. Live pack-swap reactivity is DEFERRED (ADR-0065 clause 4) — the
+//     every change; empty clears the host. Live pack-swap reactivity is DEFERRED (ADR-0065 clause 4): the
 //     registry exposes no subscribable signal, so an already-rendered <ui-icon> does not auto-update when a
 //     pack is swapped AFTER first render; re-setting `symbol` reflects a swap.
 //   • `label` — decorative by default (aria-hidden, no role); non-empty makes the icon MEANINGFUL

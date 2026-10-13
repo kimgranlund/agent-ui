@@ -1,7 +1,7 @@
 ---
 # icon.md frontmatter — the attributes-as-API descriptor for ui-icon (ADR-0004 / ADR-0065 / ADR-0066).
 # The machine-checkable public surface lives HERE (frontmatter); the prose below the fence is the /site
-# doc. The `attributes[]` block MUST mirror icon.ts `static props` (symbol/glyph/label) — the contract↔props
+# doc. The `attributes[]` block MUST mirror icon.ts `static props` (symbol/glyph/label); the contract↔props
 # trip-wire (icon-descriptor.test.ts) targets this fence. Field set per .claude/docs/plan.md §10 / ADR-0004.
 tag: ui-icon
 tier: display          # geometry size-class (Display band — NO control frame/height; geometry.md lists "icon" as a Display example)
@@ -9,11 +9,11 @@ extends: UIElement     # a non-interactive display LEAF — NOT form-associated 
 uses: []
 # marginal: ui-icon adds 513 B gz (1546 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without ui-icon's export — it + the @agent-ui/icons resolve/registry/types path it pulls in, zero Phosphor bytes — subpath-only) — within budget: family total 22193 B gz / 22528 B gz (scripts/measure-size.mjs); the family total stays gated each run.
 
-attributes:            # attributes-as-API — mirrors icon.ts `static props` (symbol, glyph, label)
+attributes:            # attributes-as-API, mirrors icon.ts `static props` (symbol, glyph, label)
   - name: symbol
     type: string
     default: ''
-    reflect: false     # NOT reflected — an empty symbol clears the host; a set symbol re-resolves via setIcon() (@agent-ui/icons). Deliberately a plain string, not an enum: a consumer's own pack can register names beyond the shipped set (ADR-0065 clause 5). The prop ui-glyph also takes (ADR-0245 cl.4)
+    reflect: false     # NOT reflected: an empty symbol clears the host; a set symbol re-resolves via setIcon() (@agent-ui/icons). Deliberately a plain string, not an enum: a consumer's own pack can register names beyond the shipped set (ADR-0065 clause 5). The prop ui-glyph also takes (ADR-0245 cl.4)
   - name: glyph
     type: string
     default: ''
@@ -67,7 +67,7 @@ active pack's SVG body and injects it as its only child. A functional mark (a ch
 
 ## Resolution
 
-`symbol` is a plain string (not a closed enum) resolved through `@agent-ui/icons`' active pack —
+`symbol` is a plain string (not a closed enum) resolved through `@agent-ui/icons`' active pack:
 `setIcon(this, symbol)` on every change; an empty `symbol` clears the host. The old `glyph` attribute is a
 deprecated alias, read only when `symbol` is empty, and is removed one release after the foundations cut
 (ADR-0245 clause 10d). An unregistered name resolves to
@@ -80,7 +80,7 @@ search · and the file-type glyphs `user`/`file`/`file-image`/`file-audio`/`file
 icons, with zero changes to `ui-icon` itself (`registerPack`/`overrideIcon`, ADR-0065 clause 5).
 
 **Live pack-swap reactivity is deferred** (ADR-0065 clause 4): an already-rendered `<ui-icon>` does not
-auto-update if a pack is swapped *after* it renders — re-setting `symbol` (or an app restart) reflects the
+auto-update if a pack is swapped *after* it renders; re-setting `symbol` (or an app restart) reflects the
 swap. The normal case is registering a pack once at startup, before first render.
 
 ## Sizing

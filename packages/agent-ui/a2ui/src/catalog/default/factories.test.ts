@@ -265,7 +265,7 @@ describe('default catalog factories — Button icon mechanism (ADR-0226, GH #150
     expect(el.childNodes).toHaveLength(1)
   })
 
-  it('AC3 — icon+label yields exactly one ui-icon[slot="leading"][data-role="icon"] child with symbol set and decorative ARIA, label as textContent', () => {
+  it('AC3: icon+label yields exactly one ui-icon[slot="leading"][data-role="icon"] child with symbol set and decorative ARIA, label as textContent', () => {
     const el = buttonFactory.create()
     buttonFactory.applyProp(el, 'icon', 'download-simple')
     buttonFactory.applyProp(el, 'label', 'Download')
@@ -313,7 +313,7 @@ describe('default catalog factories — Button icon mechanism (ADR-0226, GH #150
     expect(el.querySelectorAll('ui-icon[slot="leading"][data-role="icon"]')).toHaveLength(1)
   })
 
-  it('AC3 — a bound icon re-apply retargets symbol on the SAME child — no duplicate (the LLD-C7 bindProp re-apply shape)', () => {
+  it('AC3: a bound icon re-apply retargets symbol on the SAME child, no duplicate (the LLD-C7 bindProp re-apply shape)', () => {
     const el = buttonFactory.create()
     buttonFactory.applyProp(el, 'icon', 'plus')
     buttonFactory.applyProp(el, 'icon', 'minus') // simulates a re-resolved {path} binding

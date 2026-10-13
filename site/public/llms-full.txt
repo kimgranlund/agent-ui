@@ -2893,7 +2893,7 @@ active pack's SVG body and injects it as its only child. A functional mark (a ch
 
 ## Resolution
 
-`symbol` is a plain string (not a closed enum) resolved through `@agent-ui/icons`' active pack —
+`symbol` is a plain string (not a closed enum) resolved through `@agent-ui/icons`' active pack:
 `setIcon(this, symbol)` on every change; an empty `symbol` clears the host. The old `glyph` attribute is a
 deprecated alias, read only when `symbol` is empty, and is removed one release after the foundations cut
 (ADR-0245 clause 10d). An unregistered name resolves to
@@ -2906,7 +2906,7 @@ search · and the file-type glyphs `user`/`file`/`file-image`/`file-audio`/`file
 icons, with zero changes to `ui-icon` itself (`registerPack`/`overrideIcon`, ADR-0065 clause 5).
 
 **Live pack-swap reactivity is deferred** (ADR-0065 clause 4): an already-rendered `<ui-icon>` does not
-auto-update if a pack is swapped *after* it renders — re-setting `symbol` (or an app restart) reflects the
+auto-update if a pack is swapped *after* it renders; re-setting `symbol` (or an app restart) reflects the
 swap. The normal case is registering a pack once at startup, before first render.
 
 ## Sizing

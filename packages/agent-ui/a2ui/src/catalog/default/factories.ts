@@ -230,7 +230,7 @@ export const buttonFactory: WidgetFactory = {
           const icon = document.createElement('ui-icon') as HTMLElement & { symbol?: unknown }
           icon.setAttribute('slot', 'leading')
           icon.setAttribute('data-role', 'icon')
-          icon.symbol = symbol // label stays at its own default (empty) — decorative by construction
+          icon.symbol = symbol // label stays at its own default (empty): decorative by construction
           el.insertBefore(icon, el.firstChild) // leading position, ahead of any label text
         }
         break
