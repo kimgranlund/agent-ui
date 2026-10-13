@@ -142,7 +142,10 @@ describe('createRenderer — GH #497 concierge/croupier content personas (SPEC-R
     const card = mount.querySelector('ui-card')
     expect(card).not.toBeNull()
     // Never a producer literal — this text can ONLY have come from the bound `/booking` path (§1 argument b).
-    expect(card!.querySelector('[data-a2ui-confirmation-row] [data-part="value"]')?.textContent).toBe('2026-08-10')
+    // The ISO date is shown in the reader's locale form (T-0092); the bound value stays ISO.
+    expect(card!.querySelector('[data-a2ui-confirmation-row] [data-part="value"]')?.textContent).toBe(
+      new Date(2026, 7, 10).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }),
+    )
     cleanup()
   })
 

@@ -71,9 +71,10 @@ export const personaBasicFixtureDemoSeed: PersonaExampleSeed = {
 
 const BOOKING_SID = 'concierge-booking'
 
-/** The booking form's three field kinds (dateSingle, select, checkbox), shared by both booking seeds. */
+/** The booking form's field kinds (a dateSingle arrival and departure pair, a select, a checkbox), shared by both booking seeds. */
 const BOOKING_FIELDS = [
-  { kind: 'dateSingle', path: 'checkIn', label: 'Check-in', required: true },
+  { kind: 'dateSingle', path: 'checkIn', label: 'Arrival', required: true },
+  { kind: 'dateSingle', path: 'checkOut', label: 'Departure', required: true },
   {
     kind: 'select',
     path: 'roomType',
@@ -90,7 +91,8 @@ const BOOKING_FIELDS = [
 
 /** The confirmation's rows, read from the same `/booking` object the form writes. */
 const BOOKING_ROWS = [
-  { label: 'Check-in', path: 'checkIn' },
+  { label: 'Arrival', path: 'checkIn' },
+  { label: 'Departure', path: 'checkOut' },
   { label: 'Room type', path: 'roomType' },
   { label: 'Breakfast', path: 'breakfast' },
 ]
@@ -100,10 +102,11 @@ export const personaConciergeBookingSeed: PersonaExampleSeed = {
   name: 'persona-concierge-booking',
   description:
     'The concierge persona over the agent-ui base: a BookingForm titled "Book your stay" with a required ' +
-    'dateSingle check-in, a required room-type select and a breakfast checkbox, its aggregate bound to ' +
-    '/booking and its child a submit Button; beside it a BookingConfirmation whose rows read check-in, room ' +
-    'type and breakfast back from the same /booking object.',
-  promptText: 'I want to book a room at the hotel: pick a check-in date, a room type and whether I want breakfast.',
+    'dateSingle arrival and departure (drawn as two date cards), a required room-type select and a breakfast ' +
+    'checkbox (a Yes / No choice), its aggregate bound to /booking and its child a submit Button; beside it a ' +
+    'BookingConfirmation whose rows read arrival, departure, room type and breakfast back from the same ' +
+    '/booking object.',
+  promptText: 'I want to book a room at the hotel: pick an arrival and a departure date, a room type and whether I want breakfast.',
   surfaceId: BOOKING_SID,
   protocolVersion: 'v1.0',
   catalogId: 'agent-ui--concierge',
@@ -111,7 +114,7 @@ export const personaConciergeBookingSeed: PersonaExampleSeed = {
     { version: 'v1.0', createSurface: { surfaceId: BOOKING_SID, catalogId: 'agent-ui--concierge' } },
     {
       version: 'v1.0',
-      updateDataModel: { surfaceId: BOOKING_SID, path: '/booking', value: { checkIn: '2026-11-14', roomType: 'king', breakfast: true } },
+      updateDataModel: { surfaceId: BOOKING_SID, path: '/booking', value: { checkIn: '2026-11-14', checkOut: '2026-11-17', roomType: 'king', breakfast: true } },
     },
     {
       version: 'v1.0',
@@ -135,7 +138,7 @@ export const personaBasicConciergeBookingSeed: PersonaExampleSeed = {
     'The concierge persona over the a2ui-basic base: the same BookingForm and BookingConfirmation pair bound ' +
     'to /booking inside a Basic Column, with the form\'s child a Basic Button whose label is a child Text and ' +
     'whose confirm_booking event carries the bound /booking object.',
-  promptText: 'I want to book a room at the hotel: pick a check-in date, a room type and whether I want breakfast.',
+  promptText: 'I want to book a room at the hotel: pick an arrival and a departure date, a room type and whether I want breakfast.',
   surfaceId: BOOKING_SID,
   protocolVersion: 'v1.0',
   catalogId: 'a2ui-basic--concierge',
@@ -143,7 +146,7 @@ export const personaBasicConciergeBookingSeed: PersonaExampleSeed = {
     { version: 'v1.0', createSurface: { surfaceId: BOOKING_SID, catalogId: 'a2ui-basic--concierge' } },
     {
       version: 'v1.0',
-      updateDataModel: { surfaceId: BOOKING_SID, path: '/booking', value: { checkIn: '2026-11-14', roomType: 'twin', breakfast: false } },
+      updateDataModel: { surfaceId: BOOKING_SID, path: '/booking', value: { checkIn: '2026-11-14', checkOut: '2026-11-17', roomType: 'twin', breakfast: false } },
     },
     {
       version: 'v1.0',
@@ -173,15 +176,15 @@ const STAY_SID = 'concierge-stay'
 const STAY_FIELDS = [
   { kind: 'text', path: 'guestName', label: 'Guest name', required: true },
   { kind: 'number', path: 'guests', label: 'Number of guests', required: true },
-  { kind: 'dateSingle', path: 'checkIn', label: 'Check-in', required: true },
-  { kind: 'dateSingle', path: 'checkOut', label: 'Check-out', required: true },
+  { kind: 'dateSingle', path: 'checkIn', label: 'Arrival', required: true },
+  { kind: 'dateSingle', path: 'checkOut', label: 'Departure', required: true },
 ]
 
 const STAY_ROWS = [
   { label: 'Guest', path: 'guestName' },
   { label: 'Guests', path: 'guests' },
-  { label: 'Check-in', path: 'checkIn' },
-  { label: 'Check-out', path: 'checkOut' },
+  { label: 'Arrival', path: 'checkIn' },
+  { label: 'Departure', path: 'checkOut' },
 ]
 
 /** The concierge persona over agent-ui: a BookingForm using the text and number kinds and a two-field date range. */
@@ -189,10 +192,10 @@ export const personaConciergeStaySeed: PersonaExampleSeed = {
   name: 'persona-concierge-stay-details',
   description:
     'The concierge persona over the agent-ui base: a BookingForm titled "Your stay" with a required text guest ' +
-    'name, a required number guest count and the date range as two required dateSingle fields (check-in, ' +
-    'check-out), its aggregate bound to /stay and its child a submit Button; beside it a BookingConfirmation ' +
+    'name, a required number guest count and the date range as two required dateSingle fields (arrival, ' +
+    'departure), its aggregate bound to /stay and its child a submit Button; beside it a BookingConfirmation ' +
     'whose rows read the four values back from the same /stay object.',
-  promptText: 'Book a stay for two guests: take the guest name, the number of guests, and the check-in and check-out dates.',
+  promptText: 'Book a stay for two guests: take the guest name, the number of guests, and the arrival and departure dates.',
   surfaceId: STAY_SID,
   protocolVersion: 'v1.0',
   catalogId: 'agent-ui--concierge',
