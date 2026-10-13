@@ -44,17 +44,18 @@
 //
 // Field kinds (§2.1 sketch named "range Calendar" — narrowed at build): `dateSingle | select | checkbox |
 // text | number` (T-0079 added the last two). `text` and `number` mint a `ui-text-field`. A `dateSingle` is a
-// DATE CARD (T-0092): a `ui-card` with the field's label, the chosen date in the reader's locale format and one
-// `ui-button` ("Choose date", "Change" once set) that opens a `ui-calendar` in a `ui-popover`, never a month
-// grid inline. The `ui-calendar` is the card's form control (named for the path), so the committed value is
+// DATE FIELD (T-0092, reshaped T-0106): a `ui-field` label over a read-only `ui-text-field` showing the chosen date in
+// the reader's locale format ("Choose date" placeholder while empty), with a small calendar icon `ui-button` in its
+// trailing slot. The text field is the trigger of a `ui-popover` holding a `ui-calendar`, never a month grid inline,
+// so a click on the text or the icon opens it. No nested card. The `ui-calendar` is the field's form control (named for the path), so the committed value is
 // still the ISO `YYYY-MM-DD` string and the wire contract is unchanged; only the shown text is formatted.
 // The calendar is swapped for a fresh one each time the popover opens, because a live calendar only seeds its
 // displayed month at connect: a fresh one opens on the booked month (today's when empty). `ui-calendar`'s
 // `mode="range"` commits via a two-ENTRY `FormData` (start+end under one `name`), which
 // `ui-form-provider`'s native `values()` aggregation does not flatten into the single scalar-per-path shape
 // `BookingConfirmation.rows` needs, so a date RANGE is authored as two ordinary `dateSingle` fields (e.g.
-// `checkIn`/`checkOut`), drawn as two cards side by side where the width allows. Within a run the later card
-// takes the earlier card's date as its calendar `min`, and an earlier pick that passes a later date clears it.
+// `checkIn`/`checkOut`), drawn as two fields side by side where the width allows. Within a run the later field
+// takes the earlier field's date as its calendar `min`, and an earlier pick that passes a later date clears it.
 // A `checkbox` kind is a Yes / No `ui-radio-group` (T-0092), its value the string `Yes` or `No`; `required`
 // means the guest must answer, not that the answer must be Yes.
 //
@@ -62,13 +63,14 @@
 // tokens on `el.style`) and a `[data-box]`, so every child, the producer's action Buttons included, takes the
 // shared 6px inset; the root carries the region padding (12 inline, 6 block), the ADR-0056 region-less card
 // reading, so ink sits 19px in like a stock card's regions. Every field but the self-labelled checkbox wears a
-// `ui-field` (the fleet's visible label), fields stack at the 8px region gap, and the producer's Buttons step
-// up to the 36px `lg` action size (`largeActionButtons`, ADR-0243 Amendment 2). `BookingConfirmation` is a
+// `ui-field` (the fleet's visible label), fields stack at the 8px region gap, and the form uses the `sm` and `md`
+// button steps only: the date picker buttons are `sm` (24px) and the producer's Buttons are `md` (28px, T-0106;
+// the other composites keep `lg`, ADR-0243 Amendment 2, via `sizedActionButtons`). `BookingConfirmation` is a
 // `ui-card` with real `ui-card-header`/`ui-card-content` regions and one label (muted, start) / value
 // (emphasis, end) row per entry, hairline dividers between rows.
 
 import type { WidgetFactory } from '../../types.ts'
-import { largeActionButtons } from '../action-row.ts'
+import { sizedActionButtons } from '../action-row.ts'
 
 // ── display formatting (the wire value is never touched) ────────────────────────────────────────────
 
@@ -148,8 +150,8 @@ interface BookingFormParts {
   titleEl: HTMLElement
   fieldsEl: HTMLElement
   fields: BookingField[]
-  dateCards: Map<string, DateCard>
-  dateRuns: DateCard[][]
+  dateFields: Map<string, DateField>
+  dateRuns: DateField[][]
 }
 
 const bookingFormParts = new WeakMap<HTMLElement, BookingFormParts>()
@@ -229,10 +231,10 @@ function prefillFieldControl(wrap: HTMLElement, field: BookingField, raw: unknow
   else (control as unknown as { value: string }).value = raw == null ? '' : String(raw)
 }
 
-// ── date cards (T-0092) ─────────────────────────────────────────────────────────────────────────────
+// ── date fields (T-0092, T-0106) ────────────────────────────────────────────────────────────────────
 
-/** One date card: its element and the three things the form drives. `value` is always an ISO date or ''. */
-interface DateCard {
+/** One date field: its element and the three things the form drives. `value` is always an ISO date or ''. */
+interface DateField {
   el: HTMLElement
   value(): string
   setValue(iso: string): void
@@ -250,42 +252,42 @@ interface PopoverLike extends HTMLElement {
   open: boolean
 }
 
-type TextLike = HTMLElement & { as: string; variant: string; size: string; emphasis: boolean }
-
-function dateText(variant: string, size: string): TextLike {
-  const el = document.createElement('ui-text') as TextLike
-  el.as = 'none'
-  el.variant = variant
-  el.size = size
-  el.style.display = 'block'
-  return el
+interface DateInputLike extends HTMLElement {
+  value: string
+  placeholder: string
+  readonly: boolean
 }
 
-/** A `ui-card` showing the label, the chosen date and one button opening a calendar popover. `onPick` runs when the
- *  guest picks a date, before the change reaches the form. */
-function buildDateCard(field: BookingField, onPick: () => void): DateCard {
-  const card = document.createElement('ui-card')
-  card.setAttribute('data-a2ui-booking-field', field.path)
-  card.setAttribute('data-part', 'date-card')
-  const label = dateText('label', 'md')
-  label.setAttribute('data-part', 'label')
-  label.style.color = 'var(--md-sys-color-neutral-on-surface-variant)'
-  label.textContent = field.label
-  if (field.required === true) {
-    const mark = document.createElement('span') // the ui-field required marker, drawn here because a card is no ui-field
-    mark.setAttribute('aria-hidden', 'true')
-    mark.textContent = ' *'
-    label.append(mark)
-  }
-  const text = dateText('title', 'md')
-  text.setAttribute('data-part', 'date-text')
-  text.style.marginBlockEnd = 'var(--md-sys-space-sm)' // air between the date and its button
-  const popover = document.createElement('ui-popover') as PopoverLike
+/** A labelled input-style field: a read-only `ui-text-field` showing the date, with a small calendar icon button in
+ *  its trailing slot. The text field is the `ui-popover` trigger, so a click on the text or the button opens the
+ *  calendar panel; the calendar is the popover's other child, never inside the text field (a nested form control is
+ *  an internal part and would not register with the form). `onPick` runs when the guest picks a date, before the
+ *  change reaches the form. */
+function buildDateField(field: BookingField, onPick: () => void): DateField {
+  const wrap = document.createElement('ui-field') as unknown as HTMLElement & { label: string }
+  wrap.label = field.label
+  wrap.setAttribute('data-a2ui-booking-field', field.path)
+  wrap.setAttribute('data-part', 'date-field')
+  // Unnamed and not required itself: the calendar is the form control (named for the path), and its `required`
+  // draws the ui-field marker.
+  const input = document.createElement('ui-text-field') as DateInputLike
+  input.setAttribute('data-a2ui-date-input', '') // not data-part: the popover claims it for the trigger
+  input.readonly = true
+  input.placeholder = 'Choose date'
   const button = document.createElement('ui-button') as HTMLElement & { size: string }
-  button.setAttribute('data-a2ui-date-button', '') // not data-part: the popover claims it for the trigger
-  button.size = 'lg' // the library's large action step, 36px (also stamped by largeActionButtons)
-  popover.append(button) // the first child is the trigger; the calendar joins it in the panel
-  card.append(label, text, popover)
+  button.setAttribute('data-a2ui-date-button', '')
+  button.setAttribute('slot', 'trailing')
+  button.setAttribute('icon-only', '')
+  button.size = 'sm' // the library's small step, 24px
+  const icon = document.createElement('ui-icon') as HTMLElement & { symbol: string }
+  icon.setAttribute('slot', 'leading')
+  icon.setAttribute('data-role', 'icon')
+  icon.symbol = 'calendar-blank'
+  button.append(icon)
+  input.append(button)
+  const popover = document.createElement('ui-popover') as PopoverLike
+  popover.append(input) // the first child is the trigger; the calendar joins it in the panel
+  wrap.append(popover)
 
   let value = ''
   let min = ''
@@ -293,9 +295,7 @@ function buildDateCard(field: BookingField, onPick: () => void): DateCard {
 
   const paint = (): void => {
     const shown = formatIsoDate(value)
-    text.textContent = shown === '' ? 'No date chosen' : shown
-    text.style.color = shown === '' ? 'var(--md-sys-color-neutral-on-surface-variant)' : ''
-    button.textContent = shown === '' ? 'Choose date' : 'Change'
+    input.value = shown
     button.setAttribute('aria-label', `${shown === '' ? 'Choose' : 'Change'} ${field.label.toLowerCase()} date`)
   }
 
@@ -321,16 +321,22 @@ function buildDateCard(field: BookingField, onPick: () => void): DateCard {
   popover.addEventListener(
     'click',
     (ev) => {
-      if (!(ev.target instanceof Element) || ev.target.closest('[data-a2ui-date-button]') === null) return
+      if (!(ev.target instanceof Element) || ev.target.closest('[data-a2ui-date-input]') === null) return
       if (!popover.open) mountCalendar()
     },
     true,
   )
+  // The text field is not a button, so Enter / Space on it presses the trigger.
+  input.addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Enter' && ev.key !== ' ') return
+    ev.preventDefault()
+    input.click()
+  })
 
   mountCalendar()
   paint()
   return {
-    el: card,
+    el: wrap,
     value: () => value,
     setValue: (iso) => {
       value = ISO_DATE.test(iso) ? iso : ''
@@ -344,9 +350,9 @@ function buildDateCard(field: BookingField, onPick: () => void): DateCard {
   }
 }
 
-/** Hold a run of date cards in order: each takes the one before as its `min`. `clear` also empties a later date a
+/** Hold a run of date fields in order: each takes the one before as its `min`. `clear` also empties a later date a
  *  fresh pick has moved before (a guest cannot leave before they arrive); a bound prefill never clears. */
-function reconcileDateRun(run: DateCard[], clear: boolean): void {
+function reconcileDateRun(run: DateField[], clear: boolean): void {
   for (let i = 1; i < run.length; i++) {
     const [prev, cur] = [run[i - 1]!, run[i]!]
     cur.setMin(prev.value())
@@ -355,7 +361,7 @@ function reconcileDateRun(run: DateCard[], clear: boolean): void {
 }
 
 /** A run of consecutive `dateSingle` fields (arrival and departure) shares one wrapping row: side by side where the
- *  form is wide enough for two 12rem cards, stacked on a phone. */
+ *  form is wide enough for two 12rem fields, stacked on a phone. */
 function dateRow(): HTMLElement {
   const row = document.createElement('div')
   row.setAttribute('data-part', 'date-row')
@@ -367,11 +373,11 @@ function dateRow(): HTMLElement {
 
 function rebuildFields(parts: BookingFormParts, fields: BookingField[]): void {
   parts.fields = fields
-  parts.dateCards = new Map()
+  parts.dateFields = new Map()
   parts.dateRuns = []
   const nodes: HTMLElement[] = []
   let row: HTMLElement | null = null
-  let run: DateCard[] = []
+  let run: DateField[] = []
   for (const field of fields) {
     if (field.kind !== 'dateSingle') {
       row = null
@@ -385,11 +391,11 @@ function rebuildFields(parts: BookingFormParts, fields: BookingField[]): void {
       parts.dateRuns.push(run)
     }
     const thisRun = run
-    const card = buildDateCard(field, () => reconcileDateRun(thisRun, true))
-    card.el.style.flex = '1 1 12rem'
-    thisRun.push(card)
-    parts.dateCards.set(field.path, card)
-    row.appendChild(card.el)
+    const dateField = buildDateField(field, () => reconcileDateRun(thisRun, true))
+    dateField.el.style.flex = '1 1 12rem'
+    thisRun.push(dateField)
+    parts.dateFields.set(field.path, dateField)
+    row.appendChild(dateField.el)
   }
   parts.fieldsEl.replaceChildren(...nodes)
 }
@@ -419,8 +425,8 @@ function paintCardSurface(el: HTMLElement): void {
  */
 export const bookingFormFactory: WidgetFactory = {
   tag: 'ui-form-provider',
-  // ADR-0233: the field controls and date-card parts it mints
-  uses: ['ui-button', 'ui-calendar', 'ui-card', 'ui-field', 'ui-popover', 'ui-radio', 'ui-radio-group', 'ui-select', 'ui-text', 'ui-text-field'],
+  // ADR-0233: the field controls and date-field parts it mints
+  uses: ['ui-button', 'ui-calendar', 'ui-field', 'ui-icon', 'ui-popover', 'ui-radio', 'ui-radio-group', 'ui-select', 'ui-text', 'ui-text-field'],
   create: () => {
     const el = document.createElement('ui-form-provider') as unknown as FormProviderLike
     // The card surface and the ADR-0046 box: `[data-box]` insets every child 6px (margins collapsing in its
@@ -442,8 +448,8 @@ export const bookingFormFactory: WidgetFactory = {
     fieldsEl.style.gap = 'var(--ui-box-gap)' // 8px between fields
     fieldsEl.style.marginBlock = 'var(--ui-box-gap)' // collapses with its neighbours' 6px inset: 8px to the title and actions
     el.append(titleEl, fieldsEl)
-    largeActionButtons(el)
-    bookingFormParts.set(el, { titleEl, fieldsEl, fields: [], dateCards: new Map(), dateRuns: [] })
+    sizedActionButtons(el, 'md', '[data-a2ui-date-button]') // the form's own Reserve steps down to md (T-0106)
+    bookingFormParts.set(el, { titleEl, fieldsEl, fields: [], dateFields: new Map(), dateRuns: [] })
     // Expose the LIVE aggregate as a plain readable property — a getter proxying the form-provider's
     // OWN native `values()` (name → committed FormValue, form-registry.ts). `installInputBinding`
     // (LLD-C8) reads this via the factory's `value` mark's `readProp` on every commit — no manual
@@ -476,7 +482,7 @@ export const bookingFormFactory: WidgetFactory = {
         for (const field of parts.fields) {
           const raw = obj[field.path]
           if (field.kind === 'dateSingle') {
-            parts.dateCards.get(field.path)?.setValue(raw == null ? '' : String(raw))
+            parts.dateFields.get(field.path)?.setValue(raw == null ? '' : String(raw))
             continue
           }
           const wrap = wraps.get(field.path)

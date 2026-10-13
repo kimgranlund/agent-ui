@@ -112,8 +112,8 @@ describe('BookingForm → BookingConfirmation — a real day-cell pick round-tri
     const confirmRowBefore = mount.querySelector('[data-a2ui-confirmation-row] [data-part="value"]')
     expect(confirmRowBefore?.textContent).toBe('—')
 
-    // The date card (T-0092): no month grid shows until its button opens the popover.
-    const dateCard = mount.querySelector('ui-card[data-a2ui-booking-field="checkIn"]') as HTMLElement
+    // The date field (T-0092, T-0106): no month grid shows until its button opens the popover.
+    const dateCard = mount.querySelector('ui-field[data-a2ui-booking-field="checkIn"]') as HTMLElement
     expect(box(dateCard.querySelector('ui-calendar')).height, 'the calendar is hidden in its closed popover').toBe(0)
     ;(dateCard.querySelector('[data-a2ui-date-button]') as HTMLElement).click()
     await whenFlushed() // the popover's open effect shows the panel
@@ -130,7 +130,7 @@ describe('BookingForm → BookingConfirmation — a real day-cell pick round-tri
     const pickedIso = day05!.dataset['date']!
     expect(pickedIso).toMatch(/^\d{4}-\d{2}-05$/)
 
-    expect(dateCard.querySelector('[data-a2ui-date-button]')?.textContent, 'the button now offers a change').toBe('Change')
+    expect(dateCard.querySelector('[data-a2ui-date-button]')?.getAttribute('aria-label'), 'the button now offers a change').toBe('Change arrival date')
     await whenFlushed()
     expect(box(cal).height, 'picking a day closes the popover').toBe(0)
     ;(mount.querySelector('ui-form-provider > ui-button') as HTMLElement).click() // valid (required field filled) — gate permits
@@ -143,7 +143,7 @@ describe('BookingForm → BookingConfirmation — a real day-cell pick round-tri
     const [py, pm, pd] = pickedIso.split('-').map(Number)
     const pickedText = new Date(py!, pm! - 1, pd!).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
     expect(confirmRowAfter?.textContent).toBe(pickedText) // shown in locale form, the data model keeps the ISO
-    expect(dateCard.querySelector('[data-part="date-text"]')?.textContent).toBe(pickedText)
+    expect((dateCard.querySelector('[data-a2ui-date-input]') as HTMLElement & { value: string }).value).toBe(pickedText)
 
     r.dispose()
     mount.remove()
@@ -212,7 +212,7 @@ const wrapOf = (mount: HTMLElement, path: string): HTMLElement =>
   [...mount.querySelectorAll<HTMLElement>('[data-a2ui-booking-field]')].find((w) => w.getAttribute('data-a2ui-booking-field') === path)!
 
 describe('BookingForm and BookingConfirmation: labelled fields, compact dates, a summary card (T-0085)', () => {
-  it('every field shows its visible label, no month grid renders inline, ink sits 19px in and Reserve is 36px', async () => {
+  it('every field shows its visible label, no month grid renders inline, ink sits 19px in and Reserve is 28px', async () => {
     const { mount, r } = await mountStay(480)
     const form = mount.querySelector('ui-form-provider')!
     for (const [path, label] of [
@@ -222,7 +222,7 @@ describe('BookingForm and BookingConfirmation: labelled fields, compact dates, a
       ['checkOut', 'Departure'],
     ] as const) {
       const own = [...wrapOf(mount, path).children].find((c) => c.getAttribute('data-part') === 'label') as HTMLElement
-      expect(own?.textContent?.replace(/\s*\*$/, ''), `${path}: the label (the card's carries a trailing required mark)`).toBe(label)
+      expect(own?.textContent?.replace(/\s*\*$/, ''), `${path}: the label (a required field's carries a trailing mark)`).toBe(label)
       expect(box(own).height, `${path}: the label is rendered, not just named`).toBeGreaterThan(0)
     }
     for (const cal of mount.querySelectorAll('ui-calendar')) expect(box(cal).height, 'no inline month grid').toBe(0)
@@ -230,8 +230,8 @@ describe('BookingForm and BookingConfirmation: labelled fields, compact dates, a
     expect(box(wrapOf(mount, 'guestName')).left - box(form).left).toBeCloseTo(19, 0)
     const button = mount.querySelector('ui-form-provider > ui-button')!
     expect(box(button).left - box(form).left).toBeCloseTo(19, 0)
-    expect(box(button).height).toBeCloseTo(36, 0)
-    const card = mount.querySelector('ui-card:not([data-part="date-card"])')!
+    expect(box(button).height, 'the form steps down to the md button').toBeCloseTo(28, 0)
+    const card = mount.querySelector('ui-card')!
     expect(box(card.querySelector('[data-part="title"]')).left - box(card).left).toBeCloseTo(19, 0)
     // 8px between fields (the ADR-0046 region gap).
     expect(box(wrapOf(mount, 'guests')).top - box(wrapOf(mount, 'guestName')).bottom).toBeCloseTo(8, 0)
@@ -239,7 +239,7 @@ describe('BookingForm and BookingConfirmation: labelled fields, compact dates, a
     mount.remove()
   })
 
-  it('arrival and departure cards share a row in the 480px column and stack in the 336px phone column', async () => {
+  it('arrival and departure fields share a row in the 480px column and stack in the 336px phone column', async () => {
     const wide = await mountStay(480)
     const [inW, outW] = [box(wrapOf(wide.mount, 'checkIn')), box(wrapOf(wide.mount, 'checkOut'))]
     expect(outW.top, 'side by side: same row').toBeCloseTo(inW.top, 0)
@@ -276,30 +276,38 @@ describe('BookingForm and BookingConfirmation: labelled fields, compact dates, a
   })
 })
 
-describe('BookingForm date cards: arrival and departure, each with a button that opens a picker (T-0092)', () => {
-  const cardOf = (mount: HTMLElement, path: string): HTMLElement =>
-    mount.querySelector(`ui-card[data-a2ui-booking-field="${path}"]`) as HTMLElement
-  const buttonOf = (card: HTMLElement): HTMLElement => card.querySelector('[data-a2ui-date-button]') as HTMLElement
-  const monthTitle = (card: HTMLElement): string => card.querySelector('ui-calendar [data-part="title"]')?.textContent ?? ''
+describe('BookingForm date fields: arrival and departure inputs, each with a small button that opens a picker (T-0106)', () => {
+  const fieldOf = (mount: HTMLElement, path: string): HTMLElement =>
+    mount.querySelector(`ui-field[data-a2ui-booking-field="${path}"]`) as HTMLElement
+  const buttonOf = (field: HTMLElement): HTMLElement => field.querySelector('[data-a2ui-date-button]') as HTMLElement
+  const inputOf = (field: HTMLElement): HTMLElement & { value: string } =>
+    field.querySelector('[data-a2ui-date-input]') as HTMLElement & { value: string }
+  const monthTitle = (field: HTMLElement): string => field.querySelector('ui-calendar [data-part="title"]')?.textContent ?? ''
 
-  it('shows two cards, side by side at 480px and stacked at 336px, each button at the 36px lg step', async () => {
+  it('shows two input fields with no nested card, side by side at 480px and stacked at 336px, buttons at sm and md only', async () => {
     const wide = await mountStay(480)
-    const [a, d] = [cardOf(wide.mount, 'checkIn'), cardOf(wide.mount, 'checkOut')]
+    const [a, d] = [fieldOf(wide.mount, 'checkIn'), fieldOf(wide.mount, 'checkOut')]
     expect(box(d).top, 'side by side').toBeCloseTo(box(a).top, 0)
-    expect(box(d).left - box(a).right, 'the 8px gap between cards').toBeCloseTo(8, 0)
-    for (const card of [a, d]) {
-      expect(box(buttonOf(card)).height, 'the library lg step').toBeCloseTo(36, 0)
-      expect(box(card.querySelector('[data-part="label"]')).height).toBeGreaterThan(0)
+    expect(box(d).left - box(a).right, 'the 8px gap between fields').toBeCloseTo(8, 0)
+    expect(wide.mount.querySelector('ui-form-provider ui-card'), 'no card inside the form card').toBeNull()
+    for (const field of [a, d]) {
+      expect(buttonOf(field).getAttribute('size'), 'the sm step').toBe('sm')
+      // the field's trailing adornment cell holds it (the field's icon size, at most the 24px sm step), inside the input frame
+      expect(box(buttonOf(field)).height).toBeGreaterThan(0)
+      expect(box(buttonOf(field)).height).toBeLessThanOrEqual(24)
+      expect(box(buttonOf(field)).right).toBeLessThanOrEqual(box(inputOf(field)).right)
+      expect(box(inputOf(field)).height, 'the input at the md step').toBeCloseTo(28, 0)
+      expect(box(field.querySelector('[data-part="label"]')).height).toBeGreaterThan(0)
     }
-    expect(a.querySelector('[data-part="date-text"]')?.textContent).toBe(
+    expect(inputOf(a).value).toBe(
       new Date(2026, 10, 14).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }),
     )
-    expect(buttonOf(a).textContent).toBe('Change')
+    expect(buttonOf(a).getAttribute('aria-label')).toBe('Change arrival date')
     wide.r.dispose()
     wide.mount.remove()
 
     const narrow = await mountStay(336)
-    const [an, dn] = [cardOf(narrow.mount, 'checkIn'), cardOf(narrow.mount, 'checkOut')]
+    const [an, dn] = [fieldOf(narrow.mount, 'checkIn'), fieldOf(narrow.mount, 'checkOut')]
     expect(box(dn).top - box(an).bottom, 'stacked, 8px apart').toBeCloseTo(8, 0)
     expect(box(dn).left).toBeCloseTo(box(an).left, 0)
     narrow.r.dispose()
@@ -308,13 +316,13 @@ describe('BookingForm date cards: arrival and departure, each with a button that
 
   it('opens on the booked month, and departure days before the arrival are disabled', async () => {
     const { mount, r } = await mountStay(480) // arrival 2026-11-14, departure 2026-11-17
-    const arrival = cardOf(mount, 'checkIn')
+    const arrival = fieldOf(mount, 'checkIn')
     buttonOf(arrival).click()
     expect(monthTitle(arrival), 'the booked month, not today\'s').toContain('November')
     expect(monthTitle(arrival)).toContain('2026')
     buttonOf(arrival).click() // toggles closed
 
-    const departure = cardOf(mount, 'checkOut')
+    const departure = fieldOf(mount, 'checkOut')
     buttonOf(departure).click()
     const disabled = (day: string): string | null =>
       departure.querySelector<HTMLElement>(`[role="gridcell"][data-date="2026-11-${day}"]`)?.getAttribute('aria-disabled') ?? null
@@ -325,15 +333,31 @@ describe('BookingForm date cards: arrival and departure, each with a button that
     mount.remove()
   })
 
+  it('a click on the field text opens the same calendar popover, and a second click closes it', async () => {
+    const { mount, r } = await mountStay(480)
+    const arrival = fieldOf(mount, 'checkIn')
+    const calendar = (): HTMLElement => arrival.querySelector('ui-popover ui-calendar') as HTMLElement
+    expect(box(calendar()).height, 'closed: no month grid').toBe(0)
+    inputOf(arrival).click()
+    await whenFlushed()
+    expect(box(calendar()).height, 'the field text opened the popover').toBeGreaterThan(0)
+    expect(monthTitle(arrival)).toContain('November')
+    inputOf(arrival).click()
+    await whenFlushed()
+    expect(box(calendar()).height, 'a second click closes it').toBe(0)
+    r.dispose()
+    mount.remove()
+  })
+
   it('a pick writes the ISO to the data model, and an arrival moved past the departure clears the departure', async () => {
     const { mount, r } = await mountStay(480)
-    const arrival = cardOf(mount, 'checkIn')
+    const arrival = fieldOf(mount, 'checkIn')
     buttonOf(arrival).click()
     arrival.querySelector<HTMLElement>('[role="gridcell"][data-date="2026-11-20"]')!.click()
     await whenFlushed()
-    const departure = cardOf(mount, 'checkOut')
-    expect(departure.querySelector('[data-part="date-text"]')?.textContent, 'cleared: before the new arrival').toBe('No date chosen')
-    expect(buttonOf(departure).textContent).toBe('Choose date')
+    const departure = fieldOf(mount, 'checkOut')
+    expect(inputOf(departure).value, 'cleared: before the new arrival').toBe('')
+    expect(buttonOf(departure).getAttribute('aria-label')).toBe('Choose departure date')
     const form = mount.querySelector('ui-form-provider') as HTMLElement & { values(): Record<string, unknown> }
     expect(form.values()['checkIn']).toBe('2026-11-20') // the ISO, never the locale text
     expect(form.values()['checkOut']).toBeUndefined()
