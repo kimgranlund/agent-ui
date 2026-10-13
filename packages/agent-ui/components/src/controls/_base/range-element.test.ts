@@ -95,6 +95,25 @@ describe('UIRangeElement — RNG-C1 value model', () => {
     el.remove()
   })
 
+  it('a fractional step snaps without float drift (6 * 0.1 reads 0.6, not 0.6000000000000001)', () => {
+    const el = makeRange()
+    el.min = 0
+    el.max = 1
+    el.step = 0.1
+    el.value = 0.6
+    document.body.append(el)
+    expect(el.value).toBe(0.6)
+    el.remove()
+    const odd = makeRange()
+    odd.min = 0
+    odd.max = 1
+    odd.step = 0.1
+    odd.value = 0.30000000000000004
+    document.body.append(odd)
+    expect(odd.value).toBe(0.3)
+    odd.remove()
+  })
+
   it('value rounds up to nearest step when midpoint', () => {
     const el = makeRange()
     el.min = 0

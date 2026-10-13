@@ -678,6 +678,14 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  /* The default row's include switch is locked ON by `disabled`, and switch.css mutes a disabled switch to
+     the neutral roles whatever its checked state: a pale track under a dark thumb that reads as a bare dot.
+     Keep the ON hue instead (the primary family's own disabled role, a role-repoint, never an opacity dim)
+     so the lock reads as "on, not editable". Unchecked-disabled keeps the shipped neutral roles. */
+  [data-part='model-include'][checked][disabled] {
+    --ui-switch-track: var(--md-sys-color-primary-disabled);
+    --ui-switch-thumb: var(--md-sys-color-primary-on-primary);
+  }
 
   /* The Agent config panel reads as a CARD like the entry cards beside it (Kim, design-mode
      2026-07-19) — the exact [data-part='entry'] chrome recipe (border/radius/surface/padding), matched

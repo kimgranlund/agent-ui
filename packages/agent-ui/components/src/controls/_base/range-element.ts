@@ -44,6 +44,13 @@ const rangeProps = {
 } satisfies PropsSchema
 
 export interface UIRangeElement extends ReactiveProps<typeof rangeProps> {}
+/** Decimal places in a number's shortest decimal form (0.1 is 1, 0.25 is 2, 5 is 0, 1e-7 is 7), capped at 20 for toFixed. */
+function decimalPlaces(n: number): number {
+  const m = /^-?\d*(?:\.(\d+))?(?:e([+-]\d+))?$/i.exec(String(n))
+  if (!m) return 0
+  return Math.min(20, Math.max(0, (m[1]?.length ?? 0) - Number(m[2] ?? 0)))
+}
+
 export class UIRangeElement extends UIFormElement {
   static props = rangeProps
 
@@ -68,9 +75,13 @@ export class UIRangeElement extends UIFormElement {
     // max is always reachable exactly — End → max, and clamping to max lands here too.
     if (clamped === max) return max
     const steps = Math.round((clamped - min) / step)
-    const snapped = min + steps * step
+    // `min + steps * step` accumulates binary float error (6 * 0.1 = 0.6000000000000001), so the result
+    // is rounded to the decimal places min and step carry: the value reads as the author wrote the step.
+    const places = Math.max(decimalPlaces(min), decimalPlaces(step))
+    const at = (n: number): number => Number((min + n * step).toFixed(places))
+    const snapped = at(steps)
     // snap-down if snapped overshoots max
-    return snapped > max ? min + (steps - 1) * step : snapped
+    return snapped > max ? at(steps - 1) : snapped
   }
 
   /** LLD-C5: percentage position of value along [min, max] for the `--value-pct` geometry seam. */
