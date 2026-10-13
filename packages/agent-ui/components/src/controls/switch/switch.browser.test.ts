@@ -107,11 +107,11 @@ describe('ui-switch cross-engine browser smoke — track + thumb geometry (ADR-0
 
   it('ADR-0041: track box = --md-sys-compact-{size} per [size] (the widget ramp, NOT the control height ramp)', () => {
     // The Indicator widget box rides the COMPACT ramp (ADR-0041), NOT the full control height ramp (ADR-0038).
-    // Default scale ui-md: --md-sys-compact-sm=14 / --md-sys-compact-md=16 / --md-sys-compact-lg=18.
+    // Derived ramp (ADR-0245): --md-sys-compact-sm=12 / --md-sys-compact-md=14 / --md-sys-compact-lg=16.
     const SIZES: Array<[string, number]> = [
-      ['sm', 14],
-      ['md', 16],
-      ['lg', 18],
+      ['sm', 12],
+      ['md', 14],
+      ['lg', 16],
     ]
     for (const [size, expected] of SIZES) {
       const { sw } = mount(`<ui-switch size="${size}"></ui-switch>`)
@@ -164,16 +164,17 @@ describe('ui-switch cross-engine browser smoke — track + thumb geometry (ADR-0
     expect(r.c + thumb + thumb + r.c).toBe(px(getComputedStyle(sw).inlineSize))
   })
 
-  it('track inline-size ≈ 1.8× the box; the pill is wider than tall (density-invariant)', () => {
+  it('track inline-size = 2 × box − 2c (the derived pill, 24px at md); the pill is wider than tall (density-invariant)', () => {
     // ADR-0223 (Fill by Default, slice 2): the default host now FILLS the container, so the host-width-
     // equals-track claim lives in the `[inline]` hug state (the pre-wave posture; a bare label-less switch).
-    const { sw } = mount('<ui-switch inline></ui-switch>') // md default: box = 16px, track ≈ 28.8px
+    const { sw } = mount('<ui-switch inline></ui-switch>') // md default: box = 14px, track = 2 × 14 − 2c = 24px (c = 2)
     const h = trackHeight(sw)
     const w = px(getComputedStyle(sw).inlineSize)
     // The track is a pill — inline > block.
     expect(w, 'track must be wider than tall (pill constraint)').toBeGreaterThan(h)
-    // ≈ 1.8× (the law) — allow ±0.5px rounding.
-    expect(w, `track inline-size (${w}) is not ≈ 1.8× box (${h * 1.8}px)`).toBeCloseTo(h * 1.8, 0)
+    // 2 × box − 2c (ADR-0245: the width follows the derived pill, not today's 1.8× box), allow ±0.5px rounding.
+    const c = resolve('product', 'sm', 'md').c
+    expect(w, `track inline-size (${w}) is not 2 × box − 2c (${2 * h - 2 * c}px)`).toBeCloseTo(2 * h - 2 * c, 0)
   })
 })
 

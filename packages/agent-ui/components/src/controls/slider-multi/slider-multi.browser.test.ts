@@ -64,39 +64,39 @@ function stubRailCapture(el: UISliderMultiElement): void {
 describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
   // ── AC1: thumb = box − 4px (the ADR-0041 2px-inset law), exact px per [size]×[scale] ─────────────
 
-  it('AC1 default [size=md]: thumbs are (--md-sys-compact-md − 4px) × 2 = 12px (at default ui-md scale)', () => {
+  it('AC1 default [size=md]: thumbs are (--md-sys-compact-md − 4px) = 10px (the derived compact ramp)', () => {
     const el = document.createElement('ui-slider-multi')
     document.body.append(el)
 
-    // --md-sys-compact-md = 16px at ui-md scale → thumb = 16 − 4 = 12px
+    // --md-sys-compact-md = 14px (derived, ADR-0245) → thumb = 14 − 4 = 10px
     const loThumb = el.querySelector<HTMLElement>('.thumb[data-thumb="lo"]')!
     const hiThumb = el.querySelector<HTMLElement>('.thumb[data-thumb="hi"]')!
-    expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(12)  // box − 4 = 16 − 4 = 12
-    expect(Number.parseFloat(getComputedStyle(loThumb).height)).toBe(12)
-    expect(Number.parseFloat(getComputedStyle(hiThumb).width)).toBe(12)
-    expect(Number.parseFloat(getComputedStyle(hiThumb).height)).toBe(12)
+    expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(10)  // box − 4 = 14 − 4 = 10
+    expect(Number.parseFloat(getComputedStyle(loThumb).height)).toBe(10)
+    expect(Number.parseFloat(getComputedStyle(hiThumb).width)).toBe(10)
+    expect(Number.parseFloat(getComputedStyle(hiThumb).height)).toBe(10)
     el.remove()
   })
 
-  it('AC1 [size=sm]: thumbs are (--md-sys-compact-sm − 4px) = 10px', () => {
+  it('AC1 [size=sm]: thumbs are (--md-sys-compact-sm − 4px) = 8px', () => {
     const el = document.createElement('ui-slider-multi')
     el.setAttribute('size', 'sm')
     document.body.append(el)
 
-    // --md-sys-compact-sm = 14px → thumb = 14 − 4 = 10px
+    // --md-sys-compact-sm = 12px → thumb = 12 − 4 = 8px
     const loThumb = el.querySelector<HTMLElement>('.thumb[data-thumb="lo"]')!
-    expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(10)
+    expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(8)
     el.remove()
   })
 
-  it('AC1 [size=lg]: thumbs are (--md-sys-compact-lg − 4px) = 14px', () => {
+  it('AC1 [size=lg]: thumbs are (--md-sys-compact-lg − 4px) = 12px', () => {
     const el = document.createElement('ui-slider-multi')
     el.setAttribute('size', 'lg')
     document.body.append(el)
 
-    // --md-sys-compact-lg = 18px → thumb = 18 − 4 = 14px
+    // --md-sys-compact-lg = 16px → thumb = 16 − 4 = 12px
     const loThumb = el.querySelector<HTMLElement>('.thumb[data-thumb="lo"]')!
-    expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(14)
+    expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(12)
     el.remove()
   })
 
@@ -109,7 +109,7 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
 
     const smW = Number.parseFloat(getComputedStyle(sm.querySelector<HTMLElement>('.thumb')!).width)
     const lgW = Number.parseFloat(getComputedStyle(lg.querySelector<HTMLElement>('.thumb')!).width)
-    expect(smW).not.toBe(lgW) // 10 ≠ 14 — not the same (anti-vacuous: different sizes render different px)
+    expect(smW).not.toBe(lgW) // 8 ≠ 12, not the same (anti-vacuous: different sizes render different px)
     sm.remove()
     lg.remove()
   })
@@ -122,7 +122,7 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
     const el = document.createElement('ui-slider-multi')
     document.body.append(el)
     const rows = getComputedStyle(el).gridTemplateRows.split(' ').map((v) => Number.parseFloat(v))
-    expect(rows[rows.length - 1]).toBe(16) // --md-sys-compact-md = 16px at ui-md scale
+    expect(rows[rows.length - 1]).toBe(14) // --md-sys-compact-md = 14px (derived, ADR-0245)
     el.remove()
   })
 

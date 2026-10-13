@@ -20,27 +20,27 @@ import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 const num = (v: string): number => Number.parseFloat(v)
 
 describe('ui-checkbox browser smoke (S1 AC1–AC4)', () => {
-  it('AC1 default: ::before box = 16×16 px (--md-sys-compact-md at ui-md scale)', () => {
+  it('AC1 default: ::before box = 14×14 px (--md-sys-compact-md, the derived compact ramp)', () => {
     const el = document.createElement('ui-checkbox')
     document.body.append(el)
     const cs = getComputedStyle(el, '::before')
-    // --md-sys-compact-md = 16px at the default ui-md scale (ADR-0041 clause 2)
-    expect(Number.parseFloat(cs.width)).toBe(16)
-    expect(Number.parseFloat(cs.height)).toBe(16)
+    // --md-sys-compact-md = 14px on the derived ramp (ADR-0041 clause 2, ADR-0245)
+    expect(Number.parseFloat(cs.width)).toBe(14)
+    expect(Number.parseFloat(cs.height)).toBe(14)
     el.remove()
   })
 
-  it('AC1 [size=sm] → 14px box; [size=lg] → 18px box (the compact ramp)', () => {
+  it('AC1 [size=sm] → 12px box; [size=lg] → 16px box (the compact ramp)', () => {
     const sm = document.createElement('ui-checkbox')
     sm.setAttribute('size', 'sm')
     document.body.append(sm)
-    expect(Number.parseFloat(getComputedStyle(sm, '::before').width)).toBe(14) // --md-sys-compact-sm
+    expect(Number.parseFloat(getComputedStyle(sm, '::before').width)).toBe(12) // --md-sys-compact-sm
     sm.remove()
 
     const lg = document.createElement('ui-checkbox')
     lg.setAttribute('size', 'lg')
     document.body.append(lg)
-    expect(Number.parseFloat(getComputedStyle(lg, '::before').width)).toBe(18) // --md-sys-compact-lg
+    expect(Number.parseFloat(getComputedStyle(lg, '::before').width)).toBe(16) // --md-sys-compact-lg
     lg.remove()
   })
 
@@ -64,9 +64,12 @@ describe('ui-checkbox browser smoke (S1 AC1–AC4)', () => {
   })
 
   it('outside any region the marks keep today\'s shape: radius box/5, check 60% x 55% inset 20%, dash 2px', () => {
+    const legacy = document.createElement('div')
+    legacy.setAttribute('data-foundations', 'legacy') // ADR-0245 cl.10e: the opt-out renders today's geometry
+    document.body.append(legacy)
     const el = document.createElement('ui-checkbox') as HTMLElement & { indeterminate: boolean }
     el.setAttribute('checked', '')
-    document.body.append(el)
+    legacy.append(el)
     expect(num(getComputedStyle(el, '::before').borderTopLeftRadius)).toBeCloseTo(3.2, 1)
     const check = getComputedStyle(el, '::after')
     expect([num(check.width), num(check.height), num(check.left)].map((v) => Number(v.toFixed(1)))).toEqual([9.6, 8.8, 3.2])
@@ -74,10 +77,11 @@ describe('ui-checkbox browser smoke (S1 AC1–AC4)', () => {
 
     const dash = document.createElement('ui-checkbox') as HTMLElement & { indeterminate: boolean }
     dash.indeterminate = true
-    document.body.append(dash)
+    legacy.append(dash)
     const d = getComputedStyle(dash, '::after')
     expect([num(d.width), num(d.height), num(d.borderTopLeftRadius)].map((v) => Number(v.toFixed(1)))).toEqual([9.6, 2, 1])
     dash.remove()
+    legacy.remove()
   })
 
   it('C10 connect→disconnect zero-residue: reconnect produces exactly one toggle per click', () => {
