@@ -43,8 +43,8 @@
      nested-radius derivation off it (ADR-0018's concentric-corner spirit; identical rendered values at
      the default base). Minted here (not read directly in @scope) so the pending dimensional-constants
      ruling (TKT-0066 item 5) is satisfied either way. */
-  --ui-conversation-radius: var(--md-sys-shape-corner-base, 12px);
-  --ui-conversation-bubble-radius: calc(var(--ui-conversation-radius) - 2px);
+  --ui-conversation-radius: var(--md-sys-card-radius, var(--md-sys-shape-corner-base, 12px));
+  --ui-conversation-bubble-radius: calc(var(--ui-conversation-radius) - var(--md-sys-c, 2px));
   /* SPEC-R11c/AC19 (spacing-drift gate): the STYLES block below never reads --md-sys-space-* directly
      inside @scope (TKT-0066 item 5) — it mints these role-named tokens here and consumes THOSE.
      ADR-0180 (GH #688) — the log's own inset (formerly --ui-conversation-log-pad here) moved WITH the
@@ -413,7 +413,7 @@
     align-items: center;
     gap: var(--ui-conversation-reference-tag-gap);
     padding: 0.1rem 0.4rem;
-    border-radius: 999px; /* pill — the composer chip's own value, deliberately shared across the two surfaces */
+    border-radius: var(--md-sys-height, 999px); /* pill (4n in a data-tier region: never under half the tag's height) — the composer chip's own value, deliberately shared across the two surfaces */
     background: var(--ui-conversation-reference-tag-bg);
     color: var(--ui-conversation-reference-tag-ink);
     font-size: 0.7rem;

@@ -144,7 +144,7 @@ describe('ui-conversation — GH #891 SPEC-R10: the sent bubble carries display-
     const tags = [...log(el).querySelectorAll<HTMLElement>('[data-part="reference-tag"]')]
     const icon = tags[0]!.querySelector<HTMLElement>('[data-part="reference-tag-icon"]')!
     expect(icon.tagName.toLowerCase()).toBe('ui-icon')
-    expect(icon.getAttribute('glyph')).toBe('file-text')
+    expect(icon.getAttribute('symbol')).toBe('file-text')
     expect(icon.getAttribute('data-role')).toBe('icon')
     expect(tags[0]!.firstElementChild, 'the glyph leads the label').toBe(icon)
     expect(tags[1]!.querySelector('[data-part="reference-tag-icon"]'), 'no glyph, no cell').toBeNull()

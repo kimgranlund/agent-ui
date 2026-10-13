@@ -444,7 +444,7 @@ export class UISuperShellElement extends UIElement {
       const icon = document.createElement('ui-icon')
       icon.setAttribute('slot', 'leading') // the icon-only anatomy's ONE adornment cell (button.md)
       icon.setAttribute('data-role', 'icon')
-      icon.setAttribute('glyph', glyph)
+      icon.setAttribute('symbol', glyph)
       icon.setAttribute('data-glyph', role)
       button.append(icon)
     }

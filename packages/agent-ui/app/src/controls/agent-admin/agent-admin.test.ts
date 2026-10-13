@@ -1429,12 +1429,12 @@ describe('UIAgentAdminElement — the unified header bar (S7-c, ADR-0179 GH #686
 
   it('the state-icon glyph mirrors membership (eye shown / eye-slash hidden) on every pill, at every flip', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const stateIconOf = (pane: 'chat' | 'settings' | 'copilot'): HTMLElement & { glyph: string } =>
-      pillOf(el, pane).querySelector('[slot="state-icon"]') as HTMLElement & { glyph: string }
-    expect(['chat', 'settings', 'copilot'].map((p) => stateIconOf(p as never).glyph)).toEqual(['eye', 'eye', 'eye'])
+    const stateIconOf = (pane: 'chat' | 'settings' | 'copilot'): HTMLElement & { symbol: string } =>
+      pillOf(el, pane).querySelector('[slot="state-icon"]') as HTMLElement & { symbol: string }
+    expect(['chat', 'settings', 'copilot'].map((p) => stateIconOf(p as never).symbol)).toEqual(['eye', 'eye', 'eye'])
     pillOf(el, 'chat').click() // chat off
-    expect(stateIconOf('chat').glyph, 'hidden ⇒ eye-slash').toBe('eye-slash')
-    expect(stateIconOf('settings').glyph, 'still shown ⇒ eye').toBe('eye')
+    expect(stateIconOf('chat').symbol, 'hidden ⇒ eye-slash').toBe('eye-slash')
+    expect(stateIconOf('settings').symbol, 'still shown ⇒ eye').toBe('eye')
   })
 })
 

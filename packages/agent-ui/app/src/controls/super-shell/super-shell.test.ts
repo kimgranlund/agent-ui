@@ -210,8 +210,8 @@ describe('ui-super-shell — SPEC-R8/R9/R10 responsive system (jsdom coverage, L
     const toggle = el.querySelector('[data-part="side-toggle"][data-side="start"]') as HTMLElement
     const menu = toggle.querySelector('ui-icon[data-glyph="menu"]')
     const close = toggle.querySelector('ui-icon[data-glyph="close"]')
-    expect(menu?.getAttribute('glyph')).toBe('list')
-    expect(close?.getAttribute('glyph')).toBe('x')
+    expect(menu?.getAttribute('symbol')).toBe('list')
+    expect(close?.getAttribute('symbol')).toBe('x')
     expect(menu?.getAttribute('slot')).toBe('leading')
     expect(close?.getAttribute('slot')).toBe('leading')
   })
