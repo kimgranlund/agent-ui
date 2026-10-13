@@ -1,20 +1,21 @@
 #!/usr/bin/env node
 // foundations-probe.mjs: measures every sized control in a real browser and compares it to the derived
 // geometry (ADR-0245). For each `ui-*` whose descriptor declares a `size` attribute, at sizes sm, md and lg, it
-// mounts the control twice, once on a plain page (today's geometry) and once inside the library root register
-// `data-tier="product" data-scale="sm"` (the opt-in region), and reads the host's computed height, inline
-// padding and corner radius. The derived row is compared to scale.mjs resolve() under clause 3's rules:
-// height 4n; radius n, the pill h/2 for button and toggle; inline padding n, 2n for button, toggle and segment.
+// mounts the control twice, once on a plain page (the root register since the cut, product at scale sm) and once
+// under `data-foundations="legacy"` (clause 10e, today's geometry), and measures the element clause 3 rules on:
+// the host, a named part or a pseudo-element. CLASSES is clause 3 as a table: each control class names its
+// measured element and the quantities clause 3 fixes for it (a frame control: height 4n, inline padding n, radius
+// n; the button and toggle pill; a 2n indicator box; a listbox at the group level; and so on). A control whose
+// host clause 3 gives no rule (a panel, an overlay, a preset widget, a display atom) is listed in EXEMPT with the
+// gate that pins its derived geometry instead, so nothing is skipped silently.
 //
-// It is a measurement tool, not a gate: before a lane migrates a control every derived row mismatches by
-// design, and the Wave 2 sweep reads these numbers before and after each lane. The page is served by an
-// in-process Vite dev server (the docs-site resolution: workspace packages through their exports maps) and
-// driven by Playwright's Chromium.
+// The page is served by an in-process Vite dev server (the docs-site resolution: workspace packages through
+// their exports maps) and driven by Playwright's Chromium.
 //
 // Usage:
 //   node scripts/foundations-probe.mjs [--tags ui-button,ui-select] [--json] [--strict]
 //     --json    print the rows as JSON instead of the table
-//     --strict  exit 1 when any derived row mismatches (for a lane that has migrated its controls)
+//     --strict  exit 1 when any derived row mismatches, or a sized control has no class and no exemption
 //   node scripts/foundations-probe.mjs selftest   prove the expectations and the comparison, no browser
 
 import { readFileSync, readdirSync } from 'node:fs'
@@ -27,9 +28,61 @@ const REPO = fileURLToPath(new URL('..', import.meta.url))
 const CONTROLS = join(REPO, 'packages/agent-ui/components/src/controls')
 const STEPS = ['sm', 'md', 'lg']
 const ROOT_REGISTER = ['product', 'sm'] // clause 2: the library root
-const PILL = new Set(['ui-button', 'ui-toggle']) // clause 3: radius h/2 = 2n, kept at step 0
-const LABEL_PAD_2N = new Set(['ui-button', 'ui-toggle', 'ui-segment']) // clause 3: padding 2n beside a label
 const TOLERANCE = 0.5
+
+/**
+ * Clause 3 as a table: class -> the element measured (`part` is a `[data-part]` name, `selector` any selector
+ * inside the host, `pseudo` a pseudo-element of the host; `parent` wraps the control in its container) and the
+ * quantities clause 3 fixes for it, from scale.mjs resolve() at the control's own n.
+ */
+export const CLASSES = {
+  frame: { rule: (r) => ({ height: r.h, padding: r.n, radius: r.radius }) }, // a field: height 4n, padding n, radius n
+  pill: { rule: (r) => ({ height: r.h, padding: 2 * r.n, radius: r.h / 2 }) }, // button, toggle: the pill kept at step 0
+  trigger: { part: 'trigger', rule: (r) => ({ height: r.h, padding: r.n, radius: r.radius }) }, // a popup field's frame
+  cell: { part: 'cell', rule: (r) => ({ height: r.h, radius: r.radius }) }, // one frame per character cell
+  multiline: { rule: (r) => ({ padding: r.n, radius: r.radius }) }, // padding n and radius n; rows set the height
+  listbox: { rule: (r) => ({ padding: r.c, radius: r.group.radius }) }, // the group level: padding c, radius n + c
+  // segments 4n, padding 2n; a segment's own size is unconsumed (segment.md), so the size goes on the group
+  segment: { parent: 'ui-segmented-control', sizeOnParent: true, rule: (r) => ({ height: r.h, padding: 2 * r.n }) },
+  avatar: { rule: (r) => ({ height: r.h, radius: r.h / 2 }) }, // the 4n tile ruled at step 0, a circle
+  checkbox: { pseudo: '::before', rule: (r) => ({ height: r.icon, radius: r.n / 2 }) }, // 2n box, radius n/2
+  radio: { pseudo: '::before', rule: (r) => ({ height: r.icon, radius: r.icon / 2 }) }, // 2n circle
+  switch: { pseudo: '::before', rule: (r) => ({ height: r.icon, radius: r.n }) }, // track 2n tall, fully rounded
+  range: { selector: '.rail', rule: (r) => ({ height: r.icon }) }, // ui-slider's .rail is its box: the 2n indicator box
+  rail: { selector: '.rail', rule: (r) => ({ height: 2 * r.c }) }, // ui-slider-multi's .rail is the rail itself: 2c
+  stars: { part: 'stars', rule: (r) => ({ height: r.icon }) }, // each star is an icon in a 2n box
+  type: { rule: (r) => ({ font: r.type.body }) }, // ui-text body at its own n (clause 7)
+}
+
+/** Each sized control's clause 3 class. */
+export const CLASS_OF = {
+  'ui-text-field': 'frame',
+  'ui-button': 'pill',
+  'ui-toggle': 'pill',
+  'ui-select': 'trigger',
+  'ui-otp-field': 'cell',
+  'ui-textarea': 'multiline',
+  'ui-multi-select': 'listbox',
+  'ui-segment': 'segment',
+  'ui-avatar': 'avatar',
+  'ui-checkbox': 'checkbox',
+  'ui-radio': 'radio',
+  'ui-switch': 'switch',
+  'ui-slider': 'range',
+  'ui-slider-multi': 'rail',
+  'ui-rating': 'stars',
+  'ui-text': 'type',
+}
+
+/** Sized controls whose host clause 3 gives no rule, and the gate that pins their derived geometry instead. */
+export const EXEMPT = {
+  'ui-calendar': 'a panel; its 4n day cells are pinned by calendar-foundations.browser.test.ts',
+  'ui-form-popover': 'an overlay container at the widget level; the closed host has no box (containers-foundations)',
+  'ui-playing-card': 'a preset widget sized by its own card ratio (ADR-0245 lane 4b)',
+  'ui-status-stream': 'a display atom; its 2n marker box is pinned by timeline-item-foundations.browser.test.ts',
+  'ui-timeline': 'a display atom list; its items carry the 2n marker box (timeline-item-foundations)',
+  'ui-timeline-item': 'a display atom; its 2n marker box and 2n - 2c dot are pinned by timeline-item-foundations',
+}
 
 /** Every control tag whose descriptor declares a `size` attribute. */
 export function sizedTags(dir = CONTROLS) {
@@ -46,16 +99,24 @@ export function sizedTags(dir = CONTROLS) {
   return tags.sort()
 }
 
-/** What clause 3 says the host measures at the root register for `size`. */
+/** What clause 3 says the measured element reads at the root register for `size` (null: no class). */
 export function expected(tag, size) {
-  const r = derive(ROOT_REGISTER[0], ROOT_REGISTER[1], size)
-  return { height: r.h, padding: LABEL_PAD_2N.has(tag) ? 2 * r.n : r.n, radius: PILL.has(tag) ? r.h / 2 : r.radius }
+  const cls = CLASSES[CLASS_OF[tag]]
+  return cls ? cls.rule(derive(ROOT_REGISTER[0], ROOT_REGISTER[1], size)) : null
 }
 
 /** The fields of a measured derived row that differ from `expected` by more than TOLERANCE. */
 export function mismatches(row) {
   const want = expected(row.tag, row.size)
-  return Object.keys(want).filter((k) => Math.abs(row[k] - want[k]) > TOLERANCE)
+  if (want === null) return ['no clause 3 class']
+  if (row.found === false) return ['measured element not found']
+  return Object.keys(want).filter((k) => !(Math.abs(row[k] - want[k]) <= TOLERANCE))
+}
+
+/** What the page measures for each tag: the class's element spec. */
+const specOf = (tag) => {
+  const { part, selector, pseudo, parent, sizeOnParent } = CLASSES[CLASS_OF[tag]] ?? {}
+  return { part, selector, pseudo, parent, sizeOnParent }
 }
 
 const ENTRY = (tags) => `
@@ -63,29 +124,41 @@ import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
 const TAGS = ${JSON.stringify(tags)}
+const SPECS = ${JSON.stringify(Object.fromEntries(tags.map((t) => [t, specOf(t)])))}
 const STEPS = ${JSON.stringify(STEPS)}
 const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
-async function measure(tag, size, region) {
+const len = (v, basis) => (String(v).endsWith('%') ? (parseFloat(v) / 100) * basis : parseFloat(v) || 0)
+async function measure(tag, size, legacy) {
+  const spec = SPECS[tag]
   const wrap = document.createElement('div')
   wrap.style.inlineSize = '320px'
-  if (region) { wrap.setAttribute('data-tier', ${JSON.stringify(ROOT_REGISTER[0])}); wrap.setAttribute('data-scale', ${JSON.stringify(ROOT_REGISTER[1])}) }
+  if (legacy) wrap.setAttribute('data-foundations', 'legacy')
   const el = document.createElement(tag)
-  el.setAttribute('size', size)
+  if (!spec.sizeOnParent) el.setAttribute('size', size)
   el.setAttribute('label', 'Label')
   if (!el.childElementCount) el.textContent = 'Label'
-  wrap.append(el)
+  if (spec.parent) {
+    const parent = document.createElement(spec.parent)
+    if (spec.sizeOnParent) parent.setAttribute('size', size)
+    parent.append(el)
+    wrap.append(parent)
+  } else wrap.append(el)
   document.body.append(wrap)
   await el.updateComplete
   await frame()
-  const cs = getComputedStyle(el)
-  const row = { tag, size, height: el.getBoundingClientRect().height, padding: parseFloat(cs.paddingInlineStart) || 0, radius: parseFloat(cs.borderStartStartRadius) || 0 }
+  const target = spec.part ? el.querySelector('[data-part="' + spec.part + '"]') : spec.selector ? el.querySelector(spec.selector) : el
+  const node = target ?? el
+  const cs = getComputedStyle(node, spec.pseudo ?? null)
+  const width = spec.pseudo ? parseFloat(cs.inlineSize) || 0 : node.getBoundingClientRect().width
+  const height = spec.pseudo ? parseFloat(cs.blockSize) || 0 : node.getBoundingClientRect().height
+  const row = { tag, size, found: target !== null, height, padding: parseFloat(cs.paddingInlineStart) || 0, radius: len(cs.borderStartStartRadius, width), font: parseFloat(cs.fontSize) || 0 }
   wrap.remove()
   return row
 }
 window.__probe = (async () => {
   await Promise.all(TAGS.map((t) => customElements.whenDefined(t)))
   const rows = []
-  for (const tag of TAGS) for (const size of STEPS) rows.push({ ...(await measure(tag, size, true)), today: await measure(tag, size, false) })
+  for (const tag of TAGS) for (const size of STEPS) rows.push({ ...(await measure(tag, size, false)), today: await measure(tag, size, true) })
   return rows
 })()
 `
@@ -104,11 +177,17 @@ function probePagePlugin(tags) {
   }
 }
 
-const fmt = (o) => `${o.height} / ${o.padding} / ${o.radius}`
+/** Only the quantities the class asserts, e.g. `h 28 · pad 7 · r 7`. */
+const fmt = (o, keys) => keys.map((k) => `${k === 'height' ? 'h' : k === 'padding' ? 'pad' : k === 'radius' ? 'r' : k} ${Math.round(o[k] * 100) / 100}`).join(' · ')
+
+/** Sized tags with neither a class nor an exemption: a new sized control the table has not ruled on yet. */
+export const unruled = (tags) => tags.filter((t) => !CLASS_OF[t] && !EXEMPT[t])
 
 async function main() {
   const tagArg = process.argv.indexOf('--tags')
-  const tags = tagArg === -1 ? sizedTags() : process.argv[tagArg + 1].split(',')
+  const all = tagArg === -1 ? sizedTags() : process.argv[tagArg + 1].split(',')
+  const loose = unruled(all)
+  const tags = all.filter((t) => CLASS_OF[t])
   const { createServer } = await import('vite')
   const { chromium } = await import('playwright')
   const port = await freePort()
@@ -123,11 +202,16 @@ async function main() {
     const bad = rows.filter((r) => mismatches(r).length > 0)
     if (process.argv.includes('--json')) console.log(JSON.stringify(rows.map((r) => ({ ...r, expected: expected(r.tag, r.size), mismatches: mismatches(r) })), null, 2))
     else {
-      console.log('control size | today h / pad / r | derived h / pad / r | expected h / pad / r | mismatch')
-      for (const r of rows) console.log(`${r.tag} ${r.size} | ${fmt(r.today)} | ${fmt(r)} | ${fmt(expected(r.tag, r.size))} | ${mismatches(r).join(', ') || 'none'}`)
+      console.log('control size (class) | legacy today | derived | expected | mismatch')
+      for (const r of rows) {
+        const keys = Object.keys(expected(r.tag, r.size))
+        console.log(`${r.tag} ${r.size} (${CLASS_OF[r.tag]}) | ${fmt(r.today, keys)} | ${fmt(r, keys)} | ${fmt(expected(r.tag, r.size), keys)} | ${mismatches(r).join(', ') || 'none'}`)
+      }
+      for (const t of all.filter((x) => EXEMPT[x])) console.log(`${t} exempt: ${EXEMPT[t]}`)
     }
-    console.log(`foundations-probe: ${rows.length} rows over ${tags.length} controls at ${ROOT_REGISTER.join('/')}; ${bad.length} mismatch the derived geometry`)
-    if (process.argv.includes('--strict') && bad.length) process.exitCode = 1
+    for (const t of loose) console.log(`${t}: no clause 3 class and no exemption`)
+    console.log(`foundations-probe: ${rows.length} rows over ${tags.length} classed controls at ${ROOT_REGISTER.join('/')} (${all.length - tags.length - loose.length} exempt); ${bad.length} mismatch the derived geometry, ${loose.length} unruled`)
+    if (process.argv.includes('--strict') && (bad.length || loose.length)) process.exitCode = 1
   } finally {
     await browser?.close()
     await server.close()
@@ -147,8 +231,14 @@ function selftest() {
   check('a derived row on the formula has no mismatch', mismatches({ tag: 'ui-select', size: 'sm', height: 24, padding: 6, radius: 6 }).length === 0)
   check('today\'s field radius 12 at md is a radius mismatch', mismatches({ tag: 'ui-select', size: 'md', height: 28, padding: 7, radius: 12 }).join() === 'radius')
   check('sub-pixel layout noise is tolerated', mismatches({ tag: 'ui-select', size: 'md', height: 28.25, padding: 7, radius: 7 }).length === 0)
+  const box = expected('ui-checkbox', 'md')
+  check('an indicator is ruled on its 2n box, not the 4n frame: checkbox md box 14, radius n/2 3.5', box.height === 14 && box.radius === 3.5 && !('padding' in box))
+  check('a listbox is ruled at the group level: padding c 2, radius n + c 9', expected('ui-multi-select', 'md').padding === 2 && expected('ui-multi-select', 'md').radius === 9)
+  check('a measured element that is missing is a mismatch, never a pass', mismatches({ tag: 'ui-select', size: 'md', found: false, height: 28, padding: 7, radius: 7 }).join() === 'measured element not found')
+  check('a sized tag with no class is reported, and an unruled new tag would be caught', mismatches({ tag: 'ui-zz', size: 'md' }).join() === 'no clause 3 class' && unruled(['ui-zz']).join() === 'ui-zz')
   const tags = sizedTags()
   check('the sized fleet is found and includes button and text-field', tags.includes('ui-button') && tags.includes('ui-text-field') && !tags.includes('ui-icon'))
+  check('every sized control has a clause 3 class or a stated exemption', unruled(tags).length === 0)
   console.log(failures === 0 ? 'selftest: all green' : `selftest: ${failures} failure(s)`)
   if (failures) process.exit(1)
 }
