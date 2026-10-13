@@ -4,6 +4,9 @@
  * only the flex layout wrapping them + the default-stamped overlay placement. Standalone; never injected
  * from a .ts (behaviour-only .ts, no runtime style injection — plan §2). */
 
+/* uses: synced from swiper-paddles.md by scripts/codemod-uses.mjs */
+@import '../glyph/glyph.css';
+
 @scope (ui-swiper-paddles) {
   :scope {
     display: flex;

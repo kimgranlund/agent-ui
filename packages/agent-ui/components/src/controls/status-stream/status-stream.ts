@@ -142,6 +142,7 @@ import { pendingComputed, type PendingSource } from '../../traits/pending-comput
 import { UITimelineItemElement } from '../timeline-item/timeline-item.ts' // constructs items via its own API (F4)
 import '../timeline/timeline.ts' // registers <ui-timeline> — the nested group host (ADR-0146 F5, ADR-0143's mechanism)
 import '../button/button.ts' // registers <ui-button> — the GH #147/ADR-0153 inline retry action (Fork 2)
+import '../glyph/glyph.ts' // registers <ui-glyph>, the header caret's functional mark (ADR-0245 cl.5)
 import type { UIButtonElement } from '../button/button.ts'
 // TYPE-only — the composed reveal disclosure (GH #240) is created by ui-timeline-item's own anatomy
 // (timeline-item.ts already imports/registers ui-disclosure); this host only labels its `summary` prop.
@@ -952,11 +953,9 @@ export class UIStatusStreamElement extends UIContainerElement {
       header.setAttribute('tabindex', '0')
       header.setAttribute('aria-expanded', String(!this.#collapsed))
       if (!this.#headerCaret) {
-        const caret = document.createElement('span')
+        const caret = document.createElement('ui-glyph')
         caret.dataset.part = 'header-caret'
-        const svg = resolveIcon('caret-down')
-        svg.setAttribute('data-role', 'marker') // the header-marker glyph-tagging precedent
-        caret.append(svg)
+        caret.setAttribute('symbol', 'caret-down') // a library mark in the 2n slot, not pack art (ADR-0245 cl.5)
         header.append(caret)
         this.#headerCaret = caret
       }
