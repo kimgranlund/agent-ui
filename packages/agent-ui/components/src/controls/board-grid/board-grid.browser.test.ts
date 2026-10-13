@@ -89,6 +89,16 @@ describe('ui-board-grid: whole shape', () => {
   })
 })
 
+describe('ui-board-grid: the ADR-0046 box model (Amendment 7)', () => {
+  it('the frame is the 6px box inset; the cell gap stays the tight 4px data-grid gap', () => {
+    const el = mount(`<ui-board-grid rows="2" cols="3"></ui-board-grid>`)
+    const [a, b] = cells(el)
+    expect(rect(a!).left - rect(el).left).toBeCloseTo(6, 0)
+    expect(rect(a!).top - rect(el).top).toBeCloseTo(6, 0)
+    expect(rect(b!).left - rect(a!).right).toBeCloseTo(4, 0)
+  })
+})
+
 describe('ui-board-grid: keyboard with real focus', () => {
   it('one tab stop; arrows rove by cell and row, skipping disabled cells; Enter and Space emit exactly once', async () => {
     const before = document.createElement('button')

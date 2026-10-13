@@ -94,6 +94,14 @@ describe('canvas-surface.ts — GH #892: applyRootStretch fills a Row/Card root,
     expect(root.getBoundingClientRect().width, 'the List root did not fill the artboard').toBeCloseTo(contentWidth(surface), 0)
   })
 
+  it('a GameHud root (an ADR-0243 widget, not a UIContainerElement) fills the surface content box (ADR-0046 Amendment 7)', () => {
+    const { surface } = mountArtboard()
+    renderInto(surface, [{ id: 'root', component: 'GameHud', title: 'Level 3', stats: [{ label: 'HP', value: 9 }] }])
+    const root = surface.firstElementChild as HTMLElement
+    expect(root.tagName.toLowerCase()).toBe('ui-game-hud')
+    expect(root.getBoundingClientRect().width, 'the GameHud root hugged its content').toBeCloseTo(contentWidth(surface), 0)
+  })
+
   it('negative control: a lone Button root (an intrinsic control) keeps its own natural width, NOT force-stretched', () => {
     const { surface } = mountArtboard()
     renderInto(surface, [{ id: 'root', component: 'Button', variant: 'solid', label: 'Go' }])

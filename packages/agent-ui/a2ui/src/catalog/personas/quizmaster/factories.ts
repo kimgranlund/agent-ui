@@ -10,10 +10,13 @@
 // marks the correct row (a check glyph and "Correct") and a wrong pick (a cross glyph and "Your answer"), so no
 // state rests on color alone. The producer's own children (the Check answer Button) are appended by the renderer
 // after the explanation, sized at the button's `lg` step by `largeActionButtons` (ADR-0243 Amendment 2). Styling
-// goes through `el.style` only, with no border-left anywhere; no host ARIA.
+// goes through `el.style` only, with no border-left anywhere; no host ARIA. The card is one region on the ADR-0046
+// box model (`boxRegionCard`, ADR-0046 Amendment 7): ink the box inset plus the region padding in from the border,
+// and one 8px gap between parts.
 
 import type { WidgetFactory } from '../../types.ts'
 import { largeActionButtons } from '../action-row.ts'
+import { BOX, boxRegionCard } from '../box-region.ts'
 
 interface QuestionOption {
   value: string
@@ -239,15 +242,15 @@ export const questionCardFactory: WidgetFactory = {
     const s = el.style
     s.display = 'flex'
     s.flexDirection = 'column'
-    s.gap = 'var(--md-sys-space-xs)' // plus the card's own 8px inset margin on each control: 12px between parts
-    s.padding = 'var(--md-sys-space-md) var(--md-sys-space-lg) var(--md-sys-space-lg)'
+    boxRegionCard(el)
+    s.gap = BOX.gap
 
     const headEl = document.createElement('div')
     headEl.setAttribute('data-part', 'head')
     headEl.style.display = 'none'
     headEl.style.justifyContent = 'space-between'
     headEl.style.alignItems = 'center'
-    headEl.style.gap = 'var(--md-sys-space-sm)'
+    headEl.style.gap = BOX.gap
     const labelEl = document.createElement('ui-badge') as unknown as BadgeLike
     labelEl.setAttribute('data-part', 'label')
     labelEl.style.display = 'none'

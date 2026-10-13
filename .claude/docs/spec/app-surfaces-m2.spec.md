@@ -144,7 +144,7 @@ M2 pays down the two site embryos this SPEC generalizes: `site/lib/canvas-surfac
 interface UISurfaceHostElement {
   label?: string                                    // optional accessible name for the artboard region
   ingest(line: string): void                        // one validated A2UI JSONL line -> progressive paint
-  finalize(): void                                   // end of a batch; stretches a root ui-column (applyRootStretch)
+  finalize(): void                                   // end of a batch; stretches the root to the canvas width (applyRootStretch: a ui-column, a container, an ADR-0243 widget)
   dispose(): void                                    // tears down the RendererHost; no retained signals/listeners
   onClientMessage(cb: (m: A2uiClientMessage) => void): void   // callback, NOT a CustomEvent (SPEC-R5's rationale applies identically)
 }

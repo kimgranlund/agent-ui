@@ -98,11 +98,11 @@ keyboard: []            # not interactive and not focusable: no tabindex, no key
 
 geometry:
   sizeClass: pattern
-  paddingBlock: var(--ui-game-hud-pad-block)      # = --md-sys-space-md
-  paddingInline: var(--ui-game-hud-pad-inline)    # = --md-sys-space-md
-  rowGap: var(--ui-game-hud-gap)                  # = --md-sys-space-sm, between header, progress and stats
+  paddingBlock: calc(var(--ui-game-hud-inset) + var(--ui-game-hud-pad-block))    # = 6px box inset + 6px region block padding (ADR-0046 Amendment 7)
+  paddingInline: calc(var(--ui-game-hud-inset) + var(--ui-game-hud-pad-inline))  # = 6px box inset + 12px region inline padding
+  rowGap: var(--ui-game-hud-gap)                  # = --ui-box-gap (8px), between header, progress and stats
   radius: var(--ui-game-hud-radius)               # = --md-sys-shape-corner-base
-  note: Container spacing only, no control-height row (no action part). Block-level fill by default (ADR-0223); the `inline` boolean flips the host to inline-grid. Stat tiles wrap in an auto-fit grid with an 84px tile floor, so the HUD never overflows its container.
+  note: Container spacing only, no control-height row (no action part). The spacing is the ADR-0046 box model in fixed rem (no density scaling), the shared --ui-box-* tokens, so the ink sits 19px inline and 13px block from the outer edge like a stock card region. As a surface root the HUD fills the canvas width (applyRootStretch, ADR-0046 Amendment 7). Block-level fill by default (ADR-0223); the `inline` boolean flips the host to inline-grid. Stat tiles wrap in an auto-fit grid with an 84px tile floor, so the HUD never overflows its container.
 
 forcedColors: The host keeps its outline as a CanvasText border; the progress track gains a CanvasText border and the progress fill and stat glyphs paint in CanvasText (a background-painted shape would otherwise flatten to Canvas and vanish, the badge.css note). The composed status badge carries its own forced-colors treatment.
 ---

@@ -25,8 +25,11 @@
   --ui-board-grid-cols: 1;
   --ui-board-grid-cell-size: 46px;
   --ui-board-grid-cell-min: 34px;
+  /* The cell gap stays the tight 4px data-grid gap of the approved mockup (a board reads as one unit; the
+     ADR-0046 8px region gap would spread a 6 by 6 board by 20px). The frame is the 6px box inset (ADR-0046
+     Amendment 7), the shared token with its literal fallback, the card.css idiom. */
   --ui-board-grid-gap: var(--md-sys-space-xs);
-  --ui-board-grid-frame: var(--md-sys-space-xs);
+  --ui-board-grid-frame: var(--ui-box-inset, 0.375rem);
   --ui-board-grid-cell-radius: calc(var(--md-sys-shape-corner-base) * 2 / 3);
 
   /* A cell with no intent: the neutral surface, on-surface ink and an outline-variant border. */

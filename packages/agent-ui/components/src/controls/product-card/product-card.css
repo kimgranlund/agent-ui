@@ -2,9 +2,9 @@
  * sectioned blocks, the service-card.css shape:
  *
  *   [1] TOKEN BLOCK: `:where(ui-product-card)` (specificity 0) declares the `--ui-product-card-*` chain
- *       from the colour roles, the type matrix, the space ladder and the control ramp (the action row's
- *       height at the ramp's `lg` step, the pattern tier's one control-height row, ADR-0224 cl.1; the
- *       approved mockup, ADR-0243 Amendment 2).
+ *       from the colour roles, the type matrix, the space ladder, the ADR-0046 box tokens and the control
+ *       ramp (the action row's height at the ramp's `lg` step, the pattern tier's one control-height row,
+ *       ADR-0224 cl.1; the approved mockup, ADR-0243 Amendment 2).
  *   [2] STYLES BLOCK: `@scope (ui-product-card)` consumes ONLY `--ui-product-card-*` (plus the sanctioned
  *       fleet constants: focus ring, motion, `--md-sys-control-line-height`). The host is a block-level
  *       flex column (fill by default, ADR-0223); `[inline]` flips to `inline-flex` with no hug floor (the
@@ -52,10 +52,16 @@
   --ui-product-card-price-line-height: var(--md-sys-typescale-title-large-line-height);
   --ui-product-card-price-weight: 700;
 
-  /* Spacing off the --md-sys-space ladder (density-responsive by the token chain itself). */
-  --ui-product-card-pad-inline: var(--md-sys-space-md);
-  --ui-product-card-pad-block: var(--md-sys-space-md);
-  --ui-product-card-row-gap: var(--md-sys-space-xs);
+  /* Body spacing: the ADR-0046 container box model (fixed rem, no density scaling, ADR-0046 Amendment 7). The
+     body is one region under the full-bleed media, so its ink sits the 6px box inset plus the region padding
+     (12px inline, 6px block) in from the edge, its rows on the 8px region gap. The shared --ui-box-* tokens
+     with their literal fallbacks, the card.css idiom (the host is not a [data-box]). */
+  --ui-product-card-inset: var(--ui-box-inset, 0.375rem); /* 6px */
+  --ui-product-card-pad-inline: var(--ui-box-pad-inline, 0.75rem); /* 12px */
+  --ui-product-card-pad-block: var(--ui-box-pad-block, 0.375rem); /* 6px */
+  --ui-product-card-row-gap: var(--ui-box-gap, 0.5rem); /* 8px between the body's rows */
+  /* Inline spacing within a row, off the --md-sys-space ladder (density-responsive by the token chain). */
+  --ui-product-card-rating-gap: var(--md-sys-space-xs); /* stars to the number */
   --ui-product-card-row-pad: var(--md-sys-space-sm); /* space above the price row */
   --ui-product-card-inline-gap: var(--md-sys-space-sm); /* price, note and action within the row */
   --ui-product-card-badge-inset: var(--md-sys-space-sm); /* the badge's offset over the image corner */
@@ -142,8 +148,8 @@
 
   /* The icon header: no aspect box, a top-start glyph in the primary colour. */
   :scope > [data-part='media']:has(> [data-part='icon']) {
-    padding-inline: var(--ui-product-card-pad-inline);
-    padding-block-start: var(--ui-product-card-pad-block);
+    padding-inline: calc(var(--ui-product-card-inset) + var(--ui-product-card-pad-inline));
+    padding-block-start: calc(var(--ui-product-card-inset) + var(--ui-product-card-pad-block));
   }
   :scope > [data-part='media'] > [data-part='icon'] {
     inline-size: var(--ui-product-card-icon-size);
@@ -159,8 +165,8 @@
     flex: 1 1 auto;
     gap: var(--ui-product-card-row-gap);
     min-inline-size: 0;
-    padding-inline: var(--ui-product-card-pad-inline);
-    padding-block: var(--ui-product-card-pad-block);
+    padding-inline: calc(var(--ui-product-card-inset) + var(--ui-product-card-pad-inline));
+    padding-block: calc(var(--ui-product-card-inset) + var(--ui-product-card-pad-block));
   }
 
   :scope [data-part='title'] {
@@ -186,7 +192,7 @@
   :scope [data-part='rating'] {
     display: flex;
     align-items: baseline;
-    gap: var(--ui-product-card-row-gap);
+    gap: var(--ui-product-card-rating-gap);
     font-variant-numeric: tabular-nums;
   }
   :scope [data-part='rating-stars'] {
