@@ -1196,8 +1196,20 @@ describe('ui-code-editor — derived foundations geometry (ADR-0245 cl.3, dark l
     expect(box.height, `${server.browser}: toggle block size`).toBe(r.h)
   })
 
-  it('outside any region: today\'s geometry holds (font * 0.5 / 0.75 padding, the 24px toggle)', async () => {
+  it('outside any region the page root derives the geometry (root = product / sm / md): padding n - 1, the toggle a 4n square', async () => {
     const { field } = mount(`<ui-code-editor language="markdown" ${SIZED}></ui-code-editor>`)
+    const r = resolve('product', 'sm', 'md')
+    await expect.poll(() => field.querySelector('[data-part="mode-toggle"]') !== null, { timeout: 5000 }).toBe(true)
+    const cs = getComputedStyle(field)
+    expect(px(cs.paddingTop), `${server.browser}: padding-block`).toBe(r.control.margin - 1)
+    expect(px(cs.paddingLeft), `${server.browser}: padding-inline`).toBe(r.control.margin - 1)
+    const box = (field.querySelector('[data-part="mode-toggle"]') as HTMLElement).getBoundingClientRect()
+    expect(box.height, `${server.browser}: toggle block size`).toBe(r.h)
+  })
+
+  it('data-foundations="legacy": today\'s geometry holds (font * 0.5 / 0.75 padding, the 24px toggle)', async () => {
+    const { wrap, field } = mount(`<ui-code-editor language="markdown" ${SIZED}></ui-code-editor>`)
+    wrap.setAttribute('data-foundations', 'legacy') // ADR-0245 cl.10e: the opt-out renders today's geometry
     await expect.poll(() => field.querySelector('[data-part="mode-toggle"]') !== null, { timeout: 5000 }).toBe(true)
     const cs = getComputedStyle(field)
     const font = px(cs.fontSize)

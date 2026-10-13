@@ -205,7 +205,7 @@
   }
 
   [data-part='index-suit'] {
-    font-size: 0.9em;
+    font-size: max(var(--md-sys-type-floor, 9px), 0.9em); /* the type floor: 0.9em alone reads 8.78px at the canvas */
   }
 
   /* The center content region — the rank's pip grid (A, 2–10) OR the large letter (J/Q/K); empty for the

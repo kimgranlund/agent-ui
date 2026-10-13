@@ -95,6 +95,7 @@ function derivedDeclarations() {
     ['--md-sys-type-control', lin(CFG.linear.control)],
     ['--md-sys-type-field-label', lin(CFG.linear.fieldLabel)],
     ['--md-sys-type-group-label', lin(CFG.linear.groupLabel)],
+    ['--md-sys-type-floor', `${CFG.floor}px`],
     ['--md-sys-group-margin', `calc(var(--md-sys-inset) + ${C})`],
     ['--md-sys-group-gutter', C],
     ['--md-sys-group-radius', `calc(var(--md-sys-radius) + ${C})`],

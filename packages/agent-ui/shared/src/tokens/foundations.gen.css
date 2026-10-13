@@ -36,6 +36,7 @@
   --md-sys-type-control: max(9px, calc((11 + 1 * (var(--md-sys-n) - 5)) * 1px));
   --md-sys-type-field-label: max(9px, calc((9 + 1 * (var(--md-sys-n) - 5)) * 1px));
   --md-sys-type-group-label: max(9px, calc((9 + 0.5 * (var(--md-sys-n) - 5)) * 1px));
+  --md-sys-type-floor: 9px;
   --md-sys-group-margin: calc(var(--md-sys-inset) + var(--md-sys-c));
   --md-sys-group-gutter: var(--md-sys-c);
   --md-sys-group-radius: calc(var(--md-sys-radius) + var(--md-sys-c));
