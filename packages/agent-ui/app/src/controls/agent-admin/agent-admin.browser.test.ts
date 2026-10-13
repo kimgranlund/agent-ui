@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 // GH #849 — the reference typeahead needs REAL keystrokes + the real focus/caret the engine owns.
 import { server, userEvent } from 'vitest/browser'
 
@@ -1184,9 +1185,9 @@ describe('ui-agent-admin cross-engine smoke — min-size-floors census (GH #185 
   })
 })
 
-// ADR-0245 cut: the root register is product/sm at the control's md step, so the inset n is 7
-// (scale.mjs resolve('product', 'sm', 'md').inset), no longer the font-derived 0.5 / 0.75 factors.
-const ROOT_INSET = 7
+// ADR-0245 cut: the root register is product/sm at the control's md step, so the control inset is n 6
+// (scale.mjs resolve('product', 'sm', 'md').control.margin), no longer the font-derived 0.5 / 0.75 factors.
+const ROOT_INSET = resolve('product', 'sm', 'md').control.margin
 
 describe('ui-agent-admin cross-engine smoke — TKT-0049/ADR-0139: entry-content/entry-add-content min-height is driven by ui-code-editor\'s own `rows` lever, not dead agent-admin.css', () => {
   // `--ui-code-editor-min-block-size`'s formula (editor.css): rows × line-box + 2×padding-block, where
@@ -1246,7 +1247,7 @@ describe('ui-agent-admin cross-engine smoke — TKT-0050/TKT-0059/ADR-0139: entr
   // admin.css named a DIFFERENT role — --md-sys-color-neutral-outline-variant — than the one that actually
   // renders — --md-sys-color-neutral, ui-textarea's own idle border token).
   function expectedPadding(field: HTMLElement): { block: number; inline: number } {
-    // editor.css's formula since the ADR-0245 cut: inset n (7, the root register) minus the 1px border, both axes
+    // editor.css's formula since the ADR-0245 cut: the control inset (n 6, the root register) minus the 1px border, both axes
     void field
     return { block: ROOT_INSET - 1, inline: ROOT_INSET - 1 }
   }
