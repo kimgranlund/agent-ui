@@ -1362,22 +1362,22 @@ const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
 }
 
 // The component-mode counterpart to a2ui-mode's A2UI_INITIAL: a per-tag knob-value seed for a control whose
-// OWN descriptor default is not demonstrable (not a design fix — icon.md's `glyph: ''` default is CORRECT, an
+// OWN descriptor default is not demonstrable (not a design fix — icon.md's `symbol: ''` default is CORRECT, an
 // unset icon legitimately renders nothing; this only supplies a DEMO value, same discipline as A2UI_INITIAL
-// never touching the catalog). ui-icon is one fleet member: `glyph` defaults to '' (renders nothing, icon.ts:
+// never touching the catalog). ui-icon is one fleet member: `symbol` defaults to '' (renders nothing, icon.ts:
 // 38-41), so a bare specimen would be an invisible 0×0 box — seeded with a real, shipped Phosphor name so the
 // gallery's whole-shape law (box > 0) has something to measure. ui-grid/ui-field (batch B) seed a legible
 // starting prop value to go with their new sample children (grid-doc.ts's own gap/min; field.md's own default
 // label is '').
 // Wave M1 (ADR-0111/ADR-0113): ui-stat's `label`/`figure` and ui-badge's `label` are real string knobs (not
-// a codec skip), but their descriptor default is '' (blank) — same demonstrability gap as ui-icon's `glyph`
+// a codec skip), but their descriptor default is '' (blank) — same demonstrability gap as ui-icon's `symbol`
 // — so a bare specimen would render an empty tile / an unlabeled dot. ui-disclosure's `summary` is likewise
 // a real string knob defaulting to '' — an unlabeled fold reads as a bare chevron with no affordance text.
 // Wave M1 (ADR-0118): ui-swatch's `color`/`label` are real string knobs (not a codec skip) but default to
-// '' (blank) — the same demonstrability gap as ui-icon's `glyph` — so a bare specimen would render an empty
+// '' (blank) — the same demonstrability gap as ui-icon's `symbol` — so a bare specimen would render an empty
 // transparent box with no name to read.
 const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
-  'ui-icon': { glyph: 'check' },
+  'ui-icon': { symbol: 'check' },
   'ui-glyph': { symbol: 'check' }, // ADR-0245: an empty symbol renders nothing, the ui-icon demonstrability gap
   'ui-grid': { gap: 'md', min: '8rem' },
   'ui-field': { label: 'Email' },
@@ -1443,7 +1443,7 @@ const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
   // empty state) — the same demonstrability gap as ui-badge's `label`/ui-stat's `label` above; an
   // unseeded bare specimen still paints the card outline (a real background/border box), but with no
   // rank/pip/index content at all — uninstructive. Seeded with the Ace of spades, the same "the simplest
-  // representative member" choice ui-icon's `glyph: 'check'` makes.
+  // representative member" choice ui-icon's `symbol: 'check'` makes.
   'ui-playing-card': { rank: 'A', suit: 'spades' },
   // ADR-0243: ui-board-grid defaults to a 0 x 0 board (board-grid.md), so a bare specimen paints nothing.
   // Seeded as the 6x6 board; COMPONENT_SAMPLE_INIT below writes `actionName` and the marked cells.

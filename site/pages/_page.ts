@@ -1228,7 +1228,7 @@ function renderChip(btn: UIButtonElement, glyph: string, label: string, iconOnly
     const icon = document.createElement('ui-icon')
     icon.setAttribute('slot', 'leading')
     icon.setAttribute('data-role', 'icon')
-    icon.setAttribute('glyph', glyph)
+    icon.setAttribute('symbol', glyph)
     btn.append(icon)
     btn.setAttribute('aria-label', label)
   } else {

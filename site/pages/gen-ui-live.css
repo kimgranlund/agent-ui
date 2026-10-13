@@ -33,7 +33,7 @@
   min-inline-size: 0;
   box-sizing: border-box;
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: var(--ui-super-shell-radius, 12px); /* concentric with the shell's own pane/canvas wrapper, GH #253 */
+  border-radius: var(--ui-super-shell-radius, var(--md-sys-widget-radius, 12px)); /* concentric with the shell's own pane/canvas wrapper, GH #253 */
   background: var(--md-sys-color-neutral-surface-low);
   overflow: hidden;
 }
@@ -73,7 +73,7 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   padding: 0.2rem 0.5rem;
-  border-radius: 999px;
+  border-radius: 100vmax;
   color: var(--md-sys-color-primary-on-surface-variant);
   background: var(--md-sys-color-primary-container);
   white-space: nowrap;
@@ -109,7 +109,7 @@
   flex-direction: column;
   gap: 0.15rem;
   padding: 0.45rem 0.7rem;
-  border-radius: 10px;
+  border-radius: var(--md-sys-group-radius, 10px);
   max-inline-size: 92%;
 }
 .msg[data-role='user'] {

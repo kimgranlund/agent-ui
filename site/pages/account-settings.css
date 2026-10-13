@@ -67,7 +67,7 @@ ui-card {
   overflow: hidden;
   margin-block-start: var(--md-sys-space-md);
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: 12px;
+  border-radius: var(--md-sys-widget-radius, 12px);
   background: var(--md-sys-color-neutral-surface-lowest);
 }
 
@@ -126,7 +126,7 @@ ui-card {
 .account-settings-saved-marker {
   flex: none;
   padding-inline: var(--md-sys-space-xs);
-  border-radius: 999px;
+  border-radius: 100vmax;
   background: var(--md-sys-color-primary-container-low);
   color: var(--md-sys-color-primary-high);
   font-size: 0.75rem;
