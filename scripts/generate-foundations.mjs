@@ -116,10 +116,15 @@ export function renderFoundationsCss({ rootDefault = ROOT_DEFAULT } = {}) {
 
 /** M3 size names of the typescale rows -> the size step whose n they read. */
 const M3_SIZE = { small: 'sm', medium: 'md', large: 'lg' }
-/** ui-text's typescale roles (ADR-0078) -> the skill role that derives them (ADR-0245 clause 7). */
+/**
+ * ui-text's typescale roles (ADR-0078) -> the skill role that derives them (ADR-0245 clause 7). `kicker` maps
+ * to the field-label role, not the section kicker: every consumer of the old kicker rows (nav-rail group
+ * labels, gauge and select captions, ui-text itself) is a small uppercase label over a group, 11 / 12 / 14px
+ * today, never an eyebrow above a heading (T-0117; the section-kicker role keeps its own token).
+ */
 const TYPESCALE_ROLE = {
   display: 'display', headline: 'heading', title: 'title', body: 'body', label: 'fieldLabel',
-  kicker: 'sectionKicker', overline: 'groupKicker', lead: 'subhead', quote: 'subhead',
+  kicker: 'fieldLabel', overline: 'groupKicker', lead: 'subhead', quote: 'subhead',
 }
 
 /**

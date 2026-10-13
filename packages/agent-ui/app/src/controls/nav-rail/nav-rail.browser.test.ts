@@ -228,14 +228,15 @@ describe('ui-nav-rail-group — context-label uses the kicker-small typescale ro
     expect(label.textContent, 'the DOM text stays as-authored — uppercase is a transform, not a rewrite').toBe('Components')
 
     const cs = getComputedStyle(label)
-    // kicker-small at the derived root register (foundations-bridge.gen.css, ADR-0245: body-sm 13 * 1.125 rounds
-    // to 15): size 15px, weight 400, tracking 0.2em (GH #370's re-ruled role).
-    expect(Number.parseFloat(cs.fontSize), `${server.browser}: expected the kicker-small 15px register`).toBeCloseTo(15, 0)
+    // kicker-small at the derived root register (foundations-bridge.gen.css, ADR-0245: the kicker rows read the
+    // field-label role, n 6 gives 10px; T-0117, it was 15px while they read the section kicker): size 10px,
+    // weight 400, tracking 0.2em (GH #370's re-ruled role).
+    expect(Number.parseFloat(cs.fontSize), `${server.browser}: expected the kicker-small 10px register`).toBeCloseTo(10, 0)
     expect(cs.fontWeight, `${server.browser}: expected the kicker REGULAR register (GH #370)`).toBe('400')
-    // letter-spacing resolves to px (0.2em of the 15px kicker-small font = 3px) — a real, non-zero
+    // letter-spacing resolves to px (0.2em of the 10px kicker-small font = 2px) — a real, non-zero
     // tracking value, the thing a bare font-size read could never produce. Pinned tightly enough to fail
     // if the role ever slid back to the pre-#370 0.08em (1.2px).
-    expect(Number.parseFloat(cs.letterSpacing), `${server.browser}: expected the 0.2em kicker tracking`).toBeCloseTo(3, 1)
+    expect(Number.parseFloat(cs.letterSpacing), `${server.browser}: expected the 0.2em kicker tracking`).toBeCloseTo(2, 1)
     expect(cs.textTransform, 'GH #370 — casing lives at the consumer, as text.css does it').toBe('uppercase')
   })
 })
