@@ -39,7 +39,7 @@
 :where(ui-bar-chart) {
   --ui-bar-chart-min-inline-size: 16em; /* the whole-shape floor (SPEC-R9 AC1) — never a collapsed sliver */
   --ui-bar-chart-bar-size: 0.5rem; /* bar/track thickness — density-invariant (SPEC-R12) */
-  --ui-bar-chart-bar-radius: 2px;
+  --ui-bar-chart-bar-radius: var(--md-sys-c, 2px);
   --ui-bar-chart-bar-ink: var(--md-sys-color-primary); /* the data-bearing fill — >=3:1 vs surface (WCAG 1.4.11) */
   --ui-bar-chart-track-ink: var(--md-sys-color-neutral-container); /* the decorative rail */
   --ui-bar-chart-text-ink: var(--md-sys-color-neutral-on-surface); /* label/value ink — the ONE role reference (role-pure) */

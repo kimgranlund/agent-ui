@@ -42,7 +42,7 @@
      of box size," not a governed dimensional value. */
   --ui-chart-chip-bg: var(--md-sys-color-neutral-container);
   --ui-chart-chip-fg: var(--md-sys-color-neutral-on-surface);
-  --ui-chart-chip-radius: 999px;
+  --ui-chart-chip-radius: var(--md-sys-height, 999px);
   --ui-chart-chip-pad-inline: var(--md-sys-space-sm);
   --ui-chart-chip-pad-block: var(--md-sys-space-xs);
   --ui-chart-chip-font-size: var(--md-sys-typescale-label-small-size);
