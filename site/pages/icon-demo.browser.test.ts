@@ -41,7 +41,15 @@ describe('icon-demo — real Phosphor icons in real contexts', () => {
     const small = glyphs.find((g) => g.style.fontSize === '1rem')
     const large = glyphs.find((g) => g.style.fontSize === '3rem')
     expect(small && large).toBeTruthy()
-    expect(large!.getBoundingClientRect().width).toBeGreaterThan(small!.getBoundingClientRect().width * 2)
+    // ADR-0245 cl.4 + cl.10e (T-0116): a standalone icon is the derived 2n box (14px) by default, ignoring ambient
+    // font-size; the 1em cell is the data-foundations="legacy" opt-out, which is where the ramp sizes it.
+    const root = document.querySelector('[data-page-content]') as HTMLElement
+    root.setAttribute('data-foundations', 'legacy')
+    try {
+      expect(large!.getBoundingClientRect().width).toBeGreaterThan(small!.getBoundingClientRect().width * 2)
+    } finally {
+      root.removeAttribute('data-foundations')
+    }
   })
 
   it('meaningful icons carry a label; decorative ones do not', async () => {

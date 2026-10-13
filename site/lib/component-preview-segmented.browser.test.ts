@@ -73,6 +73,9 @@ const translateOf = (transform: string): { tx: number; ty: number } => {
   return { tx: parts[4] ?? 0, ty: parts[5] ?? 0 }
 }
 
+// ADR-0245 cut (T-0116): the segment gap is the derived `c` = 2px at the root register (product / sm, n 7), was 0.
+const SEGMENT_GAP = 2
+
 describe('component-preview — batch-A enum knobs render as a real ui-segmented-control (both engines)', () => {
   it('a short 3-member set (ui-button `size`) renders HORIZONTAL: equal-width adjoining cells, no overflow', async () => {
     const preview = await mountPreview('component', 'ui-button')
@@ -94,7 +97,7 @@ describe('component-preview — batch-A enum knobs render as a real ui-segmented
 
     const rects = segments.map((r) => r.getBoundingClientRect())
     for (const r of rects) expect(r.width).toBeCloseTo(rects[0]!.width, 0) // equal-width cells
-    for (let i = 1; i < rects.length; i++) expect(rects[i]!.left).toBeCloseTo(rects[i - 1]!.right, 0) // adjoining, no gap
+    for (let i = 1; i < rects.length; i++) expect(rects[i]!.left).toBeCloseTo(rects[i - 1]!.right + SEGMENT_GAP, 0) // adjoining at the derived segment gap
     // every segment stays within the row's own bounds (no per-cell clipping/overflow either)
     for (const r of rects) {
       expect(r.left).toBeGreaterThanOrEqual(rowRect.left - 1)
@@ -109,7 +112,7 @@ describe('component-preview — batch-A enum knobs render as a real ui-segmented
     expect(seededIndex, 'no segment pre-checked from the seeded size default (md)').toBe(1) // sm=0, md=1, lg=2
     const seededTx = translateOf(before(group).transform).tx
     expect(seededTx, 'the indicator is not positioned over the seeded (md) segment before any click').toBeCloseTo(
-      seededIndex * cellWidth,
+      seededIndex * (cellWidth + SEGMENT_GAP),
       0,
     )
     expect(px(before(group).width), 'the indicator is not sized to one cell').toBeCloseTo(cellWidth, 0)
@@ -120,7 +123,7 @@ describe('component-preview — batch-A enum knobs render as a real ui-segmented
     // pinned at the seeded position, or sized/placed for the wrong cell).
     await expect
       .poll(() => translateOf(before(group).transform).tx, { timeout: 1500 })
-      .toBeCloseTo(2 * cellWidth, 0)
+      .toBeCloseTo(2 * (cellWidth + SEGMENT_GAP), 0)
     const afterTx = translateOf(before(group).transform).tx
     expect(afterTx, 'the indicator did not move off its seeded position — it is pinned').not.toBeCloseTo(seededTx, 0)
     expect(px(before(group).opacity)).toBe(1)
@@ -158,7 +161,7 @@ describe('component-preview — batch-A enum knobs render as a real ui-segmented
       `groupRect.right=${groupRect.right.toFixed(1)} rowRect.right=${rowRect.right.toFixed(1)}`,
     ).toBeLessThanOrEqual(rowRect.right + 1)
     for (const r of rects) expect(r.width).toBeCloseTo(rects[0]!.width, 0) // equal-width cells
-    for (let i = 1; i < rects.length; i++) expect(rects[i]!.left).toBeCloseTo(rects[i - 1]!.right, 0) // adjoining, no gap
+    for (let i = 1; i < rects.length; i++) expect(rects[i]!.left).toBeCloseTo(rects[i - 1]!.right + SEGMENT_GAP, 0) // adjoining at the derived segment gap
     for (const r of rects) {
       expect(r.left).toBeGreaterThanOrEqual(rowRect.left - 1)
       expect(
