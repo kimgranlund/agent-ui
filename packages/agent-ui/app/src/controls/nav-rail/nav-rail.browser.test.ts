@@ -233,7 +233,7 @@ describe('ui-nav-rail-group — context-label uses the kicker-small typescale ro
     // weight 400, tracking 0.2em (GH #370's re-ruled role).
     expect(Number.parseFloat(cs.fontSize), `${server.browser}: expected the kicker-small 9px register`).toBeCloseTo(9, 0)
     expect(cs.fontWeight, `${server.browser}: expected the kicker REGULAR register (GH #370)`).toBe('400')
-    // letter-spacing resolves to px (0.2em of the 9px kicker-small font = 1.8px) — a real, non-zero
+    // letter-spacing resolves to px (0.2em of the 9px kicker-small font = 1.8px), a real, non-zero
     // tracking value, the thing a bare font-size read could never produce. Pinned tightly enough to fail
     // if the role ever slid back to the pre-#370 0.08em (1.2px).
     expect(Number.parseFloat(cs.letterSpacing), `${server.browser}: expected the 0.2em kicker tracking`).toBeCloseTo(1.8, 1)

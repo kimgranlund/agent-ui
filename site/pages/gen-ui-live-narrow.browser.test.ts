@@ -123,7 +123,7 @@ describe('gen-ui-live — GH #260 regression at Kim\'s actual reported geometry 
     // visible and a deliberate scroll is still required.
     const CANVAS_FLOOR = 160
     const preScroll = visibleRect(canvas)
-    expect(preScroll.height, 'pre-scroll, the canvas floor is not yet visible — only a sliver of it, as in the ORIGINAL bug report; a deliberate scroll is required, same as any normal overflowing page').toBeLessThan(CANVAS_FLOOR)
+    expect(preScroll.height, 'pre-scroll, the canvas floor is not yet visible, only a sliver of it as in the ORIGINAL bug report; a deliberate scroll is required, same as any normal overflowing page').toBeLessThan(CANVAS_FLOOR)
 
     // What a real touch/wheel scroll gesture on the page accomplishes.
     middle.scrollTop = middle.scrollHeight
