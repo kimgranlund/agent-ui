@@ -69,6 +69,16 @@ function resolvedBarInset(host: HTMLElement): string {
   return used
 }
 
+/** The USED px of any length custom property where `host` sits (the same probe idiom as above). */
+function resolvedPx(host: HTMLElement, name: string): number {
+  const probe = document.createElement('div')
+  probe.style.paddingInlineStart = `var(${name})`
+  host.append(probe)
+  const used = parseFloat(getComputedStyle(probe).paddingInlineStart)
+  probe.remove()
+  return used
+}
+
 /** Asserts `column` is `min(64rem, region − 2 × --ui-bar-inline-inset)` wide and centred in `region`. The
  *  cap is read off the real root font-size rather than assumed to be 1024px, so a root-size change moves
  *  the expectation with the layout instead of reddening this file. */
@@ -101,17 +111,49 @@ describe('GH #626 — the bar column and the canvas column land on the SAME x', 
     expect(Math.abs(pager.right - appFooter.right), 'pager vs app-footer content-edge right x').toBeLessThanOrEqual(0.5)
   })
 
-  it('the app header insets by the SAME token, one level in from the bar edge (the nav toggle sits outside it)', async () => {
+  // T-0121 (sweep fixes 1 and 4): the header's column IS the app footer's column, below the 64rem cap and
+  // above it. Before, the header row padded the layout margin inside `bar-content`, which starts after
+  // the nav toggle: its text began 46px further in than the footer's, and above the cap it kept spreading
+  // to the frame edges while the footer centred. Now the header BAR carries the column as its own
+  // padding, so its content box spans the footer column's x range at every width, and the two boxed
+  // children at its edges (the nav toggle, the action chips) step out by their own margin n, the
+  // placement rule: their MARGIN EDGE (box edge plus or minus n, where the glyph or label slot starts)
+  // lands on the column's text edge. A text chip's label sits one label margin further in, by the same rule.
+  // Two widths, because either alone passes for the wrong reason: at 700 the column is `region - 2 * inset`
+  // (an inset-only layout also lands there), at 1400 it is the capped, centred 64rem.
+  for (const width of [700, 1400]) {
+    it(`at ${width}px the header's toggle and its last action land on the app footer's column edges`, async () => {
+      mountAt(width)
+      await raf()
+      const column = q('.app-context-footer-inner').getBoundingClientRect()
+      const n = resolvedPx(q('.app-context-header'), '--md-sys-inset')
+      expect(n, 'the control margin n resolves').toBeGreaterThan(0)
+      const toggle = q('[data-part="bar"][data-bar="header"] > [data-part="side-toggle"][data-side="start"]')
+      const glyph = [...toggle.querySelectorAll<HTMLElement>('ui-icon')].find((icon) => getComputedStyle(icon).display !== 'none')!
+      const actions = [...document.querySelectorAll<HTMLElement>('.app-context-actions ui-button')]
+      const last = actions[actions.length - 1]!
+      // anti-vacuous: above the cap the column is genuinely narrower than the frame minus two insets
+      const frame = q('[data-part="frame"]').getBoundingClientRect()
+      const inset = parseFloat(resolvedBarInset(q('.app-context-header')))
+      if (width === 1400) expect(column.left - frame.left, 'above the cap the column is centred, not inset-only').toBeGreaterThan(inset + 1)
+      else expect(Math.abs(column.left - frame.left - inset), 'below the cap the column sits one layout margin in').toBeLessThanOrEqual(0.5)
+      expect(Math.abs(toggle.getBoundingClientRect().left + n - column.left), 'toggle margin edge vs footer column start').toBeLessThanOrEqual(0.5)
+      expect(Math.abs(glyph.getBoundingClientRect().left - column.left), 'the toggle glyph starts ON the footer text edge').toBeLessThanOrEqual(0.5)
+      expect(Math.abs(last.getBoundingClientRect().right - n - column.right), 'last action margin edge vs footer column end').toBeLessThanOrEqual(0.5)
+      // the row itself carries no inline padding any more: the bar owns the column
+      expect(getComputedStyle(q('.app-context-header')).paddingInlineStart, 'header row carries no inline padding').toBe('0px')
+    })
+  }
+
+  it('the content column pads the layout margin on the BLOCK axis too, the same value as its inline inset (T-0121 fix 1)', async () => {
     mountAt(700)
     await raf()
-    // MEASURED, then corrected: the brand does NOT share the pager's x, and asserting that it did would
-    // have been asserting a promise the layout never made. The site authors a nav side, so `bar-content`
-    // is preceded by a 54px side-toggle inside the header bar; the brand starts after it. What IS shared
-    // is the token — `.app-context-header` insets its row by `--ui-bar-inline-inset`, the same term the
-    // pager's column subtracts twice — so that is what this pins.
-    const inset = resolvedBarInset(q('.app-context-header'))
-    expect(getComputedStyle(q('.app-context-header')).paddingInlineStart, 'header row inset').toBe(inset)
-    expect(getComputedStyle(q('.app-context-header')).paddingInlineEnd, 'header row inset (end)').toBe(inset)
+    const content = q('[data-page-content]')
+    const inset = resolvedBarInset(content)
+    const cs = getComputedStyle(content)
+    expect(cs.paddingBlockStart, 'content block-start padding = the layout margin').toBe(inset)
+    expect(cs.paddingBlockEnd, 'content block-end padding = the layout margin').toBe(inset)
+    expect(resolvedPx(content, '--md-sys-layout-margin'), 'and the role IS the layout margin 4n').toBe(parseFloat(inset))
   })
 
   it('the app header row stays vertically CENTRED in its bar (GH #626 review — where the shift was measured)', async () => {

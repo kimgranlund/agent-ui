@@ -83,7 +83,8 @@ decision (dated line in §4).
   control. None of this reopens the "closed" framing above — it's the same steady
   single-control-riding-a-review cadence, just a longer list of reviews.
 - **The shell system — the current center of gravity.** The named-archetype family (ADR-0151):
-  `ui-super-shell`, a two-level recursive rail+pane grammar on an 18px module, with
+  `ui-super-shell`, a two-level recursive rail+pane grammar on the derived level tokens (ADR-0245
+  clause 6; a fixed 18px module before T-0121), with
   `ui-workspace-shell`/`ui-chat-shell` as presets; resizable panes + tab collapse (ADR-0154); the
   responsive band ladder and menu⇄X toggle law (ADR-0155). `ui-app-shell` is **removed** (ADR-0156,
   Option C ruled and ratified; the removal gate closed 2026-07-26 — §4's dated line): the migration

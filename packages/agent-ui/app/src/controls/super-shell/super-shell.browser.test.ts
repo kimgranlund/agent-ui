@@ -110,7 +110,7 @@ function mountFullChrome(): UISuperShellElement {
 
 /** ADR-0166 cl.8 — the same chrome as `mountFullChrome()` MINUS the footer. The one fixture on which a
  *  corner negative control can bite: with only a header authored, the block-START pair squares and the
- *  block-END pair stays `18px`, so a dropped or mis-spelled block-end consumption has something left to
+ *  block-END pair stays `21px` (the card radius 3n), so a dropped or mis-spelled block-end consumption has something left to
  *  take away. On a both-bars fixture every longhand is already `0` and the control is unsatisfiable. */
 function mountHeaderOnly(): UISuperShellElement {
   const el = document.createElement('ui-super-shell') as UISuperShellElement
@@ -151,11 +151,11 @@ describe('ui-super-shell cross-engine smoke — bar radius (GH #253)', () => {
   // stated PER SIDE, because that is what the narrowed ruling actually guarantees. Two traps, both from
   // cl.8:
   //   · the `borderRadius` SHORTHAND is barred here and in super-shell-bar-seam.browser.test.ts —
-  //     `0px 0px 18px 18px` satisfies `not.toBe('0px')` VACUOUSLY;
+  //     `0px 0px 21px 21px` satisfies `not.toBe('0px')` VACUOUSLY;
   //   · the negative control CANNOT live on `mountFullChrome()` — both bars authored means all four
   //     longhands compute `0`, so nothing survives for a mutation to remove and the control is
   //     unsatisfiable by construction. It runs on the HEADER-ONLY fixture below, whose block-END pair
-  //     stays 18px.
+  //     stays 21px.
   it('rail/pane/pane-resizer (floating cards) keep their corners PER SIDE — squared only where a bar is actually flush (ADR-0166 cl.4/cl.5)', () => {
     const el = mountFullChrome() // authors BOTH bars ⇒ cl.5's bottom row: both pairs square
     for (const sel of ['[data-part="rail"]', '[data-part="pane"]', '[data-part="pane-resizer"]']) {
@@ -169,7 +169,7 @@ describe('ui-super-shell cross-engine smoke — bar radius (GH #253)', () => {
     }
   })
 
-  it('#253\'s intent, on the fixture where it can still bite: a HEADER-ONLY shell keeps the block-END pair round (18px) on all three carded parts', () => {
+  it('#253\'s intent, on the fixture where it can still bite: a HEADER-ONLY shell keeps the block-END pair round (21px) on all three carded parts', () => {
     // The negative-control vehicle. Dropping the block-end longhand consumption from the grouped corner
     // rule, or mis-spelling `--ui-super-shell-radius-block-end`, reds here naming
     // `border-end-start-radius` — on `mountFullChrome()` the same mutation reds nothing.
@@ -180,8 +180,8 @@ describe('ui-super-shell cross-engine smoke — bar radius (GH #253)', () => {
       const cs = getComputedStyle(part)
       expect(cs.borderStartStartRadius, `${sel} block-start (flush against the header)`).toBe('0px')
       expect(cs.borderStartEndRadius, `${sel} block-start (flush against the header)`).toBe('0px')
-      expect(cs.borderEndStartRadius, `${sel} block-end (no footer — stays round)`).toBe('18px')
-      expect(cs.borderEndEndRadius, `${sel} block-end (no footer — stays round)`).toBe('18px')
+      expect(cs.borderEndStartRadius, `${sel} block-end (no footer, stays round)`).toBe('21px')
+      expect(cs.borderEndEndRadius, `${sel} block-end (no footer, stays round)`).toBe('21px')
     }
   })
 })

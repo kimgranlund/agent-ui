@@ -77,7 +77,7 @@ keyboard:
 
 geometry:
   sizeClass: container   # container-class sizing via [data-box]; NO control height (--md-sys-height-* is never read)
-  padding: var(--ui-drawer-padding)   # region padding via [data-box] (the region model, not a control dimension)
+  padding: 0   # the dialog shell holds no padding; region padding via [data-box] (--ui-drawer-pad-inline / --ui-drawer-pad-block, the region model, not a control dimension)
   radius: var(--ui-drawer-radius)     # = var(--md-sys-card-radius) 3n under data-tier (ADR-0245 cl.6), var(--md-sys-shape-corner-base) elsewhere; zeroed on the DOCKED edge only
   surface: var(--ui-container-bg) + var(--ui-container-tint)   # the elevation×brightness surface seam (ADR-0015), inherited from the host onto the dialog part
   scrollbarSeam: --ui-drawer-scrollbar-width   # GH #913 — declared `thin` in the token block (the #874/#911 fleet idiom, modal.css precedent verbatim): transparent-at-rest, reveals --ui-drawer-scrollbar-thumb{,-hover} on hover or while the dialog part itself is :focus-within (focus is TRAPPED inside by showModal()); the scroll-fade edge affordance stays a complementary treatment; a consumer repoints to `none`/`auto`

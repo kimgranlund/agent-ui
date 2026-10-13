@@ -72,6 +72,10 @@ ui-theme-provider.app-shell {
   display: flex;
   flex-direction: column;
   block-size: 100dvh;
+  /* T-0121: the reading column's cap, named ONCE. The header bar, the app footer, the page header, the
+     pager and the content column below all read it, so the five boxes cannot drift apart. A content
+     measure, not a level: it stays a rem literal and does not move with n. */
+  --site-page-measure: 64rem;
 }
 
 /* M5 / GH #84 — the ui-super-shell frame fills the provider; everything inside it is the shell's own. */
@@ -165,6 +169,23 @@ ui-theme-provider.app-shell > .site-shell[data-narrow-open='start'] [data-site-n
  * wanting a different seam repoints the token; it does not re-declare the border. */
 ui-theme-provider.app-shell > .site-shell > [data-part='frame'] > [data-part='bar'][data-bar='header'] {
   background: var(--md-sys-color-neutral-surface);
+  /* T-0121 (sweep fixes 1 and 4): the header's content box IS the app footer's column. This is the start
+     edge of `min(measure, 100% - 2 * inset)` centred, written as a padding: percentages resolve against
+     the frame, so at every width the bar's content box spans exactly the x range
+     `.app-context-footer-inner` spans below it. Before this the header row padded the layout margin
+     inside `bar-content`, which starts after the nav toggle, so the row began 46px further in than the
+     footer text and, above the cap, kept spreading to the frame edges while the footer centred.
+     On the BAR, and only this bar: the toggle is the bar's own child, so nothing inside `bar-content`
+     can place it. GH #626's padding-less rail law guards a bar whose content paints a different surface
+     (the footer, below, stays a rail); this bar and its content paint the same one, so no sliver can show. */
+  padding-inline: max(var(--ui-bar-inline-inset), calc((100% - var(--site-page-measure)) / 2));
+}
+
+/* The placement rule (ADR-0245 cl.6): a boxed child at a container edge steps out by its own margin n, so
+   its margin edge (where its glyph or label slot starts) lands on the container's text edge. The header
+   bar has one at each end: the nav toggle and the action chips. */
+ui-theme-provider.app-shell > .site-shell > [data-part='frame'] > [data-part='bar'][data-bar='header'] > [data-part='side-toggle'][data-side='start'] {
+  margin-inline-start: calc(-1 * var(--md-sys-inset));
 }
 
 /* The app top-bar — right column, row 1, fixed (non-scrolling). */
@@ -174,12 +195,9 @@ ui-theme-provider.app-shell > .site-shell > [data-part='frame'] > [data-part='ba
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--md-sys-space-md);
-  /* GH #626 — the bar-content inline inset, read from the fleet role instead of spelled as a ramp stop.
-     Same rendered 24px; what changed is that this row and the page column below it now derive from ONE
-     token, so a repoint moves both. Before #626 the bar added its own 6px on top of this, putting the
-     brand at 30px while the page column started at 24px. */
-  padding-inline: var(--ui-bar-inline-inset);
+  gap: var(--md-sys-layout-gutter); /* the bar is a layout-level row: brand and actions sit one layout gutter apart at least */
+  /* T-0121: NO inline padding here any more. GH #626 moved the inset onto this row; the header BAR now
+     carries the whole column (the rule above), so this row fills `bar-content` edge to edge inside it. */
   padding-block: var(--md-sys-space-sm);
 }
 
@@ -203,6 +221,7 @@ ui-theme-provider.app-shell > .site-shell > [data-part='frame'] > [data-part='ba
   display: flex;
   align-items: center;
   gap: var(--md-sys-space-xs);
+  margin-inline-end: calc(-1 * var(--md-sys-inset)); /* the placement rule: the last chip's margin edge lands on the column edge */
 }
 
 /* The real Theme control's own row — sized to sit flush with the Search placeholder beside it, never
@@ -241,8 +260,8 @@ ui-theme-provider.app-shell > .site-shell > [data-part='frame'] > [data-part='ba
  * of the footer line floating at a different inset from the page body.
  *
  * GH #626 — that promise is now KEPT, and by one shared term. All four rules run the identical formula
- * `min(64rem, 100% - calc(2 * var(--ui-bar-inline-inset)))`, replacing four copies of the literal `3rem`.
- * The cap is unchanged; the inset half is the fleet role. This box is the one of the four that lives
+ * `min(var(--site-page-measure), 100% - calc(2 * var(--ui-bar-inline-inset)))`, replacing four copies of
+ * the literal `3rem`. The cap is the named measure (T-0121); the inset half is the fleet role. This box is the one of the four that lives
  * inside a super-shell bar, and it aligns with the other three only because #626 made that bar a
  * padding-less rail: while the bar owned 6px, this column's `100%` was 12px narrower AND offset 6px, so
  * the footer's text sat 6px right of the pager's directly above it — the misalignment this issue was
@@ -250,13 +269,13 @@ ui-theme-provider.app-shell > .site-shell > [data-part='frame'] > [data-part='ba
  * engine and fails if they diverge, so the alignment is pinned structurally rather than by matching
  * literals nobody can see are matched. */
 .app-context-footer-inner {
-  inline-size: min(64rem, 100% - calc(2 * var(--ui-bar-inline-inset)));
+  inline-size: min(var(--site-page-measure), 100% - calc(2 * var(--ui-bar-inline-inset)));
   margin-inline: auto;
   padding-block: var(--md-sys-space-sm);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--md-sys-space-md);
+  gap: var(--md-sys-layout-gutter);
   font-size: 0.78rem;
   color: var(--md-sys-color-neutral-on-surface-variant);
 }
@@ -337,7 +356,7 @@ ui-theme-provider.app-shell [data-site-nav]::-webkit-scrollbar,
 /* Inner gutter — the header bar spans the column edge-to-edge (background + border), its content constrained to
  * the same reading column as `[data-page-content]`. */
 .page-header-inner {
-  inline-size: min(64rem, 100% - calc(2 * var(--ui-bar-inline-inset))); /* GH #626 — the shared inset half; see .app-context-footer-inner */
+  inline-size: min(var(--site-page-measure), 100% - calc(2 * var(--ui-bar-inline-inset))); /* GH #626: the shared inset half; see .app-context-footer-inner */
   margin-inline: auto;
   padding-block: var(--md-sys-space-md);
   display: flex;
@@ -425,7 +444,7 @@ ui-theme-provider.app-shell [data-site-nav]::-webkit-scrollbar,
 .page-lead {
   /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
   width: 100%;
-  margin: 0 0 1.25rem;
+  margin: 0 0 var(--md-sys-widget-margin);
   max-inline-size: 68ch;
   color: var(--md-sys-color-neutral-on-surface-variant);
   line-height: 1.5;
@@ -436,8 +455,8 @@ ui-theme-provider.app-shell [data-site-nav]::-webkit-scrollbar,
  * ui-button, so the CTA remains a real navigation anchor. */
 .page-cta {
   flex: none;
-  padding: 0.45rem 0.9rem;
-  border-radius: 0.6rem;
+  padding: var(--md-sys-inset) var(--md-sys-widget-margin);
+  border-radius: var(--md-sys-group-radius);
   background: var(--md-sys-color-neutral-inverse-surface);
   color: var(--md-sys-color-neutral-inverse-on-surface);
   font-size: 0.875rem;
@@ -469,7 +488,7 @@ ui-theme-provider.app-shell [data-site-nav]::-webkit-scrollbar,
 
 .page-tabs a {
   display: inline-block;
-  padding: 0.35rem 0.1rem;
+  padding: var(--md-sys-inset) var(--md-sys-c);
   margin-block-end: -1px; /* straddle the header's 1px divider so the active 2px underline sits ON it */
   border-block-end: 2px solid transparent;
   color: var(--md-sys-color-neutral-on-surface-variant);
@@ -500,7 +519,7 @@ ui-theme-provider.app-shell [data-site-nav]::-webkit-scrollbar,
 }
 
 .page-footer-inner {
-  inline-size: min(64rem, 100% - calc(2 * var(--ui-bar-inline-inset))); /* GH #626 — the shared inset half; see .app-context-footer-inner */
+  inline-size: min(var(--site-page-measure), 100% - calc(2 * var(--ui-bar-inline-inset))); /* GH #626: the shared inset half; see .app-context-footer-inner */
   margin-inline: auto;
   padding-block: var(--md-sys-space-sm);
   display: flex;
@@ -541,12 +560,14 @@ ui-theme-provider.app-shell [data-site-nav]::-webkit-scrollbar,
  * scrolls). */
 [data-page-content] {
   flex: 1 0 auto;
-  inline-size: min(64rem, 100% - calc(2 * var(--ui-bar-inline-inset))); /* GH #626 — the shared inset half; see .app-context-footer-inner */
+  inline-size: min(var(--site-page-measure), 100% - calc(2 * var(--ui-bar-inline-inset))); /* GH #626: the shared inset half; see .app-context-footer-inner */
   margin-inline: auto;
   /* Block breathing room so content clears the sticky page-header (top) and page-footer (bottom) instead of
    * butting against them — padding on the scroll-body region, not a margin on the first child the header would
-   * overlap. Reset to 0 on the full-bleed variant below (it owns its region edge-to-edge). */
-  padding-block: var(--md-sys-space-xl);
+   * overlap. Reset to 0 on the full-bleed variant below (it owns its region edge-to-edge). T-0121: the
+   * layout margin 4n, the SAME value as the column's inline inset above (a layout region pads one margin
+   * on both axes; it was the card margin 3n before). */
+  padding-block: var(--md-sys-layout-margin);
 }
 
 /* ── the reading column's DEFAULT prose treatment (GH #1264) ──────────────────────────────────────────────
@@ -630,7 +651,7 @@ ui-theme-provider.app-shell [data-site-nav]::-webkit-scrollbar,
   overflow-x: auto;
   scrollbar-width: none; /* hide the bar — horizontal scroll stays functional */
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: 0.5rem;
+  border-radius: var(--md-sys-group-radius);
   background: var(--md-sys-color-neutral-surface-high);
   color: var(--md-sys-color-neutral-on-surface);
   font-family: var(--md-sys-typeface-mono);
@@ -673,9 +694,9 @@ code {
      it used to be 650) and stays specific only to insulate the name rail from a future change to THIS
      declaration; that file's own comment at the rule explains why it is spelled out rather than deleted. */
   font-weight: 400;
-  padding: 0.1em 0.35em;
+  padding: 0 calc(2 * var(--md-sys-c)); /* the chip level (ui-badge's own pad): text edge 2c */
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: 0.3rem;
+  border-radius: calc(var(--md-sys-radius) / 2); /* the chip radius n/2, ui-badge's */
   background: var(--md-sys-color-neutral-surface-high);
   color: var(--md-sys-color-neutral-on-surface);
   -webkit-box-decoration-break: clone;

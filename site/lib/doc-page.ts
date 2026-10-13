@@ -512,7 +512,7 @@ export function heading(level: number, text: string): HTMLElement {
 /** specimenRow — a wrapping flex row of live specimens (inline layout; a doc page ships no stylesheet of its own). */
 export function specimenRow(children: readonly Node[]): HTMLElement {
   const row = document.createElement('div')
-  row.style.cssText = 'display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap; margin:0.5rem 0 1.5rem;'
+  row.style.cssText = 'display:flex; gap:var(--md-sys-widget-margin); align-items:center; flex-wrap:wrap; margin:var(--md-sys-inset) 0 var(--md-sys-card-margin);' // levels, not rem literals (T-0121): specimens sit a widget margin apart
   row.append(...children)
   return row
 }

@@ -85,7 +85,7 @@ describe('container-box.css — the shared box-model foundation', () => {
 describe('container-box.css — region padding system (header/footer/content: inline 12 · block 6 · gap 8)', () => {
   it('declares the region padding tokens on the card level (ADR-0245 cl.6), today\'s 12 / 6 / 8 as the legacy fallbacks', () => {
     expect(CODE).toMatch(/--ui-box-pad-inline:\s*var\(--md-sys-card-gutter,\s*0\.75rem\)/)
-    expect(CODE).toMatch(/--ui-box-pad-block:\s*var\(--md-sys-inset,\s*0\.375rem\)/)
+    expect(CODE).toMatch(/--ui-box-pad-block:\s*var\(--md-sys-card-gutter,\s*0\.375rem\)/) // T-0121: 2n, the card margin 3n on the block axis too (the legacy 6px fallback is unchanged)
     expect(CODE).toMatch(/--ui-box-gap:\s*var\(--md-sys-card-gutter,\s*0\.5rem\)/)
   })
 
@@ -103,8 +103,8 @@ describe('container-box.css — region padding system (header/footer/content: in
     // L2 = one inset in (concentric with the parent ink) — expressed as an explicit descendant level, NOT a
     // self-referencing custom property (a CSS cycle → invalid). This is the load-bearing correctness point.
     expect(CODE).toMatch(/:where\(\[data-region='content'\],\s*main\)\s*:where\(\[data-region='content'\],\s*main\)\s*\{[^}]*padding-inline:\s*calc\(var\(--ui-box-pad-inline\)\s*-\s*var\(--ui-box-inset\)\)/)
-    // L3+ floor
-    expect(CODE).toMatch(/:where\(\[data-region='content'\],\s*main\)\s*:where\(\[data-region='content'\],\s*main\)\s*:where\(\[data-region='content'\],\s*main\)\s*\{[^}]*padding-inline:\s*var\(--ui-box-pad-block\)/)
+    // L3+ floor: one inset (it read the block-pad token while that equalled the inset; T-0121 made the block pad 2n)
+    expect(CODE).toMatch(/:where\(\[data-region='content'\],\s*main\)\s*:where\(\[data-region='content'\],\s*main\)\s*:where\(\[data-region='content'\],\s*main\)\s*\{[^}]*padding-inline:\s*var\(--ui-box-inset\)/)
   })
 
   it('REVISED 2026-07-04: the region wrappers (header/footer/content/main + [data-region]) are now INSET, not full-bleed', () => {

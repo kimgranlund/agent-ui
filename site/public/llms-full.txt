@@ -933,9 +933,11 @@ consumer.
 ## Region padding + margin — the shared model, uniform across the family (ADR-0046, revised 2026-07-04)
 
 The card itself holds **no** padding (the box-model law). Each region (`ui-card-header` / `ui-card-content` /
-`ui-card-footer`) now reads the **shared** `container-box.css` region model straight — **inline 12px / block
-6px** padding, plus a **6px inset margin** — identical to `ui-modal` and the `ui-select`/`ui-menu`/`ui-combo-box`
-overlay panels. (An earlier card-only 6px-inline override, and a full-bleed-region default, are both **rescinded**
+`ui-card-footer`) now reads the **shared** `container-box.css` region model straight, the card gutter **2n**
+padding on both axes plus an **n inset margin**, so the ink sits the card margin 3n from the frame on every
+side (T-0121; the px figures in this section are the pre-cut values, inline 12px / block 6px padding plus a 6px
+inset margin, which a `data-foundations="legacy"` region still renders), the same region model as `ui-modal`
+and the `ui-select`/`ui-menu`/`ui-combo-box` overlay panels. (An earlier card-only 6px-inline override, and a full-bleed-region default, are both **rescinded**
 by this revision — one spacing vocabulary across the whole container family, restoring ADR-0046's original intent.)
 
 A region is **inset**, not full-bleed: it floats inside the card frame with a uniform 6px gutter (frame↔region

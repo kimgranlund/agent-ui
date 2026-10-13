@@ -43,13 +43,13 @@
      bar at all"). GH #626's `--ui-bar-inline-inset` (24px, the fleet's real-header-content role) shipped
      there anyway, unvalidated against the headerless shape — Kim's live pass caught the result: with
      nothing to track, the strip read visibly deeper-inset than the try-it strip directly below it, which
-     resolves the shell's own generic module-scaled rhythm instead (agent-admin.css's `--ui-agent-admin-
-     shell-gutter`, `module * 2/3`). Split the rule on header presence (the `[data-part='frame']:has(>
+     resolves the shell's own generic gutter rhythm instead (agent-admin.css's `--ui-agent-admin-
+     shell-gutter`, the widget margin 2n). Split the rule on header presence (the `[data-part='frame']:has(>
      [data-bar='header'])` idiom super-shell.css already uses for the SAME fact, GH #380): a header-bearing
      shell tracks the header's own inset (GH #575/#626's law, unchanged); a headerless shell falls back to
-     `--ui-super-shell-module * 2/3` directly — the SAME shared, generic module-derived rhythm agent-
-     admin's own ambient canvas/pane gutter happens to resolve to, without this fleet-shared file reaching
-     into any consumer-private token to get there.
+     the widget margin directly (T-0121; two thirds of the shell's retired 18px module before), the
+     SAME level token agent-admin's own ambient canvas/pane gutter resolves to, without this
+     fleet-shared file reaching into any consumer-private token to get there.
      GH #686's Amendment / S7-c (admin-three-pane-ia.lld.md §16.1/§16.3) — `ui-agent-admin` NOW composes a
      real header (the unified header bar), so the first branch above is live for it too; this rule's own
      narrow-tabs SUBJECT stays moot regardless (the six-entry `narrow-end="tabs"` vocabulary retired with
@@ -60,6 +60,6 @@
     padding-inline: var(--ui-bar-inline-inset);
   }
   :scope [data-part='frame']:not(:has(> [data-bar='header'])) ui-tabs[data-part='narrow-tabs'] {
-    padding-inline: calc(var(--ui-super-shell-module) * 2 / 3);
+    padding-inline: var(--md-sys-widget-margin, 0.75rem);
   }
 }

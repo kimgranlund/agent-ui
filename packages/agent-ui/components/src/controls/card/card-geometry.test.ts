@@ -68,7 +68,7 @@ describe('card.css — padding/gap off the --md-sys-space ladder (Container/layo
     // next test). The shell is plain block flow now — no grid, no --ui-card-gap row-gap (two tests down).
     expect(cardTokens).toMatch(/--ui-card-padding:\s*0/)
     expect(cardTokens).toMatch(/--ui-card-region-pad-inline:\s*var\(--md-sys-card-gutter,\s*var\(--ui-box-pad-inline,/)
-    expect(cardTokens).toMatch(/--ui-card-region-pad-block:\s*var\(--md-sys-inset,\s*var\(--ui-box-pad-block,/)
+    expect(cardTokens).toMatch(/--ui-card-region-pad-block:\s*var\(--md-sys-card-gutter,\s*var\(--ui-box-pad-block,/) // T-0121: the card gutter 2n on the block axis too
     expect(css).not.toMatch(/--md-sys-height-/) // a container has NO control height (geometry.md)
   })
 
@@ -79,14 +79,14 @@ describe('card.css — padding/gap off the --md-sys-space ladder (Container/layo
     expect(cardTokens).not.toMatch(/--ui-box-pad-inline:/)
     expect(cardTokens).not.toMatch(/--ui-box-pad-block:/)
     expect(cardTokens).toMatch(/--ui-card-region-pad-inline:\s*var\(--md-sys-card-gutter,\s*var\(--ui-box-pad-inline,\s*0\.75rem\)\)/)
-    expect(cardTokens).toMatch(/--ui-card-region-pad-block:\s*var\(--md-sys-inset,\s*var\(--ui-box-pad-block,\s*0\.375rem\)\)/)
+    expect(cardTokens).toMatch(/--ui-card-region-pad-block:\s*var\(--md-sys-card-gutter,\s*var\(--ui-box-pad-block,\s*0\.375rem\)\)/)
     // the shared container-box.css defaults are untouched (12px inline / 6px block, since the 2026-07-04 revision)
     const sharedCss = readFileSync(
       `${process.cwd()}/packages/agent-ui/components/src/controls/_surface/container-box.css`,
       'utf8',
     ) as string
     expect(sharedCss).toMatch(/--ui-box-pad-inline:\s*var\(--md-sys-card-gutter,\s*0\.75rem\)/) // ADR-0245 cl.6, 12px under legacy
-    expect(sharedCss).toMatch(/--ui-box-pad-block:\s*var\(--md-sys-inset,\s*0\.375rem\)/) // 6px under legacy
+    expect(sharedCss).toMatch(/--ui-box-pad-block:\s*var\(--md-sys-card-gutter,\s*0\.375rem\)/) // 2n derived (T-0121), 6px under legacy
   })
 
   it('REVISED 2026-07-04: a region is now INSET — the block-flow shell gives every region a uniform 6px margin', () => {

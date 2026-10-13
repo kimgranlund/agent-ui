@@ -40,7 +40,7 @@ describe('modal.css — structure + sectioning (s9)', () => {
     // ui-modal is an OPAQUE plane — it repoints the container base default (transparent) to a surface role.
     expect(tokenBlock).toMatch(/--ui-container-bg:\s*var\(--md-sys-color-neutral-surface\)/)
     // the own chain (consumed role-pure in @scope) declared from roles + dimensions
-    for (const slot of ['ink', 'outline', 'radius', 'padding', 'scrim']) {
+    for (const slot of ['ink', 'outline', 'radius', 'scrim']) {
       expect(tokenBlock).toMatch(new RegExp(`--ui-modal-${slot}:`))
     }
     // TKT-0019 — black 80% opacity (Kim-specified), NOT the generated --md-sys-color-neutral-scrim (too light);
@@ -49,7 +49,9 @@ describe('modal.css — structure + sectioning (s9)', () => {
     // GH #1554 — the own-chain blur dial (opacity alone cannot defeat arbitrarily high-contrast page content).
     expect(tokenBlock).toMatch(/--ui-modal-scrim-blur:\s*\d/)
     expect(tokenBlock).toMatch(/--ui-modal-radius:\s*var\(--md-sys-card-radius,\s*var\(--md-sys-shape-corner-base\)\)/) // the shared fleet radius
-    expect(tokenBlock).toMatch(/--ui-modal-padding:\s*var\(--md-sys-card-margin,\s*var\(--md-sys-space-/) // the density-responsive layout spacing
+    // T-0121: `--ui-modal-padding` was declared and never consumed (the dialog is `padding: 0`; its regions
+    // pad through the --ui-modal-box-* tokens). The dead token is deleted and must not come back.
+    expect(css).not.toMatch(/--ui-modal-padding/)
   })
 
   it('NO control height — the modal shell never reads --md-sys-height-* (geometry.md Pattern/container class)', () => {

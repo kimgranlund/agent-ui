@@ -45,9 +45,13 @@
    *   inline 12px · block 6px · gap 8px.
    * A NESTED content steps its INLINE padding IN by one inset (6px) per level (12 → 6 → 6…, floored), so a
    * content-inside-content stays concentric with its parent's ink: parent inline-pad 12 = child inset margin 6
-   * + child inline-pad 6. Block padding + gap stay constant at every level. */
+   * + child inline-pad 6. Block padding + gap stay constant at every level.
+   * T-0121 (ADR-0245 cl.6): the card margin 3n holds on ALL sides, so the block padding is the card gutter 2n
+   * like the inline one (inset n + pad 2n = 3n to the ink on both axes; it was n, a 2n block text edge). The
+   * px figures in this file's older notes are the pre-cut values, which a `[data-foundations='legacy']`
+   * region still reads through the fallbacks. */
   --ui-box-pad-inline: var(--md-sys-card-gutter, 0.75rem); /* 2n, so inset + pad = the card margin 3n (ADR-0245 cl.6); 12px before the cut */
-  --ui-box-pad-block: var(--md-sys-inset, 0.375rem); /* n; 6px before the cut — region block padding */
+  --ui-box-pad-block: var(--md-sys-card-gutter, 0.375rem); /* 2n, so inset + pad = the card margin 3n on the block axis too; 6px before the cut, region block padding */
   --ui-box-gap: var(--md-sys-card-gutter, 0.5rem); /* the card gutter 2n; 8px before the cut — gap between a region's own children */
 
   /* Edge-aware scroll fade (below) — the depth of the mask band at a faded edge. Density-linked (like the
@@ -103,9 +107,10 @@
 /* content — the region between the brackets: a column of stacked children with the 8px region gap. The INLINE
    padding steps IN one inset per NESTING level so a content-inside-content stays concentric with its parent's
    ink (parent 12 = child inset-margin 6 + child pad 6). Expressed as explicit descendant levels rather than a
-   self-referencing custom property (which CSS treats as a cycle → invalid): L1 12 · L2 6 · L3+ 6 (the block-pad
-   floor — L2 and the floor now coincide, since the inset and the block-pad token are both 6px). Three levels
-   covers real nesting; deeper content stays at the 6px floor. */
+   self-referencing custom property (which CSS treats as a cycle → invalid): L1 12 · L2 6 · L3+ 6 (the inset
+   floor, L2 and the floor coincide: both are one inset). Three levels covers real nesting; deeper content
+   stays at the one-inset floor. The floor read the block-pad token while that equalled the inset; T-0121
+   made the block pad 2n, so the floor names the inset itself. */
 :where([data-region='content'], main) {
   box-sizing: border-box; /* same missing-declaration class as the header/footer rule above — confirmed
                               live on this exact selector (modal-demo.html), the report that found it */
@@ -123,7 +128,7 @@
   padding-inline: calc(var(--ui-box-pad-inline) - var(--ui-box-inset)); /* L2 = 6px (12 − 6) */
 }
 :where([data-region='content'], main) :where([data-region='content'], main) :where([data-region='content'], main) {
-  padding-inline: var(--ui-box-pad-block); /* L3+ floor = 6px */
+  padding-inline: var(--ui-box-inset); /* L3+ floor = one inset (n) */
 }
 
 /* Every direct child carries the uniform inset margin (→ 6px from the edges, 6px between siblings) — INCLUDING

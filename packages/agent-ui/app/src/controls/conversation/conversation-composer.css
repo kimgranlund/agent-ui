@@ -69,8 +69,16 @@
   /* SPEC-R11c/AC19 (spacing-drift gate): the STYLES block below never reads --md-sys-space-* directly
      inside @scope (TKT-0066 item 5) — it mints these role-named tokens here and consumes THOSE. */
   --ui-conversation-composer-stack-gap: var(--md-sys-space-sm); /* the host's own chips/editor/options column rhythm */
-  --ui-conversation-composer-pad-inline: var(--md-sys-space-md); /* the host frame's horizontal inset (vertical stays its own 0.65rem — no ladder rung) */
+  --ui-conversation-composer-pad-inline: var(--md-sys-space-md); /* the host frame's horizontal inset */
+  --ui-conversation-composer-pad-block: var(--md-sys-space-md); /* the host frame's vertical inset: the same group margin n + c (T-0121; a 0.65rem literal before) */
   --ui-conversation-composer-options-gap: var(--md-sys-space-sm); /* the options row's own leading/trailing spread */
+  /* T-0121: the chip row and the chips' own box, off the space aliases (rem literals before). A chip pads the
+     group margin at its text edge and n beside its dismiss, whose glyph sits c inside its own box: both ink
+     edges land n + c from the chip's edge. */
+  --ui-conversation-composer-chips-gap: var(--md-sys-space-sm); /* between chips in the row, and inside the options row's two groups */
+  --ui-conversation-composer-chip-gap: var(--md-sys-space-sm); /* label to dismiss, inside one chip */
+  --ui-conversation-composer-chip-pad: var(--md-sys-space-xs) var(--md-sys-space-sm) var(--md-sys-space-xs) var(--md-sys-space-md); /* block c, dismiss side n, text side n + c */
+  --ui-conversation-composer-reference-chip-pad: var(--md-sys-space-xs) var(--md-sys-space-sm); /* block c, inline n: a reference chip may lead with an icon */
 
   /* GH #849 — the reference typeahead panel (SPEC-R7's control-created [role=listbox] popover) + the
      committed-reference chips. Surface roles mirror ui-menu's own panel exactly (neutral-surface +
@@ -140,7 +148,7 @@
     /* FILL BY DEFAULT (ADR-0223 cl.1/2 — slice 1, the entry family): the default host carries NO
        intrinsic width — the container is the floor. The ADR-0021 20ch typing-width floor moved to
        the `[inline]` hug leg below (clause 3(b)). */
-    padding: 0.65rem var(--ui-conversation-composer-pad-inline);
+    padding: var(--ui-conversation-composer-pad-block) var(--ui-conversation-composer-pad-inline);
     background: var(--ui-conversation-composer-bg);
     color: var(--ui-conversation-composer-ink);
     border: 1px solid var(--ui-conversation-composer-border);
@@ -234,13 +242,13 @@
   [data-part='context-chips']:not([hidden]) {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.35rem;
+    gap: var(--ui-conversation-composer-chips-gap);
   }
   [data-part='context-chip'] {
     display: flex;
     align-items: center;
-    gap: 0.3rem;
-    padding: 0.15rem 0.3rem 0.15rem 0.55rem;
+    gap: var(--ui-conversation-composer-chip-gap);
+    padding: var(--ui-conversation-composer-chip-pad);
     border-radius: var(--md-sys-height, 999px); /* pill: 4n in a data-tier region, never under half the chip's height */
     background: var(--ui-conversation-composer-chip-bg);
     font-size: 0.72rem;
@@ -249,8 +257,8 @@
   }
   [data-part='context-chip-dismiss'],
   [data-part='reference-chip-dismiss'] {
-    --ui-button-height: 0.875rem;
-    --ui-button-icon: 0.625rem;
+    --ui-button-height: var(--md-sys-icon-box, 0.875rem); /* 2n: the dismiss sits in an icon box */
+    --ui-button-icon: var(--md-sys-glyph-box, 0.625rem); /* 2n - 2c: its mark */
   }
   /* GH #1211 — the OPTIONAL secondary line (`ContextItem.description`, e.g. a file size or extraction
      state). Absent on every pre-#1211 chip (`#syncContextChips` never creates this part then), so this
@@ -279,8 +287,8 @@
   [data-part='reference-chip'] {
     display: flex;
     align-items: center;
-    gap: 0.3rem;
-    padding: 0.15rem 0.3rem 0.15rem 0.45rem;
+    gap: var(--ui-conversation-composer-chip-gap);
+    padding: var(--ui-conversation-composer-reference-chip-pad);
     border-radius: var(--md-sys-height, 999px); /* pill — the context-chip rule's own value, deliberately shared */
     background: var(--ui-conversation-composer-reference-chip-bg);
     font-size: 0.72rem;
@@ -497,7 +505,7 @@
   [data-part='options-trailing'] {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: var(--ui-conversation-composer-chips-gap);
   }
   /* An empty leading cell (neither picker enabled) collapses rather than reserving dead space — the
      `justify-content: space-between` above still puts the trailing group flush right. */

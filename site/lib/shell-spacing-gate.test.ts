@@ -2,8 +2,11 @@ import { describe, it, expect } from 'vitest'
 // shell-spacing-gate.test.ts — AC19 (SPEC-R11c/AC19, .claude/docs/spec/shell-archetypes-m5.spec.md
 // §10 · "AC19 (extends §6) — the spacing-drift gate"): a raw px/rem literal in a spacing- or
 // box-dimension declaration, across the named shell-family sheet set, that numerically equals a
-// shipped ladder rung (an R11a module multiple or a --md-sys-space-* value at density 1) IS drift,
-// never coincidence — it silently forks that box off every future token retune (density, module).
+// shipped ladder rung IS drift, never coincidence, it silently forks that box off every future
+// retune of n. T-0121 (ADR-0245 cl.6) repointed the ladder: it was the shell's fixed 18px module
+// multiples plus --md-sys-space-* at density 1, and is now the derived LEVELS at the root register
+// (c, n, the group, widget, card and layout margins and gutters, the control height 4n) plus the
+// shell's own n multiples (bar 8n, floors 24n, pane 36n), all computed from scale.mjs.
 // This deterministic, browser-free test (plain `npm test`, no browser needed — it reads CSS source
 // as text) holds the count at the AC19 baseline. A future red here reads as law, not lint noise.
 //
@@ -21,10 +24,12 @@ import { describe, it, expect } from 'vitest'
 // mint written with raw literals (`--ui-x: 0.5rem 0.75rem`) matched neither of round 1's whole-value
 // regexes and passed unseen — the arm split catches it, scanning each dimension-shaped arm on its
 // own (var() arms, fallback included, stay excluded — GH #213's fallback-exclusion rule held
-// consistent in multi-value position). So `calc(var(--ui-super-shell-module) / 3)` passes (no
-// literal arm), `calc(0.375rem * 2)` fails, and `0.5rem 0.75rem` now fails on BOTH arms.
+// consistent in multi-value position). So `calc(var(--md-sys-layout-margin) * 9)` passes (no
+// literal arm), `calc(0.4375rem * 2)` fails, and `0.4375rem 0.875rem` fails on BOTH arms.
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
+import { resolve as derive, CFG } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
+import type { Resolved, Step, Tier } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
 declare const process: { cwd(): string }
 
 const ROOT = process.cwd()
@@ -86,16 +91,33 @@ const SPACING_PROPERTIES = new Set([
   'min-inline-size', 'max-inline-size', 'min-block-size', 'max-block-size',
 ])
 
-// The two ladders AC19(b) tests a literal against, both realized at their SHIPPED rungs only (16px
-// root, density 1 — the only density any shipped app renders under).
-const MODULE_PX = 18 // --ui-super-shell-module = 1.125rem (super-shell.css's token block, R11a)
-const MODULE_MULTIPLES = [1 / 3, 2 / 3, 1, 3, 9, 14] // ×2 is deliberately absent — no shipped rung (R11c)
-const SPACE_PX_DENSITY_1 = [4, 8, 12, 16, 24, 32] // --md-sys-space-* at density 1 (dimensions.css)
-const LADDER_PX = [...new Set([...MODULE_MULTIPLES.map((m) => MODULE_PX * m), ...SPACE_PX_DENSITY_1])]
+// The ladder AC19(b) tests a literal against: the derived levels realized at the ROOT REGISTER, the
+// one every shipped shell renders under unless a region re-registers (16px root font for the rem
+// literals). The register is read off foundations.gen.css's own `:root` rule, the cut's default
+// (ADR-0245 cl.2), never restated here, so the ladder moves with the next anchor change.
+function rootRegister(): Resolved {
+  const css = readFileSync(`${ROOT}/packages/agent-ui/shared/src/tokens/foundations.gen.css`, 'utf8') as string
+  const rule = /^:root \{([^}]*)\}/m.exec(css)?.[1] ?? ''
+  const num = (name: string): number => Number(new RegExp(`--md-sys-${name}:\\s*(-?[\\d.]+)`).exec(rule)?.[1])
+  const row = [num('tier-n0'), num('tier-a'), num('tier-k'), num('tier-g')]
+  const tier = (Object.keys(CFG.tiers) as Tier[]).find((t) => CFG.tiers[t].every((v, i) => v === row[i]))
+  const scale = ({ '-1': 'sm', '0': 'md', '1': 'lg' } as Record<string, Step>)[String(num('scale-s'))]
+  if (!tier || !scale) throw new Error(`shell-spacing-gate: no tier/scale matches the :root rule (${rule.trim()})`)
+  return derive(tier, scale)
+}
+const REGISTER = rootRegister()
+const LEVEL_PX = [
+  REGISTER.c, REGISTER.inset, REGISTER.h,
+  ...[REGISTER.group, REGISTER.widget, REGISTER.card, REGISTER.layout].flatMap((l) => [l.margin, l.gutter]),
+]
+const SHELL_N_MULTIPLES = [8, 24, 36] // super-shell.css's token block: bars and rails 8n, the floors 24n, panes 36n
+const LADDER_PX = [...new Set([...LEVEL_PX, ...SHELL_N_MULTIPLES.map((m) => m * REGISTER.n)])]
 
-// AC19(c) — the allowlist: an explicit (file, declaration, reason) list. At landing, exactly ONE
-// entry — R11c's resizer thickness. Growing it is a reviewed act, never a drive-by (R11c). GH #213
-// appends a second entry (below) for the custom-property predicate's own one necessary exception.
+// AC19(c), the allowlist: an explicit (file, declaration, reason) list. Growing it is a reviewed act,
+// never a drive-by (R11c). It is EMPTY since T-0121: its two entries were the shell module's own root
+// literal (`--ui-super-shell-module: 1.125rem`, a declaration that no longer exists) and the pane-resizer's
+// 4px ink (`0.25rem`), which equalled the old --md-sys-space-xs rung and equals no derived level, so it
+// no longer needs an exception. The mechanism stays for the next reviewed entry.
 interface AllowlistEntry {
   file: string
   selectorContains: string
@@ -103,35 +125,7 @@ interface AllowlistEntry {
   literal: string
   reason: string
 }
-const ALLOWLIST: AllowlistEntry[] = [
-  {
-    // GH #214 — the resizer's hit-box is now `--ui-super-shell-gap` (a var(), no literal); the
-    // 4px INK thickness moved from `inline-size` into a `padding-inline` calc arm (centers the ink
-    // within the gap-sized hit-box) — same file, same selector, same literal, same reason, only the
-    // property field follows the literal to its new declaration. (Kim's glyph-on-ladder sanction,
-    // 2026-07-23, would let this literal chain to `var(--md-sys-space-xs)` instead and drop off the
-    // allowlist entirely — a follow-up, not this wave's change.)
-    file: 'packages/agent-ui/app/src/controls/super-shell/super-shell.css',
-    selectorContains: "[data-part='pane-resizer']",
-    property: 'padding-inline',
-    literal: '0.25rem',
-    reason:
-      "SPEC-R11c's one AC19 exception — the pane-resizer's visible INK thickness (GH #214: the hit-box " +
-      "itself is the gap-sized `--ui-super-shell-gap`, no literal there — only the centered ink stays this " +
-      'value) is a control dimension that coincides with --md-sys-space-xs numerically, not semantically.',
-  },
-  {
-    file: 'packages/agent-ui/app/src/controls/super-shell/super-shell.css',
-    selectorContains: ':where(ui-super-shell)',
-    property: '--ui-super-shell-module',
-    literal: '1.125rem',
-    reason:
-      "GH #213 — R11a's own ROOT definition: the module IS the 18px origin of the entire ladder " +
-      '("the head of super-shell.css\'s token block"), so there is no var() to chain it to — its ' +
-      'own literal spelling is the one lawful exception, mirrored from this same allowlist\'s ' +
-      'resizer-thickness precedent.',
-  },
-]
+const ALLOWLIST: AllowlistEntry[] = []
 
 interface Declaration {
   file: string
@@ -192,7 +186,31 @@ function declarationsOf(file: string, raw: string): { decls: Declaration[]; text
 
 const LITERAL_RE = /(-?\d*\.?\d+)(px|rem)\b/g
 
-function literalsOf(value: string): { token: string; px: number }[] {
+// T-0121: the fallback of a foundations token is not a mint. `var(--md-sys-c, 2px)` is ADR-0245
+// cl.10a's dark-launch form: the token carries the value, and the literal after the comma is the
+// pre-cut value kept for a `[data-foundations='legacy']` region (cl.10e), where the token is unset.
+// It belongs to that token, not to this declaration (the GH #213 fallback rule, applied to the
+// foundations' own namespace wherever the var() sits, a calc() arm included). Blanked, never removed,
+// so every offset holds. A fallback of any OTHER var() is still scanned.
+function withoutFoundationFallbacks(value: string): string {
+  let out = value
+  for (let i = out.indexOf('var(--md-sys-'); i !== -1; i = out.indexOf('var(--md-sys-', i + 1)) {
+    let depth = 0
+    let comma = -1
+    let end = -1
+    for (let j = i + 3; j < out.length; j++) {
+      if (out[j] === '(') depth++
+      else if (out[j] === ')' && --depth === 0) { end = j; break }
+      else if (out[j] === ',' && depth === 1 && comma === -1) comma = j
+    }
+    if (end === -1) break
+    if (comma !== -1) out = out.slice(0, comma) + ' '.repeat(end - comma) + out.slice(end)
+  }
+  return out
+}
+
+function literalsOf(raw: string): { token: string; px: number }[] {
+  const value = withoutFoundationFallbacks(raw)
   const hits: { token: string; px: number }[] = []
   for (const m of value.matchAll(LITERAL_RE)) {
     const num = parseFloat(m[1]!)
@@ -283,8 +301,30 @@ describe('AC19 — the shell-family spacing-literal drift gate (SPEC-R11c/AC19)'
     expect(missing, missing.join(', ')).toEqual([])
   })
 
-  it('the allowlist carries exactly TWO entries after the GH #213 follow-up append (R11c — growing it further is a reviewed act, never a drive-by)', () => {
-    expect(ALLOWLIST.length).toBe(2)
+  it('the allowlist is EMPTY since T-0121 retired the module (R11c, growing it is a reviewed act, never a drive-by)', () => {
+    expect(ALLOWLIST.length).toBe(0)
+  })
+
+  it('the ladder is the derived levels at the root register, read from scale.mjs (anti-vacuous)', () => {
+    // n at the root register comes off foundations.gen.css's own :root rule; every level is a multiple of it.
+    const n = REGISTER.n
+    expect(n, 'the root register resolves to an n on the ladder').toBeGreaterThanOrEqual(CFG.ladder[0])
+    for (const px of [REGISTER.c, n, n + REGISTER.c, 2 * n, 3 * n, 4 * n, 8 * n, 24 * n, 36 * n]) {
+      expect(LADDER_PX, `${px}px is a rung`).toContain(px)
+    }
+    // the retired 18px module is no rung of its own any more (it survives only where it equals a level)
+    if (18 % n !== 0) expect(LADDER_PX).not.toContain(18)
+  })
+
+  it('a rung-equal literal FAILS and a foundations fallback passes (negative controls)', () => {
+    const rem = (px: number): string => `${px / 16}rem`
+    const margin = REGISTER.widget.margin
+    const hits = (value: string): number[] => literalsOf(value).map((h) => h.px).filter((px) => LADDER_PX.some((l) => Math.abs(px - l) < 0.01))
+    expect(hits(`calc(${rem(margin)} * 2)`), 'a raw level literal in a calc arm is drift').toEqual([margin])
+    expect(hits(`${REGISTER.inset}px ${rem(REGISTER.layout.margin)}`), 'both arms of a two-value mint').toEqual([REGISTER.inset, REGISTER.layout.margin])
+    expect(hits(`calc(var(--ui-x) - var(--md-sys-c, ${REGISTER.c}px))`), "a foundations token's own fallback is not a mint").toEqual([])
+    expect(hits(`var(--ui-x, ${rem(margin)})`), 'a fallback of any other var() is still scanned').toEqual([margin])
+    expect(hits('calc(var(--md-sys-layout-margin) * 9)'), 'a level token with a unitless multiplier has no literal').toEqual([])
   })
 
   it('no raw px/rem literal in a spacing-/box-dimension declaration, OR in a minted --ui-* custom-property value, equals a shipped ladder rung, unless allowlisted', () => {

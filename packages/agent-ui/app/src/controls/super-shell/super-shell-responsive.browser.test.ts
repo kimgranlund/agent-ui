@@ -127,15 +127,15 @@ describe('ui-super-shell — SPEC-R9 toggle affordance law (AC15/AC16)', () => {
   it('AC16 overlay cap: at 320px the open overlay clamps to calc(100cqi - bar-size - overlay-inset), so a canvas edge stays visible', async () => {
     const el = mount({ width: 320, narrowStart: 'collapse' }) // narrow band, default collapse-band
     // Pane default is 252px < 320, so a `width < 320` pin would pass with OR without the cap (vacuous). Push
-    // the pane's own size ABOVE the ~254px clamp (320cqi − 54px bar − 12px floating inset) so the cap rule is
-    // genuinely load-bearing: uncapped the overlay would be 300px; the cap must pull it to ~254px.
+    // the pane's own size ABOVE the ~250px clamp (320cqi − 56px bar − 14px floating inset) so the cap rule is
+    // genuinely load-bearing: uncapped the overlay would be 300px; the cap must pull it to ~250px.
     el.style.setProperty('--ui-super-shell-pane-size', '300px')
     const toggle = startToggle(el)
     toggle.click(); await settle(el)
     const width = startSide(el).getBoundingClientRect().width
     expect(width, 'the cap clamped the overlay BELOW its own 300px pane-size (deleting the cap would leave it at 300)').toBeLessThan(280)
-    expect(Math.round(width), 'clamped to ~calc(100cqi - bar-size - overlay-inset) = 320 - 54 - 12 = 254px').toBeGreaterThan(248)
-    expect(Math.round(width)).toBeLessThanOrEqual(258)
+    expect(Math.round(width), 'clamped to ~calc(100cqi - bar-size - overlay-inset) = 320 - 56 - 14 = 250px').toBeGreaterThan(244)
+    expect(Math.round(width)).toBeLessThanOrEqual(254)
   })
 
   it('the mixed-arm compact probe: a compact shell with a STACK start side keeps a VISIBLE menu-glyph toggle at 45rem (its line is 40rem, not 52.5rem)', async () => {
@@ -165,11 +165,11 @@ describe('ui-super-shell — SPEC-R9 toggle affordance law (AC15/AC16)', () => {
     await settle(el)
     const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
     const canvasRect = canvas.getBoundingClientRect()
-    // --ui-super-shell-canvas-min-block-size = 9 modules × 1.125rem = 10.125rem = 162px at the default
-    // 16px root font (SPEC-R15b) — a DEDICATED block-size floor, independent from the inline-size
+    // --ui-super-shell-canvas-min-block-size = six layout margins = 24n = 168px at the root register
+    // (SPEC-R15b; nine 18px modules, 162px, before T-0121), a DEDICATED block-size floor, independent from the inline-size
     // `--ui-super-shell-canvas-min-size` token (F4 fix: reusing that one would have silently turned
     // agent-admin.css's 16rem WIDTH override into an unrelated 256px HEIGHT floor there).
-    expect(canvasRect.height, 'canvas keeps its 162px floor even against a wildly oversize stacked sibling').toBeGreaterThanOrEqual(161)
+    expect(canvasRect.height, 'canvas keeps its 168px floor even against a wildly oversize stacked sibling').toBeGreaterThanOrEqual(167)
   })
 
   it('GH #260 — narrow-stack: canvas\'s floor is genuinely REACHABLE through an outer overflow:hidden ancestor (the real-page hazard), not just present in the DOM', async () => {
@@ -213,12 +213,12 @@ describe('ui-super-shell — SPEC-R9 toggle affordance law (AC15/AC16)', () => {
     const visibleTop = Math.max(canvasRect.top, clipRect.top)
     const visibleBottom = Math.min(canvasRect.bottom, clipRect.bottom)
     const visibleHeight = Math.max(0, visibleBottom - visibleTop)
-    expect(visibleHeight, 'canvas\'s floor is genuinely visible THROUGH the outer clip once scrolled, not just present in the DOM').toBeGreaterThanOrEqual(161)
+    expect(visibleHeight, 'canvas\'s floor is genuinely visible THROUGH the outer clip once scrolled, not just present in the DOM').toBeGreaterThanOrEqual(167)
   })
 })
 
 describe('ui-super-shell — floating overlay margin (shell-polish wave, S2): the pane floats popover-style instead of docking flush to the middle row', () => {
-  const OVERLAY_INSET = 12 // px — --ui-super-shell-overlay-inset = module(18px) × 2/3, at the default 16px root font
+  const OVERLAY_INSET = 14 // px: --ui-super-shell-overlay-inset = the widget margin 2n, at the root register (n 7)
   const TOLERANCE = 2 // px — cross-engine (chromium/webkit) subpixel-rounding slack
 
   const middlePart = (el: UISuperShellElement): HTMLElement => el.querySelector('[data-part="middle"]') as HTMLElement
@@ -298,8 +298,8 @@ describe('ui-super-shell — floating overlay margin (shell-polish wave, S2): th
 })
 
 describe('ui-super-shell — GH #778: a rail+pane side overlays as a COMPOSED PAIR, never a stack (the end-side popover overlap)', () => {
-  const OVERLAY_INSET = 12 // px — --ui-super-shell-overlay-inset = module(18px) × 2/3
-  const BAR_SIZE = 54 // px — --ui-super-shell-bar-size = module(18px) × 3 (the rail's own width)
+  const OVERLAY_INSET = 14 // px: --ui-super-shell-overlay-inset = the widget margin 2n (n 7 at the root register)
+  const BAR_SIZE = 56 // px: --ui-super-shell-bar-size = height 4n + two widget margins = 8n (the rail's own width)
   const TOLERANCE = 2 // px — cross-engine subpixel-rounding slack
 
   const middlePart = (el: UISuperShellElement): HTMLElement => el.querySelector('[data-part="middle"]') as HTMLElement

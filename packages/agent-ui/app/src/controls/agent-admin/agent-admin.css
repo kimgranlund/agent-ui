@@ -21,13 +21,12 @@
  *       config panel/Surface Options/Context tabs) — `ui-agent-admin` is the extraction's first CONSUMER
  *       now (ADR-0164 cl.7), composing `../entry-list/entry-list.ts`'s section shell rather than owning
  *       its markup or CSS. TWO deliberate exceptions, both on the SAME `ui-super-shell { ... }` rule:
- *       (a) `--ui-agent-admin-shell-gutter` mints a `--ui-agent-admin-*` token by chaining off
- *       `--ui-super-shell-module` — it can't live in the [1] TOKEN BLOCK instead (CSS custom properties
- *       inherit strictly downward; that module token is declared only on `ui-super-shell` itself, a
- *       DESCENDANT of `ui-agent-admin` — see that rule's own comment for the full mechanics + the
- *       regression that proved it), and this is SPEC-R11b's cited boundary-alias precedent: a
- *       cross-family length mints ONE named alias per role on the composed shell element, never a raw
- *       `--ui-super-shell-module` read at the consuming selector; (b) the R6c floor-token repoint
+ *       (a) `--ui-agent-admin-shell-gutter` mints a `--ui-agent-admin-*` token on the composed shell
+ *       element. It reads the widget margin 2n (T-0121; it chained off the shell's retired 18px module
+ *       before, which is why it was first declared there and not in the [1] TOKEN BLOCK), and this is
+ *       SPEC-R11b's cited boundary-alias precedent: a cross-family length mints ONE named alias per role
+ *       on the composed shell element, never a raw level read at each consuming selector; (b) the R6c
+ *       floor-token repoint
  *       (`--ui-super-shell-canvas-min-size`/`-pane-min-size`) moved down here from the [1] TOKEN
  *       BLOCK for the SIBLING reason — `:where(ui-super-shell)` unconditionally re-declares its OWN
  *       default for those same two names, and a directly-matching declaration on an element always beats
@@ -163,29 +162,24 @@
      `min-block-size: 0` fill the available block space (the standard flex-overflow guard, the
      master-detail.css precedent); no `[hidden]` guard is needed — the shell is never toggled, it owns its
      own responsive collapse.
-     SPEC-R1c-derived (every shell dimension chains off the ONE `--ui-super-shell-module`): the padded
-     gutter this consumer wants on BOTH of the shell's content-holding siblings, `[data-part='canvas']`
-     and `[data-part='pane']` below. `* 2 / 3` reproduces the old 0.75rem literal unchanged, so this is a
-     law fix, not a visual change.
+     T-0121 (ADR-0245 cl.6): the padded gutter this consumer wants on the shell's content-holding
+     parts (the header row, `[data-part='pane']` and the panels below) is the WIDGET MARGIN 2n, the same
+     level token the shell's own overlay inset reads. It was two thirds of the shell's 18px module (a fixed
+     12px) before the module retired; it is 14px at the root register and moves with n.
      THIS rule is the file banner's ONE remaining deliberate exception to "styles block consumes ONLY
-     --ui-agent-admin-*" — and it can't move to the [1] TOKEN BLOCK: `--ui-super-shell-module` is
-     declared only on `:where(ui-super-shell)` (super-shell.css), a DESCENDANT of `ui-agent-admin`.
-     Custom properties inherit strictly downward — a var() reference resolves using whatever is
-     inherited AT ITS OWN DECLARING ELEMENT, not at wherever it's later consumed. Minting this alias in
-     the ancestor-scoped token block (`:where(ui-agent-admin)`) computes it BEFORE `--ui-super-shell-module`
-     exists anywhere in the inherited chain, so the calc() is invalid there and that guaranteed-invalid
-     value is what inherits down — proven by a real cross-engine 0px regression when tried. Declaring it
-     here, on the composed `ui-super-shell` instance itself (the SAME element super-shell.css's own
-     `--ui-super-shell-module` lives on), lets it resolve correctly once and then inherit normally to
-     every consuming part below — ONE definition, DRY, instead of duplicating a calc() at each
-     call site (SPEC-R11b — the boundary-alias pattern; this rule IS R11b's cited precedent). ADR-0164
-     cl.4 retired this rule's SECOND former alias, `--ui-agent-admin-compact-gap`: its only consumers
-     (entry/entry-add-form's internal gap) moved to `../entry-list/entry-list.css`, which mints its own
-     standalone `--ui-entry-list-compact-gap` (no `--ui-super-shell-module` dependency needed there). */
+     --ui-agent-admin-*". The alias was first minted here because the module it chained off lived only on
+     the composed `ui-super-shell`, a DESCENDANT of `ui-agent-admin` (a var() resolves at its own
+     declaring element, so an ancestor-scoped mint computed to nothing, proven by a real cross-engine 0px
+     regression). The level token resolves on any element, so that constraint is gone; the declaration
+     stays here so its site does not move under the parts that read it: ONE definition instead of a
+     level read at each call site (SPEC-R11b: the boundary-alias pattern; this rule IS R11b's cited
+     precedent). ADR-0164 cl.4 retired this rule's SECOND former alias, `--ui-agent-admin-compact-gap`:
+     its only consumers (entry/entry-add-form's internal gap) moved to `../entry-list/entry-list.css`,
+     which mints its own standalone `--ui-entry-list-compact-gap`. */
   :scope > ui-super-shell {
     flex: 1 1 auto;
     min-block-size: 0;
-    --ui-agent-admin-shell-gutter: calc(var(--ui-super-shell-module) * 2 / 3);
+    --ui-agent-admin-shell-gutter: var(--md-sys-widget-margin, 0.75rem);
     /* min-size-floors census (GH #185 follow-up) — moved down from the [1] TOKEN BLOCK's
        `:where(ui-agent-admin)`, where it silently never won: `--ui-super-shell-canvas-min-size`/
        `-pane-min-size` ALSO have a default declared directly on `:where(ui-super-shell)`
@@ -212,7 +206,7 @@
   }
 
   /* GH #1260 (Kim's 2026-08-18 ruling) — EDGE-TO-EDGE PANEL IA. This rule used to read `padding:
-     var(--ui-agent-admin-shell-gutter)` (GH #686/#665's outer gutter — the SAME 12px rhythm as the
+     var(--ui-agent-admin-shell-gutter)` (GH #686/#665's outer gutter, the SAME rhythm as the
      pane-holder's inter-column gap below). Kim's ruling REVERSES that gutter design by name: the three
      regions meet the shell's edges (and each other) flush — the page-background strips the gutter left
      along the shell's start side + block-end (the "light hairline on dark" #1260 was filed on: `surface`
@@ -433,7 +427,7 @@
      the composed `ui-super-shell` above for the shared-ancestor mechanics: this line must fire at the
      IDENTICAL real pixel moment the pane holder's own 52.5rem line does. GH #1260 (Kim's 2026-08-18
      ruling) RE-DERIVED it from 54rem to 52.5rem: the constant was `SHELL_COMPACT_BREAKPOINT` (52.5rem)
-     PLUS one `shell-gutter` (0.75rem) per side, and the canvas padding that gutter came from is now 0 —
+     PLUS one `shell-gutter` (then 0.75rem) per side, and the canvas padding that gutter came from is now 0,
      the shell's inline-size IS the holder's inline-size, so the two queries share one number again
      (`agent-admin.browser.test.ts` measures both lines against the same mounts). The retired pane-nav bar
      used this line to HIDE itself entirely at wide; S7-c reuses the SAME line for a different purpose —
@@ -1160,7 +1154,7 @@
     list-style: disc;
   }
   [data-part='receipt-list'] > li {
-    margin-block: 0.125rem;
+    margin-block: var(--md-sys-c, 0.125rem);
   }
   [data-part='receipt-list'] [data-part='receipt-link'] {
     min-block-size: 0;

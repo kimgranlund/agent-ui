@@ -654,8 +654,8 @@ export class UISuperShellElement extends UIElement {
       this.#dragBaseline = {
         pane: pane.getBoundingClientRect().width,
         canvasAvail: canvas.getBoundingClientRect().width,
-        paneMin: this.#resolvePx('--ui-super-shell-pane-min-size', 162),
-        canvasMin: this.#resolvePx('--ui-super-shell-canvas-min-size', 162),
+        paneMin: this.#resolvePx('--ui-super-shell-pane-min-size', 168),
+        canvasMin: this.#resolvePx('--ui-super-shell-canvas-min-size', 168),
       }
       // GH #185 (parity gap a) — mirrors split.ts's #applyPointerDelta exactly: armed on the drag's
       // first live move (baseline null → set), cleared on commit below. super-shell.css's
@@ -685,7 +685,8 @@ export class UISuperShellElement extends UIElement {
     }
   }
 
-  /** Arrow keys step by one module (SPEC-R6b); Home/End jump straight to the resolved bounds (R6c) —
+  /** Arrow keys step by one inter-card gap, the layout gutter 3n (SPEC-R6b; the retired 18px module's
+   *  successor, T-0121); Home/End jump straight to the resolved bounds (R6c),
    *  each keypress is both the live update and the commit in one atomic action (the ui-split keyboard
    *  precedent), so no drag baseline is needed here. Growing the END pane is the physical MIRROR of
    *  growing the START pane (dragging the end separator LEFT grows it, matching #onResize's own
@@ -698,19 +699,19 @@ export class UISuperShellElement extends UIElement {
     const growsRight = side === 'start' ? !rtl : rtl
     const growKey = growsRight ? 'ArrowRight' : 'ArrowLeft'
     const shrinkKey = growsRight ? 'ArrowLeft' : 'ArrowRight'
-    const module = this.#resolvePx('--ui-super-shell-module', 18)
+    const step = this.#resolvePx('--ui-super-shell-gap', 21)
     const current = pane.getBoundingClientRect().width
     const baseline = {
       pane: current,
       canvasAvail: canvas.getBoundingClientRect().width,
-      paneMin: this.#resolvePx('--ui-super-shell-pane-min-size', 162),
-      canvasMin: this.#resolvePx('--ui-super-shell-canvas-min-size', 162),
+      paneMin: this.#resolvePx('--ui-super-shell-pane-min-size', 168),
+      canvasMin: this.#resolvePx('--ui-super-shell-canvas-min-size', 168),
     }
 
     let next: number | null = null
     switch (event.key) {
-      case growKey: next = current + module; break
-      case shrinkKey: next = current - module; break
+      case growKey: next = current + step; break
+      case shrinkKey: next = current - step; break
       case 'Home': next = -Infinity; break // clamp drives it straight to the pane minimum
       case 'End': next = Infinity; break // clamp drives it straight to the pane maximum
       default: return
@@ -765,8 +766,8 @@ export class UISuperShellElement extends UIElement {
       const baseline = {
         pane: paneWidth,
         canvasAvail: canvas.getBoundingClientRect().width,
-        paneMin: this.#resolvePx('--ui-super-shell-pane-min-size', 162),
-        canvasMin: this.#resolvePx('--ui-super-shell-canvas-min-size', 162),
+        paneMin: this.#resolvePx('--ui-super-shell-pane-min-size', 168),
+        canvasMin: this.#resolvePx('--ui-super-shell-canvas-min-size', 168),
       }
       sep.setAttribute('aria-valuenow', String(Math.round(paneWidth)))
       sep.setAttribute('aria-valuemin', String(Math.round(baseline.paneMin)))

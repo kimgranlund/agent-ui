@@ -37,7 +37,7 @@
  * ui-chat-shell is already display:flex/flex-direction:column from chat-shell.css — we only frame it. */
 ui-chat-shell.cs-demo {
   block-size: 23.75rem;
-  margin-block: var(--md-sys-space-lg) 1.75rem;
+  margin-block: var(--md-sys-space-lg) var(--md-sys-layout-margin);
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
   border-radius: var(--md-sys-widget-radius, 12px);
   overflow: hidden;

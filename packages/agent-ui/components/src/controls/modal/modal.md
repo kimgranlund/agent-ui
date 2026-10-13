@@ -70,7 +70,7 @@ keyboard:
 
 geometry:
   sizeClass: pattern      # geometry.md Pattern band — the shell spaces off the container levels and --md-sys-space (generated over n); NO control height (--md-sys-height-* is never read)
-  padding: var(--ui-modal-padding)   # = var(--md-sys-card-margin) 3n under data-tier (ADR-0245 cl.6, card level: region margin n + pad 2n), var(--md-sys-space-lg) elsewhere
+  padding: 0   # the dialog shell holds no padding; its [data-box] regions pad through --ui-modal-box-inset / --ui-modal-box-pad-inline / --ui-modal-box-pad-block (ADR-0245 cl.6, card level: region margin n + inline pad 2n)
   radius: var(--ui-modal-radius)     # = var(--md-sys-card-radius) 3n under data-tier, var(--md-sys-shape-corner-base) elsewhere (ADR-0015 cl.5)
   surface: var(--ui-container-bg) + var(--ui-container-tint)   # the elevation×brightness surface seam (ADR-0015), inherited from the host onto the dialog part
   scrollbarSeam: --ui-modal-scrollbar-width   # GH #913 — declared `thin` in the token block (the #874/#911 fleet idiom): transparent-at-rest, reveals --ui-modal-scrollbar-thumb{,-hover} on hover or while the dialog part itself is :focus-within (focus is TRAPPED inside by showModal(), so no sibling/host proxy is needed); the scroll-fade edge affordance stays a complementary treatment; a consumer repoints to `none`/`auto`

@@ -52,6 +52,10 @@
      compat; nothing in THIS file's @scope reads it anymore. */
   --ui-conversation-bubble-pad: var(--md-sys-space-sm) var(--md-sys-space-md);
   --ui-conversation-mounts-gap: var(--md-sys-space-sm);
+  /* T-0121: the turn's own small rhythms, off the space aliases (rem literals in @scope before). */
+  --ui-conversation-turn-gap: var(--md-sys-space-sm); /* label to bubble, and between a bubble's own children; the annotation and the wire block sit the same n below */
+  --ui-conversation-disclosure-margin-block-start: var(--md-sys-space-xs); /* the wire disclosure hugs the turn: c */
+  --ui-conversation-reference-tag-pad: var(--md-sys-space-xs) var(--md-sys-space-sm); /* one sent reference tag: block c, inline n */
   --ui-conversation-composer-inset: var(--md-sys-space-md);
   /* GH #291/ADR-0160 clause 3 — the settled-turn action-chip row. */
   --ui-conversation-actions-gap: var(--md-sys-space-xs);
@@ -114,7 +118,7 @@
   [data-part='turn'] {
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
+    gap: var(--ui-conversation-turn-gap);
     max-inline-size: 92%;
   }
   [data-part='turn'][data-role='user'] {
@@ -134,7 +138,7 @@
   [data-part='bubble'] {
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
+    gap: var(--ui-conversation-turn-gap);
     padding: var(--ui-conversation-bubble-pad);
     border-radius: var(--ui-conversation-bubble-radius);
   }
@@ -363,7 +367,7 @@
     content: none;
   }
   [data-part='annotation'] {
-    margin: 0.3rem 0 0;
+    margin: var(--ui-conversation-turn-gap) 0 0;
     font-size: 0.72rem;
     font-style: italic;
     color: var(--ui-conversation-ink-variant);
@@ -371,7 +375,7 @@
 
   /* The per-turn wire disclosure (ADR-0129 clause 3, opt-in via `disclosure`). */
   [data-part='disclosure'] {
-    margin-block-start: 0.15rem;
+    margin-block-start: var(--ui-conversation-disclosure-margin-block-start);
     font-size: 0.72rem;
   }
   [data-part='disclosure'] > summary {
@@ -379,7 +383,7 @@
     color: var(--ui-conversation-ink-variant);
   }
   [data-part='wire'] {
-    margin-block-start: 0.35rem;
+    margin-block-start: var(--ui-conversation-turn-gap);
     max-block-size: 16rem;
     overflow: auto;
     scrollbar-width: var(--ui-conversation-scrollbar-width, auto); /* consumer-inherited seam (split-pane.css's own note) — deliberately NOT self-declared */
@@ -412,7 +416,7 @@
     display: flex;
     align-items: center;
     gap: var(--ui-conversation-reference-tag-gap);
-    padding: 0.1rem 0.4rem;
+    padding: var(--ui-conversation-reference-tag-pad);
     border-radius: var(--md-sys-height, 999px); /* pill (4n in a data-tier region: never under half the tag's height) — the composer chip's own value, deliberately shared across the two surfaces */
     background: var(--ui-conversation-reference-tag-bg);
     color: var(--ui-conversation-reference-tag-ink);
