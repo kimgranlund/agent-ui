@@ -1,17 +1,20 @@
 # Dimensional standard — bringing every component up to corpus §0/§2
 
-> **Status: SUPERSEDED (historical), 2026-06-30.** This 2026-06-14 note established the dimensional
-> **producer→consumer wiring** (consume `--ui-{cmp}-height`/`-font` not ad-hoc sizing; block-size not
-> block-padding; load the token sheet first) — that wiring rationale **still holds**. But three of its
-> *specifics* are superseded; do not read them as current (each flagged inline below):
-> 1. the **fallback ramp literals** (`28·32·36` heights / `12·13·14` fonts) → the landed control ramp is
->    **`24·28·36` / `13·14·16`** ([`geometry-sizing-spec.md`](./geometry-sizing-spec.md) §1: SM 24/13 · MD 28/14 · LG 36/16);
-> 2. the **inline-pad formula** (`2px + height × 0.375 × density`) → the **v4 slot model** (`h/2` slotless
->    value edge / `½(h − icon)` slotted; **density on the gap, not the pad**), geometry-sizing-spec.md §1.5 / [`geometry.md`](./geometry.md);
-> 3. the **scale-as-discrete-TIER** framing (`ui-{sm,md,lg}` / `content-{sm,md,lg}`) → the **numeric
->    `--ui-scale` multiplier on `*`** (ADR-0007); the per-component `size` prop (sm/md/lg) is unchanged.
+> **Status: SUPERSEDED (historical), 2026-06-30; the ramp and tier notes re-pointed 2026-10-13 at the ADR-0245 cut.**
+> This 2026-06-14 note established the dimensional **producer→consumer wiring** (consume
+> `--ui-{cmp}-height`/`-font` not ad-hoc sizing; block-size not block-padding; load the token sheet first)
+> and that wiring rationale **still holds**. Its specifics do not; do not read them as current (each is
+> flagged inline below):
+> 1. the **fallback ramp literals** (`28·32·36` heights / `12·13·14` fonts) and the later hand-tabled
+>    `24·28·36` / `13·14·16` ramp: every size now derives from one n (`height = 4n`, root sm / md / lg =
+>    **24 / 28 / 32**), see [`geometry-sizing-spec.md`](./geometry-sizing-spec.md) §1 and ADR-0245;
+> 2. the **inline-pad formula** (`2px + height × 0.375 × density`): controls pad in n (a field `n`, a pill
+>    button `2n` beside a label, `n` beside an icon), see [`geometry.md`](./geometry.md);
+> 3. the **scale-as-tier framing** (`ui-{sm,md,lg}` / `content-{sm,md,lg}` `[scale]`, then the numeric
+>    `--ui-scale` multiplier): `[scale]` and `[density]` retired into the `data-tier` and `data-scale`
+>    region axes (ADR-0245 cl.2); the per-component `size` prop (sm/md/lg) is unchanged and is z.
 >
-> **Current authorities:** sizing law + ramp = [`geometry-sizing-spec.md`](./geometry-sizing-spec.md) v4 (resolved law: [`geometry.md`](./geometry.md)) · scale model = ADR-0007 · type scale = `--md-sys-typescale-{role}-{size}-*` (ADR-0078, supersedes ADR-0025's `--ui-type-*`) · compact-window body register = the body `-size` column drops 1px below **`52.5rem`/840px** (ADR-0150 — the ONE viewport-responsive token override; the breakpoint is a documented LITERAL, not tokenizable — custom properties are invalid in media-query conditions; a second use repeats it verbatim and cites ADR-0150). Retained for wiring history only.
+> **Current authorities:** sizing law + derivation = [`geometry-sizing-spec.md`](./geometry-sizing-spec.md) (resolved law: [`geometry.md`](./geometry.md)) · foundations = ADR-0245 (one n, `foundations.gen.css`) · type = the derived `--md-sys-type-*` roles behind `ui-text`'s unchanged nine variants (ADR-0245 cl.7; ADR-0078's axes stand, ADR-0150's compact-window drop is superseded). Retained for wiring history only.
 
 **Goal.** Wire the scale/size/density dimensional system *through* every `ui-*` element so
 heights, font-sizes, and inline-padding actually respond to `scale` / `size` / `density`.
@@ -28,9 +31,9 @@ demos/barrels. The system is currently decorative. This standard connects produc
 - **`scale × size → {height, font-size, indicator}`** (§2.1-2.2). `scale` (tier: `ui-{sm,md,lg}` /
   `content-{sm,md,lg}`, default `ui-md` at `:root`) publishes the table rows
   `--ui-{height,font,ind}-{sm,md,lg}`. `size` (component: sm/md/lg, **default md**) picks the row.
-  *(SUPERSEDED — note 3: `scale` is no longer a discrete tier; it is the **numeric `--ui-scale` multiplier on `*`**, ADR-0007. `size` is unchanged.)*
+  *(SUPERSEDED, note 3: `[scale]` retired into the `data-tier` and `data-scale` region axes, ADR-0245. `size` is unchanged.)*
 - **Inline-padding is *derived* from height** (§2.4): `2px + height × 0.375 × density`.
-  *(SUPERSEDED — note 2: replaced by the v4 slot model — `h/2` slotless / `½(h − icon)` slotted, density on the gap. See geometry-sizing-spec.md §1.5 / geometry.md.)*
+  *(SUPERSEDED, note 2: replaced by n-based padding, ADR-0245. See geometry-sizing-spec.md §1.5 / geometry.md.)*
 - **Density** (§2.4): `comfortable` 1 (default) · `compact` 0.75 · `spacious` 1.25 — multiplies
   inline spacing (inline-padding/margins/gaps) **only**, never height/font.
 - **Pure-CSS cascade** (§0): `scale`/`size`/`density` are CSS attribute selectors, no JS / no
@@ -50,9 +53,9 @@ demos/barrels. The system is currently decorative. This standard connects produc
 
 ### Control-class — `{cmp}-tokens.css` (in `:where(ui-{cmp})`)
 > *SUPERSEDED — note 1 (literals) + note 2 (formula): the `32/28/36`px height + `13/12/14`px font fallbacks
-> below are the OLD ramp — the landed control ramp is **`24·28·36` heights / `13·14·16` fonts** (SM·MD·LG,
-> geometry-sizing-spec.md §1); and the `2px + height·0.375·density` pad is the OLD formula (now the v4 slot
-> model). The recipe SHAPE (consume `--ui-{cmp}-height`/`-font`, block-size not block-padding) is still valid.*
+> below are the OLD ramp; the root ramp is now derived, **24 / 28 / 32** heights (SM·MD·LG,
+> geometry-sizing-spec.md §1); and the `2px + height·0.375·density` pad is the OLD formula (now n-based
+> padding). The recipe SHAPE (consume `--ui-{cmp}-height`/`-font`, block-size not block-padding) is still valid.*
 ```css
 :where(ui-button) {
   --ui-button-height:     var(--ui-height-md, 32px);

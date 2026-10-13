@@ -136,9 +136,9 @@ geometry:
   sizeClass: pattern     # three-class composite: editor = Control-class; panel = Container/surface; options = item-pad rows
   posture: fill (block-level `grid` host, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-grid + hug   # Fill by Default — slice 1 (entry family)
   editor:
-    blockSize: var(--ui-combo-box-height)  # = var(--md-sys-height-md) — Control-class height (the trigger field)
-    font: var(--ui-combo-box-font)         # = var(--md-sys-font-md) — matches the control tier font
-    paddingInline: var(--ui-combo-box-padding-inline)  # = h/2 (calc(var(--ui-combo-box-height) / 2)) — the fleet Control-class value-edge standard (2026-07-06, was --md-sys-space-sm)
+    blockSize: var(--ui-combo-box-height)  # = var(--md-sys-height) 4n (--md-sys-height-md bridge alias until W7) — Control-class height (the trigger field)
+    font: var(--ui-combo-box-font)         # = var(--md-sys-type-control) (--md-sys-font-md bridge alias until W7) — matches the control type
+    paddingInline: var(--ui-combo-box-padding-inline)  # = n (--md-sys-inset, ADR-0245 cl.3; h/2 is the legacy fallback) — the fleet Control-class value-edge standard
     radius: var(--ui-combo-box-radius)     # = var(--md-sys-shape-corner-base) — shared fleet radius
     minInlineSize: var(--ui-combo-box-min-inline-size) # 20ch floor, ACTIVE IN THE [inline] HUG STATE ONLY (ADR-0223 cl.3(b), superseding ADR-0021's default-state placement) — the fill default needs no floor
   panel:
@@ -146,13 +146,13 @@ geometry:
     radius: var(--ui-combo-box-panel-radius)  # = var(--md-sys-shape-corner-base)
     minInlineSize: var(--ui-combo-box-panel-min-inline-size)  # 12rem panel collapse floor
     maxBlockSize: var(--ui-combo-box-panel-max-block-size) (scrolls) # PUBLIC dial (TKT-0027), default min(50vh, calc(12 * var(--ui-combo-box-height) + 13 * var(--ui-combo-box-listbox-padding) + 2px)) — 12 real option rows (the row-height law makes a row == --ui-combo-box-height exactly) + their insets + the panel's own 2px border (box-sizing: border-box) or half the viewport, whichever is smaller; was a flat 40vh (REVISED 2026-07-04: before that, `overflow: hidden`, unbounded/unscrollable) — gets the shared edge-aware scroll-fade by default (traits/scroll-fade.ts, container-box.css)
-    padding: var(--ui-combo-box-listbox-padding)  # = editor-padding-inline/2 = h/4 — DERIVED off the editor ramp (2026-07-06), same mechanism as ui-select
+    padding: var(--ui-combo-box-listbox-padding)  # = c (--md-sys-c, ADR-0245 cl.3; editor-padding-inline/2 is the legacy fallback), same mechanism as ui-select
   options:
-    sizeClass: legacy item-pad (ROV-C5 / §4.6/5.1) — numbers DERIVED off the editor ramp (2026-07-06), superseding the fixed --md-sys-space-xs/sm px
+    sizeClass: legacy item-pad (ROV-C5 / §4.6/5.1) — numbers DERIVED off the editor's n (ADR-0245), superseding the fixed --md-sys-space-xs/sm px
     paddingBlock: var(--ui-combo-box-option-padding-block)    # = (editor height − option font)/2 — row height == editor height
-    paddingInline: var(--ui-combo-box-option-padding-inline)  # = editor-padding-inline/2 = h/4 — pairs with panel padding to total h/2 exactly (the alignment law), same as ui-select (2026-07-06 follow-up: the editor's own padding-inline is now h/2, was --md-sys-space-sm)
+    paddingInline: var(--ui-combo-box-option-padding-inline)  # = c-based, pairs with panel padding so option text aligns under the editor edge (the alignment law), same as ui-select
     font: var(--ui-combo-box-option-font)  # = --ui-combo-box-font (was size-blind; bug fix)
-    note: ui-combo-box has NO `[size]` attribute today (structural divergence from ui-select, flagged not forced) — these tokens are ramp-DERIVED so a future `[size]` addition (its own ADR/decomp) would repoint them for free
+    note: ui-combo-box has NO `[size]` attribute today (structural divergence from ui-select, flagged not forced) — these tokens are n-DERIVED so a future `[size]` addition (its own ADR/decomp) would repoint them for free
 
 forcedColors: A `@media (forced-colors: active)` block maps the editor to Field/FieldText/FieldText border and the panel to Canvas/CanvasText. The active-descendant highlight paints Highlight/HighlightText (with forced-color-adjust:none to preserve it). The focus ring inherits the Highlight system colour via --md-sys-color-focus-ring.
 ---

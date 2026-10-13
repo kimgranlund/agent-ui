@@ -98,9 +98,9 @@ keyboard: []           # NOT interactive and NOT focusable — no tabindex, no k
 
 geometry:
   sizeClass: display
-  minInlineSize: var(--ui-line-chart-min-inline-size)  # 16em default — the whole-shape floor; NO [size] ramp, NO --md-sys-height-* (Display class); UNCHANGED by `axes`
+  minInlineSize: var(--ui-line-chart-min-inline-size)  # 16em default — the whole-shape floor; NO [size] n rule, NO --md-sys-height (Display class); UNCHANGED by `axes`
   minBlockSize: var(--ui-line-chart-min-block-size)    # 9em default — room for both label rows + a real plot area (default state) or the plot+chrome overlay (axes state)
-  rowGap: var(--ui-line-chart-row-gap)                 # the density-RESPONSIVE label<->plot rhythm (default state only — `axes` is a one-cell overlay, no row-gap)
+  rowGap: var(--ui-line-chart-row-gap)                 # the scale-RESPONSIVE label<->plot rhythm (default state only — `axes` is a one-cell overlay, no row-gap)
 
 forcedColors: DEFAULT state — no dedicated block — the line/area are `currentColor` stroke/fill, resolving to whatever forced ink the consuming context already resolves to; the baseline is the SAME `currentColor` stroke at a reduced `--ui-line-chart-baseline-opacity` (opacity is not a color property — WHCM never flattens it). The gradient-filled area (`variant="area"`, both states) flattens to a solid `CanvasText` fill — a paint-server is not currentColor-resolvable under WHCM. AXES state additionally flattens gridlines/now-marker to system inks and chips to a bordered `Canvas`/`CanvasText` pill (the `ui-column-chart` precedent). The min/max labels (default state) are plain text and survive untouched.
 ---

@@ -27,7 +27,7 @@ is `ui-button` (G5).
 
 | # | Dimension | Type | What it checks | 1 → 3 → 5 (anchors name the evidence) |
 |---|---|---|---|---|
-| C6 | Geometry & the law | [gate] | `block-size` off the ramp, `padding-block: 0`, slotless inline-pad `= h/2`, slot edge-pad `= ½(h−icon)`, gap `= font/2`; subtree `[scale]`/`[density]` recompute (ADR-0007) | 1: block-padding for height, or a magic-number pad · 3: the static geometry probes green (`padding-block==0`; edge-pad formula; `0<glyph≤box`) · 5: + the cross-engine smoke proves subtree `[scale]`/`[density]` recompute (gap changes, frame holds) per the law — geometry is *measured*, not asserted |
+| C6 | Geometry & the law | [gate] | `block-size` off the derived height (`4n`), `padding-block: 0`, padding, gap, radius, icon box (`2n`) and glyph box (`2n−2c`) all formulas of the control's one n (ADR-0245); a subtree `data-tier` / `data-scale` / `size` recomputes n | 1: block-padding for height, a px literal, or a hand-tabled ramp read · 3: the static geometry probes green (`padding-block==0`; the class's n formula; `0<glyph≤box`; a pin against `resolve()` at sm, md and lg) · 5: + the cross-engine smoke proves a subtree `data-scale` / `data-tier` recompute (height, padding, icon and glyph boxes move together) per the law — geometry is *measured*, not asserted |
 | C7 | Behaviour & semantics | [gate] | Space/Enter→`click` via `pressActivation`; disabled fully inert; native-parity `click`; role/ARIA via `internals` only; light DOM | 1: `role`/`aria-*` on the host, or disabled still activates · 3: activation + disabled-inert + click probes green; `aria`-internals-only probe green · 5: + the keyboard path matches a native button (Space on keyup, Enter on keydown, scroll suppressed) and the trait is disabled-aware end-to-end |
 | C8 | Styling & tokens | [gate] | `@scope (ui-{name})` consuming **only** `--ui-{name}-*`; tokens declared in `:where()` from `--md-sys-color-{family}-{role}` roles; survives `forced-colors: active`; **no intent by color alone** — any rule keyed on an intent role has a co-carried visible non-color signifier (best-practices / ADR-0057) | 1: raw primitive refs, or styles leak outside `@scope` · 3: `@scope` + tokens-in-`:where()` probes green; a `forced-colors` block exists · 5: + the forced-colors survival is proven in a real engine (the ink/affordance does not vanish), every `--ui-{name}-*` resolves from a role, never a literal, and each intent-keyed rule names its non-color co-signifier |
 | C9 | Cross-engine fidelity | [gate] | The browser-truth smoke is green in **Chromium AND WebKit** — the anti-vacuous geometry assertions + forced-colors | 1: jsdom-only, no real-engine proof · 3: the smoke runs and is green in Chromium · 5: green in **both** Chromium and WebKit, anti-vacuous both ways (`[size]`/`[scale]` change px on both variants; `[density]` changes the gap AND the bare frame holds) |
@@ -50,8 +50,8 @@ contract trip-wire are the deterministic half).
 ## Class lens — the **Display** control class (ui-text)
 
 The C1–C10 anchors above are written against the reference control `ui-button`, a **Control**-class
-*frame-bearing* control: it has a frame — a `--ui-height-*` box, `padding-block: 0`, the slot/slotless edge-pad
-formula, the geometry law (`geometry.md`). The entry-control (`text-field`) and container-control (`card`/`row`/
+*frame-bearing* control: it has a frame, a `4n` height box (`--md-sys-height`), `padding-block: 0`, the
+n-based padding rule, the geometry law (`geometry.md`). The entry-control (`text-field`) and container-control (`card`/`row`/
 `column`) classes are likewise frame-bearing — they carry a frame's quantities (radius, surface, the
 `min-inline-size` floor; the "frame quantities split by control class" law, ADR-0021). **The frame-bearing
 criteria below are NOT weakened by this lens** — for an entry/container control, score C1–C10 exactly as the
@@ -80,8 +80,8 @@ still gates COMPOSE and REALIZE separately, and every [gate] dimension is still 
   still no template — is the ONE sanctioned exception) and the *Display* size-class. Score C2's host/anatomy on
   the Display facts
   below, not the grid anatomy.
-- **C6 — the geometry law (frame quantities).** `block-size` off the `--ui-height-*` ramp, `padding-block: 0`,
-  the slotless inline-pad `= h/2`, the slot edge-pad `= ½(h−icon)`, the `gap = font/2` — **all N/A**. A Display
+- **C6 — the geometry law (frame quantities).** `block-size` off the derived height, `padding-block: 0`,
+  the n-based padding, the `n` gap — **all N/A**. A Display
   leaf has no control height and no padding law (`block-size` is content-driven). C6 is re-pointed for Display
   (below) onto the *type-scale* lever; do not fail it for the absent frame formulae.
 - **C7 — interaction behaviour.** `pressActivation` (Space/Enter→`click`), the disabled-inert path, and
@@ -141,10 +141,10 @@ These re-point the frame gates (C6/C7) and sharpen C2/C9/C10 onto the Display fa
   *1:* hard-coded sizes/weights, or the leaf reads `--md-sys-typescale-*`/raw px directly (no component-token
   seam). *3:* the static probes prove `font-size: var(--ui-text-size)` resolves from the
   `[variant][size]`-repointed `--md-sys-typescale-{role}-{size}-size`, weight/line-height/tracking likewise;
-  type is **density-invariant** (`-size` carries `× var(--ui-scale)` on the `*` ramp but **not**
-  `var(--ui-density)`; the other three legs are `:root` constants). *5:* + the cross-engine smoke proves a
-  subtree `[scale]` **re-multiplies** the type px (the `*`-ramp pre-substitution, ADR-0007) while `[density]`
-  leaves type untouched, and the full 9×3 = 27-cell matrix resolves to genuinely distinct computed px — the
+  type is **derived** (`-size` is a generated alias over the `--md-sys-type-*` roles, a formula of the element's
+  n, ADR-0245 cl.7; the other three legs are `:root` constants). *5:* + the cross-engine smoke proves a
+  subtree `data-scale` / `data-tier` **re-derives** the type px (the recompute list, ADR-0245 cl.1) and a
+  `size` steps the text's own n, and the full 9×3 = 27-cell matrix resolves to genuinely distinct computed px — the
   Display analogue of C6's "geometry is measured": the *type scale* is the law a Display leaf obeys.
 - **C7-Display — semantic-stamping correctness (re-points the behaviour gate)** [gate]. The content model +
   the `as` axis (cl.4): a real element is STAMPED around the light-DOM children — never `ElementInternals`.
@@ -159,10 +159,10 @@ These re-point the frame gates (C6/C7) and sharpen C2/C9/C10 onto the Display fa
   `margin`/`font: inherit` reset gives **zero** geometry delta vs. `as='none'`), so `as` changes semantics with
   no layout cost.
 - **C9-Display — cross-engine content.** The browser-truth smoke (Chromium AND WebKit) asserts the
-  *type-scale matrix* facts, not the frame law: distinct computed px per `variant`×`size` cell, `[scale]`
-  re-multiplies type on both engines, `[density]` does **not** touch type, a stamped `as` element renders with
+  *type-scale matrix* facts, not the frame law: distinct computed px per `variant`×`size` cell, `data-scale`
+  re-derives type on both engines, a stamped `as` element renders with
   **zero geometry delta** vs. `as='none'`, and the `forced-colors` block keeps the text visible
-  (`CanvasText`). Anti-vacuous every way (the scale/size moves px; density and stamping hold it).
+  (`CanvasText`). Anti-vacuous every way (the scale/size moves px; stamping holds it).
 - **C10-Display — restamp + heal residue.** `ui-text` carries TWO always-on pieces of machinery (cl.4/B3,
   Consequences (b)) — the `connected()` restamp effect off the `as` signal, and its companion childList
   `MutationObserver` (the heal) — both must leave **zero** residue on disconnect: zero subscribers (`inspect`)

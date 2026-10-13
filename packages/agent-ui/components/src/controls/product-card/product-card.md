@@ -180,7 +180,7 @@ geometry:
   actionHeight: var(--ui-product-card-action-height)   # = --md-sys-height (4n) inside a data-tier region, else --md-sys-height-lg (ADR-0243 Amendment 2, ADR-0245 cl.10a), the one control-height row a pattern-tier card owns
   radius: var(--ui-product-card-radius)                # = --md-sys-shape-corner-base
   mediaAspect: 16 / 10
-  note: Block-level fill by default, no intrinsic width (ADR-0223); `inline` flips to inline-flex and hugs. The body spacing is the ADR-0046 box model in fixed rem (no density scaling), the shared --ui-box-* tokens, so the body ink sits 19px inline from the outer edge like a stock card region; the icon header aligns to it. As a surface root the card fills the canvas width (applyRootStretch, ADR-0046 Amendment 7).
+  note: Block-level fill by default, no intrinsic width (ADR-0223); `inline` flips to inline-flex and hugs. The body spacing is the ADR-0046 box model in fixed rem (no scale-axis scaling outside the derived foundations), the shared --ui-box-* tokens, so the body ink sits 19px inline from the outer edge like a stock card region; the icon header aligns to it. As a surface root the card fills the canvas width (applyRootStretch, ADR-0046 Amendment 7).
 
 forcedColors: The card outline and the action button keep a CanvasText border; the image and icon carry no status. Intent is never color alone (the badge carries its own glyph and label).
 ---

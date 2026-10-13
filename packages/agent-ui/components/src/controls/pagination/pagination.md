@@ -64,8 +64,8 @@ keyboard:
 geometry:
   sizeClass: pattern
   posture: fill (block-level flex host, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-flex + hug   # Fill by Default — slice 2 (action/selection)
-  stopHeight: the composed ui-buttons' own control height (size=sm) — ui-pagination owns no [size]/[scale] geometry row of its own (ADR-0163 cl.6 — "the novelty is zero")
-  gap: var(--ui-pagination-gap)   # off --md-sys-space (density-responsive)
+  stopHeight: the composed ui-buttons' own control height (size=sm) — ui-pagination owns no [size] geometry row of its own (ADR-0163 cl.6 — "the novelty is zero")
+  gap: var(--ui-pagination-gap)   # off --md-sys-space (scale-responsive)
 
 forcedColors: No dedicated `@media (forced-colors: active)` block — every visible affordance is a composed `ui-button` (which already carries its own forced-colors handling) or real text (the ellipsis marker); this file paints no background-only mark of its own.
 ---

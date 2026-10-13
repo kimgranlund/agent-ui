@@ -89,7 +89,7 @@ geometry:
   sizeClass: display
   minInlineSize: var(--ui-column-chart-min-inline-size)  # 16em default — the whole-shape floor (ADR-0229 cl.6 role-(d) row)
   minBlockSize: var(--ui-column-chart-min-block-size)    # 16em default — a real plot height, not a sliver, on the SAME role-(d) floor
-  columnGap: var(--ui-column-chart-column-gap)           # between adjacent category tracks — rides [density] for free
+  columnGap: var(--ui-column-chart-column-gap)           # between adjacent category tracks — rides data-scale for free
 
 forcedColors: An explicit `@media (forced-colors: active)` block — gridlines/now-marker flatten to system inks, every segment fill flattens to `CanvasText` with a `Canvas` border keeping adjacent series distinguishable, and every chip flattens to a bordered `Canvas`/`CanvasText` pill — identity survives via the generated summary + callout text, never hue alone (ADR-0057).
 ---

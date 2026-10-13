@@ -88,10 +88,10 @@ geometry:
   sizeClass: display
   posture: fill (block-level grid, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-grid   # Fill by Default — slice 3 (display composites); the role-(d) whole-shape floor survives both states, R3(d); max-inline-size:100% drops on the flip (redundant on a block host)
   minInlineSize: var(--ui-attachment-min-inline-size)  # 12em default — the whole-shape floor (SPEC-R18 AC1), ratified role (d) (ADR-0223 cl.3(d)) — SURVIVES fill AND [inline]
-  # NO [size] attribute, NO [scale] geometry row, NO --md-sys-height-* consumption (SPEC-R20 AC2) — the glyph
-  # rides the fixed content-icon register (--md-sys-icon-md, geometry.md's "Affordance vs content-icon" law;
-  # the 2n icon box --md-sys-icon-box inside an opt-in [data-tier] region, ADR-0245 cl.4);
-  # rhythm (gap/padding) rides the space ladder, density-responsive for free (SPEC-R18 AC3).
+  # NO [size] attribute, NO control n rule, NO --md-sys-height consumption (SPEC-R20 AC2) — the glyph
+  # rides the 2n icon box --md-sys-icon-box (geometry.md's "Icon and glyph" law, fallback --md-sys-icon-md until W7;
+  # ADR-0245 cl.4);
+  # rhythm (gap/padding) rides the space ladder, data-scale-responsive for free (SPEC-R18 AC3).
   # Type register (not a geometry key — noted here because it is the card's only size lever): name reads
   # var(--ui-attachment-name-size) ← --md-sys-typescale-label-medium-size (12px), meta reads
   # var(--ui-attachment-meta-size) ← --md-sys-typescale-label-small-size (11px), each with a -line-height twin —

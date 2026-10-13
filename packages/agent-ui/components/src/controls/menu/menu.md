@@ -99,7 +99,7 @@ geometry:
   itemPadInline: var(--ui-menu-item-pad-inline)    # = var(--md-sys-space-md) — legacy item-pad inline axis
   itemBlockSize: var(--ui-menu-item-block-size)    # = font + 2×pad-block (line-height:1 makes it exact) — the real rendered row height, feeding panelMaxBlockSize
   itemRadius: var(--ui-menu-item-radius)           # nested-radius from panel corner = panelRadius − --ui-box-inset (FIXED 2026-07-06: was subtracting the unrelated --md-sys-space-xs, an ADR-0018 inset-inconsistency)
-  checkSize: var(--ui-menu-check-size)             # GH #55 — the menuitemradio/menuitemcheckbox checkmark glyph slot, = var(--md-sys-compact-sm) (the checkbox.css widget-box ramp precedent, not a menu-specific magic number)
+  checkSize: var(--ui-menu-check-size)             # GH #55 — the menuitemradio/menuitemcheckbox checkmark glyph slot, = var(--md-sys-icon-box) 2n (--md-sys-compact-sm bridge alias until W7; the checkbox.css indicator-box precedent, not a menu-specific magic number)
   checkGap: var(--ui-menu-check-gap)               # = var(--md-sys-space-xs) — gap between the glyph slot and the item's own inline padding
   note: ui-menu has NO `[size]` attribute and renders no trigger geometry (the trigger is fully author-owned) — the select/combo-box family's size-carrying derivation (panel inset + option pad off the trigger's own height/font) does not apply here; flagged as a structural divergence, not forced (2026-07-06 pass)
 

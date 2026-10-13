@@ -180,11 +180,11 @@ keyboard:
 
 geometry:
   sizeClass: control
-  blockSize: var(--ui-text-field-height)   # the vertical lever off the dimensional ramp; padding-block is 0
+  blockSize: var(--ui-text-field-height)   # the vertical lever, 4n off --md-sys-height (ADR-0245); padding-block is 0
   paddingBlock: 0
-  inlinePad: h/2 (value/text edge) · ½(h−icon) (leading / trailing slot edge)   # the centering law, geometry.md
-  gap: var(--ui-text-field-gap)            # adornment↔editor column-gap — the one density-bearing quantity (gap = font/2 × density)
-  radius: var(--md-sys-shape-corner-base)            # fixed rounded-rect — the container-fleet referent, NOT the h/2 pill; entry-control class, geometry.md "Corner radius" / ADR-0015 cl.5 (#71 amendment)
+  inlinePad: n = --md-sys-inset (value/text edge; h/2 outside the derived foundations, ADR-0245 cl.3) · ½(h−icon) (leading / trailing slot edge)   # the centering law, geometry.md
+  gap: var(--ui-text-field-gap)            # adornment↔editor column-gap — the one scale-bearing quantity (gap = n)
+  radius: var(--md-sys-shape-corner-base)            # rounded-rect, radius n (--md-sys-radius, squircle), NOT the h/2 pill; entry-control class, geometry.md "Corner radius" / ADR-0015 cl.5 (#71 amendment)
   posture: fill (block-level grid, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-grid + hug   # Fill by Default — the slice-0 pilot
   minInlineSize: var(--ui-text-field-min-inline-size) (~20ch — typing-width floor, native <input size> parity), ACTIVE IN THE [inline] HUG STATE ONLY (ADR-0223 cl.3(b), superseding ADR-0021's default-state placement)   # the fill default needs no floor — the container is the floor; size-invariant (ch is font-relative)
 

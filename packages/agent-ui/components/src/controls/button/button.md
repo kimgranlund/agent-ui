@@ -88,10 +88,10 @@ keyboard:
 geometry:
   sizeClass: control
   posture: fill (block-level host, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-grid + hug   # Fill by Default — slice 2 (action/selection); the squareness floor (min-inline-size = height) survives both states, R3(a)
-  blockSize: var(--ui-button-height)   # the vertical lever off the s6 dimensional ramp; padding-block is 0
+  blockSize: var(--ui-button-height)   # the vertical lever, 4n off --md-sys-height (ADR-0245); padding-block is 0
   paddingBlock: 0
-  inlinePad: h/2 (slotless bare label) · ½(h−icon) (leading icon / trailing adornment slot edge) · ½(h−icon) BOTH edges via justify-content, no literal padding (icon-only, no label)   # the centering law, geometry.md
-  gap: var(--ui-button-gap)            # icon↔label column-gap — the one density-bearing quantity (gap = font/2 × density)
+  inlinePad: h/2 = 2n (slotless bare label) · ½(h−icon) (leading icon / trailing adornment slot edge) · ½(h−icon) BOTH edges via justify-content, no literal padding (icon-only, no label)   # the centering law, geometry.md
+  gap: var(--ui-button-gap)            # icon↔label column-gap — the one scale-bearing quantity (gap = n)
 
 forcedColors: A `@media (forced-colors: active)` block keeps the ink + border visible (ButtonText) so the label/outline never vanishes.
 ---

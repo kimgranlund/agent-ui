@@ -57,9 +57,9 @@ keyboard: []           # NOT interactive and NOT focusable — no tabindex, no k
 
 geometry:
   sizeClass: display
-  rowGap: var(--ui-description-list-row-gap)   # between rows — --md-sys-space-xs base, the one [density]-bearing quantity
+  rowGap: var(--ui-description-list-row-gap)   # between rows — --md-sys-space-xs base, the one data-scale-bearing quantity
   pairGap: var(--ui-description-list-pair-gap) # label → value — --md-sys-space-sm base
-  # NO [size] attribute, NO [scale] geometry row, NO --md-sys-height-* consumption — the levers are the
+  # NO [size] attribute, NO control n rule, NO --md-sys-height consumption — the levers are the
   # type matrix (--md-sys-typescale-*) + the space ladder (the Display-band law).
 
 forcedColors: No dedicated block — every part is real text (the stat lesson; only background-drawn shapes need a forced-colors repoint). The label's secondary ink is forced to CanvasText by the UA like any other text.

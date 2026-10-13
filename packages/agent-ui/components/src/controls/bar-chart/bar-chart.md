@@ -64,9 +64,9 @@ keyboard: []           # NOT interactive and NOT focusable — no tabindex, no k
 
 geometry:
   sizeClass: display
-  minInlineSize: var(--ui-bar-chart-min-inline-size)  # 16em default — the whole-shape floor (SPEC-R9 AC1); NO [size] ramp, NO --md-sys-height-* (SPEC-R12 AC2)
-  rowGap: var(--ui-bar-chart-row-gap)                 # the density-RESPONSIVE row rhythm (rides [density] for free — ADR-0103)
-  barSize: var(--ui-bar-chart-bar-size)                # bar/track thickness — density-INVARIANT mark geometry (SPEC-R12)
+  minInlineSize: var(--ui-bar-chart-min-inline-size)  # 16em default — the whole-shape floor (SPEC-R9 AC1); NO [size] n rule, NO --md-sys-height (SPEC-R12 AC2)
+  rowGap: var(--ui-bar-chart-row-gap)                 # the scale-RESPONSIVE row rhythm (rides data-scale for free — ADR-0103)
+  barSize: var(--ui-bar-chart-bar-size)                # bar/track thickness — scale-INVARIANT mark geometry (SPEC-R12)
 
 forcedColors: An explicit `@media (forced-colors: active)` block (SPEC-R10) — the fill paints `CanvasText` (a background-drawn fill is otherwise forced to `Canvas` and vanishes) and the track keeps shape via a `Canvas` background + `CanvasText` border, so fill != track survives WHCM. The printed value is plain text and needs no override.
 ---

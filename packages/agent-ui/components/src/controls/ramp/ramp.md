@@ -62,8 +62,8 @@ keyboard: []            # NOT interactive and NOT focusable — no tabindex, no 
 
 geometry:
   sizeClass: display
-  minInlineSize: var(--ui-ramp-min-inline-size)  # 8em default — the whole-shape floor (SPEC-R13 AC1); NO [size] ramp, NO --md-sys-height-* (SPEC-R16 AC2)
-  cellSize: var(--ui-ramp-cell-size)              # per-cell box size — density-invariant
+  minInlineSize: var(--ui-ramp-min-inline-size)  # 8em default — the whole-shape floor (SPEC-R13 AC1); NO [size] n rule, NO --md-sys-height (SPEC-R16 AC2)
+  cellSize: var(--ui-ramp-cell-size)              # per-cell box size — scale-invariant
 
 forcedColors: An explicit `@media (forced-colors: active)` block (SPEC-R14) — every cell's box degrades to a `CanvasText` border with its `background` forced `transparent` (never a fake system color); the step-label/value text is real text and survives untouched.
 ---

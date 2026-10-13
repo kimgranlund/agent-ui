@@ -71,9 +71,9 @@ keyboard: []           # NOT interactive and NOT focusable — no tabindex, no k
 
 geometry:
   sizeClass: display
-  minInlineSize: var(--ui-pie-chart-min-inline-size)  # 16em default — the whole-shape floor (ADR-0219, SPEC-R9 AC1 precedent); NO [size] ramp, NO --md-sys-height-*
-  ringSize: var(--ui-pie-chart-ring-size)              # 8em default — the ring's fixed box, density-invariant mark geometry
-  rowGap: var(--ui-pie-chart-row-gap)                  # key-row rhythm — rides [density] for free (ADR-0103)
+  minInlineSize: var(--ui-pie-chart-min-inline-size)  # 16em default — the whole-shape floor (ADR-0219, SPEC-R9 AC1 precedent); NO [size] n rule, NO --md-sys-height
+  ringSize: var(--ui-pie-chart-ring-size)              # 8em default — the ring's fixed box, scale-invariant mark geometry
+  rowGap: var(--ui-pie-chart-row-gap)                  # key-row rhythm — rides data-scale for free (ADR-0103)
   colGap: var(--ui-pie-chart-col-gap)                  # ring<->key-list rhythm
 
 forcedColors: An explicit `@media (forced-colors: active)` block — every slice AND the key-swatch flatten to `CanvasText` (separators/track background to `Canvas`, the track keeping a `CanvasText` border) so the ring stays visible under WHCM without relying on hue; identity survives untouched via the key list's real text (ADR-0219 cl.7).

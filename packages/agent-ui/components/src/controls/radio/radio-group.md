@@ -101,7 +101,7 @@ keyboard:              # the roving axis is PER-ORIENTATION (the resolved `orien
 geometry:
   sizeClass: container   # no fixed block-size — the group sizes to its content (ui-radio children).
   display: flex          # ADR-0103: the group owns its interior layout — flex-direction:column by default (a ui-radio host is inline-flex, so unstyled children would butt together with zero gap)
-  gap: var(--ui-radio-group-gap)   # = var(--md-sys-space-sm) — density-responsive; page authors retune per-instance with one custom property
+  gap: var(--ui-radio-group-gap)   # = var(--md-sys-space-sm) — scale-responsive; page authors retune per-instance with one custom property
   orientationEffect: '[orientation=horizontal] switches flex-direction:row + flex-wrap:wrap + align-items:center — the roving-focus axis (radio-group.ts) and the visual axis are now one source of truth (ADR-0103)'
   note: The joined-button segmented presentation (a real display:grid layout, one shared moving indicator) is the standalone ui-segmented-control (ADR-0095), not this group.
 

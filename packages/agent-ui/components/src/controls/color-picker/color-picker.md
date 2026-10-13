@@ -112,8 +112,8 @@ keyboard:
 
 geometry:
   tier: pattern                                  # container + control-height rows (geometry.md) — the pad is a sized surface, channel rows are Indicator-class ui-sliders, the readout is a Control-height ui-text-field
-  pad: --ui-color-picker-pad-block-size           # a bespoke density-invariant floor (10rem default) — NOT a §1 geometry-lookup row (the ui-swatch box / ui-calendar cell precedent)
-  channels: Indicator-class ui-slider rows        # self-sized under the ADR-0038 (scale × size) lookup — no new row here
+  pad: --ui-color-picker-pad-block-size           # a bespoke scale-invariant floor (10rem default) — NOT a derived n row (the ui-swatch box / ui-calendar cell precedent)
+  channels: Indicator-class ui-slider rows        # self-sized under the ADR-0245 n rule — no new row here
   readout: Control-height ui-text-field           # self-sized under the same lookup
   noNewRow: true                                  # the novelty is the INTERACTION (the area-drag trait + the pad a11y model), not the metric
 

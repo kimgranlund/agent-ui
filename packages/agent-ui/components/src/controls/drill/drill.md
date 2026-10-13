@@ -91,7 +91,7 @@ keyboard:
 
 geometry:
   sizeClass: pattern       # container + control-height header row (geometry.md Pattern class, the ui-tabs/ui-toolbar example); the panel viewport uses the space-scale ladder, no control height
-  headerHeight: var(--ui-drill-header-height)   # = var(--md-sys-height-md) — the interactive back+heading row
+  headerHeight: var(--ui-drill-header-height)   # = var(--md-sys-height) 4n (--md-sys-height-md bridge alias until W7) — the interactive back+heading row
   padding: var(--ui-drill-padding)              # panel viewport padding, space-scale
   outline: var(--ui-drill-outline)              # the card border + the header's bottom hairline
   radius: var(--ui-drill-radius)                # ADR-0195 Amendment cl.A5 — the contained card's own corner radius

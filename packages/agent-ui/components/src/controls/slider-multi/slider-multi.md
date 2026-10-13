@@ -148,10 +148,10 @@ keyboard:
 geometry:
   sizeClass: range
   inlineSize: 100%    # .rail stretches to its grid track's full inline-size (justify-self: stretch, GH #1141 — no longer flex:1)
-  blockSize: var(--ui-slider-multi-box)   # the RAIL ROW's fixed grid-track size = the compact widget-box ramp step (ADR-0041); .rail's own thin bar is centred within it (align-self: center)
-  thumbSize: calc(--ui-slider-multi-box - 2c)     # box − 2×--md-sys-c (2n − 2c inside an opt-in data-tier region, ADR-0245 cl.3); box − 4px outside (ADR-0041 cl.3: 2px-inset law)
+  blockSize: var(--ui-slider-multi-box)   # the RAIL ROW's fixed grid-track size = the 2n indicator box (ADR-0245 cl.3); .rail's own thin bar is centred within it (align-self: center)
+  thumbSize: calc(--ui-slider-multi-box - 2c)     # box − 2×--md-sys-c (2n − 2c inside an opt-in data-tier region, ADR-0245 cl.3); legacy fallback box − 4px
   railHeight: --ui-slider-multi-rail-size         # 2c inside a region (the progress rule), box/4 outside; the pill radius is half of it
-  boxRamp: --md-sys-icon-box (2n) with fallback --md-sys-compact-{size}   # 2n inside an opt-in data-tier region; 14/16/18 px at ui-md scale outside (ADR-0041 clause 2, ADR-0245 cl.3)
+  boxRamp: --md-sys-icon-box (2n) with fallback --md-sys-compact-{size}   # the box is 2n (ADR-0245 cl.3); the --md-sys-compact-{size} bridge alias is the data-foundations="legacy" fallback until W7 (ADR-0041's widget ramp retired)
   layoutGap: --ui-slider-multi-layout-gap    # GH #1141 — the label↔rail↔value row/column rhythm, off --md-sys-space-xs
 
 forcedColors: A `@media (forced-colors: active)` block maps the rail to a Canvas fill + ButtonText border; the fill to Highlight; the thumbs to ButtonFace + ButtonText border. forced-color-adjust:none on all three elements preserves the explicit system-colour assignments so the browser cannot re-override them. The :focus-visible ring resolves to Highlight via --md-sys-color-focus-ring from the token layer (ADR-0009).

@@ -4,12 +4,12 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted |
+> | **Status** | superseded |
 > | **Date** | 2026-06-30 *(authored)* |
 > | **Proposed by** | planning-lead — the design seat, on the team-lead's control-suite brief (#49 B): the widget-size geometry for the Indicator/Range classes |
 > | **Ratified by** | Kim ratified the **widget [size]×[scale] table** exactly as proposed (clause 2; as she did the control table, ADR-0038); orchestration-lead ratifies the ADR on the green gate |
 > | **Repairs** | `references/geometry-sizing-spec.md §5.2` (the compact-box ramp → Kim's clean 8-value widget ramp; the realm becomes CONSUMED) + `references/geometry.md` (the Indicator size-class lever) · **shipped-token change**: `shared/src/tokens/dimensions.css` (`--ui-compact-{sm,md,lg}` re-tabled per `[scale]` to the widget ramp) + `dimensions.test.ts` · reconciles the **stale `--ui-ind-{size}` name** (geometry.md / goals.md G6) — it does NOT exist; widget GLYPHS ride `--ui-icon-*` (ADR-0035), the widget BOX rides `--ui-compact-*` (this ADR). **Relates ADR-0038** (the control lookup this mirrors), **ADR-0032** (built the `--ui-compact-*` re-table this revises), **ADR-0035** (the glyph ramp). |
-> | **Supersedes / Superseded by** | **Revises ADR-0032's §5.2 compact-box ramp** (the two-band `12·14·16·18·20` / `18→32` ladder → Kim's single 8-value ramp; the per-`[scale]` re-table MECHANISM stays — it predates and matches ADR-0038's explicit-table form). No control-ramp change (ADR-0038 stands). |
+> | **Supersedes / Superseded by** | **Superseded by [ADR-0245](./0245-foundations-derive-from-one-n.md)** (2026-10-13, the cut landed in #1932: the 14/16/18 widget-box ramp and the 2px inset become the icon and glyph boxes over n). **Revises ADR-0032's §5.2 compact-box ramp** (the two-band `12·14·16·18·20` / `18→32` ladder → Kim's single 8-value ramp; the per-`[scale]` re-table MECHANISM stays — it predates and matches ADR-0038's explicit-table form). No control-ramp change (ADR-0038 stands). |
 
 ## Context
 

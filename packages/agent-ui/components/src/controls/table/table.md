@@ -169,10 +169,10 @@ keyboard:
 
 geometry:
   sizeClass: display
-  minInlineSize: var(--ui-table-min-inline-size)  # 16em default — the whole-shape floor (SPEC-R14/R17 AC1); NO [size] ramp, NO --md-sys-height-*
-  cellPadInline: var(--ui-table-cell-pad-inline)  # rhythm — rides [density] for free (ADR-0103)
+  minInlineSize: var(--ui-table-min-inline-size)  # 16em default — the whole-shape floor (SPEC-R14/R17 AC1); NO [size] n rule, NO --md-sys-height
+  cellPadInline: var(--ui-table-cell-pad-inline)  # rhythm — rides data-scale for free (ADR-0103)
   cellPadBlock: var(--ui-table-cell-pad-block)
-  note: The composed selection controls/sort buttons/footer pagination each carry their OWN geometry end to end (`ui-checkbox`/`ui-radio`'s widget-box sizing, `ui-button`'s control-height ramp, `ui-pagination`'s own §1 control-height buttons; ADR-0163 amendment GH #1445 — every one now a real FACE control, not a bare native element) — this control mints no new geometry row of its own for them (ADR-0163 cl.6's "the novelty is zero", applied fleet-wide to every composed interactive part here).
+  note: The composed selection controls/sort buttons/footer pagination each carry their OWN geometry end to end (`ui-checkbox`/`ui-radio`'s 2n indicator box, `ui-button`'s 4n control height, `ui-pagination`'s own control-height buttons; ADR-0163 amendment GH #1445 — every one now a real FACE control, not a bare native element) — this control mints no new geometry row of its own for them (ADR-0163 cl.6's "the novelty is zero", applied fleet-wide to every composed interactive part here).
 
 forcedColors: No dedicated `@media (forced-colors: active)` block — every row/header separator is a real `border` (repainted in system inks, never removed under `forced-colors: active`, unlike a background-drawn mark); all content is real text. The composed `ui-checkbox`/`ui-radio` selection cells and `ui-button` sort trigger each carry their OWN forced-colors treatment from their own stylesheet (checkbox.css/radio.css/button.css each ship a `@media (forced-colors: active)` block) — this file adds no reset of its own (ADR-0163 amendment, GH #1445 — the pre-amendment native `<button>`'s `all: unset`-then-repaint rule is retired along with the native element it painted).
 ---

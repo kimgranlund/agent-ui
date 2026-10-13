@@ -92,9 +92,9 @@ keyboard:
 geometry:
   sizeClass: pattern
   itemHeight: the items' own control height (the toolbar owns no size prop of its own)
-  gap: var(--ui-toolbar-gap)                     # off --md-sys-space (density-responsive)
+  gap: var(--ui-toolbar-gap)                     # off --md-sys-space (scale-responsive)
   padInline: var(--ui-toolbar-pad-inline)        # off --md-sys-space
-  minBlockSize: var(--ui-toolbar-min-block-size) # the whole-shape bar floor — the control-height register (--md-sys-height-md), NOT a --md-sys-space quantity
+  minBlockSize: var(--ui-toolbar-min-block-size) # the whole-shape bar floor — the control-height register (--md-sys-height 4n; --md-sys-height-md bridge alias until W7), NOT a --md-sys-space quantity
   surface: --ui-container-bg                     # the ADR-0015 seam; transparent at elevation 0/unset (embedded), a raised plane at ≥1 (floating)
 
 forcedColors: A `@media (forced-colors: active)` block keeps a surfaced toolbar's plane a system colour (Canvas) and drops the tonal wash (belt-and-braces with the shared container.css surface block); the toolbar paints no intent surface of its own in v1, so there is no additional indicator/cue to protect.

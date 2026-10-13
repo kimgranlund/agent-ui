@@ -68,8 +68,8 @@ keyboard:
   - note: No keyboard model of its own — the toast never takes focus on show. The optional action and the always-present close ui-button parts are reachable via normal Tab order (each carries its own tabbable-trait tabindex=0); no tabindex games, no autofocus (SPEC-R15 AC3).
 
 geometry:
-  sizeClass: pattern                                  # a fixed-width notification card — Container/surface geometry, not a control-height ramp
-  inlineSize: var(--ui-toast-inline-size)              # = 20em, fixed (max-inline-size:100% floors small viewports) — the ui-menu panel's fixed-surface precedent, NOT a [size]/[scale] control ramp
+  sizeClass: pattern                                  # a fixed-width notification card — Container/surface geometry, not a control-height row
+  inlineSize: var(--ui-toast-inline-size)              # = 20em, fixed (max-inline-size:100% floors small viewports) — the ui-menu panel's fixed-surface precedent, NOT a [size] control row
   paddingInline: var(--md-sys-space-md)   # = var(--md-sys-widget-margin) 2n under data-tier (ADR-0245 cl.6, widget level)
   paddingBlock: var(--md-sys-space-sm)    # = var(--md-sys-widget-gutter) n under data-tier
   gap: var(--md-sys-space-sm)                              # message | action | close column gap

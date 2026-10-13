@@ -97,7 +97,7 @@ geometry:
   sizeClass: display
   posture: fill (block-level grid, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-grid   # Fill by Default — slice 3 (display composites); the role-(d) whole-shape floor survives both states, R3(d)
   minInlineSize: var(--ui-stat-min-inline-size)  # 8em default — the whole-shape floor (SPEC-R10), ratified role (d) (ADR-0223 cl.3(d)) — SURVIVES fill AND [inline]
-  # NO [size] attribute, NO [scale] geometry row, NO --md-sys-height-* consumption (SPEC-R17 AC2) — the
+  # NO [size] attribute, NO control n rule, NO --md-sys-height consumption (SPEC-R17 AC2) — the
   # lever is the type matrix (--md-sys-typescale-*; label, value and delta read the derived field-label,
   # heading and body roles --md-sys-type-* inside an opt-in [data-tier] region, ADR-0245 cl.7) + the space ladder (--ui-stat-gap).
 

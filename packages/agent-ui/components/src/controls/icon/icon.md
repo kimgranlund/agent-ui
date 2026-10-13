@@ -45,7 +45,7 @@ keyboard: []           # NOT interactive and NOT focusable — no tabindex, no `
 
 geometry:
   sizeClass: display
-  inlineSize: var(--md-sys-icon-size)   # the 2n icon box (`--md-sys-icon-box`) inside an opt-in [data-tier] region (ADR-0245 cl.4); else 1em — NO size/tone lever (no [size] ramp); the consumer's ambient font-size or an explicit inline-size override IS the lever (LLD §3, geometry.md "intrinsic structural sizing")
+  inlineSize: var(--md-sys-icon-size)   # the 2n icon box (`--md-sys-icon-box`, ADR-0245 cl.4); 1em is the legacy fallback until W7 — NO size/tone lever (no [size] n rule); the consumer's ambient font-size or an explicit inline-size override IS the lever (LLD §3, geometry.md "intrinsic structural sizing")
   blockSize: var(--md-sys-icon-size)
 
 forcedColors: No dedicated `@media (forced-colors: active)` block — the host paints nothing of its own; `color: inherit` means the injected `<svg fill="currentColor">` (resolve.ts) tracks whatever forced-colors ink the CONSUMING context already resolves to (e.g. a button's ButtonText), so ui-icon needs no WHCM override of its own.

@@ -72,9 +72,9 @@ keyboard: []              # NOT interactive and NOT focusable — no tabindex, n
 
 geometry:
   sizeClass: display
-  inlineSize: var(--ui-playing-card-inline-size)  # em-keyed owned box — sm 3.5em / md 5em (default) / lg 7em via [size] repoint (ADR-0225 cl.5, the avatar F3 pattern; the compact ramp is explicitly NOT reused)
+  inlineSize: var(--ui-playing-card-inline-size)  # em-keyed owned box — sm 3.5em / md 5em (default) / lg 7em via [size] repoint (ADR-0225 cl.5, the avatar F3 pattern; the indicator box is explicitly NOT reused)
   aspectRatio: 9 / 14      # the bridge card size, 2¼ × 3½ in (ADR-0225 cl.5)
-  radius: calc(var(--ui-playing-card-inline-size) * 0.055)  # box-relative, density-invariant (the avatar calc idiom); snaps on a [size] change, never transitions
+  radius: calc(var(--ui-playing-card-inline-size) * 0.055)  # box-relative, scale-invariant (the avatar calc idiom); snaps on a [size] change, never transitions
 
 forcedColors: An explicit `@media (forced-colors: active)` block flattens the face/back to `Canvas`/`CanvasText` (the lattice pattern drops — the CanvasText border alone marks the back) so both faces stay legible under WHCM without relying on hue.
 ---

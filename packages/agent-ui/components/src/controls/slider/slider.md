@@ -127,7 +127,7 @@ geometry:
   sizeClass: indicator
   blockSize: var(--ui-slider-box)     # .rail's block-size = --md-sys-compact-{size} (ADR-0041); the host's own block-size is now grid-content-sized (label/rail/value rows, GH #1141)
   inlineSize: 100%                    # .rail stretches to its grid track's full inline-size (justify-self: stretch); the host stretches to its container (grid, no intrinsic inline-size beyond the min-inline-size floor)
-  thumbSize: box − 2c                 # circle thumb = --ui-slider-box − 2×--md-sys-c (2n − 2c inside an opt-in data-tier region, ADR-0245 cl.3); box − 4px outside (ADR-0041 cl.3)
+  thumbSize: box − 2c                 # circle thumb = --ui-slider-box − 2×--md-sys-c (2n − 2c, ADR-0245 cl.3); box − 4px is the legacy fallback until W7 (ADR-0041's 2px-inset law retired)
   railHeight: --ui-slider-rail-height # 2c inside a region (the progress rule, ADR-0245 cl.3), 3px outside; not derived from the widget box
   layoutGap: --ui-slider-layout-gap   # GH #1141 — the label↔rail↔value row/column rhythm, off --md-sys-space-xs (the field.css --ui-field-gap precedent)
 

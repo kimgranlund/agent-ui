@@ -81,14 +81,14 @@ keyboard:
 geometry:
   sizeClass: pattern
   summary:
-    height: var(--ui-disclosure-height)   # Pattern-class interactive row — off the §1-row ramp; density-INVARIANT frame
+    height: var(--ui-disclosure-height)   # Pattern-class interactive row — 4n off --md-sys-height (ADR-0245 cl.3); scale-INVARIANT only where a control token pins it
     font: var(--ui-disclosure-font)
     glyph: var(--ui-disclosure-glyph)     # = var(--md-sys-glyph-box) 2n - 2c under data-tier (centred in the 2n slot, --ui-disclosure-slot), = font elsewhere (geometry.md)
-    gap: var(--ui-disclosure-gap)         # the density-bearing chevron↔label rhythm
+    gap: var(--ui-disclosure-gap)         # the scale-bearing chevron↔label rhythm
   body:
     shellClass: layout-shell
-    padBlock: var(--ui-disclosure-body-pad-block)     # = --md-sys-space-sm, density-RESPONSIVE — applied under [contained] ONLY (GH #1283); the default body is UNPADDED
-    padInline: var(--ui-disclosure-body-pad-inline)   # = --md-sys-space-md, density-RESPONSIVE — [contained] only
+    padBlock: var(--ui-disclosure-body-pad-block)     # = --md-sys-space-sm, scale-RESPONSIVE — applied under [contained] ONLY (GH #1283); the default body is UNPADDED
+    padInline: var(--ui-disclosure-body-pad-inline)   # = --md-sys-space-md, scale-RESPONSIVE — [contained] only
   contained:                                          # the [contained] chrome (GH #1283)
     bg: var(--ui-disclosure-bg)                       # = --md-sys-color-neutral-surface — the contained surface paint
     radius: var(--ui-disclosure-radius)               # = var(--md-sys-radius) n under data-tier (ADR-0245 cl.3), --md-sys-shape-corner-base elsewhere (ADR-0015 cl.5)

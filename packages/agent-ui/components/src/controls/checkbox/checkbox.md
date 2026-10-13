@@ -106,7 +106,7 @@ geometry:
   posture: fill (block-level flex host, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-flex + hug   # Fill by Default — slice 2 (action/selection); the widget BOX below keeps its fixed square either way
   inlineSize: var(--ui-checkbox-box)   # square widget box — the Indicator-class lever (ADR-0041)
   blockSize: var(--ui-checkbox-box)
-  boxRamp: --md-sys-icon-box (2n) with fallback --md-sys-compact-{size}   # inside an opt-in data-tier region the box is 2n; outside, 14/16/18 px at ui-md scale (ADR-0041 clause 2, ADR-0245 cl.3)
+  boxRamp: --md-sys-icon-box (2n) with fallback --md-sys-compact-{size}   # the box is 2n (ADR-0245 cl.3); the --md-sys-compact-{size} bridge alias is the data-foundations="legacy" fallback until W7 (ADR-0041's widget ramp retired)
   radius: calc(var(--md-sys-radius) / 2) with fallback box/5   # n/2 inside a region (3.5px at md of the root); box/5 outside (~3px at 16px default)
   markBox: --md-sys-glyph-box (2n - 2c) with fallback 60% of the box   # the check and dash width; centred, inset c (ADR-0245 cl.4); the dash is --md-sys-glyph-stroke tall
 

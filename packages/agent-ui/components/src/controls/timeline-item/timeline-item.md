@@ -108,7 +108,7 @@ geometry:
   dotSize: var(--ui-timeline-item-dot-size)
   connectorWidth: var(--ui-timeline-item-connector-width)
   gutter: var(--ui-timeline-item-gutter)
-  rowGap: var(--ui-timeline-item-row-gap)            # the ONE density-riding quantity; realized as the item's own margin-block-end
+  rowGap: var(--ui-timeline-item-row-gap)            # the ONE scale-riding quantity; realized as the item's own margin-block-end
   note: A NEW bespoke marker-system table (the second per-(scale×size) explicit lookup after the calendar's date-grid, ADR-0048) — connector-width is deliberately 2px across every size AND scale tier (the ADR-0038 stepping lesson a probe must not assume away).
 
 forcedColors: A `@media (forced-colors: active)` block repaints the marker dot/ring/connector and the muted content ink to CanvasText, keeping every status SHAPE (not colour) legible (SPEC-R4 AC2) — belt-and-suspenders over the token layer's own WHCM-mapped roles.

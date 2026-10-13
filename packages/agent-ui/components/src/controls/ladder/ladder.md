@@ -57,9 +57,9 @@ keyboard: []            # NOT interactive and NOT focusable — no tabindex, no 
 
 geometry:
   sizeClass: display
-  minInlineSize: var(--ui-ladder-min-inline-size)  # 16em default — the whole-shape floor; NO [size] ramp, NO --md-sys-height-* (SPEC-R16 AC2)
-  rowGap: var(--ui-ladder-row-gap)                  # the density-RESPONSIVE row rhythm (rides [density] for free — ADR-0103)
-  barSize: var(--ui-ladder-bar-size)                # bar THICKNESS — density-invariant mark geometry (SPEC-R16)
+  minInlineSize: var(--ui-ladder-min-inline-size)  # 16em default — the whole-shape floor; NO [size] n rule, NO --md-sys-height (SPEC-R16 AC2)
+  rowGap: var(--ui-ladder-row-gap)                  # the scale-RESPONSIVE row rhythm (rides data-scale for free — ADR-0103)
+  barSize: var(--ui-ladder-bar-size)                # bar THICKNESS — scale-invariant mark geometry (SPEC-R16)
 
 forcedColors: An explicit `@media (forced-colors: active)` block (SPEC-R14) — the bar paints `CanvasText` (a system ink is never forced away, so magnitude still carries by length); the label/value text is real text and survives untouched.
 ---

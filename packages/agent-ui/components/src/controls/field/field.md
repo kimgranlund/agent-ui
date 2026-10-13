@@ -55,7 +55,7 @@ keyboard: []           # not interactive itself — no tabindex, no keyboard con
 geometry:
   sizeClass: container   # Container/layout band — NO control height (never reads --md-sys-height-*); the radio-group precedent
   display: flex          # column flow: label / control slot / description / error, top to bottom (DOM placement IS reading order)
-  gap: var(--ui-field-gap)   # label↔control↔description↔error rhythm, off --md-sys-space × density — the one density-bearing quantity (field.css)
+  gap: var(--ui-field-gap)   # label↔control↔description↔error rhythm, off --md-sys-space (a generated alias over n) — the one scale-bearing quantity (field.css)
   note: The slotted control brings its own geometry (e.g. text-field's ADR-0021 min-inline-size floor); the field itself adds none — it is a pure label/description/error wrapper, never a sizing surface.
 
 forcedColors: A `@media (forced-colors: active)` block keeps the label/description/error ink visible (CanvasText — real text, not decorative glyphs); the error stays distinguishable by PRESENCE, not colour alone (WCAG 1.4.1 — field.css).
