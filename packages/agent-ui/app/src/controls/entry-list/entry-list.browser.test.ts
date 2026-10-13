@@ -8,6 +8,7 @@
 // actually landed, as opposed to merely existing as an unconsumed sheet.
 
 import { describe, it, expect, afterEach } from 'vitest'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 import '@agent-ui/components/foundation-styles.css' // the --md-sys-color-*/--md-sys-space-*/-shape-corner-base roots entry-list.css's own token block reads
 import '@agent-ui/components/all.css' // ui-button/ui-icon/ui-switch/ui-text-field/ui-field's shipped CSS (composed by entry-list.ts)
@@ -178,8 +179,8 @@ describe('mountEntryList — standalone, ZERO ui-agent-admin/agent-admin.css inv
     await field.updateComplete
     expect(field.rows).toBe(4)
     const fontSize = Number.parseFloat(getComputedStyle(field).fontSize)
-    // ADR-0245 cut: padding-block is the root register's inset n (7, scale.mjs resolve('product', 'sm', 'md').inset) minus the 1px border
-    const expected = 4 * (fontSize * 1.5) + 2 * (7 - 1)
+    // ADR-0245 cut: padding-block is the root register's control inset (n 6, scale.mjs resolve('product', 'sm', 'md').control.margin) minus the 1px border
+    const expected = 4 * (fontSize * 1.5) + 2 * (resolve('product', 'sm', 'md').control.margin - 1)
     const computed = Number.parseFloat(getComputedStyle(field).minHeight)
     expect(computed).toBeCloseTo(expected, 1)
   })

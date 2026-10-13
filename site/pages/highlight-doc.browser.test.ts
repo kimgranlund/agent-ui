@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { resolve } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
 
 // highlight-doc.browser.test.ts — GH #1264, the real-engine proof for the guide page's PROSE treatment and its
 // read-only ui-code specimens. Imports the REAL page module through the browser dev-transform pipeline (real
@@ -51,7 +52,9 @@ describe('highlight-doc — guide prose reads at the site prose treatment (GH #1
     const h = getComputedStyle(fidelity)
     const p = getComputedStyle(prose)
     expect(parseFloat(h.marginBlockStart)).toBeGreaterThanOrEqual(parseFloat(p.marginBlockEnd)) // heading gap > paragraph gap
-    expect(parseFloat(h.marginBlockStart)).toBeGreaterThan(24) // 2xl (32px at density 1) — never the UA 0.83em
+    // 2xl is 4m at the root register (24px at n 6, scale.mjs resolve('product', 'sm', 'md').m): exactly the token, never the UA 0.83em
+    expect(parseFloat(h.marginBlockStart)).toBeCloseTo(4 * resolve('product', 'sm', 'md').m, 1)
+    expect(parseFloat(h.marginBlockStart)).not.toBeCloseTo(0.83 * parseFloat(h.fontSize), 0)
     expect(parseFloat(p.marginBlockStart)).toBe(0)
     expect(p.maxInlineSize).toMatch(/px$/) // 72ch resolved to a real length, not `none`
   })

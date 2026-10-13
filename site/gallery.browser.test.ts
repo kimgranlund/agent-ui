@@ -18,6 +18,7 @@ import '@agent-ui/icons/phosphor'
 import './lib/component-gallery.ts'
 import { galleryMembers } from './lib/component-gallery.ts'
 import { whenFlushed } from '@agent-ui/components'
+import { resolve } from '../packages/agent-ui/shared/src/tokens/scale.mjs'
 import type { UISelectElement } from '@agent-ui/components/controls/select'
 
 // GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles),
@@ -168,16 +169,16 @@ describe('<component-gallery> — the ONE <ui-theme-provider> drives every speci
     const live = liveFor(card!, 'ui-button') as HTMLElement
     expect(live, 'no live ui-button rendered').not.toBeNull()
 
-    // ADR-0245 cl.2: the default is the root register, product at scale sm (a md button is 4n = 28px).
+    // ADR-0245 cl.2: the default is the root register, product at scale sm (a md button is 4n = 24px).
     const heightSm = Number.parseFloat(getComputedStyle(live).blockSize)
-    expect(heightSm).toBe(28)
+    expect(heightSm).toBe(resolve('product', 'sm', 'md').h)
 
     await chooseOption(selectFor(gallery, 'Scale'), 'md')
     const heightMd = Number.parseFloat(getComputedStyle(live).blockSize)
-    expect(heightMd, 'data-scale=md did not change the specimen height').toBe(36)
+    expect(heightMd, 'data-scale=md did not change the specimen height').toBe(resolve('product', 'md', 'md').h)
 
     await chooseOption(selectFor(gallery, 'Tier'), 'content')
-    expect(Number.parseFloat(getComputedStyle(live).blockSize), 'data-tier=content did not change the height').toBe(44)
+    expect(Number.parseFloat(getComputedStyle(live).blockSize), 'data-tier=content did not change the height').toBe(resolve('content', 'md', 'md').h)
 
     await chooseOption(selectFor(gallery, 'Tier'), 'product') // back to the defaults
     await chooseOption(selectFor(gallery, 'Scale'), 'sm')

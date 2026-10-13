@@ -130,9 +130,9 @@ The prefix IS the ownership boundary — no allowlist needed:
   declaration ALWAYS means "this control folder owns it" — never a foundation constant.
 - **System tier** `--md-sys-{family}-*`: everything global and shared — color (`--md-sys-color-*`),
   typescale (`--md-sys-typescale-*`), and the dimensional foundation, which derives from one n per
-  element (ADR-0245): the inputs `--md-sys-tier-*`, `--md-sys-scale-s`, `--md-sys-size-z`, the outputs
-  `--md-sys-{n,c,height,inset,radius,icon-box,glyph-box,glyph-stroke,corner-shape}`,
-  `--md-sys-type-{display,heading,subhead,section-kicker,title,body,control,field-label,group-kicker}` and
+  element (ADR-0245): the inputs `--md-sys-tier-*`, `--md-sys-scale-s`, `--md-sys-size-z`, `--md-sys-density-d`,
+  the outputs `--md-sys-{n,m,c,height,inset,radius,icon-box,glyph-box,glyph-stroke,corner-shape}`,
+  `--md-sys-type-{display,heading,subhead,section-label,title,body,control,field-label,group-label}` and
   `--md-sys-{group,widget,card,layout}-{margin,gutter,radius}`, all in the generated `foundations.gen.css`;
   the old names `--md-sys-{height,font,icon,gap,compact,space}-*`, `--md-sys-shape-corner-base` and
   `--md-sys-widget-inset` live on as bridge aliases until the W7 cleanup;

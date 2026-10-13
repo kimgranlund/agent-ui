@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp } from 'vitest/browser'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 // avatar.browser.test.ts — the cross-engine browser-truth proof for ui-avatar (SPEC-N2: jsdom is blind to
 // painted geometry, computed-style ink, and WHCM). Covers: the control-height square-box geometry under
@@ -32,29 +33,29 @@ afterEach(() => {
 })
 
 describe('ui-avatar — control-height square box (SPEC-R20 AC1; ADR-0112 Amendment 3 — the button ladder, ADR-0038)', () => {
-  it('default (size=md, no ancestor [scale]) → 28×28 box (--md-sys-height-md at ui-md scale — a button\'s height)', () => {
+  it('default (size=md, no ancestor [scale]) → 24×24 box (--md-sys-height-md at the root register, a button\'s height)', () => {
     const el = mount('<ui-avatar identity="Ada Lovelace"></ui-avatar>')
     const box = el.getBoundingClientRect()
-    expect(box.width).toBe(28)
-    expect(box.height).toBe(28)
+    expect(box.width).toBe(resolve('product', 'sm', 'md').h)
+    expect(box.height).toBe(resolve('product', 'sm', 'md').h)
   })
 
-  it('[size=sm] → 24px box; [size=lg] → 32px box (the control-height ladder, 4n at the root register since ADR-0245)', () => {
+  it('[size=sm] → 20px box; [size=lg] → 28px box (the control-height ladder, 4n at the root register since ADR-0245)', () => {
     const sm = mount('<ui-avatar identity="Ada Lovelace" size="sm"></ui-avatar>')
-    expect(sm.getBoundingClientRect().width).toBe(24)
+    expect(sm.getBoundingClientRect().width).toBe(resolve('product', 'sm', 'sm').h)
 
     const lg = mount('<ui-avatar identity="Ada Lovelace" size="lg"></ui-avatar>')
-    expect(lg.getBoundingClientRect().width).toBe(32)
+    expect(lg.getBoundingClientRect().width).toBe(resolve('product', 'sm', 'lg').h)
   })
 
-  it('data-scale md × size md → 36px (4n at product / md, ADR-0245 cl.3, the old ui-lg register)', () => {
+  it('data-scale md × size md → 32px (4n at product / md, ADR-0245 cl.3, the old ui-lg register)', () => {
     const wrap = document.createElement('div')
     wrap.setAttribute('data-scale', 'md')
     wrap.innerHTML = '<ui-avatar identity="Ada Lovelace"></ui-avatar>'
     document.body.append(wrap)
     mounted.push(wrap)
     const el = wrap.querySelector('ui-avatar') as HTMLElement
-    expect(el.getBoundingClientRect().width).toBe(36)
+    expect(el.getBoundingClientRect().width).toBe(resolve('product', 'md', 'md').h)
   })
 
   it('ui-avatar and ui-button share the same height row: the avatar box equals the derived control height (4n, ADR-0245)', () => {
@@ -65,7 +66,7 @@ describe('ui-avatar — control-height square box (SPEC-R20 AC1; ADR-0112 Amendm
     el.parentElement!.append(probe)
     const row = probe.getBoundingClientRect().height
     probe.remove()
-    expect(row).toBe(28)
+    expect(row).toBe(resolve('product', 'sm', 'md').h)
     expect(el.getBoundingClientRect().height).toBe(row)
   })
 

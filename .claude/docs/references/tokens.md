@@ -1,8 +1,9 @@
 # Color tokens — the role system
 
 > Canonical naming + role standard for agent-ui color. The dimensional tokens (every size) are not here:
-> they derive from one n per element, see [`geometry-sizing-spec.md`](./geometry-sizing-spec.md) §1 and
-> ADR-0245 (`@agent-ui/shared` `foundations.gen.css`, generated from `scale.mjs`, never hand-edited). **Derived** from the value source
+> they derive from one n per element, and container spacing from m, see
+> [`geometry-sizing-spec.md`](./geometry-sizing-spec.md) §1 and ADR-0245 with its Amendment 3
+> (`@agent-ui/shared` `foundations.gen.css`, generated from `scale.mjs`, never hand-edited). **Derived** from the value source
 > `@agent-ui/shared/src/tokens/tokens.css` (OKLCH primitives + semantic roles) — the values live there
 > and are not duplicated here; this doc describes the *system*. Distilled 2026-06-26 · adopted into
 > `@agent-ui/shared` 2026-06-26.
@@ -69,7 +70,8 @@ families):
   `--ui-{cmp}-*` declared in `:where()`.
 - **Dimensional tokens route through the own chain too** (TKT-0066 item 5, Kim-ruled
   2026-07-15; the names moved with ADR-0245): a `@scope` styles block never reads a foundation size
-  (`--md-sys-{height,inset,radius,icon-box,glyph-box,type-*}`, the container levels
+  (`--md-sys-{height,inset,radius,icon-box,glyph-box,type-*}`, the type roles including
+  `--md-sys-type-section-label` and `--md-sys-type-group-label`, the container levels
   `--md-sys-{group,widget,card,layout}-{margin,gutter,radius}`, or the bridge aliases of the old names)
   directly. It mints a role-named `--ui-{cmp}-*` token in the `:where()` block
   (`--ui-toast-radius: var(--md-sys-widget-radius)`) and consumes that, same as color roles. The

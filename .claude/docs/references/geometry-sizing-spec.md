@@ -1,7 +1,8 @@
 # Geometry & Sizing Spec: one n, the centering law, the derived foundations
 
-**Status:** design-of-record. **Rewritten 2026-10-13 for ADR-0245**, shipped at the foundations cut (#1932):
-every size derives from **one integer n per element**. This replaces the hand-tuned eight-row ramp
+**Status:** design-of-record. **Rewritten 2026-10-13 for ADR-0245**, shipped at the foundations cut (#1932),
+and brought to the skill's v2 constants and density by Amendment 3 (T-0120): every size derives from **one
+integer n per element**, and container spacing from **m**. This replaces the hand-tuned eight-row ramp
 (16 to 64), the sublinear power law, the `(scale × size) → §1-row` lookup (ADR-0038), the compact box ramp
 (ADR-0041) and the `[density]` frame/rhythm split; their history lives in those superseded ADRs and in git.
 The section numbers (§1 to §7) are kept because ADR bodies cite them.
@@ -11,25 +12,28 @@ a `2n` slot, centered. Tier, scale and size choose n; everything else is a formu
 its font, icon, padding and radius pair by construction. One config owns the system: the skill's
 `scale.mjs` (CFG, `resolve()`, `check()`), vendored to `@agent-ui/shared/src/tokens/scale.mjs`, emitted as
 `foundations.gen.css` by `scripts/generate-foundations.mjs` (which refuses to write when `check()` returns a
-failure). Changing the system means editing CFG, never a stylesheet.
+failure). Changing the system means editing CFG, never a
+stylesheet.
 
 ---
 
 ## 1 · The derivation
 
-`n = n0 + a·s + k·z + g·s·z`. The tier supplies `(n0, a, k, g)`, the region supplies the scale s, and the
-control (or `data-size`) supplies the size z; s and z are each -1, 0 or +1.
+`n = n0 + a·s + k·z + g·s·z`, n in 4 to 24. The tier supplies `(n0, a, k, g)`, the region supplies the scale
+s, and the control (or `data-size`) supplies the size z; s and z are each -1, 0 or +1. Density d (`data-density`
+compact / default / spacious, -1 / 0 / +1) moves only the container unit `m = max(n + a·d, floor((n + c)/2) + 1)`.
 
 | tier | n0 / a / k / g | use |
 |---|---|---|
-| widget | 7 / 1 / 1 / 0 | tool panels, dense chrome |
-| product | 9 / 2 / 2 / 1 | app screens (the library root, at scale sm) |
-| content | 11 / 2 / 2 / 1 | reading and document surfaces |
+| widget | 6 / 1 / 1 / 0 | tool panels, dense chrome |
+| product | 8 / 2 / 2 / 1 | app screens (the library root, at scale sm) |
+| content | 10 / 2 / 2 / 1 | reading and document surfaces |
 | brand | 14 / 2 / 2 / 1 | hero and marketing |
 
-Reachable heights (`4n`) at sm / md / lg: **widget** 20 / 24 / 28 at scale sm and 24 / 28 / 32 at md (the A2UI canvas,
-ADR-0245 Amendment 2), **product** 24 / 28 / 32 at scale sm (the root), 28 / 36 / 44 at md and 32 / 44 / 56 at lg; content and brand step up
-likewise (ADR-0245 Appendix B holds every cell). The retired `[scale]` values map by purpose (`ui-sm` to
+Reachable heights (`4n`) at sm / md / lg: **widget** 16 / 20 / 24 at scale sm, 20 / 24 / 28 at md (the A2UI
+canvas, Amendment 2) and 24 / 28 / 32 at lg; **product** 20 / 24 / 28 at scale sm (the root), 24 / 32 / 40 at md
+and 28 / 40 / 52 at lg; content and brand step up likewise (`derive.out.md` holds every cell; Amendment 3 moved
+the anchors one step down from the 7 / 9 / 11 of the cut). The retired `[scale]` values map by purpose (`ui-sm` to
 widget/sm, `ui-md` to product/sm, `ui-lg` to product/md, `content-*` to content/sm, md, lg); the bridge
 applies the map for one release.
 
@@ -44,12 +48,14 @@ With `c = ceil(n/4)` the derived quantities, all whole pixels (check M7), are:
 | glyph box | `2n - 2c` | `--md-sys-glyph-box` |
 | glyph stroke | `max(1.5px, c/2)` | `--md-sys-glyph-stroke` |
 | type | linear `n + 6` for controls, `pow` for display, heading and subhead | `--md-sys-type-*` |
-| container levels | group / widget / card / layout margin, gutter, radius | `--md-sys-{level}-{margin,gutter,radius}` |
+| type | linear roles never below 9px; the section label `round(body · 9/8)` and the group label `n/2 + 6.5` | `--md-sys-type-section-label`, `--md-sys-type-group-label` |
+| container unit | `m` (n at default density) | `--md-sys-m` |
+| container levels | group (n) and widget / card / layout (m) margin, gutter, radius | `--md-sys-{level}-{margin,gutter,radius}` |
 
-n depends on three attributes that inherit independently, so the generated block is live `calc()` over the
-inputs `--md-sys-tier-*`, `--md-sys-scale-s`, `--md-sys-size-z`, declared on `:root, [data-tier], [data-scale],
-[data-size], [size]` (the recompute list that replaced ADR-0007's `*` ramp), never a literal table per
-combination.
+n depends on three attributes that inherit independently (m on a fourth), so the generated block is live
+`calc()` over the inputs `--md-sys-tier-*`, `--md-sys-scale-s`, `--md-sys-size-z`, `--md-sys-density-d`, declared
+on `:root, [data-tier], [data-scale], [data-size], [size], [data-density]` (the recompute list that replaced
+ADR-0007's `*` ramp), never a literal table per combination.
 
 ### 1.1 · Why no multiplier and no power law
 
@@ -60,9 +66,9 @@ inside a `4n` height.
 
 ### 1.2 · What the derivation moved
 
-Against the old ramp: sm and md keep 24 and 28 at the root, lg moves 36 to 32, the icon box moves 16 / 18 / 20
-to 12 / 14 / 16, the field radius 12 to n, the card radius to 3n. A2UI surfaces at scale md keep a 36px md
-action. The wire, the payloads and the K6 prompt budget move zero bytes (ADR-0245 cl.8).
+Against the old ramp the cut kept 24 and 28 at the root and moved lg 36 to 32; Amendment 3's v2 anchors then
+moved every root step one n down, to 20 / 24 / 28 (n 5 / 6 / 7), and the icon box to 10 / 12 / 14. The field
+radius is n, the card radius 3m. The wire, the payloads and the K6 prompt budget move zero bytes (ADR-0245 cl.8).
 
 ### 1.3 · The dark launch, and what is transitional
 
@@ -74,9 +80,9 @@ the cut, no rollback used); the law above does not.
 
 ### 1.4 · The families, retired
 
-The old "frame ∝ height, rhythm ∝ font" split (and "density multiplies the rhythm only") retired with
-`[density]`: under one n the frame and the rhythm move together, and a denser or roomier region is one
-attribute, `data-scale`.
+The old "frame ∝ height, rhythm ∝ font" split retired with the hand-tabled ramp: under one n the frame and
+the rhythm move together, and a whole region grows or shrinks with one attribute, `data-scale`. Container air
+alone moves with `data-density` (m), never a control (Amendment 3).
 
 ### 1.5 · Slot-presence padding
 
@@ -115,8 +121,9 @@ The old `[scale]` tiers, their literal tables and Kim's `(scale × size)` lookup
 ADR-0245 and retired from `dimensions.css`, which now holds only constants (focus ring, scrollbar, motion,
 pending and working states, typefaces, the typescale weight, line-height and tracking legs). A control reads
 its size prop as z and inherits tier and scale from its region; nothing in a stylesheet names a height.
-The root is product at scale sm; an A2UI surface root carries `data-tier="widget" data-scale="md"`; a reading column sets
-`data-tier="content"`. `[scale]` and `[density]` survive one release as bridge aliases of those axes.
+The root is product at scale sm; an A2UI surface root carries `data-tier="widget" data-scale="md"`; a reading
+column sets `data-tier="content"`. `[scale]` survives one release as a bridge alias of tier and scale,
+`[density]` of `data-density`.
 
 ---
 
@@ -126,7 +133,7 @@ The root is product at scale sm; an A2UI surface root carries `data-tier="widget
 
 A functional mark (a caret, check, plus, minus, dot, x, ellipsis, warning, info) is a `ui-glyph`, drawn from
 one path table in `components` as a stroke path in a fixed viewBox with `vector-effect: non-scaling-stroke`,
-so the stroke is the token `--md-sys-glyph-stroke`. Its box is `2n - 2c` (8 / 10 / 12 at the root's sm / md /
+so the stroke is the token `--md-sys-glyph-stroke`. Its box is `2n - 2c` (6 / 8 / 10 at the root's sm / md /
 lg), always inside a `2n` slot, so an icon and a glyph in neighbouring slots share the slot box and the centre
 line. A caret is no longer drawn at the control font. A control with a child slot renders `<ui-glyph>`; a
 control that drew on a pseudo-element either gains a `ui-glyph` child or reads a generated mask token from the
@@ -135,7 +142,7 @@ same table, and never re-draws a mark by hand.
 ### 4.2 · Icon (leading)
 
 A leading icon (a field's `slot=icon`, a button's icon) is pictorial pack art (ADR-0065/0066) in the `2n` icon
-box (12 / 14 / 16 at the root). The standalone `<ui-icon>` is the same box.
+box (10 / 12 / 14 at the root). The standalone `<ui-icon>` is the same box.
 
 ### 4.3 · Padding
 
@@ -150,7 +157,7 @@ its label is `n`.
 ### 4.5 · `--md-sys-space-*` is LAYOUT spacing, a generated alias layer
 
 `--md-sys-space-{none,xs..2xl}` is a generated alias layer over the container values at the element's n
-(`xs` c, `sm` n, `md` n + c, `lg` 2n, `xl` 3n, `2xl` 4n), so the six A2UI `gap` enums keep their names. It is
+(`xs` c, `sm` n, `md` n + c, `lg` 2m, `xl` 3m, `2xl` 4m), so the six A2UI `gap` enums keep their names. It is
 the space between components. Three registers remain: **control padding** (the n rules above), **layout
 spacing** (`--md-sys-space-*`), and **container interior** (the four container levels, ADR-0245 cl.6, which
 replaced ADR-0046's fixed 6 / 12 / 8 paddings and the nested 12 to 6 to 6 step-down).
@@ -209,10 +216,10 @@ not universal.
 
 ### 4.9 · Containers, placement and radius (ADR-0245 cl.6)
 
-Four levels at the container's own n (root md, n 7, c 2): **group** (margin and radius `n + c`, gutter `c`:
-listbox panels, segmented-control, table rows, tooltip), **widget** (`2n`, gutter `n`: popover, toast,
-form-popover panel), **card** (`3n`, gutter `2n`: card, modal, drawer, command-modal) and **layout** (`4n`,
-gutter `3n`: super-shell frame and bars, the docs page frame). A container pads with its margin; a boxed child
+Four levels at the container's own n and m (root md, n 6, c 2, m 6): **group** (margin and radius `n + c`,
+gutter `c`: listbox panels, segmented-control, table rows, tooltip), **widget** (`2m`, gutter `m`: popover,
+toast, form-popover panel), **card** (`3m`, gutter `2m`: card, modal, drawer, command-modal, the A2UI
+artboard) and **layout** (`4m`, gutter `3m`: super-shell frame and bars, the docs page frame). A container pads with its margin; a boxed child
 at an edge sits at `margin - its own inset` via a negative margin of `--md-sys-inset` resolved on the child.
 ADR-0018's `max(0, r - pad)` chain retired. ADR-0046 keeps `[data-box]`, the flow-root BFC, sticky regions
 and the scroll-fade mask; it loses the fixed inset and paddings and density-invariance.
@@ -247,9 +254,9 @@ ADR-0041's 14 / 16 / 18 widget ramp (`--md-sys-compact-*`, Kim's eight-value `12
 
 | Law | Probe |
 |---|---|
-| the config is coherent | `check()` M1 to M10: the generator refuses to emit, a vitest leg asserts `[]` |
+| the config is coherent | `check()` M1 to M16 (M14: no size that depends on n alone shrinks as n grows): the generator refuses to emit, a vitest leg asserts `[]` and pins the vendored sha |
 | the generated sheets are never hand-edited | `--check` on `check:scripts` (`foundations.test.ts`) |
-| computed tokens equal `resolve()` | the 36-cell browser leg (every tier, scale and size cell, both engines) |
+| computed tokens equal `resolve()` | the 36-cell browser leg (every tier, scale and size cell at every density, both engines) |
 | each control obeys its clause 3 rule | `scripts/foundations-probe.mjs` (a class table, `--strict`) plus each control's geometry pin at sm, md and lg against `resolve()` |
 | no hand-tabled ramp, px geometry literal, old `glyph` prop or `[scale]` / `[density]` use | `scripts/foundations-census.mjs --gate` (empty allowlist after the cut) |
 | fill-by-default posture and the width floors | `sizing-gates.test.ts` (ADR-0223), untouched by ADR-0245 |
@@ -263,8 +270,9 @@ their lists, so a sized control outside the class table fails `--strict` rather 
 
 ## 7 · Ratified decisions
 
-1. **ADR-0245 (Kim, 2026-10-13)** is the authority: one n per element, root `product` at scale `sm` (sizes 24 / 28 /
-   32), the A2UI canvas at widget / md (Amendment 2; step 0 had ruled product / md), the pill kept for button and toggle, the avatar `4n`, the glyph stroke
+1. **ADR-0245 (Kim, 2026-10-13)** is the authority: one n per element, root `product` at scale `sm` (sizes
+   20 / 24 / 28 since Amendment 3), density on m, the A2UI canvas at widget / md (Amendment 2; step 0 had ruled
+   product / md), the pill `2n` for button and toggle, the avatar a `4n` circle, the radio dot `glyph - 2`, the glyph stroke
    `max(1.5px, c/2)`, `icon` and `glyph` as separate boxes and elements with the shared `symbol` prop, four
    container levels, type derived behind `ui-text`'s unchanged API.
 2. **ADR-0036 stands:** single-line control text is `line-height: 1`.

@@ -91,7 +91,7 @@ geometry:
   paddingInline: calc(var(--ui-result-card-inset) + var(--ui-result-card-pad-inline))  # = 6px box inset + 12px region inline padding
   rowGap: var(--ui-result-card-gap)                  # = --ui-box-gap (8px), between header, summary, stats and the actions row
   radius: var(--ui-result-card-radius)               # = --md-sys-shape-corner-base
-  note: Container spacing only, no control-height row of its own. The spacing is the ADR-0046 box model in fixed rem (the shared --ui-box-* tokens), so the ink sits 19px inline and 13px block from the outer edge like a stock card region. The control stamps size="lg" on every direct ui-button child (36px at the default scale, the button's own ramp, the personas/action-row.ts behaviour re-homed), so action buttons never take a custom height. Block-level fill by default (ADR-0223); the `inline` boolean flips the host to inline-flex. Stat tiles wrap in an auto-fit grid with an 84px tile floor, and the actions row wraps, so the card never overflows its container.
+  note: Container spacing only, no control-height row of its own. The spacing is the ADR-0046 box model in fixed rem (the shared --ui-box-* tokens), so the ink sits 19px inline and 13px block from the outer edge like a stock card region. The control stamps size="lg" on every direct ui-button child (28px at the root and on an A2UI canvas, the button's own ramp, the personas/action-row.ts behaviour re-homed), so action buttons never take a custom height. Block-level fill by default (ADR-0223); the `inline` boolean flips the host to inline-flex. Stat tiles wrap in an auto-fit grid with an 84px tile floor, and the actions row wraps, so the card never overflows its container.
 
 forcedColors: The host keeps its outline as a CanvasText border, the outcome pill gains a CanvasText border (a tinted fill would otherwise flatten to Canvas), and the stat glyphs paint in CanvasText. The outcome glyph strokes in currentColor and needs no adjustment.
 ---
@@ -134,7 +134,7 @@ number through `Intl.NumberFormat`, a delta signed (`+50`, `-3`).
 ## Actions
 
 The card mints no button. Each direct `ui-button` child is stamped `size="lg"`, so action buttons sit at the
-36px step of the library ramp. A click on the summary or a stat never fires an action.
+large step of the library ramp (28px at the root and on an A2UI canvas). A click on the summary or a stat never fires an action.
 
 ## Accessibility
 

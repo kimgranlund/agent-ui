@@ -36,8 +36,9 @@
      at a button's height in a row. ADR-0112 Amendment 3 (Kim, 2026-08-23) moved it here off the ADR-0041
      widget-box ramp — F3's own named re-open trigger (a register above the compact ceiling) fired: a
      compact-md mark beside height-md controls was unreadable. The box is square; initials/glyph still
-     derive from it. ADR-0245 cl.3 (Kim's step 0 ruling): the derived box is 4n (24 / 28 / 32 at the root),
-     `--md-sys-height` inside an opt-in [data-tier] region; outside one today's height ramp holds. */
+     derive from it. ADR-0245 cl.3 and Amendment 3: the derived box is a 4n circle (20 / 24 / 28 at the root),
+     `--md-sys-height`; an avatar seated inline inside a tag or a control row takes the skill's 2n
+     (`--ui-avatar-size: var(--md-sys-icon-box)`), which no fleet consumer does yet. */
   --ui-avatar-size: var(--md-sys-height, var(--md-sys-height-md));
 
   /* The person icon: derived, the 2n icon box (ADR-0245 cl.4, half the 4n avatar box); today 0.6 of the box. */

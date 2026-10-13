@@ -55,9 +55,9 @@ keyboard: []            # NOT interactive and NOT focusable — no tabindex, no 
 
 geometry:
   sizeClass: display
-  inlineSize: var(--ui-swatch-box-size)   # 2rem default box — NO [size] n rule, NO --md-sys-height (SPEC-R16 AC2)
+  inlineSize: var(--ui-swatch-box-size)   # the icon tile, a 4n square at its context n (ADR-0245 Amendment 3; 2rem under the legacy opt-out); NO [size] attribute, NO control height (SPEC-R16 AC2)
   blockSize: var(--ui-swatch-box-size)
-  radius: var(--ui-swatch-radius)          # n (`--md-sys-radius`) inside an opt-in [data-tier] region (ADR-0245 cl.3); else --md-sys-shape-corner-base
+  radius: var(--ui-swatch-radius)          # the icon tile's n (`--md-sys-radius`, ADR-0245 cl.3, Amendment 3); --md-sys-shape-corner-base under the legacy opt-out
 
 forcedColors: An explicit `@media (forced-colors: active)` block (SPEC-R14) — the box degrades to a `CanvasText` border with its `background` forced `transparent` (never a fake system color); the value/label text is real text and survives untouched.
 ---
@@ -102,7 +102,8 @@ text content: the printed datum and the accessible name are the same string, in 
 
 ## Sizing
 
-The host defaults to a `2rem × 2rem` box (`--ui-swatch-box-size`) — an EXPLICIT token size, not `auto`: a
+The host defaults to a 4n square box, the icon tile (`--ui-swatch-box-size`, ADR-0245 Amendment 3; 24px at the root
+md, `2rem` under the legacy opt-out), an EXPLICIT token size, not `auto`: a
 swatch has no intrinsic content, so a bare `<ui-swatch>` in an unstyled flex row still paints a visible,
 non-collapsed square with zero consumer CSS (ADR-0102 Lane A). There is no `[size]`/`[scale]` attribute and
 no `--md-sys-height-*` lever (SPEC-R16 AC2) — the value text reads the `--md-sys-typescale-body-medium-*` row

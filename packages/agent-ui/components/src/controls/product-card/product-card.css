@@ -66,8 +66,9 @@
   --ui-product-card-inline-gap: var(--md-sys-space-sm); /* price, note and action within the row */
   --ui-product-card-badge-inset: var(--md-sys-space-sm); /* the badge's offset over the image corner */
 
-  /* The action row: the control height at the ramp's large step (button.css `lg`, 36px at the default
-     scale; the approved mockup, ADR-0243 Amendment 2), a filled primary pill. */
+  /* The action row: the derived control height at the card's own n (4n: 24px at the root and on an A2UI
+     canvas, ADR-0245 Amendment 3); the old ramp's large step (36px, the approved mockup, ADR-0243
+     Amendment 2) under the legacy opt-out. A filled primary pill. */
   --ui-product-card-action-height: var(--md-sys-height, var(--md-sys-height-lg));
   --ui-product-card-action-font: var(--md-sys-type-control, var(--md-sys-font-lg));
   --ui-product-card-action-bg: var(--md-sys-color-primary);

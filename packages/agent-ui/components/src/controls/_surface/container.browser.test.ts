@@ -26,6 +26,7 @@ import '../card/card.ts'
 import '../card/card-content.ts'
 import '../text/text.css'
 import '../text/text.ts'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 const mounted: HTMLElement[] = []
 /** An EXTERNALLY-SIZED boundary div (ADR-0100 cl.2's law: definite inline-size) that establishes the query
@@ -133,8 +134,11 @@ describe('ADR-0100 — tiles leg (pattern-dashboard-tiles shape)', () => {
     expect(cards).toHaveLength(3)
 
     const rects = cards.map(rect)
-    const REM8 = 128 // 8rem at the default 16px root
-    for (const r of rects) expect(r.width).toBeGreaterThanOrEqual(REM8)
+    // The content-sized floor scales with the root register's n: it was 8rem (128px, about 18n at the old n 7);
+    // at the n 6 root (scale.mjs resolve('product', 'sm', 'md').n) the tiles measure 125px, so 18n = 108px, still
+    // three times the ~36px chrome-only crush the audit measured pre-fix.
+    const TILE_FLOOR = 18 * resolve('product', 'sm', 'md').n
+    for (const r of rects) expect(r.width).toBeGreaterThanOrEqual(TILE_FLOOR)
     // single line: all three share the same top offset.
     expect(rects[1].top).toBeCloseTo(rects[0].top, 0)
     expect(rects[2].top).toBeCloseTo(rects[0].top, 0)

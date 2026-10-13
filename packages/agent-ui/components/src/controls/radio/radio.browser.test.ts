@@ -14,6 +14,8 @@ import type { UIRadioElement } from '@agent-ui/components/controls/radio'
 import type { UIRadioGroupElement } from '@agent-ui/components/controls/radio-group'
 import '@agent-ui/components/all'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+// The page root register (no data-tier region): product / sm, n 5 / 6 / 7 for size sm / md / lg.
+const root = (size: 'sm' | 'md' | 'lg') => resolve('product', 'sm', size)
 
 const mounted: Element[] = []
 afterEach(() => {
@@ -87,24 +89,24 @@ const contrastOf = (a: string, b: string): number => {
 // ── S3 browser smoke: dot box = --md-sys-compact (exact-px per [size] + [scale]×[size]) ─────────────
 
 describe('ui-radio browser smoke — box geometry (exact px, ADR-0041)', () => {
-  it('radio-box-md: ::before circle = 14px (--md-sys-compact-md, the derived compact ramp)', () => {
+  it('radio-box-md: ::before circle = the root md radio part (12px, --md-sys-compact-md, the derived compact ramp)', () => {
     const el = mount(document.createElement('ui-radio') as UIRadioElement)
     el.textContent = 'Test'
-    // --md-sys-compact-md = 14px on the derived ramp (ADR-0041 clause 2, ADR-0245)
-    expect(Number.parseFloat(getComputedStyle(el, '::before').width)).toBe(14)
-    expect(Number.parseFloat(getComputedStyle(el, '::before').height)).toBe(14)
+    // --md-sys-compact-md = 2n at the root register on the derived ramp (ADR-0041 clause 2, ADR-0245)
+    expect(Number.parseFloat(getComputedStyle(el, '::before').width)).toBe(root('md').parts.radio)
+    expect(Number.parseFloat(getComputedStyle(el, '::before').height)).toBe(root('md').parts.radio)
   })
 
-  it('radio-box-sm: [size=sm] → 12px circle; [size=lg] → 16px circle (the compact ramp)', () => {
+  it('radio-box-sm: [size=sm] → 10px circle; [size=lg] → 14px circle (the compact ramp at the root)', () => {
     const sm = mount(document.createElement('ui-radio') as UIRadioElement)
     sm.setAttribute('size', 'sm')
     sm.textContent = 'Small'
-    expect(Number.parseFloat(getComputedStyle(sm, '::before').width)).toBe(12) // --md-sys-compact-sm
+    expect(Number.parseFloat(getComputedStyle(sm, '::before').width)).toBe(root('sm').parts.radio) // --md-sys-compact-sm
 
     const lg = mount(document.createElement('ui-radio') as UIRadioElement)
     lg.setAttribute('size', 'lg')
     lg.textContent = 'Large'
-    expect(Number.parseFloat(getComputedStyle(lg, '::before').width)).toBe(16) // --md-sys-compact-lg
+    expect(Number.parseFloat(getComputedStyle(lg, '::before').width)).toBe(root('lg').parts.radio) // --md-sys-compact-lg
   })
 
   it('outside any region the dot keeps today\'s 56% of the box (22% inset)', () => {
@@ -120,11 +122,12 @@ describe('ui-radio browser smoke — box geometry (exact px, ADR-0041)', () => {
   })
 })
 
-// ADR-0245 clause 3: inside an opt-in region the circle is 2n and the dot 2n - 4c, against scale.mjs resolve().
+// ADR-0245 clause 3 and Amendment 3: inside an opt-in region the circle is 2n and the dot the glyph minus 2
+// (2n - 2c - 2), against scale.mjs resolve().
 describe('ui-radio geometry inside an opt-in data-tier region (ADR-0245)', () => {
   for (const scale of ['sm', 'md'] as const) {
     for (const size of ['sm', 'md', 'lg'] as const) {
-      it(`product / ${scale} / ${size}: circle 2n, dot 2n - 4c`, () => {
+      it(`product / ${scale} / ${size}: circle 2n, dot glyph - 2`, () => {
         const r = resolve('product', scale, size)
         const wrapper = document.createElement('div')
         wrapper.setAttribute('data-tier', 'product')
@@ -139,8 +142,8 @@ describe('ui-radio geometry inside an opt-in data-tier region (ADR-0245)', () =>
         expect(Number.parseFloat(ring.width)).toBe(r.icon)
         expect(Number.parseFloat(ring.height)).toBe(r.icon)
         const dot = getComputedStyle(el, '::after')
-        expect(Number.parseFloat(dot.width)).toBe(r.icon - 4 * r.c)
-        expect(Number.parseFloat(dot.height)).toBe(r.icon - 4 * r.c)
+        expect(Number.parseFloat(dot.width)).toBe(r.parts.radioDot)
+        expect(Number.parseFloat(dot.height)).toBe(r.parts.radioDot)
       })
     }
   }

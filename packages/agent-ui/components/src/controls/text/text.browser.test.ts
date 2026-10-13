@@ -31,17 +31,17 @@ beforeAll(async () => {
 })
 
 describe('ui-text browser-truth harness — the role×size matrix resolves to real px (ADR-0078)', () => {
-  it('body/md (the bare default) resolves to 14px — the fully-M3-canonical size (ADR-0078 knob ①)', () => {
+  it('body/md (the bare default) resolves to the derived body role at the root register, 13px (ADR-0078 knob ①, ADR-0245 cl.7)', () => {
     const el = document.createElement('ui-text')
     el.textContent = 'Body text'
     document.body.append(el)
     const fontSize = getComputedStyle(el).fontSize
     expect(fontSize).toMatch(/px$/)
-    expect(Number.parseFloat(fontSize)).toBeCloseTo(14, 0)
+    expect(Number.parseFloat(fontSize)).toBeCloseTo(resolve('product', 'sm', 'md').type.body, 0)
     el.remove()
   })
 
-  it('display/sm → 27px · title/lg → 17px · body/md → 14px (the derived roles at the root register, ADR-0245 cl.7)', () => {
+  it('display/sm → 27px · title/lg → 17px · body/md → 13px (the derived roles at the root register, ADR-0245 cl.7)', () => {
     const cases: Array<[string, string, number]> = [
       ['display', 'sm', resolve('product', 'sm', 'sm').type.display],
       ['title', 'lg', resolve('product', 'sm', 'lg').type.title],
@@ -144,7 +144,9 @@ describe('ui-text in a region — the type roles derive from the region n (ADR-0
     wrap.remove()
 
     expect(compactPx).toBeLessThan(basePx)
-    expect(compactPx).toBeCloseTo(basePx * 0.875, 0)
+    // derived, not a ratio: the heading role at the root (n 6) and in a widget / sm region (n 5)
+    expect(basePx).toBeCloseTo(resolve('product', 'sm', 'md').type.heading, 0)
+    expect(compactPx).toBeCloseTo(resolve('widget', 'sm', 'md').type.heading, 0)
   })
 })
 
@@ -172,9 +174,9 @@ describe('ui-text compact-window override — body 15/13/11 below the 52.5rem li
     el.remove()
   })
 
-  it("bare size='lg' (the body-large row via :not([variant])) computes 15px below the line", () => {
+  it("bare size='lg' (the body-large row via :not([variant])) computes the derived 14px below the line", () => {
     const el = mountText({ size: 'lg' })
-    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(15, 0)
+    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(resolve('product', 'sm', 'lg').type.body, 0)
     el.remove()
   })
 

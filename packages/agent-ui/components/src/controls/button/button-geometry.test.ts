@@ -46,7 +46,7 @@ const iconBySize: Record<string, number | null> = {
 describe('button.css — STATIC geometry trip-wires (s11)', () => {
   it('0 < glyph ≤ box: the content-icon ramp is positive and fits the height box at every size', () => {
     // anti-vacuous: the root register's 2n icon box (ADR-0245), NOT an empty value silently passing the relation.
-    expect(iconBySize).toEqual({ sm: 12, md: 14, lg: 16 }) // 2n at n 6 / 7 / 8
+    expect(iconBySize).toEqual({ sm: 10, md: 12, lg: 14 }) // 2n at n 5 / 6 / 7
 
     for (const size of ['sm', 'md', 'lg'] as const) {
       const icon = iconBySize[size]

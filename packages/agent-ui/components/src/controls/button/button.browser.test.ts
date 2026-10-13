@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 // Phase-1 s12 — the browser-truth harness PROOF (trivial, not the real geometry smoke — that's s13).
 // This asserts only that the harness is alive: the family self-defines, the foundation + component CSS
@@ -19,12 +20,12 @@ describe('ui-button browser-truth harness (s12)', () => {
     el.textContent = 'Go'
     document.body.append(el)
 
-    // block-size is `var(--ui-button-height)` → `var(--md-sys-height-md)` → `calc(28px * var(--md-sys-scale))`.
+    // block-size is `var(--ui-button-height)` → `var(--md-sys-height-md)` → the derived 4n md height (scale.mjs resolve()).
     // If the foundation/component CSS or the token chain hadn't resolved, this would not be a real px.
     const blockSize = getComputedStyle(el).blockSize
     expect(blockSize).toMatch(/px$/)
     expect(Number.parseFloat(blockSize)).toBeGreaterThan(0)
-    expect(Number.parseFloat(blockSize)).toBe(28) // md frame @ scale 1 — the ramp truly resolved
+    expect(Number.parseFloat(blockSize)).toBe(resolve('product', 'sm', 'md').h) // md frame @ scale 1, the ramp truly resolved
 
     el.remove()
   })

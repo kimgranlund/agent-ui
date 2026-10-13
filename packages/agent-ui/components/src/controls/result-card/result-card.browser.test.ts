@@ -1,8 +1,12 @@
 import { describe, it, expect, afterEach } from 'vitest'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+
+/** The derived root register (product / sm / md, ADR-0245). */
+const ROOT = resolve('product', 'sm', 'md')
 
 // result-card.browser.test.ts: the real-engine painted proof for ui-result-card (ADR-0244, ResultCard fork
 // sheet). jsdom is blind to layout, so this covers the whole-shape fill and hug, the ADR-0046 box model by
-// computed geometry, the no-edge-accent law, the producer buttons at the lg step (32px derived), and the stat wrap.
+// computed geometry, the no-edge-accent law, the producer buttons at the lg step (28px derived), and the stat wrap.
 //
 // Side-effect imports, load-bearing order (ADR-0003): foundation roles and ramps first, then the sheets, then
 // the controls. The card mints no button, so the test brings ui-button itself (as the renderer would).
@@ -150,7 +154,7 @@ describe('ui-result-card: the ADR-0046 box model', () => {
 })
 
 describe('ui-result-card: the producer buttons at the lg step', () => {
-  it('every direct ui-button child carries size lg and renders the derived 32px tall', async () => {
+  it('every direct ui-button child carries size lg and renders the derived 28px tall', async () => {
     const el = winCard(container('480px'))
     const late = button('Show board')
     el.append(late)
@@ -159,7 +163,7 @@ describe('ui-result-card: the producer buttons at the lg step', () => {
     expect(buttons).toHaveLength(3)
     for (const b of buttons) {
       expect(b.getAttribute('size')).toBe('lg')
-      expect(b.getBoundingClientRect().height).toBeCloseTo(32, 0)
+      expect(b.getBoundingClientRect().height).toBeCloseTo(resolve('product', 'sm', 'lg').h, 0)
     }
   })
 })
@@ -205,8 +209,8 @@ describe('ui-result-card: the outcome pill and the stat wrap', () => {
 })
 
 // ADR-0245 geometry pin (clause 10c): the migrated tokens read the derived foundation inside an opt-in
-// data-tier region and today's value outside it. Values are scale.mjs resolve('product', 'sm', 'md'): n 7,
-// height 28, c 2, icon box 14, radius 7. Lengths are read through layout (`inline-size: var(<token>)`).
+// data-tier region and today's value outside it. Values are scale.mjs resolve('product', 'sm', 'md'): n 6,
+// height 24, c 2, icon box 12, radius 6. Lengths are read through layout (`inline-size: var(<token>)`).
 const lengthOf = (host: HTMLElement, token: string): number => {
   const probe = document.createElement('span')
   probe.style.cssText = `position:absolute;block-size:1px;inline-size:var(${token});`
@@ -228,11 +232,11 @@ describe('ui-result-card: ADR-0245 derived foundations, dark launch', () => {
   it('reads today\'s value outside a data-tier region and the derived value inside', () => {
     const { out, inside } = foundationsPair('ui-result-card', 'outcome="win" result-title="Blackjack"')
     expect(lengthOf(out, '--ui-result-card-outcome-radius')).toBe(999)
-    expect(lengthOf(inside, '--ui-result-card-outcome-radius')).toBe(28) // any radius over half the pill's height is a pill
+    expect(lengthOf(inside, '--ui-result-card-outcome-radius')).toBe(ROOT.h) // any radius over half the pill's height is a pill
     expect(lengthOf(out, '--ui-result-card-outcome-gap')).toBe(5)
-    expect(lengthOf(inside, '--ui-result-card-outcome-gap')).toBe(7)
+    expect(lengthOf(inside, '--ui-result-card-outcome-gap')).toBe(ROOT.n)
     expect(lengthOf(out, '--ui-result-card-stat-radius')).toBe(lengthOf(out, '--md-sys-shape-corner-base') - 2)
-    expect(lengthOf(inside, '--ui-result-card-stat-radius')).toBe(7)
+    expect(lengthOf(inside, '--ui-result-card-stat-radius')).toBe(ROOT.n)
     for (const el of [out, inside]) expect(lengthOf(el, '--ui-result-card-stat-gap')).toBe(2)
   })
 })

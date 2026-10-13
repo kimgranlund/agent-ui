@@ -17,8 +17,8 @@
   --ui-artboard-checker-b: var(--md-sys-color-neutral-surface, currentColor);
   --ui-artboard-stage-bg: var(--md-sys-color-neutral-surface-low, currentColor);
   --ui-artboard-empty-ink: var(--md-sys-color-neutral-on-surface-variant, currentColor);
-  --ui-artboard-gap: var(--md-sys-space-md);
-  --ui-artboard-pad: var(--md-sys-space-lg);
+  --ui-artboard-gap: var(--md-sys-card-gutter, var(--md-sys-space-md)); /* the card level, 2m (ADR-0245 Amendment 3) */
+  --ui-artboard-pad: var(--md-sys-card-margin, var(--md-sys-space-lg)); /* the card level, 3m (ADR-0245 Amendment 3) */
   --ui-artboard-inline-inset: var(--md-sys-space-2xl); /* the calc() arm subtracted from 100% below — the 32rem cap itself has no ladder rung */
 }
 

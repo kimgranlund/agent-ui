@@ -25,9 +25,9 @@
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-swatch) declares --ui-swatch-* ════════════════ */
 
 :where(ui-swatch) {
-  --ui-swatch-box-size: 2rem; /* the deterministic default box (whole-shape, SPEC-R13 AC1) — NOT auto */
+  --ui-swatch-box-size: calc(4 * var(--md-sys-inset, 0.5rem)); /* the icon tile, a 4n square (ADR-0245 Amendment 3; n, never m, so density leaves it alone), the deterministic default box (whole-shape, SPEC-R13 AC1), NOT auto; 2rem under the legacy opt-out */
   --ui-swatch-border: 1px solid var(--md-sys-color-neutral-outline-variant); /* the hairline so a surface color never vanishes (SPEC-R2 AC3) */
-  --ui-swatch-radius: var(--md-sys-radius, var(--md-sys-shape-corner-base)); /* ADR-0245 cl.3: n inside an opt-in region */
+  --ui-swatch-radius: var(--md-sys-radius, var(--md-sys-shape-corner-base)); /* the icon tile's radius n (ADR-0245 cl.3, Amendment 3) */
   --ui-swatch-gap: var(--md-sys-space-xs); /* box↔text gap — rides [density] for free (ADR-0103) */
 }
 

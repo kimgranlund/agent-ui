@@ -79,12 +79,12 @@ keyboard: []           # NOT interactive and NOT focusable — no tabindex, no k
 
 geometry:
   sizeClass: indicator
-  boxSize: var(--ui-avatar-size)  # a SQUARE: 4n (`--md-sys-height`, 24 / 28 / 32 at the root) the control height (ADR-0245 cl.3, Kim's step 0 ruling); the `--md-sys-height-{sm,md,lg}` bridge aliases serve a data-foundations="legacy" region until W7
+  boxSize: var(--ui-avatar-size)  # a 4n circle (`--md-sys-height`, 20 / 24 / 28 at the root) the control height (ADR-0245 cl.3, Amendment 3; inline in a tag or control row the skill's 2n); the `--md-sys-height-{sm,md,lg}` bridge aliases serve a data-foundations="legacy" region until W7
                                     # (the same root tokens ui-button's block-size /
                                     # min-inline-size ride; ADR-0112 Amendment 3, 2026-08-23, re-ruling fork F3);
                                     # `[size]` is z; `data-scale` / `data-tier` on an ancestor re-derives the
                                     # box for the subtree for free — no avatar-local scale rule needed
-  # 24 / 28 / 32px at the root's sm / md / lg (SPEC-R20 as amended). Initials/glyph derive from the box.
+  # 20 / 24 / 28px at the root's sm / md / lg (SPEC-R20 as amended). Initials/glyph derive from the box.
 
 forcedColors: An explicit `@media (forced-colors: active)` block adds a system-ink (`CanvasText`) border so the circle boundary stays visible under WHCM (SPEC-R19 — a background-drawn plane can otherwise merge with the page). Initials are real text and survive untouched; the `ui-icon` glyph inherits the consuming context's forced-colors ink (icon.md's own posture).
 ---

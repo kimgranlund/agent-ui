@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { userEvent } from 'vitest/browser'
+import { resolve } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
 // Side-effect import: the demo page mounts the app shell + the live ui-command-modal specimen into document.body
 // (mountPage appends to `#app ?? document.body`; the adr-index.browser.test.ts precedent).
 import './command-modal-demo.ts'
@@ -73,15 +74,16 @@ describe('command-modal-demo: the mock row is byte-identical outside a data-tier
     }
   })
 
-  it('inside data-tier="product" data-scale="md" the same row measures 4n tall at n 9 (36px, 15px type)', async () => {
+  it('inside data-tier="product" data-scale="md" the same row measures 4n tall at n 8 (32px, 14px type)', async () => {
     await raf()
     const mock = document.querySelector('.demo-modal-mock') as HTMLElement
     mock.setAttribute('data-tier', 'product')
     mock.setAttribute('data-scale', 'md')
     try {
       await raf()
-      expect(getComputedStyle(search()).minBlockSize).toBe('36px')
-      expect(getComputedStyle(search()).fontSize).toBe('15px')
+      const r = resolve('product', 'md', 'md')
+      expect(getComputedStyle(search()).minBlockSize).toBe(`${r.h}px`)
+      expect(getComputedStyle(search()).fontSize).toBe(`${r.type.control}px`)
     } finally {
       mock.removeAttribute('data-tier')
       mock.removeAttribute('data-scale')

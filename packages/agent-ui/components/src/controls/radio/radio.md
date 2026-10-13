@@ -97,7 +97,7 @@ geometry:
   posture: fill (block-level flex host, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-flex + hug   # Fill by Default — slice 2 (action/selection); the circle box below keeps its fixed square either way
   blockSize: var(--md-sys-compact-md)   # the indicator box height: --md-sys-icon-box (2n, ADR-0245 cl.3); --md-sys-compact-{size} is the bridge alias until W7 (ADR-0041's widget ramp retired)
   inlineSize: var(--md-sys-compact-md)  # the indicator box width = same (square circle)
-  dotInset: 2c inside an opt-in data-tier region (dot = 2n − 4c, ADR-0245 cl.3); 22% of box outside (::after dot diameter = box − 2×22%-of-box, same maths as the prior box-shadow annulus)
+  dotInset: c + 1 (dot = glyph − 2 = 2n − 2c − 2, ADR-0245 Amendment 3, which never shrinks as n grows); 22% of box under the legacy opt-out (::after dot diameter = box − 2×22%-of-box, same maths as the prior box-shadow annulus)
   labelGap: var(--ui-radio-gap)     # gap between circle and label slot (n)
 
 forcedColors: A `@media (forced-colors: active)` block keeps the idle ring visible (ButtonText border) and, when checked, maps the ring+fill to Highlight and the dot (::after) to HighlightText — the platform's own paired "on-fill" colour (forced-color-adjust: none preserves both). The focus ring survives via --md-sys-color-focus-ring → Highlight.

@@ -195,9 +195,9 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
       icon.wrap.setAttribute('data-scale', scale)
       bare.wrap.setAttribute('data-scale', scale)
       const r = resolve('product', scale, 'md')
-      expect(px(getComputedStyle(icon.field).columnGap), `column-gap @ ${scale}`).toBeCloseTo(r.inset, 1)
+      expect(px(getComputedStyle(icon.field).columnGap), `column-gap @ ${scale}`).toBeCloseTo(r.control.margin, 1)
       expect(frameHeight(bare.field), `bare height @ ${scale}`).toBeCloseTo(r.h, 0)
-      expect(padStartPx(bare.field), `bare value edge @ ${scale}`).toBeCloseTo(r.inset, 0)
+      expect(padStartPx(bare.field), `bare value edge @ ${scale}`).toBeCloseTo(r.control.margin, 0)
     }
   })
 

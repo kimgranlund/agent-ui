@@ -714,3 +714,135 @@ The cut's step-down stamps revert: the persona action rows and CardTable's chips
 clause 2 bullet "A2UI surfaces sit at `data-scale="md"`", step 0 ruling 2, the clause 10b W5 row's
 parenthetical and Appendix B's closing canvas paragraph, all left above as written. Clause 2's
 catalog-invisible rule and clause 8's zero prompt bytes stand: no catalog row or payload names the register.
+
+## Amendment 3 (2026-10-13, T-0120): the skill's v2 constants, density on m, M14, the section and group labels, and the derived exceptions
+
+The skill owner published a v2 of `mathematical-design-system` on 2026-10-13 and took in agent-ui's peer review
+the same day: `scale.mjs` now carries `data-density` and the container unit m, a 9px type floor, one ladder of
+levels (chip, control, group, widget, card, page), the component sizes under `parts`, the control rule, and the
+contract M11 to M16. Kim's rulings, 2026-10-13: take the new `scale.mjs` byte for byte, tier anchors included,
+and accept the one-step shrink of every control; rename the kicker roles to section label and group label, with
+`ui-text`'s `kicker` kept as an alias; add the monotonic contract and make the radio dot the glyph minus 2;
+derive the hand-set exceptions; keep separate scaling laws for controls, content and type (no change); accept
+the half-pixel group label. This amendment supersedes the parts of the body named below; the body and its
+appendices stay as written.
+
+1. **The v2 constants, byte for byte.** `packages/agent-ui/shared/src/tokens/scale.mjs` and
+   `../references/foundations-derivation/scale.mjs` are the skill's v2 copy (sha256 `3c319761…6057ba5b`, its
+   07:51 revision, the one that answers the peer review). The cut's copy (sha256 `eca32879…a3fb8f4d9`) stays
+   beside it as `scale-v1.mjs`, so `derive.mjs` still prints the body's tables (its sections 1 to 10) and
+   prints this amendment's from v2 (sections 11 to 17 of `derive.out.md`). The anchors moved one n down: widget
+   6/1/1/0, product 8/2/2/1, content 10/2/2/1, brand 14/2/2/1, ladder n 4 to 24. Linear type never goes below
+   9px (field label and group label are held there at n 4), and the generator's `lin()` carries the same
+   `max(9px, …)`. `resolve()` renamed its keys (`inset` and `radius` are `control.margin` and
+   `control.radius`, `layout` is `page`); the tokens keep their ADR-0140 names, `--md-sys-inset`,
+   `--md-sys-radius` and `--md-sys-layout-*`.
+2. **The root shrinks one step.** The root stays product at scale sm, now n 5 / 6 / 7: heights 24 / 28 / 32
+   become **20 / 24 / 28**. The title's "the library root keeps 24 and 28 while lg moves to 32" and clause 2's
+   root table describe v1. The A2UI canvas (widget at scale md, Amendment 2) keeps the root's n, so Amendment
+   2's numbers re-derive with it: on a canvas sm / md / lg read height 20 / 24 / 28 (was 24 / 28 / 32) · icon
+   box 10 / 12 / 14 · glyph box 6 / 8 / 10 · control type 11 / 12 / 13 · button radius (pill) 10 / 12 / 14, and
+   the card levels at md are margin 18, gutter 12, radius 18 with body type 13. The stamps Amendment 2 restored
+   keep their sizes: the persona action rows and CardTable's chips, stake and Clear are `lg` (28px),
+   BookingForm's Reserve and fields are `md` (24px), its date picker buttons `sm` (20px), and an unsized
+   catalog Button reads `md` (24px). Product/md now reads 24 / 32 / 40. Every default golden and every literal
+   pin moves with the root.
+3. **`[density]` maps to `data-density`, not `data-scale`** (supersedes clause 2's "`[density]` retires into
+   `data-scale`" bullet and the clause 10a bridge line). Density moves container spacing only:
+   `m = max(n + a·d, floor((n + c)/2) + 1)` with d = -1 / 0 / +1 for compact / default / spacious. The
+   widget, card and layout levels read m; the group level and every control value keep n. The generator emits
+   the input `--md-sys-density-d` on `[data-density]`, the token `--md-sys-m`, and adds `[data-density]` to the
+   recompute list; the bridge maps `[density="compact"]` and `[density="spacious"]` onto the same input. At the
+   root md (n 6): compact m 5 (card 15 / 10 / 15), default m 6 (18 / 12 / 18), spacious m 8 (24 / 16 / 24).
+4. **M14: no size that depends on n alone shrinks as n grows.** Kim's rule (asked for as "M11") is the skill's
+   own M14 since the peer review, beside its M11 (gutter plus label margin equals the control margin), M12 (a
+   label-only control is at least 4n wide), M13 (margins nest at every density), M15 and M16. It runs inside
+   `check()` on every n in the ladder, over every size `resolve()` returns and its `parts`. agent-ui keeps no
+   contract of its own: `scripts/generate-foundations.mjs` refuses to emit when `check()` returns any failure,
+   and `foundations.test.ts` pins the vendored sha, so a re-vendor is a deliberate one-line change. **The radio
+   dot becomes `glyph - 2` (2n - 2c - 2, `parts.radioDot`)**: the old 2n - 4c stepped down each time c stepped
+   up (4 to 2 at n 4 to 5, 8 to 6 at n 8 to 9, 12 to 10 at n 12 to 13), which M14 forbids.
+5. **Section label and group label.** `--md-sys-type-section-kicker` is renamed `--md-sys-type-section-label`
+   and `--md-sys-type-group-kicker` is renamed `--md-sys-type-group-label`, the skill's own names since the peer
+   review (`type.sectionLabel`, `type.groupLabel`). `ui-text`'s `kicker` variant becomes an alias that reads the group label,
+   like `overline` (supersedes Amendment 1's field-label mapping); the bridge's `--md-sys-typescale-kicker-*-size`
+   rows follow. At the root the kicker reads 9 / 9.5 / 10 (was 10 / 11 / 12 under Amendment 1 at v1).
+6. **The exceptions derive** (supersedes clause 3's deviations list and the Step 0 rulings 3 and 4 as
+   exceptions; their pixels stand or move only with n):
+
+   | quantity | was | now | root md, v1 → v2 |
+   |---|---|---|---|
+   | button and toggle radius | the pill as the h/2 special case | `2n` (`--ui-{button,toggle}-radius`) | 14 → 12 |
+   | `ui-avatar` | the 4n deviation | a `4n` circle; `2n` when seated inline in a tag or a control row (no fleet consumer yet) | 28 → 24 |
+   | gauge ring stroke | `0.5rem` | `4c` | 8 → 8 |
+   | swatch box | `2rem` | the icon tile, a `4n` square with radius `n` | 32 → 24 |
+   | A2UI artboard padding and gap | `--md-sys-space-lg` / `-md` (16 / 12 before the cut) | the card level, `3m` / `2m` | 14 / 9 → 18 / 12 |
+   | column-chart top segment radius | `0.75rem`, pinned | the group radius `n + c` | 12 → 8 |
+
+   Each keeps its `var(<derived>, <today>)` fallback, so `data-foundations="legacy"` still renders today's value.
+   ADR-0036 and the slider rule stand.
+7. **Not adopted here** (each a separate decision; `derive.out.md` section 17 has the px):
+   - **The skill's control rule** (margin n, gutter c, label margin n - c, text edge 2n - c). It would move
+     every control's text edge: entry and trigger controls, menu and listbox rows and tabs from n to 2n - c
+     (5 / 6 / 7 to 8 / 10 / 12 at the root, +3 / +4 / +5), and button, toggle and segment labels from 2n to
+     2n - c (10 / 12 / 14 to 8 / 10 / 12, -2).
+   - **Badge height 2n + 2c** (the fleet keeps 2n: 12 against 16 at the root md) and **checkbox and badge radius
+     ceil(n/2)** (the fleet keeps n/2: 2.5 against 3 at sm, 3.5 against 4 at lg).
+   - **The chip level** (tag, badge, kbd) and the reserved levels (tray, lane, shell): no token is generated.
+
+The root controls, v1 → v2 at sm · md · lg (`derive.out.md` section 13):
+
+| quantity | rule | v1 → v2 (delta), sm · md · lg |
+|---|---|---|
+| height, avatar, swatch tile (4n) | 4n | 24 → 20 (-4) · 28 → 24 (-4) · 32 → 28 (-4) |
+| inset, gap, field radius (n) | n | 6 → 5 (-1) · 7 → 6 (-1) · 8 → 7 (-1) |
+| c | ceil(n/4) | 2 → 2 (0) · 2 → 2 (0) · 2 → 2 (0) |
+| icon box, indicator box, badge height (2n) | 2n | 12 → 10 (-2) · 14 → 12 (-2) · 16 → 14 (-2) |
+| glyph box, checkbox check, switch thumb | 2n - 2c | 8 → 6 (-2) · 10 → 8 (-2) · 12 → 10 (-2) |
+| button / toggle pill radius | h/2 → 2n | 12 → 10 (-2) · 14 → 12 (-2) · 16 → 14 (-2) |
+| button label padding | 2n | 12 → 10 (-2) · 14 → 12 (-2) · 16 → 14 (-2) |
+| checkbox radius | n/2 | 3 → 2.5 (-0.5) · 3.5 → 3 (-0.5) · 4 → 3.5 (-0.5) |
+| switch track width | 2 thumb + 2c | 20 → 16 (-4) · 24 → 20 (-4) · 28 → 24 (-4) |
+| field label gap | ceil(n/2) | 3 → 3 (0) · 4 → 3 (-1) · 4 → 4 (0) |
+| table row | 4n + 2c | 28 → 24 (-4) · 32 → 28 (-4) · 36 → 32 (-4) |
+| table text cell padding, tooltip padding (group margin) | n + c | 8 → 7 (-1) · 9 → 8 (-1) · 10 → 9 (-1) |
+| glyph stroke | max(1.5, c/2) | 1.5 → 1.5 (0) · 1.5 → 1.5 (0) · 1.5 → 1.5 (0) |
+| control type | n + 6 | 12 → 11 (-1) · 13 → 12 (-1) · 14 → 13 (-1) |
+| body | n + 7 | 13 → 12 (-1) · 14 → 13 (-1) · 15 → 14 (-1) |
+| title | body + 0/1/2 | 13 → 12 (-1) · 15 → 14 (-1) · 17 → 16 (-1) |
+| field label (`label`) | n + 4 | 10 → 9 (-1) · 11 → 10 (-1) · 12 → 11 (-1) |
+| group label (`overline`, table header) | n/2 + 6.5 | 9.5 → 9 (-0.5) · 10 → 9.5 (-0.5) · 10.5 → 10 (-0.5) |
+| section label | round(body · 9/8) | 15 → 14 (-1) · 16 → 15 (-1) · 17 → 16 (-1) |
+| subhead (`lead`, `quote`) | round(body · Q) | 17 → 15 (-2) · 18 → 17 (-1) · 20 → 18 (-2) |
+| heading (`headline`) | round(body · Q²) | 21 → 19 (-2) · 24 → 21 (-3) · 27 → 24 (-3) |
+| display | round(body · Q³) | 27 → 23 (-4) · 32 → 27 (-5) · 36 → 32 (-4) |
+| radio dot | 2n - 4c → glyph - 2 | 4 → 4 (0) · 6 → 6 (0) · 8 → 8 (0) |
+| `kicker` variant | field label (Amendment 1) → group label | 10 → 9 (-1) · 11 → 9.5 (-1.5) · 12 → 10 (-2) |
+
+The containers and the space alias at the root md, v1 (n 7) → v2 (n 6, m 6) (`derive.out.md` section 14):
+
+| quantity | rule | v1 → v2 (delta) |
+|---|---|---|
+| group margin | n + c | 9 → 8 (-1) |
+| group gutter | c | 2 → 2 (0) |
+| group radius | n + c | 9 → 8 (-1) |
+| widget margin | 2n → 2m | 14 → 12 (-2) |
+| widget gutter | n → m | 7 → 6 (-1) |
+| widget radius | 2n → 2m | 14 → 12 (-2) |
+| card margin | 3n → 3m | 21 → 18 (-3) |
+| card gutter | 2n → 2m | 14 → 12 (-2) |
+| card radius | 3n → 3m | 21 → 18 (-3) |
+| layout margin | 4n → 4m | 28 → 24 (-4) |
+| layout gutter | 3n → 3m | 21 → 18 (-3) |
+| layout radius | 4n → 4m | 28 → 24 (-4) |
+| `--md-sys-space-xs` | c | 2 → 2 (0) |
+| `--md-sys-space-sm` | n | 7 → 6 (-1) |
+| `--md-sys-space-md` | n + c | 9 → 8 (-1) |
+| `--md-sys-space-lg` | 2n → 2m | 14 → 12 (-2) |
+| `--md-sys-space-xl` | 3n → 3m | 21 → 18 (-3) |
+| `--md-sys-space-2xl` | 4n → 4m | 28 → 24 (-4) |
+
+Repairs in the same change: `geometry.md`, `geometry-sizing-spec.md`, `tokens.md`, `naming.md` §12,
+`dimensional-standard.md`, the `component-standards` skill, `CLAUDE.md`'s ramp line, the `avatar`, `radio`,
+`swatch` and `text` descriptors, the sizing page lead and the canvas comment in `action-row.ts`. Every test that
+pins a v1 pixel is re-pinned by its census lane.

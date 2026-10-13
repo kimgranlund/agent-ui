@@ -33,7 +33,7 @@ const CARD = '<ui-attachment filename="plan.pdf" mime-type="application/pdf" siz
 describe('ui-attachment geometry (ADR-0245 cl.3, cl.4 and cl.7)', () => {
   it('inside a region: radius n, the icon is the 2n box and the name is the field-label role', () => {
     const el = mount(CARD).querySelector('ui-attachment') as HTMLElement
-    expect(px(getComputedStyle(el).borderTopLeftRadius)).toBeCloseTo(root.radius, 1)
+    expect(px(getComputedStyle(el).borderTopLeftRadius)).toBeCloseTo(root.control.radius, 1)
     const icon = el.querySelector('ui-icon') as HTMLElement
     expect(icon.getBoundingClientRect().width).toBeCloseTo(root.icon, 1)
     const name = el.querySelector('[data-part="name"]') as HTMLElement

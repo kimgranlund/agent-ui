@@ -136,7 +136,7 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
       wrap.setAttribute('data-scale', scale)
       gaps.push(gapPx(btn))
     }
-    expect(gaps).toEqual((['sm', 'md', 'lg'] as const).map((s) => resolve('product', s, 'md').inset))
+    expect(gaps).toEqual((['sm', 'md', 'lg'] as const).map((s) => resolve('product', s, 'md').control.margin))
     expect(allDistinct(gaps), `gap did not change across data-scale: ${gaps.join()}`).toBe(true)
   })
 
@@ -181,7 +181,9 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
     const caretContent = caret.getBoundingClientRect().width - px(cs.paddingInlineStart) - px(cs.paddingInlineEnd)
     expect(caretContent, 'leading caret content box is not glyph-sized (the --ui-ind oversize bug on the leading edge)').toBeCloseTo(resolve('product', 'sm', 'md').glyph, 0)
     expect(caretContent, 'leading caret glyph is not strictly smaller than its icon-sized cell').toBeLessThan(iconCell)
-    expect(font, 'font is not strictly smaller than the icon cell').toBeLessThan(iconCell)
+    // font <= icon cell, not <: at the root md the control type (n + 6 = 12) TIES the 2n icon box (12) at n 6;
+    // the strict form held only from n 7 up (skill v2). The glyph assertion above still proves caret < icon.
+    expect(font, 'font exceeds the icon cell').toBeLessThanOrEqual(iconCell)
   })
 
   it('ADR-0036 line-height = font: computed line-height on the host equals font-size (single-line control standard)', () => {

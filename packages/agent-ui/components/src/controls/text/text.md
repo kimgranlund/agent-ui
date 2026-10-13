@@ -93,7 +93,7 @@ keyboard:              # NOT interactive/focusable for every `as` EXCEPT the gat
 geometry:
   sizeClass: display
   blockSize: content   # NO control height (geometry.md Display class) — block-size is content-driven; no padding-block law, no frame
-  fontSize: var(--ui-text-size)         # the --md-sys-typescale-{role}-{size}-size the [variant][size] matrix repoints to (ADR-0078 cl.3) — a generated alias over the derived type roles since the cut (ADR-0245 cl.7); inside an opt-in [data-tier] region the derived role --md-sys-type-{role} (ADR-0245 cl.7: display, heading, title, body, field-label, group-kicker, subhead; `kicker` reads field-label, the small uppercase label over a group, not section-kicker, T-0117)
+  fontSize: var(--ui-text-size)         # the --md-sys-typescale-{role}-{size}-size the [variant][size] matrix repoints to (ADR-0078 cl.3): a generated alias over the derived type roles since the cut (ADR-0245 cl.7); inside an opt-in [data-tier] region the derived role --md-sys-type-{role} (ADR-0245 cl.7: display, heading, title, body, field-label, group-label, subhead; `kicker` is an alias of group-label, the small uppercase label over a group, not section-label, T-0117 and Amendment 3)
   fontWeight: var(--ui-text-weight)     # from --md-sys-typescale-{role}-{size}-weight (a :root constant)
   lineHeight: var(--ui-text-line-height)  # from --md-sys-typescale-{role}-{size}-line-height (a :root unitless constant)
   tracking: var(--ui-text-tracking)     # from --md-sys-typescale-{role}-{size}-tracking (a :root em constant); NEW — ADR-0025's table had no tracking leg
@@ -259,7 +259,7 @@ invisible to AT. Reserve `emphasis` for names/labels/key values where the surrou
 law, and no frame — its lever is the type scale, not `--md-sys-height-*`. It consumes only its component tokens
 (`--ui-text-size`/`-weight`/`-line-height`/`-tracking`), which the `[variant][size]` matrix repoints from the
 fleet `--md-sys-typescale-{role}-{size}-*` scale (ADR-0078 cl.2/cl.3) — the role-pure two-block pattern every
-control uses; `ui-text` holds zero scale opinion. `kicker`/`overline` add `text-transform: uppercase` (`kicker` reads the field-label size, so it stays the small label over a group);
+control uses; `ui-text` holds zero scale opinion. `kicker`/`overline` add `text-transform: uppercase` (`kicker` reads the group-label size, the same as `overline`, so it stays the small label over a group);
 `quote` adds italic + an inline-start rule + an indent. An allowed link (`--ui-text-link-ink`, defaulting to
 `--md-sys-color-primary`) always pairs an underline with its ink — never a color-only signifier (ADR-0057)
 — and keeps the fleet's shared `:focus-visible` ring. Text is **selectable** (`user-select` is enabled —

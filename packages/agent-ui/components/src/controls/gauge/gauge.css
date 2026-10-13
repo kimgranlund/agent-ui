@@ -40,7 +40,7 @@
 :where(ui-gauge) {
   --ui-gauge-min-inline-size: 16em; /* the whole-shape floor (ADR-0229 cl.6 role-(d) row) */
   --ui-gauge-min-block-size: 16em; /* a real ring box, not a sliver — the SAME cl.6 floor on the block axis */
-  --ui-gauge-ring-stroke-width: 0.5rem; /* 8px, density-invariant mark geometry (SPEC-R12): ADR-0245 has no ring rule, so the T-0107 ruling keeps the stroke as a whole-shape rem constant that never moves with n; non-scaling-stroke keeps it crisp at any box size */
+  --ui-gauge-ring-stroke-width: calc(4 * var(--md-sys-c, 0.125rem)); /* 4c (ADR-0245 Amendment 3): 8px at c 2, 12px at c 3; density-invariant (c reads n, never m); 0.5rem under the legacy opt-out; non-scaling-stroke keeps it crisp at any box size */
   --ui-gauge-track-ink: var(--md-sys-color-neutral-container); /* the unfilled ring track (mirrors --ui-pie-chart-track-ink) */
   --ui-gauge-text-ink: var(--md-sys-color-neutral-on-surface); /* legend text — the ONE role reference */
   --ui-gauge-row-gap: var(--md-sys-space-sm); /* legend-row rhythm — rides [density] for free (ADR-0103) */

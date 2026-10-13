@@ -40,8 +40,8 @@ describe('ui-toolbar foundations (ADR-0245 lane a01)', () => {
     it(`inside product / sm at size ${size} reads the derived geometry`, () => {
       const r = resolve('product', 'sm', size)
       const el = mount(true, size)
-      expect(read(el, 'column-gap'), 'gap').toBeCloseTo(r.inset, 1)
-      expect(read(el, 'padding-inline-start'), 'padding').toBeCloseTo(r.inset, 1)
+      expect(read(el, 'column-gap'), 'gap').toBeCloseTo(r.control.margin, 1)
+      expect(read(el, 'padding-inline-start'), 'padding').toBeCloseTo(r.control.margin, 1)
     })
   }
 })

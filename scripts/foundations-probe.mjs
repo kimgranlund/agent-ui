@@ -36,15 +36,15 @@ const TOLERANCE = 0.5
  * quantities clause 3 fixes for it, from scale.mjs resolve() at the control's own n.
  */
 export const CLASSES = {
-  frame: { rule: (r) => ({ height: r.h, padding: r.n, radius: r.radius }) }, // a field: height 4n, padding n, radius n
-  pill: { rule: (r) => ({ height: r.h, padding: 2 * r.n, radius: r.h / 2 }) }, // button, toggle: the pill kept at step 0
-  trigger: { part: 'trigger', rule: (r) => ({ height: r.h, padding: r.n, radius: r.radius }) }, // a popup field's frame
-  cell: { part: 'cell', rule: (r) => ({ height: r.h, radius: r.radius }) }, // one frame per character cell
-  multiline: { rule: (r) => ({ padding: r.n, radius: r.radius }) }, // padding n and radius n; rows set the height
+  frame: { rule: (r) => ({ height: r.h, padding: r.n, radius: r.control.radius }) }, // a field: height 4n, padding n, radius n
+  pill: { rule: (r) => ({ height: r.h, padding: 2 * r.n, radius: 2 * r.n }) }, // button, toggle: the pill radius 2n (Amendment 3)
+  trigger: { part: 'trigger', rule: (r) => ({ height: r.h, padding: r.n, radius: r.control.radius }) }, // a popup field's frame
+  cell: { part: 'cell', rule: (r) => ({ height: r.h, radius: r.control.radius }) }, // one frame per character cell
+  multiline: { rule: (r) => ({ padding: r.n, radius: r.control.radius }) }, // padding n and radius n; rows set the height
   listbox: { rule: (r) => ({ padding: r.c, radius: r.group.radius }) }, // the group level: padding c, radius n + c
   // segments 4n, padding 2n; a segment's own size is unconsumed (segment.md), so the size goes on the group
   segment: { parent: 'ui-segmented-control', sizeOnParent: true, rule: (r) => ({ height: r.h, padding: 2 * r.n }) },
-  avatar: { rule: (r) => ({ height: r.h, radius: r.h / 2 }) }, // the 4n tile ruled at step 0, a circle
+  avatar: { rule: (r) => ({ height: r.h, radius: r.h / 2 }) }, // a 4n circle (Amendment 3)
   checkbox: { pseudo: '::before', rule: (r) => ({ height: r.icon, radius: r.n / 2 }) }, // 2n box, radius n/2
   radio: { pseudo: '::before', rule: (r) => ({ height: r.icon, radius: r.icon / 2 }) }, // 2n circle
   switch: { pseudo: '::before', rule: (r) => ({ height: r.icon, radius: r.n }) }, // track 2n tall, fully rounded
@@ -225,16 +225,16 @@ function selftest() {
     console.log(`${cond ? 'ok  ' : 'FAIL'} ${label}`)
   }
   const md = expected('ui-text-field', 'md')
-  check('a field at the root md: height 28, padding n 7, radius n 7', md.height === 28 && md.padding === 7 && md.radius === 7)
+  check('a field at the root md: height 24, padding n 6, radius n 6', md.height === 24 && md.padding === 6 && md.radius === 6)
   const lg = expected('ui-button', 'lg')
-  check('a button at the root lg: height 32, padding 2n 16, the pill radius 16', lg.height === 32 && lg.padding === 16 && lg.radius === 16)
-  check('a derived row on the formula has no mismatch', mismatches({ tag: 'ui-select', size: 'sm', height: 24, padding: 6, radius: 6 }).length === 0)
-  check('today\'s field radius 12 at md is a radius mismatch', mismatches({ tag: 'ui-select', size: 'md', height: 28, padding: 7, radius: 12 }).join() === 'radius')
-  check('sub-pixel layout noise is tolerated', mismatches({ tag: 'ui-select', size: 'md', height: 28.25, padding: 7, radius: 7 }).length === 0)
+  check('a button at the root lg: height 28, padding 2n 14, the pill radius 2n 14', lg.height === 28 && lg.padding === 14 && lg.radius === 14)
+  check('a derived row on the formula has no mismatch', mismatches({ tag: 'ui-select', size: 'sm', height: 20, padding: 5, radius: 5 }).length === 0)
+  check('the legacy field radius 12 at md is a radius mismatch', mismatches({ tag: 'ui-select', size: 'md', height: 24, padding: 6, radius: 12 }).join() === 'radius')
+  check('sub-pixel layout noise is tolerated', mismatches({ tag: 'ui-select', size: 'md', height: 24.25, padding: 6, radius: 6 }).length === 0)
   const box = expected('ui-checkbox', 'md')
-  check('an indicator is ruled on its 2n box, not the 4n frame: checkbox md box 14, radius n/2 3.5', box.height === 14 && box.radius === 3.5 && !('padding' in box))
-  check('a listbox is ruled at the group level: padding c 2, radius n + c 9', expected('ui-multi-select', 'md').padding === 2 && expected('ui-multi-select', 'md').radius === 9)
-  check('a measured element that is missing is a mismatch, never a pass', mismatches({ tag: 'ui-select', size: 'md', found: false, height: 28, padding: 7, radius: 7 }).join() === 'measured element not found')
+  check('an indicator is ruled on its 2n box, not the 4n frame: checkbox md box 12, radius n/2 3', box.height === 12 && box.radius === 3 && !('padding' in box))
+  check('a listbox is ruled at the group level: padding c 2, radius n + c 8', expected('ui-multi-select', 'md').padding === 2 && expected('ui-multi-select', 'md').radius === 8)
+  check('a measured element that is missing is a mismatch, never a pass', mismatches({ tag: 'ui-select', size: 'md', found: false, height: 24, padding: 6, radius: 6 }).join() === 'measured element not found')
   check('a sized tag with no class is reported, and an unruled new tag would be caught', mismatches({ tag: 'ui-zz', size: 'md' }).join() === 'no clause 3 class' && unruled(['ui-zz']).join() === 'ui-zz')
   const tags = sizedTags()
   check('the sized fleet is found and includes button and text-field', tags.includes('ui-button') && tags.includes('ui-text-field') && !tags.includes('ui-icon'))

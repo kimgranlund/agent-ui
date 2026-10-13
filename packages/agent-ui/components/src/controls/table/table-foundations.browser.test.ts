@@ -32,7 +32,7 @@ describe('ui-table geometry inside an opt-in region', () => {
       const td = cell(`<div data-tier="product" data-scale="${scale}">${TABLE}</div>`)
       const r = resolve('product', scale, 'md')
       expect(td.getBoundingClientRect().height).toBe(r.h + 2 * r.c)
-      expect(Number.parseFloat(getComputedStyle(td).paddingInlineStart)).toBe(r.inset + r.c)
+      expect(Number.parseFloat(getComputedStyle(td).paddingInlineStart)).toBe(r.control.margin + r.c)
     })
   }
 })

@@ -38,6 +38,7 @@
 
   /* Geometry — off the s6 dimensional ramp (default size = md). [size] repoints below. */
   --ui-button-height: var(--md-sys-height, var(--md-sys-height-md));
+  --ui-button-radius: calc(2 * var(--md-sys-radius, calc(var(--ui-button-height) / 4))); /* the pill, 2n (ADR-0245 Amendment 3); h/2 under the legacy opt-out */
   --ui-button-font: var(--md-sys-type-control, var(--md-sys-font-md));
   --ui-button-gap: var(--md-sys-inset, var(--md-sys-gap-md));
   --ui-button-icon: var(--md-sys-icon-box, var(--md-sys-icon-md)); /* content-icon = the shared §1-SET icon table (ADR-0035 4a hoist, dimensions.css), per-[scale]-tier; was pow(scale,0.58) */
@@ -112,7 +113,7 @@
     background: var(--ui-button-bg);
     color: var(--ui-button-ink);
     border: 1px solid var(--ui-button-border);
-    border-radius: calc(var(--ui-button-height) / 2); /* pill radius = h/2 */
+    border-radius: var(--ui-button-radius); /* the pill, 2n */
     cursor: pointer;
     -webkit-user-select: none; /* WebKit/Safari still needs the prefix — the label is a control surface, not selectable text */
     user-select: none;

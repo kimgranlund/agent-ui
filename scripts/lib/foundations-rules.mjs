@@ -26,8 +26,8 @@ export const LEGACY_TO_DERIVED = [
 
 /** Every derived token foundations.gen.css declares (generate-foundations.mjs). */
 export const DERIVED = new Set([
-  'n', 'c', 'height', 'inset', 'radius', 'icon-box', 'glyph-box', 'glyph-stroke', 'corner-shape',
-  ...['display', 'heading', 'subhead', 'section-kicker', 'title', 'body', 'control', 'field-label', 'group-kicker'].map((r) => `type-${r}`),
+  'n', 'm', 'c', 'height', 'inset', 'radius', 'icon-box', 'glyph-box', 'glyph-stroke', 'corner-shape',
+  ...['display', 'heading', 'subhead', 'section-label', 'title', 'body', 'control', 'field-label', 'group-label'].map((r) => `type-${r}`),
   ...['group', 'widget', 'card', 'layout'].flatMap((l) => ['margin', 'gutter', 'radius'].map((q) => `${l}-${q}`)),
 ].map((name) => `--md-sys-${name}`))
 
