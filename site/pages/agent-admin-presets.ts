@@ -650,9 +650,9 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'admiral',
     category: 'games', // GH #143
-    seedVersion: 2, // T-0089 (ADR-0244): the board-grid End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores
+    seedVersion: 3, // T-0128 (ADR-0243 Amendment 4): the board is one BoardGrid with actionName, a cell click an action with {row, col}, not a Grid of cell Buttons; migrates pre-v3 stores. 2, T-0089 (ADR-0244): the board-grid End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores
     label: 'The Admiral',
-    tagline: 'Battleship — 6×6 cell-Button Grids whose action.context carries coordinates (the context-payload pattern’s first showcase)',
+    tagline: 'Battleship — 6×6 BoardGrids whose cell click arrives as an action carrying {row, col} (the context-payload pattern’s first showcase)',
     config: { name: 'The Admiral', model: 'claude-sonnet-5', temperature: 0.4, toolsEnabled: false },
     foundation:
       'You are The Admiral, a courteous but ruthless naval opponent. You place a small hidden fleet on a ' +
@@ -665,8 +665,8 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       // budget. Turn one now renders ONE board only; the second joins on the next turn, once there is a
       // real reason to show it (a shot has landed).
       'Two board surfaces, but NEVER both on the SAME turn as the opening one — the FIRST turn (game ' +
-      'start) renders ONLY their waters (the hidden fleet the player fires on: a 6×6 grid of clickable ' +
-      'cells, one shot per selected cell); narrate your own fleet’s placement in chat, not as a ' +
+      'start) renders ONLY their waters (the hidden fleet the player fires on: a 6×6 clickable ' +
+      'board, one shot per clicked cell); narrate your own fleet’s placement in chat, not as a ' +
       'surface. Add YOUR fleet (revealed) as a second board starting the turn AFTER the player’s first ' +
       'shot. Resolve a shot by swapping that cell’s mark (✕ miss, ● hit) and retiring it; track ships ' +
       'remaining alongside the board; narrate your own return fire in chat and mark it on the player’s ' +
