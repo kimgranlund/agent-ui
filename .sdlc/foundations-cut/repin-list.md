@@ -1,4 +1,4 @@
-# T-0107 re-pin list: the component browser files the cut turned red
+# T-0107 re-pin list: the browser test files the cut turned red
 
 Source: `npm run test:browser:packages:components` on `feat/foundations-cut` at `c852d3fb`: 197 failing results from 99 tests in 33 files (Chromium and WebKit each count once). Grouped by the census lane partition (`LANES` in `scripts/foundations-census.mjs`) so each group can run as its own file-disjoint lane. A lane re-pins with scale.mjs `resolve()` at the root register (product / sm) unless the test sets a region.
 
@@ -290,3 +290,119 @@ Kinds. A *value pin* takes the derived value. An *outside leg* keeps today's val
 | test | engines | pinned | measured | kind |
 |---|---|---|---|---|
 | derived foundations, dark launch > reads today's value outside a data-tier region and the derived value inside | 2 | 24 | 28 | outside leg: wrap in data-foundations="legacy" (cl.10e) and keep the old value |
+
+# The other shards: app, packages-rest and site
+
+Source: `npm run test:browser:packages:app`, `test:browser:packages:rest` and `test:browser:site` on `feat/foundations-cut` at `80533e5c` (25 tests in 15 files; the site gallery axis test this lane broke is fixed, not listed). Same columns and kinds as above; the lane names follow the census `PACKAGE_LANES`.
+
+| lane | files | failing tests |
+|---|---|---|
+| a07 | 7 | 13 |
+| a08 | 3 | 5 |
+| a10 | 5 | 7 |
+
+## a07 app (packages/agent-ui/app)
+
+### `packages/agent-ui/app/src/lib/pdf-extractor.browser.test.ts` (3 failing tests)
+
+| test | engines | pinned | measured | kind |
+|---|---|---|---|---|
+| -gated both engines) > extracts real text from a hand-built single-page PDF (worker loads same-origin, no CDN) | 1 | ? | ? | not a value pin: investigate before re-pinning (may be a regression or a flake under load) |
+|  engines) > claims a .pdf file with a blank/absent MIME type by extension alone (a real drag-drop can omit it) | 1 | ? | ? | not a value pin: investigate before re-pinning (may be a regression or a flake under load) |
+| ly PDF (no text-showing operator at all) surfaces the honest no-text-layer reason, never a silent empty result | 1 | ? | ? | not a value pin: investigate before re-pinning (may be a regression or a flake under load) |
+
+### `packages/agent-ui/app/src/controls/agent-admin/agent-admin-chat-surface.browser.test.ts` (2 failing tests)
+
+| test | engines | pinned | measured | kind |
+|---|---|---|---|---|
+| omium: a streamed Card in the Test Chat paints its regions inset and seats the trailing Badge on the title row | 1 | '12px' | '18px' | value pin: take the resolve() value |
+| ebkit: a streamed Card in the Test Chat paints its regions inset and seats the trailing Badge on the title row | 1 | '12px' | '18px' | value pin: take the resolve() value |
+
+### `packages/agent-ui/app/src/controls/agent-admin/agent-admin.browser.test.ts` (4 failing tests)
+
+| test | engines | pinned | measured | kind |
+|---|---|---|---|---|
+| s > entry-add-content (rows=8, the drawer figure) renders a real computed min-height matching the rows formula | 2 | 169 | 168 | value pin: take the resolve() value |
+| ontent's rendered min-height (proves the mechanism; catches a future competing CSS rule that WINS the cascade) | 2 | 247 | 246 | value pin: take the resolve() value |
+|  the SAME computed padding despite agent-admin.css declaring two different literal values for them (both dead) | 2 | 6.5 | 6 | value pin: take the resolve() value |
+|  is the fleet MENU, not an affordance-less scroll - and it genuinely engages at the fleet-default narrow width | 2 | 0 | 0 | value pin: take the resolve() value |
+
+### `packages/agent-ui/app/src/controls/entry-list/entry-list.browser.test.ts` (1 failing tests)
+
+| test | engines | pinned | measured | kind |
+|---|---|---|---|---|
+| e) > a non-drawered kind's entry-content (rows=4) renders a real computed min-height matching the rows formula | 2 | 91 | 90 | value pin: take the resolve() value |
+
+### `packages/agent-ui/app/src/controls/nav-rail/nav-rail-geometry.browser.test.ts` (1 failing tests)
+
+| test | engines | pinned | measured | kind |
+|---|---|---|---|---|
+| i-nav-rail geometry across the data-tier dark launch > reads today’s ramp outside a region (the fallbacks win) | 2 | 18 | 14 | outside leg: wrap in data-foundations="legacy" (cl.10e) and keep the old value |
+
+### `packages/agent-ui/app/src/controls/nav-rail/nav-rail.browser.test.ts` (1 failing tests)
+
+| test | engines | pinned | measured | kind |
+|---|---|---|---|---|
+| gines) > font-size/font-weight/letter-spacing resolve to the kicker-small register, uppercased at the consumer | 2 | 11 | the kicker-small 11px register: expected | value pin: take the resolve() value |
+
+### `packages/agent-ui/app/src/controls/super-shell/super-shell-resize-tabs.browser.test.ts` (1 failing tests)
+
+| test | engines | pinned | measured | kind |
+|---|---|---|---|---|
+|  strip is a real ui-tabs - labels never clip mid-word, the tablist scrolls, tablist semantics ride the control | 2 | 253 | 252 | value pin: take the resolve() value |
+
+## a08 a2ui (packages/agent-ui/a2ui)
+
+### `packages/agent-ui/a2ui/src/renderer/checkbox-group-layout.browser.test.ts` (1 failing tests)
+
+| test | engines | pinned | measured | kind |
+|---|---|---|---|---|
+| O Column wrapper (the pre-fix shape) really DO share one row - proves the positive legs measure something real | 2 | less than 2 | 2.5 | value pin: take the resolve() value |
+
+### `packages/agent-ui/a2ui/src/catalog/personas/box-region.browser.test.ts` (1 failing tests)
+
+| test | engines | pinned | measured | kind |
+|---|---|---|---|---|
+| t row sits one region (18px) between the felt and the Deal row; chips, stepper and Clear at 36px lg, 8px apart | 2 | 36 | 44 | value pin: take the resolve() value |
+
+### `packages/agent-ui/a2ui/src/catalog/personas/concierge/concierge.browser.test.ts` (3 failing tests)
+
+| test | engines | pinned | measured | kind |
+|---|---|---|---|---|
+| 085) > every field shows its visible label, no month grid renders inline, ink sits 19px in and Reserve is 28px | 2 | 19 | 28 | value pin: take the resolve() value |
+| rd (T-0085) > arrival and departure fields share a row in the 480px column and stack in the 336px phone column | 2 | 8 | 18 | value pin: take the resolve() value |
+| ws two input fields with no nested card, side by side at 480px and stacked at 336px, buttons at sm and md only | 2 | 8 | 18 | value pin: take the resolve() value |
+
+## a10 site (site/)
+
+### `site/lib/component-preview-segmented.browser.test.ts` (2 failing tests)
+
+| test | engines | pinned | measured | kind |
+|---|---|---|---|---|
+| ngines) > a short 3-member set (ui-button `size`) renders HORIZONTAL: equal-width adjoining cells, no overflow | 2 | 192 | 194 | value pin: take the resolve() value |
+| izontal case (ui-button `variant`: solid/soft/ghost, 3×5-char labels) still fits the knob row with no overflow | 2 | 192 | 194 | value pin: take the resolve() value |
+
+### `site/pages/a2ui-live.browser.test.ts` (2 failing tests)
+
+| test | engines | pinned | measured | kind |
+|---|---|---|---|---|
+| chrome re-host (ADR-0156) - wide resting shape > the ui-super-shell composition renders the re-baselined rects | 2 | 24 | 21 | value pin: take the resolve() value |
+| ed sidebar holds > the chat pane stays pinned at its fixed 26rem width - it does not shrink with content width | 2 | 24 | 21 | value pin: take the resolve() value |
+
+### `site/pages/command-modal-demo.browser.test.ts` (1 failing tests)
+
+| test | engines | pinned | measured | kind |
+|---|---|---|---|---|
+| gion and derived inside > outside an opt-in region the search row keeps today's md ramp (28px tall, 14px type) | 2 | '14px' | '13px' | outside leg: wrap in data-foundations="legacy" (cl.10e) and keep the old value |
+
+### `site/pages/icon-demo.browser.test.ts` (1 failing tests)
+
+| test | engines | pinned | measured | kind |
+|---|---|---|---|---|
+| icons in real contexts > the ambient font-size ramp sizes the 1em cell - a 3rem icon is wider than a 1rem icon | 2 | 28 | 14 | value pin: take the resolve() value |
+
+### `site/pages/drill-demo.browser.test.ts` (1 failing tests)
+
+| test | engines | pinned | measured | kind |
+|---|---|---|---|---|
+| eractive > both the "Categories" and "Electronics" columns are painted, side by side, neither dimmed nor inert | 1 | 811.941162109375 | 811.3765258789062 | value pin: take the resolve() value |

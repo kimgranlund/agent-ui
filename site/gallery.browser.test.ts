@@ -60,7 +60,7 @@ const cardFor = (gallery: HTMLElement, tag: string): HTMLElement | null =>
 const liveFor = (card: HTMLElement, tag: string): HTMLElement | null =>
   card.querySelector(`.canvas-surface ${tag}`) as HTMLElement | null
 
-/** The one toolbar `ui-select` labelled `label` (scheme/scale/density/theme) — see themeSelect() in
+/** The one toolbar `ui-select` labelled `label` (scheme/tier/scale/theme) — see themeSelect() in
  *  component-gallery.ts. Dogfooded off the fleet's own control (Kim's directive), not a native `<select>`. */
 function selectFor(gallery: HTMLElement, label: string): UISelectElement {
   const wrap = [...gallery.querySelectorAll<HTMLElement>('.gallery-select')].find((s) => s.textContent?.startsWith(label))
@@ -225,8 +225,8 @@ describe('<component-gallery> — the toolbar axis selects compute a real access
     const gallery = await mountGallery()
     const expectations: ReadonlyArray<[string, string]> = [
       ['Scheme', 'Scheme light'],
-      ['Scale', 'Scale ui-md'],
-      ['Density', 'Density comfortable'],
+      ['Tier', 'Tier product'],
+      ['Scale', 'Scale sm'],
       ['Theme', 'Theme default'],
     ]
     for (const [axis, name] of expectations) {
