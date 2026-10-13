@@ -257,8 +257,8 @@
   }
   [data-part='context-chip-dismiss'],
   [data-part='reference-chip-dismiss'] {
-    --ui-button-height: var(--md-sys-icon-box, 0.875rem); /* 2n: the dismiss sits in an icon box */
-    --ui-button-icon: var(--md-sys-glyph-box, 0.625rem); /* 2n - 2c: its mark */
+    --ui-button-height: 0.875rem;
+    --ui-button-icon: 0.625rem;
   }
   /* GH #1211 — the OPTIONAL secondary line (`ContextItem.description`, e.g. a file size or extraction
      state). Absent on every pre-#1211 chip (`#syncContextChips` never creates this part then), so this
