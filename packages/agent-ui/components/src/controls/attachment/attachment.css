@@ -46,7 +46,7 @@
   --ui-attachment-pad-block: var(--md-sys-space-xs);
   --ui-attachment-border: var(--md-sys-color-neutral-outline);
   --ui-attachment-surface: transparent; /* rides the ambient plane; a page may lift it */
-  --ui-attachment-glyph: var(--md-sys-icon-md); /* content-icon register (geometry.md taxonomy), fixed tier — Display class, no [scale] row */
+  --ui-attachment-glyph: var(--md-sys-icon-box, var(--md-sys-icon-md)); /* content-icon register (geometry.md taxonomy), fixed tier — Display class, no [scale] row */
   --ui-attachment-name-ink: var(--md-sys-color-neutral-on-surface);
   --ui-attachment-meta-ink: var(--md-sys-color-neutral-on-surface-variant);
   /* Type register (ADR-0078 typescale, NOT the ADR-0038 control ladder — Display class, no [size]/[scale] row):
@@ -54,11 +54,11 @@
      one step below body prose. Kim's 2026-08-23 ruling for ui-attachment, not fleet law: the four tokens exist
      so a page can repoint the register without touching a part selector (other text-bearing controls read the
      typescale directly and that stays the convention). */
-  --ui-attachment-name-size: var(--md-sys-typescale-label-medium-size);
+  --ui-attachment-name-size: var(--md-sys-type-field-label, var(--md-sys-typescale-label-medium-size));
   --ui-attachment-name-line-height: var(--md-sys-typescale-label-medium-line-height);
   --ui-attachment-meta-size: var(--md-sys-typescale-label-small-size);
   --ui-attachment-meta-line-height: var(--md-sys-typescale-label-small-line-height);
-  --ui-attachment-radius: var(--md-sys-shape-corner-base); /* TKT-0066 item 5 ruling: constants route through the own chain */
+  --ui-attachment-radius: var(--md-sys-radius, var(--md-sys-shape-corner-base)); /* TKT-0066 item 5 ruling: constants route through the own chain */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-attachment) consumes ONLY --ui-attachment-* ════════════════ */
