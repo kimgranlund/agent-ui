@@ -84,7 +84,7 @@ geometry:
                                     # min-inline-size ride; ADR-0112 Amendment 3, 2026-08-23, re-ruling fork F3);
                                     # `[size]` is z; `data-scale` / `data-tier` on an ancestor re-derives the
                                     # box for the subtree for free — no avatar-local scale rule needed
-  # 20 / 24 / 28px at the root's sm / md / lg (SPEC-R20 as amended). Initials/glyph derive from the box.
+  # 20 / 24 / 28px at the root's sm / md / lg (SPEC-R20 as amended). Initials/glyph derive from the box; initials hold the 9px type floor (0.42 of the 20px sm box is 8.4px).
 
 forcedColors: An explicit `@media (forced-colors: active)` block adds a system-ink (`CanvasText`) border so the circle boundary stays visible under WHCM (SPEC-R19 — a background-drawn plane can otherwise merge with the page). Initials are real text and survive untouched; the `ui-icon` glyph inherits the consuming context's forced-colors ink (icon.md's own posture).
 ---
