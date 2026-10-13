@@ -74,11 +74,11 @@ describe('ui-product-card: rendered geometry', () => {
     expect(part(card, 'subtitle').getBoundingClientRect().top - part(card, 'title').getBoundingClientRect().bottom).toBeCloseTo(8, 0)
   })
 
-  it('the action sits at the control ramp lg step: 36px tall, the 16px lg font (ADR-0243 Amendment 2)', async () => {
+  it('the action sits at the derived 28px height, the 13px control font (ADR-0243 Amendment 2)', async () => {
     const { card } = await mount(`<ui-product-card title="Suite" price="$312" action-label="Book" action='{"action":"book"}'></ui-product-card>`)
     const action = part(card, 'action')
-    expect(action.getBoundingClientRect().height).toBe(36)
-    expect(getComputedStyle(action).fontSize).toBe('16px')
+    expect(action.getBoundingClientRect().height).toBe(28)
+    expect(getComputedStyle(action).fontSize).toBe('13px')
   })
 
   it('selected draws a 2px primary outline and a transparent ghost action; disabled greys the media and fades the action', async () => {
@@ -134,7 +134,7 @@ const lengthOf = (host: HTMLElement, token: string): number => {
 }
 const foundationsPair = (tag: string, attrs: string): { out: HTMLElement; inside: HTMLElement } => {
   const wrap = document.createElement('div')
-  wrap.innerHTML = `<div><${tag} ${attrs}></${tag}></div><div data-tier="product" data-scale="sm"><${tag} ${attrs}></${tag}></div>`
+  wrap.innerHTML = `<div data-foundations="legacy"><${tag} ${attrs}></${tag}></div><div data-tier="product" data-scale="sm"><${tag} ${attrs}></${tag}></div>`
   document.body.append(wrap)
   mounted.push(wrap)
   const [out, inside] = Array.from(wrap.querySelectorAll<HTMLElement>(tag)) as [HTMLElement, HTMLElement]

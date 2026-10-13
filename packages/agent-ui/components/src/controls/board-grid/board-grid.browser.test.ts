@@ -61,15 +61,15 @@ describe('ui-board-grid: whole shape', () => {
     expect(rect(all[9]!).top).toBeGreaterThan(rect(all[0]!).bottom - 0.5)
   })
 
-  it('a board with room paints the 46px mockup cell; a narrow one gives way to the 34px floor and no further (ADR-0243 Amendment 2)', () => {
+  it('a board with room paints the derived 42px cell; a narrow one gives way to the 34px floor and no further (ADR-0243 Amendment 2)', () => {
     const roomy = mount('<ui-board-grid rows="6" cols="6"></ui-board-grid>')
     for (const c of cells(roomy)) {
-      expect(rect(c).width).toBeCloseTo(46, 1)
-      expect(rect(c).height).toBeCloseTo(46, 1)
+      expect(rect(c).width).toBeCloseTo(42, 1)
+      expect(rect(c).height).toBeCloseTo(42, 1)
     }
-    const narrow = mount('<ui-board-grid rows="2" cols="8"></ui-board-grid>') // 8 x 46 + gaps overflows the 328px column
+    const narrow = mount('<ui-board-grid rows="2" cols="8"></ui-board-grid>') // 8 x 42 + gaps overflows the 328px column
     const side = rect(cells(narrow)[0]!).width
-    expect(side).toBeLessThan(46)
+    expect(side).toBeLessThan(42)
     expect(side).toBeGreaterThanOrEqual(34)
     const tight = mount('<ui-board-grid rows="1" cols="12"></ui-board-grid>') // even 12 x 34 overflows: the floor holds
     for (const c of cells(tight)) expect(rect(c).width).toBeCloseTo(34, 1)
@@ -90,12 +90,12 @@ describe('ui-board-grid: whole shape', () => {
 })
 
 describe('ui-board-grid: the ADR-0046 box model (Amendment 7)', () => {
-  it('the frame is the 6px box inset; the cell gap stays the tight 4px data-grid gap', () => {
+  it('the frame is the 6px box inset; the cell gap is the derived 2px data-grid gap', () => {
     const el = mount(`<ui-board-grid rows="2" cols="3"></ui-board-grid>`)
     const [a, b] = cells(el)
     expect(rect(a!).left - rect(el).left).toBeCloseTo(6, 0)
     expect(rect(a!).top - rect(el).top).toBeCloseTo(6, 0)
-    expect(rect(b!).left - rect(a!).right).toBeCloseTo(4, 0)
+    expect(rect(b!).left - rect(a!).right).toBeCloseTo(2, 0)
   })
 })
 
@@ -161,7 +161,7 @@ const lengthOf = (host: HTMLElement, token: string): number => {
 }
 const foundationsPair = (tag: string, attrs: string): { out: HTMLElement; inside: HTMLElement } => {
   const wrap = document.createElement('div')
-  wrap.innerHTML = `<div><${tag} ${attrs}></${tag}></div><div data-tier="product" data-scale="sm"><${tag} ${attrs}></${tag}></div>`
+  wrap.innerHTML = `<div data-foundations="legacy"><${tag} ${attrs}></${tag}></div><div data-tier="product" data-scale="sm"><${tag} ${attrs}></${tag}></div>`
   document.body.append(wrap)
   mounted.push(wrap)
   const [out, inside] = Array.from(wrap.querySelectorAll<HTMLElement>(tag)) as [HTMLElement, HTMLElement]
