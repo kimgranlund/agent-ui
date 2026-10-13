@@ -56,12 +56,12 @@ describe('ui-disclosure — mounts + a real engine resolves the geometry (whole-
     const host = row.querySelector('ui-disclosure') as HTMLElement
     const summary = host.querySelector('[data-part="summary"]') as HTMLElement
 
-    // md ramp @ scale 1: height 28, font 14 (dimensions.css §1).
+    // derived root register (ADR-0245, n 7): height 4n = 28, font type.control = 13.
     expect(px(getComputedStyle(summary).blockSize)).toBeCloseTo(28, 0)
-    expect(px(getComputedStyle(summary).fontSize)).toBeCloseTo(14, 0)
+    expect(px(getComputedStyle(summary).fontSize)).toBeCloseTo(13, 0)
     expect(px(getComputedStyle(summary).paddingBlockStart)).toBe(0) // NEVER block-padding (geometry.md)
-    // the h/2 slotless-edge inline pad
-    expect(px(getComputedStyle(summary).paddingInlineStart)).toBeCloseTo(14, 0)
+    // the slotless-edge inline pad: n = 7 (derived, ADR-0245; was h/2)
+    expect(px(getComputedStyle(summary).paddingInlineStart)).toBeCloseTo(7, 0)
     // the host box itself is non-collapsed (test-the-whole-shape — a bare instance must paint correct)
     const box = host.getBoundingClientRect()
     expect(box.width).toBeGreaterThan(0)
@@ -72,7 +72,9 @@ describe('ui-disclosure — mounts + a real engine resolves the geometry (whole-
     const { host, chevron } = mount('<ui-disclosure summary="X"><p>Y</p></ui-disclosure>')
     const glyphSize = px(getComputedStyle(chevron).inlineSize)
     const fontSize = px(getComputedStyle(host.querySelector('[data-part="summary"]') as HTMLElement).fontSize)
-    expect(glyphSize).toBeCloseTo(fontSize, 0) // = font, the inline-affordance law (geometry.md)
+    // derived (ADR-0245): the chevron slot is 2n = 14, no longer the font (type.control 13)
+    expect(fontSize).toBeCloseTo(13, 0)
+    expect(glyphSize).toBeCloseTo(14, 0)
 
     expect(getComputedStyle(chevron).rotate).toBe('0deg') // closed: no rotation (authored 0deg, not the UA `none`)
     // Toggle the DETAILS part's own native [open] directly — this leg proves the CSS SELECTOR match, not
@@ -137,17 +139,17 @@ describe('ui-disclosure — mounts + a real engine resolves the geometry (whole-
     expect(getComputedStyle(innerHost).backgroundColor).toBe('rgba(0, 0, 0, 0)')
   })
 
-  it('[density] changes the CONTAINED body padding but leaves the summary row height/font untouched (the Pattern-class split, SPEC-R18 AC2)', () => {
+  it('a region data-scale moves the CONTAINED body padding and the summary row together (one n, ADR-0245)', () => {
     const { host, summary, body } = mount('<ui-disclosure summary="X" open contained><p>Y</p></ui-disclosure>')
-    const heightComfortable = px(getComputedStyle(summary).blockSize)
-    const padComfortable = px(getComputedStyle(body).paddingBlockStart)
+    const heightRoot = px(getComputedStyle(summary).blockSize)
+    const padRoot = px(getComputedStyle(body).paddingBlockStart)
 
-    host.parentElement?.setAttribute('density', 'compact')
-    const heightCompact = px(getComputedStyle(summary).blockSize)
-    const padCompact = px(getComputedStyle(body).paddingBlockStart)
+    host.parentElement?.setAttribute('data-scale', 'md')
+    const heightRoomy = px(getComputedStyle(summary).blockSize)
+    const padRoomy = px(getComputedStyle(body).paddingBlockStart)
 
-    expect(heightCompact).toBe(heightComfortable) // the frame is density-INVARIANT
-    expect(padCompact).not.toBe(padComfortable) // the body rhythm rides density (anti-vacuous: it DID move)
+    expect(heightRoomy).toBeGreaterThan(heightRoot) // the frame moves with n now (the [density] split retired)
+    expect(padRoomy).toBeGreaterThan(padRoot) // and so does the body rhythm (anti-vacuous: both DID move)
   })
 })
 

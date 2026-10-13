@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest'
 
 // result-card.browser.test.ts: the real-engine painted proof for ui-result-card (ADR-0244, ResultCard fork
 // sheet). jsdom is blind to layout, so this covers the whole-shape fill and hug, the ADR-0046 box model by
-// computed geometry, the no-edge-accent law, the producer buttons at the lg step (36px), and the stat wrap.
+// computed geometry, the no-edge-accent law, the producer buttons at the lg step (32px derived), and the stat wrap.
 //
 // Side-effect imports, load-bearing order (ADR-0003): foundation roles and ramps first, then the sheets, then
 // the controls. The card mints no button, so the test brings ui-button itself (as the renderer would).
@@ -150,7 +150,7 @@ describe('ui-result-card: the ADR-0046 box model', () => {
 })
 
 describe('ui-result-card: the producer buttons at the lg step', () => {
-  it('every direct ui-button child carries size lg and renders 36px tall', async () => {
+  it('every direct ui-button child carries size lg and renders the derived 32px tall', async () => {
     const el = winCard(container('480px'))
     const late = button('Show board')
     el.append(late)
@@ -159,7 +159,7 @@ describe('ui-result-card: the producer buttons at the lg step', () => {
     expect(buttons).toHaveLength(3)
     for (const b of buttons) {
       expect(b.getAttribute('size')).toBe('lg')
-      expect(b.getBoundingClientRect().height).toBeCloseTo(36, 0)
+      expect(b.getBoundingClientRect().height).toBeCloseTo(32, 0)
     }
   })
 })
@@ -217,7 +217,7 @@ const lengthOf = (host: HTMLElement, token: string): number => {
 }
 const foundationsPair = (tag: string, attrs: string): { out: HTMLElement; inside: HTMLElement } => {
   const wrap = document.createElement('div')
-  wrap.innerHTML = `<div><${tag} ${attrs}></${tag}></div><div data-tier="product" data-scale="sm"><${tag} ${attrs}></${tag}></div>`
+  wrap.innerHTML = `<div data-foundations="legacy"><${tag} ${attrs}></${tag}></div><div data-tier="product" data-scale="sm"><${tag} ${attrs}></${tag}></div>`
   document.body.append(wrap)
   mounted.push(wrap)
   const [out, inside] = Array.from(wrap.querySelectorAll<HTMLElement>(tag)) as [HTMLElement, HTMLElement]

@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { server, cdp, page } from 'vitest/browser'
 import type { UITextElement } from './text.ts'
 
@@ -40,11 +41,11 @@ describe('ui-text browser-truth harness — the role×size matrix resolves to re
     el.remove()
   })
 
-  it('display/sm → 36px · title/lg → 22px · body/md → 14px (the ADR-named computed samples)', () => {
+  it('display/sm → 27px · title/lg → 17px · body/md → 14px (the derived roles at the root register, ADR-0245 cl.7)', () => {
     const cases: Array<[string, string, number]> = [
-      ['display', 'sm', 36],
-      ['title', 'lg', 22],
-      ['body', 'md', 14],
+      ['display', 'sm', resolve('product', 'sm', 'sm').type.display],
+      ['title', 'lg', resolve('product', 'sm', 'lg').type.title],
+      ['body', 'md', resolve('product', 'sm', 'md').type.body],
     ]
     for (const [variant, size, px] of cases) {
       const el = document.createElement('ui-text')
@@ -68,11 +69,10 @@ describe('ui-text browser-truth harness — the role×size matrix resolves to re
       sizes.add(Number.parseFloat(getComputedStyle(el).fontSize))
       el.remove()
     }
-    // Two groups collapse by DESIGN (cl.2b): quote ≡ lead (18px, "own tokens, changeable independently")
-    // and label/kicker/overline all borrow the M3 label-medium size (12px — kicker/overline are label
-    // metrics re-weighted/tracked, not resized). So 9 variants land on exactly 6 distinct sizes: display
-    // 45 · headline 28 · title 16 · body 14 · {label,kicker,overline} 12 · {quote,lead} 18.
-    expect(sizes.size).toBe(6)
+    // One group collapses by DESIGN: quote ≡ lead (both the derived subhead role, ADR-0245 cl.7). The other
+    // eight roles are distinct at the root register, so 9 variants land on exactly 8 distinct sizes: display 32 ·
+    // headline 24 · title 15 · body 14 · label 11 · kicker 16 · overline 10 · {quote,lead} 18.
+    expect(sizes.size).toBe(8)
   })
 
   it('size=sm/lg repoint within ONE role produce a strictly ascending triple (sm < md < lg)', () => {
@@ -98,18 +98,19 @@ describe('ui-text browser-truth harness — the role×size matrix resolves to re
     el.setAttribute('size', 'lg')
     el.textContent = 'no variant'
     document.body.append(el)
-    // body-large = 16px (vs. body-medium's 14px) — proves the :not([variant]) compound selector is live
-    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(16, 0)
+    // body at size lg = 15px (vs. size md's 14px) proves the :not([variant]) compound selector is live
+    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(resolve('product', 'sm', 'lg').type.body, 0)
     el.remove()
   })
 })
 
 // ── [scale] subtree re-multiplication (the `*` ramp pre-substitution law, ADR-0078 cl.2 / dimensions.css) ──
 
-describe('ui-text subtree-[scale] — --md-sys-typescale-*-size re-multiplies for a scaled ancestor', () => {
-  it('display/lg under [scale=content-lg] resolves to 99.75px (57px × 1.75 — the * pre-substitution law)', () => {
+describe('ui-text in a region — the type roles derive from the region n (ADR-0245 cl.7)', () => {
+  it('display/lg in a content / lg region resolves to the derived display role at n 16', () => {
     const wrap = document.createElement('div')
-    wrap.setAttribute('scale', 'content-lg') // --md-sys-scale → 1.75
+    wrap.setAttribute('data-tier', 'content')
+    wrap.setAttribute('data-scale', 'lg')
     document.body.append(wrap)
 
     const el = document.createElement('ui-text')
@@ -118,7 +119,7 @@ describe('ui-text subtree-[scale] — --md-sys-typescale-*-size re-multiplies fo
     el.textContent = 'Scaled display'
     wrap.append(el)
 
-    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(99.75, 0)
+    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBe(resolve('content', 'lg', 'lg').type.display)
     wrap.remove()
   })
 
@@ -131,7 +132,8 @@ describe('ui-text subtree-[scale] — --md-sys-typescale-*-size re-multiplies fo
     unscaled.remove()
 
     const wrap = document.createElement('div')
-    wrap.setAttribute('scale', 'ui-sm') // --md-sys-scale → 0.875 (a SMALLER multiplier for clear contrast)
+    wrap.setAttribute('data-tier', 'widget') // the old ui-sm register: a smaller n for clear contrast
+    wrap.setAttribute('data-scale', 'sm')
     document.body.append(wrap)
     const scaled = document.createElement('ui-text')
     scaled.setAttribute('variant', 'headline')
@@ -163,9 +165,9 @@ describe('ui-text compact-window override — body 15/13/11 below the 52.5rem li
     return el
   }
 
-  it('body/md (the bare default) computes 13px below the line — was 14 at/above', () => {
+  it('body/md (the bare default) computes 14px below the line too, the 1px drop is retired (ADR-0245 cl.7)', () => {
     const el = mountText({})
-    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(13, 0)
+    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(resolve('product', 'sm', 'md').type.body, 0)
     el.remove()
   })
 
@@ -175,20 +177,20 @@ describe('ui-text compact-window override — body 15/13/11 below the 52.5rem li
     el.remove()
   })
 
-  it('a non-body role does NOT shift: headline/md stays 28px (the override is body-column-only)', () => {
+  it('a non-body role does NOT shift: headline/md stays at the derived heading role, 24px', () => {
     const el = mountText({ variant: 'headline' })
-    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(28, 0)
+    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(resolve('product', 'sm', 'md').type.heading, 0)
     el.remove()
   })
 
-  it('[scale] composes with the breakpoint: body/md under [scale=ui-lg] → 13 × 1.125 (the `*` override keeps the multiplier)', () => {
+  it('body/md under data-scale md (the old ui-lg register) reads the body role at n 9, at every viewport (ADR-0150 retired)', () => {
     const wrap = document.createElement('div')
-    wrap.setAttribute('scale', 'ui-lg') // --md-sys-scale → 1.125
+    wrap.setAttribute('data-scale', 'md')
     document.body.append(wrap)
     const el = document.createElement('ui-text')
     el.textContent = 'compact scaled'
     wrap.append(el)
-    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(13 * 1.125, 1)
+    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBe(resolve('product', 'md', 'md').type.body)
     wrap.remove()
   })
 })

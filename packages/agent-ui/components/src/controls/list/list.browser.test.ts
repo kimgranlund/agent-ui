@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 // G9 s5 — the ui-list cross-engine smoke (Chromium + WebKit via Playwright; npm run test:browser). jsdom
 // can't compute flex/gap or honour the [density] ramp — a REAL engine resolves `display:flex; flex-direction
@@ -23,10 +24,10 @@ class ProbeList extends UIListElement {
 }
 if (!customElements.get('ui-list-probe')) customElements.define('ui-list-probe', ProbeList)
 
-/** Mount a ui-list with two items under an optional [density] wrapper; returns the list + a cleanup. */
-function mount(tag: string, attrs: Record<string, string>, density?: string): { el: HTMLElement; done: () => void } {
+/** Mount a ui-list with two items under an optional data-scale wrapper; returns the list + a cleanup. */
+function mount(tag: string, attrs: Record<string, string>, scale?: string): { el: HTMLElement; done: () => void } {
   const wrapper = document.createElement('div')
-  if (density) wrapper.setAttribute('density', density)
+  if (scale) wrapper.setAttribute('data-scale', scale)
   const el = document.createElement(tag)
   for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v)
   el.append(document.createElement('span'), document.createElement('span')) // two items → a gap BETWEEN them
@@ -163,17 +164,17 @@ describe('ui-list cross-engine smoke (s5)', () => {
     done()
   })
 
-  it('gap responds to [density] — the row-gap px CHANGES with the ancestor density (anti-vacuous)', () => {
-    // gap='md' → var(--md-sys-space-md) = calc(12px * var(--md-sys-density)). compact 0.5 → 6px; spacious 1.5 → 18px.
-    const compact = mount('ui-list', { gap: 'md' }, 'compact')
-    const spacious = mount('ui-list', { gap: 'md' }, 'spacious')
+  it('gap moves with the ancestor data-scale: the row-gap px CHANGES with the region n (anti-vacuous)', () => {
+    // gap='md' → var(--md-sys-space-md) = the group margin n + c (ADR-0245 cl.6): 9px at scale sm, 14px at lg.
+    const compact = mount('ui-list', { gap: 'md' }, 'sm')
+    const spacious = mount('ui-list', { gap: 'md' }, 'lg')
 
     const compactGap = Number.parseFloat(getComputedStyle(compact.el).rowGap)
     const spaciousGap = Number.parseFloat(getComputedStyle(spacious.el).rowGap)
 
-    expect(compactGap).toBe(6) // 12 × 0.5
-    expect(spaciousGap).toBe(18) // 12 × 1.5
-    expect(spaciousGap).toBeGreaterThan(compactGap) // anti-vacuous: the gap actually CHANGED with [density]
+    expect(compactGap).toBe(resolve('product', 'sm', 'md').group.margin) // 9
+    expect(spaciousGap).toBe(resolve('product', 'lg', 'md').group.margin) // 14
+    expect(spaciousGap).toBeGreaterThan(compactGap) // anti-vacuous: the gap actually CHANGED with the region n
 
     compact.done()
     spacious.done()

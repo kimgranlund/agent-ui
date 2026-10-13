@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 // s4 — the ui-column cross-engine smoke (the browser-truth harness; runs in BOTH Chromium and WebKit via
 // vitest.browser.config.ts → playwright instances). jsdom computes no layout, so the REAL proofs live here:
@@ -65,15 +66,16 @@ describe('ui-column browser-truth harness (s4)', () => {
     wrap.append(el)
 
     const gapPx = (): number => Number.parseFloat(getComputedStyle(el).rowGap)
-    const base = gapPx() // --md-sys-space-md @ density 1 = 12px
-    expect(base).toBeGreaterThan(0)
+    // ADR-0245 cl.6: gap md is the group margin n + c at the region's n (the [density] multiplier retired).
+    expect(gapPx()).toBe(resolve('product', 'sm', 'md').group.margin) // the root register: 9
 
-    wrap.setAttribute('density', 'compact') // --md-sys-density → 0.5
-    const compact = gapPx()
-    expect(compact).toBeCloseTo(base / 2, 1) // the rhythm halved — gap rides --md-sys-density (geometry.md)
+    wrap.setAttribute('data-tier', 'widget')
+    wrap.setAttribute('data-scale', 'sm')
+    expect(gapPx()).toBe(resolve('widget', 'sm', 'md').group.margin) // a denser region: 8
 
-    wrap.setAttribute('density', 'spacious') // --md-sys-density → 1.5
-    expect(gapPx()).toBeCloseTo(base * 1.5, 1) // and grows — density is the one quantity that moves the gap
+    wrap.setAttribute('data-tier', 'product')
+    wrap.setAttribute('data-scale', 'lg')
+    expect(gapPx()).toBe(resolve('product', 'lg', 'md').group.margin) // and a roomier one: 14
   })
 
   it('ADR-0030 fill-width: a width-LESS child FILLS the column width by default; align="start" shrink-wraps', () => {

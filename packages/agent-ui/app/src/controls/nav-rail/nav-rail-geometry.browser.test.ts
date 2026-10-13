@@ -3,7 +3,7 @@ import { UINavRailElement } from './nav-rail.ts'
 import { UINavRailItemElement } from './nav-rail-item.ts'
 
 // nav-rail-geometry.browser.test.ts: the ADR-0245 dark-launch pair for ui-nav-rail (lane a07). Outside a
-// `[data-tier]` region the row reads today's ramp through the fallbacks (28px high, a 14px gap, an 18px
+// `[data-tier]` region, under `data-foundations="legacy"` (clause 10e), the row reads today's ramp through the fallbacks (28px high, a 14px gap, an 18px
 // icon cell); inside `data-tier="product" data-scale="md"` (n 9, the A2UI canvas register) the same rule
 // reads the derived tokens (height 4n = 36, icon cell 2n = 18, gap n = 9, tag type n+4 = 13). Expected
 // numbers are scale.mjs resolve('product', 'md', 'md'); the 36-cell token proof lives in
@@ -22,6 +22,8 @@ function mount(region: boolean): { activator: HTMLElement; icon: HTMLElement } {
   if (region) {
     wrapper.setAttribute('data-tier', 'product')
     wrapper.setAttribute('data-scale', 'md')
+  } else {
+    wrapper.setAttribute('data-foundations', 'legacy') // ADR-0245 cl.10e: the opt-out renders today's geometry
   }
   const rail = new UINavRailElement()
   const item = new UINavRailItemElement()
@@ -40,7 +42,7 @@ function mount(region: boolean): { activator: HTMLElement; icon: HTMLElement } {
 const px = (value: string): number => parseFloat(value)
 
 describe('ui-nav-rail geometry across the data-tier dark launch', () => {
-  it('reads today’s ramp outside a region (the fallbacks win)', async () => {
+  it('reads today’s ramp under data-foundations=legacy (the clause 10e rollback)', async () => {
     const { activator, icon } = mount(false)
     await new Promise((r) => requestAnimationFrame(() => r(undefined)))
     expect(px(getComputedStyle(activator).blockSize)).toBe(28)

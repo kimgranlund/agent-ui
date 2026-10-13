@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { server, cdp } from 'vitest/browser'
 
 // timeline-family.lld.md §5 · SPEC-R4/R13/R14/R15 — the cross-engine geometry + whole-shape + signifier +
@@ -41,14 +42,18 @@ interface CdpSession {
 describe('ui-timeline-item cross-engine geometry smoke — the marker-system explicit (scale × size) table', () => {
   it('[size] sm→md→lg resolves the EXACT frozen integers at the default [scale] (marker-box/dot/connector/gutter/row-gap)', () => {
     const { item } = mount('<ui-timeline-item status="active" label="x"></ui-timeline-item>')
-    const EXPECTED: Record<string, [number, number, number, number, number]> = {
-      sm: [14, 6, 2, 18, 8],
-      md: [16, 8, 2, 20, 12],
-      lg: [20, 10, 2, 24, 16],
+    // marker-box / dot ride the derived icon box (2n) and glyph box at the root register (ADR-0245 cl.2, cl.4); the
+    // connector width, gutter and row-gap stay literals.
+    const LITERALS: Record<string, [number, number, number]> = {
+      sm: [2, 18, 8],
+      md: [2, 20, 12],
+      lg: [2, 24, 16],
     }
     for (const size of ['sm', 'md', 'lg'] as const) {
       item.setAttribute('size', size)
-      const [mb, dot, cw, gut, rg] = EXPECTED[size]!
+      const r = resolve('product', 'sm', size)
+      const [mb, dot] = [r.icon, r.glyph]
+      const [cw, gut, rg] = LITERALS[size]!
       expect(markerBox(item), `size=${size} marker-box`).toBeCloseTo(mb, 0)
       expect(dotSize(item), `size=${size} dot-size`).toBeCloseTo(dot, 0)
       expect(connectorWidth(item), `size=${size} connector-width`).toBeCloseTo(cw, 0)
@@ -74,34 +79,14 @@ describe('ui-timeline-item cross-engine geometry smoke — the marker-system exp
     expect(allDistinct(boxes), `marker-box should step across sizes: ${boxes.join()}`).toBe(true)
   })
 
-  it('[scale] content-sm ≡ ui-md and content-md ≡ ui-lg (Kim\'s band-overlap law) — NOT all 6 tiers distinct', () => {
+  it('the marker box is the 2n icon slot at every region register (ADR-0245 cl.2 and cl.4)', () => {
     const { wrap, item } = mount('<ui-timeline-item size="md"></ui-timeline-item>')
-    const read = (scale: string): number => {
-      wrap.setAttribute('scale', scale)
-      return markerBox(item)
+    const registers = [['widget', 'sm'], ['product', 'sm'], ['product', 'md'], ['content', 'sm'], ['content', 'md'], ['content', 'lg']] as const
+    for (const [tier, scale] of registers) {
+      wrap.setAttribute('data-tier', tier)
+      wrap.setAttribute('data-scale', scale)
+      expect(markerBox(item), `${tier} / ${scale}`).toBe(resolve(tier, scale, 'md').icon)
     }
-    const uiMd = read('ui-md')
-    const contentSm = read('content-sm')
-    const uiLg = read('ui-lg')
-    const contentMd = read('content-md')
-    expect(contentSm, 'content-sm marker-box should equal ui-md (band overlap)').toBeCloseTo(uiMd, 0)
-    expect(contentMd, 'content-md marker-box should equal ui-lg (band overlap)').toBeCloseTo(uiLg, 0)
-
-    const all = [read('ui-sm'), uiMd, uiLg, contentSm, contentMd, read('content-lg')]
-    expect(new Set(all.map((v) => Math.round(v))).size, 'Kim\'s 6 tiers → 4 distinct marker-box registers').toBe(4)
-  })
-
-  it('[density] compact→spacious changes ONLY row-gap (the rhythm quantity) — marker-box/dot/gutter/connector are density-INVARIANT', () => {
-    const { wrap, item } = mount('<ui-timeline-item size="md"></ui-timeline-item>')
-    const gaps: number[] = []
-    const boxes: number[] = []
-    for (const density of ['compact', 'comfortable', 'spacious'] as const) {
-      wrap.setAttribute('density', density)
-      gaps.push(rowGap(item))
-      boxes.push(markerBox(item))
-    }
-    expect(allDistinct(gaps), `row-gap did not change across [density]: ${gaps.join()}`).toBe(true)
-    expect(boxes.every((b) => Math.round(b) === Math.round(boxes[0]!)), `marker-box must be density-invariant: ${boxes.join()}`).toBe(true)
   })
 })
 

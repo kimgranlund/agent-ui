@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 // TKT-0042 / ADR-0133 — the cross-engine proof for the label-wrapper ellipsis mechanism. Runs in BOTH
 // Chromium and WebKit (vitest.browser.config.ts). Two legs, both explicitly called for by the ticket's
@@ -58,7 +59,7 @@ describe('ui-button label-wrapper geometry regression (ADR-0133) — the label F
     const h = frameHeight(btn)
     expect(h).toBeCloseTo(28, 0)
     // leading slot edge = ½(h−icon); trailing (label) edge = h/2 — the wrapper must not perturb either.
-    expect(padStartPx(btn)).toBeCloseTo((h - 18) / 2, 0)
+    expect(padStartPx(btn)).toBeCloseTo((h - resolve('product', 'sm', 'md').icon) / 2, 0)
     expect(padEndPx(btn)).toBeCloseTo(h / 2, 0)
     expect(label(btn).textContent).toBe('Download')
     // the leading adornment stays a DIRECT host child, not swept into the label wrapper.

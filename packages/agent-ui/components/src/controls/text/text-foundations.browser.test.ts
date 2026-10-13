@@ -15,6 +15,8 @@ function mount(html: string, region = true): HTMLElement {
   if (region) {
     wrap.setAttribute('data-tier', 'product')
     wrap.setAttribute('data-scale', 'sm')
+  } else {
+    wrap.setAttribute('data-foundations', 'legacy') // ADR-0245 cl.10e: the opt-out renders today's geometry
   }
   wrap.innerHTML = html
   document.body.append(wrap)
@@ -51,7 +53,7 @@ describe('ui-text sizes (ADR-0245 cl.7)', () => {
     expect(px(getComputedStyle(el).fontSize)).toBeCloseTo(resolve('product', 'sm', 'lg').type.body, 1)
   })
 
-  it('outside any region: display/md is still the M3 45px row, not the derived 32px', () => {
+  it('under data-foundations=legacy: display/md is still the M3 45px row, not the derived 32px', () => {
     const el = mount('<ui-text variant="display">Text</ui-text>', false).querySelector('ui-text') as HTMLElement
     expect(px(getComputedStyle(el).fontSize)).toBe(45)
   })

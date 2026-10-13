@@ -18,6 +18,8 @@ function mount(inRegion: boolean, size?: string): HTMLElement {
   if (inRegion) {
     wrap.setAttribute('data-tier', 'product')
     wrap.setAttribute('data-scale', 'sm')
+  } else {
+    wrap.setAttribute('data-foundations', 'legacy') // ADR-0245 cl.10e: the opt-out renders today's geometry
   }
   wrap.innerHTML = `<ui-segmented-control><ui-segment value="a">A</ui-segment><ui-segment value="b">B</ui-segment></ui-segmented-control>`
   const control = wrap.querySelector('ui-segmented-control') as HTMLElement
@@ -29,7 +31,7 @@ function mount(inRegion: boolean, size?: string): HTMLElement {
 const read = (el: HTMLElement, prop: string): number => parseFloat(getComputedStyle(el).getPropertyValue(prop))
 
 describe('ui-segmented-control foundations (ADR-0245 lane a01)', () => {
-  it('outside a data-tier region keeps today\'s geometry (the default-page contract)', () => {
+  it('under data-foundations="legacy" keeps today\'s geometry (the clause 10e rollback)', () => {
     const el = mount(false)
     expect(read(el, 'padding-inline-start'), 'padding').toBeCloseTo(0, 1)
     expect(read(el, 'column-gap'), 'gap').toBeCloseTo(0, 1)

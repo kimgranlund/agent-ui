@@ -1,8 +1,8 @@
 // site/pages/sizing.ts — the public sizing & density guide: the consumer-facing story over
 // .claude/docs/references/geometry.md (the LAW this page tells, never restates verbatim — cited by section for
-// depth). Five size-classes, the [scale] × [size] explicit lookup (a live matrix of REAL ui-button instances,
-// each caption read back via getBoundingClientRect — an empirical table, not an illustration), the compact
-// realm's pad law, density-rides-rhythm-never-the-box, and single-line line-height:1.
+// depth). Five size-classes, the ADR-0245 tier × scale × size derivation (a live matrix of REAL ui-button
+// instances, each caption read back via getBoundingClientRect — an empirical table, not an illustration), the
+// indicator box, one n moving frame and gap together, and single-line line-height:1.
 import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './sizing.css'
 import { heading } from '../lib/doc-page.ts'
@@ -11,17 +11,17 @@ import { el } from '../lib/specimens.ts'
 const { content } = mountPage({
   title: 'Sizing & density',
   intro:
-    'Control geometry is an explicit (scale × size) lookup — never a multiplier — and density touches only the ' +
-    'rhythm (spacing), never the frame. This is the consumer-facing story over the geometry law; see ' +
-    '.claude/docs/references/geometry.md for the full normative spec and its rationale.',
+    'Every size derives from one integer n per element, chosen by the region tier, the region scale and the ' +
+    'control size (ADR-0245): height 4n, inset n, icon 2n. This is the consumer-facing story over the geometry ' +
+    'law; see .claude/docs/references/geometry.md and ADR-0245 for the normative spec and its rationale.',
 })
 
 content.append(
   pageLead(
-    'Every control’s size resolves from two independent inputs: an ancestor [scale] (the frame tier — a ' +
-      'subtree-repointable multiplier’s replacement) and its own [size] attribute (sm/md/lg, which §1 row within ' +
-      'that scale). The cell they select names height, font, and icon together — never derived by formula, so a ' +
-      'control never drifts out of its own row.',
+    'Every control’s n resolves from three inputs that inherit on their own: an ancestor data-tier (what a ' +
+      'region is for: widget, product, content, brand), an ancestor data-scale (its density: sm, md, lg) and the ' +
+      'control’s own size (sm, md, lg). The document root is product at scale sm, so sm / md / lg controls read ' +
+      '24 / 28 / 32. Height, type, icon, padding and radius are all formulas of the same n, so they never drift apart.',
   ),
 )
 
@@ -91,23 +91,28 @@ const CLASSES: readonly SizeClass[] = [
   )
 }
 
-// ── 2 · the [scale] × [size] lookup — a LIVE, MEASURED matrix ───────────────────────────────────────────────
-content.append(heading(2, '2 · the [scale] × [size] lookup'))
+// ── 2 · the tier × scale × size derivation — a LIVE, MEASURED matrix ───────────────────────────────────────
+content.append(heading(2, '2 · the tier × scale × size derivation'))
 content.append(
   el('p', {}, [
     document.createTextNode(
-      'Each row is a real ui-button wrapped in a [scale] ancestor; each column is its own [size]. The height ' +
-        'below every button is read back live from the rendered DOM (getBoundingClientRect) — an empirical fact, ' +
-        'not an illustration. The underlying height RAMP has two bands: a compact band (20 · 24 · 28, +4 linear ' +
-        'steps) and an expressive band (36 · 48 · 64, ×4/3 geometric steps). Each [scale] name is a sliding ' +
-        'three-value window over that one ramp — adjacent scales share values (ui-sm reads 20·24·28, ui-md reads ' +
-        '24·28·36, … content-lg reads 36·48·64), which is why neighbouring cells in the matrix below repeat ' +
-        'heights: a lookup over shared ramp rows, never a per-scale multiplier.',
+      'Each row is a real ui-button inside a data-tier and data-scale region; each column is its own size. The ' +
+        'height below every button is read back live from the rendered DOM (getBoundingClientRect), an empirical ' +
+        'fact, not an illustration. n = n0 + a·s + k·z + g·s·z per tier, so each row steps evenly: widget / sm ' +
+        'reads 20 · 24 · 28, the root product / sm 24 · 28 · 32, product / md (the A2UI canvas) 28 · 36 · 44.',
   ),
   ]),
 )
 
-const SCALES = ['ui-sm', 'ui-md', 'ui-lg', 'content-sm', 'content-md', 'content-lg'] as const
+// The six registers the retired [scale] values map onto (ADR-0245 cl.2), as tier and scale.
+const REGISTERS = [
+  ['widget', 'sm'],
+  ['product', 'sm'],
+  ['product', 'md'],
+  ['content', 'sm'],
+  ['content', 'md'],
+  ['content', 'lg'],
+] as const
 const SIZES = ['sm', 'md', 'lg'] as const
 
 const matrix = document.createElement('div')
@@ -119,14 +124,15 @@ for (const size of SIZES) header.append(el('span', { class: 'sizing-matrix-headc
 matrix.append(header)
 
 const captions: { readonly button: HTMLElement; readonly caption: HTMLElement }[] = []
-for (const scale of SCALES) {
+for (const [tier, scale] of REGISTERS) {
   const row = document.createElement('div')
   row.className = 'sizing-matrix-row'
-  row.append(el('span', { class: 'sizing-matrix-rowhead' }, [document.createTextNode(`[scale="${scale}"]`)]))
+  row.append(el('span', { class: 'sizing-matrix-rowhead' }, [document.createTextNode(`${tier} / ${scale}`)]))
   for (const size of SIZES) {
     const cell = document.createElement('div')
     cell.className = 'sizing-matrix-cell'
-    cell.setAttribute('scale', scale)
+    cell.setAttribute('data-tier', tier)
+    cell.setAttribute('data-scale', scale)
     const button = document.createElement('ui-button')
     button.setAttribute('variant', 'soft')
     button.setAttribute('size', size)
@@ -169,24 +175,24 @@ content.append(
   content.append(el('div', { class: 'sizing-inline-row' }, [checkbox, badge]))
 }
 
-// ── 4 · density rides rhythm, never the box ──────────────────────────────────────────────────────────────────
-content.append(heading(2, '4 · density rides rhythm, never the box'))
+// ── 4 · one n moves the frame and the gap together ──────────────────────────────────────────────────────────
+content.append(heading(2, '4 · one n moves the frame and the gap together'))
 content.append(
   el('p', {}, [
     document.createTextNode(
-      '[density] multiplies ONLY the icon-to-label gap — the frame (height, font, inline-pad) holds exactly. ' +
-        'Watch the label sit closer to or further from the icon below while the button height never changes:',
+      'A region’s data-scale moves n, so the height, the type and the icon-to-label gap move together (the old ' +
+        '[density] axis, which moved the gap alone, retired into it). The same button at scale sm, md and lg:',
     ),
   ]),
 )
 {
   const row = document.createElement('div')
   row.className = 'sizing-density-row'
-  for (const density of ['compact', 'comfortable', 'spacious'] as const) {
+  for (const scale of ['sm', 'md', 'lg'] as const) {
     const cluster = document.createElement('div')
     cluster.className = 'sizing-density-cluster'
-    cluster.setAttribute('density', density)
-    const label = el('span', { class: 'sizing-density-label' }, [document.createTextNode(`[density="${density}"]`)])
+    cluster.setAttribute('data-scale', scale)
+    const label = el('span', { class: 'sizing-density-label' }, [document.createTextNode(`data-scale="${scale}"`)])
     const button = document.createElement('ui-button')
     button.setAttribute('variant', 'soft')
     const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg')

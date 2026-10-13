@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { server, cdp } from 'vitest/browser'
 
 // s11 (geometry leg) — the CROSS-ENGINE geometry smoke for ui-text-field (decomp g4-g6 node s11). Where the
@@ -32,7 +33,7 @@ const BARE = '<ui-text-field></ui-text-field>' //                               
 const ICON = '<ui-text-field><span slot="leading" data-role="icon">●</span></ui-text-field>' // leading slot edge ½(h−icon)
 
 // ── mount/cleanup: each field rides a wrapper carrying the [scale] ancestor attribute (dimensions.css keys
-// off bare `[scale="…"]`; the custom props inherit down to the host). ──────────────────────────────────
+// off the region axes data-tier / data-scale (ADR-0245); the custom props inherit down to the host). ────
 const mounted: HTMLElement[] = []
 const mount = (markup: string): { wrap: HTMLElement; field: HTMLElement; editor: HTMLElement } => {
   const wrap = document.createElement('div')
@@ -54,8 +55,10 @@ const fontPx = (el: HTMLElement): number => px(getComputedStyle(el).fontSize)
 const padStartPx = (field: HTMLElement): number => px(getComputedStyle(field).paddingInlineStart)
 const padEndPx = (field: HTMLElement): number => px(getComputedStyle(field).paddingInlineEnd)
 
+/** The derived control type at the root register per [size] (ADR-0245 cl.7): the editor font at sm / md / lg. */
+const FONT_STOPS = (['sm', 'md', 'lg'] as const).map((sz): [string, number] => [sz, resolve('product', 'sm', sz).type.control])
+
 const allDistinct = (xs: number[]): boolean => new Set(xs.map((x) => x.toFixed(2))).size === xs.length
-const allEqual = (xs: number[]): boolean => new Set(xs.map((x) => x.toFixed(2))).size === 1
 
 describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => {
   it('[size] sm→md→lg CHANGES the frame height + the editor font px — on BOTH the bare and leading-icon variants', () => {
@@ -79,30 +82,31 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
         const gapBottom = fieldRect.bottom - editorRect.bottom
         expect(Math.abs(gapTop - gapBottom), `[${markup}] size=${size}: editor not vertically centered in the frame`).toBeLessThanOrEqual(1)
       }
-      // the control-band ramp @ scale 1 (geometry-sizing-spec §1): height 24·28·36, font 13·14·16.
-      expect(heights[0]).toBeCloseTo(24, 0)
-      expect(heights[1]).toBeCloseTo(28, 0)
-      expect(heights[2]).toBeCloseTo(36, 0)
-      expect(fonts[0]).toBeCloseTo(13, 0)
-      expect(fonts[1]).toBeCloseTo(14, 0)
-      expect(fonts[2]).toBeCloseTo(16, 0)
+      // the derived ramp at the root register (product / sm, ADR-0245 cl.3): height 4n, font = control type.
+      const ramp = (['sm', 'md', 'lg'] as const).map((sz) => resolve('product', 'sm', sz))
+      expect(heights[0]).toBeCloseTo(ramp[0].h, 0)
+      expect(heights[1]).toBeCloseTo(ramp[1].h, 0)
+      expect(heights[2]).toBeCloseTo(ramp[2].h, 0)
+      expect(fonts[0]).toBeCloseTo(ramp[0].type.control, 0)
+      expect(fonts[1]).toBeCloseTo(ramp[1].type.control, 0)
+      expect(fonts[2]).toBeCloseTo(ramp[2].type.control, 0)
       // anti-vacuous: the three steps are genuinely DISTINCT px — the [size] lever truly moved the frame + font.
       expect(allDistinct(heights), `heights did not change across [size]: ${heights.join()}`).toBe(true)
       expect(allDistinct(fonts), `editor fonts did not change across [size]: ${fonts.join()}`).toBe(true)
     }
   })
 
-  it('[scale] ui-sm→content-lg CHANGES the frame height + the editor font px — on BOTH variants (ADR-0038 explicit §1-row lookup)', () => {
-    // Kim's explicit (scale × size) table (ADR-0038 clause 1): each cell is one §1 row; no multiplier.
-    // md column sampled at 3 tiers: ui-sm→24 (row 24→f13), ui-md→28 (row 28→f14, default), content-lg→48 (row 48→f18).
-    // The OLD multiplier heights (24.5, 49) are gone — Kim's §1 rows are exact integers.
-    // Editor font = §1-SET integers from the explicit font table (also ADR-0038; unchanged for these three tiers).
+  it('the region register CHANGES the frame height + the editor font px — on BOTH variants (ADR-0245: 4n and n + 6)', () => {
+    // The md column at three registers (the old ui-sm, ui-md and content-lg): widget / sm, the root product / sm,
+    // and content / lg, read against scale.mjs resolve().
+    const REGISTERS = [['widget', 'sm'], ['product', 'sm'], ['content', 'lg']] as const
     for (const markup of [BARE, ICON]) {
       const { wrap, field, editor } = mount(markup) // size stays md (default)
       const heights: number[] = []
       const fonts: number[] = []
-      for (const scale of ['ui-sm', 'ui-md', 'content-lg'] as const) {
-        wrap.setAttribute('scale', scale)
+      for (const [tier, scale] of REGISTERS) {
+        wrap.setAttribute('data-tier', tier)
+        wrap.setAttribute('data-scale', scale)
         heights.push(frameHeight(field))
         fonts.push(fontPx(editor))
 
@@ -115,47 +119,41 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
         const gapBottom = fieldRect.bottom - editorRect.bottom
         expect(Math.abs(gapTop - gapBottom), `[${markup}] scale=${scale}: editor not vertically centered in the frame`).toBeLessThanOrEqual(1)
       }
-      // ADR-0038 md column: ui-sm→24, ui-md→28, content-lg→48 (§1 rows, exact integers — no multiplier decimals)
-      expect(heights[0]).toBeCloseTo(24, 1)  // was 24.5 (28×0.875 multiplier) — Kim's §1 row 24
-      expect(heights[1]).toBeCloseTo(28, 1)
-      expect(heights[2]).toBeCloseTo(48, 1)  // was 49 (28×1.75 multiplier) — Kim's §1 row 48
-      // Editor font — §1-SET integers (unchanged for these three tiers: 13·14·18)
-      expect(fonts[0]).toBeCloseTo(13, 0)
-      expect(fonts[1]).toBeCloseTo(14, 0)
-      expect(fonts[2]).toBeCloseTo(18, 0)
+      expect(heights).toEqual(REGISTERS.map(([t, sc]) => resolve(t, sc, 'md').h)) // 24 · 28 · 52
+      expect(fonts).toEqual(REGISTERS.map(([t, sc]) => resolve(t, sc, 'md').type.control)) // 12 · 13 · 19
       // anti-vacuous: all three sampled tiers produce distinct heights and fonts
       expect(allDistinct(heights), `heights did not change across [scale]: ${heights.join()}`).toBe(true)
       expect(allDistinct(fonts), `editor fonts did not change across [scale]: ${fonts.join()}`).toBe(true)
     }
   })
 
-  it('BARE: the value edge == h/2 on BOTH inline sides (the slotless value-edge formula)', () => {
-    const { field } = mount(BARE) // md frame @ scale 1 → h = 28, value edge = 14 each side
+  it('BARE: the value edge == n on BOTH inline sides (the slotless value-edge formula, ADR-0245 cl.3 frame padding n)', () => {
+    const { field } = mount(BARE) // md frame at the root register → h = 4n = 28, value edge = n = 7 each side
     const h = frameHeight(field)
-    expect(padStartPx(field), 'leading value edge is not h/2').toBeCloseTo(h / 2, 1)
-    expect(padEndPx(field), 'trailing value edge is not h/2').toBeCloseTo(h / 2, 1)
+    const n = resolve('product', 'sm', 'md').n
+    expect(padStartPx(field), 'leading value edge is not n').toBeCloseTo(n, 1)
+    expect(padEndPx(field), 'trailing value edge is not n').toBeCloseTo(n, 1)
     // anti-vacuous: the edge tracks the frame — it really is half of a positive frame height.
     expect(h, 'frame height is not a positive px').toBeGreaterThan(0)
   })
 
-  it('LEADING-ICON: the trailing value edge == h/2 and the leading slot edge == ½(h−icon); 0 < icon ≤ box', () => {
+  it('LEADING-ICON: the trailing value edge == n and the leading slot edge == ½(h−icon) == n; 0 < icon ≤ box', () => {
     // icon = var(--md-sys-icon-md) = 18px at default scale (ADR-0038 / ADR-0035 conformance: text-field now reads
     // the shared --md-sys-icon-* table, dropping the old calc(18px * var(--md-sys-scale)) local formula).
-    const { field } = mount(ICON) // md @ scale 1 → h = 28, icon = 18, slot edge = ½(28−18) = 5, value edge = 14
+    const { field } = mount(ICON) // md at the root register → h = 28, icon = 2n = 14, slot edge = ½(28−14) = 7 = n, value edge = n
     const leadingCell = field.querySelector('[slot="leading"]') as HTMLElement
     const h = frameHeight(field)
     const icon = leadingCell.getBoundingClientRect().width // the icon-sized slot cell (--ui-text-field-icon)
 
-    expect(padEndPx(field), 'trailing value edge is not h/2').toBeCloseTo(h / 2, 1)
+    const r = resolve('product', 'sm', 'md')
+    expect(padEndPx(field), 'trailing value edge is not n').toBeCloseTo(r.n, 1)
     expect(padStartPx(field), 'leading slot edge is not ½(h−icon)').toBeCloseTo((h - icon) / 2, 1)
+    expect(icon, 'icon cell is not the derived icon box 2n').toBeCloseTo(r.icon, 1)
     // the icon ramp law: 0 < icon ≤ box (the cell never exceeds the frame).
     expect(icon, 'icon cell is not a positive px').toBeGreaterThan(0)
     expect(icon, 'the icon cell exceeds the box height').toBeLessThanOrEqual(h + 0.5)
-    // anti-vacuous: the two edges are genuinely DIFFERENT px (the slot edge is smaller than the value edge),
-    // so the per-edge ½(h−icon) vs h/2 split is real — not both collapsing onto one pad.
-    expect(padStartPx(field), 'the slot edge did not differ from the value edge (per-edge formula collapsed)').toBeLessThan(
-      padEndPx(field),
-    )
+    // the derived system makes the two edges one value: ½(4n − 2n) == n, so the slot edge equals the value edge.
+    expect(padStartPx(field), 'the slot edge did not equal the value edge (½(h−icon) == n)').toBeCloseTo(padEndPx(field), 1)
   })
 
   // ── ADR-0223 (Fill by Default, slice-0 pilot) — the two-posture acceptance leg (generalizing the ADR-0021
@@ -188,33 +186,19 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
   })
 
   // ── ADR-0006 / geometry.md: [density] rides the rhythm (the slot↔editor gap), NEVER the frame (C6 polish) ──
-  it('[density] compact→spacious CHANGES the adornment↔editor column-gap (--ui-text-field-gap); the BARE frame is INVARIANT', () => {
-    // density multiplies the ONE rhythm quantity (the slot↔editor column-gap) on the leading-icon grid, while the
-    // frame (block-size + the h/2 value edges) holds — the sharp ADR-0006 split, mirrored from the button smoke.
+  it('a region data-scale moves the adornment↔editor column-gap AND the bare frame together (one n, ADR-0245)', () => {
+    // The [density] axis (gap only) retired into data-scale: n moves the gap (n), the height (4n) and the
+    // value edge (inset n) at once.
     const icon = mount(ICON) // size stays md (default); the `auto 1fr` grid carries the column-gap
-    const gaps: number[] = []
-    for (const density of ['compact', 'comfortable', 'spacious'] as const) {
-      icon.wrap.setAttribute('density', density)
-      gaps.push(px(getComputedStyle(icon.field).columnGap)) // the slot↔editor rhythm
-    }
-    // gap_md = font_md / 2 × --md-sys-density = 7 × {0.5, 1, 1.5} @ scale 1 (the one density-bearing quantity).
-    expect(gaps[0]).toBeCloseTo(3.5, 1)
-    expect(gaps[1]).toBeCloseTo(7, 1)
-    expect(gaps[2]).toBeCloseTo(10.5, 1)
-    // anti-vacuous: the three gaps are genuinely DISTINCT px — [density] truly moved the rhythm.
-    expect(allDistinct(gaps), `the column-gap did not change across [density]: ${gaps.join()}`).toBe(true)
-
-    // the COMPLEMENTARY invariant: density rides the gap ONLY — the BARE field's frame must NOT move (geometry.md).
     const bare = mount(BARE)
-    const heights: number[] = []
-    const valueEdges: number[] = []
-    for (const density of ['compact', 'comfortable', 'spacious'] as const) {
-      bare.wrap.setAttribute('density', density)
-      heights.push(frameHeight(bare.field))
-      valueEdges.push(padStartPx(bare.field))
+    for (const scale of ['sm', 'md', 'lg'] as const) {
+      icon.wrap.setAttribute('data-scale', scale)
+      bare.wrap.setAttribute('data-scale', scale)
+      const r = resolve('product', scale, 'md')
+      expect(px(getComputedStyle(icon.field).columnGap), `column-gap @ ${scale}`).toBeCloseTo(r.inset, 1)
+      expect(frameHeight(bare.field), `bare height @ ${scale}`).toBeCloseTo(r.h, 0)
+      expect(padStartPx(bare.field), `bare value edge @ ${scale}`).toBeCloseTo(r.inset, 0)
     }
-    expect(allEqual(heights), `[density] moved the bare frame height: ${heights.join()}`).toBe(true)
-    expect(allEqual(valueEdges), `[density] moved the bare h/2 value edge: ${valueEdges.join()}`).toBe(true)
   })
 
   // ── ADR-0036: single-line control line-height = font (the editor cell) ─────────────────────────────────
@@ -253,12 +237,12 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
   it('search type: magnifier + clear-button font-size == --ui-text-field-font across [size] — EXACT px', () => {
     // The magnifier (leading-adornment) and clear-button (inside trailing-adornment) both carry
     // font-size: var(--ui-text-field-font) or inherit it. Proved at all three [size] stops with EXACT
-    // integers (sm→13, md→14, lg→16 px at default scale — the §1 ramp from ADR-0038).
+    // integers (sm→12, md→13, lg→14 px at the root register, the derived control type).
     const { field, editor } = mount('<ui-text-field type="search"></ui-text-field>')
     const magnifier = field.querySelector('[data-part="leading-adornment"]') as HTMLElement
     const clearBtn = field.querySelector('[data-part="clear-button"]') as HTMLElement
 
-    for (const [size, expectedFont] of [['sm', 13], ['md', 14], ['lg', 16]] as [string, number][]) {
+    for (const [size, expectedFont] of FONT_STOPS) {
       field.setAttribute('size', size)
       const ef = fontPx(editor)
       expect(ef, `editor font at size=${size} must be ${expectedFont}px`).toBeCloseTo(expectedFont, 0)
@@ -278,7 +262,7 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
     const stepUp = field.querySelector('[data-part="step-up"]') as HTMLElement
     const stepDown = field.querySelector('[data-part="step-down"]') as HTMLElement
 
-    for (const [size, expectedFont] of [['sm', 13], ['md', 14], ['lg', 16]] as [string, number][]) {
+    for (const [size, expectedFont] of FONT_STOPS) {
       field.setAttribute('size', size)
       const ef = fontPx(editor)
       expect(ef).toBeCloseTo(expectedFont, 0)
@@ -318,18 +302,21 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
     }
   })
 
-  it('[scale] content-lg: adornment font tracks the elevated §1-row — EXACT px at md size', () => {
-    // ADR-0038 md×content-lg = 18px (explicit §1-row table, not a multiplier). The adornment must
-    // track the editor via the shared --ui-text-field-font token at every [scale] tier.
+  it('a content / lg region: the adornment font tracks the elevated control type — EXACT px at md size', () => {
+    // ADR-0245: control type n + 6 at content / lg / md (n 13) = 19px. The adornment must track the editor via
+    // the shared --ui-text-field-font token in every region.
     const { wrap, field, editor } = mount('<ui-text-field type="search"></ui-text-field>')
     const magnifier = field.querySelector('[data-part="leading-adornment"]') as HTMLElement
 
-    wrap.setAttribute('scale', 'content-lg')
+    wrap.setAttribute('data-tier', 'content')
+    wrap.setAttribute('data-scale', 'lg')
+    const want = resolve('content', 'lg', 'md').type.control
     const ef = fontPx(editor)
-    expect(ef, 'editor font at content-lg×md must be 18px (ADR-0038 §1-row)').toBeCloseTo(18, 0)
-    expect(fontPx(magnifier), 'magnifier font at content-lg×md must track editor (= 18px via --ui-text-field-font)').toBeCloseTo(18, 0)
-    // anti-vacuous: the content-lg font (18) is measurably larger than the default (14)
-    wrap.removeAttribute('scale')
+    expect(ef, 'editor font at content / lg / md').toBeCloseTo(want, 0)
+    expect(fontPx(magnifier), 'magnifier font must track the editor via --ui-text-field-font').toBeCloseTo(want, 0)
+    // anti-vacuous: the region font is measurably larger than the root's
+    wrap.removeAttribute('data-tier')
+    wrap.removeAttribute('data-scale')
     const efDefault = fontPx(editor)
     expect(ef, 'content-lg font must exceed the default-scale font').toBeGreaterThan(efDefault)
   })
@@ -365,12 +352,12 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
 
   it('currency type: leading symbol font-size == --ui-text-field-font at each [size] (§4.6 inline affordance = font)', () => {
     // The currency leading-adornment carries font-size: var(--ui-text-field-font) (same law as the
-    // magnifier). Proved at all three [size] stops with EXACT integers (sm→13, md→14, lg→16).
+    // magnifier). Proved at all three [size] stops with EXACT integers (sm→12, md→13, lg→14).
     const { field, editor } = mount('<ui-text-field type="currency"></ui-text-field>')
     const symbol = field.querySelector('[data-part="leading-adornment"][data-role="currency"]') as HTMLElement
     expect(symbol, 'currency leading-adornment must be present').not.toBeNull()
 
-    for (const [size, expectedFont] of [['sm', 13], ['md', 14], ['lg', 16]] as [string, number][]) {
+    for (const [size, expectedFont] of FONT_STOPS) {
       field.setAttribute('size', size)
       const ef = fontPx(editor)
       expect(ef, `editor font at size=${size}`).toBeCloseTo(expectedFont, 0)
@@ -394,7 +381,7 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
       const suffix = field.querySelector('[data-part="suffix"]') as HTMLElement
       expect(suffix, `suffix must be present for ${markup}`).not.toBeNull()
 
-      for (const [size, expectedFont] of [['sm', 13], ['md', 14], ['lg', 16]] as [string, number][]) {
+      for (const [size, expectedFont] of FONT_STOPS) {
         field.setAttribute('size', size)
         const ef = fontPx(editor)
         expect(ef, `editor font at size=${size}`).toBeCloseTo(expectedFont, 0)
@@ -431,11 +418,11 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
     }
   })
 
-  it('Phosphor-icon sweep: injected <svg> glyphs (magnifier / clear / steppers) paint at a real, non-collapsed 1em size', () => {
+  it('Phosphor-icon sweep: injected <svg> glyphs (magnifier / clear / steppers) paint at a real, non-collapsed derived icon-box size', () => {
     // setIcon(...) glyphs must themselves render at a real size — not just their containing button/span
     // (the ui-slider "collapsed dot" lesson: a container can pass every bounding-box check while its
-    // content renders at 0×0). Each svg is sized to 1em (text-field.css), tracking the part's own
-    // font-size (--ui-text-field-font, inherited on the buttons / explicit on leading-adornment).
+    // content renders at 0×0). Each svg is sized to the derived icon box (--ui-text-field-svg, 1em outside a
+    // data-tier region; text-field.css).
     const { field: searchField } = mount('<ui-text-field type="search" value="x"></ui-text-field>')
     const magnifier = searchField.querySelector('[data-part="leading-adornment"]') as HTMLElement
     const clearBtn = searchField.querySelector('[data-part="clear-button"]') as HTMLElement
@@ -449,18 +436,19 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
     ] as const) {
       const svg = el.querySelector('svg')!
       const r = svg.getBoundingClientRect()
-      const em = fontPx(el)
       expect(r.width, `${server.browser}: ${label} svg collapsed to zero width`).toBeGreaterThan(0)
       expect(r.height, `${server.browser}: ${label} svg collapsed to zero height`).toBeGreaterThan(0)
-      expect(r.width, `${server.browser}: ${label} svg is not 1em-sized`).toBeCloseTo(em, 0)
+      // the injected svg paints at the derived icon box (2n, ADR-0245 cl.3), not 1em: md at the root register is 14px.
+      expect(r.width, `${server.browser}: ${label} svg is not the derived icon box`).toBeCloseTo(resolve('product', 'sm', 'md').icon, 0)
 
       // GH #634 displacement gap: the svg's own size was pinned, but never its POSITION within the
       // adornment slot — a regression from align-items/justify-content:center to flex-start on the slot
-      // would misplace the glyph while size checks stay green. Anti-vacuous: the slot must genuinely
-      // exceed the glyph in at least one axis for centering to mean anything.
+      // would misplace the glyph while size checks stay green. The derived icon box (ADR-0245 cl.3) is the slot cell
+      // itself, so the glyph now FILLS it with no slack to slide in (it overflowed or sat loose before): the
+      // anti-vacuous floor is that the glyph never overflows its slot, and the gap checks below pin zero offset.
       const slotRect = slotEl.getBoundingClientRect()
-      const slack = Math.max(slotRect.width - r.width, slotRect.height - r.height)
-      expect(slack, `${server.browser}: ${label} slot has no slack over the glyph (anti-vacuous)`).toBeGreaterThan(0.5)
+      const slack = Math.min(slotRect.width - r.width, slotRect.height - r.height)
+      expect(slack, `${server.browser}: ${label} glyph overflows its slot`).toBeGreaterThanOrEqual(-0.5)
       const gapX1 = r.left - slotRect.left
       const gapX2 = slotRect.right - r.right
       const gapY1 = r.top - slotRect.top
@@ -499,8 +487,9 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
     // against the parent `[slot='trailing']` cell, not the button's own box.
     const calSlot = calBtn.closest('[slot="trailing"]') as HTMLElement
     const calSlotRect = calSlot.getBoundingClientRect()
-    const calSlack = Math.max(calSlotRect.width - calR.width, calSlotRect.height - calR.height)
-    expect(calSlack, `${server.browser}: calendar-button slot has no slack over the glyph (anti-vacuous)`).toBeGreaterThan(0.5)
+    // The glyph fills the derived icon-box cell (no slack, as above): the floor is that it never overflows.
+    const calSlack = Math.min(calSlotRect.width - calR.width, calSlotRect.height - calR.height)
+    expect(calSlack, `${server.browser}: calendar-button glyph overflows its slot`).toBeGreaterThanOrEqual(-0.5)
     expect(
       Math.abs((calR.left - calSlotRect.left) - (calSlotRect.right - calR.right)),
       `${server.browser}: calendar-button glyph not horizontally centered in its slot`,
@@ -799,7 +788,7 @@ describe('ui-text-field Wave-5B — type=time codec (s11 Wave-5B, both engines)'
     expect(display, 'the localized display must differ from the canonical "14:30"').not.toBe('14:30')
   })
 
-  it('GESTALT: type=time field is wider than tall in a flex row (not a dot)', () => {
+  it('GESTALT: type=time field in a flex row hugs its frame, never a dot (width = the derived padding + border, > 0)', () => {
     const wrap = document.createElement('div')
     wrap.style.display = 'flex'
     wrap.style.flexDirection = 'row'
@@ -810,7 +799,13 @@ describe('ui-text-field Wave-5B — type=time codec (s11 Wave-5B, both engines)'
     const box = field.getBoundingClientRect()
 
     expect(box.width, 'type=time field collapsed to zero width in a flex row').toBeGreaterThan(0)
-    expect(box.width, 'type=time field is narrower than tall (should be a text-input shape)').toBeGreaterThan(box.height)
+    // ADR-0245 cl.3 frame padding n replaced the old h/2: an empty flex-row item hugs padding + border, so its width
+    // (16 at md) is no longer above its 4n height (28). The text-input shape is the frame itself: width >= both
+    // inline pads + both hairlines, height the derived 4n.
+    const cs = getComputedStyle(field)
+    const frame = px(cs.paddingInlineStart) + px(cs.paddingInlineEnd) + px(cs.borderInlineStartWidth) + px(cs.borderInlineEndWidth)
+    expect(box.width, 'type=time field is narrower than its own frame (a dot)').toBeGreaterThanOrEqual(frame - 0.5)
+    expect(box.height, 'type=time field height is not the derived 4n').toBeCloseTo(resolve('product', 'sm', 'md').h, 0)
   })
 })
 

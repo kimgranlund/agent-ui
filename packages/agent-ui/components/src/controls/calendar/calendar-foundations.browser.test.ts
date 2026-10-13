@@ -31,8 +31,8 @@ describe('ui-calendar geometry inside an opt-in region', () => {
   }
 })
 
-describe('ui-calendar geometry outside any region (the dark launch)', () => {
+describe('ui-calendar geometry under data-foundations=legacy (the clause 10e rollback)', () => {
   it('--ui-calendar-cell-size is 28', () => {
-    expect(token('<ui-calendar></ui-calendar>')).toBe(28)
+    expect(token('<div data-foundations="legacy"><ui-calendar></ui-calendar></div>')).toBe(28)
   })
 })

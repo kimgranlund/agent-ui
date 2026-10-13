@@ -17,6 +17,8 @@ function mount(html: string, region = true): HTMLElement {
   if (region) {
     wrap.setAttribute('data-tier', 'product')
     wrap.setAttribute('data-scale', 'sm')
+  } else {
+    wrap.setAttribute('data-foundations', 'legacy') // ADR-0245 cl.10e: the opt-out renders today's geometry
   }
   wrap.innerHTML = html
   document.body.append(wrap)
@@ -37,7 +39,7 @@ describe("ui-avatar geometry (ADR-0245 cl.3, Kim's step 0 ruling: 4n)", () => {
     })
   }
 
-  it("outside any region: today's 24 / 28 / 36 control-height ladder and the 0.6 icon", () => {
+  it("under data-foundations=legacy: today's 24 / 28 / 36 control-height ladder and the 0.6 icon", () => {
     const wrap = mount('<ui-avatar size="sm"></ui-avatar><ui-avatar></ui-avatar><ui-avatar size="lg"></ui-avatar>', false)
     const widths = [...wrap.querySelectorAll('ui-avatar')].map((a) => a.getBoundingClientRect().width)
     expect(widths).toEqual([24, 28, 36])

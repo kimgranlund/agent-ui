@@ -17,7 +17,7 @@ attributes:            # attributes-as-API, mirrors icon.ts `static props` (symb
   - name: glyph
     type: string
     default: ''
-    reflect: false     # DEPRECATED alias of `symbol` (ADR-0245 cl.4), read only when `symbol` is empty; accepted until the W7 cleanup removes it
+    reflect: false     # DEPRECATED alias of `symbol` (ADR-0245 cl.4), read only when `symbol` is empty; accepted until the W7 cleanup removes it (foundations-alias)
   - name: label
     type: string
     default: ''

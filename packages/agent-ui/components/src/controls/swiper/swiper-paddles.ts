@@ -17,7 +17,7 @@
 
 import { UIElement } from '../../dom/element.ts'
 import type { PropsSchema } from '../../dom/props.ts'
-import { setIcon } from '@agent-ui/icons'
+import '../glyph/glyph.ts' // the paddle carets are functional marks, ui-glyph (ADR-0245 cl.5)
 import type { UIButtonElement } from '../button/button.ts'
 
 export class UISwiperPaddlesElement extends UIElement {
@@ -34,8 +34,8 @@ export class UISwiperPaddlesElement extends UIElement {
    */
   fill(onPrev: () => void, onNext: () => void, orientation: 'horizontal' | 'vertical'): void {
     this.#ensureButtons()
-    setIcon(this.#prevIcon!, orientation === 'vertical' ? 'caret-up' : 'caret-left')
-    setIcon(this.#nextIcon!, orientation === 'vertical' ? 'caret-down' : 'caret-right')
+    this.#prevIcon!.setAttribute('symbol', orientation === 'vertical' ? 'caret-up' : 'caret-left')
+    this.#nextIcon!.setAttribute('symbol', orientation === 'vertical' ? 'caret-down' : 'caret-right')
     this.#prev!.onclick = () => onPrev() // reassigning .onclick replaces cleanly — no accumulation across re-drives
     this.#next!.onclick = () => onNext()
   }
@@ -48,7 +48,7 @@ export class UISwiperPaddlesElement extends UIElement {
     this.#prev.setAttribute('variant', 'ghost')
     this.#prev.setAttribute('icon-only', '')
     this.#prev.setAttribute('aria-label', 'Previous slide')
-    this.#prevIcon = document.createElement('ui-icon')
+    this.#prevIcon = document.createElement('ui-glyph')
     this.#prevIcon.setAttribute('slot', 'leading')
     this.#prevIcon.setAttribute('data-role', 'icon')
     this.#prev.appendChild(this.#prevIcon)
@@ -59,7 +59,7 @@ export class UISwiperPaddlesElement extends UIElement {
     this.#next.setAttribute('variant', 'ghost')
     this.#next.setAttribute('icon-only', '')
     this.#next.setAttribute('aria-label', 'Next slide')
-    this.#nextIcon = document.createElement('ui-icon')
+    this.#nextIcon = document.createElement('ui-glyph')
     this.#nextIcon.setAttribute('slot', 'leading')
     this.#nextIcon.setAttribute('data-role', 'icon')
     this.#next.appendChild(this.#nextIcon)

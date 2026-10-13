@@ -66,15 +66,25 @@ export function parseColorRoles(tokensCss: string): ColorRole[] {
   return roles
 }
 
+/** The bridge's alias block (foundations-bridge.gen.css, ADR-0245 clause 10a): since the cut the old ramp names
+ *  (height, font, icon, compact, gap, space, the typescale -size legs) are declared here as aliases of the
+ *  derived values, on the same recompute list as the derived block. */
+export const BRIDGE_ALIAS_SELECTOR = ':root, [data-tier], [data-scale], [data-size], [size], [scale], [density]'
+
+/** The base declaration homes of a dimensions source (dimensions.css followed by the bridge sheet): the
+ *  `:root` constants, any `*` block, and the bridge's alias block. */
+function baseBlocks(css: string): string {
+  return [':root', '*', BRIDGE_ALIAS_SELECTOR].map((sel) => firstTopLevelBlock(css, sel)).join('\n')
+}
+
 /**
- * parseDimensionRamp — every `--{prefix}-{tier}` declared in dimensions.css's BASE ramp: the `:root` block
- * (height/font/icon/compact — the default, ui-md-equivalent literals) concatenated with the `*` block
- * (gap/space — the density-derived ledger). Deliberately stops before any `[scale="…"]` override block, so the
- * table this renders is the single default row, not six duplicated tiers — the `[scale]` STEPPING itself is
- * `sizing.html`'s live demo, not this reference table's job.
+ * parseDimensionRamp — every `--{prefix}-{tier}` declared in the BASE homes of dimensions.css plus the bridge
+ * sheet (`baseBlocks`): since the ADR-0245 cut the height/font/icon/compact/gap/space names are the bridge's
+ * derived aliases. Deliberately stops before any `[scale="…"]` or legacy block, so the table this renders is
+ * the single default row; the live swatches read the computed values.
  */
 export function parseDimensionRamp(dimensionsCss: string, prefix: string): DimensionTier[] {
-  const combined = firstTopLevelBlock(dimensionsCss, ':root') + '\n' + firstTopLevelBlock(dimensionsCss, '*')
+  const combined = baseBlocks(dimensionsCss)
   const tiers: DimensionTier[] = []
   const seen = new Set<string>()
   const re = new RegExp(String.raw`--${prefix}-([a-z0-9]+):\s*([^;]+);`, 'g')
@@ -142,7 +152,7 @@ export interface TypescaleRow {
 
 /**
  * parseTypescale — every complete `--md-sys-typescale-{role}-{size}-*` cell declared across
- * dimensions.css's `:root` block (weight/line-height/tracking) and `*` block (size), GH #728
+ * dimensions.css's `:root` block (weight/line-height/tracking) and the bridge's alias block (size), GH #728
  * (additive — every sibling function above is unchanged, the parseColorPrimitives precedent). Roles
  * emit in sheet declaration order (display · headline · title · body · label, then the cl.2b editorial
  * extensions kicker · overline · lead · quote), sizes in the M3 large/medium/small order. A cell missing
@@ -150,7 +160,7 @@ export interface TypescaleRow {
  * catches a half-declared role.
  */
 export function parseTypescale(dimensionsCss: string): TypescaleRow[] {
-  const combined = firstTopLevelBlock(dimensionsCss, ':root') + '\n' + firstTopLevelBlock(dimensionsCss, '*')
+  const combined = baseBlocks(dimensionsCss)
   const cells = new Map<string, Partial<Record<'size' | 'weight' | 'line-height' | 'tracking', string>>>()
   const roleOrder: string[] = []
   const re = /--md-sys-typescale-([a-z]+)-(large|medium|small)-(size|weight|line-height|tracking):\s*([^;]+);/g

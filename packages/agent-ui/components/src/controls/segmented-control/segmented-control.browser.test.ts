@@ -13,6 +13,7 @@
 
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp, userEvent } from 'vitest/browser'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
@@ -33,6 +34,8 @@ afterEach(async () => {
 })
 
 const px = (v: string): number => Number.parseFloat(v)
+/** The segment gap: c at the root register (ADR-0245 cl.3), the same at every size. */
+const GAP = resolve('product', 'sm', 'md').c
 const before = (el: Element): CSSStyleDeclaration => getComputedStyle(el, '::before')
 const bg = (el: Element): string => getComputedStyle(el).backgroundColor
 const beforeBg = (el: Element): string => before(el).backgroundColor
@@ -92,8 +95,8 @@ describe('ui-segmented-control — grid track + segment geometry (both engines)'
     expect(groupRect.height).toBeGreaterThan(0)
     // equal cells ±1px
     for (const r of rects) expect(r.width).toBeCloseTo(rects[0]!.width, 0)
-    // no inter-cell gap: each cell's left edge sits at the previous cell's right edge
-    for (let i = 1; i < rects.length; i++) expect(rects[i]!.left).toBeCloseTo(rects[i - 1]!.right, 0)
+    // the derived gap c (ADR-0245 cl.3): each cell's left edge sits one gap past the previous cell's right edge
+    for (let i = 1; i < rects.length; i++) expect(rects[i]!.left).toBeCloseTo(rects[i - 1]!.right + GAP, 0)
 
     // one outer rounded track — painted on the host's `::after` overlay (bug #1380), not the host's
     // own `border` (freed so the overlay can always rasterize ABOVE the moving indicator).
@@ -116,7 +119,7 @@ describe('ui-segmented-control — grid track + segment geometry (both engines)'
     expect(group.getAttribute('orientation')).toBe('vertical')
     const rects = segments.map((r) => r.getBoundingClientRect())
     for (const r of rects) expect(r.height).toBeCloseTo(rects[0]!.height, 0)
-    for (let i = 1; i < rects.length; i++) expect(rects[i]!.top).toBeCloseTo(rects[i - 1]!.bottom, 0)
+    for (let i = 1; i < rects.length; i++) expect(rects[i]!.top).toBeCloseTo(rects[i - 1]!.bottom + GAP, 0)
     // Same zero-divider ruling as horizontal, on the block axis.
     for (const seg of segments) {
       const cs = getComputedStyle(seg)
@@ -162,7 +165,7 @@ describe('ui-segmented-control — the shared moving indicator (both engines)', 
     expect(px(before(group).opacity)).toBe(0)
   })
 
-  it('horizontal: indicator sizes to one cell, translateX == selectedIndex × cellWidth, and slides on reselect', async () => {
+  it('horizontal: indicator sizes to one cell, translateX == selectedIndex × (cellWidth + gap), and slides on reselect', async () => {
     const { group, segments } = mount(HORIZONTAL)
     await userEvent.click(segments[1]!)
     expect(px(before(group).opacity)).toBe(1) // appears instantly on first selection
@@ -174,7 +177,7 @@ describe('ui-segmented-control — the shared moving indicator (both engines)', 
     // the ::before transitions `transform` over --md-sys-motion-duration-fast (300ms) — a synchronous read right
     // after the click would sample a MID-FADE interpolated value (the same reasoning as the button
     // motion harness); poll until the transform SETTLES on the target translate instead.
-    await expect.poll(() => translateOf(before(group).transform).tx, { timeout: 1500 }).toBeCloseTo(1 * cellWidth, 0)
+    await expect.poll(() => translateOf(before(group).transform).tx, { timeout: 1500 }).toBeCloseTo(1 * (cellWidth + GAP), 0)
     expect(translateOf(before(group).transform).ty).toBeCloseTo(0, 0)
 
     // grid-column/grid-row are NOT used to place the indicator (the animatable path is transform).
@@ -183,16 +186,16 @@ describe('ui-segmented-control — the shared moving indicator (both engines)', 
 
     // slide on reselect
     await userEvent.click(segments[2]!)
-    await expect.poll(() => translateOf(before(group).transform).tx, { timeout: 1500 }).toBeCloseTo(2 * cellWidth, 0)
+    await expect.poll(() => translateOf(before(group).transform).tx, { timeout: 1500 }).toBeCloseTo(2 * (cellWidth + GAP), 0)
   })
 
-  it('vertical: indicator sizes to one cell, translateY == selectedIndex × cellHeight', async () => {
+  it('vertical: indicator sizes to one cell, translateY == selectedIndex × (cellHeight + gap)', async () => {
     const { group, segments } = mount(VERTICAL)
     await userEvent.click(segments[2]!)
     const cellHeight = segments[2]!.getBoundingClientRect().height
     const indicatorHeight = px(before(group).height)
     expect(indicatorHeight).toBeCloseTo(cellHeight, 0)
-    await expect.poll(() => translateOf(before(group).transform).ty, { timeout: 1500 }).toBeCloseTo(2 * cellHeight, 0)
+    await expect.poll(() => translateOf(before(group).transform).ty, { timeout: 1500 }).toBeCloseTo(2 * (cellHeight + GAP), 0)
     expect(translateOf(before(group).transform).tx).toBeCloseTo(0, 0)
   })
 

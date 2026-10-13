@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { server, cdp, userEvent, page } from 'vitest/browser'
 import type { UICalendarElement } from './calendar.ts'
 
@@ -878,7 +879,7 @@ describe('ui-calendar — Enter commit (both engines)', () => {
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
-//  [10] Container box-model inset — the nav header + grid honor the shared 6px inset (ADR-0046
+//  [10] Container box-model inset — the nav header + grid honor the shared box inset (ADR-0046
 //       Amendment 2, 2026-07-04: [data-box] regions are no longer full-bleed). calendar.css's own
 //       comments describe this; this pins the RENDERED consequence a real engine resolves, so a
 //       regression in the shared container-box.css (or a calendar.css override that opts back out
@@ -886,21 +887,22 @@ describe('ui-calendar — Enter commit (both engines)', () => {
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-calendar — container box-model inset (ADR-0046 Amendment 2, both engines)', () => {
-  it('the nav header is INSET (margin + sticky offset = the 6px box inset, not full-bleed/0)', async () => {
+  it('the nav header is INSET (margin + sticky offset = the box inset, not full-bleed/0)', async () => {
     const { el } = mount('<ui-calendar value="2026-07-15"></ui-calendar>')
     await el.updateComplete
 
     const nav = el.querySelector<HTMLElement>('[data-part="nav"]')!
     const cs  = getComputedStyle(nav)
+    const inset = `${resolve('product', 'sm', 'md').inset}px`
 
-    // At-rest margin: the SAME --ui-box-inset every other [data-box] child carries (6px @ 16px
-    // root) — NOT the pre-revision full-bleed margin:0.
-    expect(cs.marginTop, `${server.browser}: nav header margin is not the 6px box inset (full-bleed regression?)`).toBe('6px')
+    // At-rest margin: the SAME --ui-box-inset every other [data-box] child carries (n, ADR-0245 cl.6:
+    // 7px at the root register, product / sm / md) — NOT the pre-revision full-bleed margin:0.
+    expect(cs.marginTop, `${server.browser}: nav header margin is not the box inset (full-bleed regression?)`).toBe(inset)
 
     // Sticky offset: inset-block-start is the SAME 6px inset, not 0 — the fix that keeps the
     // at-rest and stuck positions from snapping (container-box.css's sticky-offset note).
     expect(cs.position, `${server.browser}: nav header lost position:sticky`).toBe('sticky')
-    expect(cs.top, `${server.browser}: nav header sticky inset-block-start is not the 6px box inset`).toBe('6px')
+    expect(cs.top, `${server.browser}: nav header sticky inset-block-start is not the box inset`).toBe(inset)
   })
 
   it('the nav header sits inset from the panel edge (not flush against it, i.e. not full-bleed)', async () => {
@@ -912,17 +914,17 @@ describe('ui-calendar — container box-model inset (ADR-0046 Amendment 2, both 
     const gap   = nav.getBoundingClientRect().top - panel.getBoundingClientRect().top
 
     // Panel border-box top → nav border-box top = the panel's own 1px border + the nav's 6px
-    // margin = ~7px. The load-bearing floor is "clearly inset" (≥ 6px), not "flush" (~0-1px) —
+    // margin = ~8px (7px inset at the root register). The load-bearing floor is "clearly inset" (≥ 6px), not "flush" (~0-1px) —
     // the shape a full-bleed regression would collapse to.
     expect(gap, `${server.browser}: nav sits flush against the panel edge (full-bleed) instead of inset`).toBeGreaterThanOrEqual(6)
   })
 
-  it('the day grid carries the same 6px direct-child inset margin as the nav header', async () => {
+  it('the day grid carries the same direct-child inset margin as the nav header', async () => {
     const { el } = mount('<ui-calendar value="2026-07-15"></ui-calendar>')
     await el.updateComplete
 
     const grid = el.querySelector<HTMLElement>('[data-part="grid"]')!
-    expect(getComputedStyle(grid).marginTop, `${server.browser}: grid margin is not the 6px box inset`).toBe('6px')
+    expect(getComputedStyle(grid).marginTop, `${server.browser}: grid margin is not the box inset`).toBe(`${resolve('product', 'sm', 'md').inset}px`)
   })
 })
 

@@ -15,6 +15,8 @@ function mount(html: string, region = true): HTMLElement {
   if (region) {
     wrap.setAttribute('data-tier', 'product')
     wrap.setAttribute('data-scale', 'sm')
+  } else {
+    wrap.setAttribute('data-foundations', 'legacy') // ADR-0245 cl.10e: the opt-out renders today's geometry
   }
   wrap.innerHTML = html
   document.body.append(wrap)
@@ -38,7 +40,7 @@ describe('ui-sparkline stroke (ADR-0245 cl.5: the mark stroke max(1.5px, c/2))',
     expect(Math.max(1.5, r.c / 2)).toBe(2)
   })
 
-  it('outside any region the stroke stays 1.5px', () => {
+  it('under data-foundations=legacy the stroke stays 1.5px', () => {
     const line = mount('<ui-sparkline values="[1,3,2,4]"></ui-sparkline>', false).querySelector(
       '[data-part="line"]',
     ) as SVGElement

@@ -9,6 +9,7 @@
 // Imports the self-defining `all` entry + the foundation/component CSS so tokens resolve in the real engine.
 
 import { describe, it, expect, afterEach } from 'vitest'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { userEvent } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
@@ -85,14 +86,16 @@ describe('ui-radio-group browser smoke — component-owned layout (ADR-0103)', (
     wrap.append(el)
 
     const gapPx = (): number => px(getComputedStyle(el).rowGap)
-    const base = gapPx() // --md-sys-space-sm @ density 1 = 8px
-    expect(base).toBeGreaterThan(0)
+    // --md-sys-space-sm is n at the region (ADR-0245 cl.6): 7 at the root, then a denser and a roomier region.
+    expect(gapPx()).toBe(resolve('product', 'sm', 'md').inset)
 
-    wrap.setAttribute('density', 'compact') // --md-sys-density → 0.5
-    expect(gapPx()).toBeCloseTo(base / 2, 1)
+    wrap.setAttribute('data-tier', 'widget')
+    wrap.setAttribute('data-scale', 'sm')
+    expect(gapPx()).toBe(resolve('widget', 'sm', 'md').inset)
 
-    wrap.setAttribute('density', 'spacious') // --md-sys-density → 1.5
-    expect(gapPx()).toBeCloseTo(base * 1.5, 1)
+    wrap.setAttribute('data-tier', 'product')
+    wrap.setAttribute('data-scale', 'lg')
+    expect(gapPx()).toBe(resolve('product', 'lg', 'md').inset)
   })
 
   it('one Tab stop, real focus (ADR-0121 amendment regression guard): exactly one ui-radio is Tab-reachable, not three', async () => {

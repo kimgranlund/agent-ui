@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp, userEvent } from 'vitest/browser'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 // S7-a cross-engine smoke — ui-toggle (ADR-0179 GH #686 Amendment, admin-three-pane-ia.lld.md §16.4). Runs
 // in BOTH Chromium and WebKit (vitest.browser.config.ts). Where toggle.test.ts (jsdom) pins the behaviour
@@ -127,9 +128,10 @@ describe('ui-toggle cross-engine geometry (s13-shaped)', () => {
         heights.push(frameHeight(el))
         fonts.push(fontPx(el))
       }
-      // Control-band ramp @ scale 1 (the button.css precedent): height 24·28·36, font 13·14·16.
-      expect(heights).toEqual([24, 28, 36])
-      expect(fonts).toEqual([13, 14, 16])
+      // The derived ramp at the root register (product / sm), ADR-0245 cl.3: height 4n, font = control type.
+      const ramp = (['sm', 'md', 'lg'] as const).map((s) => resolve('product', 'sm', s))
+      expect(heights).toEqual(ramp.map((r) => r.h))
+      expect(fonts).toEqual(ramp.map((r) => r.type.control))
     }
   })
 

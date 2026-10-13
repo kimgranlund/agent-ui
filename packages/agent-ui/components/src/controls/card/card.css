@@ -113,8 +113,12 @@
 /* PUBLISH the child radius ONE level (ADR-0018): hand every direct child the card's inner radius as the
    inherited --ui-card-child-radius. Set on the CHILDREN (`> *`), never on the card itself, so the publishing
    card never reads the property it writes (the cycle-free realization of the published seam). A nested card —
-   normally inside ui-card-content — inherits this through the region wrapper and reads it for its own radius. */
-:where(ui-card) > * {
+   normally inside ui-card-content — inherits this through the region wrapper and reads it for its own radius.
+   A ui-card that is itself a DIRECT child is skipped: declared on it, the child radius would read its own inner
+   radius, which reads its own radius, which reads the child radius, a cycle. Chromium ignores it while the
+   derived --md-sys-card-radius makes the fallback unused; WebKit counts every var() and drops the radius to 0.
+   Skipped, a direct nested card reads its own 3n like any card (ADR-0245 cl.6), in both engines. */
+:where(ui-card) > :where(:not(ui-card)) {
   --ui-card-child-radius: var(--ui-card-inner-radius);
 }
 

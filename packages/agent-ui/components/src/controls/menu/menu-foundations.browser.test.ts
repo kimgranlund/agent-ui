@@ -57,9 +57,9 @@ describe('ui-menu geometry inside an opt-in region', () => {
   }
 })
 
-describe('ui-menu geometry outside any region (the dark launch)', () => {
+describe('ui-menu geometry under data-foundations=legacy (the clause 10e rollback)', () => {
   it('the row is font + 2 x pad, the inset 6px and the panel corner 12px', async () => {
-    const { item, panel } = await open(MENU)
+    const { item, panel } = await open(`<div data-foundations="legacy">${MENU}</div>`)
     const font = Number.parseFloat(getComputedStyle(item).fontSize)
     expect(item.getBoundingClientRect().height).toBe(font + 2 * 4)
     expect(margin(item)).toBe(6)

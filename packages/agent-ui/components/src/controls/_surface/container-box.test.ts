@@ -16,9 +16,9 @@ const CSS = read('packages/agent-ui/components/src/controls/_surface/container-b
 const CODE = CSS.replace(/\/\*[\s\S]*?\*\//g, '')
 
 describe('container-box.css — the shared box-model foundation', () => {
-  it('opt-in [data-box] establishes a BFC + declares the 0.375rem inset token', () => {
+  it('opt-in [data-box] establishes a BFC + declares the inset token (n since the ADR-0245 cut, 0.375rem under the legacy opt-out)', () => {
     expect(CODE).toMatch(/:where\(\[data-box\]\)\s*\{[^}]*display:\s*flow-root/)
-    expect(CODE).toMatch(/--ui-box-inset:\s*0\.375rem/)
+    expect(CODE).toMatch(/--ui-box-inset:\s*var\(--md-sys-inset,\s*0\.375rem\)/)
   })
 
   it('every direct child gets the inset margin; the token drives it', () => {
@@ -83,10 +83,10 @@ describe('container-box.css — the shared box-model foundation', () => {
 })
 
 describe('container-box.css — region padding system (header/footer/content: inline 12 · block 6 · gap 8)', () => {
-  it('declares the region padding tokens: inline 0.75rem (12px), block 0.375rem (6px), gap 0.5rem (8px)', () => {
-    expect(CODE).toMatch(/--ui-box-pad-inline:\s*0\.75rem/)
-    expect(CODE).toMatch(/--ui-box-pad-block:\s*0\.375rem/)
-    expect(CODE).toMatch(/--ui-box-gap:\s*0\.5rem/)
+  it('declares the region padding tokens on the card level (ADR-0245 cl.6), today\'s 12 / 6 / 8 as the legacy fallbacks', () => {
+    expect(CODE).toMatch(/--ui-box-pad-inline:\s*var\(--md-sys-card-gutter,\s*0\.75rem\)/)
+    expect(CODE).toMatch(/--ui-box-pad-block:\s*var\(--md-sys-inset,\s*0\.375rem\)/)
+    expect(CODE).toMatch(/--ui-box-gap:\s*var\(--md-sys-card-gutter,\s*0\.5rem\)/)
   })
 
   it('header/footer regions carry inline+block padding + the region gap', () => {

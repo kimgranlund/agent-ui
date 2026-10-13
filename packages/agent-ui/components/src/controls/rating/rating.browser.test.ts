@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 // rating.browser.test.ts — ui-rating browser smoke (ADR-0216; GH #1395).
 //
@@ -35,27 +36,27 @@ const ptr = (el: UIRatingElement, type: string, x: number, id = 1): PointerEvent
 }
 
 describe('ui-rating browser smoke — widget-box geometry (ADR-0041)', () => {
-  it('default: each star svg = 16×16 px (--md-sys-compact-md at ui-md scale)', () => {
+  it('default: each star svg = the md icon box, 14×14 px (ADR-0245 cl.3, root register product / sm)', () => {
     const el = document.createElement('ui-rating') as UIRatingElement
     document.body.append(el)
     const svg = el.querySelector('.stars-base svg') as SVGSVGElement
     const cs = getComputedStyle(svg)
-    expect(Number.parseFloat(cs.width)).toBe(16)
-    expect(Number.parseFloat(cs.height)).toBe(16)
+    expect(Number.parseFloat(cs.width)).toBe(resolve('product', 'sm', 'md').icon)
+    expect(Number.parseFloat(cs.height)).toBe(resolve('product', 'sm', 'md').icon)
     el.remove()
   })
 
-  it('[size=sm] → 14px star; [size=lg] → 18px star (the compact ramp)', () => {
+  it('[size=sm] → 12px star; [size=lg] → 16px star (the derived icon box)', () => {
     const sm = document.createElement('ui-rating')
     sm.setAttribute('size', 'sm')
     document.body.append(sm)
-    expect(Number.parseFloat(getComputedStyle(sm.querySelector('.stars-base svg') as SVGSVGElement).width)).toBe(14)
+    expect(Number.parseFloat(getComputedStyle(sm.querySelector('.stars-base svg') as SVGSVGElement).width)).toBe(resolve('product', 'sm', 'sm').icon)
     sm.remove()
 
     const lg = document.createElement('ui-rating')
     lg.setAttribute('size', 'lg')
     document.body.append(lg)
-    expect(Number.parseFloat(getComputedStyle(lg.querySelector('.stars-base svg') as SVGSVGElement).width)).toBe(18)
+    expect(Number.parseFloat(getComputedStyle(lg.querySelector('.stars-base svg') as SVGSVGElement).width)).toBe(resolve('product', 'sm', 'lg').icon)
     lg.remove()
   })
 })

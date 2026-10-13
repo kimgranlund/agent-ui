@@ -60,7 +60,7 @@ describe('UIIconElement: symbol, and glyph as its deprecated alias (ADR-0245 cl.
 
   it('symbol wins over the alias; the alias is read only while symbol is empty', async () => {
     const el = new ProbeIcon()
-    el.glyph = 'x'
+    el.glyph = 'x' // foundations-alias: the deprecated alias must still resolve until W7 (ADR-0245 cl.10d)
     el.symbol = 'check'
     document.body.append(el)
     expect(el.querySelector('path')?.getAttribute('data-icon')).toBe('check')

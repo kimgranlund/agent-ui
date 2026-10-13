@@ -336,13 +336,13 @@ describe('bookingFormFactory date fields (T-0106, detached, jsdom-safe)', () => 
     expect(card.querySelectorAll('ui-calendar').length).toBe(1)
   })
 
-  it('the form steps its action Buttons down to md and leaves the date picker buttons at sm (T-0106)', async () => {
+  it('the form steps its action Buttons down to sm (28px on the canvas register) and leaves the date picker buttons at sm (T-0106, ADR-0245)', async () => {
     const el = bookingFormFactory.create()
     bookingFormFactory.applyProp(el, 'fields', stay)
     const reserve = document.createElement('ui-button')
     el.append(reserve) // the renderer appends the producer's child Button after create()
     await Promise.resolve() // the subtree observer stamps on a microtask
-    expect(reserve.getAttribute('size')).toBe('md')
+    expect(reserve.getAttribute('size')).toBe('sm')
     expect(buttonOf(cardOf(el, 'checkIn')).size).toBe('sm')
     expect(buttonOf(cardOf(el, 'checkOut')).getAttribute('size')).toBe('sm')
   })

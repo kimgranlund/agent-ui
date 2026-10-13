@@ -12,7 +12,8 @@ declare const process: { cwd(): string }
 // gap is the `--md-sys-space` LEDGER (rides [density], not [scale]) — a different ledger from the h/2 centring law.
 
 const rowCss = readFileSync(`${process.cwd()}/packages/agent-ui/components/src/controls/row/row.css`, 'utf8') as string
-const dimCss = readFileSync(`${process.cwd()}/packages/agent-ui/shared/src/tokens/dimensions.css`, 'utf8') as string
+// Since the ADR-0245 cut the --md-sys-space-* steps are bridge aliases of the derived container levels.
+const dimCss = readFileSync(`${process.cwd()}/packages/agent-ui/shared/src/tokens/foundations-bridge.gen.css`, 'utf8') as string
 const stylesBlock = rowCss.slice(rowCss.indexOf('@scope (ui-row) {'))
 const scopeRule = stylesBlock.slice(stylesBlock.indexOf(':scope {'), stylesBlock.indexOf('}', stylesBlock.indexOf(':scope {')) + 1)
 
@@ -43,14 +44,11 @@ describe('row.css — gap is the --md-sys-space ledger, density-responsive (ADR-
     for (const step of steps) expect(rowCss).toContain(`var(--md-sys-space-${step})`)
   })
 
-  it('--md-sys-space rides [density] but NOT [scale] (layout rhythm is not control-frame size — geometry.md)', () => {
-    // cross-file law: the ledger the row consumes is density-responsive and scale-INVARIANT. Pin it at the
-    // source so a future ramp edit that wires --md-sys-scale into --md-sys-space (re-coupling layout to the frame) trips.
+  it('--md-sys-space derives from the element n (ADR-0245 clause 6): md is the group margin n + c', () => {
+    // under one n the frame and the rhythm move together (the geometry.md frame/rhythm split retired at the cut).
     const md = dimCss.match(/--md-sys-space-md:\s*([^;]+);/)
-    expect(md, '--md-sys-space-md must be declared in dimensions.css').not.toBeNull()
-    const decl = (md as RegExpMatchArray)[1]
-    expect(decl).toContain('var(--md-sys-density)') // density re-multiplies the gutter
-    expect(decl).not.toContain('var(--md-sys-scale)') // [scale] resizes controls, not the gutters between them
+    expect(md, '--md-sys-space-md must be declared in the foundations bridge').not.toBeNull()
+    expect((md as RegExpMatchArray)[1]).toBe('var(--md-sys-group-margin)')
   })
 })
 

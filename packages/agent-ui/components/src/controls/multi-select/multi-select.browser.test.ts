@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, userEvent } from 'vitest/browser'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { UIMultiSelectElement } from './multi-select.ts'
 
 // M-F browser smoke — ui-multi-select (multi-select-field.lld.md · multi-select-field.spec.md SPEC-R7/R8
@@ -187,6 +188,15 @@ describe('ui-multi-select — C10 zero-residue reconnect (both engines)', () => 
 
 const px = (v: string): number => Number.parseFloat(v)
 
+/** A derived token is an unregistered calc() (NaN as text): read it as px through the host's own inline-size. */
+const readLength = (el: HTMLElement, prop: string): number => {
+  const prev = el.style.inlineSize
+  el.style.inlineSize = `var(${prop})`
+  const v = px(getComputedStyle(el).inlineSize)
+  el.style.inlineSize = prev
+  return v
+}
+
 describe('ui-multi-select — geometry (GEO-LAW: 0 < checkmark glyph ≤ icon cell, both engines)', () => {
   it('default [size=md]: the selected option row height matches the ramp; the checkmark renders within the icon cell', async () => {
     const { el } = mount(`<ui-multi-select>${OPTIONS}</ui-multi-select>`)
@@ -200,7 +210,7 @@ describe('ui-multi-select — geometry (GEO-LAW: 0 < checkmark glyph ≤ icon ce
     // The checkmark paints via ::before — its resolved width/height must be > 0 and ≤ the icon token.
     const cs = getComputedStyle(option, '::before')
     const glyphW = px(cs.width)
-    const iconCell = px(getComputedStyle(el).getPropertyValue('--ui-multi-select-icon'))
+    const iconCell = readLength(el, '--ui-multi-select-icon')
     expect(glyphW, `${server.browser}: selected checkmark did not render (0 width)`).toBeGreaterThan(0)
     expect(glyphW, `${server.browser}: checkmark wider than its icon cell — GEO-LAW violation`).toBeLessThanOrEqual(iconCell)
   })
@@ -218,17 +228,17 @@ describe('ui-multi-select — geometry (GEO-LAW: 0 < checkmark glyph ≤ icon ce
     document.body.append(smWrap)
     mounted.push(smWrap)
     const smEl = smWrap.querySelector('ui-multi-select') as UIMultiSelectElement
-    const smHeight = px(getComputedStyle(smEl).getPropertyValue('--ui-multi-select-height'))
+    const smHeight = readLength(smEl, '--ui-multi-select-height')
 
     const lgWrap = document.createElement('div')
     lgWrap.innerHTML = `<ui-multi-select size="lg">${OPTIONS}</ui-multi-select>`
     document.body.append(lgWrap)
     mounted.push(lgWrap)
     const lgEl = lgWrap.querySelector('ui-multi-select') as UIMultiSelectElement
-    const lgHeight = px(getComputedStyle(lgEl).getPropertyValue('--ui-multi-select-height'))
+    const lgHeight = readLength(lgEl, '--ui-multi-select-height')
 
-    expect(smHeight, `${server.browser}: sm row-height lever`).toBe(24)
-    expect(lgHeight, `${server.browser}: lg row-height lever`).toBe(36)
+    expect(smHeight, `${server.browser}: sm row-height lever`).toBe(resolve('product', 'sm', 'sm').h)
+    expect(lgHeight, `${server.browser}: lg row-height lever`).toBe(resolve('product', 'sm', 'lg').h)
   })
 })
 

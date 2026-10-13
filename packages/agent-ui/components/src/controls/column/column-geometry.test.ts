@@ -18,7 +18,8 @@ const stripComments = (s: string): string => s.replace(/\/\*[\s\S]*?\*\//g, ' ')
 const columnCss = stripComments(
   readFileSync(`${process.cwd()}/packages/agent-ui/components/src/controls/column/column.css`, 'utf8') as string,
 )
-const dimCss = readFileSync(`${process.cwd()}/packages/agent-ui/shared/src/tokens/dimensions.css`, 'utf8') as string
+// Since the ADR-0245 cut the --md-sys-space-* steps are bridge aliases of the derived container levels.
+const dimCss = readFileSync(`${process.cwd()}/packages/agent-ui/shared/src/tokens/foundations-bridge.gen.css`, 'utf8') as string
 
 // The non-`none` gap steps column maps (the flexProps gap union minus the 0 step) — each must resolve to a
 // real --md-sys-space-{step} token in the shared ramp.
@@ -35,18 +36,17 @@ describe('column.css — STATIC geometry trip-wires (s4)', () => {
     // anti-vacuous: prove column actually references each --md-sys-space step before checking it exists in the ramp.
     for (const step of GAP_STEPS) {
       expect(columnCss, `column.css does not map gap=${step}`).toMatch(new RegExp(`var\\(--md-sys-space-${step}\\)`))
-      expect(dimCss, `--md-sys-space-${step} is not declared in dimensions.css`).toMatch(new RegExp(`--md-sys-space-${step}:`))
+      expect(dimCss, `--md-sys-space-${step} is not declared in the foundations bridge`).toMatch(new RegExp(`--md-sys-space-${step}:`))
     }
     // the `none` default is the zero step
     expect(columnCss).toMatch(/var\(--md-sys-space-none\)/)
     expect(dimCss).toMatch(/--md-sys-space-none:/)
   })
 
-  it('the gap is DENSITY-RESPONSIVE: the --md-sys-space ladder carries var(--md-sys-density) (rhythm, not frame)', () => {
-    // each non-zero --md-sys-space step is `calc(<px> * var(--md-sys-density))`, so a subtree [density] re-multiplies the
-    // column gap while no frame moves — the geometry.md split (density rides the rhythm, [scale] does not touch it).
+  it('the gap derives from n: each --md-sys-space step aliases a derived token (ADR-0245 clause 6), never a px literal', () => {
+    // a subtree data-scale moves the gap with the frame now (one n); the bridge maps xs..2xl onto c, n and the levels.
     for (const step of GAP_STEPS) {
-      expect(dimCss).toMatch(new RegExp(`--md-sys-space-${step}:\\s*calc\\([^)]*\\*\\s*var\\(--md-sys-density\\)\\s*\\)`))
+      expect(dimCss).toMatch(new RegExp(`--md-sys-space-${step}:\\s*var\\(--md-sys-(?:c|inset|group-margin|widget-margin|card-margin|layout-margin)\\)`))
     }
   })
 })

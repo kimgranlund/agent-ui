@@ -18,6 +18,8 @@ function mount(inRegion: boolean, size?: string): HTMLElement {
   if (inRegion) {
     wrap.setAttribute('data-tier', 'product')
     wrap.setAttribute('data-scale', 'sm')
+  } else {
+    wrap.setAttribute('data-foundations', 'legacy') // ADR-0245 cl.10e: the opt-out renders today's geometry
   }
   wrap.innerHTML = `<ui-otp-field></ui-otp-field>`
   const control = wrap.querySelector('ui-otp-field') as HTMLElement
@@ -29,7 +31,7 @@ function mount(inRegion: boolean, size?: string): HTMLElement {
 const read = (el: HTMLElement, prop: string): number => parseFloat(getComputedStyle(el).getPropertyValue(prop))
 
 describe('ui-otp-field foundations (ADR-0245 lane a01)', () => {
-  it('outside a data-tier region keeps today\'s geometry (the default-page contract)', () => {
+  it('under data-foundations="legacy" keeps today\'s geometry (the clause 10e rollback)', () => {
     const el = mount(false)
     expect(read(el, 'block-size'), 'height').toBeCloseTo(28, 1)
     expect(read(el, 'border-top-left-radius'), 'radius').toBeCloseTo(12, 1)

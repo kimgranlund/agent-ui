@@ -10,9 +10,7 @@ import { describe, it, expect } from 'vitest'
 //   C10: Reconnect produces exactly one response per keyboard event (no listener stacking).
 //
 // The widget-box ramp table (--md-sys-compact-{size} per [scale], dimensions.css):
-//   Default (ui-md):  sm=14px · md=16px · lg=18px
-//   ui-sm:            sm=12px · md=14px · lg=16px
-//   ui-lg:            sm=16px · md=18px · lg=20px
+//   Default (derived, ADR-0245): sm=12px · md=14px · lg=16px
 //   content-lg:       sm=22px · md=24px · lg=28px
 // Thumb = box − 4px (−2px × each side; --md-sys-widget-inset=2px; ADR-0041 cl.3).
 //
@@ -232,9 +230,9 @@ describe('ui-slider — thumb ring "pops" in both schemes without regressing the
     const el = document.createElement('ui-slider') as UISliderElement
     document.body.append(el)
     const cs = getComputedStyle(rail(el), '::after')
-    // default ui-md size=md: box=16px → thumb=12px, border-box means the 2px ring border does NOT grow it.
-    expect(Number.parseFloat(cs.width)).toBe(12)
-    expect(Number.parseFloat(cs.height)).toBe(12)
+    // default size=md: box=14px (derived compact ramp, ADR-0245) → thumb=10px, border-box means the 2px ring border does NOT grow it.
+    expect(Number.parseFloat(cs.width)).toBe(10)
+    expect(Number.parseFloat(cs.height)).toBe(10)
     el.remove()
   })
 })
@@ -249,30 +247,30 @@ describe('ui-slider — thumb ring "pops" in both schemes without regressing the
 // `.rail` rather than the host to preserve the ratified per-part contract.
 
 describe('ui-slider browser smoke (AC1 — .rail block-size exact px per [size]×[scale])', () => {
-  it('AC1 default: .rail block-size = 16px (--md-sys-compact-md at default ui-md scale)', () => {
+  it('AC1 default: .rail block-size = 14px (--md-sys-compact-md, the derived compact ramp)', () => {
     const el = document.createElement('ui-slider') as UISliderElement
     document.body.append(el)
-    // .rail's block-size = --md-sys-compact-md = 16px at ui-md scale (ADR-0041 clause 2)
+    // .rail's block-size = --md-sys-compact-md = 14px on the derived ramp (ADR-0041 clause 2, ADR-0245)
     const rect = rail(el).getBoundingClientRect()
-    expect(rect.height).toBe(16)
+    expect(rect.height).toBe(14)
     el.remove()
   })
 
-  it('AC1 [size=sm] → .rail block-size = 14px; [size=lg] → 18px (the compact widget ramp)', () => {
+  it('AC1 [size=sm] → .rail block-size = 12px; [size=lg] → 16px (the compact widget ramp)', () => {
     const sm = document.createElement('ui-slider') as UISliderElement
     sm.setAttribute('size', 'sm')
     document.body.append(sm)
-    expect(rail(sm).getBoundingClientRect().height).toBe(14) // --md-sys-compact-sm at ui-md
+    expect(rail(sm).getBoundingClientRect().height).toBe(12) // --md-sys-compact-sm, derived
     sm.remove()
 
     const lg = document.createElement('ui-slider') as UISliderElement
     lg.setAttribute('size', 'lg')
     document.body.append(lg)
-    expect(rail(lg).getBoundingClientRect().height).toBe(18) // --md-sys-compact-lg at ui-md
+    expect(rail(lg).getBoundingClientRect().height).toBe(16) // --md-sys-compact-lg, derived
     lg.remove()
   })
 
-  it('AC1 negative control: [size=sm] ≠ [size=md] (14px ≠ 16px — anti-vacuous box proof)', () => {
+  it('AC1 negative control: [size=sm] ≠ [size=md] (12px ≠ 14px, anti-vacuous box proof)', () => {
     const sm = document.createElement('ui-slider') as UISliderElement
     sm.setAttribute('size', 'sm')
     document.body.append(sm)
@@ -291,35 +289,35 @@ describe('ui-slider browser smoke (AC1 — .rail block-size exact px per [size]�
 // ── AC2: thumb = box − 4px (the ADR-0041 cl.3 two-pixel-inset proof, Range half) ────────────────
 
 describe('ui-slider browser smoke (AC2 — thumb = box − 4px, the ADR-0042 Range-half ratification)', () => {
-  it('AC2 default (ui-md, size=md): thumb ::after width = 12px (16px − 4px)', () => {
+  it('AC2 default (size=md): thumb ::after width = 10px (14px − 4px)', () => {
     const el = document.createElement('ui-slider') as UISliderElement
     document.body.append(el)
-    // --md-sys-compact-md=16px → thumb = 16 − 2×2 = 12px (ADR-0041 cl.3: thumb = box − 2×inset)
-    const cs = getComputedStyle(rail(el), '::after')
-    expect(Number.parseFloat(cs.width)).toBe(12)
-    expect(Number.parseFloat(cs.height)).toBe(12)
-    el.remove()
-  })
-
-  it('AC2 [size=sm] → thumb = 10px (14px − 4px)', () => {
-    const el = document.createElement('ui-slider') as UISliderElement
-    el.setAttribute('size', 'sm')
-    document.body.append(el)
-    // --md-sys-compact-sm=14px → thumb = 14 − 4 = 10px
+    // --md-sys-compact-md=14px → thumb = 14 − 2×2 = 10px (ADR-0041 cl.3: thumb = box − 2×inset)
     const cs = getComputedStyle(rail(el), '::after')
     expect(Number.parseFloat(cs.width)).toBe(10)
     expect(Number.parseFloat(cs.height)).toBe(10)
     el.remove()
   })
 
-  it('AC2 [size=lg] → thumb = 14px (18px − 4px)', () => {
+  it('AC2 [size=sm] → thumb = 8px (12px − 4px)', () => {
+    const el = document.createElement('ui-slider') as UISliderElement
+    el.setAttribute('size', 'sm')
+    document.body.append(el)
+    // --md-sys-compact-sm=12px → thumb = 12 − 4 = 8px
+    const cs = getComputedStyle(rail(el), '::after')
+    expect(Number.parseFloat(cs.width)).toBe(8)
+    expect(Number.parseFloat(cs.height)).toBe(8)
+    el.remove()
+  })
+
+  it('AC2 [size=lg] → thumb = 12px (16px − 4px)', () => {
     const el = document.createElement('ui-slider') as UISliderElement
     el.setAttribute('size', 'lg')
     document.body.append(el)
-    // --md-sys-compact-lg=18px → thumb = 18 − 4 = 14px
+    // --md-sys-compact-lg=16px → thumb = 16 − 4 = 12px
     const cs = getComputedStyle(rail(el), '::after')
-    expect(Number.parseFloat(cs.width)).toBe(14)
-    expect(Number.parseFloat(cs.height)).toBe(14)
+    expect(Number.parseFloat(cs.width)).toBe(12)
+    expect(Number.parseFloat(cs.height)).toBe(12)
     el.remove()
   })
 
@@ -686,10 +684,13 @@ describe('ui-slider geometry inside an opt-in data-tier region (ADR-0245)', () =
   const railHeight = (el: Element): number => Number.parseFloat(getComputedStyle(rail(el), '::before').height)
 
   it('outside any region the rail is 3px', () => {
+    const wrapper = document.createElement('div')
+    wrapper.setAttribute('data-foundations', 'legacy') // ADR-0245 cl.10e: the opt-out renders today's geometry
     const el = document.createElement('ui-slider') as UISliderElement
-    document.body.append(el)
+    wrapper.append(el)
+    document.body.append(wrapper)
     expect(railHeight(el)).toBe(3)
-    el.remove()
+    wrapper.remove()
   })
 
   for (const scale of ['sm', 'md'] as const) {

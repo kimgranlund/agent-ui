@@ -115,7 +115,7 @@ npm-workspaces monorepo; ten packages under `packages/agent-ui/*`.
 How an agent works on an edit, a fix or a style pass. Kim's ruling 2026-10-12: the full suite is the CI gate, not a per-edit step.
 
 - Local gate: `npm run check` plus the tests of the touched folders only. Never the full `npm test` per edit; CI runs it on the PR. A ticket's "Done when", a plan's criteria and a verifier's run all use this set, never "npm test exit 0".
-- Style and UI work: a screenshot of the real widget next to its approved mockup is the evidence. Behaviour tests alone do not prove a look. Controls take the library ramp (`sm` 24 / `md` 28 / `lg` 36 px); no one-off heights.
+- Style and UI work: a screenshot of the real widget next to its approved mockup is the evidence. Behaviour tests alone do not prove a look. Controls take the library ramp (`sm` 24 / `md` 28 / `lg` 32 px, ADR-0245); no one-off heights.
 - One independent verifier per ticket, and a pass is final. Em dashes, stale count comments and wording go under NOTES and never cause a rebuild; the conductor fixes a one-line nit itself.
 - Merge through one serial path that rebases on fresh `origin/main`, regenerates every generated file with its script, runs the affected tests, waits for CI to settle and then merges. Never squash a branch onto a stale base.
 - A solo agent gets one brief paragraph, not a checklist. A planner writes one terse step for a ticket with a merged precedent, and a stalled agent (no output for 20 minutes) is stopped and relaunched lighter, not waited on.

@@ -12,7 +12,7 @@
 // hands are whole-array bindable props (`/dealerHand`, `/playerHand`); the factory reuses the i-th card for
 // item i, so a draw appends one element and a hole card turned up flips the same element (ADR-0225 cl.6). The
 // action Buttons are the producer's own children, appended by the renderer after the readout, and sized at the
-// button's `lg` step by `largeActionButtons` (ADR-0243 Amendment 2). The hands deal at the card's `md` size.
+// button's 36px action height by `actionRowButtons` (ADR-0243 Amendment 2; `md` on the ADR-0245 canvas register). The hands deal at the card's `md` size.
 // Styling is inline (`el.style`): the a2ui package ships no CSS file. The spacing is the ADR-0046 box model
 // (`boxRegionCard`, ADR-0046 Amendment 7): the head, each zone and the readout row sit one region apart, the
 // region-to-region distance of a stock card (block padding, box inset, block padding), and a zone's label and
@@ -31,7 +31,7 @@
 // through either base's own dialect, the same reasoning as `concierge/index.ts`.
 
 import type { WidgetFactory } from '../../types.ts'
-import { largeActionButtons } from '../action-row.ts'
+import { actionRowButtons } from '../action-row.ts'
 import { BOX, boxRegionCard } from '../box-region.ts'
 
 export const playingCardFactory: WidgetFactory = {
@@ -221,7 +221,7 @@ function band(part: string): HTMLElement {
 function button(variant: string, label: string): ButtonLike {
   const el = document.createElement('ui-button') as ButtonLike
   el.variant = variant
-  el.size = 'lg' // minted before `largeActionButtons` observes, so sized here (ADR-0243 Amendment 2)
+  el.size = 'md' // 36px on the canvas register (ADR-0245); minted before `actionRowButtons` observes, so sized here (ADR-0243 Amendment 2)
   el.inline = true // hug its label in the bet row (ADR-0223's one opt-out), never fill it
   el.textContent = label
   return el
@@ -352,7 +352,7 @@ export const cardTableFactory: WidgetFactory = {
     const stakeEl = document.createElement('ui-text-field') as StakeFieldLike
     stakeEl.setAttribute('data-part', 'stake')
     stakeEl.type = 'number'
-    stakeEl.size = 'lg'
+    stakeEl.size = 'md' // 36px beside the chips on the canvas register (ADR-0245, the old lg)
     stakeEl.label = 'Bet'
     stakeEl.placeholder = 'Bet'
     stakeEl.min = '1'
@@ -370,7 +370,7 @@ export const cardTableFactory: WidgetFactory = {
     readoutEl.appendChild(readoutText)
 
     el.append(head, dealer.el, player.el, resultEl, betEl, readoutEl)
-    largeActionButtons(el)
+    actionRowButtons(el)
     const parts: CardTableParts = {
       titleEl,
       statusEl,

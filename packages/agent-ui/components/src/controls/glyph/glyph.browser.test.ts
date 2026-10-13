@@ -46,8 +46,10 @@ describe('ui-glyph geometry inside an opt-in region', () => {
 })
 
 describe('ui-glyph geometry outside any region (the dark launch)', () => {
-  it('the slot is 1em and the inset 0.125em, so the mark is 0.75em', async () => {
-    const host = await mount('<div style="font-size: 16px"><ui-glyph symbol="plus"></ui-glyph></div>')
+  it('under data-foundations=legacy the slot is 1em and the inset 0.125em, so the mark is 0.75em', async () => {
+    const host = await mount(
+      '<div data-foundations="legacy"><div style="font-size: 16px"><ui-glyph symbol="plus"></ui-glyph></div></div>',
+    ) // ADR-0245 cl.10e: the opt-out keeps today's em geometry; a plain page is the derived root register since the cut
     expect(boxOf(host)).toEqual({ w: 16, h: 16 })
     expect(boxOf(host.querySelector('svg') as SVGSVGElement)).toEqual({ w: 12, h: 12 })
   })

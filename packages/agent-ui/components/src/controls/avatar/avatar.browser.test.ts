@@ -39,17 +39,17 @@ describe('ui-avatar — control-height square box (SPEC-R20 AC1; ADR-0112 Amendm
     expect(box.height).toBe(28)
   })
 
-  it('[size=sm] → 24px box; [size=lg] → 36px box (the control-height ladder)', () => {
+  it('[size=sm] → 24px box; [size=lg] → 32px box (the control-height ladder, 4n at the root register since ADR-0245)', () => {
     const sm = mount('<ui-avatar identity="Ada Lovelace" size="sm"></ui-avatar>')
     expect(sm.getBoundingClientRect().width).toBe(24)
 
     const lg = mount('<ui-avatar identity="Ada Lovelace" size="lg"></ui-avatar>')
-    expect(lg.getBoundingClientRect().width).toBe(36)
+    expect(lg.getBoundingClientRect().width).toBe(32)
   })
 
-  it('[scale=ui-lg] × [size=md] → 36px (the scale × size row lookup, ADR-0038)', () => {
+  it('data-scale md × size md → 36px (4n at product / md, ADR-0245 cl.3, the old ui-lg register)', () => {
     const wrap = document.createElement('div')
-    wrap.setAttribute('scale', 'ui-lg')
+    wrap.setAttribute('data-scale', 'md')
     wrap.innerHTML = '<ui-avatar identity="Ada Lovelace"></ui-avatar>'
     document.body.append(wrap)
     mounted.push(wrap)
@@ -57,9 +57,15 @@ describe('ui-avatar — control-height square box (SPEC-R20 AC1; ADR-0112 Amendm
     expect(el.getBoundingClientRect().width).toBe(36)
   })
 
-  it('ui-avatar and ui-button share the same height row: the avatar box equals --md-sys-height-md', () => {
+  it('ui-avatar and ui-button share the same height row: the avatar box equals the derived control height (4n, ADR-0245)', () => {
     const el = mount('<ui-avatar identity="Ada Lovelace"></ui-avatar>')
-    const row = Number.parseFloat(getComputedStyle(el).getPropertyValue('--md-sys-height-md'))
+    // --md-sys-height is an unregistered calc() (4n): the raw text parses as NaN, so read it through a probe box
+    const probe = document.createElement('div')
+    probe.style.cssText = 'position:absolute;visibility:hidden;inline-size:1px;block-size:var(--md-sys-height)'
+    el.parentElement!.append(probe)
+    const row = probe.getBoundingClientRect().height
+    probe.remove()
+    expect(row).toBe(28)
     expect(el.getBoundingClientRect().height).toBe(row)
   })
 

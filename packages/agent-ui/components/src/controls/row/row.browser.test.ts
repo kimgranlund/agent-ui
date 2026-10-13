@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 // s3 — ui-row cross-engine browser smoke (the geometry/responsiveness TRUTH jsdom cannot compute). Runs in
 // BOTH Chromium and WebKit (vitest.browser.config.ts → playwright instances). It proves the three behaviours
@@ -52,16 +53,16 @@ describe('ui-row cross-engine smoke — flex grammar maps to computed props (s3)
     wrapper.remove()
   })
 
-  it('gap → the --md-sys-space ladder responds to an ancestor [density] (the one density-bearing quantity)', () => {
+  it('gap → the --md-sys-space alias moves with an ancestor data-scale (one n, ADR-0245 cl.6)', () => {
     const { wrapper, row } = mount('600px')
-    row.setAttribute('gap', 'md') // → var(--md-sys-space-md) = calc(12px * var(--md-sys-density))
+    row.setAttribute('gap', 'md') // → var(--md-sys-space-md) = the group margin n + c
     const base = Number.parseFloat(getComputedStyle(row).columnGap)
-    expect(base).toBe(12) // density 1 → 12px (the ramp truly resolved — not a fallback)
+    expect(base).toBe(resolve('product', 'sm', 'md').group.margin) // the root register: 9
 
-    wrapper.setAttribute('density', 'spacious') // [density="spacious"] → --md-sys-density: 1.5 (inherits to the row)
-    const spacious = Number.parseFloat(getComputedStyle(row).columnGap)
-    expect(spacious).toBe(18) // 12 × 1.5 — density re-multiplied the gutter
-    expect(spacious).toBeGreaterThan(base) // anti-vacuous: the gap actually grew
+    wrapper.setAttribute('data-scale', 'md') // the roomier register (inherits to the row)
+    const roomy = Number.parseFloat(getComputedStyle(row).columnGap)
+    expect(roomy).toBe(resolve('product', 'md', 'md').group.margin) // 12
+    expect(roomy).toBeGreaterThan(base) // anti-vacuous: the gap actually grew
 
     wrapper.remove()
   })

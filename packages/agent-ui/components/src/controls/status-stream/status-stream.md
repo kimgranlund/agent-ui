@@ -12,6 +12,7 @@ tier: pattern            # mirrors ui-timeline's classification (the family's sh
 extends: UIContainerElement  # NOT form-associated — a live display strip, no value/validity
 uses:
   - ui-button
+  - ui-glyph
   - ui-timeline
   - ui-timeline-item
 # marginal: measured at the family barrel integration slice (npm run size, ADR-0040 §3)

@@ -180,10 +180,10 @@ describe('ui-agent-admin Test Chat cross-engine: the activity strip and the chat
     for (const tag of ['ui-card-header', 'ui-card-content', 'ui-card-footer']) {
       const region = card.querySelector(tag) as HTMLElement
       const cs = getComputedStyle(region)
-      expect(cs.paddingLeft, `${tag} keeps the 12px region inline padding`).toBe('12px')
-      expect(cs.marginLeft, `${tag} keeps the 6px region inset margin`).toBe('6px')
+      expect(cs.paddingLeft, `${tag} keeps the 18px region inline padding (the card gutter 2n, n = 9)`).toBe('18px')
+      expect(cs.marginLeft, `${tag} keeps the 9px region inset margin (n)`).toBe('9px')
       const ink = region.firstElementChild as HTMLElement
-      expect(ink.getBoundingClientRect().left - cardBox.left, `${tag}: content is inset from the card edge, never flush`).toBeGreaterThanOrEqual(18 - 0.5)
+      expect(ink.getBoundingClientRect().left - cardBox.left, `${tag}: content is inset from the card edge, never flush`).toBeGreaterThanOrEqual(27 - 0.5)
     }
     const title = card.querySelector('ui-card-header ui-text') as HTMLElement
     const badge = card.querySelector('ui-card-header ui-badge') as HTMLElement
@@ -193,8 +193,8 @@ describe('ui-agent-admin Test Chat cross-engine: the activity strip and the chat
     const hb = header.getBoundingClientRect()
     expect(bb.top, 'the trailing Badge shares the title row, not a row under it').toBeLessThan(tb.bottom)
     expect(bb.left, 'and sits to the right of the title').toBeGreaterThanOrEqual(tb.right - 0.5)
-    expect(hb.right - bb.right, 'at the header\'s trailing edge, inside its padding').toBeGreaterThanOrEqual(11.5)
-    expect(hb.right - bb.right).toBeLessThanOrEqual(12 + 0.5)
+    expect(hb.right - bb.right, 'at the header\'s trailing edge, inside its padding').toBeGreaterThanOrEqual(17.5)
+    expect(hb.right - bb.right).toBeLessThanOrEqual(18 + 0.5)
   })
 
   it(`${server.browser}: every text part of the settled, expanded strip sits inside the strip's own inline inset`, async () => {

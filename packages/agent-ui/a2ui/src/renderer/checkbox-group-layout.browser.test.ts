@@ -107,8 +107,11 @@ describe('checkbox multi-select ask card — real-engine geometry (GH #1125)', (
 
     const children = [...parent.children] as HTMLElement[]
     const tops = children.map((c) => c.getBoundingClientRect().top)
-    // every unwrapped inline-flex sibling sits on the SAME line as the first — the exact bug shape.
-    for (const top of tops) expect(Math.abs(top - tops[0]!)).toBeLessThan(2)
+    // every unwrapped inline-flex sibling sits on the SAME line as the first (the exact bug shape). Baseline
+    // alignment puts a checkbox's top a few px off a button's (2.5px at the derived canvas register, ADR-0245),
+    // so "same line" is within half a control height; a stacked row sits a full height or more below.
+    const half = children[0]!.getBoundingClientRect().height / 2
+    for (const top of tops) expect(Math.abs(top - tops[0]!)).toBeLessThan(half)
   })
 
   it('parity: the RadioGroup card built the identical Column({group,button-after}) shape stacks the SAME way (unchanged by this fix)', () => {

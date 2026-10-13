@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { server, cdp, userEvent } from 'vitest/browser'
 
 // G9 s7 — the CROSS-ENGINE card smoke (decomp g9-containers s7 browser gate). Runs in BOTH Chromium and WebKit
@@ -110,7 +111,7 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     expect(alphaOf(getComputedStyle(card).backgroundColor), 'card surface is transparent').toBeGreaterThan(0)
   })
 
-  it('a NESTED card radius DECREMENTS one level — measured px == max(--md-sys-space-xs, parent − padding) (ADR-0018)', () => {
+  it('a NESTED card reads its own 3n, not the retired ADR-0018 decrement of its parent (ADR-0245 cl.6, concentric by construction)', () => {
     // Reseed the root radius well larger than the region padding so the one-level decrement is a clear
     // unambiguous px well above the floor (with the default --md-sys-shape-corner-base of 12px against the
     // shared 12px region padding the decrement would land exactly ON the --md-sys-space-xs (4px) floor RESOLVED
@@ -134,14 +135,14 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     // the concentric-corner law, measured: child == max(--md-sys-space-xs, parent − content inline padding) —
     // 4px at the default density; at this reseed (32px) the decrement (20px) sits well clear of the floor
     // either way — see the dedicated default-root floor test below for the case where the floor actually binds.
-    expect(nestedR, 'nested radius != max(floor, parent − content inline padding)').toBeCloseTo(Math.max(4, rootR - pad), 1)
-    // anti-vacuous negative control: the nested radius is genuinely SMALLER than the parent (the decrement is
-    // real — a same-radius/no-decrement bug would make these equal and FAIL here)
-    expect(nestedR, 'nested radius did not decrement below the parent').toBeLessThan(rootR)
+    // ADR-0245 cl.6: a container's radius equals its own margin (3n = 21), so the ADR-0018 chain is only the
+    // legacy fallback; the parent's reseed to 32px does not reach the nested card.
+    expect(nestedR, 'nested radius is not the derived 3n').toBe(resolve('product', 'sm', 'md').card.radius)
+    expect(nestedR, 'nested radius did not stay below the reseeded parent').toBeLessThan(rootR)
     expect(nestedR, 'nested radius collapsed to 0 (no demonstrable decrement)').toBeGreaterThan(0)
   })
 
-  it('a nested card under the DEFAULT (unreseeded) root radius keeps a small floor, not a knife-edge 0', () => {
+  it('a nested card under the DEFAULT (unreseeded) root reads the same derived 3n as its parent, never a knife-edge 0', () => {
     // RESOLVED 2026-08-24 (Kim, live off a design-mode report on comparison-pricing-table's plan tiles): with
     // the default --md-sys-shape-corner-base (12px) exactly equal to the shared region inline padding (12px),
     // an UNRESEEDED root card's nested children used to decrement to a literal 0 (12 − 12), rendering every
@@ -152,10 +153,10 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     const root = mount('<ui-card><ui-card-content><ui-card>nested</ui-card></ui-card-content></ui-card>')
     const nested = root.querySelector('ui-card-content > ui-card') as HTMLElement
 
-    expect(radiusPx(root), 'root did not fall to the default corner-base').toBeCloseTo(12, 0)
+    expect(radiusPx(root), 'root did not fall to the default corner-base').toBeCloseTo(21, 0)
     // 4px == --md-sys-space-xs at the default density (1) — see this file's px()/mount() helpers; a fresh
     // mount carries no [density] repoint, so the token resolves to its literal 4px base.
-    expect(radiusPx(nested), 'default-root nested card lost the floor (regressed to knife-edge 0)').toBeCloseTo(4, 1)
+    expect(radiusPx(nested), 'default-root nested card is not the derived 3n (regressed to a knife-edge 0?)').toBe(resolve('product', 'sm', 'md').card.radius)
   })
 
   it('regions are PRESENCE-DRIVEN in BLOCK FLOW — a present region adds a box, an absent one leaves nothing', () => {
@@ -209,12 +210,14 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     // region padding straight (inline 0.75rem=12px / block 0.375rem=6px), matching modal/select/menu/combo-box
     // exactly. Because they are rem-based (not --md-sys-space × --md-sys-density), the region padding — like the
     // frame — is density-INVARIANT.
+    // ADR-0245 cl.10e: today's fixed 12/6 now holds under the legacy opt-out (outside it the region padding derives
+    // from n, containers-foundations.browser.test.ts), and a data-scale inside the opt-out moves nothing.
     const card = mount(
-      '<ui-card><ui-card-header>H</ui-card-header><ui-card-content>C</ui-card-content></ui-card>',
-    )
+      '<div data-foundations="legacy"><ui-card><ui-card-header>H</ui-card-header><ui-card-content>C</ui-card-content></ui-card></div>',
+    ).querySelector('ui-card') as HTMLElement
     const content = card.querySelector('ui-card-content') as HTMLElement
 
-    // comfortable baseline: the fixed 12/6 region padding
+    // the legacy baseline: the fixed 12/6 region padding
     const padInlineBase = px(getComputedStyle(content).paddingLeft)
     const padBlockBase = px(getComputedStyle(content).paddingTop)
     const borderBase = px(getComputedStyle(card).borderTopWidth)
@@ -225,8 +228,8 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     expect(radiusBase, 'radius is 0 (frame invariant is vacuous)').toBeGreaterThan(0)
 
     // density-INVARIANT: compact + spacious leave the region padding + frame unchanged (rem, not --md-sys-space)
-    for (const d of ['compact', 'spacious']) {
-      card.setAttribute('density', d)
+    for (const d of ['sm', 'md', 'lg']) {
+      card.setAttribute('data-scale', d)
       expect(px(getComputedStyle(content).paddingLeft), `inline padding changed at ${d}`).toBeCloseTo(padInlineBase, 1)
       expect(px(getComputedStyle(content).paddingTop), `block padding changed at ${d}`).toBeCloseTo(padBlockBase, 1)
       expect(px(getComputedStyle(card).borderTopWidth), `border width changed at ${d}`).toBe(borderBase)
@@ -234,7 +237,7 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     }
   })
 
-  it('[box-model] REVISED 2026-07-04: regions are INSET — uniform 6px gutters, frame↔region AND region↔region, never doubled', () => {
+  it('[box-model] REVISED 2026-07-04: regions are INSET — uniform 7px gutters (derived n), frame↔region AND region↔region, never doubled', () => {
     // ui-card is `display: flow-root` (plain block flow, like container-box.css's BFC) — adjacent region
     // margins COLLAPSE (6px + 6px → a single 6px gutter) and the card's 1px frame border blocks collapse-through
     // at the edges, so this is the load-bearing rendered proof that one uniform per-region `margin` (card.css
@@ -267,14 +270,14 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
       ['footer→frame', footerToFrame],
       ['frame→header (inline)', frameToHeaderInline],
     ] as const) {
-      expect(gap, `${label} gap is not ~6px (got ${gap})`).toBeCloseTo(6, 0)
+      expect(gap, `${label} gap is not ~7px (got ${gap})`).toBeCloseTo(7, 0)
     }
     // anti-vacuous: the BETWEEN-region gutter is genuinely not double the edge gutter (the doubling that
     // margin-collapse in this block-flow shell prevents for free).
     expect(headerToContent, 'between-region gap doubled (12px) instead of reconciling to one inset (6px)').toBeLessThan(frameToHeader * 1.5)
   })
 
-  it('NESTED card-content padding stays FLAT (12/6) at every depth — no stepping law at all (REVISED 2026-07-04)', () => {
+  it('NESTED card-content padding stays FLAT (14/7, derived) at every depth — no stepping law at all (REVISED 2026-07-04)', () => {
     // The shared container-box.css model (modal/select/menu/combo-box) steps a NESTED [data-region='content']'s
     // inline padding IN one inset per level (12 → 6 → 6, floored). But `ui-card-content` is a bespoke tag,
     // never marked `[data-region='content']` or `[data-box]` — the shared stepping selectors
@@ -295,8 +298,8 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
 
     const padsInline = contents.map((c) => px(getComputedStyle(c).paddingLeft))
     const padsBlock = contents.map((c) => px(getComputedStyle(c).paddingTop))
-    for (const [i, p] of padsInline.entries()) expect(p, `L${i + 1} inline padding is not ~12px (a stepping law leaked in)`).toBeCloseTo(12, 0)
-    for (const [i, p] of padsBlock.entries()) expect(p, `L${i + 1} block padding is not ~6px (a stepping law leaked in)`).toBeCloseTo(6, 0)
+    for (const [i, p] of padsInline.entries()) expect(p, `L${i + 1} inline padding is not ~14px (a stepping law leaked in)`).toBeCloseTo(14, 0)
+    for (const [i, p] of padsBlock.entries()) expect(p, `L${i + 1} block padding is not ~7px (a stepping law leaked in)`).toBeCloseTo(7, 0)
     // anti-vacuous: every level reads the identical value (flat, NOT a decreasing ladder) — a stepping bug
     // (accidentally inheriting the shared container-box.css formula) would make these diverge.
     expect(new Set(padsInline).size, 'padding is not flat across nesting depth').toBe(1)
@@ -309,13 +312,13 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     // also add the region's separate 6px positional margin — see card.css's flagged note on this reading.)
     const bare = mount('<ui-card><div>First</div><div>Second</div></ui-card>')
     const bareStyle = getComputedStyle(bare)
-    expect(px(bareStyle.paddingLeft), 'bare card inline padding is not ~12px').toBeCloseTo(12, 0)
-    expect(px(bareStyle.paddingTop), 'bare card block padding is not ~6px').toBeCloseTo(6, 0)
+    expect(px(bareStyle.paddingLeft), 'bare card inline padding is not ~14px').toBeCloseTo(14, 0)
+    expect(px(bareStyle.paddingTop), 'bare card block padding is not ~7px').toBeCloseTo(7, 0)
     // REVISED 2026-07-04: the loose-child rhythm is an adjacent-sibling margin now (the shell is block flow, not
     // a grid/flex `gap` — `rowGap` computes to 'normal'). Measure the RENDERED gap between the two children.
     const [first, second] = [...bare.children] as HTMLElement[]
     const rhythm = second.getBoundingClientRect().top - first.getBoundingClientRect().bottom
-    expect(rhythm, 'bare card content rhythm (adjacent-sibling margin) is not ~8px').toBeCloseTo(8, 0)
+    expect(rhythm, 'bare card content rhythm (adjacent-sibling margin) is not ~14px (card gutter 2n, derived)').toBeCloseTo(14, 0)
 
     // anti-vacuous vs a region card: a card WITH a real region does NOT get the fallback on its OWN box (its
     // own padding stays the box-model 0 — the region itself carries the padding, not the card).
@@ -341,7 +344,7 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     // bare (streamed with no regions yet) and a header streams in AFTER. The :has() re-evaluation must catch
     // it live, with no double padding at any point.
     const card = mount('<ui-card><div>Body</div></ui-card>')
-    expect(px(getComputedStyle(card).paddingLeft), 'bare card did not get the fallback padding').toBeCloseTo(12, 0)
+    expect(px(getComputedStyle(card).paddingLeft), 'bare card did not get the fallback padding').toBeCloseTo(14, 0)
 
     const header = document.createElement('ui-card-header')
     header.textContent = 'Title'
@@ -351,7 +354,7 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     // REVISED 2026-07-04: block flow — no grid row template "takes over". The late header now simply contributes
     // a real region box in normal flow (presence-driven for free), carrying the uniform 6px inset region margin.
     expect(getComputedStyle(card).display, 'the shell is not block flow post-flip').toBe('flow-root')
-    expect(px(getComputedStyle(header).marginTop), 'the flipped-in header did not get the 6px region inset margin').toBeCloseTo(6, 0)
+    expect(px(getComputedStyle(header).marginTop), 'the flipped-in header did not get the 7px region inset margin').toBeCloseTo(7, 0)
   })
 
   it('MIXED composition (a region PLUS a loose sibling) gets NO fallback — regions present, author owns it', () => {
@@ -360,25 +363,22 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     expect(px(getComputedStyle(mixed).paddingLeft), 'mixed composition wrongly got the fallback padding').toBe(0)
   })
 
-  it('a DIRECT card > card nesting (no region wrapper, outer card bare) stays the pre-existing manual case — ADR-0056 re-proof', () => {
-    // ADR-0056 re-proof (the ADR names this explicitly as an open question — verify which way it resolves):
-    // a card nested DIRECTLY inside another card (no ui-card-content between) matches BOTH `:where(ui-card)`
-    // (declaring its own --ui-card-inner-radius) AND its parent's `:where(ui-card) > *` publish rule (setting
-    // --ui-card-child-radius directly ON it) — a genuine multi-property CSS CYCLE
-    // (radius → child-radius → inner-radius → radius) that collapses the nested radius to 0, independent of
-    // any padding value. This is PRE-EXISTING (ADR-0018), not something ADR-0056 introduces: the region-less
-    // fallback only ever sets padding/gap, never touches the radius chain — so direct nesting stays exactly
-    // the documented manual-reseed case, whether or not the outer (bare) card now also carries fallback
-    // padding. Measured, not assumed: the fallback's OWN leg (the padding) still applies independently.
+  it('a DIRECT card > card nesting (no region wrapper, outer card bare) reads its own 3n in both engines (ADR-0245 cl.6, ADR-0056 re-proof)', () => {
+    // ADR-0056 re-proof. A card nested DIRECTLY inside another card (no ui-card-content between) used to match
+    // its parent's child-radius publish rule as well as its own token block, a multi-property CSS cycle
+    // (radius, child-radius, inner-radius) that WebKit enforced even through the unused var() fallback (0)
+    // while Chromium did not (21). The publish rule now skips a direct ui-card child, so the nested card reads
+    // its own --md-sys-card-radius (3n = 21 at the root) in both engines. The region-less fallback padding of
+    // the bare outer card is an independent leg and still applies.
     const root = mount('<ui-card style="--ui-card-radius: 32px"><ui-card>nested, no region wrapper</ui-card></ui-card>')
     const nested = root.querySelector('ui-card') as HTMLElement
 
     expect(radiusPx(root), 'root radius did not reseed to 32px').toBeCloseTo(32, 0)
     // the region-less fallback (an unrelated, independent leg) still applies its own padding to the bare outer
     // card even though its radius chain doesn't reach the nested card cleanly.
-    expect(px(getComputedStyle(root).paddingLeft), 'the bare outer card lost its own fallback padding').toBeCloseTo(12, 0)
-    // the pre-existing cycle still collapses the DIRECT nested card's radius — unchanged by ADR-0056
-    expect(radiusPx(nested), 'direct nesting unexpectedly escaped the pre-existing radius cycle (ADR-0018)').toBe(0)
+    expect(px(getComputedStyle(root).paddingLeft), 'the bare outer card lost its own fallback padding').toBeCloseTo(14, 0)
+    // derived (ADR-0245): the nested card reads --md-sys-card-radius (3n = 21), the same in both engines.
+    expect(radiusPx(nested), `${server.browser}: direct nesting radius (derived 3n)`).toBe(resolve('product', 'sm', 'md').card.radius)
 
     // the documented workaround (an explicit border-radius reseed) still recovers the radius under the
     // fallback — the manual case remains manually fixable, it is simply not automatic.
@@ -447,8 +447,8 @@ describe('ui-card — full-bleed HERO media slot (R3, GH #1204, both engines)', 
 
     // content below is UNAFFECTED — the normal region margin + inline/block padding, untouched by the hero rule
     const content = card.querySelector('ui-card-content') as HTMLElement
-    expect(px(getComputedStyle(content).marginTop), 'content region lost its normal 6px region margin').toBeCloseTo(6, 0)
-    expect(px(getComputedStyle(content).paddingLeft), 'content region lost its normal 12px inline padding').toBeCloseTo(12, 0)
+    expect(px(getComputedStyle(content).marginTop), 'content region lost its normal 7px region margin').toBeCloseTo(7, 0)
+    expect(px(getComputedStyle(content).paddingLeft), 'content region lost its normal 14px inline padding').toBeCloseTo(14, 0)
   })
 
   it('a hero-only card (nothing follows it) rounds ALL FOUR corners to the outer radius, and does NOT pick up the ADR-0056 region-less fallback padding', () => {
@@ -475,15 +475,15 @@ describe('ui-card — full-bleed HERO media slot (R3, GH #1204, both engines)', 
     // the card's own radius reading the shared base (no --ui-card-radius reseed here).
     expect(getComputedStyle(plain).display).toBe('flow-root')
     expect(px(getComputedStyle(plain).paddingLeft)).toBe(0)
-    expect(px(getComputedStyle(header).marginTop)).toBeCloseTo(6, 0)
-    expect(px(getComputedStyle(content).marginTop)).toBeCloseTo(6, 0)
-    expect(px(getComputedStyle(content).paddingLeft)).toBeCloseTo(12, 0)
+    expect(px(getComputedStyle(header).marginTop)).toBeCloseTo(7, 0)
+    expect(px(getComputedStyle(content).marginTop)).toBeCloseTo(7, 0)
+    expect(px(getComputedStyle(content).paddingLeft)).toBeCloseTo(14, 0)
 
     const bare = mount('<ui-card><div>First</div><div>Second</div></ui-card>')
     // the ADR-0056 region-less fallback still fires exactly as before for an ordinary bare card with no
     // [slot="hero"] child at all — the R3 exclusion only ever widens the :not(:has()) predicate, it never
     // narrows what the fallback still catches.
-    expect(px(getComputedStyle(bare).paddingLeft), 'plain bare-card fallback regressed').toBeCloseTo(12, 0)
+    expect(px(getComputedStyle(bare).paddingLeft), 'plain bare-card fallback regressed').toBeCloseTo(14, 0)
   })
 })
 

@@ -15,6 +15,8 @@ function mount(html: string, region = true): HTMLElement {
   if (region) {
     wrap.setAttribute('data-tier', 'product')
     wrap.setAttribute('data-scale', 'sm')
+  } else {
+    wrap.setAttribute('data-foundations', 'legacy') // ADR-0245 cl.10e: the opt-out renders today's geometry
   }
   wrap.innerHTML = html
   document.body.append(wrap)
@@ -33,7 +35,7 @@ describe('ui-swatch geometry (ADR-0245 cl.3)', () => {
     expect(px(getComputedStyle(box(wrap)).borderTopLeftRadius)).toBeCloseTo(root.radius, 1)
   })
 
-  it('outside any region the chip radius is the 12px corner base', () => {
+  it('under data-foundations=legacy the chip radius is the 12px corner base', () => {
     const wrap = mount('<ui-swatch color="#336699" label="Brand"></ui-swatch>', false)
     expect(px(getComputedStyle(box(wrap)).borderTopLeftRadius)).toBe(12)
   })

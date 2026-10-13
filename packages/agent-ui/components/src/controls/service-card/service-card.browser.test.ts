@@ -229,7 +229,7 @@ const lengthOf = (host: HTMLElement, token: string): number => {
 }
 const foundationsPair = (tag: string, attrs: string): { out: HTMLElement; inside: HTMLElement } => {
   const wrap = document.createElement('div')
-  wrap.innerHTML = `<div><${tag} ${attrs}></${tag}></div><div data-tier="product" data-scale="sm"><${tag} ${attrs}></${tag}></div>`
+  wrap.innerHTML = `<div data-foundations="legacy"><${tag} ${attrs}></${tag}></div><div data-tier="product" data-scale="sm"><${tag} ${attrs}></${tag}></div>`
   document.body.append(wrap)
   mounted.push(wrap)
   const [out, inside] = Array.from(wrap.querySelectorAll<HTMLElement>(tag)) as [HTMLElement, HTMLElement]

@@ -60,7 +60,7 @@ const cardFor = (gallery: HTMLElement, tag: string): HTMLElement | null =>
 const liveFor = (card: HTMLElement, tag: string): HTMLElement | null =>
   card.querySelector(`.canvas-surface ${tag}`) as HTMLElement | null
 
-/** The one toolbar `ui-select` labelled `label` (scheme/scale/density/theme) — see themeSelect() in
+/** The one toolbar `ui-select` labelled `label` (scheme/tier/scale/theme) — see themeSelect() in
  *  component-gallery.ts. Dogfooded off the fleet's own control (Kim's directive), not a native `<select>`. */
 function selectFor(gallery: HTMLElement, label: string): UISelectElement {
   const wrap = [...gallery.querySelectorAll<HTMLElement>('.gallery-select')].find((s) => s.textContent?.startsWith(label))
@@ -159,37 +159,29 @@ describe('<component-gallery> — overlay-class specimens open then paint (§6 E
   })
 })
 
-// ── the ONE theme provider — scale/density/scheme (anti-vacuous both directions) ───────────────────────────
+// ── the ONE theme provider — tier/scale/scheme (anti-vacuous both directions) ─────────────────────────────
 
 describe('<component-gallery> — the ONE <ui-theme-provider> drives every specimen (both engines)', () => {
-  it('scale change resizes a specimen, density change re-spaces it, and BOTH revert to their default', async () => {
+  it('a scale change resizes a specimen, a tier change re-sizes it again, and BOTH revert to their default', async () => {
     const gallery = await mountGallery()
     const card = cardFor(gallery, 'ui-button')
     const live = liveFor(card!, 'ui-button') as HTMLElement
     expect(live, 'no live ui-button rendered').not.toBeNull()
 
+    // ADR-0245 cl.2: the default is the root register, product at scale sm (a md button is 4n = 28px).
+    const heightSm = Number.parseFloat(getComputedStyle(live).blockSize)
+    expect(heightSm).toBe(28)
+
+    await chooseOption(selectFor(gallery, 'Scale'), 'md')
     const heightMd = Number.parseFloat(getComputedStyle(live).blockSize)
-    expect(heightMd).toBeGreaterThan(0)
+    expect(heightMd, 'data-scale=md did not change the specimen height').toBe(36)
 
-    await chooseOption(selectFor(gallery, 'Scale'), 'ui-lg')
-    const heightLg = Number.parseFloat(getComputedStyle(live).blockSize)
-    expect(heightLg, '[scale=ui-lg] did not change the specimen height').not.toBeCloseTo(heightMd, 0)
+    await chooseOption(selectFor(gallery, 'Tier'), 'content')
+    expect(Number.parseFloat(getComputedStyle(live).blockSize), 'data-tier=content did not change the height').toBe(44)
 
-    await chooseOption(selectFor(gallery, 'Scale'), 'ui-md') // back to the default
-    expect(Number.parseFloat(getComputedStyle(live).blockSize)).toBeCloseTo(heightMd, 0)
-
-    // Density rides the RHYTHM only (--md-sys-density), never the frame — a bare (icon-less) button's own height/
-    // padding is density-INVARIANT by design (button-geometry.browser.test.ts's law), so the specimen's --ui-
-    // density CUSTOM PROPERTY itself (dimensions.css's [density] table: comfortable=1, spacious=1.5) is the
-    // real, generic proof every specimen inherits, regardless of which of its own rendered properties consume it.
-    const densityValue = (): string => getComputedStyle(live).getPropertyValue('--md-sys-density').trim()
-    expect(densityValue()).toBe('1') // the default (comfortable)
-
-    await chooseOption(selectFor(gallery, 'Density'), 'spacious')
-    expect(densityValue(), '[density=spacious] did not repoint --md-sys-density').toBe('1.5')
-
-    await chooseOption(selectFor(gallery, 'Density'), 'comfortable') // back to the default
-    expect(densityValue()).toBe('1')
+    await chooseOption(selectFor(gallery, 'Tier'), 'product') // back to the defaults
+    await chooseOption(selectFor(gallery, 'Scale'), 'sm')
+    expect(Number.parseFloat(getComputedStyle(live).blockSize)).toBe(heightSm)
   })
 
   it('scheme flips a specimen\'s used colour, and reverts to the light default (anti-vacuous both ways)', async () => {
@@ -233,8 +225,8 @@ describe('<component-gallery> — the toolbar axis selects compute a real access
     const gallery = await mountGallery()
     const expectations: ReadonlyArray<[string, string]> = [
       ['Scheme', 'Scheme light'],
-      ['Scale', 'Scale ui-md'],
-      ['Density', 'Density comfortable'],
+      ['Tier', 'Tier product'],
+      ['Scale', 'Scale sm'],
       ['Theme', 'Theme default'],
     ]
     for (const [axis, name] of expectations) {

@@ -112,10 +112,10 @@ const degenerate = el('div', { class: 'demo-grid' }, [
   captioned('a malformed entry is dropped, the rest render', el('ui-bar-chart', { data: '[{"label":"EMEA","value":42},{"label":"broken"},{"label":"APAC","value":31}]', label: 'Hardened input' })),
 ])
 
-// ── [4] density — row rhythm rides an ancestor [density]; bar thickness stays invariant ─────────────────────
+// ── [4] density — row rhythm follows an ancestor data-scale (one n, ADR-0245); bar thickness stays invariant ──
 const density = el('div', { class: 'demo-grid' }, [
-  captioned('default density', barChart(REVENUE_BY_QUARTER.q3, 'Revenue by region, Q3')),
-  captioned('[density="compact"] ancestor', el('div', { density: 'compact' }, [barChart(REVENUE_BY_QUARTER.q3, 'Revenue by region, Q3 (compact)')])),
+  captioned('the root register', barChart(REVENUE_BY_QUARTER.q3, 'Revenue by region, Q3')),
+  captioned('a widget / sm ancestor', el('div', { 'data-tier': 'widget', 'data-scale': 'sm' }, [barChart(REVENUE_BY_QUARTER.q3, 'Revenue by region, Q3 (compact)')])),
 ])
 
 content.append(

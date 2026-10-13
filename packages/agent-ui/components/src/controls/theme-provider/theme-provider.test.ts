@@ -54,9 +54,9 @@ describe('ui-theme-provider — props schema (SPEC-R2)', () => {
     expect(el.scheme).toBe('light')
 
     el.scale = 'ui-lg'
-    expect(el.getAttribute('scale')).toBe('ui-lg')
+    expect(el.getAttribute('scale')).toBe('ui-lg') // foundations-alias
     el.density = 'compact'
-    expect(el.getAttribute('density')).toBe('compact')
+    expect(el.getAttribute('density')).toBe('compact') // foundations-alias
     el.theme = 'acme'
     expect(el.getAttribute('theme')).toBe('acme')
     el.setAttribute('theme', 'other-package')
@@ -67,9 +67,9 @@ describe('ui-theme-provider — props schema (SPEC-R2)', () => {
     const el = mount()
     expect(() => el.setAttribute('scheme', 'not-a-real-scheme')).not.toThrow()
     expect(el.scheme).toBe('')
-    expect(() => el.setAttribute('scale', 'bogus')).not.toThrow()
+    expect(() => el.setAttribute('scale', 'bogus')).not.toThrow() // foundations-alias
     expect(el.scale).toBe('')
-    expect(() => el.setAttribute('density', 'roomy')).not.toThrow()
+    expect(() => el.setAttribute('density', 'roomy')).not.toThrow() // foundations-alias
     expect(el.density).toBe('')
   })
 })
@@ -140,12 +140,12 @@ describe('ui-theme-provider — theme stays the reserved, inert seam (SPEC-R5)',
 describe('ui-theme-provider — empty-attribute vs absent-attribute (LOW-1)', () => {
   it('never-touched (absent attribute) and explicitly-set-to-"" (present, empty attribute) both resolve to the identical "" property, but are NOT DOM-identical', () => {
     const neverTouched = mount()
-    expect(neverTouched.hasAttribute('scale')).toBe(false)
+    expect(neverTouched.hasAttribute('scale')).toBe(false) // foundations-alias
     expect(neverTouched.scale).toBe('')
 
-    const explicitEmpty = mount('<ui-theme-provider scale=""></ui-theme-provider>')
-    expect(explicitEmpty.hasAttribute('scale')).toBe(true) // present, empty — genuinely different DOM shape
-    expect(explicitEmpty.getAttribute('scale')).toBe('')
+    const explicitEmpty = mount('<ui-theme-provider scale=""></ui-theme-provider>') // foundations-alias
+    expect(explicitEmpty.hasAttribute('scale')).toBe(true) // present, empty — genuinely different DOM shape // foundations-alias
+    expect(explicitEmpty.getAttribute('scale')).toBe('') // foundations-alias
     expect(explicitEmpty.scale).toBe('') // same resolved property value as the never-touched case
   })
 

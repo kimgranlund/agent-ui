@@ -259,7 +259,8 @@ describe('ui-choice-card: badge and tick geometry', () => {
   const centreX = (cs: CSSStyleDeclaration): number => px(cs.right) + px(cs.width) / 2
 
   it('outside any region the badge is 1.25rem, the tick 0.75rem x 0.65rem, centred on the badge', () => {
-    const { card } = mount()
+    const { wrap, card } = mount()
+    wrap.setAttribute('data-foundations', 'legacy') // ADR-0245 cl.10e: the opt-out renders today's geometry
     expect([px(after(card).width), px(after(card).height)]).toEqual([1.25 * REM, 1.25 * REM])
     expect(px(before(card).width)).toBeCloseTo(0.75 * REM, 1)
     expect(px(before(card).height)).toBeCloseTo(0.65 * REM, 1)

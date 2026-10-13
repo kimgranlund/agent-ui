@@ -110,19 +110,19 @@ const MEMBERS = galleryMembers()
 
 const normalize = (s: string): string => s.trim().toLowerCase()
 
-// Vocabularies from the token system (never invented here) — ADR-0032 scale tiers, the density set, and the
-// reserved theme-package seam (one member, 'default', in G8; ADR-0079 cl.3).
-type Scale = 'ui-sm' | 'ui-md' | 'ui-lg' | 'content-sm' | 'content-md' | 'content-lg'
-type Density = 'compact' | 'comfortable' | 'spacious'
+// Vocabularies from the token system (never invented here): the ADR-0245 region axes, tier and scale (the root
+// reads product at scale sm), and the reserved theme-package seam (one member, 'default', in G8; ADR-0079 cl.3).
+type Tier = 'widget' | 'product' | 'content' | 'brand'
+type Scale = 'sm' | 'md' | 'lg'
 type Scheme = 'light' | 'dark'
 
 const SCHEMES: readonly Scheme[] = ['light', 'dark']
-const SCALES: readonly Scale[] = ['ui-sm', 'ui-md', 'ui-lg', 'content-sm', 'content-md', 'content-lg']
-const DENSITIES: readonly Density[] = ['compact', 'comfortable', 'spacious']
+const TIERS: readonly Tier[] = ['widget', 'product', 'content', 'brand']
+const SCALES: readonly Scale[] = ['sm', 'md', 'lg']
 const THEMES = ['default'] as const // the reserved seam — exactly one package ships in G8
 
 /**
- * One labelled `ui-select` bound to a signal — the toolbar's theme-axis knobs (scheme/scale/density/theme).
+ * One labelled `ui-select` bound to a signal — the toolbar's theme-axis knobs (scheme/tier/scale/theme).
  * Dogfoods the fleet's OWN select control in the gallery's own chrome (Kim's directive: no native `<select>`
  * where a ui-* control exists) rather than a native `<select>`. Options are appended as `[role=option]`
  * light-DOM children BEFORE the element connects — ui-select's own contract (select.md's `slots` clause) —
@@ -159,8 +159,8 @@ function themeSelect<T extends string>(label: string, values: readonly T[], targ
 export class ComponentGallery extends UIElement {
   readonly #filter = signal('')
   readonly #scheme = signal<Scheme>('light')
-  readonly #scale = signal<Scale>('ui-md')
-  readonly #density = signal<Density>('comfortable')
+  readonly #tier = signal<Tier>('product')
+  readonly #scale = signal<Scale>('sm')
   readonly #theme = signal<string>('default')
   readonly #visible = computed<readonly GalleryMember[]>(() => {
     const q = normalize(this.#filter.value)
@@ -197,8 +197,8 @@ export class ComponentGallery extends UIElement {
     // The ONE theme subtree (LLD §4): every axis lands on the single <ui-theme-provider>, nothing per-card.
     this.effect(() => {
       provider.setAttribute('scheme', this.#scheme.value)
-      provider.setAttribute('scale', this.#scale.value)
-      provider.setAttribute('density', this.#density.value)
+      provider.setAttribute('data-tier', this.#tier.value)
+      provider.setAttribute('data-scale', this.#scale.value)
       provider.setAttribute('theme', this.#theme.value)
     })
 
@@ -254,8 +254,8 @@ export class ComponentGallery extends UIElement {
     toolbar.append(
       filterInput,
       themeSelect('Scheme', SCHEMES, this.#scheme),
+      themeSelect('Tier', TIERS, this.#tier),
       themeSelect('Scale', SCALES, this.#scale),
-      themeSelect('Density', DENSITIES, this.#density),
       themeSelect('Theme', THEMES, this.#theme),
       readoutHole,
     )

@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest'
 // same approach as the s6/s7 probes). jsdom can NOT compute layout px, so these are STATIC structural/
 // formula checks on the DECLARED calc()s; the rendered-px CHANGE (sm→md→lg, [scale]/[density]) is s13's
 // cross-engine browser smoke, NOT here.
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 
@@ -21,7 +22,6 @@ const buttonCss = readFileSync(
   `${process.cwd()}/packages/agent-ui/components/src/controls/button/button.css`,
   'utf8',
 ) as string
-const dimCss = readFileSync(`${process.cwd()}/packages/agent-ui/shared/src/tokens/dimensions.css`, 'utf8') as string
 
 const stylesBlock = buttonCss.slice(buttonCss.indexOf('@scope (ui-button) {'))
 
@@ -32,28 +32,11 @@ const whereBlock = (marker: string): string => {
   return buttonCss.slice(start, buttonCss.indexOf('}', start))
 }
 
-/** The comment-stripped `:root` block of dimensions.css — the no-[scale] DEFAULT tier (where --md-sys-icon's
- *  ui-md band lives). Strip comments first so `[^}]*` cleanly captures the one block. */
-const dimRoot = ((): string => {
-  const noComments = dimCss.replace(/\/\*[\s\S]*?\*\//g, '')
-  return (noComments.match(/:root\s*\{[^}]*\}/) ?? [''])[0]
-})()
+/** The root register's derived boxes (ADR-0245 clause 2: product at scale sm). Since the cut the icon is the
+ *  2n icon box and the height the 4n frame; scale.mjs resolve() is their one source. */
+const iconPx = (size: 'sm' | 'md' | 'lg'): number => resolve('product', 'sm', size).icon
+const heightPx = (size: 'sm' | 'md' | 'lg'): number => resolve('product', 'sm', size).h
 
-/** Parse the :root default `--md-sys-icon-{size}: <n>px` — the §1-SET icon table's ui-md band (ADR-0035 4a hoist).
- *  The icon is the shared --md-sys-icon-* token now (hoisted from button.css); the px @ scale 1 lives here. */
-const iconPx = (size: string): number | null => {
-  const m = dimRoot.match(new RegExp(`--md-sys-icon-${size}:\\s*(\\d+(?:\\.\\d+)?)px\\s*;`))
-  return m ? Number(m[1]) : null
-}
-
-/** Parse `--md-sys-height-{size}: <n>px` from dimensions.css :root (ADR-0038 explicit literal table; no × --md-sys-scale). */
-const heightPx = (size: string): number | null => {
-  const m = dimRoot.match(new RegExp(`--md-sys-height-${size}:\\s*(\\d+(?:\\.\\d+)?)px\\s*;`))
-  return m ? Number(m[1]) : null
-}
-
-// The §1-SET icon ramp's no-[scale] default (dimensions.css :root, ADR-0035 4a hoist): sm·md·lg = 16·18·20.
-// button.css reads var(--md-sys-icon-{size}) per [size]; the px @ scale 1 is dimensions.css's :root default.
 const iconBySize: Record<string, number | null> = {
   sm: iconPx('sm'),
   md: iconPx('md'),
@@ -62,9 +45,8 @@ const iconBySize: Record<string, number | null> = {
 
 describe('button.css — STATIC geometry trip-wires (s11)', () => {
   it('0 < glyph ≤ box: the content-icon ramp is positive and fits the height box at every size', () => {
-    // anti-vacuous: the parse actually found the §1-SET --md-sys-icon ramp's :root default (ADR-0035 4a hoist,
-    // dimensions.css) — NOT an empty match silently passing the relation below.
-    expect(iconBySize).toEqual({ sm: 16, md: 18, lg: 20 })
+    // anti-vacuous: the root register's 2n icon box (ADR-0245), NOT an empty value silently passing the relation.
+    expect(iconBySize).toEqual({ sm: 12, md: 14, lg: 16 }) // 2n at n 6 / 7 / 8
 
     for (const size of ['sm', 'md', 'lg'] as const) {
       const icon = iconBySize[size]

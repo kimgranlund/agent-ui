@@ -22,7 +22,7 @@ const whereBlock = (marker: string): string => {
 }
 
 const cardTokens = whereBlock(':where(ui-card) {')
-const publishBlock = whereBlock(':where(ui-card) > * {')
+const publishBlock = whereBlock(':where(ui-card) > :where(:not(ui-card)) {') // a direct nested card is skipped (the WebKit cycle, ADR-0245)
 const regionTokens = whereBlock(':where(ui-card-header, ui-card-footer) {')
 
 describe('card.css — the concentric-corner radius chain (ADR-0018, cycle-free)', () => {
@@ -55,7 +55,9 @@ describe('card.css — the concentric-corner radius chain (ADR-0018, cycle-free)
     // ADR-0018: a card both reading AND declaring --ui-card-child-radius is a CSS cycle. The card's own
     // :where(ui-card) token block must NOT declare --ui-card-child-radius; only the `> *` child rule does.
     expect(cardTokens).not.toMatch(/--ui-card-child-radius:/)
-    expect(css).toMatch(/:where\(ui-card\)\s*>\s*\*\s*\{/) // the descendant publish rule exists
+    // the descendant publish rule exists, and skips a directly nested ui-card: declared there it would read its
+    // own inner radius, the cycle WebKit enforces even through an unused fallback (ADR-0245 cut)
+    expect(css).toMatch(/:where\(ui-card\)\s*>\s*:where\(:not\(ui-card\)\)\s*\{/)
   })
 })
 
@@ -83,8 +85,8 @@ describe('card.css — padding/gap off the --md-sys-space ladder (Container/layo
       `${process.cwd()}/packages/agent-ui/components/src/controls/_surface/container-box.css`,
       'utf8',
     ) as string
-    expect(sharedCss).toMatch(/--ui-box-pad-inline:\s*0\.75rem/)
-    expect(sharedCss).toMatch(/--ui-box-pad-block:\s*0\.375rem/)
+    expect(sharedCss).toMatch(/--ui-box-pad-inline:\s*var\(--md-sys-card-gutter,\s*0\.75rem\)/) // ADR-0245 cl.6, 12px under legacy
+    expect(sharedCss).toMatch(/--ui-box-pad-block:\s*var\(--md-sys-inset,\s*0\.375rem\)/) // 6px under legacy
   })
 
   it('REVISED 2026-07-04: a region is now INSET — the block-flow shell gives every region a uniform 6px margin', () => {
