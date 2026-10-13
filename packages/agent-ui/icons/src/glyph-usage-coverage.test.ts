@@ -1,14 +1,22 @@
-// glyph-usage-coverage.test.ts — the GH #1508 fleet gate: every `glyph` value a real consumer under
-// `site/` or `packages/agent-ui/app/src/` actually asks `ui-icon` to resolve must exist in the vendored
+// glyph-usage-coverage.test.ts: the GH #1508 fleet gate: every icon name a real consumer under `site/` or
+// any `packages/agent-ui/*/src/` actually asks `ui-icon` to resolve must exist in the vendored
 // Phosphor pack roster (`phosphor/icons.gen.ts`'s own exported keys, not just the `ICON_NAMES` type
 // list — the two CAN drift, exactly `sign-out`/`share`'s bug class: a name gets typed but the vendor
 // script never runs). Same reverse-coupling fs-read pattern + walk()/derived-SET shape as
 // `@agent-ui/components`'s `site-coverage.test.ts` (the derived-inventory precedent this file follows).
 //
+// ADR-0245 cl.4 follow-through (T-0093): the icon-name prop is now `symbol` (with `glyph` its deprecated
+// alias), so every form below reads both spellings; the scan covers every package's src, not only app/; and
+// the two forms the first version missed, `setAttribute('glyph' | 'symbol', 'name')` and `.glyph = 'name'` /
+// `.symbol = 'name'`, are read too. A `symbol` aimed at `ui-glyph` (the nearest preceding element name is
+// ui-glyph) names a functional mark and resolves against the closed mark set, not the Phosphor roster.
+// Test files are not consumers (they plant unresolvable names on purpose) and are skipped.
+//
 // Extraction is grep-derived, in two tiers:
-//   (1) DIRECT literals — `glyph: 'name'` (object-property call sites, the `el()` specimen idiom) and
-//       `glyph="name"` (template/HTML-string call sites). `data-glyph` (an unrelated CSS-hook attribute
-//       some controls use, e.g. ui-super-shell's toggle) is explicitly excluded.
+//   (1) DIRECT literals: `glyph: 'name'` (object-property call sites, the `el()` specimen idiom),
+//       `glyph="name"` (template/HTML-string call sites), `setAttribute('glyph', 'name')` and
+//       `.glyph = 'name'`, each also spelled `symbol`. `data-glyph` (an unrelated CSS-hook attribute some
+//       controls use, e.g. ui-super-shell's toggle) is explicitly excluded.
 //   (2) INDIRECT literals — a local per-page helper (e.g. command-modal-demo.ts's `commandOption`)
 //       often forwards a NAMED PARAMETER into `glyph: paramName`. This tier locates the parameter's
 //       index in the enclosing function's declaration, then reads the string-literal argument at that
@@ -29,11 +37,13 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync } from 'node:fs'
 import type { Dirent } from 'node:fs'
 import { phosphorIcons } from './phosphor/icons.gen.ts'
+import { GLYPH_SYMBOLS } from '../../components/src/controls/glyph/glyph-paths.ts'
 
 declare const process: { cwd(): string }
 
 const ROOT = process.cwd()
-const SCAN_ROOTS = [`${ROOT}/site`, `${ROOT}/packages/agent-ui/app/src`]
+const PACKAGES = readdirSync(`${ROOT}/packages/agent-ui`, { withFileTypes: true }).filter((e) => e.isDirectory())
+const SCAN_ROOTS = [`${ROOT}/site`, ...PACKAGES.map((e) => `${ROOT}/packages/agent-ui/${e.name}/src`)]
 
 const read = (p: string): string => readFileSync(p, 'utf8') as string
 
@@ -51,19 +61,38 @@ function walk(dir: string): string[] {
     if (e.name === 'node_modules' || e.name.startsWith('.')) continue
     const full = `${dir}/${e.name}`
     if (e.isDirectory()) files.push(...walk(full))
-    else if (e.isFile() && /\.tsx?$/.test(e.name)) files.push(full)
+    else if (e.isFile() && /\.tsx?$/.test(e.name) && !/\.(test|gen)\.tsx?$/.test(e.name)) files.push(full)
   }
   return files
 }
 
-/** DIRECT `glyph: 'name'` / `glyph="name"` literals — excludes the unrelated `data-glyph` attribute. */
+const DIRECT_FORMS = [
+  /(?<![\w-])(?:glyph|symbol):\s*['"]([\w-]+)['"]/g, // { glyph: 'x' } / { symbol: 'x' }
+  /(?<![\w-])(?:glyph|symbol)=['"]([\w-]+)['"]/g, // glyph="x" / symbol="x"
+  /\bsetAttribute\(\s*['"](?:glyph|symbol)['"]\s*,\s*['"]([\w-]+)['"]/g, // setAttribute('symbol', 'x')
+  /\.(?:glyph|symbol)\s*=\s*['"]([\w-]+)['"]/g, // el.symbol = 'x'
+]
+
+/** The element a literal at `index` is aimed at: the nearest `ui-icon` / `ui-glyph` mention before it. */
+function targetOf(src: string, index: number): 'icon' | 'glyph' {
+  const before = src.slice(Math.max(0, index - 160), index)
+  const hits = [...before.matchAll(/ui-(icon|glyph)\b/g)]
+  return hits.at(-1)?.[1] === 'glyph' ? 'glyph' : 'icon'
+}
+
+/** DIRECT literals aimed at ui-icon (every form above, both spellings); excludes `data-glyph` and marks. */
 export function directGlyphLiterals(src: string): string[] {
-  const out: string[] = []
-  const reColon = /(?<!data-)\bglyph:\s*['"]([\w-]+)['"]/g
-  const reAttr = /(?<!data-)\bglyph=['"]([\w-]+)['"]/g
-  let m: RegExpExecArray | null
-  while ((m = reColon.exec(src))) out.push(m[1])
-  while ((m = reAttr.exec(src))) out.push(m[1])
+  return directLiterals(src).filter((l) => l.target === 'icon').map((l) => l.name)
+}
+
+/** Every DIRECT literal with the element it targets. */
+export function directLiterals(src: string): { name: string; target: 'icon' | 'glyph' }[] {
+  const out: { name: string; target: 'icon' | 'glyph' }[] = []
+  for (const re of DIRECT_FORMS) {
+    re.lastIndex = 0
+    let m: RegExpExecArray | null
+    while ((m = re.exec(src))) out.push({ name: m[1] as string, target: targetOf(src, m.index) })
+  }
   return out
 }
 
@@ -124,7 +153,7 @@ function extractCallArgs(src: string, openIdx: number): string {
  *  string-literal argument at that parameter's index from every call site of the helper in `src`. */
 export function indirectGlyphLiterals(src: string): string[] {
   const out: string[] = []
-  const identRe = /\bglyph:\s*([a-zA-Z_$][\w$]*)\b/g
+  const identRe = /(?<![\w-])(?:glyph|symbol):\s*([a-zA-Z_$][\w$]*)\b/g
   const idents = new Set<string>()
   let im: RegExpExecArray | null
   while ((im = identRe.exec(src))) idents.add(im[1])
@@ -164,6 +193,12 @@ function glyphLiteralsIn(src: string): string[] {
   return [...new Set([...directGlyphLiterals(src), ...indirectGlyphLiterals(src)])]
 }
 
+/** Every literal a file's source asks `ui-glyph` to draw (a functional mark, ADR-0245 cl.5). */
+function markLiteralsIn(src: string): string[] {
+  return [...new Set(directLiterals(src).filter((l) => l.target === 'glyph').map((l) => l.name))]
+}
+const MARKS = new Set<string>(GLYPH_SYMBOLS)
+
 // ── the KNOWN_GAP allowlist (KNOWN_UNDOCUMENTED precedent, site-coverage.test.ts) ──────────────────────
 // A pre-existing, unrelated glyph-vocabulary bug this gate's addition surfaced (GH #807/#817, ADR-0186):
 // card-demo.ts's structured-header specimen passes `glyph: 'calendar'`, which is not a real Phosphor
@@ -179,18 +214,21 @@ interface Usage {
   readonly glyph: string
 }
 
-function scan(roots: readonly string[]): Usage[] {
-  const out: Usage[] = []
+function scan(roots: readonly string[]): { icons: Usage[]; marks: Usage[] } {
+  const icons: Usage[] = []
+  const marks: Usage[] = []
   for (const root of roots) {
     for (const file of walk(root)) {
       const rel = file.slice(ROOT.length + 1)
-      for (const glyph of glyphLiteralsIn(read(file))) out.push({ file: rel, glyph })
+      const src = read(file)
+      for (const glyph of glyphLiteralsIn(src)) icons.push({ file: rel, glyph })
+      for (const glyph of markLiteralsIn(src)) marks.push({ file: rel, glyph })
     }
   }
-  return out
+  return { icons, marks }
 }
 
-const USAGES = scan(SCAN_ROOTS)
+const { icons: USAGES, marks: MARK_USAGES } = scan(SCAN_ROOTS)
 const unresolved = (usages: readonly Usage[]): Usage[] =>
   usages.filter((u) => !ROSTER.has(u.glyph) && !KNOWN_GAP.has(`${u.file}::${u.glyph}`))
 
@@ -204,6 +242,16 @@ describe('glyph-usage coverage (GH #1508) — every glyph a site/app consumer as
   it('the INDIRECT tier resolves command-modal-demo.ts\'s commandOption(value, icon, …) forwarding', () => {
     const found = USAGES.filter((u) => u.file === 'site/pages/command-modal-demo.ts').map((u) => u.glyph)
     expect(found.sort()).toEqual(['gear', 'house', 'share', 'sign-out'].sort())
+  })
+
+  it('ADR-0245 cl.4: the scan reaches every package src, not only app/src', () => {
+    expect(USAGES).toContainEqual({ file: 'packages/agent-ui/components/src/controls/toast/toast.ts', glyph: 'x' }) // setAttribute form
+    expect(USAGES).toContainEqual({ file: 'packages/agent-ui/components/src/controls/avatar/avatar.ts', glyph: 'user' }) // .glyph = form
+  })
+
+  it('every scanned ui-glyph literal is one of the twelve marks (ADR-0245 cl.5)', () => {
+    const bad = MARK_USAGES.filter((u) => !MARKS.has(u.glyph))
+    expect(bad, JSON.stringify(bad)).toEqual([])
   })
 
   it('every scanned glyph literal resolves in the vendored Phosphor pack roster (KNOWN_GAP excepted)', () => {
@@ -231,6 +279,21 @@ describe('glyph-usage coverage — the extraction predicates BITE (synthetic neg
   it('directGlyphLiterals reads both the object-property and HTML-attribute spellings', () => {
     expect(directGlyphLiterals(`el('ui-icon', { glyph: 'house' })`)).toEqual(['house'])
     expect(directGlyphLiterals(`<ui-icon glyph="paperclip">`)).toEqual(['paperclip'])
+  })
+
+  it('ADR-0245 cl.4: directGlyphLiterals reads the symbol spelling and the setAttribute and property forms', () => {
+    expect(directGlyphLiterals(`el('ui-icon', { symbol: 'house' })`)).toEqual(['house'])
+    expect(directGlyphLiterals(`<ui-icon symbol="paperclip">`)).toEqual(['paperclip'])
+    expect(directGlyphLiterals(`icon.setAttribute('glyph', 'gear')`)).toEqual(['gear'])
+    expect(directGlyphLiterals(`icon.setAttribute("symbol", "bell")`)).toEqual(['bell'])
+    expect(directGlyphLiterals(`icon.glyph = 'x'; icon.symbol = 'eye'`).sort()).toEqual(['eye', 'x'])
+  })
+
+  it('ADR-0245 cl.5: a symbol aimed at ui-glyph is a mark, not an icon name', () => {
+    const src = `<ui-glyph symbol="more"></ui-glyph><ui-icon symbol="eye"></ui-icon>`
+    expect(directGlyphLiterals(src)).toEqual(['eye'])
+    expect(directLiterals(src)).toContainEqual({ name: 'more', target: 'glyph' })
+    expect(directLiterals(`el('ui-glyph', { symbol: 'not-a-mark' })`).filter((l) => !MARKS.has(l.name))).toHaveLength(1)
   })
 
   it('directGlyphLiterals does NOT count the unrelated data-glyph attribute', () => {

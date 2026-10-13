@@ -1378,6 +1378,7 @@ const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
 // transparent box with no name to read.
 const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
   'ui-icon': { glyph: 'check' },
+  'ui-glyph': { symbol: 'check' }, // ADR-0245: an empty symbol renders nothing, the ui-icon demonstrability gap
   'ui-grid': { gap: 'md', min: '8rem' },
   'ui-field': { label: 'Email' },
   'ui-stat': { label: 'Revenue', figure: '48200', delta: '12' },
@@ -1626,6 +1627,7 @@ export const NO_SLOT_TEXT = new Set([
   'ui-command-modal', // #ensureParts(): a control-created search/list/status + a nested ui-modal (ADR-0125)
   'ui-field', // #ensureParts(): the label/description/error chrome (3 parts)
   'ui-form-popover', // #ensureParts(): a CONTROL-CREATED trigger (label+caret) + panel — GH #294 F4, the ui-select/ui-popover precedent
+  'ui-glyph', // ADR-0245: renderGlyph() builds the one <svg> child from `symbol`, never authored text
   'ui-icon', // setIcon() injects a real <svg> child whenever `name` is non-empty (icon.ts:38-41) — a name-driven slot, not authored text
   'ui-image', // GH #1189: connected() PREPENDS a control-built <img data-part="media"> as a persistent, never-replaced child (image.ts) — a host-level `textContent =` write would wipe it (and any caption sibling) out entirely; the caption itself is real optional content (COMPONENT_SAMPLE_CHILDREN demonstrates it), just not a plain-string SLOT_TEXT knob's to own
   'ui-video', // GH #1209: connected() PREPENDS a control-built <video data-part="media" controls> as a persistent child (video.ts, the ui-image law) — no slotted content model at v1 (video.md slots: [])

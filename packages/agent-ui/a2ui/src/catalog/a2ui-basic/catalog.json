@@ -39,7 +39,7 @@
             ]
           },
           "bindable": true,
-          "mapsTo": "glyph"
+          "mapsTo": "symbol"
         },
         "weight": { "type": { "type": "number" }, "mapsTo": "weight" },
         "accessibility": { "type": { "type": "object" }, "mapsTo": "accessibility" }

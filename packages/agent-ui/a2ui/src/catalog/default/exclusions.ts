@@ -93,4 +93,8 @@ export const EXCLUSION_ALLOWLIST: ReadonlyMap<string, string> = new Map<string, 
     'fragment + mini-skills teach it; a default-catalog row would hand every generic agent a casino-' +
     'domain object with no teaching context. Widening to the default catalog is a separate, later ' +
     'intake (the mint-vs-compose TYPE arm), never a drive-by row.'],
+  ['Glyph',
+    'ADR-0245 cl.2 and cl.4 (T-0093): ui-glyph is a functional-mark atom that controls render inside their own ' +
+    'slots; the A2UI wire stays catalog-invisible to the foundations overhaul (no row gains a property), and an ' +
+    'agent asks for a mark through Icon or a control prop, never a Glyph node.'],
 ])

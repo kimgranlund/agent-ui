@@ -368,6 +368,17 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // ADR-0245 (T-0093): the functional-mark display atom beside ui-icon, tier=display {doc}.
+  {
+    label: 'ui-glyph',
+    cards: [
+      {
+        href: './glyph-doc.html',
+        title: 'API reference',
+        blurb: 'The functional-mark display atom: the twelve library marks in their own glyph box, outside a region and at the library root, generated from glyph.md.',
+      },
+    ],
+  },
   // The Wave M1 chart family (ADR-0107): two Display-class axis-free charts, each a descriptor-derived API doc
   // (tier=display ⇒ {doc} only, the ui-text/ui-icon precedent).
   {

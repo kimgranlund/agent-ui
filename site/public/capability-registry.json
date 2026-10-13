@@ -675,6 +675,25 @@
       ]
     },
     {
+      "id": "control:ui-glyph",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/glyph/glyph.md"
+      },
+      "status": {
+        "state": "excluded",
+        "reason": "ADR-0245 cl.2 and cl.4 (T-0093): ui-glyph is a functional-mark atom that controls render inside their own slots; the A2UI wire stays catalog-invisible to the foundations overhaul (no row gains a property), and an agent asks for a mark through Icon or a control prop, never a Glyph node."
+      },
+      "consumers": [
+        "site"
+      ],
+      "tag": "ui-glyph",
+      "tier": "display",
+      "description": "A functional mark (check, x, plus, minus, a caret, dot, more, warning, info) drawn from the library path table in its own glyph box.",
+      "uses": [],
+      "catalogs": []
+    },
+    {
       "id": "control:ui-grid",
       "kind": "control",
       "source": {

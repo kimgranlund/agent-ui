@@ -1,19 +1,21 @@
 // icon.ts — UIIconElement, the Display-class icon-adapter consumer (LLD-C5, ADR-0065/0066). The
-// declarative surface over `@agent-ui/icons`: <ui-icon glyph="caret-down"> resolves the active pack's
+// declarative surface over `@agent-ui/icons`: <ui-icon symbol="caret-down"> resolves the active pack's
 // SVG body and injects it via `setIcon` (the cross-package edge the layering trip-wire admits — icons
 // as a second lower-tier sibling, mirroring components → shared). Light-DOM, self-defining, no traits.
 //
-// Two props, two connected() effects — nothing else:
-//   • `glyph` — reacts ONLY to glyph (and re-runs setIcon on every change); empty clears the host. Live
-//     pack-swap reactivity is DEFERRED (ADR-0065 clause 4) — the registry exposes no subscribable
-//     signal, so an already-rendered <ui-icon> does not auto-update when a pack is swapped AFTER first
-//     render; re-setting `glyph` reflects a swap.
+// Three props, two connected() effects, nothing else:
+//   • `symbol`: the icon name (ADR-0245 cl.4 renamed it from `glyph`, so the word glyph names only the
+//     functional-mark element ui-glyph, which takes the same `symbol` prop). `glyph` stays a deprecated
+//     alias for one release after the cut: the effect resolves `symbol || glyph`. It re-runs setIcon on
+//     every change; empty clears the host. Live pack-swap reactivity is DEFERRED (ADR-0065 clause 4): the
+//     registry exposes no subscribable signal, so an already-rendered <ui-icon> does not auto-update when a
+//     pack is swapped AFTER first render; re-setting `symbol` reflects a swap.
 //   • `label` — decorative by default (aria-hidden, no role); non-empty makes the icon MEANINGFUL
 //     (role=img + aria-label). ARIA via ElementInternals only — never a host attribute (the FACE rule),
 //     so aria-hidden is toggled through `internals.ariaHidden`, not `setAttribute`, and is explicitly
 //     CLEARED when a label is supplied (so a labelled icon is never simultaneously aria-hidden).
 //
-// `glyph` is typed `prop.string('')`, not `prop.enum(ICON_NAMES, ...)`, deliberately: the swappable-pack
+// `symbol` is typed `prop.string('')`, not `prop.enum(ICON_NAMES, ...)`, deliberately: the swappable-pack
 // architecture means a consumer's own pack can register names beyond the shipped nine, so the prop stays
 // an open string; the IconName cast happens only at the internal setIcon call (an unregistered name is a
 // non-throwing `data-icon-missing` render, per resolve.ts).
@@ -25,7 +27,8 @@ import { UIElement, prop, type PropsSchema, type ReactiveProps } from '../../dom
 import { setIcon, type IconName } from '@agent-ui/icons'
 
 const props = {
-  glyph: prop.string(''), // an IconName; empty → renders nothing (clears the host). Renamed from `name` (TKT-0069 item 1 ruling: `name` is reserved fleet-wide for the FORM name; the A2UI catalog keeps the wire field `name`, mapped in its bespoke factory)
+  symbol: prop.string(''), // an IconName; empty → renders nothing (clears the host). ADR-0245 cl.4: the icon-name prop, shared with ui-glyph (`name` stays reserved fleet-wide for the FORM name, TKT-0069; the A2UI catalog keeps the wire field `name`, mapped to `symbol`)
+  glyph: prop.string(''), // DEPRECATED alias of `symbol` (ADR-0245 cl.4), read only when `symbol` is empty; removed at W7
   label: { ...prop.string(''), reflect: true }, // non-empty → meaningful: role=img + aria-label; empty → decorative (aria-hidden)
 } satisfies PropsSchema
 
@@ -34,9 +37,10 @@ export class UIIconElement extends UIElement {
   static props = props
 
   protected override connected(): void {
-    // glyph effect: (re)inject the active pack's svg on glyph change; an empty glyph clears the host.
+    // symbol effect: (re)inject the active pack's svg on symbol (or the deprecated glyph) change; empty clears the host.
     this.effect(() => {
-      if (this.glyph) setIcon(this, this.glyph as IconName)
+      const name = this.symbol || this.glyph
+      if (name) setIcon(this, name as IconName)
       else this.replaceChildren()
     })
     // label effect: decorative (aria-hidden) vs meaningful (role=img + aria-label). ElementInternals only.

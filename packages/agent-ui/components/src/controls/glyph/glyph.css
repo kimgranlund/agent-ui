@@ -1,0 +1,44 @@
+/* glyph.css: ui-glyph, the functional-mark display atom (ADR-0245 clauses 4 and 5). Two sectioned blocks:
+ *
+ *   [1] TOKEN BLOCK: `:where(ui-glyph)` declares the slot, its inset and the stroke. Each reads the derived
+ *       foundation token first (`--md-sys-icon-box` 2n, `--md-sys-c` c, `--md-sys-glyph-stroke`
+ *       max(1.5px, c/2)), so inside an opt-in `[data-tier]` region the mark box is exactly 2n - 2c. Outside
+ *       one the derived tokens are undefined and the em fallbacks size it like ui-icon's 1em cell.
+ *   [2] STYLES BLOCK: `@scope (ui-glyph)` consumes ONLY --ui-glyph-*. The host is the shared icon-sized
+ *       slot; its padding is the inset c, so the svg (the mark box) fills what is left. `color: inherit`
+ *       lets the stroke track the surrounding ink, forced colors included, with no override of its own.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK: :where(ui-glyph) declares --ui-glyph-* ════════════════ */
+
+:where(ui-glyph) {
+  --ui-glyph-slot: var(--md-sys-icon-box, 1em);
+  --ui-glyph-inset: var(--md-sys-c, 0.125em);
+  --ui-glyph-stroke: var(--md-sys-glyph-stroke, 1.5px);
+}
+
+/* ════════════════ [2] STYLES BLOCK: @scope (ui-glyph) consumes ONLY --ui-glyph-* ════════════════ */
+
+@scope (ui-glyph) {
+  :scope {
+    display: inline-flex;
+    box-sizing: border-box;
+    inline-size: var(--ui-glyph-slot);
+    block-size: var(--ui-glyph-slot);
+    padding: var(--ui-glyph-inset);
+    color: inherit;
+  }
+
+  :scope svg {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    overflow: visible;
+  }
+
+  :scope path {
+    stroke-width: var(--ui-glyph-stroke);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}

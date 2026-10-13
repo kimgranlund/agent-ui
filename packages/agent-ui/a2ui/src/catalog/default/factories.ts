@@ -177,9 +177,9 @@ function clearLabelText(el: HTMLElement): void {
  * never routed through `applyProp`.
  *
  * ADR-0226 cl.1 — `icon` (bindable string, the ICON_NAMES vocabulary verbatim) realizes as ONE
- * factory-owned `<ui-icon slot="leading" data-role="icon">` child: `glyph` set to the value, `label`
+ * factory-owned `<ui-icon slot="leading" data-role="icon">` child: `symbol` set to the value, `label`
  * left at its own default (empty) so `icon.ts`'s own label effect keeps it decorative (aria-hidden, no
- * role) by construction; a re-apply (bound update) retargets `glyph` on the SAME child (no duplicate),
+ * role) by construction; a re-apply (bound update) retargets `symbol` on the SAME child (no duplicate),
  * and an empty/null value removes it. `iconOnly` (static boolean, deliberately NOT bindable — per-node
  * structure, not state) sets the host's OWN reflecting `iconOnly` prop (button.md, the CSS fifth
  * structure) and forks `label`'s destination.
@@ -218,19 +218,19 @@ export const buttonFactory: WidgetFactory = {
         break
       }
       case 'icon': {
-        const glyph = value == null ? '' : String(value)
-        const existing = el.querySelector(':scope > [data-role="icon"]') as (HTMLElement & { glyph?: unknown }) | null
-        if (!glyph) {
+        const symbol = value == null ? '' : String(value)
+        const existing = el.querySelector(':scope > [data-role="icon"]') as (HTMLElement & { symbol?: unknown }) | null
+        if (!symbol) {
           existing?.remove()
           break
         }
         if (existing) {
-          existing.glyph = glyph
+          existing.symbol = symbol
         } else {
-          const icon = document.createElement('ui-icon') as HTMLElement & { glyph?: unknown }
+          const icon = document.createElement('ui-icon') as HTMLElement & { symbol?: unknown }
           icon.setAttribute('slot', 'leading')
           icon.setAttribute('data-role', 'icon')
-          icon.glyph = glyph // label stays at its own default (empty) — decorative by construction
+          icon.symbol = symbol // label stays at its own default (empty): decorative by construction
           el.insertBefore(icon, el.firstChild) // leading position, ahead of any label text
         }
         break
@@ -549,12 +549,13 @@ export const optionFactory: WidgetFactory = {
 
 // ── the ADR-0087 Wave A rows (Icon / Menu+MenuItem / Popover / Tooltip) ─────────────
 
-// Icon → ui-icon (ADR-0065/0066). Wire `name` → prop `glyph` (TKT-0069 item 1 — the control renamed;
-// the catalog keeps its shipped wire field); `label` stays 1:1. `slot` (GH #808 S1, catalog SPEC-R2)
+// Icon → ui-icon (ADR-0065/0066). Wire `name` → prop `symbol` (TKT-0069 item 1 renamed it from `name` to
+// `glyph`, ADR-0245 cl.4 from `glyph` to `symbol`; the catalog keeps its shipped wire field); `label` stays
+// 1:1. `slot` (GH #808 S1, catalog SPEC-R2)
 // rides the mapping's DEFAULT arm (`mapping['slot'] ?? 'slot'` → `'slot'`) straight onto `el.slot` —
 // the platform's own reflecting `HTMLElement.slot` IDL accessor, zero factory code — placing an Icon
 // in `ui-card-header`'s leading/trailing grid cell (`card.css`'s `:has([slot='leading'])` family).
-export const iconFactory: WidgetFactory = mappedAccessorFactory('ui-icon', { name: 'glyph' })
+export const iconFactory: WidgetFactory = mappedAccessorFactory('ui-icon', { name: 'symbol' })
 
 // Menu → ui-menu (ADR-0043/overlay-controller.lld). Two-way bindable on `open` via the `toggle` event
 // (ADR-0019) — the family contract shared with Popover/Modal/Tabs. `children` is a plain ChildList: the

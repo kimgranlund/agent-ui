@@ -283,7 +283,8 @@ TKT-0069 item 1) and EXECUTED same day: the fleet-wide §3 reservation STANDS; a
 (`ui-icon.name`→`glyph` · `ui-avatar.name`→`identity` · `ui-attachment.name`→`filename` ·
 `ui-stat.value`→`figure` · `ui-swatch.value`→`color` · `ui-swiper-item.value`→`key` ·
 `ui-progress.value`→`current` · `ui-tab.value`→`key`, the eighth — found at execution, the
-swiper-item comment's own cited precedent). The A2UI catalog keeps its shipped WIRE field names
+swiper-item comment's own cited precedent; ADR-0245 cl.4 later renamed `ui-icon.glyph`→`symbol`, the prop the
+new `ui-glyph` takes too, with `glyph` a deprecated alias until the W7 cleanup). The A2UI catalog keeps its shipped WIRE field names
 (`Icon.name`, `Stat.value`, …): `catalog.json`'s `mapsTo` + `mappedAccessorFactory` translate
 wire→prop at apply time, so every corpus record and taught idiom stays valid — the ONE catalog-vs-
 component naming divergence class, deliberate (§7's namespace is the protocol surface, §3's is the

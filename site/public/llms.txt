@@ -112,6 +112,7 @@
 
 - [ui-text](./text-doc.html): the typographic leaf — M3 role `variant` × `size` × real-element `as` stamp (headings, paragraphs, links via a security-gated `href`), plus `truncate` and `emphasis`; [demo](./text-demo.html).
 - [ui-icon](./icon-doc.html): the declarative icon consumer over the swappable pack adapter (Phosphor vendored as default); [demo](./icon-demo.html).
+- [ui-glyph](./glyph-doc.html): the functional-mark atom, one of twelve library marks (check, x, plus, minus, the four carets, dot, more, warning, info) in its own glyph box beside ui-icon (ADR-0245).
 - [ui-code](./code-doc.html): verbatim code display — host-as-content, monospace, self-scrolling, no highlighter by design; [demo](./code-demo.html).
 - [ui-disclosure](./disclosure-doc.html): the native details/summary content fold — toggle-only, two-way `open`; [demo](./disclosure-demo.html).
 

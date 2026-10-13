@@ -61,7 +61,7 @@ const L1_TAXONOMY = {
     'ui-sparkline', 'ui-bar-chart', 'ui-line-chart', 'ui-pie-chart', 'ui-column-chart', 'ui-gauge',
     'ui-swatch', 'ui-ramp', 'ui-ladder',
   ],
-  'Typography & media primitives': ['ui-text', 'ui-icon', 'ui-image', 'ui-video', 'ui-audio'],
+  'Typography & media primitives': ['ui-text', 'ui-icon', 'ui-glyph', 'ui-image', 'ui-video', 'ui-audio'],
   'Layout primitives': [
     'ui-row', 'ui-column', 'ui-list', 'ui-grid', 'ui-toast-region', 'ui-split', 'ui-split-pane',
     'ui-swiper-item',

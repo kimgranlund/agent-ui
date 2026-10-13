@@ -271,6 +271,15 @@
       "group": "Charts & data visuals"
     },
     {
+      "name": "Glyph",
+      "tag": "ui-glyph",
+      "url": "./glyph-doc.html",
+      "description": "A functional mark (check, x, plus, minus, a caret, dot, more, warning, info) drawn from the library path table in its own glyph box.",
+      "level": "L1",
+      "section": "Components",
+      "group": "Typography & media primitives"
+    },
+    {
       "name": "Grid",
       "tag": "ui-grid",
       "url": "./grid-demo.html",

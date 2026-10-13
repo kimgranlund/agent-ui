@@ -265,15 +265,15 @@ describe('default catalog factories — Button icon mechanism (ADR-0226, GH #150
     expect(el.childNodes).toHaveLength(1)
   })
 
-  it('AC3 — icon+label yields exactly one ui-icon[slot="leading"][data-role="icon"] child with glyph set and decorative ARIA, label as textContent', () => {
+  it('AC3: icon+label yields exactly one ui-icon[slot="leading"][data-role="icon"] child with symbol set and decorative ARIA, label as textContent', () => {
     const el = buttonFactory.create()
     buttonFactory.applyProp(el, 'icon', 'download-simple')
     buttonFactory.applyProp(el, 'label', 'Download')
 
     const icons = el.querySelectorAll('ui-icon[slot="leading"][data-role="icon"]')
     expect(icons).toHaveLength(1)
-    const icon = icons[0] as HTMLElement & { glyph?: unknown; label?: unknown }
-    expect(icon.glyph).toBe('download-simple')
+    const icon = icons[0] as HTMLElement & { symbol?: unknown; label?: unknown }
+    expect(icon.symbol).toBe('download-simple')
     expect(icon.label).toBe('') // decorative by construction — icon.ts's own label effect keeps it aria-hidden
     expect(el.textContent).toBe('Download')
     expect(el.hasAttribute('aria-label')).toBe(false)
@@ -313,13 +313,13 @@ describe('default catalog factories — Button icon mechanism (ADR-0226, GH #150
     expect(el.querySelectorAll('ui-icon[slot="leading"][data-role="icon"]')).toHaveLength(1)
   })
 
-  it('AC3 — a bound icon re-apply retargets glyph on the SAME child — no duplicate (the LLD-C7 bindProp re-apply shape)', () => {
+  it('AC3: a bound icon re-apply retargets symbol on the SAME child, no duplicate (the LLD-C7 bindProp re-apply shape)', () => {
     const el = buttonFactory.create()
     buttonFactory.applyProp(el, 'icon', 'plus')
     buttonFactory.applyProp(el, 'icon', 'minus') // simulates a re-resolved {path} binding
     const icons = el.querySelectorAll('[data-role="icon"]')
     expect(icons).toHaveLength(1)
-    expect((icons[0] as HTMLElement & { glyph?: unknown }).glyph).toBe('minus')
+    expect((icons[0] as HTMLElement & { symbol?: unknown }).symbol).toBe('minus')
   })
 
   it('AC3 — clearing icon (empty string, or null) removes the child', () => {
@@ -534,14 +534,14 @@ describe('default catalog factories — Select / Option (ADR-0053, ChoicePicker 
 })
 
 describe('default catalog factories — Icon (ADR-0087 Wave A, ADR-0065/0066)', () => {
-  it('Icon → ui-icon: wire `name` maps to the `glyph` prop (TKT-0069 item 1); label 1:1; not an input (no value bind)', () => {
+  it('Icon → ui-icon: wire `name` maps to the `symbol` prop (ADR-0245 cl.4); label 1:1; not an input (no value bind)', () => {
     expect(iconFactory.tag).toBe('ui-icon')
     expect(iconFactory.value).toBeUndefined() // a display leaf — no two-way binding
     const el = iconFactory.create()
     iconFactory.applyProp(el, 'name', 'caret-down')
     iconFactory.applyProp(el, 'label', 'Expand')
     const target = el as unknown as Record<string, unknown>
-    expect(target.glyph).toBe('caret-down') // the wire field lands on the RENAMED prop
+    expect(target.symbol).toBe('caret-down') // the wire field lands on the RENAMED prop
     expect(target.name).toBeUndefined() // and never on a stale `name` expando
     expect(target.label).toBe('Expand')
   })
