@@ -970,8 +970,11 @@ describe('ui-tabs — overflow="menu": the hidden-connect reveal engages fit (do
 
 describe('ui-tabs — orientation="vertical" × overflow="menu": the §7 corner — fit axis flips to block-size (both engines)', () => {
   it("[MUST-PROVE] the fit axis flips to BLOCK-size under vertical; the trigger sits at the strip column's block-end, a tab-height square", () => {
+    // The fixture box is derived from the tab row (4n at the root register), not a literal: three rows' worth of
+    // block-size cannot hold five rows + the trigger reserve at any n, so the fit axis always has to engage.
+    const boxPx = 3 * resolve('product', 'sm', 'md').h
     const wrap = document.createElement('div')
-    wrap.style.cssText = 'display:flex; flex-direction:column; block-size:200px;'
+    wrap.style.cssText = `display:flex; flex-direction:column; block-size:${boxPx}px;`
     wrap.innerHTML = `
       <ui-tabs fill orientation="vertical" overflow="menu">
         <ui-tab>One</ui-tab><ui-tab>Two</ui-tab><ui-tab>Three</ui-tab><ui-tab>Four</ui-tab><ui-tab>Five</ui-tab>
@@ -994,7 +997,7 @@ describe('ui-tabs — orientation="vertical" × overflow="menu": the §7 corner 
       0,
     )
 
-    // the fit axis flipped to BLOCK-size: the 200px-bounded column cannot hold all 5 rows + the trigger reserve.
+    // the fit axis flipped to BLOCK-size: the bounded column (3 rows tall) cannot hold all 5 rows + the trigger reserve.
     const visible = tabEls.filter((t) => !t.hasAttribute('data-overflowed'))
     const overflowed = tabEls.filter((t) => t.hasAttribute('data-overflowed'))
     expect(visible.length, 'vacuous test setup').toBeGreaterThan(0)
