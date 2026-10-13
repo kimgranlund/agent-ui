@@ -10,7 +10,7 @@
 // them"); every other row is bespoke, matching its cl.9b "Factory shape" cell.
 
 import type { VariantDispatch, WidgetFactory } from '../types.ts'
-import { textFactory, cardFactory, sliderFactory, multiSelectFactory, createCatalogButton } from '../default/factories.ts'
+import { textFactory, cardFactory, sliderFactory, multiSelectFactory } from '../default/factories.ts'
 
 // ── cl.9a — the schema-wide common-prop decorator, shown verbatim in ADR-0169 §9a ──────────────────
 
@@ -267,7 +267,7 @@ const BUTTON_VARIANT_MAP: Record<string, string> = { primary: 'solid', default: 
 
 export const basicButtonFactory: WidgetFactory = withBasicCommon({
   tag: 'ui-button',
-  create: createCatalogButton, // sm, 28px on the canvas register (ADR-0245); a payload size still wins
+  create: () => document.createElement('ui-button'),
   applyProp: (el, prop, value) => {
     // `action` never routes through applyProp — the renderer's action controller strips it before
     // widget resolution runs (renderer.ts `#actionPropsOf`, gated on `PropDef.mapsTo === 'action'`).

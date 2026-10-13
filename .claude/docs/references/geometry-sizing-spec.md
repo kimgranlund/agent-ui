@@ -27,8 +27,8 @@ control (or `data-size`) supplies the size z; s and z are each -1, 0 or +1.
 | content | 11 / 2 / 2 / 1 | reading and document surfaces |
 | brand | 14 / 2 / 2 / 1 | hero and marketing |
 
-Reachable heights (`4n`) at sm / md / lg: **widget** 20 / 24 / 28 at scale sm and 24 / 28 / 32 at md, **product** 24 / 28 / 32 at
-scale sm (the root), 28 / 36 / 44 at md (the A2UI canvas) and 32 / 44 / 56 at lg; content and brand step up
+Reachable heights (`4n`) at sm / md / lg: **widget** 20 / 24 / 28 at scale sm and 24 / 28 / 32 at md (the A2UI canvas,
+ADR-0245 Amendment 2), **product** 24 / 28 / 32 at scale sm (the root), 28 / 36 / 44 at md and 32 / 44 / 56 at lg; content and brand step up
 likewise (ADR-0245 Appendix B holds every cell). The retired `[scale]` values map by purpose (`ui-sm` to
 widget/sm, `ui-md` to product/sm, `ui-lg` to product/md, `content-*` to content/sm, md, lg); the bridge
 applies the map for one release.
@@ -115,7 +115,7 @@ The old `[scale]` tiers, their literal tables and Kim's `(scale × size)` lookup
 ADR-0245 and retired from `dimensions.css`, which now holds only constants (focus ring, scrollbar, motion,
 pending and working states, typefaces, the typescale weight, line-height and tracking legs). A control reads
 its size prop as z and inherits tier and scale from its region; nothing in a stylesheet names a height.
-The root is product at scale sm; an A2UI surface root carries `data-scale="md"`; a reading column sets
+The root is product at scale sm; an A2UI surface root carries `data-tier="widget" data-scale="md"`; a reading column sets
 `data-tier="content"`. `[scale]` and `[density]` survive one release as bridge aliases of those axes.
 
 ---
@@ -264,7 +264,7 @@ their lists, so a sized control outside the class table fails `--strict` rather 
 ## 7 · Ratified decisions
 
 1. **ADR-0245 (Kim, 2026-10-13)** is the authority: one n per element, root `product` at scale `sm` (sizes 24 / 28 /
-   32), the A2UI canvas at scale md, the pill kept for button and toggle, the avatar `4n`, the glyph stroke
+   32), the A2UI canvas at widget / md (Amendment 2; step 0 had ruled product / md), the pill kept for button and toggle, the avatar `4n`, the glyph stroke
    `max(1.5px, c/2)`, `icon` and `glyph` as separate boxes and elements with the shared `symbol` prop, four
    container levels, type derived behind `ui-text`'s unchanged API.
 2. **ADR-0036 stands:** single-line control text is `line-height: 1`.

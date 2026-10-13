@@ -693,3 +693,24 @@ Kim's GH #370 ruling. The section-kicker role (`--md-sys-type-section-kicker`) s
 for a future eyebrow consumer; no stylesheet reads it today. The `kicker` row of Appendix B now reads
 `11 → 10 (-1) · 12 → 11 (-1) · 14 → 12 (-2)`, the same as `label`; the original row above is left as
 written. The lg step lands 2px under today's 14px, the same delta `label` already carries.
+
+## Amendment 2 (2026-10-13, T-0119): the A2UI canvas register is widget at scale md
+
+Kim, 2026-10-13: the A2UI surface root uses `data-tier="widget" data-scale="md"`, not product/md with
+hand-shifted stamps. "The scale shifts down one whole step so 32 will be 28, which is fine for widget cards."
+
+Cause: step 0 ruling 2 put the canvas at product/md (28 / 36 / 44) so a widget action at md stayed 36px. To
+hold the rendered px, the cut then stamped every A2UI size one step down (the persona action rows `lg` to
+`md`, BookingForm's Reserve, inputs and select `md` to `sm`, and an unsized catalog Button created at `sm`),
+so a factory's size no longer meant what it said on a canvas.
+
+Ruling: the renderer's surface root carries `data-tier="widget"` and `data-scale="md"` (each only when the root
+does not already name it). Widget/md is the same n as the page root (n 6 / 7 / 8), so on a canvas sm / md / lg
+read height 24 / 28 / 32 · icon box 12 / 14 / 16 · glyph box 8 / 10 / 12 · control type 12 / 13 / 14 · button
+radius (pill) 12 / 14 / 16, and the card levels at md are margin 21, gutter 14, radius 21 with body type 14.
+The cut's step-down stamps revert: the persona action rows and CardTable's chips, stake and Clear are `lg`
+(32px), BookingForm's Reserve is `md` and its fields take the default `md` (28px), the date picker buttons stay
+`sm`, and an unsized catalog Button is created with no size, so it reads `md` (28px). This supersedes the
+clause 2 bullet "A2UI surfaces sit at `data-scale="md"`", step 0 ruling 2, the clause 10b W5 row's
+parenthetical and Appendix B's closing canvas paragraph, all left above as written. Clause 2's
+catalog-invisible rule and clause 8's zero prompt bytes stand: no catalog row or payload names the register.

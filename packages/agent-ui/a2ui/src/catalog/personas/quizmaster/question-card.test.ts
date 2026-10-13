@@ -225,13 +225,13 @@ describe('QuestionCard through the real renderer', () => {
     cleanup()
   })
 
-  it('QuestionCard: the producer Check answer Button sits at the 36px action step, md on the canvas register (ADR-0243 Amendment 2, ADR-0245)', async () => {
+  it('QuestionCard: the producer Check answer Button sits at the button lg step, 32px on the canvas register (ADR-0243 Amendment 2, ADR-0245 Amendment 2)', async () => {
     const button = { id: 'checkBtn', component: 'Button', variant: 'solid', label: 'Check answer', action: { action: 'checkAnswer' } }
     const { mount, errors, cleanup } = await render({ ...BOUND, children: ['checkBtn'] }, [button])
     expect(errors()).toEqual([])
     const btn = mount.querySelector('ui-card > ui-button') as HTMLElement & { size: string }
-    expect(btn.getAttribute('size')).toBe('md')
-    expect(btn.size).toBe('md')
+    expect(btn.getAttribute('size')).toBe('lg')
+    expect(btn.size).toBe('lg')
     cleanup()
   })
 

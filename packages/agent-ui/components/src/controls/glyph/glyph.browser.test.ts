@@ -7,7 +7,7 @@ import type { UIGlyphElement } from './glyph.ts'
 
 // ui-glyph geometry (ADR-0245 clause 4): inside an opt-in region the host is the 2n icon slot and the svg is
 // the 2n - 2c mark box, both against scale.mjs resolve() at the library root (product / sm) for sm, md and lg
-// and at the A2UI canvas register (data-scale md); outside a region the em fallbacks hold.
+// and at product / md, one data-scale up; outside a region the em fallbacks hold.
 
 const mounted: HTMLElement[] = []
 afterEach(() => mounted.splice(0).forEach((el) => el.remove()))

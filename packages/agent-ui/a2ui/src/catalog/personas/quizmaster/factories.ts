@@ -9,7 +9,8 @@
 // `revealed` true disables the group and opens the explanation in place; with `answer` naming an option it also
 // marks the correct row (a check glyph and "Correct") and a wrong pick (a cross glyph and "Your answer"), so no
 // state rests on color alone. The producer's own children (the Check answer Button) are appended by the renderer
-// after the explanation, sized at the 36px action height by `actionRowButtons` (ADR-0243 Amendment 2; `md` on the ADR-0245 canvas register). Styling
+// after the explanation, sized at the button's `lg` step by `actionRowButtons` (ADR-0243 Amendment 2; 32px on the A2UI canvas
+// register, ADR-0245 Amendment 2). Styling
 // goes through `el.style` only, with no border-left anywhere; no host ARIA. The card is one region on the ADR-0046
 // box model (`boxRegionCard`, ADR-0046 Amendment 7): ink the box inset plus the region padding in from the border,
 // and one 8px gap between parts.
