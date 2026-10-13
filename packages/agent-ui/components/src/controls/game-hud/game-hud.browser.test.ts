@@ -58,6 +58,25 @@ describe('ui-game-hud: sizing (ADR-0223)', () => {
   })
 })
 
+describe('ui-game-hud: the ADR-0046 box model (Amendment 7)', () => {
+  it('ink sits 19px inline and 13px block from the outer edge; header, progress and stats are 8px apart', async () => {
+    const el = hud(container('480px'), (h) => {
+      h.title = 'Dungeon level 3'
+      h.stats = [{ label: 'HP', value: 9 }]
+      h.progress = { value: 3, max: 8, label: 'Rooms cleared' }
+    })
+    await el.updateComplete
+    const host = el.getBoundingClientRect()
+    const box = (name: string): DOMRect => (el.querySelector(`[data-part="${name}"]`) as HTMLElement).getBoundingClientRect()
+    // border 1px + the 6px box inset + the region padding (12px inline, 6px block)
+    expect(box('header').left - host.left).toBeCloseTo(19, 0)
+    expect(box('header').top - host.top).toBeCloseTo(13, 0)
+    expect(host.right - box('stats').right).toBeCloseTo(19, 0)
+    expect(box('progress').top - box('header').bottom).toBeCloseTo(8, 0)
+    expect(box('stats').top - box('progress').bottom).toBeCloseTo(8, 0)
+  })
+})
+
 describe('ui-game-hud: stat wrap', () => {
   it('six stats wrap inside a 320px container with no horizontal overflow', async () => {
     const wrap = container('320px')

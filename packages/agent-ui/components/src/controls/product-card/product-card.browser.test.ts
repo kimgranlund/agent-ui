@@ -64,6 +64,16 @@ describe('ui-product-card: rendered geometry', () => {
     expect(hug.card.getBoundingClientRect().width).toBeGreaterThan(0)
   })
 
+  it('the body follows the ADR-0046 box model: ink 19px inline, 13px from the bottom edge, rows 8px apart (Amendment 7)', async () => {
+    const { card } = await mount(`<ui-product-card title="Suite" subtitle="Sleeps 2" price="$312"></ui-product-card>`)
+    const host = card.getBoundingClientRect()
+    // border 1px + the 6px box inset + the region padding (12px inline, 6px block)
+    expect(part(card, 'title').getBoundingClientRect().left - host.left).toBeCloseTo(19, 0)
+    expect(host.bottom - part(card, 'body').getBoundingClientRect().bottom).toBeCloseTo(1, 0)
+    expect(host.bottom - part(card, 'price-row').getBoundingClientRect().bottom).toBeCloseTo(13, 0)
+    expect(part(card, 'subtitle').getBoundingClientRect().top - part(card, 'title').getBoundingClientRect().bottom).toBeCloseTo(8, 0)
+  })
+
   it('the action sits at the control ramp lg step: 36px tall, the 16px lg font (ADR-0243 Amendment 2)', async () => {
     const { card } = await mount(`<ui-product-card title="Suite" price="$312" action-label="Book" action='{"action":"book"}'></ui-product-card>`)
     const action = part(card, 'action')
