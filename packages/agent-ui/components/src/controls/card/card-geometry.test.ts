@@ -30,7 +30,7 @@ describe('card.css — the concentric-corner radius chain (ADR-0018, cycle-free)
     // cl.1 root fallback + cl.2 nested read, in ONE token: a nested card inherits --ui-card-child-radius from
     // its parent; a root card (channel unset) falls to --md-sys-shape-corner-base.
     expect(cardTokens).toMatch(
-      /--ui-card-radius:\s*var\(--ui-card-child-radius,\s*var\(--md-sys-shape-corner-base\)\)/,
+      /--ui-card-radius:\s*var\(--md-sys-card-radius,\s*var\(--ui-card-child-radius,\s*var\(--md-sys-shape-corner-base\)\)\)/,
     )
   })
 
@@ -39,7 +39,7 @@ describe('card.css — the concentric-corner radius chain (ADR-0018, cycle-free)
     // region's inline padding, so the concentric chain re-bases off --ui-card-region-pad-inline. The floor is
     // --md-sys-space-xs (4px), not a literal 0px (RESOLVED 2026-08-24 — see this file's own banner comment).
     expect(cardTokens).toMatch(
-      /--ui-card-inner-radius:\s*max\(\s*var\(--md-sys-space-xs\)\s*,\s*calc\(\s*var\(--ui-card-radius\)\s*-\s*var\(--ui-card-region-pad-inline\)\s*\)\s*\)/,
+      /--ui-card-inner-radius:\s*var\(--md-sys-widget-radius,\s*max\(\s*var\(--md-sys-space-xs\)\s*,\s*calc\(\s*var\(--ui-card-radius\)\s*-\s*var\(--ui-card-region-pad-inline\)\s*\)\s*\)\s*\)/,
     )
   })
 
@@ -65,8 +65,8 @@ describe('card.css — padding/gap off the --md-sys-space ladder (Container/layo
     // padding off the shared --ui-box-* tokens (REVISED 2026-07-04: the card-only override is gone; see the
     // next test). The shell is plain block flow now — no grid, no --ui-card-gap row-gap (two tests down).
     expect(cardTokens).toMatch(/--ui-card-padding:\s*0/)
-    expect(cardTokens).toMatch(/--ui-card-region-pad-inline:\s*var\(--ui-box-pad-inline,/)
-    expect(cardTokens).toMatch(/--ui-card-region-pad-block:\s*var\(--ui-box-pad-block,/)
+    expect(cardTokens).toMatch(/--ui-card-region-pad-inline:\s*var\(--md-sys-card-gutter,\s*var\(--ui-box-pad-inline,/)
+    expect(cardTokens).toMatch(/--ui-card-region-pad-block:\s*var\(--md-sys-inset,\s*var\(--ui-box-pad-block,/)
     expect(css).not.toMatch(/--md-sys-height-/) // a container has NO control height (geometry.md)
   })
 
@@ -76,8 +76,8 @@ describe('card.css — padding/gap off the --md-sys-space ladder (Container/layo
     // SAME fallback-literal pattern (defensive if a [data-box] ancestor never set the channel).
     expect(cardTokens).not.toMatch(/--ui-box-pad-inline:/)
     expect(cardTokens).not.toMatch(/--ui-box-pad-block:/)
-    expect(cardTokens).toMatch(/--ui-card-region-pad-inline:\s*var\(--ui-box-pad-inline,\s*0\.75rem\)/)
-    expect(cardTokens).toMatch(/--ui-card-region-pad-block:\s*var\(--ui-box-pad-block,\s*0\.375rem\)/)
+    expect(cardTokens).toMatch(/--ui-card-region-pad-inline:\s*var\(--md-sys-card-gutter,\s*var\(--ui-box-pad-inline,\s*0\.75rem\)\)/)
+    expect(cardTokens).toMatch(/--ui-card-region-pad-block:\s*var\(--md-sys-inset,\s*var\(--ui-box-pad-block,\s*0\.375rem\)\)/)
     // the shared container-box.css defaults are untouched (12px inline / 6px block, since the 2026-07-04 revision)
     const sharedCss = readFileSync(
       `${process.cwd()}/packages/agent-ui/components/src/controls/_surface/container-box.css`,
@@ -92,7 +92,7 @@ describe('card.css — padding/gap off the --md-sys-space ladder (Container/layo
     // margin every other [data-box] child gets. ui-card is now plain BLOCK FLOW (flow-root BFC, NOT grid) —
     // so ONE uniform `margin` gives clean 6px gutters (adjacent region margins collapse; the 1px frame border
     // blocks collapse-through at the edges), with no grid gap and no first/last-child split.
-    expect(cardTokens).toMatch(/--ui-card-region-margin:\s*var\(--ui-box-inset,\s*0\.375rem\)/)
+    expect(cardTokens).toMatch(/--ui-card-region-margin:\s*var\(--md-sys-inset,\s*var\(--ui-box-inset,\s*0\.375rem\)\)/)
     expect(css).toMatch(/:scope\s*\{[^}]*display:\s*flow-root/) // block flow, not grid
     expect(cardTokens).not.toMatch(/--ui-card-gap:/) // the grid row-gap is gone
     // one uniform margin on all three region tags — no first/last split, no margin-inline-only
@@ -101,7 +101,7 @@ describe('card.css — padding/gap off the --md-sys-space ladder (Container/layo
   })
 
   it('the adornment column-gap also rides the --md-sys-space ladder', () => {
-    expect(regionTokens).toMatch(/--ui-card-region-gap:\s*var\(--md-sys-space-/)
+    expect(regionTokens).toMatch(/--ui-card-region-gap:\s*var\(--md-sys-inset,\s*var\(--md-sys-space-/)
   })
 })
 

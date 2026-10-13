@@ -41,10 +41,10 @@
   --ui-toast-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
 
   /* TKT-0066 item 5 ruling: dimensional constants route through the own chain, never read raw in @scope. */
-  --ui-toast-gap: var(--md-sys-space-sm); /* shared shell-spacing step — the ui-menu panel precedent */
-  --ui-toast-pad-inline: var(--md-sys-space-md);
-  --ui-toast-pad-block: var(--md-sys-space-sm);
-  --ui-toast-radius: var(--md-sys-shape-corner-base); /* the shared fleet radius (ui-menu/ui-card precedent) */
+  --ui-toast-gap: var(--md-sys-widget-gutter, var(--md-sys-space-sm)); /* shared shell-spacing step — the ui-menu panel precedent */
+  --ui-toast-pad-inline: var(--md-sys-widget-margin, var(--md-sys-space-md));
+  --ui-toast-pad-block: var(--md-sys-widget-gutter, var(--md-sys-space-sm));
+  --ui-toast-radius: var(--md-sys-widget-radius, var(--md-sys-shape-corner-base)); /* the shared fleet radius (ui-menu/ui-card precedent) */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-toast) consumes ONLY --ui-toast-* ════════════════ */

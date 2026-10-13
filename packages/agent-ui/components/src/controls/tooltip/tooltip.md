@@ -75,8 +75,8 @@ keyboard:
 
 geometry:
   sizeClass: pattern    # Container/surface geometry — the panel uses --md-sys-space-sm padding; NO control height
-  padding: var(--ui-tooltip-padding)          # = var(--md-sys-space-sm) — compact tooltip spacing
-  radius: var(--ui-tooltip-radius)            # = var(--md-sys-shape-corner-base), the shared fleet radius
+  padding: var(--ui-tooltip-padding)          # = var(--md-sys-group-margin) n + c under data-tier (ADR-0245 cl.6, group level), var(--md-sys-space-sm) elsewhere
+  radius: var(--ui-tooltip-radius)            # = var(--md-sys-group-radius) under data-tier, var(--md-sys-shape-corner-base) elsewhere
   minInlineSize: var(--ui-tooltip-min-inline-size)  # floor to prevent collapse (ADR-0021 lesson)
   surface: var(--ui-tooltip-bg)              # neutral-variant surface (elevated contrast for tooltip readability)
 

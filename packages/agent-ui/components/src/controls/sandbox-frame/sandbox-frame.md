@@ -96,6 +96,7 @@ keyboard: []              # no keyboard contract of the HOST's own — a rendere
 
 geometry:
   sizeClass: container
+  radius: var(--ui-sandbox-frame-radius)   # = var(--md-sys-card-radius) 3n under data-tier (ADR-0245 cl.6), var(--md-sys-shape-corner-base) elsewhere
   blockSize: 'clamp(var(--ui-sandbox-frame-min-block-size), var(--content-height, var(--ui-sandbox-frame-min-block-size)), var(--ui-sandbox-frame-max-block-size))'
   note: "Content-driven auto-height (SPEC-R7's clamp law), not a fixed control-height row; --content-height is the JS-seam inline custom property (the --value-pct precedent) sandbox-frame.ts writes on a valid size-changed bridge message."
 

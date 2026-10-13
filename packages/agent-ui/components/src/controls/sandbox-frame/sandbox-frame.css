@@ -23,12 +23,12 @@
   /* Frame: the neutral hairline border + the fixed corner radius — the SAME referent the container
      family (card/modal) uses (geometry.md's Entry/container fixed-radius law). */
   --ui-sandbox-frame-border: var(--md-sys-color-neutral-outline-variant);
-  --ui-sandbox-frame-radius: var(--md-sys-shape-corner-base);
+  --ui-sandbox-frame-radius: var(--md-sys-card-radius, var(--md-sys-shape-corner-base));
 
   /* The fail-closed [data-part="fallback"] affordance (SPEC-R5's "a visible 'not rendered' affordance"). */
   --ui-sandbox-frame-fallback-bg: var(--md-sys-color-neutral-surface);
   --ui-sandbox-frame-fallback-ink: var(--md-sys-color-neutral-on-surface-variant);
-  --ui-sandbox-frame-fallback-font-size: var(--md-sys-font-md);
+  --ui-sandbox-frame-fallback-font-size: var(--md-sys-type-control, var(--md-sys-font-md));
   --ui-sandbox-frame-fallback-font-family: var(--md-sys-typeface-sans);
 }
 

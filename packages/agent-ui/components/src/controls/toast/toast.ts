@@ -195,7 +195,7 @@ export class UIToastElement extends UIElement {
     const icon = document.createElement('ui-icon')
     icon.setAttribute('slot', 'leading')
     icon.setAttribute('data-role', 'icon')
-    icon.setAttribute('glyph', 'x')
+    icon.setAttribute('symbol', 'x')
     closeBtn.appendChild(icon)
     this.appendChild(closeBtn)
     this.listen(closeBtn, 'click', () => this.close())

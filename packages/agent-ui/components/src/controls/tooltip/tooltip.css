@@ -29,10 +29,10 @@
 
   /* Frame */
   --ui-tooltip-outline: var(--md-sys-color-neutral-outline-variant);
-  --ui-tooltip-radius: var(--md-sys-shape-corner-base); /* the shared fleet radius (ADR-0015 cl.5) */
+  --ui-tooltip-radius: var(--md-sys-group-radius, var(--md-sys-shape-corner-base)); /* the shared fleet radius (ADR-0015 cl.5) */
 
   /* Shell spacing — panel-class geometry (Container/surface, NOT a control height) */
-  --ui-tooltip-padding: var(--md-sys-space-sm); /* tooltips are compact — sm, not md */
+  --ui-tooltip-padding: var(--md-sys-group-margin, var(--md-sys-space-sm)); /* tooltips are compact — sm, not md */
 
   /* Size floor — prevents collapse when tooltip content is absent or narrow.
      The overlay JS positions against the measured bounding box, so a zero-width
