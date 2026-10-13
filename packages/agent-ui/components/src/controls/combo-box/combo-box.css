@@ -103,7 +103,7 @@
   --ui-combo-box-ink-answered: var(--ui-answered-ink);
 
   /* Frame shape */
-  --ui-combo-box-corner-shape: var(--md-sys-corner-shape, round); /* squircle in a data-tier region (ADR-0245 cl.3) */
+  --ui-combo-box-corner-shape: round; /* the pill takes circular corners, like button and toggle (ADR-0245 Amendment 5); the squircle stays with the radius-n surfaces */
   --ui-combo-box-radius: var(--md-sys-control-radius, var(--md-sys-shape-corner-base)); /* the pill h/2 = 2n (ADR-0245 Amendment 5); the fixed rounded-rect under the legacy opt-out */
 
   /* Min-inline-size floor — the [inline] hug-state typing-width floor (ADR-0223 cl.3(b),
