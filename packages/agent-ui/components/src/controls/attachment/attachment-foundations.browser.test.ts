@@ -16,6 +16,8 @@ function mount(html: string, region = true): HTMLElement {
   if (region) {
     wrap.setAttribute('data-tier', 'product')
     wrap.setAttribute('data-scale', 'sm')
+  } else {
+    wrap.setAttribute('data-foundations', 'legacy') // ADR-0245 cl.10e: the opt-out renders today's geometry
   }
   wrap.innerHTML = html
   document.body.append(wrap)
@@ -38,7 +40,7 @@ describe('ui-attachment geometry (ADR-0245 cl.3, cl.4 and cl.7)', () => {
     expect(px(getComputedStyle(name).fontSize)).toBeCloseTo(root.type.fieldLabel, 1)
   })
 
-  it('outside any region: the 12px corner base, the 18px icon register and the 12px label', () => {
+  it('under data-foundations=legacy: the 12px corner base, the 18px icon register and the 12px label', () => {
     const el = mount(CARD, false).querySelector('ui-attachment') as HTMLElement
     expect(px(getComputedStyle(el).borderTopLeftRadius)).toBe(12)
     expect((el.querySelector('ui-icon') as HTMLElement).getBoundingClientRect().width).toBe(18)

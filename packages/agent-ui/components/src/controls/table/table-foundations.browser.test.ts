@@ -37,9 +37,9 @@ describe('ui-table geometry inside an opt-in region', () => {
   }
 })
 
-describe('ui-table geometry outside any region (the dark launch)', () => {
+describe('ui-table geometry under data-foundations=legacy (the clause 10e rollback)', () => {
   it('the cell is content-sized with 8px inline padding', () => {
-    const td = cell(TABLE)
+    const td = cell(`<div data-foundations="legacy">${TABLE}</div>`)
     expect(Number.parseFloat(getComputedStyle(td).paddingInlineStart)).toBe(8)
     const before = td.getBoundingClientRect().height
     td.style.blockSize = 'auto'

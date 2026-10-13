@@ -31,8 +31,8 @@ describe('ui-drill geometry inside an opt-in region', () => {
   }
 })
 
-describe('ui-drill geometry outside any region (the dark launch)', () => {
+describe('ui-drill geometry under data-foundations=legacy (the clause 10e rollback)', () => {
   it('--ui-drill-header-height is 28', () => {
-    expect(token('<ui-drill></ui-drill>')).toBe(28)
+    expect(token('<div data-foundations="legacy"><ui-drill></ui-drill></div>')).toBe(28)
   })
 })

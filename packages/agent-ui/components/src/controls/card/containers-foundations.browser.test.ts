@@ -40,7 +40,7 @@ afterEach(() => mounted.splice(0).forEach((el) => el.remove()))
 function mount(markup: string, inside: boolean): HTMLElement {
   const wrap = document.createElement('div')
   if (inside) wrap.innerHTML = `<div ${REGION}>${markup}</div>`
-  else wrap.innerHTML = markup
+  else wrap.innerHTML = `<div data-foundations="legacy">${markup}</div>` // ADR-0245 cl.10e: the opt-out renders today's geometry
   document.body.append(wrap)
   mounted.push(wrap)
   return wrap

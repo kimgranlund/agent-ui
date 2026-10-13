@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { server, cdp, userEvent, page } from 'vitest/browser'
 import type { UISelectElement } from './select.ts'
 
@@ -665,13 +666,12 @@ describe('ui-select — trigger geometry: [size] exact px + [scale] anti-vacuous
     ).not.toBe(Math.round(lgTrigger.getBoundingClientRect().height))
   })
 
-  it('[scale=content-lg] shifts the md trigger height to 48px (anti-vacuous scale proof)', () => {
-    // Wrapping in a [scale=content-lg] ancestor shifts the md register UP the ladder:
-    // content-lg is the top scale tier (above content-md≡ui-lg), so content-lg × size=md = 48px
-    // (one register above content-md's 36; consistent with lg × content-lg = 64px, ADR-0038 §1 table).
-    // This proves the [scale] tokens propagate correctly into the control's height token chain.
+  it('a content / lg region moves the md trigger to 4n = 52px (anti-vacuous region proof, ADR-0245 cl.2)', () => {
+    // A data-tier="content" data-scale="lg" ancestor (the old content-lg register) raises n to 13 for a md control,
+    // proving the region inputs propagate into the control's height token chain.
     const wrapper = document.createElement('div')
-    wrapper.setAttribute('scale', 'content-lg')
+    wrapper.setAttribute('data-tier', 'content')
+    wrapper.setAttribute('data-scale', 'lg')
     wrapper.style.display = 'flex'
     wrapper.style.flexDirection = 'row'
 
@@ -689,11 +689,10 @@ describe('ui-select — trigger geometry: [size] exact px + [scale] anti-vacuous
     const trigger = el.querySelector<HTMLElement>('[data-part="trigger"]')!
     const h = Math.round(trigger.getBoundingClientRect().height)
 
-    // At [scale=content-lg] (the top scale tier), the md register = 48px (NOT the default 28px)
-    expect(h, `${server.browser}: [scale=content-lg] trigger height should be 48px (top scale tier, one register above content-md's 36)`).toBe(48)
+    expect(h, `${server.browser}: a content / lg md trigger should be 4n`).toBe(resolve('content', 'lg', 'md').h)
 
-    // Anti-vacuous: the scaled value must differ from the default 28px
-    expect(h, `${server.browser}: [scale=content-lg] height must differ from default 28px — was the scale propagated?`).not.toBe(28)
+    // Anti-vacuous: the region value must differ from the root's 28px
+    expect(h, `${server.browser}: the region height must differ from the root 28px — did the region propagate?`).not.toBe(28)
   })
 
   it('caret width ≤ trigger height at all sizes (§4.1: caret glyph = font, icon-cell = icon)', () => {

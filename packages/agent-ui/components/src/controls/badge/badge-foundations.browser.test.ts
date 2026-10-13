@@ -15,6 +15,8 @@ function mount(html: string, region = true): HTMLElement {
   if (region) {
     wrap.setAttribute('data-tier', 'product')
     wrap.setAttribute('data-scale', 'sm')
+  } else {
+    wrap.setAttribute('data-foundations', 'legacy') // ADR-0245 cl.10e: the opt-out renders today's geometry
   }
   wrap.innerHTML = html
   document.body.append(wrap)
@@ -37,7 +39,7 @@ describe('ui-badge geometry (ADR-0245 cl.3)', () => {
     expect(glyph.getBoundingClientRect().width).toBeCloseTo(root.glyph, 1)
   })
 
-  it("outside any region: today's 18px compact box, pill radius and 8.75px pad", () => {
+  it("under data-foundations=legacy: today's 18px compact box, pill radius and 8.75px pad", () => {
     const badge = mount('<ui-badge intent="success">New</ui-badge>', false).querySelector('ui-badge') as HTMLElement
     const cs = getComputedStyle(badge)
     expect(badge.getBoundingClientRect().height).toBe(18)

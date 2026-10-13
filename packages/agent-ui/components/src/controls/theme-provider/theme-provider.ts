@@ -7,8 +7,9 @@
 // control, with one deliberate behavioral fix (SPEC-R3): `scheme` unset no longer collapses to light — it
 // clears any inline override and lets `color-scheme` inherit (the page default, or an ancestor provider's,
 // if nested). `scale`/`density`/`theme` are pure attribute carriers with zero JS-side effect (SPEC-R4/R5) —
-// `dimensions.css`'s `[scale]`/`[density]` selectors and a future `[theme='<name>']` package layer read them
-// directly; this class does nothing beyond reflecting them.
+// the foundations bridge's `[scale]`/`[density]` selectors (ADR-0245 cl.10d: deprecated, mapped onto tier and
+// scale for one release after the cut, removed at W7; new code sets `data-tier`/`data-scale`) and a future
+// `[theme='<name>']` package layer read them directly; this class does nothing beyond reflecting them.
 //
 // `controls → dom` is the allowed import direction (this control needs no trait).
 
@@ -21,7 +22,7 @@ const DENSITIES = ['', 'compact', 'comfortable', 'spacious'] as const
 const props = {
   // The ONE prop with a JS-side effect (below) — SPEC-R3.
   scheme: { ...prop.enum(SCHEMES, ''), reflect: true },
-  // Pure carriers — reflected, zero effect; dimensions.css [scale]/[density] key off the attribute (SPEC-R4).
+  // Pure carriers — reflected, zero effect; the foundations bridge maps [scale]/[density] until W7 (SPEC-R4, ADR-0245).
   scale: { ...prop.enum(SCALES, ''), reflect: true },
   density: { ...prop.enum(DENSITIES, ''), reflect: true },
   // The reserved package seam (ADR-0079 cl.3 / SPEC-R5) — free string, inert until a future [theme=] layer ships.

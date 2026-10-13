@@ -15,6 +15,8 @@ function mount(html: string, region = true): HTMLElement {
   if (region) {
     wrap.setAttribute('data-tier', 'product')
     wrap.setAttribute('data-scale', 'sm')
+  } else {
+    wrap.setAttribute('data-foundations', 'legacy') // ADR-0245 cl.10e: the opt-out renders today's geometry
   }
   wrap.innerHTML = html
   document.body.append(wrap)
@@ -35,7 +37,7 @@ describe('ui-stat type (ADR-0245 cl.7)', () => {
     expect(px(getComputedStyle(part(wrap, 'value')).fontSize)).toBeCloseTo(root.type.heading, 1)
   })
 
-  it('outside any region: the M3 label-medium (12px) and headline-small (24px, which the heading role also reaches at md) rows', () => {
+  it('under data-foundations=legacy: the M3 label-medium (12px) and headline-small (24px, which the heading role also reaches at md) rows', () => {
     const wrap = mount(STAT, false)
     expect(px(getComputedStyle(part(wrap, 'label')).fontSize)).toBe(12)
     expect(px(getComputedStyle(part(wrap, 'value')).fontSize)).toBe(24)

@@ -290,8 +290,8 @@ describe('ui-modal — [box-model] the dialog is a padding-less box; region padd
     expect(bodyRect.top - contentRect.top, 'body content did not land at the pinned block padding (a canceling margin would slip through)').toBeCloseTo(padBlockBase, 1)
 
     // density-INVARIANT: compact + spacious leave the region padding + frame unchanged (rem, not --md-sys-space)
-    for (const d of ['compact', 'spacious']) {
-      modal.setAttribute('density', d)
+    for (const d of ['sm', 'md', 'lg']) {
+      modal.setAttribute('data-scale', d)
       expect(px(getComputedStyle(content).paddingLeft), `inline padding changed at ${d}`).toBeCloseTo(padInlineBase, 1)
       expect(px(getComputedStyle(content).paddingTop), `block padding changed at ${d}`).toBeCloseTo(padBlockBase, 1)
       expect(px(getComputedStyle(dialog).borderTopWidth), `border width changed at ${d}`).toBe(borderBase)

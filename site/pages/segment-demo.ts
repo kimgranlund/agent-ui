@@ -84,7 +84,7 @@ const modelNote = el('p', {}, [
 // ── scale — the leaf's Control-height row is the HOST's (segment.md: sizing applied by ui-segmented-control's
 // compound selector, not the leaf's own tier); an ancestor [scale] re-tables the whole row (ADR-0038). ─────
 const scaledControl = (scale: string): HTMLElement =>
-  el('div', { scale }, [
+  el('div', { 'data-scale': scale }, [
     el('ui-segmented-control', { name: `density-${scale}` }, [
       el('ui-segment', { value: 'compact' }, [text('Compact')]),
       el('ui-segment', { value: 'cozy', checked: '' }, [text('Cozy')]),
@@ -92,13 +92,13 @@ const scaledControl = (scale: string): HTMLElement =>
     ]),
   ])
 const scaleRow = el('div', { style: 'display:flex; gap:1rem; align-items:center; flex-wrap:wrap;' }, [
-  captioned('[scale="ui-sm"]', scaledControl('ui-sm')),
-  captioned('[scale="ui-md"]', scaledControl('ui-md')),
-  captioned('[scale="ui-lg"]', scaledControl('ui-lg')),
+  captioned('data-scale="sm"', scaledControl('sm')),
+  captioned('data-scale="md"', scaledControl('md')),
+  captioned('data-scale="lg"', scaledControl('lg')),
 ])
 const scaleNote = el('p', {}, [
-  text('A segment has no size of its own — its height, padding and font come from the host\'s Control-height ' +
-    'row; an ancestor '), code('[scale]'), text(' re-tables that row for the whole subtree.'),
+  text('A segment has no size of its own — its height, padding and font come from the host\'s n; an ancestor '),
+  code('data-scale'), text(' moves n for the whole subtree (ADR-0245).'),
 ])
 
 // ── disabled leaf — one segment locked while the rest stay live ──────────────────────────────────────────

@@ -15,6 +15,8 @@ function mount(html: string, region = true): HTMLElement {
   if (region) {
     wrap.setAttribute('data-tier', 'product')
     wrap.setAttribute('data-scale', 'sm')
+  } else {
+    wrap.setAttribute('data-foundations', 'legacy') // ADR-0245 cl.10e: the opt-out renders today's geometry
   }
   wrap.innerHTML = html
   document.body.append(wrap)
@@ -35,7 +37,7 @@ describe('ui-icon geometry (ADR-0245 cl.4: the 2n icon box)', () => {
     })
   }
 
-  it('outside any region: the 1em cell, so the ambient font-size is the lever', () => {
+  it('under data-foundations=legacy: the 1em cell, so the ambient font-size is the lever', () => {
     const icon = mount('<span style="font-size: 20px"><ui-icon symbol="x"></ui-icon></span>', false).querySelector(
       'ui-icon',
     ) as HTMLElement

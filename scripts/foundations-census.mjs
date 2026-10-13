@@ -186,6 +186,7 @@ function selftest() {
   check('glyph: a descriptor attribute row is found, a part named glyph is not', rule('a.md', '---\nattributes:\n  - name: glyph\n    type: string\nparts:\n  - name: glyph\n---', 'glyph') === 1)
   check('glyph: a marked alias line passes, an unmarked one beside it is still found', rule('a.ts', `icon.glyph = 'x' // foundations-alias\nicon.glyph = 'y'`, 'glyph') === 1)
   check('glyph: a marker in a descriptor entry exempts that entry only', rule('a.md', '---\nattributes:\n  - name: glyph\n    type: string # foundations-alias\n  - name: label\n---', 'glyph') === 0 && rule('a.md', '---\nattributes:\n  - name: label # foundations-alias\n  - name: glyph\n---', 'glyph') === 1)
+  check('axes: a marked deprecated carrier line passes, an unmarked one is still found', rule('a.ts', `el.setAttribute('scale', 'ui-lg') // foundations-alias\nel.setAttribute('density', 'compact')`, 'axes') === 1)
   check('glyph: a glyph field not aimed at ui-icon passes', rule('a.ts', `const s = { glyph: '9♠' }; r.glyph; this.#part.glyph = el`, 'glyph') === 0)
   check('axes: selector, markup and attribute call are found', rule('a.ts', `q('[scale="ui-lg"]'); h('<div density="compact">'); e.setAttribute('scale', 'x')`, 'axes') === 3)
   check('axes: a css selector is found', rule('a.css', ':is([scale="ui-lg"]) x { color: red; }', 'axes') === 1)

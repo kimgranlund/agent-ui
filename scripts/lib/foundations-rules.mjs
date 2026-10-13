@@ -166,9 +166,10 @@ const matchAllOf = (src, forms) =>
 export const kindOf = (path) =>
   /\.css$/.test(path) ? 'css' : /\.(?:ts|tsx|mts|js|mjs)$/.test(path) ? 'code' : /\.html$/.test(path) ? 'html' : /\.md$/.test(path) ? 'md' : null
 
-// A deliberate use of ui-icon's deprecated `glyph` alias (the alias itself, its descriptor row and the proofs that
-// it still resolves, ADR-0245 cl.10d) carries this marker in a comment on its own line, or in a descriptor, anywhere
-// in its attribute entry. The gate then needs no allowlist line for it; the marker retires with the alias at W7.
+// A deliberate use of a deprecated alias (ui-icon's `glyph`, or ui-theme-provider's `scale` / `density` carriers
+// that the bridge maps for one release: the alias itself, its descriptor row and the proofs that it still
+// resolves, ADR-0245 cl.10d) carries this marker in a comment on its own line, or in a descriptor, anywhere in its
+// attribute entry. The gate then needs no allowlist line for it; the marker retires with the aliases at W7.
 export const ALIAS_MARKER = 'foundations-alias'
 
 /** True when the glyph finding at `index` is a marked deliberate use of the deprecated alias. */
@@ -191,7 +192,7 @@ export function findingsIn(path, src) {
   if (kind === 'css' || kind === 'code' || kind === 'html') res.tokens = tokensFindings(code)
   if (kind === 'css') res.px = pxFindings(code)
   res.glyph = (kind === 'md' ? glyphMdFindings(code) : glyphFindings(code)).filter((f) => !isMarkedAlias(src, f.index, kind))
-  res.axes = matchAllOf(code, AXES_FORMS[kind])
+  res.axes = matchAllOf(code, AXES_FORMS[kind]).filter((f) => !isMarkedAlias(src, f.index, kind))
   return res
 }
 

@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 // s6 (browser leg) — the CROSS-ENGINE smoke for ui-grid (decomp g9-containers node s6). Where the jsdom
 // grid.test.ts pins the structural contract and grid-css.test.ts pins the declared CSS, this pins the RENDERED
@@ -86,20 +87,18 @@ describe('ui-grid cross-engine auto-fit reflow smoke (s6, both engines)', () => 
     expect(dense).toBeGreaterThan(roomy) // a smaller floor packs MORE tracks — the prop threads into minmax()
   })
 
-  it('the gap responds to an ancestor [density] (layout rhythm off --md-sys-space, ADR-0015 cl.4)', () => {
+  it('the gap moves with an ancestor data-scale (the group margin at the region n, ADR-0245 cl.6)', () => {
     const { wrap, grid } = mount(6)
     wrap.style.inlineSize = '640px'
-    grid.setAttribute('gap', 'md') // --md-sys-space-md = calc(12px * var(--md-sys-density))
+    grid.setAttribute('gap', 'md') // --md-sys-space-md = the group margin n + c
 
     const gaps: number[] = []
-    for (const density of ['compact', 'comfortable', 'spacious'] as const) {
-      wrap.setAttribute('density', density)
+    for (const scale of ['sm', 'md', 'lg'] as const) {
+      wrap.setAttribute('data-scale', scale)
       gaps.push(px(getComputedStyle(grid).columnGap))
     }
-    // md base 12px × --md-sys-density {0.5, 1, 1.5} → 6 · 12 · 18 — [density] re-multiplies the layout gap.
-    expect(gaps[0]).toBeCloseTo(6, 0)
-    expect(gaps[1]).toBeCloseTo(12, 0)
-    expect(gaps[2]).toBeCloseTo(18, 0)
+    // product at scale sm / md / lg, size md: n 7 / 9 / 11, so n + c = 9 · 12 · 14.
+    expect(gaps).toEqual((['sm', 'md', 'lg'] as const).map((s) => resolve('product', s, 'md').group.margin))
     expect(new Set(gaps.map((g) => g.toFixed(2))).size).toBe(3) // anti-vacuous: the three gaps are genuinely distinct
   })
 

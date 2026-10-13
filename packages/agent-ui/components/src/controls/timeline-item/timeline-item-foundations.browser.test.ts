@@ -56,9 +56,9 @@ describe('ui-timeline-item geometry inside an opt-in region', () => {
   })
 })
 
-describe('ui-timeline-item geometry outside any region (the dark launch)', () => {
+describe('ui-timeline-item geometry under data-foundations=legacy (the clause 10e rollback)', () => {
   it('the default register is 16 / 8 at md, and the stream mirrors it', () => {
-    const wrap = mount(`<ui-status-stream></ui-status-stream><ui-timeline-item size="md"></ui-timeline-item>`)
+    const wrap = mount(`<div data-foundations="legacy"><ui-status-stream></ui-status-stream><ui-timeline-item size="md"></ui-timeline-item></div>`)
     const item = wrap.querySelector('ui-timeline-item')!
     expect(markerBox(item)).toBe(16)
     expect(dotSize(item)).toBe(8)

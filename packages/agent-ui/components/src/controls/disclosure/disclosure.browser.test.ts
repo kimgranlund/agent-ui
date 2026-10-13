@@ -137,17 +137,17 @@ describe('ui-disclosure — mounts + a real engine resolves the geometry (whole-
     expect(getComputedStyle(innerHost).backgroundColor).toBe('rgba(0, 0, 0, 0)')
   })
 
-  it('[density] changes the CONTAINED body padding but leaves the summary row height/font untouched (the Pattern-class split, SPEC-R18 AC2)', () => {
+  it('a region data-scale moves the CONTAINED body padding and the summary row together (one n, ADR-0245)', () => {
     const { host, summary, body } = mount('<ui-disclosure summary="X" open contained><p>Y</p></ui-disclosure>')
-    const heightComfortable = px(getComputedStyle(summary).blockSize)
-    const padComfortable = px(getComputedStyle(body).paddingBlockStart)
+    const heightRoot = px(getComputedStyle(summary).blockSize)
+    const padRoot = px(getComputedStyle(body).paddingBlockStart)
 
-    host.parentElement?.setAttribute('density', 'compact')
-    const heightCompact = px(getComputedStyle(summary).blockSize)
-    const padCompact = px(getComputedStyle(body).paddingBlockStart)
+    host.parentElement?.setAttribute('data-scale', 'md')
+    const heightRoomy = px(getComputedStyle(summary).blockSize)
+    const padRoomy = px(getComputedStyle(body).paddingBlockStart)
 
-    expect(heightCompact).toBe(heightComfortable) // the frame is density-INVARIANT
-    expect(padCompact).not.toBe(padComfortable) // the body rhythm rides density (anti-vacuous: it DID move)
+    expect(heightRoomy).toBeGreaterThan(heightRoot) // the frame moves with n now (the [density] split retired)
+    expect(padRoomy).toBeGreaterThan(padRoot) // and so does the body rhythm (anti-vacuous: both DID move)
   })
 })
 

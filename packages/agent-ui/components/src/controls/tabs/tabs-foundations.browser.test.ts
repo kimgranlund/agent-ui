@@ -36,9 +36,9 @@ describe('ui-tabs geometry inside an opt-in region', () => {
   }
 })
 
-describe('ui-tabs geometry outside any region (the dark launch)', () => {
+describe('ui-tabs geometry under data-foundations=legacy (the clause 10e rollback)', () => {
   it('the tab row stays at the lg ramp step (36)', () => {
-    const { tab } = mount(TABS)
+    const { tab } = mount(`<div data-foundations="legacy">${TABS}</div>`)
     expect(tab.getBoundingClientRect().height).toBe(36)
   })
 })

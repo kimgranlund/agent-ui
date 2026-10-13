@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { server, cdp, page } from 'vitest/browser'
 import type { UITextElement } from './text.ts'
 
@@ -106,10 +107,11 @@ describe('ui-text browser-truth harness — the role×size matrix resolves to re
 
 // ── [scale] subtree re-multiplication (the `*` ramp pre-substitution law, ADR-0078 cl.2 / dimensions.css) ──
 
-describe('ui-text subtree-[scale] — --md-sys-typescale-*-size re-multiplies for a scaled ancestor', () => {
-  it('display/lg under [scale=content-lg] resolves to 99.75px (57px × 1.75 — the * pre-substitution law)', () => {
+describe('ui-text in a region — the type roles derive from the region n (ADR-0245 cl.7)', () => {
+  it('display/lg in a content / lg region resolves to the derived display role at n 16', () => {
     const wrap = document.createElement('div')
-    wrap.setAttribute('scale', 'content-lg') // --md-sys-scale → 1.75
+    wrap.setAttribute('data-tier', 'content')
+    wrap.setAttribute('data-scale', 'lg')
     document.body.append(wrap)
 
     const el = document.createElement('ui-text')
@@ -118,7 +120,7 @@ describe('ui-text subtree-[scale] — --md-sys-typescale-*-size re-multiplies fo
     el.textContent = 'Scaled display'
     wrap.append(el)
 
-    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(99.75, 0)
+    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBe(resolve('content', 'lg', 'lg').type.display)
     wrap.remove()
   })
 
@@ -131,7 +133,8 @@ describe('ui-text subtree-[scale] — --md-sys-typescale-*-size re-multiplies fo
     unscaled.remove()
 
     const wrap = document.createElement('div')
-    wrap.setAttribute('scale', 'ui-sm') // --md-sys-scale → 0.875 (a SMALLER multiplier for clear contrast)
+    wrap.setAttribute('data-tier', 'widget') // the old ui-sm register: a smaller n for clear contrast
+    wrap.setAttribute('data-scale', 'sm')
     document.body.append(wrap)
     const scaled = document.createElement('ui-text')
     scaled.setAttribute('variant', 'headline')
@@ -181,14 +184,14 @@ describe('ui-text compact-window override — body 15/13/11 below the 52.5rem li
     el.remove()
   })
 
-  it('[scale] composes with the breakpoint: body/md under [scale=ui-lg] → 13 × 1.125 (the `*` override keeps the multiplier)', () => {
+  it('body/md under data-scale md (the old ui-lg register) reads the body role at n 9, at every viewport (ADR-0150 retired)', () => {
     const wrap = document.createElement('div')
-    wrap.setAttribute('scale', 'ui-lg') // --md-sys-scale → 1.125
+    wrap.setAttribute('data-scale', 'md')
     document.body.append(wrap)
     const el = document.createElement('ui-text')
     el.textContent = 'compact scaled'
     wrap.append(el)
-    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(13 * 1.125, 1)
+    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBe(resolve('product', 'md', 'md').type.body)
     wrap.remove()
   })
 })

@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { server, cdp } from 'vitest/browser'
 
 // badge.browser.test.ts — cross-engine (Chromium + WebKit) browser-truth probes for ui-badge
@@ -16,10 +17,10 @@ import './badge.css'
 import './badge.ts'
 
 const mounted: HTMLElement[] = []
-const mount = (markup: string, opts?: { dir?: 'ltr' | 'rtl'; density?: 'compact' | 'comfortable' | 'spacious' }): HTMLElement => {
+const mount = (markup: string, opts?: { dir?: 'ltr' | 'rtl'; scale?: 'sm' | 'md' | 'lg' }): HTMLElement => {
   const wrap = document.createElement('div')
   if (opts?.dir) wrap.dir = opts.dir
-  if (opts?.density) wrap.setAttribute('density', opts.density)
+  if (opts?.scale) wrap.setAttribute('data-scale', opts.scale)
   wrap.style.display = 'flex'
   wrap.innerHTML = markup
   document.body.append(wrap)
@@ -90,17 +91,16 @@ describe('ui-badge geometry — the compact pad law, NOT h/2 (SPEC-R13 AC1, ADR-
     expect(padInline, `padding-inline (${padInline}) != the compact pad law (${expectedPad})`).toBeCloseTo(expectedPad, 1)
   })
 
-  it('[density] on an ancestor changes the PAD only — the box (block-size) is density-invariant (SPEC-R17 AC1)', () => {
-    const compact = mount('<ui-badge label="status"></ui-badge>', { density: 'compact' })
-    const spacious = mount('<ui-badge label="status"></ui-badge>', { density: 'spacious' })
+  it('an ancestor data-scale moves the box and the pad together: height 2n, pad 2c (ADR-0245 cl.3, one n)', () => {
+    const compact = mount('<ui-badge label="status"></ui-badge>', { scale: 'sm' })
+    const spacious = mount('<ui-badge label="status"></ui-badge>', { scale: 'lg' })
 
-    const boxCompact = px(getComputedStyle(compact).blockSize)
-    const boxSpacious = px(getComputedStyle(spacious).blockSize)
-    expect(boxCompact, 'the box must NOT move with density').toBeCloseTo(boxSpacious, 0)
+    expect(px(getComputedStyle(compact).blockSize)).toBe(resolve('product', 'sm', 'md').icon)
+    expect(px(getComputedStyle(spacious).blockSize)).toBe(resolve('product', 'lg', 'md').icon)
 
     const padCompact = px(getComputedStyle(compact).paddingInlineStart)
     const padSpacious = px(getComputedStyle(spacious).paddingInlineStart)
-    expect(padCompact, 'compact density must shrink the pad').toBeLessThan(padSpacious)
+    expect(padCompact, 'a denser region must not pad wider').toBeLessThanOrEqual(padSpacious)
   })
 
   it('no [size] attribute repoints the box (SPEC-R13 AC3 — v1 ships no size axis)', () => {

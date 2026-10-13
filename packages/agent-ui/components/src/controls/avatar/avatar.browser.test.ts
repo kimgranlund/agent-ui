@@ -47,9 +47,9 @@ describe('ui-avatar — control-height square box (SPEC-R20 AC1; ADR-0112 Amendm
     expect(lg.getBoundingClientRect().width).toBe(36)
   })
 
-  it('[scale=ui-lg] × [size=md] → 36px (the scale × size row lookup, ADR-0038)', () => {
+  it('data-scale md × size md → 36px (4n at product / md, ADR-0245 cl.3, the old ui-lg register)', () => {
     const wrap = document.createElement('div')
-    wrap.setAttribute('scale', 'ui-lg')
+    wrap.setAttribute('data-scale', 'md')
     wrap.innerHTML = '<ui-avatar identity="Ada Lovelace"></ui-avatar>'
     document.body.append(wrap)
     mounted.push(wrap)

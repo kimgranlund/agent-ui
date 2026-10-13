@@ -257,14 +257,12 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
 
   // ── density-invariance — thumb/host geometry HOLDS across [density] (widget-box is scale-only) ──
   //
-  // The compact widget-box ramp (--md-sys-compact-{size}) is re-tabled by [scale], NOT by [density].
-  // Density shifts layout-ladder quantities (--md-sys-space-*, gap, padding) but never the control box.
-  // A [density=compact/comfortable/spacious] wrapper must produce identical thumb px (anti-vacuous).
+  // ADR-0245 cl.3: the slider thumb takes the switch rule, 2n - 2c, at the region's n (one n moves it).
 
-  it('density-invariant: thumb size is unchanged under [density=compact], default, and [density=spacious]', () => {
-    function makeWithDensity(density: string | null): number {
+  it('the thumb is 2n - 2c at the root and follows a region data-scale', () => {
+    function makeWithDensity(scale: string | null): number {
       const wrapper = document.createElement('div')
-      if (density !== null) wrapper.setAttribute('density', density)
+      if (scale !== null) wrapper.setAttribute('data-scale', scale)
       const el = document.createElement('ui-slider-multi')
       wrapper.append(el)
       document.body.append(wrapper)
@@ -274,14 +272,8 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
       return w
     }
 
-    const compact    = makeWithDensity('compact')
-    const comfortable = makeWithDensity(null)       // no [density] attr = comfortable baseline
-    const spacious   = makeWithDensity('spacious')
-
-    // All three must be identical: --md-sys-compact-md = 16px → thumb = 12px regardless of density
-    expect(compact,    'compact density changed the thumb size').toBe(comfortable)
-    expect(spacious,   'spacious density changed the thumb size').toBe(comfortable)
-    expect(comfortable, '[density=none] thumb must be 12px (--md-sys-compact-md − 4)').toBe(12)
+    expect(makeWithDensity(null), 'the root thumb').toBe(resolve('product', 'sm', 'md').glyph)
+    expect(makeWithDensity('md'), 'the thumb at data-scale md').toBe(resolve('product', 'md', 'md').glyph)
   })
 
   // ── forced-colors (AC3 — stylesheet presence; behavior is system-determined) ────────────────

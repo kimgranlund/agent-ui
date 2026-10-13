@@ -224,8 +224,8 @@ describe('<component-gallery> — the reactive filter/theme/grid loop', () => {
   it('each axis select carries its own `label` attribute (ADR-0085 — the trigger-naming seam wire)', () => {
     const axes = [
       ['Scheme', 'Scheme'],
+      ['Tier', 'Tier'],
       ['Scale', 'Scale'],
-      ['Density', 'Density'],
       ['Theme', 'Theme'],
     ] as const
     for (const [prefix, expected] of axes) {

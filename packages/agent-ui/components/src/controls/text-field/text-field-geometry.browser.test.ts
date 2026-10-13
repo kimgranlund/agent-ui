@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { server, cdp } from 'vitest/browser'
 
 // s11 (geometry leg) — the CROSS-ENGINE geometry smoke for ui-text-field (decomp g4-g6 node s11). Where the
@@ -32,7 +33,7 @@ const BARE = '<ui-text-field></ui-text-field>' //                               
 const ICON = '<ui-text-field><span slot="leading" data-role="icon">●</span></ui-text-field>' // leading slot edge ½(h−icon)
 
 // ── mount/cleanup: each field rides a wrapper carrying the [scale] ancestor attribute (dimensions.css keys
-// off bare `[scale="…"]`; the custom props inherit down to the host). ──────────────────────────────────
+// off the region axes data-tier / data-scale (ADR-0245); the custom props inherit down to the host). ────
 const mounted: HTMLElement[] = []
 const mount = (markup: string): { wrap: HTMLElement; field: HTMLElement; editor: HTMLElement } => {
   const wrap = document.createElement('div')
@@ -55,7 +56,6 @@ const padStartPx = (field: HTMLElement): number => px(getComputedStyle(field).pa
 const padEndPx = (field: HTMLElement): number => px(getComputedStyle(field).paddingInlineEnd)
 
 const allDistinct = (xs: number[]): boolean => new Set(xs.map((x) => x.toFixed(2))).size === xs.length
-const allEqual = (xs: number[]): boolean => new Set(xs.map((x) => x.toFixed(2))).size === 1
 
 describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => {
   it('[size] sm→md→lg CHANGES the frame height + the editor font px — on BOTH the bare and leading-icon variants', () => {
@@ -92,17 +92,17 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
     }
   })
 
-  it('[scale] ui-sm→content-lg CHANGES the frame height + the editor font px — on BOTH variants (ADR-0038 explicit §1-row lookup)', () => {
-    // Kim's explicit (scale × size) table (ADR-0038 clause 1): each cell is one §1 row; no multiplier.
-    // md column sampled at 3 tiers: ui-sm→24 (row 24→f13), ui-md→28 (row 28→f14, default), content-lg→48 (row 48→f18).
-    // The OLD multiplier heights (24.5, 49) are gone — Kim's §1 rows are exact integers.
-    // Editor font = §1-SET integers from the explicit font table (also ADR-0038; unchanged for these three tiers).
+  it('the region register CHANGES the frame height + the editor font px — on BOTH variants (ADR-0245: 4n and n + 6)', () => {
+    // The md column at three registers (the old ui-sm, ui-md and content-lg): widget / sm, the root product / sm,
+    // and content / lg, read against scale.mjs resolve().
+    const REGISTERS = [['widget', 'sm'], ['product', 'sm'], ['content', 'lg']] as const
     for (const markup of [BARE, ICON]) {
       const { wrap, field, editor } = mount(markup) // size stays md (default)
       const heights: number[] = []
       const fonts: number[] = []
-      for (const scale of ['ui-sm', 'ui-md', 'content-lg'] as const) {
-        wrap.setAttribute('scale', scale)
+      for (const [tier, scale] of REGISTERS) {
+        wrap.setAttribute('data-tier', tier)
+        wrap.setAttribute('data-scale', scale)
         heights.push(frameHeight(field))
         fonts.push(fontPx(editor))
 
@@ -115,14 +115,8 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
         const gapBottom = fieldRect.bottom - editorRect.bottom
         expect(Math.abs(gapTop - gapBottom), `[${markup}] scale=${scale}: editor not vertically centered in the frame`).toBeLessThanOrEqual(1)
       }
-      // ADR-0038 md column: ui-sm→24, ui-md→28, content-lg→48 (§1 rows, exact integers — no multiplier decimals)
-      expect(heights[0]).toBeCloseTo(24, 1)  // was 24.5 (28×0.875 multiplier) — Kim's §1 row 24
-      expect(heights[1]).toBeCloseTo(28, 1)
-      expect(heights[2]).toBeCloseTo(48, 1)  // was 49 (28×1.75 multiplier) — Kim's §1 row 48
-      // Editor font — §1-SET integers (unchanged for these three tiers: 13·14·18)
-      expect(fonts[0]).toBeCloseTo(13, 0)
-      expect(fonts[1]).toBeCloseTo(14, 0)
-      expect(fonts[2]).toBeCloseTo(18, 0)
+      expect(heights).toEqual(REGISTERS.map(([t, sc]) => resolve(t, sc, 'md').h)) // 24 · 28 · 52
+      expect(fonts).toEqual(REGISTERS.map(([t, sc]) => resolve(t, sc, 'md').type.control)) // 12 · 13 · 19
       // anti-vacuous: all three sampled tiers produce distinct heights and fonts
       expect(allDistinct(heights), `heights did not change across [scale]: ${heights.join()}`).toBe(true)
       expect(allDistinct(fonts), `editor fonts did not change across [scale]: ${fonts.join()}`).toBe(true)
@@ -188,33 +182,19 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
   })
 
   // ── ADR-0006 / geometry.md: [density] rides the rhythm (the slot↔editor gap), NEVER the frame (C6 polish) ──
-  it('[density] compact→spacious CHANGES the adornment↔editor column-gap (--ui-text-field-gap); the BARE frame is INVARIANT', () => {
-    // density multiplies the ONE rhythm quantity (the slot↔editor column-gap) on the leading-icon grid, while the
-    // frame (block-size + the h/2 value edges) holds — the sharp ADR-0006 split, mirrored from the button smoke.
+  it('a region data-scale moves the adornment↔editor column-gap AND the bare frame together (one n, ADR-0245)', () => {
+    // The [density] axis (gap only) retired into data-scale: n moves the gap (n), the height (4n) and the
+    // value edge (inset n) at once.
     const icon = mount(ICON) // size stays md (default); the `auto 1fr` grid carries the column-gap
-    const gaps: number[] = []
-    for (const density of ['compact', 'comfortable', 'spacious'] as const) {
-      icon.wrap.setAttribute('density', density)
-      gaps.push(px(getComputedStyle(icon.field).columnGap)) // the slot↔editor rhythm
-    }
-    // gap_md = font_md / 2 × --md-sys-density = 7 × {0.5, 1, 1.5} @ scale 1 (the one density-bearing quantity).
-    expect(gaps[0]).toBeCloseTo(3.5, 1)
-    expect(gaps[1]).toBeCloseTo(7, 1)
-    expect(gaps[2]).toBeCloseTo(10.5, 1)
-    // anti-vacuous: the three gaps are genuinely DISTINCT px — [density] truly moved the rhythm.
-    expect(allDistinct(gaps), `the column-gap did not change across [density]: ${gaps.join()}`).toBe(true)
-
-    // the COMPLEMENTARY invariant: density rides the gap ONLY — the BARE field's frame must NOT move (geometry.md).
     const bare = mount(BARE)
-    const heights: number[] = []
-    const valueEdges: number[] = []
-    for (const density of ['compact', 'comfortable', 'spacious'] as const) {
-      bare.wrap.setAttribute('density', density)
-      heights.push(frameHeight(bare.field))
-      valueEdges.push(padStartPx(bare.field))
+    for (const scale of ['sm', 'md', 'lg'] as const) {
+      icon.wrap.setAttribute('data-scale', scale)
+      bare.wrap.setAttribute('data-scale', scale)
+      const r = resolve('product', scale, 'md')
+      expect(px(getComputedStyle(icon.field).columnGap), `column-gap @ ${scale}`).toBeCloseTo(r.inset, 1)
+      expect(frameHeight(bare.field), `bare height @ ${scale}`).toBeCloseTo(r.h, 0)
+      expect(padStartPx(bare.field), `bare value edge @ ${scale}`).toBeCloseTo(r.inset, 0)
     }
-    expect(allEqual(heights), `[density] moved the bare frame height: ${heights.join()}`).toBe(true)
-    expect(allEqual(valueEdges), `[density] moved the bare h/2 value edge: ${valueEdges.join()}`).toBe(true)
   })
 
   // ── ADR-0036: single-line control line-height = font (the editor cell) ─────────────────────────────────
@@ -318,18 +298,21 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
     }
   })
 
-  it('[scale] content-lg: adornment font tracks the elevated §1-row — EXACT px at md size', () => {
-    // ADR-0038 md×content-lg = 18px (explicit §1-row table, not a multiplier). The adornment must
-    // track the editor via the shared --ui-text-field-font token at every [scale] tier.
+  it('a content / lg region: the adornment font tracks the elevated control type — EXACT px at md size', () => {
+    // ADR-0245: control type n + 6 at content / lg / md (n 13) = 19px. The adornment must track the editor via
+    // the shared --ui-text-field-font token in every region.
     const { wrap, field, editor } = mount('<ui-text-field type="search"></ui-text-field>')
     const magnifier = field.querySelector('[data-part="leading-adornment"]') as HTMLElement
 
-    wrap.setAttribute('scale', 'content-lg')
+    wrap.setAttribute('data-tier', 'content')
+    wrap.setAttribute('data-scale', 'lg')
+    const want = resolve('content', 'lg', 'md').type.control
     const ef = fontPx(editor)
-    expect(ef, 'editor font at content-lg×md must be 18px (ADR-0038 §1-row)').toBeCloseTo(18, 0)
-    expect(fontPx(magnifier), 'magnifier font at content-lg×md must track editor (= 18px via --ui-text-field-font)').toBeCloseTo(18, 0)
-    // anti-vacuous: the content-lg font (18) is measurably larger than the default (14)
-    wrap.removeAttribute('scale')
+    expect(ef, 'editor font at content / lg / md').toBeCloseTo(want, 0)
+    expect(fontPx(magnifier), 'magnifier font must track the editor via --ui-text-field-font').toBeCloseTo(want, 0)
+    // anti-vacuous: the region font is measurably larger than the root's
+    wrap.removeAttribute('data-tier')
+    wrap.removeAttribute('data-scale')
     const efDefault = fontPx(editor)
     expect(ef, 'content-lg font must exceed the default-scale font').toBeGreaterThan(efDefault)
   })

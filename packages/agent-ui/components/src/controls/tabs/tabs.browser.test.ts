@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { server, cdp, userEvent } from 'vitest/browser'
 import { UITabsElement } from './tabs.ts'
 import { UITabElement } from './tab.ts'
@@ -147,7 +148,7 @@ describe('ui-tabs — the selected-tab indicator paints + survives forced-colors
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-tabs — [density] shifts shell spacing; the tab control height is density-invariant (both engines)', () => {
-  it('[density] strip-gap + panel-pad SHIFT (--md-sys-space-driven); the tab block-size (--md-sys-height) HOLDS', () => {
+  it('a region data-scale moves strip-gap, panel-pad and the 4n tab height together (one n, ADR-0245)', () => {
     // tabs.css: --ui-tabs-strip-gap rides --md-sys-space-xs + --md-sys-space-md (GH #536 — carries the spacing
     // the removed per-tab inline padding used to); --ui-tabs-panel-pad rides --md-sys-space-md.
     // Both are shell/layout-ladder quantities (density-responsive). The tab CONTROL HEIGHT is --md-sys-height-lg
@@ -163,31 +164,16 @@ describe('ui-tabs — [density] shifts shell spacing; the tab control height is 
     const tabHeightBase = px(getComputedStyle(tabEls[0]).blockSize)
     expect(stripGapBase, 'comfortable strip-gap is not a positive px').toBeGreaterThan(0)
     expect(panelPadBase, 'comfortable panel-pad is not a positive px').toBeGreaterThan(0)
-    expect(tabHeightBase, 'comfortable tab height is not 36px (GH #297)').toBeCloseTo(36, 0)
+    expect(tabHeightBase, 'the root tab is not 4n = 28px (ADR-0245 Appendix B)').toBe(resolve('product', 'sm', 'md').h)
 
-    // compact (density 0.5) — shell spacing halves; control height HOLDS
-    tabs.setAttribute('density', 'compact')
-    const stripGapCompact = px(getComputedStyle(tablist).columnGap)
-    const panelPadCompact = px(getComputedStyle(panel).paddingTop)
-    const tabHeightCompact = px(getComputedStyle(tabEls[0]).blockSize)
-    expect(stripGapCompact, 'compact strip-gap did not shrink from comfortable').toBeCloseTo(stripGapBase / 2, 1)
-    expect(panelPadCompact, 'compact panel-pad did not shrink from comfortable').toBeCloseTo(panelPadBase / 2, 1)
-    expect(tabHeightCompact, `${server.browser}: tab height changed at compact (control height must be density-invariant)`).toBeCloseTo(tabHeightBase, 0)
-
-    // spacious (density 1.5) — shell spacing grows; control height HOLDS
-    tabs.setAttribute('density', 'spacious')
-    const stripGapSpacious = px(getComputedStyle(tablist).columnGap)
-    const panelPadSpacious = px(getComputedStyle(panel).paddingTop)
-    const tabHeightSpacious = px(getComputedStyle(tabEls[0]).blockSize)
-    expect(stripGapSpacious, 'spacious strip-gap did not grow from comfortable').toBeCloseTo(stripGapBase * 1.5, 1)
-    expect(panelPadSpacious, 'spacious panel-pad did not grow from comfortable').toBeCloseTo(panelPadBase * 1.5, 1)
-    expect(tabHeightSpacious, `${server.browser}: tab height changed at spacious (control height must be density-invariant)`).toBeCloseTo(tabHeightBase, 0)
-
-    // anti-vacuity: shell spacing change is measurably nonzero (compact < spacious)
-    expect(stripGapCompact, 'strip-gap is the same at compact and spacious (density has no effect)').toBeLessThan(stripGapSpacious)
-    expect(panelPadCompact, 'panel-pad is the same at compact and spacious (density has no effect)').toBeLessThan(panelPadSpacious)
-    // anti-vacuity: the tab height invariant is a real value (36px, GH #297), not vacuously zero
-    expect(tabHeightCompact, 'tab height is 0 (control-height invariant is vacuous)').toBeGreaterThan(0)
+    // a roomier region (data-scale md): one n moves the shell spacing AND the tab height (the [density] split retired)
+    tabs.setAttribute('data-scale', 'md')
+    const stripGapRoomy = px(getComputedStyle(tablist).columnGap)
+    const panelPadRoomy = px(getComputedStyle(panel).paddingTop)
+    const tabHeightRoomy = px(getComputedStyle(tabEls[0]).blockSize)
+    expect(tabHeightRoomy, `${server.browser}: the tab did not take 4n at data-scale md`).toBe(resolve('product', 'md', 'md').h)
+    expect(stripGapRoomy, 'strip-gap did not grow with n').toBeGreaterThan(stripGapBase)
+    expect(panelPadRoomy, 'panel-pad did not grow with n').toBeGreaterThan(panelPadBase)
   })
 })
 

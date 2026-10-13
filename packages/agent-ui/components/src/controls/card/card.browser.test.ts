@@ -209,12 +209,14 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     // region padding straight (inline 0.75rem=12px / block 0.375rem=6px), matching modal/select/menu/combo-box
     // exactly. Because they are rem-based (not --md-sys-space × --md-sys-density), the region padding — like the
     // frame — is density-INVARIANT.
+    // ADR-0245 cl.10e: today's fixed 12/6 now holds under the legacy opt-out (outside it the region padding derives
+    // from n, containers-foundations.browser.test.ts), and a data-scale inside the opt-out moves nothing.
     const card = mount(
-      '<ui-card><ui-card-header>H</ui-card-header><ui-card-content>C</ui-card-content></ui-card>',
-    )
+      '<div data-foundations="legacy"><ui-card><ui-card-header>H</ui-card-header><ui-card-content>C</ui-card-content></ui-card></div>',
+    ).querySelector('ui-card') as HTMLElement
     const content = card.querySelector('ui-card-content') as HTMLElement
 
-    // comfortable baseline: the fixed 12/6 region padding
+    // the legacy baseline: the fixed 12/6 region padding
     const padInlineBase = px(getComputedStyle(content).paddingLeft)
     const padBlockBase = px(getComputedStyle(content).paddingTop)
     const borderBase = px(getComputedStyle(card).borderTopWidth)
@@ -225,8 +227,8 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     expect(radiusBase, 'radius is 0 (frame invariant is vacuous)').toBeGreaterThan(0)
 
     // density-INVARIANT: compact + spacious leave the region padding + frame unchanged (rem, not --md-sys-space)
-    for (const d of ['compact', 'spacious']) {
-      card.setAttribute('density', d)
+    for (const d of ['sm', 'md', 'lg']) {
+      card.setAttribute('data-scale', d)
       expect(px(getComputedStyle(content).paddingLeft), `inline padding changed at ${d}`).toBeCloseTo(padInlineBase, 1)
       expect(px(getComputedStyle(content).paddingTop), `block padding changed at ${d}`).toBeCloseTo(padBlockBase, 1)
       expect(px(getComputedStyle(card).borderTopWidth), `border width changed at ${d}`).toBe(borderBase)

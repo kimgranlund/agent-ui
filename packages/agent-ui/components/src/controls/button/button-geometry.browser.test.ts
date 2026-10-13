@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { server, cdp } from 'vitest/browser'
 
 // Phase-1 s13 — the CROSS-ENGINE geometry + forced-colors smoke (the gold geometry PROOF; goals §G5 DoD).
@@ -25,7 +26,7 @@ const ICON = '<ui-button><span slot="leading" data-role="icon">●</span>Label</
 const ICON_ONLY = '<ui-button icon-only aria-label="Dismiss"><span slot="leading" data-role="icon">●</span></ui-button>'
 
 // ── mount/cleanup: each button rides a wrapper that carries the [scale]/[density] ancestor attributes
-// (dimensions.css keys off bare `[scale="…"]`/`[density="…"]`; custom props inherit down to the host). ──
+// (the region axes data-tier / data-scale, ADR-0245; custom props inherit down to the host). ──
 const mounted: HTMLElement[] = []
 const mount = (markup: string): { wrap: HTMLElement; btn: HTMLElement } => {
   const wrap = document.createElement('div')
@@ -57,7 +58,6 @@ const alphaOf = (color: string): number => {
 }
 
 const allDistinct = (xs: number[]): boolean => new Set(xs.map((x) => x.toFixed(2))).size === xs.length
-const allEqual = (xs: number[]): boolean => xs.every((x) => x === xs[0])
 
 /** Minimal CDP surface — `cdp()`'s public type is empty; the playwright provider gives `.send` at runtime. */
 interface CdpSession {
@@ -88,115 +88,66 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
     }
   })
 
-  it('[scale] ui-sm→content-lg: HEIGHT and FONT step to Kim\'s explicit (scale×size) §1-row lookup (ADR-0038) — md base, BOTH variants', () => {
-    // Kim's explicit table (ADR-0038 clause 1): each (scale × size) cell is one §1 row; no multiplier.
-    // The md column: heights = 24·28·36·28·36·48 — the content-* band is the ui-* band SHIFTED UP one §1 row
-    // (ADR-0038 clause 3: content-sm≡ui-md, content-md≡ui-lg — deliberate 4-register overlap).
-    // Fonts ALSO step: 13·14·16·14·16·18 — 4 distinct values for 6 tiers (§1-set integers, not pow decimals).
-    const TIERS: Array<[string, number, number]> = [
-      ['ui-sm',      24, 13], // §1 row 24 → f13
-      ['ui-md',      28, 14], // §1 row 28 → f14 (default, byte-identical)
-      ['ui-lg',      36, 16], // §1 row 36 → f16
-      ['content-sm', 28, 14], // §1 row 28 → f14 (≡ ui-md — deliberate overlap)
-      ['content-md', 36, 16], // §1 row 36 → f16 (≡ ui-lg — deliberate overlap)
-      ['content-lg', 48, 18], // §1 row 48 → f18
-    ]
+  it('ADR-0245 cl.2: HEIGHT and FONT follow the region register (4n and n + 6), md base, BOTH variants', () => {
+    // The six old [scale] registers as tier / scale; each md button is 4n tall with control type n + 6.
+    const REGISTERS = [['widget', 'sm'], ['product', 'sm'], ['product', 'md'], ['content', 'sm'], ['content', 'md'], ['content', 'lg']] as const
     for (const markup of [BARE, ICON]) {
       const { wrap, btn } = mount(markup) // size stays md (default)
-      const heights: number[] = []
-      const fonts: number[] = []
-      for (const [tier, h, f] of TIERS) {
-        wrap.setAttribute('scale', tier)
-        const gotH = frameHeight(btn)
-        const gotF = fontPx(btn)
-        expect(gotH, `height @ [scale="${tier}"]`).toBeCloseTo(h, 1)
-        expect(gotF, `font @ [scale="${tier}"] is not the §1-SET integer`).toBe(f) // EXACT (§1 integer, no pow decimal)
-        heights.push(gotH)
-        fonts.push(gotF)
+      for (const [tier, scale] of REGISTERS) {
+        wrap.setAttribute('data-tier', tier)
+        wrap.setAttribute('data-scale', scale)
+        const r = resolve(tier, scale, 'md')
+        expect(frameHeight(btn), `height @ ${tier} / ${scale}`).toBeCloseTo(r.h, 1)
+        expect(fontPx(btn), `font @ ${tier} / ${scale}`).toBe(r.type.control)
       }
-      // Kim's band overlap: 6 tiers → 4 rendered heights (content-sm=28=ui-md; content-md=36=ui-lg by design).
-      // Anti-vacuous: the range spans multiple distinct values; content-lg (48) > ui-sm (24).
-      expect(heights[heights.length - 1], 'content-lg height should exceed ui-sm').toBeGreaterThan(heights[0])
-      expect(new Set(heights).size, 'Kim\'s 6 tiers → 4 distinct heights (band overlap by design)').toBe(4)
-      // Font also steps (§1-set integers — 4 distinct values for 6 tiers; the plateau is the proof).
-      expect(new Set(fonts).size, `font should STEP to the §1 set (adjacent tiers share): ${fonts.join()}`).toBeLessThan(fonts.length)
     }
   })
 
-  it('ADR-0038 §1-row lookup: [scale] renders Kim\'s EXACT §1 integers (NOT pow/multiplier decimals) — sampled cells including the user\'s lg×content-lg case', () => {
-    // ADR-0038 supersedes ADR-0037 (snap) + the ADR-0032 multiplier: each (scale×size) cell IS one §1 row.
-    // lg×content-lg → §1 row 64 → font 20 / icon 28 (Kim's table, ADR-0038 clause 1). The NEGATIVE control
-    // is the INTEGER itself: a literal 20px resolves to an exact integer px — any decimal means a multiplier survived.
+  it('ADR-0245: sampled size × register cells render resolve() integers (height, font, icon box)', () => {
     const iconPx = (b: HTMLElement): number =>
       px(getComputedStyle(b.querySelector('[data-role="icon"]') as HTMLElement).width) // explicit inline-size → exact px
-    const read = (size: string, scale: string | null): { h: number; f: number; icon: number } => {
+    const read = (size: 'sm' | 'md' | 'lg', tier: string | null, scale: string | null): { h: number; f: number; icon: number } => {
       const { wrap, btn } = mount(ICON)
       btn.setAttribute('size', size)
-      if (scale) wrap.setAttribute('scale', scale)
+      if (tier) wrap.setAttribute('data-tier', tier)
+      if (scale) wrap.setAttribute('data-scale', scale)
       return { h: frameHeight(btn), f: fontPx(btn), icon: iconPx(btn) }
     }
-
-    // ── THE USER'S CASE — [size=lg][scale=content-lg]: §1 row 64 → font 20 / icon 28 (Kim's table) ────────
-    const lgCL = read('lg', 'content-lg')
-    expect(lgCL.h, 'lg×content-lg height (Kim\'s explicit §1 row 64)').toBeCloseTo(64, 0) // was 63 (36×1.75 multiplier) — ADR-0038 gives 64
-    expect(lgCL.f, 'lg×content-lg font is not the §1-SET 20').toBe(20)
-    expect(lgCL.icon, 'lg×content-lg icon is not the §1-SET 28').toBe(28)
-    // NEGATIVE control: the rendered values are INTEGERS — multiplier/pow decimals are gone
-    expect(Number.isInteger(lgCL.f), `font ${lgCL.f} is not an integer — multiplier survived`).toBe(true)
-    expect(Number.isInteger(lgCL.icon), `icon ${lgCL.icon} is not an integer — multiplier survived`).toBe(true)
-
-    // ── [size=md][scale=content-lg]: §1 row 48 → font 18, height 48 (Kim's table) ──────────────────────────
-    const mdCL = read('md', 'content-lg')
-    expect(mdCL.h, 'md×content-lg height (Kim\'s explicit §1 row 48)').toBeCloseTo(48, 0) // was 49 (28×1.75 multiplier) — ADR-0038 gives 48
-    expect(mdCL.f, 'md×content-lg font is not the §1-SET 18').toBe(18)
-
-    // ── default ([size=md], no [scale]): font 14 / height 28 — BYTE-IDENTICAL (ADR-0038 clause 2) ──────────
-    const mdDefault = read('md', null)
-    expect(mdDefault.f, 'md default font (byte-identical)').toBe(14)
-    expect(mdDefault.h, 'md default height (unchanged)').toBeCloseTo(28, 0)
-
-    // ── [size=lg][scale=ui-md]: §1 row 36 → font 16 / icon 20 ─────────────────────────────────────────────
-    const lgBase = read('lg', 'ui-md')
-    expect(lgBase.f, 'lg ui-md font (§1 row 36 → f16)').toBe(16)
-    expect(lgBase.icon, 'lg ui-md icon (§1 row 36 → i20)').toBe(20)
-
-    // ── [size=sm][scale=ui-sm]: §1 row 20 → font 12 ────────────────────────────────────────────────────────
-    expect(read('sm', 'ui-sm').f, 'sm×ui-sm font is not the §1-SET 12').toBe(12)
+    const cells = [
+      ['lg', 'content', 'lg'],
+      ['md', 'content', 'lg'],
+      ['md', null, null],
+      ['lg', null, null],
+      ['sm', 'widget', 'sm'],
+    ] as const
+    for (const [size, tier, scale] of cells) {
+      const r = resolve(tier ?? 'product', scale ?? 'sm', size)
+      const got = read(size, tier, scale)
+      expect(got, `${size} @ ${tier ?? 'root'} / ${scale ?? 'sm'}`).toEqual({ h: r.h, f: r.type.control, icon: r.icon })
+      expect(Number.isInteger(got.f) && Number.isInteger(got.icon), 'derived values are whole px (M7)').toBe(true)
+    }
   })
 
-  it('[density] compact→spacious CHANGES the icon↔label gap (--md-sys-gap) — the icon+label variant', () => {
-    const { wrap, btn } = mount(ICON) // md size, scale comfortable (1)
+  it('a region data-scale moves the icon↔label gap with n (the [density] axis retired into it) — the icon+label variant', () => {
+    const { wrap, btn } = mount(ICON) // md size
     const gaps: number[] = []
-    for (const density of ['compact', 'comfortable', 'spacious'] as const) {
-      wrap.setAttribute('density', density)
+    for (const scale of ['sm', 'md', 'lg'] as const) {
+      wrap.setAttribute('data-scale', scale)
       gaps.push(gapPx(btn))
     }
-    // gap_md = font_md / 2 × --md-sys-density = 7 × {0.5, 1, 1.5} @ scale 1 (the one density-bearing quantity).
-    expect(gaps[0]).toBeCloseTo(3.5, 1)
-    expect(gaps[1]).toBeCloseTo(7, 1)
-    expect(gaps[2]).toBeCloseTo(10.5, 1)
-    expect(allDistinct(gaps), `gap did not change across [density]: ${gaps.join()}`).toBe(true)
+    expect(gaps).toEqual((['sm', 'md', 'lg'] as const).map((s) => resolve('product', s, 'md').inset))
+    expect(allDistinct(gaps), `gap did not change across data-scale: ${gaps.join()}`).toBe(true)
   })
 
-  it('[density] does NOT change the bare-label FRAME — block-size + the h/2 inline-pads are INVARIANT', () => {
-    const { wrap, btn } = mount(BARE) // md size, scale comfortable (1)
-    const heights: number[] = []
-    const padStarts: number[] = []
-    const padEnds: number[] = []
-    for (const density of ['compact', 'comfortable', 'spacious'] as const) {
-      wrap.setAttribute('density', density)
-      heights.push(frameHeight(btn))
-      padStarts.push(padStartPx(btn))
-      padEnds.push(padEndPx(btn))
+  it('a region data-scale moves the bare-label FRAME too: block-size 4n and the 2n label pads (one n, ADR-0245 cl.3)', () => {
+    const { wrap, btn } = mount(BARE) // md size
+    for (const scale of ['sm', 'md', 'lg'] as const) {
+      wrap.setAttribute('data-scale', scale)
+      const r = resolve('product', scale, 'md')
+      expect(frameHeight(btn), `height @ ${scale}`).toBeCloseTo(r.h, 0)
+      expect(padStartPx(btn), `leading pad @ ${scale}`).toBeCloseTo(2 * r.n, 0)
+      expect(padEndPx(btn), `trailing pad @ ${scale}`).toBeCloseTo(2 * r.n, 0)
     }
-    // md frame @ scale 1: block-size 28, both h/2 inline-pads = 14. Density rides the GAP only
-    // (geometry.md), so a slotless button's FRAME must be byte-identical across every density step.
-    expect(heights[1]).toBeCloseTo(28, 0)
-    expect(padStarts[1]).toBeCloseTo(14, 0)
-    expect(padEnds[1]).toBeCloseTo(14, 0)
-    expect(allEqual(heights), `[density] moved the bare frame height: ${heights.join()}`).toBe(true)
-    expect(allEqual(padStarts), `[density] moved the leading h/2 pad: ${padStarts.join()}`).toBe(true)
-    expect(allEqual(padEnds), `[density] moved the trailing h/2 pad: ${padEnds.join()}`).toBe(true)
   })
 
   it('REVERSED anatomy [caret|label|icon]: the inline-pads are SYMMETRIC ½(h−icon) (role-AGNOSTIC), and the LEADING caret glyph = font < icon', () => {

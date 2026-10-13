@@ -31,8 +31,8 @@ describe('ui-swiper geometry inside an opt-in region', () => {
   }
 })
 
-describe('ui-swiper geometry outside any region (the dark launch)', () => {
+describe('ui-swiper geometry under data-foundations=legacy (the clause 10e rollback)', () => {
   it('--ui-swiper-paddle-band is 28', () => {
-    expect(token('<ui-swiper></ui-swiper>')).toBe(28)
+    expect(token('<div data-foundations="legacy"><ui-swiper></ui-swiper></div>')).toBe(28)
   })
 })
