@@ -53,7 +53,7 @@ const tokenPx = (btn: HTMLElement, name: string): number => px(getComputedStyle(
 describe('ui-icon cell-fit geometry (s-ui-icon-tests, LLD §3) — cross-engine', () => {
   it('an ui-icon in a [data-role="icon"] cell fills it: rendered svg box == --ui-button-icon (NO CSS edit)', () => {
     const btn = mount(
-      '<ui-button><ui-icon slot="leading" data-role="icon" glyph="caret-down"></ui-icon>Label</ui-button>',
+      '<ui-button><ui-icon slot="leading" data-role="icon" symbol="caret-down"></ui-icon>Label</ui-button>',
     )
     const cell = btn.querySelector('[data-role="icon"]') as HTMLElement
     const svg = cell.querySelector('svg') as SVGSVGElement
@@ -68,7 +68,7 @@ describe('ui-icon cell-fit geometry (s-ui-icon-tests, LLD §3) — cross-engine'
 
   it('an ui-icon in a [data-role="caret"] cell insets to font-rhythm: rendered svg box == --ui-button-glyph (NO CSS edit)', () => {
     const btn = mount(
-      '<ui-button>Label<ui-icon slot="trailing" data-role="caret" glyph="caret-down"></ui-icon></ui-button>',
+      '<ui-button>Label<ui-icon slot="trailing" data-role="caret" symbol="caret-down"></ui-icon></ui-button>',
     )
     const cell = btn.querySelector('[data-role="caret"]') as HTMLElement
     const svg = cell.querySelector('svg') as SVGSVGElement
@@ -83,7 +83,7 @@ describe('ui-icon cell-fit geometry (s-ui-icon-tests, LLD §3) — cross-engine'
 
   it('anti-vacuous: the SAME icon asset renders at two genuinely DIFFERENT sizes purely from ambient cell geometry', () => {
     const btn = mount(
-      '<ui-button><ui-icon slot="leading" data-role="icon" glyph="caret-down"></ui-icon>Label<ui-icon slot="trailing" data-role="caret" glyph="caret-down"></ui-icon></ui-button>',
+      '<ui-button><ui-icon slot="leading" data-role="icon" symbol="caret-down"></ui-icon>Label<ui-icon slot="trailing" data-role="caret" symbol="caret-down"></ui-icon></ui-button>',
     )
     const iconSvg = btn.querySelector('[data-role="icon"] svg') as SVGSVGElement
     const caretSvg = btn.querySelector('[data-role="caret"] svg') as SVGSVGElement
@@ -112,7 +112,7 @@ describe('ui-icon missing-glyph HONESTY (GH #1508) — the host box is intrinsic
   it('a resolved and an unresolvable glyph render the EXACT SAME host box size (same --md-sys-icon-size)', () => {
     const wrap = document.createElement('div')
     wrap.innerHTML =
-      '<ui-icon glyph="caret-down"></ui-icon><ui-icon glyph="not-a-real-icon-gh-1508"></ui-icon>'
+      '<ui-icon symbol="caret-down"></ui-icon><ui-icon symbol="not-a-real-icon-gh-1508"></ui-icon>'
     document.body.append(wrap)
     mounted.push(wrap)
 
@@ -137,7 +137,7 @@ describe('ui-icon missing-glyph HONESTY (GH #1508) — the host box is intrinsic
     const row = (glyph: string): HTMLElement =>
       el(
         `<div style="display:flex;align-items:center;gap:8px;inline-size:12rem">
-           <ui-icon data-role="icon" glyph="${glyph}"></ui-icon>
+           <ui-icon data-role="icon" symbol="${glyph}"></ui-icon>
            <span data-role="label">Log out</span>
          </div>`,
       )

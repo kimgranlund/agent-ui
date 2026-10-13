@@ -31,9 +31,9 @@
   --ui-file-drop-padding: var(--md-sys-space-lg);
   --ui-file-drop-gap: var(--md-sys-space-md);
   --ui-file-drop-row-gap: var(--md-sys-space-sm);
-  --ui-file-drop-radius: var(--md-sys-shape-corner-base); /* entry-surface radius, the card/modal referent */
-  --ui-file-drop-font: var(--md-sys-font-md);
-  --ui-file-drop-icon: var(--md-sys-icon-md);
+  --ui-file-drop-radius: var(--md-sys-card-radius, var(--md-sys-shape-corner-base)); /* entry-surface radius, the card/modal referent (ADR-0245 cl.6: the card radius 3n inside an opt-in region) */
+  --ui-file-drop-font: var(--md-sys-type-control, var(--md-sys-font-md));
+  --ui-file-drop-icon: var(--md-sys-icon-box, var(--md-sys-icon-md));
 
   /* ── Idle surface — a dashed-outline Container/surface (distinct from a solid-border entry field, the
      visual grammar a drop TARGET wants). ── */

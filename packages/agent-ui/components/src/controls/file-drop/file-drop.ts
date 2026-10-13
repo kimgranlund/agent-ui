@@ -242,7 +242,7 @@ export class UIFileDropElement extends UIFormElement {
 
     const icon = document.createElement('ui-icon')
     icon.setAttribute('data-part', 'icon')
-    icon.setAttribute('glyph', 'upload-simple')
+    icon.setAttribute('symbol', 'upload-simple')
     icon.setAttribute('aria-hidden', 'true') // decorative — the hint line carries the real text
 
     const hint = document.createElement('span')
@@ -307,7 +307,7 @@ export class UIFileDropElement extends UIFormElement {
     remove.disabled = !usable
     const removeIcon = document.createElement('ui-icon')
     removeIcon.setAttribute('slot', 'leading')
-    removeIcon.setAttribute('glyph', 'x')
+    removeIcon.setAttribute('symbol', 'x')
     remove.append(removeIcon)
     this.listen(remove, 'click', () => this.#removeFile(file.id))
     chip.append(remove)

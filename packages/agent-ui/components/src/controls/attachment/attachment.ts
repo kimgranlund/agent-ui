@@ -58,7 +58,7 @@ export class UIAttachmentElement extends UIElement {
 
       const glyph = document.createElement('ui-icon')
       glyph.setAttribute('data-part', 'glyph')
-      glyph.setAttribute('glyph', categoryGlyph(category))
+      glyph.setAttribute('symbol', categoryGlyph(category))
 
       // The name cell is a plain <span> in this pass — the LLD-C6 <a> leg is deferred (file header note).
       const name = document.createElement('span')

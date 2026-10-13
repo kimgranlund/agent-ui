@@ -18,7 +18,10 @@
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-icon) declares --md-sys-icon-* ════════════════ */
 
 :where(ui-icon) {
-  --md-sys-icon-size: 1em;
+  /* ADR-0245 cl.4: inside an opt-in [data-tier] region a standalone icon is the 2n icon box
+     (--md-sys-icon-box, 14px at the root md); outside one the derived token is undefined and today's
+     1em cell holds. An icon inside a control's cell still fills that cell (the svg is 100%). */
+  --md-sys-icon-size: var(--md-sys-icon-box, 1em);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-icon) consumes ONLY --md-sys-icon-* ════════════════ */
