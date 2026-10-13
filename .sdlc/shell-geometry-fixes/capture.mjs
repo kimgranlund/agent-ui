@@ -4,7 +4,8 @@
 //
 //   node .sdlc/shell-geometry-fixes/capture.mjs <before|after>
 //
-// Writes screens/<page>-<width>-<scheme>-<label>.png and metrics-<label>.json next to this file.
+// Writes screens/<page>-<width>-<scheme>-<label>.png and metrics-<label>.json next to this file
+// (or under CAPTURE_OUT).
 import { spawn } from 'node:child_process'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
@@ -18,7 +19,10 @@ if (label !== 'before' && label !== 'after') {
 }
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const REPO = path.resolve(HERE, '../..')
-const OUT = path.join(HERE, 'screens')
+// CAPTURE_OUT redirects the output (the before pass runs on a detached origin/main checkout, where this
+// folder's tracked files are absent and must not be re-created as untracked ones).
+const DEST = process.env.CAPTURE_OUT ? path.resolve(process.env.CAPTURE_OUT) : HERE
+const OUT = path.join(DEST, 'screens')
 await mkdir(OUT, { recursive: true })
 
 const PAGES = [
@@ -60,7 +64,7 @@ try {
   await browser.close()
   await killTree(vite).catch(() => {})
 }
-await writeFile(path.join(HERE, `metrics-${label}.json`), JSON.stringify(metrics, null, 2) + '\n')
+await writeFile(path.join(DEST, `metrics-${label}.json`), JSON.stringify(metrics, null, 2) + '\n')
 console.log(`capture ${label}: ${Object.keys(metrics).length} page/width rows`)
 
 // Runs in the page: the box geometry the ticket moves, in px, rounded to 0.1.
