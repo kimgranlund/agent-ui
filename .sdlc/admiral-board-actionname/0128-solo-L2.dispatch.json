@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L2",
+  "name": "0128-solo-L2",
+  "description": "T-0128 solo L2 Admiral preset:",
+  "model": "sonnet",
+  "effort": "high",
+  "prompt": "T-0128 Admiral preset: the board is one | solo L2\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-f1/.sdlc/admiral-board-actionname/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-f1/.sdlc/admiral-board-actionname\nImplement per .sdlc/admiral-board-actionname/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L2",
+  "tier": "L2",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-f1/.sdlc/admiral-board-actionname/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-f1/.sdlc/admiral-board-actionname",
+  "attempt_id": "4437aefa94ed4a5996b2745be1291d49",
+  "base_sha": "2776be7e273b8c21dbc54ef62d4432fcea801a52",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.6/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-f1/.sdlc/admiral-board-actionname/handoff.md"
+}

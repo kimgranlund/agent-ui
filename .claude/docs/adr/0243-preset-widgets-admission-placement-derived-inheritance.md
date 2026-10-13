@@ -376,4 +376,5 @@ a static `context`), so a clicked cell never reached the agent and the row held 
 5. **Teaching.** The BoardGrid sidecar gains the intent "a board with clickable cells" (cut to fit the dogfood
    clause and derived-prompt budgets, no ceiling moved); the prop itself rides the inventory line as
    `actionName: string`. Presets that still build a Grid of cell Buttons (the Admiral) are unchanged here; moving
-   them to `actionName` is a separate ticket.
+   them to `actionName` is a separate ticket (T-0128 moved the Admiral: its `board-grid` skill and `battle-rounds`
+   playbook now teach one BoardGrid with `actionName`, seed version 3).

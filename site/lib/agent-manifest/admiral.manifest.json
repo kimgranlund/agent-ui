@@ -1,8 +1,8 @@
 {
   "id": "admiral",
   "preset": "admiral",
-  "seedVersion": 2,
-  "seedDigest": "sha256:b0dc1385b6eba2e4408ec44db90fe8836754ef0beef7c5855193fa759a451b2a",
+  "seedVersion": 3,
+  "seedDigest": "sha256:b4b8959a02c9eadb90fe5181aa93fb3c80363cb891c21fbe7a1a702c9f4ff7bb",
   "fragment": null,
   "selection": null,
   "noFragment": {

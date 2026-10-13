@@ -243,12 +243,13 @@ export const GAMES_SKILLS: readonly NewEntryInput[] = [
     label: 'board-grid',
     description: 'battleship, minesweeper, grid targeting, cell board',
     content:
-      'A board the player CLICKS is a Grid of cell Buttons (ghost variant), each with action:{action:"cell", ' +
-      'context:{row, col}}: the coordinates ride the action context, never the label. A board that is only ' +
-      'READ (your own fleet, a revealed board) is ONE BoardGrid: rows, cols, a label, and cells = the marked ' +
-      'positions [{row, col, mark, intent}] bound to the data model, so a hit or miss patches one entry ' +
+      'A board the player CLICKS is ONE BoardGrid: rows, cols, a label, actionName "cell" and cells = the ' +
+      'marked positions [{row, col, mark, intent, disabled}] bound to the data model. A cell click arrives as ' +
+      'an A2UI action named by actionName whose context carries {row, col}: the coordinates ride the action ' +
+      'context, never a label, and the board is never a Grid of cell Buttons. A board that is only READ (your ' +
+      'own fleet, a revealed board) is the same BoardGrid with no actionName. A hit or miss patches one entry ' +
       'instead of re-minting cells. Keep boards ≤ 6×6 per surface; mark hits/misses with a glyph (✕ / ●) ' +
-      'and disable resolved cells rather than removing them. End state: when a fleet is sunk, show ONE ' +
+      'and set disabled on resolved cells rather than removing them. End state: when a fleet is sunk, show ONE ' +
       'ResultCard (outcome win or lose, a title, a one-line summary, the final stats) whose child is a Play again Button with newGame true in its action context.',
   },
   {
@@ -331,10 +332,10 @@ export const GAMES_PLAYBOOKS: readonly NewEntryInput[] = [
       // GH #144: the opening turn is ONE board only (theirs — the one the player fires on); yours joins
       // the turn after the first shot lands. Keeps the heaviest turn of the game inside a small, reliable
       // self-correct budget instead of asking for 72 cells across two boards at once.
-      'Two 6×6 board-grid surfaces, phased in: turn one is theirs (hidden) ONLY, a Grid of cell Buttons: ' +
-      'the player fires by clicking a cell (the action context carries coordinates); resolve, mark the ' +
-      'cell, then take YOUR shot and narrate it in chat. Add yours (revealed, read-only) as a BoardGrid ' +
-      'from turn two onward. Track ships remaining as GameHud stats; announce a round’s outcome (a ship sunk, a miss streak broken) as an ' +
+      'Two 6×6 BoardGrid surfaces, phased in: turn one is theirs (hidden) ONLY, one BoardGrid with an ' +
+      'actionName: the player fires by clicking a cell (the action context carries row and col); resolve, ' +
+      'mark and disable the cell, then take YOUR shot and narrate it in chat. Add yours (revealed, no ' +
+      'actionName) as a second BoardGrid from turn two onward. Track ships remaining as GameHud stats; announce a round’s outcome (a ship sunk, a miss streak broken) as an ' +
       'ephemeral Toast, and declare victory honestly the moment a fleet is sunk.',
   },
 ]
