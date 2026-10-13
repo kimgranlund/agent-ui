@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp, userEvent, page } from 'vitest/browser'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import type { UIComboBoxElement } from './combo-box.ts'
 
 // Wave-4 S5 browser smoke — ui-combo-box (decomp S5 · overlay-controller.lld.md · ADR-0043).
@@ -833,7 +834,7 @@ describe('ui-combo-box — whole-shape assertion (Test-the-whole-shape DoD law)'
   //  padding-inline is really h/2 (not just internally self-consistent), and the option text still
   //  lines up under the editor text at the new, wider offset.
   // ────────────────────────────────────────────────────────────────────────────────────────────
-  it('editor computed padding-inline == --ui-combo-box-height / 2 (the fleet h/2 value-edge standard)', async () => {
+  it('editor computed padding-inline == n (ADR-0245 cl.3 frame class: inline padding n = h/4 at the root register)', async () => {
     const { el } = mount(`
       <ui-combo-box placeholder="Search…">
         <div role="option" value="apple">Apple</div>
@@ -845,8 +846,9 @@ describe('ui-combo-box — whole-shape assertion (Test-the-whole-shape DoD law)'
 
     expect(
       editorPad,
-      `${server.browser}: editor padding-inline (${editorPad}px) should equal height/2 (${editorH / 2}px) — the h/2 standard`,
-    ).toBeCloseTo(editorH / 2, 0)
+      `${server.browser}: editor padding-inline (${editorPad}px) should equal n (${resolve('product', 'sm', 'md').n}px)`,
+    ).toBeCloseTo(resolve('product', 'sm', 'md').n, 0)
+    expect(editorH, `${server.browser}: editor frame is the derived height 4n`).toBeCloseTo(resolve('product', 'sm', 'md').h, 0)
   })
 
   it("an open option's text inline offset (from the panel edge) equals the editor's text inline offset (from the editor edge) — alignment law holds under h/2", async () => {
@@ -1695,7 +1697,11 @@ describe('ui-combo-box — GH #1269: focused-empty caret aligns with the placeho
     const font = parseFloat(getComputedStyle(editor).fontSize)
     expect(caret.height, `${server.browser}: caret is line-box tall, not box-tall`).toBeLessThanOrEqual(font * 1.6)
     // And the editor frame still lands exactly on the control height (border-box law held).
-    const height = parseFloat(getComputedStyle(el).getPropertyValue('--ui-combo-box-height'))
+    // --ui-combo-box-height is an unregistered calc() token (NaN as text): read it through the host's own inline-size.
+    const prevInline = el.style.inlineSize
+    el.style.inlineSize = 'var(--ui-combo-box-height)'
+    const height = parseFloat(getComputedStyle(el).inlineSize)
+    el.style.inlineSize = prevInline
     expect(Math.abs(editorRect.height - height), `${server.browser}: frame height on the ramp`).toBeLessThanOrEqual(1)
   })
 })
