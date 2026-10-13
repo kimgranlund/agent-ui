@@ -17,8 +17,6 @@
   "packages/agent-ui/app/src/controls/super-shell/super-shell.test.ts#glyph": "lane a07 migrates it in Wave 1 (glyph)",
   "packages/agent-ui/app/src/controls/super-shell/super-shell.ts#glyph": "lane a07 migrates it in Wave 1 (glyph)",
   "packages/agent-ui/app/src/controls/surface-host/surface-host.css#px": "lane a07 migrates it in Wave 1 (px)",
-  "packages/agent-ui/code/src/editor/editor.css#px": "lane a09 migrates it in Wave 1 (px)",
-  "packages/agent-ui/code/src/editor/editor.css#tokens": "lane a09 migrates it in Wave 1 (tokens)",
   "packages/agent-ui/components/src/controls/_chart/chart-axis.css#px": "lane a06 migrates it in Wave 1 (px)",
   "packages/agent-ui/components/src/controls/attachment/attachment.css#tokens": "lane a03 migrates it in Wave 1 (tokens)",
   "packages/agent-ui/components/src/controls/attachment/attachment.test.ts#glyph": "lane a03 migrates it in Wave 1 (glyph)",
