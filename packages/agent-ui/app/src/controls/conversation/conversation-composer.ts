@@ -350,7 +350,7 @@ export class UIConversationComposerElement extends UIElement {
       const attachIcon = document.createElement('ui-icon')
       attachIcon.setAttribute('slot', 'leading')
       attachIcon.setAttribute('data-role', 'icon')
-      attachIcon.setAttribute('glyph', 'paperclip')
+      attachIcon.setAttribute('symbol', 'paperclip')
       this.#attachBtn.append(attachIcon)
       // The picker's native vehicle — never rendered (a control-created part, the overlay-panel
       // precedent), reset after every read so the SAME file can be re-selected back to back. `multiple`:
@@ -375,7 +375,7 @@ export class UIConversationComposerElement extends UIElement {
       const micIcon = document.createElement('ui-icon')
       micIcon.setAttribute('slot', 'leading')
       micIcon.setAttribute('data-role', 'icon')
-      micIcon.setAttribute('glyph', 'microphone')
+      micIcon.setAttribute('symbol', 'microphone')
       this.#micBtn.append(micIcon)
 
       this.#sendBtn = document.createElement('ui-button') as UIButtonElement
@@ -386,7 +386,7 @@ export class UIConversationComposerElement extends UIElement {
       const sendIcon = document.createElement('ui-icon')
       sendIcon.setAttribute('slot', 'leading')
       sendIcon.setAttribute('data-role', 'icon')
-      sendIcon.setAttribute('glyph', 'arrow-up')
+      sendIcon.setAttribute('symbol', 'arrow-up')
       this.#sendBtn.append(sendIcon)
 
       optionsTrailing.append(this.#attachBtn, this.#micBtn, this.#sendBtn)
@@ -944,7 +944,7 @@ export class UIConversationComposerElement extends UIElement {
     const icon = document.createElement('ui-icon')
     icon.setAttribute('slot', 'leading')
     icon.setAttribute('data-role', 'icon')
-    icon.setAttribute('glyph', glyph)
+    icon.setAttribute('symbol', glyph)
     trigger.prepend(icon)
   }
 
@@ -954,7 +954,7 @@ export class UIConversationComposerElement extends UIElement {
     const caret = document.createElement('ui-icon')
     caret.setAttribute('slot', 'trailing')
     caret.setAttribute('data-role', 'caret')
-    caret.setAttribute('glyph', 'caret-down')
+    caret.setAttribute('symbol', 'caret-down')
     trigger.append(caret)
   }
 
@@ -1055,7 +1055,7 @@ export class UIConversationComposerElement extends UIElement {
       const icon = document.createElement('ui-icon')
       icon.setAttribute('slot', 'leading')
       icon.setAttribute('data-role', 'icon')
-      icon.setAttribute('glyph', 'x')
+      icon.setAttribute('symbol', 'x')
       dismiss.append(icon)
       this.listen(dismiss, 'click', () => this.#onContextDismissCb?.(item.id))
       chip.append(label, ...(meta ? [meta] : []), dismiss)
@@ -1225,7 +1225,7 @@ export class UIConversationComposerElement extends UIElement {
           const icon = document.createElement('ui-icon')
           icon.dataset.part = 'capability-row-icon'
           icon.setAttribute('data-role', 'icon')
-          icon.setAttribute('glyph', capability.icon)
+          icon.setAttribute('symbol', capability.icon)
           row.append(icon)
         }
         const text = document.createElement('span')
@@ -1664,7 +1664,7 @@ export class UIConversationComposerElement extends UIElement {
       if (icon) {
         icon.dataset.part = 'reference-chip-icon'
         icon.setAttribute('data-role', 'icon')
-        icon.setAttribute('glyph', ref.icon!)
+        icon.setAttribute('symbol', ref.icon!)
       }
       const label = document.createElement('span')
       label.dataset.part = 'reference-chip-label'
@@ -1677,7 +1677,7 @@ export class UIConversationComposerElement extends UIElement {
       const dismissIcon = document.createElement('ui-icon')
       dismissIcon.setAttribute('slot', 'leading')
       dismissIcon.setAttribute('data-role', 'icon')
-      dismissIcon.setAttribute('glyph', 'x')
+      dismissIcon.setAttribute('symbol', 'x')
       dismiss.append(dismissIcon)
       this.listen(dismiss, 'click', () => this.#removeReference(ref.kind, ref.id))
       if (icon) chip.append(icon)

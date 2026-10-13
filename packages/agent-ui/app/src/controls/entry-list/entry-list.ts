@@ -194,7 +194,7 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
   const addIcon = document.createElement('ui-icon') as UIIconElement
   addIcon.setAttribute('slot', 'leading')
   addIcon.setAttribute('data-role', 'icon')
-  addIcon.setAttribute('glyph', 'plus')
+  addIcon.setAttribute('symbol', 'plus')
   addToggle.append(addIcon, addLabel)
   if (withCustomAdd) section.append(addToggle) // ADR-0170 cl.8 — suppressed ⇒ no authoring affordance mounts
 
@@ -221,7 +221,7 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
     const libraryIcon = document.createElement('ui-icon') as UIIconElement
     libraryIcon.setAttribute('slot', 'leading')
     libraryIcon.setAttribute('data-role', 'icon')
-    libraryIcon.setAttribute('glyph', 'plus')
+    libraryIcon.setAttribute('symbol', 'plus')
     libraryTrigger.append(libraryIcon, 'From library')
     libraryMenu.append(libraryTrigger)
 

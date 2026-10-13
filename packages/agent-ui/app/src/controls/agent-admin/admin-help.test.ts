@@ -221,7 +221,7 @@ describe('buildAdminHelp — the ui-tooltip + anchor + card shape', () => {
     // clobber one (the ui-menu trigger precedent). A part set here would be a silently dead selector.
     expect(icon.hasAttribute('data-part'), 'the anchor part is ui-tooltip’s to name, not ours').toBe(false)
     const glyph = icon.querySelector('ui-icon')
-    expect(glyph?.getAttribute('glyph')).toBe('question')
+    expect(glyph?.getAttribute('symbol')).toBe('question')
     expect(glyph?.getAttribute('slot'), 'the icon-only adornment rides the leading position slot').toBe('leading')
     expect(glyph?.getAttribute('data-role')).toBe('icon')
     // The name says WHICH thing is explained; the card itself is the description (aria-describedby).
