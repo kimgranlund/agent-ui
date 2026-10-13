@@ -33,7 +33,7 @@ afterEach(() => {
 })
 
 describe('ui-avatar — control-height square box (SPEC-R20 AC1; ADR-0112 Amendment 3 — the button ladder, ADR-0038)', () => {
-  it('default (size=md, no ancestor [scale]) → 24×24 box (--md-sys-height-md at the root register — a button\'s height)', () => {
+  it('default (size=md, no ancestor [scale]) → 24×24 box (--md-sys-height-md at the root register, a button\'s height)', () => {
     const el = mount('<ui-avatar identity="Ada Lovelace"></ui-avatar>')
     const box = el.getBoundingClientRect()
     expect(box.width).toBe(resolve('product', 'sm', 'md').h)
