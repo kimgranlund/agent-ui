@@ -334,6 +334,7 @@ export const cardTableFactory: WidgetFactory = {
     // The settled result line (hidden until `settled` with a `result`).
     const resultEl = band('result')
     const r = resultEl.style
+    r.boxSizing = 'border-box' // padded inside its 100% flex basis, never past the card's ink edge
     r.padding = 'var(--md-sys-space-sm) var(--md-sys-space-md)'
     r.borderRadius = 'calc(var(--md-sys-shape-corner-base, 12px) - 2px)'
     const resultText = text('title', 'sm')
