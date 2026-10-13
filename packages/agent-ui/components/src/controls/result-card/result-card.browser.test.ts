@@ -203,3 +203,36 @@ describe('ui-result-card: the outcome pill and the stat wrap', () => {
     }
   })
 })
+
+// ADR-0245 geometry pin (clause 10c): the migrated tokens read the derived foundation inside an opt-in
+// data-tier region and today's value outside it. Values are scale.mjs resolve('product', 'sm', 'md'): n 7,
+// height 28, c 2, icon box 14, radius 7. Lengths are read through layout (`inline-size: var(<token>)`).
+const lengthOf = (host: HTMLElement, token: string): number => {
+  const probe = document.createElement('span')
+  probe.style.cssText = `position:absolute;block-size:1px;inline-size:var(${token});`
+  host.append(probe)
+  const width = Number.parseFloat(getComputedStyle(probe).inlineSize)
+  probe.remove()
+  return width
+}
+const foundationsPair = (tag: string, attrs: string): { out: HTMLElement; inside: HTMLElement } => {
+  const wrap = document.createElement('div')
+  wrap.innerHTML = `<div><${tag} ${attrs}></${tag}></div><div data-tier="product" data-scale="sm"><${tag} ${attrs}></${tag}></div>`
+  document.body.append(wrap)
+  mounted.push(wrap)
+  const [out, inside] = Array.from(wrap.querySelectorAll<HTMLElement>(tag)) as [HTMLElement, HTMLElement]
+  return { out, inside }
+}
+
+describe('ui-result-card: ADR-0245 derived foundations, dark launch', () => {
+  it('reads today\'s value outside a data-tier region and the derived value inside', () => {
+    const { out, inside } = foundationsPair('ui-result-card', 'outcome="win" result-title="Blackjack"')
+    expect(lengthOf(out, '--ui-result-card-outcome-radius')).toBe(999)
+    expect(lengthOf(inside, '--ui-result-card-outcome-radius')).toBe(28) // any radius over half the pill's height is a pill
+    expect(lengthOf(out, '--ui-result-card-outcome-gap')).toBe(5)
+    expect(lengthOf(inside, '--ui-result-card-outcome-gap')).toBe(7)
+    expect(lengthOf(out, '--ui-result-card-stat-radius')).toBe(lengthOf(out, '--md-sys-shape-corner-base') - 2)
+    expect(lengthOf(inside, '--ui-result-card-stat-radius')).toBe(7)
+    for (const el of [out, inside]) expect(lengthOf(el, '--ui-result-card-stat-gap')).toBe(2)
+  })
+})

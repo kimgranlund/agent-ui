@@ -43,8 +43,8 @@
   --ui-game-hud-stat-min: 84px; /* the tile floor the auto-fit grid wraps on */
   --ui-game-hud-stat-pad-block: var(--md-sys-space-sm); /* mockup 8px */
   --ui-game-hud-stat-pad-inline: var(--md-sys-space-sm); /* mockup 10px, nearest ramp step */
-  --ui-game-hud-stat-radius: calc(var(--md-sys-shape-corner-base) - 2px); /* mockup 10px */
-  --ui-game-hud-stat-gap: 2px;
+  --ui-game-hud-stat-radius: var(--md-sys-radius, calc(var(--md-sys-shape-corner-base) - 2px)); /* mockup 10px */
+  --ui-game-hud-stat-gap: var(--md-sys-c, 2px);
   --ui-game-hud-stat-surface: var(--md-sys-color-neutral-container-low); /* always; an intent never tints the tile */
   --ui-game-hud-label-size: var(--md-sys-typescale-label-small-size); /* mockup .6875rem */
   --ui-game-hud-label-tracking: 0.06em;

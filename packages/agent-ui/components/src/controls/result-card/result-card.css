@@ -38,7 +38,7 @@
   /* Outcome pill: glyph plus word on a tinted container (the approved mockup's .opill) */
   --ui-result-card-outcome-surface: var(--md-sys-color-neutral-container); /* done */
   --ui-result-card-outcome-ink: var(--md-sys-color-neutral-on-surface);
-  --ui-result-card-outcome-radius: 999px; /* a full pill */
+  --ui-result-card-outcome-radius: var(--md-sys-height, 999px); /* a full pill */
   --ui-result-card-outcome-size: var(--md-sys-typescale-label-medium-size); /* mockup .75rem */
   --ui-result-card-outcome-line-height: var(--md-sys-typescale-label-medium-line-height);
   --ui-result-card-outcome-weight: 700;
@@ -46,7 +46,7 @@
   --ui-result-card-outcome-pad-block: 2px;
   --ui-result-card-outcome-pad-start: var(--md-sys-space-sm); /* mockup 8px */
   --ui-result-card-outcome-pad-end: 10px;
-  --ui-result-card-outcome-gap: 5px;
+  --ui-result-card-outcome-gap: var(--md-sys-inset, 5px);
   --ui-result-card-outcome-glyph-size: 0.875rem; /* mockup 14px */
 
   /* Summary */
@@ -58,8 +58,8 @@
   --ui-result-card-stat-min: 84px; /* the tile floor the auto-fit grid wraps on */
   --ui-result-card-stat-pad-block: var(--md-sys-space-sm); /* mockup 8px */
   --ui-result-card-stat-pad-inline: var(--md-sys-space-sm); /* mockup 10px, nearest ramp step */
-  --ui-result-card-stat-radius: calc(var(--md-sys-shape-corner-base) - 2px); /* mockup 10px */
-  --ui-result-card-stat-gap: 2px;
+  --ui-result-card-stat-radius: var(--md-sys-radius, calc(var(--md-sys-shape-corner-base) - 2px)); /* mockup 10px */
+  --ui-result-card-stat-gap: var(--md-sys-c, 2px);
   --ui-result-card-stat-surface: var(--md-sys-color-neutral-container-low); /* always; an intent never tints the tile */
   --ui-result-card-label-size: var(--md-sys-typescale-label-small-size); /* mockup .6875rem */
   --ui-result-card-label-tracking: 0.06em;

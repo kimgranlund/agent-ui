@@ -23,7 +23,7 @@
   /* Shape: the column count (board-grid.ts writes the live value) and the square cell side: the mockup's
      46px where there is room, the 34px target-size floor where there is not (ADR-0243 Amendment 2). */
   --ui-board-grid-cols: 1;
-  --ui-board-grid-cell-size: 46px;
+  --ui-board-grid-cell-size: calc(var(--md-sys-height, 46px) + var(--md-sys-icon-box, 0px)); /* 6n inside a data-tier region (28 + 14 at the root md) */
   --ui-board-grid-cell-min: 34px;
   /* The cell gap stays the tight 4px data-grid gap of the approved mockup (a board reads as one unit; the
      ADR-0046 8px region gap would spread a 6 by 6 board by 20px). The frame is the 6px box inset (ADR-0046
@@ -51,7 +51,7 @@
   --ui-board-grid-danger-ink: var(--md-sys-color-danger-high);
 
   /* Type: the mark reads the control-band large font, bold; the corner glyph the label-small row. */
-  --ui-board-grid-mark-size: var(--md-sys-font-lg);
+  --ui-board-grid-mark-size: var(--md-sys-type-control, var(--md-sys-font-lg));
   --ui-board-grid-mark-weight: 700;
   --ui-board-grid-corner-size: var(--md-sys-typescale-label-small-size);
   --ui-board-grid-corner-weight: 700;

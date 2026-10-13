@@ -147,3 +147,31 @@ describe('ui-board-grid: keyboard with real focus', () => {
     expect(log).toHaveLength(0)
   })
 })
+
+// ADR-0245 geometry pin (clause 10c): the migrated tokens read the derived foundation inside an opt-in
+// data-tier region and today's value outside it. Values are scale.mjs resolve('product', 'sm', 'md'): n 7,
+// height 28, c 2, icon box 14, radius 7. Lengths are read through layout (`inline-size: var(<token>)`).
+const lengthOf = (host: HTMLElement, token: string): number => {
+  const probe = document.createElement('span')
+  probe.style.cssText = `position:absolute;block-size:1px;inline-size:var(${token});`
+  host.append(probe)
+  const width = Number.parseFloat(getComputedStyle(probe).inlineSize)
+  probe.remove()
+  return width
+}
+const foundationsPair = (tag: string, attrs: string): { out: HTMLElement; inside: HTMLElement } => {
+  const wrap = document.createElement('div')
+  wrap.innerHTML = `<div><${tag} ${attrs}></${tag}></div><div data-tier="product" data-scale="sm"><${tag} ${attrs}></${tag}></div>`
+  document.body.append(wrap)
+  mounted.push(wrap)
+  const [out, inside] = Array.from(wrap.querySelectorAll<HTMLElement>(tag)) as [HTMLElement, HTMLElement]
+  return { out, inside }
+}
+
+describe('ui-board-grid: ADR-0245 derived foundations, dark launch', () => {
+  it('reads today\'s value outside a data-tier region and the derived value inside', () => {
+    const { out, inside } = foundationsPair('ui-board-grid', 'rows="3" cols="3"')
+    expect(lengthOf(out, '--ui-board-grid-cell-size')).toBe(46)
+    expect(lengthOf(inside, '--ui-board-grid-cell-size')).toBe(42) // 6n = height 28 + icon box 14
+  })
+})

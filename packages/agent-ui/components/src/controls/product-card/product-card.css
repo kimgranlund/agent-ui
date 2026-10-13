@@ -32,14 +32,14 @@
   --ui-product-card-media-aspect: 16 / 10;
   --ui-product-card-media-bg: var(--md-sys-color-neutral-surface-higher);
   --ui-product-card-icon-ink: var(--md-sys-color-primary);
-  --ui-product-card-icon-size: var(--md-sys-icon-lg);
+  --ui-product-card-icon-size: var(--md-sys-icon-box, var(--md-sys-icon-lg));
 
   /* Ink */
   --ui-product-card-title-ink: var(--md-sys-color-neutral-on-surface);
   --ui-product-card-muted-ink: var(--md-sys-color-neutral-on-surface-variant);
   --ui-product-card-price-ink: var(--md-sys-color-neutral-on-surface);
   --ui-product-card-rating-star-ink: var(--md-sys-color-warning); /* the approved mockup's star colour */
-  --ui-product-card-rating-star-gap: 2px; /* the mockup's star letter-spacing, a mark-geometry constant */
+  --ui-product-card-rating-star-gap: var(--md-sys-c, 2px); /* the mockup's star letter-spacing, a mark-geometry constant */
 
   /* Type: title on the title-medium row at weight 650, clamped at two lines; the price on the
      title-large row, bold, the strongest text in the card. */
@@ -68,8 +68,8 @@
 
   /* The action row: the control height at the ramp's large step (button.css `lg`, 36px at the default
      scale; the approved mockup, ADR-0243 Amendment 2), a filled primary pill. */
-  --ui-product-card-action-height: var(--md-sys-height-lg);
-  --ui-product-card-action-font: var(--md-sys-font-lg);
+  --ui-product-card-action-height: var(--md-sys-height, var(--md-sys-height-lg));
+  --ui-product-card-action-font: var(--md-sys-type-control, var(--md-sys-font-lg));
   --ui-product-card-action-bg: var(--md-sys-color-primary);
   --ui-product-card-action-bg-hover: var(--md-sys-color-primary-high);
   --ui-product-card-action-bg-active: var(--md-sys-color-primary-dim);
@@ -79,7 +79,7 @@
   /* Selected: a primary outline around the card, the action a ghost (transparent, neutral ink, an
      outline-variant border, a low wash on hover). */
   --ui-product-card-selected-outline: var(--md-sys-color-primary);
-  --ui-product-card-selected-outline-width: 2px;
+  --ui-product-card-selected-outline-width: var(--md-sys-c, 2px);
 
   /* Disabled: the media desaturated and dimmed, the action a faded pill that keeps its own colours (the
      mockup's sold-out card; the fleet's neutral disabled fill would vanish into this card's own plane). */
