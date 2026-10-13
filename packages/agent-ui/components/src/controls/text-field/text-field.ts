@@ -193,7 +193,7 @@ export class UITextFieldElement extends UIFormElement {
   // The model→surface effect below keeps its `value` synced to `this.value`.
   #colorSwatchPreview: UISwatchElement | null = null
 
-  // T-0135 — the type=date editor keys (Enter / Alt+ArrowDown open the calendar, Escape closes it), set by the
+  // T-0135: the type=date editor keys (Enter / Alt+ArrowDown open the calendar, Escape closes it), set by the
   // type-effect's date branch for its run only. Returns true when it handled the key.
   #calendarKeys: ((key: string, alt: boolean) => boolean) | null = null
 
@@ -247,7 +247,7 @@ export class UITextFieldElement extends UIFormElement {
         this.emit('change') // Enter commits (resets the baseline, so a following blur does not double-fire)
         return
       }
-      // ArrowUp/Down: step the numeric value (native type=number parity) — numeric codecs only, never the
+      // ArrowUp/Down: step the numeric value (native type=number parity), numeric codecs only, never the
       // date/time/color codecs (a parseFloat of an ISO date would step the year into the value).
       // Never mid-composition; preventDefault prevents cursor movement / page scroll during stepping.
       const numeric = TYPE_CONFIG[this.type].validation === 'number'

@@ -3,7 +3,7 @@ import { userEvent } from 'vitest/browser'
 import { whenFlushed } from '@agent-ui/components'
 import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 
-// T-0135 — type=date as a real date input, in a real engine (Chromium and WebKit): the trigger is a square,
+// T-0135: type=date as a real date input, in a real engine (Chromium and WebKit): the trigger is a square,
 // fully round icon-only button one control step below the field and concentric in its end; the calendar
 // panel anchors to the field, opens on the current value's month every time, takes min/max fresh each open,
 // closes on a pick and returns focus; the editor keys open and close it; the text is the locale date while
