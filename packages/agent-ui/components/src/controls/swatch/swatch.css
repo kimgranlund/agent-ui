@@ -27,7 +27,7 @@
 :where(ui-swatch) {
   --ui-swatch-box-size: 2rem; /* the deterministic default box (whole-shape, SPEC-R13 AC1) — NOT auto */
   --ui-swatch-border: 1px solid var(--md-sys-color-neutral-outline-variant); /* the hairline so a surface color never vanishes (SPEC-R2 AC3) */
-  --ui-swatch-radius: var(--md-sys-shape-corner-base);
+  --ui-swatch-radius: var(--md-sys-radius, var(--md-sys-shape-corner-base)); /* ADR-0245 cl.3: n inside an opt-in region */
   --ui-swatch-gap: var(--md-sys-space-xs); /* box↔text gap — rides [density] for free (ADR-0103) */
 }
 
@@ -52,7 +52,7 @@
   }
 
   :scope [data-part='value'] {
-    font-size: var(--md-sys-typescale-body-medium-size);
+    font-size: var(--md-sys-type-body, var(--md-sys-typescale-body-medium-size));
     line-height: var(--md-sys-typescale-body-medium-line-height);
     overflow-wrap: anywhere;
   }

@@ -27,22 +27,31 @@
 
 :where(ui-badge) {
   /* Compact-realm widget-box (ADR-0041; SPEC-R13) — fixed regardless of content/label length; [scale] on
-     an ancestor re-tables --md-sys-compact-lg for its subtree for free (no badge-local [scale] rule needed). */
-  --ui-badge-box: var(--md-sys-compact-lg); /* 18px @ default ui-md scale */
+     an ancestor re-tables --md-sys-compact-lg for its subtree for free (no badge-local [scale] rule needed).
+     ADR-0245 cl.3: inside an opt-in [data-tier] region the box is 2n (--md-sys-icon-box, 14px at the root
+     md); outside one the derived token is undefined and today's compact box (18px) holds. */
+  --ui-badge-box: var(--md-sys-icon-box, var(--md-sys-compact-lg)); /* 18px @ default ui-md scale */
 
   /* The compact pad law (dimensional-standard.md §2.4; geometry.md "the compact realm") — 2px + box ×
-     0.375 × density. Density rides the PAD only; the box above stays density-invariant (geometry.md). */
-  --ui-badge-pad: calc(2px + var(--ui-badge-box) * 0.375 * var(--md-sys-density, 1));
+     0.375 × density. Density rides the PAD only; the box above stays density-invariant (geometry.md).
+     Derived: 2c (ADR-0245 cl.3). The calc holds today's pad as the fallback of c, halved, so the same
+     expression reads 2c in a region and today's pad outside one. */
+  --ui-badge-pad: calc(2 * var(--md-sys-c, calc((2px + var(--ui-badge-box) * 0.375 * var(--md-sys-density, 1)) / 2)));
+
+  /* Corner: today the pill (box/2). Derived: n/2 (ADR-0245 cl.3), the same shape of fallback as the pad. */
+  --ui-badge-radius: calc(var(--md-sys-radius, var(--ui-badge-box)) / 2);
 
   /* Text rides the fleet font ramp (NOT the compact box) — ADR-0111 cl.5's dual-listing resolution: box =
-     compact-realm law, text = --md-sys-font-*. line-height:1 in the styles block centers it like a glyph. */
-  --ui-badge-font: var(--md-sys-font-sm);
+     compact-realm law, text = --md-sys-font-*. line-height:1 in the styles block centers it like a glyph.
+     Derived: the field-label role (ADR-0245 cl.3, 11px at the root md). */
+  --ui-badge-font: var(--md-sys-type-field-label, var(--md-sys-font-sm));
 
-  /* Rhythm — the glyph↔label gap (density-responsive for free, geometry.md "rhythm ∝ font"). */
-  --ui-badge-gap: var(--md-sys-gap-sm);
+  /* Rhythm — the glyph↔label gap (density-responsive for free, geometry.md "rhythm ∝ font"). Derived: n. */
+  --ui-badge-gap: var(--md-sys-inset, var(--md-sys-gap-sm));
 
-  /* The glyph fills half the box — a content-mark, not an inline affordance (anatomy.md's frame family). */
-  --ui-badge-glyph: calc(var(--ui-badge-box) * 0.5);
+  /* The glyph fills half the box — a content-mark, not an inline affordance (anatomy.md's frame family).
+     Derived: the glyph box 2n - 2c (ADR-0245 cl.4). */
+  --ui-badge-glyph: var(--md-sys-glyph-box, calc(var(--ui-badge-box) * 0.5));
 
   /* Colour channel — neutral default (the "tag" reading of the one component, ADR-0111 fork F3). */
   --ui-badge-fill: var(--md-sys-color-neutral-container);
@@ -89,7 +98,7 @@
     min-inline-size: var(--ui-badge-box); /* empty-label floor → a filled pill/dot (SPEC-R13 AC2) */
     padding-inline: var(--ui-badge-pad);
     padding-block: 0; /* the frame law — block-size is the vertical lever, never block-padding */
-    border-radius: calc(var(--ui-badge-box) / 2); /* the pill = box/2, the realm's "count pill" case */
+    border-radius: var(--ui-badge-radius); /* today the pill = box/2, the realm's "count pill" case; derived n/2 */
     border: 1px solid var(--ui-badge-outline);
     background: var(--ui-badge-fill);
     color: var(--ui-badge-ink);

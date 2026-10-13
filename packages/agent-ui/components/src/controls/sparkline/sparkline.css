@@ -29,7 +29,7 @@
 :where(ui-sparkline) {
   --ui-sparkline-inline-size: 8em; /* the deterministic default box (see the sizing ruling above) */
   --ui-sparkline-block-size: 1lh; /* rides the ambient line box — inline-in-text fits by construction */
-  --ui-sparkline-stroke-width: 1.5px; /* density-invariant px (ADR-0107 cl.5) */
+  --ui-sparkline-stroke-width: var(--md-sys-glyph-stroke, 1.5px); /* density-invariant px (ADR-0107 cl.5); the mark stroke max(1.5px, c/2) inside an opt-in region (ADR-0245 cl.5) */
   --ui-sparkline-area-opacity: 0.15;
 }
 

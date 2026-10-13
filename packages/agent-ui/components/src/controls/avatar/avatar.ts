@@ -10,7 +10,7 @@
 //      NEW `src` no longer equals `#failedSrc`, so it re-attempts (SPEC-R5's re-attempt transition falls
 //      out of the equality check, no extra state machine); clearing `src` falls back immediately.
 //   2. else `initialsFrom(identity)` non-empty ⇒ a `<span data-part="initials">`.
-//   3. else ⇒ `<ui-icon glyph="user">` — decorative by its own default; the icon control module is
+//   3. else ⇒ `<ui-icon symbol="user">` — decorative by its own default; the icon control module is
 //      statically imported so the tag is defined before use (the sanctioned sibling-control import).
 //
 // A second effect owns ARIA (SPEC-R6) — the `ui-icon` contract shape verbatim: decorative by default
@@ -61,7 +61,7 @@ export class UIAvatarElement extends UIElement {
       }
 
       const icon = document.createElement('ui-icon') as UIIconElement
-      icon.glyph = 'user'
+      icon.symbol = 'user'
       this.replaceChildren(icon)
     })
 

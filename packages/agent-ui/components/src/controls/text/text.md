@@ -93,7 +93,7 @@ keyboard:              # NOT interactive/focusable for every `as` EXCEPT the gat
 geometry:
   sizeClass: display
   blockSize: content   # NO control height (geometry.md Display class) — block-size is content-driven; no padding-block law, no frame
-  fontSize: var(--ui-text-size)         # the --md-sys-typescale-{role}-{size}-size the [variant][size] matrix repoints to (ADR-0078 cl.3) — × var(--md-sys-scale), density-invariant
+  fontSize: var(--ui-text-size)         # the --md-sys-typescale-{role}-{size}-size the [variant][size] matrix repoints to (ADR-0078 cl.3) — × var(--md-sys-scale), density-invariant; inside an opt-in [data-tier] region the derived role --md-sys-type-{role} (ADR-0245 cl.7: display, heading, title, body, field-label, section-kicker, group-kicker, subhead)
   fontWeight: var(--ui-text-weight)     # from --md-sys-typescale-{role}-{size}-weight (a :root constant)
   lineHeight: var(--ui-text-line-height)  # from --md-sys-typescale-{role}-{size}-line-height (a :root unitless constant)
   tracking: var(--ui-text-tracking)     # from --md-sys-typescale-{role}-{size}-tracking (a :root em constant); NEW — ADR-0025's ramp had no tracking leg

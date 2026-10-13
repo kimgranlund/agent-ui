@@ -53,7 +53,7 @@ describe('UIAvatarElement — the fallback chain (SPEC-R5)', () => {
     await el.updateComplete
     const icon = el.querySelector('ui-icon') as UIIconElement | null
     expect(icon).not.toBeNull()
-    expect(icon?.glyph).toBe('user') // `glyph` is property-only (not reflected) on ui-icon
+    expect(icon?.symbol).toBe('user') // `symbol` is property-only (not reflected) on ui-icon
     expect(el.querySelector('img')).toBeNull()
     expect(el.querySelector('[data-part="initials"]')).toBeNull()
     el.remove()
@@ -107,7 +107,7 @@ describe('UIAvatarElement — the fallback chain (SPEC-R5)', () => {
     el.querySelector('img')?.dispatchEvent(new Event('error'))
     await el.updateComplete
     expect(el.querySelector('img')).toBeNull()
-    expect((el.querySelector('ui-icon') as UIIconElement | null)?.glyph).toBe('user')
+    expect((el.querySelector('ui-icon') as UIIconElement | null)?.symbol).toBe('user')
     el.remove()
   })
 

@@ -493,8 +493,8 @@ describe('file-drop.css — geometry/token trip-wire (fd-geometry-tokens)', () =
   it('fd-geometry-tokens: shell geometry is minted own-chain off the space/font/icon/shape constants (no ad hoc literals)', () => {
     expect(fileDropCss).toMatch(/--ui-file-drop-padding:\s*var\(--md-sys-space-lg\)/)
     expect(fileDropCss).toMatch(/--ui-file-drop-gap:\s*var\(--md-sys-space-md\)/)
-    expect(fileDropCss).toMatch(/--ui-file-drop-radius:\s*var\(--md-sys-shape-corner-base\)/)
-    expect(fileDropCss).toMatch(/--ui-file-drop-font:\s*var\(--md-sys-font-md\)/)
+    expect(fileDropCss).toMatch(/--ui-file-drop-radius:\s*var\(--md-sys-card-radius,\s*var\(--md-sys-shape-corner-base\)\)/)
+    expect(fileDropCss).toMatch(/--ui-file-drop-font:\s*var\(--md-sys-type-control,\s*var\(--md-sys-font-md\)\)/)
   })
 
   it('fd-geometry-tokens: no [size] selector (this control declares no size attribute)', () => {
