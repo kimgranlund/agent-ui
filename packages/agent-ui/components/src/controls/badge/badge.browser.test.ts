@@ -53,10 +53,10 @@ const alphaOf = (color: string): number => {
 // ── whole-shape + compact-realm geometry (SPEC-R13, ADR-0041) ────────────────────────────────────────
 
 describe('ui-badge whole-shape (SPEC-R13/R14 AC1, test-the-whole-shape)', () => {
-  it('a bare labeled badge in an unstyled flex row paints a non-collapsed box == the derived 2n box (14px at the root register)', () => {
+  it('a bare labeled badge in an unstyled flex row paints a non-collapsed box == the chip height 2n + 2c (16px at the root register, ADR-0245 Amendment 4)', () => {
     const el = mount('<ui-badge label="status"></ui-badge>')
     const cs = getComputedStyle(el)
-    expect(px(cs.blockSize), 'block-size must equal the derived box (2n, 14px at the root register)').toBeCloseTo(root.icon, 0)
+    expect(px(cs.blockSize), 'block-size must equal the chip height (2n + 2c, 16px at the root register)').toBeCloseTo(root.parts.badge, 0)
     const rect = el.getBoundingClientRect()
     expect(rect.width, 'the host collapsed instead of painting a real pill').toBeGreaterThan(0)
     expect(rect.height, 'the host painted a zero-height box').toBeGreaterThan(0)
@@ -65,15 +65,15 @@ describe('ui-badge whole-shape (SPEC-R13/R14 AC1, test-the-whole-shape)', () => 
   it('an EMPTY label still floors at min-inline-size == the box (a filled dot/pill, never a sliver — SPEC-R13 AC2)', () => {
     const el = mount('<ui-badge></ui-badge>') // no label, neutral intent (no glyph either)
     const rect = el.getBoundingClientRect()
-    expect(rect.width, 'empty-label badge collapsed below the box floor').toBeGreaterThanOrEqual(root.icon - 0.5)
+    expect(rect.width, 'empty-label badge collapsed below the box floor').toBeGreaterThanOrEqual(root.parts.badge - 0.5)
     expect(rect.height).toBeGreaterThan(0)
   })
 
-  it('border-radius resolves to the derived n/2 (ADR-0245 cl.3; the pre-cut pill was box/2)', () => {
+  it('border-radius resolves to the chip radius ceil(n/2) (ADR-0245 Amendment 4; the pre-cut pill was box/2)', () => {
     const el = mount('<ui-badge label="status"></ui-badge>')
     const cs = getComputedStyle(el)
-    // getComputedStyle serializes border-radius as a length (px); n/2 at the root register → 3.5px.
-    expect(px(cs.borderTopLeftRadius)).toBeCloseTo(root.control.radius / 2, 1)
+    // getComputedStyle serializes border-radius as a length (px); ceil(n/2) at the root register md is 3px.
+    expect(px(cs.borderTopLeftRadius)).toBeCloseTo(root.chip.radius, 1)
   })
 
   it('padding-block is ZERO (block-size is the vertical lever, never block-padding — geometry.md)', () => {
@@ -85,19 +85,20 @@ describe('ui-badge whole-shape (SPEC-R13/R14 AC1, test-the-whole-shape)', () => 
 })
 
 describe('ui-badge geometry — the compact pad law, NOT h/2 (SPEC-R13 AC1, ADR-0041)', () => {
-  it('padding-inline == 2c (the derived pad, ADR-0245 cl.3); the BOX stays fixed at every density', () => {
+  it('padding-inline == the chip margin c, and the label part adds the label margin c, so the text edge is 2c (ADR-0245 Amendment 4)', () => {
     const el = mount('<ui-badge label="status"></ui-badge>')
     const padInline = px(getComputedStyle(el).paddingInlineStart)
-    const expectedPad = 2 * root.c
-    expect(padInline, `padding-inline (${padInline}) != the derived pad 2c (${expectedPad})`).toBeCloseTo(expectedPad, 1)
+    expect(padInline, `padding-inline (${padInline}) != the chip margin c (${root.chip.margin})`).toBeCloseTo(root.chip.margin, 1)
+    const labelPad = px(getComputedStyle(el.querySelector('[data-part="label"]') as HTMLElement).paddingInlineStart)
+    expect(padInline + labelPad, 'the text edge is 2c').toBeCloseTo(2 * root.c, 1)
   })
 
-  it('an ancestor data-scale moves the box and the pad together: height 2n, pad 2c (ADR-0245 cl.3, one n)', () => {
+  it('an ancestor data-scale moves the box and the pad together: height 2n + 2c, pad c (ADR-0245 Amendment 4, one n)', () => {
     const compact = mount('<ui-badge label="status"></ui-badge>', { scale: 'sm' })
     const spacious = mount('<ui-badge label="status"></ui-badge>', { scale: 'lg' })
 
-    expect(px(getComputedStyle(compact).blockSize)).toBe(resolve('product', 'sm', 'md').icon)
-    expect(px(getComputedStyle(spacious).blockSize)).toBe(resolve('product', 'lg', 'md').icon)
+    expect(px(getComputedStyle(compact).blockSize)).toBe(resolve('product', 'sm', 'md').parts.badge)
+    expect(px(getComputedStyle(spacious).blockSize)).toBe(resolve('product', 'lg', 'md').parts.badge)
 
     const padCompact = px(getComputedStyle(compact).paddingInlineStart)
     const padSpacious = px(getComputedStyle(spacious).paddingInlineStart)
@@ -111,7 +112,7 @@ describe('ui-badge geometry — the compact pad law, NOT h/2 (SPEC-R13 AC1, ADR-
       const el = mount(`<ui-badge label="status" size="${size}"></ui-badge>`)
       expect(px(getComputedStyle(el).blockSize), `a stray size="${size}" moved the box`).toBe(px(getComputedStyle(bare).blockSize))
     }
-    expect(px(getComputedStyle(bare).blockSize), 'the box is the context 2n').toBe(resolve('product', 'sm', 'md').icon) // 14
+    expect(px(getComputedStyle(bare).blockSize), 'the box is the context chip height 2n + 2c').toBe(resolve('product', 'sm', 'md').parts.badge) // 16
   })
 })
 

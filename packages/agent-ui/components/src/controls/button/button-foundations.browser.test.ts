@@ -42,7 +42,11 @@ describe('ui-button foundations (ADR-0245 lane a01)', () => {
       const r = resolve('product', 'sm', size)
       const el = mount(true, size)
       expect(read(el, 'block-size'), 'height').toBeCloseTo(r.h, 1)
-      expect(read(el, 'padding-inline-start'), 'padding').toBeCloseTo(2 * r.n, 1)
+      // the control rule (ADR-0245 Amendment 4): the host pads the box margin n and the label part carries the
+      // label inset n - c, so the text edge is 2n - c
+      expect(read(el, 'padding-inline-start'), 'box margin').toBeCloseTo(r.control.margin, 1)
+      expect(read(el.querySelector('[data-part="label"]') as HTMLElement, 'padding-inline-start'), 'label inset').toBeCloseTo(r.labelMargin, 1)
+      expect(r.control.margin + r.labelMargin, 'text edge').toBe(2 * r.n - r.c)
       expect(read(el, 'border-top-left-radius'), 'radius').toBeCloseTo(r.h / 2, 1)
     })
   }

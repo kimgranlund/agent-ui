@@ -186,18 +186,22 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
   })
 
   // ── ADR-0006 / geometry.md: [density] rides the rhythm (the slot↔editor gap), NEVER the frame (C6 polish) ──
-  it('a region data-scale moves the adornment↔editor column-gap AND the bare frame together (one n, ADR-0245)', () => {
-    // The [density] axis (gap only) retired into data-scale: n moves the gap (n), the height (4n) and the
-    // value edge (inset n) at once.
+  it('a region data-scale moves the adornment↔editor distance AND the bare frame together (one n, ADR-0245 Amendment 4)', () => {
+    // The [density] axis (gap only) retired into data-scale: n moves the height (4n), the box margin (n) and the
+    // editor's label inset (n - c) at once; the column-gap is the control gutter c, so icon to text is c + (n - c) = n.
     const icon = mount(ICON) // size stays md (default); the `auto 1fr` grid carries the column-gap
     const bare = mount(BARE)
     for (const scale of ['sm', 'md', 'lg'] as const) {
       icon.wrap.setAttribute('data-scale', scale)
       bare.wrap.setAttribute('data-scale', scale)
       const r = resolve('product', scale, 'md')
-      expect(px(getComputedStyle(icon.field).columnGap), `column-gap @ ${scale}`).toBeCloseTo(r.control.margin, 1)
+      const editorInset = px(getComputedStyle(icon.field.querySelector('[data-part="editor"]') as HTMLElement).paddingInlineStart)
+      expect(px(getComputedStyle(icon.field).columnGap), `column-gap @ ${scale}`).toBeCloseTo(r.control.gutter, 1)
+      expect(px(getComputedStyle(icon.field).columnGap) + editorInset, `icon to text @ ${scale}`).toBeCloseTo(r.control.margin, 1)
       expect(frameHeight(bare.field), `bare height @ ${scale}`).toBeCloseTo(r.h, 0)
-      expect(padStartPx(bare.field), `bare value edge @ ${scale}`).toBeCloseTo(r.control.margin, 0)
+      expect(padStartPx(bare.field), `bare box margin @ ${scale}`).toBeCloseTo(r.control.margin, 0)
+      const bareInset = px(getComputedStyle(bare.field.querySelector('[data-part="editor"]') as HTMLElement).paddingInlineStart)
+      expect(padStartPx(bare.field) + bareInset, `bare value edge 2n - c @ ${scale}`).toBeCloseTo(2 * r.n - r.c, 0)
     }
   })
 

@@ -218,7 +218,12 @@ describe('text-field.css — anatomy, placeholder, motion, forced-colors', () =>
     // intrinsic width); `inline-grid` + the 20ch floor live ONLY in the `[inline]` hug leg.
     expect(stylesBlock).toMatch(/:scope\s*\{[^}]*display:\s*grid/)
     expect(stylesBlock).not.toMatch(/:scope\s*\{[^}]*display:\s*inline-grid/) // the default never goes inline-level
-    expect(stylesBlock).not.toMatch(/:scope\s*\{[^}]*min-inline-size/) // the fill default carries NO floor — the container is the floor
+    // The fill default carries no CONTENT floor (ADR-0223 cl.3(b): the container is the floor). The one floor it
+    // does carry is the control rule's 4n in the R3(a) squareness form (ADR-0245 Amendment 4), and exactly that.
+    const baseScope = stylesBlock.match(/:scope\s*\{([^}]*)\}/)
+    expect(baseScope, 'the base :scope rule is missing').not.toBeNull()
+    const floors = [...(baseScope as RegExpMatchArray)[1].matchAll(/min-inline-size:\s*([^;]+);/g)].map((m) => m[1].trim())
+    expect(floors, 'the base :scope carries the 4n floor in the R3(a) form and no other').toEqual(['var(--ui-text-field-height)'])
     const inlineLeg = stylesBlock.match(/:scope\[inline\]\s*\{([^}]*)\}/)
     expect(inlineLeg, 'the :scope[inline] hug leg is missing (ADR-0223 cl.2)').not.toBeNull()
     expect((inlineLeg as RegExpMatchArray)[1]).toMatch(/display:\s*inline-grid/)

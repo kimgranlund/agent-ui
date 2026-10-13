@@ -128,14 +128,16 @@ describe('ui-segmented-control — grid track + segment geometry (both engines)'
     }
   })
 
-  it('segment geometry: block-size = --md-sys-height-md, padding-inline = height/2, padding-block = 0', () => {
+  it('segment geometry: block-size = 4n, padding-inline = the text edge 2n - c (the control rule, ADR-0245 Amendment 4), padding-block = 0', () => {
     const { segments } = mount(HORIZONTAL)
     const seg = segments[0]!
     const cs = getComputedStyle(seg)
     const height = px(cs.blockSize)
-    expect(height).toBeCloseTo(resolve('product', 'sm', 'md').h, 0) // --md-sys-height-md default
-    expect(px(cs.paddingInlineStart)).toBeCloseTo(height / 2, 0)
-    expect(px(cs.paddingInlineEnd)).toBeCloseTo(height / 2, 0)
+    const r = resolve('product', 'sm', 'md')
+    expect(height).toBeCloseTo(r.h, 0) // --md-sys-height-md default
+    // the segment's label is anonymous content, so its edge carries the box margin n plus the label inset n - c
+    expect(px(cs.paddingInlineStart)).toBeCloseTo(r.control.margin + r.labelMargin, 0)
+    expect(px(cs.paddingInlineEnd)).toBeCloseTo(r.control.margin + r.labelMargin, 0)
     expect(px(cs.paddingBlockStart)).toBe(0)
     expect(px(cs.paddingBlockEnd)).toBe(0)
     // line-height: read the --md-sys-control-line-height custom property (== '1'), NEVER assert

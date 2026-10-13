@@ -47,9 +47,13 @@ describe('tabs.css — structure + sectioning (s8)', () => {
   it('declares the --ui-tabs-* chain — control-height tab rows + the --md-sys-space shell + the ink/indicator roles', () => {
     // the interactive rows take the CONTROL height (geometry.md Pattern class), the shell uses --md-sys-space
     expect(tokenBlock).toMatch(/--ui-tabs-tab-height:\s*var\(--md-sys-height,\s*var\(--md-sys-height-lg\)\)/) // GH #297: repointed up the ramp
-    // GH #536 — the per-tab inline padding is gone; the strip gap grew by one former padding unit (xs + md).
-    expect(tokenBlock).not.toMatch(/--ui-tabs-tab-pad-inline/)
-    expect(tokenBlock).toMatch(/--ui-tabs-strip-gap:\s*calc\(var\(--md-sys-space-xs\)\s*\+\s*var\(--md-sys-space-md\)\)/)
+    // ADR-0245 Amendment 4 supersedes GH #536: a tab carries the control rule's padding (margin n + label inset
+    // n - c, 0 under the legacy opt-out) and the 4n floor, and the tabs touch with the tight gutter c; the #536
+    // gap (xs + md) is the legacy fallback.
+    expect(tokenBlock).toMatch(/--ui-tabs-tab-pad:\s*var\(--ui-tabs-tab-pad-derived,\s*0px\)/)
+    expect(tokenBlock).toMatch(/--ui-tabs-tab-pad-derived:\s*calc\(var\(--md-sys-inset\)\s*\+\s*var\(--md-sys-label-inset\)\)/)
+    expect(tokenBlock).toMatch(/--ui-tabs-tab-min-inline-size:\s*var\(--md-sys-height,\s*0px\)/)
+    expect(tokenBlock).toMatch(/--ui-tabs-strip-gap:\s*var\(--md-sys-c,\s*calc\(var\(--md-sys-space-xs\)\s*\+\s*var\(--md-sys-space-md\)\)\)/)
     expect(tokenBlock).toMatch(/--ui-tabs-panel-pad:\s*var\(--md-sys-space-md\)/)
     // the ink ladder + the indicator (SOLID roles)
     expect(tokenBlock).toMatch(/--ui-tabs-ink:\s*var\(--md-sys-color-neutral-on-surface-variant\)/)
@@ -95,8 +99,11 @@ describe('tabs.css — the tablist strip + tab rows + panel anatomy (s8)', () =>
     expect(m, 'the ui-tab rule is missing').not.toBeNull()
     const rule = (m as RegExpMatchArray)[1]
     expect(rule).toMatch(/block-size:\s*var\(--ui-tabs-tab-height\)/)
-    // GH #536 — no per-tab inline padding; the clickable area is the label box at the control height.
-    expect(rule).not.toMatch(/padding-inline/)
+    // ADR-0245 Amendment 4 (superseding GH #536's zero padding): a tab is a control, 2n - c to its text on each
+    // side and never under 4n; it never shrinks, so the strip scrolls whole labels (GH #221).
+    expect(rule).toMatch(/padding-inline:\s*var\(--ui-tabs-tab-pad\)/)
+    expect(rule).toMatch(/min-inline-size:\s*var\(--ui-tabs-tab-min-inline-size\)/)
+    expect(rule).toMatch(/flex-shrink:\s*0/)
     expect(rule).toMatch(/cursor:\s*pointer/)
     // selected ink + the underline indicator both key on :state(selected) (no [aria-selected] attribute exists)
     expect(stylesBlock).toMatch(/ui-tab:state\(selected\)\s*\{\s*color:\s*var\(--ui-tabs-ink-selected\)/)

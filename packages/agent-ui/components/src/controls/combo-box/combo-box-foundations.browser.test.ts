@@ -40,7 +40,9 @@ describe('ui-combo-box foundations (ADR-0245 lane a01)', () => {
     it(`inside product / sm at size ${size} reads the derived geometry`, () => {
       const r = resolve('product', 'sm', size)
       const el = mount(true, size)
-      expect(read(el, 'padding-inline-start'), 'padding').toBeCloseTo(r.n, 1)
+      // the control rule (ADR-0245 Amendment 4): the editor is the frame and the text slot in one, so it pads
+      // the box margin plus the label inset, 2n - c
+      expect(read(el, 'padding-inline-start'), 'padding').toBeCloseTo(r.control.margin + r.labelMargin, 1)
       expect(read(el, 'border-top-left-radius'), 'radius').toBeCloseTo(r.control.radius, 1)
     })
   }

@@ -12,7 +12,8 @@ declare const process: { cwd(): string }
 //   • 0 < glyph ≤ box — the content-icon ramp fits inside the height box, at every scale (a CROSS-FILE
 //     static relation between button.css's `--ui-button-icon` and dimensions.css's `--md-sys-height-{size}`).
 //   • the glyph IS the slot — `[slot=leading]` is a SQUARE cell sized to `--ui-button-icon` (the slot model).
-//   • per-edge ASYMMETRY by design — the leading slot edge is ½(h−icon), the trailing label edge is h/2.
+//   • the control rule's edges: the leading slot edge is ½(h−icon) = n and the label edge is the box margin n,
+//     with the label part's own inset n - c making the text edge 2n - c (ADR-0245 Amendment 4).
 // NOT duplicated here (already pinned by button-css.test.ts s7 — referenced, not re-asserted): the two
 // sectioned blocks, `padding-block: 0`, the slotless `padding-inline: h/2`, `column-gap: --ui-button-gap`,
 // the `:has()` host-as-grid, every `--ui-button-*` declared in `:where()`, and the @scope token-hygiene
@@ -83,13 +84,22 @@ describe('button.css — STATIC geometry trip-wires (s11)', () => {
     expect(block).toMatch(/block-size:\s*var\(--ui-button-icon\)/)
   })
 
-  it('per-edge ASYMMETRY by design: leading slot edge = ½(h−icon), trailing label edge = h/2', () => {
-    // geometry.md §"Per-edge inline padding": with an icon present the control is asymmetric BY DESIGN —
-    // the leading slot edge insets ½(h−icon) while the trailing (slotless) label edge stays h/2. s7 pins
-    // that ½(h−icon) appears; here we pin it is the START edge and that END is the slotless h/2.
+  it('the control rule per edge: leading slot edge = ½(h−icon) = n, label edge = the box margin n, and the asymmetry lives on the label inset', () => {
+    // ADR-0245 Amendment 4 (re-derived from the old "asymmetric by design" law, not deleted): the host pads are
+    // EQUAL at n, the slot edge as ½(h−icon) and the label edge as the box margin token (n derived, h/2 under the
+    // legacy opt-out, where the old asymmetry survives). What still differs per edge is the TEXT: the label part
+    // adds its own inset n - c, so the text sits n + labelMargin = 2n - c from its edge and the icon n from its.
     const hasBlock = stylesBlock.slice(stylesBlock.indexOf(":scope:has(> [slot='leading']):not"))
     expect(hasBlock).toMatch(/padding-inline-start:\s*calc\(\(var\(--ui-button-height\)\s*-\s*var\(--ui-button-icon\)\)\s*\/\s*2\)/)
-    expect(hasBlock).toMatch(/padding-inline-end:\s*calc\(var\(--ui-button-height\)\s*\/\s*2\)/)
+    expect(hasBlock).toMatch(/padding-inline-end:\s*var\(--ui-button-edge\)/)
+    expect(whereBlock(':where(ui-button) {')).toMatch(/--ui-button-edge:\s*var\(--md-sys-inset,\s*calc\(var\(--ui-button-height\)\s*\/\s*2\)\)/)
+    expect(whereBlock(':where(ui-button) {')).toMatch(/--ui-button-label-inset:\s*var\(--md-sys-label-inset,\s*0px\)/)
+    for (const size of ['sm', 'md', 'lg'] as const) {
+      const r = resolve('product', 'sm', size)
+      expect((r.h - r.icon) / 2, `${size}: the slot edge equals the box margin`).toBe(r.control.margin)
+      expect(r.control.margin + r.labelMargin, `${size}: the label's text edge is 2n - c`).toBe(2 * r.n - r.c)
+      expect(r.control.gutter + r.labelMargin, `${size}: icon to text is n`).toBe(r.n)
+    }
   })
 
   it('the trailing adornment anatomy: [label|caret] is 1fr auto, [icon|label|caret] is auto 1fr auto (ADR-0006 extended)', () => {

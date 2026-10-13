@@ -232,13 +232,13 @@ describe('ui-checkbox geometry inside an opt-in data-tier region (ADR-0245)', ()
 
   for (const scale of ['sm', 'md'] as const) {
     for (const size of ['sm', 'md', 'lg'] as const) {
-      it(`product / ${scale} / ${size}: box 2n, radius n/2, check 2n - 2c inset c`, () => {
+      it(`product / ${scale} / ${size}: box 2n, radius ceil(n/2), check 2n - 2c inset c`, () => {
         const r = resolve('product', scale, size)
         const { wrap, el } = mountIn(scale, size, { checked: true })
         const box = getComputedStyle(el, '::before')
         expect(num(box.width)).toBe(r.icon)
         expect(num(box.height)).toBe(r.icon)
-        expect(num(box.borderTopLeftRadius)).toBeCloseTo(r.n / 2, 1)
+        expect(num(box.borderTopLeftRadius)).toBeCloseTo(r.parts.checkboxRadius, 1) // ceil(n/2), the chip radius (ADR-0245 Amendment 4)
         const check = getComputedStyle(el, '::after')
         expect(num(check.width)).toBeCloseTo(r.glyph, 1)
         expect(num(check.height)).toBeCloseTo((r.glyph * 11) / 12, 1)

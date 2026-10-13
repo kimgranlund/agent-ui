@@ -42,7 +42,9 @@ describe('ui-toggle foundations (ADR-0245 lane a01)', () => {
       const r = resolve('product', 'sm', size)
       const el = mount(true, size)
       expect(read(el, 'block-size'), 'height').toBeCloseTo(r.h, 1)
-      expect(read(el, 'padding-inline-start'), 'padding').toBeCloseTo(2 * r.n, 1)
+      // the control rule (ADR-0245 Amendment 4): the label is anonymous content, so the host edge beside it
+      // carries the box margin plus the label inset, 2n - c
+      expect(read(el, 'padding-inline-start'), 'padding').toBeCloseTo(r.control.margin + r.labelMargin, 1)
       expect(read(el, 'border-top-left-radius'), 'radius').toBeCloseTo(r.h / 2, 1)
     })
   }

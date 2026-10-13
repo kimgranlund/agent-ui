@@ -45,8 +45,11 @@ const THREE = `
   </ui-tabs>`
 
 const px = (v: string): number => Number.parseFloat(v)
-// The strip gap is calc(space-xs + space-md) = c + group margin at the root register (ADR-0245 cl.6): 2 + 9 = 11px.
-const STRIP_GAP = resolve('product', 'sm', 'md').c + resolve('product', 'sm', 'md').group.margin
+// ADR-0245 Amendment 4 (superseding GH #536): the tabs touch with the tight gutter c, and each tab carries the
+// control rule's padding, margin n + label inset n - c = 2n - c, on each inline side. Root register: 2 and 10.
+const ROOT = resolve('product', 'sm', 'md')
+const STRIP_GAP = ROOT.c
+const TAB_PAD = ROOT.control.margin + ROOT.labelMargin
 
 /** Let a ResizeObserver learn a real post-change size (the select.browser.test.ts `nextFrames` precedent —
  *  two rAFs comfortably clears the RO's own per-spec "after rendering updates" timing). */
@@ -150,12 +153,11 @@ describe('ui-tabs — the selected-tab indicator paints + survives forced-colors
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-tabs — [density] shifts shell spacing; the tab control height is density-invariant (both engines)', () => {
-  it('a region data-scale moves strip-gap, panel-pad and the 4n tab height together (one n, ADR-0245)', () => {
-    // tabs.css: --ui-tabs-strip-gap rides --md-sys-space-xs + --md-sys-space-md (GH #536 — carries the spacing
-    // the removed per-tab inline padding used to); --ui-tabs-panel-pad rides --md-sys-space-md.
-    // Both are shell/layout-ladder quantities (density-responsive). The tab CONTROL HEIGHT is --md-sys-height-lg
-    // (36px explicit literal, ADR-0038, GH #297 — not a --md-sys-space quantity, density-invariant). Anti-vacuous: strip-gap
-    // and panel-pad must measurably CHANGE, AND the tab height must be the same at compact and spacious.
+  it('a region with a larger n moves strip-gap, panel-pad, the tab padding and the 4n tab height together (one n, ADR-0245)', () => {
+    // tabs.css: --ui-tabs-strip-gap is the tight gutter c (ADR-0245 Amendment 4) and --ui-tabs-panel-pad rides
+    // --md-sys-space-md. c is 2 on every product rung the old test compared (n 6 and n 8), so the growth leg
+    // compares the root against a content-tier region at md, n 10 and c 3, where c itself steps up. Anti-vacuous:
+    // strip-gap, panel-pad and the tab padding must measurably CHANGE with the register.
     const { tabs, tabEls, panelEls } = mount(THREE)
     const tablist = tabs.querySelector('[data-part="tablist"]') as HTMLElement
     const panel = panelEls[0] // the visible panel (tab 0 selected by default)
@@ -168,43 +170,48 @@ describe('ui-tabs — [density] shifts shell spacing; the tab control height is 
     expect(panelPadBase, 'comfortable panel-pad is not a positive px').toBeGreaterThan(0)
     expect(tabHeightBase, 'the root tab is not 4n = 28px (ADR-0245 Appendix B)').toBe(resolve('product', 'sm', 'md').h)
 
-    // a roomier region (data-scale md): one n moves the shell spacing AND the tab height (the [density] split retired)
+    expect(stripGapBase, 'the root strip gap is c').toBe(ROOT.c)
+
+    // a roomier region (data-tier content, data-scale md): one n moves the shell spacing, the gutter c, the tab
+    // padding AND the tab height
+    const roomy = resolve('content', 'md', 'md')
+    expect(roomy.c, 'the compared register must step c up, or this growth leg is vacuous').toBeGreaterThan(ROOT.c)
+    tabs.setAttribute('data-tier', 'content')
     tabs.setAttribute('data-scale', 'md')
     const stripGapRoomy = px(getComputedStyle(tablist).columnGap)
     const panelPadRoomy = px(getComputedStyle(panel).paddingTop)
     const tabHeightRoomy = px(getComputedStyle(tabEls[0]).blockSize)
-    expect(tabHeightRoomy, `${server.browser}: the tab did not take 4n at data-scale md`).toBe(resolve('product', 'md', 'md').h)
+    expect(tabHeightRoomy, `${server.browser}: the tab did not take 4n in the content region`).toBe(roomy.h)
+    expect(stripGapRoomy, 'strip-gap is the region c').toBe(roomy.c)
     expect(stripGapRoomy, 'strip-gap did not grow with n').toBeGreaterThan(stripGapBase)
     expect(panelPadRoomy, 'panel-pad did not grow with n').toBeGreaterThan(panelPadBase)
+    expect(px(getComputedStyle(tabEls[0]).paddingInlineStart), 'the tab padding is the region 2n - c').toBe(roomy.control.margin + roomy.labelMargin)
   })
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
-//  [3b] GH #542 — the strip-gap RESOLVED VALUE pins the exact calc(space-xs + space-md); a tab carries
-//  zero padding-inline (GH #536's removal, both engines)
+//  [3b] GH #542: the strip-gap RESOLVED VALUE pins the exact tight gutter c; a tab carries the control rule's
+//  padding 2n - c (ADR-0245 Amendment 4 superseding GH #536's removal, both engines)
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 
-describe('ui-tabs — strip-gap resolves the exact calc(space-xs + space-md); a tab has zero padding-inline (GH #542, both engines)', () => {
-  it('at the root register the tablist column-gap/gap is 11px (space-xs c 2px + space-md group margin 9px); a rendered tab is padding-inline:0px', () => {
+describe('ui-tabs — strip-gap resolves the exact tight gutter c; a tab carries the control rule padding 2n - c (GH #542, ADR-0245 Amendment 4, both engines)', () => {
+  it('at the root register the tablist column-gap/gap is c (2px) and a rendered tab is padding-inline 2n - c (10px)', () => {
     const { tabs, tabEls } = mount(THREE)
     const tablist = tabs.querySelector('[data-part="tablist"]') as HTMLElement
 
-    // --ui-tabs-strip-gap: calc(var(--md-sys-space-xs) + var(--md-sys-space-md)) (tabs.css). The space tokens
-    // themselves (foundations-bridge.gen.css): --md-sys-space-xs = c, --md-sys-space-md = the group margin —
-    // at the root register (product / sm / md) that's 2px + 9px = 11px EXACTLY (16px before the cut). GH #536 grew the strip gap to carry the spacing the removed per-tab inline
-    // padding used to provide; GH #542 pins the concrete resolved px (not merely >0) so a future ramp/space-
-    // token edit that silently shifts the sum away from 11px fails HERE, in a real engine's cascade — the
-    // same discipline the 28px tab-height probe above applies to the control-height ramp.
+    // --ui-tabs-strip-gap: var(--md-sys-c, <the #536 xs + md>) (tabs.css). ADR-0245 Amendment 4 supersedes GH
+    // #536: each tab carries the control rule's padding, so the tabs touch with the tight gutter c, 2px at the
+    // root register (product / sm / md). GH #542 pins the concrete resolved px (not merely >0) so a future
+    // token edit that silently shifts it fails HERE, in a real engine's cascade.
     const gapPx = px(getComputedStyle(tablist).columnGap)
-    expect(gapPx, 'the tablist column-gap did not resolve to c + group margin (11px, ADR-0245 cl.6)').toBeCloseTo(STRIP_GAP, 0)
+    expect(gapPx, 'the tablist column-gap did not resolve to c (ADR-0245 Amendment 4)').toBeCloseTo(STRIP_GAP, 0)
     expect(px(getComputedStyle(tablist).gap), 'gap and column-gap disagree on the resolved value').toBeCloseTo(STRIP_GAP, 0)
 
-    // GH #536 — the per-tab inline padding was removed (a tab's clickable area is now its label box; the strip
-    // gap above carries the spacing that padding used to). Pin the negative directly: a rendered tab's own
-    // computed padding-inline-start/-end must both be the literal 0px, not merely falsy/absent.
+    // ADR-0245 Amendment 4: a tab is a control, margin n + label inset n - c on each inline side (its label is
+    // anonymous content), 10px at the root register.
     const tabStyle = getComputedStyle(tabEls[0])
-    expect(tabStyle.paddingInlineStart, 'a tab must carry zero padding-inline-start (GH #536)').toBe('0px')
-    expect(tabStyle.paddingInlineEnd, 'a tab must carry zero padding-inline-end (GH #536)').toBe('0px')
+    expect(px(tabStyle.paddingInlineStart), 'a tab carries the text edge 2n - c at its start').toBeCloseTo(TAB_PAD, 0)
+    expect(px(tabStyle.paddingInlineEnd), 'a tab carries the text edge 2n - c at its end').toBeCloseTo(TAB_PAD, 0)
   })
 })
 
@@ -401,7 +408,7 @@ describe('ui-tabs — tablist overflow: whole labels scroll, never clip mid-word
       <ui-tabs>
         <ui-tab>Settings</ui-tab><ui-tab>Context: System</ui-tab><ui-tab>Context: Dialog</ui-tab>
       </ui-tabs>
-    </div>` // a narrow pane: the three labels (~234px with 11px gaps at the root register) outgrow it; the 252px pane that surfaced the defect now fits them
+    </div>` // a narrow pane: the three labels (each 2(2n - c) wider than its text, c apart, at the root register) outgrow it; the 252px pane that surfaced the defect now fits them
 
   it('at 200px the strip overflows and SCROLLS; every tab still holds its whole nowrap label', () => {
     const { tabs, tabEls } = mount(NARROW)
@@ -455,7 +462,7 @@ describe('ui-tabs — orientation="vertical": the default stays byte-identical (
 })
 
 describe('ui-tabs — orientation="vertical": whole-shape geometry — strip beside panel, edges, alignment (both engines)', () => {
-  it('[MUST-PROVE] the strip sits inline-start of the visible panel; aria-orientation is set; divider + indicator ride the inline-end edge; labels start-align; zero padding-inline holds; 11px row gap', async () => {
+  it('[MUST-PROVE] the strip sits inline-start of the visible panel; aria-orientation is set; divider + indicator ride the inline-end edge; labels start-align; the tab padding 2n - c holds; the row gap is c', async () => {
     const { tabs, tabEls, panelEls } = mount(VERTICAL)
     const strip = tabs.querySelector('[data-part="tablist"]') as HTMLElement
 
@@ -490,10 +497,10 @@ describe('ui-tabs — orientation="vertical": whole-shape geometry — strip bes
     expect(indicator.inlineSize, `${server.browser}: the indicator width did not resolve to the token`).toBe('2px')
     expect(px(indicator.blockSize), `${server.browser}: the indicator must span the FULL tab block-size, not a thin bottom bar`).toBeCloseTo(r0.height, 0)
 
-    // #536's law extended: zero padding-inline stands under vertical too.
+    // ADR-0245 Amendment 4 (superseding #536's zero padding): a vertical tab carries the control rule's padding too.
     const tabStyle = getComputedStyle(tabEls[0])
-    expect(tabStyle.paddingInlineStart, 'a vertical tab must carry zero padding-inline-start (GH #536, extended)').toBe('0px')
-    expect(tabStyle.paddingInlineEnd, 'a vertical tab must carry zero padding-inline-end (GH #536, extended)').toBe('0px')
+    expect(px(tabStyle.paddingInlineStart), 'a vertical tab carries the text edge 2n - c at its start').toBeCloseTo(TAB_PAD, 0)
+    expect(px(tabStyle.paddingInlineEnd), 'a vertical tab carries the text edge 2n - c at its end').toBeCloseTo(TAB_PAD, 0)
 
     // labels start-align (a list convention) — not centered (the horizontal-strip convention).
     expect(tabStyle.justifyContent, `${server.browser}: a vertical tab label must start-align`).toBe('flex-start')
@@ -501,7 +508,7 @@ describe('ui-tabs — orientation="vertical": whole-shape geometry — strip bes
     // full-width rows via cross-axis STRETCH: every tab's inline-size equals the strip's content inline-size.
     expect(r0.width, `${server.browser}: a vertical tab must stretch to the column's full width`).toBeCloseTo(r1.width, 0)
 
-    // the SAME strip-gap token, now spacing rows (row-gap) — 11px at the root register (the #542 pin, vertical form).
+    // the SAME strip-gap token, now spacing rows (row-gap): c at the root register (the #542 pin, vertical form).
     const rowGapPx = px(getComputedStyle(strip).rowGap)
     expect(rowGapPx, `${server.browser}: the vertical row-gap did not resolve to ${STRIP_GAP}px`).toBeCloseTo(STRIP_GAP, 0)
 
