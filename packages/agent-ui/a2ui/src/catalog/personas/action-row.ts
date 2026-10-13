@@ -5,18 +5,26 @@
 // default scale, the button's own `[size]` ramp, never a custom height) on every `ui-button` that lands inside
 // it, the late-child adoption shape of `ui-select`'s TKT-0026 observer. The only `ui-button`s a composite mints
 // itself, CardTable's bet-row chips and Clear (ADR-0243 Amendment 3), are `lg` by design, so the stamp never
-// changes their size.
+// changes their size. `BookingForm` (T-0106) is the one composite that steps down: its action Button is `md`
+// (28px), and the date-picker buttons it mints itself are skipped so they keep their own `sm` (24px).
 
-function stamp(node: Node): void {
+type ActionSize = 'md' | 'lg'
+
+function stamp(node: Node, size: ActionSize, skip: string | undefined): void {
   if (node.nodeType !== Node.ELEMENT_NODE) return
   const el = node as Element
-  if (el.localName === 'ui-button') el.setAttribute('size', 'lg')
-  for (const button of el.querySelectorAll('ui-button')) button.setAttribute('size', 'lg')
+  if (el.localName === 'ui-button' && !(skip !== undefined && el.matches(skip))) el.setAttribute('size', size)
+  for (const button of el.querySelectorAll(skip === undefined ? 'ui-button' : `ui-button:not(${skip})`)) button.setAttribute('size', size)
+}
+
+/** Size every `ui-button` appended anywhere under `root` at `size`, except those matching `skip`, for the life of `root`. */
+export function sizedActionButtons(root: HTMLElement, size: ActionSize, skip?: string): void {
+  new MutationObserver((records) => {
+    for (const record of records) record.addedNodes.forEach((node) => stamp(node, size, skip))
+  }).observe(root, { childList: true, subtree: true })
 }
 
 /** Size every `ui-button` appended anywhere under `root` at `lg`, for the life of `root`. */
 export function largeActionButtons(root: HTMLElement): void {
-  new MutationObserver((records) => {
-    for (const record of records) record.addedNodes.forEach(stamp)
-  }).observe(root, { childList: true, subtree: true })
+  sizedActionButtons(root, 'lg')
 }

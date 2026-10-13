@@ -103,7 +103,7 @@ export const personaConciergeBookingSeed: PersonaExampleSeed = {
   name: 'persona-concierge-booking',
   description:
     'The concierge persona over the agent-ui base: a BookingForm titled "Book your stay" with a required ' +
-    'dateSingle arrival and departure (drawn as two date cards), a required room-type select and a breakfast ' +
+    'dateSingle arrival and departure (drawn as two date fields), a required room-type select and a breakfast ' +
     'checkbox (a Yes / No choice), its aggregate bound to /booking and its child a submit Button; beside it a ' +
     'BookingConfirmation whose rows read arrival, departure, room type and breakfast back from the same ' +
     '/booking object.',
