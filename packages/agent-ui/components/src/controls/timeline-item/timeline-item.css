@@ -166,17 +166,20 @@
 
 :where(ui-timeline-item) {
   --ui-timeline-item-truncated-border: var(--md-sys-color-warning); /* TKT-0066: was a direct role read in @scope */
-  /* size → picks the row within the ambient [scale] register (Kim's (scale × size) → row lookup). Frame
+  /* ADR-0245 dark launch: inside an opt-in [data-tier] region the marker box is the 2n icon slot and the dot the
+     2n - 2c glyph box (clauses 3 and 4); outside one the derived tokens are undefined and the [scale] rows below
+     answer exactly as before (the [scale] register retires at the cut, so its rows stay until then).
+     size → picks the row within the ambient [scale] register (Kim's (scale × size) → row lookup). Frame
      quantities (marker-box/dot/connector/gutter) are density-INVARIANT (the centering law); row-gap is
      the ONE rhythm quantity and rides [density] via the shared `--md-sys-density` multiplier below. */
-  --ui-timeline-item-marker-box: var(--ui-timeline-item-marker-box-md);
-  --ui-timeline-item-dot-size: var(--ui-timeline-item-dot-size-md);
+  --ui-timeline-item-marker-box: var(--md-sys-icon-box, var(--ui-timeline-item-marker-box-md));
+  --ui-timeline-item-dot-size: var(--md-sys-glyph-box, var(--ui-timeline-item-dot-size-md));
   --ui-timeline-item-connector-width: var(--ui-timeline-item-connector-width-md);
   --ui-timeline-item-gutter: var(--ui-timeline-item-gutter-md);
   --ui-timeline-item-column-gap: var(--md-sys-space-sm); /* TKT-0066 item 5 ruling: constants route through the own chain */
   --ui-timeline-item-row-gap: calc(var(--ui-timeline-item-row-gap-md) * var(--md-sys-density));
   /* a slotted/consumer marker icon reads the CONTENT-ICON register, not this table (LLD §5). */
-  --ui-timeline-item-icon-size: var(--md-sys-icon-md);
+  --ui-timeline-item-icon-size: var(--md-sys-icon-box, var(--md-sys-icon-md));
 
   /* status-keyed ink — the SECONDARY, redundant channel (ADR-0057); the marker SHAPE is the primary one. */
   --ui-timeline-item-marker-ink: var(--md-sys-color-neutral-on-surface-variant);
@@ -187,20 +190,20 @@
   --ui-timeline-item-muted-ink: var(--md-sys-color-neutral-on-surface-variant);
 }
 :where(ui-timeline-item[size='sm']) {
-  --ui-timeline-item-marker-box: var(--ui-timeline-item-marker-box-sm);
-  --ui-timeline-item-dot-size: var(--ui-timeline-item-dot-size-sm);
+  --ui-timeline-item-marker-box: var(--md-sys-icon-box, var(--ui-timeline-item-marker-box-sm));
+  --ui-timeline-item-dot-size: var(--md-sys-glyph-box, var(--ui-timeline-item-dot-size-sm));
   --ui-timeline-item-connector-width: var(--ui-timeline-item-connector-width-sm);
   --ui-timeline-item-gutter: var(--ui-timeline-item-gutter-sm);
   --ui-timeline-item-row-gap: calc(var(--ui-timeline-item-row-gap-sm) * var(--md-sys-density));
-  --ui-timeline-item-icon-size: var(--md-sys-icon-sm);
+  --ui-timeline-item-icon-size: var(--md-sys-icon-box, var(--md-sys-icon-sm));
 }
 :where(ui-timeline-item[size='lg']) {
-  --ui-timeline-item-marker-box: var(--ui-timeline-item-marker-box-lg);
-  --ui-timeline-item-dot-size: var(--ui-timeline-item-dot-size-lg);
+  --ui-timeline-item-marker-box: var(--md-sys-icon-box, var(--ui-timeline-item-marker-box-lg));
+  --ui-timeline-item-dot-size: var(--md-sys-glyph-box, var(--ui-timeline-item-dot-size-lg));
   --ui-timeline-item-connector-width: var(--ui-timeline-item-connector-width-lg);
   --ui-timeline-item-gutter: var(--ui-timeline-item-gutter-lg);
   --ui-timeline-item-row-gap: calc(var(--ui-timeline-item-row-gap-lg) * var(--md-sys-density));
-  --ui-timeline-item-icon-size: var(--md-sys-icon-lg);
+  --ui-timeline-item-icon-size: var(--md-sys-icon-box, var(--md-sys-icon-lg));
 }
 
 /* status → the redundant ink channel (never the ONLY channel — SHAPE carries the state, styles block below). */
