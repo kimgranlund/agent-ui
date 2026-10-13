@@ -1456,6 +1456,7 @@
       "description": "A live status strip that streams work-in-progress entries and tail-follows the newest arrival.",
       "uses": [
         "ui-button",
+        "ui-glyph",
         "ui-timeline",
         "ui-timeline-item"
       ],
@@ -1585,7 +1586,9 @@
       "tag": "ui-swiper-paddles",
       "tier": "pattern",
       "description": "An author-placed anchor that the owning ui-swiper fills with previous/next navigation buttons.",
-      "uses": [],
+      "uses": [
+        "ui-glyph"
+      ],
       "catalogs": []
     },
     {
