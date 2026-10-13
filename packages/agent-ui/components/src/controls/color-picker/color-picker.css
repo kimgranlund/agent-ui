@@ -50,7 +50,7 @@
   --ui-color-picker-thumb-size: 1rem;
   --ui-color-picker-thumb-ring: var(--md-sys-color-neutral-on-surface, #1c1c1e);
   --ui-color-picker-thumb-ring-inner: var(--md-sys-color-neutral-surface-brightest, #fff);
-  --ui-color-picker-label-font: var(--md-sys-font-sm, 13px); /* TKT-0066 item 5 ruling: constants route through the own chain — the shared small-text size for channel labels, value readouts, and the format toggle */
+  --ui-color-picker-label-font: var(--md-sys-type-control, var(--md-sys-font-sm, 13px)); /* TKT-0066 item 5 ruling: constants route through the own chain — the shared small-text size for channel labels, value readouts, and the format toggle */
 }
 
 /* ══════════════════════ [2] STYLES BLOCK — @scope (ui-color-picker) ═══════════════════════════ */
