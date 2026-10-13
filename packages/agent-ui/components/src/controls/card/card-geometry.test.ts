@@ -83,8 +83,8 @@ describe('card.css — padding/gap off the --md-sys-space ladder (Container/layo
       `${process.cwd()}/packages/agent-ui/components/src/controls/_surface/container-box.css`,
       'utf8',
     ) as string
-    expect(sharedCss).toMatch(/--ui-box-pad-inline:\s*0\.75rem/)
-    expect(sharedCss).toMatch(/--ui-box-pad-block:\s*0\.375rem/)
+    expect(sharedCss).toMatch(/--ui-box-pad-inline:\s*var\(--md-sys-card-gutter,\s*0\.75rem\)/) // ADR-0245 cl.6, 12px under legacy
+    expect(sharedCss).toMatch(/--ui-box-pad-block:\s*var\(--md-sys-inset,\s*0\.375rem\)/) // 6px under legacy
   })
 
   it('REVISED 2026-07-04: a region is now INSET — the block-flow shell gives every region a uniform 6px margin', () => {
