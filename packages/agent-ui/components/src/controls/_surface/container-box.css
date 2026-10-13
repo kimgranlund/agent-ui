@@ -34,7 +34,7 @@
  * `--ui-box-inset` defaults to 0.375rem (6px at the 16px root) and is themeable per box. */
 
 :where([data-box]) {
-  --ui-box-inset: 0.375rem; /* 6px — the uniform inset/gap unit; a box may repoint it */
+  --ui-box-inset: var(--md-sys-inset, 0.375rem); /* n (ADR-0245 cl.6); 6px before the cut — the uniform inset/gap unit; a box may repoint it */
   display: flow-root; /* BFC: child margins collapse to ONE inset between siblings + hold the edge inset */
   isolation: isolate; /* the box is its own Z-DEPTH SCOPE (ADR-0052): descendant z-indexes (the sticky
                          brackets below, panel-internal chrome) resolve inside THIS stacking context and
@@ -46,9 +46,9 @@
    * A NESTED content steps its INLINE padding IN by one inset (6px) per level (12 → 6 → 6…, floored), so a
    * content-inside-content stays concentric with its parent's ink: parent inline-pad 12 = child inset margin 6
    * + child inline-pad 6. Block padding + gap stay constant at every level. */
-  --ui-box-pad-inline: 0.75rem; /* 12px — region inline padding */
-  --ui-box-pad-block: 0.375rem; /* 6px — region block padding */
-  --ui-box-gap: 0.5rem; /* 8px — gap between a region's own children */
+  --ui-box-pad-inline: var(--md-sys-card-gutter, 0.75rem); /* 2n, so inset + pad = the card margin 3n (ADR-0245 cl.6); 12px before the cut */
+  --ui-box-pad-block: var(--md-sys-inset, 0.375rem); /* n; 6px before the cut — region block padding */
+  --ui-box-gap: var(--md-sys-card-gutter, 0.5rem); /* the card gutter 2n; 8px before the cut — gap between a region's own children */
 
   /* Edge-aware scroll fade (below) — the depth of the mask band at a faded edge. Density-linked (like the
      old per-component --ui-card-fade it replaces), NOT the rem-based region padding above (a decorative

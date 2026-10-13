@@ -48,7 +48,7 @@
   :scope [data-part='cell'] {
     display: grid;
     justify-items: center;
-    gap: 2px;
+    gap: var(--md-sys-group-gutter, 2px); /* the group gutter c (ADR-0245 cl.6): 2px at the root */
   }
 
   :scope [data-part='box'] {

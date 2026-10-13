@@ -25,7 +25,7 @@
  * Standalone stylesheet — linked per control or via shared-styles.css (ADR-0233, no barrel); NEVER injected from timeline-item.ts.
  */
 
-/* ════════════════ [0] THE MARKER-SYSTEM RAMP — bare :root / [scale=…] (dimensions.css idiom) ════════════════ */
+/* ════════════════ [0] THE MARKER-SYSTEM RAMP — bare :root per-size rows (the legacy fallbacks since ADR-0245) ════════════════ */
 
 /* uses: synced from timeline-item.md by scripts/codemod-uses.mjs */
 @import '../disclosure/disclosure.css';
@@ -51,133 +51,20 @@
   --ui-timeline-item-row-gap-lg: 16px;
 }
 
-/* ui-sm — the compact register (tighter than the default). */
-[scale='ui-sm'] {
-  --ui-timeline-item-marker-box-sm: 12px;
-  --ui-timeline-item-marker-box-md: 14px;
-  --ui-timeline-item-marker-box-lg: 18px;
-  --ui-timeline-item-dot-size-sm: 5px;
-  --ui-timeline-item-dot-size-md: 6px;
-  --ui-timeline-item-dot-size-lg: 8px;
-  --ui-timeline-item-connector-width-sm: 2px;
-  --ui-timeline-item-connector-width-md: 2px;
-  --ui-timeline-item-connector-width-lg: 2px;
-  --ui-timeline-item-gutter-sm: 16px;
-  --ui-timeline-item-gutter-md: 18px;
-  --ui-timeline-item-gutter-lg: 22px;
-  --ui-timeline-item-row-gap-sm: 6px;
-  --ui-timeline-item-row-gap-md: 8px;
-  --ui-timeline-item-row-gap-lg: 12px;
-}
-/* ui-md — the default register, restated explicitly (byte-identical to :root) so every [scale] tier is a
-   complete, self-contained row (the ADR-0038 discipline: no tier relies on falling through to :root). */
-[scale='ui-md'] {
-  --ui-timeline-item-marker-box-sm: 14px;
-  --ui-timeline-item-marker-box-md: 16px;
-  --ui-timeline-item-marker-box-lg: 20px;
-  --ui-timeline-item-dot-size-sm: 6px;
-  --ui-timeline-item-dot-size-md: 8px;
-  --ui-timeline-item-dot-size-lg: 10px;
-  --ui-timeline-item-connector-width-sm: 2px;
-  --ui-timeline-item-connector-width-md: 2px;
-  --ui-timeline-item-connector-width-lg: 2px;
-  --ui-timeline-item-gutter-sm: 18px;
-  --ui-timeline-item-gutter-md: 20px;
-  --ui-timeline-item-gutter-lg: 24px;
-  --ui-timeline-item-row-gap-sm: 8px;
-  --ui-timeline-item-row-gap-md: 12px;
-  --ui-timeline-item-row-gap-lg: 16px;
-}
-/* ui-lg — a step up (also = the content-md register, Kim's 6-names→4-registers band overlap). */
-[scale='ui-lg'] {
-  --ui-timeline-item-marker-box-sm: 16px;
-  --ui-timeline-item-marker-box-md: 20px;
-  --ui-timeline-item-marker-box-lg: 24px;
-  --ui-timeline-item-dot-size-sm: 7px;
-  --ui-timeline-item-dot-size-md: 10px;
-  --ui-timeline-item-dot-size-lg: 12px;
-  --ui-timeline-item-connector-width-sm: 2px;
-  --ui-timeline-item-connector-width-md: 2px;
-  --ui-timeline-item-connector-width-lg: 2px;
-  --ui-timeline-item-gutter-sm: 20px;
-  --ui-timeline-item-gutter-md: 24px;
-  --ui-timeline-item-gutter-lg: 28px;
-  --ui-timeline-item-row-gap-sm: 10px;
-  --ui-timeline-item-row-gap-md: 16px;
-  --ui-timeline-item-row-gap-lg: 20px;
-}
-/* content-sm ≡ ui-md (Kim's band-overlap law: the content-* band is the ui-* band shifted up one row —
-   6 [scale] names render 4 distinct marker-system registers, matching --md-sys-height-* and --md-sys-font-*). */
-[scale='content-sm'] {
-  --ui-timeline-item-marker-box-sm: 14px;
-  --ui-timeline-item-marker-box-md: 16px;
-  --ui-timeline-item-marker-box-lg: 20px;
-  --ui-timeline-item-dot-size-sm: 6px;
-  --ui-timeline-item-dot-size-md: 8px;
-  --ui-timeline-item-dot-size-lg: 10px;
-  --ui-timeline-item-connector-width-sm: 2px;
-  --ui-timeline-item-connector-width-md: 2px;
-  --ui-timeline-item-connector-width-lg: 2px;
-  --ui-timeline-item-gutter-sm: 18px;
-  --ui-timeline-item-gutter-md: 20px;
-  --ui-timeline-item-gutter-lg: 24px;
-  --ui-timeline-item-row-gap-sm: 8px;
-  --ui-timeline-item-row-gap-md: 12px;
-  --ui-timeline-item-row-gap-lg: 16px;
-}
-/* content-md ≡ ui-lg (same band-overlap law). */
-[scale='content-md'] {
-  --ui-timeline-item-marker-box-sm: 16px;
-  --ui-timeline-item-marker-box-md: 20px;
-  --ui-timeline-item-marker-box-lg: 24px;
-  --ui-timeline-item-dot-size-sm: 7px;
-  --ui-timeline-item-dot-size-md: 10px;
-  --ui-timeline-item-dot-size-lg: 12px;
-  --ui-timeline-item-connector-width-sm: 2px;
-  --ui-timeline-item-connector-width-md: 2px;
-  --ui-timeline-item-connector-width-lg: 2px;
-  --ui-timeline-item-gutter-sm: 20px;
-  --ui-timeline-item-gutter-md: 24px;
-  --ui-timeline-item-gutter-lg: 28px;
-  --ui-timeline-item-row-gap-sm: 10px;
-  --ui-timeline-item-row-gap-md: 16px;
-  --ui-timeline-item-row-gap-lg: 20px;
-}
-/* content-lg — the largest register, its own row (no overlap partner, mirroring --md-sys-height-*). */
-[scale='content-lg'] {
-  --ui-timeline-item-marker-box-sm: 20px;
-  --ui-timeline-item-marker-box-md: 24px;
-  --ui-timeline-item-marker-box-lg: 28px;
-  --ui-timeline-item-dot-size-sm: 9px;
-  --ui-timeline-item-dot-size-md: 12px;
-  --ui-timeline-item-dot-size-lg: 14px;
-  --ui-timeline-item-connector-width-sm: 2px;
-  --ui-timeline-item-connector-width-md: 2px;
-  --ui-timeline-item-connector-width-lg: 2px;
-  --ui-timeline-item-gutter-sm: 24px;
-  --ui-timeline-item-gutter-md: 28px;
-  --ui-timeline-item-gutter-lg: 32px;
-  --ui-timeline-item-row-gap-sm: 12px;
-  --ui-timeline-item-row-gap-md: 20px;
-  --ui-timeline-item-row-gap-lg: 24px;
-}
-
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-timeline-item) declares --ui-timeline-item-* ════════════════ */
 
 :where(ui-timeline-item) {
   --ui-timeline-item-truncated-border: var(--md-sys-color-warning); /* TKT-0066: was a direct role read in @scope */
-  /* ADR-0245 dark launch: inside an opt-in [data-tier] region the marker box is the 2n icon slot and the dot the
-     2n - 2c glyph box (clauses 3 and 4); outside one the derived tokens are undefined and the [scale] rows below
-     answer exactly as before (the [scale] register retires at the cut, so its rows stay until then).
-     size → picks the row within the ambient [scale] register (Kim's (scale × size) → row lookup). Frame
-     quantities (marker-box/dot/connector/gutter) are density-INVARIANT (the centering law); row-gap is
-     the ONE rhythm quantity and rides [density] via the shared `--md-sys-density` multiplier below. */
+  /* ADR-0245: the marker box is the 2n icon slot and the dot the 2n - 2c glyph box (clauses 3 and 4), at the
+     element's own n; the per-size literal rows above are their fallback under [data-foundations="legacy"].
+     size picks the row for the connector, gutter and row gap. The [scale] rows and the [density] multiplier
+     retired at the cut (a region's data-scale moves n instead). */
   --ui-timeline-item-marker-box: var(--md-sys-icon-box, var(--ui-timeline-item-marker-box-md));
   --ui-timeline-item-dot-size: var(--md-sys-glyph-box, var(--ui-timeline-item-dot-size-md));
   --ui-timeline-item-connector-width: var(--ui-timeline-item-connector-width-md);
   --ui-timeline-item-gutter: var(--ui-timeline-item-gutter-md);
   --ui-timeline-item-column-gap: var(--md-sys-space-sm); /* TKT-0066 item 5 ruling: constants route through the own chain */
-  --ui-timeline-item-row-gap: calc(var(--ui-timeline-item-row-gap-md) * var(--md-sys-density));
+  --ui-timeline-item-row-gap: var(--ui-timeline-item-row-gap-md);
   /* a slotted/consumer marker icon reads the CONTENT-ICON register, not this table (LLD §5). */
   --ui-timeline-item-icon-size: var(--md-sys-icon-box, var(--md-sys-icon-md));
 
@@ -194,7 +81,7 @@
   --ui-timeline-item-dot-size: var(--md-sys-glyph-box, var(--ui-timeline-item-dot-size-sm));
   --ui-timeline-item-connector-width: var(--ui-timeline-item-connector-width-sm);
   --ui-timeline-item-gutter: var(--ui-timeline-item-gutter-sm);
-  --ui-timeline-item-row-gap: calc(var(--ui-timeline-item-row-gap-sm) * var(--md-sys-density));
+  --ui-timeline-item-row-gap: var(--ui-timeline-item-row-gap-sm);
   --ui-timeline-item-icon-size: var(--md-sys-icon-box, var(--md-sys-icon-sm));
 }
 :where(ui-timeline-item[size='lg']) {
@@ -202,7 +89,7 @@
   --ui-timeline-item-dot-size: var(--md-sys-glyph-box, var(--ui-timeline-item-dot-size-lg));
   --ui-timeline-item-connector-width: var(--ui-timeline-item-connector-width-lg);
   --ui-timeline-item-gutter: var(--ui-timeline-item-gutter-lg);
-  --ui-timeline-item-row-gap: calc(var(--ui-timeline-item-row-gap-lg) * var(--md-sys-density));
+  --ui-timeline-item-row-gap: var(--ui-timeline-item-row-gap-lg);
   --ui-timeline-item-icon-size: var(--md-sys-icon-box, var(--md-sys-icon-lg));
 }
 

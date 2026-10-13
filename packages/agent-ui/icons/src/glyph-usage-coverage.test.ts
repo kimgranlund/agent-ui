@@ -277,16 +277,16 @@ describe('glyph-usage coverage — the bite proof (synthetic revert of the GH #1
 
 describe('glyph-usage coverage — the extraction predicates BITE (synthetic negative controls)', () => {
   it('directGlyphLiterals reads both the object-property and HTML-attribute spellings', () => {
-    expect(directGlyphLiterals(`el('ui-icon', { glyph: 'house' })`)).toEqual(['house'])
-    expect(directGlyphLiterals(`<ui-icon glyph="paperclip">`)).toEqual(['paperclip'])
+    expect(directGlyphLiterals(`el('ui-icon', { glyph: 'house' })`)).toEqual(['house']) // foundations-alias
+    expect(directGlyphLiterals(`<ui-icon glyph="paperclip">`)).toEqual(['paperclip']) // foundations-alias
   })
 
   it('ADR-0245 cl.4: directGlyphLiterals reads the symbol spelling and the setAttribute and property forms', () => {
     expect(directGlyphLiterals(`el('ui-icon', { symbol: 'house' })`)).toEqual(['house'])
     expect(directGlyphLiterals(`<ui-icon symbol="paperclip">`)).toEqual(['paperclip'])
-    expect(directGlyphLiterals(`icon.setAttribute('glyph', 'gear')`)).toEqual(['gear'])
+    expect(directGlyphLiterals(`icon.setAttribute('glyph', 'gear')`)).toEqual(['gear']) // foundations-alias
     expect(directGlyphLiterals(`icon.setAttribute("symbol", "bell")`)).toEqual(['bell'])
-    expect(directGlyphLiterals(`icon.glyph = 'x'; icon.symbol = 'eye'`).sort()).toEqual(['eye', 'x'])
+    expect(directGlyphLiterals(`icon.glyph = 'x'; icon.symbol = 'eye'`).sort()).toEqual(['eye', 'x']) // foundations-alias
   })
 
   it('ADR-0245 cl.5: a symbol aimed at ui-glyph is a mark, not an icon name', () => {
@@ -304,7 +304,7 @@ describe('glyph-usage coverage — the extraction predicates BITE (synthetic neg
   it('indirectGlyphLiterals resolves a bare-identifier glyph forwarded through a named function parameter', () => {
     const src = [
       'function commandOption(value, icon, label) {',
-      "  return el('ui-icon', { glyph: icon })",
+      "  return el('ui-icon', { glyph: icon })", // foundations-alias
       '}',
       "commandOption('logout', 'sign-out', 'Log out')",
       "commandOption('share', 'share', 'Share file')",
@@ -314,7 +314,7 @@ describe('glyph-usage coverage — the extraction predicates BITE (synthetic neg
 
   it('indirectGlyphLiterals ignores a non-literal (dynamic) call argument rather than crashing', () => {
     const src = [
-      'function opt(icon) { return el("ui-icon", { glyph: icon }) }',
+      'function opt(icon) { return el("ui-icon", { glyph: icon }) }', // foundations-alias
       'const dynamicName = computeIt()',
       'opt(dynamicName)',
       "opt('house')",
