@@ -1,6 +1,6 @@
 // site/lib/a2ui-catalog-tiers.ts — the A2UI Catalog page's TIER taxonomy (owner-approved 2026-08-15 audit,
 // GH #970): groups the browsable default-catalog component types (73 at T-0064) into
-// five page-level tabs — WIDGET · PRIMITIVE · PATTERN · FEATURE · INPUT — plus the type→gallery-example
+// five page-level tabs — WIDGET · PRIMITIVE · COMPOUND · FEATURE · INPUT — plus the type→gallery-example
 // cross-link derivation the page's "see it in real use" links ride. The exact count is DERIVED
 // (`browsableNames().length`, gated by a2ui-catalog-tiers.test.ts) — this comment is a rough orientation
 // figure only, not a re-asserted fact a future addition must remember to bump.
@@ -38,12 +38,12 @@ import { seedAnchorId } from './a2ui-gallery.ts'
 export const NESTED_ONLY: ReadonlySet<string> = new Set(['Option', 'Tab', 'TabPanel', 'CardHeader', 'CardContent', 'CardFooter', 'Segment'])
 
 /** The five page-level tabs (owner-approved 2026-08-15 audit) — declaration order IS tab/display order. */
-export type Tier = 'WIDGET' | 'PRIMITIVE' | 'PATTERN' | 'FEATURE' | 'INPUT'
-export const TIERS: readonly Tier[] = ['WIDGET', 'PRIMITIVE', 'PATTERN', 'FEATURE', 'INPUT']
+export type Tier = 'WIDGET' | 'PRIMITIVE' | 'COMPOUND' | 'FEATURE' | 'INPUT'
+export const TIERS: readonly Tier[] = ['WIDGET', 'PRIMITIVE', 'COMPOUND', 'FEATURE', 'INPUT']
 export const TIER_LABEL: Readonly<Record<Tier, string>> = {
   WIDGET: 'Widget',
   PRIMITIVE: 'Primitive',
-  PATTERN: 'Pattern',
+  COMPOUND: 'Compound',
   FEATURE: 'Feature',
   INPUT: 'Input',
 }
@@ -136,43 +136,43 @@ export const TIER_OF: Readonly<Record<string, Tier>> = {
   // associated nor value-committing; INPUT's own header comment above scopes to exactly those two).
   Toggle: 'WIDGET',
 
-  // PATTERN (18): composite, multi-part interactive constructs. An *Item/*Pane companion rides with its
+  // COMPOUND (18): composite, multi-part interactive constructs. An *Item/*Pane companion rides with its
   // owning compound: MenuItem→Menu, SwiperItem→Swiper, SplitPane→Split, TimelineItem→Timeline's per-row
-  // anatomy (Timeline itself is FEATURE-class as the whole chronology surface; its row is PATTERN-class,
+  // anatomy (Timeline itself is FEATURE-class as the whole chronology surface; its row is COMPOUND-class,
   // the same composite-row shape as MenuItem/SwiperItem).
   // Drill (GH #1353, ADR-0195 GH #954): the N-level drill-down panel container — a composite,
   // multi-part interactive construct (header+back+heading anatomy, per-panel resolution), the
   // Tabs/Split/Swiper class, not a display leaf.
-  Drill: 'PATTERN',
-  DrillPanel: 'PATTERN', // rides with Drill, the SplitPane/SwiperItem precedent
-  Disclosure: 'PATTERN',
-  FormPopover: 'PATTERN',
-  Menu: 'PATTERN',
-  MenuItem: 'PATTERN',
-  Modal: 'PATTERN',
-  Popover: 'PATTERN',
+  Drill: 'COMPOUND',
+  DrillPanel: 'COMPOUND', // rides with Drill, the SplitPane/SwiperItem precedent
+  Disclosure: 'COMPOUND',
+  FormPopover: 'COMPOUND',
+  Menu: 'COMPOUND',
+  MenuItem: 'COMPOUND',
+  Modal: 'COMPOUND',
+  Popover: 'COMPOUND',
   // ServiceCard (ADR-0224, GH #1429): the availability-stated service/agent launch card — a composite,
   // multi-part construct (title+path+description+status dot+action+optional menu slot), the SAME
   // Drill/Tabs/Split "composite, multi-part" class this section names, not a WIDGET display leaf: it
   // carries a real interactive action affordance (Open⟷Unavailable) plus an app-composed overflow slot.
-  ServiceCard: 'PATTERN',
+  ServiceCard: 'COMPOUND',
   // Breadcrumb (GH #1515, the frozen design intake): a composite, multi-part construct (ordered crumb
   // children + an injected separator + an optional composed overflow ui-menu fold) — the same
   // Drill/Tabs/ServiceCard "composite, multi-part" class, not a WIDGET display leaf.
-  Breadcrumb: 'PATTERN',
+  Breadcrumb: 'COMPOUND',
   // ProductCard/BoardGrid/GameHud (ADR-0243, T-0072): all three are `tier: pattern` in their fork sheets and
   // descriptors, multi-part constructs (media/body/action, a cell grid, header/stats/progress), not WIDGET leaves.
-  ProductCard: 'PATTERN',
-  BoardGrid: 'PATTERN',
-  GameHud: 'PATTERN',
-  Split: 'PATTERN',
-  SplitPane: 'PATTERN',
-  Swiper: 'PATTERN',
-  SwiperItem: 'PATTERN',
-  Tabs: 'PATTERN',
-  TimelineItem: 'PATTERN',
-  Toolbar: 'PATTERN',
-  Tooltip: 'PATTERN',
+  ProductCard: 'COMPOUND',
+  BoardGrid: 'COMPOUND',
+  GameHud: 'COMPOUND',
+  Split: 'COMPOUND',
+  SplitPane: 'COMPOUND',
+  Swiper: 'COMPOUND',
+  SwiperItem: 'COMPOUND',
+  Tabs: 'COMPOUND',
+  TimelineItem: 'COMPOUND',
+  Toolbar: 'COMPOUND',
+  Tooltip: 'COMPOUND',
 }
 
 /** The browsable catalog type names — DERIVED from the shipped catalog (never hand-listed), mirroring
@@ -183,12 +183,12 @@ export function browsableNames(): string[] {
     .sort((a, b) => a.localeCompare(b))
 }
 
-/** One catalog type's tier home. Falls back to `'PATTERN'` (the broadest, catch-all bucket) for a name the
+/** One catalog type's tier home. Falls back to `'COMPOUND'` (the broadest, catch-all bucket) for a name the
  *  table hasn't caught up to yet — NEVER thrown at page-render time, so a drifted table degrades a live
  *  page's grouping rather than breaking it; a2ui-catalog-tiers.test.ts's completeness check is what actually
  *  enforces "every entry has exactly one tier home" before merge. */
 export function tierOf(name: string): Tier {
-  return TIER_OF[name] ?? 'PATTERN'
+  return TIER_OF[name] ?? 'COMPOUND'
 }
 
 /** Every catalog component TYPE a seed's message stream renders — walks its `updateComponents` envelopes
