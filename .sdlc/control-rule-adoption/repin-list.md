@@ -1,5 +1,7 @@
 # T-0122 re-pin list: the test files the control rule turned red
 
+Status (2026-10-13): re-pinned in T-0122 itself on Kim's rulings, no lane fan-out. Every file below is green; the law checks were re-derived as the rulings say, the select and combo-box panels now sit c outside their trigger so the alignment equalities hold, the agent-admin strip reads Settings, System and Dialog, and the 14 goldens were re-minted one file at a time after an eye review.
+
 Source: the unit suite and the six browser shards, each run once on `feat/control-rule-adoption` at `f82fcd1c` (rebased onto main `38ccc1d3`, T-0121 and T-0127 included). 54 failing tests in 26 files. Chromium and WebKit each count once under *engines*; the visual shard runs one engine. Grouped by the census lane partition (`laneOf` in `scripts/foundations-census.mjs`) so each group can run as its own file-disjoint lane. `unlaned` is outside the partition.
 
 Cause: ADR-0245 Amendment 4, the skill's control rule. Box margin n, gutter c, label inset n - c on the text slot, so the text edge is 2n - c (8 / 10 / 12 at the root sm / md / lg) where it was 2n on a button, toggle and segment, n on a field and 0 on a tab. A lane re-pins with scale.mjs `resolve()` at the test's own register, never a literal:

@@ -268,7 +268,8 @@ describe('ui-super-shell — SPEC-R7a pane segments (AC10, wide)', () => {
       expect(tab.scrollWidth, `"${tab.textContent}" clips mid-word (scrollWidth > clientWidth)`).toBeLessThanOrEqual(tab.clientWidth + 1)
       expect(tab.getBoundingClientRect().width, `"${tab.textContent}" collapsed to nothing`).toBeGreaterThan(0)
     }
-    // ADR-0245 cut: the derived tab metrics are narrower, so the trio now fits the default pane whole.
+    // ADR-0245 Amendment 4: each tab carries 2n - c on each side, and the short trio (Settings, System, Dialog)
+    // fits the default 252px pane whole at the root md.
     expect(viewport.scrollWidth, 'the whole-label row fits the default pane').toBeLessThanOrEqual(viewport.clientWidth + 1)
     // At a 162px pane the three whole labels genuinely outgrow it, and the tablist part
     // is the LIVE scroll viewport.
