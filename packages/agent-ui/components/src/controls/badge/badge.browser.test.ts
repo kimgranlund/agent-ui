@@ -104,10 +104,14 @@ describe('ui-badge geometry — the compact pad law, NOT h/2 (SPEC-R13 AC1, ADR-
     expect(padCompact, 'a denser region must not pad wider').toBeLessThanOrEqual(padSpacious)
   })
 
-  it('the badge declares no [size] prop or CSS hook (SPEC-R13 AC3); a stray size attr steps the derived n, like any element (ADR-0245)', () => {
-    const el = mount('<ui-badge label="status" size="lg"></ui-badge>') // inert for the badge itself; the foundation tokens read [size] on any element
-    const box = px(getComputedStyle(el).blockSize)
-    expect(box, 'the box is the derived 2n at the lg step of the root register').toBeCloseTo(resolve('product', 'sm', 'lg').icon, 0)
+  it('no [size] attribute repoints the box (SPEC-R13 AC3: v1 ships no size axis)', () => {
+    // ADR-0245 cl.3: the badge sits at its context n; badge.css hands a stray size step back to the parent's.
+    const bare = mount('<ui-badge label="status"></ui-badge>')
+    for (const size of ['sm', 'lg']) {
+      const el = mount(`<ui-badge label="status" size="${size}"></ui-badge>`)
+      expect(px(getComputedStyle(el).blockSize), `a stray size="${size}" moved the box`).toBe(px(getComputedStyle(bare).blockSize))
+    }
+    expect(px(getComputedStyle(bare).blockSize), 'the box is the context 2n').toBe(resolve('product', 'sm', 'md').icon) // 14
   })
 })
 

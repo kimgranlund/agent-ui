@@ -48,7 +48,6 @@ afterEach(() => {
   while (mounted.length) mounted.pop()?.remove()
 })
 
-const px = (v: string): number => Number.parseFloat(v)
 // ADR-0245: --ui-button-icon / --ui-button-glyph are derived calc() tokens (unregistered), so the raw custom-property
 // text parses as NaN; read the token through a probe box inside the button, which resolves it to real px.
 const tokenPx = (btn: HTMLElement, name: string): number => {

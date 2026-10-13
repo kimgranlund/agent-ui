@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { server, cdp, userEvent } from 'vitest/browser'
 
 // G9 s7 — the CROSS-ENGINE card smoke (decomp g9-containers s7 browser gate). Runs in BOTH Chromium and WebKit
@@ -110,7 +111,7 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     expect(alphaOf(getComputedStyle(card).backgroundColor), 'card surface is transparent').toBeGreaterThan(0)
   })
 
-  it('a NESTED card radius DECREMENTS one level — measured px == max(--md-sys-space-xs, parent − padding) (ADR-0018)', () => {
+  it('a NESTED card reads its own 3n, not the retired ADR-0018 decrement of its parent (ADR-0245 cl.6, concentric by construction)', () => {
     // Reseed the root radius well larger than the region padding so the one-level decrement is a clear
     // unambiguous px well above the floor (with the default --md-sys-shape-corner-base of 12px against the
     // shared 12px region padding the decrement would land exactly ON the --md-sys-space-xs (4px) floor RESOLVED
@@ -134,14 +135,14 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     // the concentric-corner law, measured: child == max(--md-sys-space-xs, parent − content inline padding) —
     // 4px at the default density; at this reseed (32px) the decrement (20px) sits well clear of the floor
     // either way — see the dedicated default-root floor test below for the case where the floor actually binds.
-    expect(nestedR, 'nested radius != max(floor, parent − content inline padding)').toBeCloseTo(21, 1)
-    // anti-vacuous negative control: the nested radius is genuinely SMALLER than the parent (the decrement is
-    // real — a same-radius/no-decrement bug would make these equal and FAIL here)
-    expect(nestedR, 'nested radius did not decrement below the parent').toBeLessThan(rootR)
+    // ADR-0245 cl.6: a container's radius equals its own margin (3n = 21), so the ADR-0018 chain is only the
+    // legacy fallback; the parent's reseed to 32px does not reach the nested card.
+    expect(nestedR, 'nested radius is not the derived 3n').toBe(resolve('product', 'sm', 'md').card.radius)
+    expect(nestedR, 'nested radius did not stay below the reseeded parent').toBeLessThan(rootR)
     expect(nestedR, 'nested radius collapsed to 0 (no demonstrable decrement)').toBeGreaterThan(0)
   })
 
-  it('a nested card under the DEFAULT (unreseeded) root radius keeps a small floor, not a knife-edge 0', () => {
+  it('a nested card under the DEFAULT (unreseeded) root reads the same derived 3n as its parent, never a knife-edge 0', () => {
     // RESOLVED 2026-08-24 (Kim, live off a design-mode report on comparison-pricing-table's plan tiles): with
     // the default --md-sys-shape-corner-base (12px) exactly equal to the shared region inline padding (12px),
     // an UNRESEEDED root card's nested children used to decrement to a literal 0 (12 − 12), rendering every
@@ -155,7 +156,7 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     expect(radiusPx(root), 'root did not fall to the default corner-base').toBeCloseTo(21, 0)
     // 4px == --md-sys-space-xs at the default density (1) — see this file's px()/mount() helpers; a fresh
     // mount carries no [density] repoint, so the token resolves to its literal 4px base.
-    expect(radiusPx(nested), 'default-root nested card lost the floor (regressed to knife-edge 0)').toBeCloseTo(21, 1)
+    expect(radiusPx(nested), 'default-root nested card is not the derived 3n (regressed to a knife-edge 0?)').toBe(resolve('product', 'sm', 'md').card.radius)
   })
 
   it('regions are PRESENCE-DRIVEN in BLOCK FLOW — a present region adds a box, an absent one leaves nothing', () => {
@@ -362,16 +363,13 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     expect(px(getComputedStyle(mixed).paddingLeft), 'mixed composition wrongly got the fallback padding').toBe(0)
   })
 
-  it('a DIRECT card > card nesting (no region wrapper, outer card bare) stays the pre-existing manual case — ADR-0056 re-proof', () => {
-    // ADR-0056 re-proof (the ADR names this explicitly as an open question — verify which way it resolves):
-    // a card nested DIRECTLY inside another card (no ui-card-content between) matches BOTH `:where(ui-card)`
-    // (declaring its own --ui-card-inner-radius) AND its parent's `:where(ui-card) > *` publish rule (setting
-    // --ui-card-child-radius directly ON it) — a genuine multi-property CSS CYCLE
-    // (radius → child-radius → inner-radius → radius) that collapses the nested radius to 0, independent of
-    // any padding value. This is PRE-EXISTING (ADR-0018), not something ADR-0056 introduces: the region-less
-    // fallback only ever sets padding/gap, never touches the radius chain — so direct nesting stays exactly
-    // the documented manual-reseed case, whether or not the outer (bare) card now also carries fallback
-    // padding. Measured, not assumed: the fallback's OWN leg (the padding) still applies independently.
+  it('a DIRECT card > card nesting (no region wrapper, outer card bare) reads its own 3n in both engines (ADR-0245 cl.6, ADR-0056 re-proof)', () => {
+    // ADR-0056 re-proof. A card nested DIRECTLY inside another card (no ui-card-content between) used to match
+    // its parent's child-radius publish rule as well as its own token block, a multi-property CSS cycle
+    // (radius, child-radius, inner-radius) that WebKit enforced even through the unused var() fallback (0)
+    // while Chromium did not (21). The publish rule now skips a direct ui-card child, so the nested card reads
+    // its own --md-sys-card-radius (3n = 21 at the root) in both engines. The region-less fallback padding of
+    // the bare outer card is an independent leg and still applies.
     const root = mount('<ui-card style="--ui-card-radius: 32px"><ui-card>nested, no region wrapper</ui-card></ui-card>')
     const nested = root.querySelector('ui-card') as HTMLElement
 
@@ -379,12 +377,8 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     // the region-less fallback (an unrelated, independent leg) still applies its own padding to the bare outer
     // card even though its radius chain doesn't reach the nested card cleanly.
     expect(px(getComputedStyle(root).paddingLeft), 'the bare outer card lost its own fallback padding').toBeCloseTo(14, 0)
-    // derived (ADR-0245): the nested card reads --md-sys-card-radius (3n = 21) before the ADR-0018 chain. Chromium
-    // evaluates only the used var() branch, so the pre-existing cycle no longer reaches it (21); WebKit still
-    // treats the unused fallback reference as part of the cycle and collapses it to 0. Unchanged by ADR-0056.
-    expect(radiusPx(nested), `${server.browser}: direct nesting radius (derived 3n in chromium, cycle 0 in webkit)`).toBe(
-      server.browser === 'webkit' ? 0 : 21,
-    )
+    // derived (ADR-0245): the nested card reads --md-sys-card-radius (3n = 21), the same in both engines.
+    expect(radiusPx(nested), `${server.browser}: direct nesting radius (derived 3n)`).toBe(resolve('product', 'sm', 'md').card.radius)
 
     // the documented workaround (an explicit border-radius reseed) still recovers the radius under the
     // fallback — the manual case remains manually fixable, it is simply not automatic.
