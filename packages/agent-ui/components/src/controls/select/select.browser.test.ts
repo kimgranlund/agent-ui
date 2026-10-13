@@ -641,19 +641,19 @@ describe('ui-select — trigger geometry: [size] exact px + [scale] anti-vacuous
     const mdTrigger = md.querySelector<HTMLElement>('[data-part="trigger"]')!
     const lgTrigger = lg.querySelector<HTMLElement>('[data-part="trigger"]')!
 
-    // Exact px from ADR-0038 §1 table at default [scale] (comfortable density, ui-md register)
+    // Exact px from the derived ramp at the root register (product / sm, ADR-0245 cl.3): 4n
     expect(
       Math.round(smTrigger.getBoundingClientRect().height),
-      `${server.browser}: [size=sm] trigger height should be 24px`,
-    ).toBe(24)
+      `${server.browser}: [size=sm] trigger height should be ${resolve('product', 'sm', 'sm').h}px`,
+    ).toBe(resolve('product', 'sm', 'sm').h)
     expect(
       Math.round(mdTrigger.getBoundingClientRect().height),
-      `${server.browser}: [size=md] trigger height should be 28px`,
-    ).toBe(28)
+      `${server.browser}: [size=md] trigger height should be ${resolve('product', 'sm', 'md').h}px`,
+    ).toBe(resolve('product', 'sm', 'md').h)
     expect(
       Math.round(lgTrigger.getBoundingClientRect().height),
-      `${server.browser}: [size=lg] trigger height should be 36px`,
-    ).toBe(36)
+      `${server.browser}: [size=lg] trigger height should be ${resolve('product', 'sm', 'lg').h}px`,
+    ).toBe(resolve('product', 'sm', 'lg').h)
 
     // Anti-vacuous: adjacent sizes must NOT be equal (they step, not collapse)
     expect(
@@ -738,7 +738,7 @@ describe('ui-select — trigger geometry: [size] exact px + [scale] anti-vacuous
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-select — panel/option geometry carries [size] (B5, the size-carrying model, both engines)', () => {
-  const HEIGHT: Record<string, number> = { sm: 24, md: 28, lg: 36 }
+  const HEIGHT: Record<string, number> = { sm: resolve('product', 'sm', 'sm').h, md: resolve('product', 'sm', 'md').h, lg: resolve('product', 'sm', 'lg').h }
 
   function mkSizedSelect(size: string): UISelectElement {
     const el = document.createElement('ui-select') as UISelectElement
@@ -754,7 +754,7 @@ describe('ui-select — panel/option geometry carries [size] (B5, the size-carry
     return el
   }
 
-  it('panel inset (margin) + option inline-pad sum to h/2 at sm/md/lg — the alignment law, browser-measured', async () => {
+  it('panel inset (margin) + option inline-pad sum to n (the frame inline padding, h/4) at sm/md/lg — the alignment law, browser-measured', async () => {
     const sums: Record<string, number> = {}
     for (const size of ['sm', 'md', 'lg']) {
       const wrap = document.createElement('div')
@@ -774,8 +774,8 @@ describe('ui-select — panel/option geometry carries [size] (B5, the size-carry
 
       expect(
         sum,
-        `${server.browser}: [size=${size}] panel-inset+option-inline (${sum}px) should equal h/2 (${HEIGHT[size]! / 2}px)`,
-      ).toBeCloseTo(HEIGHT[size]! / 2, 1)
+        `${server.browser}: [size=${size}] panel-inset+option-inline (${sum}px) should equal n (${resolve('product', 'sm', size as 'sm' | 'md' | 'lg').n}px)`,
+      ).toBeCloseTo(resolve('product', 'sm', size as 'sm' | 'md' | 'lg').n, 1)
     }
 
     // Anti-vacuous: the three sizes must NOT collapse to the same inset (browser-measured, not
@@ -837,8 +837,8 @@ describe('ui-select — panel/option geometry carries [size] (B5, the size-carry
       optionFont,
       `${server.browser}: option font-size (${optionFont}px) should match the [size=lg] trigger font (${triggerFont}px), not an inherited ambient value`,
     ).toBeCloseTo(triggerFont, 1)
-    // Sanity: lg font is 16px, not the browser default 16px-by-coincidence — cross-check against md.
-    expect(optionFont, `${server.browser}: [size=lg] option font should be the lg register (16px)`).toBeCloseTo(16, 1)
+    // Sanity: the lg control type at the root register (14px) is not the browser default 16px.
+    expect(optionFont, `${server.browser}: [size=lg] option font should be the lg register (14px)`).toBeCloseTo(resolve('product', 'sm', 'lg').type.control, 1)
   })
 
   it('nested option-radius == listbox-radius − listbox-padding at sm/md/lg (ADR-0018, browser-measured)', async () => {
