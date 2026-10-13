@@ -289,7 +289,7 @@ p('|---|---|---|---|');
   row('tab', 'text edge (GH #536 had none)', '0 → 2n - c', zero, v2.map(edge));
   row('tab strip', 'gap between tabs', 'n + 2c → c', v2.map((r) => r.n + 2 * r.c), c);
   row('tab strip', 'label to label distance', 'n + 2c → 4n - c', v2.map((r) => r.n + 2 * r.c), v2.map((r) => 2 * edge(r) + r.c));
-  row('toggle, text-field, select, combo-box, tab, segment', 'min width (button already had it)', 'none → 4n', zero, h);
+  row('text-field, select, combo-box, tab', 'explicit min width (button already had it; toggle and segment keep the content minimum)', 'none → 4n', zero, h);
   row('badge', 'height', '2n → 2n + 2c', v2.map((r) => r.icon), v2.map((r) => r.parts.badge));
   row('badge', 'text edge (host margin c + label margin c)', '2c → 2c', c.map((x) => 2 * x), v2.map((r) => r.chip.margin + r.c));
   row('badge', 'glyph edge (the 2n mark box at the chip margin, glyph c inside it)', '2c → 2c', c.map((x) => 2 * x), v2.map((r) => r.chip.margin + r.c));

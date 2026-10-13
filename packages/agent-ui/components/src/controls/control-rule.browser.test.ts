@@ -108,7 +108,8 @@ for (const [name, tier, scale, attrs] of REGISTERS) {
         const bare = edges(label, textRect(label))
         near(bare.start, edge, 'label-only text edge, start')
         near(bare.end, edge, 'label-only text edge, end')
-        near(px(label, 'min-inline-size'), r.minWidth, 'min width')
+        // no explicit floor on a toggle (its anonymous label cannot clip): the rule itself keeps it at 4n or wider
+        expect(label.getBoundingClientRect().width, 'a label-only toggle is 4n - 2c plus its text').toBeGreaterThanOrEqual(r.minWidth)
         const withIcon = q(wrap, '[data-case="icon"]')
         const icon = q(withIcon, '[slot="icon"]').getBoundingClientRect()
         near(edges(withIcon, icon).start, r.control.margin, 'icon edge')
@@ -160,12 +161,13 @@ for (const [name, tier, scale, attrs] of REGISTERS) {
         near(tabEdges.start, edge, 'tab text edge, start')
         near(tabEdges.end, edge, 'tab text edge, end')
         near(px(tab, 'min-inline-size'), r.minWidth, 'tab min width') // a label-only control is 4n - 2c plus its text, so the floor binds only under 2c of text
+        expect(getComputedStyle(tab).flexShrink, 'a tab never shrinks under its label: the strip scrolls (GH #221)').toBe('0')
         const [first, second] = [...wrap.querySelectorAll('ui-tab')] as [HTMLElement, HTMLElement]
         near(second.getBoundingClientRect().left - first.getBoundingClientRect().right, r.c, 'tabs touch with the tight gutter c')
 
         const segment = q(wrap, 'ui-segment')
         near(px(segment, 'padding-inline-start'), edge, 'segment text edge')
-        near(px(segment, 'min-inline-size'), r.minWidth, 'segment min width')
+        expect(segment.getBoundingClientRect().width, 'a segment is 4n - 2c plus its text, never under 4n').toBeGreaterThanOrEqual(r.minWidth)
 
         // the menu panel and the select listbox are closed popovers: their rows have computed style, no layout
         near(px(q(wrap, '[role="menuitem"]'), 'padding-inline-start'), edge, 'menu row text edge')

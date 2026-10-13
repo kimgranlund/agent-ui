@@ -57,7 +57,8 @@ height.
   (`--md-sys-inset`), gutter `c`, and the text slot carries the label inset `n - c` (`--md-sys-label-inset`).
   So an icon sits `n` from the edge and `n` from the text, the **text edge is `2n - c`** (8 / 10 / 12 at the
   root), and a control is never narrower than `4n` (`min-inline-size: var(--ui-{name}-height)`, the ADR-0223
-  R3(a) form). Where the label is anonymous host content (toggle, segment, tab, menu and listbox rows) the host
+  R3(a) form, on the button, the entry hosts and the tab; a toggle and a segment keep the automatic content
+  minimum, and the rule's own `4n - 2c` plus text keeps them at `4n`). Where the label is anonymous host content (toggle, segment, tab, menu and listbox rows) the host
   edge beside it carries margin plus inset. Icons, carets and other boxed items take no inset.
 - **Entry and trigger controls** (text-field, textarea, select, combo-box): the control rule, the editor or the
   trigger label being the text slot; a leading icon or caret slot is `2n`; radius `n`. `ui-otp-field`'s cells

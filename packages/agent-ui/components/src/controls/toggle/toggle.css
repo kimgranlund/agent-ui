@@ -112,7 +112,9 @@
     block-size: var(--ui-toggle-height); /* the vertical lever — geometry.md */
     padding-block: 0; /* NEVER block-padding */
     padding-inline: var(--ui-toggle-label-edge); /* label edge: margin n + label inset n - c = 2n - c */
-    min-inline-size: var(--ui-toggle-height); /* min width 4n (the control rule) */
+    /* No explicit 4n floor: it would replace the automatic content minimum, and this anonymous nowrap label
+       cannot clip, so a tight flex or grid row would push the text out of the pill. The rule already gives
+       4n - 2c plus the text, at least 4n from 2c of text up (ADR-0245 Amendment 4). */
 
     font-size: var(--ui-toggle-font);
     line-height: var(--md-sys-control-line-height); /* single-line control standard — ADR-0036 */

@@ -234,7 +234,7 @@ Section 17 listed these as not adopted; T-0122 adopts every row of it. Edges are
 | tab | text edge (GH #536 had none) | 0 → 2n - c | 0 → 8 (+8) · 0 → 10 (+10) · 0 → 12 (+12) |
 | tab strip | gap between tabs | n + 2c → c | 9 → 2 (-7) · 10 → 2 (-8) · 11 → 2 (-9) |
 | tab strip | label to label distance | n + 2c → 4n - c | 9 → 18 (+9) · 10 → 22 (+12) · 11 → 26 (+15) |
-| toggle, text-field, select, combo-box, tab, segment | min width (button already had it) | none → 4n | 0 → 20 (+20) · 0 → 24 (+24) · 0 → 28 (+28) |
+| text-field, select, combo-box, tab | explicit min width (button already had it; toggle and segment keep the content minimum) | none → 4n | 0 → 20 (+20) · 0 → 24 (+24) · 0 → 28 (+28) |
 | badge | height | 2n → 2n + 2c | 10 → 14 (+4) · 12 → 16 (+4) · 14 → 18 (+4) |
 | badge | text edge (host margin c + label margin c) | 2c → 2c | 4 → 4 (0) · 4 → 4 (0) · 4 → 4 (0) |
 | badge | glyph edge (the 2n mark box at the chip margin, glyph c inside it) | 2c → 2c | 4 → 4 (0) · 4 → 4 (0) · 4 → 4 (0) |

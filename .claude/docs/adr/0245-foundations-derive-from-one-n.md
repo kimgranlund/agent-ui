@@ -863,7 +863,11 @@ row; the body and its appendices stay as written.
    is `n + (n - c) = 2n - c`: **8 / 10 / 12 at the root sm / md / lg** (12 at n 7), where it was `2n` on a button,
    toggle and segment and `n` on a field. An icon, caret, tick cell or any other boxed item carries no inset and
    stays pinned to its edge. A control is never narrower than `4n`: a label-only control is `4n - 2c` plus its
-   text, so the floor binds only under `2c` of text.
+   text, so the floor binds only under `2c` of text. The explicit floor (`min-inline-size`, the ADR-0223 R3(a)
+   form) sits on `ui-button` (as before), the `ui-text-field`, `ui-select` and `ui-combo-box` hosts and
+   `ui-tab` (with `flex-shrink: 0`, so the strip still scrolls whole labels, GH #221). **`ui-toggle` and
+   `ui-segment` take no explicit floor**: it would replace the automatic content minimum of a flex or grid
+   item, and their anonymous nowrap labels cannot clip, so a tight row would push the text out of the box.
 2. **Where the inset sits.** On the text slot where the control has one; where the label is anonymous host
    content the host edge beside it carries margin plus inset and the icon to text gap is written `n` (`c` plus
    the inset), the same pixels. No wrapper is added: that is a parts contract change (`toggle.md` rules
@@ -915,7 +919,7 @@ row; the body and its appendices stay as written.
    `multiline`), splits the toggle into `barePill` (margin plus inset on the host), moves `segment` to `2n - c`
    and the checkbox radius to `ceil(n/2)`. `controls/control-rule.browser.test.ts` measures every control above,
    outside any region and inside one, in both engines: the text edge, the icon edge, icon to text, the `4n`
-   floor, the alignment table and the legacy opt-out. The census counts the new tokens as derived.
+   floor where one is set, the alignment table and the legacy opt-out. The census counts the new tokens as derived.
 9. **Not adopted here.** The skill subtracts a border from the margin; the fleet still writes padding equal to the
    rule and draws its 1px border outside it, so a text edge measured from the outer edge is `2n - c + 1`
    (unchanged practice, clause 3 notwithstanding). The toggle's alignment and the listbox offset are item 3 and
