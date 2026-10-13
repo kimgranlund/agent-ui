@@ -37,8 +37,8 @@
 :where(ui-combo-box) {
   /* ── Editor (Control-class) ─────────────────────────────────────────── */
   /* Geometry: control height off the md-scale ramp (the combo-box trigger is the editor). */
-  --ui-combo-box-height: var(--md-sys-height-md);
-  --ui-combo-box-font: var(--md-sys-font-md);
+  --ui-combo-box-height: var(--md-sys-height, var(--md-sys-height-md));
+  --ui-combo-box-font: var(--md-sys-type-control, var(--md-sys-font-md));
   /* (2026-07-06) h/2 — the fleet Control-class value-edge standard (text-field.css:119,
      select.css trigger padding-inline-start), replacing the earlier fixed --md-sys-space-sm.
      The editor was the lone entry-control outlier still anchored to a space token instead

@@ -35,8 +35,8 @@
   /* Geometry — the Pattern-class CONTROL-height ramp (geometry.md's `segmented-control` example,
      geometry.md:133), NOT the Indicator's compact/widget ramp (ADR-0041, unused here). v1 ships the single
      `md` register; an ancestor [scale] re-tables the row for free (ADR-0038). */
-  --ui-segmented-control-segment-height: var(--md-sys-height-md);
-  --ui-segmented-control-segment-font: var(--md-sys-font-md);
+  --ui-segmented-control-segment-height: var(--md-sys-height, var(--md-sys-height-md));
+  --ui-segmented-control-segment-font: var(--md-sys-type-control, var(--md-sys-font-md));
 
   /* The outer rounded track (segments carry NO divider borders — Kim's ruling, see the styles block). */
   --ui-segmented-control-track: var(--md-sys-color-neutral-outline);

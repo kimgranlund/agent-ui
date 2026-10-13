@@ -91,10 +91,10 @@
   --ui-text-field-placeholder: var(--md-sys-color-neutral);
 
   /* Geometry — off the s6 dimensional ramp (default size = md). [size] repoints below. */
-  --ui-text-field-height: var(--md-sys-height-md);
-  --ui-text-field-font: var(--md-sys-font-md);
-  --ui-text-field-gap: var(--md-sys-gap-md); /* the one density-bearing quantity (slot↔editor column-gap) */
-  --ui-text-field-icon: var(--md-sys-icon-md); /* §1-SET icon per [scale]-tier (ADR-0038 / ADR-0035 conformance gap); repoints with [scale] from dimensions.css — was calc(18px * var(--md-sys-scale)) */
+  --ui-text-field-height: var(--md-sys-height, var(--md-sys-height-md));
+  --ui-text-field-font: var(--md-sys-type-control, var(--md-sys-font-md));
+  --ui-text-field-gap: var(--md-sys-inset, var(--md-sys-gap-md)); /* the one density-bearing quantity (slot↔editor column-gap) */
+  --ui-text-field-icon: var(--md-sys-icon-box, var(--md-sys-icon-md)); /* §1-SET icon per [scale]-tier (ADR-0038 / ADR-0035 conformance gap); repoints with [scale] from dimensions.css — was calc(18px * var(--md-sys-scale)) */
 
   /* Size-INVARIANT frame quantities — declared ONCE in the base block (NOT in the per-[size] blocks below): */
   --ui-text-field-radius: var(--md-sys-shape-corner-base); /* fixed --md-sys-shape-corner-base rounded-rect — the container-fleet referent an ENTRY control takes (NOT the action family's h/2 pill); overridable per-field; ADR-0015 cl.5 / #71 amendment. */
@@ -103,22 +103,22 @@
   /* Visible inline-validation message tokens (ADR-0029 A1 — extends ADR-0014): the .ui-text-field-message
      node (control-managed, aria-describedby target) becomes VISIBLE when non-empty under :state(user-invalid).
      Declared here (specificity 0, overridable), consumed in the @scope block. */
-  --ui-text-field-message-font: var(--md-sys-font-sm); /* small type — subordinate to the field's own label/value */
+  --ui-text-field-message-font: var(--md-sys-type-control, var(--md-sys-font-sm)); /* small type — subordinate to the field's own label/value */
   --ui-text-field-message-ink: var(--md-sys-color-danger-on-surface-variant); /* danger TEXT ink — AA-gated on-surface (8.48:1 light / 8.91:1 dark). Bare --md-sys-color-danger is 4.05:1 light = an AA text FAIL, so the TEXT ink moves; the danger BORDER channel above (--ui-text-field-border-invalid) stays --md-sys-color-danger (border = 3:1 UI bar). ADR-0014 cl.2c · 2026-07-02 color audit item 1. */
 }
 
 /* size → dimensional ramp (size is reflected, so the attribute is present) */
 :where(ui-text-field[size='sm']) {
-  --ui-text-field-height: var(--md-sys-height-sm);
-  --ui-text-field-font: var(--md-sys-font-sm);
-  --ui-text-field-gap: var(--md-sys-gap-sm);
-  --ui-text-field-icon: var(--md-sys-icon-sm); /* §1-SET icon per [scale]-tier (ADR-0038) */
+  --ui-text-field-height: var(--md-sys-height, var(--md-sys-height-sm));
+  --ui-text-field-font: var(--md-sys-type-control, var(--md-sys-font-sm));
+  --ui-text-field-gap: var(--md-sys-inset, var(--md-sys-gap-sm));
+  --ui-text-field-icon: var(--md-sys-icon-box, var(--md-sys-icon-sm)); /* §1-SET icon per [scale]-tier (ADR-0038) */
 }
 :where(ui-text-field[size='lg']) {
-  --ui-text-field-height: var(--md-sys-height-lg);
-  --ui-text-field-font: var(--md-sys-font-lg);
-  --ui-text-field-gap: var(--md-sys-gap-lg);
-  --ui-text-field-icon: var(--md-sys-icon-lg); /* §1-SET icon per [scale]-tier (ADR-0038) */
+  --ui-text-field-height: var(--md-sys-height, var(--md-sys-height-lg));
+  --ui-text-field-font: var(--md-sys-type-control, var(--md-sys-font-lg));
+  --ui-text-field-gap: var(--md-sys-inset, var(--md-sys-gap-lg));
+  --ui-text-field-icon: var(--md-sys-icon-box, var(--md-sys-icon-lg)); /* §1-SET icon per [scale]-tier (ADR-0038) */
 }
 
 /* disabled → a role-REPOINT (NOT opacity, tokens.md canon; TKT-0062's disabled row). Matches BOTH the

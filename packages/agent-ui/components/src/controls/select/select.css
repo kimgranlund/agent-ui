@@ -69,10 +69,10 @@
      height/font/icon from the explicit per-[scale] table; gap = font/2 × density (on `*`).
      The caret (inline affordance) follows the §4.1 law: glyph size = font (RHYTHM family,
      not frame) → glyph is font-sized, centred in the icon cell by padding=(icon−glyph)/2. */
-  --ui-select-height: var(--md-sys-height-md);
-  --ui-select-font: var(--md-sys-font-md);
-  --ui-select-gap: var(--md-sys-gap-md);          /* the density-bearing column-gap */
-  --ui-select-icon: var(--md-sys-icon-md);        /* the icon-cell size (caret CELL is icon-wide) */
+  --ui-select-height: var(--md-sys-height, var(--md-sys-height-md));
+  --ui-select-font: var(--md-sys-type-control, var(--md-sys-font-md));
+  --ui-select-gap: var(--md-sys-inset, var(--md-sys-gap-md));          /* the density-bearing column-gap */
+  --ui-select-icon: var(--md-sys-icon-box, var(--md-sys-icon-md));        /* the icon-cell size (caret CELL is icon-wide) */
   --ui-select-glyph: var(--ui-select-font);   /* caret GLYPH = font (§4.1 caret law) */
 
   /* ── Sizing floor — the [inline] hug-state floor (ADR-0223 cl.3(b), superseding ADR-0021's
@@ -157,17 +157,17 @@
 /* ── size → dimensional ramp repoint ────────────────────────────────────────────────────────── */
 
 :where(ui-select[size='sm']) {
-  --ui-select-height: var(--md-sys-height-sm);
-  --ui-select-font: var(--md-sys-font-sm);
-  --ui-select-gap: var(--md-sys-gap-sm);
-  --ui-select-icon: var(--md-sys-icon-sm);
+  --ui-select-height: var(--md-sys-height, var(--md-sys-height-sm));
+  --ui-select-font: var(--md-sys-type-control, var(--md-sys-font-sm));
+  --ui-select-gap: var(--md-sys-inset, var(--md-sys-gap-sm));
+  --ui-select-icon: var(--md-sys-icon-box, var(--md-sys-icon-sm));
 }
 
 :where(ui-select[size='lg']) {
-  --ui-select-height: var(--md-sys-height-lg);
-  --ui-select-font: var(--md-sys-font-lg);
-  --ui-select-gap: var(--md-sys-gap-lg);
-  --ui-select-icon: var(--md-sys-icon-lg);
+  --ui-select-height: var(--md-sys-height, var(--md-sys-height-lg));
+  --ui-select-font: var(--md-sys-type-control, var(--md-sys-font-lg));
+  --ui-select-gap: var(--md-sys-inset, var(--md-sys-gap-lg));
+  --ui-select-icon: var(--md-sys-icon-box, var(--md-sys-icon-lg));
 }
 
 /* ── disabled → muted neutral roles ────────────────────────────────────────────────────────── */

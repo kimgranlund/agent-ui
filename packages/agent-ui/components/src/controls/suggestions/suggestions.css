@@ -31,14 +31,14 @@
 :where(ui-suggestions) {
   /* Compact-realm chip box (geometry.md's compact realm names "chip" directly) — v1 ships one register,
      no [size] attribute (the badge.css "no [size] in v1" precedent; ADR-0213 names no size axis). */
-  --ui-suggestions-chip-height: var(--md-sys-compact-lg);
-  --ui-suggestions-chip-font: var(--md-sys-font-sm);
+  --ui-suggestions-chip-height: var(--md-sys-icon-box, var(--md-sys-compact-lg));
+  --ui-suggestions-chip-font: var(--md-sys-type-control, var(--md-sys-font-sm));
   --ui-suggestions-chip-pad: calc(2px + var(--ui-suggestions-chip-height) * 0.375 * var(--md-sys-density, 1));
   --ui-suggestions-chip-radius: calc(var(--ui-suggestions-chip-height) / 2); /* full pill */
 
   /* Row rhythm — the set wraps as a flex row; both axes ride the same density-responsive gap token. */
-  --ui-suggestions-row-gap: var(--md-sys-gap-sm);
-  --ui-suggestions-col-gap: var(--md-sys-gap-sm);
+  --ui-suggestions-row-gap: var(--md-sys-inset, var(--md-sys-gap-sm));
+  --ui-suggestions-col-gap: var(--md-sys-inset, var(--md-sys-gap-sm));
 
   /* Live/untaken idle — a bordered neutral pill, deliberately lighter than Button's solid fill (ADR-0213
      Context fact 2). Hover/active wash toward primary — a light hint that tapping commits the set. */

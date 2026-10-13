@@ -22,7 +22,7 @@
   --ui-toolbar-gap: var(--md-sys-space-sm); /* gap default 'sm' — toolbars are tight (differs from ui-row's 'none') */
   --ui-toolbar-pad-inline: var(--md-sys-space-sm);
   --ui-toolbar-pad-block: var(--md-sys-space-xs);
-  --ui-toolbar-min-block-size: var(--md-sys-height-md); /* the whole-shape bar floor (SPEC-R7 AC2) — the control-height register, NOT a --md-sys-space quantity */
+  --ui-toolbar-min-block-size: var(--md-sys-height, var(--md-sys-height-md)); /* the whole-shape bar floor (SPEC-R7 AC2) — the control-height register, NOT a --md-sys-space quantity */
 
   box-sizing: border-box;
 }

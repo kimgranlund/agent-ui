@@ -55,7 +55,7 @@ describe('text-field.css — structure + sectioning (s9)', () => {
       expect(tokenBlock).toMatch(new RegExp(`--ui-text-field-${slot}:`))
     }
     expect(tokenBlock).toContain('var(--md-sys-color-neutral') // the field-frame roles (family = neutral)
-    expect(tokenBlock).toContain('var(--md-sys-height-md)') // the dimensional ramp
+    expect(tokenBlock).toContain('var(--md-sys-height, var(--md-sys-height-md))') // the dimensional ramp
   })
 
   it('[size] repoints the geometry ramp (height/font/gap/icon) for sm and lg', () => {

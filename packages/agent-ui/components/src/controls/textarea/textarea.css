@@ -68,7 +68,7 @@
   /* Geometry — the MULTI-LINE law (ADR-0134), not the single-line ramp. Font is the ONE sizing lever that
      [size] repoints; padding-block/padding-inline/line-box all DERIVE from it via calc() below, so a single
      repoint cascades through all three — the growable box has no fixed §1 height row. */
-  --ui-textarea-font: var(--md-sys-font-md);
+  --ui-textarea-font: var(--md-sys-type-control, var(--md-sys-font-md));
   --ui-textarea-line-height: 1.5; /* prose line-height — NEVER the single-line control's line-height:1 (geometry.md) */
   --ui-textarea-line-box: calc(var(--ui-textarea-font) * var(--ui-textarea-line-height)); /* one rendered text row */
   --ui-textarea-padding-block: calc(var(--ui-textarea-font) * 0.5); /* a comfortable text inset (ADR-0134) — never 0 */
@@ -83,16 +83,16 @@
 
   /* Visible inline-validation message tokens (ADR-0029 A1, the text-field precedent) — the .ui-textarea-message
      node (control-managed, aria-describedby target) becomes VISIBLE when non-empty under :state(user-invalid). */
-  --ui-textarea-message-font: var(--md-sys-font-sm);
+  --ui-textarea-message-font: var(--md-sys-type-control, var(--md-sys-font-sm));
   --ui-textarea-message-ink: var(--md-sys-color-danger-on-surface-variant); /* AA-gated on-surface danger text ink */
 }
 
 /* size → the ONE sizing lever (font); padding-block/padding-inline/line-box all derive from it via calc() above. */
 :where(ui-textarea[size='sm']) {
-  --ui-textarea-font: var(--md-sys-font-sm);
+  --ui-textarea-font: var(--md-sys-type-control, var(--md-sys-font-sm));
 }
 :where(ui-textarea[size='lg']) {
-  --ui-textarea-font: var(--md-sys-font-lg);
+  --ui-textarea-font: var(--md-sys-type-control, var(--md-sys-font-lg));
 }
 
 /* disabled → a role-REPOINT (NOT opacity, tokens.md canon; TKT-0062's disabled row). Matches BOTH the
