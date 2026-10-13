@@ -180,10 +180,11 @@ describe('ui-agent-admin Test Chat cross-engine: the activity strip and the chat
     for (const tag of ['ui-card-header', 'ui-card-content', 'ui-card-footer']) {
       const region = card.querySelector(tag) as HTMLElement
       const cs = getComputedStyle(region)
-      expect(cs.paddingLeft, `${tag} keeps the 18px region inline padding (the card gutter 2n, n = 9)`).toBe('18px')
-      expect(cs.marginLeft, `${tag} keeps the 9px region inset margin (n)`).toBe('9px')
+      // The A2UI canvas register, widget at scale md (n 7, ADR-0245 Amendment 2): resolve('widget', 'md', 'md').
+      expect(cs.paddingLeft, `${tag} keeps the 14px region inline padding (the card gutter 2n, n = 7)`).toBe('14px')
+      expect(cs.marginLeft, `${tag} keeps the 7px region inset margin (n)`).toBe('7px')
       const ink = region.firstElementChild as HTMLElement
-      expect(ink.getBoundingClientRect().left - cardBox.left, `${tag}: content is inset from the card edge, never flush`).toBeGreaterThanOrEqual(27 - 0.5)
+      expect(ink.getBoundingClientRect().left - cardBox.left, `${tag}: content is inset from the card edge, never flush`).toBeGreaterThanOrEqual(21 - 0.5)
     }
     const title = card.querySelector('ui-card-header ui-text') as HTMLElement
     const badge = card.querySelector('ui-card-header ui-badge') as HTMLElement
@@ -193,8 +194,8 @@ describe('ui-agent-admin Test Chat cross-engine: the activity strip and the chat
     const hb = header.getBoundingClientRect()
     expect(bb.top, 'the trailing Badge shares the title row, not a row under it').toBeLessThan(tb.bottom)
     expect(bb.left, 'and sits to the right of the title').toBeGreaterThanOrEqual(tb.right - 0.5)
-    expect(hb.right - bb.right, 'at the header\'s trailing edge, inside its padding').toBeGreaterThanOrEqual(17.5)
-    expect(hb.right - bb.right).toBeLessThanOrEqual(18 + 0.5)
+    expect(hb.right - bb.right, 'at the header\'s trailing edge, inside its padding').toBeGreaterThanOrEqual(13.5)
+    expect(hb.right - bb.right).toBeLessThanOrEqual(14 + 0.5)
   })
 
   it(`${server.browser}: every text part of the settled, expanded strip sits inside the strip's own inline inset`, async () => {
