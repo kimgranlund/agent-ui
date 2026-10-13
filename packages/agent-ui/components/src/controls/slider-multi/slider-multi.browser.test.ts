@@ -17,6 +17,8 @@ import './slider-multi.css'                          // the control stylesheet (
 import './slider-multi.ts'                           // self-define (registers ui-slider-multi)
 import { UISliderMultiElement } from './slider-multi.ts'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+// The page root register (no data-tier region): product / sm, n 5 / 6 / 7 for size sm / md / lg.
+const root = (size: 'sm' | 'md' | 'lg') => resolve('product', 'sm', size)
 
 /** Simulate a full drag gesture: pointerdown → pointermove → pointerup on an element. */
 function drag(target: HTMLElement, startX: number, endX: number, id = 1): void {
@@ -64,39 +66,40 @@ function stubRailCapture(el: UISliderMultiElement): void {
 describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
   // ── AC1: thumb = box − 4px (the ADR-0041 2px-inset law), exact px per [size]×[scale] ─────────────
 
-  it('AC1 default [size=md]: thumbs are (--md-sys-compact-md − 4px) = 10px (the derived compact ramp)', () => {
+  it('AC1 default [size=md]: thumbs are (--md-sys-compact-md − 4px) = 8px (the derived compact ramp)', () => {
     const el = document.createElement('ui-slider-multi')
     document.body.append(el)
 
-    // --md-sys-compact-md = 14px (derived, ADR-0245) → thumb = 14 − 4 = 10px
+    // --md-sys-compact-md = 12px at the root (derived, ADR-0245) → thumb = 12 − 4 = 8px
     const loThumb = el.querySelector<HTMLElement>('.thumb[data-thumb="lo"]')!
     const hiThumb = el.querySelector<HTMLElement>('.thumb[data-thumb="hi"]')!
-    expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(10)  // box − 4 = 14 − 4 = 10
-    expect(Number.parseFloat(getComputedStyle(loThumb).height)).toBe(10)
-    expect(Number.parseFloat(getComputedStyle(hiThumb).width)).toBe(10)
-    expect(Number.parseFloat(getComputedStyle(hiThumb).height)).toBe(10)
+    const thumb = root('md').icon - 4 // box − 4 = 12 − 4 = 8
+    expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(thumb)
+    expect(Number.parseFloat(getComputedStyle(loThumb).height)).toBe(thumb)
+    expect(Number.parseFloat(getComputedStyle(hiThumb).width)).toBe(thumb)
+    expect(Number.parseFloat(getComputedStyle(hiThumb).height)).toBe(thumb)
     el.remove()
   })
 
-  it('AC1 [size=sm]: thumbs are (--md-sys-compact-sm − 4px) = 8px', () => {
+  it('AC1 [size=sm]: thumbs are (--md-sys-compact-sm − 4px) = 6px', () => {
     const el = document.createElement('ui-slider-multi')
     el.setAttribute('size', 'sm')
     document.body.append(el)
 
-    // --md-sys-compact-sm = 12px → thumb = 12 − 4 = 8px
+    // --md-sys-compact-sm = 10px → thumb = 10 − 4 = 6px
     const loThumb = el.querySelector<HTMLElement>('.thumb[data-thumb="lo"]')!
-    expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(8)
+    expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(root('sm').icon - 4)
     el.remove()
   })
 
-  it('AC1 [size=lg]: thumbs are (--md-sys-compact-lg − 4px) = 12px', () => {
+  it('AC1 [size=lg]: thumbs are (--md-sys-compact-lg − 4px) = 10px', () => {
     const el = document.createElement('ui-slider-multi')
     el.setAttribute('size', 'lg')
     document.body.append(el)
 
-    // --md-sys-compact-lg = 16px → thumb = 16 − 4 = 12px
+    // --md-sys-compact-lg = 14px → thumb = 14 − 4 = 10px
     const loThumb = el.querySelector<HTMLElement>('.thumb[data-thumb="lo"]')!
-    expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(12)
+    expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(root('lg').icon - 4)
     el.remove()
   })
 
@@ -109,7 +112,7 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
 
     const smW = Number.parseFloat(getComputedStyle(sm.querySelector<HTMLElement>('.thumb')!).width)
     const lgW = Number.parseFloat(getComputedStyle(lg.querySelector<HTMLElement>('.thumb')!).width)
-    expect(smW).not.toBe(lgW) // 8 ≠ 12, not the same (anti-vacuous: different sizes render different px)
+    expect(smW).not.toBe(lgW) // 6 ≠ 10, not the same (anti-vacuous: different sizes render different px)
     sm.remove()
     lg.remove()
   })
@@ -122,7 +125,7 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
     const el = document.createElement('ui-slider-multi')
     document.body.append(el)
     const rows = getComputedStyle(el).gridTemplateRows.split(' ').map((v) => Number.parseFloat(v))
-    expect(rows[rows.length - 1]).toBe(14) // --md-sys-compact-md = 14px (derived, ADR-0245)
+    expect(rows[rows.length - 1]).toBe(root('md').icon) // --md-sys-compact-md = 12px at the root (derived, ADR-0245)
     el.remove()
   })
 

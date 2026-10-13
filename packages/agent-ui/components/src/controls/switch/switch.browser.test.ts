@@ -23,6 +23,8 @@ import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+// The page root register (no data-tier region): product / sm, n 5 / 6 / 7 for size sm / md / lg.
+const root = (size: 'sm' | 'md' | 'lg') => resolve('product', 'sm', size)
 
 // ── mount/cleanup helpers ─────────────────────────────────────────────────────────────────────────────
 const mounted: HTMLElement[] = []
@@ -80,7 +82,7 @@ describe('ui-switch cross-engine browser smoke — track + thumb geometry (ADR-0
     //   (b) thumb size DOES NOT change across states (only the `translate` position changes).
     const { sw } = mount('<ui-switch></ui-switch>')
 
-    const h = trackHeight(sw) // the widget box = --md-sys-compact-md (default) = 16px
+    const h = trackHeight(sw) // the widget box = --md-sys-compact-md (default) = 12px at the root
     const twUnchecked = thumbWidth(sw)
     const thUnchecked = thumbHeight(sw)
 
@@ -107,11 +109,11 @@ describe('ui-switch cross-engine browser smoke — track + thumb geometry (ADR-0
 
   it('ADR-0041: track box = --md-sys-compact-{size} per [size] (the widget ramp, NOT the control height ramp)', () => {
     // The Indicator widget box rides the COMPACT ramp (ADR-0041), NOT the full control height ramp (ADR-0038).
-    // Derived ramp (ADR-0245): --md-sys-compact-sm=12 / --md-sys-compact-md=14 / --md-sys-compact-lg=16.
+    // Derived ramp at the root (ADR-0245): --md-sys-compact-sm=10 / --md-sys-compact-md=12 / --md-sys-compact-lg=14.
     const SIZES: Array<[string, number]> = [
-      ['sm', 12],
-      ['md', 14],
-      ['lg', 16],
+      ['sm', root('sm').parts.switchTrack],
+      ['md', root('md').parts.switchTrack],
+      ['lg', root('lg').parts.switchTrack],
     ]
     for (const [size, expected] of SIZES) {
       const { sw } = mount(`<ui-switch size="${size}"></ui-switch>`)
