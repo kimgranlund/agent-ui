@@ -28,6 +28,21 @@ describe('bookingFormFactory — create() (detached, jsdom-safe)', () => {
     expect(el.querySelector('[data-part="fields"]')).not.toBeNull()
   })
 
+  it('the root is the card surface and an ADR-0046 [data-box] carrying the region padding (T-0085)', () => {
+    const el = bookingFormFactory.create()
+    expect(el.hasAttribute('data-box')).toBe(true)
+    expect(el.style.paddingInline).toBe('var(--ui-box-pad-inline)')
+    expect(el.style.paddingBlock).toBe('var(--ui-box-pad-block)')
+    expect(el.style.border).toContain('var(--md-sys-color-neutral-outline-variant)')
+    expect(el.style.backgroundColor).toBe('var(--md-sys-color-neutral-surface)')
+    expect((el.querySelector('[data-part="fields"]') as HTMLElement).style.gap).toBe('var(--ui-box-gap)')
+  })
+
+  it('names every control tag it mints in `uses`, and no longer mints an inline ui-calendar (ADR-0233, T-0085)', () => {
+    expect([...(bookingFormFactory.uses ?? [])]).toEqual(['ui-checkbox', 'ui-field', 'ui-select', 'ui-text', 'ui-text-field'])
+    expect([...(bookingConfirmationFactory.uses ?? [])]).toEqual(['ui-card-content', 'ui-card-header', 'ui-text'])
+  })
+
   it('exposes a2uiFormValue as a live getter proxying the form-provider\'s own values()', () => {
     const el = bookingFormFactory.create() as unknown as { values: () => Record<string, unknown>; a2uiFormValue: unknown }
     // Disconnected form-provider: values() is vacuously {} (form-provider.ts) — the getter must reflect that.
@@ -55,11 +70,13 @@ describe('bookingFormFactory — applyProp (detached, jsdom-safe)', () => {
       { kind: 'checkbox', path: 'breakfast', label: 'Breakfast included' },
     ])
     const fieldsEl = el.querySelector('[data-part="fields"]')!
-    const calendar = fieldsEl.querySelector('ui-calendar') as unknown as { name: string; required: boolean } | null
+    const date = fieldsEl.querySelector('ui-text-field') as unknown as { name: string; required: boolean; type: string } | null
     const select = fieldsEl.querySelector('ui-select') as unknown as { name: string; required: boolean } | null
     const checkbox = fieldsEl.querySelector('ui-checkbox') as unknown as (HTMLElement & { name: string; required: boolean }) | null
-    expect(calendar?.name).toBe('checkIn')
-    expect(calendar?.required).toBe(true)
+    expect(fieldsEl.querySelector('ui-calendar')).toBeNull() // the compact date field, never an inline month grid
+    expect(date?.type).toBe('date')
+    expect(date?.name).toBe('checkIn')
+    expect(date?.required).toBe(true)
     expect(select?.name).toBe('roomType')
     expect(select?.required).toBe(true)
     expect(select && (select as unknown as HTMLElement).querySelectorAll('[role="option"]').length).toBe(1)
@@ -84,6 +101,43 @@ describe('bookingFormFactory — applyProp (detached, jsdom-safe)', () => {
     expect(fields.map((f) => f.name)).toEqual(['guestName', 'guests'])
     expect(fields.map((f) => f.label)).toEqual(['Guest name', 'Guests'])
     expect(fields.map((f) => f.required)).toEqual([true, false])
+  })
+
+  it('every field but the checkbox wears a ui-field whose label is the field label (the visible label, T-0085)', () => {
+    const el = bookingFormFactory.create()
+    bookingFormFactory.applyProp(el, 'fields', [
+      { kind: 'text', path: 'guestName', label: 'Guest name' },
+      { kind: 'number', path: 'guests', label: 'Guests' },
+      { kind: 'dateSingle', path: 'checkIn', label: 'Check-in' },
+      { kind: 'select', path: 'roomType', label: 'Room type', options: [{ value: 'suite', label: 'Suite' }] },
+      { kind: 'checkbox', path: 'breakfast', label: 'Breakfast included' },
+    ])
+    const fieldWraps = [...el.querySelectorAll('ui-field')] as unknown as Array<HTMLElement & { label: string }>
+    expect(fieldWraps.map((f) => f.label)).toEqual(['Guest name', 'Guests', 'Check-in', 'Room type'])
+    expect(fieldWraps.map((f) => f.getAttribute('data-a2ui-booking-field'))).toEqual(['guestName', 'guests', 'checkIn', 'roomType'])
+    expect(fieldWraps.map((f) => f.firstElementChild?.localName)).toEqual(['ui-text-field', 'ui-text-field', 'ui-text-field', 'ui-select'])
+    expect(el.querySelector('ui-checkbox')?.closest('ui-field')).toBeNull() // self-labelled beside its box, never labelled twice
+  })
+
+  it('a run of consecutive dateSingle fields shares one wrapping date row; other kinds stay one per line', () => {
+    const el = bookingFormFactory.create()
+    bookingFormFactory.applyProp(el, 'fields', [
+      { kind: 'text', path: 'guestName', label: 'Guest name' },
+      { kind: 'dateSingle', path: 'checkIn', label: 'Check-in' },
+      { kind: 'dateSingle', path: 'checkOut', label: 'Check-out' },
+      { kind: 'number', path: 'guests', label: 'Guests' },
+    ])
+    const fieldsEl = el.querySelector('[data-part="fields"]')!
+    const lines = [...fieldsEl.children] as HTMLElement[]
+    expect(lines.map((c) => c.getAttribute('data-part') ?? c.getAttribute('data-a2ui-booking-field'))).toEqual([
+      'guestName',
+      'date-row',
+      'guests',
+    ])
+    const row = lines[1]!
+    expect(row.style.flexWrap).toBe('wrap')
+    expect([...row.children].map((c) => c.getAttribute('data-a2ui-booking-field'))).toEqual(['checkIn', 'checkOut'])
+    expect([...row.children].map((c) => (c as HTMLElement).style.flex)).toEqual(['1 1 12rem', '1 1 12rem'])
   })
 
   it('"value" prefills text and number fields from the aggregate as strings', () => {
@@ -115,8 +169,19 @@ describe('bookingFormFactory — applyProp (detached, jsdom-safe)', () => {
     ])
     bookingFormFactory.applyProp(el, 'value', { checkIn: '2026-08-10', breakfast: true })
     const fieldsEl = el.querySelector('[data-part="fields"]')!
-    expect((fieldsEl.querySelector('ui-calendar') as unknown as { value: string }).value).toBe('2026-08-10')
+    expect((fieldsEl.querySelector('ui-text-field') as unknown as { value: string }).value).toBe('2026-08-10')
     expect((fieldsEl.querySelector('ui-checkbox') as unknown as { checked: boolean }).checked).toBe(true)
+  })
+
+  it('"value" reaches a date inside a date row (the prefill scan is not limited to direct children)', () => {
+    const el = bookingFormFactory.create()
+    bookingFormFactory.applyProp(el, 'fields', [
+      { kind: 'dateSingle', path: 'checkIn', label: 'Check-in' },
+      { kind: 'dateSingle', path: 'checkOut', label: 'Check-out' },
+    ])
+    bookingFormFactory.applyProp(el, 'value', { checkIn: '2026-11-14', checkOut: '2026-11-17' })
+    const dates = [...el.querySelectorAll('[data-part="date-row"] ui-text-field')] as unknown as Array<{ value: string }>
+    expect(dates.map((d) => d.value)).toEqual(['2026-11-14', '2026-11-17'])
   })
 
   it('an unrecognized prop (e.g. a stripped "submitAction" that somehow still arrived) is a no-op — never throws', () => {
@@ -132,6 +197,32 @@ describe('bookingConfirmationFactory — create()/applyProp (jsdom-safe: ui-card
     expect(el.querySelector('[data-part="title"]')).not.toBeNull()
     expect(el.querySelector('[data-part="rows"]')).not.toBeNull()
     expect(bookingConfirmationFactory.value).toBeUndefined() // display-only — no two-way commit
+  })
+
+  it('the title sits in a ui-card-header and the rows in a ui-card-content (the stock card regions, T-0085)', () => {
+    const el = bookingConfirmationFactory.create()
+    expect([...el.children].map((c) => c.localName)).toEqual(['ui-card-header', 'ui-card-content'])
+    expect(el.querySelector('ui-card-header > [data-part="title"]')).not.toBeNull()
+    expect(el.querySelector('ui-card-content > [data-part="rows"]')).not.toBeNull()
+  })
+
+  it('each row is a muted label at the start and an emphasis value at the end, hairline dividers between rows', () => {
+    const el = bookingConfirmationFactory.create()
+    bookingConfirmationFactory.applyProp(el, 'rows', [
+      { label: 'Guest', path: 'guestName' },
+      { label: 'Guests', path: 'guests' },
+      { label: 'Check-in', path: 'checkIn' },
+    ])
+    const rows = [...el.querySelectorAll<HTMLElement>('[data-a2ui-confirmation-row]')]
+    expect(rows.map((r) => r.style.justifyContent)).toEqual(['space-between', 'space-between', 'space-between'])
+    expect(rows.map((r) => r.style.borderBlockStart)).toEqual(['', '1px solid var(--md-sys-color-neutral-outline-variant)', '1px solid var(--md-sys-color-neutral-outline-variant)'])
+    const label = rows[0]!.querySelector<HTMLElement>('[data-part="label"]')!
+    const value = rows[0]!.querySelector<HTMLElement>('[data-part="value"]')!
+    expect(label.textContent).toBe('Guest')
+    expect(label.style.color).toBe('var(--md-sys-color-neutral-on-surface-variant)')
+    expect((value as unknown as { emphasis: boolean }).emphasis).toBe(true)
+    expect(value.style.textAlign).toBe('end')
+    expect(value.style.overflowWrap).toBe('anywhere') // a long value wraps under itself
   })
 
   it('"rows" builds one label/value pair per entry, value defaulting to the em-dash placeholder', () => {

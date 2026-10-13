@@ -349,4 +349,21 @@ describe('ui-field — the required marker wears the LABEL ink, not the error in
     // and it is NOT the danger error ink — requiredness is not the dynamic validity signifier (ADR-0057)
     expect(markInk, `${server.browser}: required mark must not wear the error ink`).not.toBe(errorInk)
   })
+
+  it('the mark lands on the field label only, never on a slotted control\'s own [data-part=label] (T-0085)', async () => {
+    const wrap = mount(
+      `<ui-field label="Room type"><ui-select required placeholder="Choose one" ${SIZED}>` +
+        `<div role="option" value="king">King room</div></ui-select></ui-field>`,
+    )
+    const field = wrap.querySelector('ui-field') as UIFieldElement
+    await field.updateComplete
+    const select = field.querySelector('ui-select') as HTMLElement & { value: string; updateComplete: Promise<unknown> }
+    select.value = 'king'
+    await select.updateComplete
+    const own = [...field.children].find((el) => el.getAttribute('data-part') === 'label') as HTMLElement
+    const inner = select.querySelector('[data-part="label"]') as HTMLElement
+    expect(inner, 'ui-select renders its own [data-part=label] value span').not.toBeNull()
+    expect(getComputedStyle(own, '::after').content, `${server.browser}: the field label carries the mark`).toContain('*')
+    expect(getComputedStyle(inner, '::after').content, `${server.browser}: the select value span must not`).not.toContain('*')
+  })
 })

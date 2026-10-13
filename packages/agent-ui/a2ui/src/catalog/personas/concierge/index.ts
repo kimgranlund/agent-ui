@@ -8,7 +8,7 @@
 //
 // `targetCatalogs` resolution (the note's §2.2 second open flag, resolved at build): BOTH shipped bases.
 // Verified, not assumed — both composite factories build DIRECTLY against `@agent-ui/components` DOM
-// controls (`ui-form-provider`/`ui-calendar`/`ui-select`/`ui-checkbox`/`ui-card`/`ui-text`), never
+// controls (`ui-form-provider`/`ui-field`/`ui-text-field`/`ui-select`/`ui-checkbox`/`ui-card`/`ui-text`), never
 // through either base's OWN catalog dialect (`a2ui-basic`'s narrower `ChoicePicker`/boolean-`CheckBox`
 // rows are never referenced) — so there is no dialect-fit question to begin with, only the ORDINARY
 // reject-loud name-collision check (SPEC-R2), which trivially passes (`BookingForm`/`BookingConfirmation`

@@ -43,14 +43,26 @@
 // descendant click, including picking a calendar day, silently emitting the submit action early).
 //
 // Field kinds (§2.1 sketch named "range Calendar" — narrowed at build): `dateSingle | select | checkbox |
-// text | number` (T-0079 added the last two, both a `ui-text-field` with `type` text/number). `ui-calendar`'s `mode="range"` commits via a two-ENTRY `FormData` (`calendar.ts` — start+end
-// under one `name`), which `ui-form-provider`'s native `values()`/`entries()` aggregation (FormData
-// parity) does not flatten into the single scalar-per-path shape `BookingConfirmation.rows` needs — a
-// verified fit gap, not a guess. A date RANGE is authored as two ordinary `dateSingle` fields instead
-// (e.g. `checkIn`/`checkOut`), which is both simpler to implement and a better fit for
-// `BookingConfirmation`'s one-row-per-value display.
+// text | number` (T-0079 added the last two). `text`, `number` and `dateSingle` all mint a `ui-text-field`
+// (`type` text, number or date): a date is the field's compact form, its calendar opening in a popover from
+// the trailing calendar button, never a month grid inline (T-0085). The committed value is still the ISO
+// `YYYY-MM-DD` string (the date codec's canonical form), so the wire contract is unchanged. `ui-calendar`'s
+// `mode="range"` commits via a two-ENTRY `FormData` (start+end under one `name`), which
+// `ui-form-provider`'s native `values()` aggregation does not flatten into the single scalar-per-path shape
+// `BookingConfirmation.rows` needs, so a date RANGE is authored as two ordinary `dateSingle` fields (e.g.
+// `checkIn`/`checkOut`), which the form lays out side by side where the width allows.
+//
+// Look (T-0085, the ADR-0046 box model): `BookingForm`'s root is the card surface itself (the `ui-card` frame
+// tokens on `el.style`) and a `[data-box]`, so every child, the producer's action Buttons included, takes the
+// shared 6px inset; the root carries the region padding (12 inline, 6 block), the ADR-0056 region-less card
+// reading, so ink sits 19px in like a stock card's regions. Every field but the self-labelled checkbox wears a
+// `ui-field` (the fleet's visible label), fields stack at the 8px region gap, and the producer's Buttons step
+// up to the 36px `lg` action size (`largeActionButtons`, ADR-0243 Amendment 2). `BookingConfirmation` is a
+// `ui-card` with real `ui-card-header`/`ui-card-content` regions and one label (muted, start) / value
+// (emphasis, end) row per entry, hairline dividers between rows.
 
 import type { WidgetFactory } from '../../types.ts'
+import { largeActionButtons } from '../action-row.ts'
 
 // ── shared field schema (wire-authored, NOT a JSON pointer — see the header) ────────────────────────
 
@@ -105,17 +117,16 @@ interface BookingFormParts {
 
 const bookingFormParts = new WeakMap<HTMLElement, BookingFormParts>()
 
-/** One field label — a small caption row above a control with no native visible-label surface. */
-function fieldCaption(label: string): HTMLElement {
-  const el = document.createElement('ui-text')
-  ;(el as unknown as { as: string; variant: string; size: string }).as = 'none'
-  ;(el as unknown as { as: string; variant: string; size: string }).variant = 'body'
-  ;(el as unknown as { as: string; variant: string; size: string }).size = 'sm'
-  el.textContent = label
-  return el
+/** A `ui-field` wrapping one control: the fleet's visible label above it (ADR-0051), tagged with the field's path. */
+function labelledField(field: BookingField, control: HTMLElement): HTMLElement {
+  const wrap = document.createElement('ui-field') as unknown as HTMLElement & { label: string }
+  wrap.label = field.label
+  wrap.setAttribute('data-a2ui-booking-field', field.path)
+  wrap.appendChild(control)
+  return wrap
 }
 
-/** Build one field's live control (+ its caption, for kinds with no native visible label). */
+/** Build one field: its live control, labelled by a `ui-field` (the checkbox labels itself, beside its box). */
 function buildFieldControl(field: BookingField): HTMLElement {
   switch (field.kind) {
     case 'select': {
@@ -123,7 +134,7 @@ function buildFieldControl(field: BookingField): HTMLElement {
       el.name = field.path
       el.required = Boolean(field.required)
       el.label = field.label
-      el.placeholder = field.label
+      el.placeholder = 'Choose one'
       for (const opt of field.options ?? []) {
         const optEl = document.createElement('div')
         optEl.setAttribute('role', 'option')
@@ -131,13 +142,10 @@ function buildFieldControl(field: BookingField): HTMLElement {
         optEl.textContent = opt.label
         el.appendChild(optEl)
       }
-      const wrap = document.createElement('div')
-      wrap.setAttribute('data-a2ui-booking-field', field.path)
-      wrap.append(fieldCaption(field.label), el)
-      return wrap
+      return labelledField(field, el)
     }
     case 'checkbox': {
-      // Self-labeled (textContent IS the accessible label, the indicatorFactory precedent) — no caption wrap.
+      // Self-labeled (textContent IS the visible and accessible label, the indicatorFactory precedent).
       const el = document.createElement('ui-checkbox') as unknown as FieldControlLike
       el.name = field.path
       el.required = Boolean(field.required)
@@ -148,33 +156,18 @@ function buildFieldControl(field: BookingField): HTMLElement {
       return wrap
     }
     case 'text':
-    case 'number': {
-      // Self-labeled (`label` is the visible caption) - no caption wrap. `type=number` brings the stepper,
-      // the numeric codec and native range validity; the committed value is the field's string form.
-      const el = document.createElement('ui-text-field') as unknown as FieldControlLike & {
-        label: string
-        placeholder: string
-        type: string
-      }
+    case 'number':
+    case 'dateSingle':
+    default: {
+      // `type=number` brings the stepper, the numeric codec and native range validity; `type=date` the compact
+      // date field (a calendar popover); the committed value is the field's canonical string form. `label`
+      // stays the bare-usage accessible name, yielding to the `ui-field` label once associated.
+      const el = document.createElement('ui-text-field') as unknown as FieldControlLike & { label: string; type: string }
       el.name = field.path
       el.required = Boolean(field.required)
       el.label = field.label
-      el.placeholder = field.label
-      el.type = field.kind
-      const wrap = document.createElement('div')
-      wrap.setAttribute('data-a2ui-booking-field', field.path)
-      wrap.appendChild(el)
-      return wrap
-    }
-    case 'dateSingle':
-    default: {
-      const el = document.createElement('ui-calendar') as unknown as FieldControlLike
-      el.name = field.path
-      el.required = Boolean(field.required)
-      const wrap = document.createElement('div')
-      wrap.setAttribute('data-a2ui-booking-field', field.path)
-      wrap.append(fieldCaption(field.label), el)
-      return wrap
+      el.type = field.kind === 'text' || field.kind === 'number' ? field.kind : 'date'
+      return labelledField(field, el)
     }
   }
 }
@@ -191,23 +184,61 @@ function findByAttr(container: HTMLElement, attr: string, value: string): HTMLEl
 
 /** Set one control's CURRENT value from the bound aggregate — read direction (`applyProp('value', …)`). */
 function prefillFieldControl(wrap: HTMLElement, field: BookingField, raw: unknown): void {
-  const control = wrap.querySelector(
-    field.kind === 'checkbox'
-      ? 'ui-checkbox'
-      : field.kind === 'select'
-        ? 'ui-select'
-        : field.kind === 'text' || field.kind === 'number'
-          ? 'ui-text-field'
-          : 'ui-calendar',
-  )
+  const control = wrap.querySelector(field.kind === 'checkbox' ? 'ui-checkbox' : field.kind === 'select' ? 'ui-select' : 'ui-text-field')
   if (control === null) return
   if (field.kind === 'checkbox') (control as unknown as { checked: boolean }).checked = Boolean(raw)
   else (control as unknown as { value: string }).value = raw == null ? '' : String(raw)
 }
 
+/** A run of consecutive `dateSingle` fields (a check-in/check-out range) shares one wrapping row: side by side
+ *  where the form is wide enough for two 12rem fields, stacked on a phone. */
+function dateRow(): HTMLElement {
+  const row = document.createElement('div')
+  row.setAttribute('data-part', 'date-row')
+  row.style.display = 'flex'
+  row.style.flexWrap = 'wrap'
+  row.style.gap = 'var(--ui-box-gap)'
+  return row
+}
+
 function rebuildFields(parts: BookingFormParts, fields: BookingField[]): void {
   parts.fields = fields
-  parts.fieldsEl.replaceChildren(...fields.map(buildFieldControl))
+  const nodes: HTMLElement[] = []
+  let row: HTMLElement | null = null
+  for (const field of fields) {
+    const control = buildFieldControl(field)
+    if (field.kind !== 'dateSingle') {
+      row = null
+      nodes.push(control)
+      continue
+    }
+    if (row === null) {
+      row = dateRow()
+      nodes.push(row)
+    }
+    control.style.flex = '1 1 12rem'
+    row.appendChild(control)
+  }
+  parts.fieldsEl.replaceChildren(...nodes)
+}
+
+/** Every field wrapper under the fields part, a date row's included, keyed by its path (plain attribute equality). */
+function fieldWrapsByPath(fieldsEl: HTMLElement): Map<string, HTMLElement> {
+  const byPath = new Map<string, HTMLElement>()
+  for (const wrap of fieldsEl.querySelectorAll<HTMLElement>('[data-a2ui-booking-field]')) {
+    const path = wrap.getAttribute('data-a2ui-booking-field')!
+    if (!byPath.has(path)) byPath.set(path, wrap) // first wins, as the flat scan did
+  }
+  return byPath
+}
+
+/** The `ui-card` frame and surface (card.css: the neutral surface plane, the hairline border, the base corner). */
+function paintCardSurface(el: HTMLElement): void {
+  const s = el.style
+  s.boxSizing = 'border-box'
+  s.backgroundColor = 'var(--md-sys-color-neutral-surface)'
+  s.border = '1px solid var(--md-sys-color-neutral-outline-variant)'
+  s.borderRadius = 'var(--md-sys-shape-corner-base)'
 }
 
 /**
@@ -216,9 +247,16 @@ function rebuildFields(parts: BookingFormParts, fields: BookingField[]): void {
  */
 export const bookingFormFactory: WidgetFactory = {
   tag: 'ui-form-provider',
-  uses: ['ui-calendar', 'ui-checkbox', 'ui-select', 'ui-text', 'ui-text-field'], // ADR-0233: the field controls it mints
+  uses: ['ui-checkbox', 'ui-field', 'ui-select', 'ui-text', 'ui-text-field'], // ADR-0233: the field controls it mints
   create: () => {
     const el = document.createElement('ui-form-provider') as unknown as FormProviderLike
+    // The card surface and the ADR-0046 box: `[data-box]` insets every child 6px (margins collapsing in its
+    // flow-root BFC) and the root holds the region padding, so ink lands 19px in, the action row included.
+    el.setAttribute('data-box', '')
+    paintCardSurface(el)
+    el.style.display = 'flow-root'
+    el.style.paddingBlock = 'var(--ui-box-pad-block)'
+    el.style.paddingInline = 'var(--ui-box-pad-inline)'
     const titleEl = document.createElement('ui-text')
     ;(titleEl as unknown as { as: string; variant: string; size: string }).as = 'h4'
     ;(titleEl as unknown as { as: string; variant: string; size: string }).variant = 'title'
@@ -226,7 +264,12 @@ export const bookingFormFactory: WidgetFactory = {
     titleEl.setAttribute('data-part', 'title')
     const fieldsEl = document.createElement('div')
     fieldsEl.setAttribute('data-part', 'fields')
+    fieldsEl.style.display = 'flex'
+    fieldsEl.style.flexDirection = 'column'
+    fieldsEl.style.gap = 'var(--ui-box-gap)' // 8px between fields
+    fieldsEl.style.marginBlock = 'var(--ui-box-gap)' // collapses with its neighbours' 6px inset: 8px to the title and actions
     el.append(titleEl, fieldsEl)
+    largeActionButtons(el)
     bookingFormParts.set(el, { titleEl, fieldsEl, fields: [] })
     // Expose the LIVE aggregate as a plain readable property — a getter proxying the form-provider's
     // OWN native `values()` (name → committed FormValue, form-registry.ts). `installInputBinding`
@@ -254,10 +297,11 @@ export const bookingFormFactory: WidgetFactory = {
       case 'value': {
         if (typeof value !== 'object' || value === null) break
         const obj = value as Record<string, unknown>
-        // Plain attribute-value equality over the direct children (never a `querySelector` attribute
-        // selector, which would need CSS.escape — absent in jsdom, ADR-N5 zero-dep-friendly either way).
+        // Plain attribute-value equality over the field wrappers (never a `querySelector` attribute selector,
+        // which would need CSS.escape — absent in jsdom, ADR-N5 zero-dep-friendly either way).
+        const wraps = fieldWrapsByPath(parts.fieldsEl)
         for (const field of parts.fields) {
-          const wrap = findByAttr(parts.fieldsEl, 'data-a2ui-booking-field', field.path)
+          const wrap = wraps.get(field.path)
           if (wrap !== undefined) prefillFieldControl(wrap, field, obj[field.path])
         }
         break
@@ -298,19 +342,38 @@ interface BookingConfirmationParts {
 
 const bookingConfirmationParts = new WeakMap<HTMLElement, BookingConfirmationParts>()
 
-function buildRow(row: BookingConfirmationRow): HTMLElement {
+/** One summary row: the label muted at the start, the value in emphasis at the end, a long value wrapping under
+ *  itself. Rows after the first carry a hairline divider above; the row padding keeps 8px either side of it. */
+function buildRow(row: BookingConfirmationRow, index: number, count: number): HTMLElement {
   const wrap = document.createElement('div')
   wrap.setAttribute('data-a2ui-confirmation-row', row.path)
+  const w = wrap.style
+  w.display = 'flex'
+  w.alignItems = 'baseline'
+  w.justifyContent = 'space-between'
+  w.gap = 'var(--md-sys-space-md)'
+  w.paddingBlockStart = index === 0 ? '0' : 'var(--md-sys-space-sm)'
+  w.paddingBlockEnd = index === count - 1 ? '0' : 'var(--md-sys-space-sm)'
+  if (index > 0) w.borderBlockStart = '1px solid var(--md-sys-color-neutral-outline-variant)'
   const label = document.createElement('ui-text')
   ;(label as unknown as { as: string; variant: string; size: string }).as = 'none'
   ;(label as unknown as { as: string; variant: string; size: string }).variant = 'body'
-  ;(label as unknown as { as: string; variant: string; size: string }).size = 'sm'
+  ;(label as unknown as { as: string; variant: string; size: string }).size = 'md'
+  label.setAttribute('data-part', 'label')
+  label.style.color = 'var(--md-sys-color-neutral-on-surface-variant)'
+  label.style.flex = '0 1 auto'
+  label.style.maxInlineSize = '50%'
   label.textContent = row.label
   const valueEl = document.createElement('ui-text')
-  ;(valueEl as unknown as { as: string; variant: string; size: string }).as = 'none'
-  ;(valueEl as unknown as { as: string; variant: string; size: string }).variant = 'body'
-  ;(valueEl as unknown as { as: string; variant: string; size: string }).size = 'md'
+  ;(valueEl as unknown as { as: string; variant: string; size: string; emphasis: boolean }).as = 'none'
+  ;(valueEl as unknown as { as: string; variant: string; size: string; emphasis: boolean }).variant = 'body'
+  ;(valueEl as unknown as { as: string; variant: string; size: string; emphasis: boolean }).size = 'md'
+  ;(valueEl as unknown as { as: string; variant: string; size: string; emphasis: boolean }).emphasis = true
   valueEl.setAttribute('data-part', 'value')
+  valueEl.style.flex = '1 1 0'
+  valueEl.style.minInlineSize = '0'
+  valueEl.style.textAlign = 'end'
+  valueEl.style.overflowWrap = 'anywhere'
   valueEl.textContent = '—'
   wrap.append(label, valueEl)
   return wrap
@@ -328,23 +391,27 @@ function applyConfirmationData(parts: BookingConfirmationParts, data: unknown): 
 }
 
 /**
- * `BookingConfirmation` → `ui-card` holding a title + one label/value row per `rows` entry, EVERY row's
- * value ALWAYS derived from the bound `data` aggregate (never a producer literal — see the module header
- * + the decomp note §1 argument (b)).
+ * `BookingConfirmation` → `ui-card` holding a title (in a `ui-card-header`) + one label/value row per `rows`
+ * entry (in a `ui-card-content`), EVERY row's value ALWAYS derived from the bound `data` aggregate (never a
+ * producer literal — see the module header + the decomp note §1 argument (b)).
  */
 export const bookingConfirmationFactory: WidgetFactory = {
   tag: 'ui-card',
-  uses: ['ui-text'], // ADR-0233: the title and row labels it mints
+  uses: ['ui-card-content', 'ui-card-header', 'ui-text'], // ADR-0233: the regions, title and row texts it mints
   create: () => {
     const el = document.createElement('ui-card')
+    const headerEl = document.createElement('ui-card-header')
     const titleEl = document.createElement('ui-text')
     ;(titleEl as unknown as { as: string; variant: string; size: string }).as = 'h4'
     ;(titleEl as unknown as { as: string; variant: string; size: string }).variant = 'title'
     ;(titleEl as unknown as { as: string; variant: string; size: string }).size = 'md'
     titleEl.setAttribute('data-part', 'title')
+    headerEl.appendChild(titleEl)
+    const contentEl = document.createElement('ui-card-content')
     const rowsEl = document.createElement('div')
     rowsEl.setAttribute('data-part', 'rows')
-    el.append(titleEl, rowsEl)
+    contentEl.appendChild(rowsEl)
+    el.append(headerEl, contentEl)
     bookingConfirmationParts.set(el, { titleEl, rowsEl, rows: [] })
     return el
   },
@@ -357,7 +424,7 @@ export const bookingConfirmationFactory: WidgetFactory = {
         break
       case 'rows':
         parts.rows = readRows(value)
-        parts.rowsEl.replaceChildren(...parts.rows.map(buildRow))
+        parts.rowsEl.replaceChildren(...parts.rows.map((row, i, all) => buildRow(row, i, all.length)))
         break
       case 'data':
         applyConfirmationData(parts, value)
