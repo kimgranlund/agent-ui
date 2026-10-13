@@ -72,9 +72,11 @@ size, generated from one vendored config that `check()` gates; set the library r
 `product` at scale `sm`, so sm and md controls keep 24 and 28 and lg moves from 36 to 32; split
 the functional-mark box from the icon box with a new `ui-glyph` element and rename `ui-icon`'s
 `glyph` prop to `symbol`; replace ADR-0046's fixed paddings with the four container levels and
-the placement rule; derive `ui-text` sizes behind its unchanged nine-variant API; and ship it as
-one ratified release train whose step 0 is a mockup Kim approves.** The A2UI wire and the K6
-prompt budget move zero bytes. Eleven clauses.
+the placement rule; derive `ui-text` sizes behind its unchanged nine-variant API; and migrate the
+whole foundation by dark launch: derived tokens live only inside opt-in `data-tier` regions while
+file-disjoint family lanes rewrite each rule as `var(<derived>, <today's value>)`, then one config
+line makes the root opt in, after a step 0 mockup Kim approves.** The A2UI wire and the K6 prompt
+budget move zero bytes. Eleven clauses.
 
 ### 1. One config, one generator, one gate
 
@@ -93,9 +95,11 @@ prompt budget move zero bytes. Eleven clauses.
   multiplier because scaling height and font by one factor broke the pairing of each height with
   its font and icon row; here every quantity is a formula of the same n, so the pairing holds by
   construction.
-- **The recompute list replaces ADR-0007's `*` ramp.** Derived tokens are declared on
-  `:root, [data-tier], [data-scale], [data-size], [size]`, the same per-element re-substitution
-  ADR-0007 relies on, declared only where an input changes.
+- **The recompute list replaces ADR-0007's `*` ramp.** From the cut on (clause 10), derived
+  tokens are declared on `:root, [data-tier], [data-scale], [data-size], [size]`, the same
+  per-element re-substitution ADR-0007 relies on, declared only where an input changes. Until the
+  cut the list is scoped to opt-in regions, `[data-tier]` and `[data-tier] :is([data-scale],
+  [data-size], [size])`, by one config field.
 - **Names** follow ADR-0140: inputs `--md-sys-tier-{n0,a,k,g,ratio}`, `--md-sys-scale-s`,
   `--md-sys-size-z`, `--md-sys-title-bump`; outputs `--md-sys-n`, `--md-sys-c`, `--md-sys-height`,
   `--md-sys-inset`, `--md-sys-radius`, `--md-sys-icon-box`, `--md-sys-glyph-box`,
@@ -110,7 +114,8 @@ prompt budget move zero bytes. Eleven clauses.
   `size` prop (sm | md | lg) is z; `data-size` sets z on any other element. Nearest ancestor wins.
   Reflection is setter-driven (`dom/props.ts:227`), so a bare control carries no `size` attribute
   and inherits a region's z; wave 1 proves that with a test.
-- **The root is `product` at scale `sm`: sizes sm / md / lg = n 6 / 7 / 8 = 24 / 28 / 32.**
+- **The root is `product` at scale `sm`: sizes sm / md / lg = n 6 / 7 / 8 = 24 / 28 / 32.** It
+  becomes the default at the cut (clause 10); until then a region opts in with `data-tier`.
 
   | root candidate | heights sm / md / lg | per step vs 24 / 28 / 36 | total moved |
   |---|---|---|---|
@@ -124,7 +129,8 @@ prompt budget move zero bytes. Eleven clauses.
   `data-scale="md"`, then gives the skill's own default 28 / 36 / 44 for a roomier region.
   product/md was rejected as the root: it grows every default control by 8px.
 - **`[scale]` retires.** Its six values map by purpose, with derived heights (deltas against
-  today's tables):
+  today's tables); the bridge of clause 10 applies this mapping to pages that still set it, for one
+  release after the cut:
 
   | today | heights sm/md/lg | body-medium | becomes | heights sm/md/lg (delta) | body at md |
   |---|---|---|---|---|---|
@@ -193,7 +199,8 @@ floor `min-inline-size: var(--ui-{name}-height)` keeps its form and resolves to 
   reservation (TKT-0069) stands. `glyph` stays a deprecated alias on `ui-icon` for one release.
 - **Migration.** The prop appears in 39 `.ts` files under `packages/` and `site/`; repo-wide the
   forms count 51 `glyph=`, 61 `glyph:`, 38 `.glyph` and 33 `setAttribute('glyph', …)` hits, prose
-  and tests included. One codemod wave renames them. `glyph-usage-coverage.test.ts` follows the rename and closes its three blind
+  and tests included. Each lane of clause 10 renames the call sites inside its own folders, so no
+  wave-wide codemod crosses lane boundaries. `glyph-usage-coverage.test.ts` follows the rename and closes its three blind
   spots in the same wave (it scans only `site/` and `app/src/`, and misses `setAttribute` and
   `.glyph`). `icon.md`'s prose, which still calls the prop `name` (`icon.md:4,12,54,65-66,76`), is
   repaired in that wave. The other uses of the word (`badge.css`'s `[data-part=glyph]`,
@@ -269,7 +276,7 @@ floor `min-inline-size: var(--ui-{name}-height)` keeps its form and resolves to 
   skill's 500 / 0.08em, `overline` keeps its cl.2b 500 / 0.15em identity, and `lead` / `quote` keep
   body's 400 weight at the subhead size. An explicit ruling outranks a skill default.
 - **`--md-sys-typescale-*`** (27 rows × 4 legs) becomes a generated alias layer over the derived
-  roles for the 27 package and 7 site stylesheets that read it, and retires in the last wave.
+  roles for the 27 package and 7 site stylesheets that read it, and retires at the W7 cleanup.
   `--md-sys-scale` retires with it.
 - **ADR-0150 is superseded.** Skill rule 8 lowers the scale on narrow screens, but the root is
   already at scale sm, so the 1px body drop has no formula form at the root; a content-tier region
@@ -308,40 +315,138 @@ goldens re-run in the release wave.
   floors this record does not move. ADR-0223 is extended, not amended.
 - **A sibling rule** joins that gate family: no px literal for control geometry in a control's
   token block except the 1px hairline, the focus ring, the scrollbar and the ratified whole-shape
-  floors. It lands report-shape in wave 1 and flips enforcing in wave 6 (the ADR-0223 R5 shape).
-- **Re-baselined, never weakened:** `dimensions.test.ts` (544 lines, its six-tier table at
-  `:36-46`) is rewritten against `resolve()`; 42 test files with 162 lines name
-  `--md-sys-{height,icon,font}-*`; 66 visual goldens across 26 suites regenerate through ADR-0110's
-  deliberate recapture path, family by family.
+  floors. It lands report-shape in W1 and flips enforcing at W7 (the ADR-0223 R5 shape).
+- **Re-baselined at the cut, never weakened:** until the cut, `dimensions.test.ts` (544 lines,
+  its six-tier table at `:36-46`) and the 66 default visual goldens across 26 suites stay
+  byte-identical and serve as the dark-launch leak gate; at the cut the test is rewritten against
+  `resolve()` and the goldens regenerate through ADR-0110's deliberate recapture path. 42 test
+  files with 162 lines name `--md-sys-{height,icon,font}-*`; each moves with its family lane. The
+  full gate table is clause 10c.
 
-### 10. The wave plan (one ratified release train)
+### 10. The overhaul: strategy, waves, gates, consumer stability and rollback
 
-No wave ships a visual change to a release before wave 6; `main` carries the train behind the
-generator's additive tokens, the ADR-0223 cl.7 shape.
+#### 10a. Strategy: a dark launch behind `data-tier`
 
-- **Step 0: the mockup, reviewed and approved by Kim before wave 1.** A static page in the step-0
-  ticket folder (`.sdlc/foundations-mockup/mockup.html`, published as an artifact for review): one
-  control row per root step (sm, md, lg) and per `data-scale="md"`, each control drawn with its
-  icon slot (2n) and glyph box (2n - 2c) outlined; a listbox, popover, card and page frame at each
-  level; the `ui-text` ladder; the button pill-to-n radius change and the avatar deviation side by
-  side with today. It settles the open items below.
-- **Wave 1, foundations (additive):** vendored `scale.mjs`, the generator, `foundations.gen.css`
-  loaded beside `dimensions.css`, the gates of clause 9 (px-literal rule report-shape). Zero
-  visual change.
-- **Wave 2, icon and glyph:** `ui-glyph` mint (descriptor, registry regeneration), the path table,
-  the `symbol` rename with its alias, the codemod, the coverage test, the `mapsTo` edits.
-- **Wave 3, controls by family:** entry (text-field, textarea, select, combo-box, multi-select,
-  otp-field), action (button, toggle, segmented-control, pagination), indicators (checkbox, radio,
-  switch, slider, progress), atoms (badge, avatar), listbox family (menu and the panels), then
-  tabs, nav-rail, calendar and table. Goldens regenerate per family.
-- **Wave 4, containers:** `container-box.css`, card, modal, drawer, popover, toast, tooltip and the
-  super-shell bars onto the level tokens.
-- **Wave 5, type:** `text.css` onto the derived roles, the typescale alias layer, ADR-0150's media
-  block out.
-- **Wave 6, release:** `[scale]`, `[density]` and the old ramp tokens retire; the space and
-  typescale aliases are kept or retired by Kim's call; the px-literal rule flips enforcing; fleet
-  golden regeneration, `eval:catalog`, and Kim's reference-consumer sign-off on the docs site and
-  agent-admin; one breaking release.
+| option | how it lands | verdict |
+|---|---|---|
+| Big-bang | one change repoints every token and rewrites every control | rejected: 124 package stylesheets, 42 test files and 66 goldens in one review, no partial rollback, no parallel lanes |
+| Forward token shim alone | the old `--md-sys-*` and `--ui-box-*` names alias the derived tokens; control CSS untouched | rejected as the plan: heights, type, icons and gaps move, but control-local formulas (pill h/2, input padding h/2, checkbox box/5, the 0.6 check) keep today's shape, so the fleet lands half-derived. Kept as the consumer bridge |
+| Per-control waves alone | each family rewrites its stylesheet onto the derived tokens | rejected alone: during the train every default page on `main` mixes two systems |
+| **Dark launch (recommended)** | derived tokens exist only inside opt-in `data-tier` regions until the cut; each family lane rewrites every geometry rule as `var(<derived>, <today's expression>)`; a scoped forward shim aliases the old names inside opt-in regions; the cut is one config field that makes the root opt in | adopted |
+
+Why the dark launch wins:
+
+1. Every wave before the cut lands on `main` with zero default visual change, so the 66 default
+   goldens and `dimensions.test.ts` double as the leak gate.
+2. Lanes are file-disjoint (10b), so each one merges and reverts as its own commit.
+3. Kim reviews real controls in opt-in regions (the docs preview pane, an agent-admin flag) beside
+   the mockup before anything changes for a consumer.
+4. The flip and its rollback are one reviewed line.
+5. The same fallbacks give consumers a per-region escape hatch for one release after the cut
+   (10e).
+
+How it works:
+
+- **Undefined outside, defined inside.** Until the cut the generator's `rootDefault` field is false
+  and the derived block is declared only on `[data-tier]` and `[data-tier] :is([data-scale],
+  [data-size], [size])`. Outside an opt-in region every derived token is undefined, so each
+  `var(<derived>, <today>)` resolves to today's expression. A migrated button reads
+  `border-radius: var(--md-sys-radius, calc(var(--ui-button-height) / 2))`: a pill outside, n
+  inside.
+- **The bridge** (`foundations-bridge.gen.css`, generated with the tokens) aliases the old names
+  to derived values inside opt-in regions, and on `:root` from the cut: `--md-sys-height-{sm,md,lg}`
+  to the height one size step down, at and up (`calc` over the tier step k + g·s);
+  `--md-sys-font-*` to control type; `--md-sys-icon-*` to the icon box; `--md-sys-gap-*` to n;
+  `--md-sys-compact-*` to 2n; `--md-sys-widget-inset` to c; `--md-sys-shape-corner-base` to the
+  card radius (its ADR-0015 container meaning); `--md-sys-space-*` per clause 6;
+  `--md-sys-typescale-*-size` per clause 7; `--ui-box-*` to the level tokens. `[scale="…"]` and
+  `[density="…"]` set the tier and scale inputs per clause 2's table and join the recompute list.
+  An unmigrated stylesheet therefore picks up derived heights, type, icons and gaps in an opt-in
+  region; only its local formulas wait for its lane.
+- **The cut** sets `rootDefault: true`: `:root` takes the product/sm inputs and the full recompute
+  list of clause 1.
+
+#### 10b. Waves, sized and file-disjoint
+
+Every package control folder sits in exactly one lane; the lane-plan step re-checks the partition
+against `ls packages/agent-ui/{components,app}/src/controls` before dispatch. Generated files
+(`registry.gen.ts`, `all.gen.css`, `*.props.gen.ts`, `adr-index.json`) are never edited in a lane;
+the serial merge path regenerates them (CLAUDE.md Inner loop). Lanes inside a wave run in
+parallel up to the seat-map concurrency ceiling.
+
+| wave | lane | files (folders under `controls/` unless a path is given) | size | depends on |
+|---|---|---|---|---|
+| Step 0 | mockup | `.sdlc/foundations-mockup/` only | L2 | ratification |
+| W1 tokens, generator, gate | 1 | `packages/agent-ui/shared/src/tokens/**`, `scripts/generate-foundations.mjs`, `package.json` (`check:scripts`), `AGENTS.md` | L3 | Kim's mockup approval |
+| W2 icon and glyph containers | 2 | `icon/`, new `glyph/` (the mark path table), `packages/agent-ui/icons/src/glyph-usage-coverage.test.ts`; `ui-icon` gains `symbol` and keeps `glyph`; no call site moves | L3 | W1 |
+| W3 controls by family | 3a entry | `text-field`, `textarea`, `select`, `combo-box`, `multi-select`, `otp-field`, `field`, `color-picker`, `form-provider`, `suggestions` | L3 | W1, W2 |
+| | 3b action | `button`, `toggle`, `segmented-control`, `segment`, `pagination`, `toolbar`, `rating`, `swiper` | L3 | W1, W2 |
+| | 3c indicators | `checkbox`, `radio`, `switch`, `slider`, `slider-multi`, `progress`, `gauge`, `choice-group`, `choice-card` | L2 | W1, W2 |
+| | 3d atoms | `badge`, `avatar`, `swatch`, `attachment`, `sparkline`, `stat`, `image`, `audio`, `video` | L2 | W1, W2 |
+| | 3e navigation | `menu`, `tabs`, `breadcrumb`, `disclosure`, `drill`, `calendar`, `split`, `source-list`, app `nav-rail` | L3 | W1, W2 |
+| | 3f data display | `table`, `list`, `description-list`, `timeline`, `timeline-item`, `status-stream`, `ladder`, `ramp`, `code`, `_chart` and the four chart folders, `_token-surface`, app `entry-list` | L2 | W1, W2 |
+| | 3g type | `text` | L2 | W1 |
+| W4 containers and widgets | 4a containers | `_surface`, `card`, `modal`, `drawer`, `popover`, `toast`, `tooltip`, `command-modal`, `form-popover`, `row`, `column`, `grid`, `sandbox-frame`, `theme-provider`, app `super-shell`, `chat-shell`, `workspace-shell`, `master-detail`, `surface-host`, `settings` | L3 | W3 |
+| | 4b preset widgets | `product-card`, `board-grid`, `game-hud`, `service-card`, `playing-card`, `packages/agent-ui/a2ui/src/catalog/personas/**` | L2 | W3 |
+| W5 A2UI, site, docs | 5a A2UI catalog | `packages/agent-ui/a2ui/src/catalog/{default,a2ui-basic}/**` (`mapsTo` glyph to symbol, the Button icon child), renderer tests, `eval:catalog` under opt-in | L2 | W2 |
+| | 5b site | `site/**`: preview knobs from `[scale]`/`[density]` to the data axes, site call sites, reading columns at `data-tier="content"` | L2 | W3, W4 |
+| | 5c app surfaces | app `agent-admin`, `conversation` (the remaining `setAttribute('glyph', …)` call sites) | L2 | W2 |
+| | 5d records | `.claude/docs/**`, `.claude/skills/**` (clause 11's law records) | L2 | W3, W4 |
+| W6 the cut | 1 | the generator's `rootDefault`, its regenerated CSS, `dimensions.test.ts` against `resolve()`, the 66 default goldens, `CLAUDE.md`'s ramp line; Kim's sign-off on the docs site and agent-admin; one breaking release | L3 | W1 to W5 |
+| W7 cleanup | 1 | every control folder: `var(<derived>, <today>)` collapses to `var(<derived>)`; the bridge, `[scale]`, `[density]`, the `glyph` alias and the legacy opt-out retire; the px-literal rule enforces; a major release | L3 | one release after W6 with no rollback used |
+
+Each W3 and W4 lane, inside its own folders, converts its marks to `ui-glyph`, renames its
+`glyph` call sites to `symbol`, repairs its descriptors' `geometry:` lines, adds its per-control
+geometry pin and records its opt-in goldens.
+
+#### 10c. Gates that guard it
+
+| gate | guards | from |
+|---|---|---|
+| `check()` M1 to M10 | the config: the generator refuses to emit, a vitest leg asserts `[]` | W1 |
+| generated-file drift (`--check` on `check:scripts`) | `foundations.gen.css` and the bridge are never hand-edited | W1 |
+| the 36-cell browser leg | computed tokens equal `resolve()` in Chromium and WebKit | W1 |
+| the leak gate | until W6, no change touches a default golden or `dimensions.test.ts`; both stay byte-identical | W1 to W5 |
+| `sizing-gates.test.ts` | fill-by-default posture and floors (ADR-0223); untouched and green every wave | all |
+| per-control geometry pin | each migrated control's browser test asserts height, padding, radius, icon box and glyph box at sm, md and lg under `data-tier="product" data-scale="sm"` against `resolve()`, and the same control outside opt-in still at today's values | W3, W4 |
+| screenshot beside the mockup | each family change carries the real control under opt-in next to its approved step-0 mockup (CLAUDE.md Inner loop); opt-in goldens recorded per family | W3 to W5 |
+| the px-literal rule | report-shape, then enforcing | W1, W7 |
+| prompt and corpus bytes | the default turn stays 45,454 chars, the prompt-equivalence baseline and corpus files unchanged | W5a |
+
+#### 10d. What stays stable for consumers
+
+| surface | promise |
+|---|---|
+| tags, props, events, `size` sm/md/lg, `inline` | unchanged |
+| `--ui-{cmp}-*` knob names (ADR-0140 cl.2) | unchanged; their values derive |
+| `--md-sys-{height,font,icon,gap,compact,space,typescale}-*`, `--md-sys-shape-corner-base`, `--md-sys-widget-inset`, `--ui-box-*` | kept as bridge aliases of derived values for one release after the cut; removed in the W7 major |
+| `[scale]`, `[density]` | mapped onto tier and scale by the bridge for one release; removed at W7 |
+| `ui-icon`'s `glyph` attribute | accepted as an alias of `symbol` until W7 |
+| A2UI wire, payloads, corpus, catalog enums, K6 | byte-identical throughout |
+| DOM | one change: a control that drew a mark on a pseudo-element may gain a `ui-glyph` child (clause 5), which breaks consumer selectors aimed at that pseudo-element |
+| rendered px | change at the cut, by design (Appendix B) |
+
+#### 10e. Shipping incrementally, and rolling back
+
+- **Before the cut** a page or region opts in with `data-tier` (the root reading is `data-tier="product"
+  data-scale="sm"`); removing the attribute is the rollback. The docs preview pane and an
+  agent-admin flag opt in for review.
+- **A lane** reverts as its own commit and touches no other lane's files.
+- **The cut** is one config field plus its regenerated output and goldens. Reverting that change
+  restores the default look while the family work stays live behind opt-in.
+- **For one release after the cut** `data-foundations="legacy"` on any region sets every derived
+  token to `initial` (guaranteed-invalid) and pins the old names to today's literals, so the
+  `var(<derived>, <today>)` fallbacks render today's geometry there. A consumer who is not ready
+  opts out per region, without holding back the release.
+- **W7 is the one irreversible step,** and it runs only after a release in which no rollback was
+  used.
+
+Step 0's mockup is a static page in the step-0 ticket folder (`.sdlc/foundations-mockup/mockup.html`,
+published as an artifact for review), approved by Kim before W1: one control row per root step
+(sm, md, lg) and per `data-scale="md"`, each control drawn with its icon slot (2n) and glyph box
+(2n - 2c) outlined; a listbox, popover, card and page frame at each level; the `ui-text` ladder;
+the pill-to-n radius change and the avatar deviation beside today's look. It settles the open
+items below.
 
 ### 11. Records this invalidates (stale, re-verified per wave)
 
@@ -384,8 +489,11 @@ Inner loop line "Controls take the library ramp (sm 24 / md 28 / lg 36 px)", whi
   verdicts do.
 - **Vocabulary:** the skill's "widget" (a tier and a container level) is not the A2UI "preset
   widget" of ADR-0243. The token names keep the skill's word; `references/agent-model.md` gains one
-  disambiguating glossary line in wave 1. `--md-sys-widget-inset` (ADR-0041's 2px) retires into c in
-  wave 3 so it never sits beside `--md-sys-widget-{margin,gutter,radius}`.
+  disambiguating glossary line in W1. `--md-sys-widget-inset` (ADR-0041's 2px) becomes a bridge
+  alias of c in W1 and is removed at W7, so it never outlives the deprecation release beside
+  `--md-sys-widget-{margin,gutter,radius}`.
+- **Two systems coexist in the source until W7.** Every migrated rule carries its today fallback
+  for one release after the cut; that is the price of a one-line rollback, and W7 removes it.
 
 ### Risks
 
@@ -393,7 +501,10 @@ Inner loop line "Controls take the library ramp (sm 24 / md 28 / lg 36 px)", whi
 |---|---|---|
 | The overhaul reads as a different product (radius, icon size, container air) | high, by design | step 0 mockup before any build; Kim's sign-off before the release cut |
 | `round()` / `pow()` / `corner-shape` engine gaps | low for the first two, high for `corner-shape` outside Chromium | the 36-cell browser leg in both engines; `corner-shape` is paint-only and falls back to circular corners |
-| A region's `data-size` never reaches a control that reflects its default | low (reflection is setter-driven) | wave 1 test on a bare control under `data-size="sm"` |
+| A region's `data-size` never reaches a control that reflects its default | low (reflection is setter-driven) | W1 test on a bare control under `data-size="sm"` |
+| The dark launch leaks: a derived token resolves outside an opt-in region before the cut | medium | the 10c leak gate (default goldens and `dimensions.test.ts` byte-identical through W5) and the outside-opt-in leg of every per-control pin |
+| A missed rule keeps today's geometry behind its fallback after the cut | medium | the per-control pins assert the derived box under opt-in; W7's fallback removal reds any rule a lane missed |
+| A lane edits a folder another lane owns | low | the 10b partition is re-checked before dispatch; generated files are regenerated only on the serial merge path |
 | 171 records go stale mid-train | high | clause 11: each wave repairs the records it invalidates in the same change |
 | Mobile hit targets: no scale below the root | medium | the root is already the densest product step; rule 8 applies only to content regions |
 | Golden churn hides a real regression | medium | goldens regenerate per family with eye review (the ADR-0223 slice 2 practice) |
@@ -401,11 +512,10 @@ Inner loop line "Controls take the library ramp (sm 24 / md 28 / lg 36 px)", whi
 ## Acceptance
 
 This record ships no production code. This change: the ADR passes the ADR grammar
-(`site/lib/adr.test.ts`) and the docs grammar sweep (`site/lib/docs-grammar.test.ts`, whose S8
-`KNOWN_GAPS` gains 244, reserved in flight by the `widget-patterns-next` lane, inert once it
-lands), the regenerated indexes pass `site/lib/sitemap.test.ts`, and `npm run check` stays green.
-Each wave carries its own gates: `npm run check`, the touched folders' tests, `test:browser` for
-CSS waves, and the ADR-0110 recapture for its goldens.
+(`site/lib/adr.test.ts`) and the docs grammar sweep (`site/lib/docs-grammar.test.ts`; 0244 has
+landed, so S8 needs no known gap), the regenerated indexes pass `site/lib/sitemap.test.ts`, and
+`npm run check` stays green. Each wave carries the gates of clause 10c plus `npm run check`, the
+touched folders' tests and `test:browser` for CSS waves.
 
 ## Alternatives considered
 
@@ -428,6 +538,10 @@ CSS waves, and the ADR-0110 recapture for its goldens.
   contracts.
 - **Generated per-rung literals (the ADR-0038 style).** Rejected: n depends on three independently
   inherited attributes, so the literal table has no selector form (clause 1).
+- **Migrate big-bang, by forward shim alone, or by per-control waves alone.** Rejected for the
+  reasons in clause 10a's table; the dark launch keeps the shim as the consumer bridge and the
+  per-family waves as the unit of work, and adds the opt-in scope and the fallbacks that make each
+  step reversible.
 - **Keep ADR-0046's fixed paddings and adopt n for controls only.** Rejected: the placement rule
   (offset = margin - inset) needs the container margin and the child inset in the same system;
   mixing fixed rem regions with n-derived controls breaks text alignment at every step but one.
@@ -479,29 +593,30 @@ Badge (no size axis, at its context n, md): height 18 → 14 (-4) by 2n; inline 
 (-4.75) by 2c; radius 9 → 3.5 (-5.5) by n/2; type 13 → 11 (-2), field label.
 
 Who moves at the default md, read off the rows above and below (lg adds the -4 height row
-wherever a control has a size axis):
+wherever a control has a size axis), and the clause 10b lane that moves it. Every row moves at
+the W6 cut for default pages, and earlier inside opt-in regions as its lane lands:
 
-| control | moves at md (px) |
-|---|---|
-| button, toggle | radius -7 · icon -4 · icon-side padding +2 · type -1 |
-| text-field, select, combo-box, multi-select, otp-field | inline padding -7 · radius -5 · icon or caret box -4 (caret becomes a 10px glyph) · type -1 |
-| checkbox | box -2 · check +0.4 |
-| radio | box -2 · dot -2.96 |
-| switch | box -2 · thumb -2 · track width -4.8 |
-| slider | box -2 |
-| badge | height -4 · padding -4.75 · radius -5.5 · type -2 |
-| avatar | 0 with the 4n deviation (-14 under the skill's 2n) |
-| menu | item rows +6 · panel padding 6 → 2 · panel radius -3 |
-| select listbox | padding -5 · option radius +2 · panel radius -3 |
-| segmented-control | padding +2 |
-| table | row +3 · cell padding +1 |
-| tabs | tab -8 (36 → 28) |
-| nav-rail items, calendar cells, pagination stops | height 0 · icon -4 where an icon sits |
-| card, modal, drawer | text inset +3 inline, +9 block · region gap +8 · radius +9 |
-| popover | padding +2 · radius +2 |
-| toast | padding +2 inline, +6 block · gap -1 · radius +2 |
-| tooltip | padding +1 · radius -3 |
-| progress | 0 |
+| control | moves at md (px) | lane |
+|---|---|---|
+| button, toggle | radius -7 · icon -4 · icon-side padding +2 · type -1 | 3b |
+| text-field, select, combo-box, multi-select, otp-field | inline padding -7 · radius -5 · icon or caret box -4 (caret becomes a 10px glyph) · type -1 | 3a |
+| checkbox | box -2 · check +0.4 | 3c |
+| radio | box -2 · dot -2.96 | 3c |
+| switch | box -2 · thumb -2 · track width -4.8 | 3c |
+| slider | box -2 | 3c |
+| badge | height -4 · padding -4.75 · radius -5.5 · type -2 | 3d |
+| avatar | 0 with the 4n deviation (-14 under the skill's 2n) | 3d |
+| menu | item rows +6 · panel padding 6 → 2 · panel radius -3 | 3e |
+| select listbox | padding -5 · option radius +2 · panel radius -3 | 3a |
+| segmented-control | padding +2 | 3b |
+| table | row +3 · cell padding +1 | 3f |
+| tabs | tab -8 (36 → 28) | 3e |
+| nav-rail items, calendar cells, pagination stops | height 0 · icon -4 where an icon sits | 3e, 3b |
+| card, modal, drawer | text inset +3 inline, +9 block · region gap +8 · radius +9 | 4a |
+| popover | padding +2 · radius +2 | 4a |
+| toast | padding +2 inline, +6 block · gap -1 · radius +2 | 4a |
+| tooltip | padding +1 · radius -3 | 4a |
+| progress | 0 | 3c |
 
 Containers at the root md (n 7, c 2):
 
