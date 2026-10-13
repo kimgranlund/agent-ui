@@ -1,7 +1,8 @@
 # T-0121 px table: page and shell geometry before and after
 
-Measured by `capture.mjs` in Chromium, light scheme (dark renders the same geometry). Before is origin/main
-(e2a43515, T-0120 merged); after is this branch. The root register is product at scale sm: n 6, c 2, h 24,
+Measured by `capture.mjs` in Chromium, light scheme (dark renders the same geometry). Before is origin/main at
+e2a43515 (T-0120 merged; T-0127 after it moves nothing on these pages); after is this branch. The root register
+is product at scale sm: n 6, c 2, h 24,
 control 6, group 8, widget 12 / 6, card 18 / 12, page 24 / 18 (margin / gutter).
 The derived column is computed by `px-table.mjs` from `scale.mjs` `resolve()`, never typed in; "ok" means the measured
 after value equals it within 0.5px. x values are relative to the docs shell's inline start. Screenshots:
