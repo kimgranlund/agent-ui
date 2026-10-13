@@ -241,8 +241,17 @@ describe('ui-super-shell — SPEC-R7a pane segments (AC10, wide)', () => {
       expect(tab.scrollWidth, `"${tab.textContent}" clips mid-word (scrollWidth > clientWidth)`).toBeLessThanOrEqual(tab.clientWidth + 1)
       expect(tab.getBoundingClientRect().width, `"${tab.textContent}" collapsed to nothing`).toBeGreaterThan(0)
     }
-    // The three whole labels genuinely outgrow 252px, and the tablist part is the LIVE scroll viewport.
-    expect(viewport.scrollWidth, 'the whole-label row overflows the 252px pane').toBeGreaterThan(viewport.clientWidth + 1)
+    // ADR-0245 cut: the derived tab metrics are narrower, so the trio (about 212px) now fits the 252px pane whole.
+    expect(viewport.scrollWidth, 'the whole-label row fits the 252px pane').toBeLessThanOrEqual(viewport.clientWidth + 1)
+    // At the pane's 162px floor (9 modules) the three whole labels genuinely outgrow it, and the tablist part
+    // is the LIVE scroll viewport.
+    el.style.setProperty('--ui-super-shell-pane-size', '162px')
+    await el.updateComplete
+    expect(Math.round(pane.getBoundingClientRect().width), 'the pane narrows to its 9-module floor').toBe(162)
+    expect(viewport.scrollWidth, 'the whole-label row overflows the 162px pane').toBeGreaterThan(viewport.clientWidth + 1)
+    for (const tab of tabs) {
+      expect(tab.scrollWidth, `"${tab.textContent}" still clips mid-word at the floor`).toBeLessThanOrEqual(tab.clientWidth + 1)
+    }
     viewport.scrollLeft = 40
     expect(viewport.scrollLeft, 'the strip scrolls (lawful overflow, not clipping)').toBeGreaterThan(0)
     viewport.scrollLeft = 0

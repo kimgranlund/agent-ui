@@ -1184,6 +1184,10 @@ describe('ui-agent-admin cross-engine smoke — min-size-floors census (GH #185 
   })
 })
 
+// ADR-0245 cut: the root register is product/sm at the control's md step, so the inset n is 7
+// (scale.mjs resolve('product', 'sm', 'md').inset), no longer the font-derived 0.5 / 0.75 factors.
+const ROOT_INSET = 7
+
 describe('ui-agent-admin cross-engine smoke — TKT-0049/ADR-0139: entry-content/entry-add-content min-height is driven by ui-code-editor\'s own `rows` lever, not dead agent-admin.css', () => {
   // `--ui-code-editor-min-block-size`'s formula (editor.css): rows × line-box + 2×padding-block, where
   // line-box = font-size × 1.5 and padding-block = font-size × 0.5 (identical to the ui-textarea it replaced,
@@ -1192,8 +1196,7 @@ describe('ui-agent-admin cross-engine smoke — TKT-0049/ADR-0139: entry-content
   function expectedMinBlockSize(field: HTMLElement, rows: number): number {
     const fontSize = Number.parseFloat(getComputedStyle(field).fontSize)
     const lineBox = fontSize * 1.5
-    const paddingBlock = fontSize * 0.5
-    return rows * lineBox + 2 * paddingBlock
+    return rows * lineBox + 2 * (ROOT_INSET - 1) // editor.css: padding-block = inset n minus the 1px border
   }
 
   // GH #949 — Instructions/Pattern sources drawered too: the rows=4 INLINE content field this test pinned
@@ -1243,8 +1246,9 @@ describe('ui-agent-admin cross-engine smoke — TKT-0050/TKT-0059/ADR-0139: entr
   // admin.css named a DIFFERENT role — --md-sys-color-neutral-outline-variant — than the one that actually
   // renders — --md-sys-color-neutral, ui-textarea's own idle border token).
   function expectedPadding(field: HTMLElement): { block: number; inline: number } {
-    const fontSize = Number.parseFloat(getComputedStyle(field).fontSize)
-    return { block: fontSize * 0.5, inline: fontSize * 0.75 } // editor.css's formula (same factors as textarea's)
+    // editor.css's formula since the ADR-0245 cut: inset n (7, the root register) minus the 1px border, both axes
+    void field
+    return { block: ROOT_INSET - 1, inline: ROOT_INSET - 1 }
   }
 
   it('entry-content and entry-add-content render the SAME computed padding despite agent-admin.css declaring two different literal values for them (both dead)', async () => {
@@ -2139,7 +2143,9 @@ describe('ui-agent-admin cross-engine smoke — the settings sub-nav grouping (L
 
 
   it('the not-enough-room strategy is the fleet MENU, not an affordance-less scroll — and it genuinely engages at the fleet-default narrow width', async () => {
-    const { el } = mountAgentAdminAt(414)
+    // ADR-0245 cut: the derived tab metrics are narrower (the five labels total about 320px), so 414px now holds
+    // them all; 320px is the narrow band where the five genuinely outgrow the rail again.
+    const { el } = mountAgentAdminAt(320)
     await frames()
     goToPlace(el, 'Settings')
     await frames(3)
@@ -2150,7 +2156,7 @@ describe('ui-agent-admin cross-engine smoke — the settings sub-nav grouping (L
     expect(menuEl, 'overflow="menu" creates the part at connect').not.toBeNull()
     // Non-vacuous: the five labels really do outgrow this rail, which is the whole reason the mode is set.
     const overflowed = sectionTabs(el).filter((t) => t.hasAttribute('data-overflowed'))
-    expect(overflowed.length, 'the five sections must not all fit 414px — otherwise this mode is decoration').toBeGreaterThan(0)
+    expect(overflowed.length, 'the five sections must not all fit 320px — otherwise this mode is decoration').toBeGreaterThan(0)
     expect(menuEl.hidden, 'so the trigger paints').toBe(false)
     const trigger = menuEl.querySelector('[data-part="trigger"]') as HTMLElement
     expect(trigger.getAttribute('aria-label')).toBe('More tabs')
