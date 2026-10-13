@@ -41,7 +41,7 @@ describe('ui-textarea foundations (ADR-0245 lane a01)', () => {
       const r = resolve('product', 'sm', size)
       const el = mount(true, size)
       expect(read(el, 'padding-inline-start'), 'padding').toBeCloseTo(r.n, 1)
-      expect(read(el, 'border-top-left-radius'), 'radius').toBeCloseTo(r.control.radius, 1)
+      expect(read(el, 'border-top-left-radius'), 'radius').toBeCloseTo(r.h / 2, 1) // the pill 2n (ADR-0245 Amendment 5)
     })
   }
 })
