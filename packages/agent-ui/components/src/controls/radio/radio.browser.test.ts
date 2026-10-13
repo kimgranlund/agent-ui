@@ -140,8 +140,8 @@ describe('ui-radio geometry inside an opt-in data-tier region (ADR-0245)', () =>
         expect(Number.parseFloat(ring.width)).toBe(r.icon)
         expect(Number.parseFloat(ring.height)).toBe(r.icon)
         const dot = getComputedStyle(el, '::after')
-        expect(Number.parseFloat(dot.width)).toBe(r.glyph - 2)
-        expect(Number.parseFloat(dot.height)).toBe(r.glyph - 2)
+        expect(Number.parseFloat(dot.width)).toBe(r.parts.radioDot)
+        expect(Number.parseFloat(dot.height)).toBe(r.parts.radioDot)
       })
     }
   }

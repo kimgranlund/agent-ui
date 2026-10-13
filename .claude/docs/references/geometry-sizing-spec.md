@@ -11,8 +11,8 @@ The section numbers (§1 to §7) are kept because ADR bodies cite them.
 a `2n` slot, centered. Tier, scale and size choose n; everything else is a formula over it, so a height and
 its font, icon, padding and radius pair by construction. One config owns the system: the skill's
 `scale.mjs` (CFG, `resolve()`, `check()`), vendored to `@agent-ui/shared/src/tokens/scale.mjs`, emitted as
-`foundations.gen.css` by `scripts/generate-foundations.mjs` (which refuses to write when its `contract()`, the
-skill's `check()` with M14 extended to agent-ui's own control formulas, returns a failure). Changing the system means editing CFG, never a
+`foundations.gen.css` by `scripts/generate-foundations.mjs` (which refuses to write when `check()` returns a
+failure). Changing the system means editing CFG, never a
 stylesheet.
 
 ---
@@ -254,7 +254,7 @@ ADR-0041's 14 / 16 / 18 widget ramp (`--md-sys-compact-*`, Kim's eight-value `12
 
 | Law | Probe |
 |---|---|
-| the config is coherent | `contract()`: the skill's `check()` M1 to M16, with M14 (no size that depends on n alone shrinks as n grows) extended to agent-ui's control formulas and the m-based levels; the generator refuses to emit, a vitest leg asserts `[]` |
+| the config is coherent | `check()` M1 to M16 (M14: no size that depends on n alone shrinks as n grows): the generator refuses to emit, a vitest leg asserts `[]` and pins the vendored sha |
 | the generated sheets are never hand-edited | `--check` on `check:scripts` (`foundations.test.ts`) |
 | computed tokens equal `resolve()` | the 36-cell browser leg (every tier, scale and size cell at every density, both engines) |
 | each control obeys its clause 3 rule | `scripts/foundations-probe.mjs` (a class table, `--strict`) plus each control's geometry pin at sm, md and lg against `resolve()` |

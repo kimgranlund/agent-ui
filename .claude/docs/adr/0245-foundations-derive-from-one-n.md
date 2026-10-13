@@ -739,8 +739,13 @@ appendices stay as written.
    `--md-sys-radius` and `--md-sys-layout-*`.
 2. **The root shrinks one step.** The root stays product at scale sm, now n 5 / 6 / 7: heights 24 / 28 / 32
    become **20 / 24 / 28**. The title's "the library root keeps 24 and 28 while lg moves to 32" and clause 2's
-   root table describe v1. The A2UI canvas (widget at scale md, Amendment 2) keeps the root's n and reads
-   20 / 24 / 28 (was 24 / 28 / 32); product/md now reads 24 / 32 / 40. Every default golden and every literal
+   root table describe v1. The A2UI canvas (widget at scale md, Amendment 2) keeps the root's n, so Amendment
+   2's numbers re-derive with it: on a canvas sm / md / lg read height 20 / 24 / 28 (was 24 / 28 / 32) · icon
+   box 10 / 12 / 14 · glyph box 6 / 8 / 10 · control type 11 / 12 / 13 · button radius (pill) 10 / 12 / 14, and
+   the card levels at md are margin 18, gutter 12, radius 18 with body type 13. The stamps Amendment 2 restored
+   keep their sizes: the persona action rows and CardTable's chips, stake and Clear are `lg` (28px),
+   BookingForm's Reserve and fields are `md` (24px), its date picker buttons `sm` (20px), and an unsized
+   catalog Button reads `md` (24px). Product/md now reads 24 / 32 / 40. Every default golden and every literal
    pin moves with the root.
 3. **`[density]` maps to `data-density`, not `data-scale`** (supersedes clause 2's "`[density]` retires into
    `data-scale`" bullet and the clause 10a bridge line). Density moves container spacing only:
@@ -752,13 +757,11 @@ appendices stay as written.
 4. **M14: no size that depends on n alone shrinks as n grows.** Kim's rule (asked for as "M11") is the skill's
    own M14 since the peer review, beside its M11 (gutter plus label margin equals the control margin), M12 (a
    label-only control is at least 4n wide), M13 (margins nest at every density), M15 and M16. It runs inside
-   `check()` on every n in the ladder, over every size `resolve()` returns and its `parts`.
-   `scripts/generate-foundations.mjs` `contract()` runs `check()` and then extends M14 to the formulas the skill
-   does not return, its `CONTROL_RULES` table (the pill radius, the glyph stroke, the gauge ring, the column
-   segment radius, and the two sizes the fleet holds at its own value, below), and to the m-based levels within
-   each tier at every density. The generator refuses to emit on any failure. **The radio dot becomes `glyph - 2`
-   (2n - 2c - 2)**: the old 2n - 4c stepped down each time c stepped up (4 to 2 at n 4 to 5, 8 to 6 at n 8 to 9,
-   12 to 10 at n 12 to 13), and M14 fails on it.
+   `check()` on every n in the ladder, over every size `resolve()` returns and its `parts`. agent-ui keeps no
+   contract of its own: `scripts/generate-foundations.mjs` refuses to emit when `check()` returns any failure,
+   and `foundations.test.ts` pins the vendored sha, so a re-vendor is a deliberate one-line change. **The radio
+   dot becomes `glyph - 2` (2n - 2c - 2, `parts.radioDot`)**: the old 2n - 4c stepped down each time c stepped
+   up (4 to 2 at n 4 to 5, 8 to 6 at n 8 to 9, 12 to 10 at n 12 to 13), which M14 forbids.
 5. **Section label and group label.** `--md-sys-type-section-kicker` is renamed `--md-sys-type-section-label`
    and `--md-sys-type-group-kicker` is renamed `--md-sys-type-group-label`, the skill's own names since the peer
    review (`type.sectionLabel`, `type.groupLabel`). `ui-text`'s `kicker` variant becomes an alias that reads the group label,

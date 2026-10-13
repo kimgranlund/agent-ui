@@ -1,10 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
-import { CFG, check } from './scale.mjs'
-import {
-  BRIDGE_REL, CONTROL_RULES, LEGACY, OUT_REL, ROOT_DEFAULT, contract, renderBridgeCss, renderFoundationsCss,
-} from '../../../../../scripts/generate-foundations.mjs'
+import { CFG, check, resolve, type Resolved } from './scale.mjs'
+import { BRIDGE_REL, LEGACY, OUT_REL, ROOT_DEFAULT, renderBridgeCss, renderFoundationsCss } from '../../../../../scripts/generate-foundations.mjs'
 
 // ADR-0245 clause 1, 10a and 10c: the config gate, the generated-file drift gate, the cut and the bridge.
 // The 36-cell computed leg (tokens equal resolve() in both engines) is foundations.browser.test.ts.
@@ -25,16 +23,17 @@ const selectorsOf = (css: string): string[] =>
     .filter(Boolean)
     .flatMap((list) => list.split(/,(?![^(]*\))/).map((s) => s.trim()))
 
+/** The skill revision this repo vendors (ADR-0245 Amendment 3). Re-vendoring is a deliberate change of this line. */
+const VENDORED_SHA = '3c319761e5c8221e500077d62db65a555b95a85145cd022b58255b6e6057ba5b'
+
 describe('foundations: the vendored config and its contract (ADR-0245 clause 1)', () => {
-  it('scale.mjs is a byte copy of the ADR derivation copy (the skill reference implementation)', () => {
-    expect(sha('packages/agent-ui/shared/src/tokens/scale.mjs')).toBe(
-      sha('.claude/docs/references/foundations-derivation/scale.mjs'),
-    )
+  it('scale.mjs is the vendored skill revision, byte for byte, and so is the ADR derivation copy', () => {
+    expect(sha('packages/agent-ui/shared/src/tokens/scale.mjs')).toBe(VENDORED_SHA)
+    expect(sha('.claude/docs/references/foundations-derivation/scale.mjs')).toBe(VENDORED_SHA)
   })
 
-  it('check() returns no failure (M1 to M16), and neither does the whole contract with M14 extended to agent-ui rules', () => {
+  it('check() returns no failure (M1 to M16)', () => {
     expect(check()).toEqual([])
-    expect(contract()).toEqual([])
   })
 
   it('the generator refuses to emit when check() fails (a widget step that no longer grows trips M2)', () => {
@@ -42,24 +41,22 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
     CFG.tiers.widget[2] = 0
     try {
       expect(check().some((f) => f.startsWith('M2'))).toBe(true)
-      expect(() => renderFoundationsCss()).toThrow(/contract failed/)
+      expect(() => renderFoundationsCss()).toThrow(/check\(\) failed/)
+      expect(() => renderBridgeCss()).toThrow(/check\(\) failed/)
     } finally {
       CFG.tiers.widget = saved
     }
     expect(check()).toEqual([])
   })
 
-  it('the M14 extension bites: the retired radio dot 2n - 4c shrinks as c steps up (8 to 6 at n 8 to 9), so neither sheet emits', () => {
-    const rules = CONTROL_RULES
-    rules['radio dot 2n - 4c'] = (r) => r.icon - 4 * r.c
-    try {
-      expect(contract()).toContain('M14 agent-ui rules: radio dot 2n - 4c shrinks from 8 at n 8 to 6 at n 9')
-      expect(() => renderFoundationsCss()).toThrow(/contract failed/)
-      expect(() => renderBridgeCss()).toThrow(/contract failed/)
-    } finally {
-      delete rules['radio dot 2n - 4c']
-    }
-    expect(contract()).toEqual([])
+  it('the radio dot is the glyph minus 2 and never shrinks as n grows (the skill M14); the retired 2n - 4c did', () => {
+    const steps = ['sm', 'md', 'lg']
+    const rungs = Object.keys(CFG.tiers).flatMap((t) => steps.flatMap((s) => steps.map((z) => resolve(t, s, z))))
+    const shrinks = (size: (r: Resolved) => number): boolean =>
+      rungs.some((a) => rungs.some((b) => a.n < b.n && size(b) < size(a)))
+    for (const r of rungs) expect(r.parts.radioDot, `n ${r.n}`).toBe(r.glyph - 2)
+    expect(shrinks((r) => r.parts.radioDot)).toBe(false)
+    expect(shrinks((r) => r.icon - 4 * r.c)).toBe(true) // the control: 8 to 6 at n 8 to 9
   })
 })
 

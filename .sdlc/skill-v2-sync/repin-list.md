@@ -1,6 +1,6 @@
 # T-0120 re-pin list: the test files the skill v2 constants turned red
 
-Source: the unit suite and the six browser shards on `feat/skill-v2-sync` at `3f53cef8` (rebased onto main `f4305eb2`, T-0119 included). 157 failing tests in 69 files. Chromium and WebKit each count once under *engines*; the visual shard runs one engine. Grouped by the census lane partition (`laneOf` in `scripts/foundations-census.mjs`) so each group can run as its own file-disjoint lane. `result-card` rides a06 as it did in T-0107; `unlaned` is outside the partition.
+Source: the unit suite and the six browser shards on `feat/skill-v2-sync` at `3f53cef8` (rebased onto main `f4305eb2`, T-0119 included); the commits after it change no stylesheet and no failing test. 157 failing tests in 69 files. Chromium and WebKit each count once under *engines*; the visual shard runs one engine. Grouped by the census lane partition (`laneOf` in `scripts/foundations-census.mjs`) so each group can run as its own file-disjoint lane. `result-card` rides a06 as it did in T-0107; `unlaned` is outside the partition.
 
 Cause: the root moved one n down (product / sm is n 5 / 6 / 7, heights 20 / 24 / 28, was 24 / 28 / 32), so every literal v1 pixel is stale. The A2UI canvas (widget / md) reads the same 20 / 24 / 28. A lane re-pins with scale.mjs `resolve()` at the root register unless the test sets a region. `resolve()` keys were renamed by the skill (`control.margin`, `control.radius`, `page`, `type.groupLabel`, `type.sectionLabel`, `parts.*`); every existing read is already rewritten.
 

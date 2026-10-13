@@ -108,7 +108,7 @@ check() = []
 - button radius (pill): 14 → 18 (+4)
 - card margin: 18 → 27 (+9)
 - card radius: 12 → 27 (+15)
-## 9b. The A2UI canvas register product/md (ruled at step 0), size sm / md / lg
+## 9b. The A2UI canvas register product/md (ruled at step 0, superseded by Amendment 2: the canvas is widget/md, section 16), size sm / md / lg
 - height: 28 / 36 / 44
 - icon box: 14 / 18 / 22
 - glyph box: 10 / 12 / 16
@@ -196,9 +196,14 @@ Registers, sm / md / lg heights, v1 → v2:
 | spacious | 8 | 24 / 16 / 24 | 32 |
 - The floor binds at product sm/sm compact: n 5, m 4 (n - a = 3), widget 8 / 4 / 8, group 7 / 2 / 7.
 - `[density]` (retired) maps onto `data-density` in the bridge, so `[density="compact"]` moves m, never n.
-## 16. The A2UI canvas register, sm / md / lg
-- product/md on v2: height 24 / 32 / 40 · icon 12 / 16 / 20 · glyph 8 / 12 / 14 · control type 12 / 14 / 16 · pill radius 12 / 16 / 20
-- widget/md on v2: height 20 / 24 / 28 · icon 10 / 12 / 14 · glyph 6 / 8 / 10 · control type 11 / 12 / 13 · pill radius 10 / 12 / 14
+## 16. The A2UI canvas register widget/md (Amendment 2), re-derived on v2, size sm / md / lg
+- height: 24 / 28 / 32 → 20 / 24 / 28
+- icon box: 12 / 14 / 16 → 10 / 12 / 14
+- glyph box: 8 / 10 / 12 → 6 / 8 / 10
+- control type: 12 / 13 / 14 → 11 / 12 / 13
+- button radius (pill): 12 / 14 / 16 → 10 / 12 / 14
+- card margin / gutter / radius at md: 21 / 14 / 21 → 18 / 12 / 18; body 14 → 13
+- product/md, the step 0 register no surface uses: height 28 / 36 / 44 → 24 / 32 / 40
 ## 17. Not adopted from the skill v2: the control rule, and the sizes the fleet still holds at its own value
 | quantity | fleet today → the skill v2 | today → skill (delta), sm · md · lg at the root |
 |---|---|---|

@@ -144,10 +144,9 @@ Read ADR-0223 for the exemption tables and cite them, never copy them.
 
 ## Mechanization
 
-Every law lands with a probe. The generator's `contract()` gates the config: the skill's `check()` (M1 to
-M16), with its M14 (no size that depends on n alone shrinks as n grows) extended to agent-ui's own control
-formulas and the m-based levels, and the generator refuses to emit on a failure; a vitest leg asserts the contract is `[]` and the generated file is
-byte-identical; a browser leg sets each of the 36 tier, scale and size cells, at every density, on a probe and
+Every law lands with a probe. The skill's `check()` (M1 to M16; M14 is "no size that depends on n alone
+shrinks as n grows") gates the config and the generator refuses to emit on a failure; a vitest leg pins the
+vendored sha, asserts `check()` is `[]` and the generated file is byte-identical; a browser leg sets each of the 36 tier, scale and size cells, at every density, on a probe and
 compares computed tokens to `resolve()` in both engines; each migrated control carries a geometry pin against
 `resolve()`. The sibling px-literal rule (no
 px literal for control geometry except the hairline, focus ring, scrollbar and ratified whole-shape floors)

@@ -142,7 +142,7 @@ for (const [label, t, v] of [['height', 28, a.h], ['icon box', 18, a.icon], ['gl
   p(`- ${label}: ${t} → ${v} (${d(t, v)})`);
 }
 
-p('## 9b. The A2UI canvas register product/md (ruled at step 0), size sm / md / lg');
+p('## 9b. The A2UI canvas register product/md (ruled at step 0, superseded by Amendment 2: the canvas is widget/md, section 16), size sm / md / lg');
 const cv = SZ.map((z) => resolve('product', 'md', z));
 for (const [label, f] of [['height', (r) => r.h], ['icon box', (r) => r.icon], ['glyph box', (r) => r.glyph], ['control type', (r) => r.type.control], ['button radius (pill)', (r) => r.h / 2]]) {
   p(`- ${label}: ${cv.map(f).join(' / ')}`);
@@ -240,10 +240,15 @@ const floor = resolve2('product', 'sm', 'sm', 'compact');
 p(`- The floor binds at product sm/sm compact: n ${floor.n}, m ${floor.m} (n - a = ${floor.n - 2}), widget ${floor.widget.margin} / ${floor.widget.gutter} / ${floor.widget.radius}, group ${floor.group.margin} / ${floor.group.gutter} / ${floor.group.radius}.`);
 p('- `[density]` (retired) maps onto `data-density` in the bridge, so `[density="compact"]` moves m, never n.');
 
-p('## 16. The A2UI canvas register, sm / md / lg');
-for (const [t, s] of [['product', 'md'], ['widget', 'md']]) {
-  const rs = SZ.map((z) => resolve2(t, s, z));
-  p(`- ${t}/${s} on v2: height ${rs.map((r) => r.h).join(' / ')} · icon ${rs.map((r) => r.icon).join(' / ')} · glyph ${rs.map((r) => r.glyph).join(' / ')} · control type ${rs.map((r) => r.type.control).join(' / ')} · pill radius ${rs.map((r) => 2 * r.n).join(' / ')}`);
+p('## 16. The A2UI canvas register widget/md (Amendment 2), re-derived on v2, size sm / md / lg');
+{
+  const was = SZ.map((z) => resolve('widget', 'md', z)), now = SZ.map((z) => resolve2('widget', 'md', z));
+  for (const [label, f] of [['height', (r) => r.h], ['icon box', (r) => r.icon], ['glyph box', (r) => r.glyph], ['control type', (r) => r.type.control], ['button radius (pill)', (r) => 2 * r.n]]) {
+    p(`- ${label}: ${was.map(f).join(' / ')} → ${now.map(f).join(' / ')}`);
+  }
+  const a = was[1], b = now[1];
+  p(`- card margin / gutter / radius at md: ${a.card.margin} / ${a.card.gutter} / ${a.card.radius} → ${b.card.margin} / ${b.card.gutter} / ${b.card.radius}; body ${a.type.body} → ${b.type.body}`);
+  p(`- product/md, the step 0 register no surface uses: height ${SZ.map((z) => resolve('product', 'md', z).h).join(' / ')} → ${SZ.map((z) => resolve2('product', 'md', z).h).join(' / ')}`);
 }
 
 p('## 17. Not adopted from the skill v2: the control rule, and the sizes the fleet still holds at its own value');

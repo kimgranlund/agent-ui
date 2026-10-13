@@ -2,9 +2,8 @@
 // generate-foundations.mjs: writes packages/agent-ui/shared/src/tokens/foundations.gen.css and its consumer bridge
 // foundations-bridge.gen.css from the vendored skill config `scale.mjs` beside them (ADR-0245 clauses 1 and 10a).
 // Changing the system means editing CFG in scale.mjs, never a generated sheet. The generator refuses to emit when
-// `contract()` returns any failure: the skill's `check()` (M1 to M16), with its M14 (no size that depends on n
-// alone shrinks as n grows) extended to agent-ui's own control formulas (CONTROL_RULES) and to the m-based levels
-// (ADR-0245 Amendment 3), so a broken config can never reach a stylesheet.
+// `check()` returns any failure (M1 to M16; M14, no size that depends on n alone shrinks as n grows, is the
+// skill's own since ADR-0245 Amendment 3), so a broken config can never reach a stylesheet.
 //
 // The sheet is the skill's tokens.css form under ADR-0140 names: the tier inputs on `[data-tier="…"]`,
 // scale, size and density on their attributes, and one derived block (`--md-sys-n`, the container unit
@@ -23,12 +22,12 @@
 //
 // Usage:
 //   node scripts/generate-foundations.mjs           rewrite the sheets when they are stale
-//   node scripts/generate-foundations.mjs --check   write nothing; exit 1 when a sheet is stale or contract() fails
+//   node scripts/generate-foundations.mjs --check   write nothing; exit 1 when a sheet is stale or check() fails
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
-import { CFG, check, resolve } from '../packages/agent-ui/shared/src/tokens/scale.mjs'
+import { CFG, check } from '../packages/agent-ui/shared/src/tokens/scale.mjs'
 import { SCALE_TO_TIER } from './lib/foundations-rules.mjs'
 
 export const OUT_REL = 'packages/agent-ui/shared/src/tokens/foundations.gen.css'
@@ -115,60 +114,12 @@ export const recomputeList = (rootDefault = ROOT_DEFAULT) =>
     ? `:root, [data-tier], [data-scale], [data-size], [size], [data-density], ${LEGACY_AXES}`
     : '[data-tier], [data-tier] :is([data-scale], [data-size], [size], [data-density])'
 
-// ---- The contract: the skill's check(), with M14 extended to agent-ui's own formulas ---------------------
-
-/**
- * The control-local formulas the stylesheets apply that scale.mjs does not return (ADR-0245 clause 3 and
- * Amendment 3: the exceptions derive), and the two the fleet still holds at its own value where the skill moved
- * on (checkbox radius n/2, badge height 2n). The skill's M14 covers every size `resolve()` returns from n alone;
- * this table holds agent-ui's own rules to the same law: none may shrink as n grows. A rule that steps down when
- * c steps up (the radio dot 2n - 4c did, 8 to 6 at n 8 to 9) fails here, never in a control.
- */
-export const CONTROL_RULES = {
-  'pill radius 2n (button, toggle)': (r) => 2 * r.n,
-  'checkbox radius n/2': (r) => r.n / 2,
-  'badge height 2n': (r) => r.icon,
-  'glyph stroke max(1.5, c/2)': (r) => Math.max(1.5, r.c / 2),
-  'gauge ring stroke 4c': (r) => 4 * r.c,
-  'column segment radius n + c': (r) => r.group.radius,
-}
-
-const SIZES = Object.keys(STEP)
-const controlRules = (r) => Object.fromEntries(Object.entries(CONTROL_RULES).map(([name, rule]) => [name, rule(r)]))
-/** The container quantities, which read m: they may not shrink as n grows inside one tier at one density. */
-const mQuantities = (r) => ({
-  m: r.m,
-  ...Object.fromEntries(Object.keys(LEVEL_TOKEN).flatMap((l) => Object.entries(r[l]).map(([q, v]) => [`${l} ${q}`, v]))),
-})
-
-/** M14, extended: no agent-ui control formula and no m-based level shrinks as n grows, at every reachable rung. */
-function m14Extended() {
-  const bad = new Set()
-  const rungs = (tier, density) => SIZES.flatMap((s) => SIZES.map((z) => resolve(tier, s, z, density)))
-  const grows = (where, cells, pick) => {
-    for (const a of cells) for (const b of cells) {
-      if (!(a.n < b.n)) continue
-      const qa = pick(a), qb = pick(b)
-      for (const q of Object.keys(qa)) if (qb[q] < qa[q]) bad.add(`M14 ${where}: ${q} shrinks from ${qa[q]} at n ${a.n} to ${qb[q]} at n ${b.n}`)
-    }
-  }
-  grows('agent-ui rules', Object.keys(CFG.tiers).flatMap((t) => rungs(t, 'default')), controlRules)
-  for (const tier of Object.keys(CFG.tiers)) for (const d of Object.keys(CFG.density)) grows(`${tier} ${d}`, rungs(tier, d), mQuantities)
-  return [...bad]
-}
-
-/** The whole contract: scale.mjs check() (M1 to M16), then the M14 extension once the config itself is sound. */
-export function contract() {
-  const failures = check()
-  return failures.length ? failures : m14Extended()
-}
-
 const refuseOnFailure = () => {
-  const failures = contract()
-  if (failures.length) throw new Error(`the foundations contract failed, refusing to emit:\n  ${failures.join('\n  ')}`)
+  const failures = check()
+  if (failures.length) throw new Error(`scale.mjs check() failed, refusing to emit:\n  ${failures.join('\n  ')}`)
 }
 
-/** Render the whole sheet. Throws (writes nothing) when contract() reports a failure. */
+/** Render the whole sheet. Throws (writes nothing) when check() reports a failure. */
 export function renderFoundationsCss({ rootDefault = ROOT_DEFAULT } = {}) {
   refuseOnFailure()
   // Scoped: an attribute counts only on a region root or inside one. Unscoped (the cut): anywhere.
