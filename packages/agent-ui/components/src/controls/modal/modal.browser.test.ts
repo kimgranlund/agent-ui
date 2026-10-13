@@ -261,7 +261,11 @@ describe('ui-modal — [box-model] the dialog is a padding-less box; region padd
     // padding — a content region inside carries the FIXED region padding (inline 0.75rem=12px · block
     // 0.375rem=6px, rem-based → NOT --md-sys-space × --md-sys-density, so density-INVARIANT). The frame (border 1px ·
     // radius) is invariant too.
-    const { modal, dialog } = mount('<ui-modal><div data-region="content"><p style="margin:0">Body</p></div></ui-modal>')
+    // ADR-0245 cl.10e: that fixed 12/6 now holds under the legacy opt-out (outside it the region padding derives from n,
+    // containers-foundations.browser.test.ts, and a data-scale moves it).
+    const { modal, dialog } = mount(
+      '<div data-foundations="legacy"><ui-modal><div data-region="content"><p style="margin:0">Body</p></div></ui-modal></div>',
+    )
     modal.open = true
     await modal.updateComplete
     const content = dialog.querySelector('[data-region="content"]') as HTMLElement
@@ -299,7 +303,7 @@ describe('ui-modal — [box-model] the dialog is a padding-less box; region padd
     }
   })
 
-  it('REVISED 2026-07-04: header/content/footer are now INSET — uniform 6px gutters, never doubled between regions', async () => {
+  it('REVISED 2026-07-04: header/content/footer are now INSET — uniform 7px gutters (derived n), never doubled between regions', async () => {
     // The dialog is a [data-box] flow-root BFC (container-box.css) — adjacent children's margins COLLAPSE to
     // one inset, so a naive-margin doubling bug is NOT reachable here the way it is for ui-card's CSS Grid; this
     // is the rendered proof that modal genuinely gets the shared model's collapsing behaviour for free.
@@ -328,11 +332,11 @@ describe('ui-modal — [box-model] the dialog is a padding-less box; region padd
       ['content→footer', contentToFooter],
       ['footer→frame', footerToFrame],
     ] as const) {
-      expect(gap, `${server.browser}: ${label} gap is not ~6px (got ${gap})`).toBeCloseTo(6, 0)
+      expect(gap, `${server.browser}: ${label} gap is not ~7px (got ${gap})`).toBeCloseTo(7, 0)
     }
   })
 
-  it('REVISED 2026-07-04: the sticky header keeps its own 6px inset margin once scrolled (margin survives sticky)', async () => {
+  it('REVISED 2026-07-04: the sticky header keeps its own 7px inset margin once scrolled (derived n) (margin survives sticky)', async () => {
     // modal.css gives the dialog PART itself `overflow: auto` + `max-block-size: 85svh` — the header (a direct
     // child of the dialog, per container-box.css's [data-box] region pattern) sticks within THAT scrollport, so
     // a very tall content region (well beyond any reasonable viewport) forces the dialog itself to scroll.
@@ -349,8 +353,8 @@ describe('ui-modal — [box-model] the dialog is a padding-less box; region padd
     const restingGap = headerRect.top - dialogRect.top - borderTop
     expect(
       restingGap,
-      `${server.browser}: the sticky header's own 6px margin did not survive scrolling (measured ${restingGap})`,
-    ).toBeCloseTo(6, 0)
+      `${server.browser}: the sticky header's own 7px margin did not survive scrolling (measured ${restingGap})`,
+    ).toBeCloseTo(7, 0)
   })
 })
 
