@@ -41,7 +41,7 @@ attributes:
     values: [sm, md, lg]
     default: md
     reflect: true      # reflects so the [size] dimensional-ramp repoint applies to JS-set values too
-    description: A step on the Control-band dimensional ramp (sm, md default, lg); an ancestor [scale]/[density] also apply (the button.css ramp, geometry.md).
+    description: A step on the Control-band dimensional ramp (sm, md default, lg); an ancestor data-tier/data-scale/data-density also apply (the button.css ramp, geometry.md).
   - name: inline
     type: boolean
     default: false

@@ -156,5 +156,5 @@ relay.
 
 Fill by default (ADR-0223): a bare host is block-level and stretches to its container; the ONE opt-out is
 `inline` (hug, inline-flex). Crumb text reads the label typescale row (`--md-sys-typescale-label-medium-*`)
-— no `[size]`/`[scale]` attribute and no geometry row of its own; `ui-breadcrumb` contributes only the
-inter-crumb `gap` (off the `--md-sys-space` ladder, responding to an ancestor `[density]` for free).
+— no `size`/`data-scale` attribute and no geometry row of its own; `ui-breadcrumb` contributes only the
+inter-crumb `gap` (off the `--md-sys-space` ladder, responding to an ancestor `data-density` for free).

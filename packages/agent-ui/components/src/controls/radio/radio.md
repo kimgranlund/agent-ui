@@ -145,6 +145,6 @@ valid for single-item "accept" patterns, but lacks a form-value owner for multi-
 
 ## Sizes
 
-`size` repoints the box from the `--md-sys-compact-{sm/md/lg}` widget ramp (ADR-0041). An ancestor `[scale]`
-automatically re-tables the compact tokens (ADR-0038 — explicit per-scale lookup in `dimensions.css`), so the
-radio box tracks scale without any per-control `[scale]` rule.
+`size` repoints the box from the `--md-sys-compact-{sm/md/lg}` widget ramp (ADR-0041). An ancestor `data-tier` / `data-scale`
+re-derives the compact tokens (ADR-0245), so the radio box tracks the region register without any
+per-control scale rule.

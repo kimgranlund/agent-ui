@@ -137,7 +137,7 @@ named foreseen extension if identity-at-a-glance proves needed.
 
 `size` (`sm` / `md` / `lg`, default `md`, reflected) selects a tier off the ratified control-height
 ladder `--md-sys-height-{sm,md,lg}` (ADR-0038) — the same root tokens `ui-button` sizes its frame with, so
-an avatar sits at a button's height in a row: 28px at the default `ui-md` scale, 20–48px across ancestor
-`[scale]` tiers. The component token `--ui-avatar-size` is the page's override for larger chrome (a
+an avatar sits at a button's height in a row: 24px at the default `md`, across ancestor
+`data-tier` / `data-scale` registers. The component token `--ui-avatar-size` is the page's override for larger chrome (a
 profile header). Before ADR-0112 Amendment 3 (2026-08-23) the box rode the ADR-0041 compact ramp
 (12–28px); that fork's own ">28px register" re-open trigger fired.

@@ -142,7 +142,7 @@ imperatively appended) — authored once, shared everywhere.
 - **`icon`** (string, default `''`) — a free marker glyph name (`@agent-ui/icons`) that replaces the dot
   entirely, orthogonal to `status` — the neutral/`''` path with a richer glyph.
 - **`size`** (`sm`/`md`/`lg`, default `md`) — first-class marker-system geometry (ADR-0122 F2): picks the
-  row within the ambient `[scale]` register for the marker box, dot, connector, gutter, and row-gap.
+  row within the ambient `data-tier` / `data-scale` register for the marker box, dot, connector, gutter, and row-gap.
 
 ## Anatomy
 

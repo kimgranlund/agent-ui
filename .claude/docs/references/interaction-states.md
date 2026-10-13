@@ -305,7 +305,7 @@ geometry change **snap**. Three fleet-wide rules:
 
 **[a] Transition the state-PAINT properties only — never geometry, never `all`.** Enumerate
 `background-color` / `color` / `border-color` (add `box-shadow` / `opacity`, or a caret `transform`, if the
-control uses them). A `[scale]` / `[size]` / `[density]` change must be **instant** — the geometry ramp
+control uses them). A `data-tier` / `data-scale` / `size` / `data-density` change must be **instant** — the geometry ramp
 (`geometry.md`) is never in the transition list; animating it fights the sizing law and reads as jank. The
 keyboard focus ring stays instant too (omit `outline`): keyboard users want immediate, unambiguous feedback.
 Durations/easings are **tokens** (`--ui-motion-fast`, `--ui-ease-standard` in `dimensions.css`) — constants on
@@ -463,7 +463,7 @@ the narration strip (ADR-0146).
 FIRST loop-motion literal; deliberately NOT an alias of `--md-sys-motion-duration-fast` — a 300ms
 half-cycle is a strobe, not a breath), the overlay rungs `--ui-working-opacity-min: 0.15` /
 `--ui-working-opacity-max: 0.55`, and the diffused spread `--ui-working-blur: 24px` (a paint constant,
-no `[scale]` participation) — plus ONE pure color alias in `tokens.css`, `--ui-working-color:
+no `data-scale` participation) — plus ONE pure color alias in `tokens.css`, `--ui-working-color:
 var(--md-sys-color-primary)` (accent-family by intent; strength lives entirely in the opacity rungs,
 which keep the effective tint under the G9 14%-alpha ceiling). None are on the sanctioned direct-read
 list — a consuming control routes all five through its own `--ui-{cmp}-working-*` chain.

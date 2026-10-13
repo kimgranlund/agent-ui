@@ -34,7 +34,7 @@ controls).
 is `|sizes| × |variants| × |cols|` by construction — adding a variant adds its column for free. Include
 the optional-slot permutations (bare label AND `+ icon`) and the structural anatomy axis (forward
 `[icon|label|caret]` and reversed `[caret|label|icon]` — position ⊥ role, ADR-0012). Include the
-`[scale]`/`[density]` subtree-geometry demo where the family has one (ADR-0007).
+`data-tier`/`data-scale`/`data-density` subtree-geometry demo where the family has one (ADR-0007).
 
 **Standards.** The axis arrays are the *exact* enum values from the descriptor/`static props` — never a
 parallel hand-list. The page owns only its scaffold layout (`permutations.css`); all geometry/colour/ARIA

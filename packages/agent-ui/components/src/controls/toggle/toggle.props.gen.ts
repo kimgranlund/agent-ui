@@ -7,7 +7,7 @@ export const props = {
   pressed: { ...prop.boolean(false), reflect: true },
   // Fully inert — no press activation, no key handling, removed from the tab order. — generated from toggle.md attributes.disabled — edit the descriptor, not this file.
   disabled: { ...prop.boolean(false), reflect: true },
-  // A step on the Control-band dimensional ramp (sm, md default, lg); an ancestor [scale]/[density] also apply (the button.css ramp, geometry.md). — generated from toggle.md attributes.size — edit the descriptor, not this file.
+  // A step on the Control-band dimensional ramp (sm, md default, lg); an ancestor data-tier/data-scale/data-density also apply (the button.css ramp, geometry.md). — generated from toggle.md attributes.size — edit the descriptor, not this file.
   size: { ...prop.enum(['sm', 'md', 'lg'] as const, 'md'), reflect: true },
   // The ONE sizing opt-out (ADR-0223) — inline-level display + hug posture (the pre-wave shrink-to-content rendering). Absent, the toggle fills its block container. — generated from toggle.md attributes.inline — edit the descriptor, not this file.
   inline: { ...prop.boolean(false), reflect: true },

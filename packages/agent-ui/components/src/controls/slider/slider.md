@@ -228,7 +228,7 @@ after a net move emits `change`.
 ## Sizes
 
 `size` selects from the widget-box ramp (`sm` · `md` (default) · `lg`), sourcing `--md-sys-compact-{size}`
-(ADR-0041: 14 · 16 · 18 px at the default `ui-md` scale). An ancestor `[scale]` attribute re-tables the
+(ADR-0041, re-derived by ADR-0245). An ancestor `data-tier` / `data-scale` re-derives the
 ramp for its subtree.
 
 ## Accessibility

@@ -99,8 +99,8 @@ the token, not an attribute selector.
 ## Gap & surface
 
 `gap` selects a step on the `--md-sys-space` layout-spacing ladder (`none` (default) · `xs` · `sm` · `md` · `lg`
-· `xl` · `2xl`) for the inter-track gap; an ancestor `[density]` re-multiplies it (it is layout **rhythm**,
-so an ancestor `[scale]` leaves it untouched). The shared **surface** axes — `elevation` (the
+· `xl` · `2xl`) for the inter-track gap; an ancestor `data-density` re-multiplies it (it is layout **rhythm**,
+so an ancestor `data-scale` leaves it untouched). The shared **surface** axes — `elevation` (the
 scheme-inverting plane) and `brightness` (the scheme-consistent tonal shift) — come from `UIContainerElement`
 (ADR-0015): a bare grid is transparent (it passes its parent's surface through), and `[elevation]` /
 `[brightness]` repoint the shared `--ui-container-bg` / `-tint` seam in `controls/_surface/container.css`,

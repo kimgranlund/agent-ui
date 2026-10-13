@@ -5,7 +5,7 @@
 # scheme) — the contract↔props trip-wire (ramp-descriptor.test.ts) targets this fence.
 tag: ui-ramp
 description: An ordered strip of color cells, each labeled with real accessible text, showing a tonal or palette series.
-tier: display          # Display band — no control frame/height/[size]/[scale] (SPEC-R16/ADR-0118 cl.5)
+tier: display          # Display band — no control frame/height/size/data-scale (SPEC-R16/ADR-0118 cl.5)
 extends: UIElement     # a non-interactive display LEAF — NOT form-associated (SPEC-R5)
 uses: []
 # marginal: 148 B gz — within the 2048 B gz per-control budget (ADR-0080 clause 3); solo 4962 B gz
@@ -111,7 +111,7 @@ color-encoded only (CVD-safe by construction).
 The host defaults to an `8em` `min-inline-size` floor (`--ui-ramp-min-inline-size`) — a bare, unstyled ramp
 in a flex row still paints a visible, non-collapsed strip with zero consumer CSS (ADR-0102 Lane A). Each
 cell's box (`--ui-ramp-cell-size`) is density-invariant; the strip gap (`--ui-ramp-gap`) rides the
-`--md-sys-space` ladder and responds to an ancestor `[density]` for free. There is no `[size]`/`[scale]`
+`--md-sys-space` ladder and responds to an ancestor `data-density` for free. There is no `size`/`data-scale`
 attribute and no `--md-sys-height-*` lever (SPEC-R16 AC2).
 
 ## RTL

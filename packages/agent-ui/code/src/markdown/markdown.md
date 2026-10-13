@@ -6,7 +6,7 @@
 # via the shared parser imported from `@agent-ui/components/descriptor` (SPEC-C9/C10 — no components-side
 # allowlist entry is owed; the package-bound-gate interpretation).
 tag: ui-markdown
-tier: display          # geometry size-class (Display band — NO control frame/height/[size]/[scale]; SPEC-C6)
+tier: display          # geometry size-class (Display band — NO control frame/height/size/data-scale; SPEC-C6)
 extends: UIElement     # a non-interactive, non-form-associated block-flow CONTAINER, defined in the ./markdown pack (ADR-0119 fork F4)
 # marginal: measured at the build wave (`npm run size`, manual discipline, ADR-0080/SPEC-C9) — the
 # `@agent-ui/code/markdown` size-line-item, a separate serial slice from this fence.
@@ -104,7 +104,7 @@ technology walks straight through to the rendered children, each of which carrie
 
 ## Sizing
 
-Display-class (`geometry.md`): no control height, no `[size]`/`[scale]` attribute, no `[density]` legs of
+Display-class (`geometry.md`): no control height, no `size`/`data-scale` attribute, no `data-density` legs of
 its own beyond the `--ui-markdown-gap` block-rhythm referent (the `--md-sys-space-md` density-responsive
 token). Every rendered child owns its own overflow (a wide table scrolls inside `ui-table`, a wide fenced
 block inside `ui-code` — ADR-0102).

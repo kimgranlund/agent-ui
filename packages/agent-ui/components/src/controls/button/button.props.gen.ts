@@ -5,7 +5,7 @@ import { prop, type PropsSchema } from '../../dom/index.ts'
 export const props = {
   // The colour channel — solid (filled, default), soft (tonal), ghost (text-only). — generated from button.md attributes.variant — edit the descriptor, not this file.
   variant: { ...prop.enum(['solid', 'soft', 'ghost'] as const, 'solid'), reflect: true },
-  // A step on the dimensional ramp (sm, md default, lg); an ancestor [scale]/[density] also apply. — generated from button.md attributes.size — edit the descriptor, not this file.
+  // A step on the dimensional ramp (sm, md default, lg); an ancestor data-tier/data-scale/data-density also apply. — generated from button.md attributes.size — edit the descriptor, not this file.
   size: { ...prop.enum(['sm', 'md', 'lg'] as const, 'md'), reflect: true },
   // Fully inert — no activation, no key handling, removed from the tab order. — generated from button.md attributes.disabled — edit the descriptor, not this file.
   disabled: { ...prop.boolean(false), reflect: true },

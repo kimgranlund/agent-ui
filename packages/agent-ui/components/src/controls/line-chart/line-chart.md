@@ -225,7 +225,7 @@ The host defaults to a `16em` x `9em` floor (`--ui-line-chart-min-inline-size` /
 — UNCHANGED by `axes` — a bare, unstyled chart in a flex row still paints a visible, non-collapsed,
 proportionally-correct tile with zero consumer CSS. Stroke width is density-**invariant**; the
 label<->plot row gap (default state) rides the `--md-sys-space` ladder and responds to an ancestor
-`[density]` for free. There is no `[size]`/`[scale]` attribute and no `--md-sys-height-*` lever — labels
+`data-density` for free. There is no `size`/`data-scale` attribute and no `--md-sys-height-*` lever — labels
 read the `--md-sys-typescale-body-medium-*` row (default state) or the chip typescale (axes state) directly.
 
 ## RTL

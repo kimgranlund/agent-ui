@@ -27,7 +27,7 @@ table, so only the dimension table above is scored mechanically):
 - **T1 landing** — must contain a live hero (real control) + a card grid mirroring the nav, every target
   resolving. *Load-bearing:* liveness (the hero is real).
 - **T2 permutation matrix** — the full enum cross built programmatically, plus the anatomy and
-  `[scale]`/`[density]` axes. *Load-bearing:* derivation (enum-driven) + the drift gate (site-canon).
+  `data-tier`/`data-scale`/`data-density` axes. *Load-bearing:* derivation (enum-driven) + the drift gate (site-canon).
 - **T3 states showcase** — each interaction state honestly labelled as the *control's*, plus a real
   activation log. *Load-bearing:* scaffold-only (no restyle) + liveness (the log is real).
 - **T4 API doc** — the descriptor-derived attribute table + enum specimens + body; hand-authored shapes

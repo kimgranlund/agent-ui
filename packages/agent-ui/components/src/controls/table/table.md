@@ -10,7 +10,7 @@
 # the descriptor and the generated file byte-identical.
 tag: ui-table
 description: A data table with typed columns and record rows, rendered as a real native HTML table — with opt-in row selection, per-column sort, filter/search state, and pagination (all default OFF).
-tier: display          # geometry size-class (Display band — NO control frame/height/[size]/[scale]; SPEC-R17) — UNCHANGED by the widening: the four capabilities stamp native controls inside the existing anatomy, they do not add a control-height row of their own
+tier: display          # geometry size-class (Display band — NO control frame/height/size/data-scale; SPEC-R17) — UNCHANGED by the widening: the four capabilities stamp native controls inside the existing anatomy, they do not add a control-height row of their own
 extends: UIElement     # NOT form-associated (ADR-0163 cl.8/F5 — a table's selection is transient view state, not a submittable value)
 uses:
   - ui-button
@@ -323,10 +323,10 @@ region — an accepted residual, not a violation; provide `label` when the table
 
 ## Sizing
 
-`ui-table` is **Display**-class (`geometry.md`): no `[size]`/`[scale]` attribute, no control height, no
+`ui-table` is **Display**-class (`geometry.md`): no `size`/`data-scale` attribute, no control height, no
 `--md-sys-height-*` lever — cell text rides the `--md-sys-typescale-body-medium-*` row directly, and interior
 rhythm (`--ui-table-cell-pad-inline`/`-block`) rides the `--md-sys-space` ladder, responding to an ancestor
-`[density]` for free. The host defaults to a `16em` `min-inline-size` floor — a bare, unstyled table in a
+`data-density` for free. The host defaults to a `16em` `min-inline-size` floor — a bare, unstyled table in a
 flex row still paints a visible, non-collapsed box with zero consumer CSS.
 
 ## RTL

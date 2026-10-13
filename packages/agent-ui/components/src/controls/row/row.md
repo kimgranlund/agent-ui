@@ -39,7 +39,7 @@ attributes:            # attributes-as-API — mirrors row.ts `static props` (th
     type: enum
     values: [none, xs, sm, md, lg, xl, 2xl]
     default: none
-    reflect: true      # → gap: var(--md-sys-space-{step}) — the density-responsive layout-spacing ladder (rides [density], not [scale])
+    reflect: true      # → gap: var(--md-sys-space-{step}) — the density-responsive layout-spacing ladder (rides data-density, not data-scale)
   - name: wrap
     type: boolean
     default: false
@@ -103,8 +103,8 @@ and `ui-column` for a vertical one — there is no `direction` prop.
 - **`justify`** (main-axis distribution) → `justify-content`: `start` (default) · `center` · `end` ·
   `between` · `around` · `evenly` (the last three map to `space-between` / `space-around` / `space-evenly`).
 - **`gap`** → a step on the `--md-sys-space` layout-spacing ladder: `none` (default) · `xs` · `sm` · `md` · `lg` ·
-  `xl` · `2xl`. The gap is the one quantity that rides `[density]` (a `[density="spacious"]` ancestor widens
-  it); `[scale]` does **not** touch it — layout rhythm is not control-frame size (ADR-0015 / geometry.md).
+  `xl` · `2xl`. The gap is the one quantity that rides `data-density` (a `data-density="spacious"` ancestor widens
+  it); `data-scale` does **not** touch it — layout rhythm is not control-frame size (ADR-0015 / geometry.md).
 - **`wrap`** → `flex-wrap` (boolean presence): set `wrap` to allow children to flow onto multiple lines.
 
 A `ui-row` has **no control height** (the `Container/layout` size-class, geometry.md): it never reads

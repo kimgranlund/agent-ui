@@ -113,7 +113,7 @@ carries **no** `role`/`aria-*` attribute.
 
 The host is an `inline-flex` row: the pill track (`::before`) is the first item; any slotted label text
 follows in the default slot. The TRACK (`::before`) is a pill — `block-size = --md-sys-compact-{size}` (the
-ADR-0041 widget-box ramp, `[size]×[scale]`), `inline-size ≈ 1.8×` the box, `border-radius = box/2`. The
+ADR-0041 widget-box ramp, `size` × the ancestor `data-tier` / `data-scale`), `inline-size ≈ 1.8×` the box, `border-radius = box/2`. The
 THUMB (`::after`) is a circle inset `--md-sys-widget-inset` (2px) on all sides — **thumb = box − 4px**
 (ADR-0041 cl.3, the 2px inset law). On `:state(checked)` the thumb translates `0.8×box` to the right,
 landing with the identical 2px inset from the track end (the geometry is symmetric). Density-invariant:

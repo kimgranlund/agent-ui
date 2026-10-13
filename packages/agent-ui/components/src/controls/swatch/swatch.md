@@ -5,7 +5,7 @@
 # scheme) — the contract↔props trip-wire (swatch-descriptor.test.ts) targets this fence.
 tag: ui-swatch
 description: A bordered color box that shows one resolved color value alongside its token name as accessible text.
-tier: display          # Display band — no control frame/height/[size]/[scale] (SPEC-R16/ADR-0118 cl.5)
+tier: display          # Display band — no control frame/height/size/data-scale (SPEC-R16/ADR-0118 cl.5)
 extends: UIElement     # a non-interactive display LEAF — NOT form-associated (SPEC-R1)
 uses: []
 # marginal: 118 B gz — within the 2048 B gz per-control budget (ADR-0080 clause 3); solo 4789 B gz
@@ -105,7 +105,7 @@ text content: the printed datum and the accessible name are the same string, in 
 The host defaults to a 4n square box, the icon tile (`--ui-swatch-box-size`, ADR-0245 Amendment 3; 24px at the root
 md, `2rem` under the legacy opt-out), an EXPLICIT token size, not `auto`: a
 swatch has no intrinsic content, so a bare `<ui-swatch>` in an unstyled flex row still paints a visible,
-non-collapsed square with zero consumer CSS (ADR-0102 Lane A). There is no `[size]`/`[scale]` attribute and
+non-collapsed square with zero consumer CSS (ADR-0102 Lane A). There is no `size`/`data-scale` attribute and
 no `--md-sys-height-*` lever (SPEC-R16 AC2) — the value text reads the `--md-sys-typescale-body-medium-*` row
 directly.
 

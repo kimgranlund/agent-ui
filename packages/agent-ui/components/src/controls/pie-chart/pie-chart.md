@@ -5,7 +5,7 @@
 # (data/label/variant) — the contract<->props trip-wire (pie-chart-descriptor.test.ts) targets this fence.
 tag: ui-pie-chart
 description: A part-of-whole ring (donut, default) or solid pie chart with a printed-percent key list, identity carried by order + label + percent, never hue alone.
-tier: display          # geometry size-class (Display band — NO control frame/height/[size]/[scale]; ADR-0219, mirrors ui-bar-chart/ui-line-chart)
+tier: display          # geometry size-class (Display band — NO control frame/height/size/data-scale; ADR-0219, mirrors ui-bar-chart/ui-line-chart)
 extends: UIElement     # a non-interactive, non-form-associated display LEAF (ADR-0219)
 uses: []
 # marginal: measured at the build wave via `npm run size` (see the commit's gate evidence) — the manual
@@ -148,7 +148,7 @@ The host defaults to a `16em` `min-inline-size` floor (`--ui-pie-chart-min-inlin
 unstyled chart in a flex row still paints a visible, non-collapsed ring with zero consumer CSS. The
 ring itself is a fixed `--ui-pie-chart-ring-size` (`8em` default) square — density-**invariant** mark
 geometry; key-row/ring-to-list gaps ride the `--md-sys-space` ladder and respond to an ancestor
-`[density]` for free. There is no `[size]`/`[scale]` attribute and no `--md-sys-height-*` lever — key-row
+`data-density` for free. There is no `size`/`data-scale` attribute and no `--md-sys-height-*` lever — key-row
 text reads the `--md-sys-typescale-body-medium-*` row directly.
 
 ## Forced colors (WHCM)

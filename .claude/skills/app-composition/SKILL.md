@@ -57,7 +57,7 @@ entirely from the fleet — read them before scaffolding a new host.
    trailing `*`, declaration-order first-match.
 5. **Theming** — app-wide defaults ride `:root`/ambient; a workspace/panel that differs gets
    a `ui-theme-provider` boundary (unset props inherit ambient; the ink re-root caveat —
-   [[composition-patterns]]). `[scale]`/`[density]` set at shell/region roots.
+   [[composition-patterns]]). `data-tier`/`data-scale`/`data-density` set at shell/region roots (ADR-0245).
 6. **App state** — the props-as-signals surface each control exposes is the reactive
    contract; app-own state follows the same signals model — the kernel
    (`signal`/`computed`/`effect`) is public API off the `@agent-ui/components` root (`plan.md` §5

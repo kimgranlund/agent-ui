@@ -5,7 +5,7 @@
 # trip-wire (gauge-descriptor.test.ts) targets this fence.
 tag: ui-gauge
 description: A multi-ring radial gauge — concentric, independent 0-100 progress rings (never part-of-whole) with a real-DOM label/value legend column.
-tier: display          # geometry size-class (Display band — NO control frame/height/[size]/[scale]; ADR-0229, mirrors ui-bar-chart/ui-pie-chart/ui-column-chart)
+tier: display          # geometry size-class (Display band — NO control frame/height/size/data-scale; ADR-0229, mirrors ui-bar-chart/ui-pie-chart/ui-column-chart)
 extends: UIElement     # a non-interactive, non-form-associated display LEAF
 uses: []
 
@@ -151,7 +151,7 @@ analysis; the agent orders its own data (outer-to-inner IS the data order).
 The host defaults to a `16em` `min-inline-size`/`min-block-size` floor (ADR-0229 cl.6's role-(d) row) —
 a bare, unstyled gauge in a flex row still paints a visible, non-collapsed box with zero consumer CSS.
 Ring stroke width is density-invariant mark geometry; legend row rhythm rides `--md-sys-space` for free
-under `[density]`. There is no `[size]`/`[scale]` attribute — the legend label reads the
+under `data-density`. There is no `size`/`data-scale` attribute — the legend label reads the
 `--md-sys-typescale-kicker-small-*` row (uppercase), the percent reads
 `--md-sys-typescale-label-medium-*`.
 

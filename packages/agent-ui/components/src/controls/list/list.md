@@ -36,7 +36,7 @@ attributes:            # attributes-as-API — mirrors list.ts `static props` (t
     type: enum
     values: [none, xs, sm, md, lg, xl, 2xl]
     default: none
-    reflect: true      # reflects → gap: var(--md-sys-space-{step}) — the density-responsive layout-spacing ladder (ADR-0015 cl.4), the one [density]-bearing quantity
+    reflect: true      # reflects → gap: var(--md-sys-space-{step}) — the density-responsive layout-spacing ladder (ADR-0015 cl.4), the one data-density-bearing quantity
   - name: wrap
     type: boolean
     default: false
@@ -108,8 +108,8 @@ property (a role-pure repoint in CSS, never an inline style):
 - **`align`** (cross-axis) → `align-items`: `stretch` (default — items fill the list's width; use `start` to shrink-wrap) · `center` · `end` · `start` · `baseline`. (ADR-0030: default changed from `start` to `stretch`.)
 - **`justify`** (main-axis distribution) → `justify-content`: `start` · `center` · `end` · `between` · `around` · `evenly`.
 - **`gap`** → `gap: var(--md-sys-space-{step})` — the density-responsive layout-spacing ladder (`none` · `xs` · `sm`
-  · `md` · `lg` · `xl` · `2xl`). The inter-item gap is the one quantity that rides `[density]` (an ancestor
-  `[density]` re-multiplies it); the list has **no control height** (`geometry.md`'s Container/layout class).
+  · `md` · `lg` · `xl` · `2xl`). The inter-item gap is the one quantity that rides `data-density` (an ancestor
+  `data-density` re-multiplies it); the list has **no control height** (`geometry.md`'s Container/layout class).
 - **`wrap`** → `flex-wrap` (boolean presence).
 
 The direction is fixed — a list is always a **column** (the vertical stack is its identity, A2UI-faithful);

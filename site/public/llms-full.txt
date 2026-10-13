@@ -15,7 +15,7 @@ Components: 89 descriptors, alphabetical by tag.
 
 `ui-attachment` is the **Display**-class, FilePart-aligned compact file card (ADR-0112, feed family v1)
 — a category glyph plus a name/size cell, real selectable DOM text throughout. It is **not** interactive
-and **not** form-associated: no events, no keyboard contract, no `[size]`/`[scale]` control geometry.
+and **not** form-associated: no events, no keyboard contract, no `size`/`data-scale` control geometry.
 
 ```html
 <ui-attachment filename="report.pdf" mime-type="application/pdf" size-bytes="48200"></ui-attachment>
@@ -68,7 +68,7 @@ into this type.
 Either posture floors at `--ui-attachment-min-inline-size` (`12em` default) in an unstyled flex row
 (test-the-whole-shape) — a ratified whole-shape floor (ADR-0223 clause 3(d)) that **survives both the fill
 default and the `[inline]` hug state**. The glyph rides the fixed content-icon register (`--md-sys-icon-md`)
-— there is no `[size]`/`[scale]` axis on this Display-class leaf.
+— there is no `size`/`data-scale` axis on this Display-class leaf.
 
 ---
 
@@ -153,8 +153,8 @@ named foreseen extension if identity-at-a-glance proves needed.
 
 `size` (`sm` / `md` / `lg`, default `md`, reflected) selects a tier off the ratified control-height
 ladder `--md-sys-height-{sm,md,lg}` (ADR-0038) — the same root tokens `ui-button` sizes its frame with, so
-an avatar sits at a button's height in a row: 28px at the default `ui-md` scale, 20–48px across ancestor
-`[scale]` tiers. The component token `--ui-avatar-size` is the page's override for larger chrome (a
+an avatar sits at a button's height in a row: 24px at the default `md`, across ancestor
+`data-tier` / `data-scale` registers. The component token `--ui-avatar-size` is the page's override for larger chrome (a
 profile header). Before ADR-0112 Amendment 3 (2026-08-23) the box rode the ADR-0041 compact ramp
 (12–28px); that fork's own ">28px register" re-open trigger fired.
 
@@ -273,7 +273,7 @@ The host defaults to a `16em` `min-inline-size` floor (`--ui-bar-chart-min-inlin
 unstyled chart in a flex row still paints a visible, non-collapsed, proportionally-correct box with zero
 consumer CSS (ADR-0102 Lane A). Bar/track thickness (`--ui-bar-chart-bar-size`) is density-**invariant**;
 row/column gap (`--ui-bar-chart-row-gap`/`-col-gap`) rides the `--md-sys-space` ladder and responds to an
-ancestor `[density]` for free. There is no `[size]`/`[scale]` attribute and no `--md-sys-height-*` lever
+ancestor `data-density` for free. There is no `size`/`data-scale` attribute and no `--md-sys-height-*` lever
 (SPEC-R12 AC2) — labels/values read the `--md-sys-typescale-body-medium-*` row directly.
 
 ## RTL
@@ -429,8 +429,8 @@ relay.
 
 Fill by default (ADR-0223): a bare host is block-level and stretches to its container; the ONE opt-out is
 `inline` (hug, inline-flex). Crumb text reads the label typescale row (`--md-sys-typescale-label-medium-*`)
-— no `[size]`/`[scale]` attribute and no geometry row of its own; `ui-breadcrumb` contributes only the
-inter-crumb `gap` (off the `--md-sys-space` ladder, responding to an ancestor `[density]` for free).
+— no `size`/`data-scale` attribute and no geometry row of its own; `ui-breadcrumb` contributes only the
+inter-crumb `gap` (off the `--md-sys-space` ladder, responding to an ancestor `data-density` for free).
 
 ---
 
@@ -461,9 +461,8 @@ ADR-0006). ARIA `role="button"` is applied through `ElementInternals`, never as 
 ## Sizes
 
 `size` selects a step on the dimensional ramp (`sm` · `md` (default) · `lg`), setting the control
-height and font; an ancestor `[scale]` (the two-band tier `ui-sm…content-lg`, default `ui-md`; ADR-0032)
-multiplies the frame and an ancestor `[density]` (`compact/comfortable/spacious`) multiplies the
-icon↔label gap. The block-size is the vertical lever — `padding-block` is always `0`.
+height and font; an ancestor `data-tier` and `data-scale` (ADR-0245) set the n the ramp derives from,
+and an ancestor `data-density` (`compact/default/spacious`) moves the icon↔label gap. The block-size is the vertical lever — `padding-block` is always `0`.
 
 ## States
 
@@ -1358,7 +1357,7 @@ evidence, not a rider).
 
 ## Sizing
 
-Display-class (`geometry.md`): no control height, no `[size]`/`[scale]` attribute, no `[density]` legs —
+Display-class (`geometry.md`): no control height, no `size`/`data-scale` attribute, no `data-density` legs —
 every frame quantity (`--ui-code-pad-inline`/`-pad-block`, `--ui-code-radius`) is density-**invariant**
 (ADR-0113 cl.2), unlike a Pattern control's space-ladder rhythm. The type lever is the fixed
 `--md-sys-typescale-body-medium-*` row, not a size ramp.
@@ -1451,7 +1450,7 @@ the element's **identity** (the tag names the main axis, A2UI-faithfully) — no
 
 - **`align`** (cross axis = inline) → `align-items`: `stretch` (default — children fill the column's width) · `start` (shrink-wrap to content width) · `end` · `baseline`. **`center` is NOT allowed on `ui-column`** — a column centers its children only by shrink-wrapping them, which defeats the fill-width default and is an anti-pattern for stacked content; an `align="center"` snaps back to `stretch` and has no `[align='center']` CSS rule. Use a `ui-row` (or wrap the content) for horizontal centering. (ADR-0030: default `start`→`stretch`.)
 - **`justify`** (main axis = block) → `justify-content`: `start` (default) · `center` · `end` · `between` · `around` · `evenly` (the `between`/`around`/`evenly` keywords map to `space-*`).
-- **`gap`** → `gap: var(--md-sys-space-{step})`: `none` (default) · `xs` · `sm` · `md` · `lg` · `xl` · `2xl` — the density-responsive layout-spacing ladder (ADR-0015 cl.4), **never** a control dimension. An ancestor `[density]` (`compact/comfortable/spacious`) re-multiplies the gap; `[scale]` (the `ui-sm…content-lg` tier, ADR-0032) does not touch it (spacing is rhythm, not frame).
+- **`gap`** → `gap: var(--md-sys-space-{step})`: `none` (default) · `xs` · `sm` · `md` · `lg` · `xl` · `2xl` — the density-responsive layout-spacing ladder (ADR-0015 cl.4), **never** a control dimension. An ancestor `data-density` (`compact/comfortable/spacious`) re-multiplies the gap; `data-scale` (the `ui-sm…content-lg` tier, ADR-0032) does not touch it (spacing is rhythm, not frame).
 - **`wrap`** → `flex-wrap` (boolean presence): present ⇒ children wrap onto multiple lines.
 
 ## Sizing
@@ -1491,7 +1490,7 @@ corruption (ADR-0100 cl.2).
 ## Geometry
 
 A layout primitive has **no control height** (`geometry.md`'s Container/layout class): the block-size is
-content-driven and spacing rides `--md-sys-space` × `[density]`, never `--md-sys-height-*`. A `forced-colors` block
+content-driven and spacing rides `--md-sys-space` × `data-density`, never `--md-sys-height-*`. A `forced-colors` block
 drops the tonal wash so a column never paints over system text.
 
 ---
@@ -1599,7 +1598,7 @@ The host defaults to a `16em` `min-inline-size`/`min-block-size` floor (ADR-0229
 row) — a bare, unstyled chart in a flex row still paints a visible, non-collapsed, proportionally-correct
 box with zero consumer CSS. Mark geometry (segment radius, column gap) is density-**responsive** where
 tokened to `--md-sys-space`, density-**invariant** where it is a fixed shape constant (the chip pill
-radius). There is no `[size]`/`[scale]` attribute — chip/label text reads the
+radius). There is no `size`/`data-scale` attribute — chip/label text reads the
 `--md-sys-typescale-label-medium-*` row directly.
 
 ## Forced colors (WHCM)
@@ -2746,7 +2745,7 @@ analysis; the agent orders its own data (outer-to-inner IS the data order).
 The host defaults to a `16em` `min-inline-size`/`min-block-size` floor (ADR-0229 cl.6's role-(d) row) —
 a bare, unstyled gauge in a flex row still paints a visible, non-collapsed box with zero consumer CSS.
 Ring stroke width is density-invariant mark geometry; legend row rhythm rides `--md-sys-space` for free
-under `[density]`. There is no `[size]`/`[scale]` attribute — the legend label reads the
+under `data-density`. There is no `size`/`data-scale` attribute — the legend label reads the
 `--md-sys-typescale-kicker-small-*` row (uppercase), the percent reads
 `--md-sys-typescale-label-medium-*`.
 
@@ -2850,8 +2849,8 @@ the token, not an attribute selector.
 ## Gap & surface
 
 `gap` selects a step on the `--md-sys-space` layout-spacing ladder (`none` (default) · `xs` · `sm` · `md` · `lg`
-· `xl` · `2xl`) for the inter-track gap; an ancestor `[density]` re-multiplies it (it is layout **rhythm**,
-so an ancestor `[scale]` leaves it untouched). The shared **surface** axes — `elevation` (the
+· `xl` · `2xl`) for the inter-track gap; an ancestor `data-density` re-multiplies it (it is layout **rhythm**,
+so an ancestor `data-scale` leaves it untouched). The shared **surface** axes — `elevation` (the
 scheme-inverting plane) and `brightness` (the scheme-consistent tonal shift) — come from `UIContainerElement`
 (ADR-0015): a bare grid is transparent (it passes its parent's surface through), and `[elevation]` /
 `[brightness]` repoint the shared `--ui-container-bg` / `-tint` seam in `controls/_surface/container.css`,
@@ -2975,7 +2974,7 @@ box at all.
 
 ## Sizing
 
-`ui-image` is a Display-class leaf (geometry.md): no `[size]`/`[scale]` control-band row, no
+`ui-image` is a Display-class leaf (geometry.md): no `size`/`data-scale` control-band row, no
 `--md-sys-height-*` consumption — the box's lever is `aspect-ratio` plus the layout track sizing it. The host
 defaults to `inline-size: 100%` (the common responsive-image reset), so a bare `<ui-image>` dropped into a card
 or hero slot fills its container's inline size and derives its block size from `aspect-ratio` alone.
@@ -3049,8 +3048,8 @@ a color-only signifier.
 The host defaults to a `16em` `min-inline-size` floor (`--ui-ladder-min-inline-size`) — a bare, unstyled
 ladder in a flex row still paints a visible, non-collapsed list with zero consumer CSS (ADR-0102 Lane A).
 Bar thickness (`--ui-ladder-bar-size`) is density-**invariant**; row/column gap
-(`--ui-ladder-row-gap`/`-col-gap`) rides the `--md-sys-space` ladder and responds to an ancestor `[density]` for
-free. There is no `[size]`/`[scale]` attribute and no `--md-sys-height-*` lever (SPEC-R16 AC2).
+(`--ui-ladder-row-gap`/`-col-gap`) rides the `--md-sys-space` ladder and responds to an ancestor `data-density` for
+free. There is no `size`/`data-scale` attribute and no `--md-sys-height-*` lever (SPEC-R16 AC2).
 
 ## RTL
 
@@ -3188,7 +3187,7 @@ The host defaults to a `16em` x `9em` floor (`--ui-line-chart-min-inline-size` /
 — UNCHANGED by `axes` — a bare, unstyled chart in a flex row still paints a visible, non-collapsed,
 proportionally-correct tile with zero consumer CSS. Stroke width is density-**invariant**; the
 label<->plot row gap (default state) rides the `--md-sys-space` ladder and responds to an ancestor
-`[density]` for free. There is no `[size]`/`[scale]` attribute and no `--md-sys-height-*` lever — labels
+`data-density` for free. There is no `size`/`data-scale` attribute and no `--md-sys-height-*` lever — labels
 read the `--md-sys-typescale-body-medium-*` row (default state) or the chip typescale (axes state) directly.
 
 ## RTL
@@ -3242,8 +3241,8 @@ property (a role-pure repoint in CSS, never an inline style):
 - **`align`** (cross-axis) → `align-items`: `stretch` (default — items fill the list's width; use `start` to shrink-wrap) · `center` · `end` · `start` · `baseline`. (ADR-0030: default changed from `start` to `stretch`.)
 - **`justify`** (main-axis distribution) → `justify-content`: `start` · `center` · `end` · `between` · `around` · `evenly`.
 - **`gap`** → `gap: var(--md-sys-space-{step})` — the density-responsive layout-spacing ladder (`none` · `xs` · `sm`
-  · `md` · `lg` · `xl` · `2xl`). The inter-item gap is the one quantity that rides `[density]` (an ancestor
-  `[density]` re-multiplies it); the list has **no control height** (`geometry.md`'s Container/layout class).
+  · `md` · `lg` · `xl` · `2xl`). The inter-item gap is the one quantity that rides `data-density` (an ancestor
+  `data-density` re-multiplies it); the list has **no control height** (`geometry.md`'s Container/layout class).
 - **`wrap`** → `flex-wrap` (boolean presence).
 
 The direction is fixed — a list is always a **column** (the vertical stack is its identity, A2UI-faithful);
@@ -3725,9 +3724,9 @@ consumer-owned list: bind `pages` to the list's own page count and listen for `c
 
 ## Sizing
 
-No `[size]`/`[scale]` attribute and no geometry row of its own — every composed `ui-button` stop is stamped
+No `size`/`data-scale` attribute and no geometry row of its own — every composed `ui-button` stop is stamped
 at `size="sm"` and carries its own §1 control-height geometry (`geometry.md`); `ui-pagination` contributes
-only the inter-stop `gap` (off the `--md-sys-space` ladder, responding to an ancestor `[density]` for free).
+only the inter-stop `gap` (off the `--md-sys-space` ladder, responding to an ancestor `data-density` for free).
 
 ---
 
@@ -3802,7 +3801,7 @@ The host defaults to a `16em` `min-inline-size` floor (`--ui-pie-chart-min-inlin
 unstyled chart in a flex row still paints a visible, non-collapsed ring with zero consumer CSS. The
 ring itself is a fixed `--ui-pie-chart-ring-size` (`8em` default) square — density-**invariant** mark
 geometry; key-row/ring-to-list gaps ride the `--md-sys-space` ladder and respond to an ancestor
-`[density]` for free. There is no `[size]`/`[scale]` attribute and no `--md-sys-height-*` lever — key-row
+`data-density` for free. There is no `size`/`data-scale` attribute and no `--md-sys-height-*` lever — key-row
 text reads the `--md-sys-typescale-body-medium-*` row directly.
 
 ## Forced colors (WHCM)
@@ -4049,7 +4048,7 @@ plus one control-height action row.
 
 `ui-progress` is the **Display**-class thin-rail progress bar (feed family v1, ADR-0112) — bar-only task
 progress with a native-`<progress>`-shaped value model. It is **not** interactive and **not**
-form-associated: no events, no keyboard contract, no `[size]`/`[scale]` control geometry.
+form-associated: no events, no keyboard contract, no `size`/`data-scale` control geometry.
 
 ```html
 <ui-progress current="42" label="Indexing"></ui-progress>
@@ -4113,7 +4112,7 @@ announces as "progressbar, busy" via the platform's own indeterminate handling.
 The host floors at `--ui-progress-min-inline-size` (`8em` default) in an unstyled flex row
 (test-the-whole-shape) — override the token, or set `inline-size` directly, to size the bar to a layout.
 The rail thickness (`--ui-progress-track-size`, `4px` default) is a fixed, density-invariant constant — a
-bar is a rail, not a `[size]`/`[scale]` widget box (the slider-rail precedent).
+bar is a rail, not a `size`/`data-scale` widget box (the slider-rail precedent).
 
 ---
 
@@ -4161,9 +4160,9 @@ valid for single-item "accept" patterns, but lacks a form-value owner for multi-
 
 ## Sizes
 
-`size` repoints the box from the `--md-sys-compact-{sm/md/lg}` widget ramp (ADR-0041). An ancestor `[scale]`
-automatically re-tables the compact tokens (ADR-0038 — explicit per-scale lookup in `dimensions.css`), so the
-radio box tracks scale without any per-control `[scale]` rule.
+`size` repoints the box from the `--md-sys-compact-{sm/md/lg}` widget ramp (ADR-0041). An ancestor `data-tier` / `data-scale`
+re-derives the compact tokens (ADR-0245), so the radio box tracks the region register without any
+per-control scale rule.
 
 ---
 
@@ -4319,7 +4318,7 @@ color-encoded only (CVD-safe by construction).
 The host defaults to an `8em` `min-inline-size` floor (`--ui-ramp-min-inline-size`) — a bare, unstyled ramp
 in a flex row still paints a visible, non-collapsed strip with zero consumer CSS (ADR-0102 Lane A). Each
 cell's box (`--ui-ramp-cell-size`) is density-invariant; the strip gap (`--ui-ramp-gap`) rides the
-`--md-sys-space` ladder and responds to an ancestor `[density]` for free. There is no `[size]`/`[scale]`
+`--md-sys-space` ladder and responds to an ancestor `data-density` for free. There is no `size`/`data-scale`
 attribute and no `--md-sys-height-*` lever (SPEC-R16 AC2).
 
 ## RTL
@@ -4417,7 +4416,7 @@ strictly precedes the event on both paths (Fork-T1/D1-safe, PR #1363's disciplin
 ## Sizes
 
 `size` selects from the widget-box ramp (`sm` · `md` (default) · `lg`), sourcing `--md-sys-compact-{size}`
-(ADR-0041) — each star's own box. An ancestor `[scale]` attribute re-tables the ramp for its subtree.
+(ADR-0041) — each star's own box. An ancestor `data-tier` / `data-scale` (ADR-0245) re-derives the ramp for its subtree.
 
 ## Accessibility
 
@@ -4582,8 +4581,8 @@ and `ui-column` for a vertical one — there is no `direction` prop.
 - **`justify`** (main-axis distribution) → `justify-content`: `start` (default) · `center` · `end` ·
   `between` · `around` · `evenly` (the last three map to `space-between` / `space-around` / `space-evenly`).
 - **`gap`** → a step on the `--md-sys-space` layout-spacing ladder: `none` (default) · `xs` · `sm` · `md` · `lg` ·
-  `xl` · `2xl`. The gap is the one quantity that rides `[density]` (a `[density="spacious"]` ancestor widens
-  it); `[scale]` does **not** touch it — layout rhythm is not control-frame size (ADR-0015 / geometry.md).
+  `xl` · `2xl`. The gap is the one quantity that rides `data-density` (a `data-density="spacious"` ancestor widens
+  it); `data-scale` does **not** touch it — layout rhythm is not control-frame size (ADR-0015 / geometry.md).
 - **`wrap`** → `flex-wrap` (boolean presence): set `wrap` to allow children to flow onto multiple lines.
 
 A `ui-row` has **no control height** (the `Container/layout` size-class, geometry.md): it never reads
@@ -5067,7 +5066,7 @@ after a net move emits `change`.
 ## Sizes
 
 `size` selects from the widget-box ramp (`sm` · `md` (default) · `lg`), sourcing `--md-sys-compact-{size}`
-(ADR-0041: 14 · 16 · 18 px at the default `ui-md` scale). An ancestor `[scale]` attribute re-tables the
+(ADR-0041, re-derived by ADR-0245). An ancestor `data-tier` / `data-scale` re-derives the
 ramp for its subtree.
 
 ## Accessibility
@@ -5139,8 +5138,8 @@ entirely when `true` — at rest AND during scrub (GH #1141 widens the opt-out's
 ## Sizes
 
 `size` selects from the widget-box ramp (`sm` · `md` (default) · `lg`), sourcing `--md-sys-compact-{size}`
-(ADR-0041: 14 · 16 · 18 px at the default `ui-md` scale). The thumb is always `box − 4px` (the
-ADR-0041 2px-inset law). An ancestor `[scale]` attribute re-tables the ramp for its subtree.
+(ADR-0041, re-derived by ADR-0245). The thumb is always `box − 4px` (the
+ADR-0041 2px-inset law). An ancestor `data-tier` / `data-scale` re-derives the ramp for its subtree.
 
 ## Accessibility
 
@@ -5405,7 +5404,7 @@ oversight:
 
 `ui-stat` is the **Display**-class metric tile (ADR-0111, report family v1) — label + value + optional
 delta + optional caption as real, selectable DOM text. It is **not** interactive and **not**
-form-associated: no events, no keyboard contract, no `[size]`/`[scale]` control geometry.
+form-associated: no events, no keyboard contract, no `size`/`data-scale` control geometry.
 
 ```html
 <ui-stat label="Revenue" figure="48200" delta="12" caption="vs last month"></ui-stat>
@@ -5500,7 +5499,7 @@ posture — the pre-wave shrink-to-content rendering. Either way, the host floor
 token, or set `inline-size` directly, to size the tile to a layout. Interior gap rides `--ui-stat-gap` off
 the space ladder (density-responsive for free). `variant="ring"` adds its own density-invariant
 diameter/thickness tokens — `--ui-stat-ring-size` (`4.5em` default) and `--ui-stat-ring-thickness` (`0.5em`
-default) — sized like the delta glyph's mark geometry, never off `[scale]` (a Display-class control,
+default) — sized like the delta glyph's mark geometry, never off `data-scale` (a Display-class control,
 SPEC-R17).
 
 ---
@@ -5819,7 +5818,7 @@ accepted residual matching `ui-table`'s own unlabeled-table posture.
 directly, alongside checkbox/switch/tag/badge): `--md-sys-compact-lg` for the box, the compact pad law
 (`2px + box·ratio·density`, never `h/2`) for the inline padding — deliberately lighter than a full
 Control-height `ui-button`, per ADR-0213's own "a suggestion is a conversational offer … deliberately
-lighter" framing. No `[size]`/`[scale]` attribute in v1 (ADR-0213 names no size axis).
+lighter" framing. No `size`/`data-scale` attribute in v1 (ADR-0213 names no size axis).
 
 ---
 
@@ -5868,7 +5867,7 @@ text content: the printed datum and the accessible name are the same string, in 
 The host defaults to a 4n square box, the icon tile (`--ui-swatch-box-size`, ADR-0245 Amendment 3; 24px at the root
 md, `2rem` under the legacy opt-out), an EXPLICIT token size, not `auto`: a
 swatch has no intrinsic content, so a bare `<ui-swatch>` in an unstyled flex row still paints a visible,
-non-collapsed square with zero consumer CSS (ADR-0102 Lane A). There is no `[size]`/`[scale]` attribute and
+non-collapsed square with zero consumer CSS (ADR-0102 Lane A). There is no `size`/`data-scale` attribute and
 no `--md-sys-height-*` lever (SPEC-R16 AC2) — the value text reads the `--md-sys-typescale-body-medium-*` row
 directly.
 
@@ -6109,7 +6108,7 @@ carries **no** `role`/`aria-*` attribute.
 
 The host is an `inline-flex` row: the pill track (`::before`) is the first item; any slotted label text
 follows in the default slot. The TRACK (`::before`) is a pill — `block-size = --md-sys-compact-{size}` (the
-ADR-0041 widget-box ramp, `[size]×[scale]`), `inline-size ≈ 1.8×` the box, `border-radius = box/2`. The
+ADR-0041 widget-box ramp, `size` × the ancestor `data-tier` / `data-scale`), `inline-size ≈ 1.8×` the box, `border-radius = box/2`. The
 THUMB (`::after`) is a circle inset `--md-sys-widget-inset` (2px) on all sides — **thumb = box − 4px**
 (ADR-0041 cl.3, the 2px inset law). On `:state(checked)` the thumb translates `0.8×box` to the right,
 landing with the identical 2px inset from the track end (the geometry is symmetric). Density-invariant:
@@ -6285,10 +6284,10 @@ region — an accepted residual, not a violation; provide `label` when the table
 
 ## Sizing
 
-`ui-table` is **Display**-class (`geometry.md`): no `[size]`/`[scale]` attribute, no control height, no
+`ui-table` is **Display**-class (`geometry.md`): no `size`/`data-scale` attribute, no control height, no
 `--md-sys-height-*` lever — cell text rides the `--md-sys-typescale-body-medium-*` row directly, and interior
 rhythm (`--ui-table-cell-pad-inline`/`-block`) rides the `--md-sys-space` ladder, responding to an ancestor
-`[density]` for free. The host defaults to a `16em` `min-inline-size` floor — a bare, unstyled table in a
+`data-density` for free. The host defaults to a `16em` `min-inline-size` floor — a bare, unstyled table in a
 flex row still paints a visible, non-collapsed box with zero consumer CSS.
 
 ## RTL
@@ -6719,8 +6718,8 @@ inserts no newline (single-line). The placeholder shows via a control-toggled `d
 ## Sizes
 
 `size` selects a step on the dimensional ramp (`sm` · `md` (default) · `lg`), setting the control height
-and font; an ancestor `[scale]` multiplies the frame and an ancestor `[density]` multiplies the
-adornment↔editor gap. The geometry follows the **Control size-class** in `geometry.md`: the block-size is
+and font; an ancestor `data-tier` and `data-scale` (ADR-0245) set the n the ramp derives from, and an
+ancestor `data-density` moves the adornment↔editor gap. The geometry follows the **Control size-class** in `geometry.md`: the block-size is
 the vertical lever (`padding-block` is always `0`), the value/text edge sits at `h/2`, and a leading/trailing
 slot edge at the emergent `½(h − icon)`. The field frame (border + radius) is drawn **on the host** so a
 slotted adornment sits inside the box; the corner is the fixed `--md-sys-shape-corner-base` rounded-rect (the
@@ -7034,7 +7033,7 @@ imperatively appended) — authored once, shared everywhere.
 - **`icon`** (string, default `''`) — a free marker glyph name (`@agent-ui/icons`) that replaces the dot
   entirely, orthogonal to `status` — the neutral/`''` path with a richer glyph.
 - **`size`** (`sm`/`md`/`lg`, default `md`) — first-class marker-system geometry (ADR-0122 F2): picks the
-  row within the ambient `[scale]` register for the marker box, dot, connector, gutter, and row-gap.
+  row within the ambient `data-tier` / `data-scale` register for the marker box, dot, connector, gutter, and row-gap.
 
 ## Anatomy
 
@@ -7374,7 +7373,7 @@ spillover overflow *menu* is a fenced, additive v2 — not built in v1.
 `ui-toolbar` owns **no `size` prop** — the Pattern-class geometry (`geometry.md`): its items take their own
 control height, and the toolbar's own contribution is padding + gap off the `--md-sys-space` ladder plus a
 **min-block-size floor** tied to the control-height register, so an empty or short bar still reads as a bar.
-`[scale]`/`[density]` ride ambiently (inherited), never as toolbar props.
+`data-tier`/`data-scale`/`data-density` ride ambiently (inherited), never as toolbar props.
 
 ## Posture — floating vs embedded
 
@@ -7518,7 +7517,7 @@ captions are a named future intake needing their own design pass. Each absence i
 
 ## Sizing
 
-Display-class (geometry.md): no `[size]`/`[scale]` row, no `--md-sys-height-*` — the lever is `aspect-ratio`
+Display-class (geometry.md): no `size`/`data-scale` row, no `--md-sys-height-*` — the lever is `aspect-ratio`
 plus the layout track. The host defaults to `inline-size: 100%` (the responsive-media reset).
 
 ---

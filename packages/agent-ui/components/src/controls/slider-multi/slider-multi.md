@@ -215,8 +215,8 @@ entirely when `true` — at rest AND during scrub (GH #1141 widens the opt-out's
 ## Sizes
 
 `size` selects from the widget-box ramp (`sm` · `md` (default) · `lg`), sourcing `--md-sys-compact-{size}`
-(ADR-0041: 14 · 16 · 18 px at the default `ui-md` scale). The thumb is always `box − 4px` (the
-ADR-0041 2px-inset law). An ancestor `[scale]` attribute re-tables the ramp for its subtree.
+(ADR-0041, re-derived by ADR-0245). The thumb is always `box − 4px` (the
+ADR-0041 2px-inset law). An ancestor `data-tier` / `data-scale` re-derives the ramp for its subtree.
 
 ## Accessibility
 

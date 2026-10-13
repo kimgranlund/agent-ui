@@ -108,7 +108,7 @@ forcedColors: An explicit `@media (forced-colors: active)` block repoints the de
 
 `ui-stat` is the **Display**-class metric tile (ADR-0111, report family v1) — label + value + optional
 delta + optional caption as real, selectable DOM text. It is **not** interactive and **not**
-form-associated: no events, no keyboard contract, no `[size]`/`[scale]` control geometry.
+form-associated: no events, no keyboard contract, no `size`/`data-scale` control geometry.
 
 ```html
 <ui-stat label="Revenue" figure="48200" delta="12" caption="vs last month"></ui-stat>
@@ -203,5 +203,5 @@ posture — the pre-wave shrink-to-content rendering. Either way, the host floor
 token, or set `inline-size` directly, to size the tile to a layout. Interior gap rides `--ui-stat-gap` off
 the space ladder (density-responsive for free). `variant="ring"` adds its own density-invariant
 diameter/thickness tokens — `--ui-stat-ring-size` (`4.5em` default) and `--ui-stat-ring-thickness` (`0.5em`
-default) — sized like the delta glyph's mark geometry, never off `[scale]` (a Display-class control,
+default) — sized like the delta glyph's mark geometry, never off `data-scale` (a Display-class control,
 SPEC-R17).
