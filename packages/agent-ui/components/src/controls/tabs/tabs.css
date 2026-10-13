@@ -54,8 +54,8 @@
      28px→36px (+8px block-size, i.e. +4px = one --md-sys-space-xs unit per edge) — the ramp step that matches
      Kim's ask exactly; font/icon stay at md (Kim asked for room, not larger text) since ui-tabs has no glyph to
      keep in step with the row and pins only ONE quantity (height) to the ramp. */
-  --ui-tabs-tab-height: var(--md-sys-height-lg);
-  --ui-tabs-tab-font: var(--md-sys-font-md);
+  --ui-tabs-tab-height: var(--md-sys-height, var(--md-sys-height-lg));
+  --ui-tabs-tab-font: var(--md-sys-type-control, var(--md-sys-font-md));
 
   /* Shell spacing — the --md-sys-space layout ladder (density-responsive; NEVER the control frame). */
   /* GH #536 — the per-tab inline padding was removed (a tab's clickable area is now its label box); the strip
@@ -65,7 +65,7 @@
 
   /* The strip divider + the indicator thickness. */
   --ui-tabs-strip-line: var(--md-sys-color-neutral-outline-variant);
-  --ui-tabs-indicator-size: 2px;
+  --ui-tabs-indicator-size: var(--md-sys-c, 2px);
 
   /* The tab ink ladder (SOLID roles, never a color-mix — components hold zero colour opinion; ADR-0008) +
      the selected-tab indicator. */

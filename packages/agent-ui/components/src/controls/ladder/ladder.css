@@ -31,7 +31,7 @@
 :where(ui-ladder) {
   --ui-ladder-min-inline-size: 16em; /* the whole-shape floor */
   --ui-ladder-bar-size: 0.75rem; /* bar THICKNESS — density-invariant */
-  --ui-ladder-bar-radius: 2px;
+  --ui-ladder-bar-radius: var(--md-sys-c, 2px);
   --ui-ladder-bar-ink: var(--md-sys-color-primary); /* the magnitude fill — >=3:1 vs surface (WCAG 1.4.11) */
   --ui-ladder-row-gap: var(--md-sys-space-sm); /* rides [density] for free (ADR-0103) */
   --ui-ladder-col-gap: var(--md-sys-space-sm);

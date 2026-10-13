@@ -38,8 +38,8 @@
      at every ambient font size — a LITERAL mirror, never a var() read: the family-coherence trip-wire
      forbids cross-family token consumption, and timeline-item keeps its ramp deliberately file-local.
      status-stream.test.ts's GH #722 drift gate asserts the two files' values stay byte-equal. */
-  --ui-status-stream-header-marker-box: 16px;
-  --ui-status-stream-header-dot-size: 8px;
+  --ui-status-stream-header-marker-box: var(--md-sys-icon-box, 16px);
+  --ui-status-stream-header-dot-size: var(--md-sys-glyph-box, 8px);
   /* GH #722 (candidate 6, the other half) — entries carried ZERO inline inset while the header's own
      pad starts it space-sm in; the SAME inset on both is what makes the marker columns share one rail
      (the GH #626 bar-inset lesson: contents own their inset via a shared token, the rail stays

@@ -1204,13 +1204,13 @@ describe('menu.css — TKT-0027 panel max-block-size dial (menu-max-block-size-t
 
   it('menu-max-block-size-token-chain: --ui-menu-max-block-size defaults to min(50vh, 12 real item rows + 13 insets + the 2px border compensation)', () => {
     expect(menuCss).toMatch(
-      /--ui-menu-max-block-size:\s*min\(50vh,\s*calc\(12 \* var\(--ui-menu-item-block-size\) \+ 13 \* var\(--ui-box-inset,\s*0\.375rem\) \+ 2px\)\)/,
+      /--ui-menu-max-block-size:\s*min\(50vh,\s*calc\(12 \* var\(--ui-menu-item-block-size\) \+ 13 \* var\(--md-sys-c,\s*var\(--ui-box-inset,\s*0\.375rem\)\) \+ 1px \+ 1px\)\)/,
     )
   })
 
   it('menu-max-block-size-token-chain: --ui-menu-item-block-size derives from the item font + block-pad (font + 2×pad)', () => {
     expect(menuCss).toMatch(
-      /--ui-menu-item-block-size:\s*calc\(var\(--ui-menu-item-font\) \+ 2 \* var\(--ui-menu-item-pad-block\)\)/,
+      /--ui-menu-item-block-size:\s*var\(--md-sys-height,\s*calc\(var\(--ui-menu-item-font\) \+ 2 \* var\(--ui-menu-item-pad-block\)\)\)/,
     )
   })
 
