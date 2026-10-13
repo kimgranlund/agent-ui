@@ -60,9 +60,13 @@
           "type": { "type": "string", "enum": ["neutral", "info", "success", "warning", "danger"] },
           "bindable": true,
           "mapsTo": "statusIntent"
-        }
+        },
+        "phase": { "type": { "type": "string", "enum": ["betting", "playing", "settled"] }, "bindable": true, "mapsTo": "phase" },
+        "chips": { "type": { "type": "array", "items": { "type": "number" } }, "bindable": true, "mapsTo": "chips" },
+        "result": { "type": { "type": "string" }, "bindable": true, "mapsTo": "result" }
       },
-      "children": "ChildList"
+      "children": "ChildList",
+      "value": { "prop": "bet", "event": "change", "readProp": "a2uiCardTableBet" }
     }
   },
   "functions": {}

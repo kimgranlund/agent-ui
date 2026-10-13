@@ -11,7 +11,14 @@ import { croupierHandConsistency } from './checks.ts'
 import { semanticSurfaceViews } from '../../semantic-check.ts'
 import type { Session } from '../../../agent/agent-transport.ts'
 import type { A2uiOutput, A2uiServerMessage } from '../../../protocol.ts'
-import { personaBasicCroupierCardTableSeed, personaCroupierCardTableSeed } from '../../../examples/persona-exemplars.ts'
+import {
+  personaBasicCroupierCardTableBettingSeed,
+  personaBasicCroupierCardTableSeed,
+  personaBasicCroupierCardTableSettledSeed,
+  personaCroupierCardTableBettingSeed,
+  personaCroupierCardTableSeed,
+  personaCroupierCardTableSettledSeed,
+} from '../../../examples/persona-exemplars.ts'
 
 const dir = join(import.meta.dirname, '__fixtures__')
 const messages = (file: string): A2uiOutput =>
@@ -71,8 +78,15 @@ describe('a CardTable deal against the recorded 27-component deal', () => {
     expect(componentCount(personaCroupierCardTableSeed.messages)).toBe(4)
   })
 
-  it('CardTable: both CardTable seeds pass the hand check with no finding', () => {
-    for (const seed of [personaCroupierCardTableSeed, personaBasicCroupierCardTableSeed]) {
+  it('CardTable: every CardTable seed, each phase on both bases, passes the hand check with no finding', () => {
+    for (const seed of [
+      personaCroupierCardTableSeed,
+      personaBasicCroupierCardTableSeed,
+      personaCroupierCardTableBettingSeed,
+      personaBasicCroupierCardTableBettingSeed,
+      personaCroupierCardTableSettledSeed,
+      personaBasicCroupierCardTableSettledSeed,
+    ]) {
       expect(findings({ turns: [] }, [...seed.messages]), seed.name).toEqual([])
     }
   })

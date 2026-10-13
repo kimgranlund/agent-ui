@@ -78,7 +78,7 @@ describe('playingCardFactory — applyProp (direct prop pass-through, ADR-0225)'
 describe('cardTableFactory: the CardTable composite (ADR-0243)', () => {
   it('CardTable mints a ui-card root and names every tag it mints inside it (ADR-0233)', () => {
     expect(cardTableFactory.tag).toBe('ui-card')
-    expect(cardTableFactory.uses).toEqual(['ui-badge', 'ui-playing-card', 'ui-text'])
+    expect(cardTableFactory.uses).toEqual(['ui-badge', 'ui-button', 'ui-playing-card', 'ui-text', 'ui-text-field'])
     const el = cardTableFactory.create()
     expect(el.tagName.toLowerCase()).toBe('ui-card')
     expect(el.parentNode).toBeNull()
@@ -91,8 +91,8 @@ describe('cardTableFactory: the CardTable composite (ADR-0243)', () => {
     expect(el.innerHTML).toBe(before)
   })
 
-  it('CardTable has no value mark and no submitGate: a display composite', () => {
-    expect(cardTableFactory.value).toBeUndefined()
+  it('CardTable: the value mark is the two-way bet bind read through a2uiCardTableBet, with no submitGate (Amendment 3)', () => {
+    expect(cardTableFactory.value).toEqual({ prop: 'bet', event: 'change', readProp: 'a2uiCardTableBet' })
     expect(cardTableFactory.submitGate).toBeUndefined()
   })
 })
