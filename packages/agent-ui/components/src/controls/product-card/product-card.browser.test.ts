@@ -1,6 +1,10 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { userEvent } from 'vitest/browser'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import type { UIProductCardElement } from '@agent-ui/components/controls/product-card'
+
+/** The derived root register (product / sm / md, ADR-0245). */
+const ROOT = resolve('product', 'sm', 'md')
 
 // product-card.browser.test.ts: cross-engine (Chromium + WebKit) rendered truth for ui-product-card
 // (ADR-0243). jsdom pins the declared rules (product-card.test.ts); this proves the geometry: the 16:10
@@ -74,11 +78,11 @@ describe('ui-product-card: rendered geometry', () => {
     expect(part(card, 'subtitle').getBoundingClientRect().top - part(card, 'title').getBoundingClientRect().bottom).toBeCloseTo(8, 0)
   })
 
-  it('the action sits at the derived 28px height, the 13px control font (ADR-0243 Amendment 2)', async () => {
+  it('the action sits at the derived 24px height, the 12px control font (ADR-0243 Amendment 2)', async () => {
     const { card } = await mount(`<ui-product-card title="Suite" price="$312" action-label="Book" action='{"action":"book"}'></ui-product-card>`)
     const action = part(card, 'action')
-    expect(action.getBoundingClientRect().height).toBe(28)
-    expect(getComputedStyle(action).fontSize).toBe('13px')
+    expect(action.getBoundingClientRect().height).toBe(ROOT.h)
+    expect(getComputedStyle(action).fontSize).toBe(`${ROOT.type.control}px`)
   })
 
   it('selected draws a 2px primary outline and a transparent ghost action; disabled greys the media and fades the action', async () => {
@@ -122,8 +126,8 @@ describe('ui-product-card: rendered geometry', () => {
 })
 
 // ADR-0245 geometry pin (clause 10c): the migrated tokens read the derived foundation inside an opt-in
-// data-tier region and today's value outside it. Values are scale.mjs resolve('product', 'sm', 'md'): n 7,
-// height 28, c 2, icon box 14, radius 7. Lengths are read through layout (`inline-size: var(<token>)`).
+// data-tier region and today's value outside it. Values are scale.mjs resolve('product', 'sm', 'md'): n 6,
+// height 24, c 2, icon box 12, radius 6. Lengths are read through layout (`inline-size: var(<token>)`).
 const lengthOf = (host: HTMLElement, token: string): number => {
   const probe = document.createElement('span')
   probe.style.cssText = `position:absolute;block-size:1px;inline-size:var(${token});`
@@ -145,9 +149,9 @@ describe('ui-product-card: ADR-0245 derived foundations, dark launch', () => {
   it('reads today\'s value outside a data-tier region and the derived value inside', () => {
     const { out, inside } = foundationsPair('ui-product-card', 'title="Suite" price="$312" selected')
     expect(lengthOf(out, '--ui-product-card-action-height')).toBe(36)
-    expect(lengthOf(inside, '--ui-product-card-action-height')).toBe(28)
+    expect(lengthOf(inside, '--ui-product-card-action-height')).toBe(ROOT.h)
     expect(lengthOf(out, '--ui-product-card-icon-size')).toBe(20)
-    expect(lengthOf(inside, '--ui-product-card-icon-size')).toBe(14)
+    expect(lengthOf(inside, '--ui-product-card-icon-size')).toBe(ROOT.icon)
     for (const el of [out, inside]) {
       expect(lengthOf(el, '--ui-product-card-rating-star-gap')).toBe(2)
       expect(lengthOf(el, '--ui-product-card-selected-outline-width')).toBe(2)

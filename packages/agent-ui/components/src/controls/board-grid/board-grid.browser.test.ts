@@ -1,9 +1,13 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { userEvent } from 'vitest/browser'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 import '@agent-ui/components/foundation-styles.css'
 import './board-grid.css'
 import './board-grid.ts'
+
+/** The derived root register (product / sm / md, ADR-0245). */
+const ROOT = resolve('product', 'sm', 'md')
 
 // board-grid.browser.test.ts: real-engine truth for ui-board-grid (ADR-0243), Chromium + WebKit. The
 // whole-shape law: the board's own bounding box in a realistic container, square cells at least 34px,
@@ -61,15 +65,17 @@ describe('ui-board-grid: whole shape', () => {
     expect(rect(all[9]!).top).toBeGreaterThan(rect(all[0]!).bottom - 0.5)
   })
 
-  it('a board with room paints the derived 42px cell; a narrow one gives way to the 34px floor and no further (ADR-0243 Amendment 2)', () => {
+  it('a board with room paints the derived 36px cell; a narrow one gives way to the 34px floor and no further (ADR-0243 Amendment 2)', () => {
+    // 6n at the root md (n 6): height 24 + icon box 12
+    const cell = ROOT.h + ROOT.icon
     const roomy = mount('<ui-board-grid rows="6" cols="6"></ui-board-grid>')
     for (const c of cells(roomy)) {
-      expect(rect(c).width).toBeCloseTo(42, 1)
-      expect(rect(c).height).toBeCloseTo(42, 1)
+      expect(rect(c).width).toBeCloseTo(cell, 1)
+      expect(rect(c).height).toBeCloseTo(cell, 1)
     }
-    const narrow = mount('<ui-board-grid rows="2" cols="8"></ui-board-grid>') // 8 x 42 + gaps overflows the 328px column
+    const narrow = mount('<ui-board-grid rows="2" cols="9"></ui-board-grid>') // 9 x 36 + gaps overflows the 328px column
     const side = rect(cells(narrow)[0]!).width
-    expect(side).toBeLessThan(42)
+    expect(side).toBeLessThan(cell)
     expect(side).toBeGreaterThanOrEqual(34)
     const tight = mount('<ui-board-grid rows="1" cols="12"></ui-board-grid>') // even 12 x 34 overflows: the floor holds
     for (const c of cells(tight)) expect(rect(c).width).toBeCloseTo(34, 1)
@@ -149,8 +155,8 @@ describe('ui-board-grid: keyboard with real focus', () => {
 })
 
 // ADR-0245 geometry pin (clause 10c): the migrated tokens read the derived foundation inside an opt-in
-// data-tier region and today's value outside it. Values are scale.mjs resolve('product', 'sm', 'md'): n 7,
-// height 28, c 2, icon box 14, radius 7. Lengths are read through layout (`inline-size: var(<token>)`).
+// data-tier region and today's value outside it. Values are scale.mjs resolve('product', 'sm', 'md'): n 6,
+// height 24, c 2, icon box 12, radius 6. Lengths are read through layout (`inline-size: var(<token>)`).
 const lengthOf = (host: HTMLElement, token: string): number => {
   const probe = document.createElement('span')
   probe.style.cssText = `position:absolute;block-size:1px;inline-size:var(${token});`
@@ -172,6 +178,6 @@ describe('ui-board-grid: ADR-0245 derived foundations, dark launch', () => {
   it('reads today\'s value outside a data-tier region and the derived value inside', () => {
     const { out, inside } = foundationsPair('ui-board-grid', 'rows="3" cols="3"')
     expect(lengthOf(out, '--ui-board-grid-cell-size')).toBe(46)
-    expect(lengthOf(inside, '--ui-board-grid-cell-size')).toBe(42) // 6n = height 28 + icon box 14
+    expect(lengthOf(inside, '--ui-board-grid-cell-size')).toBe(ROOT.h + ROOT.icon) // 6n = height 24 + icon box 12
   })
 })

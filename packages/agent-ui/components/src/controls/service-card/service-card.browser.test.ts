@@ -1,6 +1,10 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp, userEvent } from 'vitest/browser'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import type { UIServiceCardElement } from '@agent-ui/components/controls/service-card'
+
+/** The derived root register (product / sm / md, ADR-0245). */
+const ROOT = resolve('product', 'sm', 'md')
 
 // service-card.browser.test.ts — the cross-engine (Chromium + WebKit) browser-truth probes for
 // ui-service-card (ADR-0224). jsdom cannot prove paint/geometry/WHCM (service-card.test.ts pins the
@@ -217,8 +221,8 @@ describe('ui-service-card forced-colors (ADR-0224 cl.6)', () => {
 })
 
 // ADR-0245 geometry pin (clause 10c): the migrated tokens read the derived foundation inside an opt-in
-// data-tier region and today's value outside it. Values are scale.mjs resolve('product', 'sm', 'md'): n 7,
-// height 28, c 2, icon box 14, radius 7. Lengths are read through layout (`inline-size: var(<token>)`).
+// data-tier region and today's value outside it. Values are scale.mjs resolve('product', 'sm', 'md'): n 6,
+// height 24, c 2, icon box 12, radius 6. Lengths are read through layout (`inline-size: var(<token>)`).
 const lengthOf = (host: HTMLElement, token: string): number => {
   const probe = document.createElement('span')
   probe.style.cssText = `position:absolute;block-size:1px;inline-size:var(${token});`
@@ -240,8 +244,8 @@ describe('ui-service-card: ADR-0245 derived foundations, dark launch', () => {
   it('reads today\'s value outside a data-tier region and the derived value inside', () => {
     const { out, inside } = foundationsPair('ui-service-card', 'name="Claims Agent" available')
     expect(lengthOf(out, '--ui-service-card-action-height')).toBe(24)
-    expect(lengthOf(inside, '--ui-service-card-action-height')).toBe(28)
+    expect(lengthOf(inside, '--ui-service-card-action-height')).toBe(ROOT.h)
     expect(lengthOf(out, '--ui-service-card-action-gap')).toBe(lengthOf(out, '--md-sys-gap-sm'))
-    expect(lengthOf(inside, '--ui-service-card-action-gap')).toBe(7)
+    expect(lengthOf(inside, '--ui-service-card-action-gap')).toBe(ROOT.n)
   })
 })

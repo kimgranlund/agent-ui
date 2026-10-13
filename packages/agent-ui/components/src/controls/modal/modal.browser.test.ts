@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp, page, userEvent } from 'vitest/browser'
 import type { UIModalElement } from './modal.ts'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 // G9 s9 (browser leg) — the CROSS-ENGINE platform-truth smoke for ui-modal (decomp g9-containers node s9).
 // This is where the native <dialog> behaviour is PROVEN — none of it resolves in jsdom (which ships a bare
@@ -303,7 +304,7 @@ describe('ui-modal — [box-model] the dialog is a padding-less box; region padd
     }
   })
 
-  it('REVISED 2026-07-04: header/content/footer are now INSET — uniform 7px gutters (derived n), never doubled between regions', async () => {
+  it('REVISED 2026-07-04: header/content/footer are now INSET — uniform n gutters (derived n), never doubled between regions', async () => {
     // The dialog is a [data-box] flow-root BFC (container-box.css) — adjacent children's margins COLLAPSE to
     // one inset, so a naive-margin doubling bug is NOT reachable here the way it is for ui-card's CSS Grid; this
     // is the rendered proof that modal genuinely gets the shared model's collapsing behaviour for free.
@@ -332,11 +333,11 @@ describe('ui-modal — [box-model] the dialog is a padding-less box; region padd
       ['content→footer', contentToFooter],
       ['footer→frame', footerToFrame],
     ] as const) {
-      expect(gap, `${server.browser}: ${label} gap is not ~7px (got ${gap})`).toBeCloseTo(7, 0)
+      expect(gap, `${server.browser}: ${label} gap is not ~n px (got ${gap})`).toBeCloseTo(resolve('product', 'sm', 'md').n, 0)
     }
   })
 
-  it('REVISED 2026-07-04: the sticky header keeps its own 7px inset margin once scrolled (derived n) (margin survives sticky)', async () => {
+  it('REVISED 2026-07-04: the sticky header keeps its own n inset margin once scrolled (derived n) (margin survives sticky)', async () => {
     // modal.css gives the dialog PART itself `overflow: auto` + `max-block-size: 85svh` — the header (a direct
     // child of the dialog, per container-box.css's [data-box] region pattern) sticks within THAT scrollport, so
     // a very tall content region (well beyond any reasonable viewport) forces the dialog itself to scroll.
@@ -353,8 +354,8 @@ describe('ui-modal — [box-model] the dialog is a padding-less box; region padd
     const restingGap = headerRect.top - dialogRect.top - borderTop
     expect(
       restingGap,
-      `${server.browser}: the sticky header's own 7px margin did not survive scrolling (measured ${restingGap})`,
-    ).toBeCloseTo(7, 0)
+      `${server.browser}: the sticky header's own n margin did not survive scrolling (measured ${restingGap})`,
+    ).toBeCloseTo(resolve('product', 'sm', 'md').n, 0)
   })
 })
 
