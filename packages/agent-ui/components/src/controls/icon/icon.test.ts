@@ -40,6 +40,37 @@ describe('UIIconElement — upgrade + typed props', () => {
   })
 })
 
+describe('UIIconElement — symbol, and glyph as its deprecated alias (ADR-0245 cl.4)', () => {
+  it('symbol defaults to empty and resolves + injects the pack svg', () => {
+    const el = new ProbeIcon()
+    expect(el.symbol).toBe('')
+    el.symbol = 'caret-down'
+    document.body.append(el)
+    expect(el.querySelector('path')?.getAttribute('data-icon')).toBe('caret-down')
+    el.remove()
+  })
+
+  it('the symbol attribute drives the same injection', () => {
+    const wrap = document.createElement('div')
+    wrap.innerHTML = '<ui-icon symbol="eye"></ui-icon>'
+    document.body.append(wrap)
+    expect(wrap.querySelector('path')?.getAttribute('data-icon')).toBe('eye')
+    wrap.remove()
+  })
+
+  it('symbol wins over the alias; the alias is read only while symbol is empty', async () => {
+    const el = new ProbeIcon()
+    el.glyph = 'x'
+    el.symbol = 'check'
+    document.body.append(el)
+    expect(el.querySelector('path')?.getAttribute('data-icon')).toBe('check')
+    el.symbol = ''
+    await el.updateComplete
+    expect(el.querySelector('path')?.getAttribute('data-icon')).toBe('x')
+    el.remove()
+  })
+})
+
 describe('UIIconElement — glyph-driven svg injection (LLD-C5)', () => {
   it('a set glyph resolves + injects the pack svg synchronously on connect', () => {
     const el = new ProbeIcon()

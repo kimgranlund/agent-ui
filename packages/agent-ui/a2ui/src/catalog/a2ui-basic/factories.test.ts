@@ -110,10 +110,10 @@ describe('a2ui-basic factories — Icon (bespoke, ICON_NAME_TABLE resolution gat
     expect(Object.keys(ICON_NAME_TABLE).length).toBe(59)
   })
 
-  it('name → glyph (through the table)', () => {
+  it('name → symbol (through the table; ADR-0245 cl.4 mapsTo)', () => {
     const el = iconFactory.create()
     iconFactory.applyProp(el, 'name', 'accountCircle')
-    expect((el as unknown as { glyph?: unknown }).glyph).toBe('user-circle')
+    expect((el as unknown as { symbol?: unknown }).symbol).toBe('user-circle')
   })
 })
 

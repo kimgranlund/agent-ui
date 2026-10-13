@@ -169,6 +169,11 @@ export const NAV: readonly NavGroup[] = [
       { href: './icon-doc.html', label: 'API' },
     ],
   },
+  // ADR-0245 (T-0093): the functional-mark display atom beside ui-icon, tier=display {doc}.
+  {
+    label: 'ui-glyph',
+    links: [{ href: './glyph-doc.html', label: 'API' }],
+  },
   {
     // The Wave M1 chart family (ADR-0107) — two Display-class axis-free charts, each a single descriptor-derived
     // API doc (tier=display ⇒ {doc} only, the ui-text/ui-icon precedent; display leaves are per-component groups),
@@ -981,7 +986,7 @@ export const NAV_TAXONOMY: readonly NavTaxonomyGroup[] = [
       'ui-swatch', 'ui-ramp', 'ui-ladder',
     ],
   },
-  { label: 'Typography & media primitives', tags: ['ui-text', 'ui-icon', 'ui-image', 'ui-video', 'ui-audio'] },
+  { label: 'Typography & media primitives', tags: ['ui-text', 'ui-icon', 'ui-glyph', 'ui-image', 'ui-video', 'ui-audio'] },
   {
     label: 'Layout primitives',
     tags: [

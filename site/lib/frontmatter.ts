@@ -20,6 +20,8 @@ import buttonMd from '../../packages/agent-ui/components/src/controls/button/but
 import toggleMd from '../../packages/agent-ui/components/src/controls/toggle/toggle.md?raw'
 import textMd from '../../packages/agent-ui/components/src/controls/text/text.md?raw'
 import iconMd from '../../packages/agent-ui/components/src/controls/icon/icon.md?raw'
+// ADR-0245 (T-0093) - ui-glyph, the functional-mark display atom beside ui-icon (tier=display => {doc}).
+import glyphMd from '../../packages/agent-ui/components/src/controls/glyph/glyph.md?raw'
 import textFieldMd from '../../packages/agent-ui/components/src/controls/text-field/text-field.md?raw'
 // ADR-0134 — ui-textarea, the multi-line FACE sibling of ui-text-field (tier=control ⇒ {permutations, states, doc}).
 import textareaMd from '../../packages/agent-ui/components/src/controls/textarea/textarea.md?raw'
@@ -189,6 +191,8 @@ export const loadButtonDoc = (): ComponentDoc => parseDoc(buttonMd)
 export const loadToggleDoc = (): ComponentDoc => parseDoc(toggleMd)
 export const loadTextDoc = (): ComponentDoc => parseDoc(textMd)
 export const loadIconDoc = (): ComponentDoc => parseDoc(iconMd)
+// ADR-0245 (T-0093) - ui-glyph, the functional-mark display atom beside ui-icon (tier=display => {doc}).
+export const loadGlyphDoc = (): ComponentDoc => parseDoc(glyphMd)
 export const loadTextFieldDoc = (): ComponentDoc => parseDoc(textFieldMd)
 export const loadTextareaDoc = (): ComponentDoc => parseDoc(textareaMd)
 export const loadRowDoc = (): ComponentDoc => parseDoc(rowMd)

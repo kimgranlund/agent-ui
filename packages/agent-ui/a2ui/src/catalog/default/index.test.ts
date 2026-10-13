@@ -2001,7 +2001,7 @@ describe('default catalog — Button icon mechanism (ADR-0226, GH #1504)', () =>
     expect(defaultCatalog.components.Button.properties.icon).toEqual({
       type: { type: 'string' },
       bindable: true,
-      mapsTo: 'glyph',
+      mapsTo: 'symbol',
       requires: ['label'],
     })
     expect(defaultCatalog.components.Button.properties.iconOnly).toEqual({

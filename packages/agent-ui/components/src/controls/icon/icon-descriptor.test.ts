@@ -23,7 +23,7 @@ const css = readFileSync(`${ICN}/icon.css`, 'utf8') as string
 
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
-const ATTR_NAMES = ['glyph', 'label']
+const ATTR_NAMES = ['symbol', 'glyph', 'label']
 
 describe('icon.md descriptor — structural validity (s8)', () => {
   it('has a leading frontmatter fence and a prose body', () => {
@@ -55,12 +55,12 @@ describe('icon.md descriptor — structural validity (s8)', () => {
 })
 
 describe('icon.md descriptor — contract↔props trip-wire (s10)', () => {
-  it('attributes[] is a faithful bijection with UIIconElement.props (name, label)', () => {
+  it('attributes[] is a faithful bijection with UIIconElement.props (symbol, glyph, label)', () => {
     expect(parsed.attributes.map((a) => a.name)).toEqual(ATTR_NAMES)
     expect(compareDescriptorToProps(parsed.attributes, UIIconElement.props)).toEqual([])
   })
 
-  it('both attributes are string type, default empty string; only label reflects (TKT-0069 item 2 ruling)', () => {
+  it('every attribute is string type, default empty string; only label reflects (TKT-0069 item 2 ruling)', () => {
     for (const name of ATTR_NAMES) {
       const a = parsed.attributes.find((x) => x.name === name)
       expect(a?.type, `${name}.type`).toBe('string')

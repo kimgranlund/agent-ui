@@ -118,6 +118,7 @@ function scanSheet(name: string, css: string): Violation[] {
 /** Clause 4 — R4 exemptions: hosts whose inline-level posture or floor IS their ratified nature. */
 const R4_EXEMPT_INLINE = new Set([
   'badge', 'icon', 'avatar', 'swatch', 'sparkline', 'swiper-label', // text-flow / display atoms
+  'glyph', // ADR-0245 cl.4: the functional-mark display atom, minted beside ui-icon under the same exemption
   'otp-field', 'segment', // interaction-geometry leaves (clause 4)
 ])
 /** Clause 4 — R4 floor exemptions on the HOST's own first block (floating-surface / interaction floors). */

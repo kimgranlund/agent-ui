@@ -17,7 +17,7 @@
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "textContent" },
         "variant": { "type": { "type": "string", "enum": ["solid", "soft", "ghost"] }, "mapsTo": "variant" },
         "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
-        "icon": { "type": { "type": "string" }, "bindable": true, "mapsTo": "glyph", "requires": ["label"] },
+        "icon": { "type": { "type": "string" }, "bindable": true, "mapsTo": "symbol", "requires": ["label"] },
         "iconOnly": { "type": { "type": "boolean" }, "mapsTo": "iconOnly", "requires": ["icon"] },
         "action": {
           "type": {
@@ -229,7 +229,7 @@
 
     "Icon": {
       "properties": {
-        "name": { "type": { "type": "string" }, "bindable": true, "mapsTo": "glyph" },
+        "name": { "type": { "type": "string" }, "bindable": true, "mapsTo": "symbol" },
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
         "slot": { "type": { "type": "string", "enum": ["leading", "trailing", "summary"] }, "mapsTo": "slot" }
       }

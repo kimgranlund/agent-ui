@@ -181,7 +181,7 @@ export const iconFactory: WidgetFactory = withBasicCommon({
   tag: 'ui-icon',
   create: () => document.createElement('ui-icon'),
   applyProp: (el, prop, value) => {
-    if (prop === 'name') setProp(el, 'glyph', ICON_NAME_TABLE[value as string] ?? value)
+    if (prop === 'name') setProp(el, 'symbol', ICON_NAME_TABLE[value as string] ?? value)
     else setAttr(el, prop, value)
   },
 })

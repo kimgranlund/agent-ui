@@ -42,6 +42,7 @@ export const CONTROLS: Readonly<Record<string, ControlRecord>> = {
   'ui-form-provider': { tag: 'ui-form-provider', load: () => import('./form-provider/form-provider.ts'), css: './form-provider/form-provider.css', uses: [] },
   'ui-game-hud': { tag: 'ui-game-hud', load: () => import('./game-hud/game-hud.ts'), css: './game-hud/game-hud.css', uses: ['ui-badge'] },
   'ui-gauge': { tag: 'ui-gauge', load: () => import('./gauge/gauge.ts'), css: './gauge/gauge.css', uses: [] },
+  'ui-glyph': { tag: 'ui-glyph', load: () => import('./glyph/glyph.ts'), css: './glyph/glyph.css', uses: [] },
   'ui-grid': { tag: 'ui-grid', load: () => import('./grid/grid.ts'), css: './grid/grid.css', uses: [] },
   'ui-icon': { tag: 'ui-icon', load: () => import('./icon/icon.ts'), css: './icon/icon.css', uses: [] },
   'ui-image': { tag: 'ui-image', load: () => import('./image/image.ts'), css: './image/image.css', uses: [] },

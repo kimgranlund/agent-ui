@@ -36,6 +36,7 @@
 @import './controls/form-provider/form-provider.css';
 @import './controls/game-hud/game-hud.css';
 @import './controls/gauge/gauge.css';
+@import './controls/glyph/glyph.css';
 @import './controls/grid/grid.css';
 @import './controls/icon/icon.css';
 @import './controls/image/image.css';

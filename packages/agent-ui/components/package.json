@@ -76,6 +76,8 @@
     "./controls/game-hud.css": "./src/controls/game-hud/game-hud.css",
     "./controls/gauge": "./src/controls/gauge/gauge.ts",
     "./controls/gauge.css": "./src/controls/gauge/gauge.css",
+    "./controls/glyph": "./src/controls/glyph/glyph.ts",
+    "./controls/glyph.css": "./src/controls/glyph/glyph.css",
     "./controls/grid": "./src/controls/grid/grid.ts",
     "./controls/grid.css": "./src/controls/grid/grid.css",
     "./controls/icon": "./src/controls/icon/icon.ts",
