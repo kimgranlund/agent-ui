@@ -177,7 +177,7 @@ geometry:
   paddingInline: calc(var(--ui-product-card-inset) + var(--ui-product-card-pad-inline))  # the body: 6px box inset + 12px region inline padding (ADR-0046 Amendment 7)
   paddingBlock: calc(var(--ui-product-card-inset) + var(--ui-product-card-pad-block))    # the body: 6px box inset + 6px region block padding
   rowGap: var(--ui-product-card-row-gap)               # = --ui-box-gap (8px) between the body's rows
-  actionHeight: var(--ui-product-card-action-height)   # = --md-sys-height-lg (ADR-0243 Amendment 2, the approved mockup), the one control-height row a pattern-tier card owns
+  actionHeight: var(--ui-product-card-action-height)   # = --md-sys-height (4n) inside a data-tier region, else --md-sys-height-lg (ADR-0243 Amendment 2, ADR-0245 cl.10a), the one control-height row a pattern-tier card owns
   radius: var(--ui-product-card-radius)                # = --md-sys-shape-corner-base
   mediaAspect: 16 / 10
   note: Block-level fill by default, no intrinsic width (ADR-0223); `inline` flips to inline-flex and hugs. The body spacing is the ADR-0046 box model in fixed rem (no density scaling), the shared --ui-box-* tokens, so the body ink sits 19px inline from the outer edge like a stock card region; the icon header aligns to it. As a surface root the card fills the canvas width (applyRootStretch, ADR-0046 Amendment 7).

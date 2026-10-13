@@ -86,9 +86,9 @@
   /* The action row — takes the CONTROL height (ADR-0224 cl.5's "pattern tier" clause: the one
      control-height row a pattern-tier surface owns), the button.css `sm` ramp (a trailing pill, not the
      card's own full-height lever). */
-  --ui-service-card-action-height: var(--md-sys-height-sm);
-  --ui-service-card-action-font: var(--md-sys-font-sm);
-  --ui-service-card-action-gap: var(--md-sys-gap-sm); /* the → glyph ↔ label gap */
+  --ui-service-card-action-height: var(--md-sys-height, var(--md-sys-height-sm));
+  --ui-service-card-action-font: var(--md-sys-type-control, var(--md-sys-font-sm));
+  --ui-service-card-action-gap: var(--md-sys-inset, var(--md-sys-gap-sm)); /* the → glyph ↔ label gap */
   --ui-service-card-action-bg: var(--md-sys-color-neutral-surface-higher); /* neutral TONAL chip (Amendment cl.A3) — status colour stays on the dot alone */
   --ui-service-card-action-bg-hover: var(--md-sys-color-neutral-surface-highest);
   --ui-service-card-action-bg-active: var(--md-sys-color-neutral-surface-highest);

@@ -104,7 +104,7 @@ export class UIProductCardElement extends UIElement {
         this.#image.alt = this.imageAlt
         if (this.#image.parentNode !== media) media.replaceChildren(this.#image)
       } else {
-        this.#icon.glyph = icon
+        this.#icon.symbol = icon
         if (this.#icon.parentNode !== media) media.replaceChildren(this.#icon)
       }
       if (media.parentNode !== this) this.insertBefore(media, this.#body)

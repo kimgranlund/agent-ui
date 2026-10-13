@@ -4909,7 +4909,7 @@ bindable boolean, `available`. It extends `UIElement` (not a container, not form
   action-label="Open"
 >
   <ui-button slot="menu" icon-only variant="ghost" aria-label="More actions">
-    <ui-icon glyph="dots-three"></ui-icon>
+    <ui-icon symbol="dots-three"></ui-icon>
   </ui-button>
 </ui-service-card>
 ```

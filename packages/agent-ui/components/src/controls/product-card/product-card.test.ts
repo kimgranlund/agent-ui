@@ -100,9 +100,9 @@ describe('UIProductCardElement: anatomy and presence', () => {
   it('icon header: no image plus icon renders a ui-icon in media and no img', async () => {
     const el = await make({ title: 'Astrolabe', icon: 'star' })
     const media = q(el, 'media')!
-    const icon = media.querySelector('[data-part="icon"]') as HTMLElement & { glyph: string }
+    const icon = media.querySelector('[data-part="icon"]') as HTMLElement & { symbol: string }
     expect(icon.tagName).toBe('UI-ICON')
-    expect(icon.glyph).toBe('star')
+    expect(icon.symbol).toBe('star')
     expect(media.querySelector('img')).toBeNull()
   })
 
