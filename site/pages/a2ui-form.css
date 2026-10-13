@@ -24,7 +24,7 @@
   flex-direction: column;
   padding: 1.1rem 1.2rem 1.3rem;
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: 12px;
+  border-radius: var(--md-sys-widget-radius, 12px);
   background: var(--md-sys-color-neutral-surface-low);
 }
 
@@ -116,7 +116,7 @@
   display: grid;
   padding: 1.3rem 1.2rem;
   border: 1px dashed var(--md-sys-color-neutral-outline);
-  border-radius: 8px;
+  border-radius: var(--md-sys-group-radius, 8px);
   background: var(--md-sys-color-neutral-surface);
   /* ADR-0100 cl.2 — the A2UI mount boundary (a2ui-form.ts's `host.mount()` target): establishes the query
    * container the fleet's layout primitives resolve `@container` reflow against. Qualifies under the law

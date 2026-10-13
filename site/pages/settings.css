@@ -11,15 +11,15 @@
   overflow: hidden;
   padding: 0.5rem;
   border: 1px dashed var(--md-sys-color-neutral-outline);
-  border-radius: 14px;
+  border-radius: var(--md-sys-widget-radius, 14px);
 }
 
 .settings-demo {
   inline-size: 100%;
-  block-size: 340px;
+  block-size: 21.25rem;
   margin: 0;
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: 12px;
+  border-radius: var(--md-sys-widget-radius, 12px);
   overflow: hidden;
   background: var(--md-sys-color-neutral-surface-lowest);
 }

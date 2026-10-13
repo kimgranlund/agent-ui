@@ -4,10 +4,10 @@
  * surface-host.css). Every colour is a --md-sys-color-* role, so the demo tracks light/dark. */
 
 .sh-frame {
-  block-size: 220px;
+  block-size: 13.75rem;
   margin-block: var(--md-sys-space-lg) var(--md-sys-space-sm);
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: 12px;
+  border-radius: var(--md-sys-widget-radius, 12px);
   overflow: hidden;
 }
 .sh-frame ui-surface-host {
@@ -21,7 +21,7 @@
   margin-block-end: var(--md-sys-space-sm);
   padding: 0.45rem 0.8rem;
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: 8px;
+  border-radius: var(--md-sys-group-radius, 8px);
   background: var(--md-sys-color-neutral-surface-low);
   color: var(--md-sys-color-neutral-on-surface);
   font-size: 0.82rem;
@@ -46,7 +46,7 @@
   overflow-y: auto;
   list-style: none;
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: 10px;
+  border-radius: var(--md-sys-group-radius, 10px);
   background: var(--md-sys-color-neutral-surface-lowest);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.76rem;

@@ -11,7 +11,7 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.9em;
   padding: 0.05em 0.35em;
-  border-radius: 5px;
+  border-radius: var(--md-sys-radius, 5px);
   background: var(--md-sys-color-neutral-surface-high);
   color: var(--md-sys-color-neutral-on-surface);
 }
@@ -29,7 +29,7 @@
   margin-block: var(--md-sys-space-sm) var(--md-sys-space-xl);
   padding: 0.9rem 1.1rem;
   overflow-x: auto;
-  border-radius: 10px;
+  border-radius: var(--md-sys-group-radius, 10px);
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
   background: var(--md-sys-color-neutral-surface-low);
   color: var(--md-sys-color-neutral-on-surface);
@@ -42,10 +42,10 @@
 /* A definite block-size makes the middle row's canvas visible; the frame + radius give the demo an edge.
  * ui-super-shell is already display:flex/container-type:inline-size from super-shell.css — we only frame it. */
 ui-super-shell.ss-demo {
-  block-size: 320px;
+  block-size: 20rem;
   margin-block: var(--md-sys-space-lg) 1.75rem;
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: 12px;
+  border-radius: var(--md-sys-widget-radius, 12px);
   /* min-size-floors census (GH #185 follow-up) — a dual-sided demo (sections 1/2/4 below) can pass
      through the 640-846px window where the shell's own fixed geometry (rails/panes) plus canvas's
      now-live floor exceed the reader's own column/window width — the shell's row then genuinely
@@ -62,7 +62,7 @@ ui-super-shell.ss-demo {
 }
 /* The nested (depth-2) demo needs more room for its own inner frame. */
 ui-super-shell.ss-demo--nested {
-  block-size: 420px;
+  block-size: 26.25rem;
 }
 /* The inner (depth-2) shell fills its content-slot wrapper instead of carrying its own fixed height. */
 /* GH #778 (D) — and its WIDTH too. The inner shell is a flex ITEM in `.ss-content-wrap`, but

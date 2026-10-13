@@ -7,7 +7,7 @@
 .genui-corpus-m3 {
   margin: 0 0 1.5rem;
   padding: 0.85rem 1rem;
-  border-radius: 8px;
+  border-radius: var(--md-sys-group-radius, 8px);
   background: var(--md-sys-color-neutral-surface-high);
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
 }

@@ -14,7 +14,7 @@
   gap: 0.6rem;
   padding: 1rem;
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: 10px;
+  border-radius: var(--md-sys-group-radius, 10px);
   background: var(--md-sys-color-neutral-surface);
 }
 
@@ -37,7 +37,7 @@
 .concept-card-facet {
   flex: none;
   padding: 0.1rem 0.5rem;
-  border-radius: 999px;
+  border-radius: 100vmax;
   background: var(--md-sys-color-neutral-surface-high);
   color: var(--md-sys-color-neutral-on-surface-variant);
   font-size: 0.68rem;
@@ -126,7 +126,7 @@
   margin: 0;
   padding: 0.55rem 0.7rem;
   border-inline-start: 3px solid var(--md-sys-color-danger-outline-variant);
-  border-radius: 6px;
+  border-radius: var(--md-sys-radius, 6px);
   background: var(--md-sys-color-danger-surface);
   color: var(--md-sys-color-danger-on-surface);
   font-size: 0.8rem;

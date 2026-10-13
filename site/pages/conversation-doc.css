@@ -4,10 +4,10 @@
  * their own {name}.css). Every colour is a --md-sys-color-* role, so the demo tracks light/dark. */
 
 .cvd-frame {
-  block-size: 420px;
+  block-size: 26.25rem;
   margin-block: var(--md-sys-space-lg) 1.75rem;
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: 12px;
+  border-radius: var(--md-sys-widget-radius, 12px);
   overflow: hidden;
 }
 .cvd-frame ui-conversation.cvd-conv {
