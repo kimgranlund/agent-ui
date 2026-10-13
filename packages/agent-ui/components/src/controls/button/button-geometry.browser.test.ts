@@ -75,13 +75,14 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
         heights.push(frameHeight(btn))
         fonts.push(fontPx(btn))
       }
-      // The control-band ramp @ scale 1 (geometry-sizing-spec §1): height 24·28·36, font 13·14·16.
-      expect(heights[0]).toBeCloseTo(24, 0)
-      expect(heights[1]).toBeCloseTo(28, 0)
-      expect(heights[2]).toBeCloseTo(36, 0)
-      expect(fonts[0]).toBeCloseTo(13, 0)
-      expect(fonts[1]).toBeCloseTo(14, 0)
-      expect(fonts[2]).toBeCloseTo(16, 0)
+      // The derived ramp at the root register (product / sm), ADR-0245 cl.3: height 4n, font = control type.
+      const ramp = (['sm', 'md', 'lg'] as const).map((s) => resolve('product', 'sm', s))
+      expect(heights[0]).toBeCloseTo(ramp[0].h, 0)
+      expect(heights[1]).toBeCloseTo(ramp[1].h, 0)
+      expect(heights[2]).toBeCloseTo(ramp[2].h, 0)
+      expect(fonts[0]).toBeCloseTo(ramp[0].type.control, 0)
+      expect(fonts[1]).toBeCloseTo(ramp[1].type.control, 0)
+      expect(fonts[2]).toBeCloseTo(ramp[2].type.control, 0)
       // anti-vacuous: the three steps are genuinely DISTINCT px — the [size] lever truly moved the frame.
       expect(allDistinct(heights), `heights did not change across [size]: ${heights.join()}`).toBe(true)
       expect(allDistinct(fonts), `fonts did not change across [size]: ${fonts.join()}`).toBe(true)
@@ -178,7 +179,7 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
     // is STRICTLY smaller than its icon-sized cell (18) — NOT the named --ui-ind oversize bug on the lead edge.
     const cs = getComputedStyle(caret)
     const caretContent = caret.getBoundingClientRect().width - px(cs.paddingInlineStart) - px(cs.paddingInlineEnd)
-    expect(caretContent, 'leading caret content box is not font-sized (the --ui-ind oversize bug on the leading edge)').toBeCloseTo(font, 0)
+    expect(caretContent, 'leading caret content box is not glyph-sized (the --ui-ind oversize bug on the leading edge)').toBeCloseTo(resolve('product', 'sm', 'md').glyph, 0)
     expect(caretContent, 'leading caret glyph is not strictly smaller than its icon-sized cell').toBeLessThan(iconCell)
     expect(font, 'font is not strictly smaller than the icon cell').toBeLessThan(iconCell)
   })
