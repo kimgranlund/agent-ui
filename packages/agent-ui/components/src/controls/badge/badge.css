@@ -59,6 +59,16 @@
   --ui-badge-outline: var(--md-sys-color-neutral-outline-variant);
 }
 
+/* ADR-0245 cl.3: the badge has no size axis and sits at its context n. foundations.gen.css steps n on ANY
+   [size] element, so a stray size attribute would move the box (a lg badge measured 16, not the context 14);
+   here the size step is handed back to the parent's on every badge (a no-op on one without the attribute).
+   The type selector (0,1,1) outranks the generated :is([size='…']) step (0,1,0); data-size, the region axis,
+   is left alone. */
+ui-badge:not([data-size]) {
+  --md-sys-size-z: inherit;
+  --md-sys-title-bump: inherit;
+}
+
 /* [intent] → the colour channel repoint (SPEC-R14 AC3 defaults, build-time AA-probe-gated per intent ×
    light/dark — the -on-surface-variant / -container pairing was flagged as a likely AA casualty at design
    time). MEASURED (badge.browser.test.ts, both engines): 7.10–7.62:1 across all four intents × both
