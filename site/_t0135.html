@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>t0135 shot</title></head>
+  <body style="margin:0;padding:16px;background:var(--md-sys-color-neutral-background, Canvas)">
+    <div id="mount" style="max-inline-size:480px"></div>
+    <script type="module">
+      import '@agent-ui/shared/tokens.css'
+      import '@agent-ui/components/foundation-styles.css'
+      import '@agent-ui/components/all.css'
+      import '@agent-ui/components/all'
+      import { createRenderer } from '@agent-ui/a2ui'
+      import { personaExemplarSeeds } from '@agent-ui/a2ui/examples'
+      const seed = personaExemplarSeeds.find((s) => s.name === 'persona-concierge-stay-details')
+      const r = createRenderer()
+      r.mount(document.getElementById('mount'))
+      await r.preload(seed.catalogId)
+      for (const m of seed.messages) r.ingestMessage(m)
+      document.body.setAttribute('data-ready', '')
+    </script>
+  </body>
+</html>
