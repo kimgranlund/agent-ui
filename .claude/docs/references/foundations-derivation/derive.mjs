@@ -2,7 +2,8 @@
 // implementation. Sections 1 to 10 (the ADR body and its appendices, frozen) run on scale-v1.mjs, the copy the
 // cut shipped (sha256 eca32879...); section 11 on (Amendment 3) runs on scale.mjs, the byte copy of the skill's
 // v2 ~/.claude/skills/mathematical-design-system/scale.mjs (sha256 3c319761...), and compares v2 against v1.
-// Section 18 (Amendment 4, T-0122) runs on the same v2 copy and gives the px the control rule moves per control.
+// Section 18 (Amendment 4, T-0122) runs on the same v2 copy and gives the px the control rule moves per control;
+// section 19 (Amendment 5, T-0134) gives the radii the pill moves.
 // v2 renamed keys: inset and radius are control.margin and control.radius, layout is page, the kicker roles are
 // sectionLabel and groupLabel, and the component sizes sit under parts.
 // "Today" values are read off the shipped stylesheets (file:line in the ADR appendix).
@@ -298,5 +299,23 @@ p('|---|---|---|---|');
 }
 p(`- New tokens: \`--md-sys-label-inset\` (n - c: ${v2.map((r) => r.labelMargin).join(' / ')}) and the chip level \`--md-sys-chip-{margin,gutter,radius}\` (${v2.map((r) => `${r.chip.margin} / ${r.chip.gutter} / ${r.chip.radius}`).join(' · ')}) at the root sm · md · lg.`);
 p(`- The identity the rule rests on: gutter c + label inset (n - c) = margin n, so an icon stays n from the edge and n from the text while the text edge is 2n - c: ${v2.map(edge).join(' / ')} at the root, 12 at n 7.`);
+
+// ---- Amendment 5: everything pill (T-0134) ----------------------------------------------------------------
+p('');
+p('## 19. Amendment 5: every single-line control and chip takes radius h/2, panels nest concentrically, sm · md · lg');
+p('scale.mjs is unchanged; the pill is a derived exception the generator emits beside it (`--md-sys-control-radius`, and `--md-sys-chip-radius` moved to the chip pill).');
+p('| control | quantity | rule, before → after | sm · md · lg |');
+p('|---|---|---|---|');
+{
+  const pill = v2.map((r) => r.h / 2), chipPill = v2.map((r) => r.n + r.c);
+  const row = (control, quantity, rule, a, b) => p(`| ${control} | ${quantity} | ${rule} | ${cmp(a, b)} |`);
+  row('text-field, select trigger, combo-box, otp-field cell', 'radius', 'n → 2n (h/2)', v2.map((r) => r.control.radius), pill);
+  row('textarea, ui-code-editor', 'radius', 'n → 2n (the single-line control radius)', v2.map((r) => r.control.radius), pill);
+  row('menu, select, combo-box and multi-select rows', 'radius', 'n → 2n (h/2)', v2.map((r) => r.control.radius), pill);
+  row('menu, select listbox, combo-box panel, multi-select', 'radius', 'n + c → 2n + c (row + inset c)', v2.map((r) => r.group.radius), v2.map((r) => r.h / 2 + r.c));
+  row('badge', 'radius', 'ceil(n/2) → n + c (h/2 of 2n + 2c)', v2.map((r) => r.chip.radius), chipPill);
+  row('checkbox', 'radius', 'ceil(n/2) → ceil(n/2)', v2.map((r) => r.parts.checkboxRadius), v2.map((r) => r.parts.checkboxRadius));
+}
+p(`- New tokens: \`--md-sys-control-radius\` (2n: ${v2.map((r) => r.h / 2).join(' / ')}) and \`--md-sys-checkbox-radius\` (ceil(n/2): ${v2.map((r) => r.parts.checkboxRadius).join(' / ')}); \`--md-sys-chip-radius\` becomes n + c (${v2.map((r) => r.n + r.c).join(' / ')}) at the root sm · md · lg.`);
 
 console.log(out.join('\n'));

@@ -114,7 +114,7 @@ geometry:
   listbox:
     sizeClass: Container/surface
     bg: var(--ui-multi-select-bg)
-    radius: var(--ui-multi-select-radius)
+    radius: var(--ui-multi-select-radius)          # concentric: the row pill 2n plus the padding c (ADR-0245 Amendment 5); corner-base under the legacy opt-out
     padding: var(--ui-multi-select-padding)         # = h/4 — DERIVED off the lever (ui-select's listbox-token mechanism copied)
     minInlineSize: var(--ui-multi-select-min-inline-size)  # the 12ch floor, ACTIVE IN THE [inline] HUG STATE ONLY (ADR-0223 cl.3(b)) — the fill default needs no floor
     maxBlockSize: var(--ui-multi-select-max-block-size) (scrolls)  # min(50vh, 12 real option rows + insets + the 2px border compensation) — the ui-select TKT-0027 formula copied

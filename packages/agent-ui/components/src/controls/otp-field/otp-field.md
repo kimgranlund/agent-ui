@@ -119,7 +119,7 @@ geometry:
   paddingBlock: 0
   cellInlineSize: var(--ui-otp-field-cell-inline-size)   # = height — a square one-glyph entry cell, derived off the lever (no new row)
   gap: var(--ui-otp-field-gap)            # inter-cell rhythm — the one scale-bearing quantity (gap = n)
-  radius: var(--md-sys-shape-corner-base)            # rounded-rect, radius n (--md-sys-radius, squircle), NOT the h/2 pill; entry-control class, geometry.md "Corner radius" / ADR-0015 cl.5
+  radius: var(--ui-otp-field-radius)                 # the pill h/2 = 2n with circular corners, so a square 4n cell is a circle (--md-sys-control-radius, ADR-0245 Amendment 5); corner-base under the legacy opt-out
   minInlineSize: none (deliberate, LLD §7)   # the N-cell grid's own intrinsic size (N × cell + (N−1) × gap) already floors the control — the entry-class min-inline-size token is deliberately NOT minted (a documented deviation from the general rule, not an omission)
 
 forcedColors: A `@media (forced-colors: active)` block keeps every cell border + ink visible (CanvasText; GrayText when disabled); the active cell's focus outline survives via --md-sys-color-focus-ring → Highlight (the token layer's WHCM mapping) with no per-control rule needed.

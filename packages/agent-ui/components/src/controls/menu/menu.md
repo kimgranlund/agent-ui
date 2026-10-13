@@ -90,7 +90,7 @@ keyboard:
 geometry:
   sizeClass: pattern            # Container/surface for the panel; item-pad rows for the menuitems (NOT a control height)
   panelPadding: var(--ui-menu-padding)             # = var(--md-sys-space-xs) — shell spacing
-  panelRadius: var(--ui-menu-radius)               # = var(--md-sys-shape-corner-base), the shared fleet radius
+  panelRadius: var(--ui-menu-radius)               # concentric: itemRadius plus the row margin c (ADR-0245 Amendment 5); corner-base under the legacy opt-out
   panelMinInlineSize: var(--ui-menu-min-inline-size)  # 10rem floor (ADR-0021 lesson)
   panelMaxBlockSize: var(--ui-menu-max-block-size) (scrolls) # PUBLIC dial (TKT-0027), default min(50vh, calc(12 * var(--ui-menu-item-block-size) + 13 * var(--ui-box-inset, 0.375rem) + 2px)) — 12 real item rows + their box-model insets + the panel's own 2px border (box-sizing: border-box) or half the viewport, whichever is smaller; gets the shared edge-aware scroll-fade by default (traits/scroll-fade.ts, container-box.css)
   scrollbarSeam: var(--ui-menu-scrollbar-width)    # declared `thin` in the token block (GH #906, superseding GH #166's `none` default) — the #874 fleet idiom: transparent-at-rest, reveals --ui-menu-scrollbar-thumb{,-hover} on hover/focus-within; the scroll-fade stays a complementary affordance; a consumer repoints to `none`/`auto`
@@ -98,7 +98,7 @@ geometry:
   itemPadBlock: var(--ui-menu-item-pad-block)      # = var(--md-sys-space-xs) — legacy item-pad block axis
   itemPadInline: var(--ui-menu-item-pad-inline)    # = 2n - c: a row is a control, margin n + label inset n - c (ADR-0245 Amendment 4); var(--md-sys-space-md) under the legacy opt-out
   itemBlockSize: var(--ui-menu-item-block-size)    # = font + 2×pad-block (line-height:1 makes it exact) — the real rendered row height, feeding panelMaxBlockSize
-  itemRadius: var(--ui-menu-item-radius)           # nested-radius from panel corner = panelRadius − --ui-box-inset (FIXED 2026-07-06: was subtracting the unrelated --md-sys-space-xs, an ADR-0018 inset-inconsistency)
+  itemRadius: var(--ui-menu-item-radius)           # a row is a single-line control: the pill 2n (--md-sys-control-radius, ADR-0245 Amendment 5); corner-base − --ui-box-inset under the legacy opt-out
   checkSize: var(--ui-menu-check-size)             # GH #55 — the menuitemradio/menuitemcheckbox checkmark glyph slot, = var(--md-sys-icon-box) 2n (--md-sys-compact-sm bridge alias until W7; the checkbox.css indicator-box precedent, not a menu-specific magic number)
   checkGap: var(--ui-menu-check-gap)               # = n, check box to text (gutter c + label inset n - c); the box itself is pinned at the row's margin n (--ui-menu-item-edge); var(--md-sys-space-xs) under the legacy opt-out
   note: ui-menu has NO `[size]` attribute and renders no trigger geometry (the trigger is fully author-owned) — the select/combo-box family's size-carrying derivation (panel inset + option pad off the trigger's own height/font) does not apply here; flagged as a structural divergence, not forced (2026-07-06 pass)

@@ -143,12 +143,12 @@ geometry:
     font: var(--ui-select-font)
     icon: var(--ui-select-icon)               # the caret CELL is icon-wide
     glyph: var(--ui-select-glyph)             # = font, the §4.1 caret law
-    radius: var(--ui-select-radius)           # = --md-sys-shape-corner-base (shared fleet radius)
+    radius: var(--ui-select-radius)           # the pill 2n, circular corners (--md-sys-control-radius, ADR-0245 Amendment 5); corner-base under the legacy opt-out
     minInlineSize: var(--ui-select-min-inline-size)  # the 10ch floor, ACTIVE IN THE [inline] HUG STATE ONLY (ADR-0223 cl.3(b), superseding ADR-0021's default-state placement) — the fill default needs no floor
   listbox:
     sizeClass: Container/surface
     bg: var(--ui-select-listbox-bg)
-    radius: var(--ui-select-listbox-radius)
+    radius: var(--ui-select-listbox-radius)    # concentric: the option row pill 2n plus the padding c (Amendment 5)
     padding: var(--ui-select-listbox-padding)  # = c (--md-sys-c, ADR-0245 cl.3; h/4 is the legacy fallback), scales with [size]
     minInlineSize: var(--ui-select-listbox-min-inline-size)
     maxBlockSize: var(--ui-select-listbox-max-block-size) (scrolls) # PUBLIC dial (TKT-0027), default min(50vh, calc(12 * var(--ui-select-height) + 13 * var(--ui-select-listbox-padding) + 2px)) — 12 real option rows (the row-height law makes a row == --ui-select-height exactly) + their insets + the panel's own 2px border (box-sizing: border-box) or half the viewport, whichever is smaller; was a flat 40vh

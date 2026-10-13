@@ -35,7 +35,8 @@ Let `c = ceil(n / 4)`. Every box value is a whole-pixel multiple of n or c (chec
 | control height | `4n` | `--md-sys-height` |
 | inset (a boxed child's own margin) | `n` | `--md-sys-inset` |
 | gap between a mark and its label | `n` | |
-| radius | `n`, `corner-shape: squircle` | `--md-sys-radius` |
+| radius of a surface (attachment, disclosure, swatch tile) | `n`, `corner-shape: squircle` | `--md-sys-radius` |
+| radius of every single-line control (the pill, h/2) | `2n`, circular corners | `--md-sys-control-radius` |
 | icon box (pictorial art) | `2n` | `--md-sys-icon-box` |
 | glyph box (functional mark) | `2n - 2c` | `--md-sys-glyph-box` |
 | glyph stroke | `max(1.5px, c/2)` | `--md-sys-glyph-stroke` |
@@ -61,18 +62,22 @@ height.
   minimum, and the rule's own `4n - 2c` plus text keeps them at `4n`). Where the label is anonymous host content (toggle, segment, tab, menu and listbox rows) the host
   edge beside it carries margin plus inset. Icons, carets and other boxed items take no inset.
 - **Entry and trigger controls** (text-field, textarea, select, combo-box): the control rule, the editor or the
-  trigger label being the text slot; a leading icon or caret slot is `2n`; radius `n`. `ui-otp-field`'s cells
-  hold one centered character and take no inset. A field label sits above with gap `ceil(n/2)`.
+  trigger label being the text slot; a leading icon or caret slot is `2n`; the pill radius `2n` with circular
+  corners (Amendment 5; a textarea takes the same `2n`). `ui-otp-field`'s cells hold one centered character,
+  take no inset and the same `2n`, so a square cell is a circle. A field label sits above with gap `ceil(n/2)`.
 - **Button and toggle**: the **pill**, radius `2n` (equal to h/2, now a formula of n, not a special case), and
   the control rule; an icon-only button is a `4n` square. A button label aligns per the skill's table
   (centered alone or between adornments, start with only trailing content, end with only leading content);
   a toggle label stays centered (`toggle.md`).
-- **Tabs, segments, menu and listbox rows**: the control rule; tabs touch with the tight gutter `c`.
+- **Tabs, segments, menu and listbox rows**: the control rule; tabs touch with the tight gutter `c`. Menu and
+  listbox rows are pills (`2n`), and their panel (menu, select listbox, combo-box panel, multi-select) is the
+  row radius plus its own inset, `2n + c`, so the rows nest concentrically (Amendment 5).
 - **Indicators**: checkbox box `2n` (radius `ceil(n/2)`, check glyph `2n - 2c`), radio `2n` circle (dot
   `glyph - 2` = `2n - 2c - 2`, which never shrinks as n grows), switch track `2n` tall with padding `c` and
   thumb `2n - 2c`, slider rail `2c` and thumb `2n - 2c`, progress track `2c` (radius `c`).
 - **Chips** (badge; the level `--md-sys-chip-{margin,gutter,radius}`): height `2n + 2c`, margin `c`, gutter
-  `c`, label margin `c` (text edge `2c`), radius `ceil(n/2)`.
+  `c`, label margin `c` (text edge `2c`), the chip pill radius `n + c` (h/2, Amendment 5). The checkbox box
+  keeps `ceil(n/2)` on its own token, `--md-sys-checkbox-radius`.
 - **Avatar** is a `4n` circle, stood beside controls at control height; an avatar inline inside a tag or a
   control row is the skill's `2n`.
 - **Derived marks and tiles** (Amendment 3): gauge ring stroke `4c`; swatch a `4n` square with radius `n`

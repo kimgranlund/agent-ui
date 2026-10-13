@@ -950,3 +950,54 @@ Repairs in the same change: `geometry.md`, `geometry-sizing-spec.md` §4.3 and �
 section 18, and the `button`, `toggle`, `text-field`, `textarea`, `select`, `combo-box`, `multi-select`, `tabs`,
 `menu`, `segmented-control`, `badge` and `checkbox` descriptors. Every test that pins an old edge is listed by
 census lane in `.sdlc/control-rule-adoption/repin-list.md` and re-pinned by its lane.
+
+## Amendment 5 (2026-10-13, T-0134): everything pill, and panels nest concentrically
+
+Kim's ruling, 2026-10-13, after dogfooding the A2UI sheets: badges, tags, select and menu read too sharp at the
+n 6 root (a 3px badge corner on a 16px chip, a 6px field corner on a 24px field). **Everything pill**: every
+single-line control and every chip takes radius h/2, the way button and toggle already did (Amendment 3). The
+reason is one shape language across a form: a field, a select, a menu row and a badge beside a pill button
+otherwise read as two families. `scale.mjs` is unchanged (sha256 `3c319761…6057ba5b`); the pill is a derived
+exception the generator emits beside it, like the button pill. It supersedes clause 3's "radius n" for the
+entry and trigger controls and the listbox rows, clause 6's group radius for listbox panels, and Amendment 4
+items 5 and 6 where they give the badge `ceil(n/2)`; the body and its appendices stay as written.
+
+1. **The control pill.** The generator emits `--md-sys-control-radius`, `h/2 = 2n` (10 / 12 / 14 at the root
+   sm / md / lg). `ui-text-field` (every type, so the date and number fields too), the `ui-select` trigger,
+   `ui-combo-box`, the `ui-otp-field` cells (a square 4n cell becomes a circle), and the menu, select,
+   combo-box and multi-select rows read it. These pills take circular corners (`corner-shape: round`, the
+   button and toggle exception of clause 3): a squircle at h/2 reads as a soft rectangle, not a pill. The
+   squircle stays with the radius-n surfaces (attachment, disclosure, the swatch tile).
+2. **The chip pill.** `--md-sys-chip-radius` becomes `n + c`, h/2 of the `2n + 2c` chip (7 / 8 / 9). `ui-badge`
+   reads it (the tag reading of the one component included). Under the legacy opt-out the badge keeps `box/2`.
+3. **Multi-line and container surfaces follow the concentric rule, not h/2.** A `ui-textarea` takes the
+   single-line control radius `2n`, so its corners match the field beside it; `ui-code-editor` keeps its
+   textarea parity (TKT-0059) and follows. A menu, a select listbox, a combo-box panel and a multi-select take
+   their row radius plus the panel's own inset `c`: `2n + c` (12 / 14 / 16), so the pill rows nest
+   concentrically. Each control writes it as row radius plus inset, so the legacy opt-out still resolves the
+   panel to `--md-sys-shape-corner-base` and the row to corner-base minus the inset, as before. A card and the
+   other roomy containers keep their level radius; segmented-control keeps the group radius.
+4. **The checkbox stays a rounded square.** It moves off the chip token to its own, `--md-sys-checkbox-radius`,
+   `ceil(n/2)` (the skill's `parts.checkboxRadius`, unchanged). Radio and switch are unchanged.
+5. **Gates.** `foundations.test.ts` and the census's derived list carry the two new names (and their `initial`
+   lines under the legacy opt-out); `foundations.browser.test.ts` reads `control-radius` as `h/2`,
+   `chip-radius` as `n + c` and `checkbox-radius` as `parts.checkboxRadius` in all 36 cells.
+   `scripts/foundations-probe.mjs` rules `frame`, `trigger`, `cell` and `multiline` at `2n` and `listbox` at
+   `2n + c`; its negative controls moved off md, where `2n` equals the legacy 12px corner. The per-control
+   foundations browser tests, `control-rule.browser.test.ts` and the three `ui-otp-field` goldens follow.
+
+The px that move, at the root sm · md · lg (`derive.out.md` section 19):
+
+| control | quantity | rule, before → after | sm · md · lg |
+|---|---|---|---|
+| text-field, select trigger, combo-box, otp-field cell | radius | n → 2n | 5 → 10 (+5) · 6 → 12 (+6) · 7 → 14 (+7) |
+| textarea, ui-code-editor | radius | n → 2n | 5 → 10 (+5) · 6 → 12 (+6) · 7 → 14 (+7) |
+| menu, select, combo-box and multi-select rows | radius | n → 2n | 5 → 10 (+5) · 6 → 12 (+6) · 7 → 14 (+7) |
+| menu, select listbox, combo-box panel, multi-select | radius | n + c → 2n + c | 7 → 12 (+5) · 8 → 14 (+6) · 9 → 16 (+7) |
+| badge | radius | ceil(n/2) → n + c | 3 → 7 (+4) · 3 → 8 (+5) · 4 → 9 (+5) |
+| checkbox | radius | ceil(n/2), unchanged | 3 · 3 · 4 |
+
+Repairs in the same change: `geometry.md`, `geometry-sizing-spec.md` (the token table and §4.9), `tokens.md`,
+`derive.mjs` section 19, and the `text-field`, `textarea`, `select`, `combo-box`, `multi-select`, `otp-field`,
+`menu`, `badge`, `checkbox` and `code-editor` descriptors. The skill proposal is P13 in
+`.sdlc/mathematical-design-system-review.md`.

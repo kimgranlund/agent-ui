@@ -43,7 +43,8 @@ With `c = ceil(n/4)` the derived quantities, all whole pixels (check M7), are:
 |---|---|---|
 | height | `4n` | `--md-sys-height` |
 | inset, gap | `n` | `--md-sys-inset` |
-| radius | `n` (`corner-shape: squircle`), pill `2n` | `--md-sys-radius` |
+| radius | `n` (`corner-shape: squircle`) for a surface; the pill `2n` (circular) for every single-line control and a textarea, Amendment 5 | `--md-sys-radius`, `--md-sys-control-radius` |
+| chip and checkbox radius | chip pill `n + c` (h/2 of the `2n + 2c` chip); checkbox `ceil(n/2)` | `--md-sys-chip-radius`, `--md-sys-checkbox-radius` |
 | icon box | `2n` | `--md-sys-icon-box` |
 | glyph box | `2n - 2c` | `--md-sys-glyph-box` |
 | glyph stroke | `max(1.5px, c/2)` | `--md-sys-glyph-stroke` |
@@ -217,7 +218,8 @@ not universal.
 ### 4.9 · Containers, placement and radius (ADR-0245 cl.6)
 
 Four levels at the container's own n and m (root md, n 6, c 2, m 6): **group** (margin and radius `n + c`,
-gutter `c`: listbox panels, segmented-control, table rows, tooltip), **widget** (`2m`, gutter `m`: popover,
+gutter `c`: segmented-control, table rows, tooltip; listbox panels keep the group padding `c` but take the
+concentric radius `2n + c`, their pill rows plus that inset, ADR-0245 Amendment 5), **widget** (`2m`, gutter `m`: popover,
 toast, form-popover panel), **card** (`3m`, gutter `2m`: card, modal, drawer, command-modal, the A2UI
 artboard) and **layout** (`4m`, gutter `3m`: super-shell frame and bars, the docs page frame). A container pads with its margin; a boxed child
 at an edge sits at `margin - its own inset` via a negative margin of `--md-sys-inset` resolved on the child.

@@ -242,3 +242,15 @@ Section 17 listed these as not adopted; T-0122 adopts every row of it. Edges are
 | badge, checkbox | radius | n/2 → ceil(n/2) | 2.5 → 3 (+0.5) · 3 → 3 (0) · 3.5 → 4 (+0.5) |
 - New tokens: `--md-sys-label-inset` (n - c: 3 / 4 / 5) and the chip level `--md-sys-chip-{margin,gutter,radius}` (2 / 2 / 3 · 2 / 2 / 3 · 2 / 2 / 4) at the root sm · md · lg.
 - The identity the rule rests on: gutter c + label inset (n - c) = margin n, so an icon stays n from the edge and n from the text while the text edge is 2n - c: 8 / 10 / 12 at the root, 12 at n 7.
+
+## 19. Amendment 5: every single-line control and chip takes radius h/2, panels nest concentrically, sm · md · lg
+scale.mjs is unchanged; the pill is a derived exception the generator emits beside it (`--md-sys-control-radius`, and `--md-sys-chip-radius` moved to the chip pill).
+| control | quantity | rule, before → after | sm · md · lg |
+|---|---|---|---|
+| text-field, select trigger, combo-box, otp-field cell | radius | n → 2n (h/2) | 5 → 10 (+5) · 6 → 12 (+6) · 7 → 14 (+7) |
+| textarea, ui-code-editor | radius | n → 2n (the single-line control radius) | 5 → 10 (+5) · 6 → 12 (+6) · 7 → 14 (+7) |
+| menu, select, combo-box and multi-select rows | radius | n → 2n (h/2) | 5 → 10 (+5) · 6 → 12 (+6) · 7 → 14 (+7) |
+| menu, select listbox, combo-box panel, multi-select | radius | n + c → 2n + c (row + inset c) | 7 → 12 (+5) · 8 → 14 (+6) · 9 → 16 (+7) |
+| badge | radius | ceil(n/2) → n + c (h/2 of 2n + 2c) | 3 → 7 (+4) · 3 → 8 (+5) · 4 → 9 (+5) |
+| checkbox | radius | ceil(n/2) → ceil(n/2) | 3 → 3 (0) · 3 → 3 (0) · 4 → 4 (0) |
+- New tokens: `--md-sys-control-radius` (2n: 10 / 12 / 14) and `--md-sys-checkbox-radius` (ceil(n/2): 3 / 3 / 4); `--md-sys-chip-radius` becomes n + c (7 / 8 / 9) at the root sm · md · lg.
