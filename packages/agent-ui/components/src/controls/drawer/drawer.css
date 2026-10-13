@@ -62,7 +62,7 @@
      the `data-fade-top`/`data-fade-bottom` flags `scrollFade` already toggles on this same dialog
      (unconditional, wired in .ts) rather than a second scroll listener — pure CSS, zero new JS. */
   --ui-drawer-pad-inline: var(--md-sys-card-gutter, var(--md-sys-space-md)); /* header/footer/content inline padding — the drawer's own rhythm */
-  --ui-drawer-pad-block: var(--md-sys-inset, var(--md-sys-space-sm)); /* header/footer block padding */
+  --ui-drawer-pad-block: var(--md-sys-card-gutter, var(--md-sys-space-sm)); /* header/footer/content block padding: the card gutter 2n, so margin n + pad 2n = the card margin 3n on the block axis too (T-0121; n before) */
   --ui-drawer-gap: var(--md-sys-card-gutter, var(--md-sys-space-sm)); /* the vertical rhythm between a content region's own stacked children */
   --ui-drawer-region-border: var(--ui-drawer-outline); /* the header/footer hairline colour — the same frame role, one edge over */
   /* GH #920 — content-scroll-mode's inter-region gap (header↔content, content↔footer): consumes the SAME

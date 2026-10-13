@@ -56,13 +56,13 @@ const one = (root: ParentNode, sel: string): HTMLElement => {
 describe('card family: card level (margin 3n, gutter 2n, radius 3n) inside; today outside', () => {
   const card = `<ui-card><ui-card-header>Title</ui-card-header><ui-card-content>Body</ui-card-content></ui-card>`
 
-  it('inside the root register (md n 6): radius 18, region margin 6, region padding 12 / 6, region radius 12', () => {
+  it('inside the root register (md n 6): radius 18, region margin 6, region padding 12 on both axes (T-0121: the card margin 3n all round), region radius 12', () => {
     const w = mount(card, true)
     expect(px(cs(one(w, 'ui-card')).borderTopLeftRadius)).toBe(18)
     const header = one(w, 'ui-card-header')
     expect(px(cs(header).marginLeft)).toBe(6)
     expect(px(cs(header).paddingLeft)).toBe(12)
-    expect(px(cs(header).paddingTop)).toBe(6)
+    expect(px(cs(header).paddingTop)).toBe(12) // margin n + pad 2n = 3n to the ink on the block axis too
     expect(px(cs(header).borderTopLeftRadius)).toBe(12)
   })
 

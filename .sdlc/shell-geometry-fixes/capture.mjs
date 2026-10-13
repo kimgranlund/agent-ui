@@ -3,6 +3,7 @@
 // at 400px and 1000px, light and dark. Boots the docs site on a free port (vite, site root) and drives Chromium.
 //
 //   node .sdlc/shell-geometry-fixes/capture.mjs <before|after>
+//   node .sdlc/shell-geometry-fixes/capture.mjs sheets    one labelled before/after contact sheet per theme
 //
 // Writes screens/<page>-<width>-<scheme>-<label>.png and metrics-<label>.json next to this file
 // (or under CAPTURE_OUT).
@@ -13,8 +14,8 @@ import path from 'node:path'
 import { freePort, waitForHttp, killTree } from '../../scripts/lib/dev-server.mjs'
 
 const label = process.argv[2]
-if (label !== 'before' && label !== 'after') {
-  console.error('usage: capture.mjs <before|after>')
+if (label !== 'before' && label !== 'after' && label !== 'sheets') {
+  console.error('usage: capture.mjs <before|after|sheets>')
   process.exit(2)
 }
 const HERE = path.dirname(fileURLToPath(import.meta.url))
@@ -24,6 +25,11 @@ const REPO = path.resolve(HERE, '../..')
 const DEST = process.env.CAPTURE_OUT ? path.resolve(process.env.CAPTURE_OUT) : HERE
 const OUT = path.join(DEST, 'screens')
 await mkdir(OUT, { recursive: true })
+
+if (label === 'sheets') {
+  await contactSheets()
+  process.exit(0)
+}
 
 const PAGES = [
   { key: 'docs', url: '/button-doc.html' },
@@ -158,4 +164,38 @@ function measure() {
     probe.remove()
   }
   return out
+}
+
+// One labelled side-by-side contact sheet per theme: a row per page, before and after at 400px then at 1000px.
+async function contactSheets() {
+  const { chromium } = await import('playwright')
+  const { rm } = await import('node:fs/promises')
+  const pages = [['docs', 'Docs page'], ['cards', 'Card page'], ['admin', 'Agent-admin'], ['chat', 'Chat shell']]
+  const browser = await chromium.launch()
+  try {
+    for (const scheme of ['light', 'dark']) {
+      const cell = (key, width, which) =>
+        `<figure><figcaption>${key} · ${width}px · ${scheme} · ${which}</figcaption>` +
+        `<img src="${key}-${width}-${scheme}-${which}.png" style="inline-size:${width / 2}px"></figure>`
+      const rows = pages
+        .map(([key, title]) => `<section><h2>${title}</h2><div class="row">${[400, 1000].map((w) => cell(key, w, 'before') + cell(key, w, 'after')).join('')}</div></section>`)
+        .join('')
+      const html = `<!doctype html><meta charset="utf-8"><style>
+        body{margin:16px;font:12px/1.4 system-ui,sans-serif;background:${scheme === 'dark' ? '#111' : '#fff'};color:${scheme === 'dark' ? '#eee' : '#111'}}
+        h1{font-size:16px;margin:0 0 12px} h2{font-size:13px;margin:16px 0 6px}
+        .row{display:flex;gap:12px;align-items:flex-start} figure{margin:0} figcaption{margin:0 0 4px;font-weight:600}
+        img{display:block;border:1px solid ${scheme === 'dark' ? '#555' : '#bbb'}}
+      </style><h1>T-0121 page and shell geometry · ${scheme} · before (origin/main) and after, shown at half size</h1>${rows}`
+      const file = path.join(OUT, `contact-sheet-${scheme}.html`)
+      await writeFile(file, html)
+      const page = await browser.newPage({ viewport: { width: 1500, height: 900 }, deviceScaleFactor: 2 })
+      await page.goto(`file://${file}`, { waitUntil: 'load' })
+      await page.screenshot({ path: path.join(OUT, `contact-sheet-${scheme}.png`), fullPage: true })
+      await page.close()
+      await rm(file)
+    }
+  } finally {
+    await browser.close()
+  }
+  console.log('contact sheets: 2')
 }

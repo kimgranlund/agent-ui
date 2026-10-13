@@ -84,7 +84,7 @@ parts:
   - name: frame
     description: The one control-created wrapper (column flex — bars + middle).
   - name: bar
-    description: Header/footer chrome rows (`data-bar="header|footer"`), 8n min-height (a control row plus the widget margin above and below, 56px at the root register), PERMANENT chrome (SPEC-R2c); rendered only when authored (the absence law). The header bar hosts the two side-toggles around the authored header children. Carries `role="banner"`/`role="contentinfo"` respectively (LLD-C1), overridable via `data-landmark` on the first authored child.
+    description: Header/footer chrome rows (`data-bar="header|footer"`), 8n min-height (a control row plus the widget margin above and below, 48px at the root register), PERMANENT chrome (SPEC-R2c); rendered only when authored (the absence law). The header bar hosts the two side-toggles around the authored header children. Carries `role="banner"`/`role="contentinfo"` respectively (LLD-C1), overridable via `data-landmark` on the first authored child.
   - name: side-toggle
     description: One header-hosted collapse toggle (`data-side="start|end"`, SPEC-R2b/R9, LOGICAL per LLD-C4) — a ui-button that composes ONLY for a side with authored content (SPEC-R9a — no dead toggle on a one-sided shell), and hides below the 40rem line for `stack`/`tabs` sides (their narrow anatomy is owned elsewhere). Carries BOTH glyphs (`list` menu + `x` close, `data-glyph`); CSS swaps them off the host's `data-narrow-open` INSIDE the band query — or, for an AUTO-collapsed side in the band-line→natural-fit window (GH #229/SPEC-R14, Kim's ruling), off `data-auto-collapsed-* + data-narrow-open` together — so the X is state-correct by construction (SPEC-R9b — no stale wide X). An auto-collapsed side's toggle stays VISIBLE and opens that side as the floating overlay (never an inline re-expansion, which cannot fit). `aria-expanded` is truthful at every band (`!collapsed` at wide, `data-narrow-open===side` below the line or while auto-collapsed — SPEC-R9c/R14a). Labeled "Toggle start panes"/"Toggle end panes" — direction-agnostic text.
   - name: scrim
@@ -92,9 +92,9 @@ parts:
   - name: middle
     description: The `[ rail | pane* | canvas | pane* | rail ]` flex row (SPEC-R5, LLD-C3 — a side stacks ZERO OR MORE panes, not a single fixed pane); the narrow overlay's containing block.
   - name: rail
-    description: An 8n (56px at the root register) global bar (`data-slot-name="global-nav|global-options"`, `data-side`), the OUTER level's ring; an inner nested shell simply authors no rails (SPEC-R1b ring-dropping recursion). Carries `role="navigation"` (global-nav) or `role="complementary"` (global-options), LLD-C1.
+    description: An 8n (48px at the root register) global bar (`data-slot-name="global-nav|global-options"`, `data-side`), the OUTER level's ring; an inner nested shell simply authors no rails (SPEC-R1b ring-dropping recursion). Carries `role="navigation"` (global-nav) or `role="complementary"` (global-options), LLD-C1.
   - name: pane
-    description: A 36n (252px at the root register) side pane (`data-slot-name="nav-pane|section-nav|options-pane|options-section"`, `data-side`), its own scroll container. A side may stack MULTIPLE panes (SPEC-R5/GH #96), DOM order is rail first, then panes outer-to-content (`nav-pane` before `section-nav`; `options-section` before `options-pane`, its mirror). Collapse is still WHOLE-SIDE: every part sharing a `data-side` value hides/restores together, never per-pane. Carries `role="navigation"` (nav-pane/section-nav) or `role="complementary"` (options-pane/options-section), LLD-C1. The INNERMOST pane on an opted-in side additionally carries a `pane-resizer` sibling (SPEC-R6) and, when its authored children carry `data-segment`, `data-segmented` + a `pane-tabs` strip of its own (SPEC-R7a).
+    description: A 36n (216px at the root register) side pane (`data-slot-name="nav-pane|section-nav|options-pane|options-section"`, `data-side`), its own scroll container. A side may stack MULTIPLE panes (SPEC-R5/GH #96), DOM order is rail first, then panes outer-to-content (`nav-pane` before `section-nav`; `options-section` before `options-pane`, its mirror). Collapse is still WHOLE-SIDE: every part sharing a `data-side` value hides/restores together, never per-pane. Carries `role="navigation"` (nav-pane/section-nav) or `role="complementary"` (options-pane/options-section), LLD-C1. The INNERMOST pane on an opted-in side additionally carries a `pane-resizer` sibling (SPEC-R6) and, when its authored children carry `data-segment`, `data-segmented` + a `pane-tabs` strip of its own (SPEC-R7a).
   - name: canvas
     description: The mandatory content region — `flex:1 1 auto; min-inline-size:0` (console.warn when unauthored). Hosts anything, including another ui-super-shell (depth 2 is the normative test ceiling, fork F3). Carries `role="main"` (LLD-C1) — an author must ensure only one `main` per document, the same cross-instance responsibility the retired ui-app-shell's `main` region carried (ADR-0156).
   - name: pane-resizer
@@ -150,7 +150,7 @@ Opt in per side (`resizable-start`/`resizable-end`) and only the side's INNERMOS
 adjacent to `content` — gains a drag/keyboard separator. The committed size is the reflected
 `size-start`/`size-end` px prop; `change` fires on commit (release or a key step), never on a live
 drag move. Bounds: the pane never shrinks below `--ui-super-shell-pane-min-size`, and never grows
-past what `--ui-super-shell-canvas-min-size` leaves available (both default 24n, 168px at the root
+past what `--ui-super-shell-canvas-min-size` leaves available (both default 24n, 144px at the root
 register; override per consumer). A collapsed side's committed size SURVIVES the round-trip.
 
 ## SPEC-R7 — pane segments + the `tabs` narrow arm (ADR-0154)

@@ -56,7 +56,7 @@ describe('drawer.css — structure + sectioning', () => {
       expect(tokenBlock).toMatch(new RegExp(`--ui-drawer-${slot}:`))
     }
     expect(tokenBlock).toMatch(/--ui-drawer-pad-inline:\s*var\(--md-sys-card-gutter,\s*var\(--md-sys-space-/)
-    expect(tokenBlock).toMatch(/--ui-drawer-pad-block:\s*var\(--md-sys-inset,\s*var\(--md-sys-space-/)
+    expect(tokenBlock).toMatch(/--ui-drawer-pad-block:\s*var\(--md-sys-card-gutter,\s*var\(--md-sys-space-/) // T-0121: the card level on the block axis too
     expect(tokenBlock).toMatch(/--ui-drawer-gap:\s*var\(--md-sys-card-gutter,\s*var\(--md-sys-space-/)
     // the hairline colour reuses the SAME frame role already declared for the dialog's own outline — no new role
     expect(tokenBlock).toMatch(/--ui-drawer-region-border:\s*var\(--ui-drawer-outline\)/)

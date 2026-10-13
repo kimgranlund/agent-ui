@@ -654,8 +654,8 @@ export class UISuperShellElement extends UIElement {
       this.#dragBaseline = {
         pane: pane.getBoundingClientRect().width,
         canvasAvail: canvas.getBoundingClientRect().width,
-        paneMin: this.#resolvePx('--ui-super-shell-pane-min-size', 168),
-        canvasMin: this.#resolvePx('--ui-super-shell-canvas-min-size', 168),
+        paneMin: this.#resolvePx('--ui-super-shell-pane-min-size', 144),
+        canvasMin: this.#resolvePx('--ui-super-shell-canvas-min-size', 144),
       }
       // GH #185 (parity gap a) — mirrors split.ts's #applyPointerDelta exactly: armed on the drag's
       // first live move (baseline null → set), cleared on commit below. super-shell.css's
@@ -699,13 +699,13 @@ export class UISuperShellElement extends UIElement {
     const growsRight = side === 'start' ? !rtl : rtl
     const growKey = growsRight ? 'ArrowRight' : 'ArrowLeft'
     const shrinkKey = growsRight ? 'ArrowLeft' : 'ArrowRight'
-    const step = this.#resolvePx('--ui-super-shell-gap', 21)
+    const step = this.#resolvePx('--ui-super-shell-gap', 18)
     const current = pane.getBoundingClientRect().width
     const baseline = {
       pane: current,
       canvasAvail: canvas.getBoundingClientRect().width,
-      paneMin: this.#resolvePx('--ui-super-shell-pane-min-size', 168),
-      canvasMin: this.#resolvePx('--ui-super-shell-canvas-min-size', 168),
+      paneMin: this.#resolvePx('--ui-super-shell-pane-min-size', 144),
+      canvasMin: this.#resolvePx('--ui-super-shell-canvas-min-size', 144),
     }
 
     let next: number | null = null
@@ -766,8 +766,8 @@ export class UISuperShellElement extends UIElement {
       const baseline = {
         pane: paneWidth,
         canvasAvail: canvas.getBoundingClientRect().width,
-        paneMin: this.#resolvePx('--ui-super-shell-pane-min-size', 168),
-        canvasMin: this.#resolvePx('--ui-super-shell-canvas-min-size', 168),
+        paneMin: this.#resolvePx('--ui-super-shell-pane-min-size', 144),
+        canvasMin: this.#resolvePx('--ui-super-shell-canvas-min-size', 144),
       }
       sep.setAttribute('aria-valuenow', String(Math.round(paneWidth)))
       sep.setAttribute('aria-valuemin', String(Math.round(baseline.paneMin)))

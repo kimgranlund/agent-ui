@@ -12,6 +12,14 @@ import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import './super-shell.css'
 import { UISuperShellElement } from './super-shell.ts'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+
+// T-0121: the shell frame reads level tokens (ADR-0245 cl.6), so every px this file pins is derived from the
+// root register (product at scale sm) through scale.mjs, never written as a literal.
+const ROOT = resolve('product', 'sm', 'md')
+const SHELL_BAR = ROOT.h + 2 * ROOT.widget.margin // --ui-super-shell-bar-size: a control row plus two widget margins, 8n
+const SHELL_INSET = ROOT.widget.margin // --ui-super-shell-overlay-inset: the widget margin 2n
+const SHELL_FLOOR = ROOT.page.margin * 6 // the canvas floors: six layout margins, 24n
 
 const mounted: HTMLElement[] = []
 afterEach(() => { for (const el of mounted.splice(0)) el.remove() })
@@ -126,16 +134,18 @@ describe('ui-super-shell — SPEC-R9 toggle affordance law (AC15/AC16)', () => {
 
   it('AC16 overlay cap: at 320px the open overlay clamps to calc(100cqi - bar-size - overlay-inset), so a canvas edge stays visible', async () => {
     const el = mount({ width: 320, narrowStart: 'collapse' }) // narrow band, default collapse-band
-    // Pane default is 252px < 320, so a `width < 320` pin would pass with OR without the cap (vacuous). Push
-    // the pane's own size ABOVE the ~250px clamp (320cqi − 56px bar − 14px floating inset) so the cap rule is
-    // genuinely load-bearing: uncapped the overlay would be 300px; the cap must pull it to ~250px.
+    // The pane default (36n) is under 320, so a `width < 320` pin would pass with OR without the cap (vacuous). Push
+    // the pane's own size ABOVE the clamp (320cqi − the bar − the floating inset) so the cap rule is
+    // genuinely load-bearing: uncapped the overlay would be 300px; the cap must pull it down to the clamp.
     el.style.setProperty('--ui-super-shell-pane-size', '300px')
     const toggle = startToggle(el)
     toggle.click(); await settle(el)
     const width = startSide(el).getBoundingClientRect().width
     expect(width, 'the cap clamped the overlay BELOW its own 300px pane-size (deleting the cap would leave it at 300)').toBeLessThan(280)
-    expect(Math.round(width), 'clamped to ~calc(100cqi - bar-size - overlay-inset) = 320 - 56 - 14 = 250px').toBeGreaterThan(244)
-    expect(Math.round(width)).toBeLessThanOrEqual(254)
+    const clamp = 320 - SHELL_BAR - SHELL_INSET
+    expect(clamp, 'anti-vacuous: the clamp sits below the 280px ceiling the line above uses').toBeLessThan(280)
+    expect(Math.round(width), 'clamped to ~calc(100cqi - bar-size - overlay-inset)').toBeGreaterThan(clamp - 6)
+    expect(Math.round(width)).toBeLessThanOrEqual(clamp + 4)
   })
 
   it('the mixed-arm compact probe: a compact shell with a STACK start side keeps a VISIBLE menu-glyph toggle at 45rem (its line is 40rem, not 52.5rem)', async () => {
@@ -165,11 +175,11 @@ describe('ui-super-shell — SPEC-R9 toggle affordance law (AC15/AC16)', () => {
     await settle(el)
     const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
     const canvasRect = canvas.getBoundingClientRect()
-    // --ui-super-shell-canvas-min-block-size = six layout margins = 24n = 168px at the root register
+    // --ui-super-shell-canvas-min-block-size = six layout margins = 24n at the root register
     // (SPEC-R15b; nine 18px modules, 162px, before T-0121), a DEDICATED block-size floor, independent from the inline-size
     // `--ui-super-shell-canvas-min-size` token (F4 fix: reusing that one would have silently turned
     // agent-admin.css's 16rem WIDTH override into an unrelated 256px HEIGHT floor there).
-    expect(canvasRect.height, 'canvas keeps its 168px floor even against a wildly oversize stacked sibling').toBeGreaterThanOrEqual(167)
+    expect(canvasRect.height, 'canvas keeps its 24n floor even against a wildly oversize stacked sibling').toBeGreaterThanOrEqual(SHELL_FLOOR - 1)
   })
 
   it('GH #260 — narrow-stack: canvas\'s floor is genuinely REACHABLE through an outer overflow:hidden ancestor (the real-page hazard), not just present in the DOM', async () => {
@@ -213,12 +223,12 @@ describe('ui-super-shell — SPEC-R9 toggle affordance law (AC15/AC16)', () => {
     const visibleTop = Math.max(canvasRect.top, clipRect.top)
     const visibleBottom = Math.min(canvasRect.bottom, clipRect.bottom)
     const visibleHeight = Math.max(0, visibleBottom - visibleTop)
-    expect(visibleHeight, 'canvas\'s floor is genuinely visible THROUGH the outer clip once scrolled, not just present in the DOM').toBeGreaterThanOrEqual(167)
+    expect(visibleHeight, 'canvas\'s floor is genuinely visible THROUGH the outer clip once scrolled, not just present in the DOM').toBeGreaterThanOrEqual(SHELL_FLOOR - 1)
   })
 })
 
 describe('ui-super-shell — floating overlay margin (shell-polish wave, S2): the pane floats popover-style instead of docking flush to the middle row', () => {
-  const OVERLAY_INSET = 14 // px: --ui-super-shell-overlay-inset = the widget margin 2n, at the root register (n 7)
+  const OVERLAY_INSET = SHELL_INSET // px: --ui-super-shell-overlay-inset = the widget margin 2n at the root register
   const TOLERANCE = 2 // px — cross-engine (chromium/webkit) subpixel-rounding slack
 
   const middlePart = (el: UISuperShellElement): HTMLElement => el.querySelector('[data-part="middle"]') as HTMLElement
@@ -245,9 +255,9 @@ describe('ui-super-shell — floating overlay margin (shell-polish wave, S2): th
     toggle.click(); await settle(el)
     const middleRect = middlePart(el).getBoundingClientRect()
     const paneRect = startSide(el).getBoundingClientRect()
-    expect(Math.abs(paneRect.left - middleRect.left - OVERLAY_INSET), 'near-edge (inline-start) floating inset ≈ 12px, not flush (0px)').toBeLessThanOrEqual(TOLERANCE)
-    expect(Math.abs(paneRect.top - middleRect.top - OVERLAY_INSET), 'top floating inset ≈ 12px, not flush (0px)').toBeLessThanOrEqual(TOLERANCE)
-    expect(Math.abs(middleRect.bottom - paneRect.bottom - OVERLAY_INSET), 'bottom floating inset ≈ 12px, not flush (0px)').toBeLessThanOrEqual(TOLERANCE)
+    expect(Math.abs(paneRect.left - middleRect.left - OVERLAY_INSET), 'near-edge (inline-start) floating inset ≈ one overlay inset, not flush (0px)').toBeLessThanOrEqual(TOLERANCE)
+    expect(Math.abs(paneRect.top - middleRect.top - OVERLAY_INSET), 'top floating inset ≈ one overlay inset, not flush (0px)').toBeLessThanOrEqual(TOLERANCE)
+    expect(Math.abs(middleRect.bottom - paneRect.bottom - OVERLAY_INSET), 'bottom floating inset ≈ one overlay inset, not flush (0px)').toBeLessThanOrEqual(TOLERANCE)
   })
 
   it('compact band (<52.5rem), START side: the same floating inset holds on the mirrored compact overlay rule', async () => {
@@ -256,9 +266,9 @@ describe('ui-super-shell — floating overlay margin (shell-polish wave, S2): th
     toggle.click(); await settle(el)
     const middleRect = middlePart(el).getBoundingClientRect()
     const paneRect = startSide(el).getBoundingClientRect()
-    expect(Math.abs(paneRect.left - middleRect.left - OVERLAY_INSET), 'near-edge (inline-start) floating inset ≈ 12px').toBeLessThanOrEqual(TOLERANCE)
-    expect(Math.abs(paneRect.top - middleRect.top - OVERLAY_INSET), 'top floating inset ≈ 12px').toBeLessThanOrEqual(TOLERANCE)
-    expect(Math.abs(middleRect.bottom - paneRect.bottom - OVERLAY_INSET), 'bottom floating inset ≈ 12px').toBeLessThanOrEqual(TOLERANCE)
+    expect(Math.abs(paneRect.left - middleRect.left - OVERLAY_INSET), 'near-edge (inline-start) floating inset ≈ one overlay inset').toBeLessThanOrEqual(TOLERANCE)
+    expect(Math.abs(paneRect.top - middleRect.top - OVERLAY_INSET), 'top floating inset ≈ one overlay inset').toBeLessThanOrEqual(TOLERANCE)
+    expect(Math.abs(middleRect.bottom - paneRect.bottom - OVERLAY_INSET), 'bottom floating inset ≈ one overlay inset').toBeLessThanOrEqual(TOLERANCE)
   })
 
   it('narrow band, END side: the mirrored inline-end selector floats with the same inset (near/top/bottom)', async () => {
@@ -267,9 +277,9 @@ describe('ui-super-shell — floating overlay margin (shell-polish wave, S2): th
     toggle.click(); await settle(el)
     const middleRect = middlePart(el).getBoundingClientRect()
     const paneRect = endSide(el).getBoundingClientRect()
-    expect(Math.abs(middleRect.right - paneRect.right - OVERLAY_INSET), 'near-edge (inline-end) floating inset ≈ 12px').toBeLessThanOrEqual(TOLERANCE)
-    expect(Math.abs(paneRect.top - middleRect.top - OVERLAY_INSET), 'top floating inset ≈ 12px').toBeLessThanOrEqual(TOLERANCE)
-    expect(Math.abs(middleRect.bottom - paneRect.bottom - OVERLAY_INSET), 'bottom floating inset ≈ 12px').toBeLessThanOrEqual(TOLERANCE)
+    expect(Math.abs(middleRect.right - paneRect.right - OVERLAY_INSET), 'near-edge (inline-end) floating inset ≈ one overlay inset').toBeLessThanOrEqual(TOLERANCE)
+    expect(Math.abs(paneRect.top - middleRect.top - OVERLAY_INSET), 'top floating inset ≈ one overlay inset').toBeLessThanOrEqual(TOLERANCE)
+    expect(Math.abs(middleRect.bottom - paneRect.bottom - OVERLAY_INSET), 'bottom floating inset ≈ one overlay inset').toBeLessThanOrEqual(TOLERANCE)
   })
 
   it('compact band, END side: the mirrored compact-block inline-end selector floats with the same inset', async () => {
@@ -278,9 +288,9 @@ describe('ui-super-shell — floating overlay margin (shell-polish wave, S2): th
     toggle.click(); await settle(el)
     const middleRect = middlePart(el).getBoundingClientRect()
     const paneRect = endSide(el).getBoundingClientRect()
-    expect(Math.abs(middleRect.right - paneRect.right - OVERLAY_INSET), 'near-edge (inline-end) floating inset ≈ 12px').toBeLessThanOrEqual(TOLERANCE)
-    expect(Math.abs(paneRect.top - middleRect.top - OVERLAY_INSET), 'top floating inset ≈ 12px').toBeLessThanOrEqual(TOLERANCE)
-    expect(Math.abs(middleRect.bottom - paneRect.bottom - OVERLAY_INSET), 'bottom floating inset ≈ 12px').toBeLessThanOrEqual(TOLERANCE)
+    expect(Math.abs(middleRect.right - paneRect.right - OVERLAY_INSET), 'near-edge (inline-end) floating inset ≈ one overlay inset').toBeLessThanOrEqual(TOLERANCE)
+    expect(Math.abs(paneRect.top - middleRect.top - OVERLAY_INSET), 'top floating inset ≈ one overlay inset').toBeLessThanOrEqual(TOLERANCE)
+    expect(Math.abs(middleRect.bottom - paneRect.bottom - OVERLAY_INSET), 'bottom floating inset ≈ one overlay inset').toBeLessThanOrEqual(TOLERANCE)
   })
 
   it('the scrim stays full-bleed behind the floated panel — the margin belongs to the panel, never the backdrop', async () => {
@@ -298,8 +308,8 @@ describe('ui-super-shell — floating overlay margin (shell-polish wave, S2): th
 })
 
 describe('ui-super-shell — GH #778: a rail+pane side overlays as a COMPOSED PAIR, never a stack (the end-side popover overlap)', () => {
-  const OVERLAY_INSET = 14 // px: --ui-super-shell-overlay-inset = the widget margin 2n (n 7 at the root register)
-  const BAR_SIZE = 56 // px: --ui-super-shell-bar-size = height 4n + two widget margins = 8n (the rail's own width)
+  const OVERLAY_INSET = SHELL_INSET // px: --ui-super-shell-overlay-inset = the widget margin 2n at the root register
+  const BAR_SIZE = SHELL_BAR // px: --ui-super-shell-bar-size = height 4n + two widget margins = 8n (the rail's own width)
   const TOLERANCE = 2 // px — cross-engine subpixel-rounding slack
 
   const middlePart = (el: UISuperShellElement): HTMLElement => el.querySelector('[data-part="middle"]') as HTMLElement
@@ -339,7 +349,7 @@ describe('ui-super-shell — GH #778: a rail+pane side overlays as a COMPOSED PA
 
     // the rail floats flush at the end (inline-end) edge, one float-inset in — unchanged base behavior
     expect(Math.abs(middle.right - rail.right - OVERLAY_INSET), 'rail floats at the end edge (≈ inset)').toBeLessThanOrEqual(TOLERANCE)
-    // THE REGRESSION: before the fix both carried inset-inline-end:inset, so the 252px pane extended UNDER
+    // THE REGRESSION: before the fix both carried inset-inline-end:inset, so the pane extended UNDER
     // the 54px rail (pane.right ≈ rail.right ≫ rail.left). After: the pane's end edge meets the rail's inner
     // edge — adjacent, not overlapping.
     expect(pane.right, 'the pane never extends under the rail (the GH #778 overlap)').toBeLessThanOrEqual(rail.left + TOLERANCE)

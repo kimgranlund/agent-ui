@@ -18,7 +18,7 @@
 :where(ui-super-shell) {
   /* T-0121 (ADR-0245 cl.6): the frame is a LAYOUT-level region, so every dimension below reads a level
      token and moves with n. A bar is one control row (height 4n) with the widget margin 2n above and
-     below it: 8n, 56px at the root register (n 7). A pane is nine layout margins wide (36n, 252px).
+     below it: 8n, 48px at the root register (n 6). A pane is nine layout margins wide (36n, 216px).
      Each fallback is the retired 18px module's value for that dimension, so a `[data-foundations='legacy']`
      region (ADR-0245 cl.10e), where the level tokens are unset, keeps the pre-cut frame. */
   --ui-super-shell-bar-size: calc(var(--md-sys-height, 1.875rem) + 2 * var(--md-sys-widget-margin, 0.75rem)); /* 8n bars + rails */
@@ -77,7 +77,7 @@
      override (agent-admin's migration sets 20rem/16rem, its shipped ui-split's own floors). ONE
      override author per shell instance: a second consumer stylesheet repointing the same instance's
      floor makes cascade order (not intent) the tiebreaker — silently, since both compile clean. */
-  --ui-super-shell-pane-min-size: calc(var(--md-sys-layout-margin, 1.6875rem) * 6); /* 24n: six layout margins, 168px at the root register */
+  --ui-super-shell-pane-min-size: calc(var(--md-sys-layout-margin, 1.6875rem) * 6); /* 24n: six layout margins, 144px at the root register */
   --ui-super-shell-canvas-min-size: calc(var(--md-sys-layout-margin, 1.6875rem) * 6); /* 24n */
   /* SPEC-R15 (GH #260) — a SEPARATE block-size floor, deliberately NOT the same token as
      `--ui-super-shell-canvas-min-size` above. That token is SPEC-R13a's INLINE-size floor only
@@ -110,7 +110,7 @@
      The move kept the value, so agent-admin's rendered spacing (the −12px, MEASURED by the REV 2026-07-30
      and ACCEPTED by Kim in the GH #380 Findings comment, 2026-07-31) did not change with it: a margin
      outside the box and the same padding inside it are one footprint. T-0121 repoints the value from a
-     third of the retired module to the control inset n (6px to 7px at the root register).
+     third of the retired module to the control inset n (6px at the root register, as before).
      GH #626 — this is a BLOCK-axis seam and nothing else. It briefly had a second, inline-axis consumer
      (chat-shell.css's narrow-tabs `padding-inline`, GH #575) that reused it only because the value
      equalled the bar's then-`padding-inline`; that coincidence ended when the bar became a padding-less
@@ -710,7 +710,7 @@
       position: absolute;
       inset-block: var(--ui-super-shell-overlay-inset);
       z-index: 2;
-      /* SPEC-R9d — cap the overlay so a canvas edge stays visible on the smallest screens (a 252px pane
+      /* SPEC-R9d: cap the overlay so a canvas edge stays visible on the smallest screens (a full pane
          never spans a 320px viewport): its own pane-size, but never wider than the container minus a bar
          AND the near-edge floating inset below (so the far-edge canvas gap stays exactly one bar wide,
          unchanged by the new margin). */

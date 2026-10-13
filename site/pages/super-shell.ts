@@ -96,8 +96,8 @@ content.append(
 content.append(
   demoShell([
     slot('header', 'header', 'Permanent chrome — hosts the collapse toggles.'),
-    slot('global-nav', 'global-nav', 'Outer rail: 8n (56px).'),
-    slot('nav-pane', 'nav-pane', 'Outer pane: 36n (252px).'),
+    slot('global-nav', 'global-nav', 'Outer rail: 8n (48px).'),
+    slot('nav-pane', 'nav-pane', 'Outer pane: 36n (216px).'),
     slot('section-nav', 'section-nav', 'Second outer pane — stacks after nav-pane, same side.'),
     slot('content', 'content', 'The mandatory slot — flexible, fills the rest.'),
     slot('options-section', 'options-section', 'Second options pane — stacks before options-pane, mirrors section-nav.'),

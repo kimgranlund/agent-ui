@@ -1,5 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+// T-0121: `--ui-agent-admin-shell-gutter` reads the widget margin 2n, derived at the root register (never a literal).
+const SHELL_GUTTER = resolve('product', 'sm', 'md').widget.margin
 // GH #849 — the reference typeahead needs REAL keystrokes + the real focus/caret the engine owns.
 import { server, userEvent } from 'vitest/browser'
 
@@ -216,7 +218,7 @@ describe('ui-agent-admin cross-engine smoke — the three-place shell grammar (G
   // consumer deliberately reads `--ui-agent-admin-shell-gutter` (agent-admin.css's own comment on the
   // rule) rather than the fleet's generic `--ui-bar-inline-inset` default. GH #1260 (Kim's ruling) made
   // the pane holder FLUSH to the shell edge (canvas padding 0), so the header content no longer shares
-  // the holder's screen-x, it sits exactly ONE shell-gutter (the widget margin 2n, 14px at the root register) inside it, and
+  // the holder's screen-x, it sits exactly ONE shell-gutter (the widget margin 2n at the root register) inside it, and
   // the holder itself sits ON the shell's own start edge. Both halves are pinned, both engines, at both
   // bands (a band crossing changes which pane-visibility control paints, never the header's own inset).
   it('header inset rhythm: the header content sits exactly one shell-gutter inside the FLUSH pane holder (GH #1260)', async () => {
@@ -234,7 +236,7 @@ describe('ui-agent-admin cross-engine smoke — the three-place shell grammar (G
       const shell = el.querySelector('ui-super-shell') as HTMLElement
       expect(header.getBoundingClientRect().width, `width ${width}: the header genuinely renders`).toBeGreaterThan(0)
       const gutterPx = Number.parseFloat(getComputedStyle(header).paddingInlineStart)
-      expect(gutterPx, `width ${width}: the header still reads the shell-gutter token (the widget margin, 14px) as its own inset`).toBe(14)
+      expect(gutterPx, `width ${width}: the header still reads the shell-gutter token (the widget margin) as its own inset`).toBe(SHELL_GUTTER)
       expect(
         Math.abs(holder.getBoundingClientRect().x - shell.getBoundingClientRect().x),
         `width ${width}: the pane holder is FLUSH to the shell's start edge (GH #1260 — no canvas gutter)`,
@@ -849,8 +851,8 @@ describe('ui-agent-admin cross-engine smoke — the canvas/region gutter is GONE
     // GH #1274 (Kim, post-#1260): the plain-div settings pane gets the gutter-equivalent INNER padding —
     // the chat/copilot panes' content rhythm comes from ui-conversation's own chrome; settings had none.
     // Pane EDGES stay flush (the edge-to-edge pin file is unchanged); only content is inset. The value is the
-    // shell gutter: the widget margin 2n since T-0121 (14px at the root register; 12px on the retired module).
-    expect(getComputedStyle(settings).paddingInlineStart, 'settings own inner padding (GH #1274)').toBe('14px')
+    // shell gutter: the widget margin 2n since T-0121 (two thirds of the retired module before).
+    expect(getComputedStyle(settings).paddingInlineStart, 'settings own inner padding (GH #1274)').toBe(`${SHELL_GUTTER}px`)
     expect(getComputedStyle(author).paddingInlineStart, 'copilot hosts ui-conversation — no own padding').toBe('0px')
     const holder = el.querySelector('[data-part="pane-holder"]') as HTMLElement
     expect(getComputedStyle(holder).columnGap, 'the row gap is 0 — regions meet flush; the seam is a painted hairline, not spacing').toBe('0px')
@@ -872,9 +874,9 @@ describe('ui-agent-admin cross-engine smoke — the canvas/region gutter is GONE
     expect(authorCs.paddingBlockEnd).toBe('0px')
     const settingsCs = getComputedStyle(settings)
     expect(settingsCs.paddingBlockStart, 'the block-start share rides the sticky strip now (GH #1318)').toBe('0px')
-    expect(settingsCs.paddingBlockEnd, 'settings inner padding (GH #1274)').toBe('14px')
+    expect(settingsCs.paddingBlockEnd, 'settings inner padding (GH #1274)').toBe(`${SHELL_GUTTER}px`)
     const strip = settings.querySelector('ui-tabs[data-part="settings-nav"]') as HTMLElement
-    expect(getComputedStyle(strip).paddingBlockStart, 'the strip carries the handed-off #1274 gutter (GH #1318)').toBe('14px')
+    expect(getComputedStyle(strip).paddingBlockStart, 'the strip carries the handed-off #1274 gutter (GH #1318)').toBe(`${SHELL_GUTTER}px`)
   })
 })
 

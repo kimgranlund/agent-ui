@@ -33,6 +33,7 @@
 // turn content). 414×700 is the geometry that actually reproduces Kim's report.
 import { describe, it, expect, beforeAll, vi } from 'vitest'
 import { page } from 'vitest/browser'
+import { resolve } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
 
 // GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles, real-timer
 // waits, the `waitFor` retry poll below, a `page.viewport()` driver round trip, and a mid-test
@@ -117,11 +118,12 @@ describe('gen-ui-live — GH #260 regression at Kim\'s actual reported geometry 
     // Pre-scroll (the page's OWN default, un-interacted state): this is the exact state Kim's
     // screenshot captured — assert it honestly reproduces the reported symptom before proving the
     // fix, rather than only ever checking the post-scroll state.
-    // ADR-0245 cut (v2 re-pin): the smaller derived chrome leaves ~91px of the canvas on screen at 414×700
-    // (was ~44px under the old layout), so the sliver ceiling is the canvas's own floor (160px, the same
-    // figure the post-scroll check below must reach) instead of a fixed 60: the canvas floor is not yet
-    // visible and a deliberate scroll is still required.
-    const CANVAS_FLOOR = 160
+    // ADR-0245 cut (v2 re-pin): the smaller derived chrome leaves part of the canvas on screen at 414×700
+    // (~44px under the old layout), so the sliver ceiling is the canvas's own floor (the same figure the
+    // post-scroll check below must reach) instead of a fixed 60: the canvas floor is not yet visible and a
+    // deliberate scroll is still required. T-0121: the floor is six layout margins (24n), read from
+    // scale.mjs at the root register, less a 2px rounding allowance.
+    const CANVAS_FLOOR = resolve('product', 'sm', 'md').page.margin * 6 - 2
     const preScroll = visibleRect(canvas)
     expect(preScroll.height, 'pre-scroll, the canvas floor is not yet visible, only a sliver of it as in the ORIGINAL bug report; a deliberate scroll is required, same as any normal overflowing page').toBeLessThan(CANVAS_FLOOR)
 
@@ -131,8 +133,8 @@ describe('gen-ui-live — GH #260 regression at Kim\'s actual reported geometry 
     expect(middle.scrollTop, 'middle genuinely scrolled — a no-op here would mean the pre-fix overflow:visible regressed').toBeGreaterThan(0)
 
     const postScroll = visibleRect(canvas)
-    // --ui-super-shell-canvas-min-block-size = 9 modules × 1.125rem = 162px at the default 16px root
-    // font (SPEC-R15b) — the floor SPEC-R15a's scroll seam makes genuinely reachable.
+    // --ui-super-shell-canvas-min-block-size = six layout margins, 24n (SPEC-R15b; nine 18px modules before
+    // T-0121), the floor SPEC-R15a's scroll seam makes genuinely reachable.
     expect(postScroll.height, 'canvas\'s floor is now genuinely VISIBLE (not just present in the DOM) once scrolled').toBeGreaterThanOrEqual(CANVAS_FLOOR)
 
     const frameVisible = visibleRect(sandboxFrame)

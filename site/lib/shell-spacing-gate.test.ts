@@ -5,8 +5,8 @@ import { describe, it, expect } from 'vitest'
 // shipped ladder rung IS drift, never coincidence, it silently forks that box off every future
 // retune of n. T-0121 (ADR-0245 cl.6) repointed the ladder: it was the shell's fixed 18px module
 // multiples plus --md-sys-space-* at density 1, and is now the derived LEVELS at the root register
-// (c, n, the group, widget, card and layout margins and gutters, the control height 4n) plus the
-// shell's own n multiples (bar 8n, floors 24n, pane 36n), all computed from scale.mjs.
+// (c, the control, group, widget, card and page margins and gutters, the control height 4n) plus the
+// shell's own multiples (bar 8n, floors 24n, pane 36n), all computed from scale.mjs.
 // This deterministic, browser-free test (plain `npm test`, no browser needed — it reads CSS source
 // as text) holds the count at the AC19 baseline. A future red here reads as law, not lint noise.
 //
@@ -107,17 +107,19 @@ function rootRegister(): Resolved {
 }
 const REGISTER = rootRegister()
 const LEVEL_PX = [
-  REGISTER.c, REGISTER.inset, REGISTER.h,
-  ...[REGISTER.group, REGISTER.widget, REGISTER.card, REGISTER.layout].flatMap((l) => [l.margin, l.gutter]),
+  REGISTER.c, REGISTER.h,
+  ...[REGISTER.control, REGISTER.group, REGISTER.widget, REGISTER.card, REGISTER.page].flatMap((l) => [l.margin, l.gutter]),
 ]
-const SHELL_N_MULTIPLES = [8, 24, 36] // super-shell.css's token block: bars and rails 8n, the floors 24n, panes 36n
-const LADDER_PX = [...new Set([...LEVEL_PX, ...SHELL_N_MULTIPLES.map((m) => m * REGISTER.n)])]
+// super-shell.css's token block, in resolve()'s own terms (the CSS names the page level `layout`): bars and
+// rails a control row plus two widget margins (8n), the floors six page margins (24n), panes nine (36n).
+const SHELL_PX = [REGISTER.h + 2 * REGISTER.widget.margin, 6 * REGISTER.page.margin, 9 * REGISTER.page.margin]
+const LADDER_PX = [...new Set([...LEVEL_PX, ...SHELL_PX])]
 
 // AC19(c), the allowlist: an explicit (file, declaration, reason) list. Growing it is a reviewed act,
-// never a drive-by (R11c). It is EMPTY since T-0121: its two entries were the shell module's own root
-// literal (`--ui-super-shell-module: 1.125rem`, a declaration that no longer exists) and the pane-resizer's
-// 4px ink (`0.25rem`), which equalled the old --md-sys-space-xs rung and equals no derived level, so it
-// no longer needs an exception. The mechanism stays for the next reviewed entry.
+// never a drive-by (R11c). T-0121 dropped its two module-era entries: the shell module's own root literal
+// (`--ui-super-shell-module: 1.125rem`, a declaration that no longer exists) and the pane-resizer's 4px ink
+// (`0.25rem`), which equalled the old --md-sys-space-xs rung and equals no derived level. It holds ONE
+// entry now, a content cap that collides with a shell rung at the root register (below).
 interface AllowlistEntry {
   file: string
   selectorContains: string
@@ -125,7 +127,18 @@ interface AllowlistEntry {
   literal: string
   reason: string
 }
-const ALLOWLIST: AllowlistEntry[] = []
+const ALLOWLIST: AllowlistEntry[] = [
+  {
+    file: 'packages/agent-ui/app/src/controls/conversation/conversation.css',
+    selectorContains: "[data-part='narration']",
+    property: '--ui-status-stream-max-block-size',
+    literal: '9rem',
+    reason:
+      "A CONTENT cap, not a level: the height bound of one turn's narration strip, a fraction of " +
+      "status-stream's own default. 9rem is 144px, which equals the shell floor (six page margins, 24n) " +
+      'only at the root register n 6, numerically and not semantically.',
+  },
+]
 
 interface Declaration {
   file: string
@@ -301,8 +314,8 @@ describe('AC19 — the shell-family spacing-literal drift gate (SPEC-R11c/AC19)'
     expect(missing, missing.join(', ')).toEqual([])
   })
 
-  it('the allowlist is EMPTY since T-0121 retired the module (R11c, growing it is a reviewed act, never a drive-by)', () => {
-    expect(ALLOWLIST.length).toBe(0)
+  it('the allowlist carries exactly ONE entry, the narration strip\'s content cap (R11c, growing it is a reviewed act, never a drive-by)', () => {
+    expect(ALLOWLIST.length).toBe(1)
   })
 
   it('the ladder is the derived levels at the root register, read from scale.mjs (anti-vacuous)', () => {
@@ -321,7 +334,7 @@ describe('AC19 — the shell-family spacing-literal drift gate (SPEC-R11c/AC19)'
     const margin = REGISTER.widget.margin
     const hits = (value: string): number[] => literalsOf(value).map((h) => h.px).filter((px) => LADDER_PX.some((l) => Math.abs(px - l) < 0.01))
     expect(hits(`calc(${rem(margin)} * 2)`), 'a raw level literal in a calc arm is drift').toEqual([margin])
-    expect(hits(`${REGISTER.inset}px ${rem(REGISTER.layout.margin)}`), 'both arms of a two-value mint').toEqual([REGISTER.inset, REGISTER.layout.margin])
+    expect(hits(`${REGISTER.control.margin}px ${rem(REGISTER.page.margin)}`), 'both arms of a two-value mint').toEqual([REGISTER.control.margin, REGISTER.page.margin])
     expect(hits(`calc(var(--ui-x) - var(--md-sys-c, ${REGISTER.c}px))`), "a foundations token's own fallback is not a mint").toEqual([])
     expect(hits(`var(--ui-x, ${rem(margin)})`), 'a fallback of any other var() is still scanned').toEqual([margin])
     expect(hits('calc(var(--md-sys-layout-margin) * 9)'), 'a level token with a unitless multiplier has no literal').toEqual([])

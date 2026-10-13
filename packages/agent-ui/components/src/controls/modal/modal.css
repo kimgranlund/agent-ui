@@ -33,11 +33,11 @@
   --ui-modal-ink: var(--md-sys-color-neutral-on-surface);
   --ui-modal-outline: var(--md-sys-color-neutral-outline-variant); /* the faint dialog frame */
   --ui-modal-radius: var(--md-sys-card-radius, var(--md-sys-shape-corner-base)); /* the shared fleet radius (ADR-0015 cl.5) */
-  /* The [data-box] region tokens the dialog hands its regions (ADR-0245 cl.6, card level: margin n + pad 2n = the card margin 3n).
-     Outside an opt-in data-tier region each falls back to container-box.css's own default, so default pages are unchanged. */
+  /* The [data-box] region tokens the dialog hands its regions (ADR-0245 cl.6, card level: margin n + pad 2n = the card margin 3n,
+     on BOTH axes since T-0121: the block pad was n). Under a data-foundations="legacy" region each falls back to today's rem value. */
   --ui-modal-box-inset: var(--md-sys-inset, 0.375rem);
   --ui-modal-box-pad-inline: var(--md-sys-card-gutter, 0.75rem);
-  --ui-modal-box-pad-block: var(--md-sys-inset, 0.375rem);
+  --ui-modal-box-pad-block: var(--md-sys-card-gutter, 0.375rem);
   --ui-modal-box-gap: var(--md-sys-card-gutter, 0.5rem); /* the shell pad off the density-responsive ladder (NOT a control height) */
   --ui-modal-scrim: var(--md-sys-color-dialog-backdrop); /* the ::backdrop blocking wash — black 80% opacity (TKT-0019; was --md-sys-color-neutral-scrim, too light) */
   /* GH #1554 — opacity alone cannot defeat arbitrarily high-contrast page content: a near-black source pixel

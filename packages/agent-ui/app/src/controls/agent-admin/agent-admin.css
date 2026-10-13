@@ -165,7 +165,7 @@
      T-0121 (ADR-0245 cl.6): the padded gutter this consumer wants on the shell's content-holding
      parts (the header row, `[data-part='pane']` and the panels below) is the WIDGET MARGIN 2n, the same
      level token the shell's own overlay inset reads. It was two thirds of the shell's 18px module (a fixed
-     12px) before the module retired; it is 14px at the root register and moves with n.
+     12px) before the module retired; it is 12px at the root register (n 6) and moves with n.
      THIS rule is the file banner's ONE remaining deliberate exception to "styles block consumes ONLY
      --ui-agent-admin-*". The alias was first minted here because the module it chained off lived only on
      the composed `ui-super-shell`, a DESCENDANT of `ui-agent-admin` (a var() resolves at its own
