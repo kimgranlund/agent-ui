@@ -194,7 +194,7 @@ describe('ui-tabs — [density] shifts shell spacing; the tab control height is 
 //  padding 2n - c (ADR-0245 Amendment 4 superseding GH #536's removal, both engines)
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 
-describe('ui-tabs — strip-gap resolves the exact tight gutter c; a tab carries the control rule padding 2n - c (GH #542, ADR-0245 Amendment 4, both engines)', () => {
+describe('ui-tabs: strip-gap resolves the exact tight gutter c; a tab carries the control rule padding 2n - c (GH #542, ADR-0245 Amendment 4, both engines)', () => {
   it('at the root register the tablist column-gap/gap is c (2px) and a rendered tab is padding-inline 2n - c (10px)', () => {
     const { tabs, tabEls } = mount(THREE)
     const tablist = tabs.querySelector('[data-part="tablist"]') as HTMLElement
