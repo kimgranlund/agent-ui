@@ -8,7 +8,7 @@
 // The sheet is the skill's tokens.css form under ADR-0140 names: the tier inputs on `[data-tier="…"]`,
 // scale, size and density on their attributes, and one derived block (`--md-sys-n`, the container unit
 // `--md-sys-m`, the box values as multiples of n or c, the label inset n - c of the control rule (Amendment 4),
-// the type roles, the chip level and the four container levels) re-declared
+// the control pill 2n (Amendment 5), the type roles, the chip level and the four container levels) re-declared
 // wherever an input changes, so each element computes its own n and m. ROOT_DEFAULT is the cut (clause 10a): true, so `:root` takes ROOT_INPUTS (product at
 // scale sm) and the full recompute list. Set it to false to roll the cut back: every declaration then sits
 // inside an opt-in `[data-tier]` region and each `var(<derived>, <today>)` resolves to today's value again.
@@ -85,6 +85,9 @@ function derivedDeclarations() {
     // The control rule (Amendment 4): the text slot carries the label inset n - c, so gutter c + inset = margin n.
     ['--md-sys-label-inset', `calc(var(--md-sys-inset) - ${C})`],
     ['--md-sys-radius', `calc(${N} * 1px)`],
+    // The pill (Amendment 5): every single-line control takes h/2 = 2n; a textarea takes it too, and a panel
+    // takes its row's 2n plus its own inset, so rows nest concentrically.
+    ['--md-sys-control-radius', 'calc(var(--md-sys-height) / 2)'],
     ['--md-sys-icon-box', `calc(${N} * 2px)`],
     ['--md-sys-glyph-box', `calc(${N} * 2px - 2 * ${C})`],
     ['--md-sys-glyph-stroke', `max(1.5px, ${C} / 2)`],
@@ -99,10 +102,12 @@ function derivedDeclarations() {
     ['--md-sys-type-field-label', lin(CFG.linear.fieldLabel)],
     ['--md-sys-type-group-label', lin(CFG.linear.groupLabel)],
     ['--md-sys-type-floor', `${CFG.floor}px`],
-    // The chip level (tag, badge, kbd): margin c, gutter c, radius ceil(n/2); the checkbox box shares the radius.
+    // The chip level (tag, badge, kbd): margin c, gutter c, and the chip pill n + c, h/2 of the 2n + 2c chip
+    // (Amendment 5). The checkbox box stays a rounded square at ceil(n/2), the skill's checkboxRadius.
     ['--md-sys-chip-margin', C],
     ['--md-sys-chip-gutter', C],
-    ['--md-sys-chip-radius', `calc(round(up, ${N} / 2, 1) * 1px)`],
+    ['--md-sys-chip-radius', `calc(var(--md-sys-inset) + ${C})`],
+    ['--md-sys-checkbox-radius', `calc(round(up, ${N} / 2, 1) * 1px)`],
     ['--md-sys-group-margin', `calc(var(--md-sys-inset) + ${C})`],
     ['--md-sys-group-gutter', C],
     ['--md-sys-group-radius', `calc(var(--md-sys-radius) + ${C})`],

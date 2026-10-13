@@ -4,8 +4,8 @@
 // mounts the control twice, once on a plain page (the root register since the cut, product at scale sm) and once
 // under `data-foundations="legacy"` (clause 10e, today's geometry), and measures the element clause 3 rules on:
 // the host, a named part or a pseudo-element. CLASSES is clause 3 as a table: each control class names its
-// measured element and the quantities clause 3 fixes for it (a frame control: height 4n, inline padding n, radius
-// n; the button and toggle pill; a 2n indicator box; a listbox at the group level; and so on). Amendment 4 adds
+// measured element and the quantities clause 3 fixes for it (a frame control: height 4n, inline padding n, the
+// pill radius 2n of Amendment 5; the button and toggle pill; a 2n indicator box; a listbox at the group level; and so on). Amendment 4 adds
 // the control rule: where a class names a `slot` (the text slot inside the host) its inline padding is the label
 // inset n - c, and a control whose label is anonymous host content carries margin + inset on the host. A control whose
 // host clause 3 gives no rule (a panel, an overlay, a preset widget, a display atom) is listed in EXEMPT with the
@@ -41,14 +41,14 @@ const TOLERANCE = 0.5
 const LABEL = '[data-part="label"]'
 const EDITOR = '[data-part="editor"]'
 export const CLASSES = {
-  frame: { slot: EDITOR, rule: (r) => ({ height: r.h, padding: r.control.margin, inset: r.labelMargin, radius: r.control.radius }) }, // a field: height 4n, margin n, the editor's label inset n - c, radius n
+  frame: { slot: EDITOR, rule: (r) => ({ height: r.h, padding: r.control.margin, inset: r.labelMargin, radius: 2 * r.n }) }, // a field: height 4n, margin n, the editor's label inset n - c, the pill 2n (Amendment 5)
   pill: { slot: LABEL, rule: (r) => ({ height: r.h, padding: r.control.margin, inset: r.labelMargin, radius: 2 * r.n }) }, // button: margin n, the label's inset n - c, the pill radius 2n (Amendment 3)
   // toggle: its label is anonymous host content (toggle.md), so the host edge carries margin + inset = 2n - c
   barePill: { rule: (r) => ({ height: r.h, padding: r.control.margin + r.labelMargin, radius: 2 * r.n }) },
-  trigger: { part: 'trigger', slot: LABEL, rule: (r) => ({ height: r.h, padding: r.control.margin, inset: r.labelMargin, radius: r.control.radius }) }, // a popup field's frame
-  cell: { part: 'cell', rule: (r) => ({ height: r.h, radius: r.control.radius }) }, // one frame per character cell
-  multiline: { slot: EDITOR, rule: (r) => ({ padding: r.control.margin, inset: r.labelMargin, radius: r.control.radius }) }, // margin n, the editor's inset and radius n; rows set the height
-  listbox: { rule: (r) => ({ padding: r.c, radius: r.group.radius }) }, // the group level: padding c, radius n + c
+  trigger: { part: 'trigger', slot: LABEL, rule: (r) => ({ height: r.h, padding: r.control.margin, inset: r.labelMargin, radius: 2 * r.n }) }, // a popup field's frame, the pill 2n
+  cell: { part: 'cell', rule: (r) => ({ height: r.h, radius: 2 * r.n }) }, // one frame per character cell, the pill 2n
+  multiline: { slot: EDITOR, rule: (r) => ({ padding: r.control.margin, inset: r.labelMargin, radius: 2 * r.n }) }, // margin n, the editor's inset, the single-line control radius 2n; rows set the height
+  listbox: { rule: (r) => ({ padding: r.c, radius: 2 * r.n + r.c }) }, // padding c; concentric radius: the row pill 2n plus the inset c (Amendment 5)
   // segments 4n, text edge 2n - c on the segment (an anonymous label); a segment's own size is unconsumed
   // (segment.md), so the size goes on the group
   segment: { parent: 'ui-segmented-control', sizeOnParent: true, rule: (r) => ({ height: r.h, padding: r.control.margin + r.labelMargin }) },
@@ -235,21 +235,22 @@ function selftest() {
     console.log(`${cond ? 'ok  ' : 'FAIL'} ${label}`)
   }
   const md = expected('ui-text-field', 'md')
-  check('a field at the root md: height 24, margin n 6, label inset n - c 4, radius n 6', md.height === 24 && md.padding === 6 && md.inset === 4 && md.radius === 6)
+  check('a field at the root md: height 24, margin n 6, label inset n - c 4, the pill radius 2n 12', md.height === 24 && md.padding === 6 && md.inset === 4 && md.radius === 12)
   const lg = expected('ui-button', 'lg')
   check('a button at the root lg: height 28, margin n 7, label inset 5 (text edge 2n - c 12), the pill radius 2n 14', lg.height === 28 && lg.padding === 7 && lg.inset === 5 && lg.padding + lg.inset === 12 && lg.radius === 14)
   const bare = expected('ui-toggle', 'lg')
   check('a toggle carries margin + inset on the host (anonymous label): padding 2n - c 12, no slot quantity', bare.padding === 12 && !('inset' in bare))
   check('a segment reads the same text edge 2n - c on the segment: 10 at md', expected('ui-segment', 'md').padding === 10)
-  check('a derived row on the formula has no mismatch', mismatches({ tag: 'ui-select', size: 'sm', height: 20, padding: 5, inset: 3, radius: 5 }).length === 0)
-  check('the legacy field radius 12 at md is a radius mismatch', mismatches({ tag: 'ui-select', size: 'md', height: 24, padding: 6, inset: 4, radius: 12 }).join() === 'radius')
-  check('a text slot with no label inset is an inset mismatch (the old n edge)', mismatches({ tag: 'ui-select', size: 'md', height: 24, padding: 6, inset: 0, radius: 6 }).join() === 'inset')
-  check('sub-pixel layout noise is tolerated', mismatches({ tag: 'ui-select', size: 'md', height: 24.25, padding: 6, inset: 4, radius: 6 }).length === 0)
+  check('a derived row on the formula has no mismatch', mismatches({ tag: 'ui-select', size: 'sm', height: 20, padding: 5, inset: 3, radius: 10 }).length === 0)
+  check('the legacy field radius 12 at sm is a radius mismatch (the pill is 10)', mismatches({ tag: 'ui-select', size: 'sm', height: 20, padding: 5, inset: 3, radius: 12 }).join() === 'radius')
+  check('the old field radius n 6 at md is a radius mismatch (the pill is 12)', mismatches({ tag: 'ui-select', size: 'md', height: 24, padding: 6, inset: 4, radius: 6 }).join() === 'radius')
+  check('a text slot with no label inset is an inset mismatch (the old n edge)', mismatches({ tag: 'ui-select', size: 'md', height: 24, padding: 6, inset: 0, radius: 12 }).join() === 'inset')
+  check('sub-pixel layout noise is tolerated', mismatches({ tag: 'ui-select', size: 'md', height: 24.25, padding: 6, inset: 4, radius: 12 }).length === 0)
   const box = expected('ui-checkbox', 'md')
   check('an indicator is ruled on its 2n box, not the 4n frame: checkbox md box 12, radius ceil(n/2) 3', box.height === 12 && box.radius === 3 && !('padding' in box))
   check('the checkbox radius rounds up: 3 at sm (n 5), 4 at lg (n 7)', expected('ui-checkbox', 'sm').radius === 3 && expected('ui-checkbox', 'lg').radius === 4)
-  check('a listbox is ruled at the group level: padding c 2, radius n + c 8', expected('ui-multi-select', 'md').padding === 2 && expected('ui-multi-select', 'md').radius === 8)
-  check('a measured element that is missing is a mismatch, never a pass', mismatches({ tag: 'ui-select', size: 'md', found: false, height: 24, padding: 6, inset: 4, radius: 6 }).join() === 'measured element not found')
+  check('a listbox nests its rows: padding c 2, radius 2n + c 14', expected('ui-multi-select', 'md').padding === 2 && expected('ui-multi-select', 'md').radius === 14)
+  check('a measured element that is missing is a mismatch, never a pass', mismatches({ tag: 'ui-select', size: 'md', found: false, height: 24, padding: 6, inset: 4, radius: 12 }).join() === 'measured element not found')
   check('a sized tag with no class is reported, and an unruled new tag would be caught', mismatches({ tag: 'ui-zz', size: 'md' }).join() === 'no clause 3 class' && unruled(['ui-zz']).join() === 'ui-zz')
   const tags = sizedTags()
   check('the sized fleet is found and includes button and text-field', tags.includes('ui-button') && tags.includes('ui-text-field') && !tags.includes('ui-icon'))

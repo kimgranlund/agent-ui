@@ -80,7 +80,7 @@
   /* Size-INVARIANT frame quantities — the entry-control class referents (geometry.md "Frame quantities that
      split by control class"), the SAME fleet tokens ui-text-field's #71/#21 amendments introduced. */
   --ui-textarea-corner-shape: var(--md-sys-corner-shape, round); /* squircle in a data-tier region (ADR-0245 cl.3) */
-  --ui-textarea-radius: var(--md-sys-radius, var(--md-sys-shape-corner-base)); /* fixed rounded-rect — the container-fleet referent, not the action h/2 pill */
+  --ui-textarea-radius: var(--md-sys-control-radius, var(--md-sys-shape-corner-base)); /* the single-line control radius 2n (ADR-0245 Amendment 5), so a textarea's corners match the field above it; the fixed rounded-rect under the legacy opt-out */
   --ui-textarea-min-inline-size: 20ch; /* the [inline] hug-state typing-width floor (ADR-0223 clause 3(b), superseding ADR-0021's default-state placement) — native <textarea> parity so a hugging textarea is hittable. The FILL default needs no floor: the container is the floor. Token name + default unchanged. */
 
   /* Visible inline-validation message tokens (ADR-0029 A1, the text-field precedent) — the .ui-textarea-message

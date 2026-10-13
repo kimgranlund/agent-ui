@@ -104,8 +104,8 @@
     inline-size: var(--ui-checkbox-box);
     block-size: var(--ui-checkbox-box);
     border: 2px solid var(--ui-checkbox-border);
-    /* radius ceil(n/2), the chip radius (ADR-0245 Amendment 4, the skill's checkboxRadius); today's box/5 under the legacy opt-out */
-    border-radius: var(--md-sys-chip-radius, calc(var(--ui-checkbox-box) * 0.2));
+    /* radius ceil(n/2), a rounded square (the skill's checkboxRadius; ADR-0245 Amendment 5 moves it off the chip pill); today's box/5 under the legacy opt-out */
+    border-radius: var(--md-sys-checkbox-radius, calc(var(--ui-checkbox-box) * 0.2));
     background-color: var(--ui-checkbox-bg);
     /* State-PAINT transition only — geometry never animates (geometry.md). */
     transition:

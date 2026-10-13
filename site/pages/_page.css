@@ -696,7 +696,7 @@ code {
   font-weight: 400;
   padding: 0 calc(2 * var(--md-sys-c)); /* the chip level (ui-badge's own pad): text edge 2c */
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: calc(var(--md-sys-radius) / 2); /* the chip radius n/2, ui-badge's */
+  border-radius: calc(var(--md-sys-radius) / 2); /* n/2: inline prose code wraps across lines, so it stays a soft rect, not ui-badge's chip pill (ADR-0245 Amendment 5) */
   background: var(--md-sys-color-neutral-surface-high);
   color: var(--md-sys-color-neutral-on-surface);
   -webkit-box-decoration-break: clone;

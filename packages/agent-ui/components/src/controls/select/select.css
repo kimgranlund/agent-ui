@@ -66,7 +66,7 @@
   --ui-select-edge: var(--md-sys-inset, calc(var(--ui-select-height) / 2)); /* the trigger's box margin: n derived (ADR-0245 cl.3), h/2 under the legacy opt-out */
   --ui-select-label-inset: var(--md-sys-label-inset, 0px); /* the control rule (Amendment 4): the label carries n - c, text edge 2n - c */
   --ui-select-corner-shape: var(--md-sys-corner-shape, round); /* squircle in a data-tier region */
-  --ui-select-radius: var(--md-sys-radius, var(--md-sys-shape-corner-base)); /* fixed rounded-rect radius, like text-field */
+  --ui-select-radius: var(--md-sys-control-radius, var(--md-sys-shape-corner-base)); /* the pill h/2 = 2n, like text-field (ADR-0245 Amendment 5); the fixed rounded-rect under the legacy opt-out */
 
   /* ── Trigger geometry (Control class, default size = md) — off the §1-row ramp (ADR-0038).
      height/font/icon from the explicit per-[scale] table; gap = font/2 × density (on `*`).
@@ -98,7 +98,7 @@
   --ui-select-listbox-bg: var(--md-sys-color-neutral-surface);
   --ui-select-listbox-ink: var(--md-sys-color-neutral-on-surface);
   --ui-select-listbox-outline: var(--md-sys-color-neutral-outline-variant);
-  --ui-select-listbox-radius: var(--md-sys-group-radius, var(--md-sys-shape-corner-base));
+  --ui-select-listbox-radius: calc(var(--ui-select-option-radius) + var(--ui-select-listbox-padding)); /* concentric (ADR-0245 Amendment 5): the row's 2n plus the panel's own inset c; corner-base under the legacy opt-out */
   /* GH #906 — the #874 fleet unobtrusive-scrollbar idiom (own-chain off the shared dimensional
      constant + colour roles, TKT-0066 item 5 law): this panel was fully untreated before (raw
      platform default), painting the chunky always-visible scrollbar the issue reports. */
@@ -153,7 +153,7 @@
   --ui-select-option-inline: var(--ui-select-option-inline-derived, calc(var(--ui-select-height) / 4));            /* h/4 — pairs with listbox-padding to total h/2 */
   --ui-select-option-inline-derived: calc(var(--md-sys-inset) + var(--md-sys-label-inset)); /* a row is a control (Amendment 4): margin n + label inset n - c, text edge 2n - c from the row edge; undefined under the legacy opt-out, so the h/4 fallback above wins */
   --ui-select-option-font: var(--ui-select-font);   /* options were size-blind on FONT too (bug fix) — now the ramp */
-  --ui-select-option-radius: calc(var(--ui-select-listbox-radius) - var(--ui-select-listbox-padding)); /* nested-radius off the REAL inset (was a hardcoded 4px, ADR-0018) */
+  --ui-select-option-radius: var(--md-sys-control-radius, calc(var(--md-sys-shape-corner-base) - var(--ui-select-listbox-padding))); /* a row is a single-line control: the pill 2n (ADR-0245 Amendment 5); the nested corner-base - inset under the legacy opt-out */
   --ui-select-option-bg-hover: var(--md-sys-color-neutral-surface-high);
   --ui-select-option-bg-selected: var(--md-sys-color-primary-container-low);
   --ui-select-option-ink-selected: var(--md-sys-color-primary-high);

@@ -23,6 +23,10 @@ const EXPECTED: ReadonlyArray<readonly [string, (r: Resolved) => number]> = [
   ['inset', (r) => r.control.margin],
   ['label-inset', (r) => r.labelMargin], // the control rule (Amendment 4): gutter c + label inset = margin n
   ['radius', (r) => r.control.radius],
+  // the pill (Amendment 5, a derived exception beside scale.mjs): a single-line control is h/2 = 2n; the chip
+  // pill is h/2 of the 2n + 2c chip, n + c; the checkbox box keeps the skill's ceil(n/2)
+  ['control-radius', (r) => r.h / 2],
+  ['checkbox-radius', (r) => r.parts.checkboxRadius],
   ['icon-box', (r) => r.icon],
   ['glyph-box', (r) => r.glyph],
   ['glyph-stroke', (r) => Math.max(1.5, r.c / 2)],
@@ -37,7 +41,11 @@ const EXPECTED: ReadonlyArray<readonly [string, (r: Resolved) => number]> = [
   ['type-group-label', (r) => r.type.groupLabel],
   // the tokens keep the name `layout` (ADR-0140 names); the skill calls that level `page`
   ...([['chip', 'chip'], ['group', 'group'], ['widget', 'widget'], ['card', 'card'], ['layout', 'page']] as const).flatMap(([token, level]) =>
-    (['margin', 'gutter', 'radius'] as const).map((q) => [`${token}-${q}`, (r: Resolved) => r[level][q]] as const),
+    (['margin', 'gutter', 'radius'] as const).map((q) =>
+      token === 'chip' && q === 'radius'
+        ? (['chip-radius', (r: Resolved) => r.n + r.c] as const)
+        : ([`${token}-${q}`, (r: Resolved) => r[level][q]] as const),
+    ),
   ),
 ]
 /** The unitless n and m read as a length through `* 1px`; every token falls back to 0.25px when undefined. */
