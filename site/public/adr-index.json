@@ -1678,5 +1678,12 @@
     "description": "The next preset widgets: a widget is also admitted when its type is inexpressible or its law lives only in prompt text, ResultCard joins the default catalog, C…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0245",
+    "url": "./adr-index.html#adr-0245",
+    "description": "Foundations derive from one n: tier, scale and size choose n per element, controls, containers and type are formulas over it, icon and glyph get separate boxes…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
