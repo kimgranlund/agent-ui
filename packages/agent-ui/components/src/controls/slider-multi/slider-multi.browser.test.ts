@@ -8,14 +8,15 @@ import { describe, it, expect } from 'vitest'
 //       selection holds; lo≤hi invariant maintained during drag.
 //   AC3 (forced-colors) — @media forced-colors: the rail/fill/thumbs have forced-color-adjust:none;
 //       stylesheet assertions (verified by reading the CSS @media block).
-//   AC4 (no --md-sys-scale multiplier) — the scale × size table is LITERAL (ADR-0041 cl.2): content-lg × lg
-//       must produce the exact px from the table, not a CSS calc result.
+//   AC4 (derived geometry, ADR-0245): inside an opt-in data-tier region the box is 2n, the thumb 2n - 2c and the
+//       rail 2c thick against scale.mjs resolve(); outside, today's ramp stands.
 //   C10 (zero-residue) — connect→disconnect produces no stacked listeners; reconnect re-arms exactly once.
 
 import '@agent-ui/components/foundation-styles.css' // tokens (--md-sys-color-*) + dimensions (--md-sys-compact-*)
 import './slider-multi.css'                          // the control stylesheet (direct — pre-barrel)
 import './slider-multi.ts'                           // self-define (registers ui-slider-multi)
 import { UISliderMultiElement } from './slider-multi.ts'
+import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 /** Simulate a full drag gesture: pointerdown → pointermove → pointerup on an element. */
 function drag(target: HTMLElement, startX: number, endX: number, id = 1): void {
@@ -123,35 +124,6 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
     const rows = getComputedStyle(el).gridTemplateRows.split(' ').map((v) => Number.parseFloat(v))
     expect(rows[rows.length - 1]).toBe(16) // --md-sys-compact-md = 16px at ui-md scale
     el.remove()
-  })
-
-  // ── AC4: content-lg × lg → exact px from the ADR-0041 literal table ───────────────────────────
-
-  it('AC4 no --md-sys-scale multiplier: [data-tier=content][data-scale=lg] × [size=lg] → thumb = 28px − 4 = 24px (literal table)', () => {
-    const wrapper = document.createElement('div')
-    wrapper.setAttribute('scale', 'content-lg')
-    const el = document.createElement('ui-slider-multi')
-    el.setAttribute('size', 'lg')
-    wrapper.append(el)
-    document.body.append(wrapper)
-
-    // content-lg × lg = 28px from the ADR-0041 literal table → thumb = 28 − 4 = 24px (NOT a CSS calc result)
-    const loThumb = el.querySelector<HTMLElement>('.thumb[data-thumb="lo"]')!
-    expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(24)
-    wrapper.remove()
-  })
-
-  it('AC4 [data-tier=product][data-scale=md] × [size=md] → thumb = 18px − 4 = 14px (literal table, not multiplier)', () => {
-    const wrapper = document.createElement('div')
-    wrapper.setAttribute('scale', 'ui-lg')
-    const el = document.createElement('ui-slider-multi')
-    wrapper.append(el)
-    document.body.append(wrapper)
-
-    // ui-lg × md = 18px → thumb = 18 − 4 = 14px
-    const loThumb = el.querySelector<HTMLElement>('.thumb[data-thumb="lo"]')!
-    expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(14)
-    wrapper.remove()
   })
 
   // ── AC2: real dual-pointer-drag — drag each thumb via pointer events ──────────────────────────
@@ -451,4 +423,38 @@ describe('ui-slider-multi browser smoke (GH #1141 — layout geometry, all three
       container.remove()
     }
   })
+})
+
+describe('ui-slider-multi geometry inside an opt-in data-tier region (ADR-0245)', () => {
+  const railHeight = (el: Element): number => Number.parseFloat(getComputedStyle(el.querySelector('.rail')!).height)
+
+  it('outside any region the rail is box/4 = 4px with a pill radius', () => {
+    const el = document.createElement('ui-slider-multi') as UISliderMultiElement
+    document.body.append(el)
+    expect(railHeight(el)).toBe(4)
+    expect(Number.parseFloat(getComputedStyle(el.querySelector('.rail')!).borderTopLeftRadius)).toBe(2)
+    el.remove()
+  })
+
+  for (const scale of ['sm', 'md'] as const) {
+    for (const size of ['sm', 'md', 'lg'] as const) {
+      it(`product / ${scale} / ${size}: box 2n, thumb 2n - 2c, rail 2c`, () => {
+        const r = resolve('product', scale, size)
+        const wrapper = document.createElement('div')
+        wrapper.setAttribute('data-tier', 'product')
+        wrapper.setAttribute('data-scale', scale)
+        const el = document.createElement('ui-slider-multi') as UISliderMultiElement
+        el.setAttribute('size', size)
+        wrapper.append(el)
+        document.body.append(wrapper)
+        const rows = getComputedStyle(el).gridTemplateRows.split(' ').map((v) => Number.parseFloat(v))
+        expect(rows[rows.length - 1]).toBe(r.icon)
+        const thumb = getComputedStyle(el.querySelector<HTMLElement>('.thumb[data-thumb="lo"]')!)
+        expect(Number.parseFloat(thumb.width)).toBe(r.icon - 2 * r.c)
+        expect(railHeight(el)).toBe(2 * r.c)
+        expect(Number.parseFloat(getComputedStyle(el.querySelector('.rail')!).borderTopLeftRadius)).toBe(r.c)
+        wrapper.remove()
+      })
+    }
+  }
 })

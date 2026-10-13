@@ -33,7 +33,7 @@
      The box drives the thumb size (box − 4px) and the host's interactive-area height. */
   --ui-slider-multi-box: var(--md-sys-icon-box, var(--md-sys-compact-md));
 
-  /* Rail thickness — 2c inside an opt-in region (the progress rule, ADR-0245 cl.3); outside, c falls back to box/8
+  /* Rail thickness: 2c inside an opt-in region (the progress rule, ADR-0245 cl.3); outside, c falls back to box/8
      so the rail stays today's box/4. The pill radius is half of it. */
   --ui-slider-multi-rail-size: calc(2 * var(--md-sys-c, calc(var(--ui-slider-multi-box) / 8)));
 
@@ -164,7 +164,7 @@
     align-self: center;
     position: relative;
     block-size: var(--ui-slider-multi-rail-size);
-    border-radius: calc(var(--ui-slider-multi-rail-size) / 2); /* pill — fully rounded ends */
+    border-radius: calc(var(--ui-slider-multi-rail-size) / 2); /* pill, fully rounded ends */
     background: var(--ui-slider-multi-rail);
     overflow: visible;                          /* thumbs extend beyond the rail's block-size */
     cursor: pointer;

@@ -127,8 +127,8 @@ geometry:
   sizeClass: indicator
   blockSize: var(--ui-slider-box)     # .rail's block-size = --md-sys-compact-{size} (ADR-0041); the host's own block-size is now grid-content-sized (label/rail/value rows, GH #1141)
   inlineSize: 100%                    # .rail stretches to its grid track's full inline-size (justify-self: stretch); the host stretches to its container (grid, no intrinsic inline-size beyond the min-inline-size floor)
-  thumbSize: box − 4px                # circle thumb = --ui-slider-box − 2×--md-sys-widget-inset (ADR-0041 cl.3)
-  railHeight: --ui-slider-rail-height # 3px constant, not derived from the widget box
+  thumbSize: box − 2c                 # circle thumb = --ui-slider-box − 2×--md-sys-c (2n − 2c inside an opt-in data-tier region, ADR-0245 cl.3); box − 4px outside (ADR-0041 cl.3)
+  railHeight: --ui-slider-rail-height # 2c inside a region (the progress rule, ADR-0245 cl.3), 3px outside; not derived from the widget box
   layoutGap: --ui-slider-layout-gap   # GH #1141 — the label↔rail↔value row/column rhythm, off --md-sys-space-xs (the field.css --ui-field-gap precedent)
 
 forcedColors: A `@media (forced-colors: active)` block maps the rail to a Highlight/ButtonText gradient (fill/track) and the thumb to a Canvas circle with a Highlight border. Both pseudo-elements carry `forced-color-adjust: none` to preserve the explicit system-colour mappings. The :focus-visible ring is free via --md-sys-color-focus-ring → Highlight from the token layer (ADR-0009).
