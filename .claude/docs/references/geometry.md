@@ -1,8 +1,9 @@
 # Geometry & sizing: the law
 
 > Canonical normative standard for agent-ui geometry. **Rewritten 2026-10-13 for the derived foundations
-> (ADR-0245, shipped at the cut #1932).** Every size derives from one integer **n** per element; the
-> hand-tabled ramp, the `[scale]` tiers, `[density]` and the frame/rhythm split are retired. The
+> (ADR-0245, shipped at the cut #1932; Amendment 3 adopts the skill's v2 constants and density).** Every size
+> derives from one integer **n** per element, and container spacing from **m**; the hand-tabled ramp, the
+> `[scale]` tiers, `[density]` and the frame/rhythm split are retired. The
 > derivation, the per-control table and the history live in
 > [`geometry-sizing-spec.md`](./geometry-sizing-spec.md); this doc is the resolved *law*. The numbers
 > come from `@agent-ui/shared`'s `scale.mjs` (CFG, `resolve()`, `check()`) through the generated
@@ -10,18 +11,22 @@
 
 ## The one rule: one n per element
 
-`n = n0 + a·s + k·z + g·s·z`, with the **tier** constants `(n0, a, k, g)` and two inheriting axes:
+`n = n0 + a·s + k·z + g·s·z`, with the **tier** constants `(n0, a, k, g)` and three inheriting axes, n in 4 to 24:
 
-- **Tier** `data-tier` = `widget` 7/1/1/0 · `product` 9/2/2/1 · `content` 11/2/2/1 · `brand` 14/2/2/1 (what a region is for).
-- **Scale** `data-scale` = `sm` / `md` / `lg` → s = -1 / 0 / +1 (a region's density).
+- **Tier** `data-tier` = `widget` 6/1/1/0 · `product` 8/2/2/1 · `content` 10/2/2/1 · `brand` 14/2/2/1 (what a region is for).
+- **Scale** `data-scale` = `sm` / `md` / `lg` → s = -1 / 0 / +1 (a whole region: controls, type and spacing together).
 - **Size** z = a control's reflected `size` prop (`sm` / `md` / `lg`), or `data-size` on any other element → -1 / 0 / +1.
+- **Density** `data-density` = `compact` / `default` / `spacious` → d = -1 / 0 / +1, container spacing only:
+  `m = max(n + a·d, floor((n + c) / 2) + 1)`. The widget, card and layout levels read m; the group level and
+  every control value keep n.
 
 The nearest ancestor wins on each axis. **The root is `product` at scale `sm`**: sizes sm / md / lg are
-n 6 / 7 / 8, so heights **24 / 28 / 32**. A2UI surfaces sit at `data-tier="widget" data-scale="md"` (the canvas
-register, the same 24 / 28 / 32; ADR-0245 Amendment 2), so a catalog size means what it says: a composite's
-`lg` action is 32px. A page opts a region into another register with
-`data-tier` / `data-scale`; `[scale]` and `[density]` were retired into those two attributes (the bridge maps
-them for one release, W7 removes it) and `[data-foundations="legacy"]` opts a region out for the same release.
+n 5 / 6 / 7, so heights **20 / 24 / 28** (Amendment 3: the skill's v2 anchors moved every tier one step down,
+and Kim took the shrink). A2UI surfaces sit at `data-tier="widget" data-scale="md"` (the canvas register, the
+same 20 / 24 / 28; Amendment 2), so a catalog size means what it says: a composite's `lg` action is 28px. A
+page opts a region into another register with `data-tier` / `data-scale` / `data-density`; `[scale]` was
+retired into the first two and `[density]` into `data-density` (the bridge maps them for one release, W7
+removes it), and `[data-foundations="legacy"]` opts a region out for the same release.
 
 Let `c = ceil(n / 4)`. Every box value is a whole-pixel multiple of n or c (check M7):
 
@@ -35,6 +40,7 @@ Let `c = ceil(n / 4)`. Every box value is a whole-pixel multiple of n or c (chec
 | glyph box (functional mark) | `2n - 2c` | `--md-sys-glyph-box` |
 | glyph stroke | `max(1.5px, c/2)` | `--md-sys-glyph-stroke` |
 | control text | `n + 6` px | `--md-sys-type-control` |
+| container unit | `m` (n at default density) | `--md-sys-m` |
 
 ## The centering law
 
@@ -49,13 +55,18 @@ height.
 
 - **Entry and trigger controls** (text-field, select, combo-box, multi-select, otp-field): padding `n`; a
   leading icon or caret slot is `2n`; radius `n`. A field label sits above with gap `ceil(n/2)`.
-- **Button and toggle**: the **pill**, radius `h/2 = 2n`, the one documented exception to radius = n.
+- **Button and toggle**: the **pill**, radius `2n` (equal to h/2, now a formula of n, not a special case).
   Padding is `2n` beside a label and `n` beside an icon; an icon-only button is a `4n` square (the
   ADR-0223 R3(a) squareness floor, `min-inline-size: var(--ui-{name}-height)`, now resolving to 4n).
 - **Indicators**: checkbox box `2n` (radius `n/2`, check glyph `2n - 2c`), radio `2n` circle (dot
-  `2n - 4c`), switch track `2n` tall with padding `c` and thumb `2n - 2c`, slider rail `2c` and thumb
-  `2n - 2c`, progress track `2c` (radius `c`), badge height `2n` (padding `2c`, radius `n/2`).
-- **Avatar** is `4n`, stood beside controls at control height.
+  `glyph - 2` = `2n - 2c - 2`, which never shrinks as n grows), switch track `2n` tall with padding `c` and
+  thumb `2n - 2c`, slider rail `2c` and thumb `2n - 2c`, progress track `2c` (radius `c`), badge height `2n`
+  (padding `2c`, radius `n/2`).
+- **Avatar** is a `4n` circle, stood beside controls at control height; an avatar inline inside a tag or a
+  control row is the skill's `2n`.
+- **Derived marks and tiles** (Amendment 3): gauge ring stroke `4c`; swatch a `4n` square with radius `n`
+  (the icon tile); column-chart top-segment radius `n + c` (the group radius); the A2UI artboard pads with
+  the card margin `3m` and gaps with the card gutter `2m`.
 - **Listbox** (menu, select and combo-box panels): options are `4n` controls stacked edge to edge, padding `c`.
 - **Segmented-control**: padding `c`, gap `c`, segments `4n` with padding `2n`.
 - **Table**: rows at least `4n + 2c`, text cells `n + c`.
@@ -75,14 +86,17 @@ The full per-control table is ADR-0245 clause 3 and Appendix B; the geometry pro
 
 ## Containers and placement
 
-Four levels, each at the container's own n (root md: n 7, c 2):
+Four levels, each at the container's own n and m (root md: n 6, c 2, m 6 at default density):
 
 | level | margin | gutter | radius | members |
 |---|---|---|---|---|
 | group | `n + c` | `c` | `n + c` | listbox panels, segmented-control, table rows, tooltip |
-| widget | `2n` | `n` | `2n` | popover, toast, form-popover panel |
-| card | `3n` | `2n` | `3n` | card, modal, drawer, command-modal |
-| layout | `4n` | `3n` | `4n` | super-shell frame and bars, the docs page frame |
+| widget | `2m` | `m` | `2m` | popover, toast, form-popover panel |
+| card | `3m` | `2m` | `3m` | card, modal, drawer, command-modal, the A2UI artboard |
+| layout | `4m` | `3m` | `4m` | super-shell frame and bars, the docs page frame |
+
+`data-density` moves m one tier step `a` (compact down, spacious up), floored so a widget always
+out-margins a group: at the root md, compact m 5 gives card 15 / 10 / 15 and spacious m 8 gives 24 / 16 / 24.
 
 A container pads with its **margin**; a boxed child at an edge sits at `margin - its own inset` through a
 negative margin of `--md-sys-inset` that resolves on the child, so its label lines up with the card's text.
@@ -95,15 +109,18 @@ level tokens. Padding now moves with n.
 ## Layout spacing
 
 `--md-sys-space-{xs..2xl}` is a generated alias layer over the same n, so the six A2UI `gap` enums keep
-their names and prompt bytes: `xs` c, `sm` n, `md` n + c, `lg` 2n, `xl` 3n, `2xl` 4n (2 / 7 / 9 / 14 / 21 /
-28 at n 7). It is the space *between* components, not control geometry.
+their names and prompt bytes: `xs` c, `sm` n, `md` n + c, `lg` 2m, `xl` 3m, `2xl` 4m (2 / 6 / 8 / 12 / 18 /
+24 at n 6, default density). It is the space *between* components, not control geometry.
 
 ## Type
 
 `ui-text`'s API stands (nine variants, `size`, `as`, the ADR-0106/0109/0114 axes); each variant maps to a
 derived role (`--md-sys-type-*`) and `size` is z. The `--md-sys-typescale-*` rows are a generated alias
 layer until W7. Display is small in a product region by design; a hero takes its own tier (content md
-display 53, brand md display 75). ADR-0150's compact-window body drop is superseded: body at the root is 14.
+display 47, brand md display 75). ADR-0150's compact-window body drop is superseded: body at the root is 13.
+Linear roles never go below 9px. The two small uppercase roles are the **section label** (`--md-sys-type-section-label`,
+round(body · 9/8)) and the **group label** (`--md-sys-type-group-label`, n/2 + 6.5, the only half-pixel role); the
+`kicker` and `overline` variants both read the group label.
 
 ## Minimum inline size (the bare-control floor)
 
@@ -127,9 +144,11 @@ Read ADR-0223 for the exemption tables and cite them, never copy them.
 
 ## Mechanization
 
-Every law lands with a probe. `check()` (M1 to M10) gates the config and the generator refuses to emit on a
-failure; a vitest leg asserts `check()` is `[]` and the generated file is byte-identical; a browser leg sets
-each of the 36 tier, scale and size cells on a probe and compares computed tokens to `resolve()` in both
-engines; each migrated control carries a geometry pin against `resolve()`. The sibling px-literal rule (no
+Every law lands with a probe. The generator's `contract()` gates the config: the skill's `check()` (M1 to
+M13) plus agent-ui's M14 (no derived px quantity, token or control formula, shrinks as n grows), and the
+generator refuses to emit on a failure; a vitest leg asserts the contract is `[]` and the generated file is
+byte-identical; a browser leg sets each of the 36 tier, scale and size cells, at every density, on a probe and
+compares computed tokens to `resolve()` in both engines; each migrated control carries a geometry pin against
+`resolve()`. The sibling px-literal rule (no
 px literal for control geometry except the hairline, focus ring, scrollbar and ratified whole-shape floors)
 is report-shape until the W7 cleanup, then enforcing.

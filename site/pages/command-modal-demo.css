@@ -46,7 +46,7 @@
 .demo-modal-mock-group-label {
   padding-inline: var(--md-sys-space-sm);
   padding-block: var(--md-sys-space-xs);
-  font-size: var(--md-sys-type-group-kicker, var(--md-sys-font-sm));
+  font-size: var(--md-sys-type-group-label, var(--md-sys-font-sm));
   color: var(--md-sys-color-neutral-on-surface-variant);
 }
 

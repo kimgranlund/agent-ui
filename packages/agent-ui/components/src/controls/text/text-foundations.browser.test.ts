@@ -34,7 +34,7 @@ const ROLE: Record<string, number> = {
   title: root.type.title,
   body: root.type.body,
   label: root.type.fieldLabel,
-  kicker: root.type.fieldLabel, // the small uppercase label over a group, not the section-kicker eyebrow (T-0117)
+  kicker: root.type.groupKicker, // an alias of the group label, not the section-label eyebrow (T-0117, ADR-0245 Amendment 3)
   overline: root.type.groupKicker,
   lead: root.type.subhead,
   quote: root.type.subhead,

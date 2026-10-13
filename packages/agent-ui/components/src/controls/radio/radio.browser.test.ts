@@ -120,11 +120,12 @@ describe('ui-radio browser smoke — box geometry (exact px, ADR-0041)', () => {
   })
 })
 
-// ADR-0245 clause 3: inside an opt-in region the circle is 2n and the dot 2n - 4c, against scale.mjs resolve().
+// ADR-0245 clause 3 and Amendment 3: inside an opt-in region the circle is 2n and the dot the glyph minus 2
+// (2n - 2c - 2), against scale.mjs resolve().
 describe('ui-radio geometry inside an opt-in data-tier region (ADR-0245)', () => {
   for (const scale of ['sm', 'md'] as const) {
     for (const size of ['sm', 'md', 'lg'] as const) {
-      it(`product / ${scale} / ${size}: circle 2n, dot 2n - 4c`, () => {
+      it(`product / ${scale} / ${size}: circle 2n, dot glyph - 2`, () => {
         const r = resolve('product', scale, size)
         const wrapper = document.createElement('div')
         wrapper.setAttribute('data-tier', 'product')
@@ -139,8 +140,8 @@ describe('ui-radio geometry inside an opt-in data-tier region (ADR-0245)', () =>
         expect(Number.parseFloat(ring.width)).toBe(r.icon)
         expect(Number.parseFloat(ring.height)).toBe(r.icon)
         const dot = getComputedStyle(el, '::after')
-        expect(Number.parseFloat(dot.width)).toBe(r.icon - 4 * r.c)
-        expect(Number.parseFloat(dot.height)).toBe(r.icon - 4 * r.c)
+        expect(Number.parseFloat(dot.width)).toBe(r.glyph - 2)
+        expect(Number.parseFloat(dot.height)).toBe(r.glyph - 2)
       })
     }
   }

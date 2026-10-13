@@ -68,8 +68,8 @@ export function parseColorRoles(tokensCss: string): ColorRole[] {
 
 /** The bridge's alias block (foundations-bridge.gen.css, ADR-0245 clause 10a): since the cut the old ramp names
  *  (height, font, icon, compact, gap, space, the typescale -size legs) are declared here as aliases of the
- *  derived values, on the same recompute list as the derived block. */
-export const BRIDGE_ALIAS_SELECTOR = ':root, [data-tier], [data-scale], [data-size], [size], [scale], [density]'
+ *  derived values, on the same recompute list as the derived block (`[data-density]` joined it in ADR-0245 Amendment 3). */
+export const BRIDGE_ALIAS_SELECTOR = ':root, [data-tier], [data-scale], [data-size], [size], [data-density], [scale], [density]'
 
 /** The base declaration homes of a dimensions source (dimensions.css followed by the bridge sheet): the
  *  `:root` constants, any `*` block, and the bridge's alias block. */

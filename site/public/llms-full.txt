@@ -5865,7 +5865,8 @@ text content: the printed datum and the accessible name are the same string, in 
 
 ## Sizing
 
-The host defaults to a `2rem × 2rem` box (`--ui-swatch-box-size`) — an EXPLICIT token size, not `auto`: a
+The host defaults to a 4n square box, the icon tile (`--ui-swatch-box-size`, ADR-0245 Amendment 3; 24px at the root
+md, `2rem` under the legacy opt-out), an EXPLICIT token size, not `auto`: a
 swatch has no intrinsic content, so a bare `<ui-swatch>` in an unstyled flex row still paints a visible,
 non-collapsed square with zero consumer CSS (ADR-0102 Lane A). There is no `[size]`/`[scale]` attribute and
 no `--md-sys-height-*` lever (SPEC-R16 AC2) — the value text reads the `--md-sys-typescale-body-medium-*` row
@@ -6659,7 +6660,7 @@ invisible to AT. Reserve `emphasis` for names/labels/key values where the surrou
 law, and no frame — its lever is the type scale, not `--md-sys-height-*`. It consumes only its component tokens
 (`--ui-text-size`/`-weight`/`-line-height`/`-tracking`), which the `[variant][size]` matrix repoints from the
 fleet `--md-sys-typescale-{role}-{size}-*` scale (ADR-0078 cl.2/cl.3) — the role-pure two-block pattern every
-control uses; `ui-text` holds zero scale opinion. `kicker`/`overline` add `text-transform: uppercase` (`kicker` reads the field-label size, so it stays the small label over a group);
+control uses; `ui-text` holds zero scale opinion. `kicker`/`overline` add `text-transform: uppercase` (`kicker` reads the group-label size, the same as `overline`, so it stays the small label over a group);
 `quote` adds italic + an inline-start rule + an indent. An allowed link (`--ui-text-link-ink`, defaulting to
 `--md-sys-color-primary`) always pairs an underline with its ink — never a color-only signifier (ADR-0057)
 — and keeps the fleet's shared `:focus-visible` ring. Text is **selectable** (`user-select` is enabled —

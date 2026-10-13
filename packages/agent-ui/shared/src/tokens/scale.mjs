@@ -1,29 +1,32 @@
 // Reference implementation. Edit CFG to change the system; resolve() and check() follow.
 const CFG = {
-  ladder: [5, 24],                                   // allowed n; h = 4n
-  tiers: { widget: [7, 1, 1, 0], product: [9, 2, 2, 1], content: [11, 2, 2, 1], brand: [14, 2, 2, 1] }, // n0 a k g
-  linear: { body: [12, 1], control: [11, 1], fieldLabel: [9, 1], groupKicker: [9, 0.5] },             // px at n=5, px per step
+  ladder: [4, 24],                                   // allowed n; h = 4n
+  tiers: { widget: [6, 1, 1, 0], product: [8, 2, 2, 1], content: [10, 2, 2, 1], brand: [14, 2, 2, 1] }, // n0 a k g
+  density: { compact: -1, default: 0, spacious: 1 }, // d; m = n + a·d, floored
+  linear: { body: [12, 1], control: [11, 1], fieldLabel: [9, 1], groupKicker: [9, 0.5] },             // px at n=5, px per step; never below floor
   Q: [1.25, 1 / 32],                                 // heading ratio at n=5, per step
   kicker: 9 / 8, titleBump: { sm: 0, md: 1, lg: 2 }, floor: 9,
-  levels: { widget: [2, 1, 2], card: [3, 2, 3], layout: [4, 3, 4] },                                 // margin gutter radius, × n
+  levels: { widget: [2, 1, 2], card: [3, 2, 3], layout: [4, 3, 4] },                                 // margin gutter radius, × m
 };
 const STEPS = ["sm", "md", "lg"], IX = { sm: -1, md: 0, lg: 1 };
 const ROLES = ["display", "heading", "subhead", "sectionKicker", "title", "body", "control", "fieldLabel", "groupKicker"];
 const round = (x) => Math.floor(x + 0.5);
 const rung = (t, sc, sz) => { const [n0, a, k, g] = CFG.tiers[t], s = IX[sc], z = IX[sz]; return n0 + a * s + k * z + g * s * z; };
-function at(n, size = "md") {
-  const c = Math.ceil(n / 4), lin = (r) => CFG.linear[r][0] + CFG.linear[r][1] * (n - 5);
+const unit = (t, n, d) => Math.max(n + CFG.tiers[t][1] * CFG.density[d], Math.floor((n + Math.ceil(n / 4)) / 2) + 1); // m, floored so a widget out-margins a group
+function at(n, size = "md", m = n) {
+  const c = Math.ceil(n / 4), lin = (r) => Math.max(CFG.floor, CFG.linear[r][0] + CFG.linear[r][1] * (n - 5));
   const body = lin("body"), Q = CFG.Q[0] + CFG.Q[1] * (n - 5);
-  const box = ([m, g, r]) => ({ margin: m * n, gutter: g * n, radius: r * n });
-  return { n, h: 4 * n, inset: n, icon: 2 * n, radius: n, c, glyph: 2 * n - 2 * c,
+  const box = ([k, g, r]) => ({ margin: k * m, gutter: g * m, radius: r * m });
+  return { n, m, h: 4 * n, minWidth: 4 * n, inset: n, icon: 2 * n, radius: n, c, glyph: 2 * n - 2 * c, gap: c, labelInset: n - c,
     type: { display: round(body * Q ** 3), heading: round(body * Q ** 2), subhead: round(body * Q), sectionKicker: round(body * CFG.kicker),
       title: body + CFG.titleBump[size], body, control: lin("control"), fieldLabel: lin("fieldLabel"), groupKicker: lin("groupKicker") },
     group: { margin: n + c, gutter: c, radius: n + c }, ...Object.fromEntries(Object.entries(CFG.levels).map(([l, v]) => [l, box(v)])) };
 }
-export function resolve(tier = "product", scale = "md", size = "md") {
+export function resolve(tier = "product", scale = "md", size = "md", density = "default") {
   const n = rung(tier, scale, size);
   if (!Number.isInteger(n) || n < CFG.ladder[0] || n > CFG.ladder[1]) throw new Error(`${tier}/${scale}/${size}: n=${n} is off the ladder`);
-  return { tier, scale, size, ...at(n, size) };
+  if (!(density in CFG.density)) throw new Error(`${density}: not a density`);
+  return { tier, scale, size, density, ...at(n, size, unit(tier, n, density)) };
 }
 // Contract: every check must pass after any change to CFG. Returns the failures.
 export function check() {
@@ -34,11 +37,11 @@ export function check() {
     if (rung(t, x, STEPS[i]) >= rung(t, x, STEPS[i + 1])) bad.push(`M2 ${t}/${x}: size ${STEPS[i]}→${STEPS[i + 1]} doesn't grow`);
     if (rung(t, STEPS[i], x) >= rung(t, STEPS[i + 1], x)) bad.push(`M2 ${t}: scale ${STEPS[i]}→${STEPS[i + 1]} doesn't grow at size ${x}`);
   }
+  for (const [t, s, z] of all) { const u = resolve(t, s, z).type; if (!(u.body <= u.title && u.title <= u.sectionKicker)) bad.push(`M4 ${t}/${s}/${z}: body ≤ title ≤ section kicker fails`); }
   const order = ROLES.filter((r) => r !== "title");
   for (let n = CFG.ladder[0]; n <= CFG.ladder[1]; n++) {
     const v = at(n), w = n > CFG.ladder[0] ? at(n - 1) : null;
     order.slice(1).forEach((r, i) => { if (v.type[order[i]] < v.type[r]) bad.push(`M3 h${4 * n}: ${order[i]} < ${r}`); });
-    for (const z of STEPS) { const u = at(n, z).type; if (!(u.body <= u.title && u.title <= u.sectionKicker)) bad.push(`M4 h${4 * n}/${z}: body ≤ title ≤ section kicker fails`); }
     if (Math.min(...ROLES.map((r) => v.type[r])) < CFG.floor) bad.push(`M5 h${4 * n}: type below ${CFG.floor}px`);
     const chain = [v.inset, v.group.margin, v.widget.margin, v.card.margin, v.layout.margin];
     if (!chain.every((m, i) => !i || chain[i - 1] < m)) bad.push(`M6 h${4 * n}: margins don't nest ${chain.join(" < ")}`);
@@ -50,6 +53,13 @@ export function check() {
     if (ROLES.some((r) => !Number.isInteger(2 * v.type[r]))) bad.push(`M7 h${4 * n}: type off the 0.5px grid`);
     if (!(v.glyph > 0)) bad.push(`M9 h${4 * n}: glyph ${v.glyph}`);
     if (w) ROLES.forEach((r) => { if (v.type[r] < w.type[r]) bad.push(`M10 h${4 * (n - 1)}→h${4 * n}: ${r} shrinks`); });
+    if (v.gap + v.labelInset !== v.inset || v.labelInset < v.c || ![v.gap, v.labelInset].every(Number.isInteger)) bad.push(`M11 h${4 * n}: gap ${v.gap} + label inset ${v.labelInset} must be ${v.inset}, label inset ≥ ${v.c}, whole px`);
+    if (Math.max(v.minWidth, 2 * v.inset + 2 * v.labelInset) < v.h) bad.push(`M12 h${4 * n}: a label-only control can be narrower than ${v.h}`);
+  }
+  for (const [t, s, z] of all) for (const d in CFG.density) {
+    const v = resolve(t, s, z, d), chain = [v.inset, v.group.margin, v.widget.margin, v.card.margin, v.layout.margin];
+    if (!Number.isInteger(v.m) || !chain.every((m, i) => !i || chain[i - 1] < m)) bad.push(`M13 ${t}/${s}/${z} ${d}: margins don't nest ${chain.join(" < ")}`);
+    for (const l in CFG.levels) if (v[l].margin - v.inset < v.c) bad.push(`M13 ${t}/${s}/${z} ${d}: a control doesn't fit in ${l}`);
   }
   return bad;
 }

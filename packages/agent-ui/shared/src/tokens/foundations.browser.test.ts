@@ -5,16 +5,19 @@ import './foundations-bridge.gen.css'
 
 // ADR-0245 clause 9 and 10c, the 36-cell leg: each tier x scale x size cell is set on a real region, every
 // derived token is read back through layout (`inline-size: var(<token>)`, skill section 6 step 4, never the
-// raw custom-property text) and compared to scale.mjs resolve(), in Chromium and WebKit. The root leg proves
+// raw custom-property text) and compared to scale.mjs resolve(), in Chromium and WebKit; Amendment 3 repeats
+// every cell at each data-density (m moves the widget, card and layout levels only). The root leg proves
 // the cut (the document is product at scale sm with no attribute), and the legacy leg the clause 10e opt-out:
 // inside [data-foundations="legacy"] every derived token is undefined, so each fallback wins.
 
 const TIERS = ['widget', 'product', 'content', 'brand'] as const
 const STEPS = ['sm', 'md', 'lg'] as const
+const DENSITIES = ['compact', 'spacious'] as const
 
 /** token -> the scale.mjs quantity it must equal, in px. */
 const EXPECTED: ReadonlyArray<readonly [string, (r: Resolved) => number]> = [
   ['n', (r) => r.n],
+  ['m', (r) => r.m],
   ['c', (r) => r.c],
   ['height', (r) => r.h],
   ['inset', (r) => r.inset],
@@ -25,20 +28,21 @@ const EXPECTED: ReadonlyArray<readonly [string, (r: Resolved) => number]> = [
   ['type-display', (r) => r.type.display],
   ['type-heading', (r) => r.type.heading],
   ['type-subhead', (r) => r.type.subhead],
-  ['type-section-kicker', (r) => r.type.sectionKicker],
+  ['type-section-label', (r) => r.type.sectionKicker],
   ['type-title', (r) => r.type.title],
   ['type-body', (r) => r.type.body],
   ['type-control', (r) => r.type.control],
   ['type-field-label', (r) => r.type.fieldLabel],
-  ['type-group-kicker', (r) => r.type.groupKicker],
+  ['type-group-label', (r) => r.type.groupKicker],
   ...(['group', 'widget', 'card', 'layout'] as const).flatMap((level) =>
     (['margin', 'gutter', 'radius'] as const).map((q) => [`${level}-${q}`, (r: Resolved) => r[level][q]] as const),
   ),
 ]
-/** The unitless n reads as a length through `* 1px`; every token falls back to 0.25px when undefined. */
+/** The unitless n and m read as a length through `* 1px`; every token falls back to 0.25px when undefined. */
 const FALLBACK = 0.25
+const UNITLESS = new Set(['n', 'm'])
 const widthOf = (name: string): string =>
-  name === 'n' ? `calc(var(--md-sys-n, ${FALLBACK}) * 1px)` : `var(--md-sys-${name}, ${FALLBACK}px)`
+  UNITLESS.has(name) ? `calc(var(--md-sys-${name}, ${FALLBACK}) * 1px)` : `var(--md-sys-${name}, ${FALLBACK}px)`
 
 const mounted: HTMLElement[] = []
 afterEach(() => mounted.splice(0).forEach((el) => el.remove()))
@@ -82,6 +86,27 @@ describe('foundations.gen.css: the 36 cells compute what resolve() gives (ADR-02
     }
   }
 
+  for (const density of DENSITIES) {
+    for (const tier of TIERS) {
+      it(`${tier} at data-density ${density}: every scale and size cell moves m and the container levels only`, () => {
+        for (const scale of STEPS) {
+          for (const size of STEPS) {
+            const got = readTokens(
+              `<div data-tier="${tier}" data-density="${density}"><div data-scale="${scale}"><div size="${size}" data-probe></div></div></div>`,
+            )
+            expect(labelled(got), `${tier} / ${scale} / ${size}`).toEqual(labelled(cell(resolve(tier, scale, size, density))))
+          }
+        }
+      })
+    }
+  }
+
+  it('the product sm/sm compact floor: m is 4, not n - a = 3, so a widget still out-margins a group', () => {
+    const got = labelled(readTokens('<div data-tier="product" data-scale="sm" data-density="compact"><i size="sm" data-probe></i></div>'))
+    expect(got).toEqual(labelled(cell(resolve('product', 'sm', 'sm', 'compact'))))
+    expect(got['m']).toBe(4)
+  })
+
   it('a nested tier inherits its ancestor scale and size (each axis inherits on its own)', () => {
     const got = readTokens(
       '<div data-tier="widget" data-scale="lg" data-size="sm"><div data-tier="brand"><i data-probe></i></div></div>',
@@ -105,6 +130,12 @@ describe('foundations.gen.css: the cut and the legacy opt-out (ADR-0245 clause 1
     expect(labelled(readTokens('<div data-scale="md"><div size="lg" data-probe></div></div>'))).toEqual(
       labelled(cell(resolve('product', 'md', 'lg'))),
     )
+  })
+
+  it('the retired [density] maps onto data-density: compact moves m one tier step down, never n', () => {
+    const legacyAxis = 'density' // built, not spelled, so this proof is not itself a use of the retired axis
+    const wrap = `<div ${legacyAxis}="compact"><span data-probe></span></div>`
+    expect(labelled(readTokens(wrap))).toEqual(labelled(cell(resolve('product', 'sm', 'md', 'compact'))))
   })
 
   it('inside [data-foundations="legacy"] every derived token is undefined, so each fallback wins', () => {

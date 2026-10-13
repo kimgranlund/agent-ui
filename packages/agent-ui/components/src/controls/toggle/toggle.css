@@ -14,7 +14,7 @@
  *       ADR-0006 host-as-grid, the button.css precedent MINUS its position/role split (toggle.md's Slots
  *       section: `icon`/`state-icon` are each a single FIXED role, unlike button's generic leading/trailing —
  *       so no `data-role` selector is needed, the slot name IS the role). Geometry per references/geometry.md:
- *       `block-size` off the ramp, `padding-block: 0`, pill `border-radius: h/2`. The label always CENTERS
+ *       `block-size` off the ramp, `padding-block: 0`, pill `border-radius: 2n` (= h/2). The label always CENTERS
  *       (no per-structure edge-spread law — ADR-0171 is a button-specific rule this control does not adopt;
  *       every named consumer label is a single short word, so the simpler constant-center rule is sufficient
  *       — see toggle.md). Interaction states (ADR-0008): `:hover`/`:active` repoint `background` only;
@@ -40,6 +40,7 @@
 
   /* Geometry — the CONTROL-band ramp (default size = md). [size] repoints below. */
   --ui-toggle-height: var(--md-sys-height, var(--md-sys-height-md));
+  --ui-toggle-radius: calc(2 * var(--md-sys-radius, calc(var(--ui-toggle-height) / 4))); /* the pill, 2n (ADR-0245 Amendment 3); h/2 under the legacy opt-out */
   --ui-toggle-font: var(--md-sys-type-control, var(--md-sys-font-md));
   --ui-toggle-gap: var(--md-sys-inset, var(--md-sys-gap-md));
   --ui-toggle-icon: var(--md-sys-icon-box, var(--md-sys-icon-md));
@@ -113,7 +114,7 @@
     background: var(--ui-toggle-bg);
     color: var(--ui-toggle-ink);
     border: 1px solid var(--ui-toggle-border);
-    border-radius: calc(var(--ui-toggle-height) / 2); /* pill radius = h/2 */
+    border-radius: var(--ui-toggle-radius); /* the pill, 2n */
     cursor: pointer;
     -webkit-user-select: none;
     user-select: none;

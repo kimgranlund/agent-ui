@@ -1,8 +1,11 @@
 // derive.mjs: every derived number in ADR-0245 comes from this script, which calls the skill's reference
-// implementation (scale.mjs beside it, a byte copy of ~/.claude/skills/mathematical-design-system/scale.mjs,
-// sha256 eca32879...). "Today" values are read off the shipped stylesheets (file:line in the ADR appendix).
+// implementation. Sections 1 to 10 (the ADR body and its appendices, frozen) run on scale-v1.mjs, the copy the
+// cut shipped (sha256 eca32879...); section 11 on (Amendment 3) runs on scale.mjs, the byte copy of the skill's
+// v2 ~/.claude/skills/mathematical-design-system/scale.mjs (sha256 20f16caf...), and compares v2 against v1.
+// "Today" values are read off the shipped stylesheets (file:line in the ADR appendix).
 // Run: node .claude/docs/references/foundations-derivation/derive.mjs > .claude/docs/references/foundations-derivation/derive.out.md
-import { resolve, check, CFG } from './scale.mjs';
+import { resolve, check, CFG } from './scale-v1.mjs';
+import { resolve as resolve2, check as check2, CFG as CFG2 } from './scale.mjs';
 
 const SZ = ['sm', 'md', 'lg'];
 const ROOT = ['product', 'sm']; // the proposed library root (clause 2)
@@ -148,5 +151,102 @@ const pm = resolve('product', 'md', 'md'), ws = resolve('widget', 'md', 'sm'), b
 p(`- product md/md: n ${pm.n}, h ${pm.h}, c ${pm.c}, glyph ${pm.glyph}; type ${JSON.stringify(pm.type)}; card ${pm.card.margin}/${pm.card.gutter}/${pm.card.radius}`);
 p(`- widget md/sm: n ${ws.n}, h ${ws.h}, c ${ws.c}, glyph ${ws.glyph}; body ${ws.type.body}, control ${ws.type.control}, field label ${ws.type.fieldLabel}, group kicker ${ws.type.groupKicker}`);
 p(`- brand lg/lg: n ${bl.n}, h ${bl.h}, c ${bl.c}; display ${bl.type.display}, heading ${bl.type.heading}, subhead ${bl.type.subhead}, body ${bl.type.body}`);
+
+// ---- Amendment 3: the skill v2 constants, density, M14 and the derived exceptions (T-0120) ----------------
+
+const v1 = SZ.map((z) => resolve('product', 'sm', z)); // the cut's root, n 6 / 7 / 8
+const v2 = SZ.map((z) => resolve2('product', 'sm', z)); // the same root on v2, n 5 / 6 / 7
+const cmp = (a, b) => SZ.map((_, i) => `${a[i]} → ${b[i]} (${d(a[i], b[i])})`).join(' · ');
+
+p('## 11. Amendment 3: check() on the v2 constants');
+p('```');
+p(`check() = ${JSON.stringify(check2())}`);
+p('```');
+p(`Tiers (n0 a k g): ${Object.entries(CFG2.tiers).map(([t, v]) => `${t} ${v.join('/')}`).join(' · ')}; ladder ${CFG2.ladder.join(' to ')}; density ${JSON.stringify(CFG2.density)}; linear type floor ${CFG2.floor}px.`);
+
+p('## 12. Reachable heights per tier on v2 (all 9 scale x size cells)');
+for (const t of Object.keys(CFG2.tiers)) {
+  const hs = [...new Set(SZ.flatMap((s) => SZ.map((z) => resolve2(t, s, z).h)))].sort((a, b) => a - b);
+  p(`- ${t}: ${hs.join(' / ')}`);
+}
+p('Registers, sm / md / lg heights, v1 → v2:');
+for (const [t, s] of [['product', 'sm'], ['product', 'md'], ['widget', 'md'], ['widget', 'lg'], ['content', 'sm']]) {
+  p(`- ${t}/${s}: ${SZ.map((z) => resolve(t, s, z).h).join(' / ')} → ${SZ.map((z) => resolve2(t, s, z).h).join(' / ')}`);
+}
+
+p(`## 13. Controls at the root product/sm, v1 (n ${v1.map((r) => r.n).join(' / ')}) → v2 (n ${v2.map((r) => r.n).join(' / ')}), size sm · md · lg`);
+p('| quantity | rule v1 → v2 | v1 → v2 (delta), sm · md · lg |');
+p('|---|---|---|');
+const controls = [
+  ['height, avatar, swatch tile (4n)', '4n', (r) => r.h],
+  ['inset, gap, field radius (n)', 'n', (r) => r.n],
+  ['c', 'ceil(n/4)', (r) => r.c],
+  ['icon box, indicator box, badge height (2n)', '2n', (r) => r.icon],
+  ['glyph box, checkbox check, switch thumb', '2n - 2c', (r) => r.glyph],
+  ['button / toggle pill radius', 'h/2 → 2n', (r) => 2 * r.n],
+  ['button label padding', '2n', (r) => 2 * r.n],
+  ['checkbox radius', 'n/2', (r) => r.n / 2],
+  ['switch track width', '2 thumb + 2c', (r) => 2 * r.glyph + 2 * r.c],
+  ['field label gap', 'ceil(n/2)', (r) => Math.ceil(r.n / 2)],
+  ['table row', '4n + 2c', (r) => r.h + 2 * r.c],
+  ['table text cell padding, tooltip padding (group margin)', 'n + c', (r) => r.n + r.c],
+  ['glyph stroke', 'max(1.5, c/2)', (r) => Math.max(1.5, r.c / 2)],
+  ['control type', 'n + 6', (r) => r.type.control],
+  ['body', 'n + 7', (r) => r.type.body],
+  ['title', 'body + 0/1/2', (r) => r.type.title],
+  ['field label (`label`)', 'n + 4', (r) => r.type.fieldLabel],
+  ['group label (`overline`, table header)', 'n/2 + 6.5', (r) => r.type.groupKicker],
+  ['section label', 'round(body · 9/8)', (r) => r.type.sectionKicker],
+  ['subhead (`lead`, `quote`)', 'round(body · Q)', (r) => r.type.subhead],
+  ['heading (`headline`)', 'round(body · Q²)', (r) => r.type.heading],
+  ['display', 'round(body · Q³)', (r) => r.type.display],
+];
+for (const [label, rule, f] of controls) p(`| ${label} | ${rule} | ${cmp(v1.map(f), v2.map(f))} |`);
+p(`| radio dot | 2n - 4c → glyph - 2 | ${cmp(v1.map((r) => 2 * r.n - 4 * r.c), v2.map((r) => r.glyph - 2))} |`);
+p(`| \`kicker\` variant | field label (Amendment 1) → group label | ${cmp(v1.map((r) => r.type.fieldLabel), v2.map((r) => r.type.groupKicker))} |`);
+
+const m1 = resolve('product', 'sm', 'md'), m2 = resolve2('product', 'sm', 'md');
+p(`## 14. Containers and the derived exceptions at the root md, v1 (n ${m1.n}, c ${m1.c}) → v2 (n ${m2.n}, c ${m2.c}, m ${m2.m})`);
+p('| quantity | rule v1 → v2 | v1 → v2 (delta) |');
+p('|---|---|---|');
+const one = (a, b) => `${a} → ${b} (${d(a, b)})`;
+const QS = ['margin', 'gutter', 'radius'];
+for (const [q, rule] of [['margin', 'n + c'], ['gutter', 'c'], ['radius', 'n + c']]) p(`| group ${q} | ${rule} | ${one(m1.group[q], m2.group[q])} |`);
+for (const [level, ks] of Object.entries(CFG2.levels)) {
+  ks.forEach((k, i) => p(`| ${level} ${QS[i]} | ${k === 1 ? '' : k}n → ${k === 1 ? '' : k}m | ${one(m1[level][QS[i]], m2[level][QS[i]])} |`));
+}
+const space2 = [['xs', (r) => r.c, 'c'], ['sm', (r) => r.n, 'n'], ['md', (r) => r.group.margin, 'n + c'], ['lg', (r) => r.widget.margin, '2n → 2m'], ['xl', (r) => r.card.margin, '3n → 3m'], ['2xl', (r) => r.layout.margin, '4n → 4m']];
+for (const [s, f, rule] of space2) p(`| \`--md-sys-space-${s}\` | ${rule} | ${one(f(m1), f(m2))} |`);
+p(`| gauge ring stroke | 0.5rem → 4c | ${one(8, 4 * m2.c)} |`);
+p(`| swatch box | 2rem → 4n (radius n) | ${one(32, m2.h)} |`);
+p(`| column-chart top segment radius | 0.75rem → n + c | ${one(12, m2.group.radius)} |`);
+p(`| A2UI artboard padding | space-lg (2n) → card margin 3m | ${one(m1.widget.margin, m2.card.margin)} |`);
+p(`| A2UI artboard gap | space-md (n + c) → card gutter 2m | ${one(m1.group.margin, m2.card.gutter)} |`);
+p(`- Before the cut the artboard read 16 / 12 (the legacy space-lg / space-md); M14 holds the gauge ring at 4c: ${[5, 9, 13, 17].map((n) => `${4 * Math.ceil(n / 4)} at n ${n}`).join(', ')}.`);
+
+p('## 15. data-density at the root md (n 6): m, then card margin / gutter / radius and layout margin');
+p('| density | m | card | layout margin |');
+p('|---|---|---|---|');
+for (const dens of Object.keys(CFG2.density)) {
+  const r = resolve2('product', 'sm', 'md', dens);
+  p(`| ${dens} | ${r.m} | ${r.card.margin} / ${r.card.gutter} / ${r.card.radius} | ${r.layout.margin} |`);
+}
+const floor = resolve2('product', 'sm', 'sm', 'compact');
+p(`- The floor binds at product sm/sm compact: n ${floor.n}, m ${floor.m} (n - a = ${floor.n - 2}), widget ${floor.widget.margin} / ${floor.widget.gutter} / ${floor.widget.radius}, group ${floor.group.margin} / ${floor.group.gutter} / ${floor.group.radius}.`);
+p('- `[density]` (retired) maps onto `data-density` in the bridge, so `[density="compact"]` moves m, never n.');
+
+p('## 16. The A2UI canvas register, sm / md / lg');
+for (const [t, s] of [['product', 'md'], ['widget', 'md']]) {
+  const rs = SZ.map((z) => resolve2(t, s, z));
+  p(`- ${t}/${s} on v2: height ${rs.map((r) => r.h).join(' / ')} · icon ${rs.map((r) => r.icon).join(' / ')} · glyph ${rs.map((r) => r.glyph).join(' / ')} · control type ${rs.map((r) => r.type.control).join(' / ')} · pill radius ${rs.map((r) => 2 * r.n).join(' / ')}`);
+}
+
+p('## 17. Not adopted: the skill v2 control rule (box padding n, label inset n - c, text edge 2n - c)');
+p('| control text edge | today | under the control rule (delta), sm · md · lg at the root |');
+p('|---|---|---|');
+p(`| entry and trigger controls (text-field, select, combo-box, multi-select, otp-field, textarea), menu and listbox rows, tabs | n | ${cmp(v2.map((r) => r.n), v2.map((r) => 2 * r.n - r.c))} |`);
+p(`| button, toggle, segment (label beside nothing) | 2n | ${cmp(v2.map((r) => 2 * r.n), v2.map((r) => 2 * r.n - r.c))} |`);
+p(`| icon to label | n | ${cmp(v2.map((r) => r.n), v2.map((r) => r.n))} |`);
+p(`| button min width (label-only) | 4n | ${cmp(v2.map((r) => r.h), v2.map((r) => r.minWidth))} |`);
 
 console.log(out.join('\n'));

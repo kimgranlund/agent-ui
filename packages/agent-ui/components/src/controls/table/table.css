@@ -54,7 +54,7 @@
      (borders sit inside the box, cl.3) come off; outside a [data-tier] region --md-sys-height is undefined, this token is invalid at computed-value time
      and the consumer's `auto` fallback leaves today's content-sized row untouched. */
   --ui-table-cell-block-size: calc(var(--md-sys-height) + 2 * var(--md-sys-c) - 2 * var(--ui-table-cell-pad-block) - 1px);
-  --ui-table-header-font: var(--md-sys-type-group-kicker, var(--md-sys-typescale-body-medium-size)); /* the header reads group-kicker type inside a region */
+  --ui-table-header-font: var(--md-sys-type-group-label, var(--md-sys-typescale-body-medium-size)); /* the header reads group-label type inside a region */
   --ui-table-rule-ink: var(--md-sys-color-neutral-outline-variant); /* row-separator hairline */
   --ui-table-header-rule-ink: var(--md-sys-color-neutral-outline); /* thead underline, stronger */
   --ui-table-caption-ink: var(--md-sys-color-neutral-on-surface-variant);

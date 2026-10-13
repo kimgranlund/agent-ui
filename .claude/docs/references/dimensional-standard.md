@@ -7,7 +7,7 @@
 > flagged inline below):
 > 1. the **fallback ramp literals** (`28·32·36` heights / `12·13·14` fonts) and the later hand-tabled
 >    `24·28·36` / `13·14·16` ramp: every size now derives from one n (`height = 4n`, root sm / md / lg =
->    **24 / 28 / 32**), see [`geometry-sizing-spec.md`](./geometry-sizing-spec.md) §1 and ADR-0245;
+>    **20 / 24 / 28** since ADR-0245 Amendment 3), see [`geometry-sizing-spec.md`](./geometry-sizing-spec.md) §1 and ADR-0245;
 > 2. the **inline-pad formula** (`2px + height × 0.375 × density`): controls pad in n (a field `n`, a pill
 >    button `2n` beside a label, `n` beside an icon), see [`geometry.md`](./geometry.md);
 > 3. the **scale-as-tier framing** (`ui-{sm,md,lg}` / `content-{sm,md,lg}` `[scale]`, then the numeric
@@ -53,7 +53,7 @@ demos/barrels. The system is currently decorative. This standard connects produc
 
 ### Control-class — `{cmp}-tokens.css` (in `:where(ui-{cmp})`)
 > *SUPERSEDED — note 1 (literals) + note 2 (formula): the `32/28/36`px height + `13/12/14`px font fallbacks
-> below are the OLD ramp; the root ramp is now derived, **24 / 28 / 32** heights (SM·MD·LG,
+> below are the OLD ramp; the root ramp is now derived, **20 / 24 / 28** heights (SM·MD·LG,
 > geometry-sizing-spec.md §1); and the `2px + height·0.375·density` pad is the OLD formula (now n-based
 > padding). The recipe SHAPE (consume `--ui-{cmp}-height`/`-font`, block-size not block-padding) is still valid.*
 ```css

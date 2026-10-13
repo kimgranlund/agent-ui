@@ -1,12 +1,12 @@
 // action-row.ts: the persona composites' action row at the library's large control step (ADR-0243 Amendment 2,
 // T-0083). A composite's action Buttons (CardTable's Hit, Stand and Double; QuestionCard's Check answer) are the
 // producer's own children, appended by the renderer after `create()`, and neither the default nor the a2ui-basic
-// `Button` row carries a size. So the composite watches its own subtree and stamps `size="lg"` (32px on the A2UI
-// canvas register, `data-tier="widget" data-scale="md"`: sm / md / lg = 24 / 28 / 32, ADR-0245 Amendment 2; the
+// `Button` row carries a size. So the composite watches its own subtree and stamps `size="lg"` (28px on the A2UI
+// canvas register, `data-tier="widget" data-scale="md"`: sm / md / lg = 20 / 24 / 28, ADR-0245 Amendments 2 and 3; the
 // button's own `[size]` ramp, never a custom height) on every `ui-button` that lands inside it, the late-child
 // adoption shape of `ui-select`'s TKT-0026 observer. The only `ui-button`s a composite mints itself, CardTable's
 // bet-row chips and Clear (ADR-0243 Amendment 3), are `lg` by design, so the stamp never changes their size.
-// `BookingForm` (T-0106) is the one composite that steps down: its action Button is `md` (28px), and the
+// `BookingForm` (T-0106) is the one composite that steps down: its action Button is `md` (24px), and the
 // date-picker buttons it mints itself are skipped so they keep their own `sm`.
 
 type ActionSize = 'md' | 'lg'

@@ -57,7 +57,7 @@
   --ui-column-chart-min-inline-size: 16em; /* the whole-shape floor (ADR-0229 cl.6 role-(d) row) */
   --ui-column-chart-min-block-size: 16em; /* a real plot height, not a sliver — the SAME cl.6 floor on the block axis */
   --ui-column-chart-column-gap: var(--md-sys-space-xs); /* between adjacent category tracks — rides [density] for free */
-  --ui-column-chart-segment-radius: 0.75rem; /* the rounded-cap radius, topmost segment only: 12px, today's value kept by ruling (T-0107). Not --md-sys-shape-corner-base, which the ADR-0245 bridge maps to the card radius 3n, a container meaning a chart mark does not share */
+  --ui-column-chart-segment-radius: var(--md-sys-group-radius, 0.75rem); /* the rounded-cap radius, topmost segment only: the group radius n + c (ADR-0245 Amendment 3), not the card radius --md-sys-shape-corner-base maps to; 12px under the legacy opt-out */
   --ui-column-chart-text-ink: var(--md-sys-color-neutral-on-surface); /* chip/callout text — the ONE role reference */
 
   /* Aliases into the shared `_chart/chart-axis.css` chain (the family-tunnel pattern) — this control's

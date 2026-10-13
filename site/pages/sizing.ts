@@ -19,9 +19,10 @@ const { content } = mountPage({
 content.append(
   pageLead(
     'Every control’s n resolves from three inputs that inherit on their own: an ancestor data-tier (what a ' +
-      'region is for: widget, product, content, brand), an ancestor data-scale (its density: sm, md, lg) and the ' +
+      'region is for: widget, product, content, brand), an ancestor data-scale (the whole region: sm, md, lg) and the ' +
       'control’s own size (sm, md, lg). The document root is product at scale sm, so sm / md / lg controls read ' +
-      '24 / 28 / 32. Height, type, icon, padding and radius are all formulas of the same n, so they never drift apart.',
+      '20 / 24 / 28. Height, type, icon, padding and radius are all formulas of the same n, so they never drift apart; ' +
+      'an ancestor data-density (compact, default, spacious) moves container spacing only.',
   ),
 )
 
@@ -181,7 +182,7 @@ content.append(
   el('p', {}, [
     document.createTextNode(
       'A region’s data-scale moves n, so the height, the type and the icon-to-label gap move together (the old ' +
-        '[density] axis, which moved the gap alone, retired into it). The same button at scale sm, md and lg:',
+        '[density] axis maps to data-density, which moves only container margins and gutters). The same button at scale sm, md and lg:',
     ),
   ]),
 )

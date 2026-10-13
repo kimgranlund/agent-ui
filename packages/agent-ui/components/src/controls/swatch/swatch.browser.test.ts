@@ -23,7 +23,16 @@ afterEach(() => {
 })
 
 const px = (v: string): number => Number.parseFloat(v)
-const tokenPx = (el: HTMLElement, name: string): number => px(getComputedStyle(el).getPropertyValue(name))
+/** A length token read through layout: since ADR-0245 Amendment 3 the box is `calc(4 * var(--md-sys-inset))`, an
+ *  unregistered custom property whose raw text is no px number, so a probe child resolves it as a used width. */
+const tokenPx = (el: HTMLElement, name: string): number => {
+  const probe = document.createElement('i')
+  probe.style.cssText = `position: absolute; display: block; block-size: 0; inline-size: var(${name})`
+  el.append(probe)
+  const used = px(getComputedStyle(probe).width)
+  probe.remove()
+  return used
+}
 
 /** Alpha of a computed colour — 0 ⇒ vanished, > 0 ⇒ painted. */
 const alphaOf = (color: string): number => {
