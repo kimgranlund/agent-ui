@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L2",
+  "name": "0130-solo-L2",
+  "description": "T-0130 solo L2 Docs demos",
+  "model": "sonnet",
+  "effort": "high",
+  "prompt": "T-0130 Docs demos overflow the right | solo L2\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-f3/.sdlc/docs-demos-400px-overflow/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-f3/.sdlc/docs-demos-400px-overflow\nImplement per .sdlc/docs-demos-400px-overflow/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L2",
+  "tier": "L2",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-f3/.sdlc/docs-demos-400px-overflow/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-f3/.sdlc/docs-demos-400px-overflow",
+  "attempt_id": "1b2cda9fa3df409f950b8a88f241c408",
+  "base_sha": "2776be7e273b8c21dbc54ef62d4432fcea801a52",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.6/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-f3/.sdlc/docs-demos-400px-overflow/handoff.md"
+}
