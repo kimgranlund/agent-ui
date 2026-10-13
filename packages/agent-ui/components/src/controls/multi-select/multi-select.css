@@ -23,24 +23,28 @@
 
 :where(ui-multi-select) {
   /* ── The virtual row-height lever (LLD-C5) — off the §1-row ramp (ADR-0038), default size = md. ── */
-  --ui-multi-select-height: var(--md-sys-height-md);
-  --ui-multi-select-font: var(--md-sys-font-md);
-  --ui-multi-select-icon: var(--md-sys-icon-md);
-  --ui-multi-select-glyph: var(--ui-multi-select-font); /* checkmark = font (the §4.1 caret law) */
-  --ui-multi-select-gap: var(--md-sys-gap-md); /* icon-cell ↔ label rhythm gap, = font/2 (§4.4) */
+  --ui-multi-select-height: var(--md-sys-height, var(--md-sys-height-md));
+  --ui-multi-select-font: var(--md-sys-type-control, var(--md-sys-font-md));
+  --ui-multi-select-icon: var(--md-sys-icon-box, var(--md-sys-icon-md));
+  --ui-multi-select-glyph: var(--md-sys-glyph-box, var(--ui-multi-select-font)); /* checkmark = font (the §4.1 caret law), the glyph box in a data-tier region */
+  /* The tick fills the glyph box (ADR-0245 cl.3, check = 2n - 2c) inside a data-tier region. Both tokens are
+     undefined outside one (guaranteed-invalid), so the 0.6 / 0.55 of the font glyph stays today's tick. */
+  --ui-multi-select-tick-inline: var(--md-sys-glyph-box);
+  --ui-multi-select-tick-block: calc(var(--md-sys-glyph-box) * 0.55 / 0.6);
+  --ui-multi-select-gap: var(--md-sys-inset, var(--md-sys-gap-md)); /* icon-cell ↔ label rhythm gap, = font/2 (§4.4) */
 
   /* ── Listbox surface — Container/surface (always visible; no overlay/top-layer, LLD-C5). ── */
   --ui-multi-select-bg: var(--md-sys-color-neutral-surface);
   --ui-multi-select-ink: var(--md-sys-color-neutral-on-surface);
   --ui-multi-select-outline: var(--md-sys-color-neutral-outline-variant);
-  --ui-multi-select-radius: var(--md-sys-shape-corner-base);
+  --ui-multi-select-radius: var(--md-sys-group-radius, var(--md-sys-shape-corner-base));
   /* panel padding = h/4 (the `ui-select` listbox-token mechanism copied, LLD-C5) — feeds the 12-row
      scroll-cap formula below too. */
-  --ui-multi-select-padding: calc(var(--ui-multi-select-height) / 4);
+  --ui-multi-select-padding: var(--md-sys-c, calc(var(--ui-multi-select-height) / 4));
   --ui-multi-select-min-inline-size: 12ch; /* the [inline] hug-state floor (ADR-0223 cl.3(b)): at least as wide as a short option (select.md's listbox floor); the FILL default needs no floor — the container is the floor */
   /* the SAME 12-real-option-rows-or-half-viewport scroll cap `ui-select`'s listbox uses (TKT-0027), an
      option row here rendering at exactly --ui-multi-select-height (the row-height law below). */
-  --ui-multi-select-max-block-size: min(50vh, calc(12 * var(--ui-multi-select-height) + 13 * var(--ui-multi-select-padding) + 2px));
+  --ui-multi-select-max-block-size: min(50vh, calc(12 * var(--ui-multi-select-height) + 13 * var(--ui-multi-select-padding) + 1px + 1px)); /* the two hairline borders */
 
   /* GH #906 — the #874 fleet unobtrusive-scrollbar idiom (own-chain off the shared dimensional
      constant + colour roles, TKT-0066 item 5 law): this always-visible listbox surface was fully
@@ -69,7 +73,8 @@
   /* ── Option rows — legacy item-pad (§5.1/ROV-C5): padding-based row height, not a fixed widget-box.
      Numbers DERIVED off the height/font lever (the `ui-select` options-token mechanism copied, LLD-C5). ── */
   --ui-multi-select-option-block: calc((var(--ui-multi-select-height) - var(--ui-multi-select-font)) / 2); /* (h−font)/2 */
-  --ui-multi-select-option-inline: calc(var(--ui-multi-select-height) / 4); /* h/4 */
+  --ui-multi-select-option-inline: var(--ui-multi-select-option-inline-derived, calc(var(--ui-multi-select-height) / 4)); /* h/4, n - c in a data-tier region */
+  --ui-multi-select-option-inline-derived: calc(var(--md-sys-inset) - var(--md-sys-c)); /* undefined outside a region, so the h/4 fallback wins */
   --ui-multi-select-option-font: var(--ui-multi-select-font);
   --ui-multi-select-option-radius: calc(var(--ui-multi-select-radius) - var(--ui-multi-select-padding)); /* nested-radius, ADR-0018 */
   --ui-multi-select-option-bg-hover: var(--md-sys-color-neutral-surface-high);
@@ -86,17 +91,17 @@
 /* ── size → dimensional ramp repoint (ADR-0038) ──────────────────────────────────────────────────── */
 
 :where(ui-multi-select[size='sm']) {
-  --ui-multi-select-height: var(--md-sys-height-sm);
-  --ui-multi-select-font: var(--md-sys-font-sm);
-  --ui-multi-select-icon: var(--md-sys-icon-sm);
-  --ui-multi-select-gap: var(--md-sys-gap-sm);
+  --ui-multi-select-height: var(--md-sys-height, var(--md-sys-height-sm));
+  --ui-multi-select-font: var(--md-sys-type-control, var(--md-sys-font-sm));
+  --ui-multi-select-icon: var(--md-sys-icon-box, var(--md-sys-icon-sm));
+  --ui-multi-select-gap: var(--md-sys-inset, var(--md-sys-gap-sm));
 }
 
 :where(ui-multi-select[size='lg']) {
-  --ui-multi-select-height: var(--md-sys-height-lg);
-  --ui-multi-select-font: var(--md-sys-font-lg);
-  --ui-multi-select-icon: var(--md-sys-icon-lg);
-  --ui-multi-select-gap: var(--md-sys-gap-lg);
+  --ui-multi-select-height: var(--md-sys-height, var(--md-sys-height-lg));
+  --ui-multi-select-font: var(--md-sys-type-control, var(--md-sys-font-lg));
+  --ui-multi-select-icon: var(--md-sys-icon-box, var(--md-sys-icon-lg));
+  --ui-multi-select-gap: var(--md-sys-inset, var(--md-sys-gap-lg));
 }
 
 /* ── disabled → muted neutral roles ──────────────────────────────────────────────────────────────── */
@@ -218,8 +223,8 @@
      the paint reads it directly, no separate state channel. */
   :scope > [role='option'][aria-selected='true']::before {
     background-color: var(--ui-multi-select-check-ink);
-    inline-size: calc(var(--ui-multi-select-glyph) * 0.6);
-    block-size: calc(var(--ui-multi-select-glyph) * 0.55);
+    inline-size: var(--ui-multi-select-tick-inline, calc(var(--ui-multi-select-glyph) * 0.6));
+    block-size: var(--ui-multi-select-tick-block, calc(var(--ui-multi-select-glyph) * 0.55));
     clip-path: polygon(14% 44%, 0% 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
   }
 

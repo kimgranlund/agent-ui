@@ -91,34 +91,39 @@
   --ui-text-field-placeholder: var(--md-sys-color-neutral);
 
   /* Geometry — off the s6 dimensional ramp (default size = md). [size] repoints below. */
-  --ui-text-field-height: var(--md-sys-height-md);
-  --ui-text-field-font: var(--md-sys-font-md);
-  --ui-text-field-gap: var(--md-sys-gap-md); /* the one density-bearing quantity (slot↔editor column-gap) */
-  --ui-text-field-icon: var(--md-sys-icon-md); /* §1-SET icon per [scale]-tier (ADR-0038 / ADR-0035 conformance gap); repoints with [scale] from dimensions.css — was calc(18px * var(--md-sys-scale)) */
+  --ui-text-field-height: var(--md-sys-height, var(--md-sys-height-md));
+  --ui-text-field-font: var(--md-sys-type-control, var(--md-sys-font-md));
+  --ui-text-field-gap: var(--md-sys-inset, var(--md-sys-gap-md)); /* the one density-bearing quantity (slot↔editor column-gap) */
+  --ui-text-field-icon: var(--md-sys-icon-box, var(--md-sys-icon-md)); /* §1-SET icon per [scale]-tier (ADR-0038 / ADR-0035 conformance gap); repoints with [scale] from dimensions.css — was calc(18px * var(--md-sys-scale)) */
 
   /* Size-INVARIANT frame quantities — declared ONCE in the base block (NOT in the per-[size] blocks below): */
-  --ui-text-field-radius: var(--md-sys-shape-corner-base); /* fixed --md-sys-shape-corner-base rounded-rect — the container-fleet referent an ENTRY control takes (NOT the action family's h/2 pill); overridable per-field; ADR-0015 cl.5 / #71 amendment. */
+  /* The slotless value edge is n inside a data-tier region (ADR-0245 cl.3), h/2 outside; the injected icon svgs
+     fill the icon box 2n there (cl.4), 1em outside; the corner is a squircle there, the initial round outside. */
+  --ui-text-field-edge: var(--md-sys-inset, calc(var(--ui-text-field-height) / 2));
+  --ui-text-field-svg: var(--md-sys-icon-box, 1em);
+  --ui-text-field-corner-shape: var(--md-sys-corner-shape, round);
+  --ui-text-field-radius: var(--md-sys-radius, var(--md-sys-shape-corner-base)); /* fixed --md-sys-shape-corner-base rounded-rect — the container-fleet referent an ENTRY control takes (NOT the action family's h/2 pill); overridable per-field; ADR-0015 cl.5 / #71 amendment. */
   --ui-text-field-min-inline-size: 20ch; /* the [inline] hug-state typing-width floor (ADR-0223 clause 3(b), superseding ADR-0021's default-state placement) — ch is font-relative so one ~20ch already scales with --ui-text-field-font across [size]; native <input size> parity so a hugging field is hittable. The FILL default needs no floor: the container is the floor. Token name + default unchanged (the GH #1407 overrides keep working). */
 
   /* Visible inline-validation message tokens (ADR-0029 A1 — extends ADR-0014): the .ui-text-field-message
      node (control-managed, aria-describedby target) becomes VISIBLE when non-empty under :state(user-invalid).
      Declared here (specificity 0, overridable), consumed in the @scope block. */
-  --ui-text-field-message-font: var(--md-sys-font-sm); /* small type — subordinate to the field's own label/value */
+  --ui-text-field-message-font: var(--md-sys-type-field-label, var(--md-sys-font-sm)); /* small type — subordinate to the field's own label/value */
   --ui-text-field-message-ink: var(--md-sys-color-danger-on-surface-variant); /* danger TEXT ink — AA-gated on-surface (8.48:1 light / 8.91:1 dark). Bare --md-sys-color-danger is 4.05:1 light = an AA text FAIL, so the TEXT ink moves; the danger BORDER channel above (--ui-text-field-border-invalid) stays --md-sys-color-danger (border = 3:1 UI bar). ADR-0014 cl.2c · 2026-07-02 color audit item 1. */
 }
 
 /* size → dimensional ramp (size is reflected, so the attribute is present) */
 :where(ui-text-field[size='sm']) {
-  --ui-text-field-height: var(--md-sys-height-sm);
-  --ui-text-field-font: var(--md-sys-font-sm);
-  --ui-text-field-gap: var(--md-sys-gap-sm);
-  --ui-text-field-icon: var(--md-sys-icon-sm); /* §1-SET icon per [scale]-tier (ADR-0038) */
+  --ui-text-field-height: var(--md-sys-height, var(--md-sys-height-sm));
+  --ui-text-field-font: var(--md-sys-type-control, var(--md-sys-font-sm));
+  --ui-text-field-gap: var(--md-sys-inset, var(--md-sys-gap-sm));
+  --ui-text-field-icon: var(--md-sys-icon-box, var(--md-sys-icon-sm)); /* §1-SET icon per [scale]-tier (ADR-0038) */
 }
 :where(ui-text-field[size='lg']) {
-  --ui-text-field-height: var(--md-sys-height-lg);
-  --ui-text-field-font: var(--md-sys-font-lg);
-  --ui-text-field-gap: var(--md-sys-gap-lg);
-  --ui-text-field-icon: var(--md-sys-icon-lg); /* §1-SET icon per [scale]-tier (ADR-0038) */
+  --ui-text-field-height: var(--md-sys-height, var(--md-sys-height-lg));
+  --ui-text-field-font: var(--md-sys-type-control, var(--md-sys-font-lg));
+  --ui-text-field-gap: var(--md-sys-inset, var(--md-sys-gap-lg));
+  --ui-text-field-icon: var(--md-sys-icon-box, var(--md-sys-icon-lg)); /* §1-SET icon per [scale]-tier (ADR-0038) */
 }
 
 /* disabled → a role-REPOINT (NOT opacity, tokens.md canon; TKT-0062's disabled row). Matches BOTH the
@@ -153,7 +158,7 @@
 
     block-size: var(--ui-text-field-height); /* the vertical lever — geometry.md (Control class) */
     padding-block: 0; /* NEVER block-padding */
-    padding-inline: calc(var(--ui-text-field-height) / 2); /* slotless value edge = h/2 */
+    padding-inline: var(--ui-text-field-edge); /* slotless value edge */
 
     font-size: var(--ui-text-field-font);
     background: var(--ui-text-field-bg);
@@ -167,6 +172,7 @@
        to ≤ h/2, so a very dense/short field degrades gracefully to the pill — never overflows. */
     border: 1px solid var(--ui-text-field-border);
     border-radius: var(--ui-text-field-radius);
+    corner-shape: var(--ui-text-field-corner-shape);
     cursor: text;
     position: relative; /* containing block for the abs-positioned .ui-text-field-message (GH #1474) */
   }
@@ -231,14 +237,14 @@
     grid-template-columns: auto 1fr;
     column-gap: var(--ui-text-field-gap);
     padding-inline-start: calc((var(--ui-text-field-height) - var(--ui-text-field-icon)) / 2);
-    padding-inline-end: calc(var(--ui-text-field-height) / 2);
+    padding-inline-end: var(--ui-text-field-edge);
   }
 
   /* [editor | trailing] (no leading): 1fr auto — leading value edge h/2, trailing slot edge ½(h−icon) */
   :scope:has(> [slot='trailing']):not(:has(> [slot='leading'])) {
     grid-template-columns: 1fr auto;
     column-gap: var(--ui-text-field-gap);
-    padding-inline-start: calc(var(--ui-text-field-height) / 2);
+    padding-inline-start: var(--ui-text-field-edge);
     padding-inline-end: calc((var(--ui-text-field-height) - var(--ui-text-field-icon)) / 2);
   }
 
@@ -339,7 +345,7 @@
     display: block;
     position: absolute;
     inset-block-start: calc(100% + 1px + var(--ui-text-field-gap) / 2); /* just below the frame's 1px border, half-gap breathing room */
-    inset-inline-start: calc(var(--ui-text-field-height) / 2); /* the slotless h/2 value edge — MD3 supporting-text alignment */
+    inset-inline-start: var(--ui-text-field-edge); /* the slotless value edge — MD3 supporting-text alignment */
     font-size: var(--ui-text-field-message-font);
     color: var(--ui-text-field-message-ink);
   }
@@ -499,8 +505,8 @@
   :scope [data-part='calendar-button'] svg,
   :scope [data-part='leading-adornment'] svg {
     display: block;
-    inline-size: 1em;
-    block-size: 1em;
+    inline-size: var(--ui-text-field-svg);
+    block-size: var(--ui-text-field-svg);
   }
 
   /* forced-colors — keep the field border + ink + placeholder VISIBLE (they must not vanish). The focus ring

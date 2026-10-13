@@ -1070,14 +1070,14 @@ const otpFieldCss = readFileSync(`${OTP_DIR}/otp-field.css`, 'utf8') as string
 
 describe('otp-field.css — geometry trip-wire (otp-geometry-tokens)', () => {
   it('the lever resolves off the §1-row ramp (ADR-0038), no ad hoc size value', () => {
-    expect(otpFieldCss).toMatch(/--ui-otp-field-height:\s*var\(--md-sys-height-md\)/)
-    expect(otpFieldCss).toMatch(/--ui-otp-field-font:\s*var\(--md-sys-font-md\)/)
-    expect(otpFieldCss).toMatch(/--ui-otp-field-gap:\s*var\(--md-sys-gap-md\)/)
+    expect(otpFieldCss).toMatch(/--ui-otp-field-height:\s*var\(--md-sys-height, var\(--md-sys-height-md\)\)/)
+    expect(otpFieldCss).toMatch(/--ui-otp-field-font:\s*var\(--md-sys-type-control, var\(--md-sys-font-md\)\)/)
+    expect(otpFieldCss).toMatch(/--ui-otp-field-gap:\s*var\(--md-sys-inset, var\(--md-sys-gap-md\)\)/)
   })
 
   it('[size=sm]/[size=lg] repoint the SAME tokens (the ramp, not a multiplier)', () => {
-    expect(otpFieldCss).toMatch(/ui-otp-field\[size='sm'\][\s\S]{0,200}--ui-otp-field-height:\s*var\(--md-sys-height-sm\)/)
-    expect(otpFieldCss).toMatch(/ui-otp-field\[size='lg'\][\s\S]{0,200}--ui-otp-field-height:\s*var\(--md-sys-height-lg\)/)
+    expect(otpFieldCss).toMatch(/ui-otp-field\[size='sm'\][\s\S]{0,200}--ui-otp-field-height:\s*var\(--md-sys-height, var\(--md-sys-height-sm\)\)/)
+    expect(otpFieldCss).toMatch(/ui-otp-field\[size='lg'\][\s\S]{0,200}--ui-otp-field-height:\s*var\(--md-sys-height, var\(--md-sys-height-lg\)\)/)
   })
 
   it('cell inline-size is DERIVED (= height), never a literal or a new ramp (§7)', () => {
@@ -1085,7 +1085,7 @@ describe('otp-field.css — geometry trip-wire (otp-geometry-tokens)', () => {
   })
 
   it('radius is the FIXED entry-class corner, never h/2 (§7)', () => {
-    expect(otpFieldCss).toMatch(/--ui-otp-field-radius:\s*var\(--md-sys-shape-corner-base\)/)
+    expect(otpFieldCss).toMatch(/--ui-otp-field-radius:\s*var\(--md-sys-radius, var\(--md-sys-shape-corner-base\)\)/)
     expect(otpFieldCss).not.toMatch(/--ui-otp-field-radius:\s*calc\(/) // never a computed h/2 pill
   })
 

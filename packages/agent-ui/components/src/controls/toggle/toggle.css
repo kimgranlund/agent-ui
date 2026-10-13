@@ -39,24 +39,24 @@
   --ui-toggle-border: var(--md-sys-color-neutral-outline);
 
   /* Geometry — the CONTROL-band ramp (default size = md). [size] repoints below. */
-  --ui-toggle-height: var(--md-sys-height-md);
-  --ui-toggle-font: var(--md-sys-font-md);
-  --ui-toggle-gap: var(--md-sys-gap-md);
-  --ui-toggle-icon: var(--md-sys-icon-md);
+  --ui-toggle-height: var(--md-sys-height, var(--md-sys-height-md));
+  --ui-toggle-font: var(--md-sys-type-control, var(--md-sys-font-md));
+  --ui-toggle-gap: var(--md-sys-inset, var(--md-sys-gap-md));
+  --ui-toggle-icon: var(--md-sys-icon-box, var(--md-sys-icon-md));
 }
 
 /* [size] → Control-band dimensional ramp repoint (the button.css precedent). */
 :where(ui-toggle[size='sm']) {
-  --ui-toggle-height: var(--md-sys-height-sm);
-  --ui-toggle-font: var(--md-sys-font-sm);
-  --ui-toggle-gap: var(--md-sys-gap-sm);
-  --ui-toggle-icon: var(--md-sys-icon-sm);
+  --ui-toggle-height: var(--md-sys-height, var(--md-sys-height-sm));
+  --ui-toggle-font: var(--md-sys-type-control, var(--md-sys-font-sm));
+  --ui-toggle-gap: var(--md-sys-inset, var(--md-sys-gap-sm));
+  --ui-toggle-icon: var(--md-sys-icon-box, var(--md-sys-icon-sm));
 }
 :where(ui-toggle[size='lg']) {
-  --ui-toggle-height: var(--md-sys-height-lg);
-  --ui-toggle-font: var(--md-sys-font-lg);
-  --ui-toggle-gap: var(--md-sys-gap-lg);
-  --ui-toggle-icon: var(--md-sys-icon-lg);
+  --ui-toggle-height: var(--md-sys-height, var(--md-sys-height-lg));
+  --ui-toggle-font: var(--md-sys-type-control, var(--md-sys-font-lg));
+  --ui-toggle-gap: var(--md-sys-inset, var(--md-sys-gap-lg));
+  --ui-toggle-icon: var(--md-sys-icon-box, var(--md-sys-icon-lg));
 }
 
 /* [pressed] / :state(pressed) — the tonal primary-container fill (dedicated interaction roles — no

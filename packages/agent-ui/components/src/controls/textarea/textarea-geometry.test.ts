@@ -46,13 +46,13 @@ describe('textarea.css — structure + sectioning', () => {
       expect(tokenBlock).toMatch(new RegExp(`--ui-textarea-${slot}:`))
     }
     expect(tokenBlock).toContain('var(--md-sys-color-neutral') // the field-frame roles (family = neutral)
-    expect(tokenBlock).toContain('var(--md-sys-font-md)') // the font ramp (NOT --md-sys-height-* — no fixed height lever)
+    expect(tokenBlock).toContain('var(--md-sys-type-control, var(--md-sys-font-md))') // the font ramp (NOT --md-sys-height-* — no fixed height lever)
   })
 
   it('[size] repoints ONLY the font token (padding/line-box derive from it via calc — no separate repoint needed)', () => {
     for (const size of ['sm', 'lg'] as const) {
       const b = whereBlock(`:where(ui-textarea[size='${size}'])`)
-      expect(b).toMatch(new RegExp(`--ui-textarea-font:\\s*var\\(--md-sys-font-${size}\\)`))
+      expect(b).toMatch(new RegExp(`--ui-textarea-font:\\s*var\\(--md-sys-type-control, var\\(--md-sys-font-${size}\\)\\)`))
     }
   })
 
@@ -126,7 +126,7 @@ describe('textarea.css — the MULTI-LINE geometry law (ADR-0134 — the inversi
   })
 
   it('radius reuses the fixed --md-sys-shape-corner-base entry-control referent (geometry.md "Corner radius")', () => {
-    expect(tokenBlock).toMatch(/--ui-textarea-radius:\s*var\(--md-sys-shape-corner-base\)/)
+    expect(tokenBlock).toMatch(/--ui-textarea-radius:\s*var\(--md-sys-radius, var\(--md-sys-shape-corner-base\)\)/)
     expect(stylesBlock).toMatch(/border-radius:\s*var\(--ui-textarea-radius\)/)
   })
 

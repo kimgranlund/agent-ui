@@ -36,11 +36,12 @@
 
 :where(ui-otp-field) {
   /* Geometry — off the §1 ramp (default size = md); text-field's own rows (ADR-0038 lookup, no multiplier). */
-  --ui-otp-field-height: var(--md-sys-height-md);
-  --ui-otp-field-font: var(--md-sys-font-md);
+  --ui-otp-field-height: var(--md-sys-height, var(--md-sys-height-md));
+  --ui-otp-field-font: var(--md-sys-type-control, var(--md-sys-font-md));
   --ui-otp-field-cell-inline-size: var(--ui-otp-field-height); /* square one-glyph cell — derived, §7 */
-  --ui-otp-field-gap: var(--md-sys-gap-md); /* = font/2 × density (rhythm family) — the density-bearing quantity */
-  --ui-otp-field-radius: var(--md-sys-shape-corner-base); /* entry class, fixed — never h/2 (§7) */
+  --ui-otp-field-gap: var(--md-sys-inset, var(--md-sys-gap-md)); /* = font/2 × density (rhythm family) — the density-bearing quantity */
+  --ui-otp-field-corner-shape: var(--md-sys-corner-shape, round); /* squircle in a data-tier region (ADR-0245 cl.3) */
+  --ui-otp-field-radius: var(--md-sys-radius, var(--md-sys-shape-corner-base)); /* entry class, fixed — never h/2 (§7) */
 
   /* Cell colour channel (family = neutral) — the TKT-0062 filled-state law applied per cell: empty / filled /
      active / disabled / user-invalid. Active and user-invalid are ORTHOGONAL border-only channels layered on
@@ -60,22 +61,22 @@
      colour-only gap WCAG 1.4.1 names). The `.ui-otp-field-message` node (control-managed, aria-describedby
      target) becomes VISIBLE when non-empty under :state(user-invalid) — declared here (specificity 0,
      overridable), consumed in the @scope block. */
-  --ui-otp-field-message-font: var(--md-sys-font-sm); /* small type — subordinate to the cell readout */
+  --ui-otp-field-message-font: var(--md-sys-type-field-label, var(--md-sys-font-sm)); /* small type — subordinate to the cell readout */
   --ui-otp-field-message-ink: var(--md-sys-color-danger-on-surface-variant);
 }
 
 /* size → dimensional ramp (size is reflected, so the attribute is present) */
 :where(ui-otp-field[size='sm']) {
-  --ui-otp-field-height: var(--md-sys-height-sm);
-  --ui-otp-field-font: var(--md-sys-font-sm);
+  --ui-otp-field-height: var(--md-sys-height, var(--md-sys-height-sm));
+  --ui-otp-field-font: var(--md-sys-type-control, var(--md-sys-font-sm));
   --ui-otp-field-cell-inline-size: var(--ui-otp-field-height);
-  --ui-otp-field-gap: var(--md-sys-gap-sm);
+  --ui-otp-field-gap: var(--md-sys-inset, var(--md-sys-gap-sm));
 }
 :where(ui-otp-field[size='lg']) {
-  --ui-otp-field-height: var(--md-sys-height-lg);
-  --ui-otp-field-font: var(--md-sys-font-lg);
+  --ui-otp-field-height: var(--md-sys-height, var(--md-sys-height-lg));
+  --ui-otp-field-font: var(--md-sys-type-control, var(--md-sys-font-lg));
   --ui-otp-field-cell-inline-size: var(--ui-otp-field-height);
-  --ui-otp-field-gap: var(--md-sys-gap-lg);
+  --ui-otp-field-gap: var(--md-sys-inset, var(--md-sys-gap-lg));
 }
 
 /* disabled → a role REPOINT (NOT opacity, tokens.md canon), matching BOTH own [disabled] and the effective
@@ -121,6 +122,7 @@
     background: var(--ui-otp-field-cell-bg);
     border: 1px solid var(--ui-otp-field-cell-border);
     border-radius: var(--ui-otp-field-radius);
+    corner-shape: var(--ui-otp-field-corner-shape);
     color: var(--ui-otp-field-cell-ink);
   }
   :scope > [data-part='cell'][data-filled] {

@@ -80,9 +80,9 @@ describe('button.css — STATIC geometry trip-wires (s11)', () => {
     // ADR-0038 supersedes ADR-0032/0037 (multiplier/snap): height is Kim's explicit lookup, not × --md-sys-scale.
     // ADR-0035 (4a hoist) established the icon table and the var(--md-sys-icon-*) wiring — button.css still reads it.
     // Pin the icon wiring (that pow and calc are gone from the icon decl); height format is tok-mono's (dimensions.test.ts).
-    expect(whereBlock(':where(ui-button) {')).toMatch(/--ui-button-icon:\s*var\(--md-sys-icon-md\)/) //          md → shared token
-    expect(whereBlock(":where(ui-button[size='sm'])")).toMatch(/--ui-button-icon:\s*var\(--md-sys-icon-sm\)/) // sm
-    expect(whereBlock(":where(ui-button[size='lg'])")).toMatch(/--ui-button-icon:\s*var\(--md-sys-icon-lg\)/) // lg
+    expect(whereBlock(':where(ui-button) {')).toMatch(/--ui-button-icon:\s*var\(--md-sys-icon-box, var\(--md-sys-icon-md\)\)/) //          md → shared token
+    expect(whereBlock(":where(ui-button[size='sm'])")).toMatch(/--ui-button-icon:\s*var\(--md-sys-icon-box, var\(--md-sys-icon-sm\)\)/) // sm
+    expect(whereBlock(":where(ui-button[size='lg'])")).toMatch(/--ui-button-icon:\s*var\(--md-sys-icon-box, var\(--md-sys-icon-lg\)\)/) // lg
     // the OLD calc/pow icon form is gone — the decl is a bare var(), not a calc()
     expect(whereBlock(':where(ui-button) {')).not.toMatch(/--ui-button-icon:\s*calc\(/)
     // ADR-0036: button.css sets line-height: var(--md-sys-control-line-height) on :scope (the single-line law)

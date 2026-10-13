@@ -89,9 +89,9 @@ describe('text-field.css — STATIC geometry law (s9)', () => {
     // shared --md-sys-icon-* table (ADR-0035 conformance gap now closed — button adopted the table first).
     // dimensions.css :root has explicit `<n>px` literals for height (no × --md-sys-scale — ADR-0038 clause 5).
     // text-field.css icon wiring
-    expect(whereBlock(':where(ui-text-field) {')).toMatch(/--ui-text-field-icon:\s*var\(--md-sys-icon-md\)/)
-    expect(whereBlock(":where(ui-text-field[size='sm'])")).toMatch(/--ui-text-field-icon:\s*var\(--md-sys-icon-sm\)/)
-    expect(whereBlock(":where(ui-text-field[size='lg'])")).toMatch(/--ui-text-field-icon:\s*var\(--md-sys-icon-lg\)/)
+    expect(whereBlock(':where(ui-text-field) {')).toMatch(/--ui-text-field-icon:\s*var\(--md-sys-icon-box, var\(--md-sys-icon-md\)\)/)
+    expect(whereBlock(":where(ui-text-field[size='sm'])")).toMatch(/--ui-text-field-icon:\s*var\(--md-sys-icon-box, var\(--md-sys-icon-sm\)\)/)
+    expect(whereBlock(":where(ui-text-field[size='lg'])")).toMatch(/--ui-text-field-icon:\s*var\(--md-sys-icon-box, var\(--md-sys-icon-lg\)\)/)
     // the old local calc is gone (ADR-0035 conformance gap closed)
     expect(whereBlock(':where(ui-text-field) {')).not.toMatch(/--ui-text-field-icon:\s*calc\(/)
     // dimensions.css :root: height is now a literal px (no multiplier), confirmed by the `heightPx` parse above
@@ -115,13 +115,15 @@ describe('text-field.css — STATIC geometry law (s9)', () => {
 
   it('per-edge formula: a slotless VALUE edge = h/2, a present SLOT edge = ½(h−icon)', () => {
     // geometry.md §"Per-edge inline padding". Slotless (bare editor) base: padding-inline h/2 (the value edge).
-    expect(stylesBlock).toMatch(/padding-inline:\s*calc\(var\(--ui-text-field-height\)\s*\/\s*2\)/)
+    // The edge reads --ui-text-field-edge: n in a data-tier region (ADR-0245 cl.3), h/2 outside (the token's fallback).
+    expect(whereBlock(':where(ui-text-field) {')).toMatch(/--ui-text-field-edge:\s*var\(--md-sys-inset,\s*calc\(var\(--ui-text-field-height\)\s*\/\s*2\)\)/)
+    expect(stylesBlock).toMatch(/padding-inline:\s*var\(--ui-text-field-edge\)/)
     // leading-only [leading | editor]: the START slot edge insets ½(h−icon); the END (slotless) value edge is h/2.
     const leadingOnly = stylesBlock.slice(stylesBlock.indexOf(":scope:has(> [slot='leading']):not"))
     expect(leadingOnly).toMatch(
       /padding-inline-start:\s*calc\(\(var\(--ui-text-field-height\)\s*-\s*var\(--ui-text-field-icon\)\)\s*\/\s*2\)/,
     )
-    expect(leadingOnly).toMatch(/padding-inline-end:\s*calc\(var\(--ui-text-field-height\)\s*\/\s*2\)/)
+    expect(leadingOnly).toMatch(/padding-inline-end:\s*var\(--ui-text-field-edge\)/)
   })
 
   it('M2 (ADR-0048): calendar-button is in the adornment-button chrome-reset block (no UA border/background)', () => {
