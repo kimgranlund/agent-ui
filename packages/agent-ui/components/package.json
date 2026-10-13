@@ -116,6 +116,8 @@
     "./controls/ramp.css": "./src/controls/ramp/ramp.css",
     "./controls/rating": "./src/controls/rating/rating.ts",
     "./controls/rating.css": "./src/controls/rating/rating.css",
+    "./controls/result-card": "./src/controls/result-card/result-card.ts",
+    "./controls/result-card.css": "./src/controls/result-card/result-card.css",
     "./controls/row": "./src/controls/row/row.ts",
     "./controls/row.css": "./src/controls/row/row.css",
     "./controls/sandbox-frame": "./src/controls/sandbox-frame/sandbox-frame.ts",

@@ -1,0 +1,277 @@
+/* result-card.css: ui-result-card, the settled outcome card (ADR-0244, ResultCard fork sheet).
+ *
+ *   [1] TOKEN BLOCK: `:where(ui-result-card)` (specificity 0,0,0) declares the --ui-result-card-* chain from the
+ *       color roles, the dimensional ramps and the ADR-0046 box tokens. The per-outcome pill tint repoints
+ *       (keyed on the control-written `[data-outcome]` of the pill) and the per-intent stat ink repoints
+ *       (keyed on each stat's `[data-intent]`) live here too, so the styles block reads only its own chain.
+ *   [2] STYLES BLOCK: `@scope (ui-result-card)` consumes only --ui-result-card-*. The host is a card surface:
+ *       header (outcome pill, then title), summary, stat tiles, then the producer's own children, which share
+ *       the last line as the wrapping actions row.
+ *
+ * The outcome tint is never the only signifier: the pill always carries its word and glyph. Intent never
+ * tints a stat tile (the ui-game-hud stat look). No edge accent of any kind: every border is the same on all
+ * four sides.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK: :where(ui-result-card) declares --ui-result-card-* ════════════════ */
+
+:where(ui-result-card) {
+  /* Host surface. The spacing is the ADR-0046 container box model (fixed rem, no density scaling, ADR-0046
+     Amendment 7): the card's content is one region, so its ink sits the 6px box inset plus the region padding
+     (12px inline, 6px block) in from the border, and header, summary, stats and the actions row keep the 8px
+     region gap. The shared --ui-box-* tokens with their literal fallbacks, the game-hud.css idiom. */
+  --ui-result-card-surface: var(--md-sys-color-neutral-surface);
+  --ui-result-card-outline: var(--md-sys-color-neutral-outline-variant);
+  --ui-result-card-radius: var(--md-sys-shape-corner-base);
+  --ui-result-card-inset: var(--ui-box-inset, 0.375rem); /* 6px */
+  --ui-result-card-pad-block: var(--ui-box-pad-block, 0.375rem); /* 6px */
+  --ui-result-card-pad-inline: var(--ui-box-pad-inline, 0.75rem); /* 12px */
+  --ui-result-card-gap: var(--ui-box-gap, 0.5rem); /* 8px between regions, and between action buttons */
+  --ui-result-card-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-result-card-muted-ink: var(--md-sys-color-neutral-on-surface-variant);
+
+  /* Header: the outcome pill then the title */
+  --ui-result-card-header-gap: var(--md-sys-space-sm); /* mockup 10px, nearest ramp step */
+  --ui-result-card-title-size: var(--md-sys-typescale-title-medium-size); /* mockup 1rem */
+  --ui-result-card-title-line-height: var(--md-sys-typescale-title-medium-line-height);
+
+  /* Outcome pill: glyph plus word on a tinted container (the approved mockup's .opill) */
+  --ui-result-card-outcome-surface: var(--md-sys-color-neutral-container); /* done */
+  --ui-result-card-outcome-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-result-card-outcome-radius: 999px; /* a full pill */
+  --ui-result-card-outcome-size: var(--md-sys-typescale-label-medium-size); /* mockup .75rem */
+  --ui-result-card-outcome-line-height: var(--md-sys-typescale-label-medium-line-height);
+  --ui-result-card-outcome-weight: 700;
+  --ui-result-card-outcome-tracking: 0.02em;
+  --ui-result-card-outcome-pad-block: 2px;
+  --ui-result-card-outcome-pad-start: var(--md-sys-space-sm); /* mockup 8px */
+  --ui-result-card-outcome-pad-end: 10px;
+  --ui-result-card-outcome-gap: 5px;
+  --ui-result-card-outcome-glyph-size: 0.875rem; /* mockup 14px */
+
+  /* Summary */
+  --ui-result-card-summary-size: var(--md-sys-typescale-body-medium-size); /* mockup .875rem */
+  --ui-result-card-summary-line-height: var(--md-sys-typescale-body-medium-line-height);
+
+  /* Stats grid and tiles: the ui-game-hud stat look, value for value */
+  --ui-result-card-stats-gap: var(--md-sys-space-sm); /* mockup 8px */
+  --ui-result-card-stat-min: 84px; /* the tile floor the auto-fit grid wraps on */
+  --ui-result-card-stat-pad-block: var(--md-sys-space-sm); /* mockup 8px */
+  --ui-result-card-stat-pad-inline: var(--md-sys-space-sm); /* mockup 10px, nearest ramp step */
+  --ui-result-card-stat-radius: calc(var(--md-sys-shape-corner-base) - 2px); /* mockup 10px */
+  --ui-result-card-stat-gap: 2px;
+  --ui-result-card-stat-surface: var(--md-sys-color-neutral-container-low); /* always; an intent never tints the tile */
+  --ui-result-card-label-size: var(--md-sys-typescale-label-small-size); /* mockup .6875rem */
+  --ui-result-card-label-tracking: 0.06em;
+  --ui-result-card-value-size: var(--md-sys-typescale-headline-small-size);
+  --ui-result-card-value-line-height: var(--md-sys-typescale-headline-small-line-height);
+  --ui-result-card-value-weight: 700;
+  --ui-result-card-delta-size: var(--md-sys-typescale-label-medium-size); /* mockup .75rem */
+  --ui-result-card-delta-weight: 650;
+  --ui-result-card-glyph-size: 0.6em;
+  --ui-result-card-glyph-gap: var(--md-sys-space-xs);
+
+  /* Per-stat intent ink: no intent means the quiet on-surface-variant ink and no glyph. */
+  --ui-result-card-intent-ink: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+/* Outcome tint repoints, keyed on the pill's control-written [data-outcome]: win success, lose danger, draw
+   warning, done neutral (the default above). */
+:where(ui-result-card [data-part='outcome'][data-outcome='win']) {
+  --ui-result-card-outcome-surface: var(--md-sys-color-success-container);
+}
+:where(ui-result-card [data-part='outcome'][data-outcome='lose']) {
+  --ui-result-card-outcome-surface: var(--md-sys-color-danger-container);
+}
+:where(ui-result-card [data-part='outcome'][data-outcome='draw']) {
+  --ui-result-card-outcome-surface: var(--md-sys-color-warning-container);
+}
+
+/* Stat intent repoints, keyed on the stat part's control-written [data-intent]. */
+:where(ui-result-card [data-part='stat'][data-intent='success']) {
+  --ui-result-card-intent-ink: var(--md-sys-color-success-high);
+}
+:where(ui-result-card [data-part='stat'][data-intent='danger']) {
+  --ui-result-card-intent-ink: var(--md-sys-color-danger-high);
+}
+:where(ui-result-card [data-part='stat'][data-intent='warning']) {
+  --ui-result-card-intent-ink: var(--md-sys-color-warning-high);
+}
+:where(ui-result-card [data-part='stat'][data-intent='info']) {
+  --ui-result-card-intent-ink: var(--md-sys-color-info-high);
+}
+
+/* ════════════════ [2] STYLES BLOCK: @scope (ui-result-card) consumes only --ui-result-card-* ════════════════ */
+
+@scope (ui-result-card) {
+  /* Fill by default (ADR-0223): block-level, no width opinion of its own. A wrapping flex box: each part
+     takes a whole line, and the producer's children share the last line as the actions row. */
+  :scope {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    align-content: start;
+    gap: var(--ui-result-card-gap);
+    box-sizing: border-box;
+    padding-block: calc(var(--ui-result-card-inset) + var(--ui-result-card-pad-block));
+    padding-inline: calc(var(--ui-result-card-inset) + var(--ui-result-card-pad-inline));
+    border: 1px solid var(--ui-result-card-outline);
+    border-radius: var(--ui-result-card-radius);
+    background: var(--ui-result-card-surface);
+    color: var(--ui-result-card-ink);
+  }
+  :scope[inline] {
+    display: inline-flex; /* ADR-0223: the one sizing opt-out, hugs its content */
+  }
+  :scope > [data-part] {
+    flex: 1 0 100%;
+    min-inline-size: 0;
+  }
+  :scope > :not([data-part]) {
+    flex: none; /* an action button keeps its own width; the row wraps */
+  }
+
+  :scope [data-part='header'] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ui-result-card-header-gap);
+  }
+  :scope [data-part='outcome'] {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: var(--ui-result-card-outcome-gap);
+    padding-block: var(--ui-result-card-outcome-pad-block);
+    padding-inline: var(--ui-result-card-outcome-pad-start) var(--ui-result-card-outcome-pad-end);
+    border-radius: var(--ui-result-card-outcome-radius);
+    background: var(--ui-result-card-outcome-surface);
+    color: var(--ui-result-card-outcome-ink);
+    font-size: var(--ui-result-card-outcome-size);
+    line-height: var(--ui-result-card-outcome-line-height);
+    font-weight: var(--ui-result-card-outcome-weight);
+    letter-spacing: var(--ui-result-card-outcome-tracking);
+  }
+  :scope [data-part='outcome-glyph'] {
+    flex: none;
+    inline-size: var(--ui-result-card-outcome-glyph-size);
+    block-size: var(--ui-result-card-outcome-glyph-size);
+  }
+  :scope [data-part='title'] {
+    min-inline-size: 0;
+    font-size: var(--ui-result-card-title-size);
+    line-height: var(--ui-result-card-title-line-height);
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+  :scope [data-part='summary'] {
+    margin: 0;
+    color: var(--ui-result-card-muted-ink);
+    font-size: var(--ui-result-card-summary-size);
+    line-height: var(--ui-result-card-summary-line-height);
+    text-wrap: pretty;
+    overflow-wrap: anywhere;
+  }
+
+  :scope [data-part='stats'] {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(var(--ui-result-card-stat-min), 1fr));
+    gap: var(--ui-result-card-stats-gap);
+  }
+  :scope [data-part='stat'] {
+    /* Glyph and label share the first line; value and delta each take a full line. */
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    align-content: start;
+    column-gap: var(--ui-result-card-glyph-gap);
+    row-gap: var(--ui-result-card-stat-gap);
+    min-inline-size: 0;
+    padding-block: var(--ui-result-card-stat-pad-block);
+    padding-inline: var(--ui-result-card-stat-pad-inline);
+    border-radius: var(--ui-result-card-stat-radius);
+    background: var(--ui-result-card-stat-surface);
+  }
+  :scope [data-part='stat'] [data-part='label'] {
+    flex: 1 1 0;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+    color: var(--ui-result-card-muted-ink);
+    font-size: var(--ui-result-card-label-size);
+    letter-spacing: var(--ui-result-card-label-tracking);
+    text-transform: uppercase;
+  }
+  :scope [data-part='stat'] [data-part='value'],
+  :scope [data-part='stat'] [data-part='delta'] {
+    flex: 1 0 100%;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+  }
+  :scope [data-part='stat'] [data-part='value'] {
+    font-size: var(--ui-result-card-value-size);
+    line-height: var(--ui-result-card-value-line-height);
+    font-weight: var(--ui-result-card-value-weight);
+  }
+  :scope [data-part='stat'] [data-part='delta'] {
+    color: var(--ui-result-card-intent-ink);
+    font-size: var(--ui-result-card-delta-size);
+    font-weight: var(--ui-result-card-delta-weight);
+  }
+
+  /* The stat glyph sits beside the label, painted in the intent ink. Hidden by default and opted in per known
+     intent, so an unknown [data-intent] degrades to no glyph, never a shapeless square. */
+  :scope [data-part='stat'] [data-part='glyph'] {
+    display: none;
+    flex: none;
+    inline-size: var(--ui-result-card-glyph-size);
+    block-size: var(--ui-result-card-glyph-size);
+    background-color: var(--ui-result-card-intent-ink);
+  }
+  :scope [data-part='stat'][data-intent='success'] [data-part='glyph'] {
+    /* tick, badge.css verbatim */
+    display: inline-block;
+    clip-path: polygon(14% 44%, 0% 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  }
+  :scope [data-part='stat'][data-intent='danger'] [data-part='glyph'] {
+    /* cross, badge.css verbatim */
+    display: inline-block;
+    clip-path: polygon(
+      20% 8%,
+      8% 20%,
+      38% 50%,
+      8% 80%,
+      20% 92%,
+      50% 62%,
+      80% 92%,
+      92% 80%,
+      62% 50%,
+      92% 20%,
+      80% 8%,
+      50% 38%
+    );
+  }
+  :scope [data-part='stat'][data-intent='warning'] [data-part='glyph'] {
+    display: inline-block;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%); /* triangle, badge.css verbatim */
+  }
+  :scope [data-part='stat'][data-intent='info'] [data-part='glyph'] {
+    display: inline-block;
+    clip-path: circle(50%); /* disc, badge.css verbatim */
+  }
+
+  /* Forced colors: the pill tint would flatten to Canvas, so the pill gains a system border; a clip-path stat
+     glyph paints in a system ink (the badge.css note). The outcome glyph strokes in currentColor already. */
+  @media (forced-colors: active) {
+    :scope {
+      border-color: CanvasText;
+    }
+    :scope [data-part='outcome'] {
+      border: 1px solid CanvasText;
+    }
+    :scope [data-part='stat'] [data-part='glyph'] {
+      forced-color-adjust: none;
+      background-color: CanvasText;
+    }
+  }
+}

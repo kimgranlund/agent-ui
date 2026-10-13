@@ -100,6 +100,8 @@ import statMd from '../../packages/agent-ui/components/src/controls/stat/stat.md
 import badgeMd from '../../packages/agent-ui/components/src/controls/badge/badge.md?raw'
 // ADR-0243 (T-0071) - ui-game-hud, the game score and status strip (tier=pattern => {doc, demo}).
 import gameHudMd from '../../packages/agent-ui/components/src/controls/game-hud/game-hud.md?raw'
+// ADR-0244 (T-0089) - ui-result-card, the settled outcome card (tier=pattern => {doc, demo}).
+import resultCardMd from '../../packages/agent-ui/components/src/controls/result-card/result-card.md?raw'
 // ADR-0201 — ui-description-list, the key–value receipt primitive (tier=display ⇒ {doc}).
 import descriptionListMd from '../../packages/agent-ui/components/src/controls/description-list/description-list.md?raw'
 // ADR-0214/GH #1394 — ui-source-list, the source-attribution aggregate leaf (tier=display ⇒ {doc}).
@@ -263,6 +265,8 @@ export const loadStatDoc  = (): ComponentDoc => parseDoc(statMd)
 export const loadBadgeDoc = (): ComponentDoc => parseDoc(badgeMd)
 // ADR-0243 (T-0071) - ui-game-hud, the game score and status strip (tier=pattern => {doc, demo}).
 export const loadGameHudDoc = (): ComponentDoc => parseDoc(gameHudMd)
+// ADR-0244 (T-0089) - ui-result-card, the settled outcome card (tier=pattern => {doc, demo}).
+export const loadResultCardDoc = (): ComponentDoc => parseDoc(resultCardMd)
 export const loadDescriptionListDoc = (): ComponentDoc => parseDoc(descriptionListMd)
 // ADR-0214/GH #1394 — ui-source-list, the source-attribution aggregate leaf (tier=display ⇒ {doc}).
 export const loadSourceListDoc = (): ComponentDoc => parseDoc(sourceListMd)

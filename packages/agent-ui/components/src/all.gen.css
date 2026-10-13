@@ -56,6 +56,7 @@
 @import './controls/radio/radio.css';
 @import './controls/ramp/ramp.css';
 @import './controls/rating/rating.css';
+@import './controls/result-card/result-card.css';
 @import './controls/row/row.css';
 @import './controls/sandbox-frame/sandbox-frame.css';
 @import './controls/segment/segment.css';
