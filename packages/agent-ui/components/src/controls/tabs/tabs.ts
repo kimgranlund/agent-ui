@@ -431,7 +431,10 @@ export class UITabsElement extends UIContainerElement {
     const gap = Number.parseFloat(vertical ? cs.rowGap : cs.columnGap) || 0
     // Reserve — the trigger's token-derived footprint (never measured from the trigger element itself, so
     // the budget never depends on the trigger's OWN current display state — the LLD's anti-feedback ruling).
-    const tabHeight = Number.parseFloat(getComputedStyle(this).getPropertyValue('--ui-tabs-tab-height')) || 0
+    // The token is a derived calc() since the ADR-0245 cut, and a bare getPropertyValue() returns that unresolved
+    // text (parseFloat → NaN → 0, so overflow never engaged). Every ui-tab's block-size IS the token (tabs.css), and
+    // its computed value is the resolved length even while the tab is display:none (data-overflowed).
+    const tabHeight = Number.parseFloat(getComputedStyle(tabs[0]!).blockSize) || 0
     const reserve = tabHeight + gap
 
     // CACHE-VALIDITY GUARD (doc-review repair 1) — horizontal only; vertical has no cache to go stale (pure
