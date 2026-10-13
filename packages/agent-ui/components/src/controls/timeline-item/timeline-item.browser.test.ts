@@ -42,14 +42,18 @@ interface CdpSession {
 describe('ui-timeline-item cross-engine geometry smoke — the marker-system explicit (scale × size) table', () => {
   it('[size] sm→md→lg resolves the EXACT frozen integers at the default [scale] (marker-box/dot/connector/gutter/row-gap)', () => {
     const { item } = mount('<ui-timeline-item status="active" label="x"></ui-timeline-item>')
-    const EXPECTED: Record<string, [number, number, number, number, number]> = {
-      sm: [14, 6, 2, 18, 8],
-      md: [16, 8, 2, 20, 12],
-      lg: [20, 10, 2, 24, 16],
+    // marker-box / dot ride the derived icon box (2n) and glyph box at the root register (ADR-0245 cl.2, cl.4); the
+    // connector width, gutter and row-gap stay literals.
+    const LITERALS: Record<string, [number, number, number]> = {
+      sm: [2, 18, 8],
+      md: [2, 20, 12],
+      lg: [2, 24, 16],
     }
     for (const size of ['sm', 'md', 'lg'] as const) {
       item.setAttribute('size', size)
-      const [mb, dot, cw, gut, rg] = EXPECTED[size]!
+      const r = resolve('product', 'sm', size)
+      const [mb, dot] = [r.icon, r.glyph]
+      const [cw, gut, rg] = LITERALS[size]!
       expect(markerBox(item), `size=${size} marker-box`).toBeCloseTo(mb, 0)
       expect(dotSize(item), `size=${size} dot-size`).toBeCloseTo(dot, 0)
       expect(connectorWidth(item), `size=${size} connector-width`).toBeCloseTo(cw, 0)
