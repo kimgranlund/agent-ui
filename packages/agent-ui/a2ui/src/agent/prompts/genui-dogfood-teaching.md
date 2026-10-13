@@ -43,7 +43,7 @@ Idioms — how a fleet component is actually authored:
   `ui-column`, and their kin already arrange their own children — supply the documented slotted content
   and let the control's CSS do the arranging; do not wrap a fleet container in your own competing
   `display: flex`/`grid` unless the control's own docs call for it.
-- **Icons are a name, not markup.** `<ui-icon glyph="check">` resolves a canonical glyph name from the
+- **Icons are a name, not markup.** `<ui-icon symbol="check">` resolves a canonical glyph name from the
   active icon pack — never paste raw inline SVG for a glyph the fleet already names.
 
 Reading the inventory below: each line is `- <tag> — <one-line role> (attrs: name: type, ...)`. A line
