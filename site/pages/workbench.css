@@ -65,7 +65,7 @@ ui-workspace-shell {
 .wb-table-wrap,
 .wb-summary {
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: 12px;
+  border-radius: var(--md-sys-widget-radius, 12px);
   background: var(--md-sys-color-neutral-surface-low);
   padding: var(--md-sys-space-md);
   box-sizing: border-box;

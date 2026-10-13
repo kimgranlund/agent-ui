@@ -10,7 +10,7 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.9em;
   padding: 0.05em 0.35em;
-  border-radius: 5px;
+  border-radius: var(--md-sys-radius, 5px);
   background: var(--md-sys-color-neutral-surface-high);
   color: var(--md-sys-color-neutral-on-surface);
 }
@@ -29,10 +29,10 @@
 /* A definite block-size makes the rail/pane/content row visible; the frame + radius give the demo an edge.
  * ui-workspace-shell fills its flex parent (auto block-size) — we give the demo a fixed height + frame. */
 ui-workspace-shell.ws-demo {
-  block-size: 380px;
+  block-size: 23.75rem;
   margin-block: var(--md-sys-space-lg) 1.75rem;
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: 12px;
+  border-radius: var(--md-sys-widget-radius, 12px);
   overflow: hidden;
   background: var(--md-sys-color-neutral-surface-lowest);
 }

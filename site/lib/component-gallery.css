@@ -79,7 +79,7 @@ component-gallery {
 
 .gallery-card-tier {
   padding: 0.1rem 0.55rem;
-  border-radius: 999px;
+  border-radius: 100vmax;
   background: var(--md-sys-color-neutral-surface-high);
   color: var(--md-sys-color-neutral-on-surface-variant);
   font-size: 0.7rem;

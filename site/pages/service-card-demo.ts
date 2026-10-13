@@ -46,7 +46,7 @@ function overflowMenu(cardName: string): HTMLElement {
   trigger.setAttribute('aria-label', `More actions for ${cardName}`)
   const dots = document.createElement('ui-icon')
   dots.setAttribute('slot', 'leading')
-  dots.setAttribute('glyph', 'dots-three')
+  dots.setAttribute('symbol', 'dots-three')
   trigger.append(dots)
 
   const menu = el('ui-menu', { slot: 'menu' }, [

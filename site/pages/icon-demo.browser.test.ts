@@ -20,8 +20,8 @@ describe('icon-demo — real Phosphor icons in real contexts', () => {
     expect(icons.length).toBeGreaterThanOrEqual(15)
     for (const icon of icons) {
       const svg = icon.querySelector('svg')
-      expect(svg, `ui-icon[glyph=${icon.getAttribute('glyph')}] has no injected svg`).not.toBeNull()
-      expect(svg?.hasAttribute('data-icon-missing'), `glyph ${icon.getAttribute('glyph')} is missing from the pack`).toBe(false)
+      expect(svg, `ui-icon[symbol=${icon.getAttribute('symbol')}] has no injected svg`).not.toBeNull()
+      expect(svg?.hasAttribute('data-icon-missing'), `glyph ${icon.getAttribute('symbol')} is missing from the pack`).toBe(false)
     }
   })
 
@@ -37,7 +37,7 @@ describe('icon-demo — real Phosphor icons in real contexts', () => {
 
   it('the ambient font-size ramp sizes the 1em cell — a 3rem icon is wider than a 1rem icon', async () => {
     await raf()
-    const glyphs = [...document.querySelectorAll('ui-icon[glyph="calendar-check"]')] as HTMLElement[]
+    const glyphs = [...document.querySelectorAll('ui-icon[symbol="calendar-check"]')] as HTMLElement[]
     const small = glyphs.find((g) => g.style.fontSize === '1rem')
     const large = glyphs.find((g) => g.style.fontSize === '3rem')
     expect(small && large).toBeTruthy()
@@ -47,6 +47,6 @@ describe('icon-demo — real Phosphor icons in real contexts', () => {
   it('meaningful icons carry a label; decorative ones do not', async () => {
     await raf()
     expect(document.querySelectorAll('[data-page-content] ui-icon[label]').length).toBe(4)
-    expect(document.querySelector('[data-page-content] ui-icon[glyph="paperclip"]')?.hasAttribute('label')).toBe(false)
+    expect(document.querySelector('[data-page-content] ui-icon[symbol="paperclip"]')?.hasAttribute('label')).toBe(false)
   })
 })

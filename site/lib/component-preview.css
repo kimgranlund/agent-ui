@@ -15,7 +15,7 @@ component-preview {
            * padding already spaces the knobs, so an inter-column gap only opened a strip of card background
            * between divider and canvas (GH #1299). The stacked (narrow) branch inherits the same flush seam. */
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: 12px;
+  border-radius: var(--md-sys-widget-radius, 12px);
   overflow: hidden;
   background: var(--md-sys-color-neutral-surface-low);
 }

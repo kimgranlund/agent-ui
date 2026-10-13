@@ -19,7 +19,7 @@
 .feed-error {
   margin: 0 0 1rem;
   padding: 0.75rem 1rem;
-  border-radius: 8px;
+  border-radius: var(--md-sys-group-radius, 8px);
   background: var(--md-sys-color-error-container);
   color: var(--md-sys-color-on-error-container);
 }
@@ -40,7 +40,7 @@
   flex-direction: column;
   gap: 0.4rem;
   padding: 0.65rem 0.85rem;
-  border-radius: 10px;
+  border-radius: var(--md-sys-group-radius, 10px);
   max-inline-size: min(46rem, 92%);
 }
 .msg[hidden] {

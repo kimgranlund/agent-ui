@@ -86,7 +86,7 @@
 .surface {
   padding: 1.25rem;
   border: 1px dashed var(--md-sys-color-neutral-outline);
-  border-radius: 8px;
+  border-radius: var(--md-sys-group-radius, 8px);
   background: var(--md-sys-color-neutral-surface);
   /* ADR-0100 cl.2 — the A2UI mount boundary (a2ui-list.ts's `host.mount()` target): establishes the query
    * container the fleet's layout primitives resolve `@container` reflow against. Qualifies under the law

@@ -12,7 +12,7 @@
   overflow: hidden;
   padding: 0.5rem;
   border: 1px dashed var(--md-sys-color-neutral-outline);
-  border-radius: 14px;
+  border-radius: var(--md-sys-widget-radius, 14px);
 }
 
 /* A FIXED-width narrow frame — the band the flyout actually lives in, so the open card is demonstrable
@@ -22,7 +22,7 @@
   max-inline-size: 100%;
   padding: 0.5rem;
   border: 1px dashed var(--md-sys-color-neutral-outline);
-  border-radius: 14px;
+  border-radius: var(--md-sys-widget-radius, 14px);
 }
 
 /* The demo rail's own frame — a surface so the rail reads as chrome inside a page, not floating text. */
@@ -30,7 +30,7 @@
   inline-size: 100%;
   margin: 0;
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: 12px;
+  border-radius: var(--md-sys-widget-radius, 12px);
   background: var(--md-sys-color-neutral-surface-lowest);
 }
 
@@ -42,7 +42,7 @@
   block-size: 3.5rem;
   overflow: hidden;
   border: 1px solid var(--md-sys-color-danger-outline, var(--md-sys-color-neutral-outline));
-  border-radius: 12px;
+  border-radius: var(--md-sys-widget-radius, 12px);
   background: var(--md-sys-color-neutral-surface-lowest);
 }
 
@@ -55,7 +55,7 @@
   overflow: hidden;
   padding: 0.5rem;
   border: 1px dashed var(--md-sys-color-primary-outline, var(--md-sys-color-neutral-outline));
-  border-radius: 14px;
+  border-radius: var(--md-sys-widget-radius, 14px);
 }
 .nr-column {
   inline-size: 15rem;

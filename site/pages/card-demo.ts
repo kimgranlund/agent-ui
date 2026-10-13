@@ -92,7 +92,7 @@ const labelValueRow = (label: string, value: string): HTMLElement =>
 
 const structured = el('ui-card', {}, [
   el('ui-card-header', { format: 'structured' }, [
-    el('ui-icon', { slot: 'leading', glyph: 'calendar', 'aria-hidden': 'true' }),
+    el('ui-icon', { slot: 'leading', symbol: 'calendar', 'aria-hidden': 'true' }),
     text('Date selection'),
     el('ui-badge', { slot: 'trailing', intent: 'success', label: 'Confirmed' }),
   ]),
