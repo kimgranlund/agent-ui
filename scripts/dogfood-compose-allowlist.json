@@ -1,9 +1,9 @@
 {
   "site/pages/attachment-demo.ts#inline-geometry": "owner T-0190: an off-ramp gap, margin or padding (a --md-sys-space-* step or the level token) left after the T-0170 token pass",
-  "site/pages/audio-demo.ts#inline-geometry": "owner T-0190: a literal geometry value in a multi-line style string left after the T-0170 token pass",
+  "site/pages/audio-demo.ts#inline-geometry": "owner T-0190: an inline font-size (a --md-sys-type-* role) left after the T-0170 token pass",
   "site/pages/avatar-demo.ts#inline-geometry": "owner T-0190: an off-ramp gap, margin or padding (a --md-sys-space-* step or the level token) left after the T-0170 token pass",
   "site/pages/choice-card-demo.ts#inline-geometry": "owner T-0190: an inline font-size (a --md-sys-type-* role) left after the T-0170 token pass",
-  "site/pages/command-modal-demo.ts#inline-geometry": "owner T-0190: a literal geometry value in a multi-line style string left after the T-0170 token pass",
+  "site/pages/command-modal-demo.ts#inline-geometry": "owner T-0190: an inline font-size (a --md-sys-type-* role) left after the T-0170 token pass",
   "site/pages/drill-demo.ts#inline-geometry": "owner T-0190: an off-ramp gap, margin or padding (a --md-sys-space-* step or the level token) left after the T-0170 token pass",
   "site/pages/icon-demo.ts#inline-geometry": "owner T-0190: an inline font-size (a --md-sys-type-* role) left after the T-0170 token pass",
   "site/pages/otp-field-demo.ts#inline-geometry": "owner T-0190: a literal frame block-size left after the T-0170 token pass",
@@ -14,11 +14,11 @@
   "site/pages/split-pane-demo.ts#inline-geometry": "owner T-0190: an inline font-size (a --md-sys-type-* role); an off-ramp gap, margin or padding (a --md-sys-space-* step or the level token); a literal frame block-size left after the T-0170 token pass",
   "site/pages/stat-demo.ts#inline-geometry": "owner T-0190: an off-ramp gap, margin or padding (a --md-sys-space-* step or the level token) left after the T-0170 token pass",
   "site/pages/swiper-item-demo.ts#inline-geometry": "owner T-0190: an inline font-size (a --md-sys-type-* role); a literal frame block-size; an off-ramp gap, margin or padding (a --md-sys-space-* step or the level token) left after the T-0170 token pass",
-  "site/pages/swiper-label-demo.ts#inline-geometry": "owner T-0190: a literal geometry value in a multi-line style string left after the T-0170 token pass",
+  "site/pages/swiper-label-demo.ts#inline-geometry": "owner T-0190: an inline font-size (a --md-sys-type-* role) left after the T-0170 token pass",
   "site/pages/switch-demo.ts#inline-geometry": "owner T-0190: an off-ramp gap, margin or padding (a --md-sys-space-* step or the level token); an inline font-size (a --md-sys-type-* role) left after the T-0170 token pass",
   "site/pages/textarea-demo.ts#inline-geometry": "owner T-0190: an inline font-size (a --md-sys-type-* role) left after the T-0170 token pass",
   "site/pages/theme-provider-demo.ts#inline-geometry": "owner T-0190: an off-ramp gap, margin or padding (a --md-sys-space-* step or the level token) left after the T-0170 token pass",
   "site/pages/toast-region-demo.ts#inline-geometry": "owner T-0190: an inline font-size (a --md-sys-type-* role) left after the T-0170 token pass",
   "site/pages/toggle-demo.ts#inline-geometry": "owner T-0190: an inline font-size (a --md-sys-type-* role) left after the T-0170 token pass",
-  "site/pages/video-demo.ts#inline-geometry": "owner T-0190: a literal geometry value in a multi-line style string left after the T-0170 token pass"
+  "site/pages/video-demo.ts#inline-geometry": "owner T-0190: an inline font-size (a --md-sys-type-* role) left after the T-0170 token pass"
 }

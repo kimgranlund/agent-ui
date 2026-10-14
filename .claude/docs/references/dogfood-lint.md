@@ -94,7 +94,8 @@ An allowlist holds only real debt with an owner. Two ways out of it that are not
   entry; an exemption that finds nothing is stale.
 
 Day one (T-0136) listed 9 render findings and 53 compose findings, every compose one a site demo's inline geometry.
-T-0170 fixed three render findings, marked the specimen, moved the other four to owner tickets, migrated 22 demos to
+T-0170 fixed two render findings (ui-code border-box, the avatar plane), scoped glyph-gap off a badge mark (two
+findings), marked the specimen, moved four to owner tickets, migrated 22 demos to
 the `--md-sys-space-*` steps, exempted 6 and left 22 compose entries owned by T-0190.
 
 ## How to add a rule
