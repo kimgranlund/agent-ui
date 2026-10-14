@@ -33,3 +33,11 @@ Kim 2026-10-14: "we should stop using ADR system". New decisions are recorded in
 - Dispositions of the unflipped amendments (0040, 0067, 0072, 0170) and the stale clauses from `.sdlc/notes.md` (0046 Am7, 0059, 0105 Am2, 0219, 0228 cl.6) are tabled in `.claude/skills/doc-standards/references/adr-log-mechanics.md` §1a; the live rules moved to `.claude/docs/references/geometry.md` (Rules that replace frozen ADR clauses) and `tokens.md` (switch track, chart series inks).
 - `.sdlc/notes.md` is untracked in the main checkout, so this lane does not edit it; the conductor marks those lines resolved at landing.
 - `scripts/adr_ratify.py` and its selftest stay (nothing calls the script; the test rides `check:scripts`); removing them is a separate cleanup. The ADR index generator keeps building from the frozen set unchanged.
+
+## Acceptance criteria
+1. `npm run check` exits 0.
+2. `npx vitest run site/lib/adr.test.ts site/lib/docs-grammar.test.ts site/lib/sitemap.test.ts` exits 0.
+3. `git diff --quiet 305540bd -- .claude/docs/adr` exits 0 (no ADR file added or edited).
+4. Every remaining hit of `rg -n "write an ADR|new ADR|amend(ment)? .*ADR|ratif" CLAUDE.md AGENTS.md docs .claude/docs/process.md .claude/skills .claude/agents` is a citation of a past decision, an eval prompt, the fleet-review deviations-ledger name, or a frozen-history note; none tells an agent to write, amend or flip an ADR.
+5. `docs/layout.md`, `CLAUDE.md`, `AGENTS.md`, `.claude/docs/process.md` and `doc-standards` route a new decision to its ticket and the owning reference doc or skill.
+6. Each of ADR-0040, 0067, 0072, 0170 (unflipped amendments) and 0046 Am7, 0059, 0105 Am2, 0219, 0228 cl.6 (stale clauses) has a disposition in `adr-log-mechanics.md` §1a, and each stale clause's current value matches the shipped CSS it names (`board-grid.css`, `product-card.css`, `switch.css`, `calendar.css`, `_chart/chart-axis.css`).
