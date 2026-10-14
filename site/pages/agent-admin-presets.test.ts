@@ -32,6 +32,16 @@ import {
 // storage key; the retired active-preset key constant stays inside the source module — the active-id
 // probes below go through the source's own read/write surface instead).
 import { ROSTER_ORDER_KEY } from '@agent-ui/app/agent-admin-roster-source'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import {
+  COMMERCE_SKILLS,
+  CORE_PLAYBOOKS,
+  GAMES_PLAYBOOKS,
+  GAMES_RULES,
+  GAMES_SKILLS,
+  HOSPITALITY_PLAYBOOKS,
+  HOSPITALITY_SKILLS,
+} from './agent-admin-libraries.ts'
 
 /** The worst case for the lint: NO modality is on, so every term in the vocabulary is live. */
 const ALL_OFF = { a2ui: false, genui: false }
@@ -271,5 +281,91 @@ describe('the Quizmaster seedVersion bump (T-0036): saved stores move to Haiku 5
     const store = personaStore(persona)
     expect(store.get('temperature')).toBe(0.1)
     expect(store.get('model')).toBe('claude-sonnet-4-5')
+  })
+})
+
+// ── T-0159 — preset and library prose names only what the live catalogs ship ──────────────────────────
+// The 2026-10-14 audit found prose that taught a Text variant the catalog lacks (`body/sm`) and skills that
+// promised components a persona's catalog does not carry. This gate reads every authored capability text
+// (each preset's surfaceStyle, skills and workflows, and the authored library packs) and checks two kinds of
+// claim against the committed catalog.json files: each COMPOUND type name (`GameHud`, `QuestionCard`; a
+// single-word type is also plain English, the prompt-lint rule) and each Text variant claim (`Text (caption)`,
+// `Text (variant caption)`, `variant "caption"`). A preset is held to the default catalog plus its own
+// `localPatterns` fragment; a shared library entry, which any persona may add, to the default catalog plus
+// every fragment.
+
+const CATALOG_DIR = `${process.cwd()}/packages/agent-ui/a2ui/src/catalog`
+
+function catalogComponents(path: string): Record<string, { properties?: Record<string, { type?: { enum?: string[] } }> }> {
+  return (JSON.parse(readFileSync(path, 'utf8')) as { components: Record<string, never> }).components
+}
+
+const DEFAULT_COMPONENTS = catalogComponents(`${CATALOG_DIR}/default/catalog.json`)
+const DEFAULT_TYPES = new Set(Object.keys(DEFAULT_COMPONENTS))
+const FRAGMENT_TYPES: Record<string, Set<string>> = Object.fromEntries(
+  readdirSync(`${CATALOG_DIR}/personas`)
+    .filter((id) => existsSync(`${CATALOG_DIR}/personas/${id}/catalog.json`))
+    .map((id) => [id, new Set(Object.keys(catalogComponents(`${CATALOG_DIR}/personas/${id}/catalog.json`)))]),
+)
+const ALL_TYPES = new Set([...DEFAULT_TYPES, ...Object.values(FRAGMENT_TYPES).flatMap((types) => [...types])])
+const TEXT_VARIANTS = new Set(DEFAULT_COMPONENTS.Text!.properties!.variant!.type!.enum!)
+
+/** Every catalog-shaped claim one prose text makes. */
+function claimsIn(text: string): { types: string[]; variants: string[] } {
+  const types = [...text.matchAll(/\b[A-Z][a-z]+(?:[A-Z][a-z0-9]*)+\b/g)].map((m) => m[0])
+  const variants = [
+    ...[...text.matchAll(/\bText \((?:variant )?([a-z0-9]+(?:\/[a-z0-9]+)*)\)/g)].map((m) => m[1]!),
+    ...[...text.matchAll(/\bvariant[\s:]+["']([a-z0-9/]+)["']/g)].map((m) => m[1]!),
+  ]
+  return { types, variants }
+}
+
+/** The claims in `text` that `types` and the Text variant enum do not back, as readable findings. */
+function unbackedClaims(text: string, types: ReadonlySet<string>): string[] {
+  const { types: named, variants } = claimsIn(text)
+  return [
+    ...named.filter((t) => !types.has(t)).map((t) => `type ${t}`),
+    ...variants.filter((v) => !TEXT_VARIANTS.has(v)).map((v) => `Text variant ${v}`),
+  ]
+}
+
+const LIBRARY_PACKS = { HOSPITALITY_SKILLS, COMMERCE_SKILLS, GAMES_SKILLS, CORE_PLAYBOOKS, HOSPITALITY_PLAYBOOKS, GAMES_PLAYBOOKS, GAMES_RULES }
+
+describe('preset and library prose against the live catalogs (T-0159)', () => {
+  it('each preset names only types its own catalog carries, and only real Text variants', () => {
+    let checked = 0
+    for (const preset of AGENT_PRESETS) {
+      const fragment = preset.localPatterns === undefined ? new Set<string>() : FRAGMENT_TYPES[preset.localPatterns]
+      expect(fragment, `${preset.id} localPatterns names a shipped fragment`).toBeDefined()
+      const scope = new Set([...DEFAULT_TYPES, ...fragment!])
+      const texts: [string, string][] = [
+        ['surfaceStyle', preset.surfaceStyle],
+        ...[...preset.skills, ...preset.workflows].flatMap((e): [string, string][] => [[e.id, `${e.description} ${e.content}`]]),
+      ]
+      for (const [where, text] of texts) {
+        expect(unbackedClaims(text, scope), `${preset.id} / ${where}`).toEqual([])
+        checked += claimsIn(text).types.length
+      }
+    }
+    expect(checked, 'anti-vacuity: the presets really do name compound types').toBeGreaterThan(10)
+  })
+
+  it('each authored library entry names only shipped types and real Text variants', () => {
+    for (const [pack, entries] of Object.entries(LIBRARY_PACKS)) {
+      expect(entries.length, pack).toBeGreaterThan(0)
+      for (const entry of entries) {
+        expect(unbackedClaims(`${entry.description} ${entry.content}`, ALL_TYPES), `${pack} / ${entry.label}`).toEqual([])
+      }
+    }
+  })
+
+  it('the gate bites: a fake type and the retired body/sm variant are both caught', () => {
+    expect(unbackedClaims('Render the score as ONE FooWidget beside the board.', ALL_TYPES)).toEqual(['type FooWidget'])
+    expect(unbackedClaims('a Card with a caption Text (body/sm) under the title', ALL_TYPES)).toEqual(['Text variant body/sm'])
+    expect(unbackedClaims('a Text with variant "body/sm"', ALL_TYPES)).toEqual(['Text variant body/sm'])
+    // Scope bites too: a fragment type is unbacked for a preset whose catalog lacks that fragment.
+    expect(unbackedClaims('ONE BookingForm', DEFAULT_TYPES)).toEqual(['type BookingForm'])
+    // And the real shapes pass, so the controls above fail for the planted claim alone.
+    expect(unbackedClaims('one GameHud, a caption Text (caption), a Text (variant h2)', ALL_TYPES)).toEqual([])
   })
 })

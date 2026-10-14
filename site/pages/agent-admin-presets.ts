@@ -22,7 +22,7 @@
 // custom "Surface style" section states when a surface earns its place vs prose and what belongs on it
 // (INTENT ONLY, modality-neutral — GH #412 rewrote all fourteen: naming a dialect or a component
 // vocabulary in persona prose broke the moment the admin flipped Surface Options, and dialect is the
-// harness grammar's job, ADR-0138), and its capability entries either intent-match the shipped
+// a2ui producer grammar's job, ADR-0138), and its capability entries either intent-match the shipped
 // mini-skill registry (ADR-0091 — the game/dashboard showcases: card-layout · game-table-chrome ·
 // game-hud · dashboard-kpi-grid) or carry AUTHORED
 // hospitality/travel skills seeded from the library packs (GH #46 — projected wholesale into the live
@@ -79,7 +79,7 @@ export interface AgentPreset {
   /** The custom "Surface style" section — when to show a surface vs prose, and WHAT belongs on it.
    *  MODALITY-NEUTRAL by law (GH #412): it states the persona's surface INTENT — what one persistent
    *  surface carries, that it updates IN PLACE rather than minting a new one per message, and what stays
-   *  in prose — and never names a dialect or a component vocabulary. Those belong to the harness's own
+   *  in prose — and never names a dialect or a component vocabulary. Those belong to the a2ui producer's own
    *  grammar blocks (`system-prompt.ts`), which compose independently of what any persona says; a persona
    *  that assumed one dialect broke the moment the admin flipped Surface Options (ADR-0138's boundary). */
   surfaceStyle: string
@@ -213,8 +213,8 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       {
         id: 'game-hud',
         label: 'game-hud',
-        description: 'Scores, chips, and status — badges with intent, a chips Stat with delta, bound data.',
-        content: 'Score badges turn success/danger/warning with the hand; the chip count, bet and round status are ONE GameHud (a stat with a signed delta, a status badge with intent); every figure is data-bound so moves update in place.',
+        description: 'Scores, chips and status for games other than blackjack: one GameHud, bound data.',
+        content: 'In blackjack the CardTable already carries the bankroll, bet and round status, so never add a GameHud beside it. Other games put the chip count, bet and round status in ONE GameHud (a stat with a signed delta, a status badge with intent); every figure is data-bound so moves update in place.',
       },
     ],
     workflows: [
@@ -485,11 +485,13 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       {
         id: 'palette-presentation',
         label: 'palette-presentation',
-        description: 'The token-surface idiom: swatches for anchors, ramps for scales, one ContrastPair per pairing.',
+        description: 'The token-surface idiom: swatches for anchors, ramps for scales, a ladder for spacing and size tiers, one ContrastPair per pairing.',
         content:
           'Anchors first as Swatches, then each family as one Ramp; name steps 50-900. Each proposed ' +
           'text-on-background pairing is ONE ContrastPair (foreground, background, label): the surface computes ' +
-          'its ratio and AA/AAA verdicts, so the prose never states a ratio the surface did not compute.',
+          'its ratio and AA/AAA verdicts, so the prose never states a ratio the surface did not compute. ' +
+          'Spacing and size tiers are ONE Ladder (label, then tiers of {label, value}), smallest step first, ' +
+          'so each step renders at its real size.',
       },
     ],
     workflows: [],
@@ -548,7 +550,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'You are The Quizmaster, a rapid-fire trivia host. You run multi-round quizzes with a running ' +
       'score, quick banter between rounds, and a grand reveal at the end.',
     surfaceStyle:
-      'One quiz = ONE surface, updated round by round: each round is one QuestionCard carrying the ' +
+      'One quiz = ONE surface, updated round by round: each round is one question card carrying the ' +
       'question, its choices, how far into the run the player is and the explanation revealed after each ' +
       'answer (kept tucked away until then), beside the running score; the final results are an overlay ' +
       'opened from that same surface when the last round settles, which the player dismisses.',
@@ -1107,7 +1109,7 @@ export function builderPersona(): Persona {
 
 /** A FRESH store per flow entry — no `persistKey`, no cache (see this section's header for why).
  *
- *  GH #670 — `model` is the Author card's PRE-ARM pick, folded into the seed rather than written after the
+ *  GH #670 — `model` is the Co-pilot card's PRE-ARM pick, folded into the seed rather than written after the
  *  fact: the interview's own config read then finds the user's choice already committed, so the pick wins by
  *  construction and there is no overwrite step to lose a race with. Absent ⇒ the Builder preset's own
  *  Sonnet-class id stands (LLD §15: interview quality is the product). */

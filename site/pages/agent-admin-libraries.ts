@@ -92,11 +92,16 @@ const GENUI_PACK_LIBRARY: EntryLibraryPack[] = Object.keys(GENUI_PACK_SOURCES)
 // ── the authored packs (hospitality lands with GH #46's trio; games join with the roster wave) ──────────
 
 export const HOSPITALITY_SKILLS: readonly NewEntryInput[] = [
+  // The hand-built form stays (T-0159): this pack is shared, and only a persona with the concierge fragment
+  // (`localPatterns: 'concierge'`) has BookingForm in its catalog. The Concierge drops this entry for the
+  // structural BookingForm; the Restaurant has no fragment and keeps it. A single date is a date TextField
+  // (T-0135); only a multi-night stay takes a range Calendar, a kind BookingForm does not offer.
   {
     label: 'hotel-booking-form',
     description: 'room, spa, amenity, restaurant, breakfast booking; reservation intake',
     content:
-      'A booking ask becomes ONE Card: a short form (Calendar for dates — range for stays, single for slots; ' +
+      'A booking ask becomes ONE Card: a short form (a TextField type "date" for a single date or slot, one ' +
+      'range Calendar only for a multi-night stay; ' +
       'Select for room/table/treatment type; Slider for budget where price flexes; Checkbox for extras), ' +
       'required-field checks gating ONE Submit button, and after submit a confirmation Card bound to the ' +
       'SAME data-model values the form wrote — never re-ask a value the model already holds.',
@@ -106,7 +111,7 @@ export const HOSPITALITY_SKILLS: readonly NewEntryInput[] = [
     description: 'photos, gallery, rooms tour, venue, showcase',
     content:
       'Photo/tour asks render a Swiper (loop + pagination + paddles), one SwiperItem per exhibit: a Card ' +
-      'with a title Text, a caption Text (body/sm), and a Badge for the standout fact (view, size, rating). ' +
+      'with a title Text, a caption Text (variant caption), and a Badge for the standout fact (view, size, rating). ' +
       'Lead each card with an Image (usageHint hero, fit cover, alt always set) over the title Text; ' +
       'never a broken src, so use only a src you were given.',
   },
@@ -190,6 +195,9 @@ export const CORE_PLAYBOOKS: readonly NewEntryInput[] = [
 ]
 
 export const HOSPITALITY_PLAYBOOKS: readonly NewEntryInput[] = [
+  // `booking-flow` keeps its own scenes rather than one BookingForm (T-0159): it is a step arc on one surface
+  // (Back at every scene, a confirm read-back, a settled receipt) and its stay dates are a range, which
+  // BookingForm's field kinds do not carry. The Concierge seeds it beside its BookingForm fragment.
   {
     label: 'booking-flow',
     description: 'Hotel domain — a realistic room booking end to end: stay dates, guests, room and rate, extras (Back at every step), confirm, settled receipt, courtesy close.',
