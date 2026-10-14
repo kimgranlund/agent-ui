@@ -56,10 +56,10 @@ const variants = el('div', { class: 'demo-grid' }, [
   captioned('variant="area"', sparkline(MRR_12M, 'MRR', 'area')),
 ])
 
-// ── [3] sizing — the two tokens; the default box is 8em × 1lh so an inline mark rides the line box ───────────
+// ── [3] sizing: the two tokens; the default box is 8em × 1em so an inline mark sits on the em box inside the line ───────────
 const inline = el('p', {}, [
   text('Revenue trended '), sparkline(MRR_12M, 'MRR'), text(' over the year while p95 latency '),
-  sparkline(P95_LATENCY_24H, 'p95 latency'), text(' spiked at the 07:00 deploy — the default 8em × 1lh box rides the ambient line box.'),
+  sparkline(P95_LATENCY_24H, 'p95 latency'), text(' spiked at the 07:00 deploy; the default 8em × 1em box sits on the em box, inside the ambient line.'),
 ])
 const wide = sparkline(SIGNUPS_30D, 'Sign-ups, 30 days', 'area')
 wide.style.setProperty('--ui-sparkline-inline-size', '100%')

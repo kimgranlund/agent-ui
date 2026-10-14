@@ -29,7 +29,8 @@
 // only its own concentric-ring anatomy plus the label/value legend column. The two-layer full-bleed
 // inset model DOES still apply (ADR-0228 cl.1-3, generalized to a radial mark, per ADR-0229 cl.4/cl.5's
 // own citation of the shared vocabulary): the ring layer bleeds edge-to-edge at zero inset (gauge.css);
-// the legend layer floats on top, inset from every edge by exactly `--ui-gauge-chrome-inset`.
+// the legend layer floats on top, inset from every edge by exactly `--ui-gauge-chrome-inset`. Below a 28em
+// host the legend moves to a second grid row under the rings instead (gauge.css, T-0141).
 //
 // Imports inward only (controls → dom): UIElement + prop + the typed-schema helpers from the dom
 // barrel; the pure math from the co-located gauge-math.ts (the ADR-0065 pure-core split).
@@ -49,6 +50,12 @@ export interface UIGaugeElement extends ReactiveProps<typeof props> {}
 export class UIGaugeElement extends UIElement {
   static props = props
 
+  // Screen px per viewBox unit (the `meet` scale of the rings svg), published on the host as `--_gauge-scale`.
+  // The progress arc is NOT `non-scaling-stroke` (with it the browser reads the dash pattern in screen px, and
+  // a viewBox-unit pattern repeated as scattered dashes round the ring, T-0141), so its stroke width divides
+  // by this scale to stay 4c on screen while the dash pattern stays in viewBox units.
+  #scale = 0
+
   protected override connected(): void {
     // List semantics (the ui-pie-chart/ui-bar-chart precedent) — a constant semantic role, set directly
     // (not inside an effect); re-set on each connect (idempotent).
@@ -66,6 +73,24 @@ export class UIGaugeElement extends UIElement {
       const g = gaugeRows(cleanData(this.data))
       this.replaceChildren(this.#ringsNode(g), this.#legendNode(g))
     })
+
+    // Re-publish the scale whenever the host box changes (the rings svg tracks it). A stroke width changes no
+    // box size, so this never feeds back into another observation.
+    if (typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(() => this.#syncScale())
+      ro.observe(this)
+      this.effect(() => () => ro.disconnect())
+    }
+  }
+
+  #syncScale(): void {
+    const svg = this.querySelector('svg[data-part="rings"]')
+    if (!svg) return
+    const box = svg.getBoundingClientRect()
+    const scale = Math.min(box.width, box.height) / VIEWBOX_SIZE
+    if (!(scale > 0) || Math.abs(scale - this.#scale) < 1e-3) return
+    this.#scale = scale
+    this.style.setProperty('--_gauge-scale', String(Math.round(scale * 1000) / 1000))
   }
 
   /** Layer 1 — the aria-hidden, zero-inset SVG rings: one track circle + one rounded-cap progress

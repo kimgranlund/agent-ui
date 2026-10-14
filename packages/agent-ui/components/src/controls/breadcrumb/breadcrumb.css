@@ -41,6 +41,9 @@
   --ui-breadcrumb-gap: var(--md-sys-space-xs); /* the inter-crumb/-separator rhythm — rides [density] free (ADR-0103) */
   --ui-breadcrumb-current-ink: var(--md-sys-color-neutral-on-surface-variant); /* the auto-stamped current-page crumb — a passive marker, not an intent */
   --ui-breadcrumb-separator-ink: var(--md-sys-color-neutral-on-surface-variant); /* the slotted-or-default separator glyph */
+  --ui-breadcrumb-link-ink: var(--md-sys-color-neutral-on-surface-variant); /* an author <a> crumb, never the UA link blue */
+  --ui-breadcrumb-link-ink-hover: var(--md-sys-color-neutral-on-surface);
+  --ui-breadcrumb-trigger-bg-hover: var(--md-sys-color-neutral-container-low); /* the overflow trigger's hover wash */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-breadcrumb) consumes ONLY --ui-breadcrumb-* ════════════════ */
@@ -55,8 +58,8 @@
     align-items: center;
     flex-wrap: wrap;
     gap: var(--ui-breadcrumb-gap);
-    font-size: var(--md-sys-typescale-label-medium-size);
-    line-height: var(--md-sys-typescale-label-medium-line-height);
+    font-size: var(--md-sys-typescale-body-medium-size); /* the prose row, not label: a trail reads beside body text (T-0141) */
+    line-height: var(--md-sys-typescale-body-medium-line-height);
   }
 
   /* [inline] — the ONE sizing opt-out (ADR-0223 cl.2, R2): inline-level display + hug posture. */
@@ -69,6 +72,16 @@
      itself; this rule is scoped to a direct child on purpose). */
   :scope > [aria-current='page'] {
     color: var(--ui-breadcrumb-current-ink);
+  }
+
+  /* An author <a> crumb takes the trail's ink, not the UA link blue and underline (T-0141); hover marks it. */
+  :scope > a {
+    color: var(--ui-breadcrumb-link-ink);
+    text-decoration: none;
+  }
+  :scope > a:not([aria-current]):hover {
+    color: var(--ui-breadcrumb-link-ink-hover);
+    text-decoration: underline;
   }
 
   :scope [data-part='separator'] {
@@ -92,7 +105,7 @@
     display: none;
   }
 
-  /* The overflow trigger — a compact square keyed to the CRUMB'S OWN line box (`1lh`, not a new control-
+  /* The overflow trigger: a compact round square (a circle) keyed to the CRUMB'S OWN line box (`1lh`, not a new control-
      height token — the intake's Geometry row: ui-breadcrumb owns no geometry row of its own), a padded hit
      area, the shared ink + focus ring. `setIcon` (breadcrumb.ts) injects a fresh <svg fill="currentColor">
      that inherits `color` here (the tabs.css trigger precedent, minus the grid-area assignment — the
@@ -107,16 +120,18 @@
     justify-content: center;
     padding: 0;
     border: 0;
+    border-radius: 50%; /* an icon-only control is a round square (Kim's ruling, T-0141) */
     background: transparent;
     color: var(--ui-breadcrumb-separator-ink);
     cursor: pointer;
   }
   :scope > [data-part='overflow'] > [data-part='trigger'] svg {
-    inline-size: 1em;
-    block-size: 1em;
+    inline-size: var(--md-sys-icon-box, 1em);
+    block-size: var(--md-sys-icon-box, 1em);
   }
   :scope > [data-part='overflow'] > [data-part='trigger']:hover {
     color: var(--ui-breadcrumb-current-ink);
+    background: var(--ui-breadcrumb-trigger-bg-hover);
   }
   :scope > [data-part='overflow'] > [data-part='trigger']:focus-visible {
     outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);

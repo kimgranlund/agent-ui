@@ -26,7 +26,9 @@
  * (ADR-0228 cl.3), realized as a mechanism, never a host padding opinion. `preserveAspectRatio="xMinYMid
  * meet"` (gauge.ts) pins the ring drawing itself to the box's START edge, so a wide host's extra width
  * letterboxes into genuinely empty room at the END edge for the legend column to occupy without visually
- * colliding with the rings — no shrinking, no overlap, by construction.
+ * colliding with the rings: no shrinking, no overlap, by construction. The rings layer is out of flow, so the host
+ * is as tall as its floor or its legend (a square svg in flow made the box square and left no room). Below a 28em
+ * host the legend moves to a second grid row under the rings (T-0141).
  *
  * Identity (cl.4): each `[data-part='progress']`/`[data-part='key-swatch']` reads its OWN `--_ring-ink`
  * hook (imperatively set per-node by gauge.ts to one of the six ramp tokens, OUTER ring first) — never
@@ -40,7 +42,7 @@
 :where(ui-gauge) {
   --ui-gauge-min-inline-size: 16em; /* the whole-shape floor (ADR-0229 cl.6 role-(d) row) */
   --ui-gauge-min-block-size: 16em; /* a real ring box, not a sliver — the SAME cl.6 floor on the block axis */
-  --ui-gauge-ring-stroke-width: calc(4 * var(--md-sys-c, 0.125rem)); /* 4c (ADR-0245 Amendment 3): 8px at c 2, 12px at c 3; density-invariant (c reads n, never m); 0.5rem under the legacy opt-out; non-scaling-stroke keeps it crisp at any box size */
+  --ui-gauge-ring-stroke-width: calc(4 * var(--md-sys-c, 0.125rem)); /* 4c (ADR-0245 Amendment 3): 8px at c 2, 12px at c 3; density-invariant (c reads n, never m); 0.5rem under the legacy opt-out; the track is non-scaling-stroke, the progress arc divides by the svg scale (gauge.ts) */
   --ui-gauge-track-ink: var(--md-sys-color-neutral-container); /* the unfilled ring track (mirrors --ui-pie-chart-track-ink) */
   --ui-gauge-text-ink: var(--md-sys-color-neutral-on-surface); /* legend text — the ONE role reference */
   --ui-gauge-row-gap: var(--md-sys-space-sm); /* legend-row rhythm — rides [density] for free (ADR-0103) */
@@ -74,6 +76,8 @@
   :scope {
     display: grid;
     grid-template: 1fr / 1fr; /* one cell — the rings layer and the legend layer both full-overlay it */
+    position: relative;
+    container-type: inline-size; /* the narrow-box query below reads the host's own width */
     min-inline-size: var(--ui-gauge-min-inline-size);
     min-block-size: var(--ui-gauge-min-block-size);
     box-sizing: border-box;
@@ -92,6 +96,11 @@
     display: block;
     inline-size: 100%;
     block-size: 100%;
+    /* Out of flow, so the square viewBox never sets the host height (a square box letterboxes no room
+       and the legend lands on the outer ring, T-0141): the host is as tall as its floor or its legend,
+       and the rings fill that box from the start edge. */
+    position: absolute;
+    inset: 0;
   }
 
   :scope [data-part='track'] {
@@ -104,11 +113,12 @@
   :scope [data-part='progress'] {
     fill: none;
     stroke: var(--_ring-ink, var(--ui-gauge-series-1-ink));
-    stroke-width: var(--ui-gauge-ring-stroke-width);
     stroke-linecap: round; /* the boards' rounded caps */
     stroke-dasharray: var(--_ring-circumference, 0);
     stroke-dashoffset: var(--_ring-dashoffset, 0);
-    vector-effect: non-scaling-stroke;
+    /* No non-scaling-stroke here: the dash pattern is in viewBox units (gauge-math.ts), so the stroke width
+       is divided by the svg's own scale (gauge.ts publishes it) to stay the same 4c as the track (T-0141). */
+    stroke-width: calc(var(--ui-gauge-ring-stroke-width) / var(--_gauge-scale, 1));
   }
 
   :scope [data-part='legend'] {
@@ -121,6 +131,20 @@
     justify-content: center;
     align-items: flex-end; /* the boards' side legend — hugs the box's END edge, inside the ring's own letterboxed room */
     gap: var(--ui-gauge-row-gap);
+  }
+
+  /* Too narrow for a ring beside a legend column (the ring floor plus about 12em of legend rows):
+     the legend moves to a second row under the rings, start-aligned with them. */
+  @container (inline-size < 28em) {
+    :scope svg[data-part='rings'] {
+      position: static;
+      block-size: var(--ui-gauge-min-block-size);
+    }
+    :scope [data-part='legend'] {
+      grid-area: 2 / 1;
+      block-size: auto;
+      align-items: flex-start;
+    }
   }
 
   :scope [role='listitem'] {

@@ -204,4 +204,5 @@ token, or set `inline-size` directly, to size the tile to a layout. Interior gap
 the space ladder (density-responsive for free). `variant="ring"` adds its own density-invariant
 diameter/thickness tokens — `--ui-stat-ring-size` (`4.5em` default) and `--ui-stat-ring-thickness` (`0.5em`
 default) — sized like the delta glyph's mark geometry, never off `data-scale` (a Display-class control,
-SPEC-R17).
+SPEC-R17). The ring size is a floor: a wider figure ("47 / 50") grows the ring so the value stays inside
+the hole (T-0141).

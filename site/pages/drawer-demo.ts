@@ -123,7 +123,8 @@ const focusNote = el('p', {}, [
 ])
 
 content.append(
-  exampleSection('The three edges', endEdge, startEdge, bottomEdge),
+  // One gapped row of triggers on the group gutter, never three stacked edge to edge (T-0141).
+  exampleSection('The three edges', el('div', { style: 'display:flex; flex-wrap:wrap; gap:var(--md-sys-group-gutter)' }, [endEdge, startEdge, bottomEdge])),
   exampleSection('Non-dismissable (agent owns the close)', persistent),
   exampleSection('Long-list scroll (scroll-fade)', longList),
   exampleSection('Inline field (native Tab order)', inlineField),

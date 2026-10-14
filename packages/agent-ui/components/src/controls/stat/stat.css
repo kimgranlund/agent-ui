@@ -130,8 +130,12 @@
   /* GH#1208 — variant='ring': a named-area layout, CSS-keyed off the reflected [variant] host attribute
      (badge [intent] precedent). `figure` is shared by BOTH `[data-part='ring']` and `[data-part='value']`
      — a same-area overlay (later DOM sibling paints on top, stat.ts's insertion order), never a wrapper. */
+  /* The figure sits in an auto middle track, so the ring is sized FROM the figure: the track is the wider
+     of the ring floor and the padded value, and the ring stretches to it (T-0141: "47 / 50" used to
+     spill across a fixed 4.5em ring). The value's inline padding keeps its box inside the hole. */
   :scope[variant='ring'] {
-    grid-template-areas: 'label' 'figure' 'delta' 'caption';
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-areas: 'label label label' '. figure .' 'delta delta delta' 'caption caption caption';
     justify-items: center;
     text-align: center;
   }
@@ -142,6 +146,16 @@
   :scope[variant='ring'] [data-part='value'] {
     grid-area: figure;
     place-self: center;
+  }
+  :scope[variant='ring'] [data-part='ring'] {
+    justify-self: stretch;
+    inline-size: auto;
+    block-size: auto;
+    min-inline-size: var(--ui-stat-ring-size);
+    aspect-ratio: 1;
+  }
+  :scope[variant='ring'] [data-part='value'] {
+    padding-inline: calc(var(--ui-stat-ring-thickness) + 0.75em);
   }
   :scope[variant='ring'] [data-part='delta'] {
     grid-area: delta;

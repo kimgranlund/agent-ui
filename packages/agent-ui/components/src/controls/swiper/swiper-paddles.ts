@@ -50,7 +50,8 @@ export class UISwiperPaddlesElement extends UIElement {
     this.#prev.setAttribute('aria-label', 'Previous slide')
     this.#prevIcon = document.createElement('ui-glyph')
     this.#prevIcon.setAttribute('slot', 'leading')
-    this.#prevIcon.setAttribute('data-role', 'icon')
+    // the caret role, not icon: a glyph keeps its own glyph box 2n - 2c inside the icon cell (ADR-0245 Amendment 6)
+    this.#prevIcon.setAttribute('data-role', 'caret')
     this.#prev.appendChild(this.#prevIcon)
     this.appendChild(this.#prev)
 
@@ -61,7 +62,7 @@ export class UISwiperPaddlesElement extends UIElement {
     this.#next.setAttribute('aria-label', 'Next slide')
     this.#nextIcon = document.createElement('ui-glyph')
     this.#nextIcon.setAttribute('slot', 'leading')
-    this.#nextIcon.setAttribute('data-role', 'icon')
+    this.#nextIcon.setAttribute('data-role', 'caret')
     this.#next.appendChild(this.#nextIcon)
     this.appendChild(this.#next)
   }

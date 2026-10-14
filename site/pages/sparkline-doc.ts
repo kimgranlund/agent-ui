@@ -18,7 +18,7 @@ import type { ParsedDescriptor } from '@agent-ui/components/descriptor'
 // a doc page has no descriptor source for example content (SPEC-R9's example-content bar — never a lorem stub).
 const REVENUE_TREND = [42, 45, 41, 48, 52, 49, 58, 61, 60, 67, 72, 78] as const
 
-// A larger showcase box than the inline `8em × 1lh` default (sparkline.css) so the shape reads on the page; the
+// A larger showcase box than the inline `8em × 1em` default (sparkline.css) so the shape reads on the page; the
 // inline-size/block-size pair is the documented author override (sparkline.md § Sizing). The RAW default box gets
 // its own dedicated first specimen below (review-mandated: the inline-in-text mark is the control's headline
 // feature and must be SHOWN, not only described); this box is the "size it to a layout" upgrade.
@@ -46,14 +46,14 @@ function renderSpecimens(d: ParsedDescriptor): HTMLElement {
   return section
 }
 
-// renderDefaultBoxSpecimen — the control at its RAW `8em × 1lh` default, set inline in running prose: the
+// renderDefaultBoxSpecimen: the control at its RAW `8em × 1em` default, set inline in running prose: the
 // headline feature (an inline-in-text mark, the SPEC-R9 sizing ruling's whole point), shown live with zero
 // style override. Everything below this upgrades the box; this is what a bare <ui-sparkline> IS.
 function renderDefaultBoxSpecimen(): HTMLElement {
   const wrap = document.createElement('div')
   const prose = document.createElement('p')
   const box = document.createElement('code')
-  box.textContent = '8em × 1lh'
+  box.textContent = '8em × 1em'
   prose.append(
     'The default box — no sizing at all: revenue ran ',
     sparkline({ rawDefaultBox: true, label: 'Revenue trend' }),
@@ -114,7 +114,7 @@ function sparkline(opts: {
   values?: readonly number[]
   variant?: string
   label?: string
-  /** Omit the SHOWCASE_BOX override — the control renders at its own `8em × 1lh` default. */
+  /** Omit the SHOWCASE_BOX override; the control renders at its own `8em × 1em` default. */
   rawDefaultBox?: boolean
 }): HTMLElement {
   const el = document.createElement('ui-sparkline')

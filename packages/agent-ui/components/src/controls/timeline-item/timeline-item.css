@@ -102,9 +102,11 @@
 }
 :where(ui-timeline-item[status='done']) {
   --ui-timeline-item-marker-ink: var(--md-sys-color-success);
+  --ui-timeline-item-marker-on-ink: var(--md-sys-color-success-on-success); /* the check knocked out of the done disc */
 }
 :where(ui-timeline-item[status='error']) {
   --ui-timeline-item-marker-ink: var(--md-sys-color-danger);
+  --ui-timeline-item-marker-on-ink: var(--md-sys-color-danger-on-danger); /* the x knocked out of the error disc */
 }
 /* warning (ADR-0146 F7) — a lesser advisory outcome the single `error` state cannot express. The SHAPE
    (the injected triangle-exclamation glyph) is the primary signifier (ADR-0057); this warning-role ink is
@@ -139,10 +141,14 @@
      the connector below can run to the item's real end however many lines or an open expand make it. The
      marker's own mark (dot or glyph) still sits centred in the FIRST `marker-box`, exactly where it always did. */
   :scope [data-part='marker'] {
+    /* T-0141: the marker box is shorter than the label's line, so its top edge drops by half the
+       difference and the dot or glyph centres on the label's first line, not above it. */
+    --_marker-offset: max(0px, (1lh - var(--ui-timeline-item-marker-box)) / 2);
     position: relative;
     grid-column: 1;
     grid-row: 1 / span 4;
     align-self: stretch;
+    margin-block-start: var(--_marker-offset);
     inline-size: var(--ui-timeline-item-marker-box);
     min-block-size: var(--ui-timeline-item-marker-box);
     display: flex;
@@ -215,7 +221,7 @@
     content: '';
     position: absolute;
     inset-block-start: var(--ui-timeline-item-marker-box);
-    inset-block-end: calc(-1 * var(--ui-timeline-item-row-gap));
+    inset-block-end: calc(-1 * (var(--ui-timeline-item-row-gap) + var(--_marker-offset))); /* to the next marker's top */
     inset-inline-start: calc(50% - var(--ui-timeline-item-connector-width) / 2);
     inline-size: var(--ui-timeline-item-connector-width);
     background: var(--ui-timeline-item-connector-ink);
@@ -243,6 +249,18 @@
      connector — the two are independent facts) and sizes to the content-icon register (LLD §5). */
   :scope:has([data-role='marker']) [data-part='marker']::before {
     display: none;
+  }
+  /* A leaf step's resolved outcome (done check, error x) is a filled status disc with the glyph knocked out,
+     so it carries the same visual weight as the solid dot of the step in progress, not a hairline glyph
+     (T-0141). Only the built-in leaf glyphs: a consumer `icon` or a group glyph keeps its own drawing. */
+  :scope:is([status='done'], [status='error']) [data-role='marker']:is([data-glyph='check'], [data-glyph='x']) {
+    box-sizing: border-box;
+    padding: calc(var(--ui-timeline-item-icon-size) / 6);
+    border-radius: 50%;
+    background: var(--ui-timeline-item-marker-ink);
+    color: var(--ui-timeline-item-marker-on-ink);
+    stroke: currentColor;
+    stroke-width: 12; /* viewBox units of the 256 icon grid: a bolder knocked-out mark */
   }
   :scope [data-role='marker'] {
     inline-size: var(--ui-timeline-item-icon-size);
