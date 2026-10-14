@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L3",
+  "name": "0144-solo-L3",
+  "description": "T-0144 solo L3 Dogfood lint:",
+  "model": "opus",
+  "effort": "high",
+  "prompt": "T-0144 Dogfood lint: promote the | solo L3\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-l2/.sdlc/dogfood-lint-rules-2/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-l2/.sdlc/dogfood-lint-rules-2\nImplement per .sdlc/dogfood-lint-rules-2/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L3",
+  "tier": "L3",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-l2/.sdlc/dogfood-lint-rules-2/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-l2/.sdlc/dogfood-lint-rules-2",
+  "attempt_id": "b30e8dc5bb244559ab1e944d4aaa6402",
+  "base_sha": "bf79b5b9519448002ef978f256d69a5f67fef54b",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.7/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-l2/.sdlc/dogfood-lint-rules-2/handoff.md"
+}
