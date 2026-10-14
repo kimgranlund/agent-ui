@@ -150,7 +150,7 @@ describe('textarea.css — the filled/container state law (TKT-0062)', () => {
   it('declares the full bg/border/ink ladder from the PINNED roles: default/filled/hover/focus', () => {
     const b = whereBlock(':where(ui-textarea) {')
     expect(b).toMatch(/--ui-textarea-bg:\s*var\(--md-sys-color-neutral-container-low\)/) // default
-    expect(b).toMatch(/--ui-textarea-bg-filled:\s*var\(--md-sys-color-neutral-container\)/) // filled
+    expect(b).toMatch(/--ui-textarea-bg-filled:\s*var\(--md-sys-color-neutral-container-low\)/) // filled; one idle fill with default (T-0148)
     expect(b).toMatch(/--ui-textarea-bg-hover:\s*var\(--md-sys-color-neutral-container\)/) // hover
     expect(b).toMatch(/--ui-textarea-bg-focus:\s*var\(--md-sys-color-neutral-container-low\)/) // focus
     expect(b).toMatch(/--ui-textarea-border:\s*var\(--md-sys-color-neutral-field-outline\)/) // default: the 3:1 resting boundary (ADR-0245 Amendment 7)
@@ -233,7 +233,7 @@ describe('textarea.css — disabled is a role REPOINT, not opacity', () => {
     expect(b.length).toBeGreaterThan(0) // the disabled repoint block exists
     expect(b).toMatch(/--ui-textarea-bg:\s*var\(--md-sys-color-neutral-container-low\)/)
     expect(b).toMatch(/--ui-textarea-ink:\s*var\(--md-sys-color-neutral-low\)/)
-    expect(b).toMatch(/--ui-textarea-border:\s*transparent/)
+    expect(b).toMatch(/--ui-textarea-border:\s*var\(--md-sys-color-neutral-outline-variant\)/) // the fleet disabled recipe keeps a quiet boundary (T-0148)
   })
 
   it('NEVER opacity — the muted look is a token repoint (the disabled host is also pointer-inert)', () => {

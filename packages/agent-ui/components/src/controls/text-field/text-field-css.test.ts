@@ -153,7 +153,7 @@ describe('text-field.css — disabled is a role REPOINT, not opacity', () => {
     expect(b.length).toBeGreaterThan(0) // the disabled repoint block exists
     expect(b).toMatch(/--ui-text-field-bg:\s*var\(--md-sys-color-neutral-container-low\)/)
     expect(b).toMatch(/--ui-text-field-ink:\s*var\(--md-sys-color-neutral-low\)/)
-    expect(b).toMatch(/--ui-text-field-border:\s*transparent/)
+    expect(b).toMatch(/--ui-text-field-border:\s*var\(--md-sys-color-neutral-outline-variant\)/) // the fleet disabled recipe keeps a quiet boundary (T-0148)
   })
 
   it('NEVER opacity — the muted look is a token repoint (the disabled host is also pointer-inert)', () => {

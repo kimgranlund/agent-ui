@@ -38,15 +38,15 @@
      differs):
        state    | bg              | border           | ink
        default  | container-low   | field-outline     | neutral
-       filled   | container       | field-outline     | on-surface-variant
+       filled   | container-low   | field-outline     | on-surface-variant
        hover    | container       | field-outline     | on-surface-variant
        focus    | container-low   | transparent (ring)| on-surface
-       disabled | container-low   | transparent       | neutral-low
+       disabled | container-low   | outline-variant   | neutral-low
      "filled" reads `[data-part='editor']:not([data-empty])` (the SAME emptiness signal the placeholder
      ::before already keys off) — see @scope's `:has()` selector below. Declared here, consumed at the
      matching pseudo-/state selector in @scope (so @scope reads only --ui-textarea-*, never a role). */
   --ui-textarea-bg: var(--md-sys-color-neutral-container-low); /* default */
-  --ui-textarea-bg-filled: var(--md-sys-color-neutral-container);
+  --ui-textarea-bg-filled: var(--md-sys-color-neutral-container-low); /* one idle fill, empty or filled (the text-field rule, T-0140); value and placeholder separate by ink */
   --ui-textarea-bg-hover: var(--md-sys-color-neutral-container);
   --ui-textarea-bg-focus: var(--md-sys-color-neutral-container-low);
   --ui-textarea-border: var(--md-sys-color-neutral-field-outline); /* default; the resting boundary, at least 3:1 against the page (SC 1.4.11, ADR-0245 Amendment 7), the text-field border; the ring stays the focus indicator */
@@ -109,7 +109,7 @@
    danger border is left untouched. The text-field precedent reused verbatim. */
 :where(ui-textarea:is([disabled], :state(disabled))) {
   --ui-textarea-bg: var(--md-sys-color-neutral-container-low);
-  --ui-textarea-border: transparent;
+  --ui-textarea-border: var(--md-sys-color-neutral-outline-variant); /* the fleet disabled recipe (T-0139): a locked textarea keeps a quiet boundary */
   --ui-textarea-ink: var(--md-sys-color-neutral-low);
   --ui-textarea-placeholder: var(--md-sys-color-neutral-low); /* GH #858 — the placeholder's one legitimate repoint, now explicit since the alias above no longer forwards it */
 }

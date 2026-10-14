@@ -63,7 +63,7 @@
        filled   | container-low   | field-outline     | on-surface-variant
        hover    | container       | field-outline     | on-surface-variant
        focus    | container-low   | transparent (ring)| on-surface
-       disabled | container-low   | transparent       | neutral-low
+       disabled | container-low   | outline-variant   | neutral-low
      "filled" reads `[data-part='editor']:not([data-empty])` (the SAME emptiness signal the placeholder
      ::before already keys off) — see @scope's `:has()` selector below. Declared here, consumed at the
      matching pseudo-/state selector in @scope (so @scope reads only --ui-text-field-*, never a role). */
@@ -148,7 +148,7 @@
    gates it), so the danger border is left untouched. */
 :where(ui-text-field:is([disabled], :state(disabled))) {
   --ui-text-field-bg: var(--md-sys-color-neutral-container-low);
-  --ui-text-field-border: transparent;
+  --ui-text-field-border: var(--md-sys-color-neutral-outline-variant); /* the fleet disabled recipe (T-0139): a locked field keeps a quiet boundary, so it never reads as a chip */
   --ui-text-field-ink: var(--md-sys-color-neutral-low);
   --ui-text-field-placeholder: var(--md-sys-color-neutral-low); /* GH #858 — the placeholder's one legitimate repoint, now explicit since the alias above no longer forwards it */
 }

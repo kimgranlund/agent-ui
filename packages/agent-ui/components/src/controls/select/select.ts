@@ -22,7 +22,7 @@
 //     <button data-part="trigger" type="button" aria-haspopup="listbox"
 //             aria-expanded="…" aria-controls="ui-select-listbox-N">
 //       <span data-part="label">…selected label or placeholder…</span>
-//       <span data-part="caret" aria-hidden="true"><svg>…caret-down (@agent-ui/icons)…</svg></span>
+//       <ui-glyph data-part="caret" aria-hidden="true" symbol="caret-down"></ui-glyph>
 //     </button>
 //     <span data-part="aria-label">…visually-hidden `label` prop text…</span>
 //     <div data-part="listbox" role="listbox" id="ui-select-listbox-N"
@@ -72,7 +72,7 @@ import { selectionCommit } from '../../traits/selection-commit.ts'
 import { scrollFade } from '../../traits/scroll-fade.ts'
 import { activeElementIndex, centerInViewport, seedOpenFocus } from '../../traits/open-scroll.ts'
 import { trackUserInvalid, type TrackUserInvalidController } from '../../traits/track-user-invalid.ts'
-import { setIcon } from '@agent-ui/icons'
+import '../glyph/glyph.ts' // the trigger's caret mark (T-0148)
 
 // ── Module-level stable-id counter (one per listbox panel, never reused across instances) ──────
 
@@ -548,17 +548,18 @@ export class UISelectElement extends UIFormElement {
     // The label span shows the selected option's text (or placeholder). It also doubles as the
     // SECOND id in the trigger's aria-labelledby concatenation (ADR-0085) — it needs a stable id even
     // when unlabelled, since a later `label` write can arm the seam without recreating parts. The
-    // caret span is an inline affordance glyph sized = font (the §4.1 caret law; CSS handles centering
-    // in the icon cell via `padding: calc((icon - glyph) / 2)` — the `--ui-select-glyph = font` chain).
+    // caret is an inline affordance mark at the glyph box (the §4.1 caret law; CSS centres it in the
+    // icon cell via `padding: calc((icon - glyph) / 2)`, the `--ui-select-glyph` chain).
     const labelSpan = document.createElement('span')
     labelSpan.setAttribute('data-part', 'label')
     labelSpan.id = `ui-select-value-${seq}`
     labelSpan.textContent = this.placeholder || ''
 
-    const caretSpan = document.createElement('span')
+    // the caret is a functional mark, so it is ui-glyph's caret-down, not pack art (ADR-0245 cl.5, T-0148)
+    const caretSpan = document.createElement('ui-glyph')
     caretSpan.setAttribute('data-part', 'caret')
     caretSpan.setAttribute('aria-hidden', 'true')
-    setIcon(caretSpan, 'caret-down') // Phosphor, via @agent-ui/icons — sized = font by the caret span's own CSS (§4.1)
+    caretSpan.setAttribute('symbol', 'caret-down')
 
     trigger.appendChild(labelSpan)
     trigger.appendChild(caretSpan)

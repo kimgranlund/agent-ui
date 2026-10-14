@@ -1199,6 +1199,14 @@ describe('ui-select — trigger geometry structure (select-geometry)', () => {
     el.remove()
   })
 
+  it('select-geometry: the caret is ui-glyph caret-down, not a Phosphor icon (T-0148)', () => {
+    const { el, trigger } = makeSelect()
+    const caret = trigger.querySelector('[data-part="caret"]')!
+    expect(caret.localName).toBe('ui-glyph')
+    expect(caret.getAttribute('symbol')).toBe('caret-down')
+    el.remove()
+  })
+
   it('select-geometry: label and caret are DIRECT children of the trigger (grid columns)', () => {
     const { el, trigger } = makeSelect()
     // The trigger is `display: inline-grid; grid-template-columns: 1fr auto` — the label and caret

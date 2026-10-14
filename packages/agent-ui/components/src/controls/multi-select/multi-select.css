@@ -90,7 +90,10 @@
      row's own selected-ink so the glyph reads consistently against the tinted selected background). */
   --ui-multi-select-check-ink: var(--md-sys-color-primary-high);
   --ui-multi-select-indicator-outline: var(--md-sys-color-neutral-outline); /* the unselected box, so the toggle shows before the first click (T-0140) */
-  --ui-multi-select-indicator-radius: var(--md-sys-checkbox-radius, calc(var(--ui-multi-select-glyph) * 0.2)); /* the checkbox corner (checkbox.css) */
+  /* The unselected box is the ui-checkbox box at the same register (2n inside a tier region, the compact widget step
+     outside), with the checkbox corner, so a pick-many list reads as checkboxes and never as radios (T-0148). */
+  --ui-multi-select-indicator: var(--md-sys-icon-box, var(--md-sys-compact-md));
+  --ui-multi-select-indicator-radius: var(--md-sys-checkbox-radius, calc(var(--ui-multi-select-indicator) * 0.2)); /* the checkbox corner (checkbox.css) */
 }
 
 /* ── size → dimensional ramp repoint (ADR-0038) ──────────────────────────────────────────────────── */
@@ -100,6 +103,7 @@
   --ui-multi-select-font: var(--md-sys-type-control, var(--md-sys-font-sm));
   --ui-multi-select-icon: var(--md-sys-icon-box, var(--md-sys-icon-sm));
   --ui-multi-select-gap: var(--md-sys-inset, var(--md-sys-gap-sm));
+  --ui-multi-select-indicator: var(--md-sys-icon-box, var(--md-sys-compact-sm));
 }
 
 :where(ui-multi-select[size='lg']) {
@@ -107,6 +111,7 @@
   --ui-multi-select-font: var(--md-sys-type-control, var(--md-sys-font-lg));
   --ui-multi-select-icon: var(--md-sys-icon-box, var(--md-sys-icon-lg));
   --ui-multi-select-gap: var(--md-sys-inset, var(--md-sys-gap-lg));
+  --ui-multi-select-indicator: var(--md-sys-icon-box, var(--md-sys-compact-lg));
 }
 
 /* ── disabled → muted neutral roles ──────────────────────────────────────────────────────────────── */
@@ -212,7 +217,7 @@
   /* Checkmark base (::before) — CSS-only paint (LLD-C3), zero DOM injection into the option node.
      Centred in an icon-sized leading cell: inset = option-inline (the row's own leading pad start) +
      ½(icon − glyph) (the §4.1 caret-law centring, applied at a LEADING position instead of trailing).
-     Unselected: an outlined glyph-sized box (below), so every option shows its toggle before the first click. */
+     Unselected: an outlined checkbox-sized box (below), so every option shows its toggle before the first click. */
   :scope > [role='option']::before {
     content: '';
     position: absolute;
@@ -224,8 +229,9 @@
 
   :scope > [role='option']:not([aria-selected='true'])::before {
     box-sizing: border-box;
-    inline-size: var(--ui-multi-select-glyph);
-    block-size: var(--ui-multi-select-glyph);
+    inset-inline-start: calc(var(--ui-multi-select-option-inline) + (var(--ui-multi-select-icon) - var(--ui-multi-select-indicator)) / 2);
+    inline-size: var(--ui-multi-select-indicator);
+    block-size: var(--ui-multi-select-indicator);
     border: 1px solid var(--ui-multi-select-indicator-outline);
     border-radius: var(--ui-multi-select-indicator-radius);
   }

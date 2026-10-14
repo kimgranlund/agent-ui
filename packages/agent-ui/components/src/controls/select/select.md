@@ -10,7 +10,8 @@
 tag: ui-select
 tier: pattern           # geometry composite: trigger = Control class; panel = Container/surface; rows = legacy item-pad
 extends: UIFormElement  # form-associated: formValue() = selected key; formValidity() = valueMissing
-uses: []
+uses:
+  - ui-glyph
 # marginal: tracked at the wave-4 integration slice (s12 barrel pass); ≤ ~3 kB tier budget (plan §10)
 
 attributes:             # attributes-as-API — mirrors UISelectElement.props (formProps spread first, then own)
@@ -92,11 +93,11 @@ slots:
 
 parts:
   - name: trigger
-    description: The control-created `<button data-part="trigger" type="button">`. Control-class height from --ui-select-height. Contains [data-part=label] (the visible label / placeholder) and [data-part=caret] (the caret-down Phosphor glyph, aria-hidden, sized = font per the §4.1 caret law). Always lays out as [label | caret] (1fr + auto grid). Gets aria-haspopup="listbox", aria-expanded (synced via scope-owned effect), aria-controls pointing to the listbox id.
+    description: The control-created `<button data-part="trigger" type="button">`. Control-class height from --ui-select-height. Contains [data-part=label] (the visible label / placeholder) and [data-part=caret] (ui-glyph's caret-down mark, aria-hidden, at the glyph box per the §4.1 caret law). Always lays out as [label | caret] (1fr + auto grid). Gets aria-haspopup="listbox", aria-expanded (synced via scope-owned effect), aria-controls pointing to the listbox id.
   - name: label
     description: A `<span data-part="label">` inside the trigger, with a stable id. Shows the text content of the selected [role=option], or the placeholder text when nothing is selected. Updated by a scope-owned reactive effect reading the `value` + `placeholder` signals. Also the SECOND id in the trigger's `aria-labelledby` concatenation (ADR-0085) — the value stays in the accessible name and recomputes live as the selection changes.
   - name: caret
-    description: A `<span data-part="caret" aria-hidden="true">` inside the trigger, injected with the Phosphor `caret-down` glyph via `setIcon` (@agent-ui/icons). An inline affordance sized = font (the §4.1 caret law). CSS centres it in an icon-sized cell by padding = ½(icon−glyph).
+    description: A `<ui-glyph data-part="caret" symbol="caret-down" aria-hidden="true">` inside the trigger (T-0148; a caret is a functional mark, so ui-glyph draws it with the token stroke, ADR-0245 cl.5). An inline affordance at the glyph box (the §4.1 caret law), inked at the value ink (`--ui-select-caret-ink`, `neutral-on-surface-variant`), never the placeholder ink. CSS centres it in an icon-sized cell by padding = ½(icon−glyph).
   - name: aria-label
     description: A control-created, visually-hidden `<span data-part="aria-label">` (ADR-0085), a host-level sibling of the trigger — always present (idempotent-parts), CSS-clipped (not `hidden`/`display:none`). Holds the `label` prop's text and is the FIRST id in the trigger's bare-usage `aria-labelledby` concatenation. Inert (unreferenced) when `label` is empty or the control is inside a `ui-field` (the field's own visible label is used instead).
   - name: listbox
@@ -195,7 +196,7 @@ the ⭐ **ADR-0043 select gate**.
 
 The control creates two internal parts on first connect:
 
-- **trigger** — a `<button type="button">` with `aria-haspopup="listbox"` + `aria-expanded` + `aria-controls`. Contains a **label span** (the selected option's text or the placeholder) and a **caret span** (a Phosphor `caret-down` glyph, sized = font).
+- **trigger** — a `<button type="button">` with `aria-haspopup="listbox"` + `aria-expanded` + `aria-controls`. Contains a **label span** (the selected option's text or the placeholder) and a **caret** (ui-glyph's `caret-down` mark at the glyph box, inked at the value ink).
 - **listbox** — a `<div role="listbox">` panel in the Popover API top layer when open. The author's `[role=option]` children are adopted into this panel at first connect AND on every later light-DOM mutation (TKT-0026) — an Option appended after connect adopts too, in the order it was added.
 
 ## Selection

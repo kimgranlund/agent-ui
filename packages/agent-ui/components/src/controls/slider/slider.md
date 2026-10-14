@@ -195,8 +195,10 @@ border, → `--md-sys-color-neutral-on-surface`, the page-ink role covering the 
 1.4.11 dimension; ADR-0094) · `--ui-slider-label-ink` (→ `--md-sys-color-neutral-on-surface-variant`, the
 subdued half of the label/value pair) · `--ui-slider-value-ink` (→ `--md-sys-color-neutral-on-surface`,
 the emphasized half — GH #1141 dropped the pre-#1141 pill surface; the value is now plain text like the
-label, since it no longer transiently overlaps the rail/thumb). `[disabled]` mutes all six to inactive
-neutral roles (SC 1.4.11-exempt). The thumb's contrast contract is three-dimensional — fill, rail, and
+label, since it no longer transiently overlaps the rail/thumb). `[disabled]` takes the fleet disabled
+recipe (SC 1.4.11-exempt, T-0148): the rail drops to `neutral-outline-variant`, the fill to `primary-outline`
+so the value side stays heavier than the empty side, the thumb keeps its interior while its ring mutes to
+`neutral-on-surface-disabled`, and both inks step to `neutral-on-surface-variant`. The thumb's contrast contract is three-dimensional — fill, rail, and
 page surface, in both schemes (ADR-0094): a repoint of any of these tokens must clear all three; the
 slider browser legs are the standing gate.
 
