@@ -4543,6 +4543,13 @@ describe('ui-agent-admin — the Model GRID (2026-07-19 rev.2)', () => {
     const grid = el.querySelector('[data-part="model-grid"]') as HTMLElement
     expect(grid).not.toBeNull()
     expect([...grid.querySelectorAll('[data-part="model-provider"]')].map((p) => p.textContent)).toEqual(['Anthropic', 'OpenAI', 'Google'])
+    // T-0142: one header row names the columns; provider headings are the kicker eyebrow
+    const head = grid.firstElementChild as HTMLElement
+    expect(head.getAttribute('data-part')).toBe('model-grid-head')
+    expect([...head.children].map((c) => c.textContent)).toEqual(['Model', 'On', 'Default'])
+    for (const p of grid.querySelectorAll('[data-part="model-provider"]')) {
+      expect([p.localName, p.getAttribute('variant')]).toEqual(['ui-text', 'kicker'])
+    }
     const rows = grid.querySelectorAll('[data-part="model-row"]')
     expect(rows).toHaveLength(7) // rev.4: the Haiku/Sonnet tier pair per provider, opus/fable GONE; T-0030 adds Haiku 5.5 beside Haiku 4.5
     // ship state: only the Anthropic rows included; the OpenAI/Gemini options ship switched OFF
