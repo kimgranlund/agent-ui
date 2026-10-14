@@ -58,7 +58,8 @@ describe('ui-agent-admin Test Chat: the runner drives the activity strip through
     const strip = el.querySelector('[data-part="narration"]')!
     const items = [...strip.querySelectorAll(':scope > ui-timeline-item')]
     const text = (i: Element, role: string): string => i.querySelector(`:scope > [data-role="${role}"]`)?.textContent ?? ''
-    expect(items.map((i) => i.getAttribute('data-activity') ?? text(i, 'label'))).toEqual(['Validated', 'Opened a new surface', 'raw', 'footer', 'model'])
+    // T-0194: the "Emitted N A2UI message(s)" tally left the chat bubble and is its own activity row.
+    expect(items.map((i) => i.getAttribute('data-activity') ?? text(i, 'label'))).toEqual(['Validated', 'Opened a new surface', 'tally', 'raw', 'footer', 'model'])
     expect(text(items[0]!, 'description')).toBe('Round 1 failed (SCHEMA), repaired in round 2')
     expect(text(items[0]!, 'timestamp')).toBe('1.2s')
     expect(strip.querySelectorAll('[data-role="source"]').length, 'the raw output shows once').toBe(1)
