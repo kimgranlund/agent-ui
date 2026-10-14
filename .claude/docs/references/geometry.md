@@ -167,5 +167,20 @@ shrinks as n grows") gates the config and the generator refuses to emit on a fai
 vendored sha, asserts `check()` is `[]` and the generated file is byte-identical; a browser leg sets each of the 36 tier, scale and size cells, at every density, on a probe and
 compares computed tokens to `resolve()` in both engines; each migrated control carries a geometry pin against
 `resolve()`. The sibling px-literal rule (no
-px literal for control geometry except the hairline, focus ring, scrollbar and ratified whole-shape floors)
+px literal for control geometry except the hairline, focus ring, scrollbar and the sanctioned whole-shape floors)
 is report-shape until the W7 cleanup, then enforcing.
+
+## Rules that replace frozen ADR clauses
+
+The ADR folder is frozen (T-0164), so a stale ADR clause is not amended; the current rule is stated here and
+wins over the ADR text.
+
+- **BoardGrid frame (ADR-0046 Amendment 7).** The board paints no frame and has no inset: its first cell
+  sits on the text edge around it (T-0146). The cell-to-cell gap is the 4px data-grid gap
+  (`--ui-board-grid-gap: var(--md-sys-space-xs)`).
+- **ProductCard rating gap (ADR-0046 Amendment 7).** The rating is a composed readonly `ui-rating`; the
+  stars-to-number gap is the inset level (`--ui-product-card-rating-gap: var(--md-sys-inset)`), not a fixed
+  4px (T-0146).
+- **Capped calendar panel (ADR-0105 Amendment 2).** A calendar capped below its container's width is
+  start-aligned on the text edge like every other block (`margin-inline-end: auto`), not centred; a consumer
+  centres it if it wants (T-0149).

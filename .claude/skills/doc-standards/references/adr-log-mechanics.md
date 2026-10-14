@@ -1,5 +1,32 @@
 # The ADR log's own rules — no index file, numbering, amendment vs supersession (doc-standards §1b)
 
+## 1a · Frozen (T-0164, 2026-10-14)
+
+Kim, 2026-10-14: "we should stop using ADR system". `.claude/docs/adr/` is read-only history, like
+`.claude/docs/tickets/` (ADR-0145). Existing ADRs stay citable by `ADR-####` and clause; nothing is
+added to the folder or changed in it: no files, no `## Amendment` sections, no Status flips. A
+decision is recorded in the ticket that makes it; a standing rule lands in the reference doc or skill
+that owns the area. A clause that goes stale is superseded there, and the ADR text is left as it
+stands. Everything below §1a describes how the log ran before the freeze, so a reader can parse it.
+
+**Amendments left `proposed` at the freeze, and where each rule stands now:**
+
+| ADR | Amendment | Disposition |
+|---|---|---|
+| ADR-0040 | 2026-08-16, `components` family-barrel row 55 KB to 58 KB | Superseded: the barrels retired (ADR-0233); the live budgets are the rows in `scripts/measure-size.mjs` |
+| ADR-0067 | 2026-08-29, skill and agent roster under new identifiers | Superseded: the live roster is `.claude/skills/`, `.claude/agents/` and the `seat-map` skill |
+| ADR-0072 | 2026-08-30, clause 5 cap and session state machine dropped | Moot: never built, as the amendment itself records |
+| ADR-0170 | 2026-08-07, cl.6 read-only catalog mirror retired | Shipped: `agent-admin.test.ts` (GH #541) pins that the a2ui row carries no catalog mirror |
+
+**Stale clauses found after the freeze, and the doc that now states the rule:**
+
+| ADR clause | Current rule |
+|---|---|
+| ADR-0046 Amendment 7, BoardGrid 6px frame inset and the 4px rating gap (stale after T-0146) | `.claude/docs/references/geometry.md` §Rules that replace frozen ADR clauses |
+| ADR-0059, switch off track on `neutral-track` (stale after T-0148) | `.claude/docs/references/tokens.md` §The role vocabulary, the track bullet |
+| ADR-0105 Amendment 2, capped calendar panel centred (stale after T-0149) | `.claude/docs/references/geometry.md` §Rules that replace frozen ADR clauses |
+| ADR-0219 Amendment and ADR-0228 cl.6, the `300` to `800` chart series ladder (stale after T-0149) | `.claude/docs/references/tokens.md` §Consumption invariants, chart series inks |
+
 ## 1b · The ADR log: no index file, numbering, amendment vs supersession
 
 **Kim's standing no-index-file rule (2026-08-13), verbatim:**
@@ -23,8 +50,8 @@
 - A rollup, when you want one: `ls .claude/docs/adr/[0-9]*.md` for order + title, and grep the
   headers for status (`grep -H '| \*\*Status\*\* |' .claude/docs/adr/[0-9]*.md`). Never committed.
 - The site's derived indexes read the DIRECTORY, not a table: `scripts/generate-sitemap.mjs`'s
-  `generateAdrIndex` globs `NNNN-*.md` and takes each title from that file's own H1. A new ADR is
-  indexed the moment its file lands.
+  `generateAdrIndex` globs `NNNN-*.md` and takes each title from that file's own H1, so the frozen
+  set keeps building `site/public/adr-index.json` unchanged.
 - **This section replaced `.claude/docs/adr/README.md` §"Status lifecycle" / §"Amendment vs
   supersession" / §"Numbering & files"** (that file, 313 KB of index + doctrine, was deleted
   2026-08-13). Accepted ADRs still cite that file (and those § names) in their own historical prose —
@@ -49,9 +76,9 @@ stands**. All three are append-only with respect to an accepted decision's subst
 
 An `## Amendment` **adds** the foreseen follow-through; it does not edit the original Context /
 Decision / Consequences, so it does not breach *never edit an accepted decision's substance*. If you
-want to *change* a sentence inside an accepted Decision, that is a supersession — open a new ADR.
-An amendment header carrying `**proposed** — Kim ratifies` is flipped only by `adr_ratify.py`'s
-amendment mode (§5), never by hand-editing.
+wanted to *change* a sentence inside an accepted Decision, that was a supersession, recorded as a
+further numbered file. An amendment header still marked `**proposed**` at the freeze stays as written
+(§1a lists each one).
 
 **The 4th shape: partial supersession left unrestated (found via revalidation, not foreseen at
 write time).** A later ADR can supersede one clause or mechanism of an earlier ADR without
@@ -80,8 +107,8 @@ itself) has moved on without the body prose catching up — the source of the dr
 (a same-file restating `## Amendment`) doesn't (Kim's ruling, 2026-08-27).
 
 [verified] 14 worked instances, all in this repo, each fixed via its own append-only `## Amendment`
-(2026-08-21 through 2026-08-29; 13 landed and ratified, adr-0067's still `proposed`, pending Kim's
-ratification): adr-0007 (Amendment 1, 2026-08-21, commit `21bea37c` — a direct
+(2026-08-21 through 2026-08-29; 13 landed and accepted, adr-0067's left `proposed` at the freeze,
+§1a): adr-0007 (Amendment 1, 2026-08-21, commit `21bea37c` — a direct
 commit, no PR), adr-0017 (PR #1626), adr-0018 (PR #1625), adr-0021 (PR #1636), adr-0025
 (PR #1635), adr-0030 (PR #1679), adr-0032 (PR #1676), adr-0033 (PR #1678), adr-0035 (PR #1677),
 adr-0040 (PR #1688), adr-0049 (PR #1688, batched with adr-0040 — the script/comment-ladder-drift
@@ -91,7 +118,7 @@ no script value involved at all), adr-0067 (PR #1705, GH #1703 — the same no-o
 drifted fact being identifiers rather than a measured value: cl.1/cl.2 named an exact skill/agent
 roster and the estate was realized under different identifiers, 7 `a2ui`-prefixed skills plus
 `a2ui-build-agent`/`a2ui-payload-authoring-agent`/`a2ui-review-agent`, with no Amendment recording
-the swap; the Amendment sits `proposed` pending Kim's ratification),
+the swap; the Amendment was left `proposed` at the freeze, §1a),
 adr-0069 (PR #1706, GH #1704 — Decision cl.5's present-tense `BrowserDirectTransport` /
 `VITE_ANTHROPIC_API_KEY` claim was never built and no successor claims it; ADR-0200's three-backend
 seam names no relation to cl.5, so the clause is recorded dropped, not superseded; the never-built
@@ -137,7 +164,5 @@ landed this entry, PR #1712, 2026-08-29): adr-0058 (phantom citation found durin
 citation corrected and the procedure canonized in PR #1693, GH #1692), adr-0059 (same correction in
 PR #1693; the full Decision-section re-audit under the canonized procedure in PR #1696, GH #1694).
 
-**How to add one.** Copy `0000-template.md` → `NNNN-<title>.md` at the next free number; fill
-Context · Decision · Consequences · Alternatives; set `Repairs:`; leave `Status: proposed` until
-Kim ratifies. There is no index row to add — the file IS the index entry. First check §1c (in
-`status-dialects.md`): whether the thing earns an ADR at all.
+**Adding one: retired.** The freeze (§1a) closed the ADR tier to additions. A decision goes in its ticket and,
+as a standing rule, in the owning reference doc or skill (`status-dialects.md` §1c).

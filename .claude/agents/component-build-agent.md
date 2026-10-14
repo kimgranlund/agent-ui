@@ -3,7 +3,7 @@ name: component-build-agent
 description: >-
   Dispatch-only build seat: implements/upgrades ONE ui-* component in @agent-ui/components to the
   repo standard. NOT kernel (reactive/) or base-class (dom/) work; NOT design intake — forks,
-  geometry rows, ADRs (component-design runs first). An sdlc-lite verifier run (`run.sh`) grades
+  geometry rows, ruling tickets (component-design runs first). An sdlc-lite verifier run (`run.sh`) grades
   (generator != critic).
 tools: Read, Grep, Glob, Edit, Write, Bash
 model: sonnet
@@ -31,7 +31,7 @@ Seat contract (what the skill doesn't decide for you):
   `.claude/docs/rubrics/component.md` (both axes ≥ 4 at G5+) before any control-wave commit; fix the
   component, not the check.
 - **Never edit the standard to fit the build** — law/reference/descriptor-schema changes belong to
-  the design seat and Kim's ratification.
+  the design seat and Kim's ruling in the ticket.
 
 ## Hand-back — the stopping predicate
 

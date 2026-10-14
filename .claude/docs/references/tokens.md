@@ -39,6 +39,10 @@ Every family exposes the same roles, so a component swaps families by changing o
   plane in both schemes**. NOT `-outline-variant` (a translucent *decorative* outline that composites to only
   ~1.5–1.7:1 — an SC 1.4.11 fail for an interactive control part). Disabled tracks are 1.4.11-exempt and keep
   their muted roles. ADR-0059.
+  The switch off track no longer takes this fill (T-0148, which replaces ADR-0059's switch clause): it is the
+  light `--md-sys-color-neutral-container` fill (hover `-container-high`) with a
+  `--md-sys-color-neutral-field-outline` edge and thumb, so the 3:1 sits on the edge and an off row no longer
+  reads heavier than an on row.
 - **field outline** *(neutral only)*: `--md-sys-color-neutral-field-outline`, the **opaque** resting border of
   every entry field (text-field, select trigger, combo-box, otp-field cells, textarea, code-editor), held to **SC 1.4.11 3:1
   vs every surface plane in both schemes** (neutral 550 light, 500 dark). NOT `-outline`, a translucent scrim
@@ -89,6 +93,12 @@ families):
   on-color → `HighlightText`, neutral inks → `CanvasText`), so components hold zero color opinions and
   survive forced-colors for free.
 - **Contrast**: surface-text roles are WCAG-AA gated; accent on-color pairs are report-only.
+- **Chart series inks** (`--ui-chart-series-{1..6}-ink`, `_chart/chart-axis.css`): six monotone primary tone
+  primitives, light `primary-400 · 600 · 650 · 700 · 750 · 800`, dark 100 brighter
+  (`300 · 500 · 550 · 600 · 650 · 700`). Series 1 and 2 sit two steps apart (at least 1.5:1 in both schemes)
+  so two stacked series read as two bars, and series 1 starts at a mid step so chips and gridlines stay
+  visible over it; 3 to 6 step by 50 (T-0149). This replaces the
+  `300` to `800` ladder in ADR-0219's Amendment and ADR-0228 cl.6.
 
 ## Applying roles to a control — the channel pattern
 

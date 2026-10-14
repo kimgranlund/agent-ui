@@ -28,7 +28,8 @@ Ten packages under `packages/agent-ui/*`; full layout in [CLAUDE.md](CLAUDE.md).
 | Question | Home |
 | --- | --- |
 | Plan, goals, roadmap, process | `.claude/docs/plan.md`, `goals.md`, `roadmap.md`, `process.md` |
-| Decisions and designs | ADR/PRD/SPEC/LLD under `.claude/docs/` |
+| Decisions | the ticket that makes them; standing rules in the owning reference doc (`.claude/docs/references/`) or skill. `.claude/docs/adr/` is frozen history (T-0164) |
+| Designs | PRD/SPEC/LLD under `.claude/docs/` |
 | A control's contract | descriptor `{name}.md` beside each control |
 | A2UI catalogs | `catalog.json` under `packages/agent-ui/a2ui/src/catalog/` |
 | Producer prompt stack | `packages/agent-ui/a2ui/src/agent/prompts/` |
