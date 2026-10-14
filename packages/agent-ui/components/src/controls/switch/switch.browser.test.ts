@@ -251,24 +251,20 @@ describe('ui-switch cross-engine browser smoke — forced-colors', () => {
 describe('ui-switch cross-engine browser smoke — disabled/checked cascade precedence (GH #694)', () => {
   // component-checker finding (GH #686/#693) on ui-toggle, confirmed to carry over here: a bare
   // `:where(ui-switch):state(checked)` puts `:state()` OUTSIDE the `:where()` net, contributing its own
-  // (0,1,0) specificity — beating the fully `:where()`-wrapped `[disabled]` override (0,0,0) regardless
-  // of source order. `<ui-switch checked disabled>` would paint the ON (primary) track instead of the
-  // muted disabled one. Fixed by moving `:state(checked)` inside the parens (switch.css). Pinned here by
-  // comparing a `disabled`-only switch's track colour against a `checked disabled` switch's track colour:
-  // they must be IDENTICAL — the exact combination the regression would have inverted.
-  it('disabled OVERRIDES checked in the paint cascade — <ui-switch checked disabled> reads the SAME muted track colour as <ui-switch disabled> (regression pin)', () => {
+  // (0,1,0) specificity, beating the fully `:where()`-wrapped `[disabled]` overrides (0,0,0) regardless
+  // of source order, so `<ui-switch checked disabled>` would paint the enabled ON track. The fleet disabled
+  // recipe (T-0139) gives locked on its own muted track, so the pin is now three-way: checked+disabled
+  // differs from checked-only (disabled wins) AND from disabled-only (locked on still reads on).
+  it('disabled OVERRIDES checked in the paint cascade, and locked on still differs from locked off (regression pin)', () => {
     const { sw: disabledOnly } = mount('<ui-switch disabled></ui-switch>')
     const disabledOnlyBg = getComputedStyle(disabledOnly, '::before').backgroundColor
-
     const { sw: checkedDisabled } = mount('<ui-switch checked disabled></ui-switch>')
     const checkedDisabledBg = getComputedStyle(checkedDisabled, '::before').backgroundColor
-    expect(checkedDisabledBg, 'a checked+disabled switch must paint the SAME muted track colour as disabled-only — checked must not leak through the disabled override').toBe(disabledOnlyBg)
-
-    // Anti-vacuous: the disabled paint is genuinely DIFFERENT from the (uncontested) checked paint, so
-    // the equality above is a real discriminator, not two coincidentally-equal colours.
     const { sw: checkedOnly } = mount('<ui-switch checked></ui-switch>')
     const checkedOnlyBg = getComputedStyle(checkedOnly, '::before').backgroundColor
-    expect(checkedOnlyBg, 'anti-vacuous: checked-only and disabled-only must paint DIFFERENT track colours for the equality check above to mean anything').not.toBe(disabledOnlyBg)
+    expect(checkedDisabledBg, 'checked must not leak through the disabled override (the enabled ON track)').not.toBe(checkedOnlyBg)
+    expect(checkedDisabledBg, 'locked on must not paint the locked-off track').not.toBe(disabledOnlyBg)
+    expect(checkedOnlyBg, 'anti-vacuous: checked-only and disabled-only must paint different tracks').not.toBe(disabledOnlyBg)
   })
 })
 

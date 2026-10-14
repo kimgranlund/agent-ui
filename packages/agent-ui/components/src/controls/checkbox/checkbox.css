@@ -2,7 +2,7 @@
  *
  *   [1] TOKEN BLOCK  — `:where(ui-checkbox)` (specificity 0,0,0) declares the --ui-checkbox-* chain from
  *       the colour roles (--md-sys-color-{family}-{role}) and the widget-box ramp (--md-sys-compact-{size}, ADR-0041).
- *       [size] repoints the box to the correct compact tier; [disabled] mutes to neutral roles.
+ *       [size] repoints the box to the correct compact tier; [disabled] takes the fleet disabled recipe (T-0139).
  *   [2] STYLES BLOCK — `@scope (ui-checkbox)` consumes ONLY --ui-checkbox-*. The host is inline-flex
  *       (box + optional label text). ::before paints the square widget box (2px border + background fill).
  *       ::after paints the glyph (checkmark or indeterminate-dash), positioned absolutely within the box
@@ -65,13 +65,15 @@
   --ui-checkbox-gap: var(--md-sys-inset, var(--md-sys-gap-lg));
 }
 
-/* [disabled] → mute the border + fill to neutral roles. The state holds at idle: pointer-events:none (below)
-   prevents :hover from ever matching, so no path can lift the muted tokens. */
+/* [disabled] → the fleet disabled recipe (T-0139): the box keeps its border at outline-variant, the checked fill
+   drops to the low-emphasis container and the mark to the low-emphasis ink, all in the primary family when checked,
+   so a locked box never vanishes and locked checked still differs from locked unchecked. The state holds at idle:
+   pointer-events:none (below) prevents :hover from ever matching, so no path can lift the muted tokens. */
 :where(ui-checkbox[disabled]) {
-  --ui-checkbox-border: var(--md-sys-color-neutral-surface-high);
-  --ui-checkbox-bg-checked: var(--md-sys-color-neutral-surface-high);
-  --ui-checkbox-border-checked: var(--md-sys-color-neutral-surface-high);
-  --ui-checkbox-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-checkbox-border: var(--md-sys-color-neutral-outline-variant);
+  --ui-checkbox-bg-checked: var(--md-sys-color-primary-container-disabled);
+  --ui-checkbox-border-checked: var(--md-sys-color-primary-outline-variant);
+  --ui-checkbox-ink: var(--md-sys-color-primary-on-surface-disabled);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-checkbox) consumes ONLY --ui-checkbox-* ════════════════ */

@@ -30,6 +30,8 @@
      · ADR-0059). The CHECKED track (primary, below) already clears 3.94:1 light / 4.68:1 dark — untouched. */
   --ui-switch-track: var(--md-sys-color-neutral-track);
   --ui-switch-track-hover: var(--md-sys-color-neutral-track-hover);
+  /* Track edge: none while enabled (the solid track carries the boundary); [disabled] paints it (T-0139). */
+  --ui-switch-track-edge: transparent;
   /* Thumb colour (unchecked default = brightest neutral surface ≈ white). Constant across schemes. */
   --ui-switch-thumb: var(--md-sys-color-neutral-surface-brightest);
 
@@ -67,12 +69,22 @@
   --ui-switch-thumb: var(--md-sys-color-primary-on-primary);
 }
 
-/* [disabled] → muted neutral roles (overrides all states). HOLDS at idle: the disabled host is
-   pointer-inert (styles block), so `:hover` never matches it (ADR-0008 disabled pattern). */
+/* [disabled] → the fleet disabled recipe (T-0139): the track keeps its pill (an outline-variant edge over the
+   low-emphasis container) and the thumb drops to the low-emphasis ink, so a locked switch is quieter than an
+   enabled one and never collapses to a lone dot. Locked on keeps the primary family, so it still differs from
+   locked off. HOLDS at idle: the disabled host is pointer-inert (styles block), so `:hover` never matches it
+   (ADR-0008 disabled pattern). Both rules sit after `:state(checked)` and stay fully `:where()`-wrapped. */
 :where(ui-switch[disabled]) {
-  --ui-switch-track: var(--md-sys-color-neutral-surface-high);
-  --ui-switch-track-hover: var(--md-sys-color-neutral-surface-high);
-  --ui-switch-thumb: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-switch-track: var(--md-sys-color-neutral-container-disabled);
+  --ui-switch-track-hover: var(--md-sys-color-neutral-container-disabled);
+  --ui-switch-track-edge: var(--md-sys-color-neutral-outline-variant);
+  --ui-switch-thumb: var(--md-sys-color-neutral-on-surface-disabled);
+}
+:where(ui-switch[disabled]:state(checked)) {
+  --ui-switch-track: var(--md-sys-color-primary-container-disabled);
+  --ui-switch-track-hover: var(--md-sys-color-primary-container-disabled);
+  --ui-switch-track-edge: var(--md-sys-color-primary-outline-variant);
+  --ui-switch-thumb: var(--md-sys-color-primary-on-surface-disabled);
 }
 
 /* answered (ADR-0196, GH #1065) — the OFF track's frame steps back to the fleet answered pair; the
@@ -122,6 +134,7 @@
     border-radius: calc(var(--ui-switch-box) / 2); /* pill radius = box/2 */
 
     background: var(--ui-switch-track);
+    border: 1px solid var(--ui-switch-track-edge); /* inside the border-box, so the track never grows */
     transition: background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
   }
 

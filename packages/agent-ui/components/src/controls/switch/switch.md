@@ -122,8 +122,9 @@ neither the box nor the inset rides `--md-sys-density`.
 ## States + colour
 
 Unchecked: solid `--md-sys-color-neutral-track` track (the state-bearing track role, ADR-0059 — SC 1.4.11 3:1 on every plane; `-track-hover` on hover), near-white thumb. Checked: `--md-sys-color-primary` track
-(`--md-sys-color-primary-on-primary` thumb). Disabled: `--md-sys-color-neutral-surface-high` track, muted ink thumb — the
-host is pointer-inert (`pointer-events: none`), so `:hover` never lifts the state. A `:focus-visible`
+(`--md-sys-color-primary-on-primary` thumb). Disabled takes the fleet disabled recipe (T-0139): an `-outline-variant` edge over a `-container-disabled` track
+with an `-on-surface-disabled` thumb, neutral when off and primary when on, so the track never vanishes and locked
+on still differs from locked off. The host is pointer-inert (`pointer-events: none`), so `:hover` never lifts the state. A `:focus-visible`
 ring (keyboard-only, ADR-0009) uses the fleet `--md-sys-color-focus-ring` / `--md-sys-state-focus-ring-*` tokens.
 
 ## Form participation

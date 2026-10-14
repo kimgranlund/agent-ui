@@ -141,7 +141,9 @@ next click/Space toggle (platform parity). While `indeterminate=true`, `ariaChec
 
 The host is an `inline-flex` row: the widget box (`::before`) is the first item; any slotted label text
 follows in the default slot. A 2px border + slight corner rounding (~box/5) frame the box; clicking or
-pressing Space keyup toggles `checked` (clearing `indeterminate` first if set).
+pressing Space keyup toggles `checked` (clearing `indeterminate` first if set). Disabled takes the fleet
+disabled recipe (T-0139): the border at `-outline-variant`, the checked fill at `primary-container-disabled` and
+the mark at `primary-on-surface-disabled`, so a locked box never vanishes.
 
 ## Sizes
 
