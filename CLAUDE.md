@@ -23,6 +23,9 @@ Process `.claude/docs/process.md` · Standards `.claude/docs/references/` · `si
   abort paths) replayed from fixtures in `scripts/e2e-admin/`; outside the six shards, local only, no CI job.
 - `npm run e2e:admin:record`: captures a new admin fixture from the live model; manual, needs a key in
   `.env`, never run in CI.
+- `npm run traces`: the last live agent turns from the dev proxy's git-ignored trace log
+  (`.agent-traces/YYYY-MM-DD.jsonl`, one redacted line per turn, on under `npm run dev`,
+  `A2UI_AGENT_TRACES=0` turns it off); `-- --full 1` prints the newest turn in full (T-0151).
 - `npm run e2e:devtools`: the `@agent-ui/devtools` keyless browser smoke (`scripts/e2e-devtools.mjs`);
   local only, no CI job.
 - `npm run test:a2ui-kit`: the keyless A2UI test kit (T-0011): scenarios, scripted transport, provider, MCP

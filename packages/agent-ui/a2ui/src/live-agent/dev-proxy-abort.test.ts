@@ -233,10 +233,13 @@ describe('dev proxy /chat failure body: plain words, never the raw error (T-0024
     expect(out.body.error).not.toBe(GENERIC_FAILURE_MESSAGE)
   })
 
+  // T-0151: the dev proxy appends the redacted reason (the status and the provider's own sentence) after
+  // the generic line; the raw upstream body still never reaches the client (the Worker keeps the generic
+  // line alone).
   it('negative control: an upstream fault keeps the 500 but its raw body never reaches the client', async () => {
     const out = await chatFailure(new Error('anthropicProvider: upstream error 500: {"secret":"x"}'))
     expect(out.status).toBe(500)
-    expect(out.body.error).toBe(GENERIC_FAILURE_MESSAGE)
+    expect(out.body.error).toBe(`${GENERIC_FAILURE_MESSAGE} [dev: upstream 500]`)
     expect(out.payload).not.toMatch(/anthropicProvider|secret/)
   })
 })

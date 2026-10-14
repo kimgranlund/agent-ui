@@ -47,6 +47,12 @@
 // kept as a compact summary/tooltip fact) — this is a widen, not a replace: `services[].tools` is
 // what lets an MCP service's Tools-panel entry show its member tools' real text instead of only
 // "N tools discovered at boot" alone (mcp-agent-config.spec.md SPEC-R4, this ADR's Repairs cell).
+//
+// T-0151: every POST turn (both arms) appends one redacted JSON line to `.agent-traces/YYYY-MM-DD.jsonl`
+// at the repo root (`trace-log.ts`; on by default under `vite dev`, `A2UI_AGENT_TRACES=0` turns it off),
+// and a failed turn's chat line names the real reason after the generic text (`devFailureMessage`). A client
+// that opted in to `progressDetail:'source'` also gets each failed round's account (validator messages, the
+// PARSE position) as the `detail` of its `retry` line. Read the log with `npm run traces`.
 
 import { readFileSync } from 'node:fs'
 import { loadEnv } from 'vite'
@@ -90,8 +96,11 @@ import {
   buildCatalogMap,
   semanticChecksDeps,
   failureMessageFor,
+  GENERIC_FAILURE_MESSAGE,
 } from './chat-validation.ts'
 import type { ChatDispatch } from './chat-validation.ts'
+// T-0151: the per-turn trace log (`.agent-traces/YYYY-MM-DD.jsonl`), Node-only and dev-only like this file.
+import { TurnTraceCollector, agentLabel, appendTraceLine, defaultTracing, devFailureReason, TRACE_DIR_NAME } from './trace-log.ts'
 export { validateMode, validateGenuiSurface, validateA2uiEnabled, validateAuthoringSurface, validateEffort, isChatBody, resolveChatDispatch }
 export type { ChatDispatch }
 
@@ -120,6 +129,22 @@ function readBody(req: IncomingMessage): Promise<string> {
     req.on('end', () => resolve(data))
     req.on('error', reject)
   })
+}
+
+/** T-0151: env values that must never reach a trace line or a dev failure message: every variable whose
+ *  name says key, token, secret or password (the provider keys and any integration key), by value. */
+function secretValues(env: Record<string, string | undefined>): string[] {
+  return Object.entries(env)
+    .filter(([name, value]) => /KEY|TOKEN|SECRET|PASSWORD/i.test(name) && typeof value === 'string' && value.length >= 8)
+    .map(([, value]) => value as string)
+}
+
+/** T-0151: the user's words for a produce turn (the intent text, or the client action as JSON). */
+function produceUserText(input: unknown): string {
+  if (typeof input !== 'object' || input === null) return ''
+  const i = input as { kind?: unknown; text?: unknown; message?: unknown }
+  if (i.kind === 'intent' && typeof i.text === 'string') return i.text
+  return JSON.stringify(i.message ?? null)
 }
 
 function sendJson(res: ServerResponse, status: number, body: unknown): void {
@@ -181,6 +206,11 @@ export function a2uiDevProxyPlugin(opts?: {
    *  a two-server roster without touching the committed (empty) `mcp-servers.json` file. Production
    *  code and `vite.config.ts` never pass this; the default reads + validates the committed roster. */
   mcpRoster?: McpServersConfig
+  /** T-0151, test-only: `{ dir }` traces every turn into `dir`, `false` turns tracing off. Absent, the
+   *  `config` hook decides: on under `vite dev` unless `A2UI_AGENT_TRACES` is `0`/`false`/`off`, written to
+   *  `.agent-traces/` at the repo root. A plugin built without the `config` hook (every route test) never
+   *  traces unless it passes a dir. */
+  traces?: { dir: string } | false
 }): Plugin {
   // The provider keys live in the repo-root `.env` (gitignored). Vite does NOT load `.env` into
   // `process.env` — non-`VITE_` vars are kept out of BOTH `process.env` and `import.meta.env` — so
@@ -191,12 +221,26 @@ export function a2uiDevProxyPlugin(opts?: {
   // key (SPEC-N2 / ADR-0073 clause 5, the trust boundary). `envDir` is the repo root (`process.cwd()`),
   // NOT Vite's `root: 'site'`, so the root `.env` is the one read.
   let env: Record<string, string | undefined> = process.env
+  let traceDir: string | undefined = opts?.traces ? opts.traces.dir : undefined
+
+  // T-0151: one trace line per turn, written at the turn's end whatever the outcome.
+  // Every turn gets a collector (it also feeds the dev build's retry details); the flag gates only the file.
+  const writeTrace = (trace: TurnTraceCollector): void => {
+    if (traceDir !== undefined) appendTraceLine(traceDir, trace.finish(), secretValues(env))
+  }
+  // T-0151: the dev build names the real failure after the generic line ("upstream 401: invalid x-api-key"),
+  // redacted. Production keeps the generic text: the Worker answers with `failureMessageFor` alone.
+  const devFailureMessage = (err: unknown): string => {
+    const base = failureMessageFor(err)
+    return base === GENERIC_FAILURE_MESSAGE ? `${base} [dev: ${devFailureReason(err, secretValues(env))}]` : base
+  }
 
   return {
     name: 'a2ui-live-agent-proxy',
     apply: 'serve', // dev only — never attaches under `vite build` (SPEC-R3/N2)
     config(_config, { mode }) {
       env = { ...process.env, ...loadEnv(mode, process.cwd(), '') }
+      if (opts?.traces === undefined) traceDir = defaultTracing(env) ? `${ROOT}/${TRACE_DIR_NAME}` : undefined
     },
     configureServer(server) {
       // The catalog + judged shard are STATIC build inputs — load once at server start (readFileSync — the
@@ -312,7 +356,19 @@ export function a2uiDevProxyPlugin(opts?: {
               }
               const { system, model, messages, effort } = body
               const dispatch = resolveChatDispatch(config, env, model)
+              const lastUser = [...messages].reverse().find((m) => m.role === 'user')
+              const chatAgent = agentLabel((body as { agent?: unknown }).agent, undefined)
+              const trace = new TurnTraceCollector({
+                route: 'chat',
+                provider: dispatch.ok ? dispatch.provider : 'unknown',
+                model,
+                user: typeof lastUser?.content === 'string' ? lastUser.content : '',
+                ...(chatAgent !== undefined ? { agent: chatAgent } : {}),
+                ...(effort !== undefined ? { effort } : {}),
+              })
               if (!dispatch.ok) {
+                trace.reject(dispatch.status, dispatch.error)
+                writeTrace(trace)
                 sendJson(res, dispatch.status, { error: dispatch.error }) // 400 unknown/rejected pair · 503 no key
                 return
               }
@@ -320,9 +376,12 @@ export function a2uiDevProxyPlugin(opts?: {
               // here if its adapter module isn't wired — never an unhandled crash.
               const providerDispatch = providerFor(dispatch.provider, { apiKey: dispatch.apiKey, endpoint: dispatch.endpoint })
               if (!providerDispatch.ok) {
+                trace.reject(503, providerDispatch.reason)
+                writeTrace(trace)
                 sendJson(res, 503, { error: providerDispatch.reason })
                 return
               }
+              const chatProvider = trace.wrapProvider(providerDispatch.provider)
               // ADR-0168 cl.5 (GH #402) — the prose arm's enablement, resolved + dispatched through the
               // SAME shared pair the produce branch below uses: `resolveIntegrations` intersects with the
               // registry (non-array/unknown ids ⇒ [], capped, fail-closed — never a 400), then
@@ -346,33 +405,43 @@ export function a2uiDevProxyPlugin(opts?: {
                 // `withTurnDeadline` produce() uses). A client disconnect still aborts `controller` and stays silent;
                 // the deadline aborts only the composed signal, so its `TurnDeadlineError` reaches the catch below.
                 for await (const fragment of withTurnDeadline(
-                  (signal) => providerDispatch.provider.stream({ model, system, messages, effort: effort as Effort | undefined, signal, ...toolOpts }),
+                  (signal) => chatProvider.stream({ model, system, messages, effort: effort as Effort | undefined, signal, ...toolOpts }),
                   controller.signal,
                   TURN_DEADLINE_MS,
                 )) {
                   text += fragment // buffered server-side, single-shot (LLD Q3); one full reply, no mid-stream truncation
                 }
+                trace.setReply(text)
                 sendJson(res, 200, { text })
               } catch (err) {
                 // An aborted turn has no reader left: write nothing to the closed response.
-                if (controller.signal.aborted) return
+                if (controller.signal.aborted) {
+                  trace.abort()
+                  return
+                }
                 // T-0024: the status stays 500 (nothing has been written, so a real HTTP error is still
                 // possible), but the body is the host's plain-words line, the produce arm's rule
                 // (`failureMessageFor`): a stall or the whole-turn deadline names itself, and an upstream
                 // fault (which embeds the provider's raw response body) never reaches the client's chat log.
-                // The raw error stays on this terminal only.
+                // T-0151: this dev host appends the redacted reason (`devFailureMessage`); the raw error and
+                // its full upstream body go to this terminal and the trace log.
                 console.error('/chat turn failed:', err)
-                sendJson(res, 500, { error: failureMessageFor(err) })
+                trace.fail(err)
+                sendJson(res, 500, { error: devFailureMessage(err) })
+              } finally {
+                writeTrace(trace)
               }
               return
             }
 
             // POST — run one turn and stream validated A2UI JSONL back.
             if (req.method === 'POST') {
-              const { input, provider, model, mode, personaSystem, integrations, progressDetail, progressReasoning, genui, a2ui, authoring, builderMission, effort, responsePreference, prefers, catalogId } = JSON.parse(await readBody(req)) as {
+              const { input, provider, model, mode, personaSystem, integrations, progressDetail, progressReasoning, genui, a2ui, authoring, builderMission, effort, responsePreference, prefers, catalogId, agent } = JSON.parse(await readBody(req)) as {
                 input: TurnInput
                 provider: string
                 model: string
+                /** T-0151: an optional agent label for the trace log only; never reaches the prompt. */
+                agent?: unknown
                 mode?: unknown
                 personaSystem?: unknown
                 integrations?: unknown
@@ -387,21 +456,39 @@ export function a2uiDevProxyPlugin(opts?: {
                 prefers?: unknown
                 catalogId?: unknown
               }
+              const turnAgent = agentLabel(agent, catalogId)
+              const turnEffort = validateEffort(effort)
+              const turnMode = validateMode(mode)
+              const trace = new TurnTraceCollector({
+                route: 'produce',
+                provider: String(provider),
+                model: String(model),
+                user: produceUserText(input),
+                ...(turnAgent !== undefined ? { agent: turnAgent } : {}),
+                ...(turnEffort !== undefined ? { effort: turnEffort } : {}),
+                ...(turnMode !== undefined ? { mode: turnMode } : {}),
+                ...(typeof catalogId === 'string' ? { catalogId } : {}),
+              })
+              const rejectTurn = (status: number, error: string): void => {
+                trace.reject(status, error)
+                writeTrace(trace)
+                sendJson(res, status, { error })
+              }
               const pair = resolvePair(config, provider, model) // SPEC-R12 PAIR-allowlist — the trust boundary
               if (!pair.ok) {
-                sendJson(res, 400, { error: pair.reason }) // degrade: the client falls back to the backbone
+                rejectTurn(400, pair.reason) // degrade: the client falls back to the backbone
                 return
               }
               const apiKey = env[pair.envKey]
               if (apiKey === undefined || apiKey === '') {
-                sendJson(res, 503, { error: 'no-key' })
+                rejectTurn(503, 'no-key')
                 return
               }
               // Endpoint comes from the MATCHED registry row (providers.json), not a client value — one
               // source of truth for the request URL (SPEC-R11).
               const dispatch = providerFor(provider, { apiKey, endpoint: pair.entry.endpoint }) // defensive dispatch (SPEC-R11 AC4)
               if (!dispatch.ok) {
-                sendJson(res, 503, { error: dispatch.reason })
+                rejectTurn(503, dispatch.reason)
                 return
               }
               res.statusCode = 200
@@ -413,7 +500,7 @@ export function a2uiDevProxyPlugin(opts?: {
               // (`semanticChecksDeps` adds nothing when the persona declares none, so such a turn is byte-identical).
               const selectedCatalog = selectCatalog(catalogs, catalogId, catalog)
               const deps: ProduceDeps = {
-                provider: dispatch.provider,
+                provider: trace.wrapProvider(dispatch.provider),
                 retrieve: (q) => retrieve(shard, q),
                 catalog: selectedCatalog,
                 ...semanticChecksDeps(selectedCatalog),
@@ -485,10 +572,18 @@ export function a2uiDevProxyPlugin(opts?: {
               const validatedResponsePreference = validateResponsePreference(responsePreference)
               const validatedPrefers = validateResponsePreference(prefers)
               try {
-                for await (const line of produce(input, deps, { maxRounds: 3, signal: controller.signal, model, mode: validateMode(mode), personaSystem: persona, progress: true, ...(detail !== undefined ? { progressDetail: detail } : {}), ...(reasoning ? { progressReasoning: true } : {}), ...(genuiSurface !== undefined ? { genuiSurface } : {}), ...(a2uiEnabled !== undefined ? { a2uiEnabled } : {}), ...(authoringSurface !== undefined ? { authoringSurface } : {}), ...(builderMissionGate !== undefined ? { builderMission: builderMissionGate } : {}), ...(validatedEffort !== undefined ? { effort: validatedEffort } : {}), ...(validatedResponsePreference !== undefined ? { responsePreference: validatedResponsePreference } : {}), ...(validatedPrefers !== undefined ? { prefers: validatedPrefers } : {}), ...toolOpts })) {
-                  res.write(line + '\n')
+                for await (const line of produce(input, deps, { maxRounds: 3, signal: controller.signal, model, mode: validateMode(mode), personaSystem: persona, progress: true, ...(detail !== undefined ? { progressDetail: detail } : {}), ...(reasoning ? { progressReasoning: true } : {}), ...(genuiSurface !== undefined ? { genuiSurface } : {}), ...(a2uiEnabled !== undefined ? { a2uiEnabled } : {}), ...(authoringSurface !== undefined ? { authoringSurface } : {}), ...(builderMissionGate !== undefined ? { builderMission: builderMissionGate } : {}), ...(validatedEffort !== undefined ? { effort: validatedEffort } : {}), ...(validatedResponsePreference !== undefined ? { responsePreference: validatedResponsePreference } : {}), ...(validatedPrefers !== undefined ? { prefers: validatedPrefers } : {}), onRepairRound: trace.onRepairRound, ...toolOpts })) {
+                  trace.observeLine(line)
+                  // T-0151: in the dev build, a client that opted in to the raw-source attachment
+                  // (`progressDetail:'source'`, the admin developer surface) also gets each failed round's
+                  // account on its `retry` line: the validator codes with their messages and, for a PARSE,
+                  // the parser's error and position. Every other client's stream is unchanged.
+                  res.write((detail === 'source' ? trace.enrichRetryLine(line, secretValues(env)) : line) + '\n')
                 }
               } catch (err) {
+                // T-0151: the trace records the full error (a halt's failures, an upstream status and body).
+                if (controller.signal.aborted) trace.abort()
+                else trace.fail(err)
                 // GH #144: ProduceHalt (the round bound exhausted) or an upstream fault mid-stream — headers
                 // are already committed (200/ndjson) by the time this can fire (every earlier throw site
                 // sits before the first `res.write`, so this catch is reached only once bytes are already
@@ -505,14 +600,17 @@ export function a2uiDevProxyPlugin(opts?: {
                 // "report without leaking a key" discipline the outer catch below already applies to a
                 // pre-stream failure, extended to a post-stream one. `res.destroyed` (the client
                 // disconnected) is the one case that stays silent — there's no one left to read it.
+                // T-0151: this dev host appends the redacted reason to the generic fallback
+                // (`devFailureMessage`); the Worker keeps `failureMessageFor` alone.
                 if (!res.destroyed && !controller.signal.aborted) {
                   // Server-only: prints to the dev server's own terminal, never crosses the wire.
                   console.error('produce() turn failed:', err)
-                  const message = failureMessageFor(err)
+                  const message = devFailureMessage(err)
                   res.write(formatErrorLine(message) + '\n')
                 }
               }
               res.end()
+              writeTrace(trace)
               return
             }
 
