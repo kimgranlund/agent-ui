@@ -21,6 +21,7 @@
 /* uses: synced from product-card.md by scripts/codemod-uses.mjs */
 @import '../badge/badge.css';
 @import '../icon/icon.css';
+@import '../rating/rating.css';
 
 :where(ui-product-card) {
   /* Surface: a neutral card plane with an outline-variant border and the base corner radius. */
@@ -44,7 +45,6 @@
   --ui-product-card-muted-ink: var(--md-sys-color-neutral-on-surface-variant);
   --ui-product-card-price-ink: var(--md-sys-color-neutral-on-surface);
   --ui-product-card-rating-star-ink: var(--md-sys-color-warning); /* the approved mockup's star colour */
-  --ui-product-card-rating-star-gap: var(--md-sys-c, 2px); /* the mockup's star letter-spacing, a mark-geometry constant */
 
   /* Type: title on the title-medium row at weight 650, clamped at two lines; the price on the
      title-large row, bold, the strongest text in the card. */
@@ -66,7 +66,8 @@
   --ui-product-card-pad-block: var(--ui-box-pad-block, 0.375rem); /* 6px */
   --ui-product-card-row-gap: var(--ui-box-gap, 0.5rem); /* 8px between the body's rows */
   /* Inline spacing within a row, off the --md-sys-space ladder (density-responsive by the token chain). */
-  --ui-product-card-rating-gap: var(--md-sys-space-xs); /* stars to the number */
+  /* T-0146: the stars sit n clear of the number (the glyph-gap rule's chip gap, was c). */
+  --ui-product-card-rating-gap: var(--md-sys-inset, var(--md-sys-space-sm)); /* stars to the number */
   --ui-product-card-row-pad: var(--md-sys-space-sm); /* space above the price row */
   --ui-product-card-inline-gap: var(--md-sys-space-sm); /* price, note and action within the row */
   --ui-product-card-badge-inset: var(--md-sys-space-sm); /* the badge's offset over the image corner */
@@ -199,28 +200,20 @@
     color: var(--ui-product-card-muted-ink);
   }
 
+  /* Centred, not baseline: the stars are a ui-rating grid box with no text baseline of its own. */
   :scope [data-part='rating'] {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: var(--ui-product-card-rating-gap);
     font-variant-numeric: tabular-nums;
   }
+  /* The composed readonly ui-rating (T-0146) takes the card's star ink through its own ink token, set on the
+     ui-rating itself (its :where token block would otherwise re-declare the neutral ink there). */
   :scope [data-part='rating-stars'] {
     display: inline-flex;
-    gap: var(--ui-product-card-rating-star-gap);
-    color: var(--ui-product-card-rating-star-ink);
   }
-  /* A half star: the empty glyph under a full glyph clipped to its inline-start half. */
-  :scope [data-part='rating-star'][data-fill='half'] {
-    position: relative;
-  }
-  :scope [data-part='rating-star'][data-fill='half']::before {
-    content: '\2605';
-    position: absolute;
-    inset-block-start: 0;
-    inset-inline-start: 0;
-    inline-size: 50%;
-    overflow: hidden;
+  :scope [data-part='rating-stars'] > ui-rating {
+    --ui-rating-ink: var(--ui-product-card-rating-star-ink);
   }
   /* Visually hidden but announced (the service-card status-text clip technique). */
   :scope [data-part='rating-text'],

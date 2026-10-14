@@ -5,6 +5,12 @@ import { UIProductCardElement } from './product-card.ts'
 // (product-card.browser.test.ts owns that); this pins the declared behaviour: typed props, ARIA via
 // internals, the presence law for every optional part, and the action event.
 
+// jsdom has no form-association surface (setFormValue/setValidity); the composed ui-rating (T-0146) is a FACE
+// control whose form effects call it on connect, so stub it on the prototype (the rating.test.ts stub).
+const internalsProto = ElementInternals.prototype as unknown as Record<string, unknown>
+internalsProto['setFormValue'] ??= (): void => {}
+internalsProto['setValidity'] ??= (): void => {}
+
 class ProbeProductCard extends UIProductCardElement {
   get probeInternals(): ElementInternals {
     return this.internals
@@ -157,25 +163,23 @@ describe('UIProductCardElement: anatomy and presence', () => {
     expect(q(el, 'rating')).toBeNull()
   })
 
-  it('rating draws five stars filled to the nearest half: full, half or empty (ADR-0243 Amendment 2)', async () => {
-    const fills = (el: Element): string => [...el.querySelectorAll('[data-part="rating-star"]')].map((s) => s.getAttribute('data-fill')![0]).join('')
-    const glyphs = (el: Element): string => q(el, 'rating-stars')!.textContent!
+  it('rating composes a readonly ui-rating at size sm, inert and aria-hidden, at the exact value (T-0146)', async () => {
     const el = await make({ title: 'Suite', rating: 4.8 })
-    expect(fills(el)).toBe('fffff')
-    expect(glyphs(el)).toBe('\u2605\u2605\u2605\u2605\u2605')
-    el.rating = 4.2
-    await el.updateComplete
-    expect(fills(el)).toBe('ffffe')
-    expect(glyphs(el)).toBe('\u2605\u2605\u2605\u2605\u2606')
+    const stars = q(el, 'rating-stars')!
+    expect(stars.hasAttribute('inert')).toBe(true)
+    const rating = stars.querySelector('ui-rating') as HTMLElement & { value: number; readonly: boolean; size: string }
+    expect(rating).not.toBeNull()
+    expect(rating.readonly).toBe(true)
+    expect(rating.size).toBe('sm')
+    expect(rating.value).toBe(4.8)
+    expect(stars.textContent).not.toContain('\u2605')
     el.rating = 3.5
     await el.updateComplete
-    expect(fills(el)).toBe('fffhe')
-    el.rating = 0.4
-    await el.updateComplete
-    expect(fills(el)).toBe('heeee')
+    expect(rating.value).toBe(3.5)
+    expect(stars.querySelectorAll('ui-rating')).toHaveLength(1) // reused, never rebuilt
     el.rating = 9
     await el.updateComplete
-    expect(fills(el)).toBe('fffff')
+    expect(rating.value).toBe(5) // ui-rating clamps to its 0 to 5 scale
   })
 
   it('rating-count renders "(318)" after the number only when above zero', async () => {

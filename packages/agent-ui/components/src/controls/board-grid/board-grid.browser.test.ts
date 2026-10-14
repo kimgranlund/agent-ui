@@ -50,7 +50,7 @@ describe('ui-board-grid: whole shape', () => {
     expect(first.left).toBeGreaterThanOrEqual(host.left)
     expect(last.right).toBeLessThanOrEqual(host.right + 0.5)
     expect(last.bottom).toBeLessThanOrEqual(host.bottom + 0.5)
-    expect(host.height).toBeGreaterThan(boardH) // the frame wraps the board
+    expect(Math.abs(host.height - boardH)).toBeLessThan(1) // no frame inset (T-0146): the host is the board
   })
 
   it('each cell is square with a side of at least 34px at the default size', () => {
@@ -92,16 +92,16 @@ describe('ui-board-grid: whole shape', () => {
     const all = cells(hug)
     const boardW = rect(all[2]!).right - rect(all[0]!).left
     expect(rect(hug).width).toBeLessThan(inner)
-    expect(rect(hug).width - boardW).toBeLessThan(24) // only the frame padding around the board
+    expect(Math.abs(rect(hug).width - boardW)).toBeLessThan(1) // no frame inset: the hug is the board itself
   })
 })
 
 describe('ui-board-grid: the ADR-0046 box model (Amendment 7)', () => {
-  it('the frame is the 6px box inset; the cell gap is the derived 2px data-grid gap', () => {
+  it('no frame inset, the first cell on the host edge (T-0146); the cell gap is the derived 2px data-grid gap', () => {
     const el = mount(`<ui-board-grid rows="2" cols="3"></ui-board-grid>`)
     const [a, b] = cells(el)
-    expect(rect(a!).left - rect(el).left).toBeCloseTo(6, 0)
-    expect(rect(a!).top - rect(el).top).toBeCloseTo(6, 0)
+    expect(rect(a!).left - rect(el).left).toBeCloseTo(0, 0)
+    expect(rect(a!).top - rect(el).top).toBeCloseTo(0, 0)
     expect(rect(b!).left - rect(a!).right).toBeCloseTo(2, 0)
   })
 })
@@ -119,6 +119,19 @@ describe('ui-board-grid: the corner glyph (ADR-0245 Amendment 6)', () => {
     const border = Number.parseFloat(getComputedStyle(cell).borderRightWidth)
     expect(rect(cell).right - border - box.right, 'inline inset').toBeCloseTo(ROOT.c, 0)
     expect(rect(cell).bottom - Number.parseFloat(getComputedStyle(cell).borderBottomWidth) - box.bottom, 'block inset').toBeCloseTo(ROOT.c, 0)
+  })
+})
+
+describe('ui-board-grid: the mark (T-0146)', () => {
+  it('a letter is sized from its cell: font size half the cell side, cap height at least a third', async () => {
+    const el = mount('<ui-board-grid rows="1" cols="5"></ui-board-grid>') as Board
+    el.cells = [{ row: 0, col: 0, mark: 'S' }]
+    await el.updateComplete
+    const cell = cells(el)[0]!
+    const side = rect(cell).width
+    const size = Number.parseFloat(getComputedStyle(cell).fontSize)
+    expect(size).toBeGreaterThanOrEqual(side / 2 - 2)
+    expect(size * 0.68).toBeGreaterThanOrEqual(side / 3) // a sans cap height is about 0.7em
   })
 })
 
