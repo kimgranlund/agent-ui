@@ -29,14 +29,14 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
 import { CFG, check } from '../packages/agent-ui/shared/src/tokens/scale.mjs'
-import { GLYPH_FLOOR, SCALE_TO_TIER } from './lib/foundations-rules.mjs'
+import { GLYPH_FLOOR, ROOT_REGISTER, SCALE_TO_TIER, STEP } from './lib/foundations-rules.mjs'
 
 export const OUT_REL = 'packages/agent-ui/shared/src/tokens/foundations.gen.css'
 export const BRIDGE_REL = 'packages/agent-ui/shared/src/tokens/foundations-bridge.gen.css'
 export const ROOT_DEFAULT = true
-export const ROOT_INPUTS = { tier: 'product', scale: 'md' }
+// The root inputs live in foundations-rules.mjs (ROOT_REGISTER), where the lints and the browser tests read them too.
+export const ROOT_INPUTS = ROOT_REGISTER
 
-const STEP = { sm: -1, md: 0, lg: 1 }
 const N = 'var(--md-sys-n)'
 const C = 'var(--md-sys-c)'
 // scale.mjs measures the linear type anchors and Q from n = 5 (its `n - 5`), independent of the ladder, and never

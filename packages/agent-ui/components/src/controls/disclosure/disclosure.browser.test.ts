@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp, userEvent } from 'vitest/browser'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 
 // content-family M1-a — ui-disclosure cross-engine browser-truth smoke (content-family.lld.md LLD-C10;
 // SPEC-R15 AC1/AC4, SPEC-R17 AC1/AC2, SPEC-R18 AC1-AC3, SPEC-R19 AC2). Runs in BOTH Chromium and WebKit
@@ -58,7 +58,7 @@ describe('ui-disclosure — mounts + a real engine resolves the geometry (whole-
     const summary = host.querySelector('[data-part="summary"]') as HTMLElement
 
     // derived root register (ADR-0245, product / md / md, n 8): height 4n = 32, font type.control = 14.
-    const d = resolve('product', 'md', 'md')
+    const d = rootResolve('md')
     expect(px(getComputedStyle(summary).blockSize)).toBeCloseTo(d.h, 0)
     expect(px(getComputedStyle(summary).fontSize)).toBeCloseTo(d.type.control, 0)
     expect(px(getComputedStyle(summary).paddingBlockStart)).toBe(0) // NEVER block-padding (geometry.md)
@@ -77,7 +77,7 @@ describe('ui-disclosure — mounts + a real engine resolves the geometry (whole-
     // derived (ADR-0245): the chevron slot is 2n. At the root md (n 8) 2n is 16 against the font
     // (type.control 14), so this leg pins both derived values and containers-foundations.browser.test.ts pins
     // the slot at n 5 / 6 / 7.
-    const d = resolve('product', 'md', 'md')
+    const d = rootResolve('md')
     expect(fontSize).toBeCloseTo(d.type.control, 0)
     expect(glyphSize).toBeCloseTo(2 * d.n, 0)
 

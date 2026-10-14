@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp, userEvent } from 'vitest/browser'
 import type { UITextareaElement } from '@agent-ui/components/controls/textarea'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 
 // The cross-engine behaviour + geometry + focus-ring + forced-colors smoke for ui-textarea (ADR-0134). Where
 // the jsdom probes pin the DECLARED rules, this pins what a REAL engine does with a real contenteditable + a
@@ -358,9 +358,9 @@ describe('ui-textarea cross-engine geometry smoke — the multi-line law (both e
       fonts.push(px(getComputedStyle(editor).fontSize))
     }
     // the page root is product / md (ADR-0245): the control type role at each size is the derived one
-    expect(fonts[0]).toBeCloseTo(resolve('product', 'md', 'sm').type.control, 0)
-    expect(fonts[1]).toBeCloseTo(resolve('product', 'md', 'md').type.control, 0)
-    expect(fonts[2]).toBeCloseTo(resolve('product', 'md', 'lg').type.control, 0)
+    expect(fonts[0]).toBeCloseTo(rootResolve('sm').type.control, 0)
+    expect(fonts[1]).toBeCloseTo(rootResolve('md').type.control, 0)
+    expect(fonts[2]).toBeCloseTo(rootResolve('lg').type.control, 0)
     expect(allDistinct(fonts), `editor fonts did not change across [size]: ${fonts.join()}`).toBe(true)
   })
 

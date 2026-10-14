@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp, page, userEvent } from 'vitest/browser'
 import type { UIModalElement } from './modal.ts'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 
 // G9 s9 (browser leg) — the CROSS-ENGINE platform-truth smoke for ui-modal (decomp g9-containers node s9).
 // This is where the native <dialog> behaviour is PROVEN — none of it resolves in jsdom (which ships a bare
@@ -333,7 +333,7 @@ describe('ui-modal — [box-model] the dialog is a padding-less box; region padd
       ['content→footer', contentToFooter],
       ['footer→frame', footerToFrame],
     ] as const) {
-      expect(gap, `${server.browser}: ${label} gap is not ~n px (got ${gap})`).toBeCloseTo(resolve('product', 'md', 'md').n, 0)
+      expect(gap, `${server.browser}: ${label} gap is not ~n px (got ${gap})`).toBeCloseTo(rootResolve('md').n, 0)
     }
   })
 
@@ -355,7 +355,7 @@ describe('ui-modal — [box-model] the dialog is a padding-less box; region padd
     expect(
       restingGap,
       `${server.browser}: the sticky header's own n margin did not survive scrolling (measured ${restingGap})`,
-    ).toBeCloseTo(resolve('product', 'md', 'md').n, 0)
+    ).toBeCloseTo(rootResolve('md').n, 0)
   })
 })
 

@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
+import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
 import { server, cdp } from 'vitest/browser'
 
 // Phase-1 s13 — the CROSS-ENGINE geometry + forced-colors smoke (the gold geometry PROOF; goals §G5 DoD).
@@ -79,7 +79,7 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
         fonts.push(fontPx(btn))
       }
       // The derived ramp at the root register (product / md), ADR-0245 cl.3: height 4n, font = control type.
-      const ramp = (['sm', 'md', 'lg'] as const).map((s) => resolve('product', 'md', s))
+      const ramp = (['sm', 'md', 'lg'] as const).map((s) => rootResolve(s))
       expect(heights[0]).toBeCloseTo(ramp[0].h, 0)
       expect(heights[1]).toBeCloseTo(ramp[1].h, 0)
       expect(heights[2]).toBeCloseTo(ramp[2].h, 0)
@@ -188,7 +188,7 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
     // is STRICTLY smaller than its icon-sized cell (18) — NOT the named --ui-ind oversize bug on the lead edge.
     const cs = getComputedStyle(caret)
     const caretContent = caret.getBoundingClientRect().width - px(cs.paddingInlineStart) - px(cs.paddingInlineEnd)
-    expect(caretContent, 'leading caret content box is not glyph-sized (the --ui-ind oversize bug on the leading edge)').toBeCloseTo(glyphBox(resolve('product', 'md', 'md')), 0)
+    expect(caretContent, 'leading caret content box is not glyph-sized (the --ui-ind oversize bug on the leading edge)').toBeCloseTo(glyphBox(rootResolve('md')), 0)
     expect(caretContent, 'leading caret glyph is not strictly smaller than its icon-sized cell').toBeLessThan(iconCell)
     // font <= icon cell, not <: the control type n + 6 TIES the 2n icon box at n 6 (an sm control at the root);
     // the strict form held only from n 7 up (skill v2). The glyph assertion above still proves caret < icon.

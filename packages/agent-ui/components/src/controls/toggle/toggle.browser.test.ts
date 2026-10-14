@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp, userEvent } from 'vitest/browser'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 
 // S7-a cross-engine smoke — ui-toggle (ADR-0179 GH #686 Amendment, admin-three-pane-ia.lld.md §16.4). Runs
 // in BOTH Chromium and WebKit (vitest.browser.config.ts). Where toggle.test.ts (jsdom) pins the behaviour
@@ -129,7 +129,7 @@ describe('ui-toggle cross-engine geometry (s13-shaped)', () => {
         fonts.push(fontPx(el))
       }
       // The derived ramp at the root register (product / md), ADR-0245 cl.3: height 4n, font = control type.
-      const ramp = (['sm', 'md', 'lg'] as const).map((s) => resolve('product', 'md', s))
+      const ramp = (['sm', 'md', 'lg'] as const).map((s) => rootResolve(s))
       expect(heights).toEqual(ramp.map((r) => r.h))
       expect(fonts).toEqual(ramp.map((r) => r.type.control))
     }
@@ -145,7 +145,7 @@ describe('ui-toggle cross-engine geometry (s13-shaped)', () => {
     const wBare = frameWidth(bare)
     const wIcon = frameWidth(icon)
     const wBoth = frameWidth(both)
-    expect(frameHeight(bare)).toBeCloseTo(resolve('product', 'md', 'md').h, 0) // md default height
+    expect(frameHeight(bare)).toBeCloseTo(rootResolve('md').h, 0) // md default height
     expect(wIcon, 'adding a leading icon must widen the frame').toBeGreaterThan(wBare)
     expect(wBoth, 'adding BOTH icon + state-icon must widen it further still').toBeGreaterThan(wIcon)
     // anti-vacuous whole-shape floor: never a near-zero collapsed box

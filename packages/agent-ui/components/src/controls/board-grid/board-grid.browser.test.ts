@@ -1,14 +1,14 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
+import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
 
 import '@agent-ui/components/foundation-styles.css'
 import './board-grid.css'
 import './board-grid.ts'
 
 /** The derived root register (product / md / md, ADR-0245 Amendment 8). */
-const ROOT = resolve('product', 'md', 'md')
+const ROOT = rootResolve('md')
 
 // board-grid.browser.test.ts: real-engine truth for ui-board-grid (ADR-0243), Chromium + WebKit. The
 // whole-shape law: the board's own bounding box in a realistic container, square cells at least 34px,

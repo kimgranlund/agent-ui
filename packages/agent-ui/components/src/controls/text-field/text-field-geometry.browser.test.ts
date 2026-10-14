@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 import { server, cdp } from 'vitest/browser'
 
 // s11 (geometry leg) — the CROSS-ENGINE geometry smoke for ui-text-field (decomp g4-g6 node s11). Where the
@@ -56,7 +57,7 @@ const padStartPx = (field: HTMLElement): number => px(getComputedStyle(field).pa
 const padEndPx = (field: HTMLElement): number => px(getComputedStyle(field).paddingInlineEnd)
 
 /** The derived control type at the root register per [size] (ADR-0245 cl.7): the editor font at sm / md / lg. */
-const FONT_STOPS = (['sm', 'md', 'lg'] as const).map((sz): [string, number] => [sz, resolve('product', 'md', sz).type.control])
+const FONT_STOPS = (['sm', 'md', 'lg'] as const).map((sz): [string, number] => [sz, rootResolve(sz).type.control])
 
 const allDistinct = (xs: number[]): boolean => new Set(xs.map((x) => x.toFixed(2))).size === xs.length
 
@@ -83,7 +84,7 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
         expect(Math.abs(gapTop - gapBottom), `[${markup}] size=${size}: editor not vertically centered in the frame`).toBeLessThanOrEqual(1)
       }
       // the derived ramp at the root register (product / md, ADR-0245 cl.3): height 4n, font = control type.
-      const ramp = (['sm', 'md', 'lg'] as const).map((sz) => resolve('product', 'md', sz))
+      const ramp = (['sm', 'md', 'lg'] as const).map((sz) => rootResolve(sz))
       expect(heights[0]).toBeCloseTo(ramp[0].h, 0)
       expect(heights[1]).toBeCloseTo(ramp[1].h, 0)
       expect(heights[2]).toBeCloseTo(ramp[2].h, 0)
@@ -130,7 +131,7 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
   it('BARE: the value edge == n on BOTH inline sides (the slotless value-edge formula, ADR-0245 cl.3 frame padding n)', () => {
     const { field } = mount(BARE) // md frame at the root register → h = 4n = 28, value edge = n = 7 each side
     const h = frameHeight(field)
-    const n = resolve('product', 'md', 'md').n
+    const n = rootResolve('md').n
     expect(padStartPx(field), 'leading value edge is not n').toBeCloseTo(n, 1)
     expect(padEndPx(field), 'trailing value edge is not n').toBeCloseTo(n, 1)
     // anti-vacuous: the edge tracks the frame — it really is half of a positive frame height.
@@ -145,7 +146,7 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
     const h = frameHeight(field)
     const icon = leadingCell.getBoundingClientRect().width // the icon-sized slot cell (--ui-text-field-icon)
 
-    const r = resolve('product', 'md', 'md')
+    const r = rootResolve('md')
     expect(padEndPx(field), 'trailing value edge is not n').toBeCloseTo(r.n, 1)
     expect(padStartPx(field), 'leading slot edge is not ½(h−icon)').toBeCloseTo((h - icon) / 2, 1)
     expect(icon, 'icon cell is not the derived icon box 2n').toBeCloseTo(r.icon, 1)
@@ -443,7 +444,7 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
       expect(r.width, `${server.browser}: ${label} svg collapsed to zero width`).toBeGreaterThan(0)
       expect(r.height, `${server.browser}: ${label} svg collapsed to zero height`).toBeGreaterThan(0)
       // the injected svg paints at the derived icon box (2n, ADR-0245 cl.3), not 1em: md at the root register is 14px.
-      expect(r.width, `${server.browser}: ${label} svg is not the derived icon box`).toBeCloseTo(resolve('product', 'md', 'md').icon, 0)
+      expect(r.width, `${server.browser}: ${label} svg is not the derived icon box`).toBeCloseTo(rootResolve('md').icon, 0)
 
       // GH #634 displacement gap: the svg's own size was pinned, but never its POSITION within the
       // adornment slot — a regression from align-items/justify-content:center to flex-start on the slot
@@ -809,7 +810,7 @@ describe('ui-text-field Wave-5B — type=time codec (s11 Wave-5B, both engines)'
     const cs = getComputedStyle(field)
     const frame = px(cs.paddingInlineStart) + px(cs.paddingInlineEnd) + px(cs.borderInlineStartWidth) + px(cs.borderInlineEndWidth)
     expect(box.width, 'type=time field is narrower than its own frame (a dot)').toBeGreaterThanOrEqual(frame - 0.5)
-    expect(box.height, 'type=time field height is not the derived 4n').toBeCloseTo(resolve('product', 'md', 'md').h, 0)
+    expect(box.height, 'type=time field height is not the derived 4n').toBeCloseTo(rootResolve('md').h, 0)
   })
 })
 

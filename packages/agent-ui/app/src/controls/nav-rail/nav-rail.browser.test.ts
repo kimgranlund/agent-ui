@@ -3,7 +3,7 @@ import { server, cdp, userEvent } from 'vitest/browser'
 import { UINavRailElement } from './nav-rail.ts'
 import { UINavRailGroupElement } from './nav-rail-group.ts'
 import { UINavRailItemElement } from './nav-rail-item.ts'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 
 // nav-rail.browser.test.ts — the CROSS-ENGINE ui-nav-rail smoke (ADR-0130; SPEC nav-rail-family.spec.md
 // SPEC-R1..R8; LLD nav-rail-family.lld.md LLD-C8). jsdom cannot resolve CSS Grid/`@container` reflow, the
@@ -232,7 +232,7 @@ describe('ui-nav-rail-group — context-label uses the kicker-small typescale ro
     // kicker-small at the derived root register (foundations-bridge.gen.css, ADR-0245: the kicker rows read the
     // group-label ramp, 9 + 0.5 (n - 5) at the sm step, so the root (product / md, n 6 at sm) gives 9.5px; T-0117, it
     // was 15px while they read the section kicker), weight 400, tracking 0.2em (GH #370's re-ruled role).
-    const kicker = resolve('product', 'md', 'sm').type.groupLabel
+    const kicker = rootResolve('sm').type.groupLabel
     expect(Number.parseFloat(cs.fontSize), `${server.browser}: expected the kicker-small ${kicker}px register`).toBeCloseTo(kicker, 1)
     expect(cs.fontWeight, `${server.browser}: expected the kicker REGULAR register (GH #370)`).toBe('400')
     // letter-spacing resolves to px (0.2em of the kicker-small font), a real, non-zero

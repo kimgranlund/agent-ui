@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 
 // s4 — the ui-column cross-engine smoke (the browser-truth harness; runs in BOTH Chromium and WebKit via
 // vitest.browser.config.ts → playwright instances). jsdom computes no layout, so the REAL proofs live here:
@@ -67,7 +68,7 @@ describe('ui-column browser-truth harness (s4)', () => {
 
     const gapPx = (): number => Number.parseFloat(getComputedStyle(el).rowGap)
     // ADR-0245 cl.6: gap md is the group margin n + c at the region's n (the [density] multiplier retired).
-    expect(gapPx()).toBe(resolve('product', 'md', 'md').group.margin) // the root register: 10
+    expect(gapPx()).toBe(rootResolve('md').group.margin) // the root register: 10
 
     wrap.setAttribute('data-tier', 'widget')
     wrap.setAttribute('data-scale', 'sm')

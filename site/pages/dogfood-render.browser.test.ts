@@ -14,7 +14,8 @@ import { applyScheme } from '../lib/theme-loader.ts'
 import { parseCss, over, flatten, contrast, inkContrast, flatLayers, CANVAS_LIGHT, CANVAS_DARK } from '../lib/dogfood-contrast.ts'
 import type { Rgba } from '../lib/dogfood-contrast.ts'
 import { resolve, CFG } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
-import type { Resolved } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
+import type { Resolved, Step, Tier } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
+import { ROOT_REGISTER, STEP, glyphBox } from '../../scripts/lib/foundations-rules.mjs'
 import RULES from '../../scripts/dogfood-rules.json'
 import ALLOW from '../../scripts/dogfood-render-allowlist.json'
 
@@ -26,7 +27,8 @@ vi.setConfig({ testTimeout: 60_000 })
 // (T-0144) at 400 and 1000px, light and dark, and checks the computed style against the `render` rules of
 // scripts/dogfood-rules.json. Every geometry value comes from scale.mjs resolve() at the element's register: the
 // nearest data-tier, data-scale, data-size or size and data-density on the element or an ancestor (the cascade
-// foundations.gen.css builds), product at scale md at the root (ADR-0245 Amendment 8). A finding is keyed `demo/<page>#<rule>`,
+// foundations.gen.css builds), the shared ROOT_REGISTER at the root (scripts/lib/foundations-rules.mjs, ADR-0245
+// Amendment 8), and widget at scale md on an A2UI canvas (the renderer stamps it). A finding is keyed `demo/<page>#<rule>`,
 // `widget/<Type>#<rule>` or `persona/<seed>#<rule>`; the gate fails on a key that
 // scripts/dogfood-render-allowlist.json does not list, and on a listed key this engine no longer finds (stale). A
 // key that holds in one engine only carries `@chromium` or `@webkit`. The last block is the negative control: one
@@ -44,6 +46,8 @@ const DENSITIES = new Set(Object.keys(CFG.density))
 const WIDTHS = [400, 1000]
 const SCHEMES = ['light', 'dark'] as const
 const ENGINE = server.browser
+// disabled-edge and avatar-disc (dogfood-rules.json `expect`): the least contrast a silhouette keeps against its surface
+const SILHOUETTE_MIN = 1.3
 
 const px = (v: string): number => parseFloat(v) || 0
 const tagOf = (el: Element): string => {
@@ -70,7 +74,7 @@ export function registerOf(el: Element): Resolved {
     }
     if (density === null && DENSITIES.has(up.getAttribute('data-density') ?? '')) density = up.getAttribute('data-density')
   }
-  return resolve(tier ?? 'product', scale ?? 'md', size ?? 'md', density ?? 'default')
+  return resolve(tier ?? ROOT_REGISTER.tier, scale ?? ROOT_REGISTER.scale, size ?? 'md', density ?? 'default')
 }
 
 let probe: HTMLElement | null = null
@@ -381,7 +385,7 @@ const CHECKS: Record<string, (root: Element, ctx: Ctx) => string[]> = {
       if (!box) continue
       measured['glyph-box']++
       const r = registerOf(el)
-      const want = Math.max(8, 2 * r.n - 2 * r.c) // T-0143: the glyph box floors at 8px (Kim's ruling)
+      const want = glyphBox(r) // T-0143: the glyph box floors at GLYPH_FLOOR (Kim's ruling)
       if (Math.abs(box.width - want) > TOL || Math.abs(box.height - want) > TOL) out.push(`${tagOf(el)} ${Math.round(box.width * 10) / 10}x${Math.round(box.height * 10) / 10} want ${want}`)
     }
     return out
@@ -430,7 +434,7 @@ const CHECKS: Record<string, (root: Element, ctx: Ctx) => string[]> = {
       const fill = flatten(own, surface)
       const edge = px(box.borderTopWidth) > 0 ? over(rgbaOf(box.borderTopColor), fill) : fill
       const ratio = Math.max(contrast(fill, surface), contrast(edge, surface))
-      if (ratio < 1.3) out.push(`${tagOf(el)} disabled edge ${fmt(ratio)}:1 against its surface`)
+      if (ratio < SILHOUETTE_MIN) out.push(`${tagOf(el)} disabled edge ${fmt(ratio)}:1 against its surface`)
     }
     return out
   },
@@ -466,7 +470,7 @@ const CHECKS: Record<string, (root: Element, ctx: Ctx) => string[]> = {
       if (!disc || !surface) continue
       measured['avatar-disc']++
       const ratio = contrast(disc, surface)
-      if (ratio < 1.3) out.push(`${tagOf(el)} disc ${fmt(ratio)}:1 against its surface`)
+      if (ratio < SILHOUETTE_MIN) out.push(`${tagOf(el)} disc ${fmt(ratio)}:1 against its surface`)
     }
     return out
   },
@@ -649,6 +653,7 @@ describe('render lint: every browsable A2UI catalog widget (T-0136)', () => {
       expect(surface(), `anti-vacuous: the ${name} preview rendered an A2UI surface`).not.toBeNull()
       expect(pane(), 'anti-vacuous: the preview has its canvas pane').not.toBeNull()
       expect(surface().getAttribute('data-tier'), 'the canvas register (ADR-0245 Amendment 2)').toBe('widget')
+      expect(surface().getAttribute('data-scale'), 'the canvas register is widget / md').toBe('md')
       const unlisted = await sweep(`widget/${name}`, surface, pane, (s) => (document.documentElement.style.colorScheme = s))
       expect(unlisted, 'a dogfood finding not in scripts/dogfood-render-allowlist.json').toEqual([])
     })
@@ -680,6 +685,7 @@ describe('render lint: every persona seed with a persona widget (T-0144)', () =>
       const surface = () => pane.querySelector('[data-a2ui-surface]') as HTMLElement
       expect(surface(), `anti-vacuous: ${seed.name} rendered an A2UI surface`).not.toBeNull()
       expect(surface().getAttribute('data-tier'), 'the canvas register (ADR-0245 Amendment 2)').toBe('widget')
+      expect(surface().getAttribute('data-scale'), 'the canvas register is widget / md').toBe('md')
       const unlisted = await sweep(`persona/${seed.name}`, surface, () => pane, (s) => (document.documentElement.style.colorScheme = s))
       host.dispose()
       expect(unlisted, 'a dogfood finding not in scripts/dogfood-render-allowlist.json').toEqual([])
@@ -794,6 +800,18 @@ describe('render lint: one injected violation per rule turns it red (negative co
     document.body.append(outer)
     const r = registerOf(outer.querySelector('b')!)
     expect([r.tier, r.scale, r.size, r.density]).toEqual(['widget', 'md', 'lg', 'compact'])
-    expect(registerOf(document.body).tier, 'the root default').toBe('product')
+    const root = registerOf(document.body)
+    expect([root.tier, root.scale], 'the root default').toEqual([ROOT_REGISTER.tier, ROOT_REGISTER.scale])
+  })
+
+  it('the page root register the cascade renders is the shared ROOT_REGISTER', () => {
+    // read off the document's own computed :root inputs (foundations.gen.css), never off registerOf's fallback
+    const cs = getComputedStyle(document.documentElement)
+    const num = (name: string): number => Number(cs.getPropertyValue(`--md-sys-${name}`).trim())
+    const row = [num('tier-n0'), num('tier-a'), num('tier-k'), num('tier-g')]
+    const tier = (Object.keys(CFG.tiers) as Tier[]).find((t) => CFG.tiers[t].every((v, i) => v === row[i]))
+    const scale = (Object.keys(STEP) as Step[]).find((k) => STEP[k] === num('scale-s'))
+    expect([tier, scale], `the rendered :root inputs ${JSON.stringify(row)} scale ${num('scale-s')}`).toEqual([ROOT_REGISTER.tier, ROOT_REGISTER.scale])
+    expect(cascadeN(document.body), 'the root n the cascade carries').toBe(resolve(ROOT_REGISTER.tier, ROOT_REGISTER.scale).n)
   })
 })

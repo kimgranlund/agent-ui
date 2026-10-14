@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 
 // rating.browser.test.ts — ui-rating browser smoke (ADR-0216; GH #1395).
 //
@@ -41,8 +41,8 @@ describe('ui-rating browser smoke — widget-box geometry (ADR-0041)', () => {
     document.body.append(el)
     const svg = el.querySelector('.stars-base svg') as SVGSVGElement
     const cs = getComputedStyle(svg)
-    expect(Number.parseFloat(cs.width)).toBe(resolve('product', 'md', 'md').icon)
-    expect(Number.parseFloat(cs.height)).toBe(resolve('product', 'md', 'md').icon)
+    expect(Number.parseFloat(cs.width)).toBe(rootResolve('md').icon)
+    expect(Number.parseFloat(cs.height)).toBe(rootResolve('md').icon)
     el.remove()
   })
 
@@ -50,13 +50,13 @@ describe('ui-rating browser smoke — widget-box geometry (ADR-0041)', () => {
     const sm = document.createElement('ui-rating')
     sm.setAttribute('size', 'sm')
     document.body.append(sm)
-    expect(Number.parseFloat(getComputedStyle(sm.querySelector('.stars-base svg') as SVGSVGElement).width)).toBe(resolve('product', 'md', 'sm').icon)
+    expect(Number.parseFloat(getComputedStyle(sm.querySelector('.stars-base svg') as SVGSVGElement).width)).toBe(rootResolve('sm').icon)
     sm.remove()
 
     const lg = document.createElement('ui-rating')
     lg.setAttribute('size', 'lg')
     document.body.append(lg)
-    expect(Number.parseFloat(getComputedStyle(lg.querySelector('.stars-base svg') as SVGSVGElement).width)).toBe(resolve('product', 'md', 'lg').icon)
+    expect(Number.parseFloat(getComputedStyle(lg.querySelector('.stars-base svg') as SVGSVGElement).width)).toBe(rootResolve('lg').icon)
     lg.remove()
   })
 })

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 
 // Phase-1 s12 — the browser-truth harness PROOF (trivial, not the real geometry smoke — that's s13).
 // This asserts only that the harness is alive: the family self-defines, the foundation + component CSS
@@ -25,7 +25,7 @@ describe('ui-button browser-truth harness (s12)', () => {
     const blockSize = getComputedStyle(el).blockSize
     expect(blockSize).toMatch(/px$/)
     expect(Number.parseFloat(blockSize)).toBeGreaterThan(0)
-    expect(Number.parseFloat(blockSize)).toBe(resolve('product', 'md', 'md').h) // md frame @ scale 1, the ramp truly resolved
+    expect(Number.parseFloat(blockSize)).toBe(rootResolve('md').h) // md frame @ scale 1, the ramp truly resolved
 
     el.remove()
   })

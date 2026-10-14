@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 import { server, cdp, userEvent } from 'vitest/browser'
 import { UITabsElement } from './tabs.ts'
 import { UITabElement } from './tab.ts'
@@ -47,7 +48,7 @@ const THREE = `
 const px = (v: string): number => Number.parseFloat(v)
 // ADR-0245 Amendment 4 (superseding GH #536): the tabs touch with the tight gutter c, and each tab carries the
 // control rule's padding, margin n + label inset n - c = 2n - c, on each inline side. Root register: 2 and 14.
-const ROOT = resolve('product', 'md', 'md')
+const ROOT = rootResolve('md')
 const STRIP_GAP = ROOT.c
 const TAB_PAD = ROOT.control.margin + ROOT.labelMargin
 
