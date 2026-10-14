@@ -139,7 +139,7 @@ const props = {
   // anything.."), so a consumer that never sets this is byte-identical to before. `attribute: false` —
   // this element is never author-composed (the `value` precedent, above): a consumer that wants a
   // different placeholder (e.g. agent-admin's Author empty-state) sets the PROPERTY, never markup.
-  placeholder: { ...prop.string('Ask anything..'), attribute: false as const },
+  placeholder: { ...prop.string('Ask anything…'), attribute: false as const },
   // Every one below defaults to undefined/empty, so a consumer that never sets them (the ORIGINAL
   // field+Send shape) gets exactly that — `ui-conversation` stays generic, it never names a model or
   // hardcodes "Effort"'s levels beyond the shared `EFFORT_LEVELS` constant a consumer may reuse.

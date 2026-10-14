@@ -85,15 +85,15 @@ describe('ui-conversation-composer — the own editor (TKT-0058, the ui-textarea
     expect(editor.getAttribute('role')).toBe('textbox')
     expect(editor.getAttribute('aria-multiline')).toBe('true')
     expect(editor.getAttribute('aria-label')).toBe('Message')
-    expect(editor.getAttribute('data-placeholder')).toBe('Ask anything..')
+    expect(editor.getAttribute('data-placeholder')).toBe('Ask anything…')
     expect(el.querySelector('ui-text-field'), 'the v1 nested ui-text-field must be gone').toBeNull()
     expect(el.querySelector('form'), 'the v1 nested <form> must be gone').toBeNull()
   })
 
-  it('the `placeholder` prop is unset by default — the editor keeps its original "Ask anything.." ghost text (GH #672)', () => {
+  it('the `placeholder` prop is unset by default — the editor keeps its original "Ask anything…" ghost text (GH #672)', () => {
     const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
-    expect(el.placeholder).toBe('Ask anything..')
-    expect(editorOf(el).getAttribute('data-placeholder')).toBe('Ask anything..')
+    expect(el.placeholder).toBe('Ask anything…')
+    expect(editorOf(el).getAttribute('data-placeholder')).toBe('Ask anything…')
   })
 
   it('setting `placeholder` reflects onto the editor\'s data-placeholder attribute, even post-connect (GH #672)', async () => {

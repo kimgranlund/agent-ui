@@ -308,9 +308,9 @@ describe('ui-conversation-composer — GH #891 SPEC-R9: the chip is label + a RE
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
-//  GH #858 — the reported surface: the placeholder ("Ask anything..") pins to the default-state
+//  GH #858 — the reported surface: the placeholder ("Ask anything…") pins to the default-state
 //  ink; hover/focus no longer forward-brighten it (the exact repro this issue was filed against —
-//  a focused, EMPTY composer used to brighten "Ask anything.." to the near-white focus ink). Busy
+//  a focused, EMPTY composer used to brighten "Ask anything…" to the near-white focus ink). Busy
 //  (the composer's own disabled-equivalent, TKT-0034) still dims it — now an explicit repoint.
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
