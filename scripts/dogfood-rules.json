@@ -10,7 +10,7 @@
     {
       "id": "pill-radius",
       "adr": "ADR-0245 Amendment 5 items 1 and 2 (Amendment 3 for button and toggle)",
-      "selector": "ui-button, ui-toggle, ui-text-field:not([multiline]), ui-select > [data-part='trigger'], ui-combo-box, ui-otp-field [data-part='cell'], ui-badge",
+      "selector": "ui-button, ui-toggle, ui-text-field:not([multiline]), ui-select > [data-part='trigger'], ui-combo-box > [data-part='editor'], ui-otp-field [data-part='cell'], ui-badge",
       "measure": "border-start-start-radius against the box height",
       "expect": "radius >= box height / 2 (a pill)"
     },
