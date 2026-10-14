@@ -44,7 +44,7 @@ parts:
   - name: overflow
     description: GH #1515 S2 — a composed `<ui-menu data-part="overflow">`, built fresh on every fold-relevant rebuild pass (never persisted — the tabs.ts `#ensureOverflowMenu` mechanism minus fit-measurement), inserted where the first folded crumb used to render. Its own first child is a control-created `<button aria-label="Show hidden breadcrumbs">` carrying the `dots-three` glyph (GH #168, the fleet's one horizontal overflow icon); every other child is one proxy `[role="menuitem"]` row per folded crumb, labeled from that crumb's `aria-label` (falling back to its trimmed textContent). Selecting a proxy row relays activation to the REAL folded crumb (`crumb.matches('a') ? crumb : (crumb.querySelector('a') ?? crumb)`, then `.click()` — dispatches even on a `display:none` node) rather than reparenting it; the menu's own `select`/`toggle`/`close` are `stopPropagation`-contained at this part's boundary, never surfacing as a `ui-breadcrumb` event. Present in the DOM only when a non-empty middle actually folds; absent entirely when `collapse="none"` (default) or when there aren't enough crumbs to fold.
 
-customStates: []        # no interaction/motion state of its own — every author crumb (a real <a>, a ui-router-link, a plain <span>) rides its own interaction states; the composed overflow menu rides ui-menu's own states
+customStates: []        # no interaction/motion state of its own; a ui-router-link or a plain <span> crumb rides its own states, and a real <a> crumb takes the trail's idle and hover ink from breadcrumb.css (T-0141); the composed overflow menu rides ui-menu's own states
 
 face:
   formAssociated: false  # transient wayfinding view state, not a submittable value — the ADR-0163 cl.8 F5 ruling / ui-pagination's own reasoning extends here too
@@ -62,7 +62,7 @@ keyboard:
 geometry:
   sizeClass: pattern
   posture: fill (block-level flex host, wraps and stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-flex + hug
-  crumbTypography: the label typescale row (`--md-sys-typescale-label-medium-*`), inherited by every light-DOM child — ui-breadcrumb owns no [size] geometry row of its own (the intake's Geometry row, ADR-0163 cl.6 verbatim)
+  crumbTypography: the body typescale row (`--md-sys-typescale-body-medium-*`, the prose row a trail sits beside), inherited by every light-DOM child; ui-breadcrumb owns no [size] geometry row of its own (the intake's Geometry row, ADR-0163 cl.6 verbatim)
   gap: var(--ui-breadcrumb-gap)   # off --md-sys-space (scale-responsive)
   overflowTrigger: a compact square keyed to `1lh` (the crumb's own rendered line box) — no new control-height token, the tabs.css tab-height-trigger shape minus the grid dance (the composed `<ui-menu>` wrapper is `display:contents`, so the trigger is simply the next flex item at the fold's DOM position)
 
@@ -155,6 +155,6 @@ relay.
 ## Sizing
 
 Fill by default (ADR-0223): a bare host is block-level and stretches to its container; the ONE opt-out is
-`inline` (hug, inline-flex). Crumb text reads the label typescale row (`--md-sys-typescale-label-medium-*`)
+`inline` (hug, inline-flex). Crumb text reads the body typescale row (`--md-sys-typescale-body-medium-*`)
 — no `size`/`data-scale` attribute and no geometry row of its own; `ui-breadcrumb` contributes only the
 inter-crumb `gap` (off the `--md-sys-space` ladder, responding to an ancestor `data-density` for free).

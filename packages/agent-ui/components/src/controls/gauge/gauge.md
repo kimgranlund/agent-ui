@@ -41,7 +41,7 @@ parts:                  # data-part nodes inside the component-built rings/legen
   - name: progress
     description: One `<circle data-part="progress" data-index="N">` per ring — the rounded-cap progress arc, revealed via `stroke-dasharray`/`stroke-dashoffset` to exactly the ring's clamped percent. Fill rides a ring-scoped `--_ring-ink` hook (one of the six `--ui-gauge-series-{1..6}-ink` ramp tokens, cycling past 6, outer ring first).
   - name: legend
-    description: The `<div data-part="legend">` — the inset chrome layer holding every real-DOM legend row, padded by `--ui-gauge-chrome-inset` so it floats INSIDE the box rather than pushing/shrinking the rings layer.
+    description: The `<div data-part="legend">`: the inset chrome layer holding every real-DOM legend row, padded by `--ui-gauge-chrome-inset` so it floats INSIDE the box rather than pushing/shrinking the rings layer. Below a 28em host it moves to a second row under the rings (T-0141), so it never lands on the outer ring.
   - name: key-swatch
     description: The `<span data-part="key-swatch" aria-hidden="true">` leading each legend row — a small filled circle matching its ring's SAME `--_ring-ink` token (the fill is a shared, non-sole identity carrier, ADR-0057).
   - name: key-label

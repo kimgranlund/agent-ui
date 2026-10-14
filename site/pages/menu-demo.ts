@@ -27,8 +27,12 @@ let seq = 0
 // ── the live menu — first child = trigger (positional child-move); the rest become menuitems ─────────────────
 // The disabled item carries `disabled` — roving focus + type-ahead + commit all skip it. Each item's data-value
 // is the emitted `value`; without it, the item's textContent is used.
+// A trigger that opens a menu shows a trailing caret (the [data-role='caret'] adornment menu.css rotates on
+// open), so it never reads as a commit button (T-0141).
+const trigger = inline(uiButton('Actions', 'solid')) // ADR-0223: the menu trigger sits in block flow (ui-menu is display:contents), so it hugs
+trigger.append(el('ui-icon', { slot: 'trailing', 'data-role': 'caret', symbol: 'caret-down' }))
 const menu = el('ui-menu', {}, [
-  inline(uiButton('Actions', 'solid')), // ADR-0223: the menu trigger sits in block flow (ui-menu is display:contents) — hugs
+  trigger,
   el('div', { 'data-value': 'new' }, [text('New file')]),
   el('div', { 'data-value': 'open' }, [text('Open file')]),
   el('div', { 'data-value': 'duplicate' }, [text('Duplicate')]),

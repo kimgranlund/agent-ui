@@ -429,7 +429,7 @@ relay.
 ## Sizing
 
 Fill by default (ADR-0223): a bare host is block-level and stretches to its container; the ONE opt-out is
-`inline` (hug, inline-flex). Crumb text reads the label typescale row (`--md-sys-typescale-label-medium-*`)
+`inline` (hug, inline-flex). Crumb text reads the body typescale row (`--md-sys-typescale-body-medium-*`)
 — no `size`/`data-scale` attribute and no geometry row of its own; `ui-breadcrumb` contributes only the
 inter-crumb `gap` (off the `--md-sys-space` ladder, responding to an ancestor `data-density` for free).
 
@@ -1084,6 +1084,11 @@ cl.4), so the exotic case only opens for an author who both locks the row horizo
 container; an author in that position owns the fix in plain CSS.
 
 ## Nested radius — one level (ADR-0018)
+
+**Under the derived geometry (ADR-0245, the default since the cut) a nested card keeps the card level radius
+3n:** `--md-sys-card-radius` is the first term of `--ui-card-radius`, and cards keep their level radius
+wherever they sit (Kim's ruling). The ADR-0018 chain below only applies where `--md-sys-card-radius` is unset
+(the legacy opt-out).
 
 Concentric rounded rectangles need the inner radius to shrink with nesting: the **concentric-corner law**
 is `r_child = max(0, r_parent − padding_parent)`. A root `ui-card` rounds to the shared `--md-sys-shape-corner-base`;
@@ -5282,7 +5287,7 @@ recorded cost (ADR-0107).
 
 ## Sizing
 
-The host defaults to an explicit `8em x 1lh` box (`--ui-sparkline-inline-size` / `--ui-sparkline-block-size`)
+The host defaults to an explicit `8em x 1em` box (`--ui-sparkline-inline-size` / `--ui-sparkline-block-size`)
 — a deterministic default, not an `auto` one: a percentage-sized SVG inside a shrink-to-fit flex item falls
 back to the browser's 300px replaced-element intrinsic, which would paint inconsistently across containers.
 Override either token, or set `inline-size`/`block-size` directly, to size the mark to a layout.
@@ -5513,7 +5518,8 @@ token, or set `inline-size` directly, to size the tile to a layout. Interior gap
 the space ladder (density-responsive for free). `variant="ring"` adds its own density-invariant
 diameter/thickness tokens — `--ui-stat-ring-size` (`4.5em` default) and `--ui-stat-ring-thickness` (`0.5em`
 default) — sized like the delta glyph's mark geometry, never off `data-scale` (a Display-class control,
-SPEC-R17).
+SPEC-R17). The ring size is a floor: a wider figure ("47 / 50") grows the ring so the value stays inside
+the hole (T-0141).
 
 ---
 
@@ -7040,7 +7046,7 @@ imperatively appended) — authored once, shared everywhere.
 - **`status`** (`''`/`pending`/`active`/`done`/`error`/`warning`, default `''`) — the item's lifecycle
   state. Each non-empty value renders a marker distinguished by **SHAPE**, never hue alone (ADR-0057):
   `pending` a hollow ring, `active` a filled dot (with an optional pulse, static under reduced-motion),
-  `done` a built-in check glyph, `error` a built-in cross glyph, `warning` (ADR-0146 F7) a built-in
+  `done` a built-in check glyph, `error` a built-in cross glyph (each knocked out of a filled status disc, T-0141), `warning` (ADR-0146 F7) a built-in
   triangle-exclamation glyph — a lesser advisory outcome the single `error` state cannot express, its
   triangle shape never `error`'s cross recoloured. The colour channel is redundant.
 - **`label`** / **`description`** / **`timestamp`** (string, default `''`) — stamped into their content

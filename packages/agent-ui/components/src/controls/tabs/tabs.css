@@ -76,6 +76,8 @@
      the selected-tab indicator. */
   --ui-tabs-ink: var(--md-sys-color-neutral-on-surface-variant); /* idle tab label */
   --ui-tabs-ink-hover: var(--md-sys-color-neutral-on-surface); /* hover */
+  --ui-tabs-trigger-bg-hover: var(--md-sys-color-neutral-container-low); /* the overflow trigger's hover wash */
+  --ui-tabs-trigger-icon: var(--md-sys-icon-box, 1em); /* the overflow trigger's glyph on the 2n icon box */
   --ui-tabs-ink-selected: var(--md-sys-color-neutral-on-surface); /* the active tab label */
   --ui-tabs-indicator: var(--md-sys-color-primary); /* the active-tab underline */
 }
@@ -316,10 +318,12 @@
   }
 
   /* The trigger — a square, tab-height icon button (LLD §4 "trigger anatomy"): zero new tokens, the shared
-     ink ladder + focus ring. `setIcon` (tabs.ts) injects a fresh <svg fill="currentColor"> that inherits
-     `color` here; sized to a standard 1em icon cell (the ui-icon precedent, icon.css). */
+     ink ladder + focus ring. An icon-only control is a round square (Kim's ruling; radius h/2, the icon-only
+     ui-button shape) with a hover wash, so it reads as a button, not stray punctuation (T-0141). `setIcon`
+     (tabs.ts) injects a fresh <svg fill="currentColor"> that inherits `color` here, on the 2n icon box. */
   :scope[overflow='menu'] > [data-part='overflow'] > [data-part='trigger'] {
     grid-area: trigger;
+    position: relative;
     box-sizing: border-box;
     inline-size: var(--ui-tabs-tab-height);
     block-size: var(--ui-tabs-tab-height);
@@ -328,6 +332,7 @@
     justify-content: center;
     padding: 0;
     border: 0;
+    border-radius: calc(var(--ui-tabs-tab-height) / 2);
     background: transparent;
     font: inherit;
     font-size: var(--ui-tabs-tab-font);
@@ -335,11 +340,26 @@
     cursor: pointer;
   }
   :scope[overflow='menu'] > [data-part='overflow'] > [data-part='trigger'] svg {
-    inline-size: 1em;
-    block-size: 1em;
+    inline-size: var(--ui-tabs-trigger-icon);
+    block-size: var(--ui-tabs-trigger-icon);
   }
   :scope[overflow='menu'] > [data-part='overflow'] > [data-part='trigger']:hover {
     color: var(--ui-tabs-ink-hover);
+    background: var(--ui-tabs-trigger-bg-hover);
+  }
+  /* The strip divider runs on under the trigger's column, so the trigger sits on the strip, not past it. */
+  :scope[overflow='menu'] > [data-part='overflow'] > [data-part='trigger']::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: -1px; /* the strip is the tab height plus its 1px divider: land on the same line */
+    border-block-end: 1px solid var(--ui-tabs-strip-line);
+  }
+  :scope[orientation='vertical'][overflow='menu'] > [data-part='overflow'] > [data-part='trigger']::after {
+    inset-inline: auto -1px;
+    inset-block: 0;
+    border-block-end: 0;
+    border-inline-end: 1px solid var(--ui-tabs-strip-line);
   }
   /* The shared focus ring (ADR-0009), read DIRECTLY from the fleet tokens — the same documented family
      exception `ui-tab:focus-visible` above already uses. Inset offset matches the tab ring (adjacent-parts

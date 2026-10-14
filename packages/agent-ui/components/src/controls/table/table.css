@@ -63,7 +63,8 @@
      is the real, non-color signifier, ADR-0057 satisfied structurally). The select.css option-row precedent
      ("the fleet's one selected-row-ink role"). */
   --ui-table-row-selected-bg: var(--md-sys-color-primary-container-low);
-  --ui-table-row-selected-ink: var(--md-sys-color-primary-high);
+  --ui-table-row-selected-ink: currentColor; /* the row's own ink: the wash carries the state; primary ink on every cell read as rows of links (T-0141) */
+  --ui-table-header-ink: var(--md-sys-color-neutral-on-surface); /* a sortable header's label reads as header text, not a primary link */
 
   /* ADR-0163 cl.6 — the footer's own rhythm (the `[data-part='footer']` region, outside the scroll
      container). Reuses --ui-table-header-rule-ink for its separator — the SAME visual weight as the
@@ -136,11 +137,15 @@
     color: var(--ui-table-row-selected-ink);
   }
 
-  /* ADR-0163 cl.5, amended (GH #1445) — the sort-button `<th>` slot needs NO reset rule of its own anymore:
-     a composed `ui-button` (`variant="ghost"`, `size="sm"`, `inline`) owns its full paint/token/focus-ring
-     chain end to end (button.css); this file places it (via `#headerCell`'s markup) and styles nothing
-     about its own rendering. The retired rule used to `all: unset` a real native `<button>` and hand-paint
-     it back to read as header text — that reset is now structural, not a CSS rule. */
+  /* ADR-0163 cl.5, amended (GH #1445): the sort-button `<th>` slot, a composed `ui-button` (`variant="ghost"`,
+     `size="sm"`, `inline`) owns its full paint/token/focus-ring chain end to end (button.css). Two placement
+     repairs only (T-0141): a negative inline margin of the button's own text edge (its box margin plus label
+     inset, read on the button so they follow its size) puts the label on the column's cell text edge, and the
+     header ink replaces the ghost's primary ink so a sortable header reads like a plain one. */
+  :scope th > [data-part='sort-button'] {
+    margin-inline: calc(-1 * (var(--md-sys-inset) + var(--md-sys-label-inset)));
+    --ui-button-ink: var(--ui-table-header-ink);
+  }
 
   /* ADR-0163 cl.6 — the footer region: a SIBLING of [data-part='scroll'] (outside the scroll container),
      holding the composed ui-pagination. A real separator (a border, WHCM-safe — SPEC-R15's own reasoning)

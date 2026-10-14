@@ -68,6 +68,7 @@ export class UISparklineElement extends UIElement {
       line.setAttribute('vector-effect', 'non-scaling-stroke')
       line.setAttribute('stroke-linecap', 'round')
       line.setAttribute('stroke-linejoin', 'round')
+      if (g.count === 1) line.setAttribute('data-single', '') // the dot is drawn wider (sparkline.css)
       svg.append(line)
 
       // One replaceChildren(svg) per change — whole-array swap semantics (SPEC-R2; no incremental

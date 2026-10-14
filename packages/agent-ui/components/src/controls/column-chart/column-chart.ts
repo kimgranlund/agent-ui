@@ -200,6 +200,9 @@ export class UIColumnChartElement extends UIElement {
     chrome.setAttribute('data-part', 'chrome')
 
     for (const tick of g.gridTicks) {
+      // The baseline "0" chip would share the bottom-start corner with the first category chip ("0 Mar"
+      // read as one label, T-0141): the baseline needs no label when a category row owns that corner.
+      if (tick.pct === 0 && g.categoryChipIndices.length > 0) continue
       const chip = document.createElement('div')
       chip.setAttribute('data-part', 'tick-label')
       chip.textContent = tick.text

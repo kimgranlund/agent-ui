@@ -598,6 +598,12 @@ ui-theme-provider.app-shell [data-site-nav]::-webkit-scrollbar,
   line-height: var(--md-sys-typescale-body-large-line-height);
   margin-block: 0 var(--md-sys-space-lg);
 }
+/* A paragraph or list right after a live demo (any non-text block) is a note on it, not a caption glued to
+ * it: it takes the widget margin above (T-0141; prose had a bottom margin only, so 0 to 2px of air). */
+[data-page-content] > :not(h1, h2, h3, h4, h5, h6, p, ul, ol, blockquote) + :is(p, ul, ol, blockquote),
+[data-page-content] > section > :not(h1, h2, h3, h4, h5, h6, p, ul, ol, blockquote) + :is(p, ul, ol, blockquote) {
+  margin-block-start: var(--md-sys-widget-margin);
+}
 [data-page-content] > :is(h2, h3, h4, h5, h6),
 [data-page-content] > section > :is(h2, h3, h4, h5, h6) {
   max-inline-size: 72ch;

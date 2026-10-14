@@ -9,8 +9,8 @@
     },
     {
       "id": "pill-radius",
-      "adr": "ADR-0245 Amendment 5 items 1 and 2 (Amendment 3 for button and toggle)",
-      "selector": "ui-button, ui-toggle, ui-text-field:not([multiline]), ui-select > [data-part='trigger'], ui-combo-box > [data-part='editor'], ui-otp-field [data-part='cell'], ui-badge",
+      "adr": "ADR-0245 Amendment 5 items 1 and 2 (Amendment 3 for button and toggle); a square entry cell (otp-field) is not a pill: see entry-cell-radius (Amendment 6)",
+      "selector": "ui-button, ui-toggle, ui-text-field:not([multiline]), ui-select > [data-part='trigger'], ui-combo-box > [data-part='editor'], ui-badge",
       "measure": "border-start-start-radius against the box height",
       "expect": "radius >= box height / 2 (a pill)"
     },
@@ -25,7 +25,7 @@
       "id": "type-floor",
       "adr": "ADR-0245 M5: no type below CFG.floor",
       "selector": "every element with its own visible text",
-      "measure": "font-size",
+      "measure": "font-size; a glyph is not text (ADR-0245 Amendment 6): ui-glyph and the glyph parts are skipped here and checked by glyph-box",
       "expect": "font-size >= CFG.floor (9px)"
     },
     {
@@ -98,6 +98,34 @@
       "selector": "ui-text-field > [slot='trailing']:is([data-role='stepper'], [data-role='numeric'])",
       "measure": "the gap between each pair of adjacent visible children of the trailing cell",
       "expect": ">= resolve(register).c"
+    },
+    {
+      "id": "entry-cell-radius",
+      "adr": "ADR-0245 Amendment 6: a square entry cell is a round square at radius n, never the pill h/2 (a circle)",
+      "selector": "ui-otp-field [data-part='cell']",
+      "measure": "border-start-start-radius",
+      "expect": "resolve(register).n"
+    },
+    {
+      "id": "glyph-box",
+      "adr": "ADR-0245 Amendment 6: icon and glyph are distinct; a glyph sits in its own glyph box 2n - 2c",
+      "selector": "ui-glyph svg, ui-board-grid [data-part='intent'], ui-game-hud [data-part='glyph'], ui-result-card [data-part='glyph']",
+      "measure": "the visible glyph box, both axes",
+      "expect": "2 * resolve(register).n - 2 * resolve(register).c"
+    },
+    {
+      "id": "dash-scale",
+      "adr": "T-0141 (review part-c, gauge): under non-scaling-stroke the browser reads a dash pattern in screen px, so a viewBox-unit pattern repeats as scattered dashes",
+      "selector": "every svg shape",
+      "measure": "computed vector-effect and stroke-dasharray",
+      "expect": "never non-scaling-stroke together with a dasharray other than none"
+    },
+    {
+      "id": "link-ink",
+      "adr": "T-0141 (review part-c, breadcrumb): an anchor inside a fleet control takes the control's ink, never the browser's default link colour",
+      "selector": "a[href] inside a ui-* host",
+      "measure": "the anchor's computed color",
+      "expect": "not a UA link colour: rgb(0, 0, 238), rgb(85, 26, 139), rgb(158, 158, 255) or rgb(208, 173, 240)"
     }
   ],
   "compose": [

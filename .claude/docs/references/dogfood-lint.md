@@ -26,9 +26,9 @@ ancestor; product at scale sm at the root, widget at scale md on an A2UI surface
 | Render rule | Expected |
 |---|---|
 | `register` | the element's cascade n (its `--md-sys-height` / 4) equals the register's n |
-| `pill-radius` | a single-line control or chip has radius at least h/2 |
+| `pill-radius` | a single-line control or chip has radius at least h/2; a square entry cell is exempt (see `entry-cell-radius`) |
 | `icon-square` | a `ui-button` with an icon and no text is as wide as it is tall |
-| `type-floor` | no visible text under `CFG.floor` (9px) |
+| `type-floor` | no visible text under `CFG.floor` (9px); a glyph is not text (Amendment 6), so glyphs are exempt and checked by `glyph-box` |
 | `column` | at 400px nothing ends past the content column unless an overflow-x frame inside it holds it |
 | `nested-card` | no `ui-card` inside a `ui-card` |
 | `control-height` | a single-line control is `resolve().h` (4n) tall |
@@ -39,6 +39,10 @@ ancestor; product at scale sm at the root, widget at scale md on an A2UI surface
 | `option-indicator` | every `ui-multi-select` option paints its indicator, selected or not (T-0140) |
 | `inline-text` | a `ui-text` link or span inside running text is `display: inline` (T-0140) |
 | `adornment-gap` | adjacent trailing adornments of a `ui-text-field` sit at least c apart (T-0140) |
+| `entry-cell-radius` | a square entry cell (`ui-otp-field` cell) is a round square at radius n, not a pill (Amendment 6) |
+| `glyph-box` | a glyph (`ui-glyph`'s mark, the board-grid intent mark, the HUD and result-card stat marks) is exactly its glyph box 2n - 2c (Amendment 6) |
+| `dash-scale` | no svg shape is non-scaling-stroke with a dasharray other than none (the browser reads such a pattern in screen px; T-0141) |
+| `link-ink` | an `a[href]` inside a `ui-*` host is never the browser's default link colour (T-0141) |
 
 | Compose rule | Use | Not |
 |---|---|---|

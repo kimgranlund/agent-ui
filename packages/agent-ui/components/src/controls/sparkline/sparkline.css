@@ -8,7 +8,7 @@
  *
  * The sizing ruling (SPEC-R9 AC1): the host takes an EXPLICIT `inline-size` token default, not an
  * `auto + min-floor` pair — `auto` is non-deterministic here (a percentage-sized SVG inside a shrink-to-fit
- * flex item falls back to the replaced-element intrinsic, 300px). `8em x 1lh` paints identically everywhere
+ * flex item falls back to the replaced-element intrinsic, 300px). `8em x 1em` paints identically everywhere
  * (whole-shape law, test-the-whole-shape) and rides the ambient type context (the `ui-icon` `1em` posture,
  * widened to a mark box) — the two tokens are the page-author override freedom (ADR-0102 Lane A).
  *
@@ -28,7 +28,7 @@
 
 :where(ui-sparkline) {
   --ui-sparkline-inline-size: 8em; /* the deterministic default box (see the sizing ruling above) */
-  --ui-sparkline-block-size: 1lh; /* rides the ambient line box — inline-in-text fits by construction */
+  --ui-sparkline-block-size: 1em; /* the em box, inside the ambient line box: an inline sparkline's peaks stay off the neighbouring lines (T-0141; was 1lh, which filled the line box edge to edge) */
   --ui-sparkline-stroke-width: var(--md-sys-glyph-stroke, 1.5px); /* density-invariant px (ADR-0107 cl.5); the mark stroke max(1.5px, c/2) inside an opt-in region (ADR-0245 cl.5) */
   --ui-sparkline-area-opacity: 0.15;
 }
@@ -40,8 +40,15 @@
     display: inline-block;
     inline-size: var(--ui-sparkline-inline-size);
     block-size: var(--ui-sparkline-block-size);
-    vertical-align: text-bottom;
+    vertical-align: -0.15em; /* about the font's descent, so the 1em box sits on the em box, centred in the line */
     color: inherit;
+  }
+
+  /* No data: a faint dashed baseline, so an empty tile reads as deliberate, not broken. */
+  :scope:empty {
+    background: repeating-linear-gradient(to right, currentColor 0 0.25em, transparent 0.25em 0.5em) center / 100%
+      var(--ui-sparkline-stroke-width) no-repeat;
+    opacity: 0.4;
   }
 
   :scope svg {
@@ -53,6 +60,11 @@
 
   :scope svg [data-part='line'] {
     stroke-width: var(--ui-sparkline-stroke-width);
+  }
+
+  /* One point is a zero-length round-capped line: draw it at three strokes so the dot is visible. */
+  :scope svg [data-part='line'][data-single] {
+    stroke-width: calc(3 * var(--ui-sparkline-stroke-width));
   }
 
   :scope svg [data-part='area'] {

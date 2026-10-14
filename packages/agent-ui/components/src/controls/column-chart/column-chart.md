@@ -63,7 +63,7 @@ parts:                  # data-part nodes inside the component-built three-layer
   - name: chrome
     description: The `<div data-part="chrome">` — the inset chrome layer holding every real-DOM text chip (tick-label/category-label/callout), padded by `--ui-column-chart-chrome-inset` so labels float INSIDE the plot box.
   - name: tick-label
-    description: One `<div data-part="tick-label">` chip per nice-number gridline — the printed value-scale reading, real DOM text.
+    description: One `<div data-part="tick-label">` chip per nice-number gridline, except the baseline 0 when a category-label row owns that corner (T-0141): the printed value-scale reading, real DOM text.
   - name: category-label
     description: One `<div data-part="category-label">` chip per THINNED category index (ADR-0228 cl.2's collision law — corner-clamped ends, dropped intermediates on overlap, never shrunk type) — the row's label, real DOM text. Carries `data-density="fine"` when it is NOT in the geometry's coarse subset (ADR-0230 cl.4) — the container-query ladder's medium rung (16em–28em) hides fine chips, endpoint-preserving; a coarse chip carries no attribute and survives every rung down to the narrow rung's all-chrome hide.
   - name: callout

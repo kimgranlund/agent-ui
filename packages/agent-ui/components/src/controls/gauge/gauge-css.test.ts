@@ -54,7 +54,7 @@ describe('gauge.css — structure + token hygiene', () => {
   it('the @scope styles block consumes ONLY --ui-gauge-* ∪ the shared --md-sys-* namespaces ∪ the ring-scoped hooks — no cross-control reach', () => {
     const refs = [...stylesBlock.matchAll(/var\((--[\w-]+)/g)].map((m) => m[1])
     expect(refs.length).toBeGreaterThan(0) // anti-vacuous
-    const localHooks = new Set(['--_ring-ink', '--_ring-circumference', '--_ring-dashoffset'])
+    const localHooks = new Set(['--_ring-ink', '--_ring-circumference', '--_ring-dashoffset', '--_gauge-scale'])
     for (const v of refs) {
       const allowed = v.startsWith('--ui-gauge-') || v.startsWith('--md-sys-') || localHooks.has(v)
       expect(allowed, `@scope consumed an out-of-family token: ${v}`).toBe(true)
@@ -62,7 +62,7 @@ describe('gauge.css — structure + token hygiene', () => {
   })
 
   it('the ring-scoped hooks are consumed but NEVER declared in :where() (imperatively set by gauge.ts)', () => {
-    for (const hook of ['--_ring-ink', '--_ring-circumference', '--_ring-dashoffset']) {
+    for (const hook of ['--_ring-ink', '--_ring-circumference', '--_ring-dashoffset', '--_gauge-scale']) {
       expect(stylesBlock).toMatch(new RegExp(`var\\(${hook}`))
       expect(tokenBlock).not.toMatch(new RegExp(`${hook}\\s*:`))
     }

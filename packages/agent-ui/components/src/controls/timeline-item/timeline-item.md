@@ -134,7 +134,7 @@ imperatively appended) — authored once, shared everywhere.
 - **`status`** (`''`/`pending`/`active`/`done`/`error`/`warning`, default `''`) — the item's lifecycle
   state. Each non-empty value renders a marker distinguished by **SHAPE**, never hue alone (ADR-0057):
   `pending` a hollow ring, `active` a filled dot (with an optional pulse, static under reduced-motion),
-  `done` a built-in check glyph, `error` a built-in cross glyph, `warning` (ADR-0146 F7) a built-in
+  `done` a built-in check glyph, `error` a built-in cross glyph (each knocked out of a filled status disc, T-0141), `warning` (ADR-0146 F7) a built-in
   triangle-exclamation glyph — a lesser advisory outcome the single `error` state cannot express, its
   triangle shape never `error`'s cross recoloured. The colour channel is redundant.
 - **`label`** / **`description`** / **`timestamp`** (string, default `''`) — stamped into their content

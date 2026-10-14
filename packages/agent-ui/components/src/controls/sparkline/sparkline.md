@@ -64,7 +64,7 @@ keyboard: []           # NOT interactive and NOT focusable — no tabindex, no k
 geometry:
   sizeClass: display
   inlineSize: var(--ui-sparkline-inline-size)   # 8em default — the deterministic sizing ruling (SPEC-R9 AC1); NO [size] n rule, NO --md-sys-height (SPEC-R12 AC2)
-  blockSize: var(--ui-sparkline-block-size)     # 1lh default — rides the ambient line box
+  blockSize: var(--ui-sparkline-block-size)     # 1em default: the em box inside the ambient line box
   strokeWidth: var(--ui-sparkline-stroke-width)  # the mark stroke max(1.5px, c/2) (`--md-sys-glyph-stroke`) inside an opt-in [data-tier] region (ADR-0245 cl.5); else 1.5px
 
 forcedColors: No dedicated `@media (forced-colors: active)` block (SPEC-R10) — the mark is `currentColor` stroke/fill, which resolves to whatever forced ink the CONSUMING context already resolves to (the `ui-icon` precedent); the area wash is that same ink at the `--ui-sparkline-area-opacity` token (opacity is not a color property — WHCM never flattens it).
@@ -114,7 +114,7 @@ recorded cost (ADR-0107).
 
 ## Sizing
 
-The host defaults to an explicit `8em x 1lh` box (`--ui-sparkline-inline-size` / `--ui-sparkline-block-size`)
+The host defaults to an explicit `8em x 1em` box (`--ui-sparkline-inline-size` / `--ui-sparkline-block-size`)
 — a deterministic default, not an `auto` one: a percentage-sized SVG inside a shrink-to-fit flex item falls
 back to the browser's 300px replaced-element intrinsic, which would paint inconsistently across containers.
 Override either token, or set `inline-size`/`block-size` directly, to size the mark to a layout.

@@ -107,6 +107,9 @@ function escapees(column: Element, scope: Element = column): string[] {
   return out
 }
 
+// The browser's default link colours (light and dark, link and visited) as computed rgb() with spaces removed.
+const UA_LINK = new Set(['rgb(0,0,238)', 'rgb(85,26,139)', 'rgb(158,158,255)', 'rgb(208,173,240)'])
+
 const SELECTOR = Object.fromEntries(RULES.render.map((r: Rule) => [r.id, r.selector]))
 const measured: Record<string, number> = Object.fromEntries(RULES.render.map((r: Rule) => [r.id, 0]))
 
@@ -148,7 +151,8 @@ const CHECKS: Record<string, (root: Element, ctx: Ctx) => string[]> = {
     const out: string[] = []
     for (const el of each(root, '*')) {
       const own = [...el.childNodes].some((n) => n.nodeType === Node.TEXT_NODE && (n.textContent ?? '').trim() !== '')
-      if (!own || !visible(el)) continue
+      // a glyph is not text (ADR-0245 Amendment 6): it sits in its glyph box, which glyph-box checks
+      if (!own || !visible(el) || el.closest(SELECTOR['glyph-box']!.replace(/ svg\b/, '')) !== null) continue
       measured['type-floor']++
       const size = px(getComputedStyle(el).fontSize)
       if (size < CFG.floor - 0.01) out.push(`${tagOf(el)} font-size=${size}`)
@@ -268,6 +272,54 @@ const CHECKS: Record<string, (root: Element, ctx: Ctx) => string[]> = {
     }
     return out
   },
+  // T-0141 (the part-c review): the rules below came from measurable review findings.
+  'link-ink'(root) {
+    const out: string[] = []
+    for (const el of each(root, 'a[href]')) {
+      if (!visible(el)) continue
+      let host: Element | null = el.parentElement
+      while (host && !host.localName.startsWith('ui-')) host = host.parentElement
+      if (!host) continue
+      measured['link-ink']++
+      const color = getComputedStyle(el).color
+      if (UA_LINK.has(color.replace(/\s+/g, ''))) out.push(`${tagOf(el)} in <${host.localName}> color=${color}`)
+    }
+    return out
+  },
+  'entry-cell-radius'(root) {
+    const out: string[] = []
+    for (const el of each(root, SELECTOR['entry-cell-radius'])) {
+      const box = visible(el)
+      if (!box) continue
+      measured['entry-cell-radius']++
+      const want = registerOf(el).n
+      const r = radiusOf(el, box)
+      if (Math.abs(r - want) > TOL) out.push(`${tagOf(el)} radius=${r} want ${want}`)
+    }
+    return out
+  },
+  'glyph-box'(root) {
+    const out: string[] = []
+    for (const el of each(root, SELECTOR['glyph-box'])) {
+      const box = visible(el)
+      if (!box) continue
+      measured['glyph-box']++
+      const r = registerOf(el)
+      const want = 2 * r.n - 2 * r.c
+      if (Math.abs(box.width - want) > TOL || Math.abs(box.height - want) > TOL) out.push(`${tagOf(el)} ${Math.round(box.width * 10) / 10}x${Math.round(box.height * 10) / 10} want ${want}`)
+    }
+    return out
+  },
+  'dash-scale'(root) {
+    const out: string[] = []
+    for (const el of each(root, 'circle, ellipse, line, path, polygon, polyline, rect')) {
+      if (!visible(el)) continue
+      measured['dash-scale']++
+      const cs = getComputedStyle(el)
+      if (cs.vectorEffect === 'non-scaling-stroke' && cs.strokeDasharray !== 'none') out.push(`${tagOf(el)} non-scaling-stroke with dasharray ${cs.strokeDasharray}`)
+    }
+    return out
+  },
 }
 
 /** Every rule's findings in one root at one viewport. */
@@ -364,6 +416,7 @@ describe('render lint: the gate itself (T-0136)', () => {
 
 // The negative controls: each rule, planted once in a column at the root register, must report; the same column
 // without the plant must not. A rule added to dogfood-rules.json without a plant here fails the coverage check.
+const GAUGE = `<ui-gauge data='[{"label":"CPU","value":72}]'></ui-gauge>`
 const PLANTS: Record<string, { bad: string; good: string; width?: number }> = {
   register: { bad: '<ui-button style="--md-sys-height: 52px">Save</ui-button>', good: '<ui-button>Save</ui-button>' },
   'pill-radius': { bad: '<ui-button style="border-radius: 2px">Save</ui-button>', good: '<ui-button>Save</ui-button>' },
@@ -385,6 +438,10 @@ const PLANTS: Record<string, { bad: string; good: string; width?: number }> = {
     bad: '<style>ui-text-field [data-role=stepper] { gap: 0 !important }</style><ui-text-field type="number" value="5"></ui-text-field>',
     good: '<ui-text-field type="number" value="5"></ui-text-field>',
   },
+  'entry-cell-radius': { bad: '<ui-otp-field length="4" style="--ui-otp-field-radius: 12px"></ui-otp-field>', good: '<ui-otp-field length="4"></ui-otp-field>' },
+  'glyph-box': { bad: '<ui-glyph symbol="check" style="--ui-glyph-slot: 30px"></ui-glyph>', good: '<ui-glyph symbol="check"></ui-glyph>' },
+  'dash-scale': { bad: GAUGE + '<style>ui-gauge [data-part="progress"] { vector-effect: non-scaling-stroke }</style>', good: GAUGE },
+  'link-ink': { bad: '<ui-row><a href="#a">Raw link</a></ui-row>', good: '<ui-breadcrumb><a href="#a">Home</a><span>Here</span></ui-breadcrumb>' },
 }
 
 describe('render lint: one injected violation per rule turns it red (negative controls)', () => {

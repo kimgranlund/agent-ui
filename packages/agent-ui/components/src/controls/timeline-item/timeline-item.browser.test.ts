@@ -361,19 +361,25 @@ describe('ui-timeline-item: the connector is continuous through every row (T-002
       const marker = item.querySelector(':scope > [data-part="marker"]')!
       const mr = rect(marker)
       const ir = rect(item)
-      expect(Math.abs(mr.top - ir.top), `item ${i}: the marker cell starts at the item top`).toBeLessThanOrEqual(1)
-      expect(Math.abs(mr.height - ir.height), `item ${i}: the marker cell spans the item's full height (${mr.height} vs ${ir.height})`).toBeLessThanOrEqual(1)
+      // T-0141: the cell drops by half the label line's surplus over the marker box, so the mark centres on
+      // the label's first line; it still runs to the item's real end.
+      const line = rect(item.querySelector('[data-role="label"]')!).height // a one-line label: its box is one line box
+      const offset = Math.max(0, (line - markerBox(item)) / 2)
+      expect(offset, 'anti-vacuous: the label line is taller than the marker box').toBeGreaterThan(0)
+      expect(Math.abs(mr.top - (ir.top + offset)), `item ${i}: the marker cell starts half the line surplus below the item top`).toBeLessThanOrEqual(1)
+      expect(Math.abs(mr.bottom - ir.bottom), `item ${i}: the marker cell runs to the item's end (${mr.bottom} vs ${ir.bottom})`).toBeLessThanOrEqual(1)
       const after = getComputedStyle(marker, '::after')
       const connectorBottom = mr.top + px(after.top) + px(after.height)
+      const nextCell = rect(items[i + 1]!.querySelector(':scope > [data-part="marker"]')!)
       expect(
-        Math.abs(connectorBottom - rect(items[i + 1]!).top),
-        `item ${i}: the connector must reach the next item (ends at ${connectorBottom}, next starts at ${rect(items[i + 1]!).top})`,
+        Math.abs(connectorBottom - nextCell.top),
+        `item ${i}: the connector must reach the next item's marker cell (ends at ${connectorBottom}, next cell starts at ${nextCell.top})`,
       ).toBeLessThanOrEqual(1)
     }
     expect(rect(items[0]!).height, 'anti-vacuous: the first item really is taller than its marker box').toBeGreaterThan(markerBox(items[0]!) * 3)
   })
 
-  it(`${server.browser}: the mark itself still sits in the FIRST marker-box: a dot, a ring and a glyph all centre on the same row line and rail`, async () => {
+  it(`${server.browser}: the mark centres on the label's first line: a dot, a ring and a glyph all on the same row line and rail (T-0141)`, async () => {
     const { wrap } = mount(
       '<div style="width:220px;display:flex;flex-direction:column">' +
         '<ui-timeline-item status="active" label="Dot" description="wraps wraps wraps wraps wraps wraps wraps wraps"></ui-timeline-item>' +
@@ -395,8 +401,15 @@ describe('ui-timeline-item: the connector is continuous through every row (T-002
       const borderBox = px(before.height) + px(before.borderTopWidth) + px(before.borderBottomWidth)
       return px(before.top) + new DOMMatrix(before.transform).m42 + borderBox / 2
     }
-    const expected = markerBox(items[0]!) / 2
-    for (const [i, item] of items.entries()) expect(centreY(item), `item ${i}: the mark centres in the first marker-box`).toBeCloseTo(expected, 0)
+    // centreY is measured from the item top for a glyph, from the marker cell top for a CSS dot/ring
+    const cellTop = (item: Element): number => rect(item.querySelector(':scope > [data-part="marker"]')!).top - rect(item).top
+    for (const [i, item] of items.entries()) {
+      const label = item.querySelector('[data-role="label"]')!
+      const lineCentre = rect(label).top + rect(label).height / 2 - rect(item).top // a one-line label
+      const glyph = item.querySelector('[data-part="marker"] [data-role="marker"]')
+      const y = glyph ? centreY(item) : cellTop(item) + centreY(item)
+      expect(Math.abs(y - lineCentre), `item ${i}: the mark centres on the label's first line (${y} vs ${lineCentre})`).toBeLessThanOrEqual(1)
+    }
     const lefts = items.map((item) => {
       const marker = item.querySelector(':scope > [data-part="marker"]')!
       const glyph = marker.querySelector('[data-role="marker"]')
