@@ -282,7 +282,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'concierge', // GH #46 — upgraded IN PLACE to the Hotel Concierge (same id: persisted stores key on it)
     category: 'hospitality', // GH #143
-    seedVersion: 8, // T-0159: gallery-swiper caption variant, the amenity-service-card ServiceCard skill; migrates pre-v8 stores. 7: GH #1203 — `booking-flow` names the Back affordance + settled receipt (ADR-0198 B1/B2); migrates pre-#1203 stores (6: GH #1171 arc rewrite; 5: GH #497 local pattern set)
+    seedVersion: 9, // T-0200: facility-info-card is one ServiceCard per facility; migrates pre-v9 stores. 8: T-0159: gallery-swiper caption variant, the amenity-service-card ServiceCard skill; migrates pre-v8 stores. 7: GH #1203 — `booking-flow` names the Back affordance + settled receipt (ADR-0198 B1/B2); migrates pre-#1203 stores (6: GH #1171 arc rewrite; 5: GH #497 local pattern set)
     label: 'The Hotel Concierge',
     tagline: 'The full hospitality stack: booking forms + galleries + itineraries + live weather/FX integrations (GH #46/#49)',
     config: { name: 'The Hotel Concierge', model: 'claude-sonnet-5-5', temperature: 0.4, toolsEnabled: true },
@@ -393,7 +393,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'travel', // GH #46 — NEW
     category: 'hospitality', // GH #143
-    seedVersion: 4, // T-0159: gallery-swiper caption Text uses the caption variant; migrates pre-v4 stores. 3: T-0089 (ADR-0244): the trip-plan close is ONE ResultCard (outcome done); migrates pre-v3 stores. 2: GH #148, added a Resources entry (was empty)
+    seedVersion: 5, // T-0200: trip-plan templates its 2-3 leg ProductCards in one Grid; migrates pre-v5 stores. 4: T-0159: gallery-swiper caption Text uses the caption variant; migrates pre-v4 stores. 3: T-0089 (ADR-0244): the trip-plan close is ONE ResultCard (outcome done); migrates pre-v3 stores. 2: GH #148, added a Resources entry (was empty)
     label: 'The Travel Agent',
     tagline: 'Multi-leg trip planning — comparison cards, an accumulating itinerary, live weather/FX (GH #46/#49)',
     config: { name: 'The Travel Agent', model: 'claude-sonnet-5-5', temperature: 0.6, toolsEnabled: true },
@@ -631,7 +631,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'lexicographer',
     category: 'games', // GH #143
-    seedVersion: 2, // T-0089 (ADR-0244): the word-tiles End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores
+    seedVersion: 3, // T-0200: word-tiles names one GameHud, round-loop ends the game on one ResultCard; migrates pre-v3 stores. 2: T-0089 (ADR-0244): the word-tiles End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores
     label: 'The Lexicographer',
     tagline: 'Wordle-style word forge — Badge tile grids via list templates + a regex-checked TextField (the checks machinery as a game)',
     config: { name: 'The Lexicographer', model: 'claude-sonnet-5-5', temperature: 0.2, toolsEnabled: false },
@@ -654,7 +654,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'admiral',
     category: 'games', // GH #143
-    seedVersion: 3, // T-0128 (ADR-0243 Amendment 4): the board is one BoardGrid with actionName, a cell click an action with {row, col}, not a Grid of cell Buttons; migrates pre-v3 stores. 2, T-0089 (ADR-0244): the board-grid End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores
+    seedVersion: 4, // T-0200: board-grid puts ships remaining and shots fired in one GameHud; migrates pre-v4 stores. 3: T-0128 (ADR-0243 Amendment 4): the board is one BoardGrid with actionName, a cell click an action with {row, col}, not a Grid of cell Buttons; migrates pre-v3 stores. 2, T-0089 (ADR-0244): the board-grid End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores
     label: 'The Admiral',
     tagline: 'Battleship — 6×6 BoardGrids whose cell click arrives as an action carrying {row, col} (the context-payload pattern’s first showcase)',
     config: { name: 'The Admiral', model: 'claude-sonnet-5-5', temperature: 0.4, toolsEnabled: false },
@@ -683,7 +683,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'alchemist',
     category: 'games', // GH #143
-    seedVersion: 2, // T-0089 (ADR-0244): the color-duel End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores
+    seedVersion: 3, // T-0200: round-loop ends the game on one ResultCard, a Toast only for a transient round result; migrates pre-v3 stores. 2: T-0089 (ADR-0244): the color-duel End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores
     label: 'The Alchemist',
     tagline: 'Color Duel — Swatch targets, an oklch ColorPicker, Ramp reveals (the fleet-unique ADR-0118 token surfaces as game pieces)',
     config: { name: 'The Alchemist', model: 'claude-sonnet-5-5', temperature: 0.6, toolsEnabled: false },
@@ -705,7 +705,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'dungeon-master',
     category: 'games', // GH #143
-    seedVersion: 2, // T-0089 (ADR-0244): the quest-log End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores
+    seedVersion: 3, // T-0200: round-loop ends the game on one ResultCard, a Toast only for a transient round result; migrates pre-v3 stores. 2: T-0089 (ADR-0244): the quest-log End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores
     label: 'The Dungeon Master',
     tagline: 'A pocket dungeon crawl — Timeline quest log + HP/Gold Stats + inventory List (the longest multi-turn state horizon)',
     config: { name: 'The Dungeon Master', model: 'claude-sonnet-5-5', temperature: 0.9, toolsEnabled: false }, // rev.4

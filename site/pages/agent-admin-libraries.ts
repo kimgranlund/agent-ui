@@ -137,9 +137,10 @@ export const HOSPITALITY_SKILLS: readonly NewEntryInput[] = [
     label: 'facility-info-card',
     description: 'hours, directions, pool, gym, spa facilities, policy questions',
     content:
-      'Facility/policy answers are ONE compact Card: the fact as a title Text, hours/location as labeled ' +
-      'body rows, and at most two action Buttons (book, directions). Prose answers stay in chat; the card ' +
-      'carries only the structured facts.',
+      'Facility/policy answers are ONE ServiceCard per facility, never a hand-built Card with action ' +
+      'Buttons: name the facility, put the fact with its hours and location in the one-line description, ' +
+      'bind available to its open flag so a closed facility shows Unavailable, and actionLabel the one ' +
+      'verb ("Book", "Directions"). Prose answers stay in chat; the card carries only the structured facts.',
   },
   {
     label: 'amenity-service-card',
@@ -182,7 +183,9 @@ export const CORE_PLAYBOOKS: readonly NewEntryInput[] = [
     description: 'Any structured-intake domain — a form collects input, validates, and confirms from the submitted values.',
     content:
       'Form → validate → submit → confirmation. The confirmation Card binds to the SAME data-model paths ' +
-      'the form wrote (one source of truth), restates the key values, and offers exactly one next action.',
+      'the form wrote (one source of truth), restates the key values, and offers exactly one next action. ' +
+      'Tappable follow-up prompts the user may send next ("Change the date", "Add a guest") are ONE ' +
+      'Suggestions (suggestions as {label, value}, one action carrying the pick), never a Row of Buttons.',
   },
   {
     label: 'round-loop',
@@ -190,9 +193,11 @@ export const CORE_PLAYBOOKS: readonly NewEntryInput[] = [
     content:
       'One surface, updated in place: each user action drives ONE updateDataModel turn (never a fresh ' +
       'surface per round). Keep score/state in the data model; disable action Buttons that are invalid in ' +
-      'the current state rather than removing them. Announce a round’s RESULT ("Dealer wins") as a ' +
-      'Toast — an ephemeral, self-expiring announcement — never a Badge; Badge is for persistent inline ' +
-      'status the player should still see next round (score, deal state).',
+      'the current state rather than removing them. A transient round RESULT ("Dealer wins") may be a ' +
+      'Toast, an ephemeral, self-expiring announcement, never a Badge; Badge is for persistent inline ' +
+      'status the player should still see next round (score, deal state). The GAME’s end state is never ' +
+      'a Toast: it is ONE ResultCard (outcome win, lose or draw, a title, a one-line summary, the final ' +
+      'stats) whose child is a Play again Button with newGame true in its action context.',
   },
   {
     label: 'drilldown',
@@ -244,8 +249,9 @@ export const HOSPITALITY_PLAYBOOKS: readonly NewEntryInput[] = [
     description: 'Travel domain — multi-leg trip planning: compare legs, choose, accumulate an itinerary, summarize.',
     content:
       'Compare 4 or more legs in a Table (mode, duration, price) with a choose action Button per row; ' +
-      'for 2-3 legs use one ProductCard per leg in a Row (title the mode, subtitle the duration, price ' +
-      'the fare, actionLabel Choose with the leg id in the action context). The user picks via the ' +
+      'for 2-3 legs use ONE Grid of ProductCard tiles repeated from a {path:"/legs",componentId} template (title ' +
+      'the mode, subtitle the duration, price the fare, actionLabel Choose, the leg id in the action ' +
+      'context, all bound with relative paths), never one hand-built ProductCard per leg. The user picks via the ' +
       'row or card action; chosen legs accumulate into an itinerary-timeline surface updated in place. End ' +
       'with ONE ResultCard on that surface: outcome done, the trip as its title, a one-line summary, nights ' +
       'and total in its stats bound to the accumulated data model, and the next action (view or share the ' +
@@ -266,7 +272,8 @@ export const GAMES_SKILLS: readonly NewEntryInput[] = [
       'context, never a label, and the board is never a Grid of cell Buttons. A board that is only READ (your ' +
       'own fleet, a revealed board) is the same BoardGrid with no actionName. A hit or miss patches one entry ' +
       'instead of re-minting cells. Keep boards ≤ 6×6 per surface; mark hits/misses with a glyph (✕ / ●) ' +
-      'and set disabled on resolved cells rather than removing them. End state: when a fleet is sunk, show ONE ' +
+      'and set disabled on resolved cells rather than removing them. Scores and status (ships remaining, ' +
+      'shots fired) ride ONE GameHud beside the board, never loose Stats or Badges. End state: when a fleet is sunk, show ONE ' +
       'ResultCard (outcome win or lose, a title, a one-line summary, the final stats) whose child is a Play again Button with newGame true in its action context.',
   },
   {
@@ -287,7 +294,8 @@ export const GAMES_SKILLS: readonly NewEntryInput[] = [
       'bound to the data model: one entry per letter {row, col, mark, intent}, intent success (right spot) ' +
       '/ warning (wrong spot) / neutral (absent). The input is ONE TextField with a ' +
       'regex check (^[a-z]{5}$) gating the Submit button. Show the used-letter state as a compact List, ' +
-      'never a full keyboard. End state: solved or out of guesses shows ONE ResultCard (outcome win or lose, ' +
+      'never a full keyboard. Guesses used and the round status ride ONE GameHud (progress = guesses used ' +
+      'out of 6, status solved or in play). End state: solved or out of guesses shows ONE ResultCard (outcome win or lose, ' +
       'a title, a one-line summary, the final stats) whose child is a Play again Button with newGame true in its action context.',
   },
   {
