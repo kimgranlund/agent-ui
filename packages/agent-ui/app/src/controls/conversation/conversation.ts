@@ -519,7 +519,7 @@ function stepEntry(key: string, step: ActivityStep): StatusEntry {
 }
 
 /** The factual message-kind tally for a turn with no `note` (ADR-0088: never a fabricated sentence), the
- *  a2ui-live.ts summarize() precedent. Since T-0194 it rides the activity strip, not the bubble. */
+ *  a2ui-live.ts summarize() precedent. Since T-0194 it rides the step-mode strip, never the bubble. */
 function summarize(lines: readonly string[]): string {
   if (lines.length === 0) return ''
   const kinds = lines.map((l) => {

@@ -24,6 +24,7 @@ T-0172 shipped items 1, 2 and 4 of the original list (settle check, plain-button
 - No em dashes.
 
 ## Acceptance criteria
+verifier: L3
 - `npm run check` exits 0.
 - `npx vitest run --project packages packages/agent-ui/a2ui packages/agent-ui/app/src/controls/conversation` exits 0: `render_surface` requires `reply`; a tool round with no text ships the trimmed `reply` as the note and channel text wins over it; a step-mode turn with no reply text shows no tally in the bubble and one `data-activity="tally"` strip row.
 - `npm run chat:probe -- selftest` exits 0: `reply-text` is in `CHECK_NAMES`, the canned green records exercise it, and `seeded-no-reply.json` fails exactly `reply-text` offline.
