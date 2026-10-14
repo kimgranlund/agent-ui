@@ -101,12 +101,12 @@ export function providerIdForModel(modelId: string, providers: readonly Provider
   return providers.find((p) => p.models.some((m) => m.id === modelId))?.id
 }
 
-// ADR-0090 §4/LLD-C12 — the mode selector's demo-facing labels (promoted from provider-switcher.ts
-// verbatim); the VALUE list is derived from `GEN_UI_MODES`, the single source of truth.
+// ADR-0090 §4/LLD-C12 — the mode selector's demo-facing labels (promoted from provider-switcher.ts; T-0147
+// swapped their em dashes for parentheses); the VALUE list is derived from `GEN_UI_MODES`, the single source of truth.
 const MODE_LABELS: Record<GenUiMode, string> = {
-  default: 'Default — balanced',
-  specific: 'Specific — directive',
-  'blue-sky': 'Blue-sky — exploratory',
+  default: 'Default (balanced)',
+  specific: 'Specific (directive)',
+  'blue-sky': 'Blue-sky (exploratory)',
 }
 export const MODE_OPTIONS: readonly PickerOption[] = GEN_UI_MODES.map((value) => ({
   id: value,

@@ -389,7 +389,7 @@ describe('ui-conversation-composer cross-engine smoke — the v2 field frame (TK
     const editor = el.querySelector('[data-part="editor"]') as HTMLElement
 
     // Default — a consumer that never sets `placeholder` is byte-identical to before the prop existed.
-    expect(getComputedStyle(editor, '::before').content).toContain('Ask anything..')
+    expect(getComputedStyle(editor, '::before').content).toContain('Ask anything…')
 
     composer.placeholder = 'Describe the agent you want…'
     await whenFlushed()

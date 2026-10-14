@@ -3,7 +3,7 @@
  * Effort/Mode pickers, GH #257), narration strip, per-surface mounts, the "Closed." annotation, and the
  * wire disclosure are ALL owned by the `<ui-conversation>` primitive now (its own `conversation.css`,
  * imported by the page) — this sheet keeps only the surrounding page chrome: the full-bleed region, the
- * header content, the meta-notice status line, and the reset bar. Every colour is a `--md-sys-color-*` role
+ * header content, the empty-state line, and the footer row (status line + Reset). Every colour is a `--md-sys-color-*` role
  * (imported first via _page.ts), so it tracks light/dark. This page never restyles a ui-* control.
  *
  * Round 4 (GH #98): the OUTER flex-column shell this file used to hand-roll on a plain `.chat-shell` div is
@@ -12,7 +12,7 @@
 
 [data-page-content] {
   display: flex;
-  padding: 1.25rem var(--md-sys-space-xl);
+  padding-inline: var(--md-sys-space-xl); /* the block edge is _page.css's full-bleed `padding-block: 0` */
   box-sizing: border-box;
   min-block-size: 0;
   overflow: hidden; /* clip — the conversation owns its own inner scroll, not the region */
@@ -25,12 +25,12 @@
 }
 
 /* The composed inner ui-super-shell's canvas box is ALREADY a flex column (super-shell.css) — this adds
- * only the page's own gap between the conversation / status line / reset bar, its one remaining layout
+ * only the page's own gap between the conversation and the footer row, its one remaining layout
  * concern now that the column direction itself is the composed shell's job. */
 .chat-shell [data-part='canvas'] {
-  gap: 0.6rem;
+  gap: var(--md-sys-space-md);
   /* T-0142: the same canvas gap above the conversation, so the header's rule line never sits on the card's edge. */
-  padding-block-start: 0.6rem;
+  padding-block-start: var(--md-sys-space-md);
 }
 
 /* The conversation IS the bordered card (conversation.css gives it its own border/radius/background) — it
@@ -40,36 +40,48 @@
   min-block-size: 0;
 }
 
-/* T-0142: the page title and description type of every other page (_page.css `.page-heading` /
-   `.page-description`), not a smaller hand-sized pair. */
+/* T-0142 / T-0147: the page title and description register of every other page, on type and space tokens
+   (headline-large is the derived heading step), not rem literals. */
 .chat-title {
   margin: 0;
-  font-size: 1.55rem;
+  font-size: var(--md-sys-typescale-headline-large-size);
   font-weight: 650;
   letter-spacing: -0.01em;
   color: var(--md-sys-color-neutral-on-surface);
 }
 .chat-blurb {
-  margin: 0.2rem 0 0;
+  margin: var(--md-sys-space-xs) 0 0;
   max-inline-size: 62ch;
   line-height: 1.5;
   color: var(--md-sys-color-neutral-on-surface-variant);
 }
 
-/* ── the meta-notice status line (reset / transcript-exhausted / dev-overlay connection status) ─────────── */
-.chat-status {
-  flex: 0 0 auto;
+/* T-0147 (Kim 2026-10-14): the one empty-state line, seated in the log by `setEmptyState` until the first turn. */
+.chat-empty {
   margin: 0;
-  font-size: 0.78rem;
-  text-align: center;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+/* ── the footer row: the meta-notice status line (reset / transcript-exhausted / dev-overlay connection
+   status), start-aligned with the header, and Reset at the row's end (T-0147) ─────────────────────────── */
+.chat-foot {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: baseline; /* Reset sits on the status line's first line when that wraps at 400 */
+  gap: var(--md-sys-space-sm);
+}
+.chat-status {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  margin: 0;
+  font-size: var(--md-sys-typescale-body-small-size);
+  text-align: start;
   color: var(--md-sys-color-neutral-on-surface-variant);
 }
 .chat-status:empty {
   display: none;
 }
-
-.reset-bar {
-  flex: 0 0 auto;
-  display: flex;
-  justify-content: flex-end;
+.chat-foot > ui-button {
+  flex: 0 0 auto; /* never shrinks to an ellipsis beside a long status line */
+  margin-inline-start: auto; /* stays at the end when the status line is empty and hidden */
 }

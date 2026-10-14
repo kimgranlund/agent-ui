@@ -90,7 +90,7 @@ title.className = 'chat-title'
 title.textContent = 'A2UI Chat'
 const blurb = el('p', 'chat-blurb')
 blurb.textContent =
-  'A conversation with an agent — its narration streams live as each turn proceeds, and the A2UI ' +
+  'A conversation with an agent: its narration streams live as each turn proceeds, and the A2UI ' +
   'surfaces it opens render inline in the log, persisting across later turns until it closes them. ' +
   'Recorded transcript by default; a dev-only live overlay swaps in a real model.'
 header.append(title, blurb)
@@ -109,22 +109,29 @@ conv.setContentRenderer((text) => {
 })
 shell.append(conv)
 
+// T-0147 (Kim 2026-10-14): one empty-state line in the log until the first turn; the agent-admin log stays
+// empty (GH #684). `reset()` keeps a seated node, so the reset handler re-seats it after a cleared thread.
+const emptyNote = el('p', 'chat-empty')
+emptyNote.textContent = 'No messages yet. Send a prompt to start the conversation.'
+conv.setEmptyState(emptyNote)
+
 // A page-level status line for meta notices that are NOT conversation turns (reset / transcript-exhausted /
 // dev-overlay connection status). aria-live so a screen reader still announces them; latest-wins.
+// T-0147: the status line and Reset share one start-aligned row under the conversation.
+const foot = el('div', 'chat-foot')
 const statusLine = el('p', 'chat-status')
 statusLine.setAttribute('aria-live', 'polite')
-shell.append(statusLine)
+foot.append(statusLine)
 function status(text: string): void {
   statusLine.textContent = text
 }
 
-const resetBar = el('div', 'reset-bar')
 const resetBtn = document.createElement('ui-button')
 resetBtn.setAttribute('variant', 'ghost')
 resetBtn.setAttribute('tabindex', '0')
 resetBtn.textContent = 'Reset'
-resetBar.append(resetBtn)
-shell.append(resetBar)
+foot.append(resetBtn)
+shell.append(foot)
 
 content.append(shell) // LAST — every child is present before this element ever connects (see the note above)
 
@@ -161,6 +168,7 @@ function setBusy(next: boolean): void {
 async function runTurn(input: TurnInput): Promise<void> {
   if (busy) return
   setBusy(true)
+  conv.setEmptyState(null) // the first turn ends the empty state (T-0147)
   const handle = conv.beginAgentTurn()
   let note: string | undefined
   const turnLines: string[] = []
@@ -263,7 +271,7 @@ conv.onClientMessage(handleClientMessage)
 conv.addEventListener('action', (e) => {
   if (e.target !== conv) return
   const id = (e as CustomEvent<{ id: string }>).detail.id
-  status(id === 'helpful' ? 'Thanks for the feedback!' : "Thanks — noted, we'll do better.")
+  status(id === 'helpful' ? 'Thanks for the feedback!' : "Thanks, noted. We'll do better.")
 })
 
 // ════════════════ reset ════════════════
@@ -272,6 +280,7 @@ resetBtn.addEventListener('click', () => {
   session = { turns: [] }
   transport = createRecordedTransport(recordedTranscript)
   isLive = false // GH #415 — reset alongside the transport it describes; the re-probe below sets it true again only if the live swap actually lands
+  conv.setEmptyState(emptyNote)
   status('New conversation. Send a prompt to begin.')
   wireLiveOverlay() // re-probe
 })
@@ -328,7 +337,7 @@ function wireLiveOverlay(): void {
         })
         transport = overlay.createLiveProxyTransport({ get: () => selection })
         isLive = true // GH #415 — the ONE place a live backbone is adopted; set adjacent to the assignment it describes so the two can never drift
-        status(`Live agent connected (${probe.providers} provider(s) available). Prompt it to generate a real A2UI surface.`)
+        status(`Live agent connected (${probe.providers} provider${probe.providers === 1 ? '' : 's'} available). Prompt it to generate a real A2UI surface.`)
       } else if (import.meta.env.DEV) {
         status('Recorded transcript (no live API key found). Set a provider key in .env and restart `npm run dev` for a live agent.')
       } else {

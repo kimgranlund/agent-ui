@@ -2182,13 +2182,11 @@ describe('ui-agent-admin cross-engine smoke — the settings sub-nav grouping (L
 
 // GH #870 — the settings-nav strip's own baseline hairline (tabs.css's `[data-part='tablist']`
 // border-block-end) is painted only on the "strip" grid column `overflow="menu"` lays out (tabs.css
-// §[overflow=menu]); the … trigger sits in the adjacent "trigger" column with no border of its own, so at
-// any width narrow enough to show the trigger the line visibly stopped one column short of it. The fix
-// (agent-admin.css) is composition-side — a `box-shadow` on the trigger, landing pixel-identical to the
-// tablist's own border's outer edge — never a `tabs.css` contract change. Whole-shape: this asserts the
-// RENDERED EXTENT of the combined line (not just "a box-shadow declaration exists") reaches from the
-// strip's own left edge to the trigger's own right edge, at both the overflow-collapsed AND the
-// all-fit bands (a hidden trigger has no gap to close in the first place).
+// §[overflow=menu]). The … trigger's column carries the line on through tabs.css's own trigger `::after`
+// (T-0141); the round trigger itself paints no resting box-shadow (T-0147 dropped the old composition-side
+// shadow, which drew a crescent under the circle). Whole-shape: this asserts the line reaches from the
+// strip's own left edge to the trigger's own right edge, at both the overflow-collapsed AND the all-fit
+// bands (a hidden trigger has no gap to close in the first place).
 describe('ui-agent-admin — GH #870: the settings-nav baseline hairline spans the full header row (tabs + the … trigger)', () => {
   const frames = async (n = 2): Promise<void> => {
     for (let i = 0; i < n; i++) await new Promise((r) => requestAnimationFrame(r))
@@ -2229,13 +2227,12 @@ describe('ui-agent-admin — GH #870: the settings-nav baseline hairline spans t
       // own track ends and where the trigger begins (the GH #870 bug was exactly this gap).
       expect(Math.round(triggerRect.left) - Math.round(tablistRect.right), `${widthPx}px: no horizontal gap between strip and trigger`).toBeLessThanOrEqual(1)
 
-      // The composed baseline continuation (box-shadow, agent-admin.css) is a real declaration, and its
-      // rendered bottom edge lands exactly where the tablist's own border's bottom edge lands — the SAME
-      // horizontal line, not one a pixel higher or lower (both grid items start flush at the row's own
-      // block-start; agent-admin.css's own comment on this rule has the full box-model proof).
-      const triggerStyle = getComputedStyle(trigger)
-      expect(triggerStyle.boxShadow, `${widthPx}px: the composed baseline continuation is a real declaration`).not.toBe('none')
-      expect(Math.round(triggerRect.bottom) + 1, `${widthPx}px: the trigger's box-shadow lands on the SAME line as the tablist's own border`).toBe(
+      // T-0147: a round icon button paints no resting box-shadow; the continuation is tabs.css's own
+      // `::after` line, a real 1px border whose box sits 1px below the trigger, so it lands exactly where
+      // the tablist's own border lands (both grid items start flush at the row's own block-start).
+      expect(getComputedStyle(trigger).boxShadow, `${widthPx}px: the round trigger paints no resting shadow`).toBe('none')
+      expect(parseFloat(getComputedStyle(trigger, '::after').borderBottomWidth), `${widthPx}px: the trigger's ::after carries the strip line`).toBeGreaterThan(0)
+      expect(Math.round(triggerRect.bottom) + 1, `${widthPx}px: the trigger's ::after line lands on the SAME line as the tablist's own border`).toBe(
         Math.round(tablistRect.bottom),
       )
 
