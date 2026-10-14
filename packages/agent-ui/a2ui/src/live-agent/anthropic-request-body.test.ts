@@ -77,7 +77,7 @@ describe('buildRequestBody — the Effort dial → Anthropic extended-thinking m
     expect(buildRequestBody({ ...BASE, effort: 'low' })['thinking']).toBeUndefined()
   })
 
-  it('T-0172: a forced tool_choice is never sent on claude-sonnet-5-5 (400 there), at any effort; claude-sonnet-5 at low effort still gets it', () => {
+  it('T-0172: a forced tool_choice is never sent on claude-sonnet-5-5 (400 there), at any effort; claude-haiku-5-5 at low effort still gets it', () => {
     const tools = [{ name: 'render_surface', description: 'x', input_schema: { type: 'object' } }]
     for (const effort of [undefined, 'low', 'medium', 'high'] as const) {
       const body = buildRequestBody({ ...BASE, model: 'claude-sonnet-5-5', effort, tools, toolChoice: { name: 'render_surface' } })
@@ -85,8 +85,8 @@ describe('buildRequestBody — the Effort dial → Anthropic extended-thinking m
       expect(body['tools']).toEqual(tools)
     }
     expect(buildRequestBody({ ...BASE, model: 'claude-sonnet-5-5', effort: 'medium', tools })['thinking']).toEqual({ type: 'adaptive', display: 'summarized' })
-    expect(buildRequestBody({ ...BASE, effort: 'low', tools, toolChoice: { name: 'render_surface' } })['tool_choice']).toEqual({ type: 'tool', name: 'render_surface' })
-    expect(buildRequestBody({ ...BASE, effort: 'high', tools, toolChoice: { name: 'render_surface' } })['tool_choice']).toBeUndefined() // thinking on
+    expect(buildRequestBody({ ...BASE, model: 'claude-haiku-5-5', effort: 'low', tools, toolChoice: { name: 'render_surface' } })['tool_choice']).toEqual({ type: 'tool', name: 'render_surface' })
+    expect(buildRequestBody({ ...BASE, model: 'claude-haiku-5-5', effort: 'high', tools, toolChoice: { name: 'render_surface' } })['tool_choice']).toBeUndefined() // thinking on
   })
 
   it("T-0172: display rides only adaptive thinking: no body ever sends a disabled or between_tools thinking, and the legacy budget shape carries no display", () => {

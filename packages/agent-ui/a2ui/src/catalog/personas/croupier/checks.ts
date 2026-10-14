@@ -404,10 +404,44 @@ function betControls(view: SurfaceView): SemanticFinding[] {
   return findings
 }
 
+const BET_WORDS = /\b(bet|bets|stake|wager)\b/i
+const textOf = (v: unknown): string => (typeof v === 'string' ? v : bindingPath(v) ?? '')
+const actionName = (c: A2uiComponent): string => {
+  const a = c['action'] as { action?: unknown; event?: { name?: unknown } } | undefined
+  return typeof a?.action === 'string' ? a.action : typeof a?.event?.name === 'string' ? a.event.name : ''
+}
+
+/** T-0172 (the live Haiku 5.5 probe, 2026-10-14): a blackjack bet step built WITHOUT a CardTable (a Card with a
+ *  "Bet amount" Slider and a Deal Button) never reaches the table's bet strip, so the check above has nothing to
+ *  judge. A surface with no CardTable that holds a bet input (a Slider or TextField whose label, name or bound
+ *  path says bet, stake or wager) or a Deal Button, and no dealt card yet, is sent back to be one CardTable in its betting phase. A
+ *  false positive costs one repair round and ships tallied at the bound (ADR-0238), never a halt. */
+function betStepWithoutTable(view: SurfaceView): SemanticFinding[] {
+  const comps = [...view.components.values()]
+  // A dealt hand (any PlayingCard) is past the bet step: an older table shape is judged by the hand check alone.
+  if (comps.some((c) => c.component === 'CardTable' || c.component === 'PlayingCard')) return []
+  const strays = comps.filter((c) => {
+    if (BET_INPUTS.has(c.component)) return [c['label'], c['name'], c['value']].some((v) => BET_WORDS.test(textOf(v).replace(/[/_-]/g, ' ')))
+    if (c.component === 'Button') return /^deal\b/i.test(textOf(c['label'])) || /^(deal|place_?bet|bet)$/i.test(actionName(c))
+    return false
+  })
+  if (strays.length === 0) return []
+  return [
+    {
+      code: 'BET_TABLE_MISSING',
+      path: `${view.surfaceId}:${strays[0]!.id}`,
+      message:
+        `${view.surfaceId} takes a blackjack bet with ${strays.map((c) => `${c.id} (a ${c.component})`).join(', ')} and no CardTable. ` +
+        `Make the surface ONE CardTable, phase "betting", bet and bankroll bound, "betAction":"deal": its own bet strip ` +
+        `places the bet and deals, so drop those controls. (A game other than blackjack keeps its Card.)`,
+    },
+  ]
+}
+
 /** T-0172: one bet, one set of bet controls (the CardTable's own strip). */
 export const croupierBetControls: SemanticCheck = {
   id: 'croupier-bet-controls',
-  check: (input) => input.surfaces.flatMap(betControls),
+  check: (input) => input.surfaces.flatMap((view) => [...betControls(view), ...betStepWithoutTable(view)]),
 }
 
 export const croupierSemanticChecks: readonly SemanticCheck[] = [croupierHandConsistency, croupierBetControls]

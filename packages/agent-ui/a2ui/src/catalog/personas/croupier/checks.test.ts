@@ -514,3 +514,33 @@ describe('croupier bet controls: the CardTable owns the bet phase (T-0172)', () 
     expect(run(payload([table({ children: ['hit_btn'] }), hit], 'playing'))).toEqual([])
   })
 })
+
+// T-0172: the live Haiku 5.5 probe built the bet step as a Card with a Slider and a Deal Button, no CardTable.
+describe('croupier bet controls: a bet step with no CardTable (T-0172 live probe)', () => {
+  const surface = (components: Record<string, unknown>[]): A2uiOutput => [
+    { version: 'v1.0', createSurface: { surfaceId: 'ask-1', catalogId: 'agent-ui--croupier', sendDataModel: true } },
+    { version: 'v1.0', updateDataModel: { surfaceId: 'ask-1', value: { bankroll: 1000, bet: 50 } } },
+    { version: 'v1.0', updateComponents: { surfaceId: 'ask-1', components } },
+  ] as A2uiOutput
+  const run = (output: A2uiOutput) => croupierBetControls.check({ surfaces: semanticSurfaceViews({ turns: [] }, output) })
+
+  it('flags the probe\'s Card with a Bet amount Slider and a Deal Button, naming the CardTable repair', () => {
+    const findings = run(surface([
+      { id: 'root', component: 'Card', children: ['hdr', 'body', 'footer'] },
+      { id: 'hdr', component: 'CardHeader', children: ['title'] },
+      { id: 'title', component: 'Text', text: 'Blackjack: place your bet', variant: 'h4' },
+      { id: 'body', component: 'CardContent', children: ['bet_slider'] },
+      { id: 'bet_slider', component: 'Slider', name: 'bet', label: 'Bet amount', value: { path: '/bet' }, min: 10, max: 500, step: 10 },
+      { id: 'footer', component: 'CardFooter', children: ['deal_btn'] },
+      { id: 'deal_btn', component: 'Button', label: 'Deal', variant: 'solid', action: { action: 'place_bet', context: { bet: { path: '/bet' } } } },
+    ]))
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['BET_TABLE_MISSING', 'ask-1:bet_slider']])
+    expect(findings[0]!.message).toMatch(/ONE CardTable, phase "betting"/)
+    expect(findings[0]!.message).toMatch(/bet_slider \(a Slider\), deal_btn \(a Button\)/)
+  })
+
+  it('passes a surface with no bet control (a rules card), and the CardTable betting table', () => {
+    expect(run(surface([{ id: 'root', component: 'Text', text: 'Blackjack pays 3:2.' }]))).toEqual([])
+    expect(run(surface([{ id: 'root', component: 'CardTable', phase: 'betting', bet: { path: '/bet' }, betAction: 'deal' }]))).toEqual([])
+  })
+})

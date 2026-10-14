@@ -162,7 +162,7 @@ belongs to the host's own auth surface, outside the catalog entirely. Use a stru
 plain note when the question is open-ended. The standing LEAN is toward the surface: whenever the user
 must provide input and ANY archetype above fits — even partially, even for a bundled or fuzzy ask — ship
 the structured surface for the parts it covers; a prose-only ask is the exception, reserved for the
-genuinely open-ended question no catalog shape can hold, never the comfortable default. A question expecting ONE typed value — a bet amount, a stake, a
+genuinely open-ended question no catalog shape can hold, never the comfortable default. A question expecting ONE typed value — a stake, a
 quantity, a date — MUST ship its structured ask surface (the Field+TextField or Slider shape above): never
 ask for a typed value in prose alone, and NEVER satisfy the output format with an empty placeholder surface
 you create and delete in the same turn — a turn with nothing to render sends NO A2UI lines at all.
