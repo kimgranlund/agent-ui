@@ -343,6 +343,17 @@ describe('bookingConfirmationFactory — create()/applyProp (jsdom-safe: ui-card
     expect(el.querySelector('[data-a2ui-confirmation-row] [data-part="value"]')?.textContent).toBe('Saturday')
   })
 
+  it('T-0172: a row with `options` prints the label for a coded value (never the raw "twin"); an unmatched value prints as is', () => {
+    const el = bookingConfirmationFactory.create()
+    bookingConfirmationFactory.applyProp(el, 'rows', [
+      { label: 'Room', path: 'room', options: [{ value: 'twin', label: 'Twin room' }, { value: 'suite', label: 'Suite' }] },
+      { label: 'View', path: 'view', options: [{ value: 'sea', label: 'Sea view' }] },
+    ])
+    bookingConfirmationFactory.applyProp(el, 'data', { room: 'twin', view: 'garden' })
+    const values = [...el.querySelectorAll('[data-a2ui-confirmation-row] [data-part="value"]')].map((v) => v.textContent)
+    expect(values).toEqual(['Twin room', 'garden'])
+  })
+
   it('"data" shows an ISO date in locale form and a boolean as Yes / No (the bound values stay ISO and boolean)', () => {
     const el = bookingConfirmationFactory.create()
     bookingConfirmationFactory.applyProp(el, 'rows', [

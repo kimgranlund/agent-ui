@@ -22,6 +22,7 @@ import { appendFileSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { readMetaLine } from '../../src/agent/meta-line.ts'
 import { heal } from '../../src/corpus/heal.ts'
+import { renderSurfaceJsonl } from '../../src/agent/response-type.ts'
 import type { TokenUsage, TurnProgress, TurnTrace } from '../../src/agent/meta-line.ts'
 import type { AgentProvider, ProviderEvent } from '../../src/agent/agent-transport.ts'
 
@@ -232,24 +233,26 @@ export function describeFailure(f: { code: string; path: string; detail?: string
     const sid = /^(.+):(root-missing|root|cycle|update-after-delete)$/.exec(f.path)
     if (ref) text = `component "${ref[1]}" references "${ref[2]}", which no component in the payload or the session defines (dangling id)`
     else if (sid?.[2] === 'root-missing') text = `surface "${sid[1]}" has no component with id "root"`
-    else if (sid?.[2] === 'root') text = `surface "${sid[1]}" receives "root" more than once (a second root, or a root resent to a surface that already has one)`
+    else if (sid?.[2] === 'root') text = `surface "${sid[1]}" receives "root" twice (two roots in one payload, or a root resent as another component type)`
     else if (sid?.[2] === 'cycle') text = `surface "${sid[1]}" has a cycle in its component tree`
     else if (sid?.[2] === 'update-after-delete') text = `surface "${sid[1]}" is updated after it was deleted`
     else text = `broken component tree at ${f.path || '(no path)'}`
   } else if (f.code === 'PARSE') {
     text = 'the payload did not parse as JSON lines'
+  } else if (f.code === 'SURFACE_DROPPED') {
+    text = `surface "${f.path}" was created by an earlier round of this turn and left out of this one (T-0172)`
   } else {
     text = f.path ? `at ${f.path}` : 'no path reported'
   }
   return `${f.code}: ${text}${f.detail ? ` (${f.detail})` : ''}`
 }
 
-/** The payload a round handed to validation: the `render_surface` tool's `jsonl` when the round called it,
- *  else the round's text. */
+/** The payload a round handed to validation: the `render_surface` tool's payload when the round called it
+ *  (its `messages` as JSON lines, or the legacy `jsonl` string, T-0172), else the round's text. */
 export function roundCandidate(round: Pick<TraceRound, 'text' | 'tools'>): string {
   const call = [...round.tools].reverse().find((t) => t.name === 'render_surface')
-  const jsonl = (call?.input as { jsonl?: unknown } | undefined)?.jsonl
-  return typeof jsonl === 'string' ? jsonl : round.text
+  const input = call?.input
+  return input !== null && typeof input === 'object' ? renderSurfaceJsonl(input as Record<string, unknown>) : round.text
 }
 
 /** Where `candidate` stops parsing, the way produce() reads it: skip a leading meta-line, strip one outer

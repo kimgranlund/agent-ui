@@ -68,7 +68,7 @@ describe('structural-resend reconciliation — focus survival across engines (RS
     r.mount(mount)
 
     r.ingestMessage({ version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'agent-ui' } })
-    // `root` is never reconciled (SPEC-R4) — `btn` is wrapped under a stable, never-resent `root` so this
+    // `btn` is wrapped under a stable, never-resent `root` (a same-type root resend reconciles since T-0172) so this
     // leg resends the FOCUSED node's own record directly, genuinely exercising `#reconcileProps`.
     r.ingestMessage({
       version: 'v1.0',
@@ -94,6 +94,55 @@ describe('structural-resend reconciliation — focus survival across engines (RS
     expect(document.activeElement).toBe(btn) // focus survived the prop-only reconcile
     expect(btn.textContent).toBe('Go!') // the label really updated (SPEC-R2 AC1)
 
+    r.dispose()
+    mount.remove()
+  })
+})
+
+describe('T-0172: a same-type root resend reconciles (A2UI v1.0 updateComponents upserts by id)', () => {
+  it('a later root record with a new child keeps the SAME attached root element and its focused survivor, with no error', () => {
+    const mount = document.createElement('div')
+    document.body.append(mount)
+    const r = createRenderer()
+    const errors: unknown[] = []
+    r.onClientMessage((m) => {
+      if ('error' in m) errors.push(m)
+    })
+    r.mount(mount)
+
+    r.ingestMessage({ version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'agent-ui' } })
+    r.ingestMessage({
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: 's1',
+        components: [
+          { id: 'root', component: 'Column', children: ['btn'] },
+          { id: 'btn', component: 'Button', label: 'Hit' },
+        ],
+      },
+    })
+    const rootEl = mount.querySelector('[data-a2ui-surface="s1"]') as HTMLElement
+    const btn = mount.querySelector('ui-button') as HTMLElement
+    btn.focus()
+
+    // The Croupier deal turn's shape: `root` resent whole with the controls it now holds.
+    r.ingestMessage({
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: 's1',
+        components: [
+          { id: 'root', component: 'Column', children: ['btn', 'stand'] },
+          { id: 'stand', component: 'Button', label: 'Stand' },
+        ],
+      },
+    })
+
+    expect(errors).toEqual([])
+    expect(mount.querySelector('[data-a2ui-surface="s1"]')).toBe(rootEl)
+    expect(rootEl.getAttribute('data-tier')).toBe('widget')
+    expect([...mount.querySelectorAll('ui-button')].map((b) => b.textContent?.trim())).toEqual(['Hit', 'Stand'])
+    expect(mount.querySelector('ui-button')).toBe(btn)
+    expect(document.activeElement).toBe(btn)
     r.dispose()
     mount.remove()
   })

@@ -73,6 +73,10 @@ Content to add (verbatim intent, exact wording is the build seat's to finalize a
 > LLD-C4/C5's root-safe JSONL below; the LLD's original worked payloads hitting the `IDGRAPH` wall is the
 > proof the teaching needed this rule (SPEC-R2's root carve-out is the normative home).
 
+> **REV 2026-10-14 (T-0172):** the bullet quoted above is superseded in `grammar.md`: a same-type `root`
+> resend now replaces like any id; only a resend of another type is the id-graph error (runtime SPEC-R3 AC2
+> REV). The stable-wrapper advice stays.
+
 ### LLD-C2 — test coverage for LLD-C1
 
 Extend `system-prompt-grammar.test.ts` (the ADR-0089/0090 precedent file) with:

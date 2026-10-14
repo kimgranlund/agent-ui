@@ -616,6 +616,14 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
     '{"id":"root","component":"Column","children":["q","go","expl"]},' +
     '{"id":"expl","component":"Text","text":"Paris has been the capital since 987."}' +
     ']}}'
+  // T-0172: a same-type `root` resend is an upsert (it replaces and reconciles), so the member that still
+  // fails `sid:root` is a resend that changes root's component TYPE.
+  const ROOT_SWAP =
+    '{"a2uiMeta":{"note":"Correct! Here is why."}}\n' +
+    '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[' +
+    '{"id":"root","component":"Row","children":["q","go","expl"]},' +
+    '{"id":"expl","component":"Text","text":"Paris has been the capital since 987."}' +
+    ']}}'
   // The OTHER member: re-creating the surface (which starts it EMPTY — validate.ts's `createdHere`) while
   // sending only a partial tree. This is the shape a model reaches for once it has been told not to resend
   // `root` — half-following the re-create advice without the "COMPLETE tree" half.
@@ -624,8 +632,18 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
     '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}\n' +
     '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[{"id":"q","component":"Text","text":"Q2?"}]}}'
 
-  it('GH #307: re-delivering root on a RESUMED surface halts on IDGRAPH main:root (the game-loop failure)', async () => {
+  it('T-0172: a same-type root resend on a RESUMED surface is an upsert: round 1 streams it (the game-loop fix)', async () => {
     const { provider, calls } = stubProvider([ROOT_RESEND])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(resumedClick, deps, { maxRounds: 3 })) lines.push(line)
+    expect(calls()).toBe(1)
+    expect(lines).toHaveLength(2) // the meta-line + the updateComponents carrying the new root
+    expect(lines[1]).toContain('"expl"')
+  })
+
+  it('GH #307: re-delivering root as ANOTHER type on a RESUMED surface halts on IDGRAPH main:root', async () => {
+    const { provider, calls } = stubProvider([ROOT_SWAP])
     const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
     const lines: string[] = []
     let halted: unknown
@@ -644,7 +662,7 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
     expect(lines).toHaveLength(0)
 
     // The update-only counterpart of the SAME turn is valid — proof the seed covers this resume path and
-    // that the halt above is the root-resend specifically, not a seeding gap.
+    // that the halt above is the root type swap specifically, not a seeding gap.
     const UPDATE_ONLY =
       '{"a2uiMeta":{"note":"Correct!"}}\n' +
       '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[{"id":"q","component":"Text","text":"Q2?"}]}}'
@@ -663,7 +681,7 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
   // drops the `createSurface` — round 1 again. Three rounds, two members chasing each other, turn dead.
   // (`stubProvider` repeats its LAST output once exhausted, so this needs all three scripted explicitly.)
   it('GH #307: the two IDGRAPH members CHAIN across rounds — main:root → main:root-missing → main:root → halt', async () => {
-    const { provider, calls, reqs } = stubProvider([ROOT_RESEND, RECREATE_PARTIAL, ROOT_RESEND])
+    const { provider, calls, reqs } = stubProvider([ROOT_SWAP, RECREATE_PARTIAL, ROOT_SWAP])
     const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
     let halted: unknown
     const lines: string[] = []
@@ -688,30 +706,19 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
   })
 
   it('GH #307: the IDGRAPH feedback names the REPAIR per member (duplicate root / root-missing), not just the path', async () => {
-    const { provider, reqs } = stubProvider([ROOT_RESEND])
+    const { provider, reqs } = stubProvider([ROOT_SWAP])
     const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
     await expect(async () => {
       for await (const _l of produce(resumedClick, deps, { maxRounds: 2 })) void _l
     }).rejects.toBeInstanceOf(ProduceHalt)
     const feedback = reqs()[1]!.messages.find((m) => m.role === 'user' && /INVALID/.test(m.content))!
     expect(feedback.content).toMatch(/IDGRAPH at main:root/)
-    expect(feedback.content).toMatch(/already received its ONE `id:"root"` in an EARLIER turn/)
+    // T-0172: the member names both shapes that still fail and the repair each takes.
+    expect(feedback.content).toMatch(/different component type/)
+    expect(feedback.content).toMatch(/SAME component type replaces it/)
     expect(feedback.content).toMatch(/re-create the surface/)
+    expect(feedback.content).toMatch(/COMPLETE tree, `root` included/)
     expect(feedback.content).not.toMatch(/has NO `id:"root"`/) // the other member's hint must NOT ride along
-
-    // Review F1 — the ORDER is load-bearing, not cosmetic. `sid:root` fires only because the payload
-    // CONTAINED `id:"root"`, i.e. the model was trying to change root; leading with "send only what
-    // changed, without root" invites a compliant round that ships the new node UNPARENTED, and
-    // `checkIdGraph` has no orphan/reachability check — that round VALIDATES and streams, trading a loud
-    // halt for a silent under-render. So the re-create branch must come FIRST, and the conditional
-    // "send only what changed" arm must carry the reachability warning.
-    const recreateAt = feedback.content.indexOf('re-create the surface')
-    const partialAt = feedback.content.indexOf('send only the components that actually changed')
-    expect(recreateAt).toBeGreaterThan(-1)
-    expect(partialAt).toBeGreaterThan(-1)
-    expect(recreateAt).toBeLessThan(partialAt)
-    expect(feedback.content).toMatch(/must be reachable from `root`/)
-    expect(feedback.content).toMatch(/silently never render/)
 
     // The root-missing member gets the OTHER repair instruction.
     const { provider: p2, reqs: reqs2 } = stubProvider([RECREATE_PARTIAL])
@@ -723,7 +730,7 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
     expect(feedback2.content).toMatch(/IDGRAPH at main:root-missing/)
     expect(feedback2.content).toMatch(/has NO `id:"root"`/)
     expect(feedback2.content).toMatch(/drop the `createSurface` line/)
-    expect(feedback2.content).not.toMatch(/already received its ONE/)
+    expect(feedback2.content).not.toMatch(/different component type/)
 
     // Negative control: a CATALOG-only failure carries no id-graph hint at all.
     const { provider: p3, reqs: reqs3 } = stubProvider([INVALID, VALID])
@@ -790,10 +797,10 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
     expect(feedback.content).toMatch(/Re-send `createSurface`/)
     expect(feedback.content).toMatch(/before updating a deleted surface/)
     // Negative control: the other four members' sentences must NOT ride along.
-    expect(feedback.content).not.toMatch(/already received its ONE|has NO `id:"root"`|NO component defines|form a CYCLE/)
+    expect(feedback.content).not.toMatch(/different component type|has NO `id:"root"`|NO component defines|form a CYCLE/)
 
     // …and the converse: the existing members' feedback must NOT carry this sentence.
-    const { provider: p2, reqs: reqs2 } = stubProvider([ROOT_RESEND])
+    const { provider: p2, reqs: reqs2 } = stubProvider([ROOT_SWAP])
     const deps2: ProduceDeps = { provider: p2, retrieve: () => [], catalog: defaultCatalog }
     await expect(async () => {
       for await (const _l of produce(resumedClick, deps2, { maxRounds: 2 })) void _l
@@ -1512,7 +1519,7 @@ describe('produce() feed-embedded ask — the FEED_SCOPE self-correct gate (ADR-
 })
 
 // TKT-0081 — session-seeded validation: the per-round validator judges the MERGED cross-turn graph, so
-// a follow-up turn's root-resend fails PRE-WIRE (a self-correct round with `sid:root` fed back — the
+// a follow-up turn's root type swap (T-0172: a same-type resend is an upsert) fails PRE-WIRE (a self-correct round with `sid:root` fed back — the
 // renderer's ADR-0128 verdict, minus the shipped client-error round trip it used to cost), and the
 // correct update-only follow-up (standalone-invalid before this ticket) streams clean.
 describe('produce() — TKT-0081 cross-turn seeded validation', () => {
@@ -1542,8 +1549,18 @@ describe('produce() — TKT-0081 cross-turn seeded validation', () => {
   // into the prior turn), valid ONLY under the session seed.
   const UPDATE_ONLY = '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[{"id":"msg","component":"Text","text":"ready"}]}}'
 
-  it('a root-resend follow-up self-corrects PRE-WIRE (sid:root fed back), then the update-only round streams', async () => {
-    const { provider, calls, reqs } = stubProvider([RESEND_ROOT, UPDATE_ONLY])
+  it('T-0172: a same-type root-resend follow-up is an upsert and streams on round 1', async () => {
+    const { provider, calls } = stubProvider([RESEND_ROOT])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(followUp, deps, { maxRounds: 3 })) lines.push(line)
+    expect(calls()).toBe(1)
+    expect(lines).toEqual([RESEND_ROOT])
+  })
+
+  it('a root type-swap follow-up self-corrects PRE-WIRE (sid:root fed back), then the update-only round streams', async () => {
+    const SWAP_ROOT = RESEND_ROOT.replace('{"id":"root","component":"Column"', '{"id":"root","component":"Row"')
+    const { provider, calls, reqs } = stubProvider([SWAP_ROOT, UPDATE_ONLY])
     const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
     const lines: string[] = []
     for await (const line of produce(followUp, deps, { maxRounds: 3 })) lines.push(line)

@@ -360,4 +360,54 @@ export const croupierHandConsistency: SemanticCheck = {
   check: (input) => input.surfaces.flatMap(checkSurface),
 }
 
-export const croupierSemanticChecks: readonly SemanticCheck[] = [croupierHandConsistency]
+const bindingPath = (v: unknown): string | undefined =>
+  typeof v === 'object' && v !== null && typeof (v as { path?: unknown }).path === 'string' ? (v as { path: string }).path : undefined
+
+/** A CardTable's phase: the literal, or the bound value in the data model; absent or unknown is `playing`,
+ *  as the factory reads it. */
+function phaseOf(table: A2uiComponent, dataModel: unknown): string {
+  const raw = table['phase']
+  const path = bindingPath(raw)
+  const value = path === undefined ? raw : readPointer(dataModel, path)
+  return value === 'betting' || value === 'settled' ? value : 'playing'
+}
+
+const BET_INPUTS = new Set(['Slider', 'TextField'])
+
+/** T-0172 (Kim's ruling): a CardTable owns the whole bet phase. In `betting` its strip of bet buttons places the
+ *  bet and fires `betAction`, so the table needs `betAction`, carries no Button child, and the surface holds no
+ *  Slider or TextField for the bet. In any phase, a second control bound to the table's bet path doubles its
+ *  controls (the Sonnet 5 trace of 2026-10-14 added a Slider on `/bet` beside the table). */
+function betControls(view: SurfaceView): SemanticFinding[] {
+  const findings: SemanticFinding[] = []
+  const finding = (id: string, message: string): void => void findings.push({ code: 'BET_CONTROL_DUPLICATE', path: `${view.surfaceId}:${id}`, message })
+  for (const table of view.components.values()) {
+    if (table.component !== 'CardTable') continue
+    const bet = bindingPath(table['bet'])
+    const betting = phaseOf(table, view.dataModel) === 'betting'
+    if (betting && typeof table['betAction'] !== 'string')
+      finding(table.id, `${table.id} is in the betting phase with no "betAction". Set "betAction":"deal" so a press on its bet strip places the bet and deals.`)
+    const kids = Array.isArray(table['children']) ? (table['children'] as unknown[]) : []
+    for (const other of view.components.values()) {
+      if (other.id === table.id) continue
+      const sameBet = bet !== undefined && bindingPath(other['value']) === bet
+      const strayInput = betting && BET_INPUTS.has(other.component)
+      const strayButton = betting && other.component === 'Button' && kids.includes(other.id)
+      if (!sameBet && !strayInput && !strayButton) continue
+      finding(
+        other.id,
+        `${other.id} (a ${other.component}) duplicates ${table.id}'s own bet controls: in the betting phase its strip of ` +
+          `bet buttons places the bet and deals. Remove ${other.id} and its id from every children list.`,
+      )
+    }
+  }
+  return findings
+}
+
+/** T-0172: one bet, one set of bet controls (the CardTable's own strip). */
+export const croupierBetControls: SemanticCheck = {
+  id: 'croupier-bet-controls',
+  check: (input) => input.surfaces.flatMap(betControls),
+}
+
+export const croupierSemanticChecks: readonly SemanticCheck[] = [croupierHandConsistency, croupierBetControls]

@@ -78,7 +78,7 @@ describe('playingCardFactory — applyProp (direct prop pass-through, ADR-0225)'
 describe('cardTableFactory: the CardTable composite (ADR-0243)', () => {
   it('CardTable mints a ui-card root and names every tag it mints inside it (ADR-0233)', () => {
     expect(cardTableFactory.tag).toBe('ui-card')
-    expect(cardTableFactory.uses).toEqual(['ui-badge', 'ui-button', 'ui-playing-card', 'ui-text', 'ui-text-field'])
+    expect(cardTableFactory.uses).toEqual(['ui-badge', 'ui-button', 'ui-playing-card', 'ui-text'])
     const el = cardTableFactory.create()
     expect(el.tagName.toLowerCase()).toBe('ui-card')
     expect(el.parentNode).toBeNull()

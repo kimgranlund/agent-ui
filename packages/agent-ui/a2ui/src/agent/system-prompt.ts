@@ -78,7 +78,7 @@ const GRAMMAR = loadPrompt('grammar.md').replace('{{FEED_SURFACE_TYPES}}', FEED_
 // source of truth shared by every mode — including `'default'`, which uses GRAMMAR whole. ----
 
 const CLARIFY_MARKER = 'Ask instead of guess when the turn is underdetermined'
-const OUTPUT_MARKER = 'Output rules for the A2UI JSONL'
+const OUTPUT_MARKER = 'Output rules for the A2UI messages'
 
 const INTRO_AND_NOTE = GRAMMAR.slice(0, GRAMMAR.indexOf(CLARIFY_MARKER)).trim()
 const OUTPUT_RULES = GRAMMAR.slice(GRAMMAR.indexOf(OUTPUT_MARKER)).trim()

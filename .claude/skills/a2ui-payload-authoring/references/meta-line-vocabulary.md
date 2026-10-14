@@ -75,7 +75,7 @@ must compose correctly:
   ("never update/delete/rebuild a surface once its ask is answered; declare a NEW ask with a fresh
   `ask-<n>` id") applies ONLY from the moment the flow-final confirm is committed. Every mid-flow
   Next/Back turn in a backable wizard is a **scene transition on ONE still-open ask**: the producer's
-  `updateComponents` swaps the scene container's children (a stable child id under the root-once
+  `updateComponents` swaps the scene container's children (a stable child id under the stable-root
   wrapper), the ask keeps its ONE `ask-<n>` id for the whole wizard, and draft state lives under a
   `/draft/*` data-model prefix that survives every scene swap — Back is free because nothing has
   been committed yet. This reconciled a head-on collision between the shipped surface-reuse law and

@@ -401,6 +401,11 @@ const REPLY_HEADROOM = 2048
  *  `medium`), so it takes the current-family arm below. */
 const takesLegacyThinkingBudget = (model: string): boolean => /haiku-4-5/.test(model)
 
+/** T-0172: models that return a 400 on a forced `tool_choice` (`tool` or `any`) whatever the thinking setting
+ *  (Sonnet 5.5, Opus 5.5, Fable 5.1, Mythos 5.1). The surface override then rides `auto` plus its one
+ *  SURFACE_REQUESTED correction round in `produce()`. */
+const rejectsForcedToolChoice = (model: string): boolean => /sonnet-5-5|opus-5-5|fable-5-1|mythos-5-1/.test(model)
+
 /** Haiku 5.5 (also the Bedrock id `anthropic.claude-haiku-5-5`): the one model whose default effort is `medium`. */
 const isHaiku55 = (model: string): boolean => /haiku-5-5/.test(model)
 
@@ -423,11 +428,12 @@ export function buildRequestBody(req: {
   tools?: readonly ToolDef[]
   extraMessages?: readonly AnthropicMessage[]
   /** RTS-R2: force this tool. Sent as `tool_choice` only when the body carries tools and no `thinking`
-   *  field (the API rejects a forced tool choice with extended thinking); otherwise omitted. */
+   *  field (the API rejects a forced tool choice with extended thinking), and never on a model that rejects a
+   *  forced choice outright (T-0172, `rejectsForcedToolChoice`); otherwise omitted. */
   toolChoice?: { name: string }
 }): Record<string, unknown> {
   const body = buildArmBody(req)
-  if (req.toolChoice === undefined || body.tools === undefined || body.thinking !== undefined) return body
+  if (req.toolChoice === undefined || body.tools === undefined || body.thinking !== undefined || rejectsForcedToolChoice(req.model)) return body
   return { ...body, tool_choice: { type: 'tool', name: req.toolChoice.name } }
 }
 
@@ -473,10 +479,13 @@ function buildArmBody(req: {
   // values). max_tokens gets the same headroom bump the legacy arm used at the equivalent tier, so the
   // reply room does not shrink with the migration; Haiku 5.5 instead takes its ~30% scaled
   // HAIKU_55_MAX_TOKENS tier (T-0035).
+  // T-0172: `display: 'summarized'` on every adaptive model. Fable 5, Opus 4.7 and later, Sonnet 5 and 5.5 and
+  // Haiku 5.5 default to `'omitted'`, which streams thinking blocks with empty text, so the chat's
+  // "Reasoned" disclosure showed nothing. Display changes visibility only; thinking and billing are the same.
   return {
     ...base,
     max_tokens: isHaiku55(req.model) ? HAIKU_55_MAX_TOKENS[req.effort] : THINKING_BUDGET[req.effort] + REPLY_HEADROOM,
-    thinking: { type: 'adaptive' },
+    thinking: { type: 'adaptive', display: 'summarized' },
     output_config: { effort: req.effort },
   }
 }

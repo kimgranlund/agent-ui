@@ -783,12 +783,13 @@ describe('admit: the multi-turn facet (ADR-0231 cl.2)', () => {
     expect(deps.store.get('mt-login-submit')).toEqual(result.record)
   })
 
-  it('rejects a follow-up that resends `root` with E_IDGRAPH at `sid:root`, and admits it with the resend removed', async () => {
-    const rootResend: A2uiOutput = [
+  it('rejects a follow-up that resends `root` as ANOTHER type with E_IDGRAPH at `sid:root`, and admits a same-type resend (T-0172: an upsert) and the resend removed', async () => {
+    const resend = (component: string): A2uiOutput => [
       ...LOGIN_FOLLOW_UP,
-      { version: 'v1.0', updateComponents: { surfaceId: 'login', components: [{ id: 'root', component: 'Column', children: ['status', 'submit', 'cancel'] }] } },
+      { version: 'v1.0', updateComponents: { surfaceId: 'login', components: [{ id: 'root', component, children: ['status', 'submit', 'cancel'] }] } },
     ]
-    const rejected = await admit(multiTurnRecord({ a2uiOutput: rootResend }), mkFacetDeps())
+    expect((await admit(multiTurnRecord({ a2uiOutput: resend('Column') }), mkFacetDeps())).ok).toBe(true)
+    const rejected = await admit(multiTurnRecord({ a2uiOutput: resend('Row') }), mkFacetDeps())
     expect(rejected.ok).toBe(false)
     if (rejected.ok) return
     expect(rejected.code).toBe('E_IDGRAPH')

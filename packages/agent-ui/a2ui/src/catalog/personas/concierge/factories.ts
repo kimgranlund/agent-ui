@@ -451,6 +451,9 @@ export const bookingFormFactory: WidgetFactory = {
 interface BookingConfirmationRow {
   label: string
   path: string
+  /** T-0172: the value-to-label map for a row whose value is a code (a `select` field's `value`), so the row
+   *  prints "Twin room" rather than the raw 'twin'. A value with no match prints as before. */
+  options?: BookingFieldOption[]
 }
 
 function isConfirmationRow(v: unknown): v is BookingConfirmationRow {
@@ -462,8 +465,16 @@ function isConfirmationRow(v: unknown): v is BookingConfirmationRow {
   )
 }
 
+function isFieldOption(v: unknown): v is BookingFieldOption {
+  return typeof v === 'object' && v !== null && typeof (v as { value?: unknown }).value === 'string' && typeof (v as { label?: unknown }).label === 'string'
+}
+
 function readRows(value: unknown): BookingConfirmationRow[] {
-  return Array.isArray(value) ? value.filter(isConfirmationRow) : []
+  if (!Array.isArray(value)) return []
+  return value.filter(isConfirmationRow).map((row) => {
+    const options = Array.isArray(row.options) ? row.options.filter(isFieldOption) : []
+    return options.length > 0 ? { label: row.label, path: row.path, options } : { label: row.label, path: row.path }
+  })
 }
 
 interface BookingConfirmationParts {
@@ -518,7 +529,8 @@ function applyConfirmationData(parts: BookingConfirmationParts, data: unknown): 
     const valueEl = wrap?.querySelector('[data-part="value"]')
     if (valueEl === null || valueEl === undefined) continue
     const raw = obj[row.path]
-    valueEl.textContent = displayValue(raw)
+    const option = typeof raw === 'string' ? row.options?.find((o) => o.value === raw) : undefined
+    valueEl.textContent = option !== undefined ? option.label : displayValue(raw)
   }
 }
 

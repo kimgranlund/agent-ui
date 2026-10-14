@@ -40,7 +40,18 @@
             "type": "array",
             "items": {
               "type": "object",
-              "properties": { "label": { "type": "string" }, "path": { "type": "string" } },
+              "properties": {
+                "label": { "type": "string" },
+                "path": { "type": "string" },
+                "options": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": { "value": { "type": "string" }, "label": { "type": "string" } },
+                    "required": ["value", "label"]
+                  }
+                }
+              },
               "required": ["label", "path"]
             }
           },

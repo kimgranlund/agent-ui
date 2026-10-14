@@ -7,6 +7,7 @@ import {
   classifyResponse,
   detectUserOverride,
   isLegacyShape,
+  renderSurfaceJsonl,
   renderSurfaceTool,
 } from './response-type.ts'
 
@@ -26,9 +27,18 @@ describe('renderSurfaceTool', () => {
     expect(tool.name).toBe('render_surface')
     expect(tool.input_schema).toEqual({
       type: 'object',
-      properties: { jsonl: { type: 'string' }, target: { type: 'string' } },
-      required: ['jsonl'],
+      properties: { messages: { type: 'array', items: { type: 'object' } }, target: { type: 'string' } },
+      required: ['messages'],
     })
+    expect(tool.description).toMatch(/never a JSON string/)
+  })
+  it('T-0172: reads structured `messages` as one JSON line each, still reads a legacy `jsonl` string, else empty', () => {
+    const create = { version: 'v1.0', createSurface: { surfaceId: 's', catalogId: 'agent-ui' } }
+    const update = { version: 'v1.0', updateComponents: { surfaceId: 's', components: [{ id: 'root', component: 'Text', text: 'a "quoted" {brace}' }] } }
+    expect(renderSurfaceJsonl({ messages: [create, update] })).toBe(`${JSON.stringify(create)}\n${JSON.stringify(update)}`)
+    expect(renderSurfaceJsonl({ jsonl: 'line' })).toBe('line')
+    expect(renderSurfaceJsonl({ messages: [create], jsonl: 'ignored' })).toBe(JSON.stringify(create))
+    expect(renderSurfaceJsonl({})).toBe('')
   })
   it('names every open surface, gates on a structure, and prefers an update', () => {
     expect(tool.description).toContain('main')

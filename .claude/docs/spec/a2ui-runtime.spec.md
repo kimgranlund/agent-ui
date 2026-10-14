@@ -55,6 +55,14 @@ Normative per RFC 2119. Each carries a stable ID, a PRD trace, and acceptance cr
 - **AC1** *Given* components including `id:"root"`, *when* applied, *then* the surface renders the tree rooted at `root`.
 - **AC2** *Given* a second component with `id:"root"`, *when* applied, *then* the renderer emits `error{code:"IDGRAPH"}` and does not replace the existing root.
 
+> **REV 2026-10-14 (T-0172):** AC2 now applies to a second `root` of a DIFFERENT component type only. A2UI
+> v1.0 `updateComponents` adds or updates components by id and sets no send-once rule for `root`, so a
+> same-type `root` resend is an upsert: the renderer reconciles it onto the SAME element like any resent id
+> (`tree.ts`), the surface still holds exactly one root, and the validator's cross-turn seed counts the prior
+> root as presence, not a delivery (`validate.ts`). Two `root`s inside one payload's epoch still fail
+> `sid:root` in the validator. The live traces that drove it: the Croupier deal turn and the Concierge
+> booking turn each resent a same-type `root` and lost the turn to `sid:root`.
+
 **SPEC-R4 — Out-of-order / incomplete tolerance.** A component MAY reference a `child`/`children` ID not yet delivered, or a `path` not yet in the data model. The renderer MUST render what is available, hold unresolved references, and patch them in when later messages arrive — never blocking or erroring on a not-yet-defined reference. *(→ PRD-G1)*
 - **AC1** *Given* a parent referencing a child ID that arrives in a later message, *when* the child arrives, *then* it is patched into place with no full re-render of the unaffected subtree.
 - **AC2** *Given* a binding to an undefined `path`, *when* rendered, *then* the widget shows an empty/placeholder value (not an error) and updates when the data arrives.

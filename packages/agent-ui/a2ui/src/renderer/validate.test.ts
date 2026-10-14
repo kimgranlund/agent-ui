@@ -367,16 +367,37 @@ describe('validateA2ui — the TKT-0081 sessionSeed (cross-turn merged-graph jud
     expect(v.failures.some((f) => f.code === 'IDGRAPH' && f.path === 's1:root-missing')).toBe(true)
   })
 
-  it('re-delivering "root" for a seeded surface fails as the renderer\'s own `sid:root` verdict', () => {
+  it('T-0172: re-delivering a same-type "root" for a seeded surface is an upsert (it replaces, one root stays)', () => {
     const resend = [
       {
         version: 'v1.0',
-        updateComponents: { surfaceId: 's1', components: [{ id: 'root', component: 'Column', children: ['group'] }] },
+        updateComponents: { surfaceId: 's1', components: [{ id: 'root', component: 'Column', children: ['group', 'extra'] }, { id: 'extra', component: 'Text', text: 'new' }] },
+      },
+    ]
+    expect(validateA2ui(resend, demoCatalog, seed, { atFinalize: true })).toEqual({ valid: true, failures: [] })
+    // The replace is real: the new root's children must still resolve against the merged graph.
+    const dangling = [{ version: 'v1.0', updateComponents: { surfaceId: 's1', components: [{ id: 'root', component: 'Column', children: ['ghost'] }] } }]
+    expect(validateA2ui(dangling, demoCatalog, seed).failures).toEqual([{ code: 'IDGRAPH', path: 'root->ghost' }])
+  })
+
+  it('re-delivering "root" as ANOTHER type for a seeded surface fails as the renderer\'s own `sid:root` verdict', () => {
+    const resend = [
+      {
+        version: 'v1.0',
+        updateComponents: { surfaceId: 's1', components: [{ id: 'root', component: 'Text', text: 'swapped' }] },
       },
     ]
     const v = validateA2ui(resend, demoCatalog, seed)
     expect(v.valid).toBe(false)
     expect(v.failures).toEqual([{ code: 'IDGRAPH', path: 's1:root' }])
+  })
+
+  it('two "root"s inside ONE payload for a seeded surface still fail `sid:root` (the in-payload rule is untouched)', () => {
+    const twice = [
+      { version: 'v1.0', updateComponents: { surfaceId: 's1', components: [{ id: 'root', component: 'Column', children: ['group'] }] } },
+      { version: 'v1.0', updateComponents: { surfaceId: 's1', components: [{ id: 'root', component: 'Column', children: ['group'] }] } },
+    ]
+    expect(validateA2ui(twice, demoCatalog, seed).failures).toEqual([{ code: 'IDGRAPH', path: 's1:root' }])
   })
 
   it('a payload that RE-CREATES the surface starts fresh — its root delivery is legal despite the seed', () => {
@@ -773,8 +794,10 @@ describe('validateA2ui: ADR-0064 amendment surface epochs (delete frees the id g
       }
     })
 
-    it('negative control: the same root WITHOUT the delete is the seeded resend, `s:root`', () => {
-      expect(validateA2ui([rootText('fresh')], demoCatalog, seed, { atFinalize: true }).failures).toEqual([
+    it('negative control: the same root WITHOUT the delete is the seeded resend: a same-type one replaces (T-0172), another type fails `s:root`', () => {
+      expect(validateA2ui([rootText('fresh')], demoCatalog, seed, { atFinalize: true })).toEqual(CLEAN)
+      const typeSwap = comps([{ id: 'root', component: 'Column', children: [] }])
+      expect(validateA2ui([typeSwap], demoCatalog, seed, { atFinalize: true }).failures).toEqual([
         { code: 'IDGRAPH', path: 's:root' },
       ])
     })

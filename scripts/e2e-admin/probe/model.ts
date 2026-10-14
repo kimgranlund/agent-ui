@@ -3,10 +3,12 @@
 // the fast selftest drives every check over canned records.
 //
 // A check reads one turn record and returns pass, fail, warn or skip. `fail` makes the probe exit 1;
-// `warn` is reported only (the reasoning check stays warn-level until T-0172 lands).
+// `warn` is reported only (the reasoning check stays warn-level until a live probe confirms T-0172's
+// `display: 'summarized'` yields thinking text).
 
 import { heal } from '../../../packages/agent-ui/a2ui/src/corpus/heal.ts'
 import { readMetaLine } from '../../../packages/agent-ui/a2ui/src/agent/meta-line.ts'
+import { renderSurfaceJsonl } from '../../../packages/agent-ui/a2ui/src/agent/response-type.ts'
 
 // ── the probe fixture (`agent-ui-chat-probe` v1) ──────────────────────────────────────────────────────
 
@@ -201,8 +203,9 @@ const CREATE_RE = /"createSurface"\s*:\s*\{\s*"surfaceId"\s*:\s*"([^"]+)"/g
 export function createdInRound(round: ProbeRound): string[] {
   const texts = [round.text]
   for (const tool of round.tools) {
-    const input = tool.input as { jsonl?: unknown } | undefined
-    if (tool.name === 'render_surface' && typeof input?.jsonl === 'string') texts.push(input.jsonl)
+    const input = tool.input
+    // T-0172: the structured `messages` array, or the legacy `jsonl` string.
+    if (tool.name === 'render_surface' && input !== null && typeof input === 'object') texts.push(renderSurfaceJsonl(input as Record<string, unknown>))
   }
   const ids = new Set<string>()
   for (const text of texts) {

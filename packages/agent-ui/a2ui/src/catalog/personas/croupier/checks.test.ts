@@ -4,7 +4,7 @@
 // here with one clear dealer finding; its repair and the taught data-driven shape pass.
 
 import { describe, it, expect } from 'vitest'
-import { croupierHandConsistency, croupierSemanticChecks } from './checks.ts'
+import { croupierBetControls, croupierHandConsistency, croupierSemanticChecks } from './checks.ts'
 import { croupierManifest } from './manifest.ts'
 import { CORRECTED_LINE, DATA_DRIVEN_TURN, DEAL_TURN, EVIDENCE_LINE, NATURAL_REPAIRED_TURN, NATURAL_TURN, toJsonl } from './hands.fixture.ts'
 import { semanticSurfaceViews } from '../../semantic-check.ts'
@@ -464,8 +464,53 @@ describe('croupier hand check: what it never judges', () => {
 })
 
 describe('croupier manifest declares the check (ADR-0238 wiring)', () => {
-  it('croupierManifest.semanticChecks is the one hand check', () => {
+  it('croupierManifest.semanticChecks is the hand check and the bet-controls check (T-0172)', () => {
     expect(croupierManifest.semanticChecks).toBe(croupierSemanticChecks)
-    expect(croupierSemanticChecks.map((c) => c.id)).toEqual(['croupier-hand-consistency'])
+    expect(croupierSemanticChecks.map((c) => c.id)).toEqual(['croupier-hand-consistency', 'croupier-bet-controls'])
+  })
+})
+
+// T-0172: the Sonnet 5 Blackjack trace of 2026-10-14, round 1, put a Slider on /bet beside the CardTable; Kim's ruling
+// makes the table's own bet strip the whole bet phase.
+describe('croupier bet controls: the CardTable owns the bet phase (T-0172)', () => {
+  const table = (extra: Record<string, unknown> = {}) => ({
+    id: 'root', component: 'CardTable', title: 'Blackjack', phase: { path: '/phase' }, bet: { path: '/bet' }, bankroll: { path: '/bankroll' }, betAction: 'deal', ...extra,
+  })
+  const payload = (components: Record<string, unknown>[], phase = 'betting'): A2uiOutput => [
+    { version: 'v1.0', createSurface: { surfaceId: 'table-1', catalogId: 'agent-ui--croupier' } },
+    { version: 'v1.0', updateDataModel: { surfaceId: 'table-1', value: { bankroll: 1000, bet: 50, phase } } },
+    { version: 'v1.0', updateComponents: { surfaceId: 'table-1', components } },
+  ] as A2uiOutput
+  const run = (output: A2uiOutput) => croupierBetControls.check({ surfaces: semanticSurfaceViews({ turns: [] }, output) })
+  const deal = { id: 'deal_btn', component: 'Button', label: 'Deal', action: { action: 'deal' } }
+
+  it('passes the betting table alone: its strip and betAction are the whole bet phase', () => {
+    expect(run(payload([table()]))).toEqual([])
+  })
+
+  it('flags the traced Slider on /bet and an extra Deal Button child, each naming the fix', () => {
+    const findings = run(payload([
+      table({ children: ['bet_slider', 'deal_btn'] }),
+      { id: 'bet_slider', component: 'Slider', label: 'Bet amount', value: { path: '/bet' }, min: 10, max: 500, step: 10 },
+      deal,
+    ]))
+    expect(findings.map((f) => [f.code, f.path])).toEqual([
+      ['BET_CONTROL_DUPLICATE', 'table-1:bet_slider'],
+      ['BET_CONTROL_DUPLICATE', 'table-1:deal_btn'],
+    ])
+    expect(findings[0]!.message).toMatch(/Remove bet_slider/)
+  })
+
+  it('flags an unbound TextField on the surface while betting, and a betting table with no betAction', () => {
+    const noAction = table({ children: ['stake'] })
+    delete (noAction as Record<string, unknown>)['betAction']
+    const findings = run(payload([noAction, { id: 'stake', component: 'TextField', label: 'Bet', type: 'number' }]))
+    expect(findings.map((f) => f.path)).toEqual(['table-1:root', 'table-1:stake'])
+    expect(findings[0]!.message).toMatch(/"betAction":"deal"/)
+  })
+
+  it('outside betting, the Hit, Stand and Double Buttons are the table\'s children and pass', () => {
+    const hit = { id: 'hit_btn', component: 'Button', label: 'Hit', action: { action: 'hit' } }
+    expect(run(payload([table({ children: ['hit_btn'] }), hit], 'playing'))).toEqual([])
   })
 })

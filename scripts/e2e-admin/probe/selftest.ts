@@ -3,7 +3,8 @@
 // `selftest` (fast, no browser, rides `check:scripts`): argument parsing, the fixture parser, every named
 // check over canned turn records, the trace-id resolver, and the offline replay of the three fixtures
 // through the real `produce()`: green-button and recorded-haiku-hello (the live smoke's trace) are green, seeded-json-prose fails `no-json-as-prose` (and
-// `no-surface-loss`, since the surface the model wrote as prose never ships), seeded-dropped-surface fails
+// `no-surface-loss`, since the surface the model wrote as prose never ships; its JSON is pretty-printed, the
+// shape the producer's prose routing leaves as text, T-0172), seeded-dropped-surface fails
 // exactly `no-surface-loss`.
 //
 // `selftest --browser` (slow, local): the same three fixtures replayed in the real agent-admin page behind

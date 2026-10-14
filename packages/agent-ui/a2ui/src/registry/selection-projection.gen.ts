@@ -110,7 +110,7 @@ export const SELECTION_PROJECTION: SelectionProjection = {
   },
   persona: {
     "concierge": {
-      "BookingForm": {"intents":["collect booking details","date, option and consent fields in one form"],"notFor":[{"type":"BookingConfirmation","why":"showing a confirmed booking"},{"type":"TextField","why":"one loose input outside a booking"},{"type":"Column","why":"an ad hoc stack of unrelated inputs"}]},
+      "BookingForm": {"intents":["collect booking details","reserve a table, spa slot, tour or room","date, time, choice and party-size fields in one form"],"notFor":[{"type":"BookingConfirmation","why":"showing a confirmed booking"},{"type":"TextField","why":"one loose input outside a booking"},{"type":"Column","why":"an ad hoc stack of unrelated inputs"}]},
       "BookingConfirmation": {"intents":["confirm a completed booking","summary rows of a finished booking"],"notFor":[{"type":"BookingForm","why":"collecting booking details"},{"type":"Card","why":"a generic bounded surface"},{"type":"Text","why":"a one-line status message"}]},
     },
     "croupier": {

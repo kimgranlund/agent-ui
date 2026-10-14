@@ -345,7 +345,7 @@ describe('the Croupier case is readable from the trace file (T-0151)', () => {
     expect(retry?.a2uiMeta?.progress?.detail).toMatch(/^Round 1 failed:\n {2}PARSE: .*\n {2}parse error at payload line 2, column \d+: /)
   })
 
-  it('turn 2: rounds 1 and 2 IDGRAPH with the dangling and resent ids, round 3 only a Text and a Row', async () => {
+  it('turn 2: rounds 1 and 2 IDGRAPH with the dangling id (round 2 resends root, an upsert since T-0172, still naming "table"), round 3 only a Text and a Row', async () => {
     state.script = [TURN2_ROUND1, TURN2_ROUND2, TURN2_ROUND3]
     const session = { turns: [{ role: 'user', content: 'hello' }, { role: 'assistant', content: `${CREATE}\n${GREETING_TREE}` }] }
     const out = await post('/produce', produceBody({ kind: 'intent', text: 'I pick Blackjack', session }))
@@ -355,7 +355,7 @@ describe('the Croupier case is readable from the trace file (T-0151)', () => {
     expect(line.rounds.map((r) => r.status)).toEqual(['failed', 'failed', 'passed'])
     expect(line.rounds.map((r) => r.text)).toEqual([TURN2_ROUND1, TURN2_ROUND2, TURN2_ROUND3])
     expect(line.rounds[0]!.failures).toContainEqual(expect.objectContaining({ code: 'IDGRAPH', path: 'games->table', message: expect.stringContaining('"table"') }))
-    expect(line.rounds[1]!.failures).toContainEqual(expect.objectContaining({ code: 'IDGRAPH', path: 'greet-1:root' }))
+    expect(line.rounds[1]!.failures).toEqual([expect.objectContaining({ code: 'IDGRAPH', path: 'root->table' })])
     expect(line.retries.map((r) => r.round)).toEqual([2, 3])
     // The shipped payload: one updateComponents on greet-1, a Text and a Row, and no CardTable.
     expect(line.surface).toMatchObject({ ops: { updateComponents: 1 }, surfaceIds: ['greet-1'], components: 2, types: { Text: 1, Row: 1 } })
