@@ -230,6 +230,7 @@ export class UITextFieldElement extends UIFormElement {
     this.listen(editor, 'blur', () => {
       if (this.value === this.#committed) return
       this.#committed = this.value
+      this.#codec?.commit() // the form value carries the edit on this change, before the codec's own blur (T-0171)
       this.emit('change')
     })
     this.listen(editor, 'keydown', (event) => {
@@ -244,6 +245,7 @@ export class UITextFieldElement extends UIFormElement {
         if (this.#composing) return
         event.preventDefault() // single-line field — Enter never inserts a newline
         this.#committed = this.value
+        this.#codec?.commit()
         this.emit('change') // Enter commits (resets the baseline, so a following blur does not double-fire)
         return
       }

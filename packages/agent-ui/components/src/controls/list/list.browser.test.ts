@@ -180,3 +180,21 @@ describe('ui-list cross-engine smoke (s5)', () => {
     spacious.done()
   })
 })
+
+describe('ui-list: the align attribute never leaks a text-align (T-0171)', () => {
+  // Chromium maps a bare `align` attribute to a presentational `text-align` (the legacy HTML hint), which every
+  // child then inherits (ui-row's T-0143 finding). ui-list's `align` is its cross-axis flex grammar only; the list
+  // resets the hint to the inherited value.
+  for (const align of ['center', 'end', 'start', 'stretch', 'baseline']) {
+    it(`a child of ui-list[align=${align}] keeps the inherited text-align`, () => {
+      const wrapper = document.createElement('div')
+      wrapper.style.textAlign = 'start'
+      wrapper.innerHTML = `<ui-list align="${align}"><div><span>title</span></div></ui-list>`
+      document.body.append(wrapper)
+      const el = wrapper.querySelector('ui-list') as HTMLElement
+      expect(getComputedStyle(el).textAlign, 'the list itself').toBe('start')
+      expect(getComputedStyle(el.querySelector('div') as HTMLElement).textAlign, 'its child').toBe('start')
+      wrapper.remove()
+    })
+  }
+})

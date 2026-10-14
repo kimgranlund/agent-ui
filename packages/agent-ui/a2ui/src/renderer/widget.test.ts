@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import '@agent-ui/components/all' // ADR-0233: the catalog factories import no control; the test defines the fleet
-import { effect, inspect, whenFlushed } from '@agent-ui/components'
+import { effect, inspect, signal, whenFlushed } from '@agent-ui/components'
 import { makeCreateWidget } from './widget.ts'
 import type { WidgetDeps } from './widget.ts'
 import { createSurface, disposeSurface } from './surface.ts'
@@ -228,6 +228,31 @@ describe('widget resolution — bound props (scope-owned effect, SPEC-N2/R5/N3)'
     surface.data.value = { label: 'second' }
     await whenFlushed() // effect re-runs are microtask-batched
     expect(applied.at(-1)).toEqual({ el, prop: 'label', value: 'second' })
+  })
+
+  it('a factory that reads its control inside applyProp never subscribes the bind to it (T-0171)', async () => {
+    const guestText = signal('') // stands in for a control's input signal, which a guest edits
+    const applied: unknown[] = []
+    const factory: WidgetFactory = {
+      tag: 'ui-text-field',
+      create: () => document.createElement('ui-text-field'),
+      applyProp: (_el, _prop, value) => {
+        if (guestText.value !== value) applied.push(value) // reads the control, as a composite's prefill may
+      },
+    }
+    const { createWidget } = harness({ Field: factory })
+    const surface = createSurface(init)
+    surface.data.value = { name: 'Ada' }
+    createWidget(comp({ id: 'f1', component: 'Field', value: { path: '/name' } }), surface)
+    expect(applied).toEqual(['Ada'])
+
+    guestText.value = 'Grace' // the guest types: the bound value must not be applied again over the edit
+    await whenFlushed()
+    expect(applied).toEqual(['Ada'])
+
+    surface.data.value = { name: 'Lin' } // a data change still re-applies
+    await whenFlushed()
+    expect(applied).toEqual(['Ada', 'Lin'])
   })
 
   it('the bound-prop effect is surface.scope-owned → disposeSurface leaves 0 subscribers (N3)', () => {

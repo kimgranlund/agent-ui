@@ -232,15 +232,12 @@ function prefillFieldControl(wrap: HTMLElement, field: BookingField, raw: unknow
 
 // ── date fields (T-0092, T-0106, T-0135) ────────────────────────────────────────────────────────────
 
-/** One date field: its element and what the form drives. `value()` is always an ISO date or ''. It is a plain held
- *  copy, never a read of the input: `applyProp` runs inside the renderer's bind effect, and reading the input's
- *  signals there would subscribe that effect to every keystroke and re-apply the bound value over the guest's. */
+/** One date field: its element and what the form drives. `value()` is always an ISO date or ''. Reading the input
+ *  inside `applyProp` is safe: the renderer runs it untracked, so the bind never re-applies over a guest's edit (T-0171). */
 interface DateField {
   el: HTMLElement
   input: HTMLElement
   value(): string
-  /** Re-read the held ISO from the input after the guest commits (called outside any effect). */
-  sync(): void
   setValue(iso: string): void
   setMin(iso: string): void
 }
@@ -265,9 +262,8 @@ function buildDateField(field: BookingField, form: FormProviderLike): DateField 
   input.placeholder = 'Choose date'
   const wrap = labelledField(field, input)
   wrap.setAttribute('data-part', 'date-field')
-  let held = ''
   // The text is the locale date once the field formats it; the form value is the ISO date throughout.
-  const live = (): string => {
+  const value = (): string => {
     const shown = input.value
     if (shown === '' || ISO_DATE.test(shown)) return shown
     const committed = form.values()[field.path]
@@ -276,14 +272,10 @@ function buildDateField(field: BookingField, form: FormProviderLike): DateField 
   return {
     el: wrap,
     input,
-    value: () => held,
-    sync: () => {
-      held = live()
-    },
+    value,
     setValue: (iso) => {
       const next = ISO_DATE.test(iso) ? iso : ''
-      if (next === held) return // the guest's own commit coming back through the binding is a no-op
-      held = next
+      if (next === value()) return // the guest's own commit coming back through the binding is a no-op
       input.value = next
     },
     setMin: (iso) => {
@@ -308,14 +300,10 @@ function reconcileDateRun(run: DateField[], clear: boolean): DateField[] {
   return cleared
 }
 
-/** After a guest commits a date in the run: re-hold the run once the field's own commit has settled (a typed date
- *  reaches the form value just after its change), and announce each cleared field with its own change so the
- *  bound aggregate drops it too. */
+/** After a guest commits a date in the run: re-hold the run (the field's form value already carries the commit), and
+ *  announce each cleared field with its own change so the bound aggregate drops it too. */
 function onDateCommit(run: DateField[]): void {
-  queueMicrotask(() => {
-    for (const field of run) field.sync()
-    for (const cleared of reconcileDateRun(run, true)) cleared.input.dispatchEvent(new Event('change', { bubbles: true }))
-  })
+  for (const cleared of reconcileDateRun(run, true)) cleared.input.dispatchEvent(new Event('change', { bubbles: true }))
 }
 
 /** A run of consecutive `dateSingle` fields (arrival and departure) shares one wrapping row: side by side where the

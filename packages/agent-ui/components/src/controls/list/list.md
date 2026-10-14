@@ -105,7 +105,7 @@ children (`render()` stays void).
 `ui-list` consumes the shared **`flexProps`** layout grammar (ADR-0016), each prop mapping 1:1 onto a CSS flex
 property (a role-pure repoint in CSS, never an inline style):
 
-- **`align`** (cross-axis) → `align-items`: `stretch` (default — items fill the list's width; use `start` to shrink-wrap) · `center` · `end` · `start` · `baseline`. (ADR-0030: default changed from `start` to `stretch`.)
+- **`align`** (cross-axis) → `align-items`: `stretch` (default — items fill the list's width; use `start` to shrink-wrap) · `center` · `end` · `start` · `baseline`. (ADR-0030: default changed from `start` to `stretch`.) It never aligns text: the engines' legacy presentational `text-align` for a bare `align` attribute is reset to the inherited value (T-0171).
 - **`justify`** (main-axis distribution) → `justify-content`: `start` · `center` · `end` · `between` · `around` · `evenly`.
 - **`gap`** → `gap: var(--md-sys-space-{step})` — the density-responsive layout-spacing ladder (`none` · `xs` · `sm`
   · `md` · `lg` · `xl` · `2xl`). The inter-item gap is the one quantity that rides `data-density` (an ancestor
