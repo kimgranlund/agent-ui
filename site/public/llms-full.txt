@@ -2796,12 +2796,13 @@ the drawing; `dot` and `more` are filled.
 ## Sizing
 
 The host is the shared **icon slot**: `2n` wide and tall, inset `c` on each side, so the mark box is
-`2n - 2c` and an icon and a glyph in neighbouring slots share the slot box and the centre line. Inside an
-opt-in `data-tier` region these read the derived foundation tokens (`--md-sys-icon-box`, `--md-sys-c`,
-`--md-sys-glyph-stroke`, ADR-0245): at the library root (`data-tier="product" data-scale="sm"`) the mark is
-8 / 10 / 12 px for sizes sm / md / lg with a 1.5px stroke. Outside a region the slot is `1em` with a
-`0.125em` inset, like `ui-icon`'s `1em` cell. Override `--ui-glyph-slot`, `--ui-glyph-inset` or
-`--ui-glyph-stroke` on the host to resize one mark.
+`2n - 2c` and an icon and a glyph in neighbouring slots share the slot box and the centre line. The slot reads
+the derived foundation tokens (`--md-sys-icon-box`, `--md-sys-c`, `--md-sys-glyph-stroke`, ADR-0245), which
+the library root declares, so a glyph keeps its own glyph box everywhere: at the root (product, scale sm) the
+mark is 6 / 8 / 10 px for sizes sm / md / lg with a 1.5px stroke. This is the line between a glyph and an icon
+(ADR-0245 Amendment 6): a standalone `ui-icon` follows the surrounding text (`1em`), a glyph never does. Under
+the `data-foundations="legacy"` opt-out the slot is `1em` with a `0.125em` inset. Override `--ui-glyph-slot`,
+`--ui-glyph-inset` or `--ui-glyph-stroke` on the host to resize one mark.
 
 ## Accessibility
 
@@ -2913,9 +2914,13 @@ swap. The normal case is registering a pack once at startup, before first render
 
 ## Sizing
 
-The host is a `1em × 1em` cell by default (`--md-sys-icon-size`) — there is no size ramp or lever. A consumer
-sizes an icon via ambient `font-size` (the common case, matching surrounding text) or an explicit
-`inline-size`/`block-size` override on the host. `color: inherit` means the icon's ink (the injected
+An icon follows the surrounding text: the host is a `1em × 1em` cell (`--md-sys-icon-size`), and there is no
+size ramp or lever. A consumer sizes an icon via ambient `font-size` (the common case, matching surrounding
+text) or an explicit `inline-size`/`block-size` override on the host. Two places size it for you (ADR-0245
+Amendment 6): inside a control cell (a button, toggle, field or select slot) the control's slot rule makes it
+the `2n` icon box, and inside an explicit `[data-tier]` region (an A2UI surface) a standalone icon is that
+region's `2n` icon box (`--md-sys-icon-box`). A functional mark is a `ui-glyph` instead, which keeps its own
+`2n - 2c` glyph box everywhere. `color: inherit` means the icon's ink (the injected
 `<svg fill="currentColor">`) always tracks the surrounding context with no per-icon color plumbing.
 
 ## Accessibility

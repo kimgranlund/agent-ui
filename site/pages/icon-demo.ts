@@ -82,7 +82,7 @@ const ramp = el('ui-row', { gap: 'lg', align: 'baseline', wrap: '' }, ['0.875rem
 
 const rampNote = el('p', {}, [
   text('The host is a '), el('code', {}, [text('1em × 1em')]),
-  text(' cell (`--md-sys-icon-size`) — the consumer’s ambient font-size, or an explicit inline-size on the host, is the ONLY size lever. No ramp, no `[size]` attribute (geometry.md "intrinsic structural sizing"). '),
+  text(' cell (`--md-sys-icon-size`): the consumer’s ambient font-size, or an explicit inline-size on the host, is the ONLY size lever. No ramp, no `[size]` attribute (geometry.md "intrinsic structural sizing"). '),
   text('An icon follows the text it sits beside. Two places size it for you (ADR-0245 Amendment 6): a control cell makes it the 2n icon box, as in the buttons above, and so does an explicit data-tier region such as an A2UI surface. A functional mark (a plus, a caret, a tick) is a ui-glyph instead, which keeps its own 2n - 2c glyph box everywhere.'),
 ])
 
@@ -104,6 +104,6 @@ const statusNote = el('p', {}, [
 content.append(
   exampleSection('Inside buttons', buttonRow, buttonNote),
   exampleSection('Beside list rows', fileList),
-  exampleSection('Sizing — the ambient font-size ramp', ramp, rampNote),
+  exampleSection('Sizing: the ambient font-size ramp', ramp, rampNote),
   exampleSection('Meaningful icons + ink inheritance', statusRow, statusNote),
 )
