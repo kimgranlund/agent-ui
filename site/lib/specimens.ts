@@ -116,7 +116,15 @@ export function exampleSection(title: string, ...nodes: Node[]): HTMLElement {
   return section
 }
 
-/** captioned — a live specimen above a small monospace caption (the [attr] it demonstrates), as a flex column figure. */
+/** supporting: a secondary line of product copy (a role, a timestamp, a file size) beside its name, set in body sm at
+ *  the variant ink (.demo-supporting in pages/containers.css). Product text never wears the mono .demo-caption, which
+ *  labels the [attr] a figure demonstrates (T-0150). */
+export function supporting(copy: string): HTMLElement {
+  return el('ui-text', { variant: 'body', size: 'sm', class: 'demo-supporting' }, [document.createTextNode(copy)])
+}
+
+/** captioned: a live specimen above a small monospace caption (the [attr] it demonstrates), as a flex column figure.
+ *  The figure takes its width from the specimen, never from the caption, which wraps inside it (T-0150). */
 export function captioned(caption: string, node: Node): HTMLElement {
   const figure = document.createElement('figure')
   figure.className = 'demo-figure'

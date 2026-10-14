@@ -63,7 +63,7 @@ const endEdge = drawerDemo(
 const startEdge = drawerDemo(
   'Start-docked drawer',
   { edge: 'start', 'aria-label': 'Start-docked drawer' },
-  [el('p', { style: 'margin:0' }, [text('Docked to the inline-start — the mirror of `end`.')])],
+  [el('p', { style: 'margin:0' }, [text('Docked to the inline-start, the mirror of '), el('code', {}, [text('end')]), text('.')])],
 )
 
 const bottomEdge = drawerDemo(
@@ -123,8 +123,8 @@ const focusNote = el('p', {}, [
 ])
 
 content.append(
-  // One gapped row of triggers on the group gutter, never three stacked edge to edge (T-0141).
-  exampleSection('The three edges', el('div', { style: 'display:flex; flex-wrap:wrap; gap:var(--md-sys-group-gutter)' }, [endEdge, startEdge, bottomEdge])),
+  // One gapped row of solid triggers on the widget gutter, the spacing every overlay demo uses (T-0141, T-0150).
+  exampleSection('The three edges', el('div', { style: 'display:flex; flex-wrap:wrap; gap:var(--md-sys-widget-gutter)' }, [endEdge, startEdge, bottomEdge])),
   exampleSection('Non-dismissable (agent owns the close)', persistent),
   exampleSection('Long-list scroll (scroll-fade)', longList),
   exampleSection('Inline field (native Tab order)', inlineField),

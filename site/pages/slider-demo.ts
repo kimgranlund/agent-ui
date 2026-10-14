@@ -6,7 +6,7 @@
 // timing. The control owns drag/keyboard/clamp/snap (slider.ts + value-drag.ts); this page stages and logs.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
-import { applyDemoWidth, captioned, el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { applyDemoWidth, captioned, el, exampleSection, supporting, uiButton } from '../lib/specimens.ts'
 
 const { content } = mountPage({
   title: 'ui-slider — demo',
@@ -36,12 +36,13 @@ const record = (source: string, kind: string, value: number): void => {
 
 // ── volume — 0..100, step 5, with a page-authored readout that mirrors the value on `input` ──────────────
 const volume = el('ui-slider', {
-  id: 'volume', name: 'volume', label: 'Playback volume', min: '0', max: '100', step: '5', value: '40',
+  // readout-hidden: the page's own output below prints the value with its unit, so the row shows it once (T-0150).
+  id: 'volume', name: 'volume', label: 'Playback volume', min: '0', max: '100', step: '5', value: '40', 'readout-hidden': '',
 }) as SliderHost
 applyDemoWidth(volume, '20rem')
 const volumeReadout = el('output', { for: 'volume', 'aria-live': 'polite' }, [text('40 %')])
 const describeVolume = (v: number): string => (v === 0 ? 'Muted' : v < 34 ? 'Quiet' : v < 67 ? 'Normal' : 'Loud')
-const volumeState = el('span', { class: 'demo-caption' }, [text(describeVolume(40))])
+const volumeState = supporting(describeVolume(40))
 volume.addEventListener('input', () => {
   volumeReadout.textContent = `${volume.value} %`
   volumeState.textContent = describeVolume(volume.value)

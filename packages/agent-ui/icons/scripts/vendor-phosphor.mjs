@@ -126,6 +126,10 @@ const NAME_MAP = {
   share: 'share',
   // T-0022: the activity strip's circled repaired-step glyph; identity with Phosphor's own regular name.
   'warning-circle': 'warning-circle',
+  // T-0150: the toggle demo's Bold, Italic and Underline formatting pills; identity with Phosphor's own regular names.
+  'text-b': 'text-b',
+  'text-italic': 'text-italic',
+  'text-underline': 'text-underline',
 }
 
 const EXPECTED_VIEW_BOX = '0 0 256 256'

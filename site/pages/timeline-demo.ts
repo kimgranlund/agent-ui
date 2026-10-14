@@ -29,6 +29,7 @@ const STEPS = [
 let stepIdx = 0
 
 const addStep = inline(uiButton('Append the next step', 'soft')) // ADR-0223: bare demo action — hugs
+addStep.style.marginBlockStart = 'var(--md-sys-widget-margin)' // T-0150: its own block, not the timeline's last row
 addStep.addEventListener('click', () => {
   if (stepIdx >= STEPS.length) return
   const step = STEPS[stepIdx]!

@@ -7,7 +7,7 @@
 // leaf) — the runtime status specimen logs the WRITES this page makes, so the hardening is visibly proven.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
-import { applyDemoWidth, captioned, el, exampleSection, scrollX, uiButton } from '../lib/specimens.ts'
+import { applyDemoWidth, captioned, el, exampleSection, supporting, uiButton } from '../lib/specimens.ts'
 import { whenFlushed } from '@agent-ui/components' // the kernel's microtask flush — effects (incl. the hardening) settle before the log reads
 
 const { content } = mountPage({
@@ -39,7 +39,7 @@ const runList = el('ui-list', { gap: 'xs' }, runs.map(([name, meta, badges]) =>
   el('ui-row', { gap: 'md', align: 'center', justify: 'between' }, [
     el('ui-column', { gap: 'none' }, [
       el('ui-text', { variant: 'body' }, [text(name)]),
-      el('ui-text', { variant: 'label', size: 'sm' }, [text(meta)]),
+      supporting(meta), // a quieter supporting line under the run name (T-0150)
     ]),
     el('ui-row', { gap: 'xs', align: 'center' }, badges.map(([label, intent]) => badge(label, intent))),
   ]),
@@ -90,17 +90,18 @@ const liveNote = el('p', {}, [
 ])
 
 // ── count pills + the empty-label floor ────────────────────────────────────────────────────────────────────
-const counts = el('ui-row', { gap: 'md', align: 'center' }, [
+// T-0150: the figures share their top edge and wrap at a narrow width, so no specimen is cut off in a scroller.
+const counts = el('ui-row', { gap: 'md', align: 'start', wrap: '' }, [
   captioned('label="3"', badge('3', 'info')),
   captioned('label="12"', badge('12', 'danger')),
   captioned('label="99+"', badge('99+', 'warning')),
-  captioned('label="" — the min-inline-size floor: a dot, never a sliver', badge('', 'success')),
-  captioned('label="" intent="neutral" — a plain dot', badge('', 'neutral')),
+  captioned('label="" success: the floor keeps the tick in a pill, never a sliver', badge('', 'success')),
+  captioned('label="" neutral: no glyph, a plain dot', badge('', 'neutral')),
 ])
 
 content.append(
   exampleSection('A run list — status + count tokens', runList, listNote),
   exampleSection('A bound status, written live', el('ui-row', { gap: 'md', align: 'center' }, [live]), writes, liveNote),
   exampleSection('write log', log),
-  exampleSection('Count pills + the empty-label floor', scrollX(counts, '40rem')),
+  exampleSection('Count pills + the empty-label floor', counts),
 )

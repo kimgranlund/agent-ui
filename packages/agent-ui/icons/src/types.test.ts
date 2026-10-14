@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest'
 import { ICON_NAMES, type IconName, type IconPack } from './types.ts'
 
 describe('ICON_NAMES', () => {
-  it('has exactly one hundred names (32 pre-ADR-0169 + 44 ADR-0169 cl.9b Icon-table members + 3 ADR-0179 GH #686 Amendment S7-a members + 2 GH #868 composer-trigger glyphs + 8 GH #1258 weather glyphs + 1 GH #1406 minus stepper glyph + 7 GH #1485 amenity/hospitality glyphs + 2 GH #1508 command-modal Actions glyphs + 1 T-0022 warning-circle activity-strip glyph)', () => {
-    expect(ICON_NAMES.length).toBe(100)
+  it('has exactly one hundred and three names (32 pre-ADR-0169 + 44 ADR-0169 cl.9b Icon-table members + 3 ADR-0179 GH #686 Amendment S7-a members + 2 GH #868 composer-trigger glyphs + 8 GH #1258 weather glyphs + 1 GH #1406 minus stepper glyph + 7 GH #1485 amenity/hospitality glyphs + 2 GH #1508 command-modal Actions glyphs + 1 T-0022 warning-circle activity-strip glyph + 3 T-0150 text-formatting glyphs)', () => {
+    expect(ICON_NAMES.length).toBe(103)
   })
 
   it('is all distinct strings', () => {
@@ -47,6 +47,8 @@ describe('ICON_NAMES', () => {
         'sign-out', 'share',
         // T-0022: the activity strip's circled repaired-step glyph (identity with Phosphor's own name).
         'warning-circle',
+        // T-0150: the text-formatting marks for the toggle demo's formatting pills (identity with Phosphor's own names).
+        'text-b', 'text-italic', 'text-underline',
       ].sort(),
     )
   })
