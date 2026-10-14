@@ -32,6 +32,7 @@ import {
 // storage key; the retired active-preset key constant stays inside the source module — the active-id
 // probes below go through the source's own read/write surface instead).
 import { ROSTER_ORDER_KEY } from '@agent-ui/app/agent-admin-roster-source'
+// @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime (capability-registry.test.ts precedent)
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import {
   COMMERCE_SKILLS,
@@ -284,7 +285,7 @@ describe('the Quizmaster seedVersion bump (T-0036): saved stores move to Haiku 5
   })
 })
 
-// ── T-0159 — preset and library prose names only what the live catalogs ship ──────────────────────────
+// ── T-0159: preset and library prose names only what the live catalogs ship ──────────────────────────
 // The 2026-10-14 audit found prose that taught a Text variant the catalog lacks (`body/sm`) and skills that
 // promised components a persona's catalog does not carry. This gate reads every authored capability text
 // (each preset's surfaceStyle, skills and workflows, and the authored library packs) and checks two kinds of
@@ -294,16 +295,17 @@ describe('the Quizmaster seedVersion bump (T-0036): saved stores move to Haiku 5
 // `localPatterns` fragment; a shared library entry, which any persona may add, to the default catalog plus
 // every fragment.
 
+declare const process: { cwd(): string }
 const CATALOG_DIR = `${process.cwd()}/packages/agent-ui/a2ui/src/catalog`
 
 function catalogComponents(path: string): Record<string, { properties?: Record<string, { type?: { enum?: string[] } }> }> {
-  return (JSON.parse(readFileSync(path, 'utf8')) as { components: Record<string, never> }).components
+  return (JSON.parse(readFileSync(path, 'utf8') as string) as { components: Record<string, never> }).components
 }
 
 const DEFAULT_COMPONENTS = catalogComponents(`${CATALOG_DIR}/default/catalog.json`)
 const DEFAULT_TYPES = new Set(Object.keys(DEFAULT_COMPONENTS))
 const FRAGMENT_TYPES: Record<string, Set<string>> = Object.fromEntries(
-  readdirSync(`${CATALOG_DIR}/personas`)
+  (readdirSync(`${CATALOG_DIR}/personas`) as string[])
     .filter((id) => existsSync(`${CATALOG_DIR}/personas/${id}/catalog.json`))
     .map((id) => [id, new Set(Object.keys(catalogComponents(`${CATALOG_DIR}/personas/${id}/catalog.json`)))]),
 )

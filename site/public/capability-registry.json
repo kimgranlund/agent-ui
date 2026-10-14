@@ -1776,7 +1776,7 @@
       ],
       "tag": "ui-theme-provider",
       "tier": "container",
-      "description": "A coordination element that establishes a color-scheme, scale, and density subtree for its descendants.",
+      "description": "A coordination element that establishes a color-scheme subtree for its descendants; size a subtree with data-tier and data-scale on any wrapper (ADR-0245).",
       "uses": [],
       "catalogs": []
     },

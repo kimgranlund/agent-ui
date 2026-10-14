@@ -65,6 +65,31 @@ function unquote(s: string): string {
   return m ? m[2]! : s
 }
 
+/** The raw text of the `attributes[]` sequence block: everything after the `attributes:` line up to the next
+ *  column-0 `key:` line (or end of fence); empty when the fence has no `attributes:` key. */
+function attributesBlock(fence: string): string {
+  const start = /^attributes:.*$/m.exec(fence)
+  if (!start) return ''
+  const rest = fence.slice(start.index + start[0].length)
+  const end = /\n[A-Za-z][\w]*:/.exec(rest)
+  return end ? rest.slice(0, end.index) : rest
+}
+
+/** The names of the `attributes[]` rows that carry `deprecated: true` (T-0159): a row kept only as a bridge
+ *  for one release, such as `ui-theme-provider`'s `scale`/`density` after ADR-0245, which the teaching line
+ *  must not advertise. Read apart from `readAttributes` so that reader stays shape-equal to the real
+ *  parser's name/type/values (the parity test). */
+function readDeprecatedNames(fence: string): Set<string> {
+  const names = new Set<string>()
+  let current: string | undefined
+  for (const line of attributesBlock(fence).split('\n')) {
+    const nameMatch = /^\s*-\s*name:\s*(\S+)/.exec(line)
+    if (nameMatch) current = nameMatch[1]
+    else if (current !== undefined && /^\s*deprecated:\s*true\b/.test(line)) names.add(current)
+  }
+  return names
+}
+
 /** Read the `attributes[]` sequence block out of a frontmatter fence — every `- name: X` item up to the
  *  next column-0 `key:` line (or end of fence), pulling `type:`/`values: [a, b]` from each item's
  *  indented child lines. A minimal, deliberately narrower re-implementation of
@@ -72,11 +97,7 @@ function unquote(s: string): string {
  *  sufficient for the two fields (`type`, `values`) a teaching line renders. Exported for the parity
  *  test (`dogfood-inventory-parity.test.ts`). */
 export function readAttributes(fence: string): LocalAttribute[] {
-  const start = /^attributes:.*$/m.exec(fence)
-  if (!start) return []
-  const rest = fence.slice(start.index + start[0].length)
-  const end = /\n[A-Za-z][\w]*:/.exec(rest)
-  const block = end ? rest.slice(0, end.index) : rest
+  const block = attributesBlock(fence)
   const attrs: LocalAttribute[] = []
   let current: LocalAttribute | null = null
   for (const line of block.split('\n')) {
@@ -174,10 +195,11 @@ function firstSentence(body: string): string {
 
 /** Render one descriptor's `attributes[]` as `name: type|enum(a|b|c)` clauses — `describePropType`'s
  *  shape (`system-prompt.ts`'s catalog-inventory precedent), applied to the descriptor's OWN declared
- *  set (never a further-picked subset, LLD-C3). */
-function renderAttrs(attributes: readonly LocalAttribute[]): string {
-  if (attributes.length === 0) return 'none'
-  return attributes
+ *  set (never a further-picked subset, LLD-C3) less the rows it marks `deprecated: true`. */
+function renderAttrs(attributes: readonly LocalAttribute[], deprecated: ReadonlySet<string> = new Set()): string {
+  const taught = attributes.filter((a) => !deprecated.has(a.name))
+  if (taught.length === 0) return 'none'
+  return taught
     .map((a) => {
       const shape = a.type === 'enum' && a.values && a.values.length > 0 ? `enum(${a.values.join('|')})` : (a.type ?? 'unknown')
       return `${a.name}: ${shape}`
@@ -257,7 +279,7 @@ export function deriveDogfoodFleet(folders: readonly DogfoodFolder[]): DogfoodCo
       const { fence, body } = splitFrontmatter(src)
       const tag = readTag(fence)
       if (tag === undefined) continue
-      descriptors.push({ tag, summary: firstSentence(body), attrs: renderAttrs(readAttributes(fence)) })
+      descriptors.push({ tag, summary: firstSentence(body), attrs: renderAttrs(readAttributes(fence), readDeprecatedNames(fence)) })
       descriptorTags.add(tag)
     }
     parsed.push({ sources: folder.sources, descriptors })

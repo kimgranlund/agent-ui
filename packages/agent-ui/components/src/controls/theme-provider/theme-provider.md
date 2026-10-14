@@ -4,7 +4,7 @@
 # the /site doc. Field set per .claude/docs/plan.md §10 / ADR-0004; the promotion contract per
 # .claude/docs/spec/theme-provider.spec.md / .claude/docs/lld/theme-provider.lld.md.
 tag: ui-theme-provider
-description: A coordination element that establishes a color-scheme, scale, and density subtree for its descendants.
+description: A coordination element that establishes a color-scheme subtree for its descendants; size a subtree with data-tier and data-scale on any wrapper (ADR-0245).
 tier: container         # geometry.md Container/layout band — no control height, no --md-sys-space opinion (the ui-form-provider precedent)
 extends: UIElement      # NOT UIFormElement (carries no value/validity of its own) and NOT UIContainerElement (paints no surface of its own) — same reasoning ADR-0050 already ratified for ui-form-provider
 uses: []
@@ -24,11 +24,14 @@ attributes:            # attributes-as-API — mirrors theme-provider.ts `static
     default: ''
     reflect: true      # reflects; pure carrier (SPEC-R4) — dimensions.css's [scale] selectors key off the
                         # attribute directly, zero JS-side effect
+    deprecated: true   # ADR-0245 cl.10d: the foundations bridge maps it onto tier and scale until W7; new code
+                        # sets data-tier and data-scale. The dogfood fleet line leaves it out (T-0159).
   - name: density
     type: enum
     values: ['', compact, comfortable, spacious]
     default: ''
     reflect: true      # reflects; pure carrier (SPEC-R4), same shape as scale
+    deprecated: true   # ADR-0245 cl.10d: bridged onto data-density until W7; new code sets data-density.
   - name: theme
     type: string
     default: ''
@@ -66,10 +69,10 @@ forcedColors: No forced-colors rules needed — the provider paints no surface o
 
 # ui-theme-provider
 
-`ui-theme-provider` is a real, importable theming element for `@agent-ui/components` — a pure
-coordination/carrier layer establishing a `color-scheme` subtree plus two pure attribute carriers
-(`scale`/`density`) and a theme package seam (`theme`), promoted from the docs site's own
-`site/lib/theme-provider.ts` wrapper (ADR-0117).
+`ui-theme-provider` is a theming element that sets a `color-scheme` subtree; size a subtree with
+`data-tier` and `data-scale` on a wrapper. It is a pure coordination/carrier layer: the `scheme` axis, a
+theme package seam (`theme`), and two attribute carriers (`scale`/`density`) deprecated by ADR-0245,
+promoted from the docs site's own `site/lib/theme-provider.ts` wrapper (ADR-0117).
 
 ```html
 <ui-theme-provider scheme="dark">
@@ -88,8 +91,10 @@ coordination/carrier layer establishing a `color-scheme` subtree plus two pure a
   directly via `setAttribute` fails open to `''` (inherit), never fails closed to a named value, never throws.
 - **`scale`** — the six ADR-0032 tiers (`ui-sm … content-lg`), default `''`. A pure attribute carrier: no
   JS-side effect. `dimensions.css`'s `[scale]` selectors key off the attribute directly — any wrapper
-  element (not just this one) already carries the same mechanism.
+  element (not just this one) already carries the same mechanism. Deprecated by ADR-0245: the foundations
+  bridge maps it onto tier and scale until W7; new code sets `data-tier` and `data-scale` on a wrapper.
 - **`density`** — `'' | compact | comfortable | spacious'`, default `''`. Same pure-carrier shape as `scale`.
+  Deprecated the same way; new code sets `data-density`.
 - **`theme`** — a free string, default `''`. The **package seam** (ADR-0079 cl.3, ADR-0141): swaps whole
   token palettes. This component itself stays a pure carrier — no JS-side effect, no built-in pack registry
   — it only sets the attribute a `[theme='<name>']` CSS layer selects on; loading and injecting that layer's
