@@ -6,10 +6,10 @@ import { phosphorPack } from '@agent-ui/icons/phosphor'
 import type { FormValue, ValidityResult } from '../../dom/form.ts'
 import { readFileSync } from 'node:fs'
 
-// The date picker loads its calendar with a dynamic import() on first open. Await that module here so it
+// The date and color pickers load their modules with a dynamic import() on first open. Await both here so they
 // never resolves after the environment is torn down (an EnvironmentTeardownError under heavy machine load).
 
-afterAll(async () => { await import('../calendar/calendar.ts') })
+afterAll(async () => { await Promise.all([import('../calendar/calendar.ts'), import('../color-picker/color-picker.ts')]) })
 declare const process: { cwd(): string }
 
 // G6 s8 — UITextFieldElement jsdom behaviour/value/validity/form/disabled/readonly/zero-residue probes
