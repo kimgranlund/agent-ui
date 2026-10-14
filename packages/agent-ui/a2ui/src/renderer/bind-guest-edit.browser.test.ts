@@ -8,7 +8,8 @@ import { userEvent } from 'vitest/browser'
 import { whenFlushed } from '@agent-ui/components'
 import '@agent-ui/components/all'
 import { createRenderer } from './renderer.ts'
-import type { A2uiClientMessage, A2uiServerMessage } from './renderer.ts'
+import type { A2uiClientMessage } from './renderer.ts'
+import type { A2uiServerMessage } from '../protocol.ts'
 import type { A2uiActionMessage } from './action.ts'
 
 await createRenderer().preload('agent-ui')
