@@ -111,7 +111,7 @@
       "adr": "ADR-0245 Amendment 6: icon and glyph are distinct; a glyph sits in its own glyph box 2n - 2c",
       "selector": "ui-glyph svg, ui-board-grid [data-part='intent'], ui-game-hud [data-part='glyph'], ui-result-card [data-part='glyph']",
       "measure": "the visible glyph box, both axes",
-      "expect": "2 * resolve(register).n - 2 * resolve(register).c"
+      "expect": "max(8px, 2 * resolve(register).n - 2 * resolve(register).c) (the 8px floor: T-0143)"
     },
     {
       "id": "dash-scale",

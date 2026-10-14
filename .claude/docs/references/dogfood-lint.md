@@ -41,7 +41,7 @@ ratio or a comparison with the same control enabled, and `glyph-gap` reads the g
 | `inline-text` | a `ui-text` link or span inside running text is `display: inline` (T-0140) |
 | `adornment-gap` | adjacent trailing adornments of a `ui-text-field` sit at least c apart (T-0140) |
 | `entry-cell-radius` | a square entry cell (`ui-otp-field` cell) is a round square at radius n, not a pill (Amendment 6) |
-| `glyph-box` | a glyph (`ui-glyph`'s mark, the board-grid intent mark, the HUD and result-card stat marks) is exactly its glyph box 2n - 2c (Amendment 6) |
+| `glyph-box` | a glyph (`ui-glyph`'s mark, the board-grid intent mark, the HUD and result-card stat marks) is exactly its glyph box max(8px, 2n - 2c) (Amendment 6; the 8px floor is T-0143) |
 | `dash-scale` | no svg shape is non-scaling-stroke with a dasharray other than none (the browser reads such a pattern in screen px; T-0141) |
 | `link-ink` | an `a[href]` inside a `ui-*` host is never the browser's default link colour (T-0141) |
 | `disabled-ink` | a disabled `ui-button` or `ui-toggle`'s ink contrast against its fill is below the same control's with `disabled` lifted (T-0144) |

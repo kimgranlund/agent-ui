@@ -381,7 +381,7 @@ const CHECKS: Record<string, (root: Element, ctx: Ctx) => string[]> = {
       if (!box) continue
       measured['glyph-box']++
       const r = registerOf(el)
-      const want = 2 * r.n - 2 * r.c
+      const want = Math.max(8, 2 * r.n - 2 * r.c) // T-0143: the glyph box floors at 8px (Kim's ruling)
       if (Math.abs(box.width - want) > TOL || Math.abs(box.height - want) > TOL) out.push(`${tagOf(el)} ${Math.round(box.width * 10) / 10}x${Math.round(box.height * 10) / 10} want ${want}`)
     }
     return out
@@ -704,7 +704,7 @@ describe('render lint: the gate itself (T-0136)', () => {
 // The negative controls: each rule, planted once in a column at the root register, must report; the same column
 // without the plant must not. A rule added to dogfood-rules.json without a plant here fails the coverage check.
 const GAUGE = `<ui-gauge data='[{"label":"CPU","value":72}]'></ui-gauge>`
-const PLANTS: Record<string, { bad: string; good: string; width?: number }> = {
+const PLANTS: Record<string, { bad: string; good: string; width?: number; rule?: string }> = {
   register: { bad: '<ui-button style="--md-sys-height: 52px">Save</ui-button>', good: '<ui-button>Save</ui-button>' },
   'pill-radius': { bad: '<ui-button style="border-radius: 2px">Save</ui-button>', good: '<ui-button>Save</ui-button>' },
   'icon-square': { bad: '<ui-button><ui-icon name="plus"></ui-icon></ui-button>', good: '<ui-button icon-only aria-label="Add"><ui-icon name="plus"></ui-icon></ui-button>' },
@@ -727,6 +727,12 @@ const PLANTS: Record<string, { bad: string; good: string; width?: number }> = {
   },
   'entry-cell-radius': { bad: '<ui-otp-field length="4" style="--ui-otp-field-radius: 12px"></ui-otp-field>', good: '<ui-otp-field length="4"></ui-otp-field>' },
   'glyph-box': { bad: '<ui-glyph symbol="check" style="--ui-glyph-slot: 30px"></ui-glyph>', good: '<ui-glyph symbol="check"></ui-glyph>' },
+  // at n 5 the bare formula 2n - 2c is 6px, the floor 8px (T-0143); the svg is the slot less its inset c (2px) a side
+  'glyph-box at n 5': {
+    rule: 'glyph-box',
+    bad: '<div size="sm"><ui-glyph symbol="check" style="--ui-glyph-slot: 10px"></ui-glyph></div>',
+    good: '<div size="sm"><ui-glyph symbol="check" style="--ui-glyph-slot: 12px"></ui-glyph></div>',
+  },
   'dash-scale': { bad: GAUGE + '<style>ui-gauge [data-part="progress"] { vector-effect: non-scaling-stroke }</style>', good: GAUGE },
   'link-ink': { bad: '<ui-row><a href="#a">Raw link</a></ui-row>', good: '<ui-breadcrumb><a href="#a">Home</a><span>Here</span></ui-breadcrumb>' },
   'disabled-ink': { bad: '<ui-button disabled style="--ui-button-ink: rgb(0, 0, 0); --ui-button-bg: rgb(255, 255, 255)">Save</ui-button>', good: '<ui-button disabled>Save</ui-button>' },
@@ -763,8 +769,9 @@ describe('render lint: one injected violation per rule turns it red (negative co
       for (const k of ['id', 'adr', 'selector', 'measure', 'expect'] as const) expect(typeof r[k] === 'string' && r[k] !== '', `rule ${r.id} carries ${k}`).toBe(true)
     }
   })
-  for (const [id, plant] of Object.entries(PLANTS)) {
-    it(`${id}: the plant reports, the clean twin does not`, async () => {
+  for (const [name, plant] of Object.entries(PLANTS)) {
+    const id = plant.rule ?? name
+    it(`${name}: the plant reports, the clean twin does not`, async () => {
       const width = plant.width ?? 400
       await page.viewport(width, 900)
       const column = document.createElement('div')
