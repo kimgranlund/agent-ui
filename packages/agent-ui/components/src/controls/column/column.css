@@ -114,6 +114,13 @@
        spacing rides --md-sys-space × [density]. It never reads --md-sys-height-* (that is the control band's lever). */
   }
 
+  /* `align` is the cross-axis flex grammar only. Chromium and WebKit also map a bare `align` attribute to the
+     legacy presentational text-align (center, end), which every child inherits (ui-row's T-0143 finding). Any
+     author rule outranks the hint, so the column restores the inherited alignment (T-0171). */
+  :scope[align] {
+    text-align: inherit;
+  }
+
   /* stretch → the host FILLS its parent's available inline size (`width: stretch`). Opt-in, default off — a
      column shrink-wraps to content otherwise. Used on a ROOT layout box (e.g. the A2UI canvas root) so it
      fills its artboard instead of shrink-wrapping. The three declarations are a fill-available fallback

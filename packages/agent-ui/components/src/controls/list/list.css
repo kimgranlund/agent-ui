@@ -115,4 +115,11 @@
     gap: var(--ui-list-gap); /* the density-bearing quantity — rides --md-sys-space × [density] */
     flex-wrap: var(--ui-list-wrap);
   }
+
+  /* `align` is the cross-axis flex grammar only. Chromium and WebKit also map a bare `align` attribute to the
+     legacy presentational text-align (center, end), which every child inherits (ui-row's T-0143 finding). Any
+     author rule outranks the hint, so the list restores the inherited alignment (T-0171). */
+  :scope[align] {
+    text-align: inherit;
+  }
 }

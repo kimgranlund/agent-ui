@@ -279,3 +279,21 @@ describe('ui-column browser-truth harness (s4)', () => {
     expect(getComputedStyle(el).flexDirection).toBe('column')
   })
 })
+
+describe('ui-column: the align attribute never leaks a text-align (T-0171)', () => {
+  // Chromium maps a bare `align` attribute to a presentational `text-align` (the legacy HTML hint), which every
+  // child then inherits (ui-row's T-0143 finding). ui-column's `align` is its cross-axis flex grammar only; the column
+  // resets the hint to the inherited value.
+  for (const align of ['center', 'end', 'start', 'stretch', 'baseline']) {
+    it(`a child of ui-column[align=${align}] keeps the inherited text-align`, () => {
+      const wrapper = document.createElement('div')
+      wrapper.style.textAlign = 'start'
+      wrapper.innerHTML = `<ui-column align="${align}"><div><span>title</span></div></ui-column>`
+      document.body.append(wrapper)
+      const el = wrapper.querySelector('ui-column') as HTMLElement
+      expect(getComputedStyle(el).textAlign, 'the column itself').toBe('start')
+      expect(getComputedStyle(el.querySelector('div') as HTMLElement).textAlign, 'its child').toBe('start')
+      wrapper.remove()
+    })
+  }
+})
