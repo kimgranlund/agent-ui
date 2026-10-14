@@ -116,7 +116,7 @@ import { RENDER_SURFACE_TOOL_NAME, detectUserOverride, isLegacyShape, renderSurf
 import type { ResponsePreference } from './response-type.ts'
 
 const PROTOCOL_VERSION = 'v1.0'
-const DEFAULT_MODEL = 'claude-sonnet-5' // the registry's defaultModel (providers.json)
+const DEFAULT_MODEL = 'claude-sonnet-5-5' // the registry's defaultModel (providers.json)
 
 /** The loop's injected surfaces (SPEC §5). `provider` is the model seam (stub|real); `retrieve` runs
  * over the JUDGED shard; `catalog` is the sole component authority. */

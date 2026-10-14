@@ -94,7 +94,7 @@ describe('tool_choice', () => {
     })
 
   it('effort absent or low (no thinking field) sends tool_choice {type:"tool", name}', () => {
-    for (const model of ['claude-haiku-5-5', 'claude-sonnet-5']) {
+    for (const model of ['claude-haiku-5-5', 'claude-sonnet-5-5']) {
       for (const effort of [undefined, 'low'] as const) {
         const b = body(model, effort)
         expect(b.thinking).toBeUndefined()
@@ -104,7 +104,7 @@ describe('tool_choice', () => {
   })
 
   it('effort high (thinking sent) omits tool_choice', () => {
-    for (const model of ['claude-haiku-5-5', 'claude-sonnet-5', 'claude-haiku-4-5']) {
+    for (const model of ['claude-haiku-5-5', 'claude-sonnet-5-5', 'claude-haiku-4-5']) {
       const b = body(model, 'high')
       expect(b.thinking).toBeDefined()
       expect(b.tool_choice).toBeUndefined()
@@ -112,8 +112,8 @@ describe('tool_choice', () => {
   })
 
   it('no tools in the body means no tool_choice, and no toolChoice means none', () => {
-    expect(body('claude-sonnet-5', undefined, []).tool_choice).toBeUndefined()
-    const plain = buildRequestBody({ model: 'claude-sonnet-5', system: 's', messages: [{ role: 'user', content: 'hi' }], tools: [RENDER_SURFACE] })
+    expect(body('claude-sonnet-5-5', undefined, []).tool_choice).toBeUndefined()
+    const plain = buildRequestBody({ model: 'claude-sonnet-5-5', system: 's', messages: [{ role: 'user', content: 'hi' }], tools: [RENDER_SURFACE] })
     expect(plain.tool_choice).toBeUndefined()
   })
 
@@ -122,7 +122,7 @@ describe('tool_choice', () => {
     const provider = anthropicProvider({ apiKey: 'test-key' })
     const fragments: string[] = []
     for await (const frag of provider.stream({
-      model: 'claude-sonnet-5',
+      model: 'claude-sonnet-5-5',
       system: 'sys',
       messages: [{ role: 'user', content: 'show me a card' }],
       tools: [RENDER_SURFACE],
@@ -155,7 +155,7 @@ describe('terminal round', () => {
     const executed: Array<{ name: string; input: Record<string, unknown> }> = []
     const provider = anthropicProvider({ apiKey: 'test-key' })
     for await (const frag of provider.stream({
-      model: 'claude-sonnet-5',
+      model: 'claude-sonnet-5-5',
       system: 'sys',
       messages: [{ role: 'user', content: 'show me a card' }],
       tools: [RENDER_SURFACE],
@@ -184,7 +184,7 @@ describe('terminal round', () => {
     const provider = anthropicProvider({ apiKey: 'test-key' })
     const fragments: string[] = []
     for await (const frag of provider.stream({
-      model: 'claude-sonnet-5',
+      model: 'claude-sonnet-5-5',
       system: 'sys',
       messages: [{ role: 'user', content: 'hi' }],
       tools: [RENDER_SURFACE],
@@ -217,7 +217,7 @@ describe('mixed round', () => {
     const provider = anthropicProvider({ apiKey: 'test-key' })
     const fragments: string[] = []
     for await (const frag of provider.stream({
-      model: 'claude-sonnet-5',
+      model: 'claude-sonnet-5-5',
       system: 'sys',
       messages: [{ role: 'user', content: 'weather in Bergen?' }],
       tools: TOOLS,
@@ -255,7 +255,7 @@ describe('mixed round', () => {
     const executed: Array<{ name: string; input: Record<string, unknown> }> = []
     const provider = anthropicProvider({ apiKey: 'test-key' })
     for await (const frag of provider.stream({
-      model: 'claude-sonnet-5',
+      model: 'claude-sonnet-5-5',
       system: 'sys',
       messages: [{ role: 'user', content: 'show the forecast' }],
       tools: TOOLS,

@@ -41,7 +41,7 @@ function loadDotEnv(): Record<string, string> {
 }
 
 const FLAGSHIP_MATCH_ID = 'flagship-001'
-const SEAT_X_MODEL = 'claude-sonnet-5'
+const SEAT_X_MODEL = 'claude-sonnet-5-5'
 const SEAT_O_MODEL = 'claude-haiku-5-5' // T-0030; flagship.match.jsonl re-recorded on it 2026-10-08 (T-0056)
 
 async function main(): Promise<void> {

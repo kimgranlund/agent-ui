@@ -3288,7 +3288,7 @@ describe('UIAgentAdminElement — the DEV-only live-turn fork (TKT-0052/ADR-0136
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     await whenFlushed() // the models/model props ride ui-conversation's own reactive-prop effect, not synchronous
     const conversation = el.querySelector('ui-conversation') as UIConversationElement
-    // rev.4: the picker offers the INCLUDED roster only: the Anthropic rows ship on (Haiku 5.5, Sonnet 5, Haiku 4.5 since T-0030), the rest ship off
+    // rev.4: the picker offers the INCLUDED roster only: the Anthropic rows ship on (Haiku 5.5, Sonnet 5.5, Haiku 4.5 since T-0030), the rest ship off
     const included = SUPPORTED_MODELS.filter((m) => m.includedByDefault)
     expect(conversation.models).toEqual(included)
     expect(conversation.model).toBe(DEFAULT_MODEL_ID)
@@ -3741,7 +3741,7 @@ describe('agent-admin.md descriptor (ui-agent-admin)', () => {
 describe('UIAgentAdminElement — the agentSurfaceTurn arm', () => {
   it('a submit streams the runner: wire lines reach ingestLine (a surface host mounts), the note renders, and the request carries the composed persona + sanitized model', async () => {
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
-    el.store = createMemoryStore({ initial: { model: 'claude-sonnet-5' } })
+    el.store = createMemoryStore({ initial: { model: 'claude-sonnet-5-5' } })
     const seen: unknown[] = []
     el.agentSurfaceTurn = async function* (req) {
       seen.push(req)
@@ -3763,7 +3763,7 @@ describe('UIAgentAdminElement — the agentSurfaceTurn arm', () => {
     // The request rode the component's OWN seam: composed persona + the store's sanitized model.
     const req = seen[0] as { turn: { kind: string }; personaSystem: string; model: string }
     expect(req.turn).toEqual({ kind: 'intent', text: 'play' })
-    expect(req.model).toBe('claude-sonnet-5')
+    expect(req.model).toBe('claude-sonnet-5-5')
     expect(req.personaSystem.length).toBeGreaterThan(0)
 
     // The wire line mounted a REAL inline surface host; the note rendered at finalize. The body query is
@@ -3776,7 +3776,7 @@ describe('UIAgentAdminElement — the agentSurfaceTurn arm', () => {
 
   it("the request's `effort` reflects the composer's Effort picker selection (the same dial the plain-chat AdminTurnRequest arm already threads)", async () => {
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
-    el.store = createMemoryStore({ initial: { model: 'claude-sonnet-5' } })
+    el.store = createMemoryStore({ initial: { model: 'claude-sonnet-5-5' } })
     const seen: unknown[] = []
     el.agentSurfaceTurn = async function* (req) {
       seen.push(req)
@@ -4502,7 +4502,7 @@ describe('SUPPORTED_MODELS lists + the Haiku default (2026-07-19)', () => {
   it('the default model is Haiku; Sonnet remains an offered option', async () => {
     const { DEFAULT_MODEL_ID, SUPPORTED_MODELS } = await import('./agent-admin-schema.ts')
     expect(DEFAULT_MODEL_ID).toBe('claude-haiku-5-5')
-    expect(SUPPORTED_MODELS.some((m) => m.id === 'claude-sonnet-5')).toBe(true)
+    expect(SUPPORTED_MODELS.some((m) => m.id === 'claude-sonnet-5-5')).toBe(true)
     // T-0030 (Kim, 2026-10-07): Haiku 4.5 stays on the roster, included, so it stays selectable
     expect(SUPPORTED_MODELS.find((m) => m.id === 'claude-haiku-4-5-20251001')?.includedByDefault).toBe(true)
     // every model carries a list assignment (the grouped-select contract)
@@ -4517,13 +4517,13 @@ describe('SUPPORTED_MODELS lists + the Haiku default (2026-07-19)', () => {
     expect(schema.sections[0]!.fields.some((f) => f.key === 'customModels'), 'the Additional models field is removed').toBe(false)
     const roster = modelRoster()
     expect(roster).toEqual(SUPPORTED_MODELS)
-    const sonnet = roster.find((m) => m.id === 'claude-sonnet-5')!
+    const sonnet = roster.find((m) => m.id === 'claude-sonnet-5-5')!
     const gpt = roster.find((m) => m.id === 'gpt-4.1')!
     expect(isModelIncluded(undefined, sonnet), 'absent record ⇒ the model\'s own includedByDefault (Sonnet ships on)').toBe(true)
     expect(isModelIncluded(undefined, gpt), 'the OpenAI option ships OFF (rev.4)').toBe(false)
-    expect(isModelIncluded({ 'claude-sonnet-5': false }, sonnet), 'an explicit record wins').toBe(false)
+    expect(isModelIncluded({ 'claude-sonnet-5-5': false }, sonnet), 'an explicit record wins').toBe(false)
     expect(isModelIncluded({ 'gpt-4.1': true }, gpt)).toBe(true)
-    expect(sanitizeModel('claude-sonnet-5', roster)).toBe('claude-sonnet-5')
+    expect(sanitizeModel('claude-sonnet-5-5', roster)).toBe('claude-sonnet-5-5')
     expect(sanitizeModel('nope', roster)).toBe(DEFAULT_MODEL_ID)
   })
 })
@@ -4559,7 +4559,7 @@ describe('ui-agent-admin — the Model GRID (2026-07-19 rev.2)', () => {
       )!
       return (row.querySelector('[data-part="model-include"]') as HTMLElement & { checked: boolean }).checked
     }
-    expect(stateOf('claude-sonnet-5')).toBe(true)
+    expect(stateOf('claude-sonnet-5-5')).toBe(true)
     expect(stateOf('claude-haiku-4-5-20251001')).toBe(true)
     expect(stateOf('gpt-4.1')).toBe(false)
     expect(stateOf('gemini-2.5-flash')).toBe(false)
@@ -4578,23 +4578,23 @@ describe('ui-agent-admin — the Model GRID (2026-07-19 rev.2)', () => {
     await el.updateComplete
     const grid = el.querySelector('[data-part="model-grid"]') as HTMLElement
     const sonnetRow = [...grid.querySelectorAll<HTMLElement>('[data-part="model-row"]')].find(
-      (r) => r.querySelector('[data-part="model-row-label"]')?.getAttribute('title') === 'claude-sonnet-5',
+      (r) => r.querySelector('[data-part="model-row-label"]')?.getAttribute('title') === 'claude-sonnet-5-5',
     )!
     // exclude Sonnet
     const sw = sonnetRow.querySelector('[data-part="model-include"]') as HTMLElement & { checked: boolean }
     sw.checked = false
     sw.dispatchEvent(new Event('change'))
-    expect((store.get('modelsIncluded') as Record<string, boolean>)['claude-sonnet-5']).toBe(false)
+    expect((store.get('modelsIncluded') as Record<string, boolean>)['claude-sonnet-5-5']).toBe(false)
     await el.updateComplete
     // move the default to Sonnet — re-includes it AND moves `model`; the old default row unchecks
     const freshSonnetRow = [...el.querySelectorAll<HTMLElement>('[data-part="model-row"]')].find(
-      (r) => r.querySelector('[data-part="model-row-label"]')?.getAttribute('title') === 'claude-sonnet-5',
+      (r) => r.querySelector('[data-part="model-row-label"]')?.getAttribute('title') === 'claude-sonnet-5-5',
     )!
     const box = freshSonnetRow.querySelector('[data-part="model-default"]') as HTMLElement & { checked: boolean }
     box.checked = true
     box.dispatchEvent(new Event('change'))
-    expect(store.get('model')).toBe('claude-sonnet-5')
-    expect((store.get('modelsIncluded') as Record<string, boolean>)['claude-sonnet-5'], 'defaulting re-includes').toBe(true)
+    expect(store.get('model')).toBe('claude-sonnet-5-5')
+    expect((store.get('modelsIncluded') as Record<string, boolean>)['claude-sonnet-5-5'], 'defaulting re-includes').toBe(true)
     await el.updateComplete
     const haikuRow = [...el.querySelectorAll<HTMLElement>('[data-part="model-row"]')].find(
       (r) => r.querySelector('[data-part="model-row-label"]')?.getAttribute('title') === 'claude-haiku-5-5',

@@ -27,7 +27,7 @@ describe('provider-mode-selection — option lists (from the committed providers
     expect(anthropic.disabled).toBe(false) // implemented ⇒ never disabled
     expect(anthropic.label).toBe('Anthropic')
     expect(anthropic.models).toHaveLength(5)
-    expect(anthropic.defaultModel).toBe('claude-sonnet-5')
+    expect(anthropic.defaultModel).toBe('claude-sonnet-5-5')
     const openai = PROVIDER_OPTIONS.find((p) => p.id === 'openai')!
     expect(openai.disabled).toBe(true)
     expect(openai.label).toBe('OpenAI — coming soon')
@@ -35,7 +35,7 @@ describe('provider-mode-selection — option lists (from the committed providers
 
   it('DEFAULT_PROVIDER/DEFAULT_MODEL match the committed catalog', () => {
     expect(DEFAULT_PROVIDER).toBe('anthropic')
-    expect(DEFAULT_MODEL).toBe('claude-sonnet-5')
+    expect(DEFAULT_MODEL).toBe('claude-sonnet-5-5')
   })
 
   it('MODE_OPTIONS carries the 3 GenUiMode values with friendlier demo labels; DEFAULT_MODE is "default"', () => {
@@ -49,7 +49,7 @@ describe('provider-mode-selection — persistence (localStorage, the provider-sw
   afterEach(() => localStorage.clear())
 
   it('with no stored selection, restores the catalog defaults', () => {
-    expect(loadPersistedSelection()).toEqual({ provider: 'anthropic', model: 'claude-sonnet-5', mode: 'default', effort: 'medium' })
+    expect(loadPersistedSelection()).toEqual({ provider: 'anthropic', model: 'claude-sonnet-5-5', mode: 'default', effort: 'medium' })
   })
 
   it('persists then restores a valid selection round-trip', () => {
@@ -65,23 +65,23 @@ describe('provider-mode-selection — persistence (localStorage, the provider-sw
 
   it('rejects a persisted model that does not belong to its provider, falling back to that provider\'s defaultModel', () => {
     localStorage.setItem(LS_KEY, JSON.stringify({ provider: 'anthropic', model: 'not-a-real-model', mode: 'default', effort: 'medium' }))
-    expect(loadPersistedSelection().model).toBe('claude-sonnet-5')
+    expect(loadPersistedSelection().model).toBe('claude-sonnet-5-5')
   })
 
   it('rejects an unrecognized persisted mode, falling back to "default"', () => {
-    localStorage.setItem(LS_KEY, JSON.stringify({ provider: 'anthropic', model: 'claude-sonnet-5', mode: 'not-a-real-mode', effort: 'medium' }))
+    localStorage.setItem(LS_KEY, JSON.stringify({ provider: 'anthropic', model: 'claude-sonnet-5-5', mode: 'not-a-real-mode', effort: 'medium' }))
     expect(loadPersistedSelection().mode).toBe('default')
   })
 
   it('rejects an unrecognized persisted effort, falling back to "medium"', () => {
-    localStorage.setItem(LS_KEY, JSON.stringify({ provider: 'anthropic', model: 'claude-sonnet-5', mode: 'default', effort: 'not-a-real-effort' }))
+    localStorage.setItem(LS_KEY, JSON.stringify({ provider: 'anthropic', model: 'claude-sonnet-5-5', mode: 'default', effort: 'not-a-real-effort' }))
     expect(loadPersistedSelection().effort).toBe('medium')
   })
 
   it('corrupt JSON never throws — falls back to the catalog defaults', () => {
     localStorage.setItem(LS_KEY, '{not json')
     expect(() => loadPersistedSelection()).not.toThrow()
-    expect(loadPersistedSelection()).toEqual({ provider: 'anthropic', model: 'claude-sonnet-5', mode: 'default', effort: 'medium' })
+    expect(loadPersistedSelection()).toEqual({ provider: 'anthropic', model: 'claude-sonnet-5-5', mode: 'default', effort: 'medium' })
   })
 })
 
@@ -100,8 +100,8 @@ describe('provider-mode-selection — groupedModelOptions/providerIdForModel (th
     expect(options[anthropicHeaderIndex]).toEqual({ id: '__group-anthropic', label: 'Anthropic', disabled: true })
     // the 5 Anthropic models immediately follow their header, none disabled (anthropic IS implemented)
     const anthropicModelIds = options.slice(anthropicHeaderIndex + 1, anthropicHeaderIndex + 6).map((o) => o.id)
-    expect(anthropicModelIds).toEqual(['claude-opus-4-8', 'claude-sonnet-5', 'claude-haiku-5-5', 'claude-haiku-4-5-20251001', 'claude-fable-5'])
-    expect(options.find((o) => o.id === 'claude-sonnet-5')?.disabled).toBe(false)
+    expect(anthropicModelIds).toEqual(['claude-opus-4-8', 'claude-sonnet-5-5', 'claude-haiku-5-5', 'claude-haiku-4-5-20251001', 'claude-fable-5'])
+    expect(options.find((o) => o.id === 'claude-sonnet-5-5')?.disabled).toBe(false)
   })
 
   it('a "coming soon" (not-yet-implemented) provider\'s header AND every one of its own model rows are disabled — none is genuinely selectable yet', () => {
@@ -118,7 +118,7 @@ describe('provider-mode-selection — groupedModelOptions/providerIdForModel (th
   })
 
   it('providerIdForModel recovers the owning provider for a real committed model id', () => {
-    expect(providerIdForModel('claude-sonnet-5')).toBe('anthropic')
+    expect(providerIdForModel('claude-sonnet-5-5')).toBe('anthropic')
     expect(providerIdForModel('claude-fable-5')).toBe('anthropic')
     expect(providerIdForModel('gpt-4.1')).toBe('openai')
     expect(providerIdForModel('gemini-2.5-flash')).toBe('gemini')

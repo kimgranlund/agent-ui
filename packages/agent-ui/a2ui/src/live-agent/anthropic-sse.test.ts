@@ -14,7 +14,7 @@ declare const process: { cwd(): string }
 // a message_delta, and message_stop. Only the two text_delta `delta.text` values are model output.
 const FIXTURE = [
   'event: message_start',
-  'data: {"type":"message_start","message":{"id":"msg_1","role":"assistant","model":"claude-sonnet-5"}}',
+  'data: {"type":"message_start","message":{"id":"msg_1","role":"assistant","model":"claude-sonnet-5-5"}}',
   '',
   'event: content_block_start',
   'data: {"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}}',

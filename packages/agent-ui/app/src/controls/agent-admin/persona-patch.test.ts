@@ -155,13 +155,13 @@ describe('filter 1 — the enumerated-key filter', () => {
 describe('filter 2 — per-key admission is a FIXPOINT over the shipped sanitizers, never a coercion', () => {
   it('model: a roster id admits; an off-roster id DROPS rather than coercing to the default', () => {
     const store = freshStore()
-    expect(applyPersonaPatch(store, { values: { model: 'claude-sonnet-5' } }, deps).applied).toEqual(['model'])
-    expect(store.get('model')).toBe('claude-sonnet-5')
+    expect(applyPersonaPatch(store, { values: { model: 'claude-sonnet-5-5' } }, deps).applied).toEqual(['model'])
+    expect(store.get('model')).toBe('claude-sonnet-5-5')
 
     const report = applyPersonaPatch(store, { values: { model: 'gpt-9-imaginary' } }, deps)
     expect(report.applied).toEqual([])
     expect(report.dropped).toEqual(['model'])
-    expect(store.get('model')).toBe('claude-sonnet-5') // untouched — NOT rewritten to DEFAULT_MODEL_ID
+    expect(store.get('model')).toBe('claude-sonnet-5-5') // untouched — NOT rewritten to DEFAULT_MODEL_ID
   })
 
   it('temperature: an in-range number admits; out-of-range and non-numbers drop', () => {
@@ -202,8 +202,8 @@ describe('filter 2 — per-key admission is a FIXPOINT over the shipped sanitize
 
   it('the model-inclusion record admits a plain boolean map only', () => {
     const store = freshStore()
-    expect(applyPersonaPatch(store, { values: { [MODELS_INCLUDED_KEY]: { 'claude-sonnet-5': false } } }, deps).applied).toEqual([MODELS_INCLUDED_KEY])
-    for (const bad of [{ 'claude-sonnet-5': 'no' }, ['claude-sonnet-5'], null, 'all']) {
+    expect(applyPersonaPatch(store, { values: { [MODELS_INCLUDED_KEY]: { 'claude-sonnet-5-5': false } } }, deps).applied).toEqual([MODELS_INCLUDED_KEY])
+    for (const bad of [{ 'claude-sonnet-5-5': 'no' }, ['claude-sonnet-5-5'], null, 'all']) {
       expect(applyPersonaPatch(store, { values: { [MODELS_INCLUDED_KEY]: bad } }, deps).dropped).toEqual([MODELS_INCLUDED_KEY])
     }
   })

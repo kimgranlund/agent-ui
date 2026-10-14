@@ -60,6 +60,8 @@ import {
   defaultAgentConfigSchema,
   AUTHORING_DEFAULT_MODEL_ID,
   sanitizeAuthoringModel,
+  sanitizeModel,
+  isModelIncluded,
   modelRoster,
 } from './agent-admin-schema.ts'
 
@@ -1235,7 +1237,7 @@ describe('the Authoring row in Surface Options (ADR-0178 cl.3)', () => {
   })
 })
 
-// ── GH #880 — the Builder Interview's own model default: Sonnet 5 (Kim's ruling, 2026-08-14) ─────────────
+// ── GH #880 — the Builder Interview's own model default: Sonnet 5.5 (Kim's ruling, 2026-08-14) ─────────────
 // Every model read went through `sanitizeModel(store?.get('model'), roster)`, whose fallback is the
 // ROSTER-WIDE `DEFAULT_MODEL_ID` — Haiku, the cheap/fast tier that is the right default for a TEST chat and
 // the wrong one for the model conducting the interview that authors an agent. The fix is an ABSENT-VALUE
@@ -1248,7 +1250,7 @@ describe('the Authoring row in Surface Options (ADR-0178 cl.3)', () => {
 // interview arms only from "New agent → Generate"), so the default was invisible on the one surface the
 // filing was about. The ruling: the default is VISIBLE wherever this composer renders, pre-arm included —
 // trigger label AND selected menu row. Both halves are pinned here and in `agent-admin.browser.test.ts`.
-describe('GH #880 — a fresh Builder Interview opens on Sonnet 5; the test chat keeps Haiku', () => {
+describe('GH #880 — a fresh Builder Interview opens on Sonnet 5.5; the test chat keeps Haiku', () => {
   const labelOf = (id: string): string => SUPPORTED_MODELS.find((m) => m.id === id)!.label
 
   /** A Builder store the way a bring-your-own consumer mints one: the gate, a name, and NO `model` key —
@@ -1274,14 +1276,14 @@ describe('GH #880 — a fresh Builder Interview opens on Sonnet 5; the test chat
     (el.querySelector(`[data-part="${pane}-pane"] ui-conversation-composer`) as HTMLElement & { model?: string }).model
 
   it('the two defaults are genuinely different ids — the anti-vacuous premise every arm below rests on', () => {
-    expect(AUTHORING_DEFAULT_MODEL_ID).toBe('claude-sonnet-5')
+    expect(AUTHORING_DEFAULT_MODEL_ID).toBe('claude-sonnet-5-5')
     expect(DEFAULT_MODEL_ID).toBe('claude-haiku-5-5')
     expect(AUTHORING_DEFAULT_MODEL_ID).not.toBe(DEFAULT_MODEL_ID)
     // …and the interview's default is an OFFERED model, not a label the picker cannot commit to.
     expect(SUPPORTED_MODELS.find((m) => m.id === AUTHORING_DEFAULT_MODEL_ID)?.includedByDefault).toBe(true)
   })
 
-  it('sanitizeAuthoringModel: absent/garbage read as Sonnet 5, a roster id still WINS, and an absent Sonnet degrades', () => {
+  it('sanitizeAuthoringModel: absent/garbage read as Sonnet 5.5, a roster id still WINS, and an absent Sonnet degrades', () => {
     const roster = modelRoster()
     expect(sanitizeAuthoringModel(undefined, roster)).toBe(AUTHORING_DEFAULT_MODEL_ID)
     expect(sanitizeAuthoringModel(null, roster)).toBe(AUTHORING_DEFAULT_MODEL_ID)
@@ -1298,7 +1300,17 @@ describe('GH #880 — a fresh Builder Interview opens on Sonnet 5; the test chat
     )
   })
 
-  it('a FRESH authoring context shows Sonnet 5 while the SAME element’s test chat shows Haiku — and writes nothing', async () => {
+  it('T-0180: a stored retired claude-sonnet-5 reads as claude-sonnet-5-5 on every sanitize path', () => {
+    const roster = modelRoster()
+    expect(sanitizeModel('claude-sonnet-5', roster)).toBe('claude-sonnet-5-5')
+    expect(sanitizeAuthoringModel('claude-sonnet-5', roster)).toBe('claude-sonnet-5-5')
+    // An inclusion record saved under the retired id still switches its successor's row.
+    const sonnet = roster.find((m) => m.id === 'claude-sonnet-5-5')!
+    expect(isModelIncluded({ 'claude-sonnet-5': false }, sonnet)).toBe(false)
+    expect(isModelIncluded({ 'claude-sonnet-5': false, 'claude-sonnet-5-5': true }, sonnet)).toBe(true)
+  })
+
+  it('a FRESH authoring context shows Sonnet 5.5 while the SAME element’s test chat shows Haiku — and writes nothing', async () => {
     const draft = modellessDraft()
     const builder = modellessBuilder()
     const { el } = mountAdmin({ store: draft, authoringStore: builder })
@@ -1320,7 +1332,7 @@ describe('GH #880 — a fresh Builder Interview opens on Sonnet 5; the test chat
     expect(draft.get('model'), 'and the draft was not written either').toBeUndefined()
   })
 
-  it('an authoring TURN runs on Sonnet 5 — the wire, not just the trigger label', async () => {
+  it('an authoring TURN runs on Sonnet 5.5 — the wire, not just the trigger label', async () => {
     const { el, requests } = mountAdmin({ store: modellessDraft(), authoringStore: modellessBuilder() })
     await whenFlushed()
     await submit(el, 'a hotel concierge please')
@@ -1355,7 +1367,7 @@ describe('GH #880 — a fresh Builder Interview opens on Sonnet 5; the test chat
     expect(trigger(el, 'copilot').textContent?.trim()).toBe('Models')
   })
 
-  it('THE REOPEN’S OWN SURFACE — never armed at all, the Co-pilot card still SHOWS Sonnet 5 (label + marked row) while the test chat keeps Haiku', async () => {
+  it('THE REOPEN’S OWN SURFACE — never armed at all, the Co-pilot card still SHOWS Sonnet 5.5 (label + marked row) while the test chat keeps Haiku', async () => {
     // This is the state the docs page paints at boot, and the state Kim screenshotted: `authoringStore` is
     // undefined, so the card is the PRE-ARM one (`#reflectPreArmPickers`) and nothing in `#modelFor`'s read
     // law is reached at all. The previous build pinned the OPPOSITE here (a neutral "Models" trigger, on the
@@ -1376,7 +1388,7 @@ describe('GH #880 — a fresh Builder Interview opens on Sonnet 5; the test chat
     expect(requests.at(-1)!.model).toBe(DEFAULT_MODEL_ID)
   })
 
-  it('the default holds across a REWIRE — a second fresh interviewer opens on Sonnet 5 again', async () => {
+  it('the default holds across a REWIRE — a second fresh interviewer opens on Sonnet 5.5 again', async () => {
     const { el } = mountAdmin({ store: modellessDraft(), authoringStore: modellessBuilder() })
     await whenFlushed()
     expect(committed(el, 'copilot')).toBe(AUTHORING_DEFAULT_MODEL_ID)
@@ -1389,7 +1401,7 @@ describe('GH #880 — a fresh Builder Interview opens on Sonnet 5; the test chat
     expect(committed(el, 'copilot'), 'the re-armed interview reads the same default, not the spent one').toBe(AUTHORING_DEFAULT_MODEL_ID)
   })
 
-  it('the GH #670 fence survives — an unarmed pick is cleared by a persona switch, and the next interview opens on Sonnet 5', async () => {
+  it('the GH #670 fence survives — an unarmed pick is cleared by a persona switch, and the next interview opens on Sonnet 5.5', async () => {
     const { el } = mountAdmin({ store: modellessDraft() })
     await whenFlushed()
     // The page's seed-aware mint, in miniature (the GH #670 idiom): a seed's model rides the MINT, never a

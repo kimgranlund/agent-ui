@@ -48,7 +48,7 @@ afterEach(() => {
   vi.unstubAllGlobals() // the ADR-0170 POST-body pins stub `fetch` (admin-live-runner.test.ts's precedent)
 })
 
-const SUPPORTED_MODEL_IDS = new Set(['claude-sonnet-5', 'claude-haiku-5-5']) // rev.4: the roster pair presets may seed (Haiku 5.5 since T-0030)
+const SUPPORTED_MODEL_IDS = new Set(['claude-sonnet-5-5', 'claude-haiku-5-5']) // rev.4: the roster pair presets may seed (Haiku 5.5 since T-0030)
 const ALL_ENTRY_KEYS = Object.values(ENTRY_KINDS).map((kind) => entriesStoreKey(kind))
 
 describe('AGENT_PRESETS — data integrity (TKT-0074)', () => {
@@ -1128,7 +1128,7 @@ describe('the Builder persona (ADR-0178 cl.4 — hidden-until-invoked)', () => {
 
   it('runs a sonnet-class model — the interview quality IS the product here', async () => {
     const { builderStore } = await import('./agent-admin-presets.ts')
-    expect(builderStore().get('model')).toBe('claude-sonnet-5')
+    expect(builderStore().get('model')).toBe('claude-sonnet-5-5')
   })
 
   it('its GENERATED vocabulary section names EVERY patchable key — the drift trip-wire', async () => {
@@ -1144,7 +1144,7 @@ describe('the Builder persona (ADR-0178 cl.4 — hidden-until-invoked)', () => {
       expect(vocabulary!.content, `${key} must reach the model`).toContain(key)
     }
     // the model roster is interpolated live, never a stale hand-typed list
-    expect(vocabulary!.content).toContain('claude-sonnet-5')
+    expect(vocabulary!.content).toContain('claude-sonnet-5-5')
     expect(vocabulary!.content).not.toContain('{roster}')
   })
 

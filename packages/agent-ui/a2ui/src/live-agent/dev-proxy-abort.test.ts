@@ -145,8 +145,8 @@ function start(url: string, body: unknown): { res: FakeRes; done: Promise<void>;
   return { res, done, emitClose }
 }
 
-const CHAT_BODY = { system: 'be helpful', model: 'claude-sonnet-5', messages: [] }
-const PRODUCE_BODY = { input: { kind: 'intent', text: 'a submit button', session: { turns: [] } }, provider: 'anthropic', model: 'claude-sonnet-5' }
+const CHAT_BODY = { system: 'be helpful', model: 'claude-sonnet-5-5', messages: [] }
+const PRODUCE_BODY = { input: { kind: 'intent', text: 'a submit button', session: { turns: [] } }, provider: 'anthropic', model: 'claude-sonnet-5-5' }
 
 /** Drive one hanging turn to its provider call, disconnect, and return what the route did afterwards. */
 async function disconnectMidTurn(url: string, body: unknown): Promise<{ res: FakeRes; writesBefore: number; endedBefore: number }> {

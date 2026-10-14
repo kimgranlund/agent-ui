@@ -10,7 +10,7 @@ import { createLiveProxyTransport } from './live-proxy-transport.ts'
 import type { SelectionRef } from './live-proxy-transport.ts'
 import type { TurnInput } from './agent-runtime.ts'
 
-const INPUT: TurnInput = { kind: 'intent', text: 'hi', session: { turns: [] }, provider: 'anthropic', model: 'claude-sonnet-5' }
+const INPUT: TurnInput = { kind: 'intent', text: 'hi', session: { turns: [] }, provider: 'anthropic', model: 'claude-sonnet-5-5' }
 
 function emptyNdjsonResponse(): Response {
   return new Response(new ReadableStream<Uint8Array>({ start: (c) => c.close() }), {
@@ -27,7 +27,7 @@ describe('createLiveProxyTransport — POST body shape', () => {
   it('omits `effort` from the POST body when the selection carries none (byte-identical to before this field existed)', async () => {
     const fetchSpy = vi.fn(async () => emptyNdjsonResponse())
     vi.stubGlobal('fetch', fetchSpy)
-    const selection: SelectionRef = { get: () => ({ provider: 'anthropic', model: 'claude-sonnet-5', mode: 'specific' }) }
+    const selection: SelectionRef = { get: () => ({ provider: 'anthropic', model: 'claude-sonnet-5-5', mode: 'specific' }) }
     const transport = createLiveProxyTransport(selection)
     for await (const _line of transport.turn(INPUT)) {
       /* drain */
@@ -40,7 +40,7 @@ describe('createLiveProxyTransport — POST body shape', () => {
   it('threads a real `effort` value from the selection into the actual POST body (not just the type)', async () => {
     const fetchSpy = vi.fn(async () => emptyNdjsonResponse())
     vi.stubGlobal('fetch', fetchSpy)
-    const selection: SelectionRef = { get: () => ({ provider: 'anthropic', model: 'claude-sonnet-5', mode: 'specific', effort: 'high' }) }
+    const selection: SelectionRef = { get: () => ({ provider: 'anthropic', model: 'claude-sonnet-5-5', mode: 'specific', effort: 'high' }) }
     const transport = createLiveProxyTransport(selection)
     for await (const _line of transport.turn(INPUT)) {
       /* drain */
@@ -49,7 +49,7 @@ describe('createLiveProxyTransport — POST body shape', () => {
     const body = JSON.parse(init.body) as Record<string, unknown>
     expect(body.effort).toBe('high')
     expect(body.provider).toBe('anthropic')
-    expect(body.model).toBe('claude-sonnet-5')
+    expect(body.model).toBe('claude-sonnet-5-5')
     expect(body.mode).toBe('specific')
   })
 })

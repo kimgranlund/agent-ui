@@ -458,15 +458,15 @@ unchanged:
 
 ```ts
 import { EFFORT_LEVELS } from '@agent-ui/app/composer-options'
-conv.models = [{ id: 'claude-sonnet-5', label: 'Sonnet 5' }, /* … */]
-conv.model = 'claude-sonnet-5'
+conv.models = [{ id: 'claude-sonnet-5-5', label: 'Sonnet 5.5' }, /* … */]
+conv.model = 'claude-sonnet-5-5'
 conv.efforts = EFFORT_LEVELS
 conv.effort = 'medium'
 conv.onModelChange((id) => { /* persist the new selection, e.g. a settings store */ })
 conv.onEffortChange((id) => { /* ephemeral — no persisted counterpart expected */ })
 // GH #257 — the Provider axis narrows the SAME Models picker (a model belongs to exactly one provider);
 // Mode is a plain flat picker mirroring Effort exactly.
-conv.providers = [{ id: 'anthropic', label: 'Anthropic', defaultModel: 'claude-sonnet-5', models: conv.models }]
+conv.providers = [{ id: 'anthropic', label: 'Anthropic', defaultModel: 'claude-sonnet-5-5', models: conv.models }]
 conv.provider = 'anthropic'
 conv.onProviderChange((id) => { /* persist the new provider */ })
 conv.modes = [{ id: 'default', label: 'Default' }]

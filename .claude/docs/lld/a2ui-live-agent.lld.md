@@ -426,7 +426,7 @@ The pure `parseAnthropicSSE` is fed a CAPTURED SSE-response fixture in a `src/li
 (deterministic, no network — the code most likely to break on an upstream change is gated); the `fetch`
 arm's first-byte deadline, stall guard and `fetchWithRetry` are gated by the stubbed-fetch tests named in
 the §2 discovery table; only its live-key leg is MANUAL live acceptance. Completion = `message_stop`; `event: error` is surfaced (the
-host-verified 2026-07-04 contract). **Default model:** `claude-sonnet-5` (the registry's `defaultModel`,
+host-verified 2026-07-04 contract). **Default model:** `claude-sonnet-5-5` (the registry's `defaultModel`,
 `providers.json`; agent-admin's own `DEFAULT_MODEL_ID` is `claude-haiku-5-5`, so an admin turn and a bare
 `/__a2ui/agent` request default differently), Execute tier; `claude-opus-4-8` opt-in, `claude-fable-5` for latency; the model id rides
 `{provider,model}` from the switcher (SPEC-R12). Keys are passed IN (the `loadEnv`-resolved value

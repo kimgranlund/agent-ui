@@ -2810,7 +2810,7 @@ export class UIAgentAdminElement extends UIElement {
     const render = (): void => {
       const roster = modelRoster()
       conversation.models = roster.filter((m) => isModelIncluded(store?.get(MODELS_INCLUDED_KEY), m))
-      // GH #880 — the interview's picker opens on Sonnet 5 unless this store names a model of its own
+      // GH #880 — the interview's picker opens on Sonnet 5.5 unless this store names a model of its own
       // (`#modelFor`'s per-context read-time default; the roster above is unchanged either way, since Sonnet
       // ships INCLUDED and an off-roster/unset value was never offered).
       conversation.model = this.#modelFor(store, roster)
@@ -3216,7 +3216,7 @@ export class UIAgentAdminElement extends UIElement {
    * GH #880 (Kim's ruling, 2026-08-14) — THE model read, for every context and every consumer of it: the
    * picker's committed value, the Model grid's default row, both live arms' request, and the Context: System
    * projection all call this and nothing else. The per-context DEFAULT is applied HERE, at READ time — the
-   * Builder Interview falls back to Sonnet 5, the test chat keeps `DEFAULT_MODEL_ID` — and a stored choice
+   * Builder Interview falls back to Sonnet 5.5, the test chat keeps `DEFAULT_MODEL_ID` — and a stored choice
    * still wins on either (`sanitizeAuthoringModel`'s own first clause is `sanitizeModel`'s, verbatim).
    *
    * NEVER a store write. Nothing migrates the Builder's store to make its default true: an unset key simply
@@ -3419,7 +3419,7 @@ export class UIAgentAdminElement extends UIElement {
     const config: AgentConfigSnapshot = {
       name: typeof store?.get('name') === 'string' ? (store.get('name') as string) : 'Untitled agent',
       // GH #880 — the DRIVING context's read: an authoring turn whose Builder store names no model runs on
-      // Sonnet 5, the same value its picker was already showing (one read law, no picker/wire drift).
+      // Sonnet 5.5, the same value its picker was already showing (one read law, no picker/wire drift).
       model: this.#modelFor(store),
       temperature: sanitizeNumber(schema, 'temperature', store?.get('temperature'), 0.5),
       toolsEnabled: isEnabledFlag(store?.get(kindEnabledKey(ENTRY_KINDS.tool))),

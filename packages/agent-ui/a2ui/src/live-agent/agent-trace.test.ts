@@ -240,7 +240,7 @@ describe('a failed live turn writes its upstream error to the trace log (T-0151)
     const out = await post('/produce', {
       input: { kind: 'intent', text: 'a submit button', session: { turns: [] } },
       provider: 'anthropic',
-      model: 'claude-sonnet-5',
+      model: 'claude-sonnet-5-5',
       catalogId: 'agent-ui--croupier',
     })
     expect(out.status).toBe(200)
@@ -251,7 +251,7 @@ describe('a failed live turn writes its upstream error to the trace log (T-0151)
     const lines = writtenLines()
     expect(lines).toHaveLength(before + 1)
     const line = lines.at(-1)!
-    expect(line).toMatchObject({ route: 'produce', outcome: 'error', agent: 'croupier', model: 'claude-sonnet-5', user: 'a submit button', error: { status: 401 } })
+    expect(line).toMatchObject({ route: 'produce', outcome: 'error', agent: 'croupier', model: 'claude-sonnet-5-5', user: 'a submit button', error: { status: 401 } })
     expect(line.error?.body).toContain('authentication_error')
     expect(line.error?.body).toContain('invalid x-api-key')
     expect(line.rounds[0]?.error).toContain('upstream error 401')
@@ -261,7 +261,7 @@ describe('a failed live turn writes its upstream error to the trace log (T-0151)
   it('/chat: the line holds the upstream error; the 500 body carries the dev reason, never the raw body', async () => {
     state.error = new Error(UPSTREAM_401)
     const before = writtenLines().length
-    const out = await post('/chat', { system: 'be helpful', model: 'claude-sonnet-5', messages: [{ role: 'user', content: 'hi there' }] })
+    const out = await post('/chat', { system: 'be helpful', model: 'claude-sonnet-5-5', messages: [{ role: 'user', content: 'hi there' }] })
     expect(out.status).toBe(500)
     const body = JSON.parse(out.text) as { error: string }
     expect(body.error).toBe(`${GENERIC_FAILURE_MESSAGE} [dev: upstream 401: invalid x-api-key]`)
@@ -319,7 +319,7 @@ const TURN2_ROUND3 =
   `{"a2uiMeta":{"note":"Blackjack it is."}}\n{${V},"updateComponents":{"surfaceId":"greet-1","components":[` +
   '{"id":"greeting","component":"Text","text":"Blackjack it is. Place your bet."},{"id":"games","component":"Row","children":["bj"]}]}}'
 
-const produceBody = (input: unknown) => ({ input, provider: 'anthropic', model: 'claude-sonnet-5', effort: 'medium', catalogId: 'agent-ui--croupier', progressDetail: 'source' })
+const produceBody = (input: unknown) => ({ input, provider: 'anthropic', model: 'claude-sonnet-5-5', effort: 'medium', catalogId: 'agent-ui--croupier', progressDetail: 'source' })
 
 describe('the Croupier case is readable from the trace file (T-0151)', () => {
   it('turn 1: round 1 PARSE with the parser error and position, round 2 passed', async () => {

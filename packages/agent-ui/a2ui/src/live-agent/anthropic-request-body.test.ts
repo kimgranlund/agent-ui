@@ -6,7 +6,7 @@
 import { describe, it, expect } from 'vitest'
 import { buildRequestBody } from '../agent/providers/anthropic.ts'
 
-const BASE = { model: 'claude-sonnet-5', system: 'be helpful', messages: [] }
+const BASE = { model: 'claude-sonnet-5-5', system: 'be helpful', messages: [] }
 
 describe('buildRequestBody — the Effort dial → Anthropic extended-thinking mapping', () => {
   it('unset effort on the LEGACY family (haiku-4-5): nothing added, the pre-Effort shape (effort errors there)', () => {

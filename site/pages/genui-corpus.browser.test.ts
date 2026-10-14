@@ -24,7 +24,7 @@ const RECORD: GenuiCorpusRecord = {
     promptSetVersion: 1,
     packHash: 'abc',
     htmlHash: 'def0123456',
-    model: 'claude-sonnet-5',
+    model: 'claude-sonnet-5-5',
     dogfood: false,
     generatedAt: '2026-08-22T00:00:00.000Z',
     provenance: { source: 'generated', origin: 'run:test' },

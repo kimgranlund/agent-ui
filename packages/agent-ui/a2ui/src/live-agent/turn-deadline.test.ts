@@ -361,7 +361,7 @@ describe('anthropicProvider under produce(): the deadline covers streams and too
     )
     vi.stubGlobal('fetch', fetchMock)
     const it = anthropicProvider({ apiKey: 'k' })
-      .stream({ model: 'claude-sonnet-5', system: 's', messages: [{ role: 'user', content: 'hi' }] })
+      .stream({ model: 'claude-sonnet-5-5', system: 's', messages: [{ role: 'user', content: 'hi' }] })
       [Symbol.asyncIterator]()
     expect(await it.next()).toEqual({ done: false, value: 'first' })
     const next = it.next()

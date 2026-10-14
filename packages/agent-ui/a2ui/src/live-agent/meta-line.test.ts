@@ -29,7 +29,7 @@ describe('readMetaLine / isMetaLine (ADR-0088 §1)', () => {
       rounds: 1,
       healed: 0,
       failureCodes: [],
-      model: 'claude-sonnet-5',
+      model: 'claude-sonnet-5-5',
     }
     const line = JSON.stringify({ a2uiMeta: { note: 'ok', trace } })
     const parsed = readMetaLine(line)
@@ -45,7 +45,7 @@ describe('readMetaLine / isMetaLine (ADR-0088 §1)', () => {
       rounds: 2,
       healed: 0,
       failureCodes: ['CATALOG'],
-      model: 'claude-sonnet-5',
+      model: 'claude-sonnet-5-5',
       prompt: {
         limit: 140_000,
         total: 30,

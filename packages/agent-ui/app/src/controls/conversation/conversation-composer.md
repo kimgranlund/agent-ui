@@ -197,8 +197,8 @@ composer')`, forwarding props down and listening for its callback registrations.
 ```ts
 const composer = document.createElement('ui-conversation-composer')
 composer.placeholder = 'Describe the agent you want…' // GH #672 — default 'Ask anything…' unless set
-composer.models = [{ id: 'claude-sonnet-5', label: 'Sonnet 5' }, /* … */]
-composer.model = 'claude-sonnet-5'
+composer.models = [{ id: 'claude-sonnet-5-5', label: 'Sonnet 5.5' }, /* … */]
+composer.model = 'claude-sonnet-5-5'
 composer.onSubmit((text) => { /* the consumer's own turn loop */ })
 composer.onModelChange((id) => { /* persist the new selection */ })
 composer.onMicClick(() => { /* wire real voice input here — none is built in; ALSO reveals the mic button */ })
@@ -209,7 +209,7 @@ composer.busy = true // disables editor/send/mic/picker-triggers; the composer's
 
 ```ts
 composer.providers = [
-  { id: 'anthropic', label: 'Anthropic', defaultModel: 'claude-sonnet-5', models: [{ id: 'claude-sonnet-5', label: 'Sonnet 5' }] },
+  { id: 'anthropic', label: 'Anthropic', defaultModel: 'claude-sonnet-5-5', models: [{ id: 'claude-sonnet-5-5', label: 'Sonnet 5.5' }] },
   { id: 'openai', label: 'OpenAI — coming soon', defaultModel: 'gpt-4.1', models: [{ id: 'gpt-4.1', label: 'GPT-4.1' }], disabled: true },
 ]
 composer.provider = 'anthropic'

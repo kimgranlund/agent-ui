@@ -46,7 +46,7 @@ describe('providers.json registry (LLD-C11 / SPEC-R11 AC2)', () => {
   it('resolvePair is the PAIR-allowlist trust boundary (SPEC-R12)', () => {
     const cfg = loadConfig()
     // A known + implemented + in-catalog pair resolves to its env-var NAME (never a value).
-    expect(resolvePair(cfg, 'anthropic', 'claude-sonnet-5')).toEqual({
+    expect(resolvePair(cfg, 'anthropic', 'claude-sonnet-5-5')).toEqual({
       ok: true,
       entry: cfg.providers.anthropic!,
       envKey: 'ANTHROPIC_API_KEY',
@@ -60,7 +60,7 @@ describe('providers.json registry (LLD-C11 / SPEC-R11 AC2)', () => {
   it('providerForModel derives the owning IMPLEMENTED provider from a bare model id (ALM-C5, TKT-0052)', () => {
     const cfg = loadConfig()
     // hit: an anthropic model → 'anthropic' (the browser never named the provider)
-    expect(providerForModel(cfg, 'claude-sonnet-5')).toBe('anthropic')
+    expect(providerForModel(cfg, 'claude-sonnet-5-5')).toBe('anthropic')
     // unknown id → undefined
     expect(providerForModel(cfg, 'not-a-real-model')).toBeUndefined()
     // an id owned ONLY by an implemented:false provider (gpt-4.1 ∈ openai, implemented:false) → undefined —
