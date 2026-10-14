@@ -84,8 +84,8 @@
   --ui-conversation-strip-scrollbar-width: thin;
   --ui-conversation-strip-scrollbar-thumb: var(--md-sys-color-neutral-outline-variant, currentColor);
 }
-/* T-0173: the strip's spacing tokens resolve ON the strip, so they read the strip's own n (its size="sm"),
-   not the conversation's; the strip's grid itself (columns, gaps, expand rows) is status-stream.css's. */
+/* T-0173: the strip's spacing tokens resolve ON the strip, so they read the strip's own n (the chat's
+   register unless a region moves it), not a value frozen on the conversation; the strip's grid itself (columns, gaps, expand rows) is status-stream.css's. */
 :where(ui-conversation [data-part='narration']) {
   --ui-conversation-strip-detail-gap: var(--md-sys-space-xs);
   --ui-conversation-strip-code-pad: var(--md-sys-space-sm);
@@ -230,11 +230,10 @@
        no longer inside the agent bubble, so the bubble token would visibly mismatch. The SAME
        per-mount override pattern `--ui-status-stream-max-block-size` above already uses. */
     --ui-status-stream-header-canvas: var(--ui-conversation-surface);
-    /* TKT-0078: the timeline family is deliberately type-agnostic (ADR-0122's ramp is geometry-only;
-       content inherits ambient type) — so the compact register is THIS consumer's to set. Unpinned, the
-       strip inherited the page-ambient 1rem and towered over the bubble's own 0.66–0.86rem ladder;
-       0.78rem is the existing meta register (the system-bubble row: above annotation, below body). */
-    font-size: 0.78rem;
+    /* TKT-0078: the timeline family is deliberately type-agnostic, so the strip's type is THIS consumer's to
+       set. T-0173 (Kim 2026-10-14): the strip matches the chat, so it takes the chat's register (no size pin)
+       and its type step through the ramp (the body step at the strip's n), not a hand-picked rem. */
+    font-size: var(--md-sys-type-body);
   }
 
   /* GH #722 (candidate 2, ruled 2026-08-12): a SETTLED narration strip grows to fit its finite steps —

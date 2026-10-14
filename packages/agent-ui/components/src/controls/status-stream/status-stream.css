@@ -47,7 +47,8 @@
      header, the step rows, their expands and the raw block line up at every tier and scale. Read on the
      host, so a sized strip (the chat's size="sm") moves the whole grid with its n.
        inset        n, the inline edge both the header and the entries start at
-       gap          n, the one gap: marker to label, label to trailing cell, row to row
+       gap          n, marker to label and label to the trailing cell
+       row-gap      2n, step row to step row (Kim 2026-10-14)
        mark-box     2n, the marker column (the header marker, every step marker and the rail centre on it)
        label-start  2n + n, from a row's inline edge to its label column; every nested block starts here
        trail-box    n + 2n, the header caret's slot, reserved at the end of every entry row so the
@@ -56,6 +57,7 @@
        nest-gap     c, the beat between a row's text and its expand */
   --ui-status-stream-inset: var(--md-sys-space-sm);
   --ui-status-stream-gap: var(--md-sys-space-sm);
+  --ui-status-stream-row-gap: calc(2 * var(--ui-status-stream-gap));
   --ui-status-stream-mark-box: var(--ui-status-stream-header-marker-box);
   --ui-status-stream-label-start: calc(var(--ui-status-stream-mark-box) + var(--ui-status-stream-gap));
   --ui-status-stream-trail-box: calc(var(--ui-status-stream-gap) + var(--ui-status-stream-mark-box));
@@ -118,7 +120,7 @@
   /* GH #722 (candidate 4, Kim-delegated ruling 2026-08-12) — breathing room between the header's
      bottom hairline and the first entry row (the screenshot's crowding); applies only when the
      opt-in header is present (headerless strips byte-identical). */
-  --ui-status-stream-leading-gap: var(--ui-status-stream-gap); /* T-0173: the grid's one row gap */
+  --ui-status-stream-leading-gap: var(--ui-status-stream-gap); /* T-0173: n, header to the first row (steps are 2n apart) */
 
   --ui-status-stream-plan-ink: var(--md-sys-color-neutral-on-surface-variant);
   --ui-status-stream-plan-gap: var(--md-sys-space-xs);
@@ -169,13 +171,13 @@
 
 /* T-0173: the composed entries take the strip's grid through ui-timeline-item's public tokens (the GH #1222
    override point above): the marker column is the 2n mark box (timeline-item's own gutter is a fixed ramp
-   row, wider than the mark, which pushed every step label off the header's label column), and the column
-   and row gaps are the strip's n. Any depth, so a grouped entry's nested rail keeps the same grid. */
+   row before T-0173, wider than the mark, which pushed every step label off the header's label column), the
+   column gap is the strip's n and the row gap its 2n. Any depth, so a grouped entry's nested rail keeps the same grid. */
 :where(ui-status-stream) ui-timeline-item {
   --ui-timeline-item-marker-box: var(--ui-status-stream-mark-box);
   --ui-timeline-item-gutter: var(--ui-status-stream-mark-box);
   --ui-timeline-item-column-gap: var(--ui-status-stream-gap);
-  --ui-timeline-item-row-gap: var(--ui-status-stream-gap);
+  --ui-timeline-item-row-gap: var(--ui-status-stream-row-gap);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-status-stream) consumes ONLY --ui-status-stream-* ════════════════ */

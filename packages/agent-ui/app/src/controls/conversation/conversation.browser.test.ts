@@ -18,6 +18,8 @@ import { UIConversationElement } from './conversation.ts'
 import type { UIConversationDialogElement } from './conversation-dialog.ts'
 import type { UIConversationHeaderElement } from './conversation-header.ts'
 import { whenFlushed } from '@agent-ui/components'
+import { ROOT_REGISTER, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
+import { resolve as resolveRegister } from '../../../../shared/src/tokens/scale.mjs'
 import { createRenderer as warm } from '@agent-ui/a2ui'
 // ADR-0241 Amendment 1: the default catalog is a lazy record, so warm it at the top level, ahead of any renderer this
 // file builds (a renderer built before the body lands stays on the asynchronous path, so a beforeAll would be too late).
@@ -1753,9 +1755,10 @@ describe('ui-conversation cross-engine: the polished activity strip (T-0022)', (
 })
 
 // T-0173: the activity strip sits on ONE geometry grid derived from the strip's own n (status-stream.css,
-// status-stream.md Geometry). Measured in a real engine at two registers: the chat (product root, the strip's
-// size="sm") and the A2UI canvas (widget / md). Every invariant is an equality against the strip's computed n,
-// so a fixed px gutter, an em-based indent or a gap resolved at the wrong n reddens it.
+// status-stream.md Geometry). Measured in a real engine at two registers: the chat (the page root register,
+// read from the generator's ROOT_REGISTER so a root move never strands this test) and the A2UI canvas
+// (widget / md, explicit). Every invariant is an equality against the strip's computed n, so a fixed px
+// gutter, an em-based indent or a gap resolved at the wrong n reddens it.
 describe('ui-conversation cross-engine: the activity strip sits on one grid derived from n (T-0173)', () => {
   const frames = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
   const LONG_JSON = JSON.stringify({ version: 'v1.0', updateComponents: { surfaceId: 'quokka-board', components: [{ id: 'root', component: 'Column', children: Array.from({ length: 24 }, (_, i) => `child-${i}`) }] } })
@@ -1770,7 +1773,11 @@ describe('ui-conversation cross-engine: the activity strip sits on one grid deri
     return r.left + r.width / 2
   }
 
-  for (const register of [{ name: 'chat (product root)', attrs: {} }, { name: 'canvas (widget / md)', attrs: { 'data-tier': 'widget', 'data-scale': 'md' } }]) {
+  const registers = [
+    { name: `chat (root ${ROOT_REGISTER.tier} / ${ROOT_REGISTER.scale})`, attrs: {}, n: rootResolve('md').n },
+    { name: 'canvas (widget / md)', attrs: { 'data-tier': 'widget', 'data-scale': 'md' }, n: resolveRegister('widget', 'md', 'md', 'default').n },
+  ]
+  for (const register of registers) {
     it(`${server.browser} ${register.name}: marker, rail, label column, expands and the trailing edge all derive from n`, async () => {
       const region = document.createElement('div')
       for (const [k, v] of Object.entries(register.attrs)) region.setAttribute(k, v)
@@ -1797,7 +1804,7 @@ describe('ui-conversation cross-engine: the activity strip sits on one grid deri
       for (const s of strip.querySelectorAll<HTMLElement>('summary')) s.click()
       await frames()
 
-      // n is the strip's own (its size="sm" moves it); the two registers must really differ (anti-vacuous)
+      // n is the strip's own, and it is the register's n from the generator (no size pin on the chat strip)
       const probe = document.createElement('span')
       probe.style.inlineSize = 'var(--md-sys-inset)'
       probe.style.display = 'block'
@@ -1805,7 +1812,7 @@ describe('ui-conversation cross-engine: the activity strip sits on one grid deri
       const n = probe.getBoundingClientRect().width
       probe.remove()
       expect(n, 'the strip resolves a real n').toBeGreaterThan(0)
-      expect(n, 'the chat strip is n=6, the canvas strip n=5').toBe('data-tier' in register.attrs ? 5 : 6)
+      expect(n, `the strip takes the ${register.name} register's n`).toBe(register.n)
 
       const items = [...strip.querySelectorAll<HTMLElement>(':scope > ui-timeline-item:not([data-note])')]
       const steps = items.filter((i) => i.dataset.kind !== undefined)
@@ -1845,7 +1852,7 @@ describe('ui-conversation cross-engine: the activity strip sits on one grid deri
       const rights = steps.map((s) => s.querySelector(':scope > [data-role="timestamp"]')!.getBoundingClientRect().right)
       for (const r of rights) expect(Math.abs(r - meta.getBoundingClientRect().right), 'a duration ends on the header meta edge').toBeLessThanOrEqual(0.5)
 
-      // 4. the gaps are n: inline edge to marker, marker to label, row to row
+      // 4. the inline edge and marker to label are n, step row to step row is 2n (Kim 2026-10-14)
       const stripLeft = strip.getBoundingClientRect().left
       const headerMarker = header.querySelector('[data-part="header-marker"]')!.getBoundingClientRect()
       expect(headerMarker.left - stripLeft, 'the inline edge is n').toBeCloseTo(n, 1)
@@ -1854,7 +1861,7 @@ describe('ui-conversation cross-engine: the activity strip sits on one grid deri
       const firstMarker = steps[0]!.querySelector(':scope > [data-part="marker"]')!.getBoundingClientRect()
       expect(labelCol - firstMarker.right, 'a step marker to its label is n').toBeCloseTo(n, 1)
       for (let i = 0; i < steps.length - 1; i += 1) {
-        expect(steps[i + 1]!.getBoundingClientRect().top - steps[i]!.getBoundingClientRect().bottom, `row ${i} to row ${i + 1} is n`).toBeCloseTo(n, 1)
+        expect(steps[i + 1]!.getBoundingClientRect().top - steps[i]!.getBoundingClientRect().bottom, `row ${i} to row ${i + 1} is 2n`).toBeCloseTo(2 * n, 1)
       }
     })
   }
