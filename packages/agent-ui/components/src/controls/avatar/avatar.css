@@ -45,7 +45,10 @@
   --ui-avatar-icon: var(--md-sys-icon-box, calc(var(--ui-avatar-size) * 0.6));
 
   /* ONE neutral pair (SPEC-R7) — AA-verifiable once; every `name` computes the identical plane/ink. */
-  --ui-avatar-plane: var(--md-sys-color-neutral-surface-high);
+  /* The plane is the container-high step laid over an opaque surface base, so the disc separates from the page
+     (about 1.36:1 light, 1.5:1 dark; surface-high read 1.07:1, T-0140) and stays opaque where avatars overlap. */
+  --ui-avatar-plane: var(--md-sys-color-neutral-container-high);
+  --ui-avatar-plane-base: var(--md-sys-color-neutral-surface);
   --ui-avatar-ink: var(--md-sys-color-neutral-on-surface);
 }
 
@@ -67,7 +70,7 @@
     border-radius: 50%; /* the circle mask (SPEC-R7) */
     inline-size: var(--ui-avatar-size);
     block-size: var(--ui-avatar-size);
-    background: var(--ui-avatar-plane);
+    background: linear-gradient(var(--ui-avatar-plane), var(--ui-avatar-plane)), var(--ui-avatar-plane-base);
     color: var(--ui-avatar-ink);
     vertical-align: middle; /* an inline-grid box sitting beside text (SPEC-R6's "beside a name" case) */
   }

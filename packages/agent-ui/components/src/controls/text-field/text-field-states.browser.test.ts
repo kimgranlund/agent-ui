@@ -281,17 +281,15 @@ describe('ui-text-field — :focus-within ring on the HOST frame (both engines)'
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-text-field — forced-colors survival (Chromium emulates via CDP; WebKit asserts the baseline)', () => {
-  it('the :focus-within ring survives forced-colors AND the idle ink/placeholder do not vanish; a border APPEARS under forced-colors where light mode paints none', async () => {
+  it('the :focus-within ring survives forced-colors AND the idle ink/placeholder/border do not vanish', async () => {
     // an empty, placeholdered field so the [data-empty]::before placeholder is actually generated.
     const { field, editor } = mount(`<ui-text-field placeholder="Search…" ${SIZED}></ui-text-field>`)
 
-    // baseline (BOTH engines, normal mode): the IDLE (unfocused, unhovered) field's BORDER is
-    // TRANSPARENT by design under TKT-0062's filled/container state law — border is visible only on
-    // :hover now (the light-mode exception in that table); ink + placeholder stay real, visible colours
-    // (the "default" ink role) — so the forced-colors ink/placeholder assertions below still cannot be
-    // vacuous. The border's own forced-colors proof (below) instead checks the STRONGER claim that a
-    // border APPEARS under forced-colors where light mode painted none at all.
-    expect(alphaOf(getComputedStyle(field).borderTopColor), 'idle border unexpectedly visible in normal mode (TKT-0062: default border is transparent)').toBe(0)
+    // baseline (BOTH engines, normal mode): the IDLE (unfocused, unhovered) field paints its outline-role
+    // boundary (T-0140), and ink + placeholder stay real, visible colours (the "default" ink role), so the
+    // forced-colors assertions below cannot be vacuous. Focus then steps the border transparent, and the
+    // forced-colors proof checks that the blurred idle border repaints visible (CanvasText) there.
+    expect(alphaOf(getComputedStyle(field).borderTopColor), 'idle border invisible in normal mode (T-0140: the idle boundary is the outline role)').toBeGreaterThan(0)
     expect(alphaOf(getComputedStyle(field).color), 'ink invisible in normal mode').toBeGreaterThan(0)
     expect(
       alphaOf(getComputedStyle(editor, '::before').color),
@@ -326,10 +324,9 @@ describe('ui-text-field — forced-colors survival (Chromium emulates via CDP; W
       // the outline is WHY dev#1 makes the ring the SOLE focus indicator (the transparent border carries nothing).
       expect(ringDrawn(field), 'the :focus-within ring vanished under forced-colors').toBe(true)
 
-      // the IDLE ink + placeholder do NOT vanish, AND a border APPEARS (TKT-0062: it painted NONE in
-      // light-mode idle, per the baseline assertion above) — blur to the idle frame, then the
-      // forced-colors block unconditionally repaints border-color to CanvasText, overriding the
-      // transparent light-mode token. MOTION-AWARE: poll until the border settles off alpha 0.
+      // the IDLE ink + placeholder + border do NOT vanish: blur to the idle frame, then the forced-colors
+      // block unconditionally repaints border-color to CanvasText. MOTION-AWARE: poll until the border
+      // settles off the focus row's alpha 0.
       editor.blur()
       expect(field.matches(':focus-within'), 'the field did not blur').toBe(false)
       await expect

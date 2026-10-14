@@ -215,11 +215,13 @@ describe('ui-multi-select — geometry (GEO-LAW: 0 < checkmark glyph ≤ icon ce
     expect(glyphW, `${server.browser}: checkmark wider than its icon cell — GEO-LAW violation`).toBeLessThanOrEqual(iconCell)
   })
 
-  it('unselected option: the checkmark ::before renders with zero width (no glyph)', async () => {
+  it('unselected option: the ::before paints an outlined glyph box, so the toggle shows before the first click (T-0140)', async () => {
     const { el } = mount(`<ui-multi-select>${OPTIONS}</ui-multi-select>`)
     const option = el.querySelector<HTMLElement>('[value="design"]')!
     const cs = getComputedStyle(option, '::before')
-    expect(px(cs.width)).toBe(0)
+    expect(px(cs.width)).toBeGreaterThan(0)
+    expect(px(cs.borderTopWidth)).toBeGreaterThan(0)
+    expect(cs.clipPath).toBe('none') // the outline box, not the tick
   })
 
   it('[size=sm] and [size=lg] repoint the row-height lever off the ramp (no ad hoc size value)', async () => {

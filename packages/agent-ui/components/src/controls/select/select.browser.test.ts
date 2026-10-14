@@ -1196,7 +1196,7 @@ describe('ui-select — user-invalid leg (ADR-0051)', () => {
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-select — the TKT-0062 filled/container state law (real repaint, both engines)', () => {
-  it('placeholder (empty) vs a real selection (filled) repaint background AND ink together', async () => {
+  it('placeholder (empty) vs a real selection (filled) share one idle fill and separate by ink (T-0140)', async () => {
     const { el } = mount(`
       <ui-select placeholder="Choose…">
         <div role="option" value="light">light</div>
@@ -1212,7 +1212,7 @@ describe('ui-select — the TKT-0062 filled/container state law (real repaint, b
 
     const filledBg = getComputedStyle(trigger).backgroundColor
     const filledInk = getComputedStyle(trigger).color
-    expect(filledBg, 'the background did not repaint between placeholder and a real selection').not.toBe(emptyBg)
+    expect(filledBg, 'data must not pick the idle fill: placeholder and selection share one background').toBe(emptyBg)
     expect(filledInk, 'the ink did not repaint between placeholder and a real selection').not.toBe(emptyInk)
   })
 

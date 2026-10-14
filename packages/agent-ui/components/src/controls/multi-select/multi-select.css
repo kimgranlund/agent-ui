@@ -89,6 +89,8 @@
   /* The checkmark glyph's own fill colour (the `ui-checkbox` ink-checked precedent, repointed to the
      row's own selected-ink so the glyph reads consistently against the tinted selected background). */
   --ui-multi-select-check-ink: var(--md-sys-color-primary-high);
+  --ui-multi-select-indicator-outline: var(--md-sys-color-neutral-outline); /* the unselected box, so the toggle shows before the first click (T-0140) */
+  --ui-multi-select-indicator-radius: var(--md-sys-checkbox-radius, calc(var(--ui-multi-select-glyph) * 0.2)); /* the checkbox corner (checkbox.css) */
 }
 
 /* ── size → dimensional ramp repoint (ADR-0038) ──────────────────────────────────────────────────── */
@@ -210,7 +212,7 @@
   /* Checkmark base (::before) — CSS-only paint (LLD-C3), zero DOM injection into the option node.
      Centred in an icon-sized leading cell: inset = option-inline (the row's own leading pad start) +
      ½(icon − glyph) (the §4.1 caret-law centring, applied at a LEADING position instead of trailing).
-     Unselected: no declared size/background → renders nothing (an implicit, zero-footprint pseudo). */
+     Unselected: an outlined glyph-sized box (below), so every option shows its toggle before the first click. */
   :scope > [role='option']::before {
     content: '';
     position: absolute;
@@ -218,6 +220,14 @@
     inset-block-start: 50%;
     transform: translateY(-50%);
     pointer-events: none;
+  }
+
+  :scope > [role='option']:not([aria-selected='true'])::before {
+    box-sizing: border-box;
+    inline-size: var(--ui-multi-select-glyph);
+    block-size: var(--ui-multi-select-glyph);
+    border: 1px solid var(--ui-multi-select-indicator-outline);
+    border-radius: var(--ui-multi-select-indicator-radius);
   }
 
   /* Selected: the checkmark tick — the SAME clip-path polygon `ui-checkbox`'s own checked glyph uses,

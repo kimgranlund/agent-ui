@@ -64,7 +64,7 @@ applyDemoWidth(contact, '26rem')
 const amount = field({ label: 'Contract value', name: 'amount', type: 'currency', currency: 'EUR', min: '0', placeholder: '0.00' })
 const seats = field({ label: 'Seats', name: 'seats', type: 'number', step: '5', min: '5', max: '500', value: '25' })
 const discount = field({ label: 'Discount', name: 'discount', type: 'percent', min: '0', max: '40', placeholder: '0' })
-const starts = field({ label: 'Contract start', name: 'starts', type: 'date' })
+const starts = field({ label: 'Contract start', name: 'starts', type: 'date', placeholder: 'YYYY-MM-DD' })
 const commercial = el('ui-column', { gap: 'sm' }, [
   el('ui-row', { gap: 'sm', wrap: '' }, [amount, seats]),
   el('ui-row', { gap: 'sm', wrap: '' }, [discount, starts]),
