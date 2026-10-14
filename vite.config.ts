@@ -60,6 +60,8 @@ const input = Object.fromEntries(
 export default defineConfig({
   root: 'site',
   plugins: [a2uiDevProxyPlugin(), a2aDevProxyPlugin(), a2aFeedDevProxyPlugin(), devtoolsHarnessPlugin()],
+  // T-0151: the dev proxy appends a line to `.agent-traces/` per live turn; never a reload trigger.
+  server: { watch: { ignored: ['**/.agent-traces/**'] } },
   build: {
     outDir: '../dist',
     emptyOutDir: true,

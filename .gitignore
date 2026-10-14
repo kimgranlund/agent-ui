@@ -46,4 +46,8 @@ dist-*
 # raw replies for E_JUDGE_PARSE post-mortems) from `npm run eval:genui-corpus -- generate|judge`; never
 # committed, the same gate-verdicts-only posture as /screenshots/ above.
 packages/agent-ui/a2ui/corpus-genui/runs/
+
+# T-0151: the dev proxy's per-turn agent trace log (`npm run traces` reads it); local triage data, never
+# committed. Keys are redacted before a line is written, but the log still holds user and model text.
+/.agent-traces/
 site/.fixture-scratch/

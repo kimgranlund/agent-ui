@@ -202,7 +202,9 @@ describe('the /chat route builds the SHARED tool dispatch (SPEC-R19 AC1 — GH #
     expect('tools' in request).toBe(false)
     expect('executeTool' in request).toBe(false)
     // The whole request the route composes: the pre-amendment shape plus the turn `signal` (GH #1797), the key the Worker's handleChat also sends.
-    expect(Object.keys(request).sort()).toEqual(['effort', 'messages', 'model', 'signal', 'system'])
+    // T-0151: plus `onEvent`, the dev proxy's trace tee (token usage and thinking for the trace log): a side
+    // callback the adapter calls, never part of the upstream request body; the Worker sends none.
+    expect(Object.keys(request).sort()).toEqual(['effort', 'messages', 'model', 'onEvent', 'signal', 'system'])
   })
 
   it('a MALFORMED or unknown-id integrations value degrades to no tools — never a 400, never a partial pair', async () => {

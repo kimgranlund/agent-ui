@@ -21,6 +21,10 @@
 //   step's `reasoning` field, never a label or summary: the bounded excerpts the producer puts on `reasoning`
 //   progress events under its raw-reasoning opt-in (ADR-0146 F3), concatenated and capped. A stream without
 //   the opt-in carries no excerpt, and the step has no `reasoning` key at all.
+// - Failed rounds (T-0151, dev build): under the same raw-source opt-in, a `retry` event carries the failed
+//   round's candidate (`source`) and, from the dev proxy only, its account (`detail`: the validator codes
+//   with their messages, the parse error and position). Both reach the validate step's `details`, below the
+//   plain-words lines, labelled by round; never a label, a summary or `raw`. Without them nothing changes.
 
 import type { TurnProgress, TurnProgressStage, TurnTrace } from '../../packages/agent-ui/a2ui/src/agent/meta-line.ts'
 import type { ActivityStep, ActivityStatus, ActivityFooter } from '@agent-ui/app/conversation'
@@ -226,6 +230,29 @@ function validateDetails(codes: readonly string[], rounds: number, settled: bool
 }
 
 const CHECKING = ['Checking the response against the component catalog.']
+
+/** The most of one failed round's candidate the validate step's details show, in characters. */
+const FAILED_SOURCE_CAP = 2000
+
+/** One failed round as its `retry` event reported it (T-0151): the account and the candidate, either absent. */
+interface FailedRound {
+  round: number
+  detail?: string
+  source?: string
+}
+
+/** The details lines for the failed rounds: each round's account, then its output, capped. */
+function failedRoundLines(rounds: readonly FailedRound[]): string[] {
+  const out: string[] = []
+  for (const r of rounds) {
+    if (r.detail !== undefined && r.detail.trim() !== '') out.push(...r.detail.split('\n'))
+    if (r.source !== undefined && r.source !== '') {
+      const text = r.source.length > FAILED_SOURCE_CAP ? `${r.source.slice(0, FAILED_SOURCE_CAP)}\n[truncated]` : r.source
+      out.push(`Round ${r.round} output:`, text)
+    }
+  }
+  return out
+}
 const NO_REASONING = ['No reasoning captured']
 
 export function createA2uiActivity(now: () => number = () => Date.now()): A2uiActivity {
@@ -239,6 +266,8 @@ export function createA2uiActivity(now: () => number = () => Date.now()): A2uiAc
   /** The failure codes the live `retry` events carried, in first-seen order: why each failed round failed,
    *  known the moment it fails (before any trace). The trace's own codes win once it arrives. */
   const liveCodes: string[] = []
+  /** T-0151: each failed round's account and candidate, from the `retry` events that carried them. */
+  const failedRounds: FailedRound[] = []
 
   const view = (s: StepState): ActivityStep => {
     const running = s.status === 'running'
@@ -305,7 +334,7 @@ export function createA2uiActivity(now: () => number = () => Date.now()): A2uiAc
     if (rounds > 1) {
       v.status = 'repaired'
       v.summary = retrySummary(codes, true)
-      v.details = validateDetails(codes, rounds, true)
+      v.details = [...validateDetails(codes, rounds, true), ...failedRoundLines(failedRounds)]
       v.retries = rounds - 1
     } else if (v.status !== 'failed') {
       v.status = 'ok'
@@ -334,11 +363,14 @@ export function createA2uiActivity(now: () => number = () => Date.now()): A2uiAc
         if (closed !== undefined) changed.add(closed)
         round = ev.round ?? round + 1
         for (const c of ev.codes ?? []) if (c !== '' && !liveCodes.includes(c)) liveCodes.push(c)
+        if ((ev.detail !== undefined && ev.detail !== '') || (ev.source !== undefined && ev.source !== '')) {
+          failedRounds.push({ round: round - 1, ...(ev.detail ? { detail: ev.detail } : {}), ...(ev.source ? { source: ev.source } : {}) })
+        }
         const v = steps.get('validate')
         if (v !== undefined) {
           v.status = 'failed'
           v.summary = retrySummary(liveCodes, false)
-          v.details = validateDetails(liveCodes, round, false)
+          v.details = [...validateDetails(liveCodes, round, false), ...failedRoundLines(failedRounds)]
           v.retries = round - 1
           changed.add(v)
         }
@@ -423,7 +455,11 @@ export function createA2uiActivity(now: () => number = () => Date.now()): A2uiAc
       const failed = close('failed', now())
       if (failed !== undefined) changed.add(failed)
       if (failed?.id === 'validate') {
-        failed.details = ['The turn ended before validation passed.', ...(liveCodes.length > 0 ? [`Earlier failed checks: ${liveCodes.join(', ')}`] : [])]
+        failed.details = [
+          'The turn ended before validation passed.',
+          ...(liveCodes.length > 0 ? [`Earlier failed checks: ${liveCodes.join(', ')}`] : []),
+          ...failedRoundLines(failedRounds),
+        ]
       }
       // A failed turn shipped nothing valid: its one raw block is the last candidate the producer attached.
       const v = steps.get('validate')

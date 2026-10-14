@@ -476,3 +476,42 @@ describe('createA2uiActivity: expandable details and plain-words copy (T-0022)',
     expect(reentered.find((s) => s.id === 'generate')).toHaveProperty('startedAt', c.now() - 200) // the first 200ms still counts
   })
 })
+
+// T-0151: under the raw-source opt-in, a `retry` event carries the failed round's candidate (`source`) and,
+// from the dev proxy, its account (`detail`: validator codes with messages, the parse position). The validate
+// step's details list both per round, below the plain-words lines; `raw` stays the shipped lines only.
+describe('createA2uiActivity: failed rounds in the validate details (T-0151)', () => {
+  it('lists each failed round with its account and output, and keeps raw to the shipped lines', () => {
+    const a = createA2uiActivity()
+    const seen = new Map<string, ActivityStep>()
+    const parse = 'Round 1 failed:\n  PARSE: the payload did not parse as JSON lines\n  parse error at payload line 2, column 88: Expected \',\' or \'}\''
+    const idgraph = 'Round 2 failed:\n  IDGRAPH: component "games" references "table", which no component in the payload or the session defines (dangling id)'
+    fold(seen, a.progress({ stage: 'validating', source: 'candidate one' }))
+    const live = a.progress({ stage: 'retry', round: 2, codes: ['PARSE'], detail: parse, source: 'candidate one' })
+    fold(seen, live)
+    expect(live.find((s) => s.id === 'validate')!.details).toEqual([
+      'Failed checks: PARSE (model output did not parse)',
+      'Round 1 failed. The model was sent the failures and is trying again in round 2.',
+      ...parse.split('\n'),
+      'Round 1 output:',
+      'candidate one',
+    ])
+    fold(seen, a.progress({ stage: 'validating', source: 'candidate two' }))
+    fold(seen, a.progress({ stage: 'retry', round: 3, codes: ['IDGRAPH'], detail: idgraph, source: 'candidate two' }))
+    fold(seen, a.progress({ stage: 'validating', source: CREATE }))
+    fold(seen, a.progress({ stage: 'done' }))
+    a.line(CREATE)
+    fold(seen, a.end().steps)
+    const v = seen.get('validate')!
+    expect(v.status).toBe('repaired')
+    expect(v.details).toEqual(expect.arrayContaining(['Round 1 output:', 'candidate one', 'Round 2 output:', 'candidate two', ...idgraph.split('\n')]))
+    expect(v.raw).toBe(CREATE)
+  })
+
+  it('a retry with neither detail nor source adds no round lines (the stream without the opt-in)', () => {
+    const a = createA2uiActivity()
+    a.progress({ stage: 'validating' })
+    const v = a.progress({ stage: 'retry', round: 2, codes: ['PARSE'] }).find((s) => s.id === 'validate')!
+    expect(v.details).toEqual(['Failed checks: PARSE (model output did not parse)', 'Round 1 failed. The model was sent the failures and is trying again in round 2.'])
+  })
+})

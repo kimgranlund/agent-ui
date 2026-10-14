@@ -142,6 +142,8 @@ export default defineConfig({
       },
     ],
   },
+  // T-0151: the dev proxy's trace log (`.agent-traces/*.jsonl`) is never a watch-mode rerun trigger.
+  server: { watch: { ignored: ['**/.agent-traces/**'] } },
   resolve: {
     alias: {
       // EXACT, `?url`-suffixed twin of one CSS subpath. No source in the repo carries a `?url` specifier for
