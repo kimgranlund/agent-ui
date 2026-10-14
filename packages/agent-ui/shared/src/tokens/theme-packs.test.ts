@@ -12,7 +12,8 @@ declare const process: { cwd(): string }
 // 050/950 alpha-triple primitives feeding the tint roles, and (GH #867) the scrollbar-thumb/-thumb-hover
 // pair — 18 roles now, not 16; scrollbar-thumb is an ALIAS of neutral-track/-hover (tokens.css), and an
 // alias of a hand-authored role a stock export never produces is, by the same reasoning, never produced
-// either. A pack omitting one of these 18 is CORRECT (not a gap to close) — an element inside the themed
+// either. Later additions (the ADR-0196/0199 aliases, the Amendment 7 field outline) bring the set to 22, listed
+// below. A pack omitting one of these 22 is CORRECT (not a gap to close) — an element inside the themed
 // subtree inherits it from :root via ordinary CSS custom-property cascade, since a `[theme]` block is
 // always a :root descendant.
 //
@@ -57,6 +58,9 @@ const BESPOKE_EXEMPT = new Set([
   // ⑥); same class as the answered aliases above: a pack that re-themes primary re-themes this for
   // free, and a stock export never mints --ui-*.
   '--ui-working-color',
+  // ADR-0245 Amendment 7 (T-0143): the opaque 3:1 field-boundary outline (tokens.css ⑦), hand-authored from two
+  // neutral primitive steps like neutral-track above; a stock export never produces it.
+  '--md-sys-color-neutral-field-outline',
 ])
 
 /** name -> declared value (the FIRST `:root`/`[theme=...]` block only — every pack + tokens.css is

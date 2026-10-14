@@ -255,15 +255,17 @@ all repoint together across five states:
 
 | State | Background | Border | Text ink |
 |---|---|---|---|
-| default (empty, idle) | `neutral-container-low` | `neutral-outline` | `neutral` |
-| filled (has a value, idle) | `neutral-container-low` | `neutral-outline` | `neutral-on-surface-variant` |
-| hover | `neutral-container` | `neutral-outline` | `neutral-on-surface-variant` |
+| default (empty, idle) | `neutral-container-low` | `neutral-field-outline` | `neutral` |
+| filled (has a value, idle) | `neutral-container-low` | `neutral-field-outline` | `neutral-on-surface-variant` |
+| hover | `neutral-container` | `neutral-field-outline` | `neutral-on-surface-variant` |
 | focus | `neutral-container-low` | `transparent` (the ring is the indicator) | `neutral-on-surface` |
 | disabled | `neutral-container-low` | `transparent` | `neutral-low` |
 
 "Filled" is `[data-empty]`'s absence on the editor part — the same emptiness signal the placeholder
 already keys off. The `user-invalid` danger border is UNCHANGED/orthogonal — it layers on top of
-whichever bg/ink the table above already picked. `disabled` is a role **repoint**, **not** opacity.
+whichever bg/ink the table above already picked. `disabled` is a role **repoint**, **not** opacity. The resting
+border `neutral-field-outline` is an opaque role held at 3:1 or more against every page plane in both themes (SC
+1.4.11, ADR-0245 Amendment 7), shared by select, combo-box, otp-field and textarea.
 Motion is gated behind `:state(ready)` and zeroed under reduced-motion (the `interaction-states.md`
 motion standard).
 

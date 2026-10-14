@@ -37,9 +37,9 @@
      verbatim (a multi-line surface is the SAME entry-control kin as a single-line one, only the box shape
      differs):
        state    | bg              | border           | ink
-       default  | container-low   | transparent       | neutral
-       filled   | container       | transparent       | on-surface-variant
-       hover    | container       | outline-variant   | on-surface-variant
+       default  | container-low   | field-outline     | neutral
+       filled   | container       | field-outline     | on-surface-variant
+       hover    | container       | field-outline     | on-surface-variant
        focus    | container-low   | transparent (ring)| on-surface
        disabled | container-low   | transparent       | neutral-low
      "filled" reads `[data-part='editor']:not([data-empty])` (the SAME emptiness signal the placeholder
@@ -49,8 +49,8 @@
   --ui-textarea-bg-filled: var(--md-sys-color-neutral-container);
   --ui-textarea-bg-hover: var(--md-sys-color-neutral-container);
   --ui-textarea-bg-focus: var(--md-sys-color-neutral-container-low);
-  --ui-textarea-border: transparent; /* default — the ring is the interactive indicator, not the border */
-  --ui-textarea-border-hover: var(--md-sys-color-neutral-outline-variant); /* :hover — the ONE visible-border state */
+  --ui-textarea-border: var(--md-sys-color-neutral-field-outline); /* default; the resting boundary, at least 3:1 against the page (SC 1.4.11, ADR-0245 Amendment 7), the text-field border; the ring stays the focus indicator */
+  --ui-textarea-border-hover: var(--md-sys-color-neutral-field-outline); /* :hover; never lighter than idle; the bg step carries hover */
   --ui-textarea-border-focus: transparent; /* :focus-within — TRANSPARENT: the shared outline ring is the SOLE focus indicator (a --md-sys-color-focus-ring border-color step doubled with the ring into a visible double border; text-field ADR-0014 dev#1 precedent). Transparent holds the box geometry (the 1px frame still occupies its track — no layout shift). */
   --ui-textarea-border-invalid: var(--md-sys-color-danger); /* :state(user-invalid) — UNCHANGED, orthogonal to the table above */
   --ui-textarea-border-invalid-hover: var(--md-sys-color-danger-high); /* user-invalid + :hover — UNCHANGED */

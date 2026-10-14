@@ -240,6 +240,78 @@ describe('tokens.css — the AA-guaranteed --md-sys-color-primary-selected fill 
 // at 80% opacity, SCHEME-INVARIANT by design (a backdrop isolates the dialog from the busy page behind it in
 // EITHER scheme, not tinted by the surface ramp) — resolved via light-dark() with identical legs, the sheet's
 // own idiom for every semantic role (including the other scheme-invariant hand-authored roles above it).
+// tok-field-outline (ADR-0245 Amendment 7, T-0143): the resting border of every entry field is a SC 1.4.11 boundary,
+// so --md-sys-color-neutral-field-outline holds at least 3:1 against every elevation plane in both schemes. The
+// contrast is recomputed from the declared legs (the same OKLCH to WCAG path as the blocks above), so a repoint
+// re-runs the math; the negative control proves the generated translucent -outline it replaces fails the bar.
+describe('tokens.css: the 3:1 field-boundary outline role (ADR-0245 Amendment 7)', () => {
+  const NON_TEXT = 3
+  const oklchOf = (stop: string): [number, number, number] => {
+    const m = bare.match(new RegExp(`--md-sys-color-neutral-${stop}:\\s*oklch\\(([-\\d.]+)\\s+([-\\d.]+)\\s+([-\\d.]+)`))
+    if (!m) throw new Error(`primitive --md-sys-color-neutral-${stop} not found`)
+    return [parseFloat(m[1]), parseFloat(m[2]), parseFloat(m[3])]
+  }
+  const oklchToLin = ([L, C, H]: [number, number, number]): number[] => {
+    const h = (H * Math.PI) / 180, a = C * Math.cos(h), b = C * Math.sin(h)
+    const l_ = L + 0.3963377774 * a + 0.2158037573 * b
+    const m_ = L - 0.1055613458 * a - 0.0638541728 * b
+    const s_ = L - 0.0894841775 * a - 1.291485548 * b
+    const l = l_ ** 3, m = m_ ** 3, s = s_ ** 3
+    return [
+      4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+      -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+      -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+    ]
+  }
+  const clamp01 = (x: number) => Math.min(1, Math.max(0, x))
+  const toGamma = (c: number) => { c = clamp01(c); return c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055 }
+  const toLin = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
+  const gammaOf = (stop: string) => oklchToLin(oklchOf(stop)).map(toGamma)
+  const lum = (g: number[]) => { const [r, gg, b] = g.map(toLin); return 0.2126 * r + 0.7152 * gg + 0.0722 * b }
+  const contrast = (f: number[], b: number[]) => { const a = lum(f), c = lum(b), hi = Math.max(a, c), lo = Math.min(a, c); return (hi + 0.05) / (lo + 0.05) }
+  const over = (src: number[], a: number, dst: number[]) => src.map((s, i) => a * s + (1 - a) * dst[i])
+  const elev = { light: ['050', '075', '100', '125', '150', '175', '200'], dark: ['950', '925', '900', '875', '850', '825', '800'] }
+
+  const legs = (role: string): [string, string] => {
+    const m = rootBlock.match(new RegExp(`--md-sys-color-neutral-${role}:\\s*light-dark\\(\\s*var\\(--md-sys-color-neutral-([\\w-]+)\\)\\s*,\\s*var\\(--md-sys-color-neutral-([\\w-]+)\\)\\s*\\)`))
+    if (!m) throw new Error(`role --md-sys-color-neutral-${role} not found as a two-leg neutral light-dark()`)
+    return [m[1], m[2]]
+  }
+  /** The worst contrast of a leg over the scheme's seven planes; a `scrim-NNN` leg composites over each plane. */
+  const worst = (leg: string, scheme: 'light' | 'dark') => {
+    const scrim = leg.match(/^scrim-(\d+)$/)
+    let w = Infinity, where = ''
+    for (const plane of elev[scheme]) {
+      const base = gammaOf(plane)
+      const ink = scrim ? over(gammaOf('500'), parseInt(scrim[1], 10) / 1000, base) : gammaOf(leg)
+      const r = contrast(ink, base)
+      if (r < w) { w = r; where = `${scheme} n-${plane}` }
+    }
+    return { ratio: w, where }
+  }
+
+  it('declares --md-sys-color-neutral-field-outline as an opaque two-leg neutral role', () => {
+    const [light, dark] = legs('field-outline')
+    expect(light, 'an opaque primitive step, not a translucent scrim').toMatch(/^\d+$/)
+    expect(dark, 'an opaque primitive step, not a translucent scrim').toMatch(/^\d+$/)
+  })
+
+  it('clears 3:1 against every elevation plane in BOTH schemes (SC 1.4.11)', () => {
+    const [light, dark] = legs('field-outline')
+    for (const [leg, scheme] of [[light, 'light'], [dark, 'dark']] as const) {
+      const w = worst(leg, scheme)
+      expect(w.ratio, `field-outline ${scheme} leg n-${leg} at ${w.where} = ${w.ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(NON_TEXT)
+    }
+  })
+
+  it('NEGATIVE control: the generated translucent --md-sys-color-neutral-outline it replaces FAILS 3:1 (why the role exists)', () => {
+    const [light, dark] = legs('outline')
+    expect(light).toBe('scrim-600') // anti-vacuous: the generated role really is the translucent scrim
+    expect(worst(light, 'light').ratio).toBeLessThan(NON_TEXT)
+    expect(worst(dark, 'dark').ratio).toBeLessThan(NON_TEXT)
+  })
+})
+
 describe('tokens.css — the dialog-backdrop scrim role (TKT-0019)', () => {
   it('declares --md-sys-color-dialog-backdrop as scheme-invariant black 80% opacity', () => {
     // Generator-native since Kim's ultimate-tokens rework: a single bare black role (no light-dark()
