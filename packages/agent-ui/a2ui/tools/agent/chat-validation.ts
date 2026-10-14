@@ -28,6 +28,7 @@ import type { Catalog } from '../../src/catalog/catalog.ts'
 import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from '../../src/catalog/personas/manifests.ts'
 import { ProduceHalt } from '../../src/agent/produce.ts'
 import { AgentTimeoutError } from '../../src/agent/deadlines.ts'
+import { ANTHROPIC_WORKSPACE_ENV } from '../../src/agent/providers/anthropic.ts'
 
 // GH #144: the generic fallback shown for any produce()-loop or `/chat` failure that ISN'T one of the classes
 // `failureMessageFor` passes through (an upstream fault, e.g. anthropicProvider's own error message, which
@@ -189,7 +190,7 @@ export function buildCatalogMap(catalog: Catalog, basicCatalog: Catalog): Map<st
  * then reads the env key. Returns the resolved dispatch bits, or a `{status, error}` degrade — never a key.
  */
 export type ChatDispatch =
-  | { ok: true; provider: string; apiKey: string; endpoint: string }
+  | { ok: true; provider: string; apiKey: string; endpoint: string; workspaceId?: string }
   | { ok: false; status: number; error: string }
 
 /**
@@ -232,5 +233,12 @@ export function resolveChatDispatch(
   if (!pair.ok) return { ok: false, status: 400, error: pair.reason }
   const apiKey = env[pair.envKey]
   if (apiKey === undefined || apiKey === '') return { ok: false, status: 503, error: 'no-key' }
-  return { ok: true, provider: providerId, apiKey, endpoint: pair.entry.endpoint }
+  const workspaceId = env[ANTHROPIC_WORKSPACE_ENV]
+  return {
+    ok: true,
+    provider: providerId,
+    apiKey,
+    endpoint: pair.entry.endpoint,
+    ...(workspaceId !== undefined && workspaceId !== '' ? { workspaceId } : {}),
+  }
 }

@@ -289,6 +289,14 @@ export function readAnthropicApiKey(repoRoot: string, env: Record<string, string
   return dotenv.ANTHROPIC_API_KEY !== undefined && dotenv.ANTHROPIC_API_KEY !== '' ? dotenv.ANTHROPIC_API_KEY : undefined
 }
 
+/** T-0192: `process.env.ANTHROPIC_WORKSPACE_ID` or the repo-root `.env`; `undefined` ⇒ not configured. */
+export function readAnthropicWorkspaceId(repoRoot: string, env: Record<string, string | undefined>): string | undefined {
+  const fromEnv = env.ANTHROPIC_WORKSPACE_ID
+  if (fromEnv !== undefined && fromEnv !== '') return fromEnv
+  const fromDotenv = loadDotEnv(repoRoot).ANTHROPIC_WORKSPACE_ID
+  return fromDotenv !== undefined && fromDotenv !== '' ? fromDotenv : undefined
+}
+
 // re-exported for legs that need to validate a record against the pure core without a second import line
 export { validateGenuiRecord }
 export type { GenuiCorpusRecord, GenuiVerdictsFile }

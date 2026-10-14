@@ -504,6 +504,20 @@ export const ANTHROPIC_FIRST_BYTE_TIMEOUT_MS = 60_000
  *  `anthropicProvider: stream stalled for <ms> ms`. */
 export const ANTHROPIC_STALL_TIMEOUT_MS = 60_000
 
+/** The env-var NAME hosts read the workspace id from, server-side only (T-0192). An org-level Anthropic key
+ *  answers 400 "not scoped to a workspace" unless the request carries `anthropic-workspace-id`. */
+export const ANTHROPIC_WORKSPACE_ENV = 'ANTHROPIC_WORKSPACE_ID'
+
+/** The auth headers every Anthropic call carries; `anthropic-workspace-id` rides along only when a
+ *  non-empty id is configured (T-0192). PURE, so the header contract is unit-testable. */
+export function anthropicHeaders(apiKey: string, workspaceId?: string): Record<string, string> {
+  return {
+    'x-api-key': apiKey,
+    'anthropic-version': '2023-06-01',
+    ...(workspaceId !== undefined && workspaceId !== '' ? { 'anthropic-workspace-id': workspaceId } : {}),
+  }
+}
+
 /**
  * Ticket #1634 — `/status` today only checks the env var is a non-empty string, never that it actually
  * authenticates, so a revoked/invalid key still reads "available" until a real chat turn fails (masked).
@@ -515,10 +529,14 @@ export const ANTHROPIC_STALL_TIMEOUT_MS = 60_000
  * check's own permissive posture: this is a dev-experience signal, not a security gate, and a hiccup in
  * the CHECK is not evidence the KEY is bad.
  */
-export async function validateAnthropicKey(apiKey: string, endpoint: string = DEFAULT_ENDPOINT): Promise<boolean> {
+export async function validateAnthropicKey(
+  apiKey: string,
+  endpoint: string = DEFAULT_ENDPOINT,
+  workspaceId?: string,
+): Promise<boolean> {
   const modelsUrl = endpoint.replace(/\/messages$/, '/models')
   try {
-    const res = await fetch(modelsUrl, { headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' } })
+    const res = await fetch(modelsUrl, { headers: anthropicHeaders(apiKey, workspaceId) })
     return res.status !== 401 && res.status !== 403
   } catch {
     return true
@@ -647,7 +665,7 @@ export async function fetchWithRetry(
   }
 }
 
-export function anthropicProvider(opts: { apiKey: string; endpoint?: string }): AgentProvider {
+export function anthropicProvider(opts: { apiKey: string; endpoint?: string; workspaceId?: string }): AgentProvider {
   const endpoint = opts.endpoint ?? DEFAULT_ENDPOINT
 
   /** ONE upstream round as an async GENERATOR: POST the body, walk the SSE, yield text fragments AS THEY
@@ -670,11 +688,7 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string }): 
       try {
         return await fetch(endpoint, {
           method: 'POST',
-          headers: {
-            'x-api-key': opts.apiKey,
-            'anthropic-version': '2023-06-01',
-            'content-type': 'application/json',
-          },
+          headers: { ...anthropicHeaders(opts.apiKey, opts.workspaceId), 'content-type': 'application/json' },
           body: JSON.stringify(body),
           signal: signal ? AbortSignal.any([signal, deadline.signal]) : deadline.signal,
         })

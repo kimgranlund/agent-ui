@@ -13,6 +13,8 @@
 // resolved VALUE lives in the returned record for the duration of one request, never on a manifest, never
 // serialized (SPEC-R18 / ADR-0073 cl.5).
 
+import { ANTHROPIC_WORKSPACE_ENV } from '../../../src/agent/providers/anthropic.ts'
+
 /** The one fact this projection needs from a providers.json entry: the env-var NAME. */
 interface ProviderKeySource {
   envKey: string
@@ -43,6 +45,7 @@ export function projectEnv(
     if (typeof value === 'string') result[envKey] = value
   }
   for (const entry of providers) take(entry.envKey)
+  take(ANTHROPIC_WORKSPACE_ENV) // T-0192: not a secret key, but a request header value the Anthropic adapter needs
   for (const manifest of integrations) {
     // `auth: 'none'` names no secret — nothing to project (and per SPEC-R18 such a manifest carries no
     // `envKey` at all; registration rejects the inverse, a `serverKey` manifest without one).

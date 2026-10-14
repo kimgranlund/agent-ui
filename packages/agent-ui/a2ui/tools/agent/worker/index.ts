@@ -4,6 +4,8 @@
 // the client), same three routes, same wire shapes (`GET /status`, `POST /chat`, `POST /` — mounted at
 // `/__a2ui/agent`, matching `live-proxy-transport.ts`/`admin-live-runner.ts`'s hardcoded endpoint), same
 // `resolvePair`/`providerForModel`/`providerFor` PAIR-allowlist chain (SPEC-R12) reused verbatim.
+// T-0192: an org-level key also needs `env.ANTHROPIC_WORKSPACE_ID` (`wrangler secret put ANTHROPIC_WORKSPACE_ID`
+// or a `vars` entry), sent upstream as the `anthropic-workspace-id` header; absent ⇒ no header.
 
 import { produce } from '../../../src/agent/produce.ts'
 import { withTurnDeadline, TURN_DEADLINE_MS } from '../../../src/agent/deadlines.ts'
@@ -12,6 +14,7 @@ import { formatErrorLine } from '../../../src/agent/meta-line.ts'
 import { resolvePair, validateProvidersConfig } from '../providers-config.ts'
 import type { ProvidersConfig } from '../providers-config.ts'
 import { providerFor, validateProviderKeyCached } from '../providers/index.ts'
+import { ANTHROPIC_WORKSPACE_ENV } from '../../../src/agent/providers/anthropic.ts'
 import { retrieve } from '../../../src/corpus/retrieve.ts'
 import type { CorpusRecord } from '../../../src/corpus/record.ts'
 import { loadCatalog } from '../../../src/catalog/catalog.ts'
@@ -153,7 +156,7 @@ async function handleStatus(env: Env): Promise<Response> {
       .map(async ([id, e]) => {
         const key = env2[e.envKey]
         if (typeof key !== 'string' || key === '') return false
-        return validateProviderKeyCached(id, key, e.endpoint)
+        return validateProviderKeyCached(id, key, e.endpoint, env2[ANTHROPIC_WORKSPACE_ENV])
       }),
   )
   const available = checks.filter(Boolean).length
@@ -172,7 +175,11 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
   const chatDispatch = resolveChatDispatch(config, envVars(env), model)
   if (!chatDispatch.ok) return json(chatDispatch.status, { error: chatDispatch.error })
 
-  const dispatch = providerFor(chatDispatch.provider, { apiKey: chatDispatch.apiKey, endpoint: chatDispatch.endpoint })
+  const dispatch = providerFor(chatDispatch.provider, {
+    apiKey: chatDispatch.apiKey,
+    endpoint: chatDispatch.endpoint,
+    workspaceId: chatDispatch.workspaceId,
+  })
   if (!dispatch.ok) return json(503, { error: dispatch.reason })
 
   // ADR-0168 cl.5 (GH #402) — the prose arm's enablement, resolved + dispatched through the SAME shared
@@ -246,7 +253,11 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
   const apiKey = envVars(env)[pair.envKey]
   if (apiKey === undefined || apiKey === '') return json(503, { error: 'no-key' })
 
-  const dispatch = providerFor(provider, { apiKey, endpoint: pair.entry.endpoint })
+  const dispatch = providerFor(provider, {
+    apiKey,
+    endpoint: pair.entry.endpoint,
+    workspaceId: envVars(env)[ANTHROPIC_WORKSPACE_ENV],
+  })
   if (!dispatch.ok) return json(503, { error: dispatch.reason })
 
   const persona = typeof personaSystem === 'string' && personaSystem.length <= 16_384 ? personaSystem : undefined
