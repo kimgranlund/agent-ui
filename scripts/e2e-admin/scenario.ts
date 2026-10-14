@@ -182,6 +182,11 @@ export class ScrubRefusal extends Error {
  *  or contains the value of an env var named `*_KEY`, `*_TOKEN` or `*_SECRET` of at least 12 characters.
  *  Returns the scenario unchanged when it is clean. The refusal names the JSON path, never the value. */
 export function scrubScenario(scenario: AdminScenario, env: Readonly<Record<string, string | undefined>>): AdminScenario {
+  return scrubJson(scenario, env)
+}
+
+/** The same scrub over any JSON value (the chat probe's report, T-0174). Returns the value unchanged. */
+export function scrubJson<T>(value: T, env: Readonly<Record<string, string | undefined>>): T {
   const secrets = Object.entries(env)
     .filter(([name, value]) => SECRET_ENV_NAME.test(name) && typeof value === 'string' && value.length >= SECRET_ENV_MIN_LENGTH)
     .map(([name, value]) => ({ name, value: value as string }))
@@ -210,6 +215,6 @@ export function scrubScenario(scenario: AdminScenario, env: Readonly<Record<stri
       }
     }
   }
-  walk(scenario, '')
-  return scenario
+  walk(value, '')
+  return value
 }
