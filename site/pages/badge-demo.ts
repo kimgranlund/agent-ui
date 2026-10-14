@@ -37,9 +37,7 @@ const runs: readonly [name: string, meta: string, badges: readonly [string, stri
 ]
 const runList = el('ui-list', { gap: 'xs' }, runs.map(([name, meta, badges]) =>
   el('ui-row', { gap: 'md', align: 'center', justify: 'between' }, [
-    // text-align: Chromium maps the row's `align="center"` attribute to a presentational text-align: center,
-    // which the column inherits; start puts title and meta on one start edge.
-    el('ui-column', { gap: 'none', style: 'text-align: start;' }, [
+    el('ui-column', { gap: 'none' }, [
       el('ui-text', { variant: 'body' }, [text(name)]),
       el('ui-text', { variant: 'label', size: 'sm' }, [text(meta)]),
     ]),

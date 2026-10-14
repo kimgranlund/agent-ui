@@ -99,7 +99,9 @@ and `ui-column` for a vertical one — there is no `direction` prop.
 `ui-row` consumes the shared **flex grammar** (the `flexProps` set, identical across `ui-row` / `ui-column` /
 `ui-list` / `ui-grid`):
 
-- **`align`** (cross-axis) → `align-items`: `start` (default) · `center` · `end` · `stretch` · `baseline`.
+- **`align`** (cross-axis) → `align-items`: `start` (default) · `center` · `end` · `stretch` · `baseline`. It never
+  aligns text: the engines' legacy presentational `text-align` for a bare `align` attribute is reset to the inherited
+  value, so stacked children keep their start edge (T-0143).
 - **`justify`** (main-axis distribution) → `justify-content`: `start` (default) · `center` · `end` ·
   `between` · `around` · `evenly` (the last three map to `space-between` / `space-around` / `space-evenly`).
 - **`gap`** → a step on the `--md-sys-space` layout-spacing ladder: `none` (default) · `xs` · `sm` · `md` · `lg` ·
