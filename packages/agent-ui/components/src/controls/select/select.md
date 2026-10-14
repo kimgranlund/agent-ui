@@ -196,7 +196,7 @@ the ⭐ **ADR-0043 select gate**.
 
 The control creates two internal parts on first connect:
 
-- **trigger** — a `<button type="button">` with `aria-haspopup="listbox"` + `aria-expanded` + `aria-controls`. Contains a **label span** (the selected option's text or the placeholder) and a **caret** (ui-glyph's `caret-down` mark at the glyph box, inked at the value ink).
+- **trigger**: a `<button type="button">` with `aria-haspopup="listbox"` + `aria-expanded` + `aria-controls`. Contains a **label span** (the selected option's text or the placeholder) and a **caret** (ui-glyph's `caret-down` mark at the glyph box, inked at the value ink).
 - **listbox** — a `<div role="listbox">` panel in the Popover API top layer when open. The author's `[role=option]` children are adopted into this panel at first connect AND on every later light-DOM mutation (TKT-0026) — an Option appended after connect adopts too, in the order it was added.
 
 ## Selection

@@ -468,7 +468,7 @@ export class UIComboBoxElement extends UIFormElement {
 
   /**
    * Adopt every light-DOM node CURRENTLY sitting as a DIRECT child of the host — other than the
-   * control-created `editor`/`caret`/`listbox` parts themselves — into the listbox panel, immediately
+   * control-created `editor`/`caret`/`listbox` parts themselves, into the listbox panel, immediately
    * BEFORE `#emptyRow` (so the "no matches" row stays the panel's last child regardless of how much
    * gets adopted over time; `insertBefore(node, null)` degrades to a plain append when `#emptyRow`
    * does not exist yet, i.e. the very first call from inside `#ensureParts()`). Runs once per connect
