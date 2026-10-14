@@ -1,0 +1,11 @@
+{
+  "demo/card-demo#nested-card": "day one (T-0136): the nested-radius specimen shows a card inside a card on purpose, to demonstrate the one-level concentric corner (ADR-0018); it stays while that specimen does",
+  "demo/code-demo#column": "day one (T-0136): a ui-code block ends 16px past the 400px column; the code demo lane fixes its frame (ui-code scrolls in its own overflow frame)",
+  "demo/column-demo#column": "day one (T-0136): the shared .reflow-frame (site/pages/containers.css) is inline-size 100% plus its 1rem padding and border on a content box, so it ends 34px past the 400px column; the site lane gives it box-sizing border-box",
+  "demo/drill-demo#column": "day one (T-0136): the shared .reflow-frame (site/pages/containers.css) is inline-size 100% plus its 1rem padding and border on a content box, so it ends 34px past the 400px column; the site lane gives it box-sizing border-box; its ui-drill-panel also keeps a width past the column, which the drill lane checks after that fix",
+  "demo/grid-demo#column": "day one (T-0136): the shared .reflow-frame (site/pages/containers.css) is inline-size 100% plus its 1rem padding and border on a content box, so it ends 34px past the 400px column; the site lane gives it box-sizing border-box",
+  "demo/playing-card-demo#type-floor": "day one (T-0136): the playing card's corner index scales with the card face and reads 6.8px on the smallest specimen, under the 9px floor (ADR-0245 M5); the playing-card lane decides between a floor and a pictorial exemption",
+  "demo/row-demo#column": "day one (T-0136): the shared .reflow-frame (site/pages/containers.css) is inline-size 100% plus its 1rem padding and border on a content box, so it ends 34px past the 400px column; the site lane gives it box-sizing border-box",
+  "demo/service-card-demo#column": "day one (T-0136): a service-card figure ends 94px past the 400px column; the service-card lane makes its media fill instead of keeping its intrinsic width",
+  "demo/split-pane-demo#column": "day one (T-0136): the split-pane specimen keeps both panes' minimum widths and ends 63px past the 400px column; the split-pane lane stacks or scrolls it at narrow widths"
+}
