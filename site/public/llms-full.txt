@@ -4041,7 +4041,7 @@ plus one control-height action row.
 - **`icon`** (string): an icon glyph for the image-free header. `image` wins when both are set.
 - **`price`**, **`priceOld`** (string, attribute `price-old`), **`priceNote`** (string, attribute
   `price-note`): the price is rendered verbatim; the old price follows it, struck through.
-- **`rating`** (number): 0 renders nothing; otherwise five stars (to the nearest half), "4.8" and a hidden
+- **`rating`** (number): 0 renders nothing; otherwise a readonly `ui-rating` (the exact fraction), "4.8" and a hidden
   "out of 5". **`ratingCount`** (number, attribute `rating-count`): a count such as "(318)" after it.
 - **`badge`**, **`badgeIntent`** (string; enum `neutral|info|success|warning|danger`, attribute
   `badge-intent`): forwarded to an internal `ui-badge`.
