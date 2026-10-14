@@ -7,7 +7,7 @@
 // (the full ICON_NAMES gallery lives THERE). ui-icon emits no events, so there is no event log.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003) — also activates the Phosphor pack
 import './containers.css' // shared demo chrome (section spacing + .demo-figure/.demo-caption)
-import { captioned, el, exampleSection } from '../lib/specimens.ts'
+import { captioned, el, exampleSection, supporting } from '../lib/specimens.ts'
 
 const { content } = mountPage({
   title: 'ui-icon — demo',
@@ -66,7 +66,7 @@ const fileList = el('ui-list', { gap: 'xs' }, files.map(([glyph, name, meta]) =>
     icon(glyph),
     el('ui-column', { gap: 'none', align: 'start' }, [
       el('ui-text', { variant: 'body' }, [text(name)]),
-      el('ui-text', { variant: 'label', size: 'sm' }, [text(meta)]),
+      supporting(meta),
     ]),
   ]),
 ))
@@ -82,7 +82,9 @@ const ramp = el('ui-row', { gap: 'lg', align: 'baseline', wrap: '' }, ['0.875rem
 
 const rampNote = el('p', {}, [
   text('The host is a '), el('code', {}, [text('1em × 1em')]),
-  text(' cell (`--md-sys-icon-size`): the consumer’s ambient font-size, or an explicit inline-size on the host, is the ONLY size lever. No ramp, no `[size]` attribute (geometry.md "intrinsic structural sizing"). '),
+  text(' cell ('), el('code', {}, [text('--md-sys-icon-size')]),
+  text('): the consumer’s ambient font-size, or an explicit inline-size on the host, is the ONLY size lever. No ramp, no '),
+  el('code', {}, [text('[size]')]), text(' attribute (geometry.md "intrinsic structural sizing"). '),
   text('An icon follows the text it sits beside. Two places size it for you (ADR-0245 Amendment 6): a control cell makes it the 2n icon box, as in the buttons above, and so does an explicit data-tier region such as an A2UI surface. A functional mark (a plus, a caret, a tick) is a ui-glyph instead, which keeps its own 2n - 2c glyph box everywhere.'),
 ])
 
@@ -96,9 +98,10 @@ const statusRow = el('ui-row', { gap: 'md', align: 'center' }, [
 
 const statusNote = el('p', {}, [
   text('A non-empty '), el('code', {}, [text('label')]),
-  text(' makes an icon MEANINGFUL: role=img + the label as its accessible name, set through ElementInternals (never a host attribute). ' +
-    'The ink is `color: inherit` — the injected `<svg fill="currentColor">` tracks whatever the context resolves to, so an intent tint is one CSS `color` on the host, no per-icon plumbing. ' +
-    'Shape stays distinct per status (ADR-0057) — hue is never the only channel.'),
+  text(' makes an icon MEANINGFUL: role=img + the label as its accessible name, set through ElementInternals (never a host attribute). The ink is '),
+  el('code', {}, [text('color: inherit')]), text(': the injected '), el('code', {}, [text('<svg fill="currentColor">')]),
+  text(' tracks whatever the context resolves to, so an intent tint is one CSS '), el('code', {}, [text('color')]),
+  text(' on the host, no per-icon plumbing. Shape stays distinct per status (ADR-0057); hue is never the only channel.'),
 ])
 
 content.append(

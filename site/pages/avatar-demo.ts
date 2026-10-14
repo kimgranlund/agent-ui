@@ -6,7 +6,7 @@
 // not an avatar prop — stated honestly rather than faked as API.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (section spacing)
-import { captioned, el, exampleSection } from '../lib/specimens.ts'
+import { captioned, el, exampleSection, supporting } from '../lib/specimens.ts'
 
 const { content } = mountPage({
   title: 'ui-avatar — demo',
@@ -63,11 +63,11 @@ const rosterRow = (m: Member): HTMLElement =>
     avatar(m.src ? { src: m.src, identity: m.identity } : { identity: m.identity }),
     el('div', {}, [
       el('div', {}, [text(m.identity || 'Invited teammate')]),
-      el('div', { class: 'demo-caption' }, [text(m.role)]),
+      supporting(m.role),
     ]),
     el('div', { style: 'display:flex; gap:0.4rem; align-items:center;' }, [
       presenceDot(m.presence),
-      el('span', { class: 'demo-caption' }, [text(m.presence)]),
+      supporting(m.presence),
     ]),
   ])
 const roster = el('ul', { style: 'list-style:none; margin:0; padding:0; max-inline-size:28rem;', 'aria-label': 'Team roster' },
@@ -79,23 +79,30 @@ const rosterNote = el('p', {}, [
 ])
 
 // ── assignees cluster — overlapping avatars, the "who is on this issue" pattern ────────────────────────────
+// T-0150: each disc wears a ring in the page surface colour, so it reads as cut out of the one it overlaps, and a
+// disc covers at most a quarter of its neighbour (the overlap reads the avatar's own size hook).
 const cluster = el('div', { style: 'display:flex; align-items:center;', 'aria-label': 'Assignees' },
-  TEAM.slice(0, 4).map((m, i) =>
-    el('span', { style: i === 0 ? '' : 'margin-inline-start:-0.5rem;' }, [
-      avatar({ ...(m.src ? { src: m.src } : {}), identity: m.identity, size: 'sm' }),
-    ])),
+  TEAM.slice(0, 4).map((m, i) => {
+    const mark = avatar({ ...(m.src ? { src: m.src } : {}), identity: m.identity, size: 'sm' })
+    mark.style.borderRadius = '50%'
+    mark.style.boxShadow = '0 0 0 var(--md-sys-c) var(--md-sys-color-neutral-surface)'
+    if (i > 0) mark.style.marginInlineStart = 'calc(-0.25 * var(--ui-avatar-size))'
+    return mark
+  }),
 )
-cluster.append(el('span', { class: 'demo-caption', style: 'margin-inline-start:0.5rem;' }, [text('4 assignees')]))
+const assignees = supporting('4 assignees')
+assignees.style.marginInlineStart = 'var(--md-sys-widget-gutter)'
+cluster.append(assignees)
 
 // ── sizes — every [size] tier off the control-height ladder (the button row; ADR-0112 Amendment 3) ────────────────────────────────────────────────────
-const sizeRow = el('div', { style: 'display:flex; gap:1rem; align-items:center; flex-wrap:wrap;' }, [
+const sizeRow = el('div', { style: 'display:flex; gap:1rem; align-items:start; flex-wrap:wrap;' }, [
   captioned('size="sm"', avatar({ src: portrait('#6750a4'), identity: 'Priya Natarajan', size: 'sm' })),
   captioned('size="md"', avatar({ src: portrait('#6750a4'), identity: 'Priya Natarajan', size: 'md' })),
   captioned('size="lg"', avatar({ src: portrait('#6750a4'), identity: 'Priya Natarajan', size: 'lg' })),
 ])
 
 // ── label override — an accessible name that differs from the identity the initials derive from ─────────
-const labelled = el('div', { style: 'display:flex; gap:1rem; align-items:center; flex-wrap:wrap;' }, [
+const labelled = el('div', { style: 'display:flex; gap:1rem; align-items:start; flex-wrap:wrap;' }, [
   captioned('identity="Priya Natarajan"', avatar({ identity: 'Priya Natarajan' })),
   captioned('… label="Priya (you)"', avatar({ identity: 'Priya Natarajan', label: 'Priya (you)' })),
 ])

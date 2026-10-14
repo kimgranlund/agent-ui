@@ -6,7 +6,7 @@
 // (toast.ts + toast-region.ts); this page only stages the region and logs.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
-import { el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
 import type { UIToastRegionElement } from '@agent-ui/components/controls/toast-region'
 import type { UIToastElement } from '@agent-ui/components/controls/toast'
 
@@ -39,16 +39,17 @@ function raise(label: string, options: Parameters<UIToastRegionElement['show']>[
   toast.addEventListener('close', () => logEvent(label, 'close'))
 }
 
-const plainBtn = uiButton('Show plain toast', 'soft')
+const plainBtn = inline(uiButton('Show plain toast', 'solid'))
 plainBtn.addEventListener('click', () => raise('Plain', { message: 'File uploaded.' }))
 
-const urgentBtn = uiButton('Show urgent toast', 'soft')
+const urgentBtn = inline(uiButton('Show urgent toast', 'solid'))
 urgentBtn.addEventListener('click', () => raise('Urgent', { message: 'Upload failed.', urgent: true }))
 
-const actionableBtn = uiButton('Show actionable toast', 'soft')
+const actionableBtn = inline(uiButton('Show actionable toast', 'solid'))
 actionableBtn.addEventListener('click', () => raise('Actionable', { message: 'Upload failed — retry?', action: 'Retry' }))
 
-const buttons = el('div', { style: 'display:flex; gap:0.75rem; flex-wrap:wrap;' }, [plainBtn, urgentBtn, actionableBtn])
+// T-0150: solid triggers on the widget gutter, the one trigger treatment the modal, drawer and popover demos share.
+const buttons = el('div', { style: 'display:flex; gap:var(--md-sys-widget-gutter); flex-wrap:wrap;' }, [plainBtn, urgentBtn, actionableBtn])
 
 const note = el('p', {}, [
   document.createTextNode('The '),

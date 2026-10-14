@@ -13,9 +13,9 @@ const { content } = mountPage({
   title: 'ui-text — demo',
   intro:
     'The typographic leaf, doing its editorial job: a release-notes article set entirely in ui-text — kicker, ' +
-    'overline, display, headline, title, lead, body, label and quote — every heading a REAL heading through ' +
-    'the `as` stamp, the link a REAL gated `<a href>`. Below the article: `truncate` in a card title that ' +
-    'cannot fit, and `emphasis` used the sole-signifier-safe way. The API table is on the ui-text API page.',
+    'overline, display, headline, title, lead, body, label and quote. Every heading is a REAL heading stamped ' +
+    'through the as attribute, and the link a REAL gated anchor. Below the article: truncate in a card title that ' +
+    'cannot fit, and emphasis used the sole-signifier-safe way. The API table is on the ui-text API page.',
 })
 
 const text = (s: string): Text => document.createTextNode(s)
@@ -33,7 +33,9 @@ const article = el('ui-column', { gap: 'sm', align: 'stretch' }, [
     'Version 1.6 adds the key–value receipt primitive, a hardened description-list codec, and the composition ' +
     'patterns hub — the three pieces a confirm step needs before an agent commits a booking.',
     { as: 'p' }),
-  t('overline', 'What changed', { as: 'p' }), // uppercase, quieter than kicker — the sub-eyebrow
+  // uppercase, quieter than kicker: the sub-eyebrow. T-0150: the widget margin above it, on top of the column gap,
+  // keeps it nearer the heading it labels than the paragraph it follows.
+  t('overline', 'What changed', { as: 'p', style: 'margin-block-start: var(--md-sys-widget-margin)' }),
   t('headline', 'A receipt is data, not children', { as: 'h2', size: 'sm' }),
   t('body',
     'ui-description-list renders a record whole: per row a label on the secondary plane and its value ' +

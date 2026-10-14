@@ -94,9 +94,9 @@ const paneNote = el('p', {}, [
 ])
 
 // ── [2] a text-formatting cluster — independent pills, no policy ────────────────────────────────────────────
-const bold = pill('Bold', 'pencil-simple')
-const italic = pill('Italic', 'sparkle')
-const underline = pill('Underline', 'list')
+const bold = pill('Bold', 'text-b')
+const italic = pill('Italic', 'text-italic')
+const underline = pill('Underline', 'text-underline')
 const format = el('ui-row', { gap: 'xs', align: 'center' }, [bold, italic, underline])
 const preview = el('p', { style: 'margin:0.75rem 0 0; font-size:1.05rem;' }, [text('The quick brown fox jumps over the lazy dog.')])
 const restyle = (): void => {
@@ -118,7 +118,7 @@ const modelNote = el('p', {}, [
 ])
 
 // ── [4] the axis specimens — size × pressed/disabled ────────────────────────────────────────────────────────
-const axes = el('ui-row', { gap: 'sm', align: 'center', wrap: '' }, [
+const axes = el('ui-row', { gap: 'sm', align: 'start', wrap: '' }, [
   captioned('size="sm"', el('ui-toggle', { size: 'sm' }, [iconIn('icon', 'bell'), text('Alerts')])),
   captioned('size="md" pressed', el('ui-toggle', { pressed: '' }, [iconIn('icon', 'bell'), text('Alerts')])),
   captioned('size="lg"', el('ui-toggle', { size: 'lg' }, [iconIn('icon', 'bell'), text('Alerts')])),

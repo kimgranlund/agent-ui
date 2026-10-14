@@ -21,14 +21,12 @@ const { content } = mountPage({
 
 const text = (s: string): Text => document.createTextNode(s)
 
-// A decorative leading glyph (aria-hidden) for a header — canonical slot=leading (anatomy.md).
+// A decorative leading mark for a header, canonical slot=leading (anatomy.md). A dot is a functional mark, so it is a
+// ui-glyph in its glyph box (decorative by default), not a text bullet at the title's size (T-0150).
 function dot(): HTMLElement {
-  const span = document.createElement('span')
-  span.setAttribute('slot', 'leading')
-  span.setAttribute('aria-hidden', 'true')
-  span.style.color = 'var(--md-sys-color-neutral-on-surface-variant)' // a quiet mark, never heavier than the title
-  span.textContent = '●'
-  return span
+  const mark = el('ui-glyph', { slot: 'leading', symbol: 'dot' })
+  mark.style.color = 'var(--md-sys-color-neutral-on-surface-variant)' // a quiet mark, never heavier than the title
+  return mark
 }
 
 // The header's trailing more-actions affordance: an icon-only ghost ui-button (a round square), not a bare

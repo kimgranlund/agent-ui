@@ -56,6 +56,7 @@
   flex-direction: column;
   gap: var(--md-sys-widget-gutter, 0.5rem);
   box-sizing: border-box;
+  min-inline-size: min(100%, 10rem); /* a floor, so a dot-sized specimen still gives its caption a readable measure */
   max-inline-size: 100%; /* a max-content figure never ends past the 400px column with the level padding */
   margin: 0;
   padding: var(--demo-figure-pad);
@@ -68,6 +69,18 @@
   font-family: var(--md-sys-typeface-mono);
   font-size: 0.78rem;
   color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+/* T-0150: the caption never sizes its figure. With no intrinsic inline size of its own it stretches to the width the
+   specimen sets and wraps there, so a row of size-axis figures compares the specimens and not the caption lengths. */
+.demo-figure > figcaption {
+  contain: inline-size;
+  overflow-wrap: break-word; /* breaks inside a word only when the word alone is wider than the figure */
+}
+
+/* A secondary line of product copy beside its name (specimens.ts supporting()): quieter than the name it supports. */
+.demo-supporting {
+  --ui-text-color: var(--md-sys-color-neutral-on-surface-variant); /* ui-text paints its own ink from this hook */
 }
 
 /* A wrapping grid of captioned specimens (the axis demos — one figure per enum value). */

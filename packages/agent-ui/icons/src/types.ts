@@ -60,6 +60,9 @@ export const ICON_NAMES = [
   // circled check (done) and from `circle-notch`'s spinner (running), so a finished step never reads as busy.
   // Identity with Phosphor's own regular-weight name.
   'warning-circle',
+  // T-0150: the text-formatting marks (bold B, italic I, underlined U) for formatting toggles, so a Bold pill no
+  // longer borrows a pencil. Identity with Phosphor's own regular-weight names.
+  'text-b', 'text-italic', 'text-underline',
 ] as const
 export type IconName = (typeof ICON_NAMES)[number]
 

@@ -15,6 +15,7 @@ const { content } = mountPage({
 })
 
 const text = (s: string): Text => document.createTextNode(s)
+const code = (s: string): HTMLElement => el('code', {}, [text(s)])
 
 // ── the live control (real pattern — three segments, the second selected by default via `checked`) ────────
 // `orientation` is left unset — a bare ui-segmented-control's own CLASS-derived default is horizontal
@@ -43,8 +44,8 @@ const record = (kind: string, value: unknown): void => {
 control.addEventListener('change', () => record('change', (control as unknown as { value: string | null }).value))
 
 const instructions = el('p', {}, [
-  text('Exactly one option is selected. This control defaults to `orientation="horizontal"` (unlike ' +
-    'ui-radio-group\'s vertical default), so Arrow Left/Right move the selection and focus together; ' +
+  text('Exactly one option is selected. This control defaults to '), code('orientation="horizontal"'),
+  text(' (unlike ui-radio-group\'s vertical default), so Arrow Left/Right move the selection and focus together; ' +
     'Home/End jump to the first/last. The control value is the selected segment\'s value.'),
 ])
 
