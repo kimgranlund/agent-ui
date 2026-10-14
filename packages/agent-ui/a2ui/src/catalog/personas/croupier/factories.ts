@@ -365,7 +365,10 @@ export const cardTableFactory: WidgetFactory = {
 
     const readoutEl = document.createElement('div')
     readoutEl.setAttribute('data-part', 'readout')
-    readoutEl.style.flex = '1 1 auto'
+    // T-0142: the Buttons wrap as one group, never one at a time. Below a 26rem card the readout takes the whole
+    // line (basis (26rem - 100%) * 999 is huge), so the Buttons share the next one; above it the basis goes
+    // negative, clamps to 0 and the readout grows beside them (the flex "albatross", no container query inline).
+    readoutEl.style.flex = '1 1 calc((26rem - 100%) * 999)'
     readoutEl.style.display = 'none'
     const readoutText = text('body', 'md')
     readoutEl.appendChild(readoutText)

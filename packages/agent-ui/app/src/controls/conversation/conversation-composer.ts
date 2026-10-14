@@ -879,6 +879,9 @@ export class UIConversationComposerElement extends UIElement {
       this.#markPickerSelection(this.#providersMenu, selected)
     }
     this.#providersTrigger!.textContent = options.find((o) => o.id === selected)?.label ?? 'Provider'
+    // T-0142 — every picker carries a leading glyph: under the 21rem compact collapse a trigger with no
+    // icon kept no visible identity (a blank pill). `cloud` reads as "hosted provider" in the curated set.
+    this.#appendLeadingIcon(this.#providersTrigger!, 'cloud')
     this.#appendCaret(this.#providersTrigger!)
   }
 
@@ -909,6 +912,8 @@ export class UIConversationComposerElement extends UIElement {
       this.#markPickerSelection(this.#modesMenu, selected)
     }
     this.#modesTrigger!.textContent = options.find((o) => o.id === selected)?.label ?? 'Mode'
+    // T-0142 — see `#syncProvidersPicker`. `circle-half` is the curated set's mode/disposition glyph.
+    this.#appendLeadingIcon(this.#modesTrigger!, 'circle-half')
     this.#appendCaret(this.#modesTrigger!)
   }
 
@@ -931,8 +936,8 @@ export class UIConversationComposerElement extends UIElement {
     return { menu, trigger }
   }
 
-  /** GH #665 (Kim's ruling) — a leading glyph on the Models/Effort picker triggers ONLY (`#syncModelsPicker`/
-   *  `#syncEffortsPicker` are the two callers): the icon the composer's own narrow-host compact mode
+  /** GH #665 (Kim's ruling), widened by T-0142 to every picker (Provider, Models, Effort, Mode and the
+   *  Capabilities trigger): the icon the composer's own narrow-host compact mode
    *  (conversation-composer.css's `21rem` container query) collapses TO once the label vanishes, so a
    *  compacted trigger still says WHICH picker it is rather than reading as a bare caret. Re-appended every
    *  label rewrite for the SAME reason `#appendCaret` below re-appends its own caret — `trigger.textContent
