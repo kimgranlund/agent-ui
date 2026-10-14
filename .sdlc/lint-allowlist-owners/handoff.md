@@ -26,3 +26,11 @@ No allowlist entry points at a lane that no longer exists: each is fixed, owned 
 
 ## Constraints
 - Never add an entry to turn a red green without an owner. No em dashes.
+
+## Acceptance criteria
+verifier: L3
+- `npm run check` exits 0.
+- `node scripts/dogfood-compose.mjs --gate` exits 0 and `node scripts/dogfood-compose.mjs selftest` exits 0 (owner check and exemption cases included).
+- `npx vitest run --config vitest.browser.config.ts --project site site/pages/dogfood-render.browser.test.ts` exits 0 in chromium and webkit, including the `nested-card marker without a reason` and `nested-card marker for another rule` plants and the owner-check test.
+- Every reason in scripts/dogfood-render-allowlist.json and scripts/dogfood-compose-allowlist.json, and every `exempt` reason in scripts/dogfood-rules.json, names a T-NNNN, an ADR-NNNN or a ruling; no reason says "day one" plus a lane.
+- site/pages/card-demo.ts's inner card carries `data-dogfood-ok="nested-card"` and a non-empty `data-dogfood-reason`, and `demo/card-demo#nested-card` is gone from the render allowlist.

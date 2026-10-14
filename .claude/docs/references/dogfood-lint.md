@@ -83,8 +83,19 @@ The standalone-icon floor is ruled out: an icon inside a `[data-tier]` region st
 Each allowlist is a flat JSON object, one `"<key>": "<why>"` entry per line in sorted order, so a lane deletes only
 its own lines. A render key is `demo/<page>#<rule>`, `widget/<Type>#<rule>` or `persona/<seed>#<rule>`, with `@chromium` or `@webkit` when it
 holds in one engine only; a compose key is `<path>#<rule>`. Both gates fail on a finding with no entry, on an
-entry that no longer finds anything (stale: the fix landed, delete the line), and on an entry without a reason.
+entry that no longer finds anything (stale: the fix landed, delete the line), and on an entry whose reason names
+no owner: a `T-NNNN` ticket, an `ADR-NNNN` or a ruling (T-0170, `hasOwner` in `scripts/lib/foundations-rules.mjs`).
+An allowlist holds only real debt with an owner. Two ways out of it that are not debt (T-0170):
+
+- A permanent render specimen carries `data-dogfood-ok="<rule>"` and a non-empty `data-dogfood-reason` on the
+  element; the nested-card rule honours it (the card demo's nested-card radius specimen).
+- A compose rule's `exempt` list in `scripts/dogfood-rules.json` takes a file whose literal geometry is legitimately
+  literal (a specimen frame, the sandbox document) out of that rule, `{ path, reason }`, the reason owned like an
+  entry; an exemption that finds nothing is stale.
+
 Day one (T-0136) listed 9 render findings and 53 compose findings, every compose one a site demo's inline geometry.
+T-0170 fixed three render findings, marked the specimen, moved the other four to owner tickets, migrated 22 demos to
+the `--md-sys-space-*` steps, exempted 6 and left 22 compose entries owned by T-0190.
 
 ## How to add a rule
 
