@@ -265,13 +265,10 @@ describe('ui-textarea — forced-colors survival (Chromium emulates via CDP; Web
   it('the :focus-within ring survives forced-colors AND the idle border/ink/placeholder do not vanish', async () => {
     const { field, editor } = mount(`<ui-textarea placeholder="Write something…" ${SIZED}></ui-textarea>`)
 
-    // TKT-0062: default border is transparent — the idle (unfocused, unhovered, empty) textarea's border is
-    // TRANSPARENT by design under the filled/container state law; border is visible only on :hover now (the
-    // light-mode exception in that table). Ink + placeholder stay real, visible colours (the "default" ink
-    // role), so the forced-colors assertions below still cannot be vacuous — the border's own forced-colors
-    // proof (below) instead checks the STRONGER claim that a border APPEARS under forced-colors where light
-    // mode painted none at all.
-    expect(alphaOf(getComputedStyle(field).borderTopColor)).toBe(0)
+    // ADR-0245 Amendment 7 (T-0143): the idle border is the opaque 3:1 field outline, superseding TKT-0062's
+    // transparent idle row. Ink + placeholder stay real, visible colours too, and focus (below) still steps the
+    // border to transparent under the ring, so the forced-colors leg proves the border comes BACK on blur.
+    expect(alphaOf(getComputedStyle(field).borderTopColor)).toBeGreaterThan(0)
     expect(alphaOf(getComputedStyle(field).color)).toBeGreaterThan(0)
     expect(alphaOf(getComputedStyle(editor, '::before').color)).toBeGreaterThan(0)
 
