@@ -259,29 +259,33 @@ describe('a2ui-gallery — booking-reservation Calendar fills its field width (A
         const gridRect  = grid.getBoundingClientRect()
         const fieldRect = field!.getBoundingClientRect()
 
-        // The compact (pre-ADR-0105) floor is ~230px (7 × ~32px + gaps at the default md size) — a
-        // wide card must grow well past it; a narrow card may sit AT the floor (nothing to spend),
-        // which is itself the correct degrade (ADR-0105 §Consequences: fluid, not force-grown).
-        if (label === 'wide') {
-          expect(
-            gridRect.width,
-            `[${scheme}, ${label}] grid (${gridRect.width}px) did not grow past the compact floor — the fill regression`,
-          ).toBeGreaterThan(280)
-        }
+        // ADR-0105 Amendment 2 (T-0143): the fill stops at the content cap, 7 tracks of 6n (1.5 × the 4n cell)
+        // plus the 6 gaps, and the panel centres past it. Rows never inflate, so a day cell's height is the cell.
+        const cell = calendar!.querySelector<HTMLElement>('[role="gridcell"]')!.getBoundingClientRect().height
+        const cap = 7 * 1.5 * cell + 6 * parseFloat(getComputedStyle(grid).columnGap)
+        expect(gridRect.width - cap, `[${scheme}, ${label}] grid (${gridRect.width}px) grew past the content cap (${cap}px)`).toBeLessThanOrEqual(1)
 
-        // Whichever width it lands at, the grid must never OVER-claim the field's own content box
-        // (the fill contract is "fill what you're given," not "escape your container").
+        // The grid never OVER-claims the field's own content box (the fill contract is "fill what you're
+        // given," not "escape your container").
         expect(
           gridRect.width - fieldRect.width,
           `[${scheme}, ${label}] grid (${gridRect.width}px) overflowed its field (${fieldRect.width}px)`,
         ).toBeLessThanOrEqual(2)
 
-        // And it should be CLOSE to the field's width (small remainder = the panel's own box-model
-        // insets), not stranded at a small fraction of it — the "half-empty panel" ticket #30 shape.
-        expect(
-          fieldRect.width - gridRect.width,
-          `[${scheme}, ${label}] grid (${gridRect.width}px) is far narrower than its field (${fieldRect.width}px) — panel still half-empty`,
-        ).toBeLessThan(40)
+        if (label === 'wide') {
+          // Wide: the grid sits AT the cap (well past the compact floor, the ticket #30 regression) and the
+          // panel centres in the field instead of stranding a half-empty panel.
+          expect(Math.abs(gridRect.width - cap), `[${scheme}, ${label}] grid (${gridRect.width}px) is not at the content cap (${cap}px)`).toBeLessThanOrEqual(1)
+          const panel = calendar!.querySelector<HTMLElement>('[data-part="panel"]')!.getBoundingClientRect()
+          const host = calendar!.getBoundingClientRect()
+          expect(Math.abs((panel.left - host.left) - (host.right - panel.right)), `[${scheme}, ${label}] the capped panel is not centred`).toBeLessThanOrEqual(1)
+        } else {
+          // Narrow: below the cap the grid still fills its field (small remainder = the panel's box insets).
+          expect(
+            fieldRect.width - gridRect.width,
+            `[${scheme}, ${label}] grid (${gridRect.width}px) is far narrower than its field (${fieldRect.width}px) — panel still half-empty`,
+          ).toBeLessThan(40)
+        }
       })
     }
   }
