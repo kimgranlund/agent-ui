@@ -327,9 +327,9 @@ describe('AC19 — the shell-family spacing-literal drift gate (SPEC-R11c/AC19)'
 
   it('every allowlist entry still fires: its declaration exists and its literal equals a rung at the root register (no stale entry)', () => {
     expect(staleEntries(ALLOWLIST), 'an allowlist entry that no longer collides: delete it').toEqual([])
-    // negative control: the dropped 9rem narration cap (144px, no rung at n 8) reads as stale
+    // negative control: the dropped 9rem narration cap reads as stale exactly while 144px is no rung (n 8 and up)
     const narration = { file: 'packages/agent-ui/app/src/controls/conversation/conversation.css', selectorContains: "[data-part='narration']", property: '--ui-status-stream-max-block-size', literal: '9rem', reason: 'control' }
-    expect(staleEntries([narration]), 'the stale-entry check bites').toHaveLength(1)
+    expect(staleEntries([narration]), 'the stale-entry check bites').toHaveLength(LADDER_PX.includes(144) ? 0 : 1)
   })
 
   it('foundations.gen.css declares the shared ROOT_REGISTER on :root (the ladder reads the register the sheet renders)', () => {
