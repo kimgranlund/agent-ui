@@ -78,11 +78,11 @@ describe('text-field.css — the filled/container state law (TKT-0062)', () => {
   it('declares the full bg/border/ink ladder from the PINNED roles: default/filled/hover/focus', () => {
     const b = whereBlock(':where(ui-text-field) {')
     expect(b).toMatch(/--ui-text-field-bg:\s*var\(--md-sys-color-neutral-container-low\)/) // default
-    expect(b).toMatch(/--ui-text-field-bg-filled:\s*var\(--md-sys-color-neutral-container\)/) // filled
+    expect(b).toMatch(/--ui-text-field-bg-filled:\s*var\(--md-sys-color-neutral-container-low\)/) // filled; one idle fill with default (T-0140)
     expect(b).toMatch(/--ui-text-field-bg-hover:\s*var\(--md-sys-color-neutral-container\)/) // hover
     expect(b).toMatch(/--ui-text-field-bg-focus:\s*var\(--md-sys-color-neutral-container-low\)/) // focus
-    expect(b).toMatch(/--ui-text-field-border:\s*transparent/) // default
-    expect(b).toMatch(/--ui-text-field-border-hover:\s*var\(--md-sys-color-neutral-outline-variant\)/) // hover — the ONE visible-border state
+    expect(b).toMatch(/--ui-text-field-border:\s*var\(--md-sys-color-neutral-outline\)/) // default; the idle boundary (T-0140)
+    expect(b).toMatch(/--ui-text-field-border-hover:\s*var\(--md-sys-color-neutral-outline\)/) // hover; never lighter than idle
     expect(b).toMatch(/--ui-text-field-border-focus:\s*transparent/) // focus = transparent (the outline ring is the sole indicator; ADR-0014 dev#1)
     expect(b).toMatch(/--ui-text-field-ink:\s*var\(--md-sys-color-neutral\)/) // default
     expect(b).toMatch(/--ui-text-field-ink-filled:\s*var\(--md-sys-color-neutral-on-surface-variant\)/) // filled

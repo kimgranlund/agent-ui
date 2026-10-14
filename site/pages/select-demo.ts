@@ -51,7 +51,8 @@ const form = el('form', {}, [select])
 form.style.display = 'flex'
 form.style.flexDirection = 'column'
 form.style.gap = '0.75rem'
-form.style.alignItems = 'flex-start'
+form.style.alignItems = 'flex-start' // the Submit button hugs
+select.style.alignSelf = 'stretch' // a form field fills like its siblings (ADR-0223); flex-start alone shrank it to its placeholder
 
 // A live readout of the form value — reads this.value and the FormData entry keyed by `name`, proving the
 // round-trip. Updated on every select commit (the value two-way source) and on submit.

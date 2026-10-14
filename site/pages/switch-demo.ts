@@ -38,7 +38,10 @@ function watch(sw: HTMLElement, source: string): HTMLElement {
 }
 
 // ── one preference row: label + description on the left, the switch on the right ───────────────────────────
+// The row title IS the switch's label (a bare track, labelled through aria-label), so every track sits on the
+// row's one inline-end edge instead of hugging a second label of its own.
 function prefRow(sw: HTMLElement, title: string, description: string): HTMLElement {
+  sw.setAttribute('aria-label', title)
   return el(
     'div',
     { style: 'display:flex; align-items:center; justify-content:space-between; gap:var(--md-sys-space-lg);' },
@@ -53,11 +56,11 @@ function prefRow(sw: HTMLElement, title: string, description: string): HTMLEleme
 }
 
 // ── the panel: a master switch gating three topic switches + one policy-locked row ─────────────────────────
-const master = watch(el('ui-switch', { name: 'email', checked: '' }, [text('Email')]), 'email')
-const mentions = watch(el('ui-switch', { name: 'mentions', checked: '' }, [text('Mentions')]), 'mentions')
-const digest = watch(el('ui-switch', { name: 'digest' }, [text('Digest')]), 'digest')
-const marketing = watch(el('ui-switch', { name: 'marketing' }, [text('Product news')]), 'marketing')
-const security = watch(el('ui-switch', { name: 'security', checked: '', disabled: '' }, [text('Security')]), 'security')
+const master = watch(el('ui-switch', { name: 'email', checked: '' }), 'email')
+const mentions = watch(el('ui-switch', { name: 'mentions', checked: '' }), 'mentions')
+const digest = watch(el('ui-switch', { name: 'digest' }), 'digest')
+const marketing = watch(el('ui-switch', { name: 'marketing' }), 'marketing')
+const security = watch(el('ui-switch', { name: 'security', checked: '', disabled: '' }), 'security')
 
 const topics = [mentions, digest, marketing]
 /** The master gates its topics: off ⇒ every topic row is disabled (a programmatic write, no event fires). */

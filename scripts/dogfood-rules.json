@@ -70,6 +70,34 @@
       "selector": "ui-select [data-part='listbox'], ui-multi-select, ui-combo-box [data-part='listbox']",
       "measure": "border-start-start-radius (only when the panel has a box)",
       "expect": "2 * resolve(register).n + resolve(register).c"
+    },
+    {
+      "id": "badge-hug",
+      "adr": "T-0140 (dogfood review part B): a badge is a display atom and hugs its label; a stretching column parent never widens it into a bar",
+      "selector": "ui-badge",
+      "measure": "box width against the badge's max-content width",
+      "expect": "width <= max-content width + 1px"
+    },
+    {
+      "id": "option-indicator",
+      "adr": "T-0140 (dogfood review part B): a multi-select option shows its toggle in both states, so the control reads as choosable before the first click",
+      "selector": "ui-multi-select > [role='option']",
+      "measure": "the option's ::before box (the indicator)",
+      "expect": "width > 0 in the unselected and the selected state"
+    },
+    {
+      "id": "inline-text",
+      "adr": "T-0140 (dogfood review part B): a ui-text link or span nested in running text shares the paragraph's line box",
+      "selector": "p > ui-text[as='a'], p > ui-text[as='span'], ui-text > ui-text[as='a'], ui-text > ui-text[as='span']",
+      "measure": "computed display (truncate excepted)",
+      "expect": "inline"
+    },
+    {
+      "id": "adornment-gap",
+      "adr": "T-0140 (dogfood review part B): adjacent trailing adornments (a suffix and the step cells) never glue; ADR-0245 Amendment 4's control gap c",
+      "selector": "ui-text-field > [slot='trailing']:is([data-role='stepper'], [data-role='numeric'])",
+      "measure": "the gap between each pair of adjacent visible children of the trailing cell",
+      "expect": ">= resolve(register).c"
     }
   ],
   "compose": [

@@ -108,6 +108,7 @@ ui-badge:not([data-size]) {
     box-sizing: border-box;
     block-size: var(--ui-badge-box);
     min-inline-size: var(--ui-badge-box); /* empty-label floor → a filled pill/dot (SPEC-R13 AC2) */
+    max-inline-size: max-content; /* a display atom hugs: a stretching column parent (a card, an A2UI Column) never widens it into a bar */
     padding-inline: var(--ui-badge-pad);
     padding-block: 0; /* the frame law — block-size is the vertical lever, never block-padding */
     border-radius: var(--ui-badge-radius); /* the chip pill n + c; the pill box/2 under the legacy opt-out */

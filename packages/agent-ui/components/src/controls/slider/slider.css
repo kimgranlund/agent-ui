@@ -104,6 +104,7 @@
      control's layouts need — off `--md-sys-space-xs`, the field.css `--ui-field-gap` precedent (the
      label↔control↔description rhythm), not a raw `--md-sys-space-*` read (styling-gates.test.ts). */
   --ui-slider-layout-gap: var(--md-sys-space-xs);
+  --ui-slider-inline-gap: var(--md-sys-space-sm); /* the inline layout column gap: n inside a data-tier region (the bridge maps space-sm to the inset) */
 }
 
 /* [size] → compact widget ramp repoint (ADR-0041: the per-[scale] table in dimensions.css re-tables
@@ -164,6 +165,7 @@
   /* `inline` — one row: "label rail value" (rail's `1fr` column flexes to fill the remaining width). */
   :scope[layout='inline'] {
     grid-template-columns: auto 1fr auto;
+    column-gap: var(--ui-slider-inline-gap); /* n between label, rail and readout, so the readout never touches the rail end (T-0140) */
     grid-template-areas: 'label rail value';
     align-items: center;
   }

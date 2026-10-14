@@ -9,9 +9,9 @@
  *       see the TOKEN block's own table comment for the exact role per state). The SOLID role ladder (NOT
  *       soft-alpha — alpha outlines resolve sub-3:1 against the field surface, failing WCAG 1.4.11) is
  *       declared as per-state `--ui-text-field-{bg,border,ink}[-filled|-hover|-focus]` tokens, each from a
- *       ROLE (never a `color-mix`) — border is `transparent` in every state except `:hover` (the shared
- *       `outline` ring is the sole focus indicator; a focus border-color step would double with the ring;
- *       ADR-0014 dev#1). `user-invalid`'s danger border channel is UNCHANGED/orthogonal, layered on top.
+ *       ROLE (never a `color-mix`): the idle and hover border is the outline role, so an idle field shows its
+ *       boundary (T-0140); focus steps it to `transparent` (the shared `outline` ring is the sole focus
+ *       indicator; a focus border-color step would double with the ring; ADR-0014 dev#1). `user-invalid`'s danger border channel is UNCHANGED/orthogonal, layered on top.
  *       `[size]` repoints the geometry ramp + INLINES `--ui-text-field-icon` the way button.css does (no
  *       shared `--ui-ind` edit).
  *   [2] STYLES BLOCK — `@scope (ui-text-field)` CONSUMES only `--ui-text-field-*` for its OWN tokens (the one
@@ -59,20 +59,20 @@
      value, idle) / hover / focus / disabled. user-invalid is UNCHANGED — its own border-only danger
      channel (below) layers on top of whichever bg/ink this table already picked; it never touches bg.
        state    | bg              | border           | ink
-       default  | container-low   | transparent       | neutral
-       filled   | container       | transparent       | on-surface-variant
-       hover    | container       | outline-variant   | on-surface-variant
+       default  | container-low   | outline           | neutral
+       filled   | container-low   | outline           | on-surface-variant
+       hover    | container       | outline           | on-surface-variant
        focus    | container-low   | transparent (ring)| on-surface
        disabled | container-low   | transparent       | neutral-low
      "filled" reads `[data-part='editor']:not([data-empty])` (the SAME emptiness signal the placeholder
      ::before already keys off) — see @scope's `:has()` selector below. Declared here, consumed at the
      matching pseudo-/state selector in @scope (so @scope reads only --ui-text-field-*, never a role). */
   --ui-text-field-bg: var(--md-sys-color-neutral-container-low); /* default */
-  --ui-text-field-bg-filled: var(--md-sys-color-neutral-container);
+  --ui-text-field-bg-filled: var(--md-sys-color-neutral-container-low); /* one idle fill, empty or filled: data never picks the tone (T-0140); value and placeholder separate by ink */
   --ui-text-field-bg-hover: var(--md-sys-color-neutral-container);
   --ui-text-field-bg-focus: var(--md-sys-color-neutral-container-low);
-  --ui-text-field-border: transparent; /* default — the ring is the interactive indicator, not the border */
-  --ui-text-field-border-hover: var(--md-sys-color-neutral-outline-variant); /* :hover — the ONE visible-border state */
+  --ui-text-field-border: var(--md-sys-color-neutral-outline); /* default; the idle boundary, so a field reads as a field on any surface (T-0140); the ring stays the focus indicator */
+  --ui-text-field-border-hover: var(--md-sys-color-neutral-outline); /* :hover; never lighter than idle; the bg step carries hover */
   --ui-text-field-border-focus: transparent; /* :focus-within — TRANSPARENT: the shared outline ring is the SOLE focus indicator (a --md-sys-color-focus-ring border-color step doubled with the ring into a visible double border — a defect found on the live site; ADR-0014 dev#1). Transparent holds the box geometry (the 1px frame still occupies its track — no layout shift). */
   --ui-text-field-border-invalid: var(--md-sys-color-danger); /* :state(user-invalid) — UNCHANGED, orthogonal to the table above */
   --ui-text-field-border-invalid-hover: var(--md-sys-color-danger-high); /* user-invalid + :hover — UNCHANGED */
@@ -441,7 +441,7 @@
     justify-content: flex-end;
     inline-size: auto;
     block-size: var(--ui-text-field-icon);
-    gap: 0;
+    gap: var(--ui-text-field-gap); /* the control gap c between the two step cells, so − and + never glue (T-0140) */
   }
   /* Each step button is a square, icon-sized cell (the md stepper convention — one square tap target
      per glyph); the 1em minus/plus glyph centers inside via the shared reset's inline-flex centering.
@@ -462,7 +462,7 @@
     justify-content: flex-end;
     inline-size: auto;
     block-size: var(--ui-text-field-icon);
-    gap: 0;
+    gap: var(--ui-text-field-gap); /* c between the suffix and each step cell (T-0140) */
   }
   /* Override the slot's fixed icon inline-size for BOTH numeric-family cells — each carries a
      side-by-side button pair (plus the suffix, for numeric), wider than one icon square (GH #1406). */

@@ -256,6 +256,13 @@
     /* NO block-size / padding-block / min-inline-size — Display class has no frame law (ADR-0025 cl.1) */
   }
 
+  /* The inline `as` values flow inside running text: a link or span nested in a paragraph shares the
+     paragraph's line box instead of breaking the sentence (T-0140). Standalone, it keeps the block box
+     (SPEC-R7 AC1: as changes semantics, never layout); truncation keeps the block box it clips in. */
+  :is(p, li, span, ui-text) > :scope:is([as='a'], [as='span']):not([truncate]) {
+    display: inline;
+  }
+
   /* Editorial-extra TREATMENTS (cl.2b) — structural opinions, not scale; the four editorial roles each add
      one on top of the token-driven size/weight/line-height/tracking above. */
   :scope[variant='kicker'],

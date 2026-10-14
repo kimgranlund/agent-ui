@@ -10,7 +10,7 @@ up to a human look; each layer catches what the one before cannot see.
 
 | Layer | Reads | Catches | Gate | Allowlist |
 |---|---|---|---|---|
-| 1 Render lint | `getComputedStyle` of every docs demo page and every browsable A2UI catalog widget, at 400 and 1000px, light and dark, Chromium and WebKit | radius by role, square icon buttons, the type floor, the 400px column, nested cards, the height ramp, the text edge | `site/pages/dogfood-render.browser.test.ts` (the `site` shard of `npm run test:browser`) | `scripts/dogfood-render-allowlist.json` |
+| 1 Render lint | `getComputedStyle` of every docs demo page and every browsable A2UI catalog widget, at 400 and 1000px, light and dark, Chromium and WebKit | radius by role, square icon buttons, the type floor, the 400px column, nested cards, the height ramp, the text edge, hugging badges, option indicators, inline links, adornment gaps | `site/pages/dogfood-render.browser.test.ts` (the `site` shard of `npm run test:browser`) | `scripts/dogfood-render-allowlist.json` |
 | 2 Composition lint | the A2UI factories, the A2UI example payloads, the agent-admin presets and the site demos, as text | a composition the library has a control for: a calendar standing in for a date field, a grid of buttons standing in for a board, inline literal geometry | `node scripts/dogfood-compose.mjs selftest` and `--gate` (both in `check:scripts`) | `scripts/dogfood-compose-allowlist.json` |
 | 3 Foundations census | every stylesheet and source file under `packages/` and `site/` | a hand-tabled ramp read, a px geometry literal, the retired `glyph` prop and `[scale]` / `[density]` axes | `node scripts/foundations-census.mjs --gate` (in `check:scripts`) | `scripts/foundations-allowlist.json` |
 | 4 Review | a screenshot of the real widget beside its approved mockup | what no rule measures yet: balance, hierarchy, a wrong control for the job | a `ui-designer` review (or Kim's look check) | none; a finding becomes a rule or a ticket |
@@ -35,6 +35,10 @@ ancestor; product at scale sm at the root, widget at scale md on an A2UI surface
 | `text-edge` | host padding plus the text slot's padding is 2n - c |
 | `card-radius` | a `ui-card` takes `resolve().card.radius` |
 | `panel-radius` | a visible listbox panel is concentric: 2n + c |
+| `badge-hug` | a `ui-badge` is no wider than its max-content width (T-0140) |
+| `option-indicator` | every `ui-multi-select` option paints its indicator, selected or not (T-0140) |
+| `inline-text` | a `ui-text` link or span inside running text is `display: inline` (T-0140) |
+| `adornment-gap` | adjacent trailing adornments of a `ui-text-field` sit at least c apart (T-0140) |
 
 | Compose rule | Use | Not |
 |---|---|---|
