@@ -1072,8 +1072,8 @@ and at the n 5 root the 6px glyph box made `dot`, `more` and `info` illegible. I
 2. **The glyph box floors at 8px.** `--md-sys-glyph-box` is `max(8px, 2n - 2c)`. The floor is local to agent-ui:
    `scale.mjs` stays the skill's revision byte for byte (sha `3c319761…`, pinned in `foundations.test.ts`), so
    `resolve().glyph` stays `2n - 2c`. The generator emits the floor from `GLYPH_FLOOR` in
-   `scripts/lib/foundations-rules.mjs`, and every JS or TS reader of the glyph box (the render lint's `glyph-box`
-   rule, the browser tests) reads `glyphBox(r)` from the same module, never `resolve().glyph` alone. P15 asks
+   `scripts/lib/foundations-rules.mjs`, and every JS or TS reader of the glyph box (the browser tests) reads
+   `glyphBox(r)` from the same module, never `resolve().glyph` alone; the render lint inlines the same max. P15 asks
    the skill to adopt the floor; until it does, scale.mjs does not carry it. `ui-glyph` centres the glyph box
    in its 2n slot (inset `(2n - glyph box) / 2`), so the inset is 1px instead of c where the floor binds. md and
    lg are unchanged. The radio dot stays `2n - 2c - 2`, the switch thumb and the slider thumb keep their own
@@ -1084,8 +1084,8 @@ and at the n 5 root the 6px glyph box made `dot`, `more` and `info` illegible. I
 4. **Gates.** `tokens.test.ts` pins the field outline at 3:1 on all seven planes in both schemes, with the
    generated `-outline` as the failing negative control; `field-outline.browser.test.ts` measures the idle frame
    of all five fields in both schemes; `foundations.test.ts` pins `glyphBox(r)` = `max(8, 2n - 2c)` across every
-   rung and in the generated token, with `resolve().glyph` still `2n - 2c`; the glyph-box consumers and the render
-   lint's `glyph-box` rule read `glyphBox()`.
+   rung and in the generated token, with `resolve().glyph` still `2n - 2c`; the glyph-box consumers read
+   `glyphBox()`, and the render lint's `glyph-box` rule applies the same `max(8, 2n - 2c)` inline (T-0144).
 
 The px that move, at the root sm · md · lg (`derive.out.md` section 20):
 
