@@ -3,6 +3,7 @@ import '@agent-ui/shared/foundations.css'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
+import { SCHEMES, composite, contrast, schemeWrap } from './button/disabled-recipe.fixture.ts'
 
 // ADR-0245 Amendment 7 (T-0143): every entry field rests on one boundary, the opaque 3:1 role
 // --md-sys-color-neutral-field-outline (its contrast against every page plane is pinned in tokens.test.ts). Measured
@@ -43,14 +44,23 @@ describe('the resting field boundary is the 3:1 field-outline role (ADR-0245 Ame
     }
   }
 
-  it('a disabled field drops the boundary (the disabled row stays transparent)', async () => {
-    const wrap = document.createElement('div')
-    wrap.innerHTML = '<ui-text-field label="Name" disabled></ui-text-field><ui-otp-field length="4" disabled></ui-otp-field><ui-textarea label="Notes" disabled></ui-textarea>'
-    document.body.append(wrap)
-    mounted.push(wrap)
-    await frame()
-    for (const selector of ['ui-text-field', "ui-otp-field > [data-part='cell']", 'ui-textarea']) {
-      expect(getComputedStyle(wrap.querySelector(selector) as HTMLElement).borderTopColor, selector).toMatch(/^(rgba\(0, 0, 0, 0\)|transparent)$/)
-    }
-  })
+  // T-0148: a disabled field keeps a quiet boundary (the fleet disabled recipe, T-0139), so a locked field never
+  // reads as a chip or a soft button: at least 1.3:1 against its surface, and quieter than the 3:1 resting edge.
+  for (const scheme of SCHEMES) {
+    it(`${scheme}: a disabled field keeps a quiet boundary, at least 1.3:1 and below the resting edge`, async () => {
+      const { wrap, page } = schemeWrap(scheme, '<ui-text-field label="Name" disabled></ui-text-field><ui-otp-field length="4" disabled></ui-otp-field><ui-textarea label="Notes" disabled></ui-textarea><ui-select label="Plan" disabled><div role="option" value="a">A</div></ui-select><ui-combo-box label="City" disabled><div role="option" value="a">A</div></ui-combo-box><div data-probe style="border-top: 1px solid var(--md-sys-color-neutral-field-outline)"></div>')
+      mounted.push(wrap)
+      await frame()
+      const surface = composite(page)
+      const resting = contrast(composite(page, getComputedStyle(wrap.querySelector('[data-probe]') as HTMLElement).borderTopColor), surface)
+      for (const selector of ['ui-text-field', "ui-otp-field > [data-part='cell']", 'ui-textarea', "ui-select > [data-part='trigger']", "ui-combo-box > [data-part='editor']"]) {
+        const part = wrap.querySelector(selector) as HTMLElement
+        expect(part, `anti-vacuous: ${selector} rendered`).not.toBeNull()
+        const style = getComputedStyle(part)
+        const edge = contrast(composite(page, style.backgroundColor, style.borderTopColor), surface)
+        expect(edge, `${selector} disabled edge ${edge.toFixed(2)}:1`).toBeGreaterThanOrEqual(1.3)
+        expect(edge, `${selector} disabled edge ${edge.toFixed(2)}:1 vs resting ${resting.toFixed(2)}:1`).toBeLessThan(resting)
+      }
+    })
+  }
 })
