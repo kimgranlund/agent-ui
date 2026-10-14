@@ -151,6 +151,24 @@ header pointing here.
   **seeded fixture** is a known defect pinned to the **layer** that must catch it (validator, heal,
   renderer, catalog, producer, integration, interop) and its code. Its doubles are *scripted*
   (scripted transport, scripted provider, scripted MCP server), never "fake" or "harness".
+- **probe fixture**: the `agent-ui-chat-probe` v1 file `npm run chat:probe` replays: the preset, the user
+  steps and, per produce request, the wire lines plus the model rounds behind them (`ProbeFixture` in
+  `scripts/e2e-admin/probe/model.ts`, T-0174). A live probe writes one; `--from-trace` builds one from
+  `.agent-traces/`. Not an admin flow's scenario fixture (scripted lines per endpoint, no rounds) and not
+  a kit scenario. Contract: [spec/agent-closed-loop.spec.md](../spec/agent-closed-loop.spec.md) CL-R3.
+- **eval scenario**: one agent use case as data (`agent-ui-eval-scenario`, persona, models, efforts,
+  tags, steps, per-turn checks, optional `expectedFail: T-NNNN`), played live or replayed by the eval
+  runner (T-0176, planned; CL-R1). It tests an agent; a kit scenario tests the A2UI layer and an admin
+  flow tests the agent-admin app. Both eval and kit files end `*.scenario.json`; the `kind` tells them
+  apart.
+- **check**: one named verdict over one probe or eval turn (`model-pick`, `no-halt`, `no-json-as-prose`,
+  `no-surface-loss`, `expect-component`, `render-lint`, `reasoning`; `CHECK_NAMES` in
+  `probe/model.ts`), status `pass`, `fail`, `warn` or `skip` (CL-R2). Not a **semantic check** (a
+  persona's in-loop domain check that feeds a self-correct round), not the A2UI protocol's `checks`, and
+  not a kit finding code.
+- **signal row**: one line of `.agent-evals/runs.jsonl` per eval scenario run per sample: the checks,
+  verdict, retries, tokens, cost, latency, digest and links (T-0176, planned; CL-R4). A trace line is per
+  live turn (`.agent-traces/`, T-0151); a signal row is per scenario run and links its trace lines by id.
 - **roster**: two senses, both about agents. The **agent roster** is the ordered `AgentRecord` list
   (`AgentRosterView`); the **team roster** is an `AgentTeam`'s `members`. A capability list is
   never a roster: the composer's `@`/`/` option lists are `EntryRosters`, an entry-side name.
