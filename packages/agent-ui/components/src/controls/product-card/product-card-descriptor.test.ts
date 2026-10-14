@@ -25,7 +25,7 @@ const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 
 const PARTS = [
-  'media', 'image', 'icon', 'body', 'title', 'subtitle', 'rating', 'rating-stars', 'rating-star', 'rating-value',
+  'media', 'image', 'icon', 'body', 'title', 'subtitle', 'rating', 'rating-stars', 'rating-value',
   'rating-text', 'rating-count', 'badge', 'price-row', 'price', 'price-old', 'price-old-text', 'price-note', 'action',
 ]
 

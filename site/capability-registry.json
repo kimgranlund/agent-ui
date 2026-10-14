@@ -1014,7 +1014,8 @@
       "description": "One product, room or offer to buy or book, with optional image or icon header, rating, badge, price and a single action.",
       "uses": [
         "ui-badge",
-        "ui-icon"
+        "ui-icon",
+        "ui-rating"
       ],
       "catalogs": [
         "agent-ui"

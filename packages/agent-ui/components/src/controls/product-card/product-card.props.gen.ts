@@ -19,7 +19,7 @@ export const props = {
   priceOld: { ...prop.string(''), attribute: 'price-old' },
   // A muted qualifier beside the price (per night); empty renders no box. — generated from product-card.md attributes.priceNote — edit the descriptor, not this file.
   priceNote: { ...prop.string(''), attribute: 'price-note' },
-  // A 0 to 5 rating, rendered as five stars (full, half or empty, to the nearest half) plus the number; 0 renders no rating part. — generated from product-card.md attributes.rating — edit the descriptor, not this file.
+  // A 0 to 5 rating, rendered as a readonly ui-rating (five stars filled to the exact fraction) plus the number; 0 renders no rating part. — generated from product-card.md attributes.rating — edit the descriptor, not this file.
   rating: prop.number(0),
   // How many ratings the score rests on, shown in parentheses after the number (ADR-0243 Amendment 2); 0 renders no count. — generated from product-card.md attributes.ratingCount — edit the descriptor, not this file.
   ratingCount: { ...prop.number(0), attribute: 'rating-count' },

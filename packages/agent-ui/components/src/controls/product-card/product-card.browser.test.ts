@@ -115,12 +115,18 @@ describe('ui-product-card: rendered geometry', () => {
     expect(getComputedStyle(part(card, 'action')).backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
   })
 
-  it('a half star paints a full glyph clipped to half its own width', async () => {
-    const { card } = await mount(`<ui-product-card title="Suite" rating="3.5"></ui-product-card>`)
-    const half = card.querySelector('[data-part="rating-star"][data-fill="half"]') as HTMLElement
-    const before = getComputedStyle(half, '::before')
-    expect(before.content).toBe('"\u2605"')
-    expect(Number.parseFloat(before.width)).toBeCloseTo(half.getBoundingClientRect().width / 2, 0)
+  it('the stars are a readonly ui-rating out of the tab order, filled to the fraction, n clear of the number (T-0146)', async () => {
+    const { card } = await mount(`<ui-product-card title="Suite" rating="3.5" price="$1" action-label="Book"></ui-product-card>`)
+    const rating = card.querySelector('ui-rating') as HTMLElement
+    await (rating as HTMLElement & { updateComplete: Promise<unknown> }).updateComplete
+    expect(rating.style.getPropertyValue('--value-pct')).toBe('70')
+    // Inert: the composed slider cannot take focus, so it is never a tab stop.
+    rating.focus()
+    expect(document.activeElement).not.toBe(rating)
+    const starsBox = part(card, 'rating-stars').getBoundingClientRect()
+    const valueBox = part(card, 'rating-value').getBoundingClientRect()
+    expect(valueBox.left - starsBox.right).toBeGreaterThanOrEqual(Number.parseFloat(getComputedStyle(part(card, 'rating')).columnGap) - 0.5)
+    expect(starsBox.height).toBeGreaterThan(0)
   })
 
   it('a real click on the action button emits action with the action payload', async () => {
@@ -164,8 +170,8 @@ describe('ui-product-card: ADR-0245 derived foundations, dark launch', () => {
     expect(lengthOf(inside, '--ui-product-card-action-height')).toBe(ROOT.h)
     expect(lengthOf(out, '--ui-product-card-icon-size')).toBe(36) // T-0142: media, the 4n control height
     expect(lengthOf(inside, '--ui-product-card-icon-size')).toBe(ROOT.h)
+    expect(lengthOf(inside, '--ui-product-card-rating-gap')).toBe(ROOT.n) // T-0146: stars n clear of the number
     for (const el of [out, inside]) {
-      expect(lengthOf(el, '--ui-product-card-rating-star-gap')).toBe(2)
       expect(lengthOf(el, '--ui-product-card-selected-outline-width')).toBe(2)
     }
   })

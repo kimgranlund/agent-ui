@@ -17,22 +17,18 @@
 // precedent), so any light-DOM child the consumer wrote stays a direct host child after the body, and DOM
 // order equals reading order. No MutationObserver, no adoption.
 //
-// Layer: controls/ (imports dom plus two fleet leaves it composes, ui-badge and ui-icon).
+// Layer: controls/ (imports dom plus three fleet leaves it composes, ui-badge, ui-icon and ui-rating).
 
 import { UIElement, type ReactiveProps } from '../../dom/index.ts'
 import type { UIBadgeElement } from '../badge/badge.ts'
 import '../badge/badge.ts'
 import type { UIIconElement } from '../icon/icon.ts'
 import '../icon/icon.ts'
+import type { UIRatingElement } from '../rating/rating.ts'
+import '../rating/rating.ts'
 // Generated from product-card.md's `attributes[]` (ADR-0173): `node scripts/generate-props.mjs
 // product-card` to regenerate; never hand-edit product-card.props.gen.ts.
 import { props } from './product-card.props.gen.ts'
-
-/** The five star fills for a 0 to 5 rating, rounded to the nearest half star. */
-function starFills(rating: number): readonly ('full' | 'half' | 'empty')[] {
-  const halves = Math.round(Math.min(Math.max(rating, 0), 5) * 2)
-  return [0, 1, 2, 3, 4].map((i) => (halves >= 2 * i + 2 ? 'full' : halves === 2 * i + 1 ? 'half' : 'empty'))
-}
 
 /** Attach `node` under `parent` in its fixed `order` slot when `show`, detach it otherwise. Insert-only:
  *  a node already in place is never moved, so a focused descendant keeps focus. */
@@ -63,7 +59,7 @@ export class UIProductCardElement extends UIElement {
   #title!: HTMLDivElement
   #subtitle!: HTMLDivElement
   #rating!: HTMLDivElement
-  #ratingStars!: HTMLSpanElement[]
+  #ratingStars!: UIRatingElement
   #ratingValue!: HTMLSpanElement
   #ratingCount!: HTMLSpanElement
   #badge!: UIBadgeElement
@@ -122,11 +118,7 @@ export class UIProductCardElement extends UIElement {
       const show = rating !== null && rating > 0
       if (show) {
         this.#ratingValue.textContent = rating.toFixed(1)
-        starFills(rating).forEach((fill, i) => {
-          const star = this.#ratingStars[i]!
-          star.setAttribute('data-fill', fill)
-          star.textContent = fill === 'full' ? '\u2605' : '\u2606' // a half star overlays a clipped full star in CSS
-        })
+        this.#ratingStars.value = rating // ui-rating clamps to [0, 5] and paints the exact fraction
       }
       const showCount = count !== null && count > 0
       if (showCount) this.#ratingCount.textContent = `(${count.toLocaleString('en-US')})`
@@ -178,14 +170,18 @@ export class UIProductCardElement extends UIElement {
     this.#title = part<HTMLDivElement>('div', 'title')
     this.#subtitle = part<HTMLDivElement>('div', 'subtitle')
 
-    // Rating: five decorative stars (full, half or empty), the visible number, a visually hidden " out of 5"
-    // so the accessible text reads "4.8 out of 5" (never stars alone, the ADR-0243 A11y row), then the
-    // optional count in parentheses.
+    // Rating: the fleet's readonly ui-rating at size sm as the decorative stars (T-0146), the visible number,
+    // a visually hidden " out of 5" so the accessible text reads "4.8 out of 5" (never stars alone, the
+    // ADR-0243 A11y row), then the optional count in parentheses. The stars wrapper is aria-hidden and inert:
+    // the text already carries the value, so the composed slider is neither announced nor a tab stop.
     this.#rating = part<HTMLDivElement>('div', 'rating')
     const stars = part<HTMLSpanElement>('span', 'rating-stars')
     stars.setAttribute('aria-hidden', 'true')
-    this.#ratingStars = [0, 1, 2, 3, 4].map(() => part<HTMLSpanElement>('span', 'rating-star'))
-    stars.append(...this.#ratingStars)
+    stars.setAttribute('inert', '')
+    this.#ratingStars = document.createElement('ui-rating') as UIRatingElement
+    this.#ratingStars.readonly = true
+    this.#ratingStars.size = 'sm'
+    stars.append(this.#ratingStars)
     this.#ratingValue = part<HTMLSpanElement>('span', 'rating-value')
     const ratingText = part<HTMLSpanElement>('span', 'rating-text')
     ratingText.textContent = ' out of 5'

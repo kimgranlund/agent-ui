@@ -11,6 +11,7 @@ extends: UIElement      # a display primitive with data-props, not a container a
 uses:
   - ui-badge
   - ui-icon
+  - ui-rating
 
 attributes:             # attributes-as-API: the GENERATION SOURCE for UIProductCardElement.props (ADR-0173)
   - name: title
@@ -60,7 +61,7 @@ attributes:             # attributes-as-API: the GENERATION SOURCE for UIProduct
     type: number
     default: 0
     reflect: false
-    description: A 0 to 5 rating, rendered as five stars (full, half or empty, to the nearest half) plus the number; 0 renders no rating part.
+    description: A 0 to 5 rating, rendered as a readonly ui-rating (five stars filled to the exact fraction) plus the number; 0 renders no rating part.
   - name: ratingCount
     type: number
     default: 0
@@ -134,9 +135,7 @@ parts:
   - name: rating
     description: The rating line, present only when `rating > 0`. Stars plus a numeric label, never stars alone.
   - name: rating-stars
-    description: The `aria-hidden` run of five stars inside rating.
-  - name: rating-star
-    description: One star inside rating-stars, `data-fill` full, half or empty (the rating rounded to the nearest half). A half star is an empty star under a full star clipped to its inline-start half.
+    description: The `aria-hidden`, `inert` wrapper inside rating holding a readonly `<ui-rating size="sm">` (T-0146), the fleet's star display, filled to the exact fraction of the rating. Inert, so the composed slider is neither announced nor a tab stop; the text beside it carries the value.
   - name: rating-value
     description: The visible number inside rating (`rating.toFixed(1)`).
   - name: rating-text
@@ -222,7 +221,7 @@ plus one control-height action row.
 - **`icon`** (string): an icon glyph for the image-free header. `image` wins when both are set.
 - **`price`**, **`priceOld`** (string, attribute `price-old`), **`priceNote`** (string, attribute
   `price-note`): the price is rendered verbatim; the old price follows it, struck through.
-- **`rating`** (number): 0 renders nothing; otherwise five stars (to the nearest half), "4.8" and a hidden
+- **`rating`** (number): 0 renders nothing; otherwise a readonly `ui-rating` (the exact fraction), "4.8" and a hidden
   "out of 5". **`ratingCount`** (number, attribute `rating-count`): a count such as "(318)" after it.
 - **`badge`**, **`badgeIntent`** (string; enum `neutral|info|success|warning|danger`, attribute
   `badge-intent`): forwarded to an internal `ui-badge`.
