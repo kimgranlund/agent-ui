@@ -45,6 +45,18 @@ describe('ui-product-card: rendered geometry', () => {
     expect(Math.abs(media.height - (media.width * 10) / 16)).toBeLessThan(1.5)
   })
 
+  it('T-0142: a badge over the image takes an opaque fill; the icon header is media, at least the title line tall', async () => {
+    const { card } = await mount(`<ui-product-card title="Suite" image="/__product-card-never-loads__.png" badge="Best rate" badge-intent="success"></ui-product-card>`)
+    const fill = getComputedStyle(part(card, 'badge')).backgroundColor
+    // The alpha of any computed colour form: `rgba(r, g, b, a)` or a `/ a` slash alpha (color(), oklch()).
+    const alpha = Number(fill.match(/\/\s*([\d.]+)\s*\)$/)?.[1] ?? fill.match(/^rgba\([^)]*,\s*([\d.]+)\)$/)?.[1] ?? 1)
+    expect(alpha, `an opaque overlay fill, got ${fill}`).toBe(1)
+    const { card: tile } = await mount(`<ui-product-card title="Bronze astrolabe" icon="star"></ui-product-card>`)
+    const icon = part(tile, 'icon').getBoundingClientRect()
+    const titleLine = parseFloat(getComputedStyle(part(tile, 'title')).lineHeight)
+    expect(icon.height).toBeGreaterThanOrEqual(titleLine)
+  })
+
   it('the title clamps at two lines', async () => {
     const long = 'Merino travel sweater, charcoal, relaxed fit with a long title that clamps at two lines and keeps going well past it'
     const { card } = await mount(`<ui-product-card title="${long}"></ui-product-card>`, 240)
@@ -150,8 +162,8 @@ describe('ui-product-card: ADR-0245 derived foundations, dark launch', () => {
     const { out, inside } = foundationsPair('ui-product-card', 'title="Suite" price="$312" selected')
     expect(lengthOf(out, '--ui-product-card-action-height')).toBe(36)
     expect(lengthOf(inside, '--ui-product-card-action-height')).toBe(ROOT.h)
-    expect(lengthOf(out, '--ui-product-card-icon-size')).toBe(20)
-    expect(lengthOf(inside, '--ui-product-card-icon-size')).toBe(ROOT.icon)
+    expect(lengthOf(out, '--ui-product-card-icon-size')).toBe(36) // T-0142: media, the 4n control height
+    expect(lengthOf(inside, '--ui-product-card-icon-size')).toBe(ROOT.h)
     for (const el of [out, inside]) {
       expect(lengthOf(el, '--ui-product-card-rating-star-gap')).toBe(2)
       expect(lengthOf(el, '--ui-product-card-selected-outline-width')).toBe(2)

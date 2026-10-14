@@ -40,12 +40,13 @@ const croupierStats = (): Record<string, unknown>[] => [
   { label: 'Shoe', value: '3.1' },
 ]
 const croupier = hud({ title: 'Table 4 · Blackjack', status: 'Your turn', statusIntent: 'success', stats: croupierStats() })
-const win = el('ui-button', { variant: 'soft' }, [text('Win hand')])
+// T-0142: the column stretches (the HUD fills like its siblings below); only the trigger hugs, as a flex item.
+const win = el('ui-button', { variant: 'soft', style: 'align-self:flex-start;' }, [text('Win hand')])
 win.addEventListener('click', () => {
   chips += 60
   ;(croupier as HTMLElement & { stats: unknown }).stats = croupierStats()
 })
-const croupierBlock = el('div', { style: 'display:flex; flex-direction:column; gap:1rem; align-items:flex-start;' }, [croupier, win])
+const croupierBlock = el('div', { style: 'display:flex; flex-direction:column; gap:var(--md-sys-widget-margin);' }, [croupier, win])
 const croupierNote = el('p', {}, [
   text('Each click adds 60 to Chips and writes '), code('stats'), text(' again. The HUD reuses the same stat ' +
     'elements and rewrites only the text that changed, so a screen reader hears the new Chips value once.'),

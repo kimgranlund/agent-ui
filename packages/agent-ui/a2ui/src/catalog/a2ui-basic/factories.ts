@@ -195,10 +195,16 @@ const ROW_JUSTIFY_MAP: Record<string, string> = {
   stretch: 'start', // `justify-content: stretch` behaves as `flex-start` in flexbox — behavior-identical
 }
 
+// T-0142: the upstream Row/Column carry no gap prop and ui-row/ui-column default to `gap=none`, so stacked
+// cards touched. Every Basic Row/Column is created at the widget gutter step (`md`) instead.
 function rowColumnFactory(tag: string): WidgetFactory {
   return withBasicCommon({
     tag,
-    create: () => document.createElement(tag),
+    create: () => {
+      const el = document.createElement(tag)
+      el.setAttribute('gap', 'md')
+      return el
+    },
     applyProp: (el, prop, value) => {
       if (prop === 'justify') setProp(el, 'justify', value == null ? value : (ROW_JUSTIFY_MAP[value as string] ?? value))
       else setProp(el, prop, value)

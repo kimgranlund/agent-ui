@@ -488,6 +488,22 @@ describe('ui-conversation-composer — GH #257 Provider/Mode pickers', () => {
     expect(el.querySelector('[data-part="mode-menu"]')).toBeNull()
   })
 
+  it('T-0142: every picker trigger carries a leading identity glyph, so the compact collapse never leaves a blank pill', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.providers = PROVIDERS
+    el.provider = 'anthropic'
+    el.model = 'claude-sonnet-5'
+    el.efforts = [{ id: 'low', label: 'Low' }]
+    el.modes = [{ id: 'default', label: 'Default' }]
+    await whenFlushed()
+    const glyph = (picker: string) =>
+      el.querySelector(`[data-picker="${picker}"] ui-icon[data-role="icon"][slot="leading"]`)?.getAttribute('symbol')
+    expect(glyph('providers')).toBe('cloud')
+    expect(glyph('models')).toBe('sparkle')
+    expect(glyph('effort')).toBe('brain')
+    expect(glyph('mode')).toBe('circle-half')
+  })
+
   it('setting `providers` narrows the Models picker to the selected provider\'s OWN model list, never a plain `models` list', async () => {
     const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
     el.providers = PROVIDERS

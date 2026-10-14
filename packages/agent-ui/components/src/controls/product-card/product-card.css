@@ -32,7 +32,12 @@
   --ui-product-card-media-aspect: 16 / 10;
   --ui-product-card-media-bg: var(--md-sys-color-neutral-surface-higher);
   --ui-product-card-icon-ink: var(--md-sys-color-primary);
-  --ui-product-card-icon-size: var(--md-sys-icon-box, var(--md-sys-icon-lg));
+  /* T-0142: the icon header IS the card's media, so it is sized as media, never as an inline icon: a 4n glyph
+     (the control height) in a tinted widget-level tile, n padding. */
+  --ui-product-card-icon-size: var(--md-sys-height, var(--md-sys-height-lg));
+  --ui-product-card-icon-pad: var(--md-sys-inset, var(--md-sys-space-sm));
+  --ui-product-card-icon-bg: var(--md-sys-color-primary-container-low);
+  --ui-product-card-icon-radius: var(--md-sys-widget-radius, var(--md-sys-shape-corner-base));
 
   /* Ink */
   --ui-product-card-title-ink: var(--md-sys-color-neutral-on-surface);
@@ -155,6 +160,10 @@
   :scope > [data-part='media'] > [data-part='icon'] {
     inline-size: var(--ui-product-card-icon-size);
     block-size: var(--ui-product-card-icon-size);
+    box-sizing: content-box;
+    padding: var(--ui-product-card-icon-pad);
+    border-radius: var(--ui-product-card-icon-radius);
+    background: var(--ui-product-card-icon-bg);
     color: var(--ui-product-card-icon-ink);
   }
 
@@ -228,8 +237,10 @@
   :scope [data-part='badge'] {
     align-self: flex-start;
   }
-  /* With an image, the badge overlays the media's top-start corner. */
+  /* With an image, the badge overlays the media's top-start corner. T-0142: the tag fill is translucent and
+     lost its pill over a photo, so the overlay takes the opaque surface (the intent keeps its ink and mark). */
   :scope:has(> [data-part='media'] > [data-part='image']) [data-part='badge'] {
+    --ui-badge-fill: var(--md-sys-color-neutral-surface);
     position: absolute;
     inset-block-start: var(--ui-product-card-badge-inset);
     inset-inline-start: var(--ui-product-card-badge-inset);

@@ -144,7 +144,7 @@ parts:
   - name: rating-count
     description: The count in parentheses after the number, present only when `ratingCount > 0`.
   - name: badge
-    description: The internal `<ui-badge data-part="badge">` (label `badge`, intent `badgeIntent`), present only when `badge` is non-empty. Overlays the image's top-start corner when the media holds an image, otherwise sits in flow.
+    description: The internal `<ui-badge data-part="badge">` (label `badge`, intent `badgeIntent`), present only when `badge` is non-empty. Overlays the image's top-start corner on an opaque surface fill when the media holds an image (T-0142), otherwise sits in flow.
   - name: price-row
     description: The bottom row, present only when `price` is non-empty or `action` is non-null. Holds price, price note and the action button. Absent on an exhibit tile.
   - name: price
@@ -211,7 +211,7 @@ plus one control-height action row.
 
 - **Offer.** An image (16:10, reserved so a late load does not shift layout), the badge over its
   top-start corner, rating, price and one action.
-- **Icon header.** No `image` but an `icon`: a glyph header in the primary color, no aspect box.
+- **Icon header.** No `image` but an `icon`: the icon is the card's media, a 4n glyph in the primary color on a tinted widget-radius tile (T-0142), no aspect box.
 - **Exhibit tile.** No `price` and no `action`: there is no price row at all, so no empty price, badge
   or button renders (the `product-presentation` rule).
 

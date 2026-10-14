@@ -3265,8 +3265,21 @@ export class UIAgentAdminElement extends UIElement {
     const included = store?.get(MODELS_INCLUDED_KEY)
     const current = this.#modelFor(store, roster) // the DRAFT's store ⇒ `DEFAULT_MODEL_ID` (GH #880 leaves this read unchanged)
     host.replaceChildren()
+    // T-0142: one header row names the two control columns (a bare switch and radio read as one control),
+    // and each provider heading is the screen's own kicker eyebrow (the region-kicker recipe), not a mono line.
+    const head = document.createElement('div')
+    head.setAttribute('data-part', 'model-grid-head')
+    head.setAttribute('aria-hidden', 'true') // every switch and radio carries its own aria-label
+    for (const text of ['Model', 'On', 'Default']) {
+      const cell = document.createElement('span')
+      cell.textContent = text
+      head.append(cell)
+    }
+    host.append(head)
     for (const provider of [...new Set(roster.map((m) => m.provider))]) {
-      const providerLabel = document.createElement('div')
+      const providerLabel = document.createElement('ui-text')
+      providerLabel.setAttribute('variant', 'kicker')
+      providerLabel.setAttribute('size', 'sm')
       providerLabel.setAttribute('data-part', 'model-provider')
       providerLabel.textContent = provider
       host.append(providerLabel)

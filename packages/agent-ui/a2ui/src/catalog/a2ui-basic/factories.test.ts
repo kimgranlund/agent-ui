@@ -129,6 +129,12 @@ describe('a2ui-basic factories — Row/Column (bespoke justify/align enums)', ()
       expect((el as unknown as { justify?: unknown }).justify).toBe('center')
     }
   })
+
+  it('T-0142: a Basic Row/Column is created at the widget gutter (gap=md), never the bare gap=none', () => {
+    for (const factory of [basicRowFactory, basicColumnFactory]) {
+      expect(factory.create().getAttribute('gap')).toBe('md')
+    }
+  })
 })
 
 describe('a2ui-basic factories — List (bespoke horizontal-mode inline-flex override)', () => {

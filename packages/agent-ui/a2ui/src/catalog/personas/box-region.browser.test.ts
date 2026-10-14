@@ -23,11 +23,11 @@ afterEach(() => {
 })
 
 /** Render one persona exemplar seed into a 480px column (the canvas content width) and return its ui-card. */
-async function renderSeed(name: string): Promise<HTMLElement> {
+async function renderSeed(name: string, width = 480): Promise<HTMLElement> {
   const seed = personaExemplarSeeds.find((s) => s.name === name)
   if (seed === undefined) throw new Error(`no persona seed ${name}`)
   const mount = document.createElement('div')
-  mount.style.inlineSize = '480px'
+  mount.style.inlineSize = `${width}px`
   document.body.append(mount)
   mounted.push(mount)
   const host = createRenderer()
@@ -60,6 +60,17 @@ describe('the persona composites on the ADR-0046 box model (Amendment 7)', () =>
     expect(host.right - buttons.at(-1)!.right).toBeCloseTo(19, 0)
     expect(host.bottom - buttons.at(-1)!.bottom).toBeCloseTo(13, 0)
     expect(getComputedStyle(part(card, 'zone')).marginBlockStart).toBe('0px') // the card's loose-child margin is gone
+  })
+
+  it('T-0142: CardTable action Buttons wrap as one group: at every width they share one top edge', async () => {
+    for (const width of [480, 440, 400, 360, 320]) {
+      const card = await renderSeed('persona-croupier-card-table', width)
+      const buttons = [...card.querySelectorAll(':scope > ui-button')].map(rect)
+      expect(buttons.length, `${width}px`).toBeGreaterThan(1)
+      for (const b of buttons) expect(b.top, `${width}px: a split action group`).toBeCloseTo(buttons[0]!.top, 0)
+      const readout = rect(part(card, 'readout'))
+      expect(readout.left - rect(card).left, `${width}px`).toBeCloseTo(19, 0)
+    }
   })
 
   it('CardTable betting (Amendment 3): the bet row sits one region (18px) between the felt and the Deal row; chips, stepper and Clear at 28px (lg on the canvas register), 8px apart', async () => {
