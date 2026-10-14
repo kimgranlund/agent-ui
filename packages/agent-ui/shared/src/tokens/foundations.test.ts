@@ -23,8 +23,9 @@ const selectorsOf = (css: string): string[] =>
     .filter(Boolean)
     .flatMap((list) => list.split(/,(?![^(]*\))/).map((s) => s.trim()))
 
-/** The skill revision this repo vendors (ADR-0245 Amendment 3). Re-vendoring is a deliberate change of this line. */
-const VENDORED_SHA = '3c319761e5c8221e500077d62db65a555b95a85145cd022b58255b6e6057ba5b'
+/** The skill revision this repo vendors (ADR-0245 Amendment 3), plus the local glyph floor `CFG.glyphFloor` that
+ *  Amendment 7 carries ahead of the skill (P15). Re-vendoring is a deliberate change of this line. */
+const VENDORED_SHA = '19355c7a21a402a30c74b1ea15ffc9c347050318732c1124f7b0ba7909222b37'
 
 describe('foundations: the vendored config and its contract (ADR-0245 clause 1)', () => {
   it('scale.mjs is the vendored skill revision, byte for byte, and so is the ADR derivation copy', () => {
@@ -49,14 +50,25 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
     expect(check()).toEqual([])
   })
 
-  it('the radio dot is the glyph minus 2 and never shrinks as n grows (the skill M14); the retired 2n - 4c did', () => {
+  it('the radio dot is the unfloored glyph 2n - 2c minus 2 and never shrinks as n grows (the skill M14); the retired 2n - 4c did', () => {
     const steps = ['sm', 'md', 'lg']
     const rungs = Object.keys(CFG.tiers).flatMap((t) => steps.flatMap((s) => steps.map((z) => resolve(t, s, z))))
     const shrinks = (size: (r: Resolved) => number): boolean =>
       rungs.some((a) => rungs.some((b) => a.n < b.n && size(b) < size(a)))
-    for (const r of rungs) expect(r.parts.radioDot, `n ${r.n}`).toBe(r.glyph - 2)
+    for (const r of rungs) expect(r.parts.radioDot, `n ${r.n}`).toBe(2 * r.n - 2 * r.c - 2) // the glyph floor (Amendment 7) is not the radio's
     expect(shrinks((r) => r.parts.radioDot)).toBe(false)
     expect(shrinks((r) => r.icon - 4 * r.c)).toBe(true) // the control: 8 to 6 at n 8 to 9
+  })
+
+  it('the glyph box is max(glyphFloor, 2n - 2c): the floor binds below n 6 only, and never shrinks as n grows', () => {
+    const steps = ['sm', 'md', 'lg']
+    const rungs = Object.keys(CFG.tiers).flatMap((t) => steps.flatMap((s) => steps.map((z) => resolve(t, s, z))))
+    expect(CFG.glyphFloor).toBe(8)
+    for (const r of rungs) expect(r.glyph, `n ${r.n}`).toBe(Math.max(CFG.glyphFloor, 2 * r.n - 2 * r.c))
+    expect(rungs.some((r) => r.n === 5 && r.glyph === 8), 'anti-vacuous: an n 5 rung, where 2n - 2c is 6').toBe(true)
+    expect(resolve('product', 'sm', 'md').glyph).toBe(8) // md and lg unchanged at the root
+    expect(resolve('product', 'sm', 'lg').glyph).toBe(10)
+    expect(committed).toContain(`--md-sys-glyph-box: max(${CFG.glyphFloor}px, calc(var(--md-sys-n) * 2px - 2 * var(--md-sys-c)));`)
   })
 })
 

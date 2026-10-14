@@ -89,7 +89,8 @@ function derivedDeclarations() {
     // takes its row's 2n plus its own inset, so rows nest concentrically.
     ['--md-sys-control-radius', 'calc(var(--md-sys-height) / 2)'],
     ['--md-sys-icon-box', `calc(${N} * 2px)`],
-    ['--md-sys-glyph-box', `calc(${N} * 2px - 2 * ${C})`],
+    // The glyph floor (ADR-0245 Amendment 7): 2n - 2c, never below CFG.glyphFloor, so the n 5 marks stay legible.
+    ['--md-sys-glyph-box', `max(${CFG.glyphFloor}px, calc(${N} * 2px - 2 * ${C}))`],
     ['--md-sys-glyph-stroke', `max(1.5px, ${C} / 2)`],
     ['--md-sys-corner-shape', 'squircle'],
     ['--md-sys-type-display', headingRole(3)],

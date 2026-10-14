@@ -5,7 +5,7 @@ const CFG = {
   density: { compact: -1, default: 0, spacious: 1 }, // d; m = n + a·d, floored
   linear: { body: [12, 1], control: [11, 1], fieldLabel: [9, 1], groupLabel: [9, 0.5] },              // px at n=5, px per step; never below floor
   Q: [1.25, 1 / 32],                                 // heading ratio at n=5, per step
-  sectionRatio: 9 / 8, titleBump: { sm: 0, md: 1, lg: 2 }, floor: 9,
+  sectionRatio: 9 / 8, titleBump: { sm: 0, md: 1, lg: 2 }, floor: 9, glyphFloor: 8, // px; the glyph box never drops below glyphFloor
   levels: { chip: ["tight"], control: ["base"], group: ["tight", "control"], widget: ["roomy", "control"], tray: ["tight", "widget", "reserved"], // wrap, child; in ladder order
     card: ["roomy", "widget"], lane: ["tight", "card", "reserved"], page: ["roomy", "card"], shell: ["tight", "page", "reserved"] },
 };
@@ -27,7 +27,7 @@ function at(n, size = "md", m = n) {
     else { span[l] = span[child] + m; lv[l] = { margin: span[l], gutter: span[child], radius: span[l] }; }
   }
   const pick = (reserved) => Object.fromEntries(Object.entries(lv).filter(([l]) => (CFG.levels[l][2] === "reserved") === reserved));
-  return { n, m, h: 4 * n, minWidth: 4 * n, labelMargin: n - c, icon: 2 * n, c, glyph: 2 * n - 2 * c,
+  return { n, m, h: 4 * n, minWidth: 4 * n, labelMargin: n - c, icon: 2 * n, c, glyph: Math.max(CFG.glyphFloor, 2 * n - 2 * c),
     type: { display: round(body * Q ** 3), heading: round(body * Q ** 2), subhead: round(body * Q), sectionLabel: round(body * CFG.sectionRatio),
       title: body + CFG.titleBump[size], body, control: lin("control"), fieldLabel: lin("fieldLabel"), groupLabel: lin("groupLabel") },
     parts: { checkbox: 2 * n, checkboxRadius: half, check: 2 * n - 2 * c, radio: 2 * n, radioDot: 2 * n - 2 * c - 2, switchTrack: 2 * n, switchThumb: 2 * n - 2 * c, switchWidth: 4 * n - 2 * c,

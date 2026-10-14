@@ -3,7 +3,8 @@
 // cut shipped (sha256 eca32879...); section 11 on (Amendment 3) runs on scale.mjs, the byte copy of the skill's
 // v2 ~/.claude/skills/mathematical-design-system/scale.mjs (sha256 3c319761...), and compares v2 against v1.
 // Section 18 (Amendment 4, T-0122) runs on the same v2 copy and gives the px the control rule moves per control;
-// section 19 (Amendment 5, T-0134) gives the radii the pill moves.
+// section 19 (Amendment 5, T-0134) gives the radii the pill moves; section 20 (Amendment 7, T-0143) the glyph floor,
+// which scale.mjs carries ahead of the skill, so sections 13 and 16 read the unfloored glyph they recorded.
 // v2 renamed keys: inset and radius are control.margin and control.radius, layout is page, the kicker roles are
 // sectionLabel and groupLabel, and the component sizes sit under parts.
 // "Today" values are read off the shipped stylesheets (file:line in the ADR appendix).
@@ -181,16 +182,17 @@ for (const [t, s] of [['product', 'sm'], ['product', 'md'], ['widget', 'md'], ['
 p(`## 13. Controls at the root product/sm, v1 (n ${v1.map((r) => r.n).join(' / ')}) → v2 (n ${v2.map((r) => r.n).join(' / ')}), size sm · md · lg`);
 p('| quantity | rule v1 → v2 | v1 → v2 (delta), sm · md · lg |');
 p('|---|---|---|');
+const g = (r) => 2 * r.n - 2 * r.c; // the glyph box Amendment 3 recorded, before the Amendment 7 floor
 const controls = [
   ['height, avatar, swatch tile (4n)', '4n', (r) => r.h],
   ['inset, gap, field radius (n)', 'n', (r) => r.n],
   ['c', 'ceil(n/4)', (r) => r.c],
   ['icon box, indicator box, badge height (2n)', '2n', (r) => r.icon],
-  ['glyph box, checkbox check, switch thumb', '2n - 2c', (r) => r.glyph],
+  ['glyph box, checkbox check, switch thumb', '2n - 2c', g],
   ['button / toggle pill radius', 'h/2 → 2n', (r) => 2 * r.n],
   ['button label padding', '2n', (r) => 2 * r.n],
   ['checkbox radius', 'n/2', (r) => r.n / 2],
-  ['switch track width', '2 thumb + 2c', (r) => 2 * r.glyph + 2 * r.c],
+  ['switch track width', '2 thumb + 2c', (r) => 2 * g(r) + 2 * r.c],
   ['field label gap', 'ceil(n/2)', (r) => Math.ceil(r.n / 2)],
   ['table row', '4n + 2c', (r) => r.h + 2 * r.c],
   ['table text cell padding, tooltip padding (group margin)', 'n + c', (r) => r.n + r.c],
@@ -245,7 +247,7 @@ p('- `[density]` (retired) maps onto `data-density` in the bridge, so `[density=
 p('## 16. The A2UI canvas register widget/md (Amendment 2), re-derived on v2, size sm / md / lg');
 {
   const was = SZ.map((z) => resolve('widget', 'md', z)), now = SZ.map((z) => resolve2('widget', 'md', z));
-  for (const [label, f] of [['height', (r) => r.h], ['icon box', (r) => r.icon], ['glyph box', (r) => r.glyph], ['control type', (r) => r.type.control], ['button radius (pill)', (r) => 2 * r.n]]) {
+  for (const [label, f] of [['height', (r) => r.h], ['icon box', (r) => r.icon], ['glyph box', g], ['control type', (r) => r.type.control], ['button radius (pill)', (r) => 2 * r.n]]) {
     p(`- ${label}: ${was.map(f).join(' / ')} → ${now.map(f).join(' / ')}`);
   }
   const a = was[1], b = now[1];
@@ -317,5 +319,17 @@ p('|---|---|---|---|');
   row('checkbox', 'radius', 'ceil(n/2) → ceil(n/2)', v2.map((r) => r.parts.checkboxRadius), v2.map((r) => r.parts.checkboxRadius));
 }
 p(`- New tokens: \`--md-sys-control-radius\` (2n: ${v2.map((r) => r.h / 2).join(' / ')}) and \`--md-sys-checkbox-radius\` (ceil(n/2): ${v2.map((r) => r.parts.checkboxRadius).join(' / ')}); \`--md-sys-chip-radius\` becomes n + c (${v2.map((r) => r.n + r.c).join(' / ')}) at the root sm · md · lg.`);
+
+// ---- Amendment 7: the glyph floor (T-0143) -----------------------------------------------------------------
+p('');
+p(`## 20. Amendment 7: the glyph box floors at ${CFG2.glyphFloor}px, max(${CFG2.glyphFloor}, 2n - 2c), sm · md · lg`);
+p('scale.mjs carries `CFG.glyphFloor` ahead of the skill (P15); every control that reads `--md-sys-glyph-box`, and `ui-glyph`, follows.');
+p('| register | rule, before → after | sm · md · lg |');
+p('|---|---|---|');
+{
+  const reg = (tier, scale) => SZ.map((z) => resolve2(tier, scale, z));
+  p(`| root product/sm | 2n - 2c → max(${CFG2.glyphFloor}, 2n - 2c) | ${cmp(reg('product', 'sm').map(g), reg('product', 'sm').map((r) => r.glyph))} |`);
+  p(`| A2UI canvas widget/md | 2n - 2c → max(${CFG2.glyphFloor}, 2n - 2c) | ${cmp(reg('widget', 'md').map(g), reg('widget', 'md').map((r) => r.glyph))} |`);
+}
 
 console.log(out.join('\n'));
