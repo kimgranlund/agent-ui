@@ -172,6 +172,12 @@
     justify-self: center;
   }
 
+  /* A ui-text label (the A2UI Button's child Text) paints its own surface ink, which hid the variant ink and the
+     disabled recipe behind near-black text. Inside the label it takes the button's ink instead (T-0139). */
+  :scope > [data-part='label'] > ui-text {
+    --ui-text-color: currentColor;
+  }
+
   /* Alignment law (ADR-0171, GH #442, amended GH #450): a SINGLE adornment and its label pin to
      OPPOSITE edges of the inner row (spread), not a start-aligned cluster; center remains the base
      for bare and double-adorned. Written as the skill's three selectors on the label itself, no

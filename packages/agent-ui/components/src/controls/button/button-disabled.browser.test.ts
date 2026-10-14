@@ -6,6 +6,8 @@ import { describe, it, expect, afterEach } from 'vitest'
 import '@agent-ui/components/foundation-styles.css'
 import './button.css'
 import './button.ts'
+import '../text/text.css'
+import '../text/text.ts'
 import { SCHEMES, alphaOf, inkContrast, schemeWrap } from './disabled-recipe.fixture.ts'
 
 const mounted: HTMLElement[] = []
@@ -37,6 +39,15 @@ describe('ui-button: the fleet disabled recipe (T-0139)', () => {
       }
     })
   }
+
+  it('a ui-text label (the A2UI Button child) takes the button ink, enabled and disabled', () => {
+    const { wrap } = schemeWrap('light', '<ui-button><ui-text>Check answer</ui-text></ui-button><ui-button disabled><ui-text>Check answer</ui-text></ui-button>')
+    mounted.push(wrap)
+    for (const b of [...wrap.querySelectorAll('ui-button')] as HTMLElement[]) {
+      const text = b.querySelector('ui-text') as HTMLElement
+      expect(getComputedStyle(text).color, `label ink under ${b.hasAttribute('disabled') ? 'disabled' : 'enabled'}`).toBe(getComputedStyle(b).color)
+    }
+  })
 
   it('a disabled ghost keeps its transparent silhouette (no fill), so a disabled pager stop never reads as pressed', () => {
     const { wrap } = schemeWrap('light', '<ui-button variant="ghost" disabled>Previous</ui-button>')
