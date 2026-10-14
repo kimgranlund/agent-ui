@@ -1,13 +1,14 @@
 // scripts/e2e-admin/probe/selftest.ts: the chat probe's keyless selftests (T-0174).
 //
 // `selftest` (fast, no browser, rides `check:scripts`): argument parsing, the fixture parser, every named
-// check over canned turn records, the trace-id resolver, and the offline replay of the three fixtures
+// check over canned turn records, the trace-id resolver, and the offline replay of the six fixtures
 // through the real `produce()`: green-button and recorded-haiku-hello (the live smoke's trace) are green, seeded-json-prose fails `no-json-as-prose` (and
 // `no-surface-loss`, since the surface the model wrote as prose never ships; its JSON is pretty-printed, the
 // shape the producer's prose routing leaves as text, T-0172), seeded-dropped-surface fails
-// exactly `no-surface-loss`.
+// exactly `no-surface-loss`, seeded-click-no-update exactly `action-updates-surface`, and seeded-no-reply
+// (a `render_surface` call with no text and no `reply`, T-0194) exactly `reply-text`.
 //
-// `selftest --browser` (slow, local): the same three fixtures replayed in the real agent-admin page behind
+// `selftest --browser` (slow, local): the same six fixtures replayed in the real agent-admin page behind
 // the e2e-admin intercept, with the same verdicts.
 
 import { readFileSync } from 'node:fs'
@@ -28,6 +29,7 @@ export const SELFTEST_CASES: ReadonlyArray<{ fixture: string; fails: readonly st
   { fixture: 'seeded-json-prose.json', fails: ['no-json-as-prose', 'no-surface-loss'] },
   { fixture: 'seeded-dropped-surface.json', fails: ['no-surface-loss'] },
   { fixture: 'seeded-click-no-update.json', fails: ['action-updates-surface'] },
+  { fixture: 'seeded-no-reply.json', fails: ['reply-text'] },
 ]
 
 export function loadProbeFixture(file: string): ProbeFixture {
@@ -118,6 +120,8 @@ export async function runProbeSelftest(): Promise<number> {
     ['missing type', record(), 'expect-component', { ...opts, expectComponents: ['CardTable'] }],
     ['model not applied', record({ request: { model: 'other', effort: 'medium' } }), 'model-pick'],
     ['lint', record({ lint: [{ rule: 'nested-card', detail: 'ui-card inside a ui-card' }] }), 'render-lint'],
+    ['no reply', record({ lines: BUTTON_LINES, proseText: '' }), 'reply-text'],
+    ['tally shown', record({ proseText: 'Here. Emitted 2 A2UI message(s): createSurface, updateComponents.' }), 'reply-text'],
   ]
   for (const [label, rec, check, o] of seeded) {
     const verdict = caseVerdict(runChecks([rec], o ?? opts), [check])
@@ -158,7 +162,7 @@ export async function runProbeSelftest(): Promise<number> {
   return failures.length === 0 ? 0 : 1
 }
 
-/** The browser leg: one vite, the three fixtures replayed in the real page. */
+/** The browser leg: one vite, the six fixtures replayed in the real page. */
 export async function runBrowserSelftest(kit: DevServerKit, root: string, out: string): Promise<number> {
   const { runProbes, writeReport } = await import('./run.ts')
   const plans = SELFTEST_CASES.map((c) => {

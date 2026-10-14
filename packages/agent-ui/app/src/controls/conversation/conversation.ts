@@ -518,8 +518,8 @@ function stepEntry(key: string, step: ActivityStep): StatusEntry {
   }
 }
 
-/** Backward-compat fallback for a turn with no `note` (ADR-0088: a factual message-kind tally, never a
- *  fabricated sentence) — the a2ui-live.ts summarize() precedent. */
+/** The factual message-kind tally for a turn with no `note` (ADR-0088: never a fabricated sentence), the
+ *  a2ui-live.ts summarize() precedent. Since T-0194 it rides the activity strip, not the bubble. */
 function summarize(lines: readonly string[]): string {
   if (lines.length === 0) return ''
   const kinds = lines.map((l) => {
@@ -938,9 +938,11 @@ export class UIConversationElement extends UIElement {
     /** T-0016: the settle-time rows, after every step: ONE collapsed "Raw output" block (every distinct
      *  step `raw`, step order, with a Copy button in its expand) and the footer (counts, then the model on
      *  its own muted line, T-0022). All are markerless `note` rows, so the receipt's step count never
-     *  includes them and the completion invariant never truncates them. */
-    const appendSettleRows = (): void => {
+     *  includes them and the completion invariant never truncates them. A turn with no reply text adds its
+     *  message `tally` row first (T-0194). */
+    const appendSettleRows = (tally = ''): void => {
       if (!withSteps) return
+      if (tally !== '') narration.appendEntry({ key: `t${seq}-tally`, note: true, text: tally }).dataset.activity = 'tally'
       const raw = joinActivityRaw([...stepRows.values()].map((r) => r.step))
       if (raw !== '') {
         const item = narration.appendEntry({ key: `t${seq}-raw`, note: true, source: raw, sourceLabel: RAW_LABEL })
@@ -1248,11 +1250,14 @@ export class UIConversationElement extends UIElement {
         // not completed).
         for (const cat of categoriesSeen) narration.update(`t${seq}-${cat}`, { status: 'done', label: LABEL[cat].done })
         if (lastProgressKey !== undefined) settleProgress(lastProgressKey)
-        appendSettleRows() // T-0016: step mode's raw + footer rows, after every step, before the receipt settles
-        narration.finalize(settleOptions(false))
         // RTS-R5 AC3: streamed text with no note after it stays as painted (trimmed), never a tally over it.
-        const finalNote = noteText ?? (streamedText.trim() !== '' ? streamedText.trim() : summarize(turnLines))
-        if (finalNote !== '') revealBubble() // GH #313 — the fallback tally is real content too
+        const finalNote = noteText ?? streamedText.trim()
+        // T-0194: a turn with no reply text keeps its factual tally in the activity strip, never in the bubble a
+        // guest reads ("Emitted 2 A2UI message(s): ..." read as the agent's answer). Step mode adds it as a settle
+        // row; the legacy strip's category rows ("Opened a new surface") already say the same.
+        appendSettleRows(finalNote === '' ? summarize(turnLines) : '') // T-0016: step mode's raw + footer rows, after every step, before the receipt settles
+        narration.finalize(settleOptions(false))
+        if (finalNote !== '') revealBubble() // GH #313
         this.#renderBody(note, finalNote)
         if (this.disclosure && turnLines.length > 0) {
           revealBubble() // GH #313 — the wire dump is real content even with no note/mounts

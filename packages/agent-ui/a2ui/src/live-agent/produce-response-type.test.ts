@@ -104,6 +104,19 @@ describe('render_surface tool round', () => {
     expect(wire.slice(1)).toEqual(VALID.split('\n').map((l) => JSON.stringify(JSON.parse(l))))
   })
 
+  it('T-0194: a tool round with no text ships the tool `reply` as the note; text in the channel wins over it', async () => {
+    const silent = scripted([{ text: '', call: [{ name: 'render_surface', input: { reply: ' Pull up a chair. ', jsonl: VALID } }] }])
+    const lines = await run(NEUTRAL, silent.provider)
+    expect(finalMeta(lines).note).toBe('Pull up a chair.')
+    expect(contentOf(lines)).toHaveLength(VALID.split('\n').length)
+
+    const spoken = scripted([{ text: 'Here is your card.', call: [{ name: 'render_surface', input: { reply: 'Ignored.', jsonl: VALID } }] }])
+    expect(finalMeta(await run(NEUTRAL, spoken.provider)).note).toBe('Here is your card.')
+
+    const bare = scripted([{ text: '', call: [surface(VALID)] }])
+    expect((await run(NEUTRAL, bare.provider)).map(metaOf).some((m) => m?.note !== undefined)).toBe(false)
+  })
+
   it('RTS-R1 AC2: the executor is reached exactly once, answers received, and nothing is fed back within the turn', async () => {
     const { provider, calls, results } = scripted([{ text: 'Here is your card.', call: [surface(VALID)] }])
     await run(NEUTRAL, provider)

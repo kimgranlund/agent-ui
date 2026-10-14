@@ -1061,7 +1061,7 @@ describe('ui-conversation — narration (SPEC-R6, ADR-0146 live-at-ingest)', () 
     expect(labels.some((l) => l?.includes('Reasoning') || l?.includes('Self-correcting')), 'no progress entries without progress()').toBe(false)
   })
 
-  it('setNote renders the exact note text; no note falls back to a factual tally, never a fabricated sentence', async () => {
+  it('setNote renders the exact note text; no note leaves the bubble empty, never a tally a guest reads as the answer (T-0194)', async () => {
     vi.useFakeTimers()
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)
 
@@ -1075,7 +1075,7 @@ describe('ui-conversation — narration (SPEC-R6, ADR-0146 live-at-ingest)', () 
     const noNote = el.beginAgentTurn()
     noNote.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 's5', catalogId: 'agent-ui' } }))
     noNote.finalize()
-    expect(notes()[1].textContent).toMatch(/Emitted 1 A2UI message\(s\): createSurface\./)
+    expect(notes()[1].textContent).toBe('')
   })
 
   it('the post-hoc narrateCategories replay + NARRATION_STEP_MS pacing are DELETED, not stranded (ADR-0146 live-at-ingest — grep-zero in the live code)', () => {
@@ -2113,7 +2113,11 @@ describe('ui-conversation: step mode renders the neutral ActivityStep model (T-0
     handle.progress({ stage: 'validating', source: 'raw' })
     handle.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'agent-ui' } }))
     handle.finalize()
-    expect(rows(el), 'no category or stage rows in step mode').toEqual([])
+    const tally = rows(el).filter((r) => r.dataset.activity === 'tally')
+    expect(rows(el).filter((r) => !tally.includes(r)), 'no category or stage rows in step mode').toEqual([])
+    // T-0194: the turn had no reply text, so its message tally rides the strip as a settle row, not the bubble.
+    expect(tally.map((r) => r.textContent?.trim())).toEqual(['Emitted 1 A2UI message(s): createSurface.'])
+    expect(log(el).querySelector('[data-part="bubble"][data-role="agent"] [data-part="body"]')?.textContent ?? '').not.toMatch(/Emitted/)
     expect(log(el).querySelector('ui-surface-host'), 'routing is untouched: the surface still mounts').not.toBeNull()
   })
 
