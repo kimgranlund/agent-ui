@@ -549,6 +549,7 @@ const CHECKS: Record<string, (root: Element, ctx: Ctx) => string[]> = {
   'glyph-gap'(root) {
     const out: string[] = []
     for (const el of each(root, "ui-game-hud [data-part='glyph'], ui-result-card [data-part='glyph']")) {
+      if (el.closest('ui-badge')) continue // a status badge's mark keeps the badge rhythm (2c, Amendment 4), not the stat gap (T-0170)
       const box = visible(el)
       const next = el.nextElementSibling
       const label = next ? visible(next) : null

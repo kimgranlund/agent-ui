@@ -1,11 +1,6 @@
 {
-  "demo/card-demo#nested-card": "day one (T-0136): the nested-card specimen shows a card inside a card on purpose; under the derived geometry the nested card keeps the card level radius (T-0141, Kim's ruling), and the specimen shows that; it stays while the specimen does",
-  "demo/code-demo#column": "day one (T-0136): a ui-code block ends 16px past the 400px column; the code demo lane fixes its frame (ui-code scrolls in its own overflow frame)",
-  "demo/drill-demo#column": "day one (T-0136): its ui-drill-panel keeps a width past the 400px column (the shared .reflow-frame overflow was fixed by T-0142); the drill lane makes the panel fit",
-  "demo/game-hud-demo#glyph-gap": "T-0144: the stat glyph sits 4px from its label where the glyph's cascade n is 6 (game-hud.css --ui-game-hud-glyph-gap); the review asked for n, the game-hud lane repoints the gap",
-  "demo/line-chart-demo#dash-scale": "T-0141: the projected line's 3px 2px dash is authored in screen px on purpose (--ui-line-chart-projected-dash), and non-scaling-stroke is what keeps it 3px at any box size; not the gauge class of bug (a viewBox-length pattern read in screen px). The line-chart lane decides between this entry and a user-unit dash",
-  "demo/list-demo#avatar-disc": "T-0144: a ui-avatar on an elevation-1 list row reads 1.27:1 against the raised row (the container-high plane over the surface base, avatar.css); the avatar lane gives the disc a role that clears 1.3:1 on a raised surface",
-  "demo/playing-card-demo#type-floor": "day one (T-0136): the playing card's corner index scales with the card face and reads 6.8px on the smallest specimen, under the 9px floor (ADR-0245 M5); the playing-card lane decides between a floor and a pictorial exemption",
-  "demo/split-pane-demo#column": "day one (T-0136): the split-pane specimen keeps both panes' minimum widths and ends 63px past the 400px column; the split-pane lane stacks or scrolls it at narrow widths",
-  "widget/GameHud#glyph-gap": "T-0144: the stat glyph sits 4px from its label where the glyph's cascade n is 6 (game-hud.css --ui-game-hud-glyph-gap); the review asked for n, the game-hud lane repoints the gap"
+  "demo/drill-demo#column": "owner T-0186: its ui-drill-panel keeps a width past the 400px column (the shared .reflow-frame overflow was fixed by T-0142); T-0186 makes the panel fit",
+  "demo/line-chart-demo#dash-scale": "owner T-0188: the projected line's 3px 2px dash is authored in screen px on purpose (--ui-line-chart-projected-dash), and non-scaling-stroke keeps it 3px at any box size (T-0141); not the gauge class of bug. T-0188 decides between this entry and a user-unit dash",
+  "demo/playing-card-demo#type-floor": "owner T-0189: the playing card's corner index scales with the card face and reads 6.8px on the smallest specimen, under the 9px floor (ADR-0245 M5); T-0189 decides between a floor and a ruled pictorial exemption",
+  "demo/split-pane-demo#column": "owner T-0187: the split-pane specimen keeps both panes' minimum widths and ends 63px past the 400px column; T-0187 stacks or scrolls it at narrow widths"
 }

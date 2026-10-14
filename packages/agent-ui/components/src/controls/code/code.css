@@ -57,6 +57,7 @@
     white-space: pre; /* verbatim — newlines/indentation live in the text nodes (SPEC-R2) */
     overflow-x: auto; /* the component OWNS overflow (ADR-0102 Lane A) */
     max-inline-size: 100%; /* never blows out a flex/feed container; the scroll box absorbs excess */
+    box-sizing: border-box; /* the cap includes the padding, so a sized block never ends past its column (T-0170) */
     user-select: text;
     tab-size: 4;
   }
