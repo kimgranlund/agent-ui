@@ -283,7 +283,7 @@ describe('a2ui-gallery — booking-reservation Calendar fills its field width (A
           // Narrow: below the cap the grid still fills its field (small remainder = the panel's box insets).
           expect(
             fieldRect.width - gridRect.width,
-            `[${scheme}, ${label}] grid (${gridRect.width}px) is far narrower than its field (${fieldRect.width}px) — panel still half-empty`,
+            `[${scheme}, ${label}] grid (${gridRect.width}px) is far narrower than its field (${fieldRect.width}px), panel still half-empty`,
           ).toBeLessThan(40)
         }
       })

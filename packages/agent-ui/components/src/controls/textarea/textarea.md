@@ -180,7 +180,7 @@ hittable; layout owns width above the floor.
 
 The border-channel state ladder — idle → `:hover` → focus (transparent border + the shared outline ring) →
 the `user-invalid` danger border — and `disabled` (a role repoint, not opacity) are reused verbatim from
-`ui-text-field` (ADR-0014 cl.2c / dev#b / dev#c) — the field-frame pattern is shape-independent. The idle,
+`ui-text-field` (ADR-0014 cl.2c / dev#b / dev#c); the field-frame pattern is shape-independent. The idle,
 filled and hover border is the opaque `neutral-field-outline` role, at least 3:1 against the page in both
 themes (SC 1.4.11, ADR-0245 Amendment 7); focus steps it to transparent and disabled drops it. A disabled
 textarea is not user-resizable (`resize: none`).

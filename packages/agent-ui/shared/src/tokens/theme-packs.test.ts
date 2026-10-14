@@ -13,7 +13,7 @@ declare const process: { cwd(): string }
 // pair — 18 roles now, not 16; scrollbar-thumb is an ALIAS of neutral-track/-hover (tokens.css), and an
 // alias of a hand-authored role a stock export never produces is, by the same reasoning, never produced
 // either. Later additions (the ADR-0196/0199 aliases, the Amendment 7 field outline) bring the set to 22, listed
-// below. A pack omitting one of these 22 is CORRECT (not a gap to close) — an element inside the themed
+// below. A pack omitting one of these 22 is CORRECT (not a gap to close): an element inside the themed
 // subtree inherits it from :root via ordinary CSS custom-property cascade, since a `[theme]` block is
 // always a :root descendant.
 //
