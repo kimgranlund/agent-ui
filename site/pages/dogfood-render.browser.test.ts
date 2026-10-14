@@ -219,6 +219,55 @@ const CHECKS: Record<string, (root: Element, ctx: Ctx) => string[]> = {
     }
     return out
   },
+  'badge-hug'(root) {
+    const out: string[] = []
+    for (const el of each(root, SELECTOR['badge-hug']) as HTMLElement[]) {
+      const box = visible(el)
+      if (!box) continue
+      measured['badge-hug']++
+      // the max-content width, read on the badge itself and restored in the same frame
+      const prior = el.style.inlineSize
+      el.style.inlineSize = 'max-content'
+      const want = el.getBoundingClientRect().width
+      el.style.inlineSize = prior
+      if (box.width > want + 1) out.push(`${tagOf(el)} width=${Math.round(box.width)} max-content=${Math.round(want)}`)
+    }
+    return out
+  },
+  'option-indicator'(root) {
+    const out: string[] = []
+    for (const el of each(root, SELECTOR['option-indicator'])) {
+      if (!visible(el)) continue
+      measured['option-indicator']++
+      const before = getComputedStyle(el, '::before')
+      if (before.display === 'none' || px(before.width) <= 0) out.push(`${tagOf(el)} aria-selected=${el.getAttribute('aria-selected')} shows no indicator`)
+    }
+    return out
+  },
+  'inline-text'(root) {
+    const out: string[] = []
+    for (const el of each(root, SELECTOR['inline-text'])) {
+      if (el.hasAttribute('truncate') || !visible(el)) continue
+      measured['inline-text']++
+      const display = getComputedStyle(el).display
+      if (display !== 'inline') out.push(`${tagOf(el)} as=${el.getAttribute('as')} display=${display} inside running text`)
+    }
+    return out
+  },
+  'adornment-gap'(root) {
+    const out: string[] = []
+    for (const cell of each(root, SELECTOR['adornment-gap'])) {
+      const boxes = [...cell.children].map((c) => visible(c)).filter((b): b is DOMRect => b !== null).sort((a, b) => a.left - b.left)
+      if (boxes.length < 2) continue
+      measured['adornment-gap']++
+      const want = registerOf(cell).c
+      for (let i = 1; i < boxes.length; i++) {
+        const gap = boxes[i]!.left - boxes[i - 1]!.right
+        if (gap < want - TOL) out.push(`${tagOf(cell.parentElement!)} adornment gap=${Math.round(gap * 10) / 10} want ${want}`)
+      }
+    }
+    return out
+  },
 }
 
 /** Every rule's findings in one root at one viewport. */
@@ -326,6 +375,16 @@ const PLANTS: Record<string, { bad: string; good: string; width?: number }> = {
   'text-edge': { bad: '<ui-button style="padding-inline: 3px">Save</ui-button>', good: '<ui-button>Save</ui-button>' },
   'card-radius': { bad: '<ui-card style="border-radius: 3px">One</ui-card>', good: '<ui-card>One</ui-card>' },
   'panel-radius': { bad: '<ui-multi-select style="border-radius: 1px"><ui-option value="a">A</ui-option></ui-multi-select>', good: '<ui-multi-select><ui-option value="a">A</ui-option></ui-multi-select>' },
+  'badge-hug': { bad: '<div style="display: flex; flex-direction: column"><ui-badge style="max-inline-size: none">3</ui-badge></div>', good: '<div style="display: flex; flex-direction: column"><ui-badge>3</ui-badge></div>' },
+  'option-indicator': {
+    bad: '<style>ui-multi-select > [role=option]::before { display: none }</style><ui-multi-select><div role="option" value="a">A</div></ui-multi-select>',
+    good: '<ui-multi-select><div role="option" value="a">A</div></ui-multi-select>',
+  },
+  'inline-text': { bad: '<p>Read the <ui-text as="a" href="https://example.com" style="display: block">record</ui-text> now.</p>', good: '<p>Read the <ui-text as="a" href="https://example.com">record</ui-text> now.</p>' },
+  'adornment-gap': {
+    bad: '<style>ui-text-field [data-role=stepper] { gap: 0 !important }</style><ui-text-field type="number" value="5"></ui-text-field>',
+    good: '<ui-text-field type="number" value="5"></ui-text-field>',
+  },
 }
 
 describe('render lint: one injected violation per rule turns it red (negative controls)', () => {

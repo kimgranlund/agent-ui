@@ -6763,9 +6763,9 @@ all repoint together across five states:
 
 | State | Background | Border | Text ink |
 |---|---|---|---|
-| default (empty, idle) | `neutral-container-low` | `transparent` | `neutral` |
-| filled (has a value, idle) | `neutral-container` | `transparent` | `neutral-on-surface-variant` |
-| hover | `neutral-container` | `neutral-outline-variant` | `neutral-on-surface-variant` |
+| default (empty, idle) | `neutral-container-low` | `neutral-outline` | `neutral` |
+| filled (has a value, idle) | `neutral-container-low` | `neutral-outline` | `neutral-on-surface-variant` |
+| hover | `neutral-container` | `neutral-outline` | `neutral-on-surface-variant` |
 | focus | `neutral-container-low` | `transparent` (the ring is the indicator) | `neutral-on-surface` |
 | disabled | `neutral-container-low` | `transparent` | `neutral-low` |
 
