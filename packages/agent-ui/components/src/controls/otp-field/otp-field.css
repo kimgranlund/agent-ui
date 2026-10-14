@@ -6,9 +6,10 @@
  *       focus-ring for the active-cell indicator) and the dimensional ramp (`--md-sys-{height,font,gap}-{size}`).
  *       Geometry per code-entry-control.lld.md §7: `(scale × size) → §1-row` LOOKUP (ADR-0038, no multiplier) —
  *       text-field's own rows (sm 24/13 · md 28/14 · lg 36/16). Cell `inline-size = height` (a square one-glyph
- *       entry box, DERIVED off the lever — no new ramp). Cell radius is the fixed entry-class
- *       `--md-sys-shape-corner-base` (NEVER `h/2` — that is the action family's pill), minted here (not read
- *       directly in [2] — the styling-gates trip-wire). `--ui-otp-field-gap` (`= font/2 × density`) is the
+ *       entry box, DERIVED off the lever, no new ramp). Cell radius is the round square n with the squircle
+ *       corner (ADR-0245 Amendment 6; NEVER `h/2`, a square cell at h/2 is a circle), the fixed entry-class
+ *       `--md-sys-shape-corner-base` under the legacy opt-out, minted here (not read directly in [2]: the
+ *       styling-gates trip-wire). `--ui-otp-field-gap` (`= font/2 × density`) is the
  *       inter-cell rhythm (the ONE density-bearing quantity). **Deliberate no-floor deviation from the
  *       entry-class `min-inline-size` rule (LLD §7):** this control ships NO min-inline-size token — the
  *       N-cell grid's own intrinsic size (`N × cell + (N−1) × gap`) already IS the floor the rule exists to
@@ -40,8 +41,8 @@
   --ui-otp-field-font: var(--md-sys-type-control, var(--md-sys-font-md));
   --ui-otp-field-cell-inline-size: var(--ui-otp-field-height); /* square one-glyph cell — derived, §7 */
   --ui-otp-field-gap: var(--md-sys-inset, var(--md-sys-gap-md)); /* = font/2 × density (rhythm family) — the density-bearing quantity */
-  --ui-otp-field-corner-shape: round; /* the pill takes circular corners, like button and toggle (ADR-0245 Amendment 5); the squircle stays with the radius-n surfaces */
-  --ui-otp-field-radius: var(--md-sys-control-radius, var(--md-sys-shape-corner-base)); /* the pill h/2 = 2n (ADR-0245 Amendment 5): a square 4n cell reads round; the fixed entry radius under the legacy opt-out */
+  --ui-otp-field-corner-shape: var(--md-sys-corner-shape, round); /* the radius-n squircle (ADR-0245 Amendment 6); round under the legacy opt-out */
+  --ui-otp-field-radius: var(--md-sys-radius, var(--md-sys-shape-corner-base)); /* a round square at radius n (ADR-0245 Amendment 6): a square entry cell is not a pill; the fixed entry radius under the legacy opt-out */
 
   /* Cell colour channel (family = neutral) — the TKT-0062 filled-state law applied per cell: empty / filled /
      active / disabled / user-invalid. Active and user-invalid are ORTHOGONAL border-only channels layered on

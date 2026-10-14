@@ -2,8 +2,9 @@
  *
  *   [1] TOKEN BLOCK: `:where(ui-glyph)` declares the slot, its inset and the stroke. Each reads the derived
  *       foundation token first (`--md-sys-icon-box` 2n, `--md-sys-c` c, `--md-sys-glyph-stroke`
- *       max(1.5px, c/2)), so inside an opt-in `[data-tier]` region the mark box is exactly 2n - 2c. Outside
- *       one the derived tokens are undefined and the em fallbacks size it like ui-icon's 1em cell.
+ *       max(1.5px, c/2)), so the mark box is exactly 2n - 2c wherever the root tokens reach: a glyph keeps its
+ *       own glyph box everywhere, unlike a standalone ui-icon, which follows the text (ADR-0245 Amendment 6).
+ *       Under the legacy opt-out the derived tokens are `initial` and the em fallbacks size it as a 1em cell.
  *   [2] STYLES BLOCK: `@scope (ui-glyph)` consumes ONLY --ui-glyph-*. The host is the shared icon-sized
  *       slot; its padding is the inset c, so the svg (the mark box) fills what is left. `color: inherit`
  *       lets the stroke track the surrounding ink, forced colors included, with no override of its own.

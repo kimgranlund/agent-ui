@@ -179,8 +179,9 @@ Not every Display-class member is text. `ui-icon` and the chart family (`ui-spar
 size relative to their own **type context** (em/lh-derived), the same "no control height" law §1's
 `geometry.md` five-class table states for Display, extended past text to marks:
 
-- `ui-icon` is the `2n` icon box (`--md-sys-icon-box`, ADR-0245 cl.4; it was `1em`, ADR-0035) and `ui-glyph`
-  the `2n - 2c` glyph box, each a box of its own n and not a control row (§4.6).
+- `ui-icon` is the `2n` icon box (`--md-sys-icon-box`, ADR-0245 cl.4) inside a control cell or a `[data-tier]`
+  region and follows the surrounding text, `1em`, anywhere else (ADR-0245 Amendment 6); `ui-glyph` is the
+  `2n - 2c` glyph box everywhere. Neither is a control row (§4.6).
 - `ui-sparkline` defaults to an explicit `8em × 1lh` box (SPEC-R9 AC1), a deterministic floor, not
   a derived one, because a zero-size default would make the whole-shape law (§ below) unenforceable
   on an inline mark with no intrinsic content size.

@@ -45,7 +45,11 @@
 
   /* The outer rounded track (segments carry NO divider borders — Kim's ruling, see the styles block). */
   --ui-segmented-control-track: var(--md-sys-color-neutral-outline);
-  --ui-segmented-control-radius: var(--md-sys-group-radius, var(--md-sys-shape-corner-base)); /* group level n + c (ADR-0245 cl.6) */
+  /* The pill track (ADR-0245 Amendment 6): the 4n segment plus the track padding c on each side, so h/2 is
+     2n + c and the thumb, inset c, is the 2n pill. Undefined under the legacy opt-out, where the corner base
+     holds. */
+  --ui-segmented-control-radius: var(--ui-segmented-control-radius-derived, var(--md-sys-shape-corner-base));
+  --ui-segmented-control-radius-derived: calc(var(--md-sys-control-radius) + var(--md-sys-c));
   /* Track padding and segment gap are c inside a data-tier region (ADR-0245 cl.3); outside one there is
      none, and the indicator sits 1px inside the track outline as before. */
   --ui-segmented-control-pad: var(--md-sys-c, 0px);

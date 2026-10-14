@@ -46,7 +46,7 @@ export const CLASSES = {
   // toggle: its label is anonymous host content (toggle.md), so the host edge carries margin + inset = 2n - c
   barePill: { rule: (r) => ({ height: r.h, padding: r.control.margin + r.labelMargin, radius: 2 * r.n }) },
   trigger: { part: 'trigger', slot: LABEL, rule: (r) => ({ height: r.h, padding: r.control.margin, inset: r.labelMargin, radius: 2 * r.n }) }, // a popup field's frame, the pill 2n
-  cell: { part: 'cell', rule: (r) => ({ height: r.h, radius: 2 * r.n }) }, // one frame per character cell, the pill 2n
+  cell: { part: 'cell', rule: (r) => ({ height: r.h, radius: r.n }) }, // one frame per character cell, the round square n (Amendment 6)
   multiline: { slot: EDITOR, rule: (r) => ({ padding: r.control.margin, inset: r.labelMargin, radius: 2 * r.n }) }, // margin n, the editor's inset, the single-line control radius 2n; rows set the height
   listbox: { rule: (r) => ({ padding: r.c, radius: 2 * r.n + r.c }) }, // padding c; concentric radius: the row pill 2n plus the inset c (Amendment 5)
   // segments 4n, text edge 2n - c on the segment (an anonymous label); a segment's own size is unconsumed

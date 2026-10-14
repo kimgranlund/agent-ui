@@ -92,7 +92,9 @@ The full per-control table is ADR-0245 clause 3 and Appendix B; the geometry pro
 
 ## Icon and glyph: two boxes, two elements
 
-- An **icon** is pictorial pack art (ADR-0065/0066: `eye`, `user`, `calendar-blank`) in a `2n` box.
+- An **icon** is pictorial pack art (ADR-0065/0066: `eye`, `user`, `calendar-blank`) in a `2n` box inside a
+  control cell or a `[data-tier]` region; a standalone `ui-icon` anywhere else follows the text, `1em`
+  (ADR-0245 Amendment 6).
 - A **glyph** is a functional mark from the closed set of twelve (`check`, `x`, `plus`, `minus`, the four
   carets, `dot`, `more`, `warning`, `info`) in a `2n - 2c` box, always inside an icon-sized `2n` slot with
   `c` clear on each side. A caret is drawn at the glyph box, not at the control font.

@@ -45,7 +45,7 @@ keyboard: []           # NOT interactive and NOT focusable — no tabindex, no `
 
 geometry:
   sizeClass: display
-  inlineSize: var(--md-sys-icon-size)   # the 2n icon box (`--md-sys-icon-box`, ADR-0245 cl.4); 1em is the legacy fallback until W7 — NO size/tone lever (no [size] n rule); the consumer's ambient font-size or an explicit inline-size override IS the lever (LLD §3, geometry.md "intrinsic structural sizing")
+  inlineSize: var(--md-sys-icon-size)   # 1em, the surrounding text, outside a [data-tier] region; the 2n icon box (`--md-sys-icon-box`) under a [data-tier] ancestor; a control cell sizes it to 2n by its own slot rule (ADR-0245 Amendment 6). NO size/tone lever (no [size] n rule); the consumer's ambient font-size or an explicit inline-size override IS the lever (LLD §3, geometry.md "intrinsic structural sizing")
   blockSize: var(--md-sys-icon-size)
 
 forcedColors: No dedicated `@media (forced-colors: active)` block — the host paints nothing of its own; `color: inherit` means the injected `<svg fill="currentColor">` (resolve.ts) tracks whatever forced-colors ink the CONSUMING context already resolves to (e.g. a button's ButtonText), so ui-icon needs no WHCM override of its own.
@@ -85,9 +85,13 @@ swap. The normal case is registering a pack once at startup, before first render
 
 ## Sizing
 
-The host is a `1em × 1em` cell by default (`--md-sys-icon-size`) — there is no size ramp or lever. A consumer
-sizes an icon via ambient `font-size` (the common case, matching surrounding text) or an explicit
-`inline-size`/`block-size` override on the host. `color: inherit` means the icon's ink (the injected
+An icon follows the surrounding text: the host is a `1em × 1em` cell (`--md-sys-icon-size`), and there is no
+size ramp or lever. A consumer sizes an icon via ambient `font-size` (the common case, matching surrounding
+text) or an explicit `inline-size`/`block-size` override on the host. Two places size it for you (ADR-0245
+Amendment 6): inside a control cell (a button, toggle, field or select slot) the control's slot rule makes it
+the `2n` icon box, and inside an explicit `[data-tier]` region (an A2UI surface) a standalone icon is that
+region's `2n` icon box (`--md-sys-icon-box`). A functional mark is a `ui-glyph` instead, which keeps its own
+`2n - 2c` glyph box everywhere. `color: inherit` means the icon's ink (the injected
 `<svg fill="currentColor">`) always tracks the surrounding context with no per-icon color plumbing.
 
 ## Accessibility

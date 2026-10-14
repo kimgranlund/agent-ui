@@ -68,8 +68,10 @@
   --ui-result-card-value-weight: 700;
   --ui-result-card-delta-size: var(--md-sys-typescale-label-medium-size); /* mockup .75rem */
   --ui-result-card-delta-weight: 650;
-  --ui-result-card-glyph-size: 0.6em;
-  --ui-result-card-glyph-gap: var(--md-sys-space-xs);
+  /* The stat mark is a glyph: its own glyph box 2n - 2c, n clear of its label (the chip gap, ADR-0245
+     Amendment 6); 0.6em and the space-xs step under the legacy opt-out. */
+  --ui-result-card-glyph-size: var(--md-sys-glyph-box, 0.6em);
+  --ui-result-card-glyph-gap: var(--md-sys-inset, var(--md-sys-space-xs));
 
   /* Per-stat intent ink: no intent means the quiet on-surface-variant ink and no glyph. */
   --ui-result-card-intent-ink: var(--md-sys-color-neutral-on-surface-variant);
