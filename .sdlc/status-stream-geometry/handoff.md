@@ -28,3 +28,11 @@ Kim 2026-10-14: "the ui-status-stream and its constituent parts don't seem to fo
 
 ## Constraints
 - No literal px geometry; derive from the ramp. No em dashes.
+
+## Acceptance criteria
+- `npm run check` exits 0.
+- `node scripts/foundations-census.mjs --gate` exits 0 (no px geometry in the changed sheets).
+- `npx vitest run --config vitest.browser.config.ts --project packages packages/agent-ui/components/src/controls/status-stream packages/agent-ui/app/src/controls/conversation` exits 0 in chromium and webkit, including the T-0173 describe in `conversation.browser.test.ts` (marker centre = rail centre = header marker centre; label, Details summary, detail text, raw block and Copy share the label column; durations end on the header meta edge; inline edge, marker-to-label and row gaps equal the strip's n; at the chat and widget / md registers).
+- `npx vitest run --config vitest.browser.config.ts --project site site/pages/dogfood-render.browser.test.ts` exits 0.
+- `npx vitest run packages/agent-ui/components/src/controls/status-stream packages/agent-ui/components/src/controls/family-coherence.test.ts packages/agent-ui/app/src/controls/conversation` exits 0.
+- Before and after screenshots exist in `.sdlc/status-stream-geometry/` (`before-*.png`, `after-*.png`).

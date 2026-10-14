@@ -76,8 +76,9 @@
   --ui-conversation-reference-tag-gap: var(--md-sys-space-xs);
 
   /* T-0022: the activity strip's expands (step-mode rows' Details/Reasoning panels and the Raw output block).
-     The spacing, scrollbar and code-surface values are minted here and consumed in @scope below (the
-     SPEC-R11c spacing gate); the status-stream's own `--ui-status-stream-source-*` seams carry the type. */
+     The scrollbar and code-surface values are minted here, the two spacing values in the narration token block
+     just below (T-0173), all consumed in @scope (the SPEC-R11c spacing gate); the status-stream's own
+     `--ui-status-stream-source-*` seams carry the type. */
   --ui-conversation-strip-code-radius: calc(var(--ui-conversation-radius) / 2);
   --ui-conversation-strip-code-surface: var(--md-sys-color-neutral-surface, transparent);
   --ui-conversation-strip-scrollbar-width: thin;
