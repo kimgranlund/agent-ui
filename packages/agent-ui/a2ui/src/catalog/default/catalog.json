@@ -51,7 +51,7 @@
         "min": { "type": { "type": "string" }, "mapsTo": "min" },
         "max": { "type": { "type": "string" }, "mapsTo": "max" }
       },
-      "value": { "prop": "value", "event": "change" }
+      "value": { "prop": "value", "event": "change", "readProp": "a2uiFormValue" }
     },
 
     "Textarea": {

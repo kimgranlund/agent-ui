@@ -239,7 +239,7 @@ describe('default catalog factories — Button + TextField (catalog LLD-C5, SPEC
 
   it('TextField → ui-text-field is value-bound on the change event (the LLD-C8 back-fill, ADR-0019 cl.3)', () => {
     expect(textFieldFactory.tag).toBe('ui-text-field')
-    expect(textFieldFactory.value).toEqual({ prop: 'value', event: 'change' })
+    expect(textFieldFactory.value).toEqual({ prop: 'value', event: 'change', readProp: 'a2uiFormValue' })
     const el = textFieldFactory.create()
     textFieldFactory.applyProp(el, 'value', 'hello')
     textFieldFactory.applyProp(el, 'label', 'Name')

@@ -112,3 +112,37 @@ describe('a guest edit in a bound field keeps its text and reaches the data mode
     s.done()
   })
 })
+
+describe('a default-catalog TextField type=date publishes the ISO date, never the typed text (T-0175)', () => {
+  const dateSurface = () =>
+    mountSurface('agent-ui', { when: '2026-11-14' }, [
+      { id: 'root', component: 'Column', children: ['t', 'go'] },
+      { id: 't', component: 'TextField', label: 'Arrival', type: 'date', value: { path: '/when' } },
+      goButton,
+    ])
+
+  it('a typed locale date, a typed ISO date and a picker date all publish the ISO', async () => {
+    const s = await dateSurface()
+    await s.typeAndLeave(0, localeDate(2026, 12, 1))
+    expect(s.model()['when'], 'a typed locale date on its own commit').toBe('2026-12-01')
+    await whenFlushed()
+    expect(s.field(0).value, 'the field keeps the guest\'s text').toBe(localeDate(2026, 12, 1))
+    expect(s.model()['when']).toBe('2026-12-01')
+
+    s.field(0).querySelector<HTMLElement>('[data-part="calendar-button"]')!.click()
+    await whenFlushed()
+    s.field(0).querySelector<HTMLElement>('ui-calendar [role="gridcell"][data-date="2026-12-20"]')!.click()
+    await whenFlushed()
+    expect(s.model()['when'], 'the picker date').toBe('2026-12-20')
+    s.done()
+  })
+
+  it('an invalid typed date publishes nothing new and the field shows its invalid state', async () => {
+    const s = await dateSurface()
+    await s.typeAndLeave(0, 'not a date')
+    await whenFlushed()
+    expect(s.model()['when'], 'the data model keeps the last good date').toBe('2026-11-14')
+    expect((s.field(0) as unknown as ElementInternals & HTMLElement).matches(':state(user-invalid)')).toBe(true)
+    s.done()
+  })
+})
