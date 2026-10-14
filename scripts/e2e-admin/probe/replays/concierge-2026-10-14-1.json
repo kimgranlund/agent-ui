@@ -1,0 +1,42 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "concierge-2026-10-14-1",
+  "agent": "concierge",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "2026-10-14.jsonl:1 (catalog agent-ui--concierge)",
+  "steps": [
+    {
+      "say": "hello"
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"Welcome to the Grand Meridian. I'm your concierge, here to help with rooms, tables at Vela or the Quay Bar, spa and pool times, and local plans around Sorrento and the Bay of Naples. What can I arrange for you today?\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Welcome to the Grand Meridian. I'm your concierge, here to help with rooms, tables at Vela or the Quay Bar, spa and pool times, and local plans around Sorrento and the Bay of Naples. What can I arrange for you today?\",\"ask\":{\"surfaceId\":\"greet-1\"},\"target\":{\"surfaceId\":\"greet-1\"},\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"hello\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5\",\"prompt\":{\"limit\":142000,\"total\":46825,\"sections\":[{\"id\":\"grammar\",\"chars\":25575},{\"id\":\"components\",\"chars\":20265},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":840}],\"over\":false}}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"greet-1\",\"catalogId\":\"agent-ui--concierge\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"greet-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"prompt\",\"row\"]},{\"id\":\"prompt\",\"component\":\"Text\",\"text\":\"Where would you like to start?\",\"variant\":\"body\"},{\"id\":\"row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"c1\",\"c2\",\"c3\"]},{\"id\":\"c1\",\"component\":\"Card\",\"children\":[\"f1\"]},{\"id\":\"f1\",\"component\":\"CardFooter\",\"children\":[\"b1\"]},{\"id\":\"b1\",\"component\":\"Button\",\"label\":\"Book a room\",\"variant\":\"soft\",\"action\":{\"action\":\"starter\",\"context\":{\"intent\":\"Book a room\"}}},{\"id\":\"c2\",\"component\":\"Card\",\"children\":[\"f2\"]},{\"id\":\"f2\",\"component\":\"CardFooter\",\"children\":[\"b2\"]},{\"id\":\"b2\",\"component\":\"Button\",\"label\":\"Reserve a table\",\"variant\":\"soft\",\"action\":{\"action\":\"starter\",\"context\":{\"intent\":\"Reserve a table\"}}},{\"id\":\"c3\",\"component\":\"Card\",\"children\":[\"f3\"]},{\"id\":\"f3\",\"component\":\"CardFooter\",\"children\":[\"b3\"]},{\"id\":\"b3\",\"component\":\"Button\",\"label\":\"Plan a day out\",\"variant\":\"soft\",\"action\":{\"action\":\"starter\",\"context\":{\"intent\":\"Plan a day out\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"ask\":{\"surfaceId\":\"greet-1\"}}}\n\nWelcome to the Grand Meridian. I'm your concierge, here to help with rooms, tables at Vela or the Quay Bar, spa and pool times, and local plans around Sorrento and the Bay of Naples. What can I arrange for you today?",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "jsonl": "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"greet-1\",\"catalogId\":\"agent-ui--concierge\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"greet-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"prompt\",\"row\"]},{\"id\":\"prompt\",\"component\":\"Text\",\"text\":\"Where would you like to start?\",\"variant\":\"body\"},{\"id\":\"row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"c1\",\"c2\",\"c3\"]},{\"id\":\"c1\",\"component\":\"Card\",\"children\":[\"f1\"]},{\"id\":\"f1\",\"component\":\"CardFooter\",\"children\":[\"b1\"]},{\"id\":\"b1\",\"component\":\"Button\",\"label\":\"Book a room\",\"variant\":\"soft\",\"action\":{\"action\":\"starter\",\"context\":{\"intent\":\"Book a room\"}}},{\"id\":\"c2\",\"component\":\"Card\",\"children\":[\"f2\"]},{\"id\":\"f2\",\"component\":\"CardFooter\",\"children\":[\"b2\"]},{\"id\":\"b2\",\"component\":\"Button\",\"label\":\"Reserve a table\",\"variant\":\"soft\",\"action\":{\"action\":\"starter\",\"context\":{\"intent\":\"Reserve a table\"}}},{\"id\":\"c3\",\"component\":\"Card\",\"children\":[\"f3\"]},{\"id\":\"f3\",\"component\":\"CardFooter\",\"children\":[\"b3\"]},{\"id\":\"b3\",\"component\":\"Button\",\"label\":\"Plan a day out\",\"variant\":\"soft\",\"action\":{\"action\":\"starter\",\"context\":{\"intent\":\"Plan a day out\"}}}]}}",
+                "target": "greet-1"
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "hello"
+      }
+    }
+  ]
+}

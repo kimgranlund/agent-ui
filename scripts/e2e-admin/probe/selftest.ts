@@ -2,7 +2,7 @@
 //
 // `selftest` (fast, no browser, rides `check:scripts`): argument parsing, the fixture parser, every named
 // check over canned turn records, the trace-id resolver, and the offline replay of the three fixtures
-// through the real `produce()`: green-button is all green, seeded-json-prose fails `no-json-as-prose` (and
+// through the real `produce()`: green-button and recorded-haiku-hello (the live smoke's trace) are green, seeded-json-prose fails `no-json-as-prose` (and
 // `no-surface-loss`, since the surface the model wrote as prose never ships), seeded-dropped-surface fails
 // exactly `no-surface-loss`.
 //
@@ -23,6 +23,7 @@ export const PROBE_FIXTURES_DIR = fileURLToPath(new URL('./fixtures/', import.me
 /** Each selftest fixture and the exact set of checks it must fail (none for the green one). */
 export const SELFTEST_CASES: ReadonlyArray<{ fixture: string; fails: readonly string[] }> = [
   { fixture: 'green-button.json', fails: [] },
+  { fixture: 'recorded-haiku-hello.json', fails: [] },
   { fixture: 'seeded-json-prose.json', fails: ['no-json-as-prose', 'no-surface-loss'] },
   { fixture: 'seeded-dropped-surface.json', fails: ['no-surface-loss'] },
 ]
