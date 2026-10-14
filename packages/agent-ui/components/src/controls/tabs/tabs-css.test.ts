@@ -289,7 +289,8 @@ describe('tabs.css — [overflow=menu] (GH #586) — shell grid, part assignment
     const rule = (m as RegExpMatchArray)[1]
     expect(rule).toMatch(/inline-size:\s*var\(--ui-tabs-tab-height\)/)
     expect(rule).toMatch(/block-size:\s*var\(--ui-tabs-tab-height\)/)
-    expect(rule).toMatch(/color:\s*var\(--ui-tabs-ink\)/)
+    expect(rule).toMatch(/color:\s*var\(--ui-tabs-ink-hover\)/) // full ink at rest (T-0149)
+    expect(rule).toMatch(/background:\s*var\(--ui-tabs-trigger-bg\)/) // a resting shape, not stray dots (T-0149)
     expect(stylesBlock).toMatch(/:scope\[overflow='menu'\] > \[data-part='overflow'\] > \[data-part='trigger'\]:hover\s*\{\s*color:\s*var\(--ui-tabs-ink-hover\)/)
     expect(stylesBlock).toMatch(
       /:scope\[overflow='menu'\] > \[data-part='overflow'\] > \[data-part='trigger'\]:focus-visible\s*\{\s*outline:\s*var\(--md-sys-state-focus-ring-width\)\s+solid\s+var\(--md-sys-color-focus-ring\)/,

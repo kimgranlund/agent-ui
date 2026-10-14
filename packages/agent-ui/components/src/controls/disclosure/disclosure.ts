@@ -15,7 +15,7 @@
 //   <ui-disclosure>
 //     <details data-part="details">
 //       <summary data-part="summary" aria-labelledby="…the summary-text id…">
-//         <span data-part="chevron" aria-hidden="true"><svg>…caret-right (@agent-ui/icons)…</svg></span>
+//         <ui-glyph data-part="chevron" symbol="caret-right"></ui-glyph>
 //         <span data-part="summary-text" id="ui-disclosure-label-N">…the `summary` prop…</span>
 //         <!-- the host's `slot="summary"` children, adopted (ADR-0158 — the realized foreseen extension) -->
 //       </summary>
@@ -50,11 +50,11 @@
 //
 // No internals role, no host ARIA (SPEC-R17): the details/summary part IS the semantic element (ADR-0017
 // cl.5 lineage). No focus machinery: the summary is natively focusable. `render()` stays the inherited
-// no-op (the part is imperative DOM, not a template commit). `controls → dom + @agent-ui/icons` — the
-// allowed import direction (icons is a zero-dep sibling package, like select.ts's own caret glyph).
+// no-op (the part is imperative DOM, not a template commit). The chevron is a ui-glyph caret (T-0149: a
+// caret is a library mark in its glyph box, not pack art), composed from its sibling control folder.
 
 import { UIElement, type ReactiveProps } from '../../dom/index.ts'
-import { setIcon } from '@agent-ui/icons'
+import '../glyph/glyph.ts' // registers <ui-glyph>, the chevron's caret mark (ADR-0245 cl.5)
 // ADR-0173 (props generation): the descriptor (disclosure.md `attributes[]`) is the props ground truth —
 // edit the descriptor and `node scripts/generate-props.mjs disclosure` to regenerate; never hand-edit
 // disclosure.props.gen.ts. The fleet drift gate (descriptor/props-gen-driftwire.test.ts) keeps the two
@@ -286,10 +286,11 @@ export class UIDisclosureElement extends UIElement {
     const summary = document.createElement('summary')
     summary.setAttribute('data-part', 'summary')
 
-    const chevron = document.createElement('span')
+    // decorative (an empty-label ui-glyph is aria-hidden through its own internals): disclosure meaning rides the
+    // native summary/details, never the glyph (anatomy.md §5); rotated 90deg under [open] in disclosure.css
+    const chevron = document.createElement('ui-glyph')
     chevron.setAttribute('data-part', 'chevron')
-    chevron.setAttribute('aria-hidden', 'true') // decorative — disclosure meaning rides the native summary/details, never the glyph (anatomy.md §5)
-    setIcon(chevron, 'caret-right') // Phosphor, via @agent-ui/icons; rotated 90deg under [open] in disclosure.css
+    chevron.setAttribute('symbol', 'caret-right')
 
     const summaryText = document.createElement('span')
     summaryText.setAttribute('data-part', 'summary-text')

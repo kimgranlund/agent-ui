@@ -125,3 +125,22 @@ describe('ui-pagination -- ADR-0223 two postures (fill default / [inline] hug, b
     wrap.remove()
   })
 })
+
+describe('ui-pagination: stop ink (T-0149)', () => {
+  it('a non-current enabled stop reads the neutral text ink; the current page keeps a different (primary) ink', async () => {
+    const wrap = document.createElement('div')
+    wrap.innerHTML = '<ui-pagination page="4" pages="12"></ui-pagination><span style="color:var(--md-sys-color-neutral-on-surface)">x</span>'
+    document.body.append(wrap)
+    try {
+      await new Promise((r) => requestAnimationFrame(r))
+      const neutral = getComputedStyle(wrap.querySelector('span')!).color
+      const stop = wrap.querySelector('ui-button[data-part="page"]:not([aria-current])') as HTMLElement
+      const current = wrap.querySelector('ui-button[aria-current="page"]') as HTMLElement
+      expect(stop, 'anti-vacuous: a non-current stop renders').not.toBeNull()
+      expect(getComputedStyle(stop).color).toBe(neutral)
+      expect(getComputedStyle(current).color).not.toBe(neutral)
+    } finally {
+      wrap.remove()
+    }
+  })
+})

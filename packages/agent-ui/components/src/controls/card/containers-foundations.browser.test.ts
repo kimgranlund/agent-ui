@@ -182,12 +182,12 @@ describe('form-popover and disclosure: 4n control height, n inset, radius n, 2n 
     expect(px(cs(trigger).paddingLeft)).toBe(14)
   })
 
-  it('disclosure outside a region keeps today: summary 28, edge 14, chevron slot 14 (the font), glyph 14', () => {
+  it('disclosure outside a region keeps today: summary 28, edge 14, chevron slot 14 (the font), glyph 10.5 (ui-glyph legacy 0.75em box, T-0149)', () => {
     const w = mount(`<ui-disclosure summary="More"><p>x</p></ui-disclosure>`, false)
     expect(px(cs(one(w, '[data-part="summary"]')).height)).toBe(28)
     expect(px(cs(one(w, '[data-part="summary"]')).paddingLeft)).toBe(14)
     expect(px(cs(one(w, '[data-part="chevron"]')).width)).toBe(14)
-    expect(px(cs(one(w, '[data-part="chevron"] svg')).width)).toBe(14)
+    expect(px(cs(one(w, '[data-part="chevron"] svg')).width)).toBe(10.5) // a ui-glyph caret since T-0149: 0.75em of the slot, never the text size
   })
 })
 

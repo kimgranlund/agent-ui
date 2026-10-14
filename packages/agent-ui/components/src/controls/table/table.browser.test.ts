@@ -258,7 +258,7 @@ describe('ui-table — forced colors: row separators survive (SPEC-R15 AC1)', ()
   })
 })
 
-describe('ui-table — the scroll edge cue (T-0149)', () => {
+describe('ui-table: the scroll edge cue (T-0149)', () => {
   const WIDE_COLUMNS = JSON.stringify(
     ['Account', 'Plan', 'Region', 'Seats', 'MRR', 'Signed up'].map((label, i) => ({ key: `c${i}`, label, type: 'number' })),
   )

@@ -174,6 +174,23 @@
     background: transparent;
     border: var(--ui-timeline-item-connector-width) solid var(--ui-timeline-item-marker-ink);
   }
+  /* The status set shares one outer size (T-0149): the active and pending markers take the done and error
+     disc's diameter, so the step in progress is no longer the weakest mark in the rail and SHAPE alone carries
+     the state: a hollow ring (pending), a ring holding a dot (active), a disc with a knocked-out mark (done,
+     error). A plain unstatused dot keeps the glyph box. */
+  :scope:is([status='active'], [status='pending']) [data-part='marker']::before {
+    box-sizing: border-box;
+    inline-size: var(--ui-timeline-item-icon-size);
+    block-size: var(--ui-timeline-item-icon-size);
+  }
+  :scope[status='active'] [data-part='marker']::before {
+    border: var(--ui-timeline-item-connector-width) solid var(--ui-timeline-item-marker-ink);
+    background: radial-gradient(
+      circle closest-side,
+      var(--ui-timeline-item-marker-ink) 50%,
+      transparent calc(50% + 0.5px)
+    );
+  }
   /* 'active' — a consumer-opt-in pulse (SPEC-R4: "a pulse/spinner is a consumer-opt-in presentation
      hint"), realized as a box-shadow ping so the dot's OWN box never resizes (the centering law); static
      under reduced-motion (SPEC-R4 AC3). */

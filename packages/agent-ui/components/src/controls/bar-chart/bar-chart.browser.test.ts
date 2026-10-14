@@ -222,7 +222,7 @@ describe('ui-bar-chart: ADR-0245 derived foundations, dark launch', () => {
   })
 })
 
-describe('ui-bar-chart — the zero rule, the empty row and the dark track (T-0149)', () => {
+describe('ui-bar-chart: the zero rule, the empty row and the dark track (T-0149)', () => {
   const frameOf = (markup: string): HTMLElement => {
     const wrap = document.createElement('div')
     wrap.style.inlineSize = '480px'

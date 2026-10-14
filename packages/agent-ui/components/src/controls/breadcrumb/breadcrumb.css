@@ -38,12 +38,13 @@
 @import '../menu/menu.css';
 
 :where(ui-breadcrumb) {
-  --ui-breadcrumb-gap: var(--md-sys-space-xs); /* the inter-crumb/-separator rhythm — rides [density] free (ADR-0103) */
+  --ui-breadcrumb-gap: var(--md-sys-space-sm); /* the inter-crumb/-separator rhythm, rides [density] free (ADR-0103); one ladder step up from xs, where crumbs and slashes read as one token (T-0149) */
   --ui-breadcrumb-current-ink: var(--md-sys-color-neutral-on-surface-variant); /* the auto-stamped current-page crumb — a passive marker, not an intent */
   --ui-breadcrumb-separator-ink: var(--md-sys-color-neutral-on-surface-variant); /* the slotted-or-default separator glyph */
   --ui-breadcrumb-link-ink: var(--md-sys-color-neutral-on-surface-variant); /* an author <a> crumb, never the UA link blue */
   --ui-breadcrumb-link-ink-hover: var(--md-sys-color-neutral-on-surface);
-  --ui-breadcrumb-trigger-bg-hover: var(--md-sys-color-neutral-container-low); /* the overflow trigger's hover wash */
+  --ui-breadcrumb-trigger-bg: var(--md-sys-color-neutral-container-low); /* the overflow trigger's resting fill: a shape at rest (T-0149) */
+  --ui-breadcrumb-trigger-bg-hover: var(--md-sys-color-neutral-container); /* the overflow trigger's hover wash, one step up */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-breadcrumb) consumes ONLY --ui-breadcrumb-* ════════════════ */
@@ -121,8 +122,8 @@
     padding: 0;
     border: 0;
     border-radius: 50%; /* an icon-only control is a round square (Kim's ruling, T-0141) */
-    background: transparent;
-    color: var(--ui-breadcrumb-separator-ink);
+    background: var(--ui-breadcrumb-trigger-bg); /* transparent at rest, "Home / ··· /" read as a stray mark (T-0149) */
+    color: var(--ui-breadcrumb-current-ink);
     cursor: pointer;
   }
   :scope > [data-part='overflow'] > [data-part='trigger'] svg {

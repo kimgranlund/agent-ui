@@ -208,7 +208,7 @@ describe('ui-gauge — forced colors (ADR-0057/ADR-0228)', () => {
   })
 })
 
-describe('ui-gauge — the legend keys its rings, and no data still draws a track (T-0149)', () => {
+describe('ui-gauge: the legend keys its rings, and no data still draws a track (T-0149)', () => {
   it('in a wide box the legend starts within two group margins of the outer ring, not at the far edge', async () => {
     const wrap = document.createElement('div')
     wrap.style.inlineSize = '900px'

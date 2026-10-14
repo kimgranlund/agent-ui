@@ -43,7 +43,7 @@ parts:
   - name: next
     description: The composed `ui-button` (text "Next") that commits `page + 1`. `disabled` when `page >= pages`. `aria-label="Next page"`.
   - name: page
-    description: One composed `ui-button` per windowed page number (`computePageWindow`, pagination-model.ts — a fixed window, no configurable knob in v1) — text is the page number itself. The CURRENT page's button carries `aria-current="page"` and `variant="soft"`; every other page's button is `variant="ghost"` and commits that page on click.
+    description: One composed `ui-button` per windowed page number (`computePageWindow`, pagination-model.ts — a fixed window, no configurable knob in v1) — text is the page number itself. The CURRENT page's button carries `aria-current="page"` and `variant="soft"`; every other page's button is `variant="ghost"` and commits that page on click. A non-current, enabled stop (pages, Previous, Next) takes `--ui-pagination-stop-ink`, the neutral text ink, through the button's own `--ui-button-ink` seam, so the pager reads as a pager and not a run of links (T-0149).
   - name: ellipsis
     description: A non-interactive `<span data-part="ellipsis" aria-hidden="true">…</span>` marking a collapsed run of page numbers (never more than one per gap). Carries no click handler and is hidden from assistive technology — it conveys no operable information.
 

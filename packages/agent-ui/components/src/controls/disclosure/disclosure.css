@@ -21,6 +21,9 @@
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-disclosure) declares --ui-disclosure-* ════════════════ */
 
+/* uses: synced from disclosure.md by scripts/codemod-uses.mjs */
+@import '../glyph/glyph.css';
+
 :where(ui-disclosure) {
   /* Summary row — Pattern-class interactive row (geometry.md: "interactive rows take the control
      height"). Fixed at the md ramp step (ui-disclosure exposes no [size] axis — a fold header is not a
@@ -117,11 +120,6 @@
     block-size: var(--ui-disclosure-slot);
     color: currentColor;
     rotate: 0deg;
-  }
-  :scope [data-part='chevron'] svg {
-    display: block;
-    inline-size: var(--ui-disclosure-glyph);
-    block-size: var(--ui-disclosure-glyph);
   }
   /* GH #1102 — the hop from [open] to the chevron must be DIRECT-CHILD all the way: `@scope` has no
      lower boundary here, so with a DESCENDANT hop this rule (evaluated with an ANCESTOR fold as the

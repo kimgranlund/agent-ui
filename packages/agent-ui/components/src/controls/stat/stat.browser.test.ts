@@ -249,7 +249,7 @@ describe('ui-stat — forced colors (SPEC-R15 AC1)', () => {
   })
 })
 
-describe('ui-stat — sibling rings share one diameter and each figure fits its hole (T-0149)', () => {
+describe('ui-stat: sibling rings share one diameter and each figure fits its hole (T-0149)', () => {
   it('four ring tiles with figures of different widths paint equal rings, every value inside the hole', () => {
     const wrap = document.createElement('div')
     wrap.style.cssText = 'display:grid;grid-template-columns:repeat(2,minmax(0,1fr));inline-size:520px'

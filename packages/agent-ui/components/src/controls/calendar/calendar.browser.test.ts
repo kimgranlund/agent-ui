@@ -683,8 +683,7 @@ describe('ui-calendar — prev/next navigation buttons (both engines)', () => {
     expect(nextR.width,  `${server.browser}: next button collapsed to zero width`).toBeGreaterThan(0)
     expect(nextR.height, `${server.browser}: next button collapsed to zero height`).toBeGreaterThan(0)
 
-    // Phosphor-icon sweep: the INJECTED <svg> (setIcon(prev, 'caret-left') / setIcon(next, 'caret-right'))
-    // must itself paint at a real, non-collapsed size — not just its containing button (a container can
+    // Caret sweep: the ui-glyph's own <svg> (caret-left / caret-right, T-0149) must itself paint at a real, non-collapsed size — not just its containing button (a container can
     // pass every bounding-box check while its content renders at 0×0).
     const prevSvg = prev.querySelector('svg')!
     const nextSvg = next.querySelector('svg')!
@@ -1232,7 +1231,7 @@ describe('ui-calendar — ADR-0105 (b) wide: a stretched calendar fills the widt
     expect(wrapRect.width - gridRect.width, `${server.browser}: grid (${gridRect.width}) is not close to the column width (${wrapRect.width})`).toBeLessThan(40)
   })
 
-  it('in a column wider than the cap (600px), the grid stops at 7 tracks of 6n and the panel centres', async () => {
+  it('in a column wider than the cap (600px), the grid stops at 7 tracks of 6n and the panel keeps to the start edge (T-0149)', async () => {
     const { wrap, el } = mountStretched('<ui-calendar value="2026-07-15"></ui-calendar>')
     await el.updateComplete
 
@@ -1244,11 +1243,12 @@ describe('ui-calendar — ADR-0105 (b) wide: a stretched calendar fills the widt
     const cap = capOf(el)
     expect(cap, 'the 600px column is wider than the cap').toBeLessThan(wrapRect.width - 40)
     expect(Math.abs(gridRect.width - cap), `${server.browser}: grid ${gridRect.width} is not the content cap ${cap}`).toBeLessThanOrEqual(1)
-    // ADR-0223: the HOST still fills the column; only the panel stops and centres inside it.
+    // ADR-0223: the HOST still fills the column; only the panel stops, on the text edge (T-0149: centred, it sat
+    // about 175px in from every other block on the page).
     expect(Math.abs(hostRect.width - wrapRect.width), `${server.browser}: the host no longer fills the column`).toBeLessThanOrEqual(1)
     const start = panelRect.left - hostRect.left, end = hostRect.right - panelRect.right
-    expect(start, `${server.browser}: the capped panel is not inset from the host`).toBeGreaterThan(20)
-    expect(Math.abs(start - end), `${server.browser}: the capped panel is not centred (${start} vs ${end})`).toBeLessThanOrEqual(1)
+    expect(end, `${server.browser}: anti-vacuous: the capped panel leaves room at the end`).toBeGreaterThan(20)
+    expect(Math.abs(start), `${server.browser}: the capped panel is not on the start edge (${start})`).toBeLessThanOrEqual(1)
   })
 
   it('all seven tracks in a stretched grid are equal width', async () => {
@@ -1587,5 +1587,23 @@ describe('ui-calendar -- ADR-0223 two postures (fill default / [inline] hug, bot
     expect(hugged, 'the [inline] host did not HUG -- it still fills the container').toBeLessThan(containerWidth)
     expect(getComputedStyle(host).display, 'the [inline] host is not inline-level').toBe('inline-block')
     wrap.remove()
+  })
+})
+
+describe('ui-calendar: struck disabled days, glyph carets (T-0149)', () => {
+  it('a disabled in-month day is struck through; an adjacent-month day is not', async () => {
+    const { el } = mount('<ui-calendar value="2026-07-15" min="2026-07-05" max="2026-07-20"></ui-calendar>')
+    await new Promise((r) => requestAnimationFrame(r))
+    const disabled = el.querySelector<HTMLElement>('[role="gridcell"][aria-disabled="true"]:not([data-outside])')!
+    const outside = el.querySelector<HTMLElement>('[role="gridcell"][data-outside]:not([aria-disabled="true"])')
+    expect(disabled).not.toBeNull()
+    expect(getComputedStyle(disabled).textDecorationLine).toContain('line-through')
+    if (outside) expect(getComputedStyle(outside).textDecorationLine).not.toContain('line-through')
+  })
+
+  it('the prev/next carets are ui-glyph marks, not pack icons', () => {
+    const { el } = mount('<ui-calendar value="2026-07-15"></ui-calendar>')
+    expect(el.querySelector('[data-part="prev"] > ui-glyph')?.getAttribute('symbol')).toBe('caret-left')
+    expect(el.querySelector('[data-part="next"] > ui-glyph')?.getAttribute('symbol')).toBe('caret-right')
   })
 })

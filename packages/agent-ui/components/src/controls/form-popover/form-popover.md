@@ -11,7 +11,8 @@
 tag: ui-form-popover
 tier: pattern      # geometry composite: trigger = Control class; panel = Container/surface (select's trigger + popover's panel, by part)
 extends: UIElement # NOT form-associated — the panel's children each own their own value/validity; live-apply (F2) leaves no aggregate draft value on the host
-uses: []
+uses:
+  - ui-glyph
 # marginal: tracked at the integration slice; ≤ ~2 kB tier budget (plan §10)
 
 attributes:             # attributes-as-API — mirrors UIFormPopoverElement.props exactly
@@ -63,11 +64,11 @@ slots:
 
 parts:
   - name: trigger
-    description: The control-created `<button data-part="trigger" type="button">`. Control-class height from --ui-form-popover-height. Contains [data-part=label] (the visible `label` text) and [data-part=caret] (the caret-down Phosphor glyph, aria-hidden, sized = font per the §4.1 caret law). Always lays out as [label | caret] (1fr + auto grid). Gets aria-expanded (synced via scope-owned effect) and aria-controls pointing to the panel id — NO aria-haspopup (SPEC-R6 — a generic disclosure surface, not a menu/listbox/dialog).
+    description: The control-created `<button data-part="trigger" type="button">`. Control-class height from --ui-form-popover-height. Contains [data-part=label] (the visible `label` text) and [data-part=caret] (a decorative `ui-glyph` caret-down on its glyph box, T-0149). Always lays out as [label | caret] (1fr + auto grid). Gets aria-expanded (synced via scope-owned effect) and aria-controls pointing to the panel id — NO aria-haspopup (SPEC-R6 — a generic disclosure surface, not a menu/listbox/dialog).
   - name: label
     description: A `<span data-part="label">` inside the trigger. Shows the `label` prop's text, updated by a scope-owned reactive effect. Also the trigger's accessible name (content-only — no hidden-span concatenation, unlike select, since there is no separate selection-value text to preserve).
   - name: caret
-    description: A `<span data-part="caret" aria-hidden="true">` inside the trigger, injected with the Phosphor `caret-down` glyph via `setIcon` (@agent-ui/icons). An inline affordance sized = font (the §4.1 caret law). CSS centres it in an icon-sized cell by padding = ½(icon−glyph).
+    description: A `<ui-glyph data-part="caret" symbol="caret-down">` inside the trigger (T-0149, the icon versus glyph ruling; decorative, so aria-hidden through its own internals). It fills an icon-sized cell and insets its own glyph box max(8px, 2n - 2c) within it.
   - name: panel
     description: The control-created `<div data-part="panel" data-box tabindex="-1">`. Container/surface in the Popover API top layer when open. ALL author children are moved here at connect time. The overlay controller sets popover="auto" + position:fixed + inset; `[data-box]` (ADR-0046) provides the inner spacing + z-scope (ADR-0052) — this control's CSS adds bg/border/radius + a min/max inline-size floor+clamp only. tabindex="-1" allows fallback focus when the panel has no interactive descendants.
 
@@ -96,7 +97,7 @@ geometry:
     height: var(--ui-form-popover-height)     # Control class — 4n off --md-sys-height (ADR-0245 cl.3)
     font: var(--ui-form-popover-font)
     icon: var(--ui-form-popover-icon)         # the caret CELL is icon-wide
-    glyph: var(--ui-form-popover-glyph)       # = var(--md-sys-glyph-box) 2n - 2c under data-tier (the icon cell is the 2n slot), = font elsewhere (the §4.1 caret law)
+    glyph: ui-glyph's own glyph box          # max(8px, 2n - 2c) inset in the icon cell by ui-glyph itself (T-0149)
     radius: var(--ui-form-popover-radius)     # = var(--md-sys-radius) n under data-tier (ADR-0245 cl.3), --md-sys-shape-corner-base elsewhere
     minInlineSize: var(--ui-form-popover-min-inline-size)  # the 10ch CONTENT floor, ACTIVE IN THE [inline] HUG STATE ONLY (ADR-0223 §E ruling); the R3(a) squareness floor (min-inline-size: height) survives ALL states so an empty-label trigger stays hittable
   panel:

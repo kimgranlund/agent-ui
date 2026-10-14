@@ -116,7 +116,7 @@ geometry:
   panelPadding: var(--ui-tabs-panel-pad)    # the panel body padding — --md-sys-space
   surface: --ui-container-bg                 # the shell plane (ADR-0015 surface seam); transparent by default (ADR-0104) — a plane is asked-for via `elevation`/`brightness`
   fillPanelScrollbarSeam: --ui-tabs-panel-scrollbar-width  # ADR-0144 Q1 cl.3 — consumer-INHERITED, var()-fallback ONLY (never declared in the :where() token block); a composing surface hides the filled panel's scrollbar by setting this on ITSELF (the ui-split-pane `--ui-split-pane-scrollbar-width` shape)
-  overflowTrigger: var(--ui-tabs-tab-height)  # the overflow-menu trigger's square footprint (inline-size = block-size), a round square (radius h/2) with --ui-tabs-trigger-bg-hover and --ui-tabs-trigger-icon (the 2n icon box), T-0141
+  overflowTrigger: var(--ui-tabs-tab-height)  # the overflow-menu trigger's square footprint (inline-size = block-size), a round square (radius h/2) with a resting --ui-tabs-trigger-bg fill and full ink (T-0149), --ui-tabs-trigger-bg-hover and --ui-tabs-trigger-icon (the 2n icon box), T-0141
 
 forcedColors: A `@media (forced-colors: active)` block keeps the SELECTED-tab indicator + label visible (Highlight) and the strip divider visible (CanvasText); the shell surface drops to Canvas via the container.css role layer.
 ---

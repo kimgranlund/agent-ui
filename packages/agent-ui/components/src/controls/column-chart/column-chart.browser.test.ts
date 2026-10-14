@@ -332,7 +332,7 @@ describe('ui-column-chart — forced colors (ADR-0057/ADR-0228)', () => {
   })
 })
 
-describe('ui-column-chart — no data still draws the baseline (T-0149)', () => {
+describe('ui-column-chart: no data still draws the baseline (T-0149)', () => {
   it('data="[]" paints a visible baseline rule inside the box (NEGATIVE: never a blank box)', () => {
     const wrap = document.createElement('div')
     wrap.innerHTML = '<ui-column-chart data="[]"></ui-column-chart>'
