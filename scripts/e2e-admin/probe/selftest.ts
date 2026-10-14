@@ -172,6 +172,7 @@ export async function runBrowserSelftest(kit: DevServerKit, root: string, out: s
     console.log(`${verdict === undefined && skipped.length === 0 ? 'ok' : 'FAIL'} browser ${plan.name}${want.length ? ` (red on ${want.join(', ')} as expected)` : ''}`)
   })
   if (code === 2) return 2
+  if (code === 3) misses.push('teardown unverified (vite tree or port survived)')
   for (const m of misses) console.log(`FAIL ${m}`)
   console.log(`chat-probe selftest --browser: ${misses.length === 0 ? 'ok' : `${misses.length} failed`}`)
   return misses.length === 0 ? 0 : 1

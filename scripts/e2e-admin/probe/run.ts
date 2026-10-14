@@ -298,8 +298,9 @@ export function writeReport(report: ProbeReport, out: string): void {
   console.log(`[chat-probe] report: ${path.join(out, 'report.json')}`)
 }
 
-/** Boot, run the plans in order, tear down. Exit code: 0 every plan passed, 1 a check failed or teardown
- *  was unverified, 2 setup (vite, Chromium, the page, or no live model for a live plan). */
+/** Boot, run the plans in order, tear down. Exit code: 0 every plan passed, 1 a check failed, 2 setup
+ *  (vite, Chromium, the page, or no live model for a live plan), 3 teardown unverified (a red the entry
+ *  maps to 1; kept apart so the browser selftest, where 1 is expected, still reds on it). */
 export async function runProbes(
   plans: readonly ProbePlan[],
   kit: DevServerKit,
@@ -336,7 +337,7 @@ export async function runProbes(
     await stopVite(kit, vite)
   } catch (err) {
     console.log(`[chat-probe] teardown FAILED: ${err instanceof Error ? err.message : String(err)}`)
-    return code === 0 ? 1 : code
+    return code === 2 ? 2 : 3
   }
   return code
 }

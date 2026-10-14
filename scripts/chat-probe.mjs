@@ -15,7 +15,7 @@
  * `scripts/e2e-admin/probe/replays/`). `selftest` is the fast DOM-free leg (in `check:scripts`);
  * `selftest --browser` replays the selftest fixtures in the real page.
  *
- * Exit codes: 0 pass, 1 a check failed (or a selftest case missed), 2 usage or setup.
+ * Exit codes: 0 pass, 1 a check failed, a selftest case missed or teardown was unverified, 2 usage or setup.
  * The typed modules live in scripts/e2e-admin/probe/; `playwright` loads only on a browser path.
  */
 
@@ -97,12 +97,11 @@ const plan = {
   ...(fixture !== undefined ? { fixture } : {}),
 }
 const { fixtureFromReport, runProbes, writeReport } = await import('./e2e-admin/probe/run.ts')
-process.exit(
-  await runProbes([plan], KIT, ROOT, (report, p) => {
-    writeReport(report, p.out)
-    if (p.mode === 'live') {
-      writeFileSync(path.join(p.out, 'fixture.json'), `${JSON.stringify(scrubJson(fixtureFromReport(report), process.env), null, 2)}\n`)
-      console.log(`[chat-probe] keyless replay of this run: npm run chat:probe -- --replay ${path.relative(process.cwd(), path.join(p.out, 'fixture.json'))}`)
-    }
-  }),
-)
+const code = await runProbes([plan], KIT, ROOT, (report, p) => {
+  writeReport(report, p.out)
+  if (p.mode === 'live') {
+    writeFileSync(path.join(p.out, 'fixture.json'), `${JSON.stringify(scrubJson(fixtureFromReport(report), process.env), null, 2)}\n`)
+    console.log(`[chat-probe] keyless replay of this run: npm run chat:probe -- --replay ${path.relative(process.cwd(), path.join(p.out, 'fixture.json'))}`)
+  }
+})
+process.exit(code === 3 ? 1 : code) // 3: teardown unverified, red
