@@ -3,7 +3,7 @@
 > Derived from T-0136 (Kim, 2026-10-13: "we need some kind of linter strategy that ensures dogfooding standards
 > are adhered to"). The rules derive from ADR-0245 (one n), its Amendments 3 to 5 (pill radius, control rule,
 > pill fields and chips), T-0130 (the 400px column) and T-0135 (a date is a real input). On any conflict the
-> ADR wins and the rule is wrong.
+> source rule (the ADR clause, or the ticket and reference-doc rule it cites) wins and the lint rule is wrong.
 
 Every dogfood catch that can be measured becomes a gate, not a reminder. The four layers run from the source
 up to a human look; each layer catches what the one before cannot see.
@@ -18,7 +18,7 @@ up to a human look; each layer catches what the one before cannot see.
 ## The rules table
 
 `scripts/dogfood-rules.json` holds both lint layers: `render` (layer 1) and `compose` (layer 2). Each render rule
-names its ADR clause, its selector, what it measures and the expected value; every geometry value is computed
+names its source rule (in the `adr` field), its selector, what it measures and the expected value; every geometry value is computed
 from `resolve(tier, scale, size, density)` in `packages/agent-ui/shared/src/tokens/scale.mjs` at the element's
 register (the nearest `data-tier`, `data-scale`, `data-size` or `size`, and `data-density` on the element or an
 ancestor; product at scale sm at the root, widget at scale md on an A2UI surface). The contrast rules expect a fixed
@@ -80,7 +80,9 @@ Day one (T-0136) listed 9 render findings and 53 compose findings, every compose
 
 ## How to add a rule
 
-1. Add the row to `scripts/dogfood-rules.json` under `render` or `compose`, citing the ADR clause it enforces.
+1. Add the row to `scripts/dogfood-rules.json` under `render` or `compose`, citing in its `adr`
+   field the rule it enforces: the ticket and the reference-doc rule (`geometry.md`, this file), or an existing
+   ADR clause. ADRs are frozen (T-0164); the field keeps its name and takes free text.
 2. Write its check: a function in `CHECKS` of `site/pages/dogfood-render.browser.test.ts`, or a branch of
    `findingsIn` in `scripts/dogfood-compose.mjs`.
 3. Write its negative control: a `PLANTS` entry (a planted violation and a clean twin) in the render test, or

@@ -18,7 +18,7 @@ stands. Everything below §1a describes how the log ran before the freeze, so a 
 | ADR-0072 | 2026-08-30, clause 5 cap and session state machine dropped | Moot: never built, as the amendment itself records |
 | ADR-0170 | 2026-08-07, cl.6 read-only catalog mirror retired | Shipped: `agent-admin.test.ts` (GH #541) pins that the a2ui row carries no catalog mirror |
 
-**Stale clauses found after the freeze, and the doc that now states the rule:**
+**Stale clauses open at the freeze, and the doc that now states the rule:**
 
 | ADR clause | Current rule |
 |---|---|
