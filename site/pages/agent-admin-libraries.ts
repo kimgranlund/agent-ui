@@ -141,6 +141,15 @@ export const HOSPITALITY_SKILLS: readonly NewEntryInput[] = [
       'body rows, and at most two action Buttons (book, directions). Prose answers stay in chat; the card ' +
       'carries only the structured facts.',
   },
+  {
+    label: 'amenity-service-card',
+    description: 'hotel services and amenities to open: spa, dining, transfers, room service',
+    content:
+      'A list of bookable services (spa, dining, airport transfer) is one ServiceCard each, never a hand-built ' +
+      'Card: name the service, a one-line description, available bound to its data-model flag so the card ' +
+      'shows Unavailable when it is closed, and actionLabel the verb ("Book", "Reserve"). Group them in one ' +
+      'Column; a room or product to buy stays a ProductCard.',
+  },
 ]
 
 // ── the Commerce pack (T-0075, ADR-0243 cl.5): the Shopkeeper preset seeds from it; generic (no flavor) ──
