@@ -121,6 +121,14 @@
        Height is content-driven; the gap is the only spacing lever. */
   }
 
+  /* `align` is the cross-axis flex grammar only. Chromium and WebKit also map a bare `align` attribute to the
+     legacy presentational text-align (center, end), which every child inherits, so a row's stacked title and
+     meta zig-zagged down a list (T-0143). Any author rule outranks the hint, so the row restores the inherited
+     alignment. */
+  :scope[align] {
+    text-align: inherit;
+  }
+
   /* Container-query reflow (ADR-0016 cl.4) — intrinsic responsiveness with NO breakpoint props, PROP-GATED by
      `reflow` (ADR-0096). The row establishes NO query container of its own (ADR-0100 — an intrinsically-sized
      primitive can never safely be one; see container.css's banner), so this `@container` rule resolves against

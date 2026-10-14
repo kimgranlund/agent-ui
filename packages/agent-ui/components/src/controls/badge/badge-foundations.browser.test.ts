@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
 import '@agent-ui/components/foundation-styles.css'
 import './badge.css'
 import './badge.ts'
@@ -37,7 +38,7 @@ describe('ui-badge geometry (ADR-0245 cl.3)', () => {
     expect(px(cs.borderTopLeftRadius)).toBeCloseTo(root.n + root.c, 1) // h/2 of the 2n + 2c chip
     expect(px(cs.fontSize)).toBeCloseTo(root.type.fieldLabel, 1)
     const glyph = badge.querySelector('[data-part="glyph"]') as HTMLElement
-    expect(glyph.getBoundingClientRect().width).toBeCloseTo(root.glyph, 1)
+    expect(glyph.getBoundingClientRect().width).toBeCloseTo(glyphBox(root), 1)
   })
 
   it("under data-foundations=legacy: today's 18px compact box, pill radius and 8.75px pad", () => {

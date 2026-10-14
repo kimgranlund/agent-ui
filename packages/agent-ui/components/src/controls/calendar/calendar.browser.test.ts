@@ -1210,19 +1210,45 @@ describe('ui-calendar — ADR-0105 (a) floor: byte-identical to the pre-ADR-0105
 })
 
 describe('ui-calendar — ADR-0105 (b) wide: a stretched calendar fills the width it is given (both engines)', () => {
-  it('the grid fills the column width when the host is stretched (600px flex column, ADR-0030 chain)', async () => {
+  // ADR-0105 Amendment 2 (T-0143): the fill stops at the content cap, 7 tracks of 6n (1.5 × the 4n cell) plus
+  // the 6 gaps; past it the panel centres in the host. Below the cap the grid still fills its column.
+  const capOf = (el: UICalendarElement): number => {
+    const grid = el.querySelector<HTMLElement>('[data-part="grid"]')!
+    const cell = el.querySelector<HTMLElement>('[role="gridcell"]')!.getBoundingClientRect().height // rows never inflate: block-size is the cell size
+    const gap  = parseFloat(getComputedStyle(grid).columnGap)
+    expect(cell, 'anti-vacuous: the cell size resolved').toBeGreaterThan(0)
+    return 7 * 1.5 * cell + 6 * gap
+  }
+
+  it('the grid fills a column narrower than the content cap (240px flex column, ADR-0030 chain)', async () => {
+    const { wrap, el } = mountStretched('<ui-calendar value="2026-07-15"></ui-calendar>', 240)
+    await el.updateComplete
+
+    const gridRect = el.querySelector<HTMLElement>('[data-part="grid"]')!.getBoundingClientRect()
+    const wrapRect = wrap.getBoundingClientRect()
+    expect(capOf(el), 'the 240px column is narrower than the cap').toBeGreaterThan(wrapRect.width)
+    // Past the compact floor (7 × 24 + gaps ≈ 180px at the root md) and close to the column's own width.
+    expect(gridRect.width, `${server.browser}: grid did not grow past the compact floor (${gridRect.width}px)`).toBeGreaterThan(200)
+    expect(wrapRect.width - gridRect.width, `${server.browser}: grid (${gridRect.width}) is not close to the column width (${wrapRect.width})`).toBeLessThan(40)
+  })
+
+  it('in a column wider than the cap (600px), the grid stops at 7 tracks of 6n and the panel centres', async () => {
     const { wrap, el } = mountStretched('<ui-calendar value="2026-07-15"></ui-calendar>')
     await el.updateComplete
 
-    const grid     = el.querySelector<HTMLElement>('[data-part="grid"]')!
-    const gridRect = grid.getBoundingClientRect()
-    const wrapRect = wrap.getBoundingClientRect()
-
-    // Well past the compact floor (7 × ~32px + gaps ≈ 230px @ default md) — proves the grid actually
-    // spent the given width rather than sitting at its old fixed size in a wide, wasted panel.
-    expect(gridRect.width, `${server.browser}: grid did not grow past the compact floor in a 600px stretched column (${gridRect.width}px)`).toBeGreaterThan(300)
-    // Close to the column's own width (panel/box insets account for the small remainder).
-    expect(wrapRect.width - gridRect.width, `${server.browser}: grid (${gridRect.width}) is not close to the stretched column width (${wrapRect.width})`).toBeLessThan(40)
+    const grid      = el.querySelector<HTMLElement>('[data-part="grid"]')!
+    const gridRect  = grid.getBoundingClientRect()
+    const panelRect = el.querySelector<HTMLElement>('[data-part="panel"]')!.getBoundingClientRect()
+    const hostRect  = el.getBoundingClientRect()
+    const wrapRect  = wrap.getBoundingClientRect()
+    const cap = capOf(el)
+    expect(cap, 'the 600px column is wider than the cap').toBeLessThan(wrapRect.width - 40)
+    expect(Math.abs(gridRect.width - cap), `${server.browser}: grid ${gridRect.width} is not the content cap ${cap}`).toBeLessThanOrEqual(1)
+    // ADR-0223: the HOST still fills the column; only the panel stops and centres inside it.
+    expect(Math.abs(hostRect.width - wrapRect.width), `${server.browser}: the host no longer fills the column`).toBeLessThanOrEqual(1)
+    const start = panelRect.left - hostRect.left, end = hostRect.right - panelRect.right
+    expect(start, `${server.browser}: the capped panel is not inset from the host`).toBeGreaterThan(20)
+    expect(Math.abs(start - end), `${server.browser}: the capped panel is not centred (${start} vs ${end})`).toBeLessThanOrEqual(1)
   })
 
   it('all seven tracks in a stretched grid are equal width', async () => {

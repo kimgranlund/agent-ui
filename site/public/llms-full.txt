@@ -632,6 +632,12 @@ changes; only inline-size adapts, so a wide calendar is wider, never a taller mo
 who wants the OLD always-compact rendering even inside a stretched context keeps that one CSS line:
 `max-inline-size: max-content` on the host (ADR-0102's override escape).
 
+The fill has a ceiling, the **content cap** `--ui-calendar-max-inline-size` (ADR-0105 Amendment 2): seven
+tracks of `6n` (1.5 × the `4n` cell) plus the six gaps. In a column wider than that, the tracks stop at `6n`,
+the panel stops at the cap plus its inset and border, and it centres in the host, which still fills its
+container (ADR-0223). At page width the chevrons stay a month's width apart instead of the page's. Narrower
+than the cap, nothing changes.
+
 ## Cell paint — two layers, so circles stay circles at any width (ADR-0105)
 
 Each day cell is still the single `<button role="gridcell">` `calendar.ts` has always created — CSS
@@ -2803,11 +2809,12 @@ the drawing; `dot` and `more` are filled.
 
 ## Sizing
 
-The host is the shared **icon slot**: `2n` wide and tall, inset `c` on each side, so the mark box is
-`2n - 2c` and an icon and a glyph in neighbouring slots share the slot box and the centre line. The slot reads
-the derived foundation tokens (`--md-sys-icon-box`, `--md-sys-c`, `--md-sys-glyph-stroke`, ADR-0245), which
-the library root declares, so a glyph keeps its own glyph box everywhere: at the root (product, scale sm) the
-mark is 6 / 8 / 10 px for sizes sm / md / lg with a 1.5px stroke. This is the line between a glyph and an icon
+The host is the shared **icon slot**: `2n` wide and tall, with the glyph box `max(8px, 2n - 2c)` centred in it
+(the inset is `c` on each side wherever `2n - 2c` clears the 8px floor), so an icon and a glyph in neighbouring
+slots share the slot box and the centre line. The slot reads the derived foundation tokens
+(`--md-sys-icon-box`, `--md-sys-glyph-box`, `--md-sys-glyph-stroke`, ADR-0245), which the library root
+declares, so a glyph keeps its own glyph box everywhere: at the root (product, scale sm) the mark is
+8 / 8 / 10 px for sizes sm / md / lg with a 1.5px stroke (the 8px floor holds sm, Amendment 7). This is the line between a glyph and an icon
 (ADR-0245 Amendment 6): a standalone `ui-icon` follows the surrounding text (`1em`), a glyph never does. Under
 the `data-foundations="legacy"` opt-out the slot is `1em` with a `0.125em` inset. Override `--ui-glyph-slot`,
 `--ui-glyph-inset` or `--ui-glyph-stroke` on the host to resize one mark.
@@ -4595,7 +4602,9 @@ and `ui-column` for a vertical one — there is no `direction` prop.
 `ui-row` consumes the shared **flex grammar** (the `flexProps` set, identical across `ui-row` / `ui-column` /
 `ui-list` / `ui-grid`):
 
-- **`align`** (cross-axis) → `align-items`: `start` (default) · `center` · `end` · `stretch` · `baseline`.
+- **`align`** (cross-axis) → `align-items`: `start` (default) · `center` · `end` · `stretch` · `baseline`. It never
+  aligns text: the engines' legacy presentational `text-align` for a bare `align` attribute is reset to the inherited
+  value, so stacked children keep their start edge (T-0143).
 - **`justify`** (main-axis distribution) → `justify-content`: `start` (default) · `center` · `end` ·
   `between` · `around` · `evenly` (the last three map to `space-between` / `space-around` / `space-evenly`).
 - **`gap`** → a step on the `--md-sys-space` layout-spacing ladder: `none` (default) · `xs` · `sm` · `md` · `lg` ·
@@ -6769,15 +6778,17 @@ all repoint together across five states:
 
 | State | Background | Border | Text ink |
 |---|---|---|---|
-| default (empty, idle) | `neutral-container-low` | `neutral-outline` | `neutral` |
-| filled (has a value, idle) | `neutral-container-low` | `neutral-outline` | `neutral-on-surface-variant` |
-| hover | `neutral-container` | `neutral-outline` | `neutral-on-surface-variant` |
+| default (empty, idle) | `neutral-container-low` | `neutral-field-outline` | `neutral` |
+| filled (has a value, idle) | `neutral-container-low` | `neutral-field-outline` | `neutral-on-surface-variant` |
+| hover | `neutral-container` | `neutral-field-outline` | `neutral-on-surface-variant` |
 | focus | `neutral-container-low` | `transparent` (the ring is the indicator) | `neutral-on-surface` |
 | disabled | `neutral-container-low` | `transparent` | `neutral-low` |
 
 "Filled" is `[data-empty]`'s absence on the editor part — the same emptiness signal the placeholder
 already keys off. The `user-invalid` danger border is UNCHANGED/orthogonal — it layers on top of
-whichever bg/ink the table above already picked. `disabled` is a role **repoint**, **not** opacity.
+whichever bg/ink the table above already picked. `disabled` is a role **repoint**, **not** opacity. The resting
+border `neutral-field-outline` is an opaque role held at 3:1 or more against every page plane in both themes (SC
+1.4.11, ADR-0245 Amendment 7), shared by select, combo-box, otp-field and textarea.
 Motion is gated behind `:state(ready)` and zeroed under reduced-motion (the `interaction-states.md`
 motion standard).
 
@@ -6884,7 +6895,9 @@ hittable; layout owns width above the floor.
 
 The border-channel state ladder — idle → `:hover` → focus (transparent border + the shared outline ring) →
 the `user-invalid` danger border — and `disabled` (a role repoint, not opacity) are reused verbatim from
-`ui-text-field` (ADR-0014 cl.2c / dev#b / dev#c) — the field-frame pattern is shape-independent. A disabled
+`ui-text-field` (ADR-0014 cl.2c / dev#b / dev#c); the field-frame pattern is shape-independent. The idle,
+filled and hover border is the opaque `neutral-field-outline` role, at least 3:1 against the page in both
+themes (SC 1.4.11, ADR-0245 Amendment 7); focus steps it to transparent and disabled drops it. A disabled
 textarea is not user-resizable (`resize: none`).
 
 ## Validity & accessibility

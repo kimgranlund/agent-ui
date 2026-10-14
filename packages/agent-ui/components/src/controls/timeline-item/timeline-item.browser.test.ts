@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
 import { server, cdp } from 'vitest/browser'
 
 // timeline-family.lld.md §5 · SPEC-R4/R13/R14/R15 — the cross-engine geometry + whole-shape + signifier +
@@ -52,7 +53,7 @@ describe('ui-timeline-item cross-engine geometry smoke — the marker-system exp
     for (const size of ['sm', 'md', 'lg'] as const) {
       item.setAttribute('size', size)
       const r = resolve('product', 'sm', size)
-      const [mb, dot] = [r.icon, r.glyph]
+      const [mb, dot] = [r.icon, glyphBox(r)]
       const [cw, gut, rg] = LITERALS[size]!
       expect(markerBox(item), `size=${size} marker-box`).toBeCloseTo(mb, 0)
       expect(dotSize(item), `size=${size} dot-size`).toBeCloseTo(dot, 0)

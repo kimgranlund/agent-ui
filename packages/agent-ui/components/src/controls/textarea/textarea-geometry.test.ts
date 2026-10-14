@@ -153,8 +153,8 @@ describe('textarea.css — the filled/container state law (TKT-0062)', () => {
     expect(b).toMatch(/--ui-textarea-bg-filled:\s*var\(--md-sys-color-neutral-container\)/) // filled
     expect(b).toMatch(/--ui-textarea-bg-hover:\s*var\(--md-sys-color-neutral-container\)/) // hover
     expect(b).toMatch(/--ui-textarea-bg-focus:\s*var\(--md-sys-color-neutral-container-low\)/) // focus
-    expect(b).toMatch(/--ui-textarea-border:\s*transparent/) // default
-    expect(b).toMatch(/--ui-textarea-border-hover:\s*var\(--md-sys-color-neutral-outline-variant\)/) // hover — the ONE visible-border state
+    expect(b).toMatch(/--ui-textarea-border:\s*var\(--md-sys-color-neutral-field-outline\)/) // default: the 3:1 resting boundary (ADR-0245 Amendment 7)
+    expect(b).toMatch(/--ui-textarea-border-hover:\s*var\(--md-sys-color-neutral-field-outline\)/) // hover; never lighter than idle
     expect(b).toMatch(/--ui-textarea-border-focus:\s*transparent/) // focus = transparent (the outline ring is the sole indicator)
     expect(b).toMatch(/--ui-textarea-ink:\s*var\(--md-sys-color-neutral\)/) // default
     expect(b).toMatch(/--ui-textarea-ink-filled:\s*var\(--md-sys-color-neutral-on-surface-variant\)/) // filled

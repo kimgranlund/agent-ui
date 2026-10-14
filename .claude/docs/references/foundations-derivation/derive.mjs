@@ -3,13 +3,15 @@
 // cut shipped (sha256 eca32879...); section 11 on (Amendment 3) runs on scale.mjs, the byte copy of the skill's
 // v2 ~/.claude/skills/mathematical-design-system/scale.mjs (sha256 3c319761...), and compares v2 against v1.
 // Section 18 (Amendment 4, T-0122) runs on the same v2 copy and gives the px the control rule moves per control;
-// section 19 (Amendment 5, T-0134) gives the radii the pill moves.
+// section 19 (Amendment 5, T-0134) gives the radii the pill moves; section 20 (Amendment 7, T-0143) the glyph floor,
+// which lives in agent-ui's generator and glyphBox() (scripts/lib/foundations-rules.mjs), never in scale.mjs.
 // v2 renamed keys: inset and radius are control.margin and control.radius, layout is page, the kicker roles are
 // sectionLabel and groupLabel, and the component sizes sit under parts.
 // "Today" values are read off the shipped stylesheets (file:line in the ADR appendix).
 // Run: node .claude/docs/references/foundations-derivation/derive.mjs > .claude/docs/references/foundations-derivation/derive.out.md
 import { resolve, check, CFG } from './scale-v1.mjs';
 import { resolve as resolve2, check as check2, CFG as CFG2 } from './scale.mjs';
+import { GLYPH_FLOOR, glyphBox } from '../../../../scripts/lib/foundations-rules.mjs';
 
 const SZ = ['sm', 'md', 'lg'];
 const ROOT = ['product', 'sm']; // the proposed library root (clause 2)
@@ -317,5 +319,17 @@ p('|---|---|---|---|');
   row('checkbox', 'radius', 'ceil(n/2) → ceil(n/2)', v2.map((r) => r.parts.checkboxRadius), v2.map((r) => r.parts.checkboxRadius));
 }
 p(`- New tokens: \`--md-sys-control-radius\` (2n: ${v2.map((r) => r.h / 2).join(' / ')}) and \`--md-sys-checkbox-radius\` (ceil(n/2): ${v2.map((r) => r.parts.checkboxRadius).join(' / ')}); \`--md-sys-chip-radius\` becomes n + c (${v2.map((r) => r.n + r.c).join(' / ')}) at the root sm · md · lg.`);
+
+// ---- Amendment 7: the glyph floor (T-0143) -----------------------------------------------------------------
+p('');
+p(`## 20. Amendment 7: the glyph box floors at ${GLYPH_FLOOR}px, max(${GLYPH_FLOOR}, 2n - 2c), sm · md · lg`);
+p('scale.mjs is unchanged (P15 proposes the floor to the skill); the generator emits it and `glyphBox()` mirrors it, so every control that reads `--md-sys-glyph-box`, and `ui-glyph`, follows.');
+p('| register | rule, before → after | sm · md · lg |');
+p('|---|---|---|');
+{
+  const reg = (tier, scale) => SZ.map((z) => resolve2(tier, scale, z));
+  p(`| root product/sm | 2n - 2c → max(${GLYPH_FLOOR}, 2n - 2c) | ${cmp(reg('product', 'sm').map((r) => r.glyph), reg('product', 'sm').map(glyphBox))} |`);
+  p(`| A2UI canvas widget/md | 2n - 2c → max(${GLYPH_FLOOR}, 2n - 2c) | ${cmp(reg('widget', 'md').map((r) => r.glyph), reg('widget', 'md').map(glyphBox))} |`);
+}
 
 console.log(out.join('\n'));

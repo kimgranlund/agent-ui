@@ -59,9 +59,9 @@
      value, idle) / hover / focus / disabled. user-invalid is UNCHANGED — its own border-only danger
      channel (below) layers on top of whichever bg/ink this table already picked; it never touches bg.
        state    | bg              | border           | ink
-       default  | container-low   | outline           | neutral
-       filled   | container-low   | outline           | on-surface-variant
-       hover    | container       | outline           | on-surface-variant
+       default  | container-low   | field-outline     | neutral
+       filled   | container-low   | field-outline     | on-surface-variant
+       hover    | container       | field-outline     | on-surface-variant
        focus    | container-low   | transparent (ring)| on-surface
        disabled | container-low   | transparent       | neutral-low
      "filled" reads `[data-part='editor']:not([data-empty])` (the SAME emptiness signal the placeholder
@@ -71,8 +71,8 @@
   --ui-text-field-bg-filled: var(--md-sys-color-neutral-container-low); /* one idle fill, empty or filled: data never picks the tone (T-0140); value and placeholder separate by ink */
   --ui-text-field-bg-hover: var(--md-sys-color-neutral-container);
   --ui-text-field-bg-focus: var(--md-sys-color-neutral-container-low);
-  --ui-text-field-border: var(--md-sys-color-neutral-outline); /* default; the idle boundary, so a field reads as a field on any surface (T-0140); the ring stays the focus indicator */
-  --ui-text-field-border-hover: var(--md-sys-color-neutral-outline); /* :hover; never lighter than idle; the bg step carries hover */
+  --ui-text-field-border: var(--md-sys-color-neutral-field-outline); /* default; the idle boundary, at least 3:1 against the page in both themes (SC 1.4.11, ADR-0245 Amendment 7), so a field reads as a field on any surface; the ring stays the focus indicator */
+  --ui-text-field-border-hover: var(--md-sys-color-neutral-field-outline); /* :hover; never lighter than idle; the bg step carries hover */
   --ui-text-field-border-focus: transparent; /* :focus-within — TRANSPARENT: the shared outline ring is the SOLE focus indicator (a --md-sys-color-focus-ring border-color step doubled with the ring into a visible double border — a defect found on the live site; ADR-0014 dev#1). Transparent holds the box geometry (the 1px frame still occupies its track — no layout shift). */
   --ui-text-field-border-invalid: var(--md-sys-color-danger); /* :state(user-invalid) — UNCHANGED, orthogonal to the table above */
   --ui-text-field-border-invalid-hover: var(--md-sys-color-danger-high); /* user-invalid + :hover — UNCHANGED */

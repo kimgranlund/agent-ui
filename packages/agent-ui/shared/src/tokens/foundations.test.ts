@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { CFG, check, resolve, type Resolved } from './scale.mjs'
 import { BRIDGE_REL, LEGACY, OUT_REL, ROOT_DEFAULT, renderBridgeCss, renderFoundationsCss } from '../../../../../scripts/generate-foundations.mjs'
+import { GLYPH_FLOOR, glyphBox } from '../../../../../scripts/lib/foundations-rules.mjs'
 
 // ADR-0245 clause 1, 10a and 10c: the config gate, the generated-file drift gate, the cut and the bridge.
 // The 36-cell computed leg (tokens equal resolve() in both engines) is foundations.browser.test.ts.
@@ -57,6 +58,18 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
     for (const r of rungs) expect(r.parts.radioDot, `n ${r.n}`).toBe(r.glyph - 2)
     expect(shrinks((r) => r.parts.radioDot)).toBe(false)
     expect(shrinks((r) => r.icon - 4 * r.c)).toBe(true) // the control: 8 to 6 at n 8 to 9
+  })
+
+  it('the glyph box token is glyphBox(r) = max(8, 2n - 2c): the local floor (Amendment 7) binds below n 6 only, never in scale.mjs', () => {
+    const steps = ['sm', 'md', 'lg']
+    const rungs = Object.keys(CFG.tiers).flatMap((t) => steps.flatMap((s) => steps.map((z) => resolve(t, s, z))))
+    expect(GLYPH_FLOOR).toBe(8)
+    for (const r of rungs) expect(r.glyph, `n ${r.n}: scale.mjs keeps the skill's 2n - 2c`).toBe(2 * r.n - 2 * r.c)
+    for (const r of rungs) expect(glyphBox(r), `n ${r.n}`).toBe(Math.max(GLYPH_FLOOR, 2 * r.n - 2 * r.c))
+    expect(rungs.some((r) => r.n === 5 && glyphBox(r) === 8 && r.glyph === 6), 'anti-vacuous: an n 5 rung, where the floor binds').toBe(true)
+    expect(glyphBox(resolve('product', 'sm', 'md'))).toBe(8) // md and lg unchanged at the root
+    expect(glyphBox(resolve('product', 'sm', 'lg'))).toBe(10)
+    expect(committed).toContain(`--md-sys-glyph-box: max(${GLYPH_FLOOR}px, calc(var(--md-sys-n) * 2px - 2 * var(--md-sys-c)));`)
   })
 })
 

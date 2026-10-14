@@ -26,8 +26,8 @@
   --ui-code-editor-bg-filled: var(--md-sys-color-neutral-container);
   --ui-code-editor-bg-hover: var(--md-sys-color-neutral-container);
   --ui-code-editor-bg-focus: var(--md-sys-color-neutral-container-low);
-  --ui-code-editor-border: transparent;
-  --ui-code-editor-border-hover: var(--md-sys-color-neutral-outline-variant);
+  --ui-code-editor-border: var(--md-sys-color-neutral-field-outline); /* the resting boundary, at least 3:1 against the page (SC 1.4.11, ADR-0245 Amendment 7), the ui-textarea border */
+  --ui-code-editor-border-hover: var(--md-sys-color-neutral-field-outline); /* never lighter than idle; the bg step carries hover */
   --ui-code-editor-border-focus: transparent; /* the shared outline ring is the SOLE focus indicator */
   --ui-code-editor-border-invalid: var(--md-sys-color-danger);
   --ui-code-editor-border-invalid-hover: var(--md-sys-color-danger-high);

@@ -9,7 +9,7 @@
 // contract on the real control — never a mock.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
-import { applyDemoWidth, el, exampleSection, scrollX } from '../lib/specimens.ts'
+import { applyDemoWidth, el, exampleSection, scrollTableBody } from '../lib/specimens.ts'
 import type { UITableElement } from '@agent-ui/components/controls/table'
 import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 
@@ -146,7 +146,7 @@ const toolbar = el('div', { style: 'display:flex; gap:1rem; align-items:flex-end
 const readout = el('p', { style: 'display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;' }, [
   text('selected = '), selectedOut, clearSelection,
 ])
-const reportBlock = el('div', {}, [toolbar, scrollX(report, '40rem'), readout])
+const reportBlock = el('div', {}, [toolbar, scrollTableBody(report, '40rem'), readout])
 const reportNote = el('p', {}, [
   text('Every capability composes through ONE pipeline: rows → '), code('filter'), text(' → '), code('search'), text(' → '),
   code('sort'), text(' → page window → the stamped '), code('<tbody>'), text('. Click a '), strong('column header'),
@@ -198,6 +198,6 @@ const baselineNote = el('p', {}, [
 content.append(
   exampleSection('The full-capability report', reportBlock, reportNote),
   exampleSection('select / change event log', log),
-  exampleSection('Single selection', scrollX(single, '40rem'), singleNote),
+  exampleSection('Single selection', scrollTableBody(single, '40rem'), singleNote),
   exampleSection('Default-off baseline', baseline, baselineNote),
 )

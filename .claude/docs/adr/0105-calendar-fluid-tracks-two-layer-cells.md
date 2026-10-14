@@ -155,3 +155,25 @@ across** the gutter, plus an updated floor-width assertion (the old test had enc
 One recorded side-note: at the edge of the grid (a range endpoint in the first/last column), the overshoot
 bleeds one gap's width into the panel inset — visually inert (the wash is the same subtle range tint over
 the panel padding, no neighbour to collide with), accepted as-is.
+
+## Amendment 2 (2026-10-13, T-0143): the fill stops at a content cap and the panel centres
+
+> Append-only; this amends Decision clause 1's "the grid fills the width it is given" for a host wider than a
+> month needs. The fluid tracks, the two-layer cell and both amendments' half-wash geometry stand unedited above.
+
+Kim's ruling, 2026-10-13, from the T-0137 dogfood review: at page width the seven `1fr` tracks stretched to
+about 97px each around 24px day circles, the month chevrons sat about 600px apart, and the picker read as a
+sparse spreadsheet, not a date picker.
+
+1. **The content cap.** `--ui-calendar-max-inline-size` is seven tracks of `6n` (1.5 × the `4n` cell,
+   `--ui-calendar-cell-size`) plus the six `--ui-calendar-gap` gutters: 264px at the root md (n 6, gap 2).
+2. **Past the cap the panel centres.** The panel takes `max-inline-size` = the cap plus the box inset on each
+   side and its 1px border, with `margin-inline: auto`. The host still fills its container (ADR-0223 clause
+   1), so only the visible panel stops growing; the tracks inside it stop at `6n`.
+3. **Narrow layouts are unchanged.** Below the cap the panel fills the host and the tracks share the surplus
+   exactly as clause 1 says; shrink-wrapped and `[inline]` the grid stays at the floor.
+
+Acceptance: `calendar.browser.test.ts` leg (b) now asserts the grid fills a 240px column (narrower than the
+cap) and, in a 600px column, that the grid width equals the cap, the host still fills the column, and the panel
+is centred within 1px. The `calendar-wide-stretched-range` and `calendar-fill-default` goldens move; the floor
+and `[inline]` goldens do not. The descriptor (`calendar.md`) names the cap.

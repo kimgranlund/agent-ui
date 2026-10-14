@@ -46,7 +46,7 @@ With `c = ceil(n/4)` the derived quantities, all whole pixels (check M7), are:
 | radius | `n` (`corner-shape: squircle`) for a surface; the pill `2n` (circular) for every single-line control and a textarea, Amendment 5 | `--md-sys-radius`, `--md-sys-control-radius` |
 | chip and checkbox radius | chip pill `n + c` (h/2 of the `2n + 2c` chip); checkbox `ceil(n/2)` | `--md-sys-chip-radius`, `--md-sys-checkbox-radius` |
 | icon box | `2n` | `--md-sys-icon-box` |
-| glyph box | `2n - 2c` | `--md-sys-glyph-box` |
+| glyph box | `max(8px, 2n - 2c)` (ADR-0245 Amendment 7) | `--md-sys-glyph-box` |
 | glyph stroke | `max(1.5px, c/2)` | `--md-sys-glyph-stroke` |
 | type | linear `n + 6` for controls, `pow` for display, heading and subhead | `--md-sys-type-*` |
 | type | linear roles never below 9px; the section label `round(body · 9/8)` and the group label `n/2 + 6.5` | `--md-sys-type-section-label`, `--md-sys-type-group-label` |
@@ -134,8 +134,8 @@ column sets `data-tier="content"`. `[scale]` survives one release as a bridge al
 
 A functional mark (a caret, check, plus, minus, dot, x, ellipsis, warning, info) is a `ui-glyph`, drawn from
 one path table in `components` as a stroke path in a fixed viewBox with `vector-effect: non-scaling-stroke`,
-so the stroke is the token `--md-sys-glyph-stroke`. Its box is `2n - 2c` (6 / 8 / 10 at the root's sm / md /
-lg), always inside a `2n` slot, so an icon and a glyph in neighbouring slots share the slot box and the centre
+so the stroke is the token `--md-sys-glyph-stroke`. Its box is `max(8px, 2n - 2c)` (8 / 8 / 10 at the root's sm /
+md / lg; the 8px floor holds sm, ADR-0245 Amendment 7), always inside a `2n` slot, so an icon and a glyph in neighbouring slots share the slot box and the centre
 line. A caret is no longer drawn at the control font. A control with a child slot renders `<ui-glyph>`; a
 control that drew on a pseudo-element either gains a `ui-glyph` child or reads a generated mask token from the
 same table, and never re-draws a mark by hand.

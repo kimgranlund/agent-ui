@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
 import { server, cdp } from 'vitest/browser'
 
 // Phase-1 s13 — the CROSS-ENGINE geometry + forced-colors smoke (the gold geometry PROOF; goals §G5 DoD).
@@ -187,7 +188,7 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
     // is STRICTLY smaller than its icon-sized cell (18) — NOT the named --ui-ind oversize bug on the lead edge.
     const cs = getComputedStyle(caret)
     const caretContent = caret.getBoundingClientRect().width - px(cs.paddingInlineStart) - px(cs.paddingInlineEnd)
-    expect(caretContent, 'leading caret content box is not glyph-sized (the --ui-ind oversize bug on the leading edge)').toBeCloseTo(resolve('product', 'sm', 'md').glyph, 0)
+    expect(caretContent, 'leading caret content box is not glyph-sized (the --ui-ind oversize bug on the leading edge)').toBeCloseTo(glyphBox(resolve('product', 'sm', 'md')), 0)
     expect(caretContent, 'leading caret glyph is not strictly smaller than its icon-sized cell').toBeLessThan(iconCell)
     // font <= icon cell, not <: at the root md the control type (n + 6 = 12) TIES the 2n icon box (12) at n 6;
     // the strict form held only from n 7 up (skill v2). The glyph assertion above still proves caret < icon.

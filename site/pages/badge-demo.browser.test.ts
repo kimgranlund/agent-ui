@@ -33,6 +33,20 @@ describe('badge-demo — short tokens in a real list + a live hardened intent wr
     }
   })
 
+  it('each run row starts its title and meta on one edge (ui-row align=center leaks no text-align, T-0143)', async () => {
+    await raf()
+    const columns = [...document.querySelectorAll('ui-list ui-row[align="center"] > ui-column')]
+    expect(columns.length, 'anti-vacuous: the run list rendered its rows').toBeGreaterThanOrEqual(6)
+    for (const column of columns) {
+      const [title, meta] = [...column.querySelectorAll('ui-text')].map((t) => {
+        const range = document.createRange()
+        range.selectNodeContents(t)
+        return range.getBoundingClientRect().left
+      })
+      expect(Math.abs((title ?? 0) - (meta ?? 0)), `"${column.textContent}" title and meta start ${title} vs ${meta}`).toBeLessThanOrEqual(1)
+    }
+  })
+
   it('a property write re-points the live badge; bound garbage is hardened back to neutral and logged', async () => {
     await raf()
     const log = document.querySelector('ul.event-log[aria-live="polite"]') as HTMLUListElement

@@ -42,14 +42,26 @@ const PAGES: Record<string, () => Promise<unknown>> = {
   'icon-demo (the sizing ramp row)': () => import('./icon-demo.ts'),
 }
 
-/** table-demo's wide report table scrolls in its own frame at a readable width instead of squeezing its cells. */
+/** table-demo's wide report table scrolls its BODY in the control's own frame at a readable width instead of
+ *  squeezing its cells, and the pager footer stays outside that frame, inside the host (T-0143). */
 function expectReportTableFramed(): void {
   const table = document.querySelector('ui-table[selectable="multi"]') as HTMLElement
-  const frame = table.parentElement as HTMLElement
-  expect(getComputedStyle(frame).overflowX, 'the frame scrolls horizontally').toBe('auto')
-  expect(frame.scrollWidth, 'the table is wider than the 400px column, so it scrolls instead of squeezing').toBeGreaterThan(frame.clientWidth)
+  const frame = table.querySelector(":scope > [data-part='scroll']") as HTMLElement
+  expect(getComputedStyle(frame).overflowX, 'the control\'s own frame scrolls horizontally').toBe('auto')
+  expect(frame.scrollWidth, 'the table is wider than the 400px column, so its body scrolls instead of squeezing').toBeGreaterThan(frame.clientWidth)
   const cell = table.querySelector('tbody tr td:nth-child(2)') as HTMLElement
   expect(cell.getBoundingClientRect().width, 'a cell keeps room for an account name on one line').toBeGreaterThan(100)
+  const host = table.getBoundingClientRect()
+  expect(host.right, 'the host itself fits the column; only the body scrolls').toBeLessThanOrEqual(document.documentElement.clientWidth)
+  const footer = table.querySelector(":scope > [data-part='footer']") as HTMLElement
+  expect(footer, 'anti-vacuous: the pager footer is stamped').not.toBeNull()
+  expect(frame.contains(footer), 'the pager footer sits outside the scroll frame').toBe(false)
+  const children = [...footer.children].filter((child) => child.getBoundingClientRect().width > 0)
+  expect(children.length, 'anti-vacuous: the footer has a visible pager').toBeGreaterThan(0)
+  for (const child of children) {
+    const box = child.getBoundingClientRect()
+    expect(box.left >= host.left - 1 && box.right <= host.right + 1, `<${child.localName}> ${Math.round(box.left)}..${Math.round(box.right)} sits inside the host ${Math.round(host.left)}..${Math.round(host.right)}`).toBe(true)
+  }
 }
 
 afterEach(async () => {

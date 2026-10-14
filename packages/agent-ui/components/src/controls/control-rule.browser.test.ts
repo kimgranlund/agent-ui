@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve, type Resolved, type Step, type Tier } from '../../../shared/src/tokens/scale.mjs'
+import { glyphBox } from '../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
 import '@agent-ui/shared/foundations.css'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
@@ -222,7 +223,7 @@ for (const [name, tier, scale, attrs] of REGISTERS) {
         near(bare.end, r.chip.margin + r.c, 'badge text edge 2c, end')
         const marked = q(wrap, 'ui-badge[intent="success"]')
         const glyph = q(marked, '[data-part="glyph"]').getBoundingClientRect()
-        near(glyph.width, r.glyph, 'badge glyph')
+        near(glyph.width, glyphBox(r), 'badge glyph')
         near(edges(marked, glyph).start, r.chip.margin + r.c, 'the glyph sits c inside its 2n mark box at the chip margin')
         near(textRect(marked).left - glyph.right, r.c + r.chip.gutter + r.c, 'mark box to text: gutter c + label margin c')
         near(px(q(wrap, 'ui-checkbox'), 'border-start-start-radius', '::before'), r.parts.checkboxRadius, 'checkbox radius')

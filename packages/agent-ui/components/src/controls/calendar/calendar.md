@@ -175,6 +175,7 @@ geometry:
   panel: Container/surface              # bg + outline + radius from --ui-calendar-panel-* tokens (NOT a control height)
   navButtons: inline affordance = font  # caret-left/caret-right (Phosphor) are font-sized glyphs (§4.6 law; no icon cell)
   weekdayHeader: 0.75 × cell-size tall  # slightly shorter than day cells; 85% font size
+  maxInlineSize: --ui-calendar-max-inline-size   # ADR-0105 Amendment 2: the content cap, 7 tracks of 6n (1.5 × cellSize) + 6 gaps; the panel stops at it (plus inset and border) and centres in the filled host
   gridTracks: fluid — minmax(cellSize, 1fr)  # ADR-0105 — shrink-wrapped resolves to the floor exactly (byte-identical to pre-ADR-0105); given a definite width from an ancestor (a stretched flex/grid cell) the grid fills it, tracks sharing the surplus equally. Row block-size never changes — only inline-size adapts. Escape: `max-inline-size: max-content` on the host pins the old always-compact rendering (ADR-0102 override).
   cellLayers: two — BAND (button box, fluid, square) + POINT (::before, fixed cellSize circle, centred)  # ADR-0105 — the BAND carries the square [data-in-range] wash + ink/disabled/outside colours + the (now enlarged) hit target; the POINT carries aria-selected/hover/today-ring/focus-ring, so circles stay circles at any track width. A third paint (::after, endpoint half-wash) bridges the point circle to the band interior — 0-width at the floor, opens only under surplus width.
   rangeInterior: square (radius:0)      # ADR-0093 — [data-in-range] cells are square-cornered (vs. the circular endpoint fill on the POINT layer), a non-color signifier distinguishing interior from endpoint (ADR-0057); unaffected by ADR-0105's layer split
@@ -211,6 +212,12 @@ inline-start corner of a panel that visibly claims — then wastes — the rest.
 changes; only inline-size adapts, so a wide calendar is wider, never a taller month. A page author
 who wants the OLD always-compact rendering even inside a stretched context keeps that one CSS line:
 `max-inline-size: max-content` on the host (ADR-0102's override escape).
+
+The fill has a ceiling, the **content cap** `--ui-calendar-max-inline-size` (ADR-0105 Amendment 2): seven
+tracks of `6n` (1.5 × the `4n` cell) plus the six gaps. In a column wider than that, the tracks stop at `6n`,
+the panel stops at the cap plus its inset and border, and it centres in the host, which still fills its
+container (ADR-0223). At page width the chevrons stay a month's width apart instead of the page's. Narrower
+than the cap, nothing changes.
 
 ## Cell paint — two layers, so circles stay circles at any width (ADR-0105)
 

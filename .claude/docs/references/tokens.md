@@ -39,6 +39,10 @@ Every family exposes the same roles, so a component swaps families by changing o
   plane in both schemes**. NOT `-outline-variant` (a translucent *decorative* outline that composites to only
   ~1.5–1.7:1 — an SC 1.4.11 fail for an interactive control part). Disabled tracks are 1.4.11-exempt and keep
   their muted roles. ADR-0059.
+- **field outline** *(neutral only)*: `--md-sys-color-neutral-field-outline`, the **opaque** resting border of
+  every entry field (text-field, select trigger, combo-box, otp-field cells, textarea, code-editor), held to **SC 1.4.11 3:1
+  vs every surface plane in both schemes** (neutral 550 light, 500 dark). NOT `-outline`, a translucent scrim
+  that composites to about 2:1. Focus and disabled keep their transparent border. ADR-0245 Amendment 7.
 - **container** — `-container` · `-container-low` · `-container-high`
 - **scrim** — `-scrim-weakest … -scrim-strongest` (+ `-scrim`)
 - **inverse** — `-inverse-surface` · `-inverse-on-surface`

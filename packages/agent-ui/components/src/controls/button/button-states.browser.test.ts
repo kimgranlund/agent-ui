@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp, userEvent } from 'vitest/browser'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
 
 // Wave-2 s17 — the CROSS-ENGINE interaction-states + focus-ring + caret smoke (the REALIZE re-score; the
 // adversarial real-engine proof of ADR-0008 states / ADR-0009 focus ring / ADR-0012 + geometry-sizing-spec
@@ -243,7 +244,7 @@ describe('ui-button BTN-CARET — caret = font, icon = icon (ADR-0012 §6, both 
     const caret = btn.querySelector('[data-role="caret"]') as HTMLElement
 
     const font = fontPx(btn) //              md font = 13 (control type)
-    const glyph = resolve('product', 'sm', 'md').glyph // the caret glyph = 10 (ADR-0245 cl.3)
+    const glyph = glyphBox(resolve('product', 'sm', 'md')) // the caret glyph = 10 (ADR-0245 cl.3)
     const box = frameHeight(btn) //          md frame (border-box height) = 28
     const iconCell = caret.getBoundingClientRect().width // the cell border-box, icon-sized = --ui-button-icon = 18
     const caretContent = contentInline(caret) // glyph content box = cell − centering pad = font

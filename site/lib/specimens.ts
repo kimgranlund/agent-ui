@@ -39,6 +39,28 @@ export function scrollX(element: HTMLElement, minInlineSize: string): HTMLElemen
 }
 
 /**
+ * scrollTableBody: the ui-table form of scrollX. A ui-table already owns its overflow frame, the
+ * `[data-part='scroll']` region, with the pager footer outside it; wrapping the whole host in scrollX would carry the
+ * pager into the frame and off the column at 400px (T-0143). So the readable-width floor goes on the stamped `<table>`
+ * instead: only the table body scrolls inside the control's own frame, and the footer keeps the host's width. The
+ * table is stamped on first connect, so the floor waits for it.
+ */
+export function scrollTableBody(table: HTMLElement, minInlineSize: string): HTMLElement {
+  const floor = (): boolean => {
+    const stamped = table.querySelector<HTMLElement>(":scope > [data-part='scroll'] > table")
+    if (stamped) stamped.style.minInlineSize = minInlineSize
+    return stamped !== null
+  }
+  if (!floor()) {
+    const watch = new MutationObserver(() => {
+      if (floor()) watch.disconnect()
+    })
+    watch.observe(table, { childList: true, subtree: true })
+  }
+  return table
+}
+
+/**
  * searchIcon — the shared decorative search glyph for an adornment POSITION (slot=leading|trailing). Resolved
  * from the REAL Phosphor `magnifying-glass` through the @agent-ui/icons adapter (ADR-0065/0066) instead of a
  * hand-drawn circle+handle — authentic pack data, `fill="currentColor"` + `width/height=100%` so it fills the

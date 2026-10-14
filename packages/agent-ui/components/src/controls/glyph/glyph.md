@@ -44,7 +44,7 @@ geometry:
   sizeClass: display
   inlineSize: var(--ui-glyph-slot)   # the shared icon slot, `--md-sys-icon-box` (2n) everywhere the root tokens reach; 1em under the legacy opt-out (ADR-0245 Amendment 6: a glyph never follows the text)
   blockSize: var(--ui-glyph-slot)
-  padding: var(--ui-glyph-inset)     # c on each side, so the mark box is 2n - 2c (`--md-sys-glyph-box`)
+  padding: var(--ui-glyph-inset)     # (slot - glyph box) / 2 on each side, so the mark box is the glyph box max(8px, 2n - 2c) (`--md-sys-glyph-box`)
 
 forcedColors: No dedicated `@media (forced-colors: active)` block. The host paints nothing of its own; `color: inherit` means the svg's `currentColor` stroke tracks whatever forced-colors ink the consuming context resolves to.
 ---
@@ -77,11 +77,12 @@ the drawing; `dot` and `more` are filled.
 
 ## Sizing
 
-The host is the shared **icon slot**: `2n` wide and tall, inset `c` on each side, so the mark box is
-`2n - 2c` and an icon and a glyph in neighbouring slots share the slot box and the centre line. The slot reads
-the derived foundation tokens (`--md-sys-icon-box`, `--md-sys-c`, `--md-sys-glyph-stroke`, ADR-0245), which
-the library root declares, so a glyph keeps its own glyph box everywhere: at the root (product, scale sm) the
-mark is 6 / 8 / 10 px for sizes sm / md / lg with a 1.5px stroke. This is the line between a glyph and an icon
+The host is the shared **icon slot**: `2n` wide and tall, with the glyph box `max(8px, 2n - 2c)` centred in it
+(the inset is `c` on each side wherever `2n - 2c` clears the 8px floor), so an icon and a glyph in neighbouring
+slots share the slot box and the centre line. The slot reads the derived foundation tokens
+(`--md-sys-icon-box`, `--md-sys-glyph-box`, `--md-sys-glyph-stroke`, ADR-0245), which the library root
+declares, so a glyph keeps its own glyph box everywhere: at the root (product, scale sm) the mark is
+8 / 8 / 10 px for sizes sm / md / lg with a 1.5px stroke (the 8px floor holds sm, Amendment 7). This is the line between a glyph and an icon
 (ADR-0245 Amendment 6): a standalone `ui-icon` follows the surrounding text (`1em`), a glyph never does. Under
 the `data-foundations="legacy"` opt-out the slot is `1em` with a `0.125em` inset. Override `--ui-glyph-slot`,
 `--ui-glyph-inset` or `--ui-glyph-stroke` on the host to resize one mark.

@@ -68,6 +68,24 @@ describe('ui-row cross-engine smoke — flex grammar maps to computed props (s3)
   })
 })
 
+describe('ui-row: the align attribute never leaks a text-align (T-0143)', () => {
+  // Chromium maps a bare `align` attribute to a presentational `text-align` (the legacy HTML hint), which every
+  // child then inherits, so a row's stacked title and meta centred and zig-zagged down a list. ui-row's `align` is
+  // its cross-axis flex grammar only; the row resets the hint to the inherited value.
+  for (const align of ['center', 'end', 'start', 'stretch', 'baseline']) {
+    it(`a child of ui-row[align=${align}] keeps the inherited text-align`, () => {
+      const wrapper = document.createElement('div')
+      wrapper.style.textAlign = 'start'
+      wrapper.innerHTML = `<ui-row align="${align}"><div><span>title</span></div></ui-row>`
+      document.body.append(wrapper)
+      const row = wrapper.querySelector('ui-row') as HTMLElement
+      expect(getComputedStyle(row).textAlign, 'the row itself').toBe('start')
+      expect(getComputedStyle(row.querySelector('div') as HTMLElement).textAlign, 'its child').toBe('start')
+      wrapper.remove()
+    })
+  }
+})
+
 describe('ui-row cross-engine smoke — container-query reflow (ADR-0016 cl.4, gated by reflow — ADR-0096) (s3)', () => {
   it('the DEFAULT row (reflow="auto") reflows to a COLUMN under a narrow CONTAINER width — resize the wrapper, not the viewport', () => {
     // 24rem threshold (= 384px @ 16px root): 600px ≥ → row, 300px < → column. Resizing only the WRAPPER proves

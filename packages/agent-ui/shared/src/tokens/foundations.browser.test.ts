@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve, type Resolved } from './scale.mjs'
+import { glyphBox } from '../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
 import './foundations.gen.css'
 import './foundations-bridge.gen.css'
 
@@ -28,7 +29,7 @@ const EXPECTED: ReadonlyArray<readonly [string, (r: Resolved) => number]> = [
   ['control-radius', (r) => r.h / 2],
   ['checkbox-radius', (r) => r.parts.checkboxRadius],
   ['icon-box', (r) => r.icon],
-  ['glyph-box', (r) => r.glyph],
+  ['glyph-box', (r) => glyphBox(r)],
   ['glyph-stroke', (r) => Math.max(1.5, r.c / 2)],
   ['type-display', (r) => r.type.display],
   ['type-heading', (r) => r.type.heading],

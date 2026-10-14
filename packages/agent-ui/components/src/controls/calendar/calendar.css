@@ -18,7 +18,8 @@
  *       + sticky header) from `_surface/container-box.css` at zero specificity. The grid is a CSS
  *       grid of 7 FLUID columns (ADR-0105: `minmax(--ui-calendar-cell-size, 1fr)` — the cell-size ramp
  *       is the track FLOOR, not a fixed track; shrink-wrapped it resolves to the floor exactly, given
- *       surplus width the grid fills it); `[role=row]` divs use `display:contents` so cells participate
+ *       surplus width the grid fills it up to the content cap of 6n tracks, past which the panel centres,
+ *       ADR-0105 Amendment 2); `[role=row]` divs use `display:contents` so cells participate
  *       directly in the parent grid (a clean flat-grid layout; `[role=row]`'s ARIA role is set via
  *       attribute, not CSS, so `display:contents` does not affect the accessibility tree). Day cells are
  *       a TWO-LAYER cell (ADR-0105, CSS-only — the single `<button role=gridcell>` of calendar.ts is
@@ -53,6 +54,11 @@
      --ui-calendar-gap is the inter-cell gap; aliases --md-sys-space-xs (4px × density). */
   --ui-calendar-cell-size: var(--md-sys-height, var(--md-sys-height-md));
   --ui-calendar-gap: var(--md-sys-space-xs);
+
+  /* ── The content cap (ADR-0105 Amendment 2, T-0143): a stretched calendar spends width only until each
+     of the 7 tracks reaches 6n (1.5 × the 4n cell), plus the 6 gaps. Past that the panel stops growing and
+     centres in the filled host (ADR-0223's fill still holds for the host box); below it, nothing changes. */
+  --ui-calendar-max-inline-size: calc(7 * 1.5 * var(--ui-calendar-cell-size) + 6 * var(--ui-calendar-gap));
 
   /* ── Day-cell typography — font-size at a comfortable reading size inside the cell. */
   --ui-calendar-font: var(--md-sys-type-control, var(--md-sys-font-md, 14px));
@@ -164,6 +170,10 @@
     border: 1px solid var(--ui-calendar-panel-outline);
     border-radius: var(--ui-calendar-panel-radius);
     box-sizing: border-box;
+    /* The content cap (ADR-0105 Amendment 2): the capped grid plus the box inset on each side and the 1px
+       border; `margin-inline: auto` centres the panel past it, and is 0 whenever the panel is narrower. */
+    max-inline-size: calc(var(--ui-calendar-max-inline-size) + 2 * var(--ui-box-inset, 0.375rem) + 1px + 1px); /* the two hairlines */
+    margin-inline: auto;
   }
 
   /* user-invalid (ADR-0051) — the danger border, appearing only AFTER the first interaction (the

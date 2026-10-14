@@ -1,12 +1,13 @@
 /* glyph.css: ui-glyph, the functional-mark display atom (ADR-0245 clauses 4 and 5). Two sectioned blocks:
  *
  *   [1] TOKEN BLOCK: `:where(ui-glyph)` declares the slot, its inset and the stroke. Each reads the derived
- *       foundation token first (`--md-sys-icon-box` 2n, `--md-sys-c` c, `--md-sys-glyph-stroke`
- *       max(1.5px, c/2)), so the mark box is exactly 2n - 2c wherever the root tokens reach: a glyph keeps its
- *       own glyph box everywhere, unlike a standalone ui-icon, which follows the text (ADR-0245 Amendment 6).
+ *       foundation token first (`--md-sys-icon-box` 2n, `--md-sys-glyph-box` max(8px, 2n - 2c),
+ *       `--md-sys-glyph-stroke` max(1.5px, c/2)), so the mark box is exactly the glyph box wherever the root
+ *       tokens reach: a glyph keeps its own glyph box everywhere, unlike a standalone ui-icon, which follows the
+ *       text (ADR-0245 Amendments 6 and 7).
  *       Under the legacy opt-out the derived tokens are `initial` and the em fallbacks size it as a 1em cell.
  *   [2] STYLES BLOCK: `@scope (ui-glyph)` consumes ONLY --ui-glyph-*. The host is the shared icon-sized
- *       slot; its padding is the inset c, so the svg (the mark box) fills what is left. `color: inherit`
+ *       slot; its padding is the inset (slot - glyph box) / 2, so the svg (the mark box) fills what is left. `color: inherit`
  *       lets the stroke track the surrounding ink, forced colors included, with no override of its own.
  */
 
@@ -14,7 +15,9 @@
 
 :where(ui-glyph) {
   --ui-glyph-slot: var(--md-sys-icon-box, 1em);
-  --ui-glyph-inset: var(--md-sys-c, 0.125em);
+  /* The inset centres the glyph box in the slot: c at md and lg, less at sm where the glyph floor holds the box
+     at 8px (ADR-0245 Amendment 7); 0.125em each side under the legacy opt-out. */
+  --ui-glyph-inset: calc((var(--md-sys-icon-box, 1em) - var(--md-sys-glyph-box, 0.75em)) / 2);
   --ui-glyph-stroke: var(--md-sys-glyph-stroke, 1.5px);
 }
 

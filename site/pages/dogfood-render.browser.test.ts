@@ -727,11 +727,12 @@ const PLANTS: Record<string, { bad: string; good: string; width?: number; rule?:
   },
   'entry-cell-radius': { bad: '<ui-otp-field length="4" style="--ui-otp-field-radius: 12px"></ui-otp-field>', good: '<ui-otp-field length="4"></ui-otp-field>' },
   'glyph-box': { bad: '<ui-glyph symbol="check" style="--ui-glyph-slot: 30px"></ui-glyph>', good: '<ui-glyph symbol="check"></ui-glyph>' },
-  // at n 5 the bare formula 2n - 2c is 6px, the floor 8px (T-0143); the svg is the slot less its inset c (2px) a side
+  // at n 5 the bare formula 2n - 2c is 6px, the floor 8px (T-0143); ui-glyph centres the floored box in its 2n slot
+  // (inset (2n - glyph box) / 2 = 1px), so the plant restores the old inset c (2px) a side and draws the unfloored 6px mark
   'glyph-box at n 5': {
     rule: 'glyph-box',
-    bad: '<div size="sm"><ui-glyph symbol="check" style="--ui-glyph-slot: 10px"></ui-glyph></div>',
-    good: '<div size="sm"><ui-glyph symbol="check" style="--ui-glyph-slot: 12px"></ui-glyph></div>',
+    bad: '<div size="sm"><ui-glyph symbol="check" style="--ui-glyph-inset: 2px"></ui-glyph></div>',
+    good: '<div size="sm"><ui-glyph symbol="check"></ui-glyph></div>',
   },
   'dash-scale': { bad: GAUGE + '<style>ui-gauge [data-part="progress"] { vector-effect: non-scaling-stroke }</style>', good: GAUGE },
   'link-ink': { bad: '<ui-row><a href="#a">Raw link</a></ui-row>', good: '<ui-breadcrumb><a href="#a">Home</a><span>Here</span></ui-breadcrumb>' },

@@ -51,8 +51,8 @@
   --ui-select-bg-filled: var(--md-sys-color-neutral-container-low); /* one idle fill, empty or filled (T-0140) */
   --ui-select-bg-hover: var(--md-sys-color-neutral-container);
   --ui-select-bg-focus: var(--md-sys-color-neutral-container-low);
-  --ui-select-border: var(--md-sys-color-neutral-outline); /* default; the idle boundary (T-0140) */
-  --ui-select-border-hover: var(--md-sys-color-neutral-outline); /* never lighter than idle; the bg step carries hover */
+  --ui-select-border: var(--md-sys-color-neutral-field-outline); /* default; the idle boundary, at least 3:1 against the page (SC 1.4.11, ADR-0245 Amendment 7) */
+  --ui-select-border-hover: var(--md-sys-color-neutral-field-outline); /* never lighter than idle; the bg step carries hover */
   --ui-select-border-focus: transparent;    /* transparent holds the geometry — no layout shift */
   /* user-invalid (ADR-0051) — the danger border, appearing only AFTER the first interaction (the
      trackUserInvalid controller owns that timing; select.ts toggles :state(user-invalid)). The
