@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
 
 import '@agent-ui/components/foundation-styles.css'
 import './board-grid.css'
@@ -114,7 +115,7 @@ describe('ui-board-grid: the corner glyph (ADR-0245 Amendment 6)', () => {
     const glyph = cell.querySelector('[data-part="intent"]') as HTMLElement
     expect(glyph.textContent).toBe('+')
     const box = rect(glyph)
-    expect([box.width, box.height]).toEqual([ROOT.glyph, ROOT.glyph])
+    expect([box.width, box.height]).toEqual([glyphBox(ROOT), glyphBox(ROOT)])
     const border = Number.parseFloat(getComputedStyle(cell).borderRightWidth)
     expect(rect(cell).right - border - box.right, 'inline inset').toBeCloseTo(ROOT.c, 0)
     expect(rect(cell).bottom - Number.parseFloat(getComputedStyle(cell).borderBottomWidth) - box.bottom, 'block inset').toBeCloseTo(ROOT.c, 0)

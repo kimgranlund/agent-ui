@@ -256,7 +256,7 @@ scale.mjs is unchanged; the pill is a derived exception the generator emits besi
 - New tokens: `--md-sys-control-radius` (2n: 10 / 12 / 14) and `--md-sys-checkbox-radius` (ceil(n/2): 3 / 3 / 4); `--md-sys-chip-radius` becomes n + c (7 / 8 / 9) at the root sm · md · lg.
 
 ## 20. Amendment 7: the glyph box floors at 8px, max(8, 2n - 2c), sm · md · lg
-scale.mjs carries `CFG.glyphFloor` ahead of the skill (P15); every control that reads `--md-sys-glyph-box`, and `ui-glyph`, follows.
+scale.mjs is unchanged (P15 proposes the floor to the skill); the generator emits it and `glyphBox()` mirrors it, so every control that reads `--md-sys-glyph-box`, and `ui-glyph`, follows.
 | register | rule, before → after | sm · md · lg |
 |---|---|---|
 | root product/sm | 2n - 2c → max(8, 2n - 2c) | 6 → 8 (+2) · 8 → 8 (0) · 10 → 10 (0) |

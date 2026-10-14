@@ -21,6 +21,7 @@ import './choice-card.css'
 import './choice-card.ts'
 import type { UIChoiceCardElement } from './choice-card.ts'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
 
 interface CdpSession {
   send(method: string, params?: Record<string, unknown>): Promise<unknown>
@@ -292,8 +293,8 @@ describe('ui-choice-card: badge and tick geometry', () => {
       card.innerHTML = '<strong>Deluxe</strong><span>$185/night</span>'
       region.append(card)
       expect([px(after(card).width), px(after(card).height)]).toEqual([r.icon, r.icon])
-      expect(px(before(card).width)).toBeCloseTo(r.glyph, 1)
-      expect(px(before(card).height)).toBeCloseTo((r.glyph * 13) / 15, 1)
+      expect(px(before(card).width)).toBeCloseTo(glyphBox(r), 1)
+      expect(px(before(card).height)).toBeCloseTo((glyphBox(r) * 13) / 15, 1)
       expect(centreX(before(card))).toBeCloseTo(centreX(after(card)), 1)
     })
   }

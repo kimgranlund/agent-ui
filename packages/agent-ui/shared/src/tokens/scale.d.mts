@@ -62,8 +62,6 @@ export const CFG: {
   sectionRatio: number
   titleBump: Record<Step, number>
   floor: number
-  /** The glyph box floor in px: the glyph box is max(glyphFloor, 2n - 2c) (ADR-0245 Amendment 7). */
-  glyphFloor: number
   /** wrap (`base`, `tight` or `roomy`), the child level it wraps, and `reserved` when it has no tokens. */
   levels: Record<LevelName | ReservedLevel, [string, string?, string?]>
 }

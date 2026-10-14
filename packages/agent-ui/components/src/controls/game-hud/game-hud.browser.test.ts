@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
 
 // game-hud.browser.test.ts: the real-engine painted proof for ui-game-hud (ADR-0243, GameHud fork sheet).
 // jsdom is blind to layout, so this covers the whole-shape fill and hug, the stat wrap with no overflow,
@@ -152,7 +153,7 @@ describe('ui-game-hud: intent glyphs', () => {
     const glyph = el.querySelector('[data-part="glyph"]') as HTMLElement
     const label = el.querySelector('[data-part="stat"] [data-part="label"]') as HTMLElement
     const box = glyph.getBoundingClientRect()
-    expect([box.width, box.height]).toEqual([r.glyph, r.glyph])
+    expect([box.width, box.height]).toEqual([glyphBox(r), glyphBox(r)])
     expect(label.getBoundingClientRect().left - box.right, 'glyph to label gap').toBeCloseTo(r.n, 0)
     expect(r.n, 'anti-vacuous: n is not the old c gap').toBeGreaterThan(r.c)
   })

@@ -133,6 +133,7 @@ geometry:
   inlinePad: var(--ui-code-editor-padding-inline)
   gap: n/a                # no adornment slots — no slot↔editor gap
   radius: var(--md-sys-control-radius, var(--md-sys-shape-corner-base))   # textarea parity: the control radius 2n (ADR-0245 Amendment 5); the fixed rounded-rect under the legacy opt-out
+  border: var(--md-sys-color-neutral-field-outline) at rest and on hover   # textarea parity: the opaque 3:1 field boundary (ADR-0245 Amendment 7); transparent under the focus ring and when disabled
   minInlineSize: var(--ui-code-editor-min-inline-size) (~20ch — entry-control typing-width floor, native <textarea> parity; ADR-0021)
 
 forcedColors: A `@media (forced-colors: active)` block keeps the idle frame border, ink, and placeholder visible (CanvasText) and degrades every highlight token to plain ink (SPEC-C5 AC2 — a token is never invisible); the :focus-within outline ring survives via --md-sys-color-focus-ring → Highlight.

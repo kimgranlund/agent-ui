@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
 import '@agent-ui/components/foundation-styles.css'
 import './glyph.css'
 import './glyph.ts'
@@ -35,9 +36,9 @@ describe('ui-glyph geometry inside an opt-in region', () => {
           `<div data-tier="product" data-scale="${scale}"><span data-size="${size}"><ui-glyph symbol="check"></ui-glyph></span></div>`,
         )
         const r = resolve('product', scale, size)
-        expect(r.glyph, 'the glyph floor (Amendment 7)').toBe(Math.max(8, 2 * r.n - 2 * r.c))
+        expect(glyphBox(r), 'the glyph floor (Amendment 7)').toBe(Math.max(8, 2 * r.n - 2 * r.c))
         expect(boxOf(host)).toEqual({ w: r.icon, h: r.icon })
-        expect(boxOf(host.querySelector('svg') as SVGSVGElement)).toEqual({ w: r.glyph, h: r.glyph })
+        expect(boxOf(host.querySelector('svg') as SVGSVGElement)).toEqual({ w: glyphBox(r), h: glyphBox(r) })
         expect(parseFloat(getComputedStyle(host.querySelector('path') as SVGPathElement).strokeWidth)).toBe(
           Math.max(1.5, r.c / 2),
         )

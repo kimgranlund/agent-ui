@@ -17,6 +17,7 @@ import { resolve, CFG } from '../../packages/agent-ui/shared/src/tokens/scale.mj
 import type { Resolved } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
 import RULES from '../../scripts/dogfood-rules.json'
 import ALLOW from '../../scripts/dogfood-render-allowlist.json'
+import { glyphBox } from '../../scripts/lib/foundations-rules.mjs'
 
 // REAL-TIMING HEADROOM (vitest.browser.config.ts): four viewport and scheme round trips per page.
 vi.setConfig({ testTimeout: 60_000 })
@@ -381,7 +382,7 @@ const CHECKS: Record<string, (root: Element, ctx: Ctx) => string[]> = {
       if (!box) continue
       measured['glyph-box']++
       const r = registerOf(el)
-      const want = Math.max(8, 2 * r.n - 2 * r.c) // T-0143: the glyph box floors at 8px (Kim's ruling)
+      const want = glyphBox(r) // max(8, 2n - 2c): the local glyph floor (ADR-0245 Amendment 7)
       if (Math.abs(box.width - want) > TOL || Math.abs(box.height - want) > TOL) out.push(`${tagOf(el)} ${Math.round(box.width * 10) / 10}x${Math.round(box.height * 10) / 10} want ${want}`)
     }
     return out

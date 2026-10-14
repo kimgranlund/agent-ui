@@ -1066,22 +1066,26 @@ and at the n 5 root the 6px glyph box made `dot`, `more` and `info` illegible. I
    surface plane in both schemes (3.15:1 light, 3.11:1 dark at the worst plane; SC 1.4.11). The generated
    `--md-sys-color-neutral-outline` is a translucent scrim that composites to about 1.7 to 2.5:1, so no alpha can
    pass. It is the resting and hover border of `ui-text-field`, the `ui-select` trigger and `ui-combo-box`, and
-   now also of every `ui-otp-field` cell (empty and filled) and `ui-textarea`, which had no idle border. Focus
+   now also of every `ui-otp-field` cell (empty and filled), `ui-textarea` and its kin `ui-code-editor`, which had no idle border. Focus
    keeps the transparent border under the ring, and disabled keeps no border. Popup panels and listboxes keep
    `outline-variant`: they are containers, not entry boundaries.
-2. **The glyph box floors at 8px.** `--md-sys-glyph-box` is `max(8px, 2n - 2c)`. `scale.mjs` carries the floor
-   as `CFG.glyphFloor` (the vendored file now differs from the revision it vendored, `3c319761…`, by this one constant; its sha moves to
-   `19355c7a…9222b37`, and P15 asks the skill to adopt it), so `resolve().glyph` and every test pinned against
-   it follow. `ui-glyph` centres the glyph box in its 2n slot (inset `(2n - glyph box) / 2`), so the inset is
-   1px instead of c where the floor binds. md and lg are unchanged. The radio dot stays `2n - 2c - 2`, the
-   switch thumb and the slider thumb keep their own sizes.
+2. **The glyph box floors at 8px.** `--md-sys-glyph-box` is `max(8px, 2n - 2c)`. The floor is local to agent-ui:
+   `scale.mjs` stays the skill's revision byte for byte (sha `3c319761…`, pinned in `foundations.test.ts`), so
+   `resolve().glyph` stays `2n - 2c`. The generator emits the floor from `GLYPH_FLOOR` in
+   `scripts/lib/foundations-rules.mjs`, and every JS or TS reader of the glyph box (the render lint's `glyph-box`
+   rule, the browser tests) reads `glyphBox(r)` from the same module, never `resolve().glyph` alone. P15 asks
+   the skill to adopt the floor; until it does, scale.mjs does not carry it. `ui-glyph` centres the glyph box
+   in its 2n slot (inset `(2n - glyph box) / 2`), so the inset is 1px instead of c where the floor binds. md and
+   lg are unchanged. The radio dot stays `2n - 2c - 2`, the switch thumb and the slider thumb keep their own
+   sizes.
 3. **Kept as is.** The slider thumb and rail. An icon inside a `[data-tier]` region stays 2n (Amendment 6
    item 3). agent-admin's uppercase provider headings stay: GH #727, which asked to drop them, is superseded by
    this ruling (recorded here; the issue itself is not commented on).
 4. **Gates.** `tokens.test.ts` pins the field outline at 3:1 on all seven planes in both schemes, with the
    generated `-outline` as the failing negative control; `field-outline.browser.test.ts` measures the idle frame
-   of all five fields in both schemes; `foundations.test.ts` pins `max(glyphFloor, 2n - 2c)` across every rung;
-   the glyph-box consumers re-pin from `resolve()`.
+   of all five fields in both schemes; `foundations.test.ts` pins `glyphBox(r)` = `max(8, 2n - 2c)` across every
+   rung and in the generated token, with `resolve().glyph` still `2n - 2c`; the glyph-box consumers and the render
+   lint's `glyph-box` rule read `glyphBox()`.
 
 The px that move, at the root sm · md · lg (`derive.out.md` section 20):
 
@@ -1090,9 +1094,9 @@ The px that move, at the root sm · md · lg (`derive.out.md` section 20):
 | glyph box (ui-glyph mark, the carets of button, select and disclosure, the checkbox check and dash, the badge, choice-card, board-grid, game-hud and result-card marks, and the multi-select, form-popover, status-stream and timeline-item marks) | size | 2n - 2c → max(8, 2n - 2c) | 6 → 8 · 8 · 10 |
 | ui-glyph | inset | c → (2n - glyph box) / 2 | 2 → 1 · 2 · 2 |
 | text-field, select trigger, combo-box | idle and hover border | neutral-outline (scrim 60%) → field-outline | about 2:1 → at least 3:1 |
-| otp-field cell, textarea | idle border | transparent (otp filled: outline-variant) → field-outline | none → at least 3:1 |
+| otp-field cell, textarea, code-editor | idle border | transparent (otp filled: outline-variant) → field-outline | none → at least 3:1 |
 
 Repairs in the same change: `tokens.md` (the role vocabulary), `geometry.md` and `geometry-sizing-spec.md` (the
 glyph box rows), `derive.mjs` (section 20; sections 13 and 16 keep the unfloored glyph they recorded), and the
-`glyph`, `text-field`, `textarea` and `otp-field` descriptors. The skill proposals are P15 (the glyph floor) and
+`glyph`, `text-field`, `textarea`, `otp-field` and `code/editor` descriptors. The skill proposals are P15 (the glyph floor) and
 P16 (the 3:1 field outline) in `.sdlc/mathematical-design-system-review.md`.

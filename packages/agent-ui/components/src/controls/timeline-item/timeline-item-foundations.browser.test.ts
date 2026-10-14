@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
@@ -42,7 +43,7 @@ describe('ui-timeline-item geometry inside an opt-in region', () => {
       const item = wrap.querySelector('ui-timeline-item')!
       const r = resolve('product', 'sm', size)
       expect(markerBox(item)).toBe(r.icon)
-      expect(dotSize(item)).toBe(r.glyph)
+      expect(dotSize(item)).toBe(glyphBox(r))
     })
   }
 
@@ -51,7 +52,7 @@ describe('ui-timeline-item geometry inside an opt-in region', () => {
       `<div data-tier="product" data-scale="sm"><ui-status-stream></ui-status-stream><ui-timeline-item size="md"></ui-timeline-item></div>`,
     )
     const r = resolve('product', 'sm', 'md')
-    expect(streamTokens(wrap.querySelector('ui-status-stream') as HTMLElement)).toEqual({ box: r.icon, dot: r.glyph })
+    expect(streamTokens(wrap.querySelector('ui-status-stream') as HTMLElement)).toEqual({ box: r.icon, dot: glyphBox(r) })
     expect(markerBox(wrap.querySelector('ui-timeline-item')!)).toBe(r.icon)
   })
 })

@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
 
 /** The derived root register (product / sm / md, ADR-0245). */
 const ROOT = resolve('product', 'sm', 'md')
@@ -237,7 +238,7 @@ describe('ui-result-card: the stat glyph (ADR-0245 Amendment 6)', () => {
     const glyph = el.querySelector('[data-part="stat"] [data-part="glyph"]') as HTMLElement
     const label = el.querySelector('[data-part="stat"] [data-part="label"]') as HTMLElement
     const box = glyph.getBoundingClientRect()
-    expect([box.width, box.height]).toEqual([ROOT.glyph, ROOT.glyph])
+    expect([box.width, box.height]).toEqual([glyphBox(ROOT), glyphBox(ROOT)])
     expect(label.getBoundingClientRect().left - box.right, 'glyph to label gap').toBeCloseTo(ROOT.n, 0)
   })
 })
