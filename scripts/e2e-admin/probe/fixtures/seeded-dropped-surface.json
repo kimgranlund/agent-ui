@@ -1,0 +1,35 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "seeded-dropped-surface",
+  "agent": "quant",
+  "source": "hand-authored for the probe selftest (T-0174) (catalog agent-ui)",
+  "steps": [
+    {
+      "say": "book a table"
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"note\":\"Booking.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"book a table\",\"k\":3},\"exemplarIds\":[],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"IDGRAPH\"],\"model\":\"claude-sonnet-5\",\"prompt\":{\"limit\":141100,\"total\":46920,\"sections\":[{\"id\":\"grammar\",\"chars\":25575},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1670}],\"over\":false}}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"canvas\",\"catalogId\":\"agent-ui\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"canvas\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"btn\"]},{\"id\":\"btn\",\"component\":\"Button\",\"variant\":\"solid\",\"label\":\"Click me\",\"action\":{\"action\":\"submit\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Booking.\",\"ask\":{\"surfaceId\":\"ask-1\"}}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"canvas\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"canvas\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"btn\"]},{\"id\":\"btn\",\"component\":\"Button\",\"variant\":\"solid\",\"label\":\"Click me\",\"action\":{\"action\":\"submit\"}}]}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"q\",\"ghost\"]},{\"id\":\"q\",\"component\":\"Text\",\"text\":\"How many?\"}]}}",
+          "tools": []
+        },
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Booking.\"}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"canvas\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"canvas\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"btn\"]},{\"id\":\"btn\",\"component\":\"Button\",\"variant\":\"solid\",\"label\":\"Click me\",\"action\":{\"action\":\"submit\"}}]}}",
+          "tools": []
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "book a table"
+      }
+    }
+  ]
+}

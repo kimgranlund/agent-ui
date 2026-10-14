@@ -1,0 +1,137 @@
+{
+  "kind": "agent-ui-chat-probe-report",
+  "version": 1,
+  "name": "haiku-hello-smoke",
+  "mode": "live",
+  "agent": "concierge",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "at": "2026-10-14T19:55:50.301Z",
+  "turns": [
+    {
+      "index": 0,
+      "step": {
+        "say": "hello"
+      },
+      "request": {
+        "model": "claude-haiku-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--concierge",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"greet-1\\\",\\\"catalogId\\\":\\\"agent-ui--concierge\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"greet-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"prompt\\\",\\\"row\\\"]},{\\\"id\\\":\\\"prompt\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Where would you like to start?\\\",\\\"variant\\\":\\\"body\\\"},{\\\"id\\\":\\\"row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":[\\\"c1\\\",\\\"c2\\\",\\\"c3\\\"]},{\\\"id\\\":\\\"c1\\\",\\\"component\\\":\\\"Card\\\",\\\"children\\\":[\\\"f1\\\"]},{\\\"id\\\":\\\"f1\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"b1\\\"]},{\\\"id\\\":\\\"b1\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Book a room\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"starter\\\",\\\"context\\\":{\\\"intent\\\":\\\"Book a room\\\"}}},{\\\"id\\\":\\\"c2\\\",\\\"component\\\":\\\"Card\\\",\\\"children\\\":[\\\"f2\\\"]},{\\\"id\\\":\\\"f2\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"b2\\\"]},{\\\"id\\\":\\\"b2\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Reserve a table\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"starter\\\",\\\"context\\\":{\\\"intent\\\":\\\"Reserve a table\\\"}}},{\\\"id\\\":\\\"c3\\\",\\\"component\\\":\\\"Card\\\",\\\"children\\\":[\\\"f3\\\"]},{\\\"id\\\":\\\"f3\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"b3\\\"]},{\\\"id\\\":\\\"b3\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Plan a day out\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"starter\\\",\\\"context\\\":{\\\"intent\\\":\\\"Plan a day out\\\"}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Welcome to the Grand Meridian. I'm your concierge, here to help with rooms, tables at Vela or the Quay Bar, spa and pool times, and local plans around Sorrento and the Bay of Naples. What can I arrange for you today?\",\"ask\":{\"surfaceId\":\"greet-1\"},\"target\":{\"surfaceId\":\"greet-1\"},\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"hello\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142000,\"total\":50381,\"sections\":[{\"id\":\"grammar\",\"chars\":25575},{\"id\":\"components\",\"chars\":20265},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":840},{\"id\":\"persona\",\"chars\":3556}],\"over\":false},\"usage\":{\"inputTokens\":19257,\"outputTokens\":1405,\"cacheReadInputTokens\":0,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"greet-1\",\"catalogId\":\"agent-ui--concierge\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"greet-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"prompt\",\"row\"]},{\"id\":\"prompt\",\"component\":\"Text\",\"text\":\"Where would you like to start?\",\"variant\":\"body\"},{\"id\":\"row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"c1\",\"c2\",\"c3\"]},{\"id\":\"c1\",\"component\":\"Card\",\"children\":[\"f1\"]},{\"id\":\"f1\",\"component\":\"CardFooter\",\"children\":[\"b1\"]},{\"id\":\"b1\",\"component\":\"Button\",\"label\":\"Book a room\",\"variant\":\"soft\",\"action\":{\"action\":\"starter\",\"context\":{\"intent\":\"Book a room\"}}},{\"id\":\"c2\",\"component\":\"Card\",\"children\":[\"f2\"]},{\"id\":\"f2\",\"component\":\"CardFooter\",\"children\":[\"b2\"]},{\"id\":\"b2\",\"component\":\"Button\",\"label\":\"Reserve a table\",\"variant\":\"soft\",\"action\":{\"action\":\"starter\",\"context\":{\"intent\":\"Reserve a table\"}}},{\"id\":\"c3\",\"component\":\"Card\",\"children\":[\"f3\"]},{\"id\":\"f3\",\"component\":\"CardFooter\",\"children\":[\"b3\"]},{\"id\":\"b3\",\"component\":\"Button\",\"label\":\"Plan a day out\",\"variant\":\"soft\",\"action\":{\"action\":\"starter\",\"context\":{\"intent\":\"Plan a day out\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"ask\":{\"surfaceId\":\"greet-1\"}}}\n\nWelcome to the Grand Meridian. I'm your concierge, here to help with rooms, tables at Vela or the Quay Bar, spa and pool times, and local plans around Sorrento and the Bay of Naples. What can I arrange for you today?",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "jsonl": "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"greet-1\",\"catalogId\":\"agent-ui--concierge\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"greet-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"prompt\",\"row\"]},{\"id\":\"prompt\",\"component\":\"Text\",\"text\":\"Where would you like to start?\",\"variant\":\"body\"},{\"id\":\"row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"c1\",\"c2\",\"c3\"]},{\"id\":\"c1\",\"component\":\"Card\",\"children\":[\"f1\"]},{\"id\":\"f1\",\"component\":\"CardFooter\",\"children\":[\"b1\"]},{\"id\":\"b1\",\"component\":\"Button\",\"label\":\"Book a room\",\"variant\":\"soft\",\"action\":{\"action\":\"starter\",\"context\":{\"intent\":\"Book a room\"}}},{\"id\":\"c2\",\"component\":\"Card\",\"children\":[\"f2\"]},{\"id\":\"f2\",\"component\":\"CardFooter\",\"children\":[\"b2\"]},{\"id\":\"b2\",\"component\":\"Button\",\"label\":\"Reserve a table\",\"variant\":\"soft\",\"action\":{\"action\":\"starter\",\"context\":{\"intent\":\"Reserve a table\"}}},{\"id\":\"c3\",\"component\":\"Card\",\"children\":[\"f3\"]},{\"id\":\"f3\",\"component\":\"CardFooter\",\"children\":[\"b3\"]},{\"id\":\"b3\",\"component\":\"Button\",\"label\":\"Plan a day out\",\"variant\":\"soft\",\"action\":{\"action\":\"starter\",\"context\":{\"intent\":\"Plan a day out\"}}}]}}",
+                "target": "greet-1"
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-14.jsonl:1",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          0
+        ]
+      },
+      "domHosts": 1,
+      "proseText": "You hello Welcome to the Grand Meridian. I'm your concierge, here to help with rooms, tables at Vela or the Quay Bar, spa and pool times, and local plans around Sorrento and the Bay of Naples. What can I arrange for you today?",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "turn-1.png"
+    }
+  ],
+  "checks": [
+    {
+      "check": "model-pick",
+      "turn": 0,
+      "status": "pass",
+      "detail": "claude-haiku-5-5 / medium"
+    },
+    {
+      "check": "no-halt",
+      "turn": 0,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 0,
+      "status": "pass",
+      "detail": "226 chars of prose, clean"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 0,
+      "status": "pass",
+      "detail": "rounds created [greet-1], open [greet-1] (trace)"
+    },
+    {
+      "check": "render-lint",
+      "turn": 0,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 0,
+      "status": "warn",
+      "detail": "effort medium but no thinking text captured"
+    },
+    {
+      "check": "expect-component",
+      "status": "skip",
+      "detail": "no --expect-component"
+    }
+  ],
+  "verdict": "pass"
+}
