@@ -51,7 +51,7 @@ flip.addEventListener('click', () => {
   const host = blackjack as HTMLElement & { outcome: string }
   host.outcome = host.outcome === 'win' ? 'lose' : 'win'
 })
-const blackjackBlock = el('div', { style: 'display:flex; flex-direction:column; gap:1rem;' }, [blackjack, flip])
+const blackjackBlock = el('div', { style: 'display:flex; flex-direction:column; gap:var(--md-sys-widget-margin);' }, [blackjack, flip])
 const blackjackNote = el('p', {}, [
   text('Each click writes '), code('outcome'), text(' again. The card reuses the same pill and rewrites only ' +
     'the word and glyph, so a screen reader hears the new outcome once.'),
@@ -99,6 +99,6 @@ const emptyNote = el('p', {}, [
 content.append(
   exampleSection('Croupier: blackjack win, live outcome change', blackjackBlock, blackjackNote),
   exampleSection('Admiral: a loss', admiral),
-  exampleSection('Draw and done', el('div', { style: 'display:grid; gap:1rem;' }, [draw, trip]), doneNote),
+  exampleSection('Draw and done', el('div', { style: 'display:grid; gap:var(--md-sys-widget-margin);' }, [draw, trip]), doneNote),
   exampleSection('The empty-box law', quiz, emptyNote),
 )

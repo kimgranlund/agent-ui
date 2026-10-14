@@ -46,7 +46,7 @@ win.addEventListener('click', () => {
   chips += 60
   ;(croupier as HTMLElement & { stats: unknown }).stats = croupierStats()
 })
-const croupierBlock = el('div', { style: 'display:flex; flex-direction:column; gap:1rem;' }, [croupier, win])
+const croupierBlock = el('div', { style: 'display:flex; flex-direction:column; gap:var(--md-sys-widget-margin);' }, [croupier, win])
 const croupierNote = el('p', {}, [
   text('Each click adds 60 to Chips and writes '), code('stats'), text(' again. The HUD reuses the same stat ' +
     'elements and rewrites only the text that changed, so a screen reader hears the new Chips value once.'),
