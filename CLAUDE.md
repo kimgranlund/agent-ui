@@ -19,6 +19,10 @@ Process `.claude/docs/process.md` · Standards `.claude/docs/references/` · `si
   bump (history + the focus-timing extension rule: `component-testing`).
 - `npm run eval:agent-behavior -- selftest` is keyless and runs inside `check:scripts`; `-- live --leg selection|persona|response-type`
   needs `ANTHROPIC_API_KEY` and is Kim's manual run (exit 0, 1 or 2). Home: `packages/agent-ui/a2ui/tools/agent-eval/`, GH #1810.
+- An org-level Anthropic key (not scoped to a workspace) answers 400 unless every call carries
+  `anthropic-workspace-id`: set `ANTHROPIC_WORKSPACE_ID` beside `ANTHROPIC_API_KEY` in `.env` (dev proxy, eval and
+  recorder tools read it) and as a Worker secret or var (`wrangler secret put ANTHROPIC_WORKSPACE_ID`). Server-side
+  only, never logged (T-0192).
 - `npm run e2e:admin`: keyless headless agent-admin flows (Test Chat, Builder, Settings, teams, error and
   abort paths) replayed from fixtures in `scripts/e2e-admin/`; outside the six shards, local only, no CI job.
 - `npm run e2e:admin:record`: captures a new admin fixture from the live model; manual, needs a key in

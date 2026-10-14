@@ -25,7 +25,7 @@ export type ProviderDispatchResult =
  * rows (ADR-0073) but their modules are stubs (§ `openai.ts`/`gemini.ts`) — NOT included here, so they
  * degrade the same as any other not-yet-wired id. Adding a real adapter is: land its module, add one
  * entry here. */
-const IMPLEMENTED: Record<string, (opts: { apiKey: string; endpoint?: string }) => AgentProvider> = {
+const IMPLEMENTED: Record<string, (opts: { apiKey: string; endpoint?: string; workspaceId?: string }) => AgentProvider> = {
   anthropic: anthropicProvider,
 }
 
@@ -38,7 +38,10 @@ const IMPLEMENTED: Record<string, (opts: { apiKey: string; endpoint?: string }) 
  * `endpoint` (providers.json), so the adapter's request URL stays registry-authoritative (no second
  * source of truth). Omitted ⇒ the adapter's own built-in default.
  */
-export function providerFor(id: string, opts: { apiKey: string; endpoint?: string }): ProviderDispatchResult {
+export function providerFor(
+  id: string,
+  opts: { apiKey: string; endpoint?: string; workspaceId?: string },
+): ProviderDispatchResult {
   const factory = IMPLEMENTED[id]
   if (factory === undefined) {
     // Distinguish "we've never heard of this id at all" from "we know it, just haven't wired it yet"
@@ -55,7 +58,7 @@ export function providerFor(id: string, opts: { apiKey: string; endpoint?: strin
 /** The set of provider ids this module wires a LIVE key-authentication check for (ticket #1634) — a
  *  sibling table to `IMPLEMENTED` above, same reasoning: `openai`/`gemini` have no real adapter to
  *  validate against either, so they're absent here too. */
-const KEY_VALIDATORS: Record<string, (apiKey: string, endpoint?: string) => Promise<boolean>> = {
+const KEY_VALIDATORS: Record<string, (apiKey: string, endpoint?: string, workspaceId?: string) => Promise<boolean>> = {
   anthropic: validateAnthropicKey,
 }
 
@@ -80,14 +83,19 @@ const keyValidationCache = new Map<string, KeyValidationEntry>()
  * wired) answers `true` — the caller's own non-empty-string check already gated getting here, and there
  * is no live adapter to validate against either way (unchanged from before this ticket for openai/gemini).
  */
-export async function validateProviderKeyCached(id: string, apiKey: string, endpoint?: string): Promise<boolean> {
+export async function validateProviderKeyCached(
+  id: string,
+  apiKey: string,
+  endpoint?: string,
+  workspaceId?: string,
+): Promise<boolean> {
   const validator = KEY_VALIDATORS[id]
   if (validator === undefined) return true
-  const cacheKey = `${id}:${apiKey}`
+  const cacheKey = `${id}:${apiKey}:${workspaceId ?? ''}`
   const now = Date.now()
   const cached = keyValidationCache.get(cacheKey)
   if (cached !== undefined && cached.expiresAt > now) return cached.ok
-  const ok = await validator(apiKey, endpoint)
+  const ok = await validator(apiKey, endpoint, workspaceId)
   keyValidationCache.set(cacheKey, { ok, expiresAt: now + KEY_VALIDATION_TTL_MS })
   return ok
 }

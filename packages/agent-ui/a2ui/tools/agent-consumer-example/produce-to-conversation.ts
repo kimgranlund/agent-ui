@@ -38,7 +38,7 @@ async function main(): Promise<void> {
   //    `@agent-ui/a2ui/corpus`'s `createStore` + its own IO and returns real records here.
   //  - catalog: the sole component authority.
   const deps: ProduceDeps = {
-    provider: anthropicProvider({ apiKey }),
+    provider: anthropicProvider({ apiKey, workspaceId: process.env.ANTHROPIC_WORKSPACE_ID }),
     retrieve: () => [],
     catalog: defaultCatalog,
   }

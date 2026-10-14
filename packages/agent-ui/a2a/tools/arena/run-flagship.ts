@@ -52,7 +52,7 @@ async function main(): Promise<void> {
     process.exit(1)
   }
 
-  const provider = anthropicProvider({ apiKey })
+  const provider = anthropicProvider({ apiKey, workspaceId: process.env.ANTHROPIC_WORKSPACE_ID ?? dotenv.ANTHROPIC_WORKSPACE_ID })
   // deriveCanaryPair asserts X !== O at construction (review finding 3, LLD §7) — fail-fast, never silent.
   const { X: canaryX, O: canaryO } = deriveCanaryPair(FLAGSHIP_MATCH_ID)
 

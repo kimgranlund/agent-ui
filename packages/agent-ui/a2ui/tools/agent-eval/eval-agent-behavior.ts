@@ -39,7 +39,7 @@ import type { AgentProvider } from '../../src/agent/agent-transport.ts'
 import { retrieve } from '../../src/corpus/retrieve.ts'
 import { resolvePair, validateProvidersConfig } from '../agent/providers-config.ts'
 import type { ProvidersConfig } from '../agent/providers-config.ts'
-import { readAnthropicApiKey, loadA2uiShard } from '../corpus-genui/fs.ts'
+import { readAnthropicApiKey, readAnthropicWorkspaceId, loadA2uiShard } from '../corpus-genui/fs.ts'
 import { deriveSelectionCases, loadCaseCatalog, loadPersonaCases, loadResponseTypeCases, parsePersonaCase, parseResponseTypeCase } from './cases.ts'
 import type { PersonaCase, ResponseTypeCase, SelectionCase } from './cases.ts'
 import { observeTurn } from './observe.ts'
@@ -256,7 +256,11 @@ async function runLive(rest: readonly string[], repoRoot: string, fixturesDir: s
     console.error('live: no ANTHROPIC_API_KEY found (process env or --repo-root .env); aborting, not faking a result.')
     return 2
   }
-  const provider: AgentProvider = anthropicProvider({ apiKey, endpoint: resolved.entry.endpoint })
+  const provider: AgentProvider = anthropicProvider({
+    apiKey,
+    endpoint: resolved.entry.endpoint,
+    workspaceId: readAnthropicWorkspaceId(repoRoot, env),
+  })
 
   const only = flagValue(rest, 'only')
   const shard = loadA2uiShard(process.cwd())

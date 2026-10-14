@@ -20,7 +20,7 @@ import { join } from 'node:path'
 import { anthropicProvider } from '../../src/agent/providers/anthropic.ts'
 import { resolvePair, validateProvidersConfig } from '../agent/providers-config.ts'
 import type { ProvidersConfig } from '../agent/providers-config.ts'
-import { readAnthropicApiKey } from './fs.ts'
+import { readAnthropicApiKey, readAnthropicWorkspaceId } from './fs.ts'
 import { runCollectLeg } from './legs/collect.ts'
 import { runGenerateLeg } from './legs/generate.ts'
 import { runJudgeLeg } from './legs/judge.ts'
@@ -126,7 +126,11 @@ export async function runCli(argv: readonly string[], repoRoot: string, env: Rec
       console.error(`${leg}: no ANTHROPIC_API_KEY found (process.env or repo-root .env) — aborting, not faking a result, writing nothing.`)
       return 2
     }
-    const provider = anthropicProvider({ apiKey, endpoint: resolved.entry.endpoint })
+    const provider = anthropicProvider({
+      apiKey,
+      endpoint: resolved.entry.endpoint,
+      workspaceId: readAnthropicWorkspaceId(repoRoot, env),
+    })
 
     if (leg === 'generate') {
       const runsFlag = flagValue(rest, 'runs')

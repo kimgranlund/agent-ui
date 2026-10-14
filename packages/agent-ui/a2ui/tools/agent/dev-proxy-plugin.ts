@@ -65,6 +65,7 @@ import { formatErrorLine } from '../../src/agent/meta-line.ts'
 import { resolvePair, validateProvidersConfig } from './providers-config.ts'
 import type { ProvidersConfig } from './providers-config.ts'
 import { providerFor, validateProviderKeyCached } from './providers/index.ts'
+import { ANTHROPIC_WORKSPACE_ENV } from '../../src/agent/providers/anthropic.ts'
 import { retrieve } from '../../src/corpus/retrieve.ts'
 import type { CorpusRecord } from '../../src/corpus/record.ts'
 import { loadCatalog } from '../../src/catalog/catalog.ts'
@@ -309,7 +310,7 @@ export function a2uiDevProxyPlugin(opts?: {
                   .map(async ([id, e]) => {
                     const key = env[e.envKey]
                     if (typeof key !== 'string' || key === '') return false
-                    return validateProviderKeyCached(id, key, e.endpoint)
+                    return validateProviderKeyCached(id, key, e.endpoint, env[ANTHROPIC_WORKSPACE_ENV])
                   }),
               )
               const available = checks.filter(Boolean).length
@@ -374,7 +375,11 @@ export function a2uiDevProxyPlugin(opts?: {
               }
               // The SECOND, independent line of defense (SPEC-R11 AC4): even an allowlisted provider degrades
               // here if its adapter module isn't wired — never an unhandled crash.
-              const providerDispatch = providerFor(dispatch.provider, { apiKey: dispatch.apiKey, endpoint: dispatch.endpoint })
+              const providerDispatch = providerFor(dispatch.provider, {
+                apiKey: dispatch.apiKey,
+                endpoint: dispatch.endpoint,
+                workspaceId: dispatch.workspaceId,
+              })
               if (!providerDispatch.ok) {
                 trace.reject(503, providerDispatch.reason)
                 writeTrace(trace)
@@ -486,7 +491,7 @@ export function a2uiDevProxyPlugin(opts?: {
               }
               // Endpoint comes from the MATCHED registry row (providers.json), not a client value — one
               // source of truth for the request URL (SPEC-R11).
-              const dispatch = providerFor(provider, { apiKey, endpoint: pair.entry.endpoint }) // defensive dispatch (SPEC-R11 AC4)
+              const dispatch = providerFor(provider, { apiKey, endpoint: pair.entry.endpoint, workspaceId: env[ANTHROPIC_WORKSPACE_ENV] }) // defensive dispatch (SPEC-R11 AC4)
               if (!dispatch.ok) {
                 rejectTurn(503, dispatch.reason)
                 return
