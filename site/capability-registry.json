@@ -429,7 +429,9 @@
       ],
       "tag": "ui-combo-box",
       "tier": "pattern",
-      "uses": [],
+      "uses": [
+        "ui-glyph"
+      ],
       "catalogs": [
         "agent-ui"
       ]
@@ -1259,7 +1261,9 @@
       ],
       "tag": "ui-select",
       "tier": "pattern",
-      "uses": [],
+      "uses": [
+        "ui-glyph"
+      ],
       "catalogs": [
         "agent-ui"
       ]

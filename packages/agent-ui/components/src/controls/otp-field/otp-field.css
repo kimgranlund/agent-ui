@@ -48,7 +48,7 @@
      active / disabled / user-invalid. Active and user-invalid are ORTHOGONAL border-only channels layered on
      top of whichever bg/ink this table picks (the text-field user-invalid precedent). */
   --ui-otp-field-cell-bg: var(--md-sys-color-neutral-container-low); /* empty, idle */
-  --ui-otp-field-cell-bg-filled: var(--md-sys-color-neutral-container);
+  --ui-otp-field-cell-bg-filled: var(--md-sys-color-neutral-container-low); /* one idle fill, empty or filled (the text-field rule, T-0140); the digit carries the state */
   --ui-otp-field-cell-border: var(--md-sys-color-neutral-field-outline); /* the resting cell boundary, at least 3:1 against the page (SC 1.4.11, ADR-0245 Amendment 7), the text-field border */
   --ui-otp-field-cell-border-filled: var(--md-sys-color-neutral-field-outline);
   --ui-otp-field-cell-border-active: var(--md-sys-color-focus-ring); /* [data-active] — the caret-cell indicator */
@@ -86,8 +86,8 @@
 :where(ui-otp-field:is([disabled], :state(disabled))) {
   --ui-otp-field-cell-bg: var(--md-sys-color-neutral-container-low);
   --ui-otp-field-cell-bg-filled: var(--md-sys-color-neutral-container-low);
-  --ui-otp-field-cell-border: transparent;
-  --ui-otp-field-cell-border-filled: transparent;
+  --ui-otp-field-cell-border: var(--md-sys-color-neutral-outline-variant); /* the fleet disabled recipe (T-0139): locked cells keep a quiet boundary */
+  --ui-otp-field-cell-border-filled: var(--md-sys-color-neutral-outline-variant);
   --ui-otp-field-cell-ink: var(--ui-otp-field-cell-ink-disabled);
 }
 

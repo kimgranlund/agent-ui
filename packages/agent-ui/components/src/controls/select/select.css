@@ -39,6 +39,9 @@
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-select) declares --ui-select-* ════════════════ */
 
+/* uses: synced from select.md by scripts/codemod-uses.mjs */
+@import '../glyph/glyph.css';
+
 :where(ui-select) {
   /* ── Trigger frame — Kim's filled/container state law (TKT-0062), SUPERSEDING the ADR-0014
      cl.2c border-only channel: bg/border/ink ALL repoint per state now (default/filled/hover/
@@ -77,6 +80,9 @@
   --ui-select-gap: var(--md-sys-c, var(--md-sys-gap-md)); /* the control gutter c (Amendment 4); gutter + label inset = n to the caret cell */
   --ui-select-icon: var(--md-sys-icon-box, var(--md-sys-icon-md));        /* the icon-cell size (caret CELL is icon-wide) */
   --ui-select-glyph: var(--md-sys-glyph-box, var(--ui-select-font));   /* caret GLYPH = font (§4.1 caret law) */
+  /* The caret is a ui-glyph mark (caret-down, token stroke), inked at the value ink, never the placeholder ink: it is
+     the one cue that the pill opens a list (T-0148). */
+  --ui-select-caret-ink: var(--md-sys-color-neutral-on-surface-variant);
 
   /* ── Sizing floor — the [inline] hug-state floor (ADR-0223 cl.3(b), superseding ADR-0021's
      default-state placement): a HUGGING select with no selection or an empty placeholder needs a
@@ -84,8 +90,9 @@
      needs no floor — the container is the floor. Token name + default unchanged. */
   --ui-select-min-inline-size: 10ch;
 
-  /* ── Disabled state — TKT-0062's disabled row (bg=container-low, border=transparent, ink=neutral-low) */
-  --ui-select-border-disabled: transparent;
+  /* Disabled state: TKT-0062's disabled row (bg container-low, ink neutral-low) with the fleet disabled recipe's
+     quiet boundary (T-0139), so a locked trigger keeps its outline */
+  --ui-select-border-disabled: var(--md-sys-color-neutral-outline-variant);
   --ui-select-bg-disabled: var(--md-sys-color-neutral-container-low);
   --ui-select-ink-disabled: var(--md-sys-color-neutral-low);
 
@@ -189,6 +196,7 @@
   --ui-select-border: var(--ui-select-border-disabled);
   --ui-select-bg: var(--ui-select-bg-disabled);
   --ui-select-ink: var(--ui-select-ink-disabled);
+  --ui-select-caret-ink: var(--ui-select-ink-disabled);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-select) consumes ONLY --ui-select-* ════════════════ */
@@ -279,9 +287,9 @@
     border: 0;
   }
 
-  /* The caret span: an icon-sized CELL (box-sizing border-box). The glyph inside is font-sized
-     and centred by padding = ½(icon − glyph), the §4.1 caret law (same as button.css [data-role='caret']).
-     aria-hidden is set in select.ts; the glyph is decorative. */
+  /* The caret part: a ui-glyph caret-down (T-0148), an icon-sized CELL (box-sizing border-box). The mark inside is
+     the glyph box, centred by padding = ½(icon − glyph), the §4.1 caret law (same as button.css [data-role='caret']);
+     glyph.css draws it with the token stroke. aria-hidden is set in select.ts; the mark is decorative. */
   :scope > [data-part='trigger'] > [data-part='caret'] {
     inline-size: var(--ui-select-icon);
     block-size: var(--ui-select-icon);
@@ -292,16 +300,7 @@
     justify-content: center;
     font-size: var(--ui-select-glyph); /* the caret glyph = font (§4.1) */
     line-height: 1;
-  }
-
-  /* The injected Phosphor caret-down (setIcon, @agent-ui/icons): sized explicitly to the glyph
-     rhythm — not the icon cell — so the §4.1 law holds independent of the padding math above
-     (the padding already insets to the same value; this is belt-and-suspenders, not reliance on
-     it). Overrides the svg's own width/height="100%" presentational attributes (resolve.ts). */
-  :scope > [data-part='trigger'] > [data-part='caret'] svg {
-    display: block;
-    inline-size: var(--ui-select-glyph);
-    block-size: var(--ui-select-glyph);
+    color: var(--ui-select-caret-ink);
   }
 
   /* Trigger filled/container state law (TKT-0062, Kim's ruling — supersedes the ADR-0014 cl.2c
@@ -548,6 +547,9 @@
       border-color: ButtonBorder;
       background: ButtonFace;
       forced-color-adjust: none; /* preserve our explicit border/bg/color from the OS wash */
+    }
+    :scope > [data-part='trigger'] > [data-part='caret'] {
+      color: ButtonText;
     }
 
     /* Panel: Canvas/CanvasText for the surface; CanvasText for the border. */

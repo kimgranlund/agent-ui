@@ -8,7 +8,8 @@
 tag: ui-combo-box
 tier: pattern          # geometry size-class — the editor is Control-class; the panel is Container/surface; the options are item-pad rows (the Geometry-by-part three-class pattern from the decomp)
 extends: UIFormElement # form-associated: value + validity participate via ElementInternals (ADR-0013)
-uses: []
+uses:
+  - ui-glyph
 # marginal: tracked at the wave-4 integration slice (s12 barrel pass); ≤ ~2 kB tier budget (plan §10)
 
 attributes:            # attributes-as-API — mirrors UIComboBoxElement.props (form-specific first, then formProps)
@@ -98,6 +99,8 @@ slots:
 parts:
   - name: editor
     description: The control-created `<div data-part="editor" contenteditable="plaintext-only" role="combobox">`. Carries the combobox ARIA role (never on the host — FACE pattern), aria-haspopup="listbox", aria-autocomplete="list", aria-expanded (synced via the scope-owned effect), aria-controls (pointing to the listbox's id), and aria-activedescendant (updated on Arrow navigation). DOM focus lives HERE throughout keyboard navigation — it never moves to the listbox or options (the active-descendant pattern, OVL/ROV-C1).
+  - name: caret
+    description: The control-created `<ui-glyph data-part="caret" symbol="caret-down" aria-hidden="true">` (T-0148), a decorative trailing disclosure mark in an icon-sized cell pinned at the select trigger's caret edge, inked at the value ink (`--ui-combo-box-caret-ink`), pointer-inert. It tells a reader the field opens a list; the editor's end padding reserves its cell. Created ONCE beside the editor and never adopted into the listbox.
   - name: listbox
     description: The control-created `<div data-part="listbox" role="listbox" popover="auto" id="...">` that enters the Popover API top layer when open. Author-provided [role=option] children are adopted into this part at connect time AND on every later light-DOM mutation (TKT-0026). Created ONCE (idempotent guard — the same node persists across disconnect/reconnect). The overlay controller sets position:fixed + inset on open.
   - name: empty

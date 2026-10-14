@@ -164,7 +164,9 @@ No trigger, no popup, no overlay — the host itself carries `role="listbox"` (v
 IS the always-visible surface. The author's `[role=option]` children stay direct light-DOM children (no
 control-created panel to move them into, unlike `ui-select`). The checkmark is painted **entirely in
 CSS** as `[role=option][aria-selected="true"]::before` — zero DOM injection, matching `ui-checkbox`'s own
-"no shadow DOM, no per-node JS injection" precedent.
+"no shadow DOM, no per-node JS injection" precedent. An unselected option paints an outlined square the
+size of the `ui-checkbox` box at the same register, with the checkbox corner, so a pick-many list reads
+as checkboxes, never as radios (T-0148).
 
 ## Selection
 

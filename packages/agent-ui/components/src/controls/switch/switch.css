@@ -22,18 +22,23 @@
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-switch) declares --ui-switch-* ════════════════ */
 
 :where(ui-switch) {
-  /* Track colour (unchecked default = solid neutral). A per-state ROLE-LADDER step, never a color-mix
-     (ADR-0008). The OFF track is a state-bearing control part → the SOLID --md-sys-color-neutral-track (SC 1.4.11
-     3:1 vs every surface plane), NOT the old translucent --md-sys-color-neutral-outline-variant which composited to
-     1.51:1 light / 1.73:1 (an SC 1.4.11 fail — the off switch went near-invisible; the white thumb did
-     not carry it either, 1.22–1.84:1). Hover steps one role more prominent (2026-07-02 color audit item 4
-     · ADR-0059). The CHECKED track (primary, below) already clears 3.94:1 light / 4.68:1 dark — untouched. */
-  --ui-switch-track: var(--md-sys-color-neutral-track);
-  --ui-switch-track-hover: var(--md-sys-color-neutral-track-hover);
-  /* Track edge: none while enabled (the solid track carries the boundary); [disabled] paints it (T-0139). */
-  --ui-switch-track-edge: transparent;
-  /* Thumb colour (unchecked default = brightest neutral surface ≈ white). Constant across schemes. */
-  --ui-switch-thumb: var(--md-sys-color-neutral-surface-brightest);
+  /* Track colour (unchecked default = a light neutral container with a 3:1 edge). A per-state ROLE-LADDER step,
+     never a color-mix (ADR-0008). The OFF track is a state-bearing control part, so it holds SC 1.4.11 3:1 against
+     every surface plane. ADR-0059 (the 2026-07-02 colour audit, item 4) first met that with a SOLID
+     --md-sys-color-neutral-track fill, after the translucent outline-variant track composited to 1.51:1 light /
+     1.73:1 dark. That solid fill read heavier than the primary ON track, so "off" rows looked active. Kim
+     2026-10-14 (T-0148): the 3:1 moves from the fill to the edge. The off track is the light neutral container
+     with a --md-sys-color-neutral-field-outline edge (the field boundary role, at least 3:1 on every plane, ADR-0245
+     Amendment 7) and a thumb in the same outline role (about 3.1:1 against the track in both schemes), so the
+     off fill now sits below the on fill against the page while the boundary still carries 3:1. Hover steps
+     the fill one container step. The CHECKED track (primary, below) clears 3.94:1 light / 4.68:1 dark. */
+  --ui-switch-track: var(--md-sys-color-neutral-container);
+  --ui-switch-track-hover: var(--md-sys-color-neutral-container-high);
+  /* Track edge: the 3:1 field outline while off; :state(checked) drops it (the solid primary fill carries the
+     boundary); [disabled] paints the quiet outline-variant (T-0139). */
+  --ui-switch-track-edge: var(--md-sys-color-neutral-field-outline);
+  /* Thumb colour (unchecked = the field outline role, the off state's mark; checked = on-primary, below). */
+  --ui-switch-thumb: var(--md-sys-color-neutral-field-outline);
 
   /* Box geometry — the compact widget-box ramp step (ADR-0041; default size = md). `[size]` repoints. */
   --ui-switch-box: var(--md-sys-icon-box, var(--md-sys-compact-md));
@@ -66,6 +71,7 @@
 :where(ui-switch:state(checked)) {
   --ui-switch-track: var(--md-sys-color-primary);
   --ui-switch-track-hover: var(--md-sys-color-primary-hover);
+  --ui-switch-track-edge: transparent;
   --ui-switch-thumb: var(--md-sys-color-primary-on-primary);
 }
 

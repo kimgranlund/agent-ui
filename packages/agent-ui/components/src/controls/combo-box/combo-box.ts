@@ -49,6 +49,7 @@ import { UIFormElement, type FormValue, type ValidityResult, type FieldLabelling
 import { overlay, type OverlayHandle } from '../../traits/overlay.ts'
 import { scrollFade } from '../../traits/scroll-fade.ts'
 import { trackUserInvalid, type TrackUserInvalidController } from '../../traits/track-user-invalid.ts'
+import '../glyph/glyph.ts' // the trailing caret mark (T-0148)
 
 // ── Module-level stable-id counters ─────────────────────────────────────────────────────────────
 
@@ -109,6 +110,10 @@ export class UIComboBoxElement extends UIFormElement {
   // adopted into it at connect time AND on every later light-DOM mutation (TKT-0026 — see
   // #syncOptions) and stay there. The overlay controller sets popover="auto".
   #listbox: HTMLElement | null = null
+
+  // The control-created trailing caret (T-0148): a decorative ui-glyph caret-down, so the editor never reads as a
+  // plain text field. A host child beside the editor; #syncOptions skips it by reference, like the editor.
+  #caret: HTMLElement | null = null
 
   // The control-created "no matches" row — created ONCE, appended AFTER the moved-in options so it
   // always renders last. Toggled `hidden` by `#syncEmptyState()` (2026-07-07 fix): without it, a
@@ -448,7 +453,14 @@ export class UIComboBoxElement extends UIFormElement {
     this.#emptyRow = emptyRow
     this.#syncEmptyState()
 
-    this.append(editor, listbox)
+    // ── Trailing caret part (T-0148) ─────────────────────────────────────────────────────────
+    const caret = document.createElement('ui-glyph')
+    caret.setAttribute('data-part', 'caret')
+    caret.setAttribute('aria-hidden', 'true')
+    caret.setAttribute('symbol', 'caret-down')
+    this.#caret = caret
+
+    this.append(editor, caret, listbox)
     return { editor, listbox }
   }
 
@@ -456,7 +468,7 @@ export class UIComboBoxElement extends UIFormElement {
 
   /**
    * Adopt every light-DOM node CURRENTLY sitting as a DIRECT child of the host — other than the
-   * control-created `editor`/`listbox` parts themselves — into the listbox panel, immediately
+   * control-created `editor`/`caret`/`listbox` parts themselves, into the listbox panel, immediately
    * BEFORE `#emptyRow` (so the "no matches" row stays the panel's last child regardless of how much
    * gets adopted over time; `insertBefore(node, null)` degrades to a plain append when `#emptyRow`
    * does not exist yet, i.e. the very first call from inside `#ensureParts()`). Runs once per connect
@@ -466,7 +478,7 @@ export class UIComboBoxElement extends UIFormElement {
    *
    * Idempotent + self-terminating, no re-entrancy guard needed: an already-adopted node lives inside
    * `#listbox`, not as a direct child of `this` — so `this.firstChild`/`nextSibling` traversal never
-   * re-visits it (the relocation law: no double-move on reconnect). `editor`/`listbox` are excluded
+   * re-visits it (the relocation law: no double-move on reconnect). `editor`/`caret`/`listbox` are excluded
    * by reference (they DO become direct children of `this` at the end of `#ensureParts()`, and must
    * never be adopted into themselves).
    *
@@ -484,12 +496,13 @@ export class UIComboBoxElement extends UIFormElement {
     const listbox = this.#listbox
     if (!listbox) return
     const editor = this.#editor
+    const caret = this.#caret
     const emptyRow = this.#emptyRow
     let adopted = false
     let node = this.firstChild
     while (node) {
       const next = node.nextSibling
-      if (node !== editor && node !== listbox) {
+      if (node !== editor && node !== listbox && node !== caret) {
         listbox.insertBefore(node, emptyRow)
         adopted = true
       }

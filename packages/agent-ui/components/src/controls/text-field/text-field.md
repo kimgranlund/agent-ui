@@ -259,7 +259,7 @@ all repoint together across five states:
 | filled (has a value, idle) | `neutral-container-low` | `neutral-field-outline` | `neutral-on-surface-variant` |
 | hover | `neutral-container` | `neutral-field-outline` | `neutral-on-surface-variant` |
 | focus | `neutral-container-low` | `transparent` (the ring is the indicator) | `neutral-on-surface` |
-| disabled | `neutral-container-low` | `transparent` | `neutral-low` |
+| disabled | `neutral-container-low` | `neutral-outline-variant` (the fleet disabled recipe, T-0139) | `neutral-low` |
 
 "Filled" is `[data-empty]`'s absence on the editor part — the same emptiness signal the placeholder
 already keys off. The `user-invalid` danger border is UNCHANGED/orthogonal — it layers on top of

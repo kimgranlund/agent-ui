@@ -23,6 +23,7 @@ import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { SCHEMES, composite, contrast, inkContrast, schemeWrap } from '../button/disabled-recipe.fixture.ts'
 // The page root register (no data-tier region): product / sm, n 5 / 6 / 7 for size sm / md / lg.
 const root = (size: 'sm' | 'md' | 'lg') => resolve('product', 'sm', size)
 
@@ -180,19 +181,30 @@ describe('ui-switch cross-engine browser smoke — track + thumb geometry (ADR-0
   })
 })
 
-// ── SC 1.4.11: the OFF track is a SOLID, opaque neutral (2026-07-02 audit item 4 · ADR-0059) ─────────────
+// ── SC 1.4.11: the OFF track keeps 3:1 on its edge, not its fill (ADR-0059, moved by T-0148) ─────────────
 
-describe('ui-switch cross-engine browser smoke — solid off-track (SC 1.4.11, ADR-0059)', () => {
-  it('the UNCHECKED track (::before) paints an OPAQUE neutral — --md-sys-color-neutral-track resolved, not the old translucent outline-variant', () => {
-    // The off-track was --md-sys-color-neutral-outline-variant (neutral-500 @ 40%), which composited to only 1.51:1
-    // light / 1.73:1 dark over the surface — an SC 1.4.11 fail; the near-white thumb didn't carry it either
-    // (1.22–1.84:1 in the off state). The fix is the SOLID --md-sys-color-neutral-track. A headless env can't paint the
-    // composited alpha, so this real-engine read is the proof: the track background is fully OPAQUE (alpha 1),
-    // which the old translucent 0.4 role could never be. This probe PINS the ADR-0059 repoint.
-    const { sw } = mount('<ui-switch></ui-switch>') // unchecked (off) by default
-    const bg = getComputedStyle(sw, '::before').backgroundColor
-    expect(alphaOf(bg), `off-track background must be OPAQUE (solid --md-sys-color-neutral-track), got "${bg}"`).toBe(1)
-  })
+describe('ui-switch cross-engine browser smoke: the off track edge carries 3:1, its fill stays below the on fill', () => {
+  for (const scheme of SCHEMES) {
+    it(`${scheme}: the off edge is at least 3:1 against the page, and the off fill is quieter than the on fill`, () => {
+      // ADR-0059 met SC 1.4.11 with a solid neutral-track fill, which read heavier than the primary on track
+      // (T-0148, Kim 2026-10-14). The 3:1 now rides the field-outline edge; the fill is a light container.
+      const { wrap, page } = schemeWrap(scheme, '<ui-switch></ui-switch><ui-switch checked></ui-switch>')
+      mounted.push(wrap)
+      const [off, on] = [...wrap.querySelectorAll('ui-switch')] as HTMLElement[]
+      const offTrack = getComputedStyle(off, '::before')
+      const onTrack = getComputedStyle(on, '::before')
+      const surface = composite(page)
+      expect(Number.parseFloat(offTrack.borderTopWidth), 'the off track paints an edge').toBeGreaterThan(0)
+      const edge = contrast(composite(page, offTrack.borderTopColor), surface)
+      expect(edge, `off edge ${edge.toFixed(2)}:1`).toBeGreaterThanOrEqual(3)
+      const offFill = contrast(composite(page, offTrack.backgroundColor), surface)
+      const onFill = contrast(composite(page, onTrack.backgroundColor), surface)
+      expect(offFill, `off fill ${offFill.toFixed(2)}:1 vs on fill ${onFill.toFixed(2)}:1`).toBeLessThan(onFill)
+      // the off thumb is the state mark: at least 3:1 against the off track it sits on
+      const thumb = inkContrast(page, [offTrack.backgroundColor], getComputedStyle(off, '::after').backgroundColor)
+      expect(thumb, `off thumb ${thumb.toFixed(2)}:1 against its track`).toBeGreaterThanOrEqual(3)
+    })
+  }
 })
 
 // ── forced-colors ─────────────────────────────────────────────────────────────────────────────────────

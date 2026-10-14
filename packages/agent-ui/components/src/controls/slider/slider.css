@@ -116,15 +116,16 @@
   --ui-slider-box: var(--md-sys-icon-box, var(--md-sys-compact-lg));
 }
 
-/* [disabled] → muted neutral roles for rail, fill, and thumb. The state holds at idle: the styles
-   block sets `pointer-events: none` so `:hover` never matches, preventing any token lift. The rail
-   deliberately stays the translucent --md-sys-color-neutral-outline-variant (NOT the solid --md-sys-color-neutral-track): a
-   disabled/inactive component is SC 1.4.11-EXEMPT, and the muted rail correctly reads as inactive. */
+/* [disabled] → the fleet disabled recipe (T-0139, T-0148): the slider stays quieter than when enabled and keeps
+   its reading. The rail drops to the translucent neutral outline-variant (a disabled control is SC 1.4.11 exempt);
+   the fill takes the primary outline role, so the value side stays heavier than the empty side (about 1.4:1
+   light and 1.5:1 dark against the rail, the same reading as enabled); the thumb keeps its enabled interior and
+   only its ring mutes, so it stays a ring and is never louder than the enabled thumb. The state holds at idle:
+   the styles block sets `pointer-events: none` so `:hover` never matches, preventing any token lift. */
 :where(ui-slider[disabled]) {
   --ui-slider-rail: var(--md-sys-color-neutral-outline-variant);
-  --ui-slider-fill: var(--md-sys-color-neutral-surface-high);
-  --ui-slider-thumb: var(--md-sys-color-neutral-on-surface-variant);
-  --ui-slider-thumb-ring: var(--md-sys-color-neutral-on-surface-variant); /* SC 1.4.11-exempt; matches fill, no separate ring emphasis */
+  --ui-slider-fill: var(--md-sys-color-primary-outline);
+  --ui-slider-thumb-ring: var(--md-sys-color-neutral-on-surface-disabled);
   /* GH #1141: label/value ink mutes too (both hold READ-ONLY meaning while disabled — SC 1.4.11-exempt,
      matching the rail/fill/thumb mute above). */
   --ui-slider-value-ink: var(--md-sys-color-neutral-on-surface-variant);

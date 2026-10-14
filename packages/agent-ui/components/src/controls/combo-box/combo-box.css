@@ -34,6 +34,9 @@
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-combo-box) ════════════════ */
 
+/* uses: synced from combo-box.md by scripts/codemod-uses.mjs */
+@import '../glyph/glyph.css';
+
 :where(ui-combo-box) {
   /* ── Editor (Control-class) ─────────────────────────────────────────── */
   /* Geometry: control height off the md-scale ramp (the combo-box trigger is the editor). */
@@ -49,6 +52,14 @@
      where the box margin above holds. */
   --ui-combo-box-value-edge: var(--ui-combo-box-value-edge-derived, var(--ui-combo-box-padding-inline));
   --ui-combo-box-value-edge-derived: calc(var(--md-sys-inset) + var(--md-sys-label-inset));
+  /* The trailing caret (T-0148): ui-glyph's caret-down in an icon-sized cell pinned at the box margin, the select
+     trigger's caret anatomy, so a combo-box never reads as a plain text field. The editor's end padding reserves the
+     cell plus the control gutter c, so the value stops n before the cell, as the select label does. */
+  --ui-combo-box-icon: var(--md-sys-icon-box, var(--md-sys-icon-md));
+  --ui-combo-box-glyph: var(--md-sys-glyph-box, var(--ui-combo-box-font));
+  --ui-combo-box-caret-gap: var(--md-sys-c, var(--md-sys-gap-md));
+  --ui-combo-box-caret-edge: calc((var(--ui-combo-box-height) - var(--ui-combo-box-icon)) / 2);
+  --ui-combo-box-caret-ink: var(--md-sys-color-neutral-on-surface-variant); /* the value ink, never the placeholder ink */
 
   /* Frame — Kim's filled/container state law (TKT-0062), SUPERSEDING the earlier border-only
      channel: THREE channels now repoint per state (background, border, text-ink), keyed off five
@@ -60,7 +71,7 @@
        filled   | container-low   | field-outline     | on-surface-variant
        hover    | container       | field-outline     | on-surface-variant
        focus    | container-low   | transparent (ring)| on-surface
-       disabled | container-low   | transparent       | neutral-low
+       disabled | container-low   | outline-variant   | neutral-low
      "filled" reads `[data-part='editor']:not([data-empty])` DIRECTLY (no :has() indirection needed
      — unlike text-field/textarea, whose editor is a SEPARATE part inside :scope, combo-box's
      `[data-part='editor']` IS both the frame and the value surface); see @scope's selector below.
@@ -93,7 +104,7 @@
 
   /* Disabled state (TKT-0062's disabled row) — an indirection layer of -disabled-suffixed tokens
      fed to the base bg/border/ink trio by the [disabled] block below (keeps the TKT-0047 shape). */
-  --ui-combo-box-border-disabled: transparent;
+  --ui-combo-box-border-disabled: var(--md-sys-color-neutral-outline-variant); /* the fleet disabled recipe (T-0139): a locked editor keeps a quiet boundary */
   --ui-combo-box-bg-disabled: var(--md-sys-color-neutral-container-low);
   --ui-combo-box-ink-disabled: var(--md-sys-color-neutral-low);
 
@@ -178,6 +189,7 @@
   --ui-combo-box-bg: var(--ui-combo-box-bg-disabled);
   --ui-combo-box-ink: var(--ui-combo-box-ink-disabled);
   --ui-combo-box-placeholder: var(--ui-combo-box-ink-disabled);
+  --ui-combo-box-caret-ink: var(--ui-combo-box-ink-disabled);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-combo-box) ════════════════ */
@@ -191,7 +203,7 @@
     display: grid;
     grid-template-columns: 1fr;
     min-inline-size: var(--ui-combo-box-height); /* min width 4n (the control rule, ADR-0245 Amendment 4) */
-    position: relative; /* stacking context for any decorative caret pseudo */
+    position: relative; /* the containing block for the trailing caret part */
   }
 
   /* [inline] — the ONE sizing opt-out (ADR-0223 cl.2, R2): a single reflected boolean flips BOTH
@@ -228,11 +240,12 @@
        single line is centered by the LINE BOX instead, the same row-height law the option rows use
        ((height − font)/2 block-pad), minus the 1px border each side so the border-box still lands
        exactly on --ui-combo-box-height (box-sizing: border-box; min-block-size is a floor).
-       Nothing else keyed on the flex — the editor has no element children (placeholder is a
-       ::before; the decorative caret glyph is a host pseudo), so no sibling needed a flex row. */
+       Nothing else keyed on the flex: the editor has no element children (placeholder is a
+       ::before; the decorative caret is a sibling ui-glyph part), so no sibling needed a flex row. */
     display: block;
     padding-block: calc((var(--ui-combo-box-height) - var(--ui-combo-box-font)) / 2 - 1px);
     padding-inline: var(--ui-combo-box-value-edge);
+    padding-inline-end: calc(var(--ui-combo-box-value-edge) + var(--ui-combo-box-caret-gap) + var(--ui-combo-box-icon)); /* room for the caret cell (T-0148) */
 
     /* FIXED (2026-07-06, found by the option-font trip-wire): `font: var(--ui-combo-box-font)` was
        an INVALID `font` shorthand (a single value — the shorthand requires font-size AND
@@ -267,6 +280,21 @@
        self-scrolls horizontally to keep the caret in view on overflow, matching text-field. */
     white-space: nowrap;
     overflow: hidden;
+  }
+
+  /* The trailing caret part (T-0148): a decorative ui-glyph caret-down in an icon-sized cell, centred in the frame at
+     the select trigger's caret edge ½(h − icon), the mark at the glyph box inside it. Pointer-inert, so a click on it
+     lands on the editor beneath. */
+  :scope > [data-part='caret'] {
+    position: absolute;
+    inset-block-start: var(--ui-combo-box-caret-edge);
+    inset-inline-end: var(--ui-combo-box-caret-edge);
+    box-sizing: border-box;
+    inline-size: var(--ui-combo-box-icon);
+    block-size: var(--ui-combo-box-icon);
+    padding: calc((var(--ui-combo-box-icon) - var(--ui-combo-box-glyph)) / 2);
+    color: var(--ui-combo-box-caret-ink);
+    pointer-events: none;
   }
 
   /* Placeholder via ::before + attr(data-placeholder) (text-field pattern):
@@ -486,6 +514,11 @@
 
     :scope > [data-part='editor']:focus {
       outline-color: Highlight;
+    }
+
+    :scope > [data-part='caret'] {
+      color: FieldText;
+      forced-color-adjust: none;
     }
 
     :scope > [data-part='listbox'] {

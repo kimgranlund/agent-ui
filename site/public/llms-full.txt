@@ -3595,7 +3595,9 @@ No trigger, no popup, no overlay — the host itself carries `role="listbox"` (v
 IS the always-visible surface. The author's `[role=option]` children stay direct light-DOM children (no
 control-created panel to move them into, unlike `ui-select`). The checkmark is painted **entirely in
 CSS** as `[role=option][aria-selected="true"]::before` — zero DOM injection, matching `ui-checkbox`'s own
-"no shadow DOM, no per-node JS injection" precedent.
+"no shadow DOM, no per-node JS injection" precedent. An unselected option paints an outlined square the
+size of the `ui-checkbox` box at the same register, with the checkbox corner, so a pick-many list reads
+as checkboxes, never as radios (T-0148).
 
 ## Selection
 
@@ -4885,7 +4887,7 @@ the ⭐ **ADR-0043 select gate**.
 
 The control creates two internal parts on first connect:
 
-- **trigger** — a `<button type="button">` with `aria-haspopup="listbox"` + `aria-expanded` + `aria-controls`. Contains a **label span** (the selected option's text or the placeholder) and a **caret span** (a Phosphor `caret-down` glyph, sized = font).
+- **trigger**: a `<button type="button">` with `aria-haspopup="listbox"` + `aria-expanded` + `aria-controls`. Contains a **label span** (the selected option's text or the placeholder) and a **caret** (ui-glyph's `caret-down` mark at the glyph box, inked at the value ink).
 - **listbox** — a `<div role="listbox">` panel in the Popover API top layer when open. The author's `[role=option]` children are adopted into this panel at first connect AND on every later light-DOM mutation (TKT-0026) — an Option appended after connect adopts too, in the order it was added.
 
 ## Selection
@@ -5060,8 +5062,10 @@ border, → `--md-sys-color-neutral-on-surface`, the page-ink role covering the 
 1.4.11 dimension; ADR-0094) · `--ui-slider-label-ink` (→ `--md-sys-color-neutral-on-surface-variant`, the
 subdued half of the label/value pair) · `--ui-slider-value-ink` (→ `--md-sys-color-neutral-on-surface`,
 the emphasized half — GH #1141 dropped the pre-#1141 pill surface; the value is now plain text like the
-label, since it no longer transiently overlaps the rail/thumb). `[disabled]` mutes all six to inactive
-neutral roles (SC 1.4.11-exempt). The thumb's contrast contract is three-dimensional — fill, rail, and
+label, since it no longer transiently overlaps the rail/thumb). `[disabled]` takes the fleet disabled
+recipe (SC 1.4.11-exempt, T-0148): the rail drops to `neutral-outline-variant`, the fill to `primary-outline`
+so the value side stays heavier than the empty side, the thumb keeps its interior while its ring mutes to
+`neutral-on-surface-disabled`, and both inks step to `neutral-on-surface-variant`. The thumb's contrast contract is three-dimensional: fill, rail, and
 page surface, in both schemes (ADR-0094): a repoint of any of these tokens must clear all three; the
 slider browser legs are the standing gate.
 
@@ -6144,7 +6148,7 @@ neither the box nor the inset rides `--md-sys-density`.
 
 ## States + colour
 
-Unchecked: solid `--md-sys-color-neutral-track` track (the state-bearing track role, ADR-0059 — SC 1.4.11 3:1 on every plane; `-track-hover` on hover), near-white thumb. Checked: `--md-sys-color-primary` track
+Unchecked: a light `--md-sys-color-neutral-container` track (`-container-high` on hover) with a `--md-sys-color-neutral-field-outline` edge and thumb, so the off track is lighter than the on track while its boundary keeps SC 1.4.11 3:1 on every plane (Kim 2026-10-14, T-0148; it moved the 3:1 from ADR-0059's solid fill to the edge). Checked: `--md-sys-color-primary` track
 (`--md-sys-color-primary-on-primary` thumb). Disabled takes the fleet disabled recipe (T-0139): an `-outline-variant` edge over a `-container-disabled` track
 with an `-on-surface-disabled` thumb, neutral when off and primary when on, so the track never vanishes and locked
 on still differs from locked off. The host is pointer-inert (`pointer-events: none`), so `:hover` never lifts the state. A `:focus-visible`
@@ -6782,7 +6786,7 @@ all repoint together across five states:
 | filled (has a value, idle) | `neutral-container-low` | `neutral-field-outline` | `neutral-on-surface-variant` |
 | hover | `neutral-container` | `neutral-field-outline` | `neutral-on-surface-variant` |
 | focus | `neutral-container-low` | `transparent` (the ring is the indicator) | `neutral-on-surface` |
-| disabled | `neutral-container-low` | `transparent` | `neutral-low` |
+| disabled | `neutral-container-low` | `neutral-outline-variant` (the fleet disabled recipe, T-0139) | `neutral-low` |
 
 "Filled" is `[data-empty]`'s absence on the editor part — the same emptiness signal the placeholder
 already keys off. The `user-invalid` danger border is UNCHANGED/orthogonal — it layers on top of
@@ -6897,8 +6901,10 @@ The border-channel state ladder — idle → `:hover` → focus (transparent bor
 the `user-invalid` danger border — and `disabled` (a role repoint, not opacity) are reused verbatim from
 `ui-text-field` (ADR-0014 cl.2c / dev#b / dev#c); the field-frame pattern is shape-independent. The idle,
 filled and hover border is the opaque `neutral-field-outline` role, at least 3:1 against the page in both
-themes (SC 1.4.11, ADR-0245 Amendment 7); focus steps it to transparent and disabled drops it. A disabled
-textarea is not user-resizable (`resize: none`).
+themes (SC 1.4.11, ADR-0245 Amendment 7); focus steps it to transparent, and disabled steps it to the quiet `neutral-outline-variant` (the fleet
+disabled recipe, T-0139), so a locked textarea keeps its boundary. Empty and filled share one idle fill,
+`neutral-container-low`; the value ink, not the fill, tells them apart. A disabled textarea is not
+user-resizable (`resize: none`).
 
 ## Validity & accessibility
 
