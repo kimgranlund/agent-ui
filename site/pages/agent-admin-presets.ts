@@ -143,7 +143,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'croupier',
     category: 'games', // GH #143 — a card table, thematically a game even though it predates the games-roster wave
-    seedVersion: 9, // T-0088 (ADR-0243 Amendment 3): each round runs the CardTable's phases (betting on the table's own chips and a Deal Button, playing, settled with the result line and Deal again), taught by the card-layout and game-table-chrome skills and round-loop; migrates pre-v9 stores. 8, T-0073 (ADR-0243): the blackjack table is one CardTable, taught by the card-layout and game-table-chrome skills; migrates pre-v8 stores. 7, T-0020: a natural blackjack ends the round on the deal (surfaceStyle, round-loop and the blackjack rules entry); no mini-skill carries it, so a pre-v7 store would never hear it; migrates pre-v7 stores. 6: one surface per round (Kim 2026-10-04), supersedes #525's one-persistent-surface surfaceStyle; #525's bankroll opt-in + cross-session resume carry over; migrates pre-v6 stores. T-0016 (GH #1795) edited the hand/total seed text WITHOUT a bump: existing stores get the data-driven hand teaching from the server-composed card-layout/game-table-chrome mini-skills and the ADR-0238 hand check, so no store needs dropping
+    seedVersion: 10, // T-0159: game-hud defers to the CardTable in blackjack; migrates pre-v10 stores. 9: T-0088 (ADR-0243 Amendment 3): each round runs the CardTable's phases (betting on the table's own chips and a Deal Button, playing, settled with the result line and Deal again), taught by the card-layout and game-table-chrome skills and round-loop; migrates pre-v9 stores. 8, T-0073 (ADR-0243): the blackjack table is one CardTable, taught by the card-layout and game-table-chrome skills; migrates pre-v8 stores. 7, T-0020: a natural blackjack ends the round on the deal (surfaceStyle, round-loop and the blackjack rules entry); no mini-skill carries it, so a pre-v7 store would never hear it; migrates pre-v7 stores. 6: one surface per round (Kim 2026-10-04), supersedes #525's one-persistent-surface surfaceStyle; #525's bankroll opt-in + cross-session resume carry over; migrates pre-v6 stores. T-0016 (GH #1795) edited the hand/total seed text WITHOUT a bump: existing stores get the data-driven hand teaching from the server-composed card-layout/game-table-chrome mini-skills and the ADR-0238 hand check, so no store needs dropping
     label: 'The Croupier',
     tagline: 'Card games — Blackjack, Poker, and their variants — one table per round, each a new step in the dialog',
     config: { name: 'The Croupier', model: 'claude-sonnet-5', temperature: 0.6, toolsEnabled: true }, // rev.4: fable retired from the roster
@@ -280,7 +280,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'concierge', // GH #46 — upgraded IN PLACE to the Hotel Concierge (same id: persisted stores key on it)
     category: 'hospitality', // GH #143
-    seedVersion: 7, // GH #1203 — `booking-flow` names the Back affordance + settled receipt (ADR-0198 B1/B2); migrates pre-#1203 stores (6: GH #1171 arc rewrite; 5: GH #497 local pattern set)
+    seedVersion: 8, // T-0159: gallery-swiper caption variant, the amenity-service-card ServiceCard skill; migrates pre-v8 stores. 7: GH #1203 — `booking-flow` names the Back affordance + settled receipt (ADR-0198 B1/B2); migrates pre-#1203 stores (6: GH #1171 arc rewrite; 5: GH #497 local pattern set)
     label: 'The Hotel Concierge',
     tagline: 'The full hospitality stack: booking forms + galleries + itineraries + live weather/FX integrations (GH #46/#49)',
     config: { name: 'The Hotel Concierge', model: 'claude-sonnet-5', temperature: 0.4, toolsEnabled: true },
@@ -353,7 +353,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'restaurant', // GH #46 — NEW
     category: 'hospitality', // GH #143
-    seedVersion: 2, // GH #148 — added a Resources entry (was empty); migrates pre-#148 stores
+    seedVersion: 3, // T-0159: hotel-booking-form uses a date TextField for a single date; migrates pre-v3 stores. 2: GH #148 — added a Resources entry (was empty); migrates pre-#148 stores
     label: 'The Maître d’',
     tagline: 'Table booking + menus + wine lists — the reservation conversation as forms and menu cards (GH #46)',
     config: { name: 'The Maître d’', model: 'claude-sonnet-5', temperature: 0.5, toolsEnabled: false },
@@ -391,7 +391,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'travel', // GH #46 — NEW
     category: 'hospitality', // GH #143
-    seedVersion: 3, // T-0089 (ADR-0244): the trip-plan close is ONE ResultCard (outcome done); migrates pre-v3 stores. 2: GH #148, added a Resources entry (was empty)
+    seedVersion: 4, // T-0159: gallery-swiper caption Text uses the caption variant; migrates pre-v4 stores. 3: T-0089 (ADR-0244): the trip-plan close is ONE ResultCard (outcome done); migrates pre-v3 stores. 2: GH #148, added a Resources entry (was empty)
     label: 'The Travel Agent',
     tagline: 'Multi-leg trip planning — comparison cards, an accumulating itinerary, live weather/FX (GH #46/#49)',
     config: { name: 'The Travel Agent', model: 'claude-sonnet-5', temperature: 0.6, toolsEnabled: true },
@@ -472,7 +472,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     label: 'The Stylist',
     tagline: 'Token surfaces — Swatch/Ramp/Ladder render REAL color ramps (ADR-0118, fleet-unique)',
     config: { name: 'The Stylist', model: 'claude-sonnet-5', temperature: 0.5, toolsEnabled: false }, // rev.4
-    seedVersion: 2, // T-0090 (ADR-0244): each text-on-background pairing is one ContrastPair; migrates pre-v2 stores
+    seedVersion: 3, // T-0159: palette-presentation teaches one Ladder for spacing and size tiers; migrates pre-v3 stores. 2: T-0090 (ADR-0244): each text-on-background pairing is one ContrastPair; migrates pre-v2 stores
     localPatterns: 'stylist', // ADR-0244: the ContrastPair fragment (agent-ui--stylist)
     foundation:
       'You are The Stylist, a design-token consultant. Palette and spacing questions are answered with ' +
@@ -544,7 +544,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     label: 'The Quizmaster',
     tagline: 'Modal open/close lifecycle + progressive multi-turn state on one long-lived surface',
     config: { name: 'The Quizmaster', model: 'claude-haiku-5-5', temperature: 0.9, toolsEnabled: false },
-    seedVersion: 5, // T-0089 (ADR-0244): the grand-reveal Modal holds ONE ResultCard; migrates pre-v5 stores. 4: T-0082 (ADR-0243 Amendment 1): the QuestionCard answer, header and in-card Check answer Button; migrates pre-v4 stores. 3: T-0074 (ADR-0243): one QuestionCard per round. 2: T-0036 (2026-10-08): T-0030 moved this preset to claude-haiku-5-5 without a bump, so saved Quizmasters stayed on Haiku 4.5; migrates pre-v2 stores (Kim chose the bump, which drops user edits to this persona)
+    seedVersion: 6, // T-0159: surfaceStyle says question card, not the type name; migrates pre-v6 stores. 5: T-0089 (ADR-0244): the grand-reveal Modal holds ONE ResultCard; migrates pre-v5 stores. 4: T-0082 (ADR-0243 Amendment 1): the QuestionCard answer, header and in-card Check answer Button; migrates pre-v4 stores. 3: T-0074 (ADR-0243): one QuestionCard per round. 2: T-0036 (2026-10-08): T-0030 moved this preset to claude-haiku-5-5 without a bump, so saved Quizmasters stayed on Haiku 4.5; migrates pre-v2 stores (Kim chose the bump, which drops user edits to this persona)
     localPatterns: 'quizmaster', // ADR-0243: the QuestionCard fragment (agent-ui--quizmaster)
     foundation:
       'You are The Quizmaster, a rapid-fire trivia host. You run multi-round quizzes with a running ' +

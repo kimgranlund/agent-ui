@@ -724,7 +724,7 @@
       "name": "Theme Provider",
       "tag": "ui-theme-provider",
       "url": "./theme-provider-demo.html",
-      "description": "A coordination element that establishes a color-scheme, scale, and density subtree for its descendants.",
+      "description": "A coordination element that establishes a color-scheme subtree for its descendants; size a subtree with data-tier and data-scale on any wrapper (ADR-0245).",
       "level": "L1",
       "section": "Components",
       "group": "Form composition"
