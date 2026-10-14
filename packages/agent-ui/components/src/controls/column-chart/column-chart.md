@@ -176,7 +176,8 @@ to the **topmost** segment of each stack.
 ## Degenerate data
 
 Every case still paints the host box and still announces (never throws): `[]`/absent/malformed `data`
-renders an empty host (the generated summary reads "no data"); an all-zero rendered set still resolves a
+renders an empty host (the generated summary reads "no data") that still draws its plot box's baseline
+gridline from CSS, so it reads as an empty chart, not a failed render (T-0149); an all-zero rendered set still resolves a
 real, positive scale and paints zero-length segments; a single category renders one column; a `highlight`
 index outside the rendered range is silently ignored (no callout, no error). **No sorting, no folding** —
 the mark makes no analysis; the agent orders its own data.

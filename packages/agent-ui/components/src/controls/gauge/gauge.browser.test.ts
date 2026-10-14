@@ -207,3 +207,38 @@ describe('ui-gauge — forced colors (ADR-0057/ADR-0228)', () => {
     }
   })
 })
+
+describe('ui-gauge — the legend keys its rings, and no data still draws a track (T-0149)', () => {
+  it('in a wide box the legend starts within two group margins of the outer ring, not at the far edge', async () => {
+    const wrap = document.createElement('div')
+    wrap.style.inlineSize = '900px'
+    wrap.innerHTML = `<ui-gauge data='${JSON.stringify([{ label: 'Move', value: 72 }, { label: 'Exercise', value: 40 }])}'></ui-gauge>`
+    document.body.append(wrap)
+    try {
+      const gauge = wrap.firstElementChild as HTMLElement
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+      const outer = (gauge.querySelector('[data-part="track"]') as unknown as SVGGraphicsElement).getBoundingClientRect()
+      const row = (gauge.querySelector('[role="listitem"]') as HTMLElement).getBoundingClientRect()
+      const probe = document.createElement('div')
+      probe.style.inlineSize = 'var(--ui-gauge-legend-gap)'
+      gauge.append(probe)
+      const margin = probe.getBoundingClientRect().width
+      probe.remove()
+      expect(margin, 'anti-vacuous: the legend gap resolves').toBeGreaterThan(0)
+      const gap = row.left - outer.right
+      expect(gap, 'the legend never overlaps the rings').toBeGreaterThanOrEqual(0)
+      expect(gap).toBeLessThanOrEqual(2 * margin + 1)
+    } finally {
+      wrap.remove()
+    }
+  })
+
+  it('data="[]" paints one visible outer track (NEGATIVE: never a blank box)', () => {
+    const gauge = mount(`<ui-gauge data="[]"></ui-gauge>`) as HTMLElement
+    const tracks = gauge.querySelectorAll('[data-part="track"]')
+    expect(tracks).toHaveLength(1)
+    const stroke = getComputedStyle(tracks[0] as Element).stroke
+    expect(alphaOf(stroke)).toBeGreaterThan(0)
+    expect((tracks[0] as unknown as SVGGraphicsElement).getBoundingClientRect().width).toBeGreaterThan(40)
+  })
+})

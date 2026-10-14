@@ -54,7 +54,7 @@ describe('gauge.css — structure + token hygiene', () => {
   it('the @scope styles block consumes ONLY --ui-gauge-* ∪ the shared --md-sys-* namespaces ∪ the ring-scoped hooks — no cross-control reach', () => {
     const refs = [...stylesBlock.matchAll(/var\((--[\w-]+)/g)].map((m) => m[1])
     expect(refs.length).toBeGreaterThan(0) // anti-vacuous
-    const localHooks = new Set(['--_ring-ink', '--_ring-circumference', '--_ring-dashoffset', '--_gauge-scale'])
+    const localHooks = new Set(['--_ring-ink', '--_ring-circumference', '--_ring-dashoffset', '--_gauge-scale', '--_gauge-ring-end'])
     for (const v of refs) {
       const allowed = v.startsWith('--ui-gauge-') || v.startsWith('--md-sys-') || localHooks.has(v)
       expect(allowed, `@scope consumed an out-of-family token: ${v}`).toBe(true)

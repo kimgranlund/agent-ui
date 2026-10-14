@@ -40,7 +40,9 @@
      category (month/day) pills. A pill radius has no dedicated fleet ramp token (badge/swatch-class
      "fully round" shapes use the same literal) — 999px is the house idiom for "always a pill regardless
      of box size," not a governed dimensional value. */
-  --ui-chart-chip-bg: var(--md-sys-color-neutral-container);
+  /* Opaque (T-0149): the container tint laid over the surface, so a chip over a pale bar keeps its fill and its
+     text contrast instead of reading as a hole punched in the column (the bare tint is a 20% scrim). */
+  --ui-chart-chip-bg: linear-gradient(var(--md-sys-color-neutral-container) 0 0) var(--md-sys-color-neutral-surface);
   --ui-chart-chip-fg: var(--md-sys-color-neutral-on-surface);
   --ui-chart-chip-radius: var(--md-sys-height, 999px);
   --ui-chart-chip-pad-inline: var(--md-sys-space-sm);
@@ -62,11 +64,14 @@
   /* cl.6 — the shared series ramp: six pairwise-distinct, strictly monotone primary TONE primitives per
      scheme via light-dark() — the exact ADR-0219 Amendment mechanism (dark rides one 100-step brighter
      than light, the estate's base-role convention), generalized here as the ONE shared chain every
-     multi-series chart mark (and ui-pie-chart's own re-pointed defaults) consumes. */
-  --ui-chart-series-1-ink: light-dark(var(--md-sys-color-primary-300), var(--md-sys-color-primary-200));
-  --ui-chart-series-2-ink: light-dark(var(--md-sys-color-primary-400), var(--md-sys-color-primary-300));
-  --ui-chart-series-3-ink: light-dark(var(--md-sys-color-primary-500), var(--md-sys-color-primary-400));
-  --ui-chart-series-4-ink: light-dark(var(--md-sys-color-primary-600), var(--md-sys-color-primary-500));
-  --ui-chart-series-5-ink: light-dark(var(--md-sys-color-primary-700), var(--md-sys-color-primary-600));
+     multi-series chart mark (and ui-pie-chart's own re-pointed defaults) consumes. Series 1 and 2, the two
+     a stacked chart shows most, sit two steps apart (at least 1.5:1 between them in both schemes), and dark
+     series 1 starts at a mid step so chips and gridlines stay visible over it; 3 to 6 then step by 50 to
+     the same darkest steps as before (T-0149: one step apart, two stacked series read as one bar). */
+  --ui-chart-series-1-ink: light-dark(var(--md-sys-color-primary-400), var(--md-sys-color-primary-300));
+  --ui-chart-series-2-ink: light-dark(var(--md-sys-color-primary-600), var(--md-sys-color-primary-500));
+  --ui-chart-series-3-ink: light-dark(var(--md-sys-color-primary-650), var(--md-sys-color-primary-550));
+  --ui-chart-series-4-ink: light-dark(var(--md-sys-color-primary-700), var(--md-sys-color-primary-600));
+  --ui-chart-series-5-ink: light-dark(var(--md-sys-color-primary-750), var(--md-sys-color-primary-650));
   --ui-chart-series-6-ink: light-dark(var(--md-sys-color-primary-800), var(--md-sys-color-primary-700));
 }

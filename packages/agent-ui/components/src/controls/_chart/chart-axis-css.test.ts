@@ -57,6 +57,8 @@ describe('chart-axis.css — the shared ADR-0228 token chain', () => {
       }
     }
     for (const s of steps) expect(s.light - s.dark).toBe(100)
+    // T-0149: series 1 and 2 sit two full steps apart, so two stacked series never read as one bar
+    expect(steps[1].light - steps[0].light).toBeGreaterThanOrEqual(200)
   })
 
   it('every token declaration resolves through a role/ramp/space/typescale reference or a literal shape constant — no raw color/px literal masquerading as a role', () => {
@@ -66,8 +68,10 @@ describe('chart-axis.css — the shared ADR-0228 token chain', () => {
       const v = value.trim()
       const isRoleRef = /^var\(--md-sys-/.test(v) || /^light-dark\(/.test(v)
       const isShapeConstant = name === '--ui-chart-chip-radius' && v === '999px'
+      // the opaque chip fill (T-0149): a role tint laid over a role surface, both still role reads
+      const isLayeredRoles = name === '--ui-chart-chip-bg' && /^linear-gradient\(var\(--md-sys-color-[\w-]+\) 0 0\) var\(--md-sys-color-[\w-]+\)$/.test(v)
       const isDashPattern = name === '--ui-chart-projected-dash' && /^[\d\s]+$/.test(v)
-      expect(isRoleRef || isShapeConstant || isDashPattern, `${name}: "${v}" is neither a role reference nor a named shape constant`).toBe(true)
+      expect(isRoleRef || isShapeConstant || isDashPattern || isLayeredRoles, `${name}: "${v}" is neither a role reference nor a named shape constant`).toBe(true)
     }
   })
 })

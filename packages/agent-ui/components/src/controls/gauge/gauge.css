@@ -21,12 +21,12 @@
  * SVG concentric rings) spans the box edge-to-edge at ZERO inset (its own element box, `inline-size:
  * 100%; block-size: 100%`, never shrunk to reserve legend room — the ADR-0228 "residual-gutter model"
  * rejected alternative, applied here); `[data-part='legend']` (the real-DOM `role=listitem` rows) is
- * ALSO a full-box layer, but padded by `--ui-gauge-chrome-inset` from all four edges and right-aligned
- * within that padded box (`justify-content: flex-end`) — Kim's zero-padding-container contract
+ * ALSO a full-box layer, but padded by `--ui-gauge-chrome-inset` from all four edges, its rows starting just
+ * past the outer ring (T-0149, `--_gauge-ring-end` from gauge.ts), so rings and legend read as one group — Kim's zero-padding-container contract
  * (ADR-0228 cl.3), realized as a mechanism, never a host padding opinion. `preserveAspectRatio="xMinYMid
  * meet"` (gauge.ts) pins the ring drawing itself to the box's START edge, so a wide host's extra width
- * letterboxes into genuinely empty room at the END edge for the legend column to occupy without visually
- * colliding with the rings: no shrinking, no overlap, by construction. The rings layer is out of flow, so the host
+ * letterboxes into genuinely empty room past the rings for the legend column to occupy without visually
+ * colliding with them: no shrinking, no overlap, by construction. The rings layer is out of flow, so the host
  * is as tall as its floor or its legend (a square svg in flow made the box square and left no room). Below a 28em
  * host the legend moves to a second grid row under the rings (T-0141).
  *
@@ -48,6 +48,7 @@
   --ui-gauge-row-gap: var(--md-sys-space-sm); /* legend-row rhythm — rides [density] for free (ADR-0103) */
   --ui-gauge-key-gap: var(--md-sys-space-xs); /* swatch/label/percent rhythm within one legend row */
   --ui-gauge-swatch-size: 0.75em; /* the legend row's fill-carrying swatch (cl.4 — fill is a shared carrier, never the only one) */
+  --ui-gauge-legend-gap: var(--md-sys-group-margin, var(--md-sys-space-md)); /* rings to legend in the wide layout: the group margin, so the legend reads as the rings' key (T-0149) */
 
   /* The legend LABEL reads the KICKER typescale row (ADR-0078 cl.2b, ADR-0229 cl.4's own "uppercase
      metric labels read the KICKER typescale row" — the card.css structured-header precedent: size +
@@ -126,10 +127,16 @@
     inline-size: 100%;
     block-size: 100%;
     padding: var(--ui-gauge-chrome-inset); /* the ONE inset knob — floats INSIDE the box, never shrinking the rings layer */
+    /* The side legend starts just past the outer ring (gauge.ts publishes where its track ends), so rings and
+       legend read as one start-aligned group however wide the box grows (T-0149: pinned to the END edge,
+       the legend sat about 420px from its rings). Before the first measure it assumes the square floor. */
+    padding-inline-start: calc(
+      var(--_gauge-ring-end, 0.9 * var(--ui-gauge-min-block-size)) + var(--ui-gauge-ring-stroke-width) / 2 + var(--ui-gauge-legend-gap)
+    );
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: flex-end; /* the boards' side legend — hugs the box's END edge, inside the ring's own letterboxed room */
+    align-items: flex-start;
     gap: var(--ui-gauge-row-gap);
   }
 
@@ -143,7 +150,7 @@
     :scope [data-part='legend'] {
       grid-area: 2 / 1;
       block-size: auto;
-      align-items: flex-start;
+      padding-inline-start: var(--ui-gauge-chrome-inset);
     }
   }
 

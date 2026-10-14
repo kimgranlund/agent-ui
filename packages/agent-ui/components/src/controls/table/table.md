@@ -174,7 +174,7 @@ geometry:
   cellPadBlock: var(--ui-table-cell-pad-block)
   note: The composed selection controls/sort buttons/footer pagination each carry their OWN geometry end to end (`ui-checkbox`/`ui-radio`'s 2n indicator box, `ui-button`'s 4n control height, `ui-pagination`'s own control-height buttons; ADR-0163 amendment GH #1445 — every one now a real FACE control, not a bare native element) — this control mints no new geometry row of its own for them (ADR-0163 cl.6's "the novelty is zero", applied fleet-wide to every composed interactive part here).
 
-forcedColors: No dedicated `@media (forced-colors: active)` block — every row/header separator is a real `border` (repainted in system inks, never removed under `forced-colors: active`, unlike a background-drawn mark); all content is real text. The composed `ui-checkbox`/`ui-radio` selection cells and `ui-button` sort trigger each carry their OWN forced-colors treatment from their own stylesheet (checkbox.css/radio.css/button.css each ship a `@media (forced-colors: active)` block) — this file adds no reset of its own (ADR-0163 amendment, GH #1445 — the pre-amendment native `<button>`'s `all: unset`-then-repaint rule is retired along with the native element it painted).
+forcedColors: One `@media (forced-colors: active)` rule only, dropping the scroll edge-fade mask (T-0149) so no system-ink text is masked; every row/header separator is a real `border` (repainted in system inks, never removed under `forced-colors: active`, unlike a background-drawn mark); all content is real text. The composed `ui-checkbox`/`ui-radio` selection cells and `ui-button` sort trigger each carry their OWN forced-colors treatment from their own stylesheet (checkbox.css/radio.css/button.css each ship a `@media (forced-colors: active)` block) — this file adds no reset of its own (ADR-0163 amendment, GH #1445 — the pre-amendment native `<button>`'s `all: unset`-then-repaint rule is retired along with the native element it painted).
 ---
 
 # ui-table
@@ -302,6 +302,11 @@ A wide table scrolls **inside the component's own container**, never the page (`
 interior scroll node) — number columns never wrap (`white-space: nowrap`), so a wide numeric table forces
 the scroll container rather than clipping a digit invisibly. A table narrower than its host fills the host's
 inline size (`inline-size: 100%`) — no orphaned gutter.
+
+A column hidden past an inline edge fades that edge over one control height (T-0149, the ui-card-content
+edge-fade recipe on the inline axis): the scroll node carries `data-fade-end` until it is scrolled to the end
+and `data-fade-start` once it has left the start, measured on scroll and on resize, so overlay scrollbars no
+longer hide that a table has more columns. A table that fits carries neither flag and is never masked.
 
 ## Accessibility
 

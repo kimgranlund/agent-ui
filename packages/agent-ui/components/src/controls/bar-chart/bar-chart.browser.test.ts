@@ -221,3 +221,55 @@ describe('ui-bar-chart: ADR-0245 derived foundations, dark launch', () => {
     for (const el of [out, inside]) expect(lengthOf(el, '--ui-bar-chart-bar-radius')).toBe(2)
   })
 })
+
+describe('ui-bar-chart — the zero rule, the empty row and the dark track (T-0149)', () => {
+  const frameOf = (markup: string): HTMLElement => {
+    const wrap = document.createElement('div')
+    wrap.style.inlineSize = '480px'
+    wrap.innerHTML = markup
+    document.body.append(wrap)
+    return wrap
+  }
+
+  it('a mixed-sign chart draws a visible rule at the origin of every row; an all-positive one draws none', () => {
+    const wrap = frameOf(
+      `<ui-bar-chart data='${JSON.stringify([{ label: 'Growth', value: 4.1 }, { label: 'Churn', value: -2.7 }])}'></ui-bar-chart>` +
+        `<ui-bar-chart data='${JSON.stringify([{ label: 'A', value: 3 }, { label: 'B', value: 1 }])}'></ui-bar-chart>`,
+    )
+    try {
+      const [mixed, positive] = [...wrap.querySelectorAll('ui-bar-chart')] as HTMLElement[]
+      const tracks = [...mixed.querySelectorAll('[data-part="track"]')] as HTMLElement[]
+      expect(tracks).toHaveLength(2)
+      const xs = tracks.map((t) => {
+        const rule = getComputedStyle(t, '::before')
+        expect(rule.content).not.toBe('none')
+        expect(px(rule.borderInlineStartWidth)).toBeGreaterThan(0)
+        const box = t.getBoundingClientRect()
+        return box.left + (box.width * Number(t.style.getPropertyValue('--_bar-zero'))) / 100
+      })
+      // the origin sits where the negative bar ends and the positive bar starts
+      const fills = [...mixed.querySelectorAll('[data-part="fill"]')].map((f) => f.getBoundingClientRect())
+      expect(Math.abs(fills[0].left - xs[0])).toBeLessThanOrEqual(1)
+      expect(Math.abs(fills[1].right - xs[1])).toBeLessThanOrEqual(1)
+      for (const t of positive.querySelectorAll('[data-part="track"]')) {
+        expect(t.hasAttribute('data-origin')).toBe(false)
+        expect(getComputedStyle(t, '::before').content).toBe('none')
+      }
+    } finally {
+      wrap.remove()
+    }
+  })
+
+  it('data="[]" paints one track row (NEGATIVE: never an empty box)', () => {
+    const wrap = frameOf('<ui-bar-chart data="[]"></ui-bar-chart>')
+    try {
+      const host = wrap.firstElementChild as HTMLElement
+      const empty = getComputedStyle(host, '::before')
+      expect(empty.content).not.toBe('none')
+      expect(px(empty.blockSize)).toBeGreaterThan(0)
+      expect(empty.backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
+    } finally {
+      wrap.remove()
+    }
+  })
+})

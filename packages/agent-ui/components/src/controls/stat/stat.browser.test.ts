@@ -248,3 +248,27 @@ describe('ui-stat — forced colors (SPEC-R15 AC1)', () => {
     }
   })
 })
+
+describe('ui-stat — sibling rings share one diameter and each figure fits its hole (T-0149)', () => {
+  it('four ring tiles with figures of different widths paint equal rings, every value inside the hole', () => {
+    const wrap = document.createElement('div')
+    wrap.style.cssText = 'display:grid;grid-template-columns:repeat(2,minmax(0,1fr));inline-size:520px'
+    wrap.innerHTML = ['72%', '18%', '47 / 50', 'pending']
+      .map((f) => `<ui-stat variant="ring" label="Metric" figure="${f}" percent="50"></ui-stat>`)
+      .join('')
+    document.body.append(wrap)
+    try {
+      const stats = [...wrap.querySelectorAll('ui-stat')] as HTMLElement[]
+      const widths = stats.map((s) => (s.querySelector('[data-part="ring"]') as HTMLElement).getBoundingClientRect().width)
+      expect(widths[0], 'anti-vacuous: the ring paints').toBeGreaterThan(40)
+      for (const w of widths) expect(Math.abs(w - widths[0])).toBeLessThanOrEqual(1)
+      for (const s of stats) {
+        const hole = widths[0] - 2 * tokenPx(s, '--ui-stat-ring-thickness')
+        const value = (s.querySelector('[data-part="value"]') as HTMLElement).getBoundingClientRect().width
+        expect(value, `"${s.getAttribute('figure')}" fits the hole`).toBeLessThanOrEqual(hole)
+      }
+    } finally {
+      wrap.remove()
+    }
+  })
+})

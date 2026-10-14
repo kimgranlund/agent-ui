@@ -331,3 +331,21 @@ describe('ui-column-chart — forced colors (ADR-0057/ADR-0228)', () => {
     }
   })
 })
+
+describe('ui-column-chart — no data still draws the baseline (T-0149)', () => {
+  it('data="[]" paints a visible baseline rule inside the box (NEGATIVE: never a blank box)', () => {
+    const wrap = document.createElement('div')
+    wrap.innerHTML = '<ui-column-chart data="[]"></ui-column-chart>'
+    document.body.append(wrap)
+    try {
+      const host = wrap.firstElementChild as HTMLElement
+      expect(host.childElementCount).toBe(0)
+      const base = getComputedStyle(host, '::before')
+      expect(base.content).not.toBe('none')
+      expect(Number.parseFloat(base.borderBottomWidth)).toBeGreaterThan(0)
+      expect(base.borderBottomColor).not.toBe('rgba(0, 0, 0, 0)')
+    } finally {
+      wrap.remove()
+    }
+  })
+})

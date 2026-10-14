@@ -99,7 +99,8 @@ square viewBox — `variant="donut"` (default) cuts a hole at the ring's center,
 solid disc. Slice sweep is proportional to `value / Σ rendered` (the rendered total). Fill steps down a
 **single-family lightness ramp** — `--ui-pie-chart-slice-1-ink` (brightest) through `-6-ink` (dimmest),
 cycling past 6 slices — six pairwise-distinct primary **tone primitives** per scheme via `light-dark()`
-(light `primary-300 → -800`, dark `primary-200 → -700`, in 100-steps; strictly monotone, slice 1 always
+(light `primary-400, -600, -650, -700, -750, -800`, dark one 100-step brighter, the shared `_chart/` ramp since
+T-0149 opened the first two steps apart; strictly monotone, slice 1 always
 brightest — the ADR-0219 cl.4 Amendment: the originally-named emphasis-role chain resolved non-distinct
 and non-monotone in the shipped estate), surfaced as plain tokens so a consumer re-maps the ramp without
 touching the control; adjacent slices are separated by a constant-width, non-scaling stroke so identity

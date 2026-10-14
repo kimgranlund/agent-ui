@@ -36,7 +36,7 @@
 // barrel; the pure math from the co-located gauge-math.ts (the ADR-0065 pure-core split).
 
 import { UIElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
-import { cleanData, gaugeDataProp, gaugeRows, VIEWBOX_SIZE, type GaugeGeometry, type GaugeRing } from './gauge-math.ts'
+import { cleanData, gaugeDataProp, gaugeRows, OUTER_RADIUS, VIEWBOX_SIZE, type GaugeGeometry, type GaugeRing } from './gauge-math.ts'
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
 const CENTER = VIEWBOX_SIZE / 2
@@ -91,6 +91,8 @@ export class UIGaugeElement extends UIElement {
     if (!(scale > 0) || Math.abs(scale - this.#scale) < 1e-3) return
     this.#scale = scale
     this.style.setProperty('--_gauge-scale', String(Math.round(scale * 1000) / 1000))
+    // where the outer track's centre line ends on the inline axis: the wide legend starts just past it (T-0149)
+    this.style.setProperty('--_gauge-ring-end', `${Math.round(scale * (CENTER + OUTER_RADIUS) * 10) / 10}px`)
   }
 
   /** Layer 1 — the aria-hidden, zero-inset SVG rings: one track circle + one rounded-cap progress
@@ -107,6 +109,17 @@ export class UIGaugeElement extends UIElement {
     svg.setAttribute('data-part', 'rings')
     svg.setAttribute('aria-hidden', 'true')
     svg.setAttribute('focusable', 'false')
+
+    // No data still draws the outer track at 0%, so an empty gauge reads as a gauge, not a failed render (T-0149).
+    if (g.rings.length === 0) {
+      const track = document.createElementNS(SVG_NS, 'circle')
+      track.setAttribute('data-part', 'track')
+      track.setAttribute('data-empty', '')
+      track.setAttribute('cx', String(CENTER))
+      track.setAttribute('cy', String(CENTER))
+      track.setAttribute('r', String(OUTER_RADIUS))
+      svg.append(track)
+    }
 
     for (const ring of g.rings) {
       const track = document.createElementNS(SVG_NS, 'circle')
