@@ -83,6 +83,13 @@ export interface ValueCodecController {
    */
   setCanonical(value: string): void
   /**
+   * Parse the display into the canonical NOW, without reformatting it (a parse failure sets hasError and
+   * leaves the canonical untouched, as blur does). The control calls it right before it emits its commit
+   * `change`, which fires before the codec's own blur: a listener reading the form value on that event
+   * then sees the guest's edit, not the value from before it (T-0171).
+   */
+  commit(): void
+  /**
    * Idempotent early teardown — stops the behaviour on the next event. Listeners auto-die with the
    * connection scope regardless; call release() from the type-change effect cleanup or disconnected().
    */
@@ -139,16 +146,22 @@ export function valueCodec(host: CodecHost, opts: ValueCodecOptions, typeSignal?
   // Blur (direct on editor): fires AFTER the control's own blur listener (same element, later
   // registration = later in dispatch order). The control's change-on-commit fires first, then the
   // codec reformats the display — no spurious second change from host.value being rewritten.
-  const onBlur = (): void => {
-    if (released) return
-    focused = false
+  const commit = (): string | null => {
+    if (released) return null
     const parsed = opts.parse(host.value)
     if (parsed === null) {
       hasError.value = true
-      return
+      return null
     }
     hasError.value = false
     canonical.value = parsed
+    return parsed
+  }
+  const onBlur = (): void => {
+    if (released) return
+    focused = false
+    const parsed = commit()
+    if (parsed === null) return
     // Writing host.value triggers the control's model→surface caret-guard effect, which syncs the
     // editor's textContent. Safe on blur — no active caret to protect at this point.
     host.value = opts.format(parsed)
@@ -228,6 +241,7 @@ export function valueCodec(host: CodecHost, opts: ValueCodecOptions, typeSignal?
       canonical.value = value
       hasError.value = false
     },
+    commit: (): void => void commit(),
     release: (): void => {
       released = true
       disposeResync() // idempotent (EffectNode.dispose) — tears down the unfocused-write resync effect too

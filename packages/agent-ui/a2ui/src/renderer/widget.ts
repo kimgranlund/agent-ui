@@ -25,7 +25,7 @@
 // split's ONE new caller is structural-resend reconciliation (`tree.ts`'s `#reconcileProps`), which needs
 // to re-wire an EXISTING element without ever calling `create()` again (identity/focus preservation).
 
-import { effect } from '@agent-ui/components'
+import { effect, untracked } from '@agent-ui/components'
 import type { Scope } from '@agent-ui/components'
 import type { A2uiComponent, A2uiError, FunctionCall } from '../protocol.ts'
 import type { CatalogRegistry, WidgetFactory } from '../catalog/types.ts'
@@ -223,7 +223,9 @@ function bindProp(
       const resolved = resolveValue(value, surface, itemScope)
       // Same catalog-enum gate as the static path: a binding that resolves to a non-member value is
       // skipped (it would otherwise linger as a stray attribute — see `applies`). Re-checked each tick.
-      if (applies(members, resolved)) factory.applyProp(el, prop, resolved)
+      // Only the binding is a dependency: `applyProp` runs untracked, so a factory that reads its own
+      // control there (a composite's prefill) never re-applies the bound value over a guest's edit (T-0171).
+      if (applies(members, resolved)) untracked(() => factory.applyProp(el, prop, resolved))
     })
   })
 }
