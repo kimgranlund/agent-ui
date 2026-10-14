@@ -1189,7 +1189,7 @@ describe('ui-agent-admin cross-engine smoke — min-size-floors census (GH #185 
 })
 
 // ADR-0245 cut: the root register is product/md at the control's md step, so the control inset is n 8
-// (scale.mjs rootResolve('md').control.margin), no longer the font-derived 0.5 / 0.75 factors.
+// (rootResolve('md').control.margin), no longer the font-derived 0.5 / 0.75 factors.
 const ROOT_INSET = rootResolve('md').control.margin
 
 describe('ui-agent-admin cross-engine smoke — TKT-0049/ADR-0139: entry-content/entry-add-content min-height is driven by ui-code-editor\'s own `rows` lever, not dead agent-admin.css', () => {

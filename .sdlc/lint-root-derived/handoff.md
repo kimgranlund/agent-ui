@@ -27,3 +27,10 @@ No lint or test hard-codes the page root register: one shared `ROOT_REGISTER` re
 
 ## Constraints
 - No literal px geometry; no em dashes.
+
+## Acceptance criteria
+- `npm run check` exits 0.
+- `npx vitest run site/lib/shell-spacing-gate.test.ts packages/agent-ui/shared/src/tokens/foundations.test.ts` exits 0 (the allowlist is empty, the stale-entry leg and its control, the gen.css :root equals ROOT_REGISTER).
+- `npx vitest run --config vitest.browser.config.ts --project site site/pages/dogfood-render.browser.test.ts` exits 0 in Chromium and WebKit, the root-register leg and the canvas `data-scale` md asserts included.
+- `git grep -n "resolve('product', 'md'" -- '*.ts'` lists only lines inside explicit `data-tier` / `data-scale` region legs, none that mean the root; root reads go through `rootResolve` from `scripts/lib/foundations-rules.mjs`.
+- The root-register leg reads `getComputedStyle(document.documentElement)`'s `--md-sys-tier-*` and `--md-sys-scale-s`, decodes them through `CFG.tiers` and `STEP`, and compares them to `ROOT_REGISTER`, never to `registerOf`'s fallback (the flip proof is in solo's report).
