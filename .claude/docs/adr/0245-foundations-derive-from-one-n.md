@@ -1070,7 +1070,7 @@ and at the n 5 root the 6px glyph box made `dot`, `more` and `info` illegible. I
    keeps the transparent border under the ring, and disabled keeps no border. Popup panels and listboxes keep
    `outline-variant`: they are containers, not entry boundaries.
 2. **The glyph box floors at 8px.** `--md-sys-glyph-box` is `max(8px, 2n - 2c)`. `scale.mjs` carries the floor
-   as `CFG.glyphFloor` (the vendored file now differs from the skill by this one constant; its sha moves to
+   as `CFG.glyphFloor` (the vendored file now differs from the revision it vendored, `3c319761…`, by this one constant; its sha moves to
    `19355c7a…9222b37`, and P15 asks the skill to adopt it), so `resolve().glyph` and every test pinned against
    it follow. `ui-glyph` centres the glyph box in its 2n slot (inset `(2n - glyph box) / 2`), so the inset is
    1px instead of c where the floor binds. md and lg are unchanged. The radio dot stays `2n - 2c - 2`, the
