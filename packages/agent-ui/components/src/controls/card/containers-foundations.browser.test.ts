@@ -142,9 +142,9 @@ describe('popover, tooltip, toast: widget and group levels', () => {
   })
 })
 
-describe('form-popover and disclosure: 4n control height, n inset, radius n, 2n slot, 2n - 2c glyph', () => {
+describe('form-popover and disclosure: 4n control height, n inset, radius n, 2n slot, max(8, 2n - 2c) glyph', () => {
   const STEPS = [
-    ['sm', 20, 5, 10, 6],
+    ['sm', 20, 5, 10, 8], // the glyph floor holds sm at 8 (ADR-0245 Amendment 7)
     ['md', 24, 6, 12, 8],
     ['lg', 28, 7, 14, 10],
   ] as const
