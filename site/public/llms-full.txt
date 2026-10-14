@@ -1470,7 +1470,7 @@ the element's **identity** (the tag names the main axis, A2UI-faithfully) — no
 `ui-column` consumes the shared, spreadable `flexProps` — the same one grammar four layout primitives share
 (ADR-0016 cl.1), each reflected attribute mapping 1:1 onto a CSS flex property in column.css:
 
-- **`align`** (cross axis = inline) → `align-items`: `stretch` (default — children fill the column's width) · `start` (shrink-wrap to content width) · `end` · `baseline`. **`center` is NOT allowed on `ui-column`** — a column centers its children only by shrink-wrapping them, which defeats the fill-width default and is an anti-pattern for stacked content; an `align="center"` snaps back to `stretch` and has no `[align='center']` CSS rule. Use a `ui-row` (or wrap the content) for horizontal centering. (ADR-0030: default `start`→`stretch`.)
+- **`align`** (cross axis = inline) → `align-items`: `stretch` (default — children fill the column's width) · `start` (shrink-wrap to content width) · `end` · `baseline`. **`center` is NOT allowed on `ui-column`** — a column centers its children only by shrink-wrapping them, which defeats the fill-width default and is an anti-pattern for stacked content; an `align="center"` snaps back to `stretch` and has no `[align='center']` CSS rule. Use a `ui-row` (or wrap the content) for horizontal centering. (ADR-0030: default `start`→`stretch`.) It never aligns text: the engines' legacy presentational `text-align` for a bare `align` attribute is reset to the inherited value (T-0171).
 - **`justify`** (main axis = block) → `justify-content`: `start` (default) · `center` · `end` · `between` · `around` · `evenly` (the `between`/`around`/`evenly` keywords map to `space-*`).
 - **`gap`** → `gap: var(--md-sys-space-{step})`: `none` (default) · `xs` · `sm` · `md` · `lg` · `xl` · `2xl` — the density-responsive layout-spacing ladder (ADR-0015 cl.4), **never** a control dimension. An ancestor `data-density` (`compact/comfortable/spacious`) re-multiplies the gap; `data-scale` (the `ui-sm…content-lg` tier, ADR-0032) does not touch it (spacing is rhythm, not frame).
 - **`wrap`** → `flex-wrap` (boolean presence): present ⇒ children wrap onto multiple lines.
@@ -3268,7 +3268,7 @@ children (`render()` stays void).
 `ui-list` consumes the shared **`flexProps`** layout grammar (ADR-0016), each prop mapping 1:1 onto a CSS flex
 property (a role-pure repoint in CSS, never an inline style):
 
-- **`align`** (cross-axis) → `align-items`: `stretch` (default — items fill the list's width; use `start` to shrink-wrap) · `center` · `end` · `start` · `baseline`. (ADR-0030: default changed from `start` to `stretch`.)
+- **`align`** (cross-axis) → `align-items`: `stretch` (default — items fill the list's width; use `start` to shrink-wrap) · `center` · `end` · `start` · `baseline`. (ADR-0030: default changed from `start` to `stretch`.) It never aligns text: the engines' legacy presentational `text-align` for a bare `align` attribute is reset to the inherited value (T-0171).
 - **`justify`** (main-axis distribution) → `justify-content`: `start` · `center` · `end` · `between` · `around` · `evenly`.
 - **`gap`** → `gap: var(--md-sys-space-{step})` — the density-responsive layout-spacing ladder (`none` · `xs` · `sm`
   · `md` · `lg` · `xl` · `2xl`). The inter-item gap is the one quantity that rides `data-density` (an ancestor
