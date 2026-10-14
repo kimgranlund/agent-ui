@@ -172,7 +172,7 @@
     box-sizing: border-box;
     /* The content cap (ADR-0105 Amendment 2): the capped grid plus the box inset on each side and the 1px
        border; `margin-inline: auto` centres the panel past it, and is 0 whenever the panel is narrower. */
-    max-inline-size: calc(var(--ui-calendar-max-inline-size) + 2 * var(--ui-box-inset, 0.375rem) + 2px);
+    max-inline-size: calc(var(--ui-calendar-max-inline-size) + 2 * var(--ui-box-inset, 0.375rem) + 1px + 1px); /* the two hairlines */
     margin-inline: auto;
   }
 
