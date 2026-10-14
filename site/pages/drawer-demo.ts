@@ -95,7 +95,7 @@ for (let i = 1; i <= 40; i++) {
 const longList = drawerDemo(
   'Long-list drawer',
   { edge: 'end', 'aria-label': 'Long-list drawer' },
-  [el('div', { style: 'display:flex; flex-direction:column; gap:0.5rem' }, listItems)],
+  [el('div', { style: 'display:flex; flex-direction:column; gap:var(--md-sys-space-sm)' }, listItems)],
 )
 
 // ── an inline-field specimen — native Tab order, no roving focus (the form-popover SPEC-R5 lesson) ──────────

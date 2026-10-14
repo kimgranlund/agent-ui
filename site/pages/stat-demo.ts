@@ -87,7 +87,7 @@ const MRR_12M = [41200, 42800, 43100, 44900, 46200, 45800, 47600, 49100, 50400, 
 const trendSpark = el('ui-sparkline', { values: JSON.stringify(MRR_12M), label: 'MRR trend, 12 months', variant: 'area' })
 applyDemoWidth(trendSpark, '12rem')
 trendSpark.style.setProperty('--ui-sparkline-block-size', '3rem')
-const composition = el('div', { class: 'demo-figure', style: 'flex-direction:row; align-items:center; gap:1.5rem; inline-size:max-content;' }, [
+const composition = el('div', { class: 'demo-figure', style: 'flex-direction:row; align-items:center; gap:var(--md-sys-space-xl); inline-size:max-content;' }, [
   stat({ label: 'MRR', figure: '$55.7k', delta: 3.3, caption: 'vs last month, %' }),
   trendSpark,
 ])
@@ -131,7 +131,7 @@ switcher.addEventListener('change', () => {
   log.append(line)
   log.scrollTop = log.scrollHeight
 })
-const liveBlock = el('div', { style: 'display:flex; flex-direction:column; gap:1rem; align-items:flex-start;' }, [
+const liveBlock = el('div', { style: 'display:flex; flex-direction:column; gap:var(--md-sys-space-lg); align-items:flex-start;' }, [
   switcher,
   row(liveMrr, liveAccounts),
 ])

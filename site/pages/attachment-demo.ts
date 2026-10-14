@@ -57,7 +57,7 @@ function logAction(action: 'attach' | 'remove', file: FileFixture, pending: numb
 }
 
 // ── the pending strip ──────────────────────────────────────────────────────────────────────────────────────
-const strip = el('div', { role: 'list', 'aria-label': 'Pending attachments', style: 'display:flex; gap:0.75rem; flex-wrap:wrap; min-block-size:3rem; align-items:flex-start;' })
+const strip = el('div', { role: 'list', 'aria-label': 'Pending attachments', style: 'display:flex; gap:var(--md-sys-space-md); flex-wrap:wrap; min-block-size:3rem; align-items:flex-start;' })
 const empty = el('p', { style: 'margin:0; opacity:0.7;' }, [document.createTextNode('No files attached yet.')])
 strip.append(empty)
 let next = 0
@@ -106,13 +106,13 @@ const composerNote = el('p', {}, [
 ])
 
 // ── a received message's attachment list ───────────────────────────────────────────────────────────────────
-const message = el('div', { style: 'display:grid; gap:0.5rem; max-inline-size: 36rem;' }, [
+const message = el('div', { style: 'display:grid; gap:var(--md-sys-space-sm); max-inline-size: 36rem;' }, [
   el('p', { style: 'margin:0;' }, [document.createTextNode('Support agent · 14:22 — Thanks, reproduced it. Try the attached workaround; the patched config disables the redirect on Safari 26.')]),
-  el('div', { role: 'list', 'aria-label': 'Attachments in this message', style: 'display:flex; gap:0.75rem; flex-wrap:wrap;' }, RECEIVED.map((f) => el('div', { role: 'listitem' }, [card(f)]))),
+  el('div', { role: 'list', 'aria-label': 'Attachments in this message', style: 'display:flex; gap:var(--md-sys-space-md); flex-wrap:wrap;' }, RECEIVED.map((f) => el('div', { role: 'listitem' }, [card(f)]))),
 ])
 
 content.append(
-  exampleSection('Composer: pending attachments', strip, el('div', { style: 'margin-block-start:0.75rem;' }, [attachButton]), composerNote),
+  exampleSection('Composer: pending attachments', strip, el('div', { style: 'margin-block-start:var(--md-sys-space-md);' }, [attachButton]), composerNote),
   exampleSection('Received message with attachments', message),
   exampleSection('Composer action log', log),
 )

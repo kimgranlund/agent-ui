@@ -95,7 +95,7 @@ const wide = lineChart(SIGNUPS_30D, 'Sign-ups, last 30 days', 'area')
 applyDemoWidth(wide, '100%')
 wide.style.setProperty('--ui-line-chart-min-block-size', '12em')
 const reportRow = el('div', { class: 'demo-figure' }, [
-  el('div', { style: 'display:flex; justify-content:space-between; gap:1rem; align-items:baseline;' }, [
+  el('div', { style: 'display:flex; justify-content:space-between; gap:var(--md-sys-space-lg); align-items:baseline;' }, [
     strong('Sign-ups, last 30 days'),
     el('span', { style: 'font-variant-numeric: tabular-nums;' }, [text('831 total · 48 today')]),
   ]),
@@ -134,9 +134,9 @@ const spike = uiButton('Simulate an incident spike')
 spike.addEventListener('click', () => write([...rolling.slice(1), 1240]))
 const reset = uiButton('Reset', 'ghost')
 reset.addEventListener('click', () => write(P95_LATENCY_24H))
-const liveBlock = el('div', { style: 'display:flex; flex-direction:column; gap:0.75rem; align-items:flex-start;' }, [
+const liveBlock = el('div', { style: 'display:flex; flex-direction:column; gap:var(--md-sys-space-md); align-items:flex-start;' }, [
   live,
-  el('div', { style: 'display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;' }, [el('div', { style: 'display:flex; gap:0.75rem; flex-wrap:wrap;' }, [push, spike, reset]), readout]),
+  el('div', { style: 'display:flex; gap:var(--md-sys-space-md); align-items:center; flex-wrap:wrap;' }, [el('div', { style: 'display:flex; gap:var(--md-sys-space-md); flex-wrap:wrap;' }, [push, spike, reset]), readout]),
 ])
 const liveNote = el('p', {}, [
   text('Every click writes '), code('values'), text(' with a rolled window; the tile rebuilds as a whole (A2UI '),

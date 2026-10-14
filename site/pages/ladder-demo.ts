@@ -32,7 +32,7 @@ function ladder(tiers: readonly Tier[], label: string): HTMLElement {
 
 /** grid — a responsive two-up of captioned ladders (page demo chrome, not a ui-* control). */
 function grid(...nodes: readonly Node[]): HTMLElement {
-  return el('div', { style: 'display:grid; grid-template-columns:repeat(auto-fit, minmax(16rem, 1fr)); gap:1.5rem;' }, nodes)
+  return el('div', { style: 'display:grid; grid-template-columns:repeat(auto-fit, minmax(16rem, 1fr)); gap:var(--md-sys-space-xl);' }, nodes)
 }
 
 // ── 1. The spacing scale — the shipped tokens, resolved by the browser ───────────────────────────────────────
@@ -110,7 +110,7 @@ const comfortable = uiButton('comfortable', 'soft')
 const compact = uiButton('compact', 'soft')
 comfortable.addEventListener('click', () => setDensity('comfortable'))
 compact.addEventListener('click', () => setDensity('compact'))
-const switcher = el('div', { style: 'display:flex; flex-wrap:wrap; gap:0.5rem;' }, [comfortable, compact])
+const switcher = el('div', { style: 'display:flex; flex-wrap:wrap; gap:var(--md-sys-space-sm);' }, [comfortable, compact])
 
 const switcherNote = el('p', {}, [
   text('One ladder; the buttons rewrite '),

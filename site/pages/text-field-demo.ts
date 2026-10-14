@@ -86,7 +86,7 @@ applyDemoWidth(account, '26rem')
 
 // ── [4] Save — reportValidity() over the whole record, so every invalid state paints at once ─────────────────
 const all: UITextFieldElement[] = [vendorName, email, phone, website, amount, seats, discount, starts, password]
-const verdict = el('p', { style: 'margin:0.5rem 0 0;' }, [text('Not saved yet.')])
+const verdict = el('p', { style: 'margin:var(--md-sys-space-sm) 0 0;' }, [text('Not saved yet.')])
 const save = uiButton('Save vendor', 'solid')
 save.addEventListener('click', () => {
   const invalid = all.filter((f) => !f.reportValidity())

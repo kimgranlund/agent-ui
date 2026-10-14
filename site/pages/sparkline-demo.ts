@@ -31,7 +31,7 @@ const sparkline = (values: readonly number[], label: string, variant?: 'line' | 
 // ── [1] the KPI strip — a sparkline beside a headline figure, the canonical dashboard job ─────────────────────
 const kpi = (label: string, figure: string, spark: HTMLElement): HTMLElement =>
   el('div', { class: 'demo-figure' }, [
-    el('div', { style: 'display:flex; justify-content:space-between; gap:1rem; align-items:baseline;' }, [
+    el('div', { style: 'display:flex; justify-content:space-between; gap:var(--md-sys-space-lg); align-items:baseline;' }, [
       strong(label),
       el('span', { style: 'font-variant-numeric: tabular-nums;' }, [text(figure)]),
     ]),
@@ -91,9 +91,9 @@ push.addEventListener('click', () => {
   ;(live as HTMLElement & { values: readonly number[] }).values = rolling // a real prop write — whole re-render
   readout.textContent = `${rolling.length} points, last ${next} ms`
 })
-const liveBlock = el('div', { style: 'display:flex; flex-direction:column; gap:0.75rem; align-items:flex-start;' }, [
+const liveBlock = el('div', { style: 'display:flex; flex-direction:column; gap:var(--md-sys-space-md); align-items:flex-start;' }, [
   live,
-  el('div', { style: 'display:flex; gap:1rem; align-items:center;' }, [push, readout]),
+  el('div', { style: 'display:flex; gap:var(--md-sys-space-lg); align-items:center;' }, [push, readout]),
 ])
 const liveNote = el('p', {}, [
   text('Each click writes the '), code('values'), text(' property with a rolled window (oldest dropped, newest appended); ' +

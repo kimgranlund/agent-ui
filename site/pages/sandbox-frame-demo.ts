@@ -67,5 +67,5 @@ const note = el('p', {}, [
 
 content.append(
   exampleSection('A rendered document + the action bridge', frame, log),
-  exampleSection('Fail-closed / never-paint', note, el('div', { style: 'display:flex; gap:0.5rem;' }, [oversizeButton, resetButton]), fallbackFrame),
+  exampleSection('Fail-closed / never-paint', note, el('div', { style: 'display:flex; gap:var(--md-sys-space-sm);' }, [oversizeButton, resetButton]), fallbackFrame),
 )

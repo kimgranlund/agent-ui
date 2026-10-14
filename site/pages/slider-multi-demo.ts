@@ -54,7 +54,7 @@ const price = el('ui-slider-multi', {
 applyDemoWidth(price, '22rem')
 
 const readout = el('output', { for: 'price', 'aria-live': 'polite' })
-const results = el('ul', { style: 'margin:0.5rem 0 0; padding-inline-start:1.25rem;', 'aria-label': 'Matching products' })
+const results = el('ul', { style: 'margin:var(--md-sys-space-sm) 0 0; padding-inline-start:1.25rem;', 'aria-label': 'Matching products' })
 const summary = el('p', { class: 'demo-caption', style: 'margin:var(--md-sys-inset) 0 0;' }) // n under the readout (the prose-gap rule)
 const refresh = (): void => {
   const lo = price.valueLo
@@ -99,7 +99,7 @@ const sized = (size: string): HTMLElement => {
   applyDemoWidth(s, '12rem')
   return s
 }
-const sizeRow = el('div', { style: 'display:flex; gap:1.5rem; align-items:flex-end; flex-wrap:wrap;' }, [
+const sizeRow = el('div', { style: 'display:flex; gap:var(--md-sys-space-xl); align-items:flex-end; flex-wrap:wrap;' }, [
   captioned('size="sm"', sized('sm')),
   captioned('size="md"', sized('md')),
   captioned('size="lg"', sized('lg')),

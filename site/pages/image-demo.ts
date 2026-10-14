@@ -59,7 +59,7 @@ function image(photo: Photo, attrs: Record<string, string> = {}, width = '10rem'
 const hero = image(HERO, { aspect: '16/9', 'usage-hint': 'hero' }, 'min(100%, 32rem)')
 hero.append(el('span', {}, [document.createTextNode('Harborview loft · 2 bed · from €1,850/mo')]))
 
-const aspectRow = el('div', { style: 'display:flex; gap:0.5rem; flex-wrap:wrap; margin-block-start:0.75rem;' })
+const aspectRow = el('div', { style: 'display:flex; gap:var(--md-sys-space-sm); flex-wrap:wrap; margin-block-start:var(--md-sys-space-md);' })
 for (const ratio of ['16/9', '4/3', '1/1', '21/9'] as const) {
   const b = uiButton(`aspect="${ratio}"`, ratio === '16/9' ? 'solid' : 'soft')
   b.addEventListener('click', () => {
@@ -78,11 +78,11 @@ const heroNote = el('p', {}, [
 ])
 
 // ── the thumbnail strip — 1/1, usage-hint="thumb" (lazy) ────────────────────────────────────────────────────
-const strip = el('div', { style: 'display:flex; gap:0.75rem; flex-wrap:wrap;' })
+const strip = el('div', { style: 'display:flex; gap:var(--md-sys-space-md); flex-wrap:wrap;' })
 for (const photo of THUMBS) strip.append(image(photo, { aspect: '1/1', 'usage-hint': 'thumb' }, '7rem'))
 
 // ── fit: cover vs contain — a portrait source in a landscape frame ─────────────────────────────────────────
-const fitRow = el('div', { style: 'display:flex; gap:1rem; flex-wrap:wrap; align-items:flex-start;' }, [
+const fitRow = el('div', { style: 'display:flex; gap:var(--md-sys-space-lg); flex-wrap:wrap; align-items:flex-start;' }, [
   captioned('fit="cover" (default) — fills, crops the stairwell top and bottom', image(PORTRAIT, { aspect: '4/3', fit: 'cover' }, '14rem')),
   captioned('fit="contain" — letterboxes, the whole frame survives', image(PORTRAIT, { aspect: '4/3', fit: 'contain' }, '14rem')),
 ])

@@ -47,6 +47,11 @@ export const glyphBox = (r) => Math.max(GLYPH_FLOOR, r.glyph)
  *  (browser-safe, so the browser tests share it), so the next root change touches this line and a regenerate. */
 export const ROOT_REGISTER = Object.freeze({ tier: 'product', scale: 'md' })
 
+/** T-0170: a dogfood lint allowlist reason names its owner, a ticket (T-NNNN), an ADR (ADR-NNNN) or a ruling.
+ *  Both dogfood gates (dogfood-compose.mjs and the render lint) read it, so an entry with no owner fails either. */
+export const OWNER_REF = /\bT-\d{4}\b|\bADR-\d{4}\b|\bruling\b/i
+export const hasOwner = (why) => typeof why === 'string' && !why.startsWith('TODO') && OWNER_REF.test(why)
+
 /** `--md-sys-scale-s` per scale step, as the generator declares it and the root readers decode it. */
 export const STEP = Object.freeze({ sm: -1, md: 0, lg: 1 })
 

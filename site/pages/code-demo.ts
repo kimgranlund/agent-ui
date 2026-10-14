@@ -71,7 +71,7 @@ const SAMPLES: readonly { lang: string; code: string }[] = [
 ]
 
 const grid = el('div', { class: 'demo-grid' })
-grid.style.cssText = 'display:grid; grid-template-columns:repeat(auto-fit, minmax(20rem, 1fr)); gap:1rem; margin-block:0.75rem;'
+grid.style.cssText = 'display:grid; grid-template-columns:repeat(auto-fit, minmax(min(20rem, 100%), 1fr)); gap:var(--md-sys-space-lg); margin-block:var(--md-sys-space-md);'
 for (const { lang, code } of SAMPLES) {
   grid.append(
     captioned(`language="${lang}" — verbatim (the default)`, codeBlock(lang, code)),

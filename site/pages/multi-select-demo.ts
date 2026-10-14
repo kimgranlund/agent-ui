@@ -47,7 +47,7 @@ const multiSelect = el('ui-multi-select', { name: 'skills', label: 'Skills', req
 const form = el('form', {}, [multiSelect])
 form.style.display = 'flex'
 form.style.flexDirection = 'column'
-form.style.gap = '0.75rem'
+form.style.gap = 'var(--md-sys-space-md)'
 form.style.alignItems = 'flex-start'
 
 // A live readout of the form value — reads this.value and the FULL set of FormData entries keyed by

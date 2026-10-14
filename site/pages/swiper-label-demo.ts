@@ -78,7 +78,7 @@ const renameNote = el('p', {}, [
 requestAnimationFrame(readNames)
 
 content.append(
-  exampleSection('Named carousels', el('div', { style: 'display:grid; gap:1.5rem;' }, [arrivals.swiper, restock.swiper])),
+  exampleSection('Named carousels', el('div', { style: 'display:grid; gap:var(--md-sys-space-xl);' }, [arrivals.swiper, restock.swiper])),
   exampleSection('Unlabelled — the "Carousel" fallback', unlabelled.swiper),
   exampleSection('Model-driven rename + name probe', renameButton, probe, renameNote),
   exampleSection('select event log (the owning swiper\'s)', log),

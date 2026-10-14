@@ -200,7 +200,7 @@
     {
       "id": "glyph-gap",
       "adr": "T-0138 (review part-a, game-hud and result-card): a stat glyph sits n clear of its label (the chip gap)",
-      "selector": "ui-game-hud [data-part='glyph'], ui-result-card [data-part='glyph'], with a visible next sibling",
+      "selector": "ui-game-hud [data-part='glyph'], ui-result-card [data-part='glyph'], with a visible next sibling, outside a ui-badge (a status badge's mark keeps the badge rhythm 2c, Amendment 4; T-0170)",
       "measure": "the inline gap from the glyph to its next sibling",
       "expect": ">= the glyph's cascade n (its --md-sys-height / 4)"
     },
@@ -233,7 +233,15 @@
       "adr": "ADR-0245 clause 1: every margin, gutter, radius, height and type size derives from n",
       "use": "the derived tokens and the control's own size or the container's data-* register",
       "not": "an inline style that sets padding, margin, gap, radius, height or font-size to a literal length",
-      "detect": ".style.<prop> = '<length>', .style.cssText, .style.setProperty('<prop>', '<length>'), a style=\"...\" attribute or a style: '...' key, for a geometry property with a px, rem or em literal other than 0 and the 1px hairline"
+      "detect": ".style.<prop> = '<length>', .style.cssText, .style.setProperty('<prop>', '<length>'), a style=\"...\" attribute or a style: '...' key, for a geometry property with a px, rem or em literal other than 0 and the 1px hairline",
+      "exempt": [
+        { "path": "site/pages/card-demo.ts", "reason": "the scroll specimen's max-block-size is the frame that makes scroll mode show; a specimen frame, not composition (T-0170)" },
+        { "path": "site/pages/column-demo.ts", "reason": "the min-block-size on each ui-column specimen is the frame its justify and fill modes show in; a specimen frame (T-0170)" },
+        { "path": "site/pages/grid-demo.ts", "reason": "the tile photo's block-size is page content standing in for an image, not geometry of a control (T-0170)" },
+        { "path": "site/pages/list-demo.ts", "reason": "the min-block-size on each ui-list justify specimen is the frame the mode shows in; a specimen frame (T-0170)" },
+        { "path": "site/pages/row-demo.ts", "reason": "the min-block-size on each ui-row align specimen and its tall box is the frame the alignment shows in; a specimen frame (T-0170)" },
+        { "path": "site/pages/sandbox-frame-demo.ts", "reason": "the literal styles live in the HTML the opaque-origin sandbox renders, where no token reaches (ADR-0073 trust boundary); the host side uses tokens (T-0170)" }
+      ]
     }
   ]
 }

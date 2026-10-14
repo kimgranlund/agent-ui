@@ -53,7 +53,7 @@ drop.intake = async (files) =>
 const form = el('form', {}, [drop])
 form.style.display = 'flex'
 form.style.flexDirection = 'column'
-form.style.gap = '0.75rem'
+form.style.gap = 'var(--md-sys-space-md)'
 form.style.alignItems = 'stretch'
 form.style.maxInlineSize = '28rem'
 

@@ -97,9 +97,9 @@ const addRegion = uiButton('Add a region')
 addRegion.addEventListener('click', () => write([...current, { label: `Region ${current.length + 1}`, value: Math.round(Math.random() * 20) + 1 }]))
 const reset = uiButton('Reset', 'ghost')
 reset.addEventListener('click', () => write(REVENUE_BY_REGION))
-const liveBlock = el('div', { style: 'display:flex; flex-direction:column; gap:0.75rem; align-items:flex-start;' }, [
+const liveBlock = el('div', { style: 'display:flex; flex-direction:column; gap:var(--md-sys-space-md); align-items:flex-start;' }, [
   live,
-  el('div', { style: 'display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;' }, [el('div', { style: 'display:flex; gap:0.75rem; flex-wrap:wrap;' }, [reshuffle, addRegion, reset]), readout]),
+  el('div', { style: 'display:flex; gap:var(--md-sys-space-md); align-items:center; flex-wrap:wrap;' }, [el('div', { style: 'display:flex; gap:var(--md-sys-space-md); flex-wrap:wrap;' }, [reshuffle, addRegion, reset]), readout]),
 ])
 const liveNote = el('p', {}, [
   text('Every click writes '), code('data'), text(' with a new array; the whole mark rebuilds (A2UI '),

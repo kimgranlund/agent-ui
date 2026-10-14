@@ -89,8 +89,8 @@ dismissAllBtn.addEventListener('click', () => {
   for (const toast of [...region.querySelectorAll('ui-toast')] as UIToastElement[]) toast.close()
 })
 
-const controls = el('div', { style: 'display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center;' }, [
-  el('div', { style: 'display:flex; gap:0.75rem; flex-wrap:wrap;' }, [oneBtn, burstBtn, stickyBtn, dismissAllBtn]),
+const controls = el('div', { style: 'display:flex; gap:var(--md-sys-space-md); flex-wrap:wrap; align-items:center;' }, [
+  el('div', { style: 'display:flex; gap:var(--md-sys-space-md); flex-wrap:wrap;' }, [oneBtn, burstBtn, stickyBtn, dismissAllBtn]),
   el('span', { style: 'font-family: var(--md-sys-typeface-mono); font-size: 0.85rem;' }, [text('stack: '), stackCount]),
 ])
 
@@ -122,7 +122,7 @@ const isolationNote = el('p', {}, [
     'visually — the point here is independence, not layout.'),
 ])
 
-const secondControls = el('div', { style: 'display:flex; gap:0.75rem; flex-wrap:wrap;' }, [secondBtn, bothBtn])
+const secondControls = el('div', { style: 'display:flex; gap:var(--md-sys-space-md); flex-wrap:wrap;' }, [secondBtn, bothBtn])
 
 // ── the declarative path — author-authored markup, no show() call ────────────────────────────────────────────
 const declarativeBtn = inline(uiButton('Mount a region with two authored toasts', 'soft')) // ADR-0223: bare demo action — hugs

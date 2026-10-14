@@ -60,7 +60,10 @@ for (const value of elevations) {
 const nested = el('ui-card', { elevation: '1' }, [
   el('ui-card-content', {}, [
     text('Outer card. A card keeps its level radius wherever it sits, so the nested card below has the same corner.'),
-    el('ui-card', { elevation: '2' }, [el('ui-card-content', {}, [text('Nested card, at the card level radius.')])]),
+    // a permanent specimen of the nested shape, so the render lint's nested-card rule skips it by marker (T-0170)
+    el('ui-card', { elevation: '2', 'data-dogfood-ok': 'nested-card', 'data-dogfood-reason': 'the nested-card radius specimen (T-0141 ruling)' }, [
+      el('ui-card-content', {}, [text('Nested card, at the card level radius.')]),
+    ]),
   ]),
 ])
 applyDemoWidth(nested, '24rem')

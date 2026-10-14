@@ -29,7 +29,7 @@ function bar(attrs: Record<string, string>): HTMLElement {
 }
 
 function controls(...nodes: readonly Node[]): HTMLElement {
-  return el('div', { style: 'display:flex; flex-wrap:wrap; gap:0.5rem; margin-block-end:0.75rem;' }, nodes)
+  return el('div', { style: 'display:flex; flex-wrap:wrap; gap:var(--md-sys-space-sm); margin-block-end:var(--md-sys-space-md);' }, nodes)
 }
 
 // ── the shared update log ────────────────────────────────────────────────────────────────────────────────────
@@ -54,7 +54,7 @@ const FILES = [
 const TOTAL_KB = FILES.reduce((n, f) => n + f.kb, 0)
 
 const upload = bar({ current: '0', max: String(TOTAL_KB), label: 'Uploading 3 attachments' })
-const uploadStatus = el('p', { style: 'margin:0.5rem 0 0;' }, [text('Idle — 3 files queued (17.9 MB).')])
+const uploadStatus = el('p', { style: 'margin:var(--md-sys-space-sm) 0 0;' }, [text('Idle — 3 files queued (17.9 MB).')])
 let uploadTimer: ReturnType<typeof setInterval> | null = null
 
 function stopUpload(): void {
@@ -102,7 +102,7 @@ resetUploadBtn.addEventListener('click', resetUpload)
 // ── 2. Knowledge-base indexing — indeterminate → determinate → complete ──────────────────────────────────────
 const DOC_COUNT = 48
 const indexer = bar({ label: 'Indexer idle' })
-const indexerStatus = el('p', { style: 'margin:0.5rem 0 0;' }, [text('Idle.')])
+const indexerStatus = el('p', { style: 'margin:var(--md-sys-space-sm) 0 0;' }, [text('Idle.')])
 let indexTimer: ReturnType<typeof setInterval> | null = null
 let countTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -147,7 +147,7 @@ startIndexBtn.addEventListener('click', startIndexing)
 const STEPS = ['Welcome', 'Workspace name', 'Invite teammates', 'Choose a theme', 'Done'] as const
 let step = 2
 const stepper = bar({ current: String(step), segments: String(STEPS.length), label: `Step ${step} of ${STEPS.length}` })
-const stepStatus = el('p', { style: 'margin:0.5rem 0 0;' }, [text(`Step ${step} of ${STEPS.length} — ${STEPS[step - 1]}`)])
+const stepStatus = el('p', { style: 'margin:var(--md-sys-space-sm) 0 0;' }, [text(`Step ${step} of ${STEPS.length} — ${STEPS[step - 1]}`)])
 function goTo(next: number): void {
   step = Math.max(0, Math.min(STEPS.length, next))
   stepper.setAttribute('current', String(step))
@@ -169,7 +169,7 @@ const stepNote = el('p', {}, [
 ])
 
 // ── 4. Static states — the models side by side (no timers) ───────────────────────────────────────────────────
-const states = el('div', { style: 'display:flex; flex-direction:column; gap:1rem;' }, [
+const states = el('div', { style: 'display:flex; flex-direction:column; gap:var(--md-sys-space-lg);' }, [
   captioned('determinate — current=64 max=100', bar({ current: '64', label: 'Syncing calendar' })),
   captioned('indeterminate — no current', bar({ label: 'Waiting for the server' })),
   captioned('discrete — current=3 segments=4', bar({ current: '3', segments: '4', label: 'Step 3 of 4' })),

@@ -53,9 +53,9 @@ flip.addEventListener('click', () => {
   ;(live as HTMLElement & { faceDown: boolean }).faceDown = faceDown // a real prop write — the flipper rotor transitions
   readout.textContent = `faceDown: ${faceDown}`
 })
-const liveBlock = el('div', { style: 'display:flex; flex-direction:column; gap:0.75rem; align-items:flex-start;' }, [
+const liveBlock = el('div', { style: 'display:flex; flex-direction:column; gap:var(--md-sys-space-md); align-items:flex-start;' }, [
   live,
-  el('div', { style: 'display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;' }, [flip, readout]),
+  el('div', { style: 'display:flex; gap:var(--md-sys-space-md); align-items:center; flex-wrap:wrap;' }, [flip, readout]),
 ])
 const liveNote = el('p', {}, [
   text('Every click writes '), code('faceDown'), text(' directly; the flipper rotor transitions under '),

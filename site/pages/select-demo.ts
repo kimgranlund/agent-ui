@@ -50,7 +50,7 @@ const select = el('ui-select', { name: 'tier', placeholder: 'Choose a plan…', 
 const form = el('form', {}, [select])
 form.style.display = 'flex'
 form.style.flexDirection = 'column'
-form.style.gap = '0.75rem'
+form.style.gap = 'var(--md-sys-space-md)'
 form.style.alignItems = 'flex-start' // the Submit button hugs
 select.style.alignSelf = 'stretch' // a form field fills like its siblings (ADR-0223); flex-start alone shrank it to its placeholder
 
