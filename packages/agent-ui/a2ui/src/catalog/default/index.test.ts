@@ -265,7 +265,7 @@ describe('default catalog — G9 container declarations (SPEC-R3/R4/R8)', () => 
 
   it('TextField is value-bound on the change event — the deferred bind, now live (ADR-0019 cl.3)', () => {
     const tf = defaultCatalog.components.TextField
-    expect(tf.value).toEqual({ prop: 'value', event: 'change' })
+    expect(tf.value).toEqual({ prop: 'value', event: 'change', readProp: 'a2uiFormValue' })
     expect(tf.properties.value?.bindable).toBe(true)
   })
 })

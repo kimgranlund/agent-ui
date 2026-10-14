@@ -104,6 +104,8 @@
 
 import type { WidgetFactory } from '../types.ts'
 import type { ValueSlot } from '../catalog.ts'
+import { FORM_CONNECT_EVENT } from '@agent-ui/components'
+import type { FormConnectDetail } from '@agent-ui/components'
 
 // Generic attribute fallback for an A2UI prop with no dedicated mapping. `null`/`undefined`/`false`
 // clear the attribute; `true` sets the boolean-attribute form; everything else is string-coerced. For a
@@ -460,8 +462,29 @@ export const toastFactory: WidgetFactory = {
 // TextField (G6) — the deferred value bind goes live through the same LLD-C8 controller (ADR-0019 cl.3):
 // `value` commits on the control's `change` event (blur / Enter), zero text-field code change. The
 // Wave-5 reach (ADR-0047/0048) + the ADR-0053 catalog widening (`type`/`currency`/`unit`/`step`/`min`/
-// `max`) are ALL 1:1 reflecting accessor props — zero factory code beyond the catalog.json PropDefs.
-export const textFieldFactory: WidgetFactory = accessorFactory('ui-text-field', { prop: 'value', event: 'change' })
+// `max`) are ALL 1:1 reflecting accessor props. The commit reads `a2uiFormValue` (T-0175), not `value`: a codec
+// type (date, time, number, currency, unit, color) keeps its DISPLAY text in `value` ("Dec 1, 2026") and submits
+// the parsed form value ("2026-12-01"), so the data model gets the same value the picker and a form post carry.
+// The control announces that form value on `ui-form-connect` (a closure over its own `formValue()`); the getter
+// proxies it, and falls back to `value` where the control never connected.
+export const textFieldFactory: WidgetFactory = {
+  ...accessorFactory('ui-text-field', { prop: 'value', event: 'change', readProp: 'a2uiFormValue' }),
+  create: () => {
+    const el = document.createElement('ui-text-field')
+    let formValue: (() => unknown) | null = null
+    el.addEventListener(FORM_CONNECT_EVENT, (e) => {
+      formValue = (e as CustomEvent<FormConnectDetail>).detail.value
+    })
+    Object.defineProperty(el, 'a2uiFormValue', {
+      configurable: true,
+      get(this: HTMLElement & { value: string }) {
+        const committed = formValue?.()
+        return typeof committed === 'string' ? committed : this.value
+      },
+    })
+    return el
+  },
+}
 
 // Textarea (ADR-0134 fleet primitive; this catalog row drains that ADR's deferred "separate intake" —
 // the 2026-07-28 per-control catalog intake, ruled IN: a plain multi-line form control an agent
