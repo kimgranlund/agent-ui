@@ -107,7 +107,9 @@ resend rule can never touch is `"root"` — the shipped runtime rejects any seco
 `IDGRAPH` and keeps the original, no whole-record-resend exception (runtime SPEC-R3 AC2, `renderer/tree.ts`'s
 `#rootDelivered` guard; proven empirically at build via `validate-payload`). A producer whose surface may grow
 MUST deliver root as a stable, never-resent wrapper (e.g. a `Column`) and place the mutable container one level
-down under its own non-root id.
+down under its own non-root id. **REV 2026-10-14 (T-0172):** the carve-out now covers only a `root` resend
+that changes the component TYPE; a same-type `root` resend replaces it like any id (runtime SPEC-R3 AC2 REV).
+The stable-wrapper shape stays the cheaper producer habit, not a MUST.
 - **AC1** *Given* a node `{id:"btn", component:"Button", label:"Go", action:{...}}` re-emitted as
   `{id:"btn", component:"Button", label:"Go!"}` (omitting `action`), *when* applied, *then* the node's `action`
   is gone — the omission is a silent drop, not a preserved prior value. A producer MUST NOT rely on partial
@@ -251,8 +253,8 @@ dialog's visible record.
 | SPEC-R5 | TKT-0016 Lane 2; ADR-0126 F4/F5 |
 
 The A2UI test kit (`packages/agent-ui/a2ui/tools/testkit/`, T-0011) carries the lifecycle into keyless scenarios:
-its seeded `validator` fixture pins the rejection of a `root` re-sent without a `createSurface` (IDGRAPH
-`s:root`, the ADR-0064 epoch rule), and its `upstream-error` scenario keeps a surface standing across a failed turn.
+its seeded `validator` fixture pins the rejection of a `root` re-sent as another type without a `createSurface`
+(IDGRAPH `s:root`, the ADR-0064 epoch rule; a same-type resend is an upsert since T-0172), and its `upstream-error` scenario keeps a surface standing across a failed turn.
 
 ## 7. Open items (non-normative)
 

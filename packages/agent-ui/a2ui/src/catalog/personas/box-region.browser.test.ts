@@ -4,9 +4,9 @@
 // the 6px box inset, the region padding), the card's loose-child margin gone, and the composite's own rhythm
 // (CardTable one region apart, 18px; QuestionCard one 8px gap). jsdom cannot see a computed box, so this is
 // the geometry proof; card-table.test.ts and question-card.test.ts own the DOM shape. The CardTable betting seed
-// (ADR-0243 Amendment 3, T-0088) adds the bet row: its chips, stepper and Clear at 28px (the lg step on the canvas register, widget
-// at scale md, ADR-0245 Amendment 2), 8px apart,
-// one region between the felt and the Deal row.
+// (ADR-0243 Amendment 3, T-0088; T-0172 strip) folds the zones away and shows the bet strip, five bets at 28px (the lg
+// step on the canvas register, widget at scale md, ADR-0245 Amendment 2), 8px apart, one region under the head. The
+// T-0172 Haiku hit turn's own payload proves in both engines that a card with no faceDown paints its face.
 
 import { describe, it, expect, afterEach } from 'vitest'
 // Side-effect CSS first (foundation, then the shipped control sheets), then the self-defining controls.
@@ -73,32 +73,24 @@ describe('the persona composites on the ADR-0046 box model (Amendment 7)', () =>
     }
   })
 
-  it('CardTable betting (Amendment 3): the bet row sits one region (18px) between the felt and the Deal row; chips, stepper and Clear at 28px (lg on the canvas register), 8px apart', async () => {
+  it('CardTable betting (T-0172 strip): the zones fold away, the strip sits one region (18px) under the head and over the readout; five bets at 28px (lg on the canvas register), 8px apart', async () => {
     const card = await renderSeed('persona-croupier-card-table-betting')
     const host = rect(card)
-    const player = rect(card.querySelectorAll('[data-part="zone"]')[1]!)
+    const head = rect(part(card, 'head'))
     const bet = rect(part(card, 'bet'))
-    const chips = [...card.querySelectorAll('[data-part="chip"]')].map(rect)
-    const stake = rect(part(card, 'stake'))
-    const clear = rect(part(card, 'clear'))
-    const dealBtn = rect(card.querySelector(':scope > ui-button') as HTMLElement)
-    expect(chips).toHaveLength(4)
-    for (const r of [...chips, stake, clear, dealBtn]) expect(r.height).toBeCloseTo(resolve('widget', 'md', 'lg').h, 0) // 28: the lg step at the canvas register
-    // The chips on the first line, 8px apart; the stepper and Clear on the second, 8px below and 8px apart.
-    for (let i = 1; i < chips.length; i++) {
-      expect(chips[i]!.left - chips[i - 1]!.right).toBeCloseTo(8, 0)
-      expect(chips[i]!.top).toBeCloseTo(chips[0]!.top, 0)
+    const readout = rect(part(card, 'readout'))
+    const bets = [...card.querySelectorAll('[data-part="bet-option"]')].map(rect)
+    expect(bets).toHaveLength(5)
+    for (const r of bets) expect(r.height).toBeCloseTo(resolve('widget', 'md', 'lg').h, 0) // 28: the lg step at the canvas register
+    for (let i = 1; i < bets.length; i++) {
+      expect(bets[i]!.left - bets[i - 1]!.right).toBeCloseTo(8, 0)
+      expect(bets[i]!.top).toBeCloseTo(bets[0]!.top, 0)
     }
-    expect(chips[0]!.left - host.left).toBeCloseTo(19, 0)
-    expect(stake.top - chips[0]!.bottom).toBeCloseTo(8, 0)
-    expect(stake.left - host.left).toBeCloseTo(19, 0)
-    expect(clear.left - stake.right).toBeCloseTo(8, 0)
-    expect(clear.top).toBeCloseTo(stake.top, 0)
-    expect(host.right - clear.right).toBeCloseTo(19, 0) // the stepper takes the line's slack
-    expect(bet.top - player.bottom).toBeCloseTo(18, 0)
-    expect(dealBtn.top - bet.bottom).toBeCloseTo(18, 0)
-    expect(host.right - dealBtn.right).toBeCloseTo(19, 0)
-    expect(host.bottom - dealBtn.bottom).toBeCloseTo(13, 0)
+    expect(bets[0]!.left - host.left).toBeCloseTo(19, 0)
+    for (const zone of card.querySelectorAll('[data-part="zone"]')) expect(rect(zone).height).toBe(0)
+    expect(bet.top - head.bottom).toBeCloseTo(18, 0)
+    expect(readout.top - bet.bottom).toBeCloseTo(18, 0)
+    expect(card.querySelector(':scope > ui-button')).toBeNull()
   })
 
   it('QuestionCard: ink 19px inline and 13px block; one 8px gap between parts', async () => {
@@ -115,5 +107,47 @@ describe('the persona composites on the ADR-0046 box model (Amendment 7)', () =>
     const button = rect(card.querySelector(':scope > ui-button') as HTMLElement)
     expect(button.top - options.bottom).toBeCloseTo(8, 0)
     expect(host.bottom - button.bottom).toBeCloseTo(13, 0)
+  })
+})
+
+// T-0172: Kim saw every card of this Haiku 5.5 payload (2026-10-14 20:43 UTC trace, turn 2) painted as a back. The
+// payload byte for byte, through the real renderer: only the faceDown:true hole card turns its rotor to 180deg.
+describe('the Haiku hit turn paints its faces (T-0172)', () => {
+  it('the dealer 10 and the player 8 and 5 show their faces, the hole card its back, in this engine', async () => {
+    const mount = document.createElement('div')
+    mount.style.inlineSize = '480px'
+    document.body.append(mount)
+    mounted.push(mount)
+    const host = createRenderer()
+    host.mount(mount)
+    await host.preload('agent-ui--croupier')
+    const payload = [
+      { version: 'v1.0', createSurface: { surfaceId: 'table-1', catalogId: 'agent-ui--croupier', sendDataModel: true } },
+      { version: 'v1.0', updateDataModel: { surfaceId: 'table-1', value: { bankroll: 1000, bet: 50, status: 'Your turn', dealerHand: [{ rank: '10', suit: 'spades' }, { rank: '6', suit: 'diamonds', faceDown: true }], playerHand: [{ rank: '8', suit: 'hearts' }, { rank: '5', suit: 'clubs' }], dealerTotal: '10 showing', playerTotal: '13' } } },
+      { version: 'v1.0', updateComponents: { surfaceId: 'table-1', components: [
+        { id: 'root', component: 'CardTable', title: 'Blackjack', dealerHand: { path: '/dealerHand' }, playerHand: { path: '/playerHand' }, dealerTotal: { path: '/dealerTotal' }, playerTotal: { path: '/playerTotal' }, bankroll: { path: '/bankroll' }, bet: { path: '/bet' }, status: { path: '/status' }, statusIntent: 'neutral', phase: 'playing', children: ['actions'] },
+        { id: 'actions', component: 'Row', gap: 'md', justify: 'end', children: ['hit_btn', 'stand_btn', 'double_btn'] },
+        { id: 'hit_btn', component: 'Button', label: 'Hit', variant: 'solid', action: { action: 'hit' } },
+        { id: 'stand_btn', component: 'Button', label: 'Stand', variant: 'ghost', action: { action: 'stand' } },
+        { id: 'double_btn', component: 'Button', label: 'Double', variant: 'ghost', action: { action: 'double' } },
+      ] } },
+    ]
+    for (const message of payload) host.ingest(JSON.stringify(message))
+    host.finalize('table-1')
+    await host.settled()
+    await new Promise((resolve) => setTimeout(resolve, 400)) // the deal entrance settles
+    const cards = [...mount.querySelectorAll('ui-playing-card')]
+    const turned = cards.map((c) => {
+      const t = getComputedStyle(c.querySelector('[data-part="flipper"]')!).transform
+      return t !== 'none' && new DOMMatrix(t).m11 < 0 // rotateY(180deg) puts -1 in m11
+    })
+    expect(turned).toEqual([false, true, false, false])
+    // The face, not the back, is what a pointer at a face-up card's center hits.
+    const r = cards[0]!.getBoundingClientRect()
+    const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+    expect(hit?.closest('[data-part="face"], [data-part="back"]')?.getAttribute('data-part')).toBe('face')
+    // Hit, Stand and Double are live: none disabled on "Your turn".
+    const actions = [...mount.querySelectorAll('ui-button')].filter((b) => !b.hasAttribute('data-part')) // not the hidden bet strip
+    expect(actions.map((b) => [b.textContent?.trim(), (b as HTMLElement & { disabled: boolean }).disabled])).toEqual([['Hit', false], ['Stand', false], ['Double', false]])
   })
 })

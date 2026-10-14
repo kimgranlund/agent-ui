@@ -14,8 +14,9 @@
 //
 // Eager id-graph guard (LLD-C4 / §8). The shared validator (validate.ts) judges the COMPLETE
 // component set at *finalize*, where missing-root and dangling are legal transient mid-stream states.
-// The two *always*-invalid cases — a 2nd `root` and a cycle — are guarded here, in-stream, per
-// SPEC-R3 AC2: a 2nd `id:'root'` keeps the existing root and emits `IDGRAPH`; a cycle in
+// The two *always*-invalid cases — a 2nd `root` of another type and a cycle — are guarded here, in-stream,
+// per SPEC-R3 AC2 (T-0172 REV: a same-type `root` resend is an upsert and reconciles): a 2nd `id:'root'`
+// of another type keeps the existing root and emits `IDGRAPH`; a cycle in
 // `child`/`children` emits `IDGRAPH` and refuses to mount the invalid graph.
 //
 // Render-depth guard (a2ui-runtime SPEC-R15, GH #473, ecosystem SPEC-R2). `exceedsMaxDepth` runs
@@ -120,7 +121,7 @@ export class SurfaceTree {
   // OWN ordering enforced against it — an accepted, documented degenerate-input limitation.
   readonly #childContainer = new Map<string, string>()
   readonly #revealedCount = new Map<string, number>() // containerId -> count of leading (declared-order) children revealed
-  #rootDelivered = false // a first `id:'root'` was accepted; a later one is an IDGRAPH (SPEC-R3 AC2).
+  #rootDelivered = false // a first `id:'root'` was accepted; a later one of another type is an IDGRAPH (SPEC-R3 AC2).
   #rootMounted = false // the tree has been mounted from `root` (mount-once gate).
   #cycleReported = false // a cycle was found; the graph is invalid, so further batches are inert.
   #depthExceeded = false // the render-depth cap was exceeded; further batches are inert (SPEC-R2/GH #473).
@@ -166,8 +167,10 @@ export class SurfaceTree {
     const delivered: string[] = []
     const resent = new Map<string, A2uiComponent>() // id → its PREVIOUS record, only for already-mounted ids
     for (const comp of message.updateComponents.components) {
-      if (comp.id === 'root' && this.#rootDelivered) {
-        // SPEC-R3 AC2: a second `root` is an id-graph error; keep the existing root, drop the dupe.
+      if (comp.id === 'root' && this.#rootDelivered && this.#surface.components.get('root')?.component !== comp.component) {
+        // SPEC-R3 AC2 (T-0172 REV): a second `root` of a DIFFERENT type is an id-graph error; keep the
+        // existing root, drop the dupe. A same-type `root` is an upsert like any id (A2UI v1.0
+        // `updateComponents` adds or updates by id) and reconciles below onto the SAME element.
         this.#idgraph(`${this.#surface.id}:root`)
         continue
       }
@@ -444,12 +447,11 @@ export class SurfaceTree {
   /**
    * Dispatch one resent id's reconciliation (RSR-C4): computes both diffs against the SAME previous/next
    * pair and gates each independently, so a resend touching only `children` runs SPEC-R1's child diff and
-   * skips SPEC-R2's prop rewire, and vice versa. `"root"` is never reconciled (SPEC-R4) — the shipped
-   * IDGRAPH guard already forecloses a second `root` delivery before this would ever be reached, but the
-   * check is kept here too as the SPEC's own explicit carve-out.
+   * skips SPEC-R2's prop rewire, and vice versa. T-0172 (SPEC-R4 REV): `"root"` reconciles too, once the
+   * IDGRAPH guard in `apply` has let a same-type resend through; its element stays the one the host
+   * attached, so the surface keeps its mount, marker and register attributes.
    */
   #reconcileNode(id: string, previous: A2uiComponent, next: A2uiComponent): void {
-    if (id === 'root') return
     const oldRefs = childRefs(previous)
     const newRefs = childRefs(next)
     if (!sameOrder(oldRefs, newRefs)) this.#reconcileChildren(id, oldRefs, newRefs)

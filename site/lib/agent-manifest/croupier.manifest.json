@@ -1,8 +1,8 @@
 {
   "id": "croupier",
   "preset": "croupier",
-  "seedVersion": 10,
-  "seedDigest": "sha256:c662dc131c5d4d1916c793432e98680f8bbcf2ddbc52a91a0366f58025c02c41",
+  "seedVersion": 13,
+  "seedDigest": "sha256:1ce6f762e2f8998a499c77fa6399b531043deff9cd569f8e972914ecfddc8170",
   "fragment": {
     "personaId": "croupier",
     "types": [
@@ -13,9 +13,9 @@
       "agent-ui",
       "a2ui-basic"
     ],
-    "digest": "sha256:540b06e1c7a2e8da479c21ffd0e3b69a17f76370ab0b0bf73ab9a2667d5f5ee7"
+    "digest": "sha256:8ab6c23250a1529b423a64a357a8ff8ec6c16afc710025805d42e3b94f53fa85"
   },
   "selection": {
-    "digest": "sha256:b8741526bb460baf7041e93f1780904ec0db979a1c63f6bb00499f57e59b4b74"
+    "digest": "sha256:bfcca5bd953876276a417270b0a5787873ee76a71550f79c01db309eeefe89ae"
   }
 }

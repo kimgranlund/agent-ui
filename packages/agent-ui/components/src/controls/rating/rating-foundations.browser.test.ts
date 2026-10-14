@@ -43,3 +43,28 @@ describe('ui-rating foundations (ADR-0245 lane a01)', () => {
     })
   }
 })
+
+// T-0172: `[size]` steps the star box wherever the rating sits: at the page root (no tier region) and on an A2UI
+// canvas (widget / md), the box is the icon box 2n at the rating's own size (ADR-0245: icon 2n inside a control
+// or tier region), never the root's icon box inherited unchanged.
+describe('ui-rating [size] steps the star box (T-0172)', () => {
+  function starBox(region: Record<string, string>, size: string): number {
+    const wrap = document.createElement('div')
+    for (const [k, v] of Object.entries(region)) wrap.setAttribute(k, v)
+    wrap.innerHTML = `<ui-rating max="5" value="3" size="${size}"></ui-rating>`
+    document.body.append(wrap)
+    mounted.push(wrap)
+    return (wrap.querySelector('svg') as SVGElement).getBoundingClientRect().width
+  }
+  for (const [label, region, tier, scale] of [
+    ['the page root', {}, 'product', 'md'],
+    ['an A2UI canvas', { 'data-tier': 'widget', 'data-scale': 'md' }, 'widget', 'md'],
+  ] as const) {
+    it(`at ${label}, sm < md < lg and each equals the derived icon box`, () => {
+      const boxes = (['sm', 'md', 'lg'] as const).map((size) => starBox(region, size))
+      expect(boxes[0]).toBeLessThan(boxes[1]!)
+      expect(boxes[1]).toBeLessThan(boxes[2]!)
+      ;(['sm', 'md', 'lg'] as const).forEach((size, i) => expect(boxes[i], size).toBeCloseTo(resolve(tier, scale, size).icon, 1))
+    })
+  }
+})

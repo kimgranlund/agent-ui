@@ -123,6 +123,10 @@ no new root behavior. *(→ consistency, no regression)*
   mounted, *when* applied, *then* the runtime SPEC's existing `IDGRAPH` guard fires exactly as it does today
   (unaffected by this SPEC) and SPEC-R1/R2 reconciliation is never invoked against `"root"`.
 
+> **REV 2026-10-14 (T-0172):** the carve-out narrows to a `root` of a DIFFERENT component type. A same-type
+> `root` resend is an upsert (runtime SPEC-R3 AC2 REV) and reconciles through SPEC-R1/R2 like any mounted id,
+> onto the SAME element the host attached, so the surface marker and register attributes survive.
+
 **SPEC-R5 — Survivor reorder is a non-goal (deferred).** SPEC-R1's reconciliation is add/remove only — a
 survivor id's DOM position is NOT re-derived from its new index in the resent `children` array if that index
 differs from before (e.g. `["a","b"]` → `["b","a"]`, no add/remove, pure reorder). A survivor with a changed

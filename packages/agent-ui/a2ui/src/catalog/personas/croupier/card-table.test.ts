@@ -3,8 +3,10 @@
 // appends one element and a hole card turned up flips the same element (ADR-0225 cl.6). The action Buttons
 // are the producer's own children, appended after the readout. The derived croupier id is a lazy record
 // (ADR-0241), so `render()` awaits its load before ingesting. The hand lifecycle (ADR-0243 Amendment 3) runs
-// on the betting and settled seeds of both bases: the bet row, the two-way bet, the Deal gate, the result line.
+// on the betting and settled seeds of both bases: the bet strip (T-0172: one press places the bet and deals), the
+// result line.
 
+import { readFileSync } from 'node:fs'
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import '@agent-ui/components/all' // ADR-0233: the catalog factories import no control; the test defines the fleet
 import { whenFlushed } from '@agent-ui/components'
@@ -19,8 +21,8 @@ import {
   personaCroupierCardTableSettledSeed,
 } from '../../../examples/persona-exemplars.ts'
 
-// jsdom has no `ElementInternals.setFormValue`/`setValidity`, which the bet row's form-associated `ui-text-field`
-// calls on connect (the question-card.test.ts precedent): stubbed on the shared prototype for this file only.
+// jsdom has no `ElementInternals.setFormValue`/`setValidity`, which a form-associated control calls on connect (the
+// question-card.test.ts precedent): stubbed on the shared prototype for this file only.
 let savedSetFormValue: unknown
 let savedSetValidity: unknown
 beforeAll(() => {
@@ -101,6 +103,17 @@ describe('CardTable renders through the real renderer (ADR-0243)', () => {
     expect(cardsIn(table, 'dealer').map(face)).toEqual(['9c', '4d*'])
     expect(cardsIn(table, 'player').map(face)).toEqual(['Kh', '7s'])
     for (const c of table.querySelectorAll('ui-playing-card')) expect((c as CardEl).size).toBe('md')
+    cleanup()
+  })
+
+  it('T-0172: the Haiku hit trace\'s hands render face up except the one faceDown:true hole card (no face-down attribute on the rest)', async () => {
+    const { table, ingest, errors, cleanup } = await render()
+    await ingest(dataLine('/dealerHand', [{ rank: '10', suit: 'spades' }, { rank: '6', suit: 'diamonds', faceDown: true }]))
+    await ingest(dataLine('/playerHand', [{ rank: '8', suit: 'hearts' }, { rank: '5', suit: 'clubs' }, { rank: '4', suit: 'diamonds' }]))
+    expect(errors()).toEqual([])
+    expect(cardsIn(table, 'dealer').map(face)).toEqual(['10s', '6d*'])
+    expect(cardsIn(table, 'player').map(face)).toEqual(['8h', '5c', '4d'])
+    expect([...table.querySelectorAll('ui-playing-card')].map((c) => c.hasAttribute('face-down'))).toEqual([false, true, false, false, false])
     cleanup()
   })
 
@@ -196,10 +209,10 @@ describe('CardTable renders through the real renderer (ADR-0243)', () => {
     cleanup()
   })
 
-  it('CardTable: the root order stays head, zones, result, bet, readout, then the producer Buttons', async () => {
+  it('CardTable: the root order stays head, zones, result, bet, readout, then the producer Buttons (none while betting)', async () => {
     const { table, cleanup } = await render(personaCroupierCardTableBettingSeed.messages)
     expect([...table.children].map((k) => k.getAttribute('data-part') ?? k.tagName.toLowerCase())).toEqual([
-      'head', 'zone', 'zone', 'result', 'bet', 'readout', 'ui-button',
+      'head', 'zone', 'zone', 'result', 'bet', 'readout',
     ])
     cleanup()
   })
@@ -208,11 +221,9 @@ describe('CardTable renders through the real renderer (ADR-0243)', () => {
 const part = (table: HTMLElement, name: string): HTMLElement => table.querySelector<HTMLElement>(`[data-part="${name}"]`)!
 const visibleCards = (table: HTMLElement, zone: 'dealer' | 'player'): CardEl[] => cardsIn(table, zone).filter((c) => c.style.display !== 'none')
 const deal = (table: HTMLElement): HTMLElement & { disabled: boolean } => table.querySelector(':scope > ui-button') as HTMLElement & { disabled: boolean }
-const chips = (table: HTMLElement): (HTMLElement & { disabled: boolean; size: string })[] =>
-  [...table.querySelectorAll('[data-part="chip"]')] as (HTMLElement & { disabled: boolean; size: string })[]
-const chip = (table: HTMLElement, amount: number): HTMLElement => table.querySelector(`[data-part="chip"][data-amount="${amount}"]`)!
-const stake = (table: HTMLElement): HTMLElement & { type: string; min: string; max: string; step: number; value: string; size: string } =>
-  part(table, 'stake') as HTMLElement & { type: string; min: string; max: string; step: number; value: string; size: string }
+const betOptions = (table: HTMLElement): (HTMLElement & { disabled: boolean; size: string })[] =>
+  [...table.querySelectorAll('[data-part="bet-option"]')] as (HTMLElement & { disabled: boolean; size: string })[]
+const betOption = (table: HTMLElement, amount: number): HTMLElement => table.querySelector(`[data-part="bet-option"][data-amount="${amount}"]`)!
 const readout = (table: HTMLElement): string => part(table, 'readout').textContent ?? ''
 
 /** Click, then let the bind effects and the async action emit settle. */
@@ -223,99 +234,62 @@ async function press(el: HTMLElement): Promise<void> {
 }
 
 describe('CardTable: the hand lifecycle (ADR-0243 Amendment 3)', () => {
-  it('betting: the felt is empty, the bet row shows lg chips (32px on the canvas register), an exact-amount stepper and Clear, and Deal is live at bet 50', async () => {
+  it('betting: the felt is empty and the bet strip shows 25, 50, 75, 100 and 250 at the button lg step, with no other control (T-0172)', async () => {
     const { table, errors, cleanup } = await render(personaCroupierCardTableBettingSeed.messages)
     expect(errors()).toEqual([])
     expect(part(table, 'bet').style.display).toBe('flex')
     expect(visibleCards(table, 'dealer')).toHaveLength(0)
     expect(visibleCards(table, 'player')).toHaveLength(0)
-    expect(chips(table).map((c) => c.textContent)).toEqual(['+10', '+25', '+50', '+100'])
-    expect(chips(table).map((c) => c.size)).toEqual(['lg', 'lg', 'lg', 'lg'])
-    const field = stake(table)
-    expect(field.tagName.toLowerCase()).toBe('ui-text-field')
-    expect([field.type, field.min, field.max, field.step, field.value, field.size]).toEqual(['number', '1', '1000', 5, '50', 'lg'])
-    expect(part(table, 'clear').textContent).toBe('Clear')
+    expect([...table.querySelectorAll<HTMLElement>('[data-part="zone"]')].map((z) => z.style.display)).toEqual(['none', 'none'])
+    expect(betOptions(table).map((c) => c.textContent)).toEqual(['25', '50', '75', '100', '250'])
+    expect(betOptions(table).map((c) => c.size)).toEqual(['lg', 'lg', 'lg', 'lg', 'lg'])
+    expect(betOptions(table).some((c) => c.disabled)).toBe(false)
+    expect(part(table, 'bet').querySelector('ui-text-field, ui-slider')).toBeNull()
+    expect(deal(table)).toBeNull() // the strip is the whole bet phase: no Deal Button
     expect(readout(table)).toBe('Bankroll 1,000 · Bet 50')
-    expect(deal(table).disabled).toBe(false)
     cleanup()
   })
 
-  it('betting: a chip adds to the bet, the bet reaches the data model, and Deal sends it', async () => {
+  it('betting: one press places that bet, writes it to the data model and sends deal with it in the context', async () => {
     const { table, errors, actions, cleanup } = await render(personaCroupierCardTableBettingSeed.messages)
-    await press(chip(table, 25))
-    expect(readout(table)).toBe('Bankroll 1,000 · Bet 75')
-    expect(stake(table).value).toBe('75')
-    await press(deal(table))
+    await press(betOption(table, 75))
     expect(errors()).toEqual([])
+    expect(readout(table)).toBe('Bankroll 1,000 · Bet 75')
     expect(actions()).toEqual([{ name: 'deal', context: { bet: 75 } }])
     cleanup()
   })
 
-  it('betting: chips stop at the bankroll and then go inert, and Clear zeroes the bet and shuts Deal', async () => {
+  it('betting: the bankroll caps the strip, an amount above it is disabled and sends nothing', async () => {
     const { table, ingest, actions, cleanup } = await render(personaCroupierCardTableBettingSeed.messages)
-    await ingest(dataLine('/bankroll', 120))
-    await press(chip(table, 100))
-    expect(readout(table)).toBe('Bankroll 120 · Bet 120') // 50 + 100 capped at the bankroll
-    expect(chips(table).every((c) => c.disabled)).toBe(true)
-    await press(part(table, 'clear'))
-    expect(readout(table)).toBe('Bankroll 120 · Bet 0')
-    expect(stake(table).value).toBe('')
-    expect(chips(table).some((c) => c.disabled)).toBe(false)
-    expect(deal(table).disabled).toBe(true)
-    await press(deal(table))
-    expect(actions()).toEqual([]) // a disabled Deal sends nothing
-    await press(chip(table, 10))
-    expect(deal(table).disabled).toBe(false)
-    await press(deal(table))
-    expect(actions()).toEqual([{ name: 'deal', context: { bet: 10 } }])
+    await ingest(dataLine('/bankroll', 90))
+    expect(betOptions(table).map((c) => c.disabled)).toEqual([false, false, false, true, true])
+    await press(betOption(table, 100))
+    expect(actions()).toEqual([])
+    await ingest(dataLine('/bankroll', 1000))
+    expect(betOptions(table).some((c) => c.disabled)).toBe(false)
     cleanup()
   })
 
-  it('betting: a stepper commit sets the exact bet, clamped to the bankroll, and writes it back', async () => {
-    const { table, actions, cleanup } = await render(personaCroupierCardTableBettingSeed.messages)
-    const field = stake(table)
-    field.value = '2000'
-    field.dispatchEvent(new Event('change', { bubbles: true }))
-    await whenFlushed()
-    expect(readout(table)).toBe('Bankroll 1,000 · Bet 1,000')
-    expect(field.value).toBe('1000')
-    field.value = '35'
-    field.dispatchEvent(new Event('change', { bubbles: true }))
-    await press(deal(table))
-    expect(actions()).toEqual([{ name: 'deal', context: { bet: 35 } }])
+  it('betting with no betAction: a press only writes the bet (the croupier-bet-controls check flags the missing action)', async () => {
+    const custom = JSON.parse(JSON.stringify(personaCroupierCardTableBettingSeed.messages)) as A2uiOutput
+    delete (custom[1] as { updateComponents: { components: Record<string, unknown>[] } }).updateComponents.components[0]!['betAction']
+    const { table, actions, cleanup } = await render(custom)
+    await press(betOption(table, 50))
+    expect(actions()).toEqual([])
+    expect(readout(table)).toBe('Bankroll 1,000 · Bet 50')
     cleanup()
   })
 
-  it('betting: Deal is disabled while the bet is below 1 or above the bankroll, from the data model too', async () => {
-    const { table, ingest, cleanup } = await render(personaCroupierCardTableBettingSeed.messages)
-    expect(deal(table).disabled).toBe(false)
-    await ingest(dataLine('/bet', 0))
-    expect(deal(table).disabled).toBe(true)
-    await ingest(dataLine('/bet', 60))
-    expect(deal(table).disabled).toBe(false)
-    await ingest(dataLine('/bankroll', 40))
-    expect(deal(table).disabled).toBe(true)
-    await ingest(dataLine('/bankroll', 500))
-    expect(deal(table).disabled).toBe(false)
-    cleanup()
-  })
-
-  it('betting to playing: the deal fills the felt, the bet row hides, the bet reads only in the readout, and the gate lets go', async () => {
+  it('betting to playing: the deal fills the felt, the strip retires, and the bet reads only in the readout', async () => {
     const { table, ingest, errors, cleanup } = await render(personaCroupierCardTableBettingSeed.messages)
-    await ingest(dataLine('/bet', 0))
-    const gated = deal(table)
-    expect(gated.disabled).toBe(true)
     await ingest(dataLine('/playerHand', [{ rank: 'K', suit: 'hearts' }, { rank: '7', suit: 'spades' }]))
     expect(visibleCards(table, 'player')).toHaveLength(0) // dealt while betting: held off the felt
-    await ingest(dataLine('/bet', 50))
     await ingest(dataLine('/phase', 'playing'))
     expect(errors()).toEqual([])
     expect(part(table, 'bet').style.display).toBe('none')
+    expect([...table.querySelectorAll<HTMLElement>('[data-part="zone"]')].map((z) => z.style.display)).toEqual(['', ''])
     expect(visibleCards(table, 'player').map(face)).toEqual(['Kh', '7s'])
     expect(readout(table)).toBe('Bankroll 1,000 · Bet 50')
-    expect(gated.disabled).toBe(false)
-    await ingest(dataLine('/bet', 0))
-    expect(gated.disabled).toBe(false) // outside `betting` the factory never touches a Button
     cleanup()
   })
 
@@ -335,14 +309,11 @@ describe('CardTable: the hand lifecycle (ADR-0243 Amendment 3)', () => {
     cleanup()
   })
 
-  it('a2ui-basic: the same betting table gates the Basic Deal Button and its event carries the bound bet', async () => {
-    const { table, ingest, errors, actions, cleanup } = await render(personaBasicCroupierCardTableBettingSeed.messages)
+  it('a2ui-basic: the same betting table places the bet and sends deal from its strip', async () => {
+    const { table, errors, actions, cleanup } = await render(personaBasicCroupierCardTableBettingSeed.messages)
     expect(errors()).toEqual([])
-    await ingest(dataLine('/bet', 0))
-    expect(deal(table).disabled).toBe(true)
-    await press(chip(table, 50))
-    expect(deal(table).disabled).toBe(false)
-    await press(deal(table))
+    expect(deal(table)).toBeNull()
+    await press(betOption(table, 50))
     expect(actions()).toEqual([{ name: 'deal', context: { bet: 50 } }])
     cleanup()
   })
@@ -355,16 +326,13 @@ describe('CardTable: the hand lifecycle (ADR-0243 Amendment 3)', () => {
     cleanup()
   })
 
-  it('chips: a producer list replaces the defaults, and an empty or invalid one falls back to them', async () => {
+  it('bets: the amounts are the fixed 25 to 250 set; a model-supplied list is not a catalog prop and fails validation (T-0172)', async () => {
     const custom = JSON.parse(JSON.stringify(personaCroupierCardTableBettingSeed.messages)) as A2uiOutput
-    const root = (custom[1] as { updateComponents: { components: Record<string, unknown>[] } }).updateComponents.components[0]!
-    root['chips'] = { path: '/chips' }
-    ;(custom[2] as { updateDataModel: { value: Record<string, unknown> } }).updateDataModel.value['chips'] = [5, 500]
-    const { table, ingest, errors, cleanup } = await render(custom)
-    expect(errors()).toEqual([])
-    expect(chips(table).map((c) => c.textContent)).toEqual(['+5', '+500'])
-    await ingest(dataLine('/chips', []))
-    expect(chips(table).map((c) => c.textContent)).toEqual(['+10', '+25', '+50', '+100'])
+    ;(custom[1] as { updateComponents: { components: Record<string, unknown>[] } }).updateComponents.components[0]!['bets'] = [10, 25, 50, 100]
+    const { table, cleanup } = await render(custom)
+    expect(betOptions(table).map((c) => c.textContent)).toEqual(['25', '50', '75', '100', '250'])
+    const row = JSON.parse(readFileSync('packages/agent-ui/a2ui/src/catalog/personas/croupier/catalog.json', 'utf8')) as { components: { CardTable: { properties: Record<string, unknown> } } }
+    expect(Object.keys(row.components.CardTable.properties)).not.toContain('bets') // the validator rejects a model's own list (CATALOG)
     cleanup()
   })
 })

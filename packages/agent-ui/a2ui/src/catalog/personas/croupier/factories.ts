@@ -20,13 +20,14 @@
 // felt, and the readout and the Buttons, keep the 8px region gap.
 //
 // The hand lifecycle (ADR-0243 Amendment 3, T-0088): `phase` is `betting`, `playing` (the default, so a payload
-// without it renders as before) or `settled`. `betting` empties the felt and shows the bet row: chip buttons
-// (`chips`, default 10/25/50/100) that add to the bet and stop at the bankroll, a `ui-text-field type=number`
-// stepper (min 1, max the bankroll, step 5) and a Clear button, all at the button's `lg` step. `bet` is two-way
-// (the QuestionCard shape): a chip, Clear or a stepper commit sends a bubbling `change` the input binding reads
-// through `a2uiCardTableBet`. The first producer Button (Deal) is disabled by the factory while the bet is
-// outside 1 to bankroll: the default base has no range check a Button `checks` entry could name. `settled`
-// shows the `result` line above the readout.
+// without it renders as before) or `settled`. `betting` empties the felt and shows the bet strip (Kim's ruling,
+// T-0172): one `lg` button per amount of the fixed set Kim ruled, 25 / 50 / 75 / 100 / 250 (no wire prop, so a
+// model cannot supply its own amounts), an amount above the bankroll disabled. A press places that bet and starts the hand in one step: it writes the bet (a bubbling `change` the
+// input binding reads through `a2uiCardTableBet`), then fires the host's own `action` event with
+// `{action: betAction, context: {bet}}`, which the renderer forwards as the A2UI action (`betAction` is the
+// catalog's `actionEvent: 'action'` prop, the BoardGrid precedent). The table owns the whole bet phase, so a
+// producer adds no Slider, field or Deal Button for it (the `croupier-bet-controls` check). Leaving `betting`
+// hides the strip. `settled` shows the `result` line above the readout.
 //
 // `targetCatalogs` (both shipped bases): both factories build directly against `@agent-ui/components`, never
 // through either base's own dialect, the same reasoning as `concierge/index.ts`.
@@ -63,7 +64,8 @@ type Participant = 'dealer' | 'player'
 type Phase = 'betting' | 'playing' | 'settled'
 
 const PHASES: readonly Phase[] = ['betting', 'playing', 'settled']
-const DEFAULT_CHIPS: readonly number[] = [10, 25, 50, 100]
+/** Kim's ruling (T-0172): the bet strip's amounts, fixed. */
+const BET_AMOUNTS: readonly number[] = [25, 50, 75, 100, 250]
 
 interface ZoneParts {
   total: HTMLElement
@@ -78,17 +80,6 @@ interface ButtonLike extends HTMLElement {
   inline: boolean
 }
 
-interface StakeFieldLike extends HTMLElement {
-  type: string
-  size: string
-  label: string
-  placeholder: string
-  value: string
-  min: string
-  max: string
-  step: number
-}
-
 interface CardTableParts {
   titleEl: HTMLElement
   statusEl: HTMLElement
@@ -96,8 +87,6 @@ interface CardTableParts {
   resultEl: HTMLElement
   resultText: HTMLElement
   betEl: HTMLElement
-  chipsEl: HTMLElement
-  stakeEl: StakeFieldLike
   readoutEl: HTMLElement
   readoutText: HTMLElement
   status: string
@@ -105,12 +94,11 @@ interface CardTableParts {
   bankroll: number | undefined
   bet: number | undefined
   phase: Phase
-  chips: readonly number[]
+  /** The action name a bet press fires (`betAction`); none set, a press only writes the bet. */
+  betAction: string
   result: string
-  /** The producer Button the bet gate disabled, and its own `disabled` before, restored when the gate lifts. */
-  gated: { button: ButtonLike; prev: boolean } | null
-  /** A chip press: add `amount` to the bet. */
-  onChip: (amount: number) => void
+  /** A bet press: place `amount` and start the hand. */
+  onBet: (amount: number) => void
 }
 
 const cardTableParts = new WeakMap<HTMLElement, CardTableParts>()
@@ -228,61 +216,36 @@ function button(variant: string, label: string): ButtonLike {
   return el
 }
 
-/** Rebuild the chip buttons from `parts.chips`: one `+n` soft button per chip. */
-function renderChips(parts: CardTableParts): void {
-  parts.chipsEl.replaceChildren(
-    ...parts.chips.map((amount) => {
-      const chip = button('soft', `+${amount.toLocaleString('en-US')}`)
-      chip.setAttribute('data-part', 'chip')
-      chip.setAttribute('data-amount', String(amount))
-      chip.addEventListener('click', () => {
-        if (!chip.disabled) parts.onChip(amount)
+/** Build the bet strip: one button per fixed amount. */
+function renderBets(parts: CardTableParts): void {
+  parts.betEl.replaceChildren(
+    ...BET_AMOUNTS.map((amount) => {
+      const bet = button('soft', amount.toLocaleString('en-US'))
+      bet.setAttribute('data-part', 'bet-option')
+      bet.setAttribute('data-amount', String(amount))
+      bet.addEventListener('click', () => {
+        if (!bet.disabled) parts.onBet(amount)
       })
-      return chip
+      return bet
     }),
   )
-  paintBet(parts)
+  paintBets(parts)
 }
 
-/** A bet clamped to 0 to the bankroll (no cap while the bankroll is unknown). */
-function clampBet(parts: CardTableParts, n: number): number {
-  const capped = parts.bankroll === undefined ? n : Math.min(n, parts.bankroll)
-  return Math.max(0, capped)
-}
-
-/** Deal takes a bet of at least 1 and at most the bankroll. */
-const betInRange = (parts: CardTableParts): boolean =>
-  parts.bet !== undefined && parts.bet >= 1 && (parts.bankroll === undefined || parts.bet <= parts.bankroll)
-
-/** The stepper's value, max and the chips' disabled state follow the bet and the bankroll. */
-function paintBet(parts: CardTableParts): void {
-  const stake = parts.stakeEl
-  stake.max = parts.bankroll === undefined ? '' : String(parts.bankroll)
-  const shown = parts.bet === undefined || parts.bet === 0 ? '' : String(parts.bet)
-  if (stake.value !== shown) stake.value = shown
-  const full = parts.bankroll !== undefined && (parts.bet ?? 0) >= parts.bankroll
-  for (const chip of parts.chipsEl.children) (chip as ButtonLike).disabled = full
-}
-
-/** In `betting`, disable the first producer Button (Deal) while the bet is out of range; restore it otherwise. */
-function gateDeal(el: HTMLElement, parts: CardTableParts): void {
-  const first = el.querySelector<ButtonLike>(':scope > ui-button')
-  const shut = parts.phase === 'betting' && first !== null && !betInRange(parts)
-  const g = parts.gated
-  if (g !== null && (g.button !== first || !shut)) {
-    g.button.disabled = g.prev
-    parts.gated = null
-  }
-  if (shut && parts.gated === null) {
-    parts.gated = { button: first!, prev: first!.disabled }
-    first!.disabled = true
+/** An amount above the bankroll cannot be bet (every amount is open while the bankroll is unknown). */
+function paintBets(parts: CardTableParts): void {
+  for (const option of parts.betEl.children) {
+    const amount = Number((option as HTMLElement).getAttribute('data-amount'))
+    ;(option as ButtonLike).disabled = parts.bankroll !== undefined && amount > parts.bankroll
   }
 }
 
-/** Betting empties the felt (cards and totals hidden, the data untouched); the other phases show them. */
+/** Betting empties the felt (cards and totals hidden, the data untouched) and folds the two empty zones away, so
+ *  the table reads as its bet strip (T-0172: the tall empty felt was a defect); the other phases show them. */
 function paintZones(parts: CardTableParts): void {
   const hide = parts.phase === 'betting' ? 'none' : ''
   for (const z of Object.values(parts.zones)) {
+    if (z.felt.parentElement !== null) z.felt.parentElement.style.display = hide
     z.total.style.display = hide
     for (const card of z.felt.children) (card as HTMLElement).style.display = hide
   }
@@ -296,16 +259,15 @@ function paintResult(parts: CardTableParts): void {
   parts.resultEl.style.display = parts.phase === 'settled' && parts.result !== '' ? 'flex' : 'none'
 }
 
-function paintPhase(el: HTMLElement, parts: CardTableParts): void {
+function paintPhase(parts: CardTableParts): void {
   parts.betEl.style.display = parts.phase === 'betting' ? 'flex' : 'none'
   paintZones(parts)
   paintResult(parts)
-  gateDeal(el, parts)
 }
 
 export const cardTableFactory: WidgetFactory = {
   tag: 'ui-card',
-  uses: ['ui-badge', 'ui-button', 'ui-playing-card', 'ui-text', 'ui-text-field'], // ADR-0233: the parts it mints
+  uses: ['ui-badge', 'ui-button', 'ui-playing-card', 'ui-text'], // ADR-0233: the parts it mints
   create: () => {
     const el = document.createElement('ui-card')
     const s = el.style
@@ -342,26 +304,8 @@ export const cardTableFactory: WidgetFactory = {
     ;(resultText as unknown as { emphasis: boolean }).emphasis = true
     resultEl.appendChild(resultText)
 
-    // The bet row (hidden until `betting`): the chips, the exact-amount stepper, Clear.
+    // The bet strip (hidden until `betting`): one button per amount.
     const betEl = band('bet')
-    const chipsEl = document.createElement('div')
-    chipsEl.setAttribute('data-part', 'chips')
-    chipsEl.style.display = 'flex'
-    chipsEl.style.flexWrap = 'wrap'
-    chipsEl.style.gap = BOX.gap
-    chipsEl.style.flex = '1 0 100%' // the chips own the first line; the stepper and Clear share the second
-    const stakeEl = document.createElement('ui-text-field') as StakeFieldLike
-    stakeEl.setAttribute('data-part', 'stake')
-    stakeEl.type = 'number'
-    stakeEl.size = 'lg'
-    stakeEl.label = 'Bet'
-    stakeEl.placeholder = 'Bet'
-    stakeEl.min = '1'
-    stakeEl.step = 5
-    stakeEl.style.flex = '1 1 8rem'
-    const clearEl = button('ghost', 'Clear')
-    clearEl.setAttribute('data-part', 'clear')
-    betEl.append(chipsEl, stakeEl, clearEl)
 
     const readoutEl = document.createElement('div')
     readoutEl.setAttribute('data-part', 'readout')
@@ -382,8 +326,6 @@ export const cardTableFactory: WidgetFactory = {
       resultEl,
       resultText,
       betEl,
-      chipsEl,
-      stakeEl,
       readoutEl,
       readoutText,
       status: '',
@@ -391,36 +333,26 @@ export const cardTableFactory: WidgetFactory = {
       bankroll: undefined,
       bet: undefined,
       phase: 'playing',
-      chips: DEFAULT_CHIPS,
+      betAction: '',
       result: '',
-      gated: null,
-      onChip: () => {},
+      onBet: () => {},
     }
     cardTableParts.set(el, parts)
 
-    /** Take a new bet from the table's own controls; `notify` sends the bubbling `change` the input binding reads. */
-    const setBet = (n: number, notify: boolean): void => {
-      parts.bet = clampBet(parts, n)
+    // A bet press writes the bet (the `change` the input binding reads), then fires the host's own `action`
+    // event, which the renderer forwards only when it is dispatched ON the host (never from the button).
+    parts.onBet = (amount) => {
+      parts.bet = amount
       renderReadout(parts)
-      paintBet(parts)
-      gateDeal(el, parts)
-      if (notify) el.dispatchEvent(new Event('change', { bubbles: true }))
+      el.dispatchEvent(new Event('change', { bubbles: true }))
+      if (parts.betAction !== '') el.dispatchEvent(new CustomEvent('action', { detail: { action: parts.betAction, context: { bet: amount } } }))
     }
-    parts.onChip = (amount) => setBet((parts.bet ?? 0) + amount, true)
-    renderChips(parts)
-    clearEl.addEventListener('click', () => setBet(0, true))
-    // The stepper's own `change` (a commit or a step) bubbles to the root on its own; this listener runs first.
-    stakeEl.addEventListener('change', () => {
-      const n = Number(stakeEl.value)
-      setBet(stakeEl.value.trim() === '' || !Number.isFinite(n) ? 0 : n, false)
-    })
+    renderBets(parts)
     // The live bet for `installInputBinding` (LLD-C8), read on the root's bubbling `change`.
     Object.defineProperty(el, 'a2uiCardTableBet', {
       configurable: true,
       get: () => parts.bet ?? null,
     })
-    // The producer's Buttons land after `create()`: re-gate Deal whenever the root's children change.
-    new MutationObserver(() => gateDeal(el, parts)).observe(el, { childList: true })
     return el
   },
   applyProp: (el, prop, value) => {
@@ -457,25 +389,19 @@ export const cardTableFactory: WidgetFactory = {
       case 'bankroll':
         parts.bankroll = finite(value)
         renderReadout(parts)
-        paintBet(parts)
-        gateDeal(el, parts)
+        paintBets(parts)
         break
       case 'bet':
         parts.bet = finite(value)
         renderReadout(parts)
-        paintBet(parts)
-        gateDeal(el, parts)
         break
       case 'phase':
         parts.phase = PHASES.find((p) => p === value) ?? 'playing'
-        paintPhase(el, parts)
+        paintPhase(parts)
         break
-      case 'chips': {
-        const list = Array.isArray(value) ? value.filter((n): n is number => typeof n === 'number' && Number.isFinite(n) && n > 0) : []
-        parts.chips = list.length > 0 ? list : DEFAULT_CHIPS
-        renderChips(parts)
+      case 'betAction':
+        parts.betAction = value == null ? '' : String(value)
         break
-      }
       case 'result':
         parts.result = value == null ? '' : String(value)
         paintResult(parts)

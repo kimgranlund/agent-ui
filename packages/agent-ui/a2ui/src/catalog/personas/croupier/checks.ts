@@ -34,7 +34,7 @@
 
 import type { A2uiComponent } from '../../../protocol.ts'
 import { readPointer } from '../../semantic-check.ts'
-import type { SemanticCheck, SemanticFinding, SurfaceView } from '../../semantic-check.ts'
+import type { SemanticAction, SemanticCheck, SemanticFinding, SurfaceView } from '../../semantic-check.ts'
 
 const PARTICIPANTS = ['dealer', 'player'] as const
 type Participant = (typeof PARTICIPANTS)[number]
@@ -360,4 +360,207 @@ export const croupierHandConsistency: SemanticCheck = {
   check: (input) => input.surfaces.flatMap(checkSurface),
 }
 
-export const croupierSemanticChecks: readonly SemanticCheck[] = [croupierHandConsistency]
+const bindingPath = (v: unknown): string | undefined =>
+  typeof v === 'object' && v !== null && typeof (v as { path?: unknown }).path === 'string' ? (v as { path: string }).path : undefined
+
+/** A CardTable's phase: the literal, or the bound value in the data model; absent or unknown is `playing`,
+ *  as the factory reads it. */
+function phaseOf(table: A2uiComponent, dataModel: unknown): string {
+  const raw = table['phase']
+  const path = bindingPath(raw)
+  const value = path === undefined ? raw : readPointer(dataModel, path)
+  return value === 'betting' || value === 'settled' ? value : 'playing'
+}
+
+const BET_INPUTS = new Set(['Slider', 'TextField'])
+
+/** T-0172 (Kim's ruling): a CardTable owns the whole bet phase. In `betting` its strip of bet buttons places the
+ *  bet and fires `betAction`, so the table needs `betAction`, carries no Button child, and the surface holds no
+ *  Slider or TextField for the bet. In any phase, a second control bound to the table's bet path doubles its
+ *  controls (the Sonnet 5 trace of 2026-10-14 added a Slider on `/bet` beside the table). */
+function betControls(view: SurfaceView): SemanticFinding[] {
+  const findings: SemanticFinding[] = []
+  const finding = (id: string, message: string): void => void findings.push({ code: 'BET_CONTROL_DUPLICATE', path: `${view.surfaceId}:${id}`, message })
+  for (const table of view.components.values()) {
+    if (table.component !== 'CardTable') continue
+    const bet = bindingPath(table['bet'])
+    const betting = phaseOf(table, view.dataModel) === 'betting'
+    if (betting && typeof table['betAction'] !== 'string')
+      finding(table.id, `${table.id} is in the betting phase with no "betAction". Set "betAction":"deal" so a press on its bet strip places the bet and deals.`)
+    const kids = Array.isArray(table['children']) ? (table['children'] as unknown[]) : []
+    for (const other of view.components.values()) {
+      if (other.id === table.id) continue
+      const sameBet = bet !== undefined && bindingPath(other['value']) === bet
+      const strayInput = betting && BET_INPUTS.has(other.component)
+      const strayButton = betting && other.component === 'Button' && kids.includes(other.id)
+      if (!sameBet && !strayInput && !strayButton) continue
+      finding(
+        other.id,
+        `${other.id} (a ${other.component}) duplicates ${table.id}'s own bet controls: in the betting phase its strip of ` +
+          `bet buttons places the bet and deals. Remove ${other.id} and its id from every children list.`,
+      )
+    }
+  }
+  return findings
+}
+
+const BET_WORDS = /\b(bet|bets|stake|wager)\b/i
+const textOf = (v: unknown): string => (typeof v === 'string' ? v : bindingPath(v) ?? '')
+const actionName = (c: A2uiComponent): string => {
+  const a = c['action'] as { action?: unknown; event?: { name?: unknown } } | undefined
+  return typeof a?.action === 'string' ? a.action : typeof a?.event?.name === 'string' ? a.event.name : ''
+}
+
+/** T-0172 (the live Haiku 5.5 probe, 2026-10-14): a blackjack bet step built WITHOUT a CardTable (a Card with a
+ *  "Bet amount" Slider and a Deal Button) never reaches the table's bet strip, so the check above has nothing to
+ *  judge. A surface with no CardTable that holds a bet input (a Slider or TextField whose label, name or bound
+ *  path says bet, stake or wager) or a Deal Button, and no dealt card yet, is sent back to be one CardTable in its betting phase. A
+ *  false positive costs one repair round and ships tallied at the bound (ADR-0238), never a halt. */
+function betStepWithoutTable(view: SurfaceView): SemanticFinding[] {
+  const comps = [...view.components.values()]
+  // A dealt hand (any PlayingCard) is past the bet step: an older table shape is judged by the hand check alone.
+  if (comps.some((c) => c.component === 'CardTable' || c.component === 'PlayingCard')) return []
+  const strays = comps.filter((c) => {
+    if (BET_INPUTS.has(c.component)) return [c['label'], c['name'], c['value']].some((v) => BET_WORDS.test(textOf(v).replace(/[/_-]/g, ' ')))
+    if (c.component === 'Button') return /^deal\b/i.test(textOf(c['label'])) || /^(deal|place_?bet|bet)$/i.test(actionName(c))
+    return false
+  })
+  if (strays.length === 0) return []
+  return [
+    {
+      code: 'BET_TABLE_MISSING',
+      path: `${view.surfaceId}:${strays[0]!.id}`,
+      message:
+        `${view.surfaceId} takes a blackjack bet with ${strays.map((c) => `${c.id} (a ${c.component})`).join(', ')} and no CardTable. ` +
+        `Make the surface ONE CardTable, phase "betting", bet and bankroll bound, "betAction":"deal": its own bet strip ` +
+        `places the bet and deals, so drop those controls. (A game other than blackjack keeps its Card.)`,
+    },
+  ]
+}
+
+/** T-0172: one bet, one set of bet controls (the CardTable's own strip). */
+export const croupierBetControls: SemanticCheck = {
+  id: 'croupier-bet-controls',
+  check: (input) => input.surfaces.flatMap((view) => [...betControls(view), ...betStepWithoutTable(view)]),
+}
+
+const DEAL_ACTION = /^(deal|place_?bet|bet|deal_blackjack)$/i
+const MOVE_ACTION = /^(hit|stand|double|double_?down)$/i
+const finiteNumber = (v: unknown): number | undefined => (typeof v === 'number' && Number.isFinite(v) ? v : undefined)
+
+/** T-0172 (the live probe on f6f94f7f): a table action must move the table, and a deal must take the bet out of
+ *  the bankroll. Haiku 5.5 answered a 50 press with prose ("dealt you 9 and 7 for 16") and no update, so the
+ *  table stayed in betting; Sonnet 5.5 dealt and wrote a bankroll of 500 from 1,000 after a 50 bet. */
+function actionApplied(surfaces: readonly SurfaceView[], action: SemanticAction): SemanticFinding[] {
+  const deal = DEAL_ACTION.test(action.name)
+  if (!deal && !MOVE_ACTION.test(action.name)) return []
+  const view = surfaces.find((v) => v.surfaceId === action.surfaceId)
+  // A move answered on a NEW table (the next round) hands the flow on; the clicked one is history.
+  const handedOn = surfaces.some((v) => v.surfaceId !== action.surfaceId && [...v.components.values()].some((c) => c.component === 'CardTable'))
+  if (view === undefined) {
+    if (handedOn) return []
+    return [
+      {
+        code: 'ACTION_NOT_APPLIED',
+        path: `${action.surfaceId}:${action.name}`,
+        message:
+          `The player pressed ${action.name} on ${action.surfaceId}, and this turn sends it no update, so the table still shows the old state. ` +
+          `Call render_surface with an updateDataModel for ${action.surfaceId}: the new cards, totals, phase and bankroll, not only prose.`,
+      },
+    ]
+  }
+  const findings: SemanticFinding[] = []
+  for (const table of view.components.values()) {
+    if (table.component !== 'CardTable') continue
+    if (deal && phaseOf(table, view.dataModel) === 'betting')
+      findings.push({
+        code: 'ACTION_NOT_APPLIED',
+        path: `${view.surfaceId}:${table.id}`,
+        message: `The player bet with ${action.name}, but ${table.id} is still in the betting phase. Write the dealt hands and phase "playing" to ${view.surfaceId}'s data model.`,
+      })
+    const bet = finiteNumber(action.context['bet'])
+    const before = finiteNumber((action.dataModel as Record<string, unknown> | undefined)?.['bankroll'])
+    const path = bindingPath(table['bankroll'])
+    const after = path === undefined ? finiteNumber(table['bankroll']) : finiteNumber(readPointer(view.dataModel, path))
+    // A round that settles on this action is judged by the payout, never by the plain deal arithmetic.
+    if (phaseOf(table, view.dataModel) === 'settled') {
+      const settled = settleFinding(view, table, action, deal)
+      if (settled !== undefined) findings.push(settled)
+      continue
+    }
+    if (deal && bet !== undefined && before !== undefined && after !== undefined && after !== before - bet)
+      findings.push({
+        code: 'BANKROLL_MISMATCH',
+        path: `${view.surfaceId}:${path ?? table.id}`,
+        message:
+          `The bankroll reads ${after} after a bet of ${bet} from ${before}. The deal takes the bet out of the bankroll: write ${before - bet}. ` +
+          `Settlement later pays the bet back with the winnings (2x the bet for a win, 2.5x for a natural, 1x for a push).`,
+      })
+  }
+  return findings
+}
+
+/** A settled hand's best total (an ace counts 11 while that stays at 21 or under), every card counted. */
+function bestTotal(cards: readonly Card[]): number {
+  const hard = cards.reduce((sum, c) => sum + RANK_VALUE[c.rank]!, 0)
+  return cards.some((c) => c.rank === 'A') && hard + 10 <= 21 ? hard + 10 : hard
+}
+
+/** A list of cards read off the data model at `path`, or undefined when any item is not a card. */
+function cardsAt(dataModel: unknown, path: string | undefined): Card[] | undefined {
+  const list = path === undefined ? undefined : readPointer(dataModel, path)
+  if (!Array.isArray(list)) return undefined
+  const cards = list.map(itemCard)
+  return cards.every((c): c is Card => c !== undefined) ? cards : undefined
+}
+
+/** What a settled round pays back on a stake already taken out at the deal: 2x on a win, 2.5x on a natural,
+ *  the stake on a push, nothing on a loss, with the result in words for the repair sentence. */
+function payout(player: readonly Card[], dealer: readonly Card[], stake: number): { amount: number; result: string } {
+  const p = bestTotal(player)
+  const d = bestTotal(dealer)
+  if (p > 21) return { amount: 0, result: `a bust (${p})` }
+  if (isNatural(player) && !isNatural(dealer)) return { amount: stake * 2.5, result: 'a natural' }
+  if (isNatural(dealer) && !isNatural(player)) return { amount: 0, result: 'a loss to the dealer\'s natural' }
+  if (d > 21) return { amount: stake * 2, result: `a win (the dealer bust on ${d})` }
+  if (p > d) return { amount: stake * 2, result: `a win (${p} over ${d})` }
+  if (p === d) return { amount: stake, result: `a push (${p})` }
+  return { amount: 0, result: `a loss (${p} under ${d})` }
+}
+
+/** T-0172 (the live probe on afc073a3): a round that settles on this action must pay out from the click-time
+ *  bankroll: on a deal (a natural), the bet comes out and the payout goes back in one step; on a hit, stand or
+ *  double, the stake (doubled on a double, the extra stake taken out) pays back by the result the hands show. */
+function settleFinding(view: SurfaceView, table: A2uiComponent, action: SemanticAction, deal: boolean): SemanticFinding | undefined {
+  if (phaseOf(table, view.dataModel) !== 'settled') return undefined
+  const clickTime = action.dataModel as Record<string, unknown> | undefined
+  if (clickTime?.['phase'] === 'settled') return undefined // already settled before this action
+  const before = finiteNumber(clickTime?.['bankroll'])
+  const bankrollPath = bindingPath(table['bankroll'])
+  const after = bankrollPath === undefined ? finiteNumber(table['bankroll']) : finiteNumber(readPointer(view.dataModel, bankrollPath))
+  const player = cardsAt(view.dataModel, bindingPath(table['playerHand']))
+  const dealer = cardsAt(view.dataModel, bindingPath(table['dealerHand']))
+  const bet = deal ? finiteNumber(action.context['bet']) : finiteNumber(clickTime?.['bet'])
+  if (before === undefined || after === undefined || player === undefined || dealer === undefined || bet === undefined || bet <= 0) return undefined
+  const doubled = /^double/i.test(action.name)
+  const stake = doubled ? bet * 2 : bet
+  const takenNow = deal ? bet : doubled ? bet : 0 // the stake leaves the bankroll at the deal; a double adds one more
+  const { amount, result } = payout(player, dealer, stake)
+  const expected = before - takenNow + amount
+  if (after === expected) return undefined
+  return {
+    code: 'BANKROLL_MISMATCH',
+    path: `${view.surfaceId}:${bankrollPath ?? table.id}`,
+    message:
+      `The round settles as ${result} on a stake of ${stake}, so the bankroll goes from ${before} to ${expected}` +
+      `${takenNow > 0 ? ` (${takenNow} taken out now, ${amount} paid back)` : ` (${amount} paid back)`}, but it reads ${after}. Write ${expected}.`,
+  }
+}
+
+/** T-0172: a table action moves the table, and a deal takes the bet out of the bankroll. */
+export const croupierActionApplied: SemanticCheck = {
+  id: 'croupier-action-applied',
+  check: (input) => (input.action === undefined ? [] : actionApplied(input.surfaces, input.action)),
+}
+
+export const croupierSemanticChecks: readonly SemanticCheck[] = [croupierHandConsistency, croupierBetControls, croupierActionApplied]

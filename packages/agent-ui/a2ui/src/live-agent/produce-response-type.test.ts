@@ -187,7 +187,7 @@ describe('render_surface tool round', () => {
     const lines = await run(NEUTRAL, provider)
     expect(calls()).toBe(2)
     expect(lastUserMessage(reqs()[1]!)).toMatch(/PARSE/)
-    expect(lastUserMessage(reqs()[1]!)).toContain('Call render_surface again with the COMPLETE corrected JSONL')
+    expect(lastUserMessage(reqs()[1]!)).toContain('Call render_surface again with the COMPLETE corrected `messages`')
     expect(contentOf(lines)).toHaveLength(2)
   })
 
@@ -390,7 +390,7 @@ describe('degrade at the bound', () => {
     const req = reqs()[1]!
     const feedback = lastUserMessage(req)
     expect(feedback).toMatch(/CATALOG/)
-    expect(feedback).toContain('Call render_surface again with the COMPLETE corrected JSONL; keep your reply text addressed to the user.')
+    expect(feedback).toContain('Call render_surface again with the COMPLETE corrected `messages`; keep your reply text addressed to the user.')
     expect(feedback).not.toContain('Re-emit the COMPLETE corrected A2UI JSONL')
     const attempt = req.messages.at(-2)!
     expect(attempt.role).toBe('assistant')
@@ -530,5 +530,106 @@ describe('a2ui disabled', () => {
     const lines = await run(NEUTRAL, provider, { a2uiEnabled: false, tools: [CALC], executeTool: callerExec })
     expect(callerExec).toHaveBeenCalledTimes(1)
     expect(contentOf(lines)).toEqual([])
+  })
+})
+
+// T-0172: the Croupier and Concierge traces of 2026-10-14, keyless. Each case is red on the pre-T-0172 loop.
+describe('T-0172: structured render_surface, prose routing, surface loss', () => {
+  const objects = (jsonl: string): Record<string, unknown>[] => jsonl.split('\n').map((l) => JSON.parse(l) as Record<string, unknown>)
+
+  it('render_surface `messages` (an array of message objects) is the payload: no hand-escaped JSONL string, no PARSE round', async () => {
+    const { provider, calls } = scripted([{ text: 'Here it is.', call: [{ name: 'render_surface', input: { messages: objects(VALID) } }] }])
+    const lines = await run(NEUTRAL, provider)
+    expect(calls()).toBe(1)
+    expect(contentOf(lines)).toEqual(VALID.split('\n'))
+    expect(finalMeta(lines).note).toBe('Here it is.')
+  })
+
+  it('a PARSE on a render_surface round reminds the model `messages` is an array of objects, not the JSONL line rules', async () => {
+    const { provider, reqs } = scripted([
+      { text: 'One moment.', call: [{ name: 'render_surface', input: { jsonl: '{"version":"v1.0","createSurface":{"surfaceId":"main"' } }] },
+      { text: 'One moment.', call: [{ name: 'render_surface', input: { messages: objects(VALID) } }] },
+    ])
+    await run(NEUTRAL, provider)
+    const feedback = lastUserMessage(reqs()[1]!)
+    expect(feedback).toMatch(/`messages` is an ARRAY of A2UI message objects/)
+    expect(feedback).not.toMatch(/SINGLE line/)
+  })
+
+  it('A2UI lines written into the prose (Haiku 5.5) route as the payload: never a textDelta, never in the note', async () => {
+    const prose = `Blackjack it is.\n\n${ASK_VALID}\n`
+    const { provider, calls } = scripted([{ text: ['{"a2uiMeta":{"note":"x","ask":{"surfaceId":"ask-1"}}}\n', 'Blackjack it is.\n\n', `${ASK_VALID}\n`] }])
+    const lines = await run(NEUTRAL, provider)
+    expect(calls()).toBe(1)
+    expect(contentOf(lines)).toEqual(ASK_VALID.split('\n'))
+    const meta = finalMeta(lines)
+    expect(meta.note).toBe('Blackjack it is.')
+    expect(meta.ask).toEqual({ surfaceId: 'ask-1' })
+    expect(meta.trace?.failureCodes).toEqual(['TEXT_JSONL_ROUTED'])
+    expect(deltasOf(lines).join('')).not.toContain('"version"')
+    expect(prose).toContain('"version"') // the control: the lines were in the prose
+  })
+
+  it('fenced A2UI lines in the prose route too, and the empty fence leaves the reply', async () => {
+    const { provider } = scripted([{ text: `Here you go.\n\`\`\`json\n${VALID}\n\`\`\`\n` }])
+    const lines = await run(NEUTRAL, provider)
+    expect(contentOf(lines)).toEqual(VALID.split('\n'))
+    expect(finalMeta(lines).note).toBe('Here you go.')
+  })
+
+  it('a routed payload that fails is repaired with the render_surface wording, and degrades to its prose at the bound', async () => {
+    const { provider, reqs } = scripted([{ text: `Sure.\n${INVALID}` }])
+    const lines = await run(NEUTRAL, provider)
+    expect(lastUserMessage(reqs()[1]!)).toContain('Call render_surface again')
+    expect(contentOf(lines)).toEqual([])
+    expect(finalMeta(lines).note).toBe('Sure.')
+    expect(finalMeta(lines).trace?.failureCodes).toContain('SURFACE_DEGRADED')
+  })
+
+  // The Concierge turn after "hello": round 1 sent a new ask-1 beside a failing change to the open greet-1;
+  // round 2 fixed greet-1 and dropped ask-1, and the turn "passed" with the requested form lost.
+  const greetSession: Session = {
+    turns: [
+      { role: 'user', content: 'hello' },
+      {
+        role: 'assistant',
+        content:
+          '{"version":"v1.0","createSurface":{"surfaceId":"greet-1","catalogId":"agent-ui"}}\n' +
+          '{"version":"v1.0","updateComponents":{"surfaceId":"greet-1","components":[{"id":"root","component":"Column","children":["prompt"]},{"id":"prompt","component":"Text","text":"Hi"}]}}',
+      },
+    ],
+  }
+  const BAD_GREET = '{"version":"v1.0","updateComponents":{"surfaceId":"greet-1","components":[{"id":"prompt","component":"NotARealComponent"}]}}'
+  const GOOD_GREET = '{"version":"v1.0","updateComponents":{"surfaceId":"greet-1","components":[{"id":"prompt","component":"Text","text":"Below."}]}}'
+
+  it('a repair round that fixes one surface and drops a new one the failures never named is SURFACE_DROPPED, and the next round ships both', async () => {
+    const { provider, reqs, calls } = scripted([
+      { text: 'Booking.', call: [surface(`${BAD_GREET}\n${ASK_VALID}`)] },
+      { text: 'Booking.', call: [surface(GOOD_GREET)] },
+      { text: 'Booking.', call: [surface(`${GOOD_GREET}\n${ASK_VALID}`)] },
+    ])
+    const lines = await run(intentOf('book a table', greetSession), provider)
+    expect(calls()).toBe(3)
+    expect(lastUserMessage(reqs()[1]!)).toMatch(/Keep `ask-1` exactly as you sent it/)
+    expect(lastUserMessage(reqs()[2]!)).toMatch(/SURFACE_DROPPED at ask-1/)
+    expect(contentOf(lines)).toEqual([GOOD_GREET, ...ASK_VALID.split('\n')])
+  })
+
+  it('a surface still dropped on the last round halts with SURFACE_DROPPED, never a passed turn', async () => {
+    const { provider } = scripted([
+      { text: 'Booking.', call: [surface(`${BAD_GREET}\n${ASK_VALID}`)] },
+      { text: 'Booking.', call: [surface(GOOD_GREET)] },
+    ])
+    await expect(run(intentOf('book a table', greetSession), provider, { maxRounds: 2 })).rejects.toThrow(/SURFACE_DROPPED at ask-1/)
+  })
+
+  it('a surface the failures name may be dropped by the repair (the abandoned-createSurface fix), with no SURFACE_DROPPED', async () => {
+    const { provider, calls } = scripted([
+      { text: 'Booking.', call: [surface(`${GOOD_GREET}\n${INVALID.replace(/main/g, 'ask-2')}`)] },
+      { text: 'Booking.', call: [surface(GOOD_GREET)] },
+    ])
+    const lines = await run(intentOf('book a table', greetSession), provider)
+    expect(calls()).toBe(2)
+    expect(contentOf(lines)).toEqual([GOOD_GREET])
   })
 })

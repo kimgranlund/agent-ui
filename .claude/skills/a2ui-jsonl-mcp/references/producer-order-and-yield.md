@@ -42,9 +42,29 @@ as A2UI is the legacy shape and runs steps 1 to 9 unchanged. Text-channel A2UI l
 are dropped and tallied `TEXT_JSONL_IGNORED`. At the last round an invalid tool payload with non-empty
 text ships as text, tallied `SURFACE_DEGRADED`, instead of `ProduceHalt`.
 
+T-0172 rules (2026-10-14 traces):
+
+- The tool input is `messages`, an array of A2UI message objects, one message per entry
+  (`renderSurfaceJsonl` in `response-type.ts` turns it into one JSON line each). The model never
+  hand-escapes JSON inside a string. A legacy `jsonl` string is still read, for recorded fixtures.
+- Updating an open surface: send `updateComponents` and `updateDataModel` for the ids that changed. A
+  resent component id replaces its whole record, `root` included when its component TYPE is the same
+  (A2UI v1.0 `updateComponents` adds or updates by id; runtime SPEC-R3 AC2 REV). A `root` of another
+  type, or two `root`s in one payload, still fails `sid:root`, and the repair is a re-create
+  (`createSurface`, same id, the complete tree).
+- A text round whose prose carries A2UI lines (a model that wrote its surface as text) routes them as
+  the payload, tallied `TEXT_JSONL_ROUTED`; they never stream as `textDelta` or ship in the note.
+- An action turn is judged even when its round sends no payload: the semantic checks read the action
+  (`SemanticCheckInput.action`, the click's name, surface, context and click-time data model), so a click
+  answered in prose alone spends a repair round (the Croupier's `ACTION_NOT_APPLIED`) and ships tallied at the
+  bound.
+- A self-correct round never loses a surface: a session-new surface the failed round created that no
+  failure names must come back. The repair message names it ("Keep `ask-1` ..."); a later valid round
+  without it spends a `SURFACE_DROPPED` round, and on the last round halts with `SURFACE_DROPPED`.
+
 `maxRounds` bounds the loop. Exhaustion throws `ProduceHalt` carrying the last failures; a
 transport that already committed a 200 turns that into the terminal error line below.
-`FEED_SCOPE`, `NET_NOOP`, `FLOW_END_MISSING`, the genui codes and a semantic check's own codes
+`FEED_SCOPE`, `NET_NOOP`, `FLOW_END_MISSING`, `SURFACE_DROPPED`, the genui codes and a semantic check's own codes
 (`HAND_TOTAL`, `HAND_COUNT`, `NATURAL_ACTIONS`, `SEMANTIC_UNCORRECTED`, `SEMANTIC_CHECK_ERROR`) are produce-layer-only and
 are not members of the protocol `ErrorCode` union.
 

@@ -418,7 +418,8 @@ const CARD_TABLE_PHASE_BINDS = {
   bet: { path: '/bet' },
 }
 
-/** The betting step: empty hands, the last bet carried over, the bet two-way bound to /bet. */
+/** The betting step: empty hands, the last bet carried over, the bet two-way bound to /bet. T-0172: the table's own
+ *  bet strip places the bet and fires `deal` (`betAction`), so the step has no Button child. */
 const CARD_TABLE_BETTING_DATA = { phase: 'betting', dealerHand: [], playerHand: [], bankroll: 1000, bet: 50 }
 
 const CARD_TABLE_BETTING_ROOT = {
@@ -428,16 +429,16 @@ const CARD_TABLE_BETTING_ROOT = {
   status: 'Place your bet',
   statusIntent: 'info',
   ...CARD_TABLE_PHASE_BINDS,
-  children: ['dealBtn'],
+  betAction: 'deal',
 }
 
-/** The croupier persona over agent-ui: the betting step on the CardTable, a lone Deal Button that sends the bet. */
+/** The croupier persona over agent-ui: the betting step on the CardTable, whose bet strip sends the bet as `deal`. */
 export const personaCroupierCardTableBettingSeed: PersonaExampleSeed = {
   name: 'persona-croupier-card-table-betting',
   description:
     'The croupier persona over the agent-ui base: one CardTable titled Blackjack in its betting phase, empty felt for ' +
-    'the dealer and the player, the bet row (chips, a stepper and Clear) with the bet two-way bound to /bet at 50 of a ' +
-    '1,000 bankroll, and one Deal Button child whose action carries the bet.',
+    'the dealer and the player, the bet strip (25, 50, 75, 100 and 250) with the bet two-way bound to /bet of a 1,000 ' +
+    'bankroll, and betAction deal, so one press places the bet and starts the hand. No Button child.',
   promptText: 'Let me place a bet, then deal.',
   surfaceId: CARD_TABLE_SID,
   protocolVersion: 'v1.0',
@@ -448,10 +449,7 @@ export const personaCroupierCardTableBettingSeed: PersonaExampleSeed = {
       version: 'v1.0',
       updateComponents: {
         surfaceId: CARD_TABLE_SID,
-        components: [
-          CARD_TABLE_BETTING_ROOT,
-          { id: 'dealBtn', component: 'Button', variant: 'solid', label: 'Deal', action: { action: 'deal', context: { bet: { path: '/bet' } } } },
-        ],
+        components: [CARD_TABLE_BETTING_ROOT],
       },
     },
     { version: 'v1.0', updateDataModel: { surfaceId: CARD_TABLE_SID, value: CARD_TABLE_BETTING_DATA } },
@@ -518,12 +516,12 @@ export const personaCroupierCardTableSettledSeed: PersonaExampleSeed = {
   ],
 }
 
-/** The croupier persona over a2ui-basic: the betting step, Deal as a Basic event Button. */
+/** The croupier persona over a2ui-basic: the betting step, the same bet strip sending `deal`. */
 export const personaBasicCroupierCardTableBettingSeed: PersonaExampleSeed = {
   name: 'persona-basic-croupier-card-table-betting',
   description:
-    'The croupier persona over the a2ui-basic base: the same betting-phase CardTable, the bet bound to /bet, with a ' +
-    'Basic Button whose child Text label reads Deal and whose deal event carries the bet.',
+    'The croupier persona over the a2ui-basic base: the same betting-phase CardTable, the bet bound to /bet, whose ' +
+    'bet strip places the bet and sends deal with it. No Button child.',
   promptText: 'Let me place a bet, then deal.',
   surfaceId: CARD_TABLE_SID,
   protocolVersion: 'v1.0',
@@ -534,11 +532,7 @@ export const personaBasicCroupierCardTableBettingSeed: PersonaExampleSeed = {
       version: 'v1.0',
       updateComponents: {
         surfaceId: CARD_TABLE_SID,
-        components: [
-          CARD_TABLE_BETTING_ROOT,
-          { id: 'dealLabel', component: 'Text', text: 'Deal' },
-          { id: 'dealBtn', component: 'Button', variant: 'primary', child: 'dealLabel', action: { event: { name: 'deal', context: { bet: { path: '/bet' } } } } },
-        ],
+        components: [CARD_TABLE_BETTING_ROOT],
       },
     },
     { version: 'v1.0', updateDataModel: { surfaceId: CARD_TABLE_SID, value: CARD_TABLE_BETTING_DATA } },

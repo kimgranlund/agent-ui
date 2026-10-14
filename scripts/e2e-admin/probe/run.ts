@@ -59,7 +59,7 @@ interface Exchange {
 }
 
 function project(body: unknown): NonNullable<TurnRecord['request']> {
-  const b = (body ?? {}) as Record<string, unknown> & { input?: { kind?: unknown } }
+  const b = (body ?? {}) as Record<string, unknown> & { input?: { kind?: unknown; message?: { action?: { surfaceId?: unknown } } } }
   const pick = (k: string): string | undefined => (typeof b[k] === 'string' ? (b[k] as string) : undefined)
   const out: NonNullable<TurnRecord['request']> = {}
   for (const k of ['model', 'effort', 'agent', 'catalogId'] as const) {
@@ -67,6 +67,8 @@ function project(body: unknown): NonNullable<TurnRecord['request']> {
     if (v !== undefined) out[k] = v
   }
   if (typeof b.input?.kind === 'string') out.inputKind = b.input.kind
+  const actionSurface = b.input?.message?.action?.surfaceId
+  if (typeof actionSurface === 'string') out.actionSurface = actionSurface
   return out
 }
 
@@ -147,6 +149,10 @@ async function renderLint(page: Page): Promise<{ findings: Array<{ rule: string;
       for (const host of document.querySelectorAll(`${pane} ui-surface-host`)) {
         for (const card of host.querySelectorAll('ui-card')) {
           if (card.parentElement?.closest('ui-card') && host.contains(card.parentElement.closest('ui-card'))) out.push({ rule: 'nested-card', detail: `${name(card)} inside a ui-card` })
+          // T-0172 (Kim's ruling): a framed box whose only content is one button, the per-choice card of a picker.
+          const buttons = card.querySelectorAll('ui-button')
+          if (buttons.length === 1 && (card.textContent ?? '').trim() === (buttons[0]!.textContent ?? '').trim())
+            out.push({ rule: 'lone-button-frame', detail: `${name(card)} frames only the "${(buttons[0]!.textContent ?? '').trim()}" button` })
         }
         const edge = host.getBoundingClientRect().right
         for (const el of host.querySelectorAll('*')) {
@@ -230,7 +236,18 @@ export async function probeOnce(shared: SharedRun, plan: ProbePlan, root: string
     for (const [index, step] of plan.steps.entries()) {
       const traceBefore = plan.mode === 'live' ? traceCount(traceDir) : 0
       const exchangesBefore = plan.mode === 'live' ? exchanges.length : (wire?.entries.filter((e) => e.endpoint === 'produce').length ?? 0)
-      await playStep(admin, step)
+      try {
+        await playStep(admin, step)
+      } catch (err) {
+        // T-0172: a click whose button never appeared is a named check failure (click-target), not an abort:
+        // record the turn, keep the screenshot, stop playing, and still write the report.
+        if (!('click' in step)) throw err
+        const available = await admin.surfaceButtonLabels('chat').catch(() => [] as string[])
+        const shot = path.join(plan.out, `turn-${index + 1}.png`)
+        await page.screenshot({ path: shot, fullPage: true })
+        turns.push({ index, step, lines: [], roundsSource: 'none', clickMissing: { label: step.click, available }, proseText: await proseText(page), screenshot: path.basename(shot) })
+        break
+      }
       await page.waitForTimeout(600) // the surface settles a frame after the turn count moves
       let exchange: Exchange | undefined
       if (plan.mode === 'live') exchange = exchanges.slice(exchangesBefore).at(-1)

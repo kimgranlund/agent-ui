@@ -65,7 +65,7 @@ describe('buildSystemPrompt — GH #418: a2uiEnabled:false composes ZERO A2UI gr
   it('drops the GRAMMAR block, the catalog inventory, the functions inventory, and mini-skills', () => {
     const prompt = buildSystemPrompt(defaultCatalog, [], undefined, undefined, undefined, undefined, false)
     expect(prompt).not.toContain('A2UI (Agent2UI) protocol messages')
-    expect(prompt).not.toContain('Output rules for the A2UI JSONL')
+    expect(prompt).not.toContain('Output rules for the A2UI messages')
     expect(prompt).not.toContain('## Available components')
     expect(prompt).not.toContain('## Available functions')
     expect(prompt).not.toMatch(/createSurface|updateComponents|updateDataModel|deleteSurface/)

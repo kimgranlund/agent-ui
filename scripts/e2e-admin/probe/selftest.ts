@@ -3,7 +3,8 @@
 // `selftest` (fast, no browser, rides `check:scripts`): argument parsing, the fixture parser, every named
 // check over canned turn records, the trace-id resolver, and the offline replay of the three fixtures
 // through the real `produce()`: green-button and recorded-haiku-hello (the live smoke's trace) are green, seeded-json-prose fails `no-json-as-prose` (and
-// `no-surface-loss`, since the surface the model wrote as prose never ships), seeded-dropped-surface fails
+// `no-surface-loss`, since the surface the model wrote as prose never ships; its JSON is pretty-printed, the
+// shape the producer's prose routing leaves as text, T-0172), seeded-dropped-surface fails
 // exactly `no-surface-loss`.
 //
 // `selftest --browser` (slow, local): the same three fixtures replayed in the real agent-admin page behind
@@ -15,7 +16,7 @@ import { fileURLToPath } from 'node:url'
 import type { AgentTraceLine } from '../../../packages/agent-ui/a2ui/tools/agent/trace-log.ts'
 import { SetupError, type DevServerKit } from '../runner.ts'
 import { parseProbeCli } from './cli.ts'
-import { FixtureError, parseProbeFixture, runChecks, type CheckResult, type ProbeFixture, type TurnRecord } from './model.ts'
+import { CHECK_NAMES, FixtureError, parseProbeFixture, runChecks, type CheckResult, type ProbeFixture, type TurnRecord } from './model.ts'
 import { offlineReplay, resolveTraceSpec, typedText, type TraceEntry } from './trace.ts'
 
 export const PROBE_FIXTURES_DIR = fileURLToPath(new URL('./fixtures/', import.meta.url))
@@ -26,6 +27,7 @@ export const SELFTEST_CASES: ReadonlyArray<{ fixture: string; fails: readonly st
   { fixture: 'recorded-haiku-hello.json', fails: [] },
   { fixture: 'seeded-json-prose.json', fails: ['no-json-as-prose', 'no-surface-loss'] },
   { fixture: 'seeded-dropped-surface.json', fails: ['no-surface-loss'] },
+  { fixture: 'seeded-click-no-update.json', fails: ['action-updates-surface'] },
 ]
 
 export function loadProbeFixture(file: string): ProbeFixture {
@@ -95,9 +97,19 @@ export async function runProbeSelftest(): Promise<number> {
 
   // the checks over canned records
   const opts = { expectComponents: ['Button'], model: 'm', effort: 'medium' }
-  const green = runChecks([record()], opts)
+  // A click turn that updates the surface it came from (T-0172 action-updates-surface).
+  const UPDATE_LINE = '{"version":"v1.0","updateDataModel":{"surfaceId":"canvas","path":"/n","value":1}}'
+  const click = (lines: string[]): TurnRecord =>
+    record({ index: 1, step: { click: 'Go' }, request: { model: 'm', effort: 'medium', inputKind: 'client', actionSurface: 'canvas' }, lines: ['{"a2uiMeta":{"note":"Done."}}', ...lines], rounds: [{ text: lines.join('\n'), tools: [] }] })
+  const green = runChecks([record(), click([UPDATE_LINE])], opts)
   expectThat(caseVerdict(green, []) === undefined, `checks: the canned green record is green (${caseVerdict(green, [])})`)
-  expectThat(!green.some((c) => c.status === 'skip'), 'checks: the canned green record exercises every check (no skips)')
+  expectThat(CHECK_NAMES.every((n) => green.some((c) => c.check === n && c.status !== 'skip')), 'checks: the canned green records exercise every check (each runs at least once)')
+  const missing = runChecks([record(), { ...click([]), lines: [], rounds: undefined, roundsSource: 'none', clickMissing: { label: 'Stand', available: ['Deal again'] } }], opts)
+  expectThat(caseVerdict(missing, ['click-target']) === undefined, `checks: a click whose button never appeared fails exactly click-target (${caseVerdict(missing, ['click-target'])})`)
+  const prose = runChecks([record(), click([])], opts)
+  expectThat(caseVerdict(prose, ['action-updates-surface']) === undefined, `checks: a click answered with prose alone fails action-updates-surface (${caseVerdict(prose, ['action-updates-surface'])})`)
+  const NEXT_ROUND = ['{"version":"v1.0","createSurface":{"surfaceId":"table-2","catalogId":"agent-ui"}}', '{"version":"v1.0","updateComponents":{"surfaceId":"table-2","components":[{"id":"root","component":"Text","text":"Round 2"}]}}']
+  expectThat(statusOf(runChecks([record(), click(NEXT_ROUND)], opts), 'action-updates-surface') === 'skip,pass', 'checks: a click that opens the next surface passes action-updates-surface')
   const seeded: Array<[string, TurnRecord, string, typeof opts?]> = [
     ['halt', record({ lines: ['{"a2uiMeta":{"error":"produce: no valid surface"}}'], trace: { id: 'd:1', outcome: 'halt', retries: [], thinkingChars: [1] } }), 'no-halt', { ...opts, expectComponents: [] }],
     ['json prose', record({ proseText: 'Here: {"version":"v1.0","createSurface":{"surfaceId":"t"}}' }), 'no-json-as-prose'],

@@ -23,15 +23,32 @@ export function renderSurfaceTool(openSurfaceIds: readonly string[]): ToolDef {
     description:
       'Render or change the A2UI surface. Call this when the answer is a structure the user must scan, compare, ' +
       'fill in or act on (a comparison, table, steps, schedule, form or choice); facts, definitions and opinions ' +
-      'stay plain text. To explain and show, write the explanation as text, then call this too. ' +
+      'stay plain text. To explain and show, write the explanation as text, then call this too. Every call ' +
+      'follows at least one short line of text to the user; the surface never replaces the reply. ' +
       `${open} Prefer an update to an open surface over creating a new one when one fits. ` +
-      '`jsonl` is the A2UI JSONL message stream; `target` is the surface id it updates.',
+      '`messages` is the A2UI message list in order, each entry ONE message object (createSurface, ' +
+      'updateComponents, updateDataModel or deleteSurface), never a JSON string; `target` is the surface id it updates.',
     input_schema: {
       type: 'object',
-      properties: { jsonl: { type: 'string' }, target: { type: 'string' } },
-      required: ['jsonl'],
+      properties: {
+        messages: { type: 'array', items: { type: 'object' } },
+        target: { type: 'string' },
+      },
+      required: ['messages'],
     },
   }
+}
+
+/**
+ * T-0172: the A2UI JSONL a `render_surface` call carries. The tool takes `messages`, an array of message
+ * objects, so the model never hand-escapes JSON inside a string (Sonnet 5 unbalanced a brace in an escaped
+ * `jsonl` string on two of three rounds, 2026-10-14). The legacy `jsonl` string is still read, for recorded
+ * fixtures and traces made before the change. Anything else is the empty payload (a PARSE round).
+ */
+export function renderSurfaceJsonl(input: Record<string, unknown>): string {
+  const { messages, jsonl } = input
+  if (Array.isArray(messages)) return messages.map((m) => (typeof m === 'string' ? m : JSON.stringify(m))).join('\n')
+  return typeof jsonl === 'string' ? jsonl : ''
 }
 
 const TEXT_PHRASES = ['just tell me', 'no card', 'text only', "don't show", 'skip the ui']

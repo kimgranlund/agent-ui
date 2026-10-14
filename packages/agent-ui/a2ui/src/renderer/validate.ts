@@ -21,7 +21,8 @@
 // Granularity (renderer LLD §8 "Id-graph granularity"): the id-graph stage judges a COMPLETE
 // component set. Missing-root and dangling are legal *transient* states mid-stream (SPEC-R4), so
 // the renderer host (LLD-C13) MUST call this at FINALIZE granularity — never per incremental
-// `updateComponents`. A 2nd `root` (within one epoch, see below) and a cycle are always invalid. The corpus passes a complete
+// `updateComponents`. A 2nd `root` (within one epoch of this payload, see below) and a cycle are always
+// invalid; a later turn's same-type `root` is a replace (T-0172, the seed merge in `run`). The corpus passes a complete
 // `a2uiOutput`, so both callers judge the same set → identical verdict (N6).
 //
 // ADR-0187 / GH #829 — the FINALIZE SIGNAL (`opts.atFinalize`). One fact this function cannot know
@@ -97,7 +98,8 @@ const RESERVED = new Set(['id', 'component', 'child', 'children'])
  * IDGRAPH guard (ADR-0128) — a contradiction that live models resolved by shipping full trees and eating
  * a client-error round per move (the Croupier game loop, measured). A seed merges the prior graph UNDER
  * this payload's deliveries, so update-only payloads validate and a root-resend fails HERE (`sid:root`,
- * the renderer's exact failure) — pre-wire, as a self-correct round.
+ * the renderer's exact failure) — pre-wire, as a self-correct round. T-0172: only a root resend that
+ * changes the component TYPE still fails; a same-type resend replaces, as the renderer now does.
  */
 export interface SurfaceSeed {
   /** Prior-turn component records, replay-merged (later resends already collapsed by upsert). */
@@ -186,8 +188,13 @@ function run(
 
   // TKT-0081 — merge each seeded surface's PRIOR graph UNDER this payload's deliveries, only for
   // surfaces this payload actually touched (an untouched prior surface has nothing to judge). This
-  // payload's records WIN an id collision (a resend REPLACES, the renderer's upsert); the seed's
-  // root delivery COUNTS (so a re-delivery here is the same `sid:root` failure the renderer emits).
+  // payload's records WIN an id collision (a resend REPLACES, the renderer's upsert). T-0172: that
+  // includes `root`. `updateComponents` adds or updates by id (A2UI v1.0 §updateComponents; no rule
+  // sends `root` once), so a later turn's same-type `root` replaces the seeded one and the surface still
+  // holds exactly one; the renderer reconciles it like any resent id. The seed's root therefore counts
+  // as PRESENCE, not as a delivery. Two shapes still fail `sid:root`: two `root`s inside this payload's
+  // epoch, and a resend that changes root's component TYPE (the renderer reconciles onto the SAME
+  // element, so a new type needs a re-create).
   //
   // ADR-0064 amendment A4: the seed describes the surface the prior turn left live, so it can only
   // continue this payload's FIRST epoch for that sid, and only when that epoch is a continuation: not
@@ -200,8 +207,13 @@ function run(
       const seed = sessionSeed.get(sid)
       const first = lifecycle.closed[0] ?? lifecycle.open
       if (seed === undefined || first === undefined || first.created) continue
+      const sent = first.byId.get('root')
+      const seeded = seed.components.find((c) => c.id === 'root')
       for (const comp of seed.components) if (!first.byId.has(comp.id)) first.byId.set(comp.id, comp)
-      if (seed.rootDelivered) first.rootCount += 1
+      if (seed.rootDelivered) {
+        if (first.rootCount === 0) first.rootCount = 1
+        else if (sent !== undefined && seeded !== undefined && sent.component !== seeded.component) first.rootCount += 1
+      }
     }
   }
 

@@ -349,6 +349,16 @@ pill. A round has three steps, and the table now carries each one.
    +90) against 141,200, and BASE 139,911 (+28, the two re-authored modules) against 140,000; neither budget
    moves.
 
+> **REV 2026-10-14 (T-0172, Kim's ruling):** items 1, 2, 5 and 6 are superseded for betting. The bet phase is
+> the table's own strip of bet buttons, the fixed amounts 25 / 50 / 75 / 100 / 250 (no wire prop replaces `chips`,
+> so a model cannot supply its own), and `betAction` (string, `actionEvent: 'action'`, the Amendment 4 forwarding)
+> names the action. One
+> press writes the bet and fires `{action: betAction, context: {bet}}` on the host; an amount above the bankroll
+> is disabled. The `+n` chips, the stepper, Clear and the Deal gate are gone, `uses` drops `ui-text-field`, the
+> empty zones fold away while betting, and the producer adds no Button, Slider or field (the
+> `croupier-bet-controls` semantic check, `BET_CONTROL_DUPLICATE`). The betting seeds carry `betAction: 'deal'`
+> and no Button child; the Croupier `seedVersion` moves to 11.
+
 ## Amendment 4: the renderer forwards a control's own action event, so BoardGrid cells fire on the wire (2026-10-13, T-0081)
 
 > Status: recorded by T-0081 from the T-0072 R1 verifier finding that BoardGrid shipped read-only on the wire.

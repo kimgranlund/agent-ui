@@ -3,10 +3,12 @@
 // the fast selftest drives every check over canned records.
 //
 // A check reads one turn record and returns pass, fail, warn or skip. `fail` makes the probe exit 1;
-// `warn` is reported only (the reasoning check stays warn-level until T-0172 lands).
+// `warn` is reported only (the reasoning check stays warn-level until a live probe confirms T-0172's
+// `display: 'summarized'` yields thinking text).
 
 import { heal } from '../../../packages/agent-ui/a2ui/src/corpus/heal.ts'
 import { readMetaLine } from '../../../packages/agent-ui/a2ui/src/agent/meta-line.ts'
+import { renderSurfaceJsonl } from '../../../packages/agent-ui/a2ui/src/agent/response-type.ts'
 
 // ── the probe fixture (`agent-ui-chat-probe` v1) ──────────────────────────────────────────────────────
 
@@ -125,6 +127,20 @@ const surfaceOf = (msg: Record<string, unknown>, op: string): string | undefined
   return isObject(body) && typeof body.surfaceId === 'string' ? body.surfaceId : undefined
 }
 
+/** Every surface id a shipped content line names (any message kind), in first-named order. */
+export function touchedSurfaces(lines: readonly string[]): string[] {
+  const out: string[] = []
+  for (const line of lines) {
+    for (const msg of messagesOf(line)) {
+      for (const op of ['createSurface', 'updateComponents', 'updateDataModel', 'deleteSurface']) {
+        const sid = surfaceOf(msg, op)
+        if (sid !== undefined && !out.includes(sid)) out.push(sid)
+      }
+    }
+  }
+  return out
+}
+
 /** Surface ids the shipped lines create, minus the ones they delete, in creation order. */
 export function shippedSurfaces(lines: readonly string[]): string[] {
   const open: string[] = []
@@ -201,8 +217,9 @@ const CREATE_RE = /"createSurface"\s*:\s*\{\s*"surfaceId"\s*:\s*"([^"]+)"/g
 export function createdInRound(round: ProbeRound): string[] {
   const texts = [round.text]
   for (const tool of round.tools) {
-    const input = tool.input as { jsonl?: unknown } | undefined
-    if (tool.name === 'render_surface' && typeof input?.jsonl === 'string') texts.push(input.jsonl)
+    const input = tool.input
+    // T-0172: the structured `messages` array, or the legacy `jsonl` string.
+    if (tool.name === 'render_surface' && input !== null && typeof input === 'object') texts.push(renderSurfaceJsonl(input as Record<string, unknown>))
   }
   const ids = new Set<string>()
   for (const text of texts) {
@@ -249,7 +266,7 @@ export interface TurnRecord {
   index: number
   step: ProbeStep
   /** What the page sent (the model pick lands here). `personaSystem` and `messages` are never kept. */
-  request?: { model?: string; effort?: string; agent?: string; catalogId?: string; inputKind?: string }
+  request?: { model?: string; effort?: string; agent?: string; catalogId?: string; inputKind?: string; actionSurface?: string }
   httpStatus?: number
   lines: string[]
   rounds?: ProbeRound[]
@@ -259,6 +276,8 @@ export interface TurnRecord {
   domHosts?: number
   /** The chat log's visible text outside every surface host after the turn; offline, the meta prose. */
   proseText: string
+  /** T-0172: a `--click` whose label no surface button carried; the run stops there and still reports. */
+  clickMissing?: { label: string; available: string[] }
   lint?: Array<{ rule: string; detail: string }>
   lintNotRun?: string[]
   screenshot?: string
@@ -281,7 +300,7 @@ export interface CheckOptions {
 }
 
 /** The named checks, in report order. */
-export const CHECK_NAMES = ['model-pick', 'no-halt', 'no-json-as-prose', 'no-surface-loss', 'expect-component', 'render-lint', 'reasoning'] as const
+export const CHECK_NAMES = ['model-pick', 'click-target', 'no-halt', 'no-json-as-prose', 'no-surface-loss', 'action-updates-surface', 'expect-component', 'render-lint', 'reasoning'] as const
 
 /** Run every named check over the turn records. Per-turn checks report one row per turn; the run-level
  *  ones (expect-component) one row. */
@@ -299,6 +318,12 @@ export function runChecks(turns: readonly TurnRecord[], opts: CheckOptions): Che
       if (opts.effort !== undefined && t.request.effort !== opts.effort) bad.push(`effort ${JSON.stringify(t.request.effort)} != ${opts.effort}`)
       out.push({ check: 'model-pick', turn: t.index, status: bad.length ? 'fail' : 'pass', detail: bad.length ? bad.join('; ') : `${t.request.model ?? '-'} / ${t.request.effort ?? '-'}` })
     }
+    // click-target (T-0172): a `--click` found its button. A missing one (the hand ended on 21, so no Stand) fails
+    // here by name and the run still writes its report, never an abort.
+    if (!('click' in t.step)) out.push({ check: 'click-target', turn: t.index, status: 'skip', detail: 'not a click turn' })
+    else if (t.clickMissing !== undefined)
+      out.push({ check: 'click-target', turn: t.index, status: 'fail', detail: `no surface button reading "${t.clickMissing.label}" (buttons: ${t.clickMissing.available.join(', ') || 'none'})` })
+    else out.push({ check: 'click-target', turn: t.index, status: 'pass', detail: `clicked "${t.step.click}"` })
     // no-halt: no terminal error line, no halt or error outcome in the trace, no non-2xx answer.
     const halted =
       meta.error !== undefined ? `error line: ${meta.error.slice(0, 160)}` :
@@ -325,6 +350,25 @@ export function runChecks(turns: readonly TurnRecord[], opts: CheckOptions): Che
         status: bad.length ? 'fail' : 'pass',
         detail: bad.length ? bad.join('; ') : `rounds created [${created.join(', ')}], open [${shippedSoFar.join(', ')}] (${t.roundsSource})`,
       })
+    }
+    // action-updates-surface (T-0172): a turn that answers a click updates the surface it came from, or hands the
+    // flow on to a surface it creates (a Deal again that opens the next round's table). A click answered by
+    // prose alone (the Haiku 5.5 deal of 2026-10-14 narrated the cards and sent no update) fails.
+    const clicked = 'click' in t.step ? t.request?.actionSurface : undefined
+    if (!('click' in t.step)) out.push({ check: 'action-updates-surface', turn: t.index, status: 'skip', detail: 'not a click turn' })
+    else if (t.clickMissing !== undefined) out.push({ check: 'action-updates-surface', turn: t.index, status: 'skip', detail: 'nothing was clicked (see click-target)' })
+    else if (clicked === undefined) out.push({ check: 'action-updates-surface', turn: t.index, status: 'skip', detail: 'the clicked surface id was not observed' })
+    else if (halted !== undefined) out.push({ check: 'action-updates-surface', turn: t.index, status: 'skip', detail: 'the turn halted (see no-halt)' })
+    else {
+      const touched = touchedSurfaces(t.lines)
+      const created = shippedSurfaces(t.lines).filter((s) => s !== clicked)
+      out.push(
+        touched.includes(clicked)
+          ? { check: 'action-updates-surface', turn: t.index, status: 'pass', detail: `${clicked} updated` }
+          : created.length > 0
+            ? { check: 'action-updates-surface', turn: t.index, status: 'pass', detail: `${clicked} left as history; the flow moved to ${created.join(', ')}` }
+            : { check: 'action-updates-surface', turn: t.index, status: 'fail', detail: `the click on ${clicked} was answered with no update to it and no new surface` },
+      )
     }
     // render-lint: the dogfood render rules over the turn's surfaces.
     if (t.lint === undefined) out.push({ check: 'render-lint', turn: t.index, status: 'skip', detail: 'no DOM (offline replay)' })

@@ -4,7 +4,8 @@
     "BookingForm": {
       "intents": [
         "collect booking details",
-        "date, option and consent fields in one form"
+        "reserve a table, spa slot, tour or room",
+        "date, time, choice and party-size fields in one form"
       ],
       "notFor": [
         {

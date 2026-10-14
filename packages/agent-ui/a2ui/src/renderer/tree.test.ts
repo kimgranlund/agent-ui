@@ -114,7 +114,18 @@ describe('buffer + render-on-root (renderer LLD-C4, SPEC-R3)', () => {
 })
 
 describe('eager id-graph guard (LLD-C4 / SPEC-R3 AC2)', () => {
-  it('emits IDGRAPH on a second root and keeps the existing root (does not replace)', () => {
+  it('T-0172: a same-type root resend is an upsert: no IDGRAPH, the SAME root element, its new child mounted', () => {
+    const { errors, surface, tree } = harness()
+    tree.apply(msg([{ id: 'root', component: 'Column', children: ['a'] }, { id: 'a', component: 'Text' }]))
+    const firstRootEl = tree.rootElement!
+    tree.apply(msg([{ id: 'root', component: 'Column', children: ['a', 'b'] }, { id: 'b', component: 'Text' }]))
+    expect(errors).toEqual([])
+    expect(tree.rootElement).toBe(firstRootEl)
+    expect(childIds(firstRootEl)).toEqual(['a', 'b'])
+    expect(surface.components.get('root')?.children).toEqual(['a', 'b'])
+  })
+
+  it('emits IDGRAPH on a second root of ANOTHER type and keeps the existing root (does not replace)', () => {
     const { errors, surface, tree } = harness()
     tree.apply(msg([{ id: 'root', component: 'Column' }]))
     const firstRootEl = tree.rootElement

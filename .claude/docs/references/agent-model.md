@@ -125,7 +125,8 @@ header pointing here.
   its prompt gains the `## Your team` block. The GM is an ordinary agent; nothing else marks it.
 - **`render_surface`**: the terminal tool `produce()` offers on an a2ui-enabled turn (ADR-0242, accepted;
   [spec/response-type-selection.spec.md](../spec/response-type-selection.spec.md) RTS-R1). The model calls it
-  with the A2UI JSONL to show UI; its input is validated like any payload and never executed as a tool.
+  with `messages`, an array of A2UI message objects (T-0172), to show UI; its input is validated like any
+  payload and never executed as a tool.
   Text is the default response type: a turn with no call is a text answer.
 - **`textDelta`**: the additive meta arm `{"a2uiMeta":{"textDelta":"..."}}` carrying one fragment of the
   reply text as it streams, ahead of the leading meta-line and any content (RTS-R5). A meta arm, not a

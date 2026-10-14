@@ -44,7 +44,7 @@ describe('buildRequestBody — the Effort dial → Anthropic extended-thinking m
       ['xhigh', 6144],
     ] as const) {
       const body = buildRequestBody({ ...BASE, effort })
-      expect(body['thinking']).toEqual({ type: 'adaptive' })
+      expect(body['thinking']).toEqual({ type: 'adaptive', display: 'summarized' })
       expect(body['output_config']).toEqual({ effort })
       expect(body['max_tokens']).toBe(maxTokens) // same tiered cap as the legacy arm — reply room unchanged by the migration
     }
@@ -53,7 +53,7 @@ describe('buildRequestBody — the Effort dial → Anthropic extended-thinking m
   it('the current-family arm covers fable-5 and opus-4-8 too (adaptive is legal on all of them)', () => {
     for (const model of ['claude-fable-5', 'claude-opus-4-8']) {
       const body = buildRequestBody({ ...BASE, model, effort: 'medium' })
-      expect(body['thinking']).toEqual({ type: 'adaptive' })
+      expect(body['thinking']).toEqual({ type: 'adaptive', display: 'summarized' })
       expect(body['output_config']).toEqual({ effort: 'medium' })
     }
   })
@@ -62,8 +62,41 @@ describe('buildRequestBody — the Effort dial → Anthropic extended-thinking m
     for (const model of ['claude-haiku-5-5', 'anthropic.claude-haiku-5-5']) {
       for (const effort of ['medium', 'high', 'xhigh'] as const) {
         const body = buildRequestBody({ ...BASE, model, effort })
-        expect(body['thinking'], `${model} @ ${effort}`).toEqual({ type: 'adaptive' })
+        expect(body['thinking'], `${model} @ ${effort}`).toEqual({ type: 'adaptive', display: 'summarized' })
         expect(body['output_config'], `${model} @ ${effort}`).toEqual({ effort })
+      }
+    }
+  })
+
+  it("T-0172: every adaptive body asks for display 'summarized' (the current families default to 'omitted', which streamed empty thinking text); the legacy and low arms carry no display", () => {
+    for (const model of ['claude-sonnet-5', 'claude-sonnet-5-5', 'claude-haiku-5-5', 'claude-fable-5', 'claude-opus-5-5']) {
+      const thinking = buildRequestBody({ ...BASE, model, effort: 'high' })['thinking'] as Record<string, unknown>
+      expect(thinking['display'], model).toBe('summarized')
+    }
+    expect(buildRequestBody({ ...BASE, model: 'claude-haiku-4-5', effort: 'high' })['thinking']).toEqual({ type: 'enabled', budget_tokens: 2048 })
+    expect(buildRequestBody({ ...BASE, effort: 'low' })['thinking']).toBeUndefined()
+  })
+
+  it('T-0172: a forced tool_choice is never sent on claude-sonnet-5-5 (400 there), at any effort; claude-haiku-5-5 at low effort still gets it', () => {
+    const tools = [{ name: 'render_surface', description: 'x', input_schema: { type: 'object' } }]
+    for (const effort of [undefined, 'low', 'medium', 'high'] as const) {
+      const body = buildRequestBody({ ...BASE, model: 'claude-sonnet-5-5', effort, tools, toolChoice: { name: 'render_surface' } })
+      expect(body['tool_choice'], String(effort)).toBeUndefined()
+      expect(body['tools']).toEqual(tools)
+    }
+    expect(buildRequestBody({ ...BASE, model: 'claude-sonnet-5-5', effort: 'medium', tools })['thinking']).toEqual({ type: 'adaptive', display: 'summarized' })
+    expect(buildRequestBody({ ...BASE, model: 'claude-haiku-5-5', effort: 'low', tools, toolChoice: { name: 'render_surface' } })['tool_choice']).toEqual({ type: 'tool', name: 'render_surface' })
+    expect(buildRequestBody({ ...BASE, model: 'claude-haiku-5-5', effort: 'high', tools, toolChoice: { name: 'render_surface' } })['tool_choice']).toBeUndefined() // thinking on
+  })
+
+  it("T-0172: display rides only adaptive thinking: no body ever sends a disabled or between_tools thinking, and the legacy budget shape carries no display", () => {
+    for (const model of ['claude-sonnet-5', 'claude-sonnet-5-5', 'claude-haiku-5-5', 'claude-haiku-4-5', 'claude-opus-5-5', 'claude-fable-5-1']) {
+      for (const effort of [undefined, 'low', 'medium', 'high', 'xhigh'] as const) {
+        const thinking = buildRequestBody({ ...BASE, model, effort })['thinking'] as Record<string, unknown> | undefined
+        if (thinking === undefined) continue
+        expect(['adaptive', 'enabled'], `${model} @ ${effort}`).toContain(thinking['type'])
+        if (thinking['type'] === 'adaptive') expect(thinking['display']).toBe('summarized')
+        else expect(thinking['display']).toBeUndefined()
       }
     }
   })

@@ -17,7 +17,7 @@
 
 ### RTS-R1: the `render_surface` terminal tool
 
-`produce()` offers one tool on every turn where `a2uiEnabled !== false`, named `render_surface`, declared by `renderSurfaceTool(openSurfaceIds)` in `src/agent/response-type.ts`. Input schema: `{ jsonl: string (required): the A2UI JSONL, one message per line; target?: string: the open surfaceId this payload updates }`. The description names the open surfaces of the session (`sessionKnownSurfaceIds`) and asks for an update over a create when one fits. The tool is appended to the caller's integration tools; `tools` without `executeTool` is still "no tools" for the adapter, so `produce()` always supplies an executor that captures a `render_surface` input and delegates every other name to `opts.executeTool`.
+`produce()` offers one tool on every turn where `a2uiEnabled !== false`, named `render_surface`, declared by `renderSurfaceTool(openSurfaceIds)` in `src/agent/response-type.ts`. Input schema: `{ jsonl: string (required): the A2UI JSONL, one message per line; target?: string: the open surfaceId this payload updates }`. (REV 2026-10-14, T-0172: the schema is `{ messages: object[] (required), target?: string }`, one A2UI message object per entry, because a model hand-escaping JSONL inside a string unbalanced braces on live turns; `renderSurfaceJsonl` serializes `messages` to one line each and still reads a legacy `jsonl` string. A text round whose prose carries A2UI lines routes them as the payload, tallied `TEXT_JSONL_ROUTED`.) The description names the open surfaces of the session (`sessionKnownSurfaceIds`) and asks for an update over a create when one fits. The tool is appended to the caller's integration tools; `tools` without `executeTool` is still "no tools" for the adapter, so `produce()` always supplies an executor that captures a `render_surface` input and delegates every other name to `opts.executeTool`.
 
 - AC1: with `a2uiEnabled: false` the tool is not offered and the request shape is byte-identical to before this SPEC.
 - AC2: a scripted provider that reports a `render_surface` tool round with `{jsonl}` reaches `produce()`'s executor exactly once; the executor's result text is `received` and is never fed back as a tool result within the turn.
@@ -114,29 +114,26 @@ The hosts store an assistant turn as the reply text followed by the shipped A2UI
 
 Keyless: every AC above except the live halves of RTS-R10 runs under `npm test` or `check:scripts`. Live: Kim's `live --leg response-type` run fills K1 to K3 in the PRD.
 
-## 5. Planned: duplicate-root semantics and retry surface-loss (T-0172, not built)
+## 5. Duplicate-root semantics, retry surface loss, structured tool input (T-0172, built)
 
-Status of this section: planned. Nothing below is shipped or tested yet; T-0172 builds it and rewrites this section to the shipped behaviour in the same change. Two failures seen in live traces on 2026-10-14 (`npm run traces`, T-0151) motivate it, one on the update turn, one in the self-correct loop.
+Two failures seen in live traces on 2026-10-14 (`npm run traces`, T-0151) drove this section, one on the update turn, one in the self-correct loop, plus the PARSE rounds a hand-escaped `jsonl` string caused. The producer reference doc (`.claude/skills/a2ui-jsonl-mcp/references/producer-order-and-yield.md`, "T-0172 rules") carries the same rules.
 
-### RTS-P1: duplicate-root semantics on an existing surface
+### RTS-P1: a same-type root resend replaces the root
 
-Today a payload that re-sends `id:"root"` for a surface that already received its root in an earlier turn fails `IDGRAPH <surfaceId>:root` (runtime SPEC-R3 AC2), the old root is kept, and `produce()` feeds back the `duplicateRoot` hint (`IDGRAPH_HINTS` in `src/agent/produce.ts`): re-create the surface with the same `surfaceId` and a complete tree, or send only the changed components without `root`. Observed: a Croupier update turn resent `root` on `table-1` and a Concierge turn resent `root` on `greet-1` inside the same payload that created `ask-1`, so the whole payload was rejected.
+A2UI v1.0 `updateComponents` adds or updates components by id and sets no send-once rule for `root`, so the rule that landed is the upsert: a later turn's `root` of the SAME component type replaces the surface's root (`validate.ts` counts the seeded root as presence; `tree.ts` reconciles it onto the same element; runtime SPEC-R3 AC2 REV). A `root` of another type, or two `root`s in one payload, still fails `IDGRAPH <surfaceId>:root`, and the `duplicateRoot` hint names that repair: re-create the surface with the same id and the complete tree.
 
-The planned requirement picks exactly one rule and states it in the a2ui producer reference doc:
+- AC1: the recorded Croupier deal turn and Concierge booking turn replay keyless through the real `produce()` (`scripts/e2e-admin/probe/replays/croupier-deal-halt` and `concierge-booking-surface-loss`), red before the change and green after.
+- AC2: the producer reference doc states the rule, and the `duplicateRoot` hint agrees with it (`produce-loop.test.ts`).
 
-- Either a resent `root` with the same surface id replaces the surface's root (the validator treats `updateComponents` as an upsert by id and the duplicate-root check is relaxed for that case), or
-- the rule stays strict and the retry feedback names the exact repair for the offending surface ("drop the root line for greet-1, keep ask-1 unchanged").
+### RTS-P2: a retry never silently loses a surface
 
-The deciding input is the A2UI v1.0 `updateComponents` upsert-by-id wording; the choice and its ADR-free citation go in T-0172's closing note, not in a new ADR clause.
+At the top of each self-correct round, `produce()` takes the session-new surfaces the failed round created that no failure path names (`surfacesToKeep`), and the repair message asks to keep them by id. A later round that validates without one of them is not a success: it spends one `SURFACE_DROPPED` round naming the id, and on the last round halts with `SURFACE_DROPPED`. A surface a failure does name (an abandoned `createSurface`, a NET_NOOP) may be dropped by the repair.
 
-- AC1 (planned): a keyless regression replays the recorded Croupier and Concierge payloads through the validator and the self-correct path and fails before the fix.
-- AC2 (planned): whichever rule lands, the producer reference doc states it in one sentence and the `duplicateRoot` hint agrees with it.
+- AC3: a scripted turn whose round 1 creates `ask-1` beside a failing change to `greet-1`, and whose round 2 ships only `greet-1`, retries with `SURFACE_DROPPED at ask-1` or halts (`produce-response-type.test.ts`, the T-0172 block).
+- AC4: a retry that keeps every such surface ships as before; the repair hint appears only when the failed payload touched two or more surfaces.
 
-### RTS-P2: a retry must not silently lose a surface the failed round created
+### RTS-P3: structured tool input; `strict` not used
 
-Today a self-correct round is judged on its own payload. A round that rewrites its answer and drops a surface the failed round created still validates, so the turn ends `ok` with the requested surface missing and only a warning in the activity strip. Observed: the Concierge `ask-1` booking card was lost when the retry updated only `greet-1`.
+`render_surface` takes `messages`, an array of A2UI message objects (RTS-R1 REV). That removes the cause of the PARSE rounds: the model no longer hand-escapes JSON inside a string. `strict: true` is NOT set. Strict tool use requires `additionalProperties: false` on every object, so a component's props cannot stay open; a strict schema would have to declare every component's props per catalog (function-call `args` are open objects too) and meets the strict limits on optional parameters on the wider controls. The structured array plus the shared validator is the contract; a catalog-derived strict schema is a separate decision, not planned here.
 
-The planned requirement: at the end of a self-correct round, `produce()` compares the surface ids the failed round tried to create with the ids the retry ships (or already holds from earlier turns). A surface present before and absent after is a loss. A loss triggers one further retry whose feedback names the lost surface ids, or, when no round is left, a halt with a plain-words error. A turn that lost the surface the user asked for never ends as a pass.
-
-- AC3 (planned): a scripted turn whose round 1 creates `ask-1` and fails IDGRAPH, and whose round 2 passes without `ask-1`, does not end `ok`; it retries with the lost id named or halts.
-- AC4 (planned): a retry that keeps every surface the failed round created ships unchanged, byte for byte with today's loop (the RTS-R4 legacy guarantee holds).
+- AC5: a `render_surface` call with `messages` is the payload on round 1, with no PARSE round, and a PARSE on a capture round is repaired with the array reminder (`produce-response-type.test.ts`).

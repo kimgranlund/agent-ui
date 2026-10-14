@@ -82,7 +82,8 @@
 //     text, minus any wire or genui lines (tallied `TEXT_JSONL_IGNORED`), is the reply;
 //   - a legacy round (`isLegacyRound`: the first line after the meta-line, inside an outer fence when there
 //     is one, is an A2UI or genui line, or one the shared healer repairs): today's body, byte for byte (RTS-R4);
-//   - a text round: the trimmed text after the optional meta-line is the reply, shipped note-only.
+//   - a text round: the trimmed text after the optional meta-line is the reply, shipped note-only; A2UI
+//     lines inside it are routed as the payload instead (T-0172, tallied `TEXT_JSONL_ROUTED`).
 // The reply becomes the outgoing `note` (the model-authored note when the text is empty). On the first round,
 // with no integration tool live, reply text also streams as `{"a2uiMeta":{"textDelta":...}}` lines while it
 // arrives (RTS-R5). A capture payload still invalid at the bound degrades to its text with `SURFACE_DEGRADED`
@@ -110,9 +111,9 @@ import { MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, selectMiniSkills } from './mini-sk
 import { FEED_SURFACE_TYPE_SET } from './feed-catalog.ts'
 import { isGenuiCandidate, readGenuiLine, utf8ByteLength, GENUI_MAX_HTML_BYTES } from './genui-line.ts'
 import type { GenuiSurfaceConfig } from './genui-surface-config.ts'
-import { runSemanticChecks, semanticSurfaceViews } from '../catalog/semantic-check.ts'
+import { runSemanticChecks, semanticActionOf, semanticSurfaceViews } from '../catalog/semantic-check.ts'
 import type { SemanticCheck } from '../catalog/semantic-check.ts'
-import { RENDER_SURFACE_TOOL_NAME, detectUserOverride, isLegacyShape, renderSurfaceTool } from './response-type.ts'
+import { RENDER_SURFACE_TOOL_NAME, detectUserOverride, isLegacyShape, renderSurfaceJsonl, renderSurfaceTool } from './response-type.ts'
 import type { ResponsePreference } from './response-type.ts'
 
 const PROTOCOL_VERSION = 'v1.0'
@@ -545,20 +546,16 @@ const PARSE_HINT =
  * turn — and why the escape hatch below has to be taught somewhere the model actually reads.
  */
 const IDGRAPH_HINTS = {
-  // Review F1: the re-create branch leads. `sid:root` fires only because the payload CONTAINED `id:"root"`
-  // — the model was trying to change root — so opening with "send only what changed, without root" invites
-  // a compliant round that ships the new node UNPARENTED. `checkIdGraph` has no orphan/reachability check
-  // (validate.ts: root count, dangling refs, cycle — nothing else), so an unreferenced component VALIDATES,
-  // streams, and is buffered by tree.ts without ever mounting: a loud halt traded for a silent
-  // under-render. The conditional arm is stated second, with the orphan trap named explicitly.
+  // T-0172: a same-type `root` resend is an upsert (validate.ts's seed merge, tree.ts's reconcile), so
+  // `sid:root` now fires only for a resend that changes root's component TYPE or for two `root`s in one
+  // payload. The sentence names both and the one repair each takes; the re-create arm keeps the
+  // COMPLETE-tree half the `rootMissing` chain exists to prevent.
   duplicateRoot:
-    ' The surface already received its ONE `id:"root"` in an EARLIER turn, and re-sending it is rejected ' +
-    "(the old root is kept, your change is dropped). If the root's OWN children must change — you are " +
-    'adding or removing a node directly under `root` — you CANNOT patch root: re-create the surface ' +
-    '(`createSurface` with the SAME surfaceId) and send the COMPLETE tree, `root` included, in that same ' +
-    "turn. If root's children did NOT need to change, instead send only the components that actually " +
-    'changed, WITHOUT `id:"root"` — but every component you send must be reachable from `root` through ' +
-    'some parent\'s "children"/"child", or it will silently never render.',
+    ' `sid:root` means this payload sends `id:"root"` twice, or sends it with a different component type ' +
+    'than the root the surface already holds. Re-sending `root` with the SAME component type replaces it ' +
+    '(send its complete record, every child included), so send `root` at most once and keep its type. To ' +
+    "change root's TYPE, re-create the surface (`createSurface` with the SAME surfaceId) and send the " +
+    'COMPLETE tree, `root` included, in that same turn.',
   // ADR-0187 / GH #829 — the sentence extending this member to the ABANDONED-surface case the finalize
   // signal newly catches (LLD §5's disjunctive repair, additive PROSE on the existing key — no new hint
   // entry: the model is being told the same fact, "this surface has no root", and the two repairs read
@@ -616,13 +613,19 @@ function idgraphHint(failures: RoundFailure[]): string {
     .join('')
 }
 
+/** T-0172: the PARSE reminder for a `render_surface` round. Its payload is the `messages` array, so the
+ *  line-oriented PARSE_HINT (one object per physical line, no fences, no prose) does not apply. */
+const TOOL_PARSE_HINT =
+  ' Reminder: `messages` is an ARRAY of A2UI message objects, one message per entry, never a JSON string ' +
+  'and never JSONL text.'
+
 /** RTS-R8: the repair tail for a round whose payload came from `render_surface`, in place of the legacy
  *  "Re-emit the COMPLETE corrected A2UI JSONL" sentence (which legacy rounds keep, byte for byte). */
-const TOOL_REPAIR_SENTENCE = 'Call render_surface again with the COMPLETE corrected JSONL; keep your reply text addressed to the user.'
+const TOOL_REPAIR_SENTENCE = 'Call render_surface again with the COMPLETE corrected `messages`; keep your reply text addressed to the user.'
 
 /** RTS-R6: the one-sentence correction for a surface-override turn whose round returned no payload. */
 const SURFACE_REQUESTED_FEEDBACK =
-  'The user asked to see this as UI (SURFACE_REQUESTED): call render_surface with the A2UI JSONL for it, and keep your reply text addressed to the user.'
+  'The user asked to see this as UI (SURFACE_REQUESTED): call render_surface with the A2UI `messages` for it, and keep your reply text addressed to the user.'
 
 function messagesFor(
   input: TurnInput,
@@ -643,11 +646,12 @@ function messagesFor(
       .map((f) => `${f.code}${f.path ? ` at ${f.path}` : ''}${expectedTypeNote(f, catalog, lastOutput)}${f.detail ? `: ${f.detail}` : ''}`)
       .join('; ')
     const hint =
-      (failures.some((f) => f.code === 'PARSE') ? PARSE_HINT : '') +
+      (failures.some((f) => f.code === 'PARSE') ? (toolRound ? TOOL_PARSE_HINT : PARSE_HINT) : '') +
       idgraphHint(failures) +
       (failures.some((f) => f.code === 'NET_NOOP') ? NET_NOOP_HINT : '') + // GH #1142 — the net-no-op correction round's guidance
       (failures.some((f) => f.code === 'FLOW_END_MISSING') ? FLOW_END_HINT : '') + // GH #1168 — the missing-flowEnd correction round's guidance
-      (failures.some((f) => f.detail !== undefined) ? SEMANTIC_HINT : '') // ADR-0238: a semantic-finding round's guidance
+      (failures.some((f) => f.detail !== undefined) ? SEMANTIC_HINT : '') + // ADR-0238: a semantic-finding round's guidance
+      keepSurfacesHint(lastOutput, input.session, failures) // T-0172: never lose a surface the failed round created
     turns.push({
       role: 'user',
       content: toolRound
@@ -1047,6 +1051,50 @@ const SEMANTIC_HINT =
   ' Those findings are contradictions inside your content, not schema errors: change the values so ' +
   'what the surface states agrees with what it shows, and keep every other line as it was.'
 
+/** T-0172: the surfaces a round's payload creates that the session does not already hold. */
+function newSurfaceIds(output: A2uiOutput, session: Session): Set<string> {
+  const known = sessionKnownSurfaceIds(session)
+  const out = new Set<string>()
+  for (const msg of output) if ('createSurface' in msg && !known.has(msg.createSurface.surfaceId)) out.add(msg.createSurface.surfaceId)
+  return out
+}
+
+/** T-0172: the surfaces a failed round created that none of its failures names, so the repair has no
+ *  reason to change or drop them. A failure path names a surface by its `sid:` prefix (IDGRAPH, FEED_SCOPE)
+ *  or a component id the payload delivered to that surface (`id.prop`, `parent->child`). A failure with no
+ *  attributable path (PARSE, SCHEMA) makes every surface suspect, so nothing is required. */
+function surfacesToKeep(failed: A2uiOutput, failures: readonly RoundFailure[], session: Session): string[] {
+  const owner = new Map<string, string>() // component id → the surface it was delivered to
+  const surfaces = new Set<string>()
+  for (const msg of failed) {
+    const sid = messageSurfaceId(msg)
+    if (sid !== undefined) surfaces.add(sid)
+    if ('updateComponents' in msg) for (const c of msg.updateComponents.components) owner.set(c.id, msg.updateComponents.surfaceId)
+  }
+  const failing = new Set<string>()
+  for (const f of failures) {
+    const colon = f.path.indexOf(':')
+    const head = f.path.split('->')[0]!.split('.')[0]!
+    const sid = colon > 0 && surfaces.has(f.path.slice(0, colon)) ? f.path.slice(0, colon) : surfaces.has(f.path) ? f.path : owner.get(head)
+    if (sid === undefined) return []
+    failing.add(sid)
+  }
+  return [...newSurfaceIds(failed, session)].filter((sid) => !failing.has(sid))
+}
+
+/** T-0172: a self-correct round must not lose a surface the failed round created. The Concierge trace
+ *  (2026-10-14) failed `greet-1:root` with a correct new `ask-1` beside it, and the "corrected" round
+ *  shipped only `greet-1`: the requested form never reached the user. Named in the repair message, and fed
+ *  back as `SURFACE_DROPPED` when a passing round still lost one. */
+function keepSurfacesHint(failed: A2uiOutput | undefined, session: Session, failures: readonly RoundFailure[]): string {
+  const keep = failed === undefined ? [] : surfacesToKeep(failed, failures, session)
+  if (keep.length === 0) return ''
+  return (
+    ` Keep ${keep.map((s) => `\`${s}\``).join(', ')} exactly as you sent it (no failure names it) and resend it in the ` +
+    'corrected payload, fixing only what the failures name: a surface you leave out never reaches the user.'
+  )
+}
+
 /** The bounded turn: `produceTurn`'s whole loop under one absolute deadline (T-0023, `withTurnDeadline`). The
  * composed signal replaces `opts.signal` for the loop, so the provider fetch, its body read and every
  * in-flight tool call (`executeTool`'s third argument) stop together when the limit is reached. */
@@ -1136,10 +1184,17 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   let lastCaptureRound = false // RTS-R8: the previous round's payload came from `render_surface` (tool-aware repair wording)
   let surfaceRequestedFedBack = false // RTS-R6: the ONE correction round a surface override with no payload gets
   let textJsonlIgnored = false // RTS-R3: sticky, a capture round's text channel carried wire or genui lines that were dropped
+  let textJsonlRouted = false // T-0172: sticky, a text round's prose carried A2UI lines that became the payload
+  // T-0172: the action a client turn answers, read by the semantic checks (a no-payload round is judged too).
+  const turnAction = input.kind === 'client' ? semanticActionOf(input.message) : undefined
+  // T-0172: every surface a failed round of this turn created that no failure named; a later round that
+  // passes without one has dropped it (SURFACE_DROPPED), never a success.
+  const keptSurfaces = new Set<string>()
   // RTS-R8: the last capture round's reply and declarations, kept for the degrade at the bound.
   let degrade: Pick<ReturnType<typeof peelMetaLine>, 'plan' | 'personaPatch' | 'flowEnd' | 'team' | 'target'> & { note: string } | undefined
   for (let round = 0; round < opts.maxRounds; round++) {
     const failuresFedBack = failures // what THIS round's prompt carried back — the trace's failureCodes
+    if (round > 0 && failures !== undefined && lastOutput !== undefined) for (const sid of surfacesToKeep(lastOutput, failures, input.session)) keptSurfaces.add(sid)
     // RTS-R9: the escalation seam, consulted at the top of every self-correct round. A returned field
     // replaces only this round's effort or model; absent ⇒ byte-identical.
     roundModel = model
@@ -1206,8 +1261,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     let capture = undefined as { jsonl: string; target: string | undefined } | undefined
     const captureTool: ExecuteTool = async (name, toolInput, signal) => {
       if (name === RENDER_SURFACE_TOOL_NAME) {
-        const { jsonl, target: toolTarget } = toolInput
-        capture = { jsonl: typeof jsonl === 'string' ? jsonl : '', target: typeof toolTarget === 'string' && toolTarget !== '' ? toolTarget : undefined }
+        const toolTarget = toolInput['target']
+        capture = { jsonl: renderSurfaceJsonl(toolInput), target: typeof toolTarget === 'string' && toolTarget !== '' ? toolTarget : undefined }
         return 'received'
       }
       if (opts.executeTool === undefined) throw new Error(`no executor for tool ${name}`)
@@ -1241,9 +1296,27 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       if (!streamDeltas || round > 0) return undefined
       replyFrom ??= replyStart(raw, ended)
       if (typeof replyFrom !== 'number') return undefined
-      const from = Math.max(replyFrom, deltaEnd)
-      deltaEnd = raw.length
-      return raw.length > from ? formatTextDeltaLine(raw.slice(from)) : undefined
+      // T-0172: an A2UI line inside the prose is the payload (routed below), never reply text, so a line
+      // that opens with `{` is held until it is whole and skipped when it is one. Other text streams as it
+      // arrives, mid-line included.
+      let pos = Math.max(replyFrom, deltaEnd)
+      let out = ''
+      while (pos < raw.length) {
+        const nl = raw.indexOf('\n', pos)
+        const end = nl === -1 ? raw.length : nl + 1
+        if (pos === replyFrom || raw[pos - 1] === '\n') {
+          const head = raw.slice(pos, nl === -1 ? raw.length : nl).trimStart()
+          if (nl === -1 && !ended && (head === '' || head.startsWith('{'))) break
+          if (head.startsWith('{') && isLegacyShape(head.trim())) {
+            pos = end
+            continue
+          }
+        }
+        out += raw.slice(pos, end)
+        pos = end
+      }
+      deltaEnd = pos
+      return out.length > 0 ? formatTextDeltaLine(out) : undefined
     }
     if (emitProgress) {
       for await (const item of interleaveProgress(providerStream, channel)) {
@@ -1278,8 +1351,22 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     // text after the meta-line is the reply and the payload is the captured `render_surface` input, or none.
     const captured = capture
     const textRound = captured === undefined && !isLegacyRound(raw, afterMeta)
+    // T-0172: a text round whose prose carries A2UI lines (Haiku 5.5 wrote its surface as text instead of
+    // calling the tool, 2026-10-14) routes them as the payload, as a capture round's would be, instead of
+    // showing raw JSON in the chat. Only on a turn that offers `render_surface`.
+    const routedLines =
+      textRound && offeredTools !== undefined ? afterMeta.split('\n').filter((l) => isLegacyShape(l.trim())) : []
+    const routed = routedLines.length > 0 ? routedLines.join('\n') : undefined
+    if (routed !== undefined) textJsonlRouted = true
     if (captured !== undefined || textRound) {
       let reply = afterMeta
+      if (routed !== undefined) {
+        reply = afterMeta
+          .split('\n')
+          .filter((l) => !isLegacyShape(l.trim()))
+          .join('\n')
+          .replace(/```(?:jsonl?)?[ \t]*\n(?:[ \t]*\n)*[ \t]*```/g, '') // the fence that held only the routed lines
+      }
       if (captured !== undefined) {
         // The tool payload wins: wire or genui lines in the text channel are dropped from the reply.
         const lines = afterMeta.split('\n')
@@ -1291,10 +1378,10 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       }
       reply = reply.trim()
       if (reply !== '') note = reply
-      afterMeta = captured?.jsonl ?? ''
+      afterMeta = captured?.jsonl ?? routed ?? ''
     }
-    lastCaptureRound = captured !== undefined
-    degrade = captured !== undefined && note !== undefined && note.trim() !== '' ? { note, plan, personaPatch, flowEnd, team, target } : undefined
+    lastCaptureRound = captured !== undefined || routed !== undefined
+    degrade = lastCaptureRound && note !== undefined && note.trim() !== '' ? { note, plan, personaPatch, flowEnd, team, target } : undefined
     // genui-surface SPEC-R1 — peeled SECOND, still BEFORE heal/validate: a genui line (valid or not) never
     // reaches the shared A2UI healer/validator, which doesn't know this kind exists. Recomputed FRESH every
     // round (never carried over): a round's genui candidate belongs to THAT round's own raw output, never
@@ -1360,7 +1447,22 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         failures = [{ code: 'FLOW_END_MISSING', path: '' }]
         continue
       }
+      // T-0172: an action turn answered with no payload is still judged (`surfaces` empty), so a check can catch
+      // a click narrated in prose that never reached the surface. A finding spends a repair round while one is
+      // left (worded for render_surface when the tool is offered); on the last round it ships tallied.
+      const actionSemanticTally: string[] = []
+      if (turnAction !== undefined && deps.semanticChecks !== undefined && deps.semanticChecks.length > 0 && genuiLine === undefined) {
+        const semantic = runSemanticChecks(deps.semanticChecks, { surfaces: [], action: turnAction })
+        if (semantic.findings.length > 0 && round < opts.maxRounds - 1) {
+          failures = semantic.findings.map((f) => ({ code: f.code, path: f.path, detail: f.message }))
+          lastCaptureRound = offeredTools !== undefined
+          continue
+        }
+        if (semantic.findings.length > 0) actionSemanticTally.push('SEMANTIC_UNCORRECTED')
+        if (semantic.errored.length > 0) actionSemanticTally.push('SEMANTIC_CHECK_ERROR')
+      }
       const failureCodes = (failuresFedBack ?? []).map((f) => f.code)
+      failureCodes.push(...actionSemanticTally)
       if (genuiMultiplicityHit) failureCodes.push('GENUI_MULTIPLICITY') // SPEC-R1 — a factual tally, never a retry trigger
       if (flowEndFedBack && flowEnd === undefined) failureCodes.push('FLOW_END_UNCORRECTED') // GH #1168 — the model refused the correction round; ships unchanged, tallied (the NET_NOOP_STRIPPED naming shape)
       // SPEC-N4/SPEC-R1 — a genui structural failure on THIS shipping round is dropped from the wire
@@ -1369,6 +1471,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       // not only to the retried case already covered by `failuresFedBack` above.
       if (genuiPeel.failure !== undefined) failureCodes.push(genuiPeel.failure.code)
       if (textJsonlIgnored) failureCodes.push('TEXT_JSONL_IGNORED') // RTS-R3: a factual tally, never a retry trigger
+      if (textJsonlRouted) failureCodes.push('TEXT_JSONL_ROUTED') // T-0172: a factual tally, never a retry trigger
       if (surfaceUnmet) failureCodes.push('SURFACE_REQUESTED_UNMET') // RTS-R6: the override asked for a surface and none came
       if (emitProgress) yield formatProgressLine({ stage: 'done' }) // before the final (note-only/genui-only) yield
       if (note !== undefined) yield formatMetaLine(note, traceFor(round + 1, 0, failureCodes), undefined, plan, personaPatch, flowEnd, team, target)
@@ -1386,6 +1489,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       continue
     }
     lastOutput = assembled.output // GH #288 — this round's parsed output, kept for the NEXT round's self-correct feedback (expectedTypeNote)
+    const createdThisRound = newSurfaceIds(assembled.output, input.session)
+    const dropped = [...keptSurfaces].filter((sid) => !createdThisRound.has(sid))
     stampCreateSurfaceCatalogId(assembled.output, deps.catalog.catalogId) // ADR-0169 cl.4 — the server-selected catalog is authoritative, unconditional + idempotent, BEFORE validateA2ui runs
     // SPEC-N3 — the shared validator, no fork; TKT-0081 — seeded with the session's prior graphs so the
     // per-round judgment matches the MERGED state the renderer will hold (update-only follow-ups valid;
@@ -1400,6 +1505,13 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     // round (SPEC-R4), fed back with `IDGRAPH_HINTS.rootMissing`'s repair instruction — never a browser.
     const verdict = validateA2ui(assembled.output, deps.catalog, sessionSeeds, { atFinalize: true })
     if (verdict.valid) {
+      // T-0172: a valid round that lost a surface an earlier round of this turn created is not a success.
+      // One more round while one is left (the repair names the surface), else a halt that says so.
+      if (dropped.length > 0) {
+        failures = dropped.map((sid) => ({ code: 'SURFACE_DROPPED', path: sid }))
+        if (round < opts.maxRounds - 1) continue
+        throw new ProduceHalt(failures)
+      }
       // ADR-0097 §3 FEED_SCOPE gate — AFTER the shared validator, BEFORE anything streams. A violation is
       // a self-correct round (never a stream), exactly like a validator failure.
       if (ask !== undefined) {
@@ -1414,7 +1526,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       // payload ships with a tally instead (see the header). Skipped entirely when no check is declared.
       const semanticTally: string[] = []
       if (deps.semanticChecks !== undefined && deps.semanticChecks.length > 0) {
-        const semantic = runSemanticChecks(deps.semanticChecks, { surfaces: semanticSurfaceViews(input.session, assembled.output) })
+        const semantic = runSemanticChecks(deps.semanticChecks, { surfaces: semanticSurfaceViews(input.session, assembled.output), ...(turnAction !== undefined ? { action: turnAction } : {}) })
         if (semantic.findings.length > 0 && round < opts.maxRounds - 1) {
           failures = semantic.findings.map((f) => ({ code: f.code, path: f.path, detail: f.message }))
           continue
@@ -1481,6 +1593,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         if (flowEndFedBack && flowEnd === undefined) failureCodes.push('FLOW_END_UNCORRECTED') // GH #1168 — the correction round came back content-bearing and still without flowEnd: ships unchanged, tallied
         failureCodes.push(...semanticTally) // ADR-0238: SEMANTIC_UNCORRECTED / SEMANTIC_CHECK_ERROR on the shipping round, never a retry trigger
         if (textJsonlIgnored) failureCodes.push('TEXT_JSONL_IGNORED') // RTS-R3: a factual tally, never a retry trigger
+        if (textJsonlRouted) failureCodes.push('TEXT_JSONL_ROUTED') // T-0172: a factual tally, never a retry trigger
         // RTS-R1: the tool's `target` (the open surface this payload updates) states the ADR-0206 target arm
         // when the meta-line declared none.
         const shippedTarget = target ?? (captured?.target !== undefined ? { surfaceId: captured.target } : undefined)
@@ -1505,6 +1618,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     const failureCodes = (failures ?? []).map((f) => f.code)
     if (genuiMultiplicityHit) failureCodes.push('GENUI_MULTIPLICITY')
     if (textJsonlIgnored) failureCodes.push('TEXT_JSONL_IGNORED')
+    if (textJsonlRouted) failureCodes.push('TEXT_JSONL_ROUTED')
     failureCodes.push('SURFACE_DEGRADED')
     if (emitProgress) yield formatProgressLine({ stage: 'done' })
     yield formatMetaLine(degrade.note, traceFor(opts.maxRounds, 0, failureCodes), undefined, degrade.plan, degrade.personaPatch, degrade.flowEnd, degrade.team, degrade.target)

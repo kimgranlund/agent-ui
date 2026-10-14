@@ -234,11 +234,12 @@ the seed puts the nav Buttons in a `CardFooter`, the snapshot form may use a `Ro
 
 **Presentation vs. protocol (the known confusable — get this boundary right).** This pattern is
 DISTINCT from the `backable-wizard` seed (`catalog-frontier.ts`, GH #1192): THAT seed is the
-FLOW-PROTOCOL exemplar — one ask surface across turns, root-immutability, the scene-resend +
+FLOW-PROTOCOL exemplar — one ask surface across turns, a stable root, the scene-resend +
 draft-persistence (`/draft/*`) mechanics of going Back. THIS pattern is the single-turn
 PRESENTATION composition — what one step LOOKS like (meter + body + nav) — and never exercises the
 multi-turn scene-swap protocol. A producer building a real flow combines THIS anatomy with THAT
 protocol; a producer asked only to "show where I am in the flow" emits this snapshot alone.
-**Consequence of confusing them:** re-emitting `id:"root"` per step (presentation thinking applied
-to a live flow) trips the never-resend-root law (runtime SPEC-R3 AC2 — the second root delivery is
-dropped); the protocol seed's stable-root + swapped-scene shape exists exactly to avoid that.
+**Consequence of confusing them:** re-emitting the whole tree from `id:"root"` per step (presentation
+thinking applied to a live flow) resends every node each step, and a step that changes root's component
+type trips runtime SPEC-R3 AC2 (a root of another type is dropped; a same-type root resend is an upsert
+since T-0172); the protocol seed's stable-root + swapped-scene shape keeps each step to the scene subtree.

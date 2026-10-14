@@ -62,7 +62,7 @@
           "mapsTo": "statusIntent"
         },
         "phase": { "type": { "type": "string", "enum": ["betting", "playing", "settled"] }, "bindable": true, "mapsTo": "phase" },
-        "chips": { "type": { "type": "array", "items": { "type": "number" } }, "bindable": true, "mapsTo": "chips" },
+        "betAction": { "type": { "type": "string" }, "mapsTo": "betAction", "actionEvent": "action" },
         "result": { "type": { "type": "string" }, "bindable": true, "mapsTo": "result" }
       },
       "children": "ChildList",

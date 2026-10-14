@@ -13,9 +13,9 @@
       "agent-ui",
       "a2ui-basic"
     ],
-    "digest": "sha256:590c19ed572f8f072365534a76d31cd3997ba3075f4a78f0fed031ca278d82d0"
+    "digest": "sha256:3a78262b0746e2a39fb71168ac8478b4c32fc56ee2d67b7438f404a04d460d85"
   },
   "selection": {
-    "digest": "sha256:abd82d860c9f6bf140a028ec04566bc88e659dc223ea1d869ad6331908b8a67c"
+    "digest": "sha256:ec21a6bbe0d03478b625f7515e5696e65e0f30d624710a568b2cc9f06dd49402"
   }
 }

@@ -4,7 +4,7 @@
 // here with one clear dealer finding; its repair and the taught data-driven shape pass.
 
 import { describe, it, expect } from 'vitest'
-import { croupierHandConsistency, croupierSemanticChecks } from './checks.ts'
+import { croupierActionApplied, croupierBetControls, croupierHandConsistency, croupierSemanticChecks } from './checks.ts'
 import { croupierManifest } from './manifest.ts'
 import { CORRECTED_LINE, DATA_DRIVEN_TURN, DEAL_TURN, EVIDENCE_LINE, NATURAL_REPAIRED_TURN, NATURAL_TURN, toJsonl } from './hands.fixture.ts'
 import { semanticSurfaceViews } from '../../semantic-check.ts'
@@ -464,8 +464,160 @@ describe('croupier hand check: what it never judges', () => {
 })
 
 describe('croupier manifest declares the check (ADR-0238 wiring)', () => {
-  it('croupierManifest.semanticChecks is the one hand check', () => {
+  it('croupierManifest.semanticChecks is the hand check, the bet-controls check and the action check (T-0172)', () => {
     expect(croupierManifest.semanticChecks).toBe(croupierSemanticChecks)
-    expect(croupierSemanticChecks.map((c) => c.id)).toEqual(['croupier-hand-consistency'])
+    expect(croupierSemanticChecks.map((c) => c.id)).toEqual(['croupier-hand-consistency', 'croupier-bet-controls', 'croupier-action-applied'])
   })
 })
+
+// T-0172: the Sonnet 5 Blackjack trace of 2026-10-14, round 1, put a Slider on /bet beside the CardTable; Kim's ruling
+// makes the table's own bet strip the whole bet phase.
+describe('croupier bet controls: the CardTable owns the bet phase (T-0172)', () => {
+  const table = (extra: Record<string, unknown> = {}) => ({
+    id: 'root', component: 'CardTable', title: 'Blackjack', phase: { path: '/phase' }, bet: { path: '/bet' }, bankroll: { path: '/bankroll' }, betAction: 'deal', ...extra,
+  })
+  const payload = (components: Record<string, unknown>[], phase = 'betting'): A2uiOutput => [
+    { version: 'v1.0', createSurface: { surfaceId: 'table-1', catalogId: 'agent-ui--croupier' } },
+    { version: 'v1.0', updateDataModel: { surfaceId: 'table-1', value: { bankroll: 1000, bet: 50, phase } } },
+    { version: 'v1.0', updateComponents: { surfaceId: 'table-1', components } },
+  ] as A2uiOutput
+  const run = (output: A2uiOutput) => croupierBetControls.check({ surfaces: semanticSurfaceViews({ turns: [] }, output) })
+  const deal = { id: 'deal_btn', component: 'Button', label: 'Deal', action: { action: 'deal' } }
+
+  it('passes the betting table alone: its strip and betAction are the whole bet phase', () => {
+    expect(run(payload([table()]))).toEqual([])
+  })
+
+  it('flags the traced Slider on /bet and an extra Deal Button child, each naming the fix', () => {
+    const findings = run(payload([
+      table({ children: ['bet_slider', 'deal_btn'] }),
+      { id: 'bet_slider', component: 'Slider', label: 'Bet amount', value: { path: '/bet' }, min: 10, max: 500, step: 10 },
+      deal,
+    ]))
+    expect(findings.map((f) => [f.code, f.path])).toEqual([
+      ['BET_CONTROL_DUPLICATE', 'table-1:bet_slider'],
+      ['BET_CONTROL_DUPLICATE', 'table-1:deal_btn'],
+    ])
+    expect(findings[0]!.message).toMatch(/Remove bet_slider/)
+  })
+
+  it('flags an unbound TextField on the surface while betting, and a betting table with no betAction', () => {
+    const noAction = table({ children: ['stake'] })
+    delete (noAction as Record<string, unknown>)['betAction']
+    const findings = run(payload([noAction, { id: 'stake', component: 'TextField', label: 'Bet', type: 'number' }]))
+    expect(findings.map((f) => f.path)).toEqual(['table-1:root', 'table-1:stake'])
+    expect(findings[0]!.message).toMatch(/"betAction":"deal"/)
+  })
+
+  it('outside betting, the Hit, Stand and Double Buttons are the table\'s children and pass', () => {
+    const hit = { id: 'hit_btn', component: 'Button', label: 'Hit', action: { action: 'hit' } }
+    expect(run(payload([table({ children: ['hit_btn'] }), hit], 'playing'))).toEqual([])
+  })
+})
+
+// T-0172: the live Haiku 5.5 probe built the bet step as a Card with a Slider and a Deal Button, no CardTable.
+describe('croupier bet controls: a bet step with no CardTable (T-0172 live probe)', () => {
+  const surface = (components: Record<string, unknown>[]): A2uiOutput => [
+    { version: 'v1.0', createSurface: { surfaceId: 'ask-1', catalogId: 'agent-ui--croupier', sendDataModel: true } },
+    { version: 'v1.0', updateDataModel: { surfaceId: 'ask-1', value: { bankroll: 1000, bet: 50 } } },
+    { version: 'v1.0', updateComponents: { surfaceId: 'ask-1', components } },
+  ] as A2uiOutput
+  const run = (output: A2uiOutput) => croupierBetControls.check({ surfaces: semanticSurfaceViews({ turns: [] }, output) })
+
+  it('flags the probe\'s Card with a Bet amount Slider and a Deal Button, naming the CardTable repair', () => {
+    const findings = run(surface([
+      { id: 'root', component: 'Card', children: ['hdr', 'body', 'footer'] },
+      { id: 'hdr', component: 'CardHeader', children: ['title'] },
+      { id: 'title', component: 'Text', text: 'Blackjack: place your bet', variant: 'h4' },
+      { id: 'body', component: 'CardContent', children: ['bet_slider'] },
+      { id: 'bet_slider', component: 'Slider', name: 'bet', label: 'Bet amount', value: { path: '/bet' }, min: 10, max: 500, step: 10 },
+      { id: 'footer', component: 'CardFooter', children: ['deal_btn'] },
+      { id: 'deal_btn', component: 'Button', label: 'Deal', variant: 'solid', action: { action: 'place_bet', context: { bet: { path: '/bet' } } } },
+    ]))
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['BET_TABLE_MISSING', 'ask-1:bet_slider']])
+    expect(findings[0]!.message).toMatch(/ONE CardTable, phase "betting"/)
+    expect(findings[0]!.message).toMatch(/bet_slider \(a Slider\), deal_btn \(a Button\)/)
+  })
+
+  it('passes a surface with no bet control (a rules card), and the CardTable betting table', () => {
+    expect(run(surface([{ id: 'root', component: 'Text', text: 'Blackjack pays 3:2.' }]))).toEqual([])
+    expect(run(surface([{ id: 'root', component: 'CardTable', phase: 'betting', bet: { path: '/bet' }, betAction: 'deal' }]))).toEqual([])
+  })
+})
+
+// T-0172: the live probe on f6f94f7f. Haiku 5.5 answered a 50 press with prose and no update; Sonnet 5.5 dealt and
+// wrote a bankroll of 500 from 1,000.
+describe('croupier action check: a table action moves the table and a deal takes the bet (T-0172 live probe)', () => {
+  const action = { name: 'deal', surfaceId: 'table-1', context: { bet: 50 }, dataModel: { bankroll: 1000, bet: 50, phase: 'betting' } }
+  const table = { id: 'root', component: 'CardTable', title: 'Blackjack', phase: { path: '/phase' }, bet: { path: '/bet' }, bankroll: { path: '/bankroll' }, dealerHand: { path: '/dealerHand' }, playerHand: { path: '/playerHand' }, betAction: 'deal' }
+  const dealt = (bankroll: number, phase = 'playing'): A2uiOutput => [
+    { version: 'v1.0', createSurface: { surfaceId: 'table-1', catalogId: 'agent-ui--croupier' } },
+    { version: 'v1.0', updateComponents: { surfaceId: 'table-1', components: [table] } },
+    { version: 'v1.0', updateDataModel: { surfaceId: 'table-1', value: { bankroll, bet: 50, phase, dealerHand: [{ rank: '10', suit: 'spades' }, { rank: '6', suit: 'clubs', faceDown: true }], playerHand: [{ rank: '9', suit: 'hearts' }, { rank: '7', suit: 'clubs' }] } } },
+  ] as A2uiOutput
+  const run = (output: A2uiOutput, a: typeof action = action) => croupierActionApplied.check({ surfaces: semanticSurfaceViews({ turns: [] }, output), action: a })
+
+  it('a deal answered with no update to the table is ACTION_NOT_APPLIED (the Haiku prose-only turn)', () => {
+    const findings = croupierActionApplied.check({ surfaces: [], action })
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['ACTION_NOT_APPLIED', 'table-1:deal']])
+    expect(findings[0]!.message).toMatch(/updateDataModel for table-1/)
+  })
+
+  it('a deal that leaves the table in betting is ACTION_NOT_APPLIED', () => {
+    expect(run(dealt(950, 'betting')).map((f) => f.code)).toEqual(['ACTION_NOT_APPLIED'])
+  })
+
+  it('a deal that writes 500 from 1,000 after a 50 bet is BANKROLL_MISMATCH naming 950 (the Sonnet turn); 950 passes', () => {
+    const findings = run(dealt(500))
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['BANKROLL_MISMATCH', 'table-1:/bankroll']])
+    expect(findings[0]!.message).toMatch(/write 950/)
+    expect(run(dealt(950))).toEqual([])
+  })
+
+  it('a move other than a table action, or Deal again on a new table, passes', () => {
+    expect(croupierActionApplied.check({ surfaces: [], action: { ...action, name: 'show_rules' } })).toEqual([])
+    const next = dealt(950).map((m) => JSON.parse(JSON.stringify(m).replace(/table-1/g, 'table-2'))) as A2uiOutput
+    expect(croupierActionApplied.check({ surfaces: semanticSurfaceViews({ turns: [] }, next), action: { ...action, name: 'hit' } })).toEqual([])
+  })
+})
+
+// T-0172 (the live probe on afc073a3): Sonnet 5.5 hit to 21 against the dealer's 17 and settled. The settle check pays
+// out from the click-time bankroll by the result the hands show.
+describe('croupier action check: settlement pays out from the click-time bankroll (T-0172)', () => {
+  const table = { id: 'root', component: 'CardTable', phase: { path: '/phase' }, bet: { path: '/bet' }, bankroll: { path: '/bankroll' }, dealerHand: { path: '/dealerHand' }, playerHand: { path: '/playerHand' }, betAction: 'deal' }
+  const C = (rank: string, suit = 'clubs') => ({ rank, suit })
+  const settle = (bankroll: number, playerHand: unknown[], dealerHand: unknown[], bet = 0): A2uiOutput => [
+    { version: 'v1.0', createSurface: { surfaceId: 'table-1', catalogId: 'agent-ui--croupier' } },
+    { version: 'v1.0', updateComponents: { surfaceId: 'table-1', components: [table] } },
+    { version: 'v1.0', updateDataModel: { surfaceId: 'table-1', value: { bankroll, bet, phase: 'settled', playerHand, dealerHand } } },
+  ] as A2uiOutput
+  const run = (output: A2uiOutput, name: string, dataModel: Record<string, unknown>, context: Record<string, unknown> = {}) =>
+    croupierActionApplied.check({ surfaces: semanticSurfaceViews({ turns: [] }, output), action: { name, surfaceId: 'table-1', context, dataModel } })
+  const playing = (bankroll: number, bet = 50) => ({ bankroll, bet, phase: 'playing' })
+  const win = [C('9'), C('8'), C('4')]
+  const dealer17 = [C('K'), C('7')]
+
+  it('the traced Sonnet settle (450 to 550 on a 21 over 17 win) passes; from 950 it must read 1,050', () => {
+    expect(run(settle(550, win, dealer17), 'hit', playing(450))).toEqual([])
+    const findings = run(settle(550, win, dealer17), 'hit', playing(950))
+    expect(findings.map((f) => f.code)).toEqual(['BANKROLL_MISMATCH'])
+    expect(findings[0]!.message).toMatch(/a win \(21 over 17\) on a stake of 50, so the bankroll goes from 950 to 1050/)
+  })
+
+  it('a push pays the stake back, a loss pays nothing, a bust pays nothing', () => {
+    expect(run(settle(1000, [C('K'), C('7')], dealer17), 'stand', playing(950))).toEqual([])
+    expect(run(settle(950, [C('K'), C('6')], dealer17), 'stand', playing(950))).toEqual([])
+    expect(run(settle(950, [C('K'), C('6'), C('9')], dealer17), 'hit', playing(950))).toEqual([])
+    expect(run(settle(1100, [C('K'), C('6')], dealer17), 'stand', playing(950)).map((f) => f.code)).toEqual(['BANKROLL_MISMATCH'])
+  })
+
+  it('a natural settled on the deal takes the bet and pays 2.5x in one step (1,000 to 1,075 on 50)', () => {
+    expect(run(settle(1075, [C('A'), C('K')], [C('9'), C('7')]), 'deal', { bankroll: 1000, bet: 50, phase: 'betting' }, { bet: 50 })).toEqual([])
+    expect(run(settle(1025, [C('A'), C('K')], [C('9'), C('7')]), 'deal', { bankroll: 1000, bet: 50, phase: 'betting' }, { bet: 50 }).map((f) => f.code)).toEqual(['BANKROLL_MISMATCH'])
+  })
+
+  it('a double takes one more stake and pays on twice the bet (950 to 1,100 on a doubled 50 win)', () => {
+    expect(run(settle(1100, [C('6'), C('5'), C('K')], dealer17, 100), 'double', playing(950))).toEqual([])
+  })
+})
+

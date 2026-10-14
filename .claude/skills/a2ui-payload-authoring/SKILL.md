@@ -143,11 +143,11 @@ Draft → validate → fix → re-check → finalize only when clean:
 - **Resending an id replaces the WHOLE node.** `updateComponents` upserts by id
   (`renderer/tree.ts`'s `components.set(comp.id, comp)`) — omitting a previously-set prop on a resend DROPS
   it, it does not preserve it (`a2ui-message-lifecycle.spec.md` SPEC-R2). Adding a child to a container
-  means resending that container's FULL record with the updated `children` list, not a diff. Exception:
-  never resend `id:"root"` itself — the renderer treats ANY second delivery of `id:"root"` as an id-graph
-  error and drops it, keeping the original (runtime SPEC-R3 AC2) — so if the container that needs a new
-  child is the surface's root, wrap it one level down (a stable, never-resent root whose single child is
-  the mutable container) rather than resending root.
+  means resending that container's FULL record with the updated `children` list, not a diff. `id:"root"`
+  follows the same rule only with the SAME component type (T-0172, runtime SPEC-R3 AC2 REV): a root resend
+  of another type is an id-graph error that keeps the original, so a new root type means re-creating the
+  surface. A stable root whose single child is the mutable container is still the cheaper shape: each
+  step resends only that child.
 - **A newer surface supersedes older ones.** Update the live surface to the next scene and retire
   superseded ones the same turn; at most one surface reads live in the renderer (`prompts/grammar.md`
   surface-reuse rule, GH #1164).

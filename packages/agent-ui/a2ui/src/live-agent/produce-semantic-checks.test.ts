@@ -151,3 +151,44 @@ describe('produce() with no declared checks is byte-identical (ADR-0238 default 
     })
   }
 })
+
+// T-0172 (the live probe on f6f94f7f): a 50 press on the bet strip answered by prose alone. The no-payload round
+// is judged on the action turn, so the repair round runs and the table update ships.
+describe('produce() + croupier action check: a table action answered by prose alone is repaired (T-0172)', () => {
+  const TABLE_TURN =
+    '{"version":"v1.0","createSurface":{"surfaceId":"table-1","catalogId":"agent-ui--croupier","sendDataModel":true}}\n' +
+    '{"version":"v1.0","updateComponents":{"surfaceId":"table-1","components":[{"id":"root","component":"CardTable","title":"Blackjack","phase":{"path":"/phase"},"bet":{"path":"/bet"},"bankroll":{"path":"/bankroll"},"dealerHand":{"path":"/dealerHand"},"playerHand":{"path":"/playerHand"},"betAction":"deal"}]}}\n' +
+    '{"version":"v1.0","updateDataModel":{"surfaceId":"table-1","value":{"phase":"betting","bankroll":1000,"bet":50,"dealerHand":[],"playerHand":[]}}}'
+  const press: TurnInput = {
+    kind: 'client',
+    session: { turns: [{ role: 'user', content: 'Black jack' }, { role: 'assistant', content: TABLE_TURN }] },
+    message: { version: 'v1.0', action: { surfaceId: 'table-1', actionId: 'a1', name: 'deal', sourceComponentId: 'root', timestamp: '0', context: { bet: 50 }, dataModel: { phase: 'betting', bankroll: 1000, bet: 50, dealerHand: [], playerHand: [] } } },
+  }
+  const PROSE = '{"a2uiMeta":{"note":"Dealt."}}\nI dealt you a 9 and a 7 for 16; the dealer shows a 10.'
+  const DEAL =
+    '{"a2uiMeta":{"note":"Dealt."}}\n' +
+    '{"version":"v1.0","updateDataModel":{"surfaceId":"table-1","value":{"phase":"playing","bankroll":950,"bet":50,"dealerHand":[{"rank":"10","suit":"spades"},{"rank":"6","suit":"clubs","faceDown":true}],"playerHand":[{"rank":"9","suit":"hearts"},{"rank":"7","suit":"clubs"}],"dealerTotal":"10 showing","playerTotal":16}}}'
+
+  it('round 1 prose only spends a repair round naming ACTION_NOT_APPLIED; round 2 ships the deal', async () => {
+    const s = scripted([PROSE, DEAL])
+    const lines = await collect(produce(press, deps(s.provider, croupierSemanticChecks), { maxRounds: 3 }))
+    expect(s.calls()).toBe(2)
+    expect(s.reqs[1]!.messages.at(-1)!.content).toContain('ACTION_NOT_APPLIED at table-1:deal')
+    const final = lines.filter((l) => readMetaLine(l)?.a2uiMeta.textDelta === undefined) // round 1 streamed its prose as deltas
+    expect(traceOf(final)).toMatchObject({ rounds: 2, failureCodes: ['ACTION_NOT_APPLIED'] })
+    expect(content(final)).toEqual([JSON.parse(DEAL.split('\n')[1]!)])
+  })
+
+  it('a bankroll of 500 after a 50 bet from 1,000 spends a repair round (BANKROLL_MISMATCH)', async () => {
+    const s = scripted([DEAL.replace('"bankroll":950', '"bankroll":500'), DEAL])
+    const lines = await collect(produce(press, deps(s.provider, croupierSemanticChecks), { maxRounds: 3 }))
+    expect(s.calls()).toBe(2)
+    expect(traceOf(lines).failureCodes).toEqual(['BANKROLL_MISMATCH'])
+  })
+
+  it('with no checks declared, the prose-only answer ships as before (negative control)', async () => {
+    const s = scripted([PROSE])
+    await collect(produce(press, deps(s.provider), { maxRounds: 3 }))
+    expect(s.calls()).toBe(1)
+  })
+})

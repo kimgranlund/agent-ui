@@ -1,6 +1,6 @@
 // anthropic-terminal-tool.test.ts: RTS-R2, the seam's `terminalTools` and `toolChoice` in the Anthropic
 // adapter, proven against scripted SSE through a per-test `fetch` stub (no network, no key). AC1: the
-// request body maps `toolChoice` to `tool_choice` only when no `thinking` is sent. AC2: a terminal-only
+// request body maps `toolChoice` to `tool_choice` only when no `thinking` is sent (never on a model that 400s on it, T-0172). AC2: a terminal-only
 // round yields its text live, before the executor runs, and makes one request. AC3: a mixed round keeps
 // the GH #49 law (two requests, only the second round's text), and a terminal call ends that loop.
 import { describe, it, expect, vi, afterEach } from 'vitest'
@@ -93,13 +93,12 @@ describe('tool_choice', () => {
       ...(effort ? { effort } : {}),
     })
 
-  it('effort absent or low (no thinking field) sends tool_choice {type:"tool", name}', () => {
-    for (const model of ['claude-haiku-5-5', 'claude-sonnet-5-5']) {
-      for (const effort of [undefined, 'low'] as const) {
-        const b = body(model, effort)
-        expect(b.thinking).toBeUndefined()
-        expect(b.tool_choice).toEqual({ type: 'tool', name: 'render_surface' })
-      }
+  it('effort absent or low (no thinking field) sends tool_choice {type:"tool", name}, except on a model that 400s on it (T-0172)', () => {
+    for (const effort of [undefined, 'low'] as const) {
+      const b = body('claude-haiku-5-5', effort)
+      expect(b.thinking).toBeUndefined()
+      expect(b.tool_choice).toEqual({ type: 'tool', name: 'render_surface' })
+      expect(body('claude-sonnet-5-5', effort).tool_choice).toBeUndefined() // Sonnet 5.5 rejects a forced tool_choice
     }
   })
 
@@ -122,7 +121,7 @@ describe('tool_choice', () => {
     const provider = anthropicProvider({ apiKey: 'test-key' })
     const fragments: string[] = []
     for await (const frag of provider.stream({
-      model: 'claude-sonnet-5-5',
+      model: 'claude-haiku-5-5',
       system: 'sys',
       messages: [{ role: 'user', content: 'show me a card' }],
       tools: [RENDER_SURFACE],

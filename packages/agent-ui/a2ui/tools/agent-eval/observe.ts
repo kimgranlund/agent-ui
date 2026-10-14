@@ -25,7 +25,7 @@ import type { AgentProvider, ExecuteTool, Session } from '../../src/agent/agent-
 import { readMetaLine } from '../../src/agent/meta-line.ts'
 import type { TokenUsage } from '../../src/agent/meta-line.ts'
 import { isGenuiLine } from '../../src/agent/genui-line.ts'
-import { RENDER_SURFACE_TOOL_NAME } from '../../src/agent/response-type.ts'
+import { RENDER_SURFACE_TOOL_NAME, renderSurfaceJsonl } from '../../src/agent/response-type.ts'
 import type { Catalog } from '../../src/catalog/catalog.ts'
 import { repairOutcome } from './score.ts'
 
@@ -135,7 +135,8 @@ export async function observeTurn(input: { catalog: Catalog; prompt: string; ses
           : (name, toolInput, signal) => {
               if (name === RENDER_SURFACE_TOOL_NAME) {
                 toolCalled = true
-                if (typeof toolInput.jsonl === 'string') toolJsonl[index] += `${toolInput.jsonl}\n`
+                const jsonl = renderSurfaceJsonl(toolInput) // T-0172: `messages`, or the legacy `jsonl` string
+                if (jsonl !== '') toolJsonl[index] += `${jsonl}\n`
               }
               return execute(name, toolInput, signal)
             }

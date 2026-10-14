@@ -27,7 +27,7 @@
     },
     "CardTable": {
       "intents": [
-        "a card table with both hands and the actions"
+        "a blackjack table: bet, hands, actions, result"
       ],
       "notFor": [
         {

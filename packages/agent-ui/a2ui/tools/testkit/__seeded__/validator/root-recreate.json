@@ -2,7 +2,7 @@
   "kind": "agent-ui-a2ui-scenario",
   "version": 1,
   "name": "root-recreate",
-  "description": "Turn 1 re-sends root without a createSurface; the seeded validator rejects the resend at s:root (ADR-0064, TKT-0081).",
+  "description": "Turn 1 re-sends root as another type (Text to Column) without a createSurface; the seeded validator rejects the type swap at s:root (ADR-0064, TKT-0081; a same-type resend is an upsert since T-0172).",
   "catalogId": "agent-ui",
   "intent": "show a label",
   "expectRed": {
@@ -47,6 +47,13 @@
               "components": [
                 {
                   "id": "root",
+                  "component": "Column",
+                  "children": [
+                    "t"
+                  ]
+                },
+                {
+                  "id": "t",
                   "component": "Text",
                   "text": "two"
                 }

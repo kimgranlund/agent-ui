@@ -366,7 +366,7 @@ export const GAMES_PLAYBOOKS: readonly NewEntryInput[] = [
 export const GAMES_RULES: readonly NewEntryInput[] = [
   {
     label: 'blackjack',
-    description: 'blackjack, 21, hit, stand, double, split — the classic house game',
+    description: 'blackjack, 21, hit, stand, double, split: the classic house game',
     content:
       'Two cards each; dealer shows one, hole card face-down. Values: pips as printed, faces 10, Ace 1 or ' +
       '11. A natural (Ace + ten-card on the deal) ends the round at once: reveal the hole card, settle it ' +

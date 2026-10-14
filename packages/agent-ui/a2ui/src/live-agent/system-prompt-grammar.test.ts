@@ -463,7 +463,7 @@ describe('GRAMMAR marker-sanity guard (independent-review hardening)', () => {
   }
 
   const CLARIFY_MARKER = 'Ask instead of guess when the turn is underdetermined'
-  const OUTPUT_MARKER = 'Output rules for the A2UI JSONL'
+  const OUTPUT_MARKER = 'Output rules for the A2UI messages'
   const REAL_GRAMMAR = buildSystemPrompt(defaultCatalog, [])
 
   it('does NOT fire against the current real GRAMMAR — both markers are present today', () => {
@@ -700,11 +700,18 @@ describe('buildSystemPrompt message-lifecycle teaching (ADR-0126 F2, LLD-C1/C2)'
     expect(prompt).toMatch(/\{"version":"v1\.0","deleteSurface":\{"surfaceId":"main"\}\}/)
   })
 
-  it('teaches the root-immutability exception — resending "id":"root" is an id-graph error, not an upsert', () => {
+  it('T-0172: teaches the root rule: a same-type root resend is an upsert, another type needs a re-create', () => {
     const prompt = buildSystemPrompt(defaultCatalog, [])
-    expect(prompt).toMatch(/"id":"root" can be delivered only ONCE per surface/)
-    expect(prompt).toMatch(/silently keeps the OLD root/)
+    expect(prompt).toMatch(/"id":"root" follows the same rule only with the SAME component type/)
+    expect(prompt).toMatch(/keeps the OLD root, so a new root type means re-creating the surface/)
+    expect(prompt).toMatch(/Send root at most once per payload/)
     expect(prompt).toMatch(/stable wrapper child up front/)
+  })
+
+  it('T-0172: teaches render_surface `messages` as an array of message objects, never an escaped string', () => {
+    const prompt = buildSystemPrompt(defaultCatalog, [])
+    expect(prompt).toMatch(/"messages" is an ARRAY of A2UI message objects/)
+    expect(prompt).not.toMatch(/The "jsonl" argument/)
   })
 
   it('the teaching does NOT leak into the catalog-derived inventory section (drift gate untouched)', () => {

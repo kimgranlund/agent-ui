@@ -85,17 +85,22 @@ describe('judgeVerdict', () => {
     expect(red[0]!.detail).toContain('missing [IDGRAPH @ s:root]')
   })
 
-  it('a two-turn root resend without createSurface yields native IDGRAPH at s:root, layer validator', () => {
+  it('a two-turn root resend of ANOTHER type without createSurface yields native IDGRAPH at s:root, layer validator (a same-type one is an upsert, T-0172)', () => {
     const t0: ScenarioTurn = { respond: { lines: [j(create()), j(update([text()]))] } }
     const first = judgeTurnLines((t0.respond as { lines: string[] }).lines, {
       turn: t0, catalog: defaultCatalog, catalogId: 'agent-ui', session: { turns: [] }, respondPath: '$.turns[0].respond.lines', turnPath: '$.turns[0]',
     })
     expect(first.findings).toEqual([])
-    const t1: ScenarioTurn = { intent: 'again', respond: { lines: [j(update([text('root', 'again')]))] } }
+    const t1: ScenarioTurn = { intent: 'again', respond: { lines: [j(update([{ id: 'root', component: 'Column', children: ['t'] }, text('t', 'again')]))] } }
     const second = judgeTurnLines((t1.respond as { lines: string[] }).lines, {
       turn: t1, catalog: defaultCatalog, catalogId: 'agent-ui', session: first.session, respondPath: '$.turns[1].respond.lines', turnPath: '$.turns[1]',
     })
     expect(second.findings).toEqual([{ layer: 'validator', code: 'IDGRAPH', path: 's:root' }])
+    const t1same: ScenarioTurn = { intent: 'again', respond: { lines: [j(update([text('root', 'again')]))] } }
+    const same = judgeTurnLines((t1same.respond as { lines: string[] }).lines, {
+      turn: t1same, catalog: defaultCatalog, catalogId: 'agent-ui', session: first.session, respondPath: '$.turns[1].respond.lines', turnPath: '$.turns[1]',
+    })
+    expect(same.findings).toEqual([])
     // The clean twin: an update-only follow-up that does not resend root validates against the seed.
     const t1ok: ScenarioTurn = { intent: 'again', respond: { lines: [j(update([text('extra', 'x')]))] } }
     const clean = judgeTurnLines((t1ok.respond as { lines: string[] }).lines, {

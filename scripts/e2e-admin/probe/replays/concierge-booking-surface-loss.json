@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "concierge-booking-surface-loss",
+  "agent": "concierge",
+  "model": "claude-sonnet-5",
+  "effort": "medium",
+  "source": "2026-10-14.jsonl:5,2026-10-14.jsonl:6 (catalog agent-ui--concierge)",
+  "steps": [
+    {
+      "say": "hello"
+    },
+    {
+      "click": "Reserve a table"
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"Good day, and welcome to the Grand Meridian! I'm your concierge, here to help with bookings for rooms, dining, and spa, local itineraries around Sorrento, or any questions about our facilities and policies. How may I assist you today?\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Good day, and welcome to the Grand Meridian! I'm your concierge, here to help with bookings for rooms, dining, and spa, local itineraries around Sorrento, or any questions about our facilities and policies. How may I assist you today?\",\"ask\":{\"surfaceId\":\"greet-1\"},\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"hello\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":46939,\"sections\":[{\"id\":\"grammar\",\"chars\":25639},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":840}],\"over\":false}}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"greet-1\",\"catalogId\":\"agent-ui--concierge\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"greet-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"prompt\",\"options\"]},{\"id\":\"prompt\",\"component\":\"Text\",\"variant\":\"body\",\"text\":\"What would you like to do?\"},{\"id\":\"options\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"c1\",\"c2\",\"c3\",\"c4\"]},{\"id\":\"c1\",\"component\":\"Card\",\"children\":[\"c1f\"]},{\"id\":\"c1f\",\"component\":\"CardFooter\",\"children\":[\"b1\"]},{\"id\":\"b1\",\"component\":\"Button\",\"label\":\"Book a room\",\"variant\":\"solid\",\"action\":{\"action\":\"start\",\"context\":\"book-room\"}},{\"id\":\"c2\",\"component\":\"Card\",\"children\":[\"c2f\"]},{\"id\":\"c2f\",\"component\":\"CardFooter\",\"children\":[\"b2\"]},{\"id\":\"b2\",\"component\":\"Button\",\"label\":\"Reserve a table\",\"variant\":\"solid\",\"action\":{\"action\":\"start\",\"context\":\"reserve-table\"}},{\"id\":\"c3\",\"component\":\"Card\",\"children\":[\"c3f\"]},{\"id\":\"c3f\",\"component\":\"CardFooter\",\"children\":[\"b3\"]},{\"id\":\"b3\",\"component\":\"Button\",\"label\":\"Plan my day in Sorrento\",\"variant\":\"solid\",\"action\":{\"action\":\"start\",\"context\":\"plan-itinerary\"}},{\"id\":\"c4\",\"component\":\"Card\",\"children\":[\"c4f\"]},{\"id\":\"c4f\",\"component\":\"CardFooter\",\"children\":[\"b4\"]},{\"id\":\"b4\",\"component\":\"Button\",\"label\":\"Hotel facilities & hours\",\"variant\":\"solid\",\"action\":{\"action\":\"start\",\"context\":\"facility-info\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"ask\":{\"surfaceId\":\"greet-1\"}}}\n\nGood day, and welcome to the Grand Meridian! I'm your concierge, here to help with bookings for rooms, dining, and spa, local itineraries around Sorrento, or any questions about our facilities and policies. How may I assist you today?",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "jsonl": "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"greet-1\",\"catalogId\":\"agent-ui--concierge\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"greet-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"prompt\",\"options\"]},{\"id\":\"prompt\",\"component\":\"Text\",\"variant\":\"body\",\"text\":\"What would you like to do?\"},{\"id\":\"options\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"c1\",\"c2\",\"c3\",\"c4\"]},{\"id\":\"c1\",\"component\":\"Card\",\"children\":[\"c1f\"]},{\"id\":\"c1f\",\"component\":\"CardFooter\",\"children\":[\"b1\"]},{\"id\":\"b1\",\"component\":\"Button\",\"label\":\"Book a room\",\"variant\":\"solid\",\"action\":{\"action\":\"start\",\"context\":\"book-room\"}},{\"id\":\"c2\",\"component\":\"Card\",\"children\":[\"c2f\"]},{\"id\":\"c2f\",\"component\":\"CardFooter\",\"children\":[\"b2\"]},{\"id\":\"b2\",\"component\":\"Button\",\"label\":\"Reserve a table\",\"variant\":\"solid\",\"action\":{\"action\":\"start\",\"context\":\"reserve-table\"}},{\"id\":\"c3\",\"component\":\"Card\",\"children\":[\"c3f\"]},{\"id\":\"c3f\",\"component\":\"CardFooter\",\"children\":[\"b3\"]},{\"id\":\"b3\",\"component\":\"Button\",\"label\":\"Plan my day in Sorrento\",\"variant\":\"solid\",\"action\":{\"action\":\"start\",\"context\":\"plan-itinerary\"}},{\"id\":\"c4\",\"component\":\"Card\",\"children\":[\"c4f\"]},{\"id\":\"c4f\",\"component\":\"CardFooter\",\"children\":[\"b4\"]},{\"id\":\"b4\",\"component\":\"Button\",\"label\":\"Hotel facilities & hours\",\"variant\":\"solid\",\"action\":{\"action\":\"start\",\"context\":\"facility-info\"}}]}}\n"
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "hello"
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"Great choice — let's get your table booked. I'll just need a few details: which restaurant, the date and time, and your party size.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Great choice — let's get your table booked. I'll just need a few details: which restaurant, the date and time, and your party size.\",\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"The user triggered the \\\"start\\\" action (from component b2). Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":47644,\"sections\":[{\"id\":\"grammar\",\"chars\":25639},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1545}],\"over\":false}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"greet-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"prompt\"]},{\"id\":\"prompt\",\"component\":\"Text\",\"variant\":\"body\",\"text\":\"Starting a new request below.\"}]}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui--concierge\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"draft\":{\"restaurant\":\"vela\",\"date\":\"\",\"time\":\"19:30\",\"partySize\":2}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"children\":[\"header\",\"scene\",\"footer\"]},{\"id\":\"header\",\"component\":\"CardHeader\",\"children\":[\"title\"]},{\"id\":\"title\",\"component\":\"Text\",\"variant\":\"h4\",\"text\":\"Reserve a table\"},{\"id\":\"scene\",\"component\":\"CardContent\",\"children\":[\"restaurant_field\",\"date_field\",\"time_field\",\"size_field\"]},{\"id\":\"restaurant_field\",\"component\":\"Field\",\"label\":\"Restaurant\",\"child\":\"restaurant_group\"},{\"id\":\"restaurant_group\",\"component\":\"RadioGroup\",\"name\":\"restaurant\",\"value\":{\"path\":\"/draft/restaurant\"},\"children\":[\"r_vela\",\"r_quay\"]},{\"id\":\"r_vela\",\"component\":\"Radio\",\"value\":\"vela\",\"label\":\"Vela (fine dining)\"},{\"id\":\"r_quay\",\"component\":\"Radio\",\"value\":\"quay\",\"label\":\"Quay Bar (casual)\"},{\"id\":\"date_field\",\"component\":\"Field\",\"label\":\"Date\",\"child\":\"date_cal\"},{\"id\":\"date_cal\",\"component\":\"Calendar\",\"mode\":\"single\",\"value\":{\"path\":\"/draft/date\"},\"name\":\"date\"},{\"id\":\"time_field\",\"component\":\"Field\",\"label\":\"Time\",\"child\":\"time_input\"},{\"id\":\"time_input\",\"component\":\"TextField\",\"type\":\"time\",\"value\":{\"path\":\"/draft/time\"},\"name\":\"time\"},{\"id\":\"size_field\",\"component\":\"Slider\",\"label\":\"Party size\",\"min\":1,\"max\":10,\"step\":1,\"value\":{\"path\":\"/draft/partySize\"},\"name\":\"partySize\",\"layout\":\"standard\"},{\"id\":\"footer\",\"component\":\"CardFooter\",\"children\":[\"review_btn\"]},{\"id\":\"review_btn\",\"component\":\"Button\",\"label\":\"Review booking\",\"variant\":\"solid\",\"action\":{\"action\":\"review-table-booking\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Great choice — let's get your table booked. I'll just need a few details: which restaurant, the date and time, and your party size.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "jsonl": "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"greet-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"prompt\"]},{\"id\":\"prompt\",\"component\":\"Text\",\"variant\":\"body\",\"text\":\"Starting a new request below.\"}]}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui--concierge\",\"sendDataModel\":true}}\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"draft\":{\"restaurant\":\"vela\",\"date\":\"\",\"time\":\"19:30\",\"partySize\":2}}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"children\":[\"header\",\"scene\",\"footer\"]},{\"id\":\"header\",\"component\":\"CardHeader\",\"children\":[\"title\"]},{\"id\":\"title\",\"component\":\"Text\",\"variant\":\"h4\",\"text\":\"Reserve a table\"},{\"id\":\"scene\",\"component\":\"CardContent\",\"children\":[\"restaurant_field\",\"date_field\",\"time_field\",\"size_field\"]},{\"id\":\"restaurant_field\",\"component\":\"Field\",\"label\":\"Restaurant\",\"child\":\"restaurant_group\"},{\"id\":\"restaurant_group\",\"component\":\"RadioGroup\",\"name\":\"restaurant\",\"value\":{\"path\":\"/draft/restaurant\"},\"children\":[\"r_vela\",\"r_quay\"]},{\"id\":\"r_vela\",\"component\":\"Radio\",\"value\":\"vela\",\"label\":\"Vela (fine dining)\"},{\"id\":\"r_quay\",\"component\":\"Radio\",\"value\":\"quay\",\"label\":\"Quay Bar (casual)\"},{\"id\":\"date_field\",\"component\":\"Field\",\"label\":\"Date\",\"child\":\"date_cal\"},{\"id\":\"date_cal\",\"component\":\"Calendar\",\"mode\":\"single\",\"value\":{\"path\":\"/draft/date\"},\"name\":\"date\"},{\"id\":\"time_field\",\"component\":\"Field\",\"label\":\"Time\",\"child\":\"time_input\"},{\"id\":\"time_input\",\"component\":\"TextField\",\"type\":\"time\",\"value\":{\"path\":\"/draft/time\"},\"name\":\"time\"},{\"id\":\"size_field\",\"component\":\"Slider\",\"label\":\"Party size\",\"min\":1,\"max\":10,\"step\":1,\"value\":{\"path\":\"/draft/partySize\"},\"name\":\"partySize\",\"layout\":\"standard\"},{\"id\":\"footer\",\"component\":\"CardFooter\",\"children\":[\"review_btn\"]},{\"id\":\"review_btn\",\"component\":\"Button\",\"label\":\"Review booking\",\"variant\":\"solid\",\"action\":{\"action\":\"review-table-booking\"}}]}}\n"
+              }
+            }
+          ]
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "target": "greet-1",
+                "jsonl": "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"greet-1\",\"components\":[{\"id\":\"prompt\",\"component\":\"Text\",\"variant\":\"body\",\"text\":\"Starting a new request below.\"},{\"id\":\"options\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[]}]}}"
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "client",
+        "message": {
+          "version": "v1.0",
+          "action": {
+            "surfaceId": "greet-1",
+            "actionId": "a2ui-action-1",
+            "name": "start",
+            "sourceComponentId": "b2",
+            "timestamp": "2026-10-14T19:30:01.346Z",
+            "context": {}
+          }
+        }
+      }
+    }
+  ]
+}
