@@ -1,6 +1,10 @@
 # SPEC · agent-model: the locked contract for agent-admin's agent architecture (GH #1725)
 
-> Status: proposed · v0.1 · 2026-09-04 · Layer: SPEC (execution contract)
+> Status: proposed · v0.2 · 2026-10-14 (v0.1 2026-09-04) · Layer: SPEC (execution contract)
+> v0.2 (2026-10-14, T-0182): the agent content model now has its own contract,
+> [`agent-content.spec.md`](./agent-content.spec.md). SPEC-R5, §3.5, SPEC-R34 and §8 gain planned-change notes
+> pointing there (T-0160 to T-0163); SPEC-R10 records the shipped T-0180 retired-model-id read; §8 item 1 is
+> repaired. Shipped clauses are unchanged until their ticket lands.
 > Refines: [`prd/agent-admin-app.prd.md`](../prd/agent-admin-app.prd.md) (PRD-G1, G3, G4, G5; the why and what)
 > under the owning ADRs [ADR-0132](../adr/0132-agent-admin-instructions-capabilities-architecture.md) (entries),
 > [ADR-0135](../adr/0135-agent-harness-config-schema-and-prompt-files.md) (agent config),
@@ -34,6 +38,8 @@ Lock the six-layer agent contract the reference describes (Identity, Configurati
 Turn, Wrappers) into one testable document, so the reviewer seat grades against a spec instead of against source
 plus a derived map. Everything below is already shipped; this record adds no build authorization. It states the
 contract the shipped tree honors, cites the test that pins each clause, and fences what is deliberately absent.
+The italic *Planned change* notes (v0.2) are pointers to [agent-content.spec.md](./agent-content.spec.md), which
+owns the content model; each names the ticket that will change the shipped clause it sits under.
 
 ## 2 · Definitions
 
@@ -99,6 +105,10 @@ state under `<id>.` is swept (`resetStateSync`) before the store hydrates, and t
 preset's value. A user's edits on an unchanged preset are never swept. The sweep-then-hydrate order relies on the
 localStorage tier's same-tick writes (`agent-roster-source.ts` header). Owner: `agent-admin-presets.ts:personaStore`;
 `agent-roster-source.ts:writeSeedVersionSync`, `resetStateSync`.
+*Planned change (T-0161, [agent-content](./agent-content.spec.md) ACS-R6, ACS-R7):* the sweep on a bump becomes a
+per-field 3-way merge of the user's overlay onto the new seed; a user edit survives a bump, a conflict keeps the
+user value and is flagged `seedChanged`, and the wipe in `personaStore`/`resetPersona` retires. Until T-0161 lands
+the clause above is the shipped behavior.
 
 **SPEC-R6 (mint, duplicate, import, export).** An import mints a NEW record: `importedPersonaFrom(file, roster)` and
 `duplicatePersonaFrom(source, store, taken)` uniquify only the roster identity (`id`, `label`) and carry the state
@@ -133,6 +143,9 @@ kind's enabled entry labels. Owner: ADR-0132 cl.6, ADR-0136 cl.3; `controls/agen
 migration write:
 - `sanitizeModel` accepts an id on `SUPPORTED_MODELS`, else `DEFAULT_MODEL_ID` (Haiku 5.5 since T-0030; Haiku 4.5 stays on the roster);
   `sanitizeAuthoringModel` is the same clause with `AUTHORING_DEFAULT_MODEL_ID` (Sonnet 5.5) as the fallback.
+  Before either check a stored id named in `RETIRED_MODEL_IDS` reads as its successor (`claude-sonnet-5` as
+  `claude-sonnet-5-5`), and `isModelIncluded` honours an inclusion record saved under the retired id; nothing is
+  rewritten in the store (T-0180).
 - Master switches (`agentEnabled`, `kindEnabledKey(kind)` = `${kind}sEnabled`) read ON unless explicitly `false`
   (`isEnabledFlag`); the `tool` kind resolves to the pre-existing `toolsEnabled` key.
 - Inverse-default keys read OFF unless explicitly `true`: `surfaceGenui`, `surfaceGenuiDogfood`, `surfacePlanner`,
@@ -221,6 +234,11 @@ req-doc-ingestion R4/R6/R7; `resource-idb-store.ts`; `lib/document-budget.ts`.
 This SPEC adds nothing to that contract.
 
 ### 3.5 Composition
+
+*Planned change (T-0163, [agent-content](./agent-content.spec.md) ACS-R11 to R13):* one compiler,
+`compile(agentManifest, overlay) -> { bundle, digest, resolution }`, becomes the only assembly path for Test Chat,
+the dev proxy, the Worker and the CLI. It wraps SPEC-R20 to R22 unchanged (`bundle.system` is byte-identical to
+`composeLiveSystemPrompt` for the same inputs) and adds a bundle digest and a resolution trace to every turn.
 
 **SPEC-R20 (the base prompt).** `composeSystemPrompt(sections, team?)`: keep entries with `enabled` and non-blank
 `content`; sort by `order` then `id`; render each as `## {label}` newline `{content.trim()}`; join with one blank
@@ -350,8 +368,13 @@ exception citing ADR-0227 cl.5.
 | Skill-pack shelf | IndexedDB adapter | database `agent-ui-skill-packs`, keys `skill-packs:<packId>` | `skill-pack-store.ts` |
 | Teams | localStorage adapter | namespace `agent-ui-agent-teams`, key `<teamId>` | `agent-team.ts` |
 | Conversation history, Dialog Turns, Effort | element lifetime only | none | `agent-admin.ts` |
+| Seed content (presets, Builder preset, packs, mini-skills, GenUI packs): planned, T-0160 | build time only, no runtime tier | the generated `registry.gen.ts` over the content root | `scripts/generate-agent-content.mjs` (planned) |
+| User overlays on seeds: planned, T-0161 | localStorage adapter (large text on the IndexedDB adapter) | keyed by `id@baseVersion`; namespace chosen by T-0161 | the overlay store (planned) |
 
-Owner: ADR-0193 cl.2, cl.3, Amendment A1; ADR-0208 D3; ADR-0227 cl.2.
+Owner: ADR-0193 cl.2, cl.3, Amendment A1; ADR-0208 D3; ADR-0227 cl.2. The two planned rows are
+[agent-content](./agent-content.spec.md) ACS-R4 and ACS-R6; when T-0161 lands, the per-agent `SettingsStore` row
+holds only imports and duplicates as full records, and the `<id>.seedVersion` marker is superseded by the
+overlay's `baseVersion`.
 
 ### 3.9 Seams
 
@@ -447,7 +470,8 @@ Each criterion names the pinning test; a criterion with no existing test names t
   import-only rename and remove, the legacy active-id read, and the cross-tab subscribe.
 - **AC-R3:** `controls/agent-admin/agent-admin.test.ts` proves `deletable` absent hides the delete affordance.
 - **AC-R4/R5/R7:** `site/pages/agent-admin-presets.test.ts` proves persisted-wins-over-seed, the seedVersion sweep,
-  reset, and that the active id survives a reset.
+  reset, and that the active id survives a reset. When T-0161 lands, the sweep case is replaced by the
+  agent-content AC-R6/R7 merge and migration tests.
 - **AC-R6:** `site/pages/agent-admin-persona-file.test.ts` proves the round trip, the key filter both ways, and the
   stripped `idbRef` on export; `controls/agent-admin/persona-patch.test.ts` pins `PERSONA_STATE_KEYS`.
 - **AC-R8:** `controls/settings/store.test.ts` grep-guards that `ui-settings` imports only the interface.
@@ -497,9 +521,9 @@ red on this document, not on the tree.
 
 ## 8 · Drift and open items (2026-09-04, against main `8113b558`)
 
-1. The reference's glossary says a preset is "seedVersion set, not deletable"; the source discriminator is
-   `imported`, and a preset may declare no `seedVersion` (SPEC-R1). The reference is repaired by pointer only
-   (its §3 cites this SPEC); the sentence itself is left for the reference's owner.
+1. The reference's glossary said a preset is "seedVersion set, not deletable"; the source discriminator is
+   `imported`, and a preset may declare no `seedVersion` (SPEC-R1). Repaired 2026-10-14 by T-0182: the
+   reference's §3 sentence now names the `imported` discriminator.
 2. The reference cites ADR-0136 for the turn seam but not ADR-0152, which reversed the dev-only ruling for the
    deployed site (SPEC-R26).
 3. ADR-0203 cl.1 says teams persist "on the SAME agent-admin store the persona records use"; the source uses its own
@@ -511,3 +535,20 @@ red on this document, not on the tree.
    fixed by GH #1702 / PR #1707; this surface-turn instance (`agent-admin-schema.ts:811`) was missed by that repair
    and is resolved by GH #1727. Not repeated here.
 6. `RESOURCE_IDB_TEXT_THRESHOLD_CHARS` (4,000) is justified in a module header only; an ADR clause would close it.
+
+Added 2026-10-14 (T-0182, against main `968a02d7`): the content-model drift the
+[agent-content](./agent-content.spec.md) SPEC plans away.
+
+7. Seeds are TypeScript constants (`site/pages/agent-admin-presets.ts`, `agent-admin-libraries.ts`), with each
+   preset's `seedVersion` rationale in a trailing code comment; only the mini-skills and GenUI packs are files.
+   Planned: T-0160 (ACS-R2, ACS-R4).
+8. A `seedVersion` bump wipes every user edit to that preset (SPEC-R5; the Quizmaster v2 comment records Kim
+   choosing that loss). Planned: T-0161 (ACS-R7).
+9. Teams have two write paths: the Teams pane calls `saveAgentTeam` directly, the Builder goes through
+   `saveTeamMutation`. Planned: T-0161 (ACS-R9).
+10. The settings forms are hand-written (`agentConfigSchema`, SPEC-R11) beside the data they edit. Planned: T-0162
+    (ACS-R10).
+11. No turn trace or debug bundle records which content versions a turn ran with, and the debug bundle's
+    `captures/` slot is never filled. Planned: T-0163 (ACS-R13).
+12. The agent manifests' digests are hand-refreshed by an armed writer (persona-catalog-composition SPEC-R7);
+    T-0160 derives them from the registry, which amends that clause when it lands.
