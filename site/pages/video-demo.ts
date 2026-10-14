@@ -48,8 +48,9 @@ function player(attrs: Record<string, string>, width: string): HTMLElement {
 // ── the lesson player — 16/9 (default aspect), poster, preload="metadata" (default) ────────────────────────
 const lesson = player(
   { src: CLIP_SRC, label: 'Lesson 3 · Signals and effects (12:40)', poster: poster(640, 360, 'Lesson 3 · Signals & effects', '#1b3a5c', '#6ea8d8') },
-  'min(100%, 32rem)',
+  '32rem',
 )
+lesson.style.maxInlineSize = '100%' // T-0150: the applyDemoWidth contract; a percentage of the hugging figure resolves to nothing
 const short = player(
   { src: CLIP_SRC, aspect: '9/16', label: 'Short · Why effects re-run (0:45)', poster: poster(270, 480, 'Short', '#5c2a3f', '#d8b6c9') },
   '9rem',
