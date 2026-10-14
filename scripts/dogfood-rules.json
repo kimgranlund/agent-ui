@@ -1,0 +1,98 @@
+{
+  "render": [
+    {
+      "id": "register",
+      "adr": "ADR-0245 clause 2: one n per element, from data-tier, data-scale, size and data-density",
+      "selector": "ui-button, ui-toggle, ui-text-field, ui-select, ui-combo-box, ui-card",
+      "measure": "the element's cascade n (its --md-sys-height / 4)",
+      "expect": "resolve(register).n, the register read from the element's own and its ancestors' attributes"
+    },
+    {
+      "id": "pill-radius",
+      "adr": "ADR-0245 Amendment 5 items 1 and 2 (Amendment 3 for button and toggle)",
+      "selector": "ui-button, ui-toggle, ui-text-field:not([multiline]), ui-select > [data-part='trigger'], ui-combo-box, ui-otp-field [data-part='cell'], ui-badge",
+      "measure": "border-start-start-radius against the box height",
+      "expect": "radius >= box height / 2 (a pill)"
+    },
+    {
+      "id": "icon-square",
+      "adr": "ADR-0245 Amendment 3 (geometry.md: icon-only, no label, is square)",
+      "selector": "ui-button with an icon and no label text",
+      "measure": "box width against box height",
+      "expect": "width == height"
+    },
+    {
+      "id": "type-floor",
+      "adr": "ADR-0245 M5: no type below CFG.floor",
+      "selector": "every element with its own visible text",
+      "measure": "font-size",
+      "expect": "font-size >= CFG.floor (9px)"
+    },
+    {
+      "id": "column",
+      "adr": "T-0130: nothing past the content column at 400px",
+      "selector": "every element inside the content column",
+      "measure": "box right edge against the column's right edge + 4px, unless an overflow-x frame holds it",
+      "expect": "no escapee",
+      "widths": [400]
+    },
+    {
+      "id": "nested-card",
+      "adr": "ADR-0046 and the dogfood rule: a card is never the direct content of a card",
+      "selector": "ui-card",
+      "measure": "the nearest ancestor ui-card",
+      "expect": "none"
+    },
+    {
+      "id": "control-height",
+      "adr": "ADR-0245 clause 3: a single-line control is 4n tall",
+      "selector": "ui-button, ui-toggle, ui-text-field:not([multiline]), ui-select > [data-part='trigger']",
+      "measure": "box height",
+      "expect": "resolve(register).h"
+    },
+    {
+      "id": "text-edge",
+      "adr": "ADR-0245 Amendment 4: the text edge is 2n - c (margin n plus label inset n - c)",
+      "selector": "ui-button:not([icon-only]) > [data-part='label'], ui-text-field:not([multiline]) > [data-part='editor'], ui-toggle",
+      "measure": "host padding-inline-start + the text slot's padding-inline-start",
+      "expect": "2 * resolve(register).n - resolve(register).c"
+    },
+    {
+      "id": "card-radius",
+      "adr": "ADR-0245 clause 3: a card takes its level radius",
+      "selector": "ui-card",
+      "measure": "border-start-start-radius",
+      "expect": "resolve(register).card.radius"
+    },
+    {
+      "id": "panel-radius",
+      "adr": "ADR-0245 Amendment 5 item 3: a listbox panel is concentric, the row pill 2n plus the inset c",
+      "selector": "ui-select [data-part='listbox'], ui-multi-select, ui-combo-box [data-part='listbox']",
+      "measure": "border-start-start-radius (only when the panel has a box)",
+      "expect": "2 * resolve(register).n + resolve(register).c"
+    }
+  ],
+  "compose": [
+    {
+      "id": "date-field",
+      "adr": "T-0135: a date is a real input",
+      "use": "ui-text-field type=date (A2UI: a TextField of type date)",
+      "not": "a ui-calendar inside a ui-popover, or beside a calendar-icon ui-button, standing in for a date field (A2UI: a Calendar inside a Popover or FormPopover)",
+      "detect": "a file that creates ui-calendar and also ui-popover, ui-form-popover or an icon=calendar ui-button; a payload whose Popover or FormPopover lists a Calendar child"
+    },
+    {
+      "id": "board-grid",
+      "adr": "ADR-0243: a board of cells is ui-board-grid",
+      "use": "ui-board-grid (A2UI: BoardGrid)",
+      "not": "a ui-grid of cell ui-buttons (A2UI: a Grid whose children are all Buttons)",
+      "detect": "a payload Grid with three or more explicit children that are all Buttons, or a template child that is a Button; a file that appends ui-buttons into a ui-grid inside a loop"
+    },
+    {
+      "id": "inline-geometry",
+      "adr": "ADR-0245 clause 1: every margin, gutter, radius, height and type size derives from n",
+      "use": "the derived tokens and the control's own size or the container's data-* register",
+      "not": "an inline style that sets padding, margin, gap, radius, height or font-size to a literal length",
+      "detect": ".style.<prop> = '<length>', .style.cssText, .style.setProperty('<prop>', '<length>'), a style=\"...\" attribute or a style: '...' key, for a geometry property with a px, rem or em literal other than 0 and the 1px hairline"
+    }
+  ]
+}
