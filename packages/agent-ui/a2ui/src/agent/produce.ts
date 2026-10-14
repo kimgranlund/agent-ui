@@ -111,7 +111,7 @@ import { MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, selectMiniSkills } from './mini-sk
 import { FEED_SURFACE_TYPE_SET } from './feed-catalog.ts'
 import { isGenuiCandidate, readGenuiLine, utf8ByteLength, GENUI_MAX_HTML_BYTES } from './genui-line.ts'
 import type { GenuiSurfaceConfig } from './genui-surface-config.ts'
-import { runSemanticChecks, semanticSurfaceViews } from '../catalog/semantic-check.ts'
+import { runSemanticChecks, semanticActionOf, semanticSurfaceViews } from '../catalog/semantic-check.ts'
 import type { SemanticCheck } from '../catalog/semantic-check.ts'
 import { RENDER_SURFACE_TOOL_NAME, detectUserOverride, isLegacyShape, renderSurfaceJsonl, renderSurfaceTool } from './response-type.ts'
 import type { ResponsePreference } from './response-type.ts'
@@ -1185,6 +1185,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   let surfaceRequestedFedBack = false // RTS-R6: the ONE correction round a surface override with no payload gets
   let textJsonlIgnored = false // RTS-R3: sticky, a capture round's text channel carried wire or genui lines that were dropped
   let textJsonlRouted = false // T-0172: sticky, a text round's prose carried A2UI lines that became the payload
+  // T-0172: the action a client turn answers, read by the semantic checks (a no-payload round is judged too).
+  const turnAction = input.kind === 'client' ? semanticActionOf(input.message) : undefined
   // T-0172: every surface a failed round of this turn created that no failure named; a later round that
   // passes without one has dropped it (SURFACE_DROPPED), never a success.
   const keptSurfaces = new Set<string>()
@@ -1445,7 +1447,22 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         failures = [{ code: 'FLOW_END_MISSING', path: '' }]
         continue
       }
+      // T-0172: an action turn answered with no payload is still judged (`surfaces` empty), so a check can catch
+      // a click narrated in prose that never reached the surface. A finding spends a repair round while one is
+      // left (worded for render_surface when the tool is offered); on the last round it ships tallied.
+      const actionSemanticTally: string[] = []
+      if (turnAction !== undefined && deps.semanticChecks !== undefined && deps.semanticChecks.length > 0 && genuiLine === undefined) {
+        const semantic = runSemanticChecks(deps.semanticChecks, { surfaces: [], action: turnAction })
+        if (semantic.findings.length > 0 && round < opts.maxRounds - 1) {
+          failures = semantic.findings.map((f) => ({ code: f.code, path: f.path, detail: f.message }))
+          lastCaptureRound = offeredTools !== undefined
+          continue
+        }
+        if (semantic.findings.length > 0) actionSemanticTally.push('SEMANTIC_UNCORRECTED')
+        if (semantic.errored.length > 0) actionSemanticTally.push('SEMANTIC_CHECK_ERROR')
+      }
       const failureCodes = (failuresFedBack ?? []).map((f) => f.code)
+      failureCodes.push(...actionSemanticTally)
       if (genuiMultiplicityHit) failureCodes.push('GENUI_MULTIPLICITY') // SPEC-R1 — a factual tally, never a retry trigger
       if (flowEndFedBack && flowEnd === undefined) failureCodes.push('FLOW_END_UNCORRECTED') // GH #1168 — the model refused the correction round; ships unchanged, tallied (the NET_NOOP_STRIPPED naming shape)
       // SPEC-N4/SPEC-R1 — a genui structural failure on THIS shipping round is dropped from the wire
@@ -1509,7 +1526,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       // payload ships with a tally instead (see the header). Skipped entirely when no check is declared.
       const semanticTally: string[] = []
       if (deps.semanticChecks !== undefined && deps.semanticChecks.length > 0) {
-        const semantic = runSemanticChecks(deps.semanticChecks, { surfaces: semanticSurfaceViews(input.session, assembled.output) })
+        const semantic = runSemanticChecks(deps.semanticChecks, { surfaces: semanticSurfaceViews(input.session, assembled.output), ...(turnAction !== undefined ? { action: turnAction } : {}) })
         if (semantic.findings.length > 0 && round < opts.maxRounds - 1) {
           failures = semantic.findings.map((f) => ({ code: f.code, path: f.path, detail: f.message }))
           continue

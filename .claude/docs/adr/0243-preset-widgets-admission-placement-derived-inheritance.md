@@ -350,8 +350,9 @@ pill. A round has three steps, and the table now carries each one.
    moves.
 
 > **REV 2026-10-14 (T-0172, Kim's ruling):** items 1, 2, 5 and 6 are superseded for betting. The bet phase is
-> the table's own strip of bet buttons: `bets` (array of numbers, default 25 / 50 / 75 / 100 / 250) replaces
-> `chips`, and `betAction` (string, `actionEvent: 'action'`, the Amendment 4 forwarding) names the action. One
+> the table's own strip of bet buttons, the fixed amounts 25 / 50 / 75 / 100 / 250 (no wire prop replaces `chips`,
+> so a model cannot supply its own), and `betAction` (string, `actionEvent: 'action'`, the Amendment 4 forwarding)
+> names the action. One
 > press writes the bet and fires `{action: betAction, context: {bet}}` on the host; an amount above the bankroll
 > is disabled. The `+n` chips, the stepper, Clear and the Deal gate are gone, `uses` drops `ui-text-field`, the
 > empty zones fold away while betting, and the producer adds no Button, Slider or field (the

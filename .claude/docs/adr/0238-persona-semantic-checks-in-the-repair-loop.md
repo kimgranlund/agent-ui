@@ -105,3 +105,9 @@ check of its own.
   already reports what happened.
 - **Run checks on every surface in the session**: rejected because a finished round is history the model
   cannot change, so a finding there would burn every remaining round for nothing.
+
+> **REV 2026-10-14 (T-0172):** `SemanticCheckInput` gains an optional `action` (the click a client turn answers:
+> name, surface id, resolved context, and the click-time data model, `semanticActionOf`), and on an action turn
+> `produce()` also judges a round that sends no payload, with `surfaces` empty. The repair-and-tally posture is
+> unchanged. The live probe needed it: Haiku 5.5 answered a bet press in prose alone, which no payload-only check
+> could see. The Croupier declares `croupier-action-applied` (`ACTION_NOT_APPLIED`, `BANKROLL_MISMATCH`).

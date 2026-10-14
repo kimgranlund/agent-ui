@@ -34,7 +34,7 @@
 
 import type { A2uiComponent } from '../../../protocol.ts'
 import { readPointer } from '../../semantic-check.ts'
-import type { SemanticCheck, SemanticFinding, SurfaceView } from '../../semantic-check.ts'
+import type { SemanticAction, SemanticCheck, SemanticFinding, SurfaceView } from '../../semantic-check.ts'
 
 const PARTICIPANTS = ['dealer', 'player'] as const
 type Participant = (typeof PARTICIPANTS)[number]
@@ -444,4 +444,60 @@ export const croupierBetControls: SemanticCheck = {
   check: (input) => input.surfaces.flatMap((view) => [...betControls(view), ...betStepWithoutTable(view)]),
 }
 
-export const croupierSemanticChecks: readonly SemanticCheck[] = [croupierHandConsistency, croupierBetControls]
+const DEAL_ACTION = /^(deal|place_?bet|bet|deal_blackjack)$/i
+const MOVE_ACTION = /^(hit|stand|double|double_?down)$/i
+const finiteNumber = (v: unknown): number | undefined => (typeof v === 'number' && Number.isFinite(v) ? v : undefined)
+
+/** T-0172 (the live probe on f6f94f7f): a table action must move the table, and a deal must take the bet out of
+ *  the bankroll. Haiku 5.5 answered a 50 press with prose ("dealt you 9 and 7 for 16") and no update, so the
+ *  table stayed in betting; Sonnet 5.5 dealt and wrote a bankroll of 500 from 1,000 after a 50 bet. */
+function actionApplied(surfaces: readonly SurfaceView[], action: SemanticAction): SemanticFinding[] {
+  const deal = DEAL_ACTION.test(action.name)
+  if (!deal && !MOVE_ACTION.test(action.name)) return []
+  const view = surfaces.find((v) => v.surfaceId === action.surfaceId)
+  // A move answered on a NEW table (the next round) hands the flow on; the clicked one is history.
+  const handedOn = surfaces.some((v) => v.surfaceId !== action.surfaceId && [...v.components.values()].some((c) => c.component === 'CardTable'))
+  if (view === undefined) {
+    if (handedOn) return []
+    return [
+      {
+        code: 'ACTION_NOT_APPLIED',
+        path: `${action.surfaceId}:${action.name}`,
+        message:
+          `The player pressed ${action.name} on ${action.surfaceId}, and this turn sends it no update, so the table still shows the old state. ` +
+          `Call render_surface with an updateDataModel for ${action.surfaceId}: the new cards, totals, phase and bankroll, not only prose.`,
+      },
+    ]
+  }
+  const findings: SemanticFinding[] = []
+  for (const table of view.components.values()) {
+    if (table.component !== 'CardTable') continue
+    if (deal && phaseOf(table, view.dataModel) === 'betting')
+      findings.push({
+        code: 'ACTION_NOT_APPLIED',
+        path: `${view.surfaceId}:${table.id}`,
+        message: `The player bet with ${action.name}, but ${table.id} is still in the betting phase. Write the dealt hands and phase "playing" to ${view.surfaceId}'s data model.`,
+      })
+    const bet = finiteNumber(action.context['bet'])
+    const before = finiteNumber((action.dataModel as Record<string, unknown> | undefined)?.['bankroll'])
+    const path = bindingPath(table['bankroll'])
+    const after = path === undefined ? finiteNumber(table['bankroll']) : finiteNumber(readPointer(view.dataModel, path))
+    if (deal && bet !== undefined && before !== undefined && after !== undefined && after !== before - bet)
+      findings.push({
+        code: 'BANKROLL_MISMATCH',
+        path: `${view.surfaceId}:${path ?? table.id}`,
+        message:
+          `The bankroll reads ${after} after a bet of ${bet} from ${before}. The deal takes the bet out of the bankroll: write ${before - bet}. ` +
+          `Settlement later pays the bet back with the winnings (2x the bet for a win, 2.5x for a natural, 1x for a push).`,
+      })
+  }
+  return findings
+}
+
+/** T-0172: a table action moves the table, and a deal takes the bet out of the bankroll. */
+export const croupierActionApplied: SemanticCheck = {
+  id: 'croupier-action-applied',
+  check: (input) => (input.action === undefined ? [] : actionApplied(input.surfaces, input.action)),
+}
+
+export const croupierSemanticChecks: readonly SemanticCheck[] = [croupierHandConsistency, croupierBetControls, croupierActionApplied]

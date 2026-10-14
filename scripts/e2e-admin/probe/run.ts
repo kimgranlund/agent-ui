@@ -59,7 +59,7 @@ interface Exchange {
 }
 
 function project(body: unknown): NonNullable<TurnRecord['request']> {
-  const b = (body ?? {}) as Record<string, unknown> & { input?: { kind?: unknown } }
+  const b = (body ?? {}) as Record<string, unknown> & { input?: { kind?: unknown; message?: { action?: { surfaceId?: unknown } } } }
   const pick = (k: string): string | undefined => (typeof b[k] === 'string' ? (b[k] as string) : undefined)
   const out: NonNullable<TurnRecord['request']> = {}
   for (const k of ['model', 'effort', 'agent', 'catalogId'] as const) {
@@ -67,6 +67,8 @@ function project(body: unknown): NonNullable<TurnRecord['request']> {
     if (v !== undefined) out[k] = v
   }
   if (typeof b.input?.kind === 'string') out.inputKind = b.input.kind
+  const actionSurface = b.input?.message?.action?.surfaceId
+  if (typeof actionSurface === 'string') out.actionSurface = actionSurface
   return out
 }
 

@@ -6,6 +6,7 @@
 // on the betting and settled seeds of both bases: the bet strip (T-0172: one press places the bet and deals), the
 // result line.
 
+import { readFileSync } from 'node:fs'
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import '@agent-ui/components/all' // ADR-0233: the catalog factories import no control; the test defines the fleet
 import { whenFlushed } from '@agent-ui/components'
@@ -325,16 +326,13 @@ describe('CardTable: the hand lifecycle (ADR-0243 Amendment 3)', () => {
     cleanup()
   })
 
-  it('bets: a producer list replaces the defaults, and an empty or invalid one falls back to them', async () => {
+  it('bets: the amounts are the fixed 25 to 250 set; a model-supplied list is not a catalog prop and fails validation (T-0172)', async () => {
     const custom = JSON.parse(JSON.stringify(personaCroupierCardTableBettingSeed.messages)) as A2uiOutput
-    const root = (custom[1] as { updateComponents: { components: Record<string, unknown>[] } }).updateComponents.components[0]!
-    root['bets'] = { path: '/bets' }
-    ;(custom[2] as { updateDataModel: { value: Record<string, unknown> } }).updateDataModel.value['bets'] = [5, 500]
-    const { table, ingest, errors, cleanup } = await render(custom)
-    expect(errors()).toEqual([])
-    expect(betOptions(table).map((c) => c.textContent)).toEqual(['5', '500'])
-    await ingest(dataLine('/bets', []))
+    ;(custom[1] as { updateComponents: { components: Record<string, unknown>[] } }).updateComponents.components[0]!['bets'] = [10, 25, 50, 100]
+    const { table, cleanup } = await render(custom)
     expect(betOptions(table).map((c) => c.textContent)).toEqual(['25', '50', '75', '100', '250'])
+    const row = JSON.parse(readFileSync('packages/agent-ui/a2ui/src/catalog/personas/croupier/catalog.json', 'utf8')) as { components: { CardTable: { properties: Record<string, unknown> } } }
+    expect(Object.keys(row.components.CardTable.properties)).not.toContain('bets') // the validator rejects a model's own list (CATALOG)
     cleanup()
   })
 })

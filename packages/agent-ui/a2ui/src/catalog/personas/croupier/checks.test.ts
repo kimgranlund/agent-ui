@@ -4,7 +4,7 @@
 // here with one clear dealer finding; its repair and the taught data-driven shape pass.
 
 import { describe, it, expect } from 'vitest'
-import { croupierBetControls, croupierHandConsistency, croupierSemanticChecks } from './checks.ts'
+import { croupierActionApplied, croupierBetControls, croupierHandConsistency, croupierSemanticChecks } from './checks.ts'
 import { croupierManifest } from './manifest.ts'
 import { CORRECTED_LINE, DATA_DRIVEN_TURN, DEAL_TURN, EVIDENCE_LINE, NATURAL_REPAIRED_TURN, NATURAL_TURN, toJsonl } from './hands.fixture.ts'
 import { semanticSurfaceViews } from '../../semantic-check.ts'
@@ -464,9 +464,9 @@ describe('croupier hand check: what it never judges', () => {
 })
 
 describe('croupier manifest declares the check (ADR-0238 wiring)', () => {
-  it('croupierManifest.semanticChecks is the hand check and the bet-controls check (T-0172)', () => {
+  it('croupierManifest.semanticChecks is the hand check, the bet-controls check and the action check (T-0172)', () => {
     expect(croupierManifest.semanticChecks).toBe(croupierSemanticChecks)
-    expect(croupierSemanticChecks.map((c) => c.id)).toEqual(['croupier-hand-consistency', 'croupier-bet-controls'])
+    expect(croupierSemanticChecks.map((c) => c.id)).toEqual(['croupier-hand-consistency', 'croupier-bet-controls', 'croupier-action-applied'])
   })
 })
 
@@ -542,5 +542,41 @@ describe('croupier bet controls: a bet step with no CardTable (T-0172 live probe
   it('passes a surface with no bet control (a rules card), and the CardTable betting table', () => {
     expect(run(surface([{ id: 'root', component: 'Text', text: 'Blackjack pays 3:2.' }]))).toEqual([])
     expect(run(surface([{ id: 'root', component: 'CardTable', phase: 'betting', bet: { path: '/bet' }, betAction: 'deal' }]))).toEqual([])
+  })
+})
+
+// T-0172: the live probe on f6f94f7f. Haiku 5.5 answered a 50 press with prose and no update; Sonnet 5.5 dealt and
+// wrote a bankroll of 500 from 1,000.
+describe('croupier action check: a table action moves the table and a deal takes the bet (T-0172 live probe)', () => {
+  const action = { name: 'deal', surfaceId: 'table-1', context: { bet: 50 }, dataModel: { bankroll: 1000, bet: 50, phase: 'betting' } }
+  const table = { id: 'root', component: 'CardTable', title: 'Blackjack', phase: { path: '/phase' }, bet: { path: '/bet' }, bankroll: { path: '/bankroll' }, dealerHand: { path: '/dealerHand' }, playerHand: { path: '/playerHand' }, betAction: 'deal' }
+  const dealt = (bankroll: number, phase = 'playing'): A2uiOutput => [
+    { version: 'v1.0', createSurface: { surfaceId: 'table-1', catalogId: 'agent-ui--croupier' } },
+    { version: 'v1.0', updateComponents: { surfaceId: 'table-1', components: [table] } },
+    { version: 'v1.0', updateDataModel: { surfaceId: 'table-1', value: { bankroll, bet: 50, phase, dealerHand: [{ rank: '10', suit: 'spades' }, { rank: '6', suit: 'clubs', faceDown: true }], playerHand: [{ rank: '9', suit: 'hearts' }, { rank: '7', suit: 'clubs' }] } } },
+  ] as A2uiOutput
+  const run = (output: A2uiOutput, a: typeof action = action) => croupierActionApplied.check({ surfaces: semanticSurfaceViews({ turns: [] }, output), action: a })
+
+  it('a deal answered with no update to the table is ACTION_NOT_APPLIED (the Haiku prose-only turn)', () => {
+    const findings = croupierActionApplied.check({ surfaces: [], action })
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['ACTION_NOT_APPLIED', 'table-1:deal']])
+    expect(findings[0]!.message).toMatch(/updateDataModel for table-1/)
+  })
+
+  it('a deal that leaves the table in betting is ACTION_NOT_APPLIED', () => {
+    expect(run(dealt(950, 'betting')).map((f) => f.code)).toEqual(['ACTION_NOT_APPLIED'])
+  })
+
+  it('a deal that writes 500 from 1,000 after a 50 bet is BANKROLL_MISMATCH naming 950 (the Sonnet turn); 950 passes', () => {
+    const findings = run(dealt(500))
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['BANKROLL_MISMATCH', 'table-1:/bankroll']])
+    expect(findings[0]!.message).toMatch(/write 950/)
+    expect(run(dealt(950))).toEqual([])
+  })
+
+  it('a move other than a table action, or Deal again on a new table, passes', () => {
+    expect(croupierActionApplied.check({ surfaces: [], action: { ...action, name: 'show_rules' } })).toEqual([])
+    const next = dealt(950).map((m) => JSON.parse(JSON.stringify(m).replace(/table-1/g, 'table-2'))) as A2uiOutput
+    expect(croupierActionApplied.check({ surfaces: semanticSurfaceViews({ turns: [] }, next), action: { ...action, name: 'hit' } })).toEqual([])
   })
 })

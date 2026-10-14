@@ -54,6 +54,10 @@ T-0172 rules (2026-10-14 traces):
   (`createSurface`, same id, the complete tree).
 - A text round whose prose carries A2UI lines (a model that wrote its surface as text) routes them as
   the payload, tallied `TEXT_JSONL_ROUTED`; they never stream as `textDelta` or ship in the note.
+- An action turn is judged even when its round sends no payload: the semantic checks read the action
+  (`SemanticCheckInput.action`, the click's name, surface, context and click-time data model), so a click
+  answered in prose alone spends a repair round (the Croupier's `ACTION_NOT_APPLIED`) and ships tallied at the
+  bound.
 - A self-correct round never loses a surface: a session-new surface the failed round created that no
   failure names must come back. The repair message names it ("Keep `ask-1` ..."); a later valid round
   without it spends a `SURFACE_DROPPED` round, and on the last round halts with `SURFACE_DROPPED`.

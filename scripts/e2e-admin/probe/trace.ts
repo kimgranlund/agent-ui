@@ -217,9 +217,14 @@ export async function offlineReplay(fixture: ProbeFixture, cwd: string): Promise
     })
     lines = await deriveLines(plan, { catalogId, resolveCatalog: nodeCatalogResolver(cwd) })
   }
+  const actionSurfaceOf = (input: ProbeTurn['input']): string | undefined => {
+    const sid = input?.kind === 'client' ? (input.message as { action?: { surfaceId?: unknown } } | null)?.action?.surfaceId : undefined
+    return typeof sid === 'string' ? sid : undefined
+  }
   const records: TurnRecord[] = fixture.turns.map((t, i) => ({
     index: i,
     step: fixture.steps[i] ?? { say: '' },
+    ...(actionSurfaceOf(t.input) !== undefined ? { request: { inputKind: 'client', actionSurface: actionSurfaceOf(t.input)! } } : {}),
     lines: lines[i]!,
     ...(t.rounds !== undefined ? { rounds: t.rounds } : {}),
     roundsSource: t.rounds !== undefined ? 'fixture' : 'none',

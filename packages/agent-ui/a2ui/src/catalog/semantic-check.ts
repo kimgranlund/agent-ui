@@ -57,9 +57,31 @@ export interface SurfaceView {
   readonly dataModel: unknown
 }
 
-/** What a check reads: every surface this round's payload creates or updates, in first-touch order. */
+/** T-0172: the user action a client turn answers: its name, the surface it came from, its resolved context, and
+ *  the surface's data model as the client sent it at click time (the state BEFORE this turn's writes). */
+export interface SemanticAction {
+  readonly name: string
+  readonly surfaceId: string
+  readonly context: Readonly<Record<string, unknown>>
+  readonly dataModel: unknown
+}
+
+/** What a check reads: every surface this round's payload creates or updates, in first-touch order, and (T-0172)
+ *  the action the turn answers, when it is a client turn. A round with no payload is judged too on an action turn,
+ *  with `surfaces` empty, so a check can see that the clicked surface got no update. */
 export interface SemanticCheckInput {
   readonly surfaces: readonly SurfaceView[]
+  readonly action?: SemanticAction
+}
+
+/** The `SemanticAction` of a client message (`{action:{name, surfaceId, context?, dataModel?}}`), or undefined. */
+export function semanticActionOf(message: unknown): SemanticAction | undefined {
+  const a = typeof message === 'object' && message !== null ? (message as { action?: unknown }).action : undefined
+  if (typeof a !== 'object' || a === null) return undefined
+  const { name, surfaceId, context, dataModel } = a as Record<string, unknown>
+  if (typeof name !== 'string' || typeof surfaceId !== 'string') return undefined
+  const ctx = typeof context === 'object' && context !== null && !Array.isArray(context) ? (context as Record<string, unknown>) : {}
+  return { name, surfaceId, context: ctx, dataModel }
 }
 
 /** A persona-declared semantic check (ADR-0238). Pure and synchronous; `[]` means consistent. */

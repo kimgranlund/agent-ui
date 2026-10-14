@@ -21,8 +21,8 @@
 //
 // The hand lifecycle (ADR-0243 Amendment 3, T-0088): `phase` is `betting`, `playing` (the default, so a payload
 // without it renders as before) or `settled`. `betting` empties the felt and shows the bet strip (Kim's ruling,
-// T-0172): one `lg` button per amount in `bets` (default 25 / 50 / 75 / 100 / 250), an amount above the bankroll
-// disabled. A press places that bet and starts the hand in one step: it writes the bet (a bubbling `change` the
+// T-0172): one `lg` button per amount of the fixed set Kim ruled, 25 / 50 / 75 / 100 / 250 (no wire prop, so a
+// model cannot supply its own amounts), an amount above the bankroll disabled. A press places that bet and starts the hand in one step: it writes the bet (a bubbling `change` the
 // input binding reads through `a2uiCardTableBet`), then fires the host's own `action` event with
 // `{action: betAction, context: {bet}}`, which the renderer forwards as the A2UI action (`betAction` is the
 // catalog's `actionEvent: 'action'` prop, the BoardGrid precedent). The table owns the whole bet phase, so a
@@ -64,7 +64,8 @@ type Participant = 'dealer' | 'player'
 type Phase = 'betting' | 'playing' | 'settled'
 
 const PHASES: readonly Phase[] = ['betting', 'playing', 'settled']
-const DEFAULT_BETS: readonly number[] = [25, 50, 75, 100, 250]
+/** Kim's ruling (T-0172): the bet strip's amounts, fixed. */
+const BET_AMOUNTS: readonly number[] = [25, 50, 75, 100, 250]
 
 interface ZoneParts {
   total: HTMLElement
@@ -93,7 +94,6 @@ interface CardTableParts {
   bankroll: number | undefined
   bet: number | undefined
   phase: Phase
-  bets: readonly number[]
   /** The action name a bet press fires (`betAction`); none set, a press only writes the bet. */
   betAction: string
   result: string
@@ -216,10 +216,10 @@ function button(variant: string, label: string): ButtonLike {
   return el
 }
 
-/** Rebuild the bet strip from `parts.bets`: one solid button per amount. */
+/** Build the bet strip: one button per fixed amount. */
 function renderBets(parts: CardTableParts): void {
   parts.betEl.replaceChildren(
-    ...parts.bets.map((amount) => {
+    ...BET_AMOUNTS.map((amount) => {
       const bet = button('soft', amount.toLocaleString('en-US'))
       bet.setAttribute('data-part', 'bet-option')
       bet.setAttribute('data-amount', String(amount))
@@ -333,7 +333,6 @@ export const cardTableFactory: WidgetFactory = {
       bankroll: undefined,
       bet: undefined,
       phase: 'playing',
-      bets: DEFAULT_BETS,
       betAction: '',
       result: '',
       onBet: () => {},
@@ -400,12 +399,6 @@ export const cardTableFactory: WidgetFactory = {
         parts.phase = PHASES.find((p) => p === value) ?? 'playing'
         paintPhase(parts)
         break
-      case 'bets': {
-        const list = Array.isArray(value) ? value.filter((n): n is number => typeof n === 'number' && Number.isFinite(n) && n > 0) : []
-        parts.bets = list.length > 0 ? list : DEFAULT_BETS
-        renderBets(parts)
-        break
-      }
       case 'betAction':
         parts.betAction = value == null ? '' : String(value)
         break
