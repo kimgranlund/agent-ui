@@ -15,6 +15,8 @@
 > Sibling how-to: [state-and-persistence.md](./state-and-persistence.md) (where state lives and how it persists).
 > Ruling contract (2026-09-04, GH #1725): [spec/agent-model.spec.md](../spec/agent-model.spec.md) locks the six layers,
 > lifecycles, tiers, and seams this map describes; on any conflict that SPEC and the source it cites win over this page.
+> Content model (2026-10-14, T-0182): [spec/agent-content.spec.md](../spec/agent-content.spec.md) owns content kinds,
+> files and registry, overlays and merge, schema forms, and the one compiler (all planned, T-0160 to T-0163).
 > Written 2026-08-29 (Kim's ruling, planner seat) against main `b371558a`, after the
 > GH [#1699](https://github.com/kimgranlund/agent-ui/issues/1699) rename landed (PR #1708); type names are the shipped ones.
 
@@ -116,8 +118,9 @@ header pointing here.
 
 - **agent** = **persona** = a preset or an import (the record contract: [spec/agent-model.spec.md](../spec/agent-model.spec.md) SPEC-R1). One `AgentRecord`; "persona" survives only as a
   human-facing tagline word in the UI, never as a type name or a doc noun (Kim's decision, 2026-08-29;
-  the record type was renamed from `PersonaRecord` to `AgentRecord` by GH #1699, PR #1708, 2026-08-29), "preset" means a shipped record (`seedVersion` set, not
-  deletable), "import" means a user-minted one (`imported: true`, `createdAt` set).
+  the record type was renamed from `PersonaRecord` to `AgentRecord` by GH #1699, PR #1708, 2026-08-29), "preset" means a shipped record (`imported` absent or not `true`; not
+  deletable; it may or may not declare a `seedVersion`, so `seedVersion` never decides the kind), "import" means a
+  user-minted one (`imported: true`, `createdAt` set). The discriminator is `imported` (SPEC-R1).
 - **GM** (general manager): the team's leading agent, the one an `AgentTeam` names in `gmAgentId`;
   its prompt gains the `## Your team` block. The GM is an ordinary agent; nothing else marks it.
 - **`render_surface`**: the terminal tool `produce()` offers on an a2ui-enabled turn (ADR-0242, accepted;
@@ -237,6 +240,21 @@ header pointing here.
   panel on the Reasoned row (ADR-0240).
 - **Co-pilot**: the builder-interview place (`[Chat | Settings | Co-pilot]`, ADR-0179 as amended by
   GH #686); "Author" is its retired name.
+- **content kind**: one of `persona · skill · workflow · resource · tool · pack · team`, the seven kinds of seed
+  content ([spec/agent-content.spec.md](../spec/agent-content.spec.md) ACS-R1, planned T-0160). Not an entry kind:
+  `prompt-section`, `pattern-source` and `catalog` stay `ENTRY_KINDS` values that a persona file carries as body
+  sections and fields.
+- **seed home**: where a preset's seed lives. Today it is the TypeScript constants in
+  `site/pages/agent-admin-presets.ts` and `agent-admin-libraries.ts`, with the `seedVersion` rationale in code
+  comments; planned (T-0160), it moves to content files whose frontmatter carries `version` and a `changelog:`
+  list, indexed by the generated content **registry** (`registry.gen.ts`, one row per item with its digest).
+- **overlay**: a user's edits to one seed, stored as field-level ops keyed by `id@baseVersion`; every reader sees
+  the **resolved view** `resolve(seed, overlay)`, and a seed update merges into it instead of wiping it
+  (ACS-R6, ACS-R7, planned T-0161). Imports and duplicates are full records and carry no overlay.
+- **bundle digest**: the sha256 of everything one turn sends about an agent, as built by the one compiler
+  `compile(agentManifest, overlay)`; each turn trace records it with a **resolution** (every item's id, kind,
+  version, digest and source) (ACS-R11 to R13, planned T-0163). Not the agent manifest's seed digest, which pins
+  one preset's seed, nor a registry item digest, which pins one file.
 
 ## 4 · Seams, and why each exists
 

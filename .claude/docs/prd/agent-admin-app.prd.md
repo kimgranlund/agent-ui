@@ -1,6 +1,6 @@
 # PRD — Agent-Admin App (the agent-building product)
 
-> Status: **accepted · v0.1 · 2026-08-18 · Owner: agent-ui** — authored at Kim's 2026-08-18 doc-tier
+> Status: **accepted · v0.2 · 2026-10-14 (v0.1 2026-08-18) · Owner: agent-ui** — authored at Kim's 2026-08-18 doc-tier
 > ruling (*"IDR should not be made for features… PRD docs should be created for apps (like
 > agent-admin-app) and that PRD would document the teams feature (along all the other agent
 > features)"*). This PRD is the relocation target for the feature-scoped intent of
@@ -26,6 +26,9 @@
 > child PRD (citing this one upward) when it outgrows the section — the ruled growth path, not
 > pre-split. The GenUI modality already has that shape: [genui-surface](./genui-surface.prd.md) is
 > effectively this app's first feature-level child PRD, cited not duplicated.
+> **v0.2 (2026-10-14, T-0182):** adds PRD-G8 (editable content with provenance and reset) and PRD-G9 (trace and
+> eval observability), §3.8 and §3.9, and their acceptance. Both goals are `planned`; Kim moves the document's
+> state, and the new rows wait on that like any other.
 
 ## 1. Problem
 
@@ -63,6 +66,8 @@ open goals state checkable acceptance. **A goal states WHAT/WHY — the cited re
 | **PRD-G5** | must | A user makes an agent knowledgeable from their own documents, browser-only | building (the open arc) |
 | **PRD-G6** | must | Conversations with built agents are generative-UI experiences governed by conduct law | shipped; **never "done" by design** — governed by accreting conduct law, and that IS the criterion: every violation observed on live pixels is filed as a product bug against the owning grammar record (§3.6) |
 | **PRD-G7** | should | A user controls the agent's output modality (Markdown · A2UI · GenUI) and app settings from first-class places | shipped |
+| **PRD-G8** | must | A user edits any seeded agent's content, sees where each value came from, resets a field or an agent, and keeps their edits when the seed updates; the Builder, the settings pane, Test Chat and a CLI read and write one source | planned (T-0160 to T-0162) |
+| **PRD-G9** | must | Every turn says exactly which content versions it ran with, and agents are tested in a closed loop (replay, live probe, eval) that pins and compares those versions | planned (T-0163; closed-loop testing T-0181, built by T-0176 to T-0179) |
 
 ## 3. Features (the WHAT, with the owning records)
 
@@ -180,6 +185,30 @@ picker) — where GenUI's own WHY/WHAT is the feature-level child PRD
 `@agent-ui/app` chrome per [agent-app-surfaces](./agent-app-surfaces.prd.md); the admin surface
 itself loads via the ruled lazy split ([ADR-0197](../adr/0197-app-barrel-agent-admin-lazy-split.md)).
 
+### 3.8 Editable content with provenance (PRD-G8)
+
+Kim approved the content model 2026-10-14: agent content (personas, skills, workflows, resources, tools, packs,
+teams) lives as files in one registry; a user's edits are an overlay on the seed, never a copy that a seed update
+wipes. What the feature must deliver, at product level:
+
+- **One source**: the Builder, the settings pane, Test Chat and a CLI read and write the same content, so a
+  Builder-made agent can be committed as a seed.
+- **Edits survive updates**: a seed update merges with the user's edits; a real conflict keeps the user's value and
+  shows both.
+- **Provenance and reset**: every value shows where it came from (seed, pack, import, Builder, the user), what
+  changed from the seed, and a reset per field and per agent.
+
+Contract: [spec/agent-content.spec.md](../spec/agent-content.spec.md) ACS-R1 to R10 (T-0160, T-0161, T-0162).
+
+### 3.9 Trace and eval observability (PRD-G9)
+
+- **Every turn names its content**: one compiler builds every turn's prompt in every environment, and each turn
+  trace and debug bundle records the bundle digest and the resolution (which version of each item, from where).
+  Contract: [spec/agent-content.spec.md](../spec/agent-content.spec.md) ACS-R11 to R13 (T-0163).
+- **Closed-loop testing**: scenarios replay keylessly as gates and run live as measurements, pinned to an agent
+  digest so drift is reported, not silent. Its contract is the closed-loop testing SPEC that T-0181 writes; the
+  builds are T-0176 to T-0179.
+
 ## 4. Scope
 
 **In:** the agent-admin app's product feature set (§3) and its app-level acceptance; the
@@ -205,6 +234,13 @@ per §3.4/§3.5); component-tier contracts (the component ADR/SPEC family).
   ingestion run's capture shows zero requests carrying file bytes; only prompt text on the
   ADR-0073 dev-proxy body. (Realizing records: ADR-0202, ADR-0193, ADR-0132, req-doc-ingestion
   R1–R7.)
+- **Editable content (PRD-G8):** a user edits a seeded agent, a seed update ships, and the edit is still there;
+  a conflicting update shows both values and keeps the user's; each settings row shows its provenance and resets;
+  a Builder-made agent exports to the same file format as a seed. (Realizing records: agent-content SPEC ACS-R1
+  to R10; T-0160, T-0161, T-0162.)
+- **Observability (PRD-G9):** Test Chat, the proxy and the CLI print the same bundle digest for the same agent and
+  edits; every turn trace and debug bundle carries that digest and the resolution; a fixture pinned to an agent
+  digest reports a mismatch. (Realizing records: agent-content SPEC ACS-R11 to R13; T-0163; T-0181.)
 
 ## 6. Open items
 
