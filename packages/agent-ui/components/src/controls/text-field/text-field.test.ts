@@ -7,7 +7,7 @@ import type { FormValue, ValidityResult } from '../../dom/form.ts'
 import { readFileSync } from 'node:fs'
 
 // The date and color pickers load their modules with a dynamic import() on first open. Await both here so they
-// never resolves after the environment is torn down (an EnvironmentTeardownError under heavy machine load).
+// never resolve after the environment is torn down (an EnvironmentTeardownError under heavy machine load).
 
 afterAll(async () => { await Promise.all([import('../calendar/calendar.ts'), import('../color-picker/color-picker.ts')]) })
 declare const process: { cwd(): string }
