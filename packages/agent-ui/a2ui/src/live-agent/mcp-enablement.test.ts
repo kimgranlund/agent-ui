@@ -141,8 +141,8 @@ async function turn(handler: Middleware, arm: 'chat' | 'produce', integrations: 
   const before = captured.requests.length
   const body =
     arm === 'chat'
-      ? { system: 'be helpful', model: 'claude-sonnet-5', messages: [], integrations }
-      : { input: INTENT, provider: 'anthropic', model: 'claude-sonnet-5', integrations }
+      ? { system: 'be helpful', model: 'claude-sonnet-5-5', messages: [], integrations }
+      : { input: INTENT, provider: 'anthropic', model: 'claude-sonnet-5-5', integrations }
   const { status } = await post(handler, arm === 'chat' ? '/chat' : '/produce', body)
   const req = captured.requests[before]
   const rawTools = req?.['tools']

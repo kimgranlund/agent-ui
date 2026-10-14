@@ -77,7 +77,7 @@ function scriptedTurn(): { gen: () => AsyncGenerator<{ part: A2aPart }, A2aMessa
 describe('the artifact feed — live arm (LLD-C11, both engines, scripted transport)', () => {
   it('"Go live" clears the recorded timeline, shows the composer, hides the step controls', async () => {
     const { gen } = scriptedTurn()
-    __setLiveApiForTest(() => gen(), { provider: 'anthropic', model: 'claude-sonnet-5' })
+    __setLiveApiForTest(() => gen(), { provider: 'anthropic', model: 'claude-sonnet-5-5' })
     await raf()
     findButtonByText('Go live').click()
     await raf()
@@ -121,7 +121,7 @@ describe('the artifact feed — live arm (LLD-C11, both engines, scripted transp
       yield { part: { kind: 'text', text: 'partial…' } }
       throw new Error('stub-injected transport fault')
     }
-    __setLiveApiForTest(() => failing(), { provider: 'anthropic', model: 'claude-sonnet-5' })
+    __setLiveApiForTest(() => failing(), { provider: 'anthropic', model: 'claude-sonnet-5-5' })
 
     await typeAndSend('This one will fail.')
     for (let i = 0; i < 10; i++) await raf()
@@ -135,7 +135,7 @@ describe('the artifact feed — live arm (LLD-C11, both engines, scripted transp
     expect((query('.feed-composer').querySelector('[data-part="send"]') as HTMLElement & { disabled: boolean }).disabled).toBe(false)
 
     const { gen } = scriptedTurn()
-    __setLiveApiForTest(() => gen(), { provider: 'anthropic', model: 'claude-sonnet-5' })
+    __setLiveApiForTest(() => gen(), { provider: 'anthropic', model: 'claude-sonnet-5-5' })
     await typeAndSend('Recovering after a fault.')
     for (let i = 0; i < 10; i++) await raf()
     const recovered = lastBubbleWithRole('agent')

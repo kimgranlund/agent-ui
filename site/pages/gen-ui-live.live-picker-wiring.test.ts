@@ -134,7 +134,7 @@ describe('gen-ui-live.ts — the Model picker is a FLAT, provider-grouped list (
     const anthropicHeader = rows.find((r) => r.dataset.value === '__group-anthropic')!
     expect(anthropicHeader.getAttribute('aria-disabled')).toBe('true')
     expect(anthropicHeader.textContent).toBe('Anthropic')
-    const sonnetIndex = rows.findIndex((r) => r.dataset.value === 'claude-sonnet-5')
+    const sonnetIndex = rows.findIndex((r) => r.dataset.value === 'claude-sonnet-5-5')
     expect(sonnetIndex).toBeGreaterThan(rows.indexOf(anthropicHeader)) // the model row sits BENEATH its provider's header
     expect(rows[sonnetIndex]!.hasAttribute('aria-disabled')).toBe(false) // anthropic IS implemented — its rows are genuinely selectable
 

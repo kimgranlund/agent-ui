@@ -133,7 +133,7 @@ describe('a2aFeedDevProxyPlugin — POST /__a2a/feed (LLD-C8, offline via the te
     const plugin = a2aFeedDevProxyPlugin({ provider })
     const handler = captureHandler(plugin)
 
-    const res = await post(handler, { feed: feedLog(), provider: 'anthropic', model: 'claude-sonnet-5' })
+    const res = await post(handler, { feed: feedLog(), provider: 'anthropic', model: 'claude-sonnet-5-5' })
 
     expect(res.statusCode).toBe(200)
     expect(res.getHeader('content-type')).toBe('application/x-ndjson')
@@ -170,7 +170,7 @@ describe('a2aFeedDevProxyPlugin — POST /__a2a/feed (LLD-C8, offline via the te
     const [header, u1] = feedLog()
     const tampered = JSON.parse(u1!) as { metadata?: unknown }
     delete tampered.metadata
-    const res = await post(handler, { feed: [header, JSON.stringify(tampered)], provider: 'anthropic', model: 'claude-sonnet-5' })
+    const res = await post(handler, { feed: [header, JSON.stringify(tampered)], provider: 'anthropic', model: 'claude-sonnet-5-5' })
     expect(res.statusCode).toBe(400)
     expect(JSON.parse(res.body).error).toMatch(/a2uiClientCapabilities/)
     expect(calls()).toBe(0)
@@ -181,7 +181,7 @@ describe('a2aFeedDevProxyPlugin — POST /__a2a/feed (LLD-C8, offline via the te
     const handler = captureHandler(a2aFeedDevProxyPlugin({ provider }))
     const [header] = feedLog()
     const bogus = '{"kind":"message","role":"user","messageId":"bad","parts":[{"kind":"bogus"}]}'
-    const res = await post(handler, { feed: [header, bogus], provider: 'anthropic', model: 'claude-sonnet-5' })
+    const res = await post(handler, { feed: [header, bogus], provider: 'anthropic', model: 'claude-sonnet-5-5' })
     expect(res.statusCode).toBe(400)
     expect(calls()).toBe(0)
   })
@@ -204,7 +204,7 @@ describe('a2aFeedDevProxyPlugin — POST /__a2a/feed (LLD-C8, offline via the te
       '{"kind":"text","text":"Here you go."},' +
       '{"kind":"data","data":{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}},"metadata":{"mimeType":"application/a2ui+json"}}]}'
     const u2 = wrapClientTurn({ text: 'another one' }, { messageId: 'live-u2', contextId: 'live-ctx' })
-    const res = await post(handler, { feed: [header, u1!, a1, JSON.stringify(u2)], provider: 'anthropic', model: 'claude-sonnet-5' })
+    const res = await post(handler, { feed: [header, u1!, a1, JSON.stringify(u2)], provider: 'anthropic', model: 'claude-sonnet-5-5' })
     expect(res.statusCode).toBe(200)
     const lines = res.body.split('\n').filter((l) => l.trim().length > 0)
     const header0 = JSON.parse(lines[0]!) as { turn: { messageId: string } }

@@ -80,7 +80,7 @@ function runStream(signal?: AbortSignal): Promise<Settled> {
   return (async () => {
     let text = ''
     for await (const frag of provider.stream({
-      model: 'claude-sonnet-5',
+      model: 'claude-sonnet-5-5',
       system: 'sys',
       messages: [{ role: 'user', content: 'hi' }],
       ...(signal ? { signal } : {}),

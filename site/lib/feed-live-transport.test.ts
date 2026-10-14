@@ -63,7 +63,7 @@ describe('sendTurn — progressive paint + reassembly', () => {
       'fetch',
       vi.fn(async () => new Response(streamOfLines(lines), { status: 200, headers: { 'content-type': 'application/x-ndjson' } })),
     )
-    const gen = sendTurn(['header', 'u1'], { provider: 'anthropic', model: 'claude-sonnet-5' })
+    const gen = sendTurn(['header', 'u1'], { provider: 'anthropic', model: 'claude-sonnet-5-5' })
     const parts: unknown[] = []
     let result = await gen.next()
     while (!result.done) {
@@ -76,14 +76,14 @@ describe('sendTurn — progressive paint + reassembly', () => {
 
   it('a non-2xx response throws (never yields a partial)', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ error: 'no-key' }), { status: 503 })))
-    const gen = sendTurn(['header', 'u1'], { provider: 'anthropic', model: 'claude-sonnet-5' })
+    const gen = sendTurn(['header', 'u1'], { provider: 'anthropic', model: 'claude-sonnet-5-5' })
     await expect(gen.next()).rejects.toThrow(/no-key/)
   })
 
   it('a truncated frame stream (fewer parts than declared) throws at completion — fail-closed', async () => {
     const lines = framesOf(AGENT_TURN).slice(0, -1) // drop the last part frame — a clean-looking truncation
     vi.stubGlobal('fetch', vi.fn(async () => new Response(streamOfLines(lines), { status: 200 })))
-    const gen = sendTurn(['header', 'u1'], { provider: 'anthropic', model: 'claude-sonnet-5' })
+    const gen = sendTurn(['header', 'u1'], { provider: 'anthropic', model: 'claude-sonnet-5-5' })
     const collected: unknown[] = []
     await expect(
       (async () => {

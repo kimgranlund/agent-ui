@@ -25,7 +25,7 @@ const textFrame = (text: string): Uint8Array =>
   )
 const STOP_FRAME = enc.encode('event: message_stop\ndata: {"type":"message_stop"}\n\n')
 
-const REQ = { model: 'claude-sonnet-5', system: 'sys', messages: [{ role: 'user' as const, content: 'hi' }] }
+const REQ = { model: 'claude-sonnet-5-5', system: 'sys', messages: [{ role: 'user' as const, content: 'hi' }] }
 
 /** A fetch that never answers on its own; it rejects with an AbortError once `init.signal` aborts. */
 function hangingFetch() {

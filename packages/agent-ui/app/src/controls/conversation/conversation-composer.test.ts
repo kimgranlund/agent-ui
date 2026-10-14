@@ -461,9 +461,9 @@ describe('ui-conversation-composer — GH #257 Provider/Mode pickers', () => {
     {
       id: 'anthropic',
       label: 'Anthropic',
-      defaultModel: 'claude-sonnet-5',
+      defaultModel: 'claude-sonnet-5-5',
       models: [
-        { id: 'claude-sonnet-5', label: 'Sonnet 5' },
+        { id: 'claude-sonnet-5-5', label: 'Sonnet 5.5' },
         { id: 'claude-opus-4-8', label: 'Opus 4.8' },
       ],
     },
@@ -492,7 +492,7 @@ describe('ui-conversation-composer — GH #257 Provider/Mode pickers', () => {
     const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
     el.providers = PROVIDERS
     el.provider = 'anthropic'
-    el.model = 'claude-sonnet-5'
+    el.model = 'claude-sonnet-5-5'
     el.efforts = [{ id: 'low', label: 'Low' }]
     el.modes = [{ id: 'default', label: 'Default' }]
     await whenFlushed()
@@ -508,11 +508,11 @@ describe('ui-conversation-composer — GH #257 Provider/Mode pickers', () => {
     const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
     el.providers = PROVIDERS
     el.provider = 'anthropic'
-    el.model = 'claude-sonnet-5'
+    el.model = 'claude-sonnet-5-5'
     await whenFlushed()
     const modelsMenu = el.querySelector('[data-part="models-menu"]') as HTMLElement
     expect([...modelsMenu.querySelectorAll('[role="menuitem"]')].map((i) => (i as HTMLElement).dataset.value)).toEqual([
-      'claude-sonnet-5', 'claude-opus-4-8',
+      'claude-sonnet-5-5', 'claude-opus-4-8',
     ])
   })
 
@@ -520,7 +520,7 @@ describe('ui-conversation-composer — GH #257 Provider/Mode pickers', () => {
     const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
     el.providers = PROVIDERS
     el.provider = 'anthropic'
-    el.model = 'claude-sonnet-5'
+    el.model = 'claude-sonnet-5-5'
     await whenFlushed()
     const providerIds: string[] = []
     const modelIds: string[] = []
@@ -529,17 +529,17 @@ describe('ui-conversation-composer — GH #257 Provider/Mode pickers', () => {
     const menu = el.querySelector('[data-part="providers-menu"]') as HTMLElement
     ;(menu.querySelector('[data-value="openai"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
     expect(providerIds).toEqual(['openai'])
-    expect(modelIds, 'the current model (claude-sonnet-5) does not belong to openai — must reset to its defaultModel').toEqual(['gpt-4.1'])
+    expect(modelIds, 'the current model (claude-sonnet-5-5) does not belong to openai — must reset to its defaultModel').toEqual(['gpt-4.1'])
     // props down, callbacks up — the picker never self-assigns either prop
     expect(el.provider).toBe('anthropic')
-    expect(el.model).toBe('claude-sonnet-5')
+    expect(el.model).toBe('claude-sonnet-5-5')
   })
 
   it('code-reviewer M1 — the reset-on-provider-change ORDER is a real contract: onModelChange fires BEFORE onProviderChange in the SAME commit', async () => {
     const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
     el.providers = PROVIDERS
     el.provider = 'anthropic'
-    el.model = 'claude-sonnet-5'
+    el.model = 'claude-sonnet-5-5'
     await whenFlushed()
     // ONE shared array across BOTH callbacks — a real ordering assertion, not two isolated arrays that
     // merely prove each fired (the prior test's own scope).
@@ -556,10 +556,10 @@ describe('ui-conversation-composer — GH #257 Provider/Mode pickers', () => {
 
   it('committing a provider whose model list DOES already contain the current model does NOT fire onModelChange', async () => {
     const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
-    const sameModelId = { ...PROVIDERS[1]!, models: [{ id: 'claude-sonnet-5', label: 'Sonnet-alike' }], disabled: false }
+    const sameModelId = { ...PROVIDERS[1]!, models: [{ id: 'claude-sonnet-5-5', label: 'Sonnet-alike' }], disabled: false }
     el.providers = [PROVIDERS[0]!, sameModelId]
     el.provider = 'anthropic'
-    el.model = 'claude-sonnet-5'
+    el.model = 'claude-sonnet-5-5'
     await whenFlushed()
     const modelIds: string[] = []
     el.onModelChange((id) => modelIds.push(id))

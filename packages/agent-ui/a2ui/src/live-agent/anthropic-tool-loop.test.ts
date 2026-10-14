@@ -79,7 +79,7 @@ describe('anthropicProvider — the GH #49 tool-use loop (mocked fetch)', () => 
     const provider = anthropicProvider({ apiKey: 'test-key' })
     const fragments: string[] = []
     for await (const frag of provider.stream({
-      model: 'claude-sonnet-5',
+      model: 'claude-sonnet-5-5',
       system: 'sys',
       messages: [{ role: 'user', content: 'weather in Bergen?' }],
       tools: TOOLS,
@@ -127,7 +127,7 @@ describe('anthropicProvider — the GH #49 tool-use loop (mocked fetch)', () => 
     const provider = anthropicProvider({ apiKey: 'test-key' })
     const fragments: string[] = []
     for await (const frag of provider.stream({
-      model: 'claude-sonnet-5',
+      model: 'claude-sonnet-5-5',
       system: 'sys',
       messages: [{ role: 'user', content: 'x' }],
       tools: TOOLS,
@@ -155,7 +155,7 @@ describe('anthropicProvider — the GH #49 tool-use loop (mocked fetch)', () => 
     )
     const provider = anthropicProvider({ apiKey: 'test-key' })
     const fragments: string[] = []
-    for await (const frag of provider.stream({ model: 'claude-sonnet-5', system: 'sys', messages: [{ role: 'user', content: 'x' }] })) {
+    for await (const frag of provider.stream({ model: 'claude-sonnet-5-5', system: 'sys', messages: [{ role: 'user', content: 'x' }] })) {
       fragments.push(frag)
     }
     expect(fragments.join('')).toBe('{"final":true}')
@@ -327,7 +327,7 @@ describe('anthropicProvider — the GH #49 tool-use loop (mocked fetch)', () => 
     const provider = anthropicProvider({ apiKey: 'test-key' })
     const fragments: string[] = []
     for await (const frag of provider.stream({
-      model: 'claude-sonnet-5',
+      model: 'claude-sonnet-5-5',
       system: 'sys',
       messages: [{ role: 'user', content: 'x' }],
       tools: TOOLS,

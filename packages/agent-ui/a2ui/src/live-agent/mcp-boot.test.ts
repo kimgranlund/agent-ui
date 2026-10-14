@@ -213,7 +213,7 @@ describe('empty-roster byte-identity (SPEC-R27 AC2 — the default, uninjected p
   it('/chat builds the SAME hand-authored tool dispatch as before — an empty MCP roster adds nothing (SPEC-R19 AC1 unchanged)', async () => {
     const before = captured.requests.length
     const handler = mountPlugin()
-    const out = await postChat(handler, { system: 'be helpful', model: 'claude-sonnet-5', messages: [], integrations: ['weather', 'currency'] })
+    const out = await postChat(handler, { system: 'be helpful', model: 'claude-sonnet-5-5', messages: [], integrations: ['weather', 'currency'] })
     expect(out.status).toBe(200)
     expect(out.json['text']).toBe('stubbed reply')
     const request = captured.requests[before]!

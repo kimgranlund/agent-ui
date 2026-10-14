@@ -49,7 +49,7 @@ async function main(): Promise<void> {
     text: process.argv[2] ?? 'Build me a login form with an email field, a password field, and a submit button.',
     session,
   }
-  const opts: ProduceOptions = { maxRounds: 3, model: process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-5' }
+  const opts: ProduceOptions = { maxRounds: 3, model: process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-5-5' }
 
   const validatedLines: string[] = []
   try {

@@ -54,7 +54,7 @@ beforeEach(() => {
 
 /** POST one produce turn and return the NDJSON lines the route wrote. */
 async function turn(extra: Record<string, unknown>): Promise<string[]> {
-  const body = { input: { kind: 'intent', text: 'a submit button', session: { turns: [] } }, provider: 'anthropic', model: 'claude-sonnet-5', ...extra }
+  const body = { input: { kind: 'intent', text: 'a submit button', session: { turns: [] } }, provider: 'anthropic', model: 'claude-sonnet-5-5', ...extra }
   const listeners: Record<string, Array<(arg?: unknown) => void>> = {}
   const req = {
     method: 'POST',

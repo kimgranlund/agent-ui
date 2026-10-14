@@ -57,7 +57,7 @@ beforeEach(() => {
 
 /** POST one produce turn to completion; return the first request the mocked provider received. */
 async function produceTurn(extra: Record<string, unknown>): Promise<Record<string, unknown>> {
-  const body = { input: { kind: 'intent', text: 'a submit button', session: { turns: [] } }, provider: 'anthropic', model: 'claude-sonnet-5', ...extra }
+  const body = { input: { kind: 'intent', text: 'a submit button', session: { turns: [] } }, provider: 'anthropic', model: 'claude-sonnet-5-5', ...extra }
   const reqListeners: Record<string, Array<(arg?: unknown) => void>> = {}
   const req = {
     method: 'POST',

@@ -5,12 +5,12 @@ import { createAdminAgentTurn, createAdminSurfaceTurn, fetchLiveIntegrations, fe
 import type { AdminTurnRequest, AdminSurfaceTurnRequest, AdminSurfaceTurnEvent } from '@agent-ui/app/agent-admin-schema'
 import { formatErrorLine } from '../../packages/agent-ui/a2ui/src/agent/meta-line.ts'
 
-const REQUEST: AdminTurnRequest = { text: 'hi', system: 'be helpful', model: 'claude-sonnet-5', history: [] }
+const REQUEST: AdminTurnRequest = { text: 'hi', system: 'be helpful', model: 'claude-sonnet-5-5', history: [] }
 
 const SURFACE_REQUEST: AdminSurfaceTurnRequest = {
   turn: { kind: 'intent', text: "Let's begin the game." },
   personaSystem: 'You are The Admiral.',
-  model: 'claude-sonnet-5',
+  model: 'claude-sonnet-5-5',
 }
 
 function streamOfLines(lines: string[]): ReadableStream<Uint8Array> {
@@ -346,7 +346,7 @@ describe('createAdminSurfaceTurn — effort threading (the Effort picker reachin
     const init = (fetchSpy.mock.calls[0] as unknown[])[1] as { body: string }
     const body = JSON.parse(init.body) as Record<string, unknown>
     expect(body.effort).toBe('high')
-    expect(body.model).toBe('claude-sonnet-5')
+    expect(body.model).toBe('claude-sonnet-5-5')
   })
 })
 

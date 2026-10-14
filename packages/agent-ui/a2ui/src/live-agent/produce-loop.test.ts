@@ -395,9 +395,9 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
     const { provider, reqs } = stubProvider([VALID])
     const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
     const lines: string[] = []
-    for await (const line of produce(crafted, deps, { maxRounds: 3, model: 'claude-sonnet-5' })) lines.push(line)
+    for await (const line of produce(crafted, deps, { maxRounds: 3, model: 'claude-sonnet-5-5' })) lines.push(line)
 
-    expect(reqs()[0]!.model).toBe('claude-sonnet-5') // validated model reached the API
+    expect(reqs()[0]!.model).toBe('claude-sonnet-5-5') // validated model reached the API
     expect(reqs().every((r) => r.model !== 'ATTACKER-off-allowlist')).toBe(true) // crafted value never did
   })
 
@@ -925,7 +925,7 @@ describe('produce() meta-line + TurnTrace (ADR-0088 §1/§2/§4)', () => {
     const exemplar = mkExemplar('ex-1')
     const deps: ProduceDeps = { provider, retrieve: () => [exemplar], catalog: defaultCatalog }
     const lines: string[] = []
-    for await (const line of produce(intent, deps, { maxRounds: 3, model: 'claude-sonnet-5' })) lines.push(line)
+    for await (const line of produce(intent, deps, { maxRounds: 3, model: 'claude-sonnet-5-5' })) lines.push(line)
 
     expect(lines).toHaveLength(3) // meta-line + the two VALID A2UI messages
     const meta = readMetaLine(lines[0]!)
@@ -946,7 +946,7 @@ describe('produce() meta-line + TurnTrace (ADR-0088 §1/§2/§4)', () => {
       rounds: 1,
       healed: 0,
       failureCodes: [],
-      model: 'claude-sonnet-5',
+      model: 'claude-sonnet-5-5',
       prompt: assessPromptBudget(sections, promptBudgetFor('agent-ui')),
     })
     expect(meta!.a2uiMeta.trace!.prompt!.over).toBe(false)
@@ -1029,7 +1029,7 @@ describe('produce() meta-line + TurnTrace (ADR-0088 §1/§2/§4)', () => {
     const { provider, calls } = stubProvider(['\n{"a2uiMeta":{"note":"hi"}}\n' + VALID])
     const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
     const lines: string[] = []
-    for await (const line of produce(intent, deps, { maxRounds: 3, model: 'claude-sonnet-5' })) lines.push(line)
+    for await (const line of produce(intent, deps, { maxRounds: 3, model: 'claude-sonnet-5-5' })) lines.push(line)
 
     expect(calls()).toBe(1) // no wasted self-correct round — the leading blank line must not defeat the peel
     expect(lines).toHaveLength(3) // meta-line + the two VALID A2UI messages

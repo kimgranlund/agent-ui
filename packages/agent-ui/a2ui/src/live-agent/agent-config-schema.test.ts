@@ -26,10 +26,10 @@ const PROVIDERS: ProvidersConfig = {
       label: 'Anthropic',
       envKey: 'ANTHROPIC_API_KEY',
       endpoint: 'https://api.anthropic.com/v1/messages',
-      defaultModel: 'claude-sonnet-5',
+      defaultModel: 'claude-sonnet-5-5',
       models: [
         { id: 'claude-opus-4-8', label: 'Claude Opus 4.8' },
-        { id: 'claude-sonnet-5', label: 'Claude Sonnet 5' },
+        { id: 'claude-sonnet-5-5', label: 'Claude Sonnet 5.5' },
       ],
       implemented: true,
     },
@@ -85,11 +85,11 @@ describe('liveAgentConfigSchema — the SettingsSchema builder (ADR-0135 cl.4)',
   it('the model options PROJECT only implemented providers models — no parallel/hardcoded list (Fork 1)', () => {
     const model = fieldOf(schema, 'model')
     expect(model.type).toBe('select')
-    expect(model.options?.map((o) => o.value)).toEqual(['claude-opus-4-8', 'claude-sonnet-5'])
+    expect(model.options?.map((o) => o.value)).toEqual(['claude-opus-4-8', 'claude-sonnet-5-5'])
     // The unimplemented provider's model never surfaces.
     expect(model.options?.some((o) => o.value === 'gpt-4.1')).toBe(false)
     // Default = the default provider's own defaultModel.
-    expect(model.default).toBe('claude-sonnet-5')
+    expect(model.default).toBe('claude-sonnet-5-5')
     // Labels come from the registry, not re-derived.
     expect(model.options?.find((o) => o.value === 'claude-opus-4-8')?.label).toBe('Claude Opus 4.8')
   })
@@ -131,7 +131,7 @@ describe('resolveProduceOptions — fail-closed read into ProduceOptions (ADR-01
 
   it('fails closed to schema defaults when the store is empty (every get returns undefined)', () => {
     const opts = resolveProduceOptions(store({}), schema)
-    expect(opts).toEqual({ mode: DEFAULT_GEN_UI_MODE, model: 'claude-sonnet-5', k: 3, maxRounds: 3, miniSkillCap: DEFAULT_MINI_SKILL_CAP })
+    expect(opts).toEqual({ mode: DEFAULT_GEN_UI_MODE, model: 'claude-sonnet-5-5', k: 3, maxRounds: 3, miniSkillCap: DEFAULT_MINI_SKILL_CAP })
   })
 
   it('rejects an out-of-range number and an unknown select value (never reaches the loop verbatim)', () => {
@@ -142,7 +142,7 @@ describe('resolveProduceOptions — fail-closed read into ProduceOptions (ADR-01
     // mode/model fall back to schema defaults (unknown option); k/maxRounds below min → schema default 3;
     // miniSkillCap below min 0 → schema default DEFAULT_MINI_SKILL_CAP.
     expect(opts.mode).toBe(DEFAULT_GEN_UI_MODE)
-    expect(opts.model).toBe('claude-sonnet-5')
+    expect(opts.model).toBe('claude-sonnet-5-5')
     expect(opts.k).toBe(3)
     expect(opts.maxRounds).toBe(3)
     expect(opts.miniSkillCap).toBe(DEFAULT_MINI_SKILL_CAP)

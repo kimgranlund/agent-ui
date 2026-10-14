@@ -67,7 +67,7 @@ const mod = await import(pathToFileURL(process.argv[2]).href)
 const request = new Request('https://ui.nonoun.io/__a2ui/agent/chat', {
   method: 'POST',
   headers: { origin: 'https://ui.nonoun.io', 'content-type': 'application/json' },
-  body: JSON.stringify({ system: 's', model: 'claude-sonnet-5', messages: [{ role: 'user', content: 'hi' }] }),
+  body: JSON.stringify({ system: 's', model: 'claude-sonnet-5-5', messages: [{ role: 'user', content: 'hi' }] }),
 })
 const res = await mod.default.fetch(request, { ASSETS: { fetch: async () => new Response('') }, ANTHROPIC_API_KEY: 'sk-test-value' })
 console.log('CHAT_RESULT ' + JSON.stringify({ status: res.status, body: await res.json() }))

@@ -17,7 +17,7 @@ const config = JSON.parse(readFileSync(CONFIG_PATH, 'utf8') as string) as Provid
 
 describe('resolveChatDispatch (ALM-C6 — the /chat route validation spine)', () => {
   it('derives the provider server-side + resolves to the env key when the pair is valid AND a key is set', () => {
-    const out = resolveChatDispatch(config, { ANTHROPIC_API_KEY: 'sk-test-value' }, 'claude-sonnet-5')
+    const out = resolveChatDispatch(config, { ANTHROPIC_API_KEY: 'sk-test-value' }, 'claude-sonnet-5-5')
     expect(out).toEqual({
       ok: true,
       provider: 'anthropic',
@@ -41,8 +41,8 @@ describe('resolveChatDispatch (ALM-C6 — the /chat route validation spine)', ()
   })
 
   it('503 no-key: a valid pair but no key configured for its provider (empty or absent env value)', () => {
-    expect(resolveChatDispatch(config, {}, 'claude-sonnet-5')).toEqual({ ok: false, status: 503, error: 'no-key' })
-    expect(resolveChatDispatch(config, { ANTHROPIC_API_KEY: '' }, 'claude-sonnet-5')).toEqual({
+    expect(resolveChatDispatch(config, {}, 'claude-sonnet-5-5')).toEqual({ ok: false, status: 503, error: 'no-key' })
+    expect(resolveChatDispatch(config, { ANTHROPIC_API_KEY: '' }, 'claude-sonnet-5-5')).toEqual({
       ok: false,
       status: 503,
       error: 'no-key',
@@ -57,35 +57,35 @@ describe('resolveChatDispatch (ALM-C6 — the /chat route validation spine)', ()
 
 describe('isChatBody (TKT-0052 review MEDIUM-1 — the /chat route request-shape guard)', () => {
   it('accepts a well-shaped body', () => {
-    expect(isChatBody({ system: 'be helpful', model: 'claude-sonnet-5', messages: [] })).toBe(true)
+    expect(isChatBody({ system: 'be helpful', model: 'claude-sonnet-5-5', messages: [] })).toBe(true)
   })
 
   it('rejects a missing messages array', () => {
-    expect(isChatBody({ system: 'be helpful', model: 'claude-sonnet-5' })).toBe(false)
+    expect(isChatBody({ system: 'be helpful', model: 'claude-sonnet-5-5' })).toBe(false)
   })
 
   it('rejects a non-string system or model', () => {
-    expect(isChatBody({ system: 42, model: 'claude-sonnet-5', messages: [] })).toBe(false)
+    expect(isChatBody({ system: 42, model: 'claude-sonnet-5-5', messages: [] })).toBe(false)
     expect(isChatBody({ system: 'be helpful', model: null, messages: [] })).toBe(false)
   })
 
   it('rejects a messages value that is not an array', () => {
-    expect(isChatBody({ system: 'be helpful', model: 'claude-sonnet-5', messages: 'not-an-array' })).toBe(false)
+    expect(isChatBody({ system: 'be helpful', model: 'claude-sonnet-5-5', messages: 'not-an-array' })).toBe(false)
   })
 
   it('effort is OPTIONAL (the Figma chat-input refactor\'s Effort picker) — absent is a valid body', () => {
-    expect(isChatBody({ system: 'be helpful', model: 'claude-sonnet-5', messages: [] })).toBe(true)
+    expect(isChatBody({ system: 'be helpful', model: 'claude-sonnet-5-5', messages: [] })).toBe(true)
   })
 
   it('accepts each of the four closed effort values', () => {
     for (const effort of ['low', 'medium', 'high', 'xhigh']) {
-      expect(isChatBody({ system: 'be helpful', model: 'claude-sonnet-5', messages: [], effort })).toBe(true)
+      expect(isChatBody({ system: 'be helpful', model: 'claude-sonnet-5-5', messages: [], effort })).toBe(true)
     }
   })
 
   it('rejects an effort value outside the closed four — never forwarded as an arbitrary string', () => {
-    expect(isChatBody({ system: 'be helpful', model: 'claude-sonnet-5', messages: [], effort: 'ultra' })).toBe(false)
-    expect(isChatBody({ system: 'be helpful', model: 'claude-sonnet-5', messages: [], effort: 3 })).toBe(false)
+    expect(isChatBody({ system: 'be helpful', model: 'claude-sonnet-5-5', messages: [], effort: 'ultra' })).toBe(false)
+    expect(isChatBody({ system: 'be helpful', model: 'claude-sonnet-5-5', messages: [], effort: 3 })).toBe(false)
   })
 
   // ADR-0168 cl.5 (GH #402) / LLD-C6 — the guard stays UNCHANGED: `integrations` is optional and
@@ -96,7 +96,7 @@ describe('isChatBody (TKT-0052 review MEDIUM-1 — the /chat route request-shape
   // widened variable is exactly what both host routes pass it.)
   it('an extra `integrations` key never makes a well-shaped body invalid (the field is optional + fail-closed downstream, never a 400)', () => {
     type ChatBodyIn = { system?: unknown; model?: unknown; messages?: unknown; effort?: unknown; integrations?: unknown }
-    const withIds: ChatBodyIn = { system: 'be helpful', model: 'claude-sonnet-5', messages: [], integrations: ['weather'] }
+    const withIds: ChatBodyIn = { system: 'be helpful', model: 'claude-sonnet-5-5', messages: [], integrations: ['weather'] }
     const withMalformed: ChatBodyIn = { ...withIds, integrations: 'not-an-array' }
     expect(isChatBody(withIds)).toBe(true)
     expect(isChatBody(withMalformed)).toBe(true)
@@ -187,7 +187,7 @@ async function postChat(body: unknown): Promise<{ status: number; json: Record<s
 
 describe('the /chat route builds the SHARED tool dispatch (SPEC-R19 AC1 — GH #402 branch (a))', () => {
   it('enabled ids reach provider.stream as the matching tools + executeTool pair', async () => {
-    const out = await postChat({ system: 'be helpful', model: 'claude-sonnet-5', messages: [], integrations: ['weather', 'currency'] })
+    const out = await postChat({ system: 'be helpful', model: 'claude-sonnet-5-5', messages: [], integrations: ['weather', 'currency'] })
     expect(out.status).toBe(200)
     expect(out.json['text']).toBe('stubbed reply')
     const request = out.streamRequest!
@@ -196,7 +196,7 @@ describe('the /chat route builds the SHARED tool dispatch (SPEC-R19 AC1 — GH #
   })
 
   it('an ABSENT integrations field leaves the stream request byte-identical (no tools key, no executeTool key)', async () => {
-    const out = await postChat({ system: 'be helpful', model: 'claude-sonnet-5', messages: [] })
+    const out = await postChat({ system: 'be helpful', model: 'claude-sonnet-5-5', messages: [] })
     expect(out.status).toBe(200)
     const request = out.streamRequest!
     expect('tools' in request).toBe(false)
@@ -209,7 +209,7 @@ describe('the /chat route builds the SHARED tool dispatch (SPEC-R19 AC1 — GH #
 
   it('a MALFORMED or unknown-id integrations value degrades to no tools — never a 400, never a partial pair', async () => {
     for (const integrations of ['weather', 42, null, [], ['not-a-real-integration'], [7]]) {
-      const out = await postChat({ system: 'be helpful', model: 'claude-sonnet-5', messages: [], integrations })
+      const out = await postChat({ system: 'be helpful', model: 'claude-sonnet-5-5', messages: [], integrations })
       expect(out.status, `malformed integrations: ${JSON.stringify(integrations)}`).toBe(200)
       expect('tools' in out.streamRequest!).toBe(false)
       expect('executeTool' in out.streamRequest!).toBe(false)
@@ -217,7 +217,7 @@ describe('the /chat route builds the SHARED tool dispatch (SPEC-R19 AC1 — GH #
   })
 
   it("the dispatched executeTool is the SHARED one — an unknown wire name throws, a bad input is rejected by the manifest's schema before any integration runs", async () => {
-    const out = await postChat({ system: 'be helpful', model: 'claude-sonnet-5', messages: [], integrations: ['weather'] })
+    const out = await postChat({ system: 'be helpful', model: 'claude-sonnet-5-5', messages: [], integrations: ['weather'] })
     const executeTool = out.streamRequest!['executeTool'] as (name: string, input: unknown) => Promise<unknown>
     await expect(executeTool('not-a-tool', {})).rejects.toThrow(/unknown tool/)
     await expect(executeTool('weather', {})).rejects.toThrow(/weather: invalid input/)

@@ -54,7 +54,7 @@ export interface SupportedModel {
  *  is still the Sonnet tier. */
 export const SUPPORTED_MODELS: readonly SupportedModel[] = [
   { id: 'claude-haiku-5-5', label: 'Haiku 5.5', provider: 'Anthropic', includedByDefault: true },
-  { id: 'claude-sonnet-5', label: 'Sonnet 5', provider: 'Anthropic', includedByDefault: true },
+  { id: 'claude-sonnet-5-5', label: 'Sonnet 5.5', provider: 'Anthropic', includedByDefault: true },
   { id: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5', provider: 'Anthropic', includedByDefault: true },
   { id: 'gpt-4.1-mini', label: 'GPT-4.1 mini', provider: 'OpenAI', includedByDefault: false },
   { id: 'gpt-4.1', label: 'GPT-4.1', provider: 'OpenAI', includedByDefault: false },
@@ -86,25 +86,41 @@ export function modelRoster(): SupportedModel[] {
  *  options off; admin-added customs on — you added it to use it). */
 export function isModelIncluded(record: unknown, model: SupportedModel): boolean {
   if (typeof record === 'object' && record !== null) {
-    const value = (record as Record<string, unknown>)[model.id]
+    const entries = record as Record<string, unknown>
+    const value = entries[model.id]
     if (typeof value === 'boolean') return value
+    // T-0180: an inclusion record saved under a retired id still speaks for its successor.
+    for (const [retired, successor] of Object.entries(RETIRED_MODEL_IDS)) {
+      if (successor === model.id && typeof entries[retired] === 'boolean') return entries[retired] as boolean
+    }
   }
   return model.includedByDefault
 }
 
-/** Fail-closed model read for turn/composer time: a store value naming a roster model passes;
- *  anything else falls back to DEFAULT_MODEL_ID (the sanitizeSelect discipline, roster-based now that
- *  the Model GRID replaced the schema's select field). */
-export function sanitizeModel(value: unknown, roster: readonly SupportedModel[]): string {
-  return typeof value === 'string' && roster.some((m) => m.id === value) ? value : DEFAULT_MODEL_ID
+/** T-0180 (Kim, 2026-10-14): retired model ids and the roster id that replaces each. A stored config,
+ *  authoring store or persisted pick that names a retired id reads as its successor through the sanitize
+ *  path below; nothing is rewritten in the store (the read-time default discipline). */
+export const RETIRED_MODEL_IDS: Readonly<Record<string, string>> = { 'claude-sonnet-5': 'claude-sonnet-5-5' }
+
+/** A stored model value with any retired id mapped to its successor; anything else passes unchanged. */
+function migrateModelId(value: unknown): unknown {
+  return typeof value === 'string' ? (RETIRED_MODEL_IDS[value] ?? value) : value
 }
 
-/** GH #880 (Kim's ruling, 2026-08-14) — the AUTHORING (Builder Interview) context's own default: Sonnet 5,
+/** Fail-closed model read for turn/composer time: a store value naming a roster model passes;
+ *  anything else falls back to DEFAULT_MODEL_ID (the sanitizeSelect discipline, roster-based now that
+ *  the Model GRID replaced the schema's select field). A retired id reads as its successor (T-0180). */
+export function sanitizeModel(value: unknown, roster: readonly SupportedModel[]): string {
+  const id = migrateModelId(value)
+  return typeof id === 'string' && roster.some((m) => m.id === id) ? id : DEFAULT_MODEL_ID
+}
+
+/** GH #880 (Kim's ruling, 2026-08-14) — the AUTHORING (Builder Interview) context's own default: Sonnet 5.5,
  *  not the roster-wide `DEFAULT_MODEL_ID` above. The rationale is the same one the Builder preset's own
  *  Sonnet-class id already carries (agent-admin-presets.ts / LLD §15: interview quality IS the product) —
  *  the cheap/fast tier is the right default for a TEST chat, not for the model conducting the interview
  *  that authors an agent. The test context is untouched: it keeps `DEFAULT_MODEL_ID`. */
-export const AUTHORING_DEFAULT_MODEL_ID: string = 'claude-sonnet-5'
+export const AUTHORING_DEFAULT_MODEL_ID: string = 'claude-sonnet-5-5'
 
 /** The authoring context's model READ — `sanitizeModel`'s first clause verbatim, only the fallback differs.
  *  A stored value naming a roster model still WINS (an explicit Haiku choice stays Haiku); everything the
@@ -119,7 +135,8 @@ export const AUTHORING_DEFAULT_MODEL_ID: string = 'claude-sonnet-5'
  *  guard keeps it honest if Sonnet ever leaves `SUPPORTED_MODELS` — an id the picker cannot offer is never
  *  returned; the read degrades to the roster-wide default instead. */
 export function sanitizeAuthoringModel(value: unknown, roster: readonly SupportedModel[]): string {
-  if (typeof value === 'string' && roster.some((m) => m.id === value)) return value
+  const id = migrateModelId(value)
+  if (typeof id === 'string' && roster.some((m) => m.id === id)) return id
   return roster.some((m) => m.id === AUTHORING_DEFAULT_MODEL_ID) ? AUTHORING_DEFAULT_MODEL_ID : DEFAULT_MODEL_ID
 }
 
@@ -809,7 +826,7 @@ export interface AdminTurnRequest {
   /** `composeLiveSystemPrompt(...)` output — the composed prompt + enabled-capability projection, fresh-read. */
   system: string
   /** The sanitized `SUPPORTED_MODELS` id — the DRIVING context's own read (GH #880): `sanitizeModel`
-   *  (`DEFAULT_MODEL_ID` fallback) for the test chat, `sanitizeAuthoringModel` (Sonnet 5 fallback) for the
+   *  (`DEFAULT_MODEL_ID` fallback) for the test chat, `sanitizeAuthoringModel` (Sonnet 5.5 fallback) for the
    *  Builder Interview. A stored choice wins on either. */
   model: string
   /** The composer's Effort picker selection (the Figma chat-input refactor) — ephemeral, per-conversation
@@ -918,7 +935,7 @@ export interface AdminSurfaceTurnRequest {
    *  appended AFTER the catalog law (voice/content only, never the wire format). */
   personaSystem: string
   /** The sanitized `SUPPORTED_MODELS` id — the DRIVING context's own read, exactly `AdminTurnRequest.model`
-   *  above (GH #880: Sonnet 5 is the Builder Interview's fallback, `DEFAULT_MODEL_ID` the test chat's). */
+   *  above (GH #880: Sonnet 5.5 is the Builder Interview's fallback, `DEFAULT_MODEL_ID` the test chat's). */
   model: string
   /** The composer's Effort picker selection (the Figma chat-input refactor) — same ephemeral,
    *  per-conversation dial as `AdminTurnRequest.effort` above; `undefined` if the picker was never
