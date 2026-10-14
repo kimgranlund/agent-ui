@@ -2,8 +2,8 @@ import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { server, cdp, userEvent } from 'vitest/browser'
 
-// The root register's derived geometry (ADR-0245): product / sm / md is n 6, so the card gutter is 2n and the radius 3n.
-const DERIVED = resolve('product', 'sm', 'md')
+// The root register's derived geometry (ADR-0245): product / md / md is n 8, so the card gutter is 2n and the radius 3n.
+const DERIVED = resolve('product', 'md', 'md')
 
 // G9 s7 — the CROSS-ENGINE card smoke (decomp g9-containers s7 browser gate). Runs in BOTH Chromium and WebKit
 // (vitest.browser.config.ts). Where card-geometry.test.ts / card-css.test.ts pin the DECLARED formulas, this
@@ -140,7 +140,7 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     // either way — see the dedicated default-root floor test below for the case where the floor actually binds.
     // ADR-0245 cl.6: a container's radius equals its own margin (3n), so the ADR-0018 chain is only the
     // legacy fallback; the parent's reseed to 32px does not reach the nested card.
-    expect(nestedR, 'nested radius is not the derived 3n').toBe(resolve('product', 'sm', 'md').card.radius)
+    expect(nestedR, 'nested radius is not the derived 3n').toBe(resolve('product', 'md', 'md').card.radius)
     expect(nestedR, 'nested radius did not stay below the reseeded parent').toBeLessThan(rootR)
     expect(nestedR, 'nested radius collapsed to 0 (no demonstrable decrement)').toBeGreaterThan(0)
   })
@@ -159,7 +159,7 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     expect(radiusPx(root), 'root did not fall to the default corner-base').toBeCloseTo(DERIVED.card.radius, 0)
     // 4px == --md-sys-space-xs at the default density (1) — see this file's px()/mount() helpers; a fresh
     // mount carries no [density] repoint, so the token resolves to its literal 4px base.
-    expect(radiusPx(nested), 'default-root nested card is not the derived 3n (regressed to a knife-edge 0?)').toBe(resolve('product', 'sm', 'md').card.radius)
+    expect(radiusPx(nested), 'default-root nested card is not the derived 3n (regressed to a knife-edge 0?)').toBe(resolve('product', 'md', 'md').card.radius)
   })
 
   it('regions are PRESENCE-DRIVEN in BLOCK FLOW — a present region adds a box, an absent one leaves nothing', () => {
@@ -185,8 +185,11 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     // to use 100% of its parent height when [scrollable]"): ui-card-content itself is now the bounded scroll
     // viewport (overflow-y:auto), NOT the card — the card only supplies the flex-column sizing mechanism. Off
     // the content-level [scrollable] signal (A2UI).
+    // The bound is derived from n: the two overlaid bracket bands the content's block padding reserves are
+    // about 7n each (116px at the product / md root, n 8), so a fixed 100px max could no longer hold them.
+    const maxBlock = 20 * DERIVED.n
     const card = mount(
-      '<ui-card style="max-block-size: 100px"><ui-card-header>H</ui-card-header>' +
+      `<ui-card style="max-block-size: ${maxBlock}px"><ui-card-header>H</ui-card-header>` +
         '<ui-card-content scrollable><div style="block-size: 400px">tall</div></ui-card-content>' +
         '<ui-card-footer>F</ui-card-footer></ui-card>',
     )
@@ -200,7 +203,7 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     expect(getComputedStyle(card).overflowY, 'the card is wrongly still a scroll viewport').not.toBe('auto')
     expect(card.scrollHeight, 'the card itself overflowed (the flex column should keep it exactly bounded)').toBeLessThanOrEqual(card.clientHeight + 1)
     // the card stayed bounded — it did NOT grow to fit the 400px child (the max-block-size held)
-    expect(card.getBoundingClientRect().height, 'the card grew past its max-block-size').toBeLessThanOrEqual(110)
+    expect(card.getBoundingClientRect().height, 'the card grew past its max-block-size').toBeLessThanOrEqual(maxBlock + 10)
     // the brackets are OVERLAID PEERS (position:absolute), not sticky and not flex items
     expect(getComputedStyle(header).position, 'the header is not absolute').toBe('absolute')
     expect(getComputedStyle(footer).position, 'the footer is not absolute').toBe('absolute')
@@ -381,7 +384,7 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     // card even though its radius chain doesn't reach the nested card cleanly.
     expect(px(getComputedStyle(root).paddingLeft), 'the bare outer card lost its own fallback padding').toBeCloseTo(DERIVED.card.gutter, 0)
     // derived (ADR-0245): the nested card reads --md-sys-card-radius (3n), the same in both engines.
-    expect(radiusPx(nested), `${server.browser}: direct nesting radius (derived 3n)`).toBe(resolve('product', 'sm', 'md').card.radius)
+    expect(radiusPx(nested), `${server.browser}: direct nesting radius (derived 3n)`).toBe(resolve('product', 'md', 'md').card.radius)
 
     // the documented workaround (an explicit border-radius reseed) still recovers the radius under the
     // fallback — the manual case remains manually fixable, it is simply not automatic.

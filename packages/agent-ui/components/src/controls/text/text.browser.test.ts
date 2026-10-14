@@ -31,21 +31,21 @@ beforeAll(async () => {
 })
 
 describe('ui-text browser-truth harness — the role×size matrix resolves to real px (ADR-0078)', () => {
-  it('body/md (the bare default) resolves to the derived body role at the root register, 13px (ADR-0078 knob ①, ADR-0245 cl.7)', () => {
+  it('body/md (the bare default) resolves to the derived body role at the root register, 15px (ADR-0078 knob ①, ADR-0245 cl.7)', () => {
     const el = document.createElement('ui-text')
     el.textContent = 'Body text'
     document.body.append(el)
     const fontSize = getComputedStyle(el).fontSize
     expect(fontSize).toMatch(/px$/)
-    expect(Number.parseFloat(fontSize)).toBeCloseTo(resolve('product', 'sm', 'md').type.body, 0)
+    expect(Number.parseFloat(fontSize)).toBeCloseTo(resolve('product', 'md', 'md').type.body, 0)
     el.remove()
   })
 
-  it('display/sm → 27px · title/lg → 17px · body/md → 13px (the derived roles at the root register, ADR-0245 cl.7)', () => {
+  it('display/sm → 27px · title/lg → 19px · body/md → 15px (the derived roles at the root register, ADR-0245 cl.7)', () => {
     const cases: Array<[string, string, number]> = [
-      ['display', 'sm', resolve('product', 'sm', 'sm').type.display],
-      ['title', 'lg', resolve('product', 'sm', 'lg').type.title],
-      ['body', 'md', resolve('product', 'sm', 'md').type.body],
+      ['display', 'sm', resolve('product', 'md', 'sm').type.display],
+      ['title', 'lg', resolve('product', 'md', 'lg').type.title],
+      ['body', 'md', resolve('product', 'md', 'md').type.body],
     ]
     for (const [variant, size, px] of cases) {
       const el = document.createElement('ui-text')
@@ -71,8 +71,7 @@ describe('ui-text browser-truth harness — the role×size matrix resolves to re
     }
     // Two groups collapse by DESIGN: quote ≡ lead (both the derived subhead role, ADR-0245 cl.7) and
     // label ≡ kicker (both the field-label role, T-0117). The other six roles are distinct at the root register,
-    // so 9 variants land on exactly 7 distinct sizes: display 32 · headline 24 · title 15 · body 14 ·
-    // {label,kicker} 11 · overline 10 · {quote,lead} 18.
+    // so 9 variants land on exactly 7 distinct sizes (each read from scale.mjs resolve() at product / md).
     expect(sizes.size).toBe(7)
   })
 
@@ -99,8 +98,8 @@ describe('ui-text browser-truth harness — the role×size matrix resolves to re
     el.setAttribute('size', 'lg')
     el.textContent = 'no variant'
     document.body.append(el)
-    // body at size lg = 15px (vs. size md's 14px) proves the :not([variant]) compound selector is live
-    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(resolve('product', 'sm', 'lg').type.body, 0)
+    // body at size lg = 17px (vs. size md's 15px) proves the :not([variant]) compound selector is live
+    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(resolve('product', 'md', 'lg').type.body, 0)
     el.remove()
   })
 })
@@ -144,8 +143,8 @@ describe('ui-text in a region — the type roles derive from the region n (ADR-0
     wrap.remove()
 
     expect(compactPx).toBeLessThan(basePx)
-    // derived, not a ratio: the heading role at the root (n 6) and in a widget / sm region (n 5)
-    expect(basePx).toBeCloseTo(resolve('product', 'sm', 'md').type.heading, 0)
+    // derived, not a ratio: the heading role at the root (n 8) and in a widget / sm region (n 5)
+    expect(basePx).toBeCloseTo(resolve('product', 'md', 'md').type.heading, 0)
     expect(compactPx).toBeCloseTo(resolve('widget', 'sm', 'md').type.heading, 0)
   })
 })
@@ -168,32 +167,32 @@ describe('ui-text compact-window override — body 15/13/11 below the 52.5rem li
     return el
   }
 
-  it('body/md (the bare default) computes 14px below the line too, the 1px drop is retired (ADR-0245 cl.7)', () => {
+  it('body/md (the bare default) computes 15px below the line too, the 1px drop is retired (ADR-0245 cl.7)', () => {
     const el = mountText({})
-    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(resolve('product', 'sm', 'md').type.body, 0)
+    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(resolve('product', 'md', 'md').type.body, 0)
     el.remove()
   })
 
-  it("bare size='lg' (the body-large row via :not([variant])) computes the derived 14px below the line", () => {
+  it("bare size='lg' (the body-large row via :not([variant])) computes the derived 17px below the line", () => {
     const el = mountText({ size: 'lg' })
-    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(resolve('product', 'sm', 'lg').type.body, 0)
+    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(resolve('product', 'md', 'lg').type.body, 0)
     el.remove()
   })
 
-  it('a non-body role does NOT shift: headline/md stays at the derived heading role, 24px', () => {
+  it('a non-body role does NOT shift: headline/md stays at the derived heading role, 27px', () => {
     const el = mountText({ variant: 'headline' })
-    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(resolve('product', 'sm', 'md').type.heading, 0)
+    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(resolve('product', 'md', 'md').type.heading, 0)
     el.remove()
   })
 
-  it('body/md under data-scale md (the old ui-lg register) reads the body role at n 9, at every viewport (ADR-0150 retired)', () => {
+  it('body/md under data-scale lg (a region off the product / md root) reads the body role at n 10, at every viewport (ADR-0150 retired)', () => {
     const wrap = document.createElement('div')
-    wrap.setAttribute('data-scale', 'md')
+    wrap.setAttribute('data-scale', 'lg')
     document.body.append(wrap)
     const el = document.createElement('ui-text')
     el.textContent = 'compact scaled'
     wrap.append(el)
-    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBe(resolve('product', 'md', 'md').type.body)
+    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBe(resolve('product', 'lg', 'md').type.body)
     wrap.remove()
   })
 })

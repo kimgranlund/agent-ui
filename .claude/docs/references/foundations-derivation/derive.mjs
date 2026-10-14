@@ -4,7 +4,8 @@
 // v2 ~/.claude/skills/mathematical-design-system/scale.mjs (sha256 3c319761...), and compares v2 against v1.
 // Section 18 (Amendment 4, T-0122) runs on the same v2 copy and gives the px the control rule moves per control;
 // section 19 (Amendment 5, T-0134) gives the radii the pill moves; section 20 (Amendment 7, T-0143) the glyph floor,
-// which lives in agent-ui's generator and glyphBox() (scripts/lib/foundations-rules.mjs), never in scale.mjs.
+// which lives in agent-ui's generator and glyphBox() (scripts/lib/foundations-rules.mjs), never in scale.mjs;
+// section 21 (Amendment 8, T-0152) moves the root from product/sm to product/md and sets the canvas beside it.
 // v2 renamed keys: inset and radius are control.margin and control.radius, layout is page, the kicker roles are
 // sectionLabel and groupLabel, and the component sizes sit under parts.
 // "Today" values are read off the shipped stylesheets (file:line in the ADR appendix).
@@ -330,6 +331,76 @@ p('|---|---|---|');
   const reg = (tier, scale) => SZ.map((z) => resolve2(tier, scale, z));
   p(`| root product/sm | 2n - 2c → max(${GLYPH_FLOOR}, 2n - 2c) | ${cmp(reg('product', 'sm').map((r) => r.glyph), reg('product', 'sm').map(glyphBox))} |`);
   p(`| A2UI canvas widget/md | 2n - 2c → max(${GLYPH_FLOOR}, 2n - 2c) | ${cmp(reg('widget', 'md').map((r) => r.glyph), reg('widget', 'md').map(glyphBox))} |`);
+}
+
+// ---- Amendment 8: the root moves to product/md (T-0152) ---------------------------------------------------
+p('');
+{
+  const was = SZ.map((z) => resolve2('product', 'sm', z)), now = SZ.map((z) => resolve2('product', 'md', z));
+  p(`## 21. Amendment 8: the root moves from product/sm (n ${was.map((r) => r.n).join(' / ')}) to product/md (n ${now.map((r) => r.n).join(' / ')}), size sm · md · lg`);
+  p('scale.mjs and every rule of Amendments 3 to 7 are unchanged; only the root inputs move (`ROOT_INPUTS` in the generator, `--md-sys-scale-s` -1 → 0 on `:root`).');
+  p('| quantity | rule | before → after (delta), sm · md · lg |');
+  p('|---|---|---|');
+  const edge2 = (r) => r.control.margin + r.labelMargin;
+  const rows = [
+    ['height, avatar, swatch tile', '4n', (r) => r.h],
+    ['n: control margin, field radius, otp cell radius', 'n', (r) => r.n],
+    ['c: control gutter, chip margin', 'ceil(n/4)', (r) => r.c],
+    ['label inset', 'n - c', (r) => r.labelMargin],
+    ['text edge of a control', '2n - c', edge2],
+    ['icon box, indicator box', '2n', (r) => r.icon],
+    ['glyph box', `max(${GLYPH_FLOOR}, 2n - 2c)`, glyphBox],
+    ['control pill radius', '2n', (r) => 2 * r.n],
+    ['listbox panel radius', '2n + c', (r) => 2 * r.n + r.c],
+    ['badge height', '2n + 2c', (r) => r.parts.badge],
+    ['chip pill radius', 'n + c', (r) => r.n + r.c],
+    ['checkbox radius', 'ceil(n/2)', (r) => r.parts.checkboxRadius],
+    ['radio dot', 'glyph - 2', (r) => r.parts.radioDot],
+    ['table row', '4n + 2c', (r) => r.h + 2 * r.c],
+    ['glyph stroke', 'max(1.5, c/2)', (r) => Math.max(1.5, r.c / 2)],
+    ['control type', 'n + 6', (r) => r.type.control],
+    ['body', 'n + 7', (r) => r.type.body],
+    ['title', 'body + 0/1/2', (r) => r.type.title],
+    ['field label', 'n + 4', (r) => r.type.fieldLabel],
+    ['group label', 'n/2 + 6.5', (r) => r.type.groupLabel],
+    ['section label', 'round(body · 9/8)', (r) => r.type.sectionLabel],
+    ['subhead', 'round(body · Q)', (r) => r.type.subhead],
+    ['heading', 'round(body · Q²)', (r) => r.type.heading],
+    ['display', 'round(body · Q³)', (r) => r.type.display],
+  ];
+  for (const [label, rule, f] of rows) p(`| ${label} | ${rule} | ${cmp(was.map(f), now.map(f))} |`);
+
+  const a = was[1], b = now[1];
+  p('');
+  p(`Containers and the space aliases at the root md, before (n ${a.n}, c ${a.c}, m ${a.m}) → after (n ${b.n}, c ${b.c}, m ${b.m}):`);
+  p('| quantity | rule | before → after (delta) |');
+  p('|---|---|---|');
+  for (const [q, rule] of [['margin', 'n + c'], ['gutter', 'c'], ['radius', 'n + c']]) p(`| group ${q} | ${rule} | ${one(a.group[q], b.group[q])} |`);
+  for (const [level, token, k] of [['widget', 'widget', [2, 1, 2]], ['card', 'card', [3, 2, 3]], ['page', 'layout', [4, 3, 4]]]) {
+    QS.forEach((q, i) => p(`| ${token} ${q} | ${k[i] === 1 ? '' : k[i]}m | ${one(a[level][q], b[level][q])} |`));
+  }
+  const space3 = [['xs', (r) => r.c, 'c'], ['sm', (r) => r.n, 'n'], ['md', (r) => r.group.margin, 'n + c'], ['lg', (r) => r.widget.margin, '2m'], ['xl', (r) => r.card.margin, '3m'], ['2xl', (r) => r.page.margin, '4m']];
+  for (const [sp, f, rule] of space3) p(`| \`--md-sys-space-${sp}\` | ${rule} | ${one(f(a), f(b))} |`);
+
+  p('');
+  p(`data-density at the new root md (n ${b.n}):`);
+  p('| density | m | card margin / gutter / radius | layout margin |');
+  p('|---|---|---|---|');
+  for (const dens of Object.keys(CFG2.density)) {
+    const r = resolve2('product', 'md', 'md', dens);
+    p(`| ${dens} | ${r.m} | ${r.card.margin} / ${r.card.gutter} / ${r.card.radius} | ${r.page.margin} |`);
+  }
+
+  const cv = SZ.map((z) => resolve2('widget', 'md', z));
+  p('');
+  p('The A2UI canvas (widget/md, Amendment 2) beside the new root, sm · md · lg:');
+  p('| quantity | canvas widget/md | page root product/md |');
+  p('|---|---|---|');
+  for (const [label, f] of [['n', (r) => r.n], ['height', (r) => r.h], ['icon box', (r) => r.icon], ['glyph box', glyphBox], ['control type', (r) => r.type.control], ['body', (r) => r.type.body], ['button radius (pill)', (r) => 2 * r.n]]) {
+    p(`| ${label} | ${cv.map(f).join(' · ')} | ${now.map(f).join(' · ')} |`);
+  }
+  p(`| card margin / gutter / radius at md | ${cv[1].card.margin} / ${cv[1].card.gutter} / ${cv[1].card.radius} | ${b.card.margin} / ${b.card.gutter} / ${b.card.radius} |`);
+  p(`- Before this amendment the canvas and the root shared n (${cv.map((r) => r.n).join(' / ')}). Now a canvas control at md (${cv[1].h}px) equals a page control at sm (${now[0].h}px), and a canvas \`lg\` action (${cv[2].h}px) sits between page sm (${now[0].h}px) and page md (${now[1].h}px).`);
 }
 
 console.log(out.join('\n'));

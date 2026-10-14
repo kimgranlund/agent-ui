@@ -89,7 +89,7 @@
      as a card; ceiling `min(90vw, 20rem)` so it never outgrows a phone viewport (the --ui-menu-max-inline-
      size idiom). The block ceiling is `min(50vh, …)`: a 40-item rail scrolls inside the card rather than
      escaping the viewport, and overlay()'s shift clamp then keeps top >= 0 and bottom <= innerHeight. */
-  --ui-nav-rail-flyout-min-inline-size: 12rem;
+  --ui-nav-rail-flyout-min-inline-size: calc(var(--md-sys-height) * 6); /* the 12rem floor as 24n: 192px at the root */
   --ui-nav-rail-flyout-max-inline-size: min(90vw, 20rem);
   --ui-nav-rail-flyout-max-block-size: min(50vh, 24rem);
 }

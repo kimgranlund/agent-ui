@@ -128,7 +128,7 @@ const reset = uiButton('Reset', 'ghost')
 reset.addEventListener('click', () => write(REVENUE_BY_MONTH.map((r) => ({ label: r.label, values: [...r.values] }))))
 const liveBlock = el('div', { style: 'display:flex; flex-direction:column; gap:0.75rem; align-items:flex-start;' }, [
   live,
-  el('div', { style: 'display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;' }, [reshuffle, addMonth, reset, readout]),
+  el('div', { style: 'display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;' }, [el('div', { style: 'display:flex; gap:0.75rem; flex-wrap:wrap;' }, [reshuffle, addMonth, reset]), readout]),
 ])
 const liveNote = el('p', {}, [
   text('Every click writes '), code('data'), text(' with a new array; the whole mark rebuilds (A2UI '),

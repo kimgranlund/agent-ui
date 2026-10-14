@@ -615,7 +615,7 @@ describe('ui-select — TKT-0027 listbox max-block-size dial: a 13th option over
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-select — trigger geometry: [size] exact px + [scale] anti-vacuous (B4, both engines)', () => {
-  it('[size=sm] → trigger height = 24px; [size=md] = 28px; [size=lg] = 36px (§1-ramp)', () => {
+  it('[size=sm|md|lg] → trigger height = the derived 4n at each size (§1-ramp)', () => {
     // Three selects, one per size, all in the same flex-row container (the doc-specimen context).
     const wrap = document.createElement('div')
     wrap.style.display = 'flex'
@@ -645,19 +645,19 @@ describe('ui-select — trigger geometry: [size] exact px + [scale] anti-vacuous
     const mdTrigger = md.querySelector<HTMLElement>('[data-part="trigger"]')!
     const lgTrigger = lg.querySelector<HTMLElement>('[data-part="trigger"]')!
 
-    // Exact px from the derived ramp at the root register (product / sm, ADR-0245 cl.3): 4n
+    // Exact px from the derived ramp at the root register (product / md, ADR-0245 cl.3): 4n
     expect(
       Math.round(smTrigger.getBoundingClientRect().height),
-      `${server.browser}: [size=sm] trigger height should be ${resolve('product', 'sm', 'sm').h}px`,
-    ).toBe(resolve('product', 'sm', 'sm').h)
+      `${server.browser}: [size=sm] trigger height should be ${resolve('product', 'md', 'sm').h}px`,
+    ).toBe(resolve('product', 'md', 'sm').h)
     expect(
       Math.round(mdTrigger.getBoundingClientRect().height),
-      `${server.browser}: [size=md] trigger height should be ${resolve('product', 'sm', 'md').h}px`,
-    ).toBe(resolve('product', 'sm', 'md').h)
+      `${server.browser}: [size=md] trigger height should be ${resolve('product', 'md', 'md').h}px`,
+    ).toBe(resolve('product', 'md', 'md').h)
     expect(
       Math.round(lgTrigger.getBoundingClientRect().height),
-      `${server.browser}: [size=lg] trigger height should be ${resolve('product', 'sm', 'lg').h}px`,
-    ).toBe(resolve('product', 'sm', 'lg').h)
+      `${server.browser}: [size=lg] trigger height should be ${resolve('product', 'md', 'lg').h}px`,
+    ).toBe(resolve('product', 'md', 'lg').h)
 
     // Anti-vacuous: adjacent sizes must NOT be equal (they step, not collapse)
     expect(
@@ -742,7 +742,7 @@ describe('ui-select — trigger geometry: [size] exact px + [scale] anti-vacuous
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-select — panel/option geometry carries [size] (B5, the size-carrying model, both engines)', () => {
-  const HEIGHT: Record<string, number> = { sm: resolve('product', 'sm', 'sm').h, md: resolve('product', 'sm', 'md').h, lg: resolve('product', 'sm', 'lg').h }
+  const HEIGHT: Record<string, number> = { sm: resolve('product', 'md', 'sm').h, md: resolve('product', 'md', 'md').h, lg: resolve('product', 'md', 'lg').h }
 
   function mkSizedSelect(size: string): UISelectElement {
     const el = document.createElement('ui-select') as UISelectElement
@@ -779,7 +779,7 @@ describe('ui-select — panel/option geometry carries [size] (B5, the size-carry
       const outset = -(px(getComputedStyle(listbox).translate) || 0)
       const sum = px(cs.marginInlineStart) + px(cs.paddingInlineStart) - outset
       sums[size] = sum
-      const r = resolve('product', 'sm', size as 'sm' | 'md' | 'lg')
+      const r = resolve('product', 'md', size as 'sm' | 'md' | 'lg')
       const trigger = el.querySelector<HTMLElement>('[data-part="trigger"]')!
       const triggerText = px(getComputedStyle(trigger).paddingInlineStart) + px(getComputedStyle(trigger.querySelector('[data-part="label"]')!).paddingInlineStart)
 
@@ -850,8 +850,8 @@ describe('ui-select — panel/option geometry carries [size] (B5, the size-carry
       optionFont,
       `${server.browser}: option font-size (${optionFont}px) should match the [size=lg] trigger font (${triggerFont}px), not an inherited ambient value`,
     ).toBeCloseTo(triggerFont, 1)
-    // Sanity: the lg control type at the root register (14px) is not the browser default 16px.
-    expect(optionFont, `${server.browser}: [size=lg] option font should be the lg register (14px)`).toBeCloseTo(resolve('product', 'sm', 'lg').type.control, 1)
+    // Sanity: the lg control type at the root register is the derived one, not an inherited ambient size.
+    expect(optionFont, `${server.browser}: [size=lg] option font should be the lg register control type`).toBeCloseTo(resolve('product', 'md', 'lg').type.control, 1)
   })
 
   it('nested option-radius == listbox-radius − listbox-padding at sm/md/lg (ADR-0018, browser-measured)', async () => {

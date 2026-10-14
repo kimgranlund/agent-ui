@@ -12,7 +12,7 @@
 // is the wrong home for a suite that measures computed paint and races nothing.
 //
 // TWO standing rules for this file, both from ADR-0166 cl.8:
-//   1. NEVER read the `borderRadius` SHORTHAND. `0px 0px 18px 18px` (the card radius at the root register) is a string that satisfies
+//   1. NEVER read the `borderRadius` SHORTHAND. `0px 0px 24px 24px` (the card radius at the root register) is a string that satisfies
 //      `not.toBe('0px')` VACUOUSLY, which would let the header-only and footer-only rows of cl.5's
 //      matrix pass while testing nothing. Every corner assertion reads the four logical LONGHANDS.
 //   2. A negative control on a BOTH-BARS fixture is unsatisfiable by construction — both pairs zero, so
@@ -26,13 +26,13 @@ import { UISuperShellElement } from './super-shell.ts'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 // T-0121: the shell frame reads level tokens (ADR-0245 cl.6), so every px this file pins is derived from the
-// root register (product at scale sm) through scale.mjs, never written as a literal.
-const ROOT = resolve('product', 'sm', 'md')
+// root register (product at scale md) through scale.mjs, never written as a literal.
+const ROOT = resolve('product', 'md', 'md')
 const BAR = ROOT.h + 2 * ROOT.widget.margin // bars and rails: a control row plus the widget margin above and below, 8n
 const GAP = ROOT.page.gutter // the inter-card gap: the layout gutter 3n
 const SEAM = ROOT.control.margin // the strip seams: the control inset n
 const ROUND = `${ROOT.card.radius}px` // a carded part's round corner: the card radius 3n
-const PANE = 252 // the default pane: the named content measure 15.75rem, not an n multiple (Kim 2026-10-13)
+const PANE = 42 * ROOT.n // the default pane: 42n, the nav label column's room (Kim 2026-10-14)
 
 const mounted: HTMLElement[] = []
 afterEach(() => { for (const el of mounted.splice(0)) el.remove() })
@@ -486,7 +486,8 @@ describe('GH #381 — a floating overlay card is bordered on ALL FOUR sides, off
 
   /** Opens the narrow (<40rem) overlay on a header+footer collapse shell and hands back the overlaid card. */
   async function openNarrowOverlay(slots: readonly Slot[] = ['header', 'nav-pane', 'content', 'footer'], card = '[data-part="pane"][data-side="start"]'): Promise<{ el: UISuperShellElement; pane: HTMLElement }> {
-    const el = mount(slots, { width: 360, attrs: { 'narrow-start': 'collapse' } })
+    // under the 640px line, and wide enough that the R9d cap (width - bar - inset) still clears the 42n pane
+    const el = mount(slots, { width: PANE + 2 * BAR, attrs: { 'narrow-start': 'collapse' } })
     await el.updateComplete
     q(el, '[data-part="side-toggle"][data-side="start"]').click()
     await el.updateComplete
@@ -556,7 +557,7 @@ describe('GH #381 — a floating overlay card is bordered on ALL FOUR sides, off
     // would have rendered 56px wide — silently breaking R9d's "the far-edge canvas gap stays exactly one
     // bar wide" cap. NC: delete `box-sizing: border-box` from the narrow overlay arm and the rail reads two pixels wider.
     const { pane } = await openNarrowOverlay()
-    expect(Math.round(pane.getBoundingClientRect().width), 'the overlaid pane keeps its 252px outer width').toBe(PANE)
+    expect(Math.round(pane.getBoundingClientRect().width), `the overlaid pane keeps its ${PANE}px outer width`).toBe(PANE)
 
     const railShell = mount(['header', 'global-nav', 'content', 'footer'], { width: 360, attrs: { 'narrow-start': 'collapse' } })
     await railShell.updateComplete

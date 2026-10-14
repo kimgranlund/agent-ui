@@ -24,8 +24,8 @@ import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { SCHEMES, composite, contrast, inkContrast, schemeWrap } from '../button/disabled-recipe.fixture.ts'
-// The page root register (no data-tier region): product / sm, n 5 / 6 / 7 for size sm / md / lg.
-const root = (size: 'sm' | 'md' | 'lg') => resolve('product', 'sm', size)
+// The page root register (no data-tier region): product / md, n 6 / 8 / 10 for size sm / md / lg.
+const root = (size: 'sm' | 'md' | 'lg') => resolve('product', 'md', size)
 
 // ── mount/cleanup helpers ─────────────────────────────────────────────────────────────────────────────
 const mounted: HTMLElement[] = []
@@ -83,7 +83,7 @@ describe('ui-switch cross-engine browser smoke — track + thumb geometry (ADR-0
     //   (b) thumb size DOES NOT change across states (only the `translate` position changes).
     const { sw } = mount('<ui-switch></ui-switch>')
 
-    const h = trackHeight(sw) // the widget box = --md-sys-compact-md (default) = 12px at the root
+    const h = trackHeight(sw) // the widget box = --md-sys-compact-md (default) = 16px at the root, where c = 2
     const twUnchecked = thumbWidth(sw)
     const thUnchecked = thumbHeight(sw)
 
@@ -110,8 +110,8 @@ describe('ui-switch cross-engine browser smoke — track + thumb geometry (ADR-0
 
   it('ADR-0041: track box = --md-sys-compact-{size} per [size] (the widget ramp, NOT the control height ramp)', () => {
     // The Indicator widget box rides the COMPACT ramp (ADR-0041), NOT the full control height ramp (ADR-0038).
-    // Derived ramp at the root (ADR-0245): --md-sys-compact-sm=10 / --md-sys-compact-md=12 / --md-sys-compact-lg=14.
-    const SIZES: Array<[string, number]> = [
+    // Derived ramp at the root (ADR-0245): --md-sys-compact-sm=12 / --md-sys-compact-md=16 / --md-sys-compact-lg=20.
+    const SIZES: Array<['sm' | 'md' | 'lg', number]> = [
       ['sm', root('sm').parts.switchTrack],
       ['md', root('md').parts.switchTrack],
       ['lg', root('lg').parts.switchTrack],
@@ -122,7 +122,8 @@ describe('ui-switch cross-engine browser smoke — track + thumb geometry (ADR-0
       expect(h, `[size="${size}"] track height (${h}) ≠ --md-sys-compact-${size} (${expected}px)`).toBeCloseTo(expected, 0)
       // Thumb follows the law at each size — anti-vacuous (proves the law holds across the full ramp).
       const tw = thumbWidth(sw)
-      expect(tw, `[size="${size}"] thumb (${tw}) ≠ box − 4px (${expected - 4}px)`).toBeCloseTo(expected - 4, 0)
+      const thumb = expected - 2 * root(size).c // box − 2c: 4px at sm and md, 6px at lg where c = 3
+      expect(tw, `[size="${size}"] thumb (${tw}) ≠ box − 2c (${thumb}px)`).toBeCloseTo(thumb, 0)
     }
     // Anti-vacuous: the three sizes are genuinely distinct (the lever truly moved the box).
     const heights = SIZES.map(([size]) => {
@@ -133,7 +134,7 @@ describe('ui-switch cross-engine browser smoke — track + thumb geometry (ADR-0
   })
 
   it('ADR-0245: inside an opt-in data-tier region the track is 2n, the thumb 2n - 2c, the width 2 thumb + 2c', () => {
-    // Against scale.mjs resolve() at the library root (product / sm) and the A2UI canvas register (product / md).
+    // Against scale.mjs resolve() in an explicit product / sm region and at the page root register (product / md).
     for (const scale of ['sm', 'md']) {
       for (const size of ['sm', 'md', 'lg']) {
         const r = resolve('product', scale, size)
@@ -167,16 +168,16 @@ describe('ui-switch cross-engine browser smoke — track + thumb geometry (ADR-0
     expect(r.c + thumb + thumb + r.c).toBe(px(getComputedStyle(sw).inlineSize))
   })
 
-  it('track inline-size = 2 × box − 2c (the derived pill, 24px at md); the pill is wider than tall (density-invariant)', () => {
+  it('track inline-size = 2 × box − 2c (the derived pill, 28px at md); the pill is wider than tall (density-invariant)', () => {
     // ADR-0223 (Fill by Default, slice 2): the default host now FILLS the container, so the host-width-
     // equals-track claim lives in the `[inline]` hug state (the pre-wave posture; a bare label-less switch).
-    const { sw } = mount('<ui-switch inline></ui-switch>') // md default: box = 14px, track = 2 × 14 − 2c = 24px (c = 2)
+    const { sw } = mount('<ui-switch inline></ui-switch>') // md default: box = 16px, track = 2 × 16 − 2c = 28px (c = 2)
     const h = trackHeight(sw)
     const w = px(getComputedStyle(sw).inlineSize)
     // The track is a pill — inline > block.
     expect(w, 'track must be wider than tall (pill constraint)').toBeGreaterThan(h)
     // 2 × box − 2c (ADR-0245: the width follows the derived pill, not today's 1.8× box), allow ±0.5px rounding.
-    const c = resolve('product', 'sm', 'md').c
+    const c = resolve('product', 'md', 'md').c
     expect(w, `track inline-size (${w}) is not 2 × box − 2c (${2 * h - 2 * c}px)`).toBeCloseTo(2 * h - 2 * c, 0)
   })
 })

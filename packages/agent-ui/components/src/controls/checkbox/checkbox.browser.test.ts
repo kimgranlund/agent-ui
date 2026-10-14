@@ -19,11 +19,11 @@ import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
 
 const num = (v: string): number => Number.parseFloat(v)
-// The page root register (no data-tier region): product / sm, n 5 / 6 / 7 for size sm / md / lg.
-const root = (size: 'sm' | 'md' | 'lg') => resolve('product', 'sm', size)
+// The page root register (no data-tier region): product / md, n 6 / 8 / 10 for size sm / md / lg.
+const root = (size: 'sm' | 'md' | 'lg') => resolve('product', 'md', size)
 
 describe('ui-checkbox browser smoke (S1 AC1–AC4)', () => {
-  it('AC1 default: ::before box = the root md checkbox part (12px, --md-sys-compact-md, the derived compact ramp)', () => {
+  it('AC1 default: ::before box = the root md checkbox part (16px, --md-sys-compact-md, the derived compact ramp)', () => {
     const el = document.createElement('ui-checkbox')
     document.body.append(el)
     const cs = getComputedStyle(el, '::before')
@@ -33,7 +33,7 @@ describe('ui-checkbox browser smoke (S1 AC1–AC4)', () => {
     el.remove()
   })
 
-  it('AC1 [size=sm] → 10px box; [size=lg] → 14px box (the compact ramp at the root)', () => {
+  it('AC1 [size=sm] → 12px box; [size=lg] → 20px box (the compact ramp at the root)', () => {
     const sm = document.createElement('ui-checkbox')
     sm.setAttribute('size', 'sm')
     document.body.append(sm)

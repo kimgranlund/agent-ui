@@ -239,8 +239,8 @@ describe('ui-multi-select — geometry (GEO-LAW: 0 < checkmark glyph ≤ icon ce
     const lgEl = lgWrap.querySelector('ui-multi-select') as UIMultiSelectElement
     const lgHeight = readLength(lgEl, '--ui-multi-select-height')
 
-    expect(smHeight, `${server.browser}: sm row-height lever`).toBe(resolve('product', 'sm', 'sm').h)
-    expect(lgHeight, `${server.browser}: lg row-height lever`).toBe(resolve('product', 'sm', 'lg').h)
+    expect(smHeight, `${server.browser}: sm row-height lever`).toBe(resolve('product', 'md', 'sm').h)
+    expect(lgHeight, `${server.browser}: lg row-height lever`).toBe(resolve('product', 'md', 'lg').h)
   })
 })
 

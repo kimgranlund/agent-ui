@@ -128,8 +128,8 @@ describe('ui-toggle cross-engine geometry (s13-shaped)', () => {
         heights.push(frameHeight(el))
         fonts.push(fontPx(el))
       }
-      // The derived ramp at the root register (product / sm), ADR-0245 cl.3: height 4n, font = control type.
-      const ramp = (['sm', 'md', 'lg'] as const).map((s) => resolve('product', 'sm', s))
+      // The derived ramp at the root register (product / md), ADR-0245 cl.3: height 4n, font = control type.
+      const ramp = (['sm', 'md', 'lg'] as const).map((s) => resolve('product', 'md', s))
       expect(heights).toEqual(ramp.map((r) => r.h))
       expect(fonts).toEqual(ramp.map((r) => r.type.control))
     }
@@ -145,7 +145,7 @@ describe('ui-toggle cross-engine geometry (s13-shaped)', () => {
     const wBare = frameWidth(bare)
     const wIcon = frameWidth(icon)
     const wBoth = frameWidth(both)
-    expect(frameHeight(bare)).toBeCloseTo(resolve('product', 'sm', 'md').h, 0) // md default height
+    expect(frameHeight(bare)).toBeCloseTo(resolve('product', 'md', 'md').h, 0) // md default height
     expect(wIcon, 'adding a leading icon must widen the frame').toBeGreaterThan(wBare)
     expect(wBoth, 'adding BOTH icon + state-icon must widen it further still').toBeGreaterThan(wIcon)
     // anti-vacuous whole-shape floor: never a near-zero collapsed box

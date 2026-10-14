@@ -261,3 +261,74 @@ scale.mjs is unchanged (P15 proposes the floor to the skill); the generator emit
 |---|---|---|
 | root product/sm | 2n - 2c → max(8, 2n - 2c) | 6 → 8 (+2) · 8 → 8 (0) · 10 → 10 (0) |
 | A2UI canvas widget/md | 2n - 2c → max(8, 2n - 2c) | 6 → 8 (+2) · 8 → 8 (0) · 10 → 10 (0) |
+
+## 21. Amendment 8: the root moves from product/sm (n 5 / 6 / 7) to product/md (n 6 / 8 / 10), size sm · md · lg
+scale.mjs and every rule of Amendments 3 to 7 are unchanged; only the root inputs move (`ROOT_INPUTS` in the generator, `--md-sys-scale-s` -1 → 0 on `:root`).
+| quantity | rule | before → after (delta), sm · md · lg |
+|---|---|---|
+| height, avatar, swatch tile | 4n | 20 → 24 (+4) · 24 → 32 (+8) · 28 → 40 (+12) |
+| n: control margin, field radius, otp cell radius | n | 5 → 6 (+1) · 6 → 8 (+2) · 7 → 10 (+3) |
+| c: control gutter, chip margin | ceil(n/4) | 2 → 2 (0) · 2 → 2 (0) · 2 → 3 (+1) |
+| label inset | n - c | 3 → 4 (+1) · 4 → 6 (+2) · 5 → 7 (+2) |
+| text edge of a control | 2n - c | 8 → 10 (+2) · 10 → 14 (+4) · 12 → 17 (+5) |
+| icon box, indicator box | 2n | 10 → 12 (+2) · 12 → 16 (+4) · 14 → 20 (+6) |
+| glyph box | max(8, 2n - 2c) | 8 → 8 (0) · 8 → 12 (+4) · 10 → 14 (+4) |
+| control pill radius | 2n | 10 → 12 (+2) · 12 → 16 (+4) · 14 → 20 (+6) |
+| listbox panel radius | 2n + c | 12 → 14 (+2) · 14 → 18 (+4) · 16 → 23 (+7) |
+| badge height | 2n + 2c | 14 → 16 (+2) · 16 → 20 (+4) · 18 → 26 (+8) |
+| chip pill radius | n + c | 7 → 8 (+1) · 8 → 10 (+2) · 9 → 13 (+4) |
+| checkbox radius | ceil(n/2) | 3 → 3 (0) · 3 → 4 (+1) · 4 → 5 (+1) |
+| radio dot | glyph - 2 | 4 → 6 (+2) · 6 → 10 (+4) · 8 → 12 (+4) |
+| table row | 4n + 2c | 24 → 28 (+4) · 28 → 36 (+8) · 32 → 46 (+14) |
+| glyph stroke | max(1.5, c/2) | 1.5 → 1.5 (0) · 1.5 → 1.5 (0) · 1.5 → 1.5 (0) |
+| control type | n + 6 | 11 → 12 (+1) · 12 → 14 (+2) · 13 → 16 (+3) |
+| body | n + 7 | 12 → 13 (+1) · 13 → 15 (+2) · 14 → 17 (+3) |
+| title | body + 0/1/2 | 12 → 13 (+1) · 14 → 16 (+2) · 16 → 19 (+3) |
+| field label | n + 4 | 9 → 10 (+1) · 10 → 12 (+2) · 11 → 14 (+3) |
+| group label | n/2 + 6.5 | 9 → 9.5 (+0.5) · 9.5 → 10.5 (+1) · 10 → 11.5 (+1.5) |
+| section label | round(body · 9/8) | 14 → 15 (+1) · 15 → 17 (+2) · 16 → 19 (+3) |
+| subhead | round(body · Q) | 15 → 17 (+2) · 17 → 20 (+3) · 18 → 24 (+6) |
+| heading | round(body · Q²) | 19 → 21 (+2) · 21 → 27 (+6) · 24 → 34 (+10) |
+| display | round(body · Q³) | 23 → 27 (+4) · 27 → 36 (+9) · 32 → 47 (+15) |
+
+Containers and the space aliases at the root md, before (n 6, c 2, m 6) → after (n 8, c 2, m 8):
+| quantity | rule | before → after (delta) |
+|---|---|---|
+| group margin | n + c | 8 → 10 (+2) |
+| group gutter | c | 2 → 2 (0) |
+| group radius | n + c | 8 → 10 (+2) |
+| widget margin | 2m | 12 → 16 (+4) |
+| widget gutter | m | 6 → 8 (+2) |
+| widget radius | 2m | 12 → 16 (+4) |
+| card margin | 3m | 18 → 24 (+6) |
+| card gutter | 2m | 12 → 16 (+4) |
+| card radius | 3m | 18 → 24 (+6) |
+| layout margin | 4m | 24 → 32 (+8) |
+| layout gutter | 3m | 18 → 24 (+6) |
+| layout radius | 4m | 24 → 32 (+8) |
+| `--md-sys-space-xs` | c | 2 → 2 (0) |
+| `--md-sys-space-sm` | n | 6 → 8 (+2) |
+| `--md-sys-space-md` | n + c | 8 → 10 (+2) |
+| `--md-sys-space-lg` | 2m | 12 → 16 (+4) |
+| `--md-sys-space-xl` | 3m | 18 → 24 (+6) |
+| `--md-sys-space-2xl` | 4m | 24 → 32 (+8) |
+
+data-density at the new root md (n 8):
+| density | m | card margin / gutter / radius | layout margin |
+|---|---|---|---|
+| compact | 6 | 18 / 12 / 18 | 24 |
+| default | 8 | 24 / 16 / 24 | 32 |
+| spacious | 10 | 30 / 20 / 30 | 40 |
+
+The A2UI canvas (widget/md, Amendment 2) beside the new root, sm · md · lg:
+| quantity | canvas widget/md | page root product/md |
+|---|---|---|
+| n | 5 · 6 · 7 | 6 · 8 · 10 |
+| height | 20 · 24 · 28 | 24 · 32 · 40 |
+| icon box | 10 · 12 · 14 | 12 · 16 · 20 |
+| glyph box | 8 · 8 · 10 | 8 · 12 · 14 |
+| control type | 11 · 12 · 13 | 12 · 14 · 16 |
+| body | 12 · 13 · 14 | 13 · 15 · 17 |
+| button radius (pill) | 10 · 12 · 14 | 12 · 16 · 20 |
+| card margin / gutter / radius at md | 18 / 12 / 18 | 24 / 16 / 24 |
+- Before this amendment the canvas and the root shared n (5 / 6 / 7). Now a canvas control at md (24px) equals a page control at sm (24px), and a canvas `lg` action (28px) sits between page sm (24px) and page md (32px).

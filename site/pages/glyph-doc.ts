@@ -2,7 +2,7 @@
 // Derived from `glyph.md` through the shared doc-page.ts renderer, so the API table cannot drift from the
 // descriptor the contract trip-wire enforces (ADR-0004). The one page-local block iterates the real
 // GLYPH_SYMBOLS set, once enlarged through the host's own slot override and once per size inside the library
-// root register (`data-tier="product" data-scale="sm"`), so a mark added to the path table appears here for
+// root register (`data-tier="product" data-scale="md"`), so a mark added to the path table appears here for
 // free, then sets an icon beside a glyph in large text: the icon follows the text, the glyph keeps its glyph
 // box (ADR-0245 Amendment 6).
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
@@ -43,7 +43,7 @@ function renderMarks(): HTMLElement {
   section.append(heading(2, 'The twelve marks'), enlarged, heading(3, 'At the library root, sizes sm, md and lg'))
   const region = document.createElement('div')
   region.setAttribute('data-tier', 'product')
-  region.setAttribute('data-scale', 'sm')
+  region.setAttribute('data-scale', 'md')
   for (const size of ['sm', 'md', 'lg']) {
     const row = specimenRow(GLYPH_SYMBOLS.map((symbol) => figureFor(symbol)))
     row.setAttribute('data-size', size)

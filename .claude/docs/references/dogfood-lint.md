@@ -21,7 +21,7 @@ up to a human look; each layer catches what the one before cannot see.
 names its source rule (in the `adr` field), its selector, what it measures and the expected value; every geometry value is computed
 from `resolve(tier, scale, size, density)` in `packages/agent-ui/shared/src/tokens/scale.mjs` at the element's
 register (the nearest `data-tier`, `data-scale`, `data-size` or `size`, and `data-density` on the element or an
-ancestor; product at scale sm at the root, widget at scale md on an A2UI surface). The contrast rules expect a fixed
+ancestor; product at scale md at the root, widget at scale md on an A2UI surface). The contrast rules expect a fixed
 ratio or a comparison with the same control enabled, and `glyph-gap` reads the glyph's own cascade n.
 
 | Render rule | Expected |

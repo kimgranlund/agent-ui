@@ -76,7 +76,7 @@ geometry:
   sizeClass: indicator
   blockSize: var(--ui-badge-box)         # the chip height 2n + 2c (ADR-0245 Amendment 4; ADR-0041's widget ramp retired): fixed, NEVER content-driven
   minInlineSize: var(--ui-badge-box)     # empty-label floor → a filled pill/dot, never a sliver (SPEC-R13 AC2)
-  boxRamp: --md-sys-icon-box + 2c, else --md-sys-compact-lg  # 2n + 2c (16px at the root md, ADR-0245 Amendment 4); the --md-sys-compact-lg bridge alias is the data-foundations="legacy" fallback until W7
+  boxRamp: --md-sys-icon-box + 2c, else --md-sys-compact-lg  # 2n + 2c (20px at the root md, ADR-0245 Amendment 4); the --md-sys-compact-lg bridge alias is the data-foundations="legacy" fallback until W7
   padFormula: c + c  # the chip margin c on the host plus the label margin c on the label part: text edge 2c (ADR-0245 Amendment 4); the legacy fallback is the retired compact-realm pad law `2px + box * 0.375`
   radius: var(--ui-badge-radius)         # the chip pill n + c = h/2 of the 2n + 2c chip (--md-sys-chip-radius, ADR-0245 Amendment 5); box/2 under the legacy opt-out
   noSizeAttribute: true                   # v1 ships no [size] axis (SPEC-R13 AC3) — a foreseen extension only

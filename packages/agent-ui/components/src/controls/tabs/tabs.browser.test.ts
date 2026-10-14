@@ -46,8 +46,8 @@ const THREE = `
 
 const px = (v: string): number => Number.parseFloat(v)
 // ADR-0245 Amendment 4 (superseding GH #536): the tabs touch with the tight gutter c, and each tab carries the
-// control rule's padding, margin n + label inset n - c = 2n - c, on each inline side. Root register: 2 and 10.
-const ROOT = resolve('product', 'sm', 'md')
+// control rule's padding, margin n + label inset n - c = 2n - c, on each inline side. Root register: 2 and 14.
+const ROOT = resolve('product', 'md', 'md')
 const STRIP_GAP = ROOT.c
 const TAB_PAD = ROOT.control.margin + ROOT.labelMargin
 
@@ -81,12 +81,12 @@ describe('ui-tabs — keyboard roving moves focus + switches the visible panel (
     const { tabs, tabEls, panelEls } = mount(THREE)
     // C6 geometry — the tab rows resolve to a REAL MEASURED control height in a live engine, not a silent
     // 0-collapse if the token chain broke (e.g. a dropped token block — the `*/`-in-comment class of bug the
-    // css-text regex cannot see). Anti-vacuous: it equals the 4n height at the root register (28px, ADR-0245), not
+    // css-text regex cannot see). Anti-vacuous: it equals the 4n height at the root register (32px, ADR-0245), not
     // merely >0 — so a broken --ui-tabs-tab-height chain fails HERE, where
     // jsdom/css-text can't.
     const rowHeight = Number.parseFloat(getComputedStyle(tabEls[0]).blockSize)
     expect(rowHeight, 'the tab row collapsed — the --ui-tabs-tab-height chain did not resolve').toBeGreaterThan(0)
-    expect(rowHeight, 'the tab row height is not 4n at the root register (28px, ADR-0245)').toBeCloseTo(resolve('product', 'sm', 'md').h, 0)
+    expect(rowHeight, 'the tab row height is not 4n at the root register (32px, ADR-0245)').toBeCloseTo(ROOT.h, 0)
 
     // baseline: tab 0 selected → its panel shows, the others are display:none (the [hidden] author rule).
     expect(getComputedStyle(panelEls[0]).display, 'panel 0 not shown at baseline').toBe('block')
@@ -168,7 +168,7 @@ describe('ui-tabs — [density] shifts shell spacing; the tab control height is 
     const tabHeightBase = px(getComputedStyle(tabEls[0]).blockSize)
     expect(stripGapBase, 'comfortable strip-gap is not a positive px').toBeGreaterThan(0)
     expect(panelPadBase, 'comfortable panel-pad is not a positive px').toBeGreaterThan(0)
-    expect(tabHeightBase, 'the root tab is not 4n = 28px (ADR-0245 Appendix B)').toBe(resolve('product', 'sm', 'md').h)
+    expect(tabHeightBase, 'the root tab is not 4n = 32px (ADR-0245 Appendix B)').toBe(ROOT.h)
 
     expect(stripGapBase, 'the root strip gap is c').toBe(ROOT.c)
 
@@ -195,20 +195,20 @@ describe('ui-tabs — [density] shifts shell spacing; the tab control height is 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-tabs: strip-gap resolves the exact tight gutter c; a tab carries the control rule padding 2n - c (GH #542, ADR-0245 Amendment 4, both engines)', () => {
-  it('at the root register the tablist column-gap/gap is c (2px) and a rendered tab is padding-inline 2n - c (10px)', () => {
+  it('at the root register the tablist column-gap/gap is c (2px) and a rendered tab is padding-inline 2n - c (14px)', () => {
     const { tabs, tabEls } = mount(THREE)
     const tablist = tabs.querySelector('[data-part="tablist"]') as HTMLElement
 
     // --ui-tabs-strip-gap: var(--md-sys-c, <the #536 xs + md>) (tabs.css). ADR-0245 Amendment 4 supersedes GH
     // #536: each tab carries the control rule's padding, so the tabs touch with the tight gutter c, 2px at the
-    // root register (product / sm / md). GH #542 pins the concrete resolved px (not merely >0) so a future
+    // root register (product / md / md). GH #542 pins the concrete resolved px (not merely >0) so a future
     // token edit that silently shifts it fails HERE, in a real engine's cascade.
     const gapPx = px(getComputedStyle(tablist).columnGap)
     expect(gapPx, 'the tablist column-gap did not resolve to c (ADR-0245 Amendment 4)').toBeCloseTo(STRIP_GAP, 0)
     expect(px(getComputedStyle(tablist).gap), 'gap and column-gap disagree on the resolved value').toBeCloseTo(STRIP_GAP, 0)
 
     // ADR-0245 Amendment 4: a tab is a control, margin n + label inset n - c on each inline side (its label is
-    // anonymous content), 10px at the root register.
+    // anonymous content), 14px at the root register.
     const tabStyle = getComputedStyle(tabEls[0])
     expect(px(tabStyle.paddingInlineStart), 'a tab carries the text edge 2n - c at its start').toBeCloseTo(TAB_PAD, 0)
     expect(px(tabStyle.paddingInlineEnd), 'a tab carries the text edge 2n - c at its end').toBeCloseTo(TAB_PAD, 0)
@@ -979,7 +979,7 @@ describe('ui-tabs — orientation="vertical" × overflow="menu": the §7 corner 
   it("[MUST-PROVE] the fit axis flips to BLOCK-size under vertical; the trigger sits at the strip column's block-end, a tab-height square", () => {
     // The fixture box is derived from the tab row (4n at the root register), not a literal: three rows' worth of
     // block-size cannot hold five rows + the trigger reserve at any n, so the fit axis always has to engage.
-    const boxPx = 3 * resolve('product', 'sm', 'md').h
+    const boxPx = 3 * ROOT.h
     const wrap = document.createElement('div')
     wrap.style.cssText = `display:flex; flex-direction:column; block-size:${boxPx}px;`
     wrap.innerHTML = `

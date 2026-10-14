@@ -36,27 +36,27 @@ const ptr = (el: UIRatingElement, type: string, x: number, id = 1): PointerEvent
 }
 
 describe('ui-rating browser smoke — widget-box geometry (ADR-0041)', () => {
-  it('default: each star svg = the md icon box, 14×14 px (ADR-0245 cl.3, root register product / sm)', () => {
+  it('default: each star svg = the md icon box 2n (ADR-0245 cl.3, root register product / md)', () => {
     const el = document.createElement('ui-rating') as UIRatingElement
     document.body.append(el)
     const svg = el.querySelector('.stars-base svg') as SVGSVGElement
     const cs = getComputedStyle(svg)
-    expect(Number.parseFloat(cs.width)).toBe(resolve('product', 'sm', 'md').icon)
-    expect(Number.parseFloat(cs.height)).toBe(resolve('product', 'sm', 'md').icon)
+    expect(Number.parseFloat(cs.width)).toBe(resolve('product', 'md', 'md').icon)
+    expect(Number.parseFloat(cs.height)).toBe(resolve('product', 'md', 'md').icon)
     el.remove()
   })
 
-  it('[size=sm] → 12px star; [size=lg] → 16px star (the derived icon box)', () => {
+  it('[size=sm] and [size=lg] star = the derived icon box at that size', () => {
     const sm = document.createElement('ui-rating')
     sm.setAttribute('size', 'sm')
     document.body.append(sm)
-    expect(Number.parseFloat(getComputedStyle(sm.querySelector('.stars-base svg') as SVGSVGElement).width)).toBe(resolve('product', 'sm', 'sm').icon)
+    expect(Number.parseFloat(getComputedStyle(sm.querySelector('.stars-base svg') as SVGSVGElement).width)).toBe(resolve('product', 'md', 'sm').icon)
     sm.remove()
 
     const lg = document.createElement('ui-rating')
     lg.setAttribute('size', 'lg')
     document.body.append(lg)
-    expect(Number.parseFloat(getComputedStyle(lg.querySelector('.stars-base svg') as SVGSVGElement).width)).toBe(resolve('product', 'sm', 'lg').icon)
+    expect(Number.parseFloat(getComputedStyle(lg.querySelector('.stars-base svg') as SVGSVGElement).width)).toBe(resolve('product', 'md', 'lg').icon)
     lg.remove()
   })
 })

@@ -120,7 +120,10 @@ component-preview {
 }
 .preview-canvas > .canvas-stage {
   flex: 1 1 45%;
-  min-inline-size: 0;
+  /* The artboard never narrows below the widest whole-shape floor a catalog root carries (ui-table and
+   * ui-audio: 16em) plus the surface's inline inset. A share of the card alone left 224px at 1280 once the
+   * nav pane grew to 42n (T-0166), so AudioPlayer and Table overflowed the stage. The code view yields. */
+  min-inline-size: calc(16rem + var(--md-sys-space-2xl));
 }
 
 /* ── the tabbed code view (GH #1664): a NEW sibling of .canvas-stage, inside .preview-canvas — never inside

@@ -134,7 +134,7 @@ number through `Intl.NumberFormat`, a delta signed (`+50`, `-3`).
 ## Actions
 
 The card mints no button. Each direct `ui-button` child is stamped `size="lg"`, so action buttons sit at the
-large step of the library ramp (28px at the root and on an A2UI canvas). A click on the summary or a stat never fires an action.
+large step of the library ramp (40px at the root, 28px on an A2UI canvas). A click on the summary or a stat never fires an action.
 
 ## Accessibility
 

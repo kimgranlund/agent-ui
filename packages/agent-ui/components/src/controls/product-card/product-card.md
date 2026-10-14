@@ -155,7 +155,7 @@ parts:
   - name: price-note
     description: The muted price qualifier, present only when `priceNote` is non-empty.
   - name: action
-    description: The real native `<button type="button" data-part="action">`, present only when `action` is non-null. Visible text `actionLabel`; aria-label `{actionLabel} {title}`. At the derived control height of the card's own n (`--md-sys-height`, 4n: 24px at the root and on an A2UI canvas, ADR-0245 Amendment 3; the old large step, 36px, under the legacy opt-out); a ghost when `selected`, natively disabled when `disabled`.
+    description: The real native `<button type="button" data-part="action">`, present only when `action` is non-null. Visible text `actionLabel`; aria-label `{actionLabel} {title}`. At the derived control height of the card's own n (`--md-sys-height`, 4n: 32px at the root, ADR-0245 Amendment 8, and 24px on an A2UI canvas, Amendment 3; the old large step, 36px, under the legacy opt-out); a ghost when `selected`, natively disabled when `disabled`.
 
 customStates: []        # no custom state; presence is DOM add/remove, never a state flag
 

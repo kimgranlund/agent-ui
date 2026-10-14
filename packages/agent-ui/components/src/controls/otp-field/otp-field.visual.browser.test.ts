@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, afterEach } from 'vitest'
 import { page, server } from 'vitest/browser'
 import type { UIOtpFieldElement } from './otp-field.ts'
 
@@ -12,6 +12,10 @@ import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
 
 describe('ui-otp-field — visual regression (LLD §12.4: empty / active / complete / disabled / user-invalid)', () => {
+  // A failed screenshot throws before its el.remove(); sweep here so a leftover field (and its absolutely
+  // placed validation message) never paints into the next test's shot.
+  afterEach(() => document.querySelectorAll('ui-otp-field').forEach((el) => el.remove()))
+
   it.skipIf(server.browser !== 'chromium')('empty: six idle cells, no active ring (unfocused)', async () => {
     const el = document.createElement('ui-otp-field') as UIOtpFieldElement
     el.setAttribute('label', 'Code')

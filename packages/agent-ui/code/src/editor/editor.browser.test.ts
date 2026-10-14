@@ -1196,9 +1196,9 @@ describe('ui-code-editor — derived foundations geometry (ADR-0245 cl.3, dark l
     expect(box.height, `${server.browser}: toggle block size`).toBe(r.h)
   })
 
-  it('outside any region the page root derives the geometry (root = product / sm / md): padding n - 1, the toggle a 4n square', async () => {
+  it('outside any region the page root derives the geometry (root = product / md / md): padding n - 1, the toggle a 4n square', async () => {
     const { field } = mount(`<ui-code-editor language="markdown" ${SIZED}></ui-code-editor>`)
-    const r = resolve('product', 'sm', 'md')
+    const r = resolve('product', 'md', 'md')
     await expect.poll(() => field.querySelector('[data-part="mode-toggle"]') !== null, { timeout: 5000 }).toBe(true)
     const cs = getComputedStyle(field)
     expect(px(cs.paddingTop), `${server.browser}: padding-block`).toBe(r.control.margin - 1)

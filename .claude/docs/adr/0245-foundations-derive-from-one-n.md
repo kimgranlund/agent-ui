@@ -1100,3 +1100,77 @@ Repairs in the same change: `tokens.md` (the role vocabulary), `geometry.md` and
 glyph box rows), `derive.mjs` (section 20; sections 13 and 16 keep the unfloored glyph they recorded), and the
 `glyph`, `text-field`, `textarea`, `otp-field` and `code/editor` descriptors. The skill proposals are P15 (the glyph floor) and
 P16 (the 3:1 field outline) in `.sdlc/mathematical-design-system-review.md`.
+
+## Amendment 8 (2026-10-14, T-0152): the page root moves to product / md
+
+Kim's ruling, 2026-10-14: "product md should be the pages default". The root moves one scale step up, from
+product / sm to product / md. `scale.mjs` is unchanged (sha256 `3c319761…6057ba5b`, byte for byte the skill's),
+and so is every rule of Amendments 3 to 7: the generator's `ROOT_INPUTS` becomes `{ tier: 'product', scale: 'md' }`,
+so `:root` carries `--md-sys-scale-s: 0` (was -1), and every element that names no register derives from the new
+n. It supersedes Amendment 3 item 2's root ("the root stays product at scale sm, now n 5 / 6 / 7") and every
+"at the root" px of Amendments 3 to 7, which stay as written for the root they described.
+
+1. **The root table.** Product / md is n 6 / 8 / 10 at size sm / md / lg: heights **24 / 32 / 40**, body
+   13 / 15 / 17, control type 12 / 14 / 16. Margins, gutters and radii follow n (and m, which is n at the default
+   density): the root md card level is 24 / 16 / 24, the layout level 32 / 24 / 32. The local `glyphBox()` floor
+   (Amendment 7) and the field outline role stay; at the new root the floor binds at sm only (8 against 2n - 2c = 8,
+   so it is moot there too).
+2. **The A2UI canvas stays widget / md** (Amendment 2): n 5 / 6 / 7, heights 20 / 24 / 28. Amendment 2's "widget/md
+   is the same n as the page root" no longer holds: a canvas now sits one step below the page. A canvas control at
+   md (24px) equals a page control at sm, a composite's `lg` action (28px) sits between page sm (24px) and page md
+   (32px), and a canvas card at md reads 18 / 12 / 18 against the page's 24 / 16 / 24. No stamp moves. Kim's ruling,
+   2026-10-14: the A2UI canvas stays widget / md (20 / 24 / 28), deliberately denser than the page.
+3. **Kept as is.** The bridge's `SCALE_TO_TIER` keeps `[scale="ui-md"]` at product / sm (clause 2's table), so a
+   legacy `ui-md` region now renders one step below the root; `ui-lg` maps onto product / md, the root itself.
+   The `LEGACY` values of the `data-foundations="legacy"` opt-out are pre-cut history and do not move.
+4. **Gates.** `foundations.test.ts` pins the `:root` line at `--md-sys-scale-s: 0`; `foundations-probe.mjs` measures
+   the sized controls at product / md; the docs site's sizing page, the glyph page's root specimen and the component
+   gallery's default scale read product / md. Every fleet test that pins a root px or reads
+   `resolve('product', 'sm', …)` as "the root" is re-pinned by its census lane from
+   `.sdlc/root-product-md/repin-list.md`.
+
+The root controls, before → after at sm · md · lg (`derive.out.md` section 21):
+
+| quantity | rule | before → after (delta), sm · md · lg |
+|---|---|---|
+| height, avatar, swatch tile | 4n | 20 → 24 (+4) · 24 → 32 (+8) · 28 → 40 (+12) |
+| n: control margin, field radius, otp cell radius | n | 5 → 6 (+1) · 6 → 8 (+2) · 7 → 10 (+3) |
+| c: control gutter, chip margin | ceil(n/4) | 2 → 2 (0) · 2 → 2 (0) · 2 → 3 (+1) |
+| label inset | n - c | 3 → 4 (+1) · 4 → 6 (+2) · 5 → 7 (+2) |
+| text edge of a control | 2n - c | 8 → 10 (+2) · 10 → 14 (+4) · 12 → 17 (+5) |
+| icon box, indicator box | 2n | 10 → 12 (+2) · 12 → 16 (+4) · 14 → 20 (+6) |
+| glyph box | max(8, 2n - 2c) | 8 → 8 (0) · 8 → 12 (+4) · 10 → 14 (+4) |
+| control pill radius | 2n | 10 → 12 (+2) · 12 → 16 (+4) · 14 → 20 (+6) |
+| listbox panel radius | 2n + c | 12 → 14 (+2) · 14 → 18 (+4) · 16 → 23 (+7) |
+| badge height | 2n + 2c | 14 → 16 (+2) · 16 → 20 (+4) · 18 → 26 (+8) |
+| chip pill radius | n + c | 7 → 8 (+1) · 8 → 10 (+2) · 9 → 13 (+4) |
+| checkbox radius | ceil(n/2) | 3 → 3 (0) · 3 → 4 (+1) · 4 → 5 (+1) |
+| radio dot | glyph - 2 | 4 → 6 (+2) · 6 → 10 (+4) · 8 → 12 (+4) |
+| table row | 4n + 2c | 24 → 28 (+4) · 28 → 36 (+8) · 32 → 46 (+14) |
+| control type | n + 6 | 11 → 12 (+1) · 12 → 14 (+2) · 13 → 16 (+3) |
+| body | n + 7 | 12 → 13 (+1) · 13 → 15 (+2) · 14 → 17 (+3) |
+| title | body + 0/1/2 | 12 → 13 (+1) · 14 → 16 (+2) · 16 → 19 (+3) |
+| field label | n + 4 | 9 → 10 (+1) · 10 → 12 (+2) · 11 → 14 (+3) |
+| group label | n/2 + 6.5 | 9 → 9.5 (+0.5) · 9.5 → 10.5 (+1) · 10 → 11.5 (+1.5) |
+| section label | round(body · 9/8) | 14 → 15 (+1) · 15 → 17 (+2) · 16 → 19 (+3) |
+| subhead | round(body · Q) | 15 → 17 (+2) · 17 → 20 (+3) · 18 → 24 (+6) |
+| heading | round(body · Q²) | 19 → 21 (+2) · 21 → 27 (+6) · 24 → 34 (+10) |
+| display | round(body · Q³) | 23 → 27 (+4) · 27 → 36 (+9) · 32 → 47 (+15) |
+
+The containers and the space aliases at the root md, before (n 6, m 6) → after (n 8, m 8):
+
+| quantity | rule | before → after (delta) |
+|---|---|---|
+| group margin / gutter / radius | n + c / c / n + c | 8 / 2 / 8 → 10 / 2 / 10 |
+| widget margin / gutter / radius | 2m / m / 2m | 12 / 6 / 12 → 16 / 8 / 16 |
+| card margin / gutter / radius | 3m / 2m / 3m | 18 / 12 / 18 → 24 / 16 / 24 |
+| layout margin / gutter / radius | 4m / 3m / 4m | 24 / 18 / 24 → 32 / 24 / 32 |
+| `--md-sys-space-xs` / `-sm` / `-md` | c / n / n + c | 2 / 6 / 8 → 2 / 8 / 10 |
+| `--md-sys-space-lg` / `-xl` / `-2xl` | 2m / 3m / 4m | 12 / 18 / 24 → 16 / 24 / 32 |
+| data-density compact / default / spacious, m | max(n + a·d, floor((n + c)/2) + 1) | 5 / 6 / 8 → 6 / 8 / 10 (card 18 / 24 / 30) |
+
+Repairs in the same change: `geometry.md`, `geometry-sizing-spec.md`, `tokens.md`, `derive.mjs` (section 21),
+`CLAUDE.md`'s ramp line, the generator's header and emitted banner, `foundations-probe.mjs`'s root register, and the
+site's sizing page lead, glyph page root specimen and component gallery default. `AGENTS.md` names no root px.
+The descriptors that name a root px (`avatar`, `badge`, `glyph`, `swatch`, `product-card`, `result-card`,
+`super-shell`) are repaired by their census lanes with the re-pins, listed in the same file.

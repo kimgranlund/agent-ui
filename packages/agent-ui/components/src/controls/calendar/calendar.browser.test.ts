@@ -892,13 +892,13 @@ describe('ui-calendar — container box-model inset (ADR-0046 Amendment 2, both 
 
     const nav = el.querySelector<HTMLElement>('[data-part="nav"]')!
     const cs  = getComputedStyle(nav)
-    const inset = `${resolve('product', 'sm', 'md').control.margin}px`
+    const inset = `${resolve('product', 'md', 'md').control.margin}px`
 
     // At-rest margin: the SAME --ui-box-inset every other [data-box] child carries (n, ADR-0245 cl.6:
-    // 7px at the root register, product / sm / md) — NOT the pre-revision full-bleed margin:0.
+    // 8px at the root register, product / md / md), NOT the pre-revision full-bleed margin:0.
     expect(cs.marginTop, `${server.browser}: nav header margin is not the box inset (full-bleed regression?)`).toBe(inset)
 
-    // Sticky offset: inset-block-start is the SAME 6px inset, not 0 — the fix that keeps the
+    // Sticky offset: inset-block-start is the SAME 8px inset, not 0: the fix that keeps the
     // at-rest and stuck positions from snapping (container-box.css's sticky-offset note).
     expect(cs.position, `${server.browser}: nav header lost position:sticky`).toBe('sticky')
     expect(cs.top, `${server.browser}: nav header sticky inset-block-start is not the box inset`).toBe(inset)
@@ -912,8 +912,8 @@ describe('ui-calendar — container box-model inset (ADR-0046 Amendment 2, both 
     const nav   = el.querySelector<HTMLElement>('[data-part="nav"]')!
     const gap   = nav.getBoundingClientRect().top - panel.getBoundingClientRect().top
 
-    // Panel border-box top → nav border-box top = the panel's own 1px border + the nav's 6px
-    // margin = ~8px (7px inset at the root register). The load-bearing floor is "clearly inset" (≥ 6px), not "flush" (~0-1px) —
+    // Panel border-box top → nav border-box top = the panel's own 1px border + the nav's 8px
+    // margin = ~9px (8px inset at the root register). The load-bearing floor is "clearly inset" (≥ 6px), not "flush" (~0-1px),
     // the shape a full-bleed regression would collapse to.
     expect(gap, `${server.browser}: nav sits flush against the panel edge (full-bleed) instead of inset`).toBeGreaterThanOrEqual(6)
   })
@@ -923,7 +923,7 @@ describe('ui-calendar — container box-model inset (ADR-0046 Amendment 2, both 
     await el.updateComplete
 
     const grid = el.querySelector<HTMLElement>('[data-part="grid"]')!
-    expect(getComputedStyle(grid).marginTop, `${server.browser}: grid margin is not the box inset`).toBe(`${resolve('product', 'sm', 'md').control.margin}px`)
+    expect(getComputedStyle(grid).marginTop, `${server.browser}: grid margin is not the box inset`).toBe(`${resolve('product', 'md', 'md').control.margin}px`)
   })
 })
 

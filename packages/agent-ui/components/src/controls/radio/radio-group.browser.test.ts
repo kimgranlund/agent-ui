@@ -86,8 +86,8 @@ describe('ui-radio-group browser smoke — component-owned layout (ADR-0103)', (
     wrap.append(el)
 
     const gapPx = (): number => px(getComputedStyle(el).rowGap)
-    // --md-sys-space-sm is n at the region (ADR-0245 cl.6): 7 at the root, then a denser and a roomier region.
-    expect(gapPx()).toBe(resolve('product', 'sm', 'md').control.margin)
+    // --md-sys-space-sm is n at the region (ADR-0245 cl.6): 8 at the root, then a denser and a roomier region.
+    expect(gapPx()).toBe(resolve('product', 'md', 'md').control.margin)
 
     wrap.setAttribute('data-tier', 'widget')
     wrap.setAttribute('data-scale', 'sm')

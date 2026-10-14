@@ -725,13 +725,14 @@ describe('ui-combo-box — whole-shape assertion (Test-the-whole-shape DoD law)'
     const editor = el.querySelector<HTMLElement>('[data-part="editor"]')!
     const rect = editor.getBoundingClientRect()
 
-    // Before the fix this measured ~30px+ (2 wrapped lines); the fixed single-line height is the
-    // --ui-combo-box-height token (--md-sys-height-md ≈ 28px at default scale). Assert it stays at the
-    // sm-height floor (24px) rather than growing for a second line.
+    // The single-line editor is exactly the md height 4n at the root register; its padding-block is
+    // (h - font) / 2 - 1 at line-height 1, so a wrapped 2nd line grows it to h + font. Assert it stays
+    // under h + 1 rather than growing for a second line.
+    const h = resolve('product', 'md', 'md').h
     expect(
       rect.height,
       `${server.browser}: editor grew to ${rect.height}px — the placeholder wrapped onto a 2nd line (the fixed regression)`,
-    ).toBeLessThan(29)
+    ).toBeLessThan(h + 1)
   })
 
   it('editor has real Control-class height (≥ 24px = --md-sys-height-sm floor)', async () => {
@@ -847,12 +848,12 @@ describe('ui-combo-box — whole-shape assertion (Test-the-whole-shape DoD law)'
     const editorH = editor.getBoundingClientRect().height
     const editorPad = px(getComputedStyle(editor).paddingInlineStart)
 
-    const r = resolve('product', 'sm', 'md')
+    const r = resolve('product', 'md', 'md')
     expect(
       editorPad,
       `${server.browser}: editor padding-inline (${editorPad}px) should equal 2n - c (${r.control.margin + r.labelMargin}px)`,
     ).toBeCloseTo(r.control.margin + r.labelMargin, 0)
-    expect(editorH, `${server.browser}: editor frame is the derived height 4n`).toBeCloseTo(resolve('product', 'sm', 'md').h, 0)
+    expect(editorH, `${server.browser}: editor frame is the derived height 4n`).toBeCloseTo(resolve('product', 'md', 'md').h, 0)
   })
 
   it("an open option's text lines up under the editor's text: the alignment law, measured from the editor edge with the panel's c outset (ADR-0245 Amendment 4)", async () => {

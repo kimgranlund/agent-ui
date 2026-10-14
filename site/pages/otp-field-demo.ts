@@ -136,9 +136,10 @@ const contractNote = el('p', {}, [
 
 // ── the axis specimens — length × size × state ──────────────────────────────────────────────────────────────
 const axes = el('ui-row', { gap: 'md', align: 'end', wrap: '' }, [
-  captioned('length="4" size="sm"', el('ui-otp-field', { length: '4', size: 'sm', label: 'PIN' })),
+  // the long code takes the small size and the short one the large: eight lg cells (8 x 4n + 7n) outrun a 400px column
+  captioned('length="4" size="lg"', el('ui-otp-field', { length: '4', size: 'lg', label: 'PIN' })),
   captioned('length="6" (default)', el('ui-otp-field', { label: 'Code' })),
-  captioned('length="8" size="lg"', el('ui-otp-field', { length: '8', size: 'lg', label: 'Recovery code' })),
+  captioned('length="8" size="sm"', el('ui-otp-field', { length: '8', size: 'sm', label: 'Recovery code' })),
   captioned('disabled, partial', el('ui-otp-field', { disabled: '', value: '48', label: 'Locked' })),
 ])
 

@@ -81,8 +81,8 @@ The host is the shared **icon slot**: `2n` wide and tall, with the glyph box `ma
 (the inset is `c` on each side wherever `2n - 2c` clears the 8px floor), so an icon and a glyph in neighbouring
 slots share the slot box and the centre line. The slot reads the derived foundation tokens
 (`--md-sys-icon-box`, `--md-sys-glyph-box`, `--md-sys-glyph-stroke`, ADR-0245), which the library root
-declares, so a glyph keeps its own glyph box everywhere: at the root (product, scale sm) the mark is
-8 / 8 / 10 px for sizes sm / md / lg with a 1.5px stroke (the 8px floor holds sm, Amendment 7). This is the line between a glyph and an icon
+declares, so a glyph keeps its own glyph box everywhere: at the root (product, scale md) the mark is
+8 / 12 / 14 px for sizes sm / md / lg with a 1.5px stroke (the 8px floor holds sm, Amendment 7). This is the line between a glyph and an icon
 (ADR-0245 Amendment 6): a standalone `ui-icon` follows the surrounding text (`1em`), a glyph never does. Under
 the `data-foundations="legacy"` opt-out the slot is `1em` with a `0.125em` inset. Override `--ui-glyph-slot`,
 `--ui-glyph-inset` or `--ui-glyph-stroke` on the host to resize one mark.

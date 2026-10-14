@@ -55,7 +55,7 @@ applyDemoWidth(price, '22rem')
 
 const readout = el('output', { for: 'price', 'aria-live': 'polite' })
 const results = el('ul', { style: 'margin:0.5rem 0 0; padding-inline-start:1.25rem;', 'aria-label': 'Matching products' })
-const summary = el('p', { class: 'demo-caption', style: 'margin:0.25rem 0 0;' })
+const summary = el('p', { class: 'demo-caption', style: 'margin:var(--md-sys-inset) 0 0;' }) // n under the readout (the prose-gap rule)
 const refresh = (): void => {
   const lo = price.valueLo
   const hi = price.valueHi

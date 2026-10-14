@@ -53,7 +53,7 @@ describe('ui-timeline-item cross-engine geometry smoke — the marker-system exp
     }
     for (const size of ['sm', 'md', 'lg'] as const) {
       item.setAttribute('size', size)
-      const r = resolve('product', 'sm', size)
+      const r = resolve('product', 'md', size)
       const [mb, dot] = [r.icon, glyphBox(r)]
       const [cw, gut, rg] = LITERALS[size]!
       expect(markerBox(item), `size=${size} marker-box`).toBeCloseTo(mb, 0)

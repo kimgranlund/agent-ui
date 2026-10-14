@@ -8,7 +8,7 @@ import './foundations-bridge.gen.css'
 // derived token is read back through layout (`inline-size: var(<token>)`, skill section 6 step 4, never the
 // raw custom-property text) and compared to scale.mjs resolve(), in Chromium and WebKit; Amendment 3 repeats
 // every cell at each data-density (m moves the widget, card and layout levels only). The root leg proves
-// the cut (the document is product at scale sm with no attribute), and the legacy leg the clause 10e opt-out:
+// the cut (the document is product at scale md with no attribute, Amendment 8), and the legacy leg the clause 10e opt-out:
 // inside [data-foundations="legacy"] every derived token is undefined, so each fallback wins.
 
 const TIERS = ['widget', 'product', 'content', 'brand'] as const
@@ -125,28 +125,28 @@ describe('foundations.gen.css: the 36 cells compute what resolve() gives (ADR-02
     expect(labelled(got)).toEqual(labelled(cell(resolve('brand', 'lg', 'sm'))))
   })
 
-  it('a region with no data-scale or data-size inherits the root scale sm at size md', () => {
+  it('a region with no data-scale or data-size inherits the root scale md at size md', () => {
     expect(labelled(readTokens('<div data-tier="product" data-probe></div>'))).toEqual(
-      labelled(cell(resolve('product', 'sm', 'md'))),
+      labelled(cell(resolve('product', 'md', 'md'))),
     )
   })
 })
 
 describe('foundations.gen.css: the cut and the legacy opt-out (ADR-0245 clause 10a, 10e)', () => {
-  it('with no attribute at all the document reads the root register product / sm / md', () => {
-    expect(labelled(readTokens('<div><span data-probe></span></div>'))).toEqual(labelled(cell(resolve('product', 'sm', 'md'))))
+  it('with no attribute at all the document reads the root register product / md / md', () => {
+    expect(labelled(readTokens('<div><span data-probe></span></div>'))).toEqual(labelled(cell(resolve('product', 'md', 'md'))))
   })
 
   it('a bare data-scale or size outside any data-tier derives at the root tier', () => {
-    expect(labelled(readTokens('<div data-scale="md"><div size="lg" data-probe></div></div>'))).toEqual(
-      labelled(cell(resolve('product', 'md', 'lg'))),
+    expect(labelled(readTokens('<div data-scale="sm"><div size="lg" data-probe></div></div>'))).toEqual(
+      labelled(cell(resolve('product', 'sm', 'lg'))),
     )
   })
 
   it('the retired [density] maps onto data-density: compact moves m one tier step down, never n', () => {
     const legacyAxis = 'density' // built, not spelled, so this proof is not itself a use of the retired axis
     const wrap = `<div ${legacyAxis}="compact"><span data-probe></span></div>`
-    expect(labelled(readTokens(wrap))).toEqual(labelled(cell(resolve('product', 'sm', 'md', 'compact'))))
+    expect(labelled(readTokens(wrap))).toEqual(labelled(cell(resolve('product', 'md', 'md', 'compact'))))
   })
 
   it('inside [data-foundations="legacy"] every derived token is undefined, so each fallback wins', () => {
