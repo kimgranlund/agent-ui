@@ -28,6 +28,9 @@
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-form-popover) declares --ui-form-popover-* ════════════════ */
 
+/* uses: synced from form-popover.md by scripts/codemod-uses.mjs */
+@import '../glyph/glyph.css';
+
 :where(ui-form-popover) {
   /* ── Trigger frame — the standard FOUR-state control law (interaction-states.md): default/hover/
      active/focus repoint `background` only (the geometry law untouched); no disabled row (SPEC-R2:
@@ -41,15 +44,13 @@
 
   /* ── Trigger geometry (Control class, default size = md) — off the §1-row ramp (ADR-0038).
      height/font/icon from the explicit per-[scale] table; gap = the density-bearing column-gap.
-     The caret (inline affordance) follows the §4.1 law: glyph size = font (RHYTHM family) →
-     centred in the icon cell by padding = ½(icon−glyph). */
+     The caret is a ui-glyph that sizes its own glyph box inside the icon cell (T-0149). */
   --ui-form-popover-height: var(--md-sys-height, var(--md-sys-height-md));
   --ui-form-popover-font: var(--md-sys-type-control, var(--md-sys-font-md));
   --ui-form-popover-gap: var(--md-sys-inset, var(--md-sys-gap-md));
   --ui-form-popover-icon: var(--md-sys-icon-box, var(--md-sys-icon-md));
   --ui-form-popover-corner-shape: var(--md-sys-corner-shape, round);
   --ui-form-popover-pad-start: var(--md-sys-inset, calc(var(--ui-form-popover-height) / 2)); /* h/2 label edge; derived: n (ADR-0245 cl.3) */
-  --ui-form-popover-glyph: var(--md-sys-glyph-box, var(--ui-form-popover-font)); /* caret GLYPH = font (§4.1 caret law) */
 
   /* ── Sizing floor — the [inline] hug-state content floor (ADR-0223 Appendix §E ruling, slice 1:
      the 10ch is a CONTENT floor, so it moves to the `[inline]` hug context; the squareness floor —
@@ -149,26 +150,11 @@
     white-space: nowrap;
   }
 
-  /* The caret span: an icon-sized CELL (box-sizing border-box). The glyph inside is font-sized and
-     centred by padding = ½(icon − glyph), the §4.1 caret law (same as select.css/button.css). */
+  /* The caret: a ui-glyph caret-down in an icon-sized cell (T-0149). ui-glyph insets its own glyph box
+     max(8px, 2n - 2c) in that cell, so only the cell size is set here. */
   :scope > [data-part='trigger'] > [data-part='caret'] {
     inline-size: var(--ui-form-popover-icon);
     block-size: var(--ui-form-popover-icon);
-    box-sizing: border-box;
-    padding: calc((var(--ui-form-popover-icon) - var(--ui-form-popover-glyph)) / 2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: var(--ui-form-popover-glyph);
-    line-height: 1;
-  }
-
-  /* The injected Phosphor caret-down (setIcon, @agent-ui/icons): sized explicitly to the glyph
-     rhythm — not the icon cell — so the §4.1 law holds independent of the padding math above. */
-  :scope > [data-part='trigger'] > [data-part='caret'] svg {
-    display: block;
-    inline-size: var(--ui-form-popover-glyph);
-    block-size: var(--ui-form-popover-glyph);
   }
 
   /* Standard four interaction states (interaction-states.md, no deviation) — repoint background

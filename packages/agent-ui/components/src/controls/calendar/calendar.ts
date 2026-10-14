@@ -25,9 +25,9 @@
 //   <ui-calendar>
 //     <div data-part="panel" data-box>
 //       <header data-part="nav">
-//         <button data-part="prev" type="button" aria-label="Previous month"><svg>…caret-left…</svg></button>
+//         <button data-part="prev" type="button" aria-label="Previous month"><ui-glyph symbol="caret-left"></button>
 //         <span   data-part="title" id="uid-N" aria-live="polite">July 2026</span>
-//         <button data-part="next" type="button" aria-label="Next month"><svg>…caret-right…</svg></button>
+//         <button data-part="next" type="button" aria-label="Next month"><ui-glyph symbol="caret-right"></button>
 //       </header>
 //       <div data-part="grid" role="grid" aria-labelledby="uid-N">
 //         <div role="row">  <!-- weekday column-header row -->
@@ -79,7 +79,7 @@ import { prop } from '../../dom/index.ts'
 import type { PropsSchema, ReactiveProps } from '../../dom/index.ts'
 import type { FormValue, ValidityResult, FieldLabelling } from '../../dom/index.ts'
 import { trackUserInvalid, type TrackUserInvalidController } from '../../traits/track-user-invalid.ts'
-import { setIcon } from '@agent-ui/icons'
+import '../glyph/glyph.ts' // registers <ui-glyph>: the prev/next carets are library marks, not pack art (ADR-0245 cl.5)
 
 // ── Module-level stable-id counter (one per title/grid pair, never reused) ─────────────────
 
@@ -92,6 +92,13 @@ let _nextCalendarId = 0
  * input. Does NOT use new Date('YYYY-MM-DD'), which parses as UTC midnight and can shift the
  * calendar day by ±1 in negative-offset timezones.
  */
+/** A decorative caret mark for a nav button: a ui-glyph (empty label, so aria-hidden; the button carries the name). */
+function caretGlyph(symbol: 'caret-left' | 'caret-right'): HTMLElement {
+  const glyph = document.createElement('ui-glyph')
+  glyph.setAttribute('symbol', symbol)
+  return glyph
+}
+
 function parseDateStr(s: string): { y: number; m: number; d: number } | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s)
   if (!match) return null
@@ -611,7 +618,7 @@ export class UICalendarElement extends UIFormElement {
     prev.setAttribute('data-part', 'prev')
     prev.setAttribute('type', 'button')
     prev.setAttribute('aria-label', 'Previous month')
-    setIcon(prev, 'caret-left') // Phosphor, via @agent-ui/icons
+    prev.append(caretGlyph('caret-left'))
 
     // Stable title id so [data-part=grid] can reference it via aria-labelledby.
     const titleId = `ui-calendar-title-${++_nextCalendarId}`
@@ -625,7 +632,7 @@ export class UICalendarElement extends UIFormElement {
     next.setAttribute('data-part', 'next')
     next.setAttribute('type', 'button')
     next.setAttribute('aria-label', 'Next month')
-    setIcon(next, 'caret-right') // Phosphor, via @agent-ui/icons
+    next.append(caretGlyph('caret-right'))
 
     nav.appendChild(prev)
     nav.appendChild(title)

@@ -53,7 +53,11 @@ export class UIBarChartElement extends UIElement {
     // AC2 sibling rule the codec alone cannot cover — the codec only guards the ATTRIBUTE path).
     this.effect(() => {
       const rows = barRows(cleanData(this.data))
-      this.replaceChildren(...rows.map((row) => this.#rowNode(row)))
+      // the shared origin, wherever a value is negative (T-0149): any row gives it back, start for a positive
+      // bar, end for a negative one; an all-positive chart draws no zero rule
+      const neg = rows.find((row) => row.value < 0)
+      const zero = neg === undefined ? null : neg.startPct + neg.lengthPct
+      this.replaceChildren(...rows.map((row) => this.#rowNode(row, zero)))
     })
   }
 
@@ -63,7 +67,7 @@ export class UIBarChartElement extends UIElement {
    * method never writes a `width`. AT reading (SPEC-R8 AC1): the listitem's text content is
    * `{label} {printed value}` (the two text spans); the track subtree is aria-hidden and text-free.
    */
-  #rowNode(row: BarRow): HTMLElement {
+  #rowNode(row: BarRow, zero: number | null): HTMLElement {
     const item = document.createElement('div')
     item.setAttribute('role', 'listitem')
 
@@ -79,6 +83,10 @@ export class UIBarChartElement extends UIElement {
     const track = document.createElement('span')
     track.setAttribute('data-part', 'track')
     track.setAttribute('aria-hidden', 'true')
+    if (zero !== null) {
+      track.setAttribute('data-origin', '')
+      track.style.setProperty('--_bar-zero', String(zero))
+    }
     track.appendChild(fill)
 
     const value = document.createElement('span')

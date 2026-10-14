@@ -22,6 +22,7 @@
 :where(ui-pagination) {
   --ui-pagination-gap: var(--md-sys-c, var(--md-sys-space-xs)); /* the inter-stop rhythm — rides [density] free (ADR-0103) */
   --ui-pagination-ellipsis-ink: var(--md-sys-color-neutral-on-surface-variant); /* a passive marker, not an intent */
+  --ui-pagination-stop-ink: var(--md-sys-color-neutral-on-surface); /* a non-current stop reads as plain text, not a link (T-0149) */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-pagination) consumes ONLY --ui-pagination-* ════════════════ */
@@ -39,6 +40,14 @@
   /* [inline] — the ONE sizing opt-out (ADR-0223 cl.2, R2): inline-level display + hug posture. */
   :scope[inline] {
     display: inline-flex;
+  }
+
+  /* Stop ink (T-0149): every ghost stop in the primary ink read as a run of inline links beside a faint current
+     pill. A non-current, enabled stop takes the neutral text ink through the composed button's own ink seam
+     (the ui-table sort-button precedent); the current page keeps its soft primary pill, a disabled stop the
+     fleet disabled recipe. */
+  :scope > ui-button:not([aria-current='page']):not([disabled]) {
+    --ui-button-ink: var(--ui-pagination-stop-ink);
   }
 
   :scope [data-part='ellipsis'] {

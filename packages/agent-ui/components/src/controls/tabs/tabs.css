@@ -76,7 +76,8 @@
      the selected-tab indicator. */
   --ui-tabs-ink: var(--md-sys-color-neutral-on-surface-variant); /* idle tab label */
   --ui-tabs-ink-hover: var(--md-sys-color-neutral-on-surface); /* hover */
-  --ui-tabs-trigger-bg-hover: var(--md-sys-color-neutral-container-low); /* the overflow trigger's hover wash */
+  --ui-tabs-trigger-bg: var(--md-sys-color-neutral-container-low); /* the overflow trigger's resting fill: a shape at rest, not stray dots (T-0149) */
+  --ui-tabs-trigger-bg-hover: var(--md-sys-color-neutral-container); /* the overflow trigger's hover wash, one step up */
   --ui-tabs-trigger-icon: var(--md-sys-icon-box, 1em); /* the overflow trigger's glyph on the 2n icon box */
   --ui-tabs-ink-selected: var(--md-sys-color-neutral-on-surface); /* the active tab label */
   --ui-tabs-indicator: var(--md-sys-color-primary); /* the active-tab underline */
@@ -319,7 +320,8 @@
 
   /* The trigger — a square, tab-height icon button (LLD §4 "trigger anatomy"): zero new tokens, the shared
      ink ladder + focus ring. An icon-only control is a round square (Kim's ruling; radius h/2, the icon-only
-     ui-button shape) with a hover wash, so it reads as a button, not stray punctuation (T-0141). `setIcon`
+     ui-button shape) with a resting fill and full ink (T-0149; transparent at rest, its faint dots still read as
+     stray punctuation past the last tab) and a hover wash one step up (T-0141). `setIcon`
      (tabs.ts) injects a fresh <svg fill="currentColor"> that inherits `color` here, on the 2n icon box. */
   :scope[overflow='menu'] > [data-part='overflow'] > [data-part='trigger'] {
     grid-area: trigger;
@@ -333,10 +335,10 @@
     padding: 0;
     border: 0;
     border-radius: calc(var(--ui-tabs-tab-height) / 2);
-    background: transparent;
+    background: var(--ui-tabs-trigger-bg);
     font: inherit;
     font-size: var(--ui-tabs-tab-font);
-    color: var(--ui-tabs-ink);
+    color: var(--ui-tabs-ink-hover);
     cursor: pointer;
   }
   :scope[overflow='menu'] > [data-part='overflow'] > [data-part='trigger'] svg {

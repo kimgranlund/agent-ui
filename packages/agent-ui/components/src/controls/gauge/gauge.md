@@ -117,10 +117,12 @@ always gets the ramp's brightest step. Rounded caps read the boards' law via `st
 The **rings layer** — the concentric SVG marks — spans the host box edge-to-edge at zero inset (its own
 element box is never shrunk to reserve legend room). The **legend layer** — every label/value row, real
 DOM text — floats **on top**, inset from all four edges by ONE knob (`--ui-gauge-chrome-inset`,
-aliasing the shared `--ui-chart-chrome-inset`) and right-aligned within that padded box. The ring
-drawing itself is pinned to the box's start edge (`preserveAspectRatio="xMinYMid meet"`), so a wide host
-letterboxes genuinely empty room at the end edge for the legend — no shrinking, no overlap, by
-construction. Dropping this chart into a padding-less `ui-card`-style container reproduces the board
+aliasing the shared `--ui-chart-chrome-inset`). The ring drawing itself is pinned to the box's start edge
+(`preserveAspectRatio="xMinYMid meet"`), so a wide host letterboxes genuinely empty room past the rings for
+the legend — no shrinking, no overlap, by construction. The legend rows start one `--ui-gauge-legend-gap`
+(the group margin) past the outer ring, measured by gauge.ts as `--_gauge-ring-end`, so the rings and their
+key read as one start-aligned group however wide the box is (T-0149). With no data the gauge still draws
+its outer track at 0% (a `data-empty` track circle), so an empty gauge reads as a gauge, not a failed render. Dropping this chart into a padding-less `ui-card`-style container reproduces the board
 geometry with zero consumer CSS.
 
 ## Axis/today/provisional grammar: N/A

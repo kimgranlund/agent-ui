@@ -11,7 +11,8 @@ tag: ui-calendar
 description: A month-grid date picker form control that selects a single date or a start/end date range.
 tier: pattern           # a composite picker: nav + 2D grid + form-associated selection
 extends: UIFormElement  # form-associated: formValue() = ISO string (or FormData pair in mode=range); formValidity() = valueMissing + range
-uses: []
+uses:
+  - ui-glyph
 # marginal: tracked at the wave-5 integration slice (s12 barrel pass); ≤ ~3 kB tier budget (plan §10).
 # GH #352 — this line previously claimed "+ the ADR-0093 range-mode re-base"; that re-base was never run
 # (the only dated figure predated range mode by three days). Re-measured 2026-07-29, post-range: calendar's
@@ -108,11 +109,11 @@ parts:
   - name: nav
     description: The `<header data-part="nav">` sticky navigation bar. Contains the prev button, title span, and next button. container-box.css gives it display:flex + padding + gap; calendar.css adds justify-content:space-between.
   - name: prev
-    description: The `<button data-part="prev" type="button" aria-label="Previous month">` nav button, injected with the Phosphor `caret-left` glyph via `setIcon` (@agent-ui/icons). Clicking navigates to the previous month; focus cursor moves to the same day (clamped).
+    description: The `<button data-part="prev" type="button" aria-label="Previous month">` nav button holding a decorative `<ui-glyph symbol="caret-left">` (T-0149: a caret is a glyph, not pack art). Clicking navigates to the previous month; focus cursor moves to the same day (clamped).
   - name: title
     description: The `<span data-part="title" aria-live="polite">Month YYYY</span>` month/year label. aria-live=polite announces month changes to AT. ID is stable per instance (used by [data-part=grid]'s aria-labelledby).
   - name: next
-    description: The `<button data-part="next" type="button" aria-label="Next month">` nav button, injected with the Phosphor `caret-right` glyph via `setIcon` (@agent-ui/icons). Clicking navigates to the next month; focus cursor moves to the same day (clamped).
+    description: The `<button data-part="next" type="button" aria-label="Next month">` nav button holding a decorative `<ui-glyph symbol="caret-right">` (T-0149). Clicking navigates to the next month; focus cursor moves to the same day (clamped).
   - name: grid
     description: The `<div data-part="grid" role="grid" aria-labelledby="…title-id">` container for the weekday header row and 6 week rows. A 7-column CSS grid; [role=row] children use display:contents. The bespoke 2D keyboard handler (ADR-0048 decision 2) is attached here. Rebuilt on month navigation.
   - name: status
@@ -173,9 +174,9 @@ geometry:
   cellSize: --ui-calendar-cell-size     # ADR-0105: the track FLOOR + the point-layer circle diameter (default 2rem / 32px; [size=sm/lg] repoints) — no longer a fixed track width
   gap: --ui-calendar-gap                # inter-cell gap (default 0.125rem / 2px)
   panel: Container/surface              # bg + outline + radius from --ui-calendar-panel-* tokens (NOT a control height)
-  navButtons: inline affordance = font  # caret-left/caret-right (Phosphor) are font-sized glyphs (§4.6 law; no icon cell)
+  navButtons: ui-glyph caret-left/caret-right  # each mark sits on its own glyph box max(8px, 2n - 2c) in the 2n slot (ADR-0245 cl.4, T-0149)
   weekdayHeader: 0.75 × cell-size tall  # slightly shorter than day cells; 85% font size
-  maxInlineSize: --ui-calendar-max-inline-size   # ADR-0105 Amendment 2: the content cap, 7 tracks of 6n (1.5 × cellSize) + 6 gaps; the panel stops at it (plus inset and border) and centres in the filled host
+  maxInlineSize: --ui-calendar-max-inline-size   # ADR-0105 Amendment 2: the content cap, 7 tracks of 6n (1.5 × cellSize) + 6 gaps; the panel stops at it (plus inset and border) and keeps to the start edge of the filled host (T-0149)
   gridTracks: fluid — minmax(cellSize, 1fr)  # ADR-0105 — shrink-wrapped resolves to the floor exactly (byte-identical to pre-ADR-0105); given a definite width from an ancestor (a stretched flex/grid cell) the grid fills it, tracks sharing the surplus equally. Row block-size never changes — only inline-size adapts. Escape: `max-inline-size: max-content` on the host pins the old always-compact rendering (ADR-0102 override).
   cellLayers: two — BAND (button box, fluid, square) + POINT (::before, fixed cellSize circle, centred)  # ADR-0105 — the BAND carries the square [data-in-range] wash + ink/disabled/outside colours + the (now enlarged) hit target; the POINT carries aria-selected/hover/today-ring/focus-ring, so circles stay circles at any track width. A third paint (::after, endpoint half-wash) bridges the point circle to the band interior — 0-width at the floor, opens only under surplus width.
   rangeInterior: square (radius:0)      # ADR-0093 — [data-in-range] cells are square-cornered (vs. the circular endpoint fill on the POINT layer), a non-color signifier distinguishing interior from endpoint (ADR-0057); unaffected by ADR-0105's layer split
@@ -215,9 +216,11 @@ who wants the OLD always-compact rendering even inside a stretched context keeps
 
 The fill has a ceiling, the **content cap** `--ui-calendar-max-inline-size` (ADR-0105 Amendment 2): seven
 tracks of `6n` (1.5 × the `4n` cell) plus the six gaps. In a column wider than that, the tracks stop at `6n`,
-the panel stops at the cap plus its inset and border, and it centres in the host, which still fills its
-container (ADR-0223). At page width the chevrons stay a month's width apart instead of the page's. Narrower
-than the cap, nothing changes.
+the panel stops at the cap plus its inset and border, and it keeps to the host's start edge, the text edge
+every other block follows, while the host still fills its container (ADR-0223; T-0149 moved it off centre).
+At page width the chevrons stay a month's width apart instead of the page's. Narrower than the cap, nothing
+changes. A disabled day is struck through as well as muted, so it never reads as an adjacent-month day, and
+the prev/next carets are `ui-glyph` marks (`caret-left`, `caret-right`) on the glyph box.
 
 ## Cell paint — two layers, so circles stay circles at any width (ADR-0105)
 

@@ -77,7 +77,10 @@ export class UIStatElement extends UIElement {
       // the SAME grid area as `value` (stat.css), never a wrapper: it stays outside DOM/reading order.
       const nodes: HTMLElement[] = [this.#part('label', label)]
       if (variant === 'ring') nodes.push(this.#ringNode(ringPercent(percent)))
-      nodes.push(this.#part('value', value))
+      const figure = this.#part('value', value)
+      // the ring fits its figure to the hole by character count (stat.css, T-0149): the `--_ring-pct` precedent
+      if (variant === 'ring') figure.style.setProperty('--_figure-ch', String(Math.max(1, [...value].length)))
+      nodes.push(figure)
       if (delta !== null) nodes.push(this.#deltaNode(delta))
       if (caption !== '') nodes.push(this.#part('caption', caption))
 

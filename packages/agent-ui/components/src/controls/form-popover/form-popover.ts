@@ -43,7 +43,7 @@
 import { prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import { UIElement } from '../../dom/index.ts'
 import { overlay, type OverlayHandle, type OverlayPlacement } from '../../traits/overlay.ts'
-import { setIcon } from '@agent-ui/icons'
+import '../glyph/glyph.ts' // registers <ui-glyph>, the trigger's caret mark (ADR-0245 cl.5)
 
 // ── Placement enum values (mirrors the OverlayPlacement union from overlay.ts — popover.ts precedent) ──
 
@@ -179,10 +179,10 @@ export class UIFormPopoverElement extends UIElement {
     labelSpan.setAttribute('data-part', 'label')
     labelSpan.textContent = this.label
 
-    const caretSpan = document.createElement('span')
+    // the caret is a ui-glyph mark on its glyph box (T-0149), decorative (aria-hidden through its own internals)
+    const caretSpan = document.createElement('ui-glyph')
     caretSpan.setAttribute('data-part', 'caret')
-    caretSpan.setAttribute('aria-hidden', 'true')
-    setIcon(caretSpan, 'caret-down') // Phosphor, via @agent-ui/icons — sized = font (§4.1 caret law)
+    caretSpan.setAttribute('symbol', 'caret-down')
 
     trigger.appendChild(labelSpan)
     trigger.appendChild(caretSpan)

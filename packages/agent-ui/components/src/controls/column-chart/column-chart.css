@@ -110,6 +110,14 @@
     grid-area: 1 / 1; /* the full-overlay stacking technique — plot / columns / chrome share one box */
   }
 
+  /* No data still draws the plot box's baseline gridline (T-0149): an empty host painted a blank box that read
+     as a failed render. column-chart.ts renders no layers for `[]`, so the host is :empty. */
+  :scope:empty::before {
+    content: '';
+    grid-area: 1 / 1;
+    border-block-end: 1px solid var(--ui-column-chart-grid-ink);
+  }
+
   :scope [data-part='plot'] {
     position: relative; /* the positioning context for its own gridline/now-marker div children */
     inline-size: 100%;
@@ -306,7 +314,8 @@
 
   @media (forced-colors: active) {
     :scope [data-part='grid-line'],
-    :scope [data-part='now-tick'] {
+    :scope [data-part='now-tick'],
+    :scope:empty::before {
       border-color: CanvasText;
     }
     :scope [data-part='now-dot'] {

@@ -41,7 +41,10 @@
   --ui-bar-chart-bar-size: 0.5rem; /* bar/track thickness — density-invariant (SPEC-R12) */
   --ui-bar-chart-bar-radius: var(--md-sys-c, 2px);
   --ui-bar-chart-bar-ink: var(--md-sys-color-primary); /* the data-bearing fill — >=3:1 vs surface (WCAG 1.4.11) */
-  --ui-bar-chart-track-ink: var(--md-sys-color-neutral-container); /* the decorative rail */
+  /* the decorative rail; one container step up in dark, where the base step barely cleared the card fill and an
+     all-zero chart showed labels with no visible row (T-0149) */
+  --ui-bar-chart-track-ink: light-dark(var(--md-sys-color-neutral-container), var(--md-sys-color-neutral-container-high));
+  --ui-bar-chart-zero-ink: var(--md-sys-color-neutral-on-surface-variant); /* the diverging chart's origin rule (T-0149) */
   --ui-bar-chart-text-ink: var(--md-sys-color-neutral-on-surface); /* label/value ink — the ONE role reference (role-pure) */
   --ui-bar-chart-row-gap: var(--md-sys-space-sm); /* row rhythm — rides [density] for free (ADR-0103) */
   --ui-bar-chart-col-gap: var(--md-sys-space-sm);
@@ -83,6 +86,28 @@
     background: var(--ui-bar-chart-track-ink);
   }
 
+  /* The zero rule (T-0149): a chart with a negative value draws its origin across every row, so a diverging bar
+     reads against a visible zero instead of floating mid-track. bar-chart.ts marks the track `data-origin` and
+     sets `--_bar-zero` only then; the rule overhangs the track by half the row gap so the rows' rules join. */
+  :scope [data-part='track'][data-origin]::before {
+    content: '';
+    position: absolute;
+    z-index: 1;
+    inset-block: calc(-0.5 * var(--ui-bar-chart-row-gap));
+    inset-inline-start: calc(var(--_bar-zero) * 1%);
+    border-inline-start: var(--md-sys-c, 1px) solid var(--ui-bar-chart-zero-ink);
+  }
+
+  /* No data still draws one empty track row (T-0149): the gauge and column chart draw their own empty frame,
+     and a blank box read as a failed render. bar-chart.ts renders no rows for `[]`, so the host is :empty. */
+  :scope:empty::before {
+    content: '';
+    grid-column: 1 / -1;
+    block-size: var(--ui-bar-chart-bar-size);
+    border-radius: var(--ui-bar-chart-bar-radius);
+    background: var(--ui-bar-chart-track-ink);
+  }
+
   :scope [data-part='fill'] {
     position: absolute;
     inset-block: 0;
@@ -105,6 +130,13 @@
     :scope [data-part='track'] {
       background: Canvas;
       border: 1px solid CanvasText; /* keeps the track distinguishable from the fill under WHCM */
+    }
+    :scope [data-part='track'][data-origin]::before {
+      border-color: CanvasText;
+    }
+    :scope:empty::before {
+      background: Canvas;
+      border: 1px solid CanvasText;
     }
   }
 }

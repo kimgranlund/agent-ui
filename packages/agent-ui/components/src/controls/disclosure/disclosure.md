@@ -9,7 +9,8 @@ tag: ui-disclosure
 description: A one-line summary that expands or collapses its content, built on the native <details> element.
 tier: pattern          # geometry.md Pattern band — "accordion" is named there: the summary row = control height, the shell rides the space scale
 extends: UIElement     # NOT form-associated — a <details> participates in no form (the ADR-0017 <dialog> precedent; the no-native-form-elements law does not bind, ADR-0113 Context)
-uses: []
+uses:
+  - ui-glyph
 # marginal: measured at the LLD-C11 integration slice (the family barrel pass) — not guessed here (SPEC-N4)
 
 attributes:            # attributes-as-API — mirrors disclosure.ts `static props`
@@ -54,7 +55,7 @@ parts:                 # the native <details>/<summary> is a component-owned PAR
   - name: summary
     description: The control-created `<summary data-part="summary">` inside the details part — a Pattern-class interactive CONTROL-height row ([chevron | label | slotted controls?], flex). Natively focusable and activatable (Enter/Space, click) — no tabindex/keyboard machinery added. Carries `aria-labelledby` → the summary-text span (ADR-0158 cl.4) so the fold's accessible name is always the `summary` prop, and the component-owned activation guard (a click inside a `slot="summary"` child never folds).
   - name: chevron
-    description: A `<span data-part="chevron" aria-hidden="true">` inside the summary, injected with the Phosphor `caret-right` glyph via `setIcon` (@agent-ui/icons). An inline affordance sized = font (geometry.md §"Affordance vs content-icon"). Rotates 90deg under `[open]` — orientation carries the state, never colour alone; NO transition (SPEC-R18 — cross-engine + reduced-motion honesty).
+    description: A `<ui-glyph data-part="chevron" symbol="caret-right">` inside the summary (T-0149: a caret is a library mark, not pack art; decorative, so aria-hidden through its own internals). It fills the 2n slot and insets its own glyph box max(8px, 2n - 2c). Rotates 90deg under `[open]` — orientation carries the state, never colour alone; NO transition (SPEC-R18 — cross-engine + reduced-motion honesty).
   - name: summary-text
     description: A `<span data-part="summary-text">` inside the summary, holding the `summary` prop's text (textContent-only, never markup). Updated by a scope-owned reactive effect; never touches `open`.
   - name: body
@@ -68,7 +69,7 @@ face:
 aria:
   role: none             # the component sets NO internals role and no host ARIA (SPEC-R17) — the details/summary part IS the semantic element
   roleSource: native <details>/<summary> parts
-  labelSource: summary-text  # the summary part carries aria-labelledby → the summary-text span's generated id (ADR-0158 cl.4) — the fold's accessible name IS the `summary` prop, always; a `slot="summary"` control's text is never absorbed (it names itself, e.g. its own aria-label). PART-level ARIA on component-owned native elements (the chevron's aria-hidden layer) — still no host/internals labelling seam
+  labelSource: summary-text  # the summary part carries aria-labelledby → the summary-text span's generated id (ADR-0158 cl.4) — the fold's accessible name IS the `summary` prop, always; a `slot="summary"` control's text is never absorbed (it names itself, e.g. its own aria-label). PART-level ARIA on component-owned native elements (the chevron is a decorative ui-glyph, aria-hidden through its own internals) — still no host/internals labelling seam
   expandedState: native  # the platform reports the summary's expanded/collapsed state from the <details> [open] attribute — never re-implemented via aria-expanded
 
 keyboard:
@@ -188,7 +189,7 @@ this prop, always, which is also what the fold's accessible name is scoped to.
 ## Styling
 
 The native `::marker`/`::-webkit-details-marker` is hidden and replaced by a fleet **chevron** affordance —
-sized `= font` (geometry.md's inline-affordance law, never the icon ramp), rotating 90deg under `[open]`.
+a `ui-glyph` caret on its glyph box in the 2n slot (never the icon ramp; T-0149), rotating 90deg under `[open]`.
 **Orientation carries the state** — never colour alone (ADR-0057) — and the rotation is **not animated**
 (no fold animation either): both are named v1 fences, not omissions (ADR-0113 cl.4). Geometry is Pattern-
 class (geometry.md's own "accordion" row): the summary is an interactive **control-height** row
@@ -219,8 +220,7 @@ GH #1102 law), so a contained outer fold never paints or pads a nested fold's pa
 The component sets **no** internals role and **no** host ARIA (SPEC-R17) — the `<details>`/`<summary>`
 part *is* the semantic element, carrying native button semantics and the expanded/collapsed announcement
 the platform supplies. The summary part carries `aria-labelledby` pointing at the summary-text span
-(ADR-0158 cl.4 — part-level ARIA on component-owned native elements, the same layer as the chevron's
-`aria-hidden`): the fold's accessible name is **always the `summary` prop**, never absorbed from a
+(ADR-0158 cl.4 — part-level ARIA on component-owned native elements): the fold's accessible name is **always the `summary` prop**, never absorbed from a
 `slot="summary"` control's text. The summary is natively focusable; Enter/Space toggle it exactly like a
 native `<button>`'s Space/Enter parity, with zero keyboard code in this control. A `forced-colors` block keeps
 the summary/body ink and the chevron visible as system inks (belt-and-suspenders — every value already

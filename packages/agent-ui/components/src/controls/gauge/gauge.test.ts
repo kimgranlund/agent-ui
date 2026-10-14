@@ -206,10 +206,12 @@ describe('UIGaugeElement — axis/today/provisional chrome is N/A (ADR-0228 N/A 
 })
 
 describe('UIGaugeElement — degenerate data (ADR-0229 cl.4)', () => {
-  it('empty data → zero rings, zero legend rows; host remains role=list', () => {
+  it('empty data → zero rings, zero legend rows, one bare outer track (T-0149); host remains role=list', () => {
     const el = mount(new ProbeGauge()) as ProbeGauge
     expect(el.querySelectorAll('[role="listitem"]')).toHaveLength(0)
-    expect(el.querySelector('[data-part="track"]')).toBeNull()
+    const tracks = el.querySelectorAll('[data-part="track"]')
+    expect(tracks).toHaveLength(1)
+    expect(tracks[0].hasAttribute('data-empty')).toBe(true)
     expect(el.querySelector('[data-part="progress"]')).toBeNull()
     expect(el.probeInternals.role).toBe('list')
   })

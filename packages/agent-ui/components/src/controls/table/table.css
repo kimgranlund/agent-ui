@@ -23,7 +23,7 @@
  * padding pairs); the native `<table>` handles column order under `dir="rtl"` for free; `text-align: end`
  * flips number-column alignment — the browser leg (table.browser.test.ts) measures it.
  *
- * WHCM (SPEC-R15): NO dedicated `forced-colors` block — every row/header separator is a REAL `border`
+ * WHCM (SPEC-R15): one `forced-colors` rule only, dropping the scroll edge-fade mask (T-0149); every row/header separator is a REAL `border`
  * (system-ink-repainted, never removed under `forced-colors: active`, unlike a background); all content is
  * real text; the composed `ui-checkbox`/`ui-radio`/`ui-button` selection/sort parts carry their OWN
  * forced-colors treatment (each control's own stylesheet — checkbox.css/radio.css/button.css — already
@@ -58,6 +58,8 @@
   --ui-table-rule-ink: var(--md-sys-color-neutral-outline-variant); /* row-separator hairline */
   --ui-table-header-rule-ink: var(--md-sys-color-neutral-outline); /* thead underline, stronger */
   --ui-table-caption-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-table-edge-fade: var(--md-sys-height, 2rem); /* the scroll edge cue's depth: one control height (4n) */
+  --ui-table-fade-to: to right; /* the edge cue's gradient runs inline-start to inline-end */
 
   /* ADR-0163 cl.4 — the selected-row color PAIR (a secondary cue; the checkbox/radio's own checked state
      is the real, non-color signifier, ADR-0057 satisfied structurally). The select.css option-row precedent
@@ -73,6 +75,10 @@
   --ui-table-footer-gap: var(--md-sys-space-sm);
 }
 
+:where(ui-table:dir(rtl)) {
+  --ui-table-fade-to: to left;
+}
+
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-table) consumes ONLY --ui-table-* ════════════════ */
 
 @scope (ui-table) {
@@ -84,6 +90,40 @@
   /* the component's OWN overflow container (SPEC-R5) — a wide table scrolls HERE, never the page */
   :scope [data-part='scroll'] {
     overflow-x: auto;
+  }
+
+  /* The edge cue (T-0149): with overlay scrollbars a column cut at the inline edge read as a complete table.
+     table.ts flags each edge that hides a column; that edge fades over one row height (the ui-card-content
+     mask recipe on the inline axis: `#000` and `transparent` are mask channels, not paint). */
+  :scope [data-part='scroll'][data-fade-end]:not([data-fade-start]) {
+    -webkit-mask-image: linear-gradient(var(--ui-table-fade-to), #000 calc(100% - var(--ui-table-edge-fade)), transparent);
+    mask-image: linear-gradient(var(--ui-table-fade-to), #000 calc(100% - var(--ui-table-edge-fade)), transparent);
+  }
+  :scope [data-part='scroll'][data-fade-start]:not([data-fade-end]) {
+    -webkit-mask-image: linear-gradient(var(--ui-table-fade-to), transparent, #000 var(--ui-table-edge-fade));
+    mask-image: linear-gradient(var(--ui-table-fade-to), transparent, #000 var(--ui-table-edge-fade));
+  }
+  :scope [data-part='scroll'][data-fade-start][data-fade-end] {
+    -webkit-mask-image: linear-gradient(
+      var(--ui-table-fade-to),
+      transparent,
+      #000 var(--ui-table-edge-fade),
+      #000 calc(100% - var(--ui-table-edge-fade)),
+      transparent
+    );
+    mask-image: linear-gradient(
+      var(--ui-table-fade-to),
+      transparent,
+      #000 var(--ui-table-edge-fade),
+      #000 calc(100% - var(--ui-table-edge-fade)),
+      transparent
+    );
+  }
+  @media (forced-colors: active) {
+    :scope [data-part='scroll'] {
+      -webkit-mask-image: none;
+      mask-image: none;
+    }
   }
 
   /* the UA-default + page-cascade reset (SPEC-R2 AC2) — a stamped native <table> owns its OWN geometry */

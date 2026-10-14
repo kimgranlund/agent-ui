@@ -167,7 +167,17 @@ export class UITableElement extends UIElement {
     this.listen(this.#scroll, 'scroll', () => {
       this.#lastScrollLeft = this.#scroll.scrollLeft
       this.#lastScrollTop = this.#scroll.scrollTop
+      this.#syncFade()
     })
+    // The edge cue (T-0149): a column hidden past the inline edge fades that edge, the ui-card-content
+    // precedent on the inline axis. Re-measured when the viewport or the table resizes (a page turn, a
+    // narrower host); no ResizeObserver in jsdom, where nothing overflows and no flag is ever written.
+    if (typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(() => this.#syncFade())
+      ro.observe(this.#scroll)
+      ro.observe(this.#table)
+      this.effect(() => () => ro.disconnect())
+    }
 
     // Delegated listeners on `#table` — a STABLE skeleton node itself (SPEC-R4.1, never replaced) that wraps
     // BOTH `#thead` and `#tbody`, so a `change`/`click` on either bubbles to it identically to delegating on
@@ -378,6 +388,16 @@ export class UITableElement extends UIElement {
 
   /** The shared `<th scope="col">` base every header cell starts from (`#selectHeaderCell`/`#headerCell`
    *  below) — a plain-object-loop-style dedup of the one line all three header-cell shapes repeated. */
+  /** Flag each inline edge of `#scroll` that hides a column: `data-fade-start` once scrolled, `data-fade-end`
+   *  until the end is reached. Logical, so `dir="rtl"` (a negative scrollLeft) reads the same. */
+  #syncFade(): void {
+    const s = this.#scroll
+    const hidden = s.scrollWidth - s.clientWidth
+    const offset = Math.abs(s.scrollLeft)
+    s.toggleAttribute('data-fade-start', hidden > 1 && offset > 1)
+    s.toggleAttribute('data-fade-end', hidden > 1 && offset < hidden - 1)
+  }
+
   #thCol(): HTMLTableCellElement {
     const th = document.createElement('th')
     th.setAttribute('scope', 'col')

@@ -90,9 +90,12 @@ describe('ui-disclosure — anatomy (children adopt into the body part)', () => 
     el.remove()
   })
 
-  it('the chevron is aria-hidden (decorative — disclosure meaning rides the native part, never the glyph)', () => {
+  it('the chevron is a decorative ui-glyph caret (T-0149): no label, so its own internals hide it, never the glyph carrying meaning', () => {
     const { summary } = makeDisclosure()
-    expect(summary.querySelector('[data-part="chevron"]')?.getAttribute('aria-hidden')).toBe('true')
+    const chevron = summary.querySelector('[data-part="chevron"]')
+    expect(chevron?.localName).toBe('ui-glyph')
+    expect(chevron?.getAttribute('symbol')).toBe('caret-right')
+    expect(chevron?.getAttribute('label') ?? '').toBe('') // decorative: ui-glyph sets internals.ariaHidden for an empty label
     summary.closest('ui-disclosure')?.remove()
   })
 

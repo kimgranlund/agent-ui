@@ -42,7 +42,8 @@ interface CdpSession {
 
 describe('ui-timeline-item cross-engine geometry smoke — the marker-system explicit (scale × size) table', () => {
   it('[size] sm→md→lg resolves the EXACT frozen integers at the default [scale] (marker-box/dot/connector/gutter/row-gap)', () => {
-    const { item } = mount('<ui-timeline-item status="active" label="x"></ui-timeline-item>')
+    // a plain unstatused dot: the glyph box (the status markers take the disc diameter since T-0149)
+    const { item } = mount('<ui-timeline-item label="x"></ui-timeline-item>')
     // marker-box / dot ride the derived icon box (2n) and glyph box at the root register (ADR-0245 cl.2, cl.4); the
     // connector width, gutter and row-gap stay literals.
     const LITERALS: Record<string, [number, number, number]> = {
@@ -92,17 +93,18 @@ describe('ui-timeline-item cross-engine geometry smoke — the marker-system exp
 })
 
 describe('ui-timeline-item — status markers are DISTINCT by SHAPE, not hue alone (SPEC-R4, ADR-0057)', () => {
-  it('pending is a HOLLOW ring (border-style solid, transparent fill) — distinct from active (a FILLED dot, no border)', () => {
+  it('pending is a HOLLOW ring (border-style solid, transparent fill), distinct from active (a ring holding a painted dot, T-0149)', () => {
     const { item } = mount('<ui-timeline-item></ui-timeline-item>')
     item.setAttribute('status', 'pending')
     const pendingStyle = beforeStyle(item.querySelector('[data-part="marker"]')!)
     expect(pendingStyle.borderStyle).toBe('solid')
     expect(pendingStyle.backgroundColor).toMatch(/rgba\(0, 0, 0, 0\)|transparent/)
+    expect(pendingStyle.backgroundImage).toBe('none') // the pending ring stays hollow (T-0149)
 
     item.setAttribute('status', 'active')
     const activeStyle = beforeStyle(item.querySelector('[data-part="marker"]')!)
-    expect(activeStyle.borderStyle).toBe('none')
-    expect(activeStyle.backgroundColor).not.toMatch(/rgba\(0, 0, 0, 0\)|transparent/)
+    expect(activeStyle.borderStyle).toBe('solid')
+    expect(activeStyle.backgroundImage).toMatch(/radial-gradient/) // the dot inside the ring
   })
 
   it('done/error each inject a DIFFERENT built-in glyph (check vs x) — structurally distinct SVG markup, not a colour swap', async () => {
@@ -399,7 +401,7 @@ describe('ui-timeline-item: the connector is continuous through every row (T-002
       }
       const before = getComputedStyle(marker, '::before')
       // the dot/ring: its painted centre = its top + the translateY that centres it + half its border box
-      const borderBox = px(before.height) + px(before.borderTopWidth) + px(before.borderBottomWidth)
+      const borderBox = before.boxSizing === 'border-box' ? px(before.height) : px(before.height) + px(before.borderTopWidth) + px(before.borderBottomWidth)
       return px(before.top) + new DOMMatrix(before.transform).m42 + borderBox / 2
     }
     // centreY is measured from the item top for a glyph, from the marker cell top for a CSS dot/ring
@@ -417,5 +419,30 @@ describe('ui-timeline-item: the connector is continuous through every row (T-002
       return rect(glyph ?? marker).left + rect(glyph ?? marker).width / 2
     })
     expect(new Set(lefts.map((l) => Math.round(l))).size, `dot, ring and glyph share one rail column: ${lefts.join()}`).toBe(1)
+  })
+})
+
+describe('ui-timeline-item: the status markers share one outer size (T-0149)', () => {
+  it('done, error, active and pending markers paint at one diameter within 1px; a plain dot stays smaller', async () => {
+    const wrap = document.createElement('div')
+    wrap.innerHTML = ['done', 'error', 'active', 'pending', '']
+      .map((s) => `<ui-timeline-item status="${s}" label="Step"></ui-timeline-item>`)
+      .join('')
+    document.body.append(wrap)
+    try {
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+      const items = [...wrap.querySelectorAll('ui-timeline-item')]
+      const outer = (item: Element): number => {
+        const glyph = item.querySelector('[data-role="marker"]')
+        if (glyph && getComputedStyle(glyph).display !== 'none') return glyph.getBoundingClientRect().width
+        return px(getComputedStyle(item.querySelector('[data-part="marker"]')!, '::before').width)
+      }
+      const sizes = items.slice(0, 4).map(outer)
+      expect(sizes[0], 'anti-vacuous: the done disc paints').toBeGreaterThan(4)
+      for (const s of sizes) expect(Math.abs(s - sizes[0]), `marker sizes ${sizes.join()}`).toBeLessThanOrEqual(1)
+      expect(outer(items[4])).toBeLessThan(sizes[0])
+    } finally {
+      wrap.remove()
+    }
   })
 })

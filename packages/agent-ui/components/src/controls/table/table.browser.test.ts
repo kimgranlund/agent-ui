@@ -257,3 +257,42 @@ describe('ui-table — forced colors: row separators survive (SPEC-R15 AC1)', ()
     }
   })
 })
+
+describe('ui-table: the scroll edge cue (T-0149)', () => {
+  const WIDE_COLUMNS = JSON.stringify(
+    ['Account', 'Plan', 'Region', 'Seats', 'MRR', 'Signed up'].map((label, i) => ({ key: `c${i}`, label, type: 'number' })),
+  )
+  const WIDE_ROWS = JSON.stringify([
+    Object.fromEntries([1200000, 2400000, 3600000, 4800000, 6000000, 7200000].map((v, i) => [`c${i}`, v])),
+  ])
+  const frame = (): Promise<number> => new Promise<number>((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+  const maskOf = (el: HTMLElement): string => {
+    const cs = getComputedStyle(el) as CSSStyleDeclaration & { webkitMaskImage?: string }
+    return cs.maskImage || cs.webkitMaskImage || 'none'
+  }
+
+  it('a table cut at the inline end fades that edge; scrolled to the end it fades the start instead', async () => {
+    const wrap = mount(`<div style="inline-size:300px"><ui-table columns='${WIDE_COLUMNS}' rows='${WIDE_ROWS}'></ui-table></div>`)
+    const scroll = wrap.querySelector('[data-part="scroll"]') as HTMLElement
+    await frame()
+    expect(scroll.scrollWidth).toBeGreaterThan(scroll.clientWidth)
+    expect(scroll.hasAttribute('data-fade-end')).toBe(true)
+    expect(scroll.hasAttribute('data-fade-start')).toBe(false)
+    expect(maskOf(scroll)).not.toBe('none')
+
+    scroll.scrollLeft = scroll.scrollWidth
+    scroll.dispatchEvent(new Event('scroll'))
+    await frame()
+    expect(scroll.hasAttribute('data-fade-end')).toBe(false)
+    expect(scroll.hasAttribute('data-fade-start')).toBe(true)
+  })
+
+  it('a table that fits carries no flag and no mask (NEGATIVE)', async () => {
+    const table = mount(`<ui-table columns='${COLUMNS}' rows='${ROWS}'></ui-table>`)
+    const scroll = table.querySelector('[data-part="scroll"]') as HTMLElement
+    await frame()
+    expect(scroll.hasAttribute('data-fade-end')).toBe(false)
+    expect(scroll.hasAttribute('data-fade-start')).toBe(false)
+    expect(maskOf(scroll)).toBe('none')
+  })
+})

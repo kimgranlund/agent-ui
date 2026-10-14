@@ -202,7 +202,9 @@ posture — the pre-wave shrink-to-content rendering. Either way, the host floor
 3(d)) that **survives both postures**, unlike an entry control's hug-only content floor: override the
 token, or set `inline-size` directly, to size the tile to a layout. Interior gap rides `--ui-stat-gap` off
 the space ladder (density-responsive for free). `variant="ring"` adds its own density-invariant
-diameter/thickness tokens — `--ui-stat-ring-size` (`4.5em` default) and `--ui-stat-ring-thickness` (`0.5em`
+diameter/thickness tokens — `--ui-stat-ring-size` (`6.5em` default) and `--ui-stat-ring-thickness` (`0.5em`
 default) — sized like the delta glyph's mark geometry, never off `data-scale` (a Display-class control,
-SPEC-R17). The ring size is a floor: a wider figure ("47 / 50") grows the ring so the value stays inside
-the hole (T-0141).
+SPEC-R17). Every ring is that one diameter, so a row of ring tiles reads as a set (T-0149). The figure fits
+the hole instead: it steps down from the heading size by its character count (`--_figure-ch`, set on the
+value part by stat.ts), between `--ui-stat-ring-figure-min` (the body size) and `--ui-stat-ring-figure-max`
+(the heading size), so a wide figure such as "47 / 50" stays inside the hole.

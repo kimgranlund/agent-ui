@@ -43,7 +43,7 @@ parts:                  # data-part nodes inside each component-built row (selec
   - name: label
     description: The `<span data-part="label">` — the datum's label text (real DOM text, selectable, wraps at the 40% column cap — SPEC-R6 AC3). Part of the listitem's accessible text content.
   - name: track
-    description: The `<span data-part="track" aria-hidden="true">` — the decorative rail. `aria-hidden` and text-free; repeats the magnitude only in the length channel (SPEC-R8 AC2).
+    description: The `<span data-part="track" aria-hidden="true">` — the decorative rail. `aria-hidden` and text-free; repeats the magnitude only in the length channel (SPEC-R8 AC2). With any negative value it carries `data-origin` plus `--_bar-zero` and draws the zero rule as its `::before` (T-0149).
   - name: fill
     description: The `<span data-part="fill">` inside `track` — the length-proportional bar. Its inset/length ride two row-scoped custom properties (`--_bar-start`/`--_bar-length`, 0..100) set imperatively by bar-chart.ts; bar-chart.css owns the paint.
   - name: value
@@ -104,12 +104,15 @@ append API (A2UI `updateDataModel` semantics).
 
 Every case still paints the host box and still announces (never throws — SPEC-R7): `[]`/absent/malformed
 input renders zero rows (the host stays `role=list` with zero items — an honest empty state, not a silent
-one); entries missing a string `label` or a finite numeric `value` are dropped, the remainder renders in
+one), and the empty host paints one bare track row from CSS so it never reads as a failed render (T-0149); entries missing a string `label` or a finite numeric `value` are dropped, the remainder renders in
 order; exactly one valid datum renders one full-length row (it is the max); all-equal positive values
 render every bar full length (equality visible at a glance); all-zero values render every bar zero-length
 (the printed `0`s carry the reading); all-negative values put the shared zero point at the track's
 inline-end, every bar extending toward inline-start of it (longest = most negative); duplicate labels
-render as separate rows (the list is positional, not keyed).
+render as separate rows (the list is positional, not keyed). Whenever a value is negative, every track
+carries `data-origin` and `--_bar-zero` (the shared origin, 0..100) and paints a `--ui-bar-chart-zero-ink`
+rule there, joined across the rows, so a diverging bar reads against a visible zero (T-0149); an
+all-positive chart draws none.
 
 ## Accessibility
 

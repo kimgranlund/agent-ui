@@ -85,8 +85,11 @@ describe('table.css — structure + token hygiene', () => {
     expect(bare).toMatch(/border-block-end/)
   })
 
-  it('no dedicated forced-colors block (SPEC-R15) — every separator is a real border, no fill to lose', () => {
-    expect(css).not.toMatch(/@media \(forced-colors: active\)/)
+  it('the one forced-colors block only drops the scroll edge-fade mask (SPEC-R15, T-0149): every separator stays a real border', () => {
+    const blocks = [...css.matchAll(/@media \(forced-colors: active\)\s*\{([\s\S]*?)\n  \}/g)].map((m) => m[1])
+    expect(blocks).toHaveLength(1)
+    expect(blocks[0]).toMatch(/mask-image:\s*none/)
+    expect(blocks[0]).not.toMatch(/background|border|color:/)
   })
 
   it('no control-frame law (padding-block on the host) — this is Display, not Control', () => {

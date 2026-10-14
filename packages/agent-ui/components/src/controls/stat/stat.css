@@ -55,10 +55,14 @@
   --ui-stat-caption-ink: var(--md-sys-color-neutral-on-surface-variant);
   --ui-stat-delta-glyph-size: 0.6em; /* density-invariant mark geometry */
   /* GH#1208 — variant='ring' donut geometry, density-invariant like the delta glyph above */
-  --ui-stat-ring-size: 4.5em; /* the donut's diameter */
+  --ui-stat-ring-size: 6.5em; /* the donut's diameter: one size for every ring tile, so sibling rings match (T-0149) */
   --ui-stat-ring-thickness: 0.5em; /* ring stroke thickness (the mask punch, below) */
   --ui-stat-ring-progress-ink: var(--md-sys-color-primary); /* data-bearing arc — >=3:1 vs surface (WCAG 1.4.11), bar-chart precedent */
   --ui-stat-ring-track-ink: var(--md-sys-color-neutral-container); /* the decorative rail, bar-chart precedent */
+  /* The figure fits the hole, not the other way round (T-0149): its size steps down from the heading size by
+     its own character count (stat.ts publishes `--_figure-ch`) and never below the body size. */
+  --ui-stat-ring-figure-max: var(--md-sys-type-heading, var(--md-sys-typescale-headline-small-size));
+  --ui-stat-ring-figure-min: var(--md-sys-type-body, var(--md-sys-typescale-body-medium-size));
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-stat) consumes ONLY --ui-stat-* ════════════════ */
@@ -130,9 +134,12 @@
   /* GH#1208 — variant='ring': a named-area layout, CSS-keyed off the reflected [variant] host attribute
      (badge [intent] precedent). `figure` is shared by BOTH `[data-part='ring']` and `[data-part='value']`
      — a same-area overlay (later DOM sibling paints on top, stat.ts's insertion order), never a wrapper. */
-  /* The figure sits in an auto middle track, so the ring is sized FROM the figure: the track is the wider
-     of the ring floor and the padded value, and the ring stretches to it (T-0141: "47 / 50" used to
-     spill across a fixed 4.5em ring). The value's inline padding keeps its box inside the hole. */
+  /* Every ring is the one `--ui-stat-ring-size` diameter, so a row of ring tiles reads as a set (T-0149; the
+     T-0141 figure-sized ring gave four tiles three diameters). The figure is fitted to the hole instead:
+     its font-size is the hole's usable chord over its character count (0.62em is a generous average
+     advance for tabular digits and lower-case text), clamped between the body and heading sizes. In a
+     font-size declaration `em` reads the PARENT's size, so the ring tokens resolve at the host, the same
+     length the ring box itself uses. */
   :scope[variant='ring'] {
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     grid-template-areas: 'label label label' '. figure .' 'delta delta delta' 'caption caption caption';
@@ -147,15 +154,13 @@
     grid-area: figure;
     place-self: center;
   }
-  :scope[variant='ring'] [data-part='ring'] {
-    justify-self: stretch;
-    inline-size: auto;
-    block-size: auto;
-    min-inline-size: var(--ui-stat-ring-size);
-    aspect-ratio: 1;
-  }
   :scope[variant='ring'] [data-part='value'] {
-    padding-inline: calc(var(--ui-stat-ring-thickness) + 0.75em);
+    font-size: clamp(
+      var(--ui-stat-ring-figure-min),
+      (0.8 * var(--ui-stat-ring-size) - 2 * var(--ui-stat-ring-thickness)) / (0.62 * var(--_figure-ch, 1)),
+      var(--ui-stat-ring-figure-max)
+    );
+    white-space: nowrap;
   }
   :scope[variant='ring'] [data-part='delta'] {
     grid-area: delta;
