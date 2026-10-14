@@ -56,7 +56,7 @@ mute.addEventListener('click', () => {
   volumeReadout.textContent = '0 %'
   volumeState.textContent = describeVolume(0)
 })
-const volumeRow = el('div', { style: 'display:flex; gap:1rem; align-items:center; flex-wrap:wrap;' }, [
+const volumeRow = el('div', { style: 'display:flex; gap:var(--md-sys-space-lg); align-items:center; flex-wrap:wrap;' }, [
   volume, volumeReadout, volumeState, mute,
 ])
 const volumeNote = el('p', {}, [
@@ -83,7 +83,7 @@ const sized = (size: string): HTMLElement => {
   applyDemoWidth(s, '12rem')
   return s
 }
-const sizeRow = el('div', { style: 'display:flex; gap:1.5rem; align-items:flex-end; flex-wrap:wrap;' }, [
+const sizeRow = el('div', { style: 'display:flex; gap:var(--md-sys-space-xl); align-items:flex-end; flex-wrap:wrap;' }, [
   captioned('size="sm"', sized('sm')),
   captioned('size="md"', sized('md')),
   captioned('size="lg"', sized('lg')),
@@ -94,7 +94,7 @@ const disabled = el('ui-slider', { name: 'locked', label: 'Bass (managed by prof
 applyDemoWidth(disabled, '16rem')
 const bare = el('ui-slider', { name: 'bare', 'aria-label': 'Opacity', value: '50', 'readout-hidden': '' })
 applyDemoWidth(bare, '16rem')
-const stateRow = el('div', { style: 'display:flex; gap:1.5rem; align-items:flex-end; flex-wrap:wrap;' }, [
+const stateRow = el('div', { style: 'display:flex; gap:var(--md-sys-space-xl); align-items:flex-end; flex-wrap:wrap;' }, [
   captioned('disabled', disabled),
   captioned('aria-label + readout-hidden', bare),
 ])

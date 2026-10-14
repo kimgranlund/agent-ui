@@ -59,7 +59,7 @@ otp.addEventListener('change', () => {
   if (otp.value.length === LENGTH) verify()
 })
 
-const status = el('p', { role: 'status', style: 'margin:0.75rem 0 0; min-block-size:1.5em;' }, [text('Waiting for the code…')])
+const status = el('p', { role: 'status', style: 'margin:var(--md-sys-space-md) 0 0; min-block-size:1.5em;' }, [text('Waiting for the code…')])
 const setStatus = (msg: string, tone: 'neutral' | 'ok' | 'bad'): void => {
   status.textContent = msg
   status.style.color = tone === 'ok' ? 'var(--md-sys-color-success)' : tone === 'bad' ? 'var(--md-sys-color-danger)' : ''

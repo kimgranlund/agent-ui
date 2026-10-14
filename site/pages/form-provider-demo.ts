@@ -84,7 +84,7 @@ resetBtn.addEventListener('click', () => {
   logEvent('provider.reset()')
 })
 const actions = el('div', {}, [submitBtn, resetBtn])
-actions.style.cssText = 'display:flex; gap:0.75rem; margin-top:1rem;'
+actions.style.cssText = 'display:flex; gap:var(--md-sys-space-md); margin-top:var(--md-sys-space-lg);'
 
 content.append(
   exampleSection('Coordinated form', provider, actions, readout),

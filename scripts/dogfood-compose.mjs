@@ -7,7 +7,11 @@
 // objects of a file and resolve child ids within that file.
 //
 // The gate reads scripts/dogfood-compose-allowlist.json: one `"<path>#<rule>": "<why>"` entry per line in
-// sorted order. It fails on a finding whose key is not listed and on a listed key that finds nothing (stale).
+// sorted order. It fails on a finding whose key is not listed, on a listed key that finds nothing (stale), and on a
+// reason that names no owner: a T-NNNN ticket, an ADR-NNNN or a ruling (T-0170, hasOwner in lib/foundations-rules.mjs).
+// A rule's `exempt` list in dogfood-rules.json ({ path, reason }) takes a file whose literal geometry is
+// legitimately literal (a specimen frame, a sandbox document) out of that rule; an exempt path that no longer finds
+// anything is stale too, so the allowlist holds only real debt with an owner (T-0170).
 //
 // Usage:
 //   node scripts/dogfood-compose.mjs                    print every finding
@@ -22,9 +26,13 @@ import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { join, relative } from 'node:path'
 import { formatAllowlist, gateDiff, readAllowlist } from './foundations-census.mjs'
+import { hasOwner } from './lib/foundations-rules.mjs'
 
 const REPO = fileURLToPath(new URL('..', import.meta.url))
-const RULES = JSON.parse(readFileSync(new URL('./dogfood-rules.json', import.meta.url), 'utf8')).compose.map((r) => r.id)
+const COMPOSE = JSON.parse(readFileSync(new URL('./dogfood-rules.json', import.meta.url), 'utf8')).compose
+const RULES = COMPOSE.map((r) => r.id)
+/** The path-level exemptions of dogfood-rules.json, keyed `<path>#<rule>` like a finding, with their reasons. */
+export const EXEMPT = new Map(COMPOSE.flatMap((r) => (r.exempt ?? []).map((e) => [`${e.path}#${r.id}`, e.reason])))
 
 /** The scan set: [directory, file predicate]. Tests, generated files and fixtures are never composition. */
 const SCAN = [
@@ -272,6 +280,15 @@ export function compose(root) {
   return new Map([...found].sort(([a], [b]) => (a < b ? -1 : 1)))
 }
 
+/** The gate's verdict: exempt keys leave the findings (and are stale when they find nothing), then the allowlist diff
+ *  and every entry or exemption whose reason names no owner. */
+export function gate(found, allow, exempt) {
+  const { unlisted, stale } = gateDiff([...found.keys()].filter((k) => !exempt.has(k)), Object.keys(allow))
+  for (const k of exempt.keys()) if (!found.has(k)) stale.push(k)
+  const unreasoned = [...Object.entries(allow), ...exempt].filter(([, why]) => !hasOwner(why))
+  return { unlisted, stale, unreasoned }
+}
+
 function argValue(flag) {
   const i = process.argv.indexOf(flag)
   return i === -1 ? undefined : process.argv[i + 1]
@@ -284,7 +301,7 @@ function main() {
 
   if (process.argv.includes('--write-allowlist')) {
     const old = readAllowlist(allowFile)
-    const next = Object.fromEntries([...found.keys()].map((k) => [k, old[k] ?? 'TODO: why this composition stays']))
+    const next = Object.fromEntries([...found.keys()].filter((k) => !EXEMPT.has(k)).map((k) => [k, old[k] ?? 'TODO: why this composition stays']))
     writeFileSync(allowFile, formatAllowlist(next))
     console.log(`dogfood-compose: wrote ${Object.keys(next).length} entries to ${relative(root, allowFile)}`)
     return
@@ -292,19 +309,18 @@ function main() {
 
   if (process.argv.includes('--gate')) {
     const allow = readAllowlist(allowFile)
-    const { unlisted, stale } = gateDiff(found.keys(), Object.keys(allow))
-    const unreasoned = Object.entries(allow).filter(([, why]) => typeof why !== 'string' || why.trim() === '' || why.startsWith('TODO'))
+    const { unlisted, stale, unreasoned } = gate(found, allow, EXEMPT)
     for (const k of unlisted) {
       const f = found.get(k)
       console.error(`unlisted: ${k} (${f.count}) line ${f.line}: ${f.text}`)
     }
     for (const k of stale) console.error(`stale: ${k} no longer finds anything; delete its allowlist line`)
-    for (const [k] of unreasoned) console.error(`no reason: ${k} needs a reason in the allowlist`)
+    for (const [k] of unreasoned) console.error(`no owner: ${k} needs a reason naming a T-NNNN, an ADR-NNNN or a ruling`)
     if (unlisted.length || stale.length || unreasoned.length) {
       console.error(`dogfood-compose --gate: ${unlisted.length} unlisted, ${stale.length} stale, ${unreasoned.length} without a reason (scripts/dogfood-rules.json; fix the composition or the allowlist line)`)
       process.exit(1)
     }
-    console.log(`dogfood-compose --gate: green, ${found.size} allowlisted findings`)
+    console.log(`dogfood-compose --gate: green, ${found.size - EXEMPT.size} allowlisted findings, ${EXEMPT.size} exempt paths`)
     return
   }
 
@@ -368,6 +384,15 @@ function selftest() {
   // the gate diff is shared with the census (its selftest proves it); the rule table is covered here
   const d = gateDiff(['a#date-field', 'b#board-grid'], ['a#date-field', 'c#inline-geometry'])
   check('gate: an unlisted finding and a stale entry are both reported', d.unlisted.join() === 'b#board-grid' && d.stale.join() === 'c#inline-geometry')
+  // T-0170: the owner format check and the path exemption
+  const hits = new Map([['a#inline-geometry', {}], ['b#inline-geometry', {}]])
+  const owned = gate(hits, { 'a#inline-geometry': 'debt, owner T-0190' }, new Map([['b#inline-geometry', 'a specimen frame (T-0170)']]))
+  check('gate: an owned entry and an owned exemption pass', owned.unlisted.length + owned.stale.length + owned.unreasoned.length === 0)
+  const unowned = gate(hits, { 'a#inline-geometry': 'day one, the site lane migrates it' }, new Map([['b#inline-geometry', 'a specimen frame']]))
+  check('gate: a reason with no T-NNNN, ADR-NNNN or ruling fails, in the allowlist and in an exemption', unowned.unreasoned.map(([k]) => k).join() === 'a#inline-geometry,b#inline-geometry')
+  check('gate: a TODO reason fails even when it names a ticket', gate(hits, { 'a#inline-geometry': 'TODO: T-0190' }, new Map([['b#inline-geometry', 'ruling']])).unreasoned.length === 1)
+  check('gate: an exempt path leaves the findings, and one that finds nothing is stale', gate(new Map([['a#inline-geometry', {}]]), { 'a#inline-geometry': 'T-0190' }, new Map([['b#inline-geometry', 'T-0170']])).stale.join() === 'b#inline-geometry' && owned.unlisted.length === 0)
+  check('exempt: every exemption in dogfood-rules.json names a path and a reason', COMPOSE.every((r) => (r.exempt ?? []).every((e) => typeof e.path === 'string' && e.path !== '' && hasOwner(e.reason))))
   check(`rules: every compose rule in dogfood-rules.json has a selftest case (${RULES.join(', ')})`, RULES.length > 0 && RULES.every((r) => tested.has(r)))
   check('rules: every compose rule carries id, adr, use, not and detect', JSON.parse(readFileSync(new URL('./dogfood-rules.json', import.meta.url), 'utf8')).compose.every((r) => ['id', 'adr', 'use', 'not', 'detect'].every((k) => typeof r[k] === 'string' && r[k] !== '')))
   console.log(failures === 0 ? 'selftest: all green' : `selftest: ${failures} failure(s)`)

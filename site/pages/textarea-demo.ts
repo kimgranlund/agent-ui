@@ -88,7 +88,7 @@ const stepsNote = el('p', {}, [
 const notes = area({ label: 'Agent notes', name: 'notes', rows: '2', readonly: '', value: 'Ticket auto-triaged to Billing.\nSLA: first response within 4h.' })
 
 // ── [4] Submit — reportValidity() over the record ───────────────────────────────────────────────────────────
-const verdict = el('p', { style: 'margin:0.5rem 0 0;' }, [text('Not submitted yet.')])
+const verdict = el('p', { style: 'margin:var(--md-sys-space-sm) 0 0;' }, [text('Not submitted yet.')])
 const submit = uiButton('Submit ticket', 'solid')
 submit.addEventListener('click', () => {
   const ok = description.reportValidity() && description.value.length <= BUDGET

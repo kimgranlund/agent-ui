@@ -29,7 +29,7 @@ function swatch(color: string, label: string, scheme?: 'light' | 'dark'): HTMLEl
 
 /** row — a wrapping flex row of swatches (page demo chrome, not a ui-* control). */
 function row(...nodes: readonly Node[]): HTMLElement {
-  return el('div', { style: 'display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-start;' }, nodes)
+  return el('div', { style: 'display:flex; flex-wrap:wrap; gap:var(--md-sys-space-lg); align-items:flex-start;' }, nodes)
 }
 
 // ── 1. Brand key colors — the token names a designer reads off the sheet ──────────────────────────────────────

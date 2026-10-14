@@ -139,11 +139,11 @@ clearSelection.addEventListener('click', () => {
   selectedOut.textContent = '[]'
 })
 
-const toolbar = el('div', { style: 'display:flex; gap:1rem; align-items:flex-end; flex-wrap:wrap; margin-block-end:1rem;' }, [
+const toolbar = el('div', { style: 'display:flex; gap:var(--md-sys-space-lg); align-items:flex-end; flex-wrap:wrap; margin-block-end:var(--md-sys-space-lg);' }, [
   searchField,
   planFacet,
 ])
-const readout = el('p', { style: 'display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;' }, [
+const readout = el('p', { style: 'display:flex; gap:var(--md-sys-space-md); align-items:center; flex-wrap:wrap;' }, [
   text('selected = '), selectedOut, clearSelection,
 ])
 const reportBlock = el('div', {}, [toolbar, scrollTableBody(report, '40rem'), readout])

@@ -15,7 +15,7 @@ import { parseCss, over, flatten, contrast, inkContrast, flatLayers, CANVAS_LIGH
 import type { Rgba } from '../lib/dogfood-contrast.ts'
 import { resolve, CFG } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
 import type { Resolved, Step, Tier } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
-import { ROOT_REGISTER, STEP, glyphBox } from '../../scripts/lib/foundations-rules.mjs'
+import { ROOT_REGISTER, STEP, glyphBox, hasOwner } from '../../scripts/lib/foundations-rules.mjs'
 import RULES from '../../scripts/dogfood-rules.json'
 import ALLOW from '../../scripts/dogfood-render-allowlist.json'
 
@@ -31,8 +31,10 @@ vi.setConfig({ testTimeout: 60_000 })
 // Amendment 8), and widget at scale md on an A2UI canvas (the renderer stamps it). A finding is keyed `demo/<page>#<rule>`,
 // `widget/<Type>#<rule>` or `persona/<seed>#<rule>`; the gate fails on a key that
 // scripts/dogfood-render-allowlist.json does not list, and on a listed key this engine no longer finds (stale). A
-// key that holds in one engine only carries `@chromium` or `@webkit`. The last block is the negative control: one
-// injected violation per rule, each of which must turn its rule red.
+// key that holds in one engine only carries `@chromium` or `@webkit`. Every reason names its owner, a T-NNNN, an
+// ADR-NNNN or a ruling (T-0170, hasOwner). A permanent specimen is not debt: it carries
+// `data-dogfood-ok="<rule>"` and a non-empty `data-dogfood-reason` on the element (T-0170; honoured by nested-card).
+// The last block is the negative control: one injected violation per rule, each of which must turn its rule red.
 
 type Rule = (typeof RULES.render)[number]
 type Finding = { rule: string; detail: string }
@@ -248,7 +250,7 @@ const CHECKS: Record<string, (root: Element, ctx: Ctx) => string[]> = {
     const out: string[] = []
     for (const el of each(root, 'ui-card')) {
       measured['nested-card']++
-      if (el.parentElement?.closest('ui-card')) out.push(`${tagOf(el)} inside a ui-card`)
+      if (el.parentElement?.closest('ui-card') && !specimen(el, 'nested-card')) out.push(`${tagOf(el)} inside a ui-card`)
     }
     return out
   },
@@ -581,6 +583,12 @@ const CHECKS: Record<string, (root: Element, ctx: Ctx) => string[]> = {
   },
 }
 
+/** A permanent specimen's marker (T-0170): the element lists `rule` in data-dogfood-ok and says why. */
+export function specimen(el: Element, rule: string): boolean {
+  const ok = (el.getAttribute('data-dogfood-ok') ?? '').split(/\s+/)
+  return ok.includes(rule) && (el.getAttribute('data-dogfood-reason') ?? '').trim() !== ''
+}
+
 /** Every rule's findings in one root at one viewport. */
 function lint(root: Element, ctx: Ctx): Finding[] {
   return RULES.render.flatMap((r: Rule) => CHECKS[r.id]!(root, ctx).map((detail) => ({ rule: r.id, detail })))
@@ -702,8 +710,14 @@ describe('render lint: the gate itself (T-0136)', () => {
     }
     const stale = [...allowed].filter((k) => visited.has(k.split('#')[0]!) && !found.has(k))
     expect(stale, 'an allowlist entry this engine no longer finds: delete its line (or add @chromium / @webkit)').toEqual([])
-    const unreasoned = Object.entries(ALLOW as Record<string, string>).filter(([, why]) => typeof why !== 'string' || why.trim() === '' || why.startsWith('TODO'))
-    expect(unreasoned, 'every allowlist entry carries a reason').toEqual([])
+    const unreasoned = Object.entries(ALLOW as Record<string, string>).filter(([, why]) => !hasOwner(why))
+    expect(unreasoned, 'every allowlist entry names its owner: a T-NNNN, an ADR-NNNN or a ruling (T-0170)').toEqual([])
+  })
+  it('the owner check bites: a reason with no ticket, ADR or ruling fails (T-0170)', () => {
+    expect(hasOwner('day one: the split-pane lane stacks it')).toBe(false)
+    expect(hasOwner('TODO: T-0187')).toBe(false)
+    expect(hasOwner('owner T-0187: the specimen overflows at 400px')).toBe(true)
+    expect(hasOwner("Kim's ruling 2026-10-14")).toBe(true)
   })
 })
 
@@ -717,6 +731,17 @@ const PLANTS: Record<string, { bad: string; good: string; width?: number; rule?:
   'type-floor': { bad: '<p style="font-size: 7px">Tiny</p>', good: '<p>Body</p>' },
   column: { bad: '<div style="inline-size: 700px">Wide</div>', good: '<div>Narrow</div>', width: 400 },
   'nested-card': { bad: '<ui-card><ui-card>Inner</ui-card></ui-card>', good: '<ui-card>One</ui-card>' },
+  // T-0170: the specimen marker needs both the rule id and a reason; either alone stays red
+  'nested-card marker without a reason': {
+    rule: 'nested-card',
+    bad: '<ui-card><ui-card data-dogfood-ok="nested-card">No reason</ui-card></ui-card>',
+    good: '<ui-card><ui-card data-dogfood-ok="nested-card" data-dogfood-reason="a specimen">Marked</ui-card></ui-card>',
+  },
+  'nested-card marker for another rule': {
+    rule: 'nested-card',
+    bad: '<ui-card><ui-card data-dogfood-ok="card-radius" data-dogfood-reason="a specimen">Other rule</ui-card></ui-card>',
+    good: '<ui-card><ui-card data-dogfood-ok="card-radius nested-card" data-dogfood-reason="a specimen">Both rules</ui-card></ui-card>',
+  },
   'control-height': { bad: '<ui-button style="block-size: 37px">Save</ui-button>', good: '<ui-button>Save</ui-button>' },
   'text-edge': { bad: '<ui-button style="padding-inline: 3px">Save</ui-button>', good: '<ui-button>Save</ui-button>' },
   'card-radius': { bad: '<ui-card style="border-radius: 3px">One</ui-card>', good: '<ui-card>One</ui-card>' },

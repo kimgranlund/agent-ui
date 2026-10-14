@@ -78,7 +78,7 @@ const EPISODES = [
   { policy: 'metadata', title: 'Ep. 42 · The scheduler, explained (44 min)' },
   { policy: 'auto', title: 'Ep. 43 · Live Q&A (61 min)' },
 ] as const
-const list = el('div', { style: 'display:flex; flex-direction:column; gap:1rem;' })
+const list = el('div', { style: 'display:flex; flex-direction:column; gap:var(--md-sys-space-lg);' })
 for (const ep of EPISODES) list.append(captioned(`preload="${ep.policy}" — ${ep.title}`, player({ src: MEMO_SRC, preload: ep.policy, label: ep.title })))
 const preloadNote = el('p', {}, [
   document.createTextNode('The policy passes through verbatim to the native '),
@@ -90,7 +90,7 @@ const preloadNote = el('p', {}, [
 const lazyPlayer = player({ label: 'Voice memo from Ola · pending upload' })
 const loadButton = uiButton('Attach memo (write src)', 'solid')
 const clearButton = uiButton('Detach (src = "")', 'soft')
-const state = el('p', { 'aria-live': 'polite', style: 'margin:0.5rem 0 0; font-family: var(--ui-font-mono, ui-monospace, monospace); font-size: 0.85em;' })
+const state = el('p', { 'aria-live': 'polite', style: 'margin:var(--md-sys-space-sm) 0 0; font-family: var(--ui-font-mono, ui-monospace, monospace); font-size: 0.85em;' })
 function reportState(): void {
   const media = lazyPlayer.querySelector('[data-part="media"]')
   state.textContent = media === null ? 'src is empty → no <audio> in the DOM (nothing rendered, no dead bar).' : 'src set → <audio data-part="media" controls> is live.'
@@ -104,7 +104,7 @@ clearButton.addEventListener('click', () => {
   queueMicrotask(reportState)
 })
 reportState()
-const lazyRow = el('div', { style: 'display:flex; gap:0.5rem; flex-wrap:wrap; margin-block-start:0.75rem;' }, [loadButton, clearButton])
+const lazyRow = el('div', { style: 'display:flex; gap:var(--md-sys-space-sm); flex-wrap:wrap; margin-block-start:var(--md-sys-space-md);' }, [loadButton, clearButton])
 
 content.append(
   exampleSection('A playable voice memo', memo, memoNote),

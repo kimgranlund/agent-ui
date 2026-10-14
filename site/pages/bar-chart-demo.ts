@@ -83,7 +83,7 @@ switcher.addEventListener('change', () => {
   log.append(line)
   log.scrollTop = log.scrollHeight
 })
-const revenueBlock = el('div', { style: 'display:flex; flex-direction:column; gap:1rem; align-items:flex-start;' }, [
+const revenueBlock = el('div', { style: 'display:flex; flex-direction:column; gap:var(--md-sys-space-lg); align-items:flex-start;' }, [
   switcher,
   revenue,
 ])

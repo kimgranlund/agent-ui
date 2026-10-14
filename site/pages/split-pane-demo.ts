@@ -31,12 +31,12 @@ function panel(title: string, spec: string, body: string): HTMLElement {
   return el('div', { style: 'display:flex; flex-direction:column; block-size:100%; min-inline-size:0;' }, [
     el(
       'div',
-      { style: 'padding:0.4rem 0.75rem; font-size:0.75rem; font-weight:600; letter-spacing:0.02em; text-transform:uppercase; ' +
+      { style: 'padding:0.4rem var(--md-sys-space-md); font-size:0.75rem; font-weight:600; letter-spacing:0.02em; text-transform:uppercase; ' +
         'color: var(--md-sys-color-neutral-on-surface-variant); border-block-end:1px solid var(--md-sys-color-neutral-outline-variant); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;' },
       [text(title)],
     ),
-    el('div', { style: 'padding:0.5rem 0.75rem; font-family: var(--md-sys-typeface-mono); font-size:0.75rem; color: var(--md-sys-color-neutral-on-surface-variant);' }, [text(spec)]),
-    el('div', { style: 'padding:0 0.75rem 0.75rem; font-size:0.85rem; line-height:1.5; overflow:auto;' }, [text(body)]),
+    el('div', { style: 'padding:var(--md-sys-space-sm) var(--md-sys-space-md); font-family: var(--md-sys-typeface-mono); font-size:0.75rem; color: var(--md-sys-color-neutral-on-surface-variant);' }, [text(spec)]),
+    el('div', { style: 'padding:0 var(--md-sys-space-md) var(--md-sys-space-md); font-size:0.85rem; line-height:1.5; overflow:auto;' }, [text(body)]),
   ])
 }
 
@@ -151,7 +151,7 @@ const settled = new MutationObserver((records) => {
 })
 settled.observe(workspace, { childList: true })
 
-const dynamicControls = el('div', { style: 'display:flex; gap:0.75rem; flex-wrap:wrap; margin-block-end:0.75rem;' }, [addBtn, removeBtn])
+const dynamicControls = el('div', { style: 'display:flex; gap:var(--md-sys-space-md); flex-wrap:wrap; margin-block-end:var(--md-sys-space-md);' }, [addBtn, removeBtn])
 const dynamicNote = el('p', {}, [
   text('Panes MAY be added or removed after connect. N panes ⇒ N−1 control-rendered separators, always — an added pane seeds from its own '),
   code('initial'), text(' (or takes an equal share proportionally from the others), a removed pane\'s share redistributes to the survivors, and a ' +

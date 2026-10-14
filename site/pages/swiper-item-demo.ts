@@ -58,7 +58,7 @@ function readout(swiper: UISwiperElement, role: string): { node: HTMLElement; re
 
 // slide — a tour step's page content (NOT a ui-* control): a title + a line of copy.
 function slide(title: string, copy: string): HTMLElement {
-  return el('div', { style: 'padding:1rem 1.25rem; min-block-size:6rem; display:flex; flex-direction:column; gap:0.35rem; justify-content:center;' }, [
+  return el('div', { style: 'padding:var(--md-sys-space-lg) 1.25rem; min-block-size:6rem; display:flex; flex-direction:column; gap:0.35rem; justify-content:center;' }, [
     el('strong', { style: 'font-size:1rem;' }, [text(title)]),
     el('span', { style: 'font-size:0.85rem; color: var(--md-sys-color-neutral-on-surface-variant); line-height:1.4;' }, [text(copy)]),
   ])
@@ -81,7 +81,7 @@ const tour = el('ui-swiper', { pagination: '', paddles: '', 'data-role': 'keyed-
 watchSelect(tour, 'keyed')
 const tourReadout = readout(tour, 'keyed-readout')
 
-const keyButtons = el('div', { style: 'display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center; margin-block-end:0.75rem;' }, [
+const keyButtons = el('div', { style: 'display:flex; gap:var(--md-sys-space-sm); flex-wrap:wrap; align-items:center; margin-block-end:var(--md-sys-space-md);' }, [
   ...TOUR.map((s) => {
     const b = uiButton(`active="${s.key}"`, 'soft')
     b.addEventListener('click', () => {
@@ -102,7 +102,7 @@ const unkeyed = el('ui-swiper', { pagination: '', paddles: '', 'data-role': 'unk
 ]) as UISwiperElement
 watchSelect(unkeyed, 'index')
 const unkeyedReadout = readout(unkeyed, 'unkeyed-readout')
-const indexButtons = el('div', { style: 'display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center; margin-block-end:0.75rem;' }, [
+const indexButtons = el('div', { style: 'display:flex; gap:var(--md-sys-space-sm); flex-wrap:wrap; align-items:center; margin-block-end:var(--md-sys-space-md);' }, [
   ...[0, 1, 2, 3].map((i) => {
     const b = uiButton(`active="${i}"`, 'soft')
     b.addEventListener('click', () => {
@@ -156,7 +156,7 @@ jumpBtn.addEventListener('click', () => {
   shelf.active = last.key
   logLine('shelf', 'write', `active=${JSON.stringify(last.key)}`)
 })
-const shelfControls = el('div', { style: 'display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center; margin-block-end:0.75rem;' }, [
+const shelfControls = el('div', { style: 'display:flex; gap:var(--md-sys-space-sm); flex-wrap:wrap; align-items:center; margin-block-end:var(--md-sys-space-md);' }, [
   appendBtn, jumpBtn, shelfReadout.node,
 ])
 const appendNote = el('p', {}, [
@@ -183,7 +183,7 @@ function refreshClones(): void {
 requestAnimationFrame(refreshClones)
 const countBtn = uiButton('Re-count', 'soft')
 countBtn.addEventListener('click', refreshClones)
-const loopControls = el('div', { style: 'display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center; margin-block-end:0.75rem;' }, [countBtn, cloneReadout])
+const loopControls = el('div', { style: 'display:flex; gap:var(--md-sys-space-sm); flex-wrap:wrap; align-items:center; margin-block-end:var(--md-sys-space-md);' }, [countBtn, cloneReadout])
 const loopNote = el('p', {}, [
   text('Under '), code('loop'), text(' the swiper clones a band of slides at each end for the seamless wrap. Clones are marked '),
   code('aria-hidden'), text(' + '), code('inert'), text(', are never labelled via '), code('labelAs'), text(', and are EXCLUDED from the '),

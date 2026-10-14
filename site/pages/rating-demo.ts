@@ -41,7 +41,7 @@ const average = el('ui-rating', {
   name: 'average', label: 'Average rating', max: '5', value: '4.3', readonly: '',
 }) as RatingHost
 const averageReadout = el('output', { 'aria-live': 'polite' }, [text('4.3 / 5')])
-const averageRow = el('div', { style: 'display:flex; gap:1rem; align-items:center; flex-wrap:wrap;' }, [
+const averageRow = el('div', { style: 'display:flex; gap:var(--md-sys-space-lg); align-items:center; flex-wrap:wrap;' }, [
   average, averageReadout,
 ])
 const averageNote = el('p', {}, [
@@ -58,7 +58,7 @@ rate.addEventListener('input', () => {
   record('rate', 'input', rate.value)
 })
 rate.addEventListener('change', () => record('rate', 'change', rate.value))
-const rateRow = el('div', { style: 'display:flex; gap:1rem; align-items:center; flex-wrap:wrap;' }, [
+const rateRow = el('div', { style: 'display:flex; gap:var(--md-sys-space-lg); align-items:center; flex-wrap:wrap;' }, [
   rate, rateReadout,
 ])
 
@@ -72,7 +72,7 @@ halves.addEventListener('input', () => {
   record('halves', 'input', halves.value)
 })
 halves.addEventListener('change', () => record('halves', 'change', halves.value))
-const halvesRow = el('div', { style: 'display:flex; gap:1rem; align-items:center; flex-wrap:wrap;' }, [
+const halvesRow = el('div', { style: 'display:flex; gap:var(--md-sys-space-lg); align-items:center; flex-wrap:wrap;' }, [
   halves, halvesReadout,
 ])
 const halvesNote = el('p', {}, [
@@ -86,7 +86,7 @@ const sized = (size: string): HTMLElement => {
   applyDemoWidth(s, '8rem')
   return s
 }
-const sizeRow = el('div', { style: 'display:flex; gap:1.5rem; align-items:flex-end; flex-wrap:wrap;' }, [
+const sizeRow = el('div', { style: 'display:flex; gap:var(--md-sys-space-xl); align-items:flex-end; flex-wrap:wrap;' }, [
   captioned('size="sm"', sized('sm')),
   captioned('size="md"', sized('md')),
   captioned('size="lg"', sized('lg')),
@@ -95,7 +95,7 @@ const sizeRow = el('div', { style: 'display:flex; gap:1.5rem; align-items:flex-e
 // ── states — disabled + a bare row (no label) ───────────────────────────────────────────────────────────
 const disabled = el('ui-rating', { name: 'locked', label: 'Reliability (locked)', max: '5', value: '2', disabled: '' })
 const bare = el('ui-rating', { name: 'bare', 'aria-label': 'Quality', max: '5', value: '3' })
-const stateRow = el('div', { style: 'display:flex; gap:1.5rem; align-items:flex-end; flex-wrap:wrap;' }, [
+const stateRow = el('div', { style: 'display:flex; gap:var(--md-sys-space-xl); align-items:flex-end; flex-wrap:wrap;' }, [
   captioned('disabled', disabled),
   captioned('aria-label only (no visible label)', bare),
 ])

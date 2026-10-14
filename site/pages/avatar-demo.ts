@@ -59,7 +59,7 @@ const presenceDot = (presence: Presence): HTMLElement =>
 
 // ── the roster — one row per member: avatar · name/role · presence ──────────────────────────────────────
 const rosterRow = (m: Member): HTMLElement =>
-  el('li', { style: 'display:grid; grid-template-columns:auto 1fr auto; gap:0.75rem; align-items:center; padding:0.4rem 0;' }, [
+  el('li', { style: 'display:grid; grid-template-columns:auto 1fr auto; gap:var(--md-sys-space-md); align-items:center; padding:0.4rem 0;' }, [
     avatar(m.src ? { src: m.src, identity: m.identity } : { identity: m.identity }),
     el('div', {}, [
       el('div', {}, [text(m.identity || 'Invited teammate')]),
@@ -95,14 +95,14 @@ assignees.style.marginInlineStart = 'var(--md-sys-widget-gutter)'
 cluster.append(assignees)
 
 // ── sizes — every [size] tier off the control-height ladder (the button row; ADR-0112 Amendment 3) ────────────────────────────────────────────────────
-const sizeRow = el('div', { style: 'display:flex; gap:1rem; align-items:start; flex-wrap:wrap;' }, [
+const sizeRow = el('div', { style: 'display:flex; gap:var(--md-sys-space-lg); align-items:start; flex-wrap:wrap;' }, [
   captioned('size="sm"', avatar({ src: portrait('#6750a4'), identity: 'Priya Natarajan', size: 'sm' })),
   captioned('size="md"', avatar({ src: portrait('#6750a4'), identity: 'Priya Natarajan', size: 'md' })),
   captioned('size="lg"', avatar({ src: portrait('#6750a4'), identity: 'Priya Natarajan', size: 'lg' })),
 ])
 
 // ── label override — an accessible name that differs from the identity the initials derive from ─────────
-const labelled = el('div', { style: 'display:flex; gap:1rem; align-items:start; flex-wrap:wrap;' }, [
+const labelled = el('div', { style: 'display:flex; gap:var(--md-sys-space-lg); align-items:start; flex-wrap:wrap;' }, [
   captioned('identity="Priya Natarajan"', avatar({ identity: 'Priya Natarajan' })),
   captioned('… label="Priya (you)"', avatar({ identity: 'Priya Natarajan', label: 'Priya (you)' })),
 ])

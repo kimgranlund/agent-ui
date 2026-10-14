@@ -55,13 +55,13 @@ const short = player(
   { src: CLIP_SRC, aspect: '9/16', label: 'Short · Why effects re-run (0:45)', poster: poster(270, 480, 'Short', '#5c2a3f', '#d8b6c9') },
   '9rem',
 )
-const lessonRow = el('div', { style: 'display:flex; gap:1rem; flex-wrap:wrap; align-items:flex-start;' }, [
+const lessonRow = el('div', { style: 'display:flex; gap:var(--md-sys-space-lg); flex-wrap:wrap; align-items:flex-start;' }, [
   captioned('aspect="16/9" (default) · poster · preload="metadata"', lesson),
   captioned('aspect="9/16" — a vertical short', short),
 ])
 
 // ── preload policies ────────────────────────────────────────────────────────────────────────────────────────
-const preloadRow = el('div', { style: 'display:flex; gap:1rem; flex-wrap:wrap; align-items:flex-start;' })
+const preloadRow = el('div', { style: 'display:flex; gap:var(--md-sys-space-lg); flex-wrap:wrap; align-items:flex-start;' })
 for (const policy of ['none', 'metadata', 'auto'] as const) {
   preloadRow.append(
     captioned(
@@ -80,7 +80,7 @@ const preloadNote = el('p', {}, [
 const lazyPlayer = player({ label: 'Lesson 5 · Cleanup and disposal (9:12)', poster: poster(640, 360, 'Lesson 5', '#5c542a', '#d8d0b6') }, 'min(100%, 28rem)')
 const loadButton = uiButton('Load lesson (write src)', 'solid')
 const clearButton = uiButton('Clear (src = "")', 'soft')
-const state = el('p', { 'aria-live': 'polite', style: 'margin:0.5rem 0 0; font-family: var(--ui-font-mono, ui-monospace, monospace); font-size: 0.85em;' })
+const state = el('p', { 'aria-live': 'polite', style: 'margin:var(--md-sys-space-sm) 0 0; font-family: var(--ui-font-mono, ui-monospace, monospace); font-size: 0.85em;' })
 function reportState(): void {
   const media = lazyPlayer.querySelector('[data-part="media"]')
   state.textContent = media === null ? 'src is empty → no <video> in the DOM (only the reserved box).' : 'src set → <video data-part="media" controls> is live inside the box.'
@@ -94,7 +94,7 @@ clearButton.addEventListener('click', () => {
   queueMicrotask(reportState)
 })
 reportState()
-const lazyRow = el('div', { style: 'display:flex; gap:0.5rem; flex-wrap:wrap; margin-block-start:0.75rem;' }, [loadButton, clearButton])
+const lazyRow = el('div', { style: 'display:flex; gap:var(--md-sys-space-sm); flex-wrap:wrap; margin-block-start:var(--md-sys-space-md);' }, [loadButton, clearButton])
 
 content.append(
   exampleSection('Lesson player with poster', lessonRow),

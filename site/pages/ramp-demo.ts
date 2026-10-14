@@ -42,7 +42,7 @@ function ramp(steps: readonly Step[], label: string, scheme?: 'light' | 'dark'):
 
 /** stack — a vertical column of captioned strips (page demo chrome, not a ui-* control). */
 function stack(...nodes: readonly Node[]): HTMLElement {
-  return el('div', { style: 'display:flex; flex-direction:column; gap:1rem;' }, nodes)
+  return el('div', { style: 'display:flex; flex-direction:column; gap:var(--md-sys-space-lg);' }, nodes)
 }
 
 // ── 1. The brand ramp — primary, end to end ──────────────────────────────────────────────────────────────────
@@ -96,7 +96,7 @@ function pick(name: Family): void {
   logLine(`steps ← ${name}  (${steps.length} steps)`)
 }
 const FAMILIES: readonly Family[] = ['primary', 'secondary', 'accent', 'neutral']
-const switcher = el('div', { style: 'display:flex; flex-wrap:wrap; gap:0.5rem;' }, FAMILIES.map((name) => {
+const switcher = el('div', { style: 'display:flex; flex-wrap:wrap; gap:var(--md-sys-space-sm);' }, FAMILIES.map((name) => {
   const b = uiButton(name, 'soft')
   b.addEventListener('click', () => pick(name))
   return b
