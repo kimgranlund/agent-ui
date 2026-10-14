@@ -228,6 +228,20 @@ const foundationsPair = (tag: string, attrs: string): { out: HTMLElement; inside
   return { out, inside }
 }
 
+describe('ui-result-card: the stat glyph (ADR-0245 Amendment 6)', () => {
+  it('a stat glyph is its own glyph box 2n - 2c, n clear of its label', async () => {
+    const el = card(container('480px'), (c) => {
+      c.stats = [{ label: 'Hits', value: 3, intent: 'danger' }]
+    })
+    await settle(el)
+    const glyph = el.querySelector('[data-part="stat"] [data-part="glyph"]') as HTMLElement
+    const label = el.querySelector('[data-part="stat"] [data-part="label"]') as HTMLElement
+    const box = glyph.getBoundingClientRect()
+    expect([box.width, box.height]).toEqual([ROOT.glyph, ROOT.glyph])
+    expect(label.getBoundingClientRect().left - box.right, 'glyph to label gap').toBeCloseTo(ROOT.n, 0)
+  })
+})
+
 describe('ui-result-card: ADR-0245 derived foundations, dark launch', () => {
   it('reads today\'s value outside a data-tier region and the derived value inside', () => {
     const { out, inside } = foundationsPair('ui-result-card', 'outcome="win" result-title="Blackjack"')

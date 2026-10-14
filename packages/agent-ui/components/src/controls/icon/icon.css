@@ -1,6 +1,7 @@
 /* icon.css — ui-icon, the Display-class icon primitive (LLD-C5 §3, ADR-0065/0066). Two sectioned blocks:
  *
- *   [1] TOKEN BLOCK  — `:where(ui-icon)` declares --md-sys-icon-size: 1em. ui-icon has NO size/tone lever
+ *   [1] TOKEN BLOCK  — `:where(ui-icon)` declares --md-sys-icon-size: 1em (the 2n icon box under a [data-tier]
+ *       ancestor, ADR-0245 Amendment 6). ui-icon has NO size/tone lever
  *       (no [size] ramp, no [variant] repoint) — it is a 1em×1em cell by design; a consumer sizes it via
  *       ambient `font-size` or an explicit `inline-size` override on the host (LLD §3, geometry.md Display
  *       class: "intrinsic structural sizing").
@@ -18,9 +19,14 @@
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-icon) declares --md-sys-icon-* ════════════════ */
 
 :where(ui-icon) {
-  /* ADR-0245 cl.4: inside an opt-in [data-tier] region a standalone icon is the 2n icon box
-     (--md-sys-icon-box, 14px at the root md); outside one the derived token is undefined and today's
-     1em cell holds. An icon inside a control's cell still fills that cell (the svg is 100%). */
+  /* ADR-0245 Amendment 6: a standalone icon follows the surrounding text (1em), so an ambient font-size or an
+     explicit inline-size on the host is honoured. Inside a control's cell the control's slot rule sizes it to
+     the 2n icon box (the svg is 100%), whatever this token says. */
+  --md-sys-icon-size: 1em;
+}
+:where([data-tier] ui-icon) {
+  /* Inside an explicit [data-tier] region (an A2UI surface, a demo region) a standalone icon is that region's
+     2n icon box (--md-sys-icon-box, ADR-0245 cl.4). */
   --md-sys-icon-size: var(--md-sys-icon-box, 1em);
 }
 

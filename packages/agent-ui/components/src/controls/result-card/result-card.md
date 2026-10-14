@@ -63,7 +63,7 @@ parts:
   - name: stat
     description: One stat tile, reused by index across updates (the ui-game-hud stat look). Carries `data-intent` only when the stat has an intent; an intent never tints the tile.
   - name: glyph
-    description: The `aria-hidden` intent shape inside a stat (the badge clip-paths). Present only when the stat has an intent.
+    description: The `aria-hidden` intent shape inside a stat (the badge clip-paths). Present only when the stat has an intent, sized to the glyph box 2n - 2c and n clear of its label (ADR-0245 Amendment 6).
   - name: label
     description: The stat label, small uppercase text.
   - name: value

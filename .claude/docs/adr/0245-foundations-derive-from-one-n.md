@@ -1001,3 +1001,56 @@ Repairs in the same change: `geometry.md`, `geometry-sizing-spec.md` (the token 
 `derive.mjs` section 19, and the `text-field`, `textarea`, `select`, `combo-box`, `multi-select`, `otp-field`,
 `menu`, `badge`, `checkbox` and `code-editor` descriptors. The skill proposal is P13 in
 `.sdlc/mathematical-design-system-review.md`.
+
+## Amendment 6 (2026-10-13, T-0138): OTP round squares, the pill segmented control, and icon versus glyph sizing
+
+Kim's rulings, 2026-10-13, from the T-0137 dogfood design review (sharp badges and a rectangular icon button
+caught by eye). Square entry cells are not pills, a segmented control is one more single-line control, and an
+icon and a glyph are two different things that the system must keep apart. `scale.mjs` and the generator are
+unchanged (sha256 `3c319761…6057ba5b`). It supersedes Amendment 5 item 1 for the `ui-otp-field` cell and the
+"segmented-control keeps the group radius" sentence of Amendment 5 item 3; clause 4's 2n icon box now holds
+inside a control cell and an explicit `[data-tier]` region only. The body and its appendices stay as written.
+
+1. **OTP cells are round squares.** A `ui-otp-field` cell is a square 4n entry box, and at h/2 it read as a
+   circle (a stepper dot or a password bullet, not a box to type into). The cell takes the radius-n round
+   square, `--md-sys-radius`, with the squircle corner (`--md-sys-corner-shape`), the shape of an icon-only
+   square. The fixed entry corner stays the legacy opt-out fallback.
+2. **The segmented control is a pill track with a concentric thumb.** The track is the segment height 4n plus
+   the track padding c on each side, so its pill is `2n + c` (`--md-sys-control-radius` plus `--md-sys-c`), and
+   the moving thumb, inset c, takes `2n`, the same pill as a button. Circular corners, like every pill. Under the
+   legacy opt-out the track keeps the corner base and the thumb the corner base minus its 1px inset.
+3. **An icon and a glyph are two things.**
+   - A **glyph** is a functional mark: `+`, minus, the carets, the ticks, the game HUD and result card stat
+     marks, the board corner marks. It always sits in its own glyph box `2n - 2c` (6 / 8 / 10 at the root sm /
+     md / lg), anywhere it appears, and `--md-sys-glyph-box` stays declared on `:root`. A mark beside a label is
+     separated from it by the chip gap n, never by c.
+   - An **icon** is pictorial pack art. Inside a control cell (a button, toggle, field, select or row slot) it
+     is the 2n icon box, which the control sizes through its own slot rule. Anywhere else a standalone
+     `ui-icon` follows the surrounding text, `1em`, so an explicit `font-size` or `inline-size` on it or its
+     parent is honoured. Inside an explicit `[data-tier]` region (an A2UI surface, a demo region) a standalone
+     icon keeps the 2n box of that region's n.
+   - The mechanism lives in `icon.css`, not the generator: `--md-sys-icon-box` stays on `:root`, because about
+     25 control sheets size their own boxes from it (checkbox, radio, switch, slider, badge, rating and the
+     button, toggle, field and select icon cells). `ui-icon` defaults to `1em` and reads `--md-sys-icon-box`
+     only under a `[data-tier]` ancestor; a control cell still wins by its slot rule's specificity.
+4. **Kept as is.** The full-width toggle's centred label (Amendment 4 item 3) stays.
+5. **Gates.** `scripts/foundations-probe.mjs` rules the `cell` class at radius n; the `ui-otp-field`
+   foundations test and goldens, the segmented-control foundations test (track `2n + c`, thumb `2n`), the
+   icon foundations test (a standalone icon outside a region is `1em`), and the game HUD, result card and board
+   grid tests follow.
+
+The px that move, at the root sm · md · lg:
+
+| control | quantity | rule, before → after | sm · md · lg |
+|---|---|---|---|
+| otp-field cell | radius | 2n → n | 10 → 5 · 12 → 6 · 14 → 7 |
+| segmented-control track | radius | n + c → 2n + c | 7 → 12 · 8 → 14 · 9 → 16 |
+| segmented-control thumb | radius | n → 2n | 5 → 10 · 6 → 12 · 7 → 14 |
+| standalone ui-icon, no region | size | 2n → 1em | 10 · 12 · 14 → the text size |
+| game-hud and result-card stat glyph | size | 0.6em → 2n - 2c | → 6 · 8 · 10 |
+| game-hud and result-card stat glyph | gap to label | c → n | 2 → 5 · 2 → 6 · 2 → 7 |
+| board-grid corner glyph | box, inset | label type, 3px / 1px → 2n - 2c, c | → 6 · 8 · 10, inset 2 |
+
+Repairs in the same change: `geometry.md` and `geometry-sizing-spec.md` (the icon box rows), and the
+`otp-field`, `segmented-control`, `icon`, `glyph`, `game-hud`, `result-card` and `board-grid` descriptors. The
+skill proposal is P14 in `.sdlc/mathematical-design-system-review.md`.

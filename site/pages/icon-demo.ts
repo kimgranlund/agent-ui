@@ -7,7 +7,7 @@
 // (the full ICON_NAMES gallery lives THERE). ui-icon emits no events, so there is no event log.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003) — also activates the Phosphor pack
 import './containers.css' // shared demo chrome (section spacing + .demo-figure/.demo-caption)
-import { captioned, el, exampleSection, scrollX } from '../lib/specimens.ts'
+import { captioned, el, exampleSection } from '../lib/specimens.ts'
 
 const { content } = mountPage({
   title: 'ui-icon — demo',
@@ -64,7 +64,7 @@ const files: readonly [glyph: string, name: string, meta: string][] = [
 const fileList = el('ui-list', { gap: 'xs' }, files.map(([glyph, name, meta]) =>
   el('ui-row', { gap: 'sm', align: 'center' }, [
     icon(glyph),
-    el('ui-column', { gap: 'none' }, [
+    el('ui-column', { gap: 'none', align: 'start' }, [
       el('ui-text', { variant: 'body' }, [text(name)]),
       el('ui-text', { variant: 'label', size: 'sm' }, [text(meta)]),
     ]),
@@ -73,7 +73,8 @@ const fileList = el('ui-list', { gap: 'xs' }, files.map(([glyph, name, meta]) =>
 fileList.style.fontSize = '1.25rem' // the rows' ambient font-size IS the icon size lever (see the ramp below)
 
 // ── the size ramp — ambient font-size only; there is no [size] attribute by design ────────────────────────
-const ramp = el('ui-row', { gap: 'lg', align: 'baseline' }, ['0.875rem', '1rem', '1.5rem', '2rem', '3rem'].map((size) => {
+// The cards wrap at narrow widths (a scroller clipped the third card mid-word at 400px).
+const ramp = el('ui-row', { gap: 'lg', align: 'baseline', wrap: '' }, ['0.875rem', '1rem', '1.5rem', '2rem', '3rem'].map((size) => {
   const glyph = icon('calendar-check')
   glyph.style.fontSize = size
   return captioned(`font-size: ${size}`, glyph)
@@ -81,7 +82,8 @@ const ramp = el('ui-row', { gap: 'lg', align: 'baseline' }, ['0.875rem', '1rem',
 
 const rampNote = el('p', {}, [
   text('The host is a '), el('code', {}, [text('1em × 1em')]),
-  text(' cell (`--md-sys-icon-size`) — the consumer’s ambient font-size, or an explicit inline-size on the host, is the ONLY size lever. No ramp, no `[size]` attribute (geometry.md "intrinsic structural sizing").'),
+  text(' cell (`--md-sys-icon-size`) — the consumer’s ambient font-size, or an explicit inline-size on the host, is the ONLY size lever. No ramp, no `[size]` attribute (geometry.md "intrinsic structural sizing"). '),
+  text('An icon follows the text it sits beside. Two places size it for you (ADR-0245 Amendment 6): a control cell makes it the 2n icon box, as in the buttons above, and so does an explicit data-tier region such as an A2UI surface. A functional mark (a plus, a caret, a tick) is a ui-glyph instead, which keeps its own 2n - 2c glyph box everywhere.'),
 ])
 
 // ── a meaningful icon — `label` ⇒ role=img + aria-label via ElementInternals ─────────────────────────────
@@ -102,6 +104,6 @@ const statusNote = el('p', {}, [
 content.append(
   exampleSection('Inside buttons', buttonRow, buttonNote),
   exampleSection('Beside list rows', fileList),
-  exampleSection('Sizing — the ambient font-size ramp', scrollX(ramp, '40rem'), rampNote),
+  exampleSection('Sizing — the ambient font-size ramp', ramp, rampNote),
   exampleSection('Meaningful icons + ink inheritance', statusRow, statusNote),
 )

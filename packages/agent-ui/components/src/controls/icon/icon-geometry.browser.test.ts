@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeAll, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 // s-ui-icon-tests (icon-adapter.decomp.json) — the CELL-FIT PROOF (LLD §3, ADR-0065/0066). A jsdom test
 // can assert "an svg was injected"; only a real engine can prove the CONTENT-INTO-CELL geometry
@@ -132,10 +131,9 @@ describe('ui-icon missing-glyph HONESTY (GH #1508) — the host box is intrinsic
 
     const resolvedBox = resolved.getBoundingClientRect()
     const missingBox = missing.getBoundingClientRect()
-    // Since ADR-0245 a plain page is the root register (product / sm), where the icon slot is the derived 2n
-    // (--md-sys-icon-size resolves to resolve().icon), no longer the host's own font-size.
-    const iconPx = resolve('product', 'sm', 'md').icon
-    expect(iconPx, 'anti-vacuous: the derived icon size must be a real px value').toBeGreaterThan(0)
+    // ADR-0245 Amendment 6: outside a [data-tier] region a standalone icon follows the text, 1em of the host.
+    const iconPx = parseFloat(getComputedStyle(resolved).fontSize)
+    expect(iconPx, 'anti-vacuous: the ambient font-size must be a real px value').toBeGreaterThan(0)
     expect(resolvedBox.width).toBeCloseTo(iconPx, 0)
     expect(missingBox.width, 'an unresolvable glyph must NOT collapse the ui-icon host box').toBeCloseTo(resolvedBox.width, 0)
     expect(missingBox.height, 'an unresolvable glyph must NOT collapse the ui-icon host box').toBeCloseTo(resolvedBox.height, 0)

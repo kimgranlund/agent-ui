@@ -105,6 +105,22 @@ describe('ui-board-grid: the ADR-0046 box model (Amendment 7)', () => {
   })
 })
 
+describe('ui-board-grid: the corner glyph (ADR-0245 Amendment 6)', () => {
+  it('sits in its own glyph box 2n - 2c, inset c from the cell corner', async () => {
+    const el = mount('<ui-board-grid rows="2" cols="2"></ui-board-grid>') as Board
+    el.cells = [{ row: 0, col: 0, mark: '', intent: 'success' }]
+    await el.updateComplete
+    const cell = cells(el)[0]!
+    const glyph = cell.querySelector('[data-part="intent"]') as HTMLElement
+    expect(glyph.textContent).toBe('+')
+    const box = rect(glyph)
+    expect([box.width, box.height]).toEqual([ROOT.glyph, ROOT.glyph])
+    const border = Number.parseFloat(getComputedStyle(cell).borderRightWidth)
+    expect(rect(cell).right - border - box.right, 'inline inset').toBeCloseTo(ROOT.c, 0)
+    expect(rect(cell).bottom - Number.parseFloat(getComputedStyle(cell).borderBottomWidth) - box.bottom, 'block inset').toBeCloseTo(ROOT.c, 0)
+  })
+})
+
 describe('ui-board-grid: keyboard with real focus', () => {
   it('one tab stop; arrows rove by cell and row, skipping disabled cells; Enter and Space emit exactly once', async () => {
     const before = document.createElement('button')

@@ -143,6 +143,20 @@ describe('ui-game-hud: intent glyphs', () => {
     expect(getComputedStyle(delta).color).toBe(getComputedStyle(glyphs[0]!).backgroundColor)
   })
 
+  it('a stat glyph is its own glyph box 2n - 2c, n clear of its label (ADR-0245 Amendment 6)', async () => {
+    const r = resolve('product', 'sm', 'md')
+    const el = hud(container('640px'), (h) => {
+      h.stats = [{ label: 'Chips', value: 1, intent: 'success' }]
+    })
+    await el.updateComplete
+    const glyph = el.querySelector('[data-part="glyph"]') as HTMLElement
+    const label = el.querySelector('[data-part="stat"] [data-part="label"]') as HTMLElement
+    const box = glyph.getBoundingClientRect()
+    expect([box.width, box.height]).toEqual([r.glyph, r.glyph])
+    expect(label.getBoundingClientRect().left - box.right, 'glyph to label gap').toBeCloseTo(r.n, 0)
+    expect(r.n, 'anti-vacuous: n is not the old c gap').toBeGreaterThan(r.c)
+  })
+
   it('the status badge renders its intent glyph', async () => {
     const wrap = container('480px')
     const el = hud(wrap, (h) => {

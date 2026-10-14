@@ -50,13 +50,15 @@
   --ui-board-grid-danger-bg: var(--md-sys-color-danger-container);
   --ui-board-grid-danger-ink: var(--md-sys-color-danger-high);
 
-  /* Type: the mark reads the control-band large font, bold; the corner glyph the label-small row. */
+  /* Type: the mark reads the control-band large font, bold. The corner mark is a glyph (ADR-0245 Amendment 6):
+     its own glyph box 2n - 2c, its cap height filling the box, inset c from the cell corner; the label-small
+     row and the old 3px / 1px inset under the legacy opt-out. */
   --ui-board-grid-mark-size: var(--md-sys-type-control, var(--md-sys-font-lg));
   --ui-board-grid-mark-weight: 700;
-  --ui-board-grid-corner-size: var(--md-sys-typescale-label-small-size);
+  --ui-board-grid-corner-size: var(--md-sys-glyph-box, var(--md-sys-typescale-label-small-size));
   --ui-board-grid-corner-weight: 700;
-  --ui-board-grid-corner-inset-inline: 3px;
-  --ui-board-grid-corner-inset-block: 1px;
+  --ui-board-grid-corner-inset-inline: var(--md-sys-c, 3px);
+  --ui-board-grid-corner-inset-block: var(--md-sys-c, 1px);
 }
 
 /* The intent legs: a cell carrying data-intent repoints its own bg and ink (declared on the cell, so they
@@ -145,14 +147,21 @@
     z-index: 1;
   }
 
-  /* The corner glyph: aria-hidden, bottom-right, the intent's non-color signifier. */
+  /* The corner glyph: aria-hidden, bottom-right, the intent's non-color signifier. The span is the glyph box
+     and the mark centres in it with its cap height at the box (font-size-adjust), so `+`, `?`, `-`, `!` and
+     `i` read at one size whatever the font's own proportions. */
   :scope [data-part='intent'] {
     position: absolute;
     inset-inline-end: var(--ui-board-grid-corner-inset-inline);
     inset-block-end: var(--ui-board-grid-corner-inset-block);
+    display: grid;
+    place-items: center;
+    inline-size: var(--ui-board-grid-corner-size);
+    block-size: var(--ui-board-grid-corner-size);
     font-size: var(--ui-board-grid-corner-size);
+    font-size-adjust: cap-height 1;
     font-weight: var(--ui-board-grid-corner-weight);
-    line-height: var(--md-sys-control-line-height);
+    line-height: 1;
   }
 
   /* Motion: paint only, enumerated, and only when the user has not asked for reduced motion. */
