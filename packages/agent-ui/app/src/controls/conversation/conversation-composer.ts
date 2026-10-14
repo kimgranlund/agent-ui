@@ -879,7 +879,7 @@ export class UIConversationComposerElement extends UIElement {
       this.#markPickerSelection(this.#providersMenu, selected)
     }
     this.#providersTrigger!.textContent = options.find((o) => o.id === selected)?.label ?? 'Provider'
-    // T-0142 — every picker carries a leading glyph: under the 21rem compact collapse a trigger with no
+    // T-0142: every picker carries a leading glyph: under the 21rem compact collapse a trigger with no
     // icon kept no visible identity (a blank pill). `cloud` reads as "hosted provider" in the curated set.
     this.#appendLeadingIcon(this.#providersTrigger!, 'cloud')
     this.#appendCaret(this.#providersTrigger!)
@@ -912,7 +912,7 @@ export class UIConversationComposerElement extends UIElement {
       this.#markPickerSelection(this.#modesMenu, selected)
     }
     this.#modesTrigger!.textContent = options.find((o) => o.id === selected)?.label ?? 'Mode'
-    // T-0142 — see `#syncProvidersPicker`. `circle-half` is the curated set's mode/disposition glyph.
+    // T-0142: see `#syncProvidersPicker`. `circle-half` is the curated set's mode/disposition glyph.
     this.#appendLeadingIcon(this.#modesTrigger!, 'circle-half')
     this.#appendCaret(this.#modesTrigger!)
   }

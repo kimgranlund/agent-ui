@@ -29,6 +29,8 @@
  * concern now that the column direction itself is the composed shell's job. */
 .chat-shell [data-part='canvas'] {
   gap: 0.6rem;
+  /* T-0142: the same canvas gap above the conversation, so the header's rule line never sits on the card's edge. */
+  padding-block-start: 0.6rem;
 }
 
 /* The conversation IS the bordered card (conversation.css gives it its own border/radius/background) — it
@@ -38,15 +40,19 @@
   min-block-size: 0;
 }
 
+/* T-0142: the page title and description type of every other page (_page.css `.page-heading` /
+   `.page-description`), not a smaller hand-sized pair. */
 .chat-title {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 1.55rem;
   font-weight: 650;
+  letter-spacing: -0.01em;
   color: var(--md-sys-color-neutral-on-surface);
 }
 .chat-blurb {
   margin: 0.2rem 0 0;
-  font-size: 0.8rem;
+  max-inline-size: 62ch;
+  line-height: 1.5;
   color: var(--md-sys-color-neutral-on-surface-variant);
 }
 

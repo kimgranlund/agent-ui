@@ -23,6 +23,11 @@
   color: var(--md-sys-color-neutral-on-surface-variant);
   line-height: 1.5;
 }
+/* T-0142: the paragraph margin is a lead-in above a specimen, so a note placed BELOW a specimen or a button
+   touched it. A paragraph after any non-text sibling takes the widget margin above it. */
+[data-page-content] > section > :not(h2, h3, h4, p) + p {
+  margin-block-start: var(--md-sys-widget-margin, 1rem);
+}
 
 /* A demo-content layout item — the page's own box a container arranges (so gap/align/justify/track flow read).
  * It is NOT a ui-* control; the container under test is the live control. */
@@ -40,15 +45,20 @@
   white-space: nowrap;
 }
 
-/* A captioned specimen — the live container above the [attr] it demonstrates. */
+/* A captioned specimen: the live container above the [attr] it demonstrates. T-0142: geometry from the levels,
+   never hand-tabled: the card margin as padding, the widget gutter between specimen and caption, and the
+   concentric corner (a held card's radius plus the inset, ADR-0245 Amendment 5 item 3), so a card inside never
+   reads rounder than its frame. */
 .demo-figure {
+  --demo-figure-pad: var(--md-sys-card-margin, 1rem);
+  --demo-figure-radius: calc(var(--md-sys-card-radius, 0.75rem) + var(--demo-figure-pad));
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--md-sys-widget-gutter, 0.5rem);
   margin: 0;
-  padding: 1rem;
+  padding: var(--demo-figure-pad);
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: 0.6rem;
+  border-radius: var(--demo-figure-radius);
   background: var(--md-sys-color-neutral-surface-low);
 }
 
@@ -82,15 +92,16 @@
   background: var(--md-sys-color-neutral-surface-low);
 }
 
-/* The shared event log for the interactive demos (tabs select · modal close/toggle). */
+/* The shared event log for the interactive demos (tabs select · modal close/toggle). T-0142: the same level
+   tokens as .demo-figure (inset and corner), never hand-tabled rem. */
 .event-log {
-  margin: 0.5rem 0 0;
-  padding: 0.75rem 1rem;
+  margin: var(--md-sys-widget-gutter, 0.5rem) 0 0;
+  padding: var(--md-sys-card-margin, 1rem);
   min-block-size: 5rem;
   max-block-size: 13rem;
   overflow-y: auto;
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: 0.5rem;
+  border-radius: calc(var(--md-sys-card-radius, 0.75rem) + var(--md-sys-card-margin, 1rem));
   background: var(--md-sys-color-neutral-surface-low);
   font-family: var(--md-sys-typeface-mono);
   font-size: 0.8rem;

@@ -45,12 +45,13 @@ const blackjack = card({
   ],
   actions: [['Play again'], ['Change bet', 'soft']],
 })
-const flip = el('ui-button', { variant: 'soft' }, [text('Toggle win and loss')])
+// T-0142: the column stretches (the card fills like its siblings below); only the trigger hugs, as a flex item.
+const flip = el('ui-button', { variant: 'soft', style: 'align-self:flex-start;' }, [text('Toggle win and loss')])
 flip.addEventListener('click', () => {
   const host = blackjack as HTMLElement & { outcome: string }
   host.outcome = host.outcome === 'win' ? 'lose' : 'win'
 })
-const blackjackBlock = el('div', { style: 'display:flex; flex-direction:column; gap:1rem; align-items:flex-start;' }, [blackjack, flip])
+const blackjackBlock = el('div', { style: 'display:flex; flex-direction:column; gap:1rem;' }, [blackjack, flip])
 const blackjackNote = el('p', {}, [
   text('Each click writes '), code('outcome'), text(' again. The card reuses the same pill and rewrites only ' +
     'the word and glyph, so a screen reader hears the new outcome once.'),
