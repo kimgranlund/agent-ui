@@ -1650,7 +1650,10 @@ describe('ui-conversation cross-engine: the polished activity strip (T-0022)', (
       const after = getComputedStyle(marker, '::after')
       const mr = marker.getBoundingClientRect()
       const bottom = mr.top + px(after.top) + px(after.height)
-      expect(Math.abs(bottom - items[i + 1]!.getBoundingClientRect().top), `row ${i}: the connector reaches row ${i + 1}`).toBeLessThanOrEqual(1)
+      // The connector runs to the NEXT MARKER's top (timeline-item.css), which sits its centring offset below the
+      // row's top (T-0141): measuring to the row top read that offset as a 1 to 2px gap (T-0171).
+      const nextMarker = items[i + 1]!.querySelector(':scope > [data-part="marker"]')!.getBoundingClientRect()
+      expect(Math.abs(bottom - nextMarker.top), `row ${i}: the connector reaches row ${i + 1}'s marker`).toBeLessThanOrEqual(1)
     }
     const centres = items.map((item) => {
       const glyph = item.querySelector(':scope > [data-part="marker"] svg[data-role="marker"]')!
