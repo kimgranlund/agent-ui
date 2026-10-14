@@ -1,9 +1,9 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
+import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
 
 /** The derived root register (product / md / md, ADR-0245 Amendment 8). */
-const ROOT = resolve('product', 'md', 'md')
+const ROOT = rootResolve('md')
 
 // result-card.browser.test.ts: the real-engine painted proof for ui-result-card (ADR-0244, ResultCard fork
 // sheet). jsdom is blind to layout, so this covers the whole-shape fill and hug, the ADR-0046 box model by
@@ -164,7 +164,7 @@ describe('ui-result-card: the producer buttons at the lg step', () => {
     expect(buttons).toHaveLength(3)
     for (const b of buttons) {
       expect(b.getAttribute('size')).toBe('lg')
-      expect(b.getBoundingClientRect().height).toBeCloseTo(resolve('product', 'md', 'lg').h, 0)
+      expect(b.getBoundingClientRect().height).toBeCloseTo(rootResolve('lg').h, 0)
     }
   })
 })

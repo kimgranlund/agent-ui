@@ -33,7 +33,7 @@ import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import './super-shell.css'
 import { UISuperShellElement } from './super-shell.ts'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 
 const mounted: HTMLElement[] = []
 afterEach(() => { for (const el of mounted.splice(0)) el.remove() })
@@ -43,7 +43,7 @@ afterEach(() => { for (const el of mounted.splice(0)) el.remove() })
 // visible (R9d's cap) and the floating inset on both sides. Far under the 40rem/640px narrow line, so the band
 // overlay arm is the one under test, and the card stays the majority of the shot (gate 3 below) at any n. It
 // was a fixed 320px on the retired 18px module.
-const ROOT = resolve('product', 'md', 'md')
+const ROOT = rootResolve('md')
 const SHELL_PANE = 42 * ROOT.n // --ui-super-shell-pane-size: 42n
 const SHELL_BAR = ROOT.h + 2 * ROOT.widget.margin // --ui-super-shell-bar-size: a control row plus two widget margins, 8n
 const SHELL_INLINE = SHELL_PANE + SHELL_BAR + 2 * ROOT.widget.margin

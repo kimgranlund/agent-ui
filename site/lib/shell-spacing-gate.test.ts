@@ -28,8 +28,9 @@ import { describe, it, expect } from 'vitest'
 // literal arm), `calc(0.4375rem * 2)` fails, and `0.4375rem 0.875rem` fails on BOTH arms.
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
-import { resolve as derive, CFG } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
-import type { Resolved, Step, Tier } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
+import { CFG } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
+import type { Step, Tier } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
+import { ROOT_REGISTER, STEP, rootResolve } from '../../scripts/lib/foundations-rules.mjs'
 declare const process: { cwd(): string }
 
 const ROOT = process.cwd()
@@ -93,19 +94,19 @@ const SPACING_PROPERTIES = new Set([
 
 // The ladder AC19(b) tests a literal against: the derived levels realized at the ROOT REGISTER, the
 // one every shipped shell renders under unless a region re-registers (16px root font for the rem
-// literals). The register is read off foundations.gen.css's own `:root` rule, the cut's default
-// (ADR-0245 cl.2), never restated here, so the ladder moves with the next anchor change.
-function rootRegister(): Resolved {
+// literals). The register is the shared ROOT_REGISTER (scripts/lib/foundations-rules.mjs, the generator's
+// ROOT_INPUTS), never restated here, so the ladder moves with the next anchor change; the leg below proves
+// foundations.gen.css's own `:root` rule declares that same register.
+function generatedRoot(): { tier: Tier | undefined; scale: Step | undefined; rule: string } {
   const css = readFileSync(`${ROOT}/packages/agent-ui/shared/src/tokens/foundations.gen.css`, 'utf8') as string
   const rule = /^:root \{([^}]*)\}/m.exec(css)?.[1] ?? ''
   const num = (name: string): number => Number(new RegExp(`--md-sys-${name}:\\s*(-?[\\d.]+)`).exec(rule)?.[1])
   const row = [num('tier-n0'), num('tier-a'), num('tier-k'), num('tier-g')]
   const tier = (Object.keys(CFG.tiers) as Tier[]).find((t) => CFG.tiers[t].every((v, i) => v === row[i]))
-  const scale = ({ '-1': 'sm', '0': 'md', '1': 'lg' } as Record<string, Step>)[String(num('scale-s'))]
-  if (!tier || !scale) throw new Error(`shell-spacing-gate: no tier/scale matches the :root rule (${rule.trim()})`)
-  return derive(tier, scale)
+  const scale = (Object.keys(STEP) as Step[]).find((s) => STEP[s] === num('scale-s'))
+  return { tier, scale, rule: rule.trim() }
 }
-const REGISTER = rootRegister()
+const REGISTER = rootResolve()
 const LEVEL_PX = [
   REGISTER.c, REGISTER.h,
   ...[REGISTER.control, REGISTER.group, REGISTER.widget, REGISTER.card, REGISTER.page].flatMap((l) => [l.margin, l.gutter]),
@@ -119,8 +120,9 @@ const LADDER_PX = [...new Set([...LEVEL_PX, ...SHELL_PX])]
 // AC19(c), the allowlist: an explicit (file, declaration, reason) list. Growing it is a reviewed act,
 // never a drive-by (R11c). T-0121 dropped its two module-era entries: the shell module's own root literal
 // (`--ui-super-shell-module: 1.125rem`, a declaration that no longer exists) and the pane-resizer's 4px ink
-// (`0.25rem`), which equalled the old --md-sys-space-xs rung and equals no derived level. It holds ONE
-// entry now, a content cap that collides with a shell rung at the root register (below).
+// (`0.25rem`), which equalled the old --md-sys-space-xs rung and equals no derived level. T-0167 dropped the
+// narration strip's 9rem content cap: it equalled the shell floor (24n) only at n 6, and the root is n 8 since
+// Amendment 8. It is empty now; an entry must still fire (the stale-entry leg below), so none outlives its collision.
 interface AllowlistEntry {
   file: string
   selectorContains: string
@@ -128,18 +130,7 @@ interface AllowlistEntry {
   literal: string
   reason: string
 }
-const ALLOWLIST: AllowlistEntry[] = [
-  {
-    file: 'packages/agent-ui/app/src/controls/conversation/conversation.css',
-    selectorContains: "[data-part='narration']",
-    property: '--ui-status-stream-max-block-size',
-    literal: '9rem',
-    reason:
-      "A CONTENT cap, not a level: the height bound of one turn's narration strip, a fraction of " +
-      "status-stream's own default. 9rem is 144px, which equals the shell floor (six page margins, 24n) " +
-      'only at the root register n 6, numerically and not semantically.',
-  },
-]
+const ALLOWLIST: AllowlistEntry[] = []
 
 interface Declaration {
   file: string
@@ -302,6 +293,21 @@ function isAllowlisted(d: Declaration, literalToken: string): boolean {
   )
 }
 
+// An allowlist entry is stale when no declaration it names still carries its literal at a ladder rung.
+function staleEntries(entries: AllowlistEntry[]): string[] {
+  return entries
+    .filter((a) => {
+      const { decls } = declarationsOf(a.file, readFileSync(`${ROOT}/${a.file}`, 'utf8'))
+      return !decls.some(
+        (d) =>
+          d.property === a.property &&
+          d.selector.includes(a.selectorContains) &&
+          literalsOf(d.value).some((h) => h.token === a.literal && LADDER_PX.some((l) => Math.abs(h.px - l) < 0.01)),
+      )
+    })
+    .map((a) => `${a.file} ${a.property}: ${a.literal}`)
+}
+
 describe('AC19 — the shell-family spacing-literal drift gate (SPEC-R11c/AC19)', () => {
   it('every SHELL_FAMILY_SHEETS entry exists on disk (the sheet enumeration, verified live)', () => {
     const missing = SHELL_FAMILY_SHEETS.filter((rel) => {
@@ -315,8 +321,20 @@ describe('AC19 — the shell-family spacing-literal drift gate (SPEC-R11c/AC19)'
     expect(missing, missing.join(', ')).toEqual([])
   })
 
-  it('the allowlist carries exactly ONE entry, the narration strip\'s content cap (R11c, growing it is a reviewed act, never a drive-by)', () => {
-    expect(ALLOWLIST.length).toBe(1)
+  it('the allowlist is empty (R11c, growing it is a reviewed act, never a drive-by)', () => {
+    expect(ALLOWLIST.length).toBe(0)
+  })
+
+  it('every allowlist entry still fires: its declaration exists and its literal equals a rung at the root register (no stale entry)', () => {
+    expect(staleEntries(ALLOWLIST), 'an allowlist entry that no longer collides: delete it').toEqual([])
+    // negative control: the dropped 9rem narration cap (144px, no rung at n 8) reads as stale
+    const narration = { file: 'packages/agent-ui/app/src/controls/conversation/conversation.css', selectorContains: "[data-part='narration']", property: '--ui-status-stream-max-block-size', literal: '9rem', reason: 'control' }
+    expect(staleEntries([narration]), 'the stale-entry check bites').toHaveLength(1)
+  })
+
+  it('foundations.gen.css declares the shared ROOT_REGISTER on :root (the ladder reads the register the sheet renders)', () => {
+    const got = generatedRoot()
+    expect([got.tier, got.scale], `the :root rule (${got.rule})`).toEqual([ROOT_REGISTER.tier, ROOT_REGISTER.scale])
   })
 
   it('the ladder is the derived levels at the root register, read from scale.mjs (anti-vacuous)', () => {
@@ -364,7 +382,7 @@ describe('AC19 — the shell-family spacing-literal drift gate (SPEC-R11c/AC19)'
           const line = lineAt(text, d.index)
           violations.push(
             `${rel}:${line} — ${d.property}: ${d.value.trim()} (literal ${token} = ${px}px, matches the ` +
-              `${rung}px ladder rung; SPEC-R11c/AC19: convert to its var(--md-sys-space-*) or module-chain spelling)`,
+              `${rung}px ladder rung; SPEC-R11c/AC19: spell it from the derived level tokens, var(--md-sys-<level>-margin) or -gutter, or a multiple of var(--md-sys-n))`,
           )
         }
       }

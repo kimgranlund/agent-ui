@@ -22,8 +22,9 @@ import './slider.css'                               // the control stylesheet (d
 import './slider.ts'                                // self-define (registers ui-slider)
 import type { UISliderElement } from './slider.ts'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 // The page root register (no data-tier region): product / md, n 6 / 8 / 10 for size sm / md / lg.
-const root = (size: 'sm' | 'md' | 'lg') => resolve('product', 'md', size)
+const root = (size: 'sm' | 'md' | 'lg') => rootResolve(size)
 
 // ── helpers ──────────────────────────────────────────────────────────────────────────────────────
 

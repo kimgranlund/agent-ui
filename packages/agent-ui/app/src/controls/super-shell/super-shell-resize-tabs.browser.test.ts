@@ -11,12 +11,12 @@ import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import './super-shell.css'
 import { UISuperShellElement } from './super-shell.ts'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 
 // T-0121: the shell frame reads level tokens (ADR-0245 cl.6), so every default px this file pins is derived
 // from the root register (product at scale md) through scale.mjs, never written as a literal. The pane width
 // is 42n, the nav label column's room (Kim 2026-10-14).
-const ROOT = resolve('product', 'md', 'md')
+const ROOT = rootResolve('md')
 const SHELL_GAP = ROOT.page.gutter // --ui-super-shell-gap: the layout gutter 3n
 const SHELL_PANE = 42 * ROOT.n // --ui-super-shell-pane-size: 42n (Kim 2026-10-14)
 const SHELL_FLOOR = ROOT.page.margin * 6 // the pane and canvas floors: six layout margins, 24n

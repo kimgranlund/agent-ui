@@ -1,10 +1,11 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 import type { UIProductCardElement } from '@agent-ui/components/controls/product-card'
 
 /** The derived root register (product / md / md, ADR-0245 Amendment 8). */
-const ROOT = resolve('product', 'md', 'md')
+const ROOT = rootResolve('md')
 /** The explicit product / sm region the foundations pair below mounts into. */
 const SM = resolve('product', 'sm', 'md')
 

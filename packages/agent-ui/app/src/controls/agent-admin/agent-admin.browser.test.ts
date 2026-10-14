@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 // T-0121: `--ui-agent-admin-shell-gutter` reads the widget margin 2n, derived at the root register (never a literal).
-const SHELL_GUTTER = resolve('product', 'md', 'md').widget.margin
+const SHELL_GUTTER = rootResolve('md').widget.margin
 // GH #849 — the reference typeahead needs REAL keystrokes + the real focus/caret the engine owns.
 import { server, userEvent } from 'vitest/browser'
 
@@ -1189,8 +1189,8 @@ describe('ui-agent-admin cross-engine smoke — min-size-floors census (GH #185 
 })
 
 // ADR-0245 cut: the root register is product/md at the control's md step, so the control inset is n 8
-// (scale.mjs resolve('product', 'md', 'md').control.margin), no longer the font-derived 0.5 / 0.75 factors.
-const ROOT_INSET = resolve('product', 'md', 'md').control.margin
+// (scale.mjs rootResolve('md').control.margin), no longer the font-derived 0.5 / 0.75 factors.
+const ROOT_INSET = rootResolve('md').control.margin
 
 describe('ui-agent-admin cross-engine smoke — TKT-0049/ADR-0139: entry-content/entry-add-content min-height is driven by ui-code-editor\'s own `rows` lever, not dead agent-admin.css', () => {
   // `--ui-code-editor-min-block-size`'s formula (editor.css): rows × line-box + 2×padding-block, where

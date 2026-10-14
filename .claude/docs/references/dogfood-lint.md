@@ -15,13 +15,19 @@ up to a human look; each layer catches what the one before cannot see.
 | 3 Foundations census | every stylesheet and source file under `packages/` and `site/` | a hand-tabled ramp read, a px geometry literal, the retired `glyph` prop and `[scale]` / `[density]` axes | `node scripts/foundations-census.mjs --gate` (in `check:scripts`) | `scripts/foundations-allowlist.json` |
 | 4 Review | a screenshot of the real widget beside its approved mockup | what no rule measures yet: balance, hierarchy, a wrong control for the job | a `ui-designer` review (or Kim's look check) | none; a finding becomes a rule or a ticket |
 
+Layer 1 and `npm run test:eval-catalog` are local and merge-queue gates, not CI: `.github/workflows/ci.yml` runs
+`npm run check` and `npm test` and never `test:browser`, so a lane runs the render lint itself before it lands. Layers
+2 and 3 ride `check:scripts`, which CI runs.
+
 ## The rules table
 
 `scripts/dogfood-rules.json` holds both lint layers: `render` (layer 1) and `compose` (layer 2). Each render rule
 names its source rule (in the `adr` field), its selector, what it measures and the expected value; every geometry value is computed
 from `resolve(tier, scale, size, density)` in `packages/agent-ui/shared/src/tokens/scale.mjs` at the element's
 register (the nearest `data-tier`, `data-scale`, `data-size` or `size`, and `data-density` on the element or an
-ancestor; product at scale md at the root, widget at scale md on an A2UI surface). The contrast rules expect a fixed
+ancestor; at the root the shared `ROOT_REGISTER` of `scripts/lib/foundations-rules.mjs`, the generator's root inputs,
+product at scale md since Amendment 8; widget at scale md on an A2UI surface, which the renderer stamps). A sweep leg
+asserts the rendered `:root` inputs equal `ROOT_REGISTER`, so a root change edits one line and regenerates. The contrast rules expect a fixed
 ratio or a comparison with the same control enabled, and `glyph-gap` reads the glyph's own cascade n.
 
 | Render rule | Expected |
@@ -61,8 +67,10 @@ The contrast rules (`disabled-*`, `avatar-disc`, `badge-overlay`) read `site/lib
 layer (a computed background colour, a flat gradient layer, a border, an ink) resolves to sRGB channels, flattens
 source-over down to an opaque colour, and the pair gives the WCAG 2.x ratio. A real image in the stack has no single
 colour, so a rule that meets one skips the element, except `badge-overlay`, whose fill must be opaque on its own.
-The field-boundary 3:1 rule waits on the T-0143 role; the standalone-icon floor (0.875 of the row's font-size) waits on
-Kim's ruling on icons outside a `[data-tier]` region, since every standalone icon the sweep reaches sits inside one.
+The field-boundary 3:1 role landed with T-0143 (ADR-0245 Amendment 7): `--md-sys-color-neutral-field-outline` holds at
+least 3:1 on every plane, gated by `tokens.test.ts` and `field-outline.browser.test.ts` rather than a render rule here.
+The standalone-icon floor is ruled out: an icon inside a `[data-tier]` region stays 2n (Amendment 7, item 3), so no
+0.875-of-font-size rule exists, and `glyph-box` carries the only floor (8px).
 
 | Compose rule | Use | Not |
 |---|---|---|

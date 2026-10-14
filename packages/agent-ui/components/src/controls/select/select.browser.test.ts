@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 import { server, cdp, userEvent, page } from 'vitest/browser'
 import type { UISelectElement } from './select.ts'
 
@@ -648,16 +649,16 @@ describe('ui-select — trigger geometry: [size] exact px + [scale] anti-vacuous
     // Exact px from the derived ramp at the root register (product / md, ADR-0245 cl.3): 4n
     expect(
       Math.round(smTrigger.getBoundingClientRect().height),
-      `${server.browser}: [size=sm] trigger height should be ${resolve('product', 'md', 'sm').h}px`,
-    ).toBe(resolve('product', 'md', 'sm').h)
+      `${server.browser}: [size=sm] trigger height should be ${rootResolve('sm').h}px`,
+    ).toBe(rootResolve('sm').h)
     expect(
       Math.round(mdTrigger.getBoundingClientRect().height),
-      `${server.browser}: [size=md] trigger height should be ${resolve('product', 'md', 'md').h}px`,
-    ).toBe(resolve('product', 'md', 'md').h)
+      `${server.browser}: [size=md] trigger height should be ${rootResolve('md').h}px`,
+    ).toBe(rootResolve('md').h)
     expect(
       Math.round(lgTrigger.getBoundingClientRect().height),
-      `${server.browser}: [size=lg] trigger height should be ${resolve('product', 'md', 'lg').h}px`,
-    ).toBe(resolve('product', 'md', 'lg').h)
+      `${server.browser}: [size=lg] trigger height should be ${rootResolve('lg').h}px`,
+    ).toBe(rootResolve('lg').h)
 
     // Anti-vacuous: adjacent sizes must NOT be equal (they step, not collapse)
     expect(
@@ -742,7 +743,7 @@ describe('ui-select — trigger geometry: [size] exact px + [scale] anti-vacuous
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-select — panel/option geometry carries [size] (B5, the size-carrying model, both engines)', () => {
-  const HEIGHT: Record<string, number> = { sm: resolve('product', 'md', 'sm').h, md: resolve('product', 'md', 'md').h, lg: resolve('product', 'md', 'lg').h }
+  const HEIGHT: Record<string, number> = { sm: rootResolve('sm').h, md: rootResolve('md').h, lg: rootResolve('lg').h }
 
   function mkSizedSelect(size: string): UISelectElement {
     const el = document.createElement('ui-select') as UISelectElement
@@ -779,7 +780,7 @@ describe('ui-select — panel/option geometry carries [size] (B5, the size-carry
       const outset = -(px(getComputedStyle(listbox).translate) || 0)
       const sum = px(cs.marginInlineStart) + px(cs.paddingInlineStart) - outset
       sums[size] = sum
-      const r = resolve('product', 'md', size as 'sm' | 'md' | 'lg')
+      const r = rootResolve(size as 'sm' | 'md' | 'lg')
       const trigger = el.querySelector<HTMLElement>('[data-part="trigger"]')!
       const triggerText = px(getComputedStyle(trigger).paddingInlineStart) + px(getComputedStyle(trigger.querySelector('[data-part="label"]')!).paddingInlineStart)
 
@@ -851,7 +852,7 @@ describe('ui-select — panel/option geometry carries [size] (B5, the size-carry
       `${server.browser}: option font-size (${optionFont}px) should match the [size=lg] trigger font (${triggerFont}px), not an inherited ambient value`,
     ).toBeCloseTo(triggerFont, 1)
     // Sanity: the lg control type at the root register is the derived one, not an inherited ambient size.
-    expect(optionFont, `${server.browser}: [size=lg] option font should be the lg register control type`).toBeCloseTo(resolve('product', 'md', 'lg').type.control, 1)
+    expect(optionFont, `${server.browser}: [size=lg] option font should be the lg register control type`).toBeCloseTo(rootResolve('lg').type.control, 1)
   })
 
   it('nested option-radius == listbox-radius − listbox-padding at sm/md/lg (ADR-0018, browser-measured)', async () => {

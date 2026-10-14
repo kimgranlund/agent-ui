@@ -23,9 +23,10 @@ import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 import { SCHEMES, composite, contrast, inkContrast, schemeWrap } from '../button/disabled-recipe.fixture.ts'
 // The page root register (no data-tier region): product / md, n 6 / 8 / 10 for size sm / md / lg.
-const root = (size: 'sm' | 'md' | 'lg') => resolve('product', 'md', size)
+const root = (size: 'sm' | 'md' | 'lg') => rootResolve(size)
 
 // ── mount/cleanup helpers ─────────────────────────────────────────────────────────────────────────────
 const mounted: HTMLElement[] = []
@@ -177,7 +178,7 @@ describe('ui-switch cross-engine browser smoke — track + thumb geometry (ADR-0
     // The track is a pill — inline > block.
     expect(w, 'track must be wider than tall (pill constraint)').toBeGreaterThan(h)
     // 2 × box − 2c (ADR-0245: the width follows the derived pill, not today's 1.8× box), allow ±0.5px rounding.
-    const c = resolve('product', 'md', 'md').c
+    const c = rootResolve('md').c
     expect(w, `track inline-size (${w}) is not 2 × box − 2c (${2 * h - 2 * c}px)`).toBeCloseTo(2 * h - 2 * c, 0)
   })
 })

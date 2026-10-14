@@ -17,8 +17,9 @@ import './slider-multi.css'                          // the control stylesheet (
 import './slider-multi.ts'                           // self-define (registers ui-slider-multi)
 import { UISliderMultiElement } from './slider-multi.ts'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 // The page root register (no data-tier region): product / md, n 6 / 8 / 10 for size sm / md / lg.
-const root = (size: 'sm' | 'md' | 'lg') => resolve('product', 'md', size)
+const root = (size: 'sm' | 'md' | 'lg') => rootResolve(size)
 
 /** Simulate a full drag gesture: pointerdown → pointermove → pointerup on an element. */
 function drag(target: HTMLElement, startX: number, endX: number, id = 1): void {
@@ -275,7 +276,7 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
       return w
     }
 
-    expect(makeWithDensity(null), 'the root thumb').toBe(resolve('product', 'md', 'md').glyph)
+    expect(makeWithDensity(null), 'the root thumb').toBe(rootResolve('md').glyph)
     expect(makeWithDensity('sm'), 'the thumb at data-scale sm').toBe(resolve('product', 'sm', 'md').glyph)
   })
 

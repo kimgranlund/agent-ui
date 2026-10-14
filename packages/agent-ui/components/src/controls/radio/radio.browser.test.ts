@@ -14,8 +14,9 @@ import type { UIRadioElement } from '@agent-ui/components/controls/radio'
 import type { UIRadioGroupElement } from '@agent-ui/components/controls/radio-group'
 import '@agent-ui/components/all'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 // The page root register (no data-tier region): product / md, n 6 / 8 / 10 for size sm / md / lg.
-const root = (size: 'sm' | 'md' | 'lg') => resolve('product', 'md', size)
+const root = (size: 'sm' | 'md' | 'lg') => rootResolve(size)
 
 const mounted: Element[] = []
 afterEach(() => {

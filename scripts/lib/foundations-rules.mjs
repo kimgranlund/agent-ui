@@ -14,6 +14,8 @@
 // Comments are blanked before matching in code and stylesheets (offsets kept), so prose about an old name is
 // not a use of it.
 
+import { resolve } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
+
 /** Hand-tabled ramp token -> the derived token that replaces it at the element's own n (clauses 3, 4, 10a). */
 export const LEGACY_TO_DERIVED = [
   [/--md-sys-height-(?:sm|md|lg)(?![\w-])/, '--md-sys-height'],
@@ -39,6 +41,17 @@ export const GLYPH_FLOOR = 8
 
 /** The glyph box of a resolved register: max(GLYPH_FLOOR, 2n - 2c), where scale.mjs resolve() supplies 2n - 2c. */
 export const glyphBox = (r) => Math.max(GLYPH_FLOOR, r.glyph)
+
+/** The page root register (ADR-0245 Amendment 8): the tier and scale `:root` takes at the cut. The one definition:
+ *  generate-foundations.mjs emits it as its ROOT_INPUTS, and every lint and test that means "the root" reads it here
+ *  (browser-safe, so the browser tests share it), so the next root change touches this line and a regenerate. */
+export const ROOT_REGISTER = Object.freeze({ tier: 'product', scale: 'md' })
+
+/** `--md-sys-scale-s` per scale step, as the generator declares it and the root readers decode it. */
+export const STEP = Object.freeze({ sm: -1, md: 0, lg: 1 })
+
+/** scale.mjs resolve() at the root register, at `size` and `density`. */
+export const rootResolve = (size = 'md', density = 'default') => resolve(ROOT_REGISTER.tier, ROOT_REGISTER.scale, size, density)
 
 /** Clause 2: today's `[scale]` value -> the tier and scale it becomes. */
 export const SCALE_TO_TIER = {

@@ -13,7 +13,7 @@
 
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp, userEvent } from 'vitest/browser'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
@@ -35,7 +35,7 @@ afterEach(async () => {
 
 const px = (v: string): number => Number.parseFloat(v)
 /** The segment gap: c at the root register (ADR-0245 cl.3), the same at every size. */
-const GAP = resolve('product', 'md', 'md').c
+const GAP = rootResolve('md').c
 const before = (el: Element): CSSStyleDeclaration => getComputedStyle(el, '::before')
 const bg = (el: Element): string => getComputedStyle(el).backgroundColor
 const beforeBg = (el: Element): string => before(el).backgroundColor
@@ -133,7 +133,7 @@ describe('ui-segmented-control — grid track + segment geometry (both engines)'
     const seg = segments[0]!
     const cs = getComputedStyle(seg)
     const height = px(cs.blockSize)
-    const r = resolve('product', 'md', 'md')
+    const r = rootResolve('md')
     expect(height).toBeCloseTo(r.h, 0) // --md-sys-height-md default
     // the segment's label is anonymous content, so its edge carries the box margin n plus the label inset n - c
     expect(px(cs.paddingInlineStart)).toBeCloseTo(r.control.margin + r.labelMargin, 0)

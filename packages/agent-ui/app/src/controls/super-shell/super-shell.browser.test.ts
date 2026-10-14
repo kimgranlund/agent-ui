@@ -11,10 +11,10 @@ import { describe, it, expect, afterEach } from 'vitest'
 import '@agent-ui/components/foundation-styles.css'
 import './super-shell.css'
 import { UISuperShellElement } from './super-shell.ts'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 
 // T-0121: a carded part's round corner is the card radius 3n at the root register, derived, never a literal.
-const ROUND = `${resolve('product', 'md', 'md').card.radius}px`
+const ROUND = `${rootResolve('md').card.radius}px`
 
 const mounted: HTMLElement[] = []
 afterEach(() => { for (const el of mounted.splice(0)) el.remove() })

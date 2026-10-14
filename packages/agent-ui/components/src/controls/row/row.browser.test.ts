@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 
 // s3 — ui-row cross-engine browser smoke (the geometry/responsiveness TRUTH jsdom cannot compute). Runs in
 // BOTH Chromium and WebKit (vitest.browser.config.ts → playwright instances). It proves the three behaviours
@@ -57,7 +58,7 @@ describe('ui-row cross-engine smoke — flex grammar maps to computed props (s3)
     const { wrapper, row } = mount('600px')
     row.setAttribute('gap', 'md') // → var(--md-sys-space-md) = the group margin n + c
     const base = Number.parseFloat(getComputedStyle(row).columnGap)
-    expect(base).toBe(resolve('product', 'md', 'md').group.margin) // the root register: 10
+    expect(base).toBe(rootResolve('md').group.margin) // the root register: 10
 
     wrapper.setAttribute('data-scale', 'lg') // the roomier register (inherits to the row)
     const roomy = Number.parseFloat(getComputedStyle(row).columnGap)

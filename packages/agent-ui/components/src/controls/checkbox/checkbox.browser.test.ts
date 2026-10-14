@@ -16,11 +16,11 @@ import '@agent-ui/components/foundation-styles.css' // tokens (--md-sys-color-*)
 import './checkbox.css'                             // the control stylesheet (direct — pre-barrel)
 import './checkbox.ts'                             // self-define (registers ui-checkbox)
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
+import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
 
 const num = (v: string): number => Number.parseFloat(v)
 // The page root register (no data-tier region): product / md, n 6 / 8 / 10 for size sm / md / lg.
-const root = (size: 'sm' | 'md' | 'lg') => resolve('product', 'md', size)
+const root = (size: 'sm' | 'md' | 'lg') => rootResolve(size)
 
 describe('ui-checkbox browser smoke (S1 AC1–AC4)', () => {
   it('AC1 default: ::before box = the root md checkbox part (16px, --md-sys-compact-md, the derived compact ramp)', () => {

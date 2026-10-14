@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 
 // TKT-0042 / ADR-0133 — the cross-engine proof for the label-wrapper ellipsis mechanism. Runs in BOTH
 // Chromium and WebKit (vitest.browser.config.ts). Two legs, both explicitly called for by the ticket's
@@ -40,7 +40,7 @@ const tick = (): Promise<void> => new Promise((resolve) => queueMicrotask(resolv
 describe('ui-button label-wrapper geometry regression (ADR-0133) — the label FITS', () => {
   it('a fitting label renders the frame the control rule specifies: h = 4n, box margin n, the label inset n - c on the wrapper, no clipping engaged', () => {
     const { btn } = mount('<ui-button>Save</ui-button>') // md default, wide (unconstrained) container
-    const r = resolve('product', 'md', 'md')
+    const r = rootResolve('md')
     expect(frameHeight(btn), 'md frame height (geometry.md §1 row)').toBeCloseTo(r.h, 0)
     expect(padStartPx(btn), 'leading box margin n').toBeCloseTo(r.control.margin, 0)
     expect(padEndPx(btn), 'trailing box margin n').toBeCloseTo(r.control.margin, 0)
@@ -59,12 +59,12 @@ describe('ui-button label-wrapper geometry regression (ADR-0133) — the label F
       '<ui-button><svg slot="leading" data-role="icon"><rect width="18" height="18"/></svg>Download</ui-button>',
     )
     const h = frameHeight(btn)
-    expect(h).toBeCloseTo(resolve('product', 'md', 'md').h, 0)
+    expect(h).toBeCloseTo(rootResolve('md').h, 0)
     // leading slot edge = ½(h−icon) = n; the label edge is the box margin n, and the wrapper adds its own inset
     // n - c (ADR-0245 Amendment 4).
-    expect(padStartPx(btn)).toBeCloseTo((h - resolve('product', 'md', 'md').icon) / 2, 0)
-    expect(padEndPx(btn)).toBeCloseTo(resolve('product', 'md', 'md').control.margin, 0)
-    expect(Number.parseFloat(getComputedStyle(label(btn)).paddingInlineEnd)).toBeCloseTo(resolve('product', 'md', 'md').labelMargin, 0)
+    expect(padStartPx(btn)).toBeCloseTo((h - rootResolve('md').icon) / 2, 0)
+    expect(padEndPx(btn)).toBeCloseTo(rootResolve('md').control.margin, 0)
+    expect(Number.parseFloat(getComputedStyle(label(btn)).paddingInlineEnd)).toBeCloseTo(rootResolve('md').labelMargin, 0)
     expect(label(btn).textContent).toBe('Download')
     // the leading adornment stays a DIRECT host child, not swept into the label wrapper.
     expect(btn.children[0]?.getAttribute('slot')).toBe('leading')

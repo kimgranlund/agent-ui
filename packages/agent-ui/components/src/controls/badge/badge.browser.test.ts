@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 import { server, cdp } from 'vitest/browser'
 
 // badge.browser.test.ts — cross-engine (Chromium + WebKit) browser-truth probes for ui-badge
@@ -34,7 +35,7 @@ afterEach(() => {
 const px = (v: string): number => Number.parseFloat(v)
 
 // ADR-0245 cl.3: a plain page is the root register (product / md), so the badge reads its derived geometry here
-const root = resolve('product', 'md', 'md')
+const root = rootResolve('md')
 
 /** Minimal CDP surface — `cdp()`'s public type is empty; the playwright provider gives `.send` at runtime. */
 interface CdpSession {
@@ -112,7 +113,7 @@ describe('ui-badge geometry — the compact pad law, NOT h/2 (SPEC-R13 AC1, ADR-
       const el = mount(`<ui-badge label="status" size="${size}"></ui-badge>`)
       expect(px(getComputedStyle(el).blockSize), `a stray size="${size}" moved the box`).toBe(px(getComputedStyle(bare).blockSize))
     }
-    expect(px(getComputedStyle(bare).blockSize), 'the box is the context chip height 2n + 2c').toBe(resolve('product', 'md', 'md').parts.badge) // 20
+    expect(px(getComputedStyle(bare).blockSize), 'the box is the context chip height 2n + 2c').toBe(rootResolve('md').parts.badge) // 20
   })
 })
 

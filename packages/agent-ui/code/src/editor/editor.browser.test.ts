@@ -7,6 +7,7 @@ import type { UICodeEditorElement } from './editor.ts'
 // coincidentally-matching literal.
 import { LINK_TARGET, LINK_REL } from '@agent-ui/components/controls/text'
 import { resolve } from '../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../scripts/lib/foundations-rules.mjs'
 
 /** Minimal CDP surface (the button-states.browser.test.ts precedent) — `cdp()`'s public type is empty; the
  *  playwright provider gives `.send` at runtime. Chromium-only (WebKit exposes no CDP forced-colors emulation). */
@@ -1198,7 +1199,7 @@ describe('ui-code-editor — derived foundations geometry (ADR-0245 cl.3, dark l
 
   it('outside any region the page root derives the geometry (root = product / md / md): padding n - 1, the toggle a 4n square', async () => {
     const { field } = mount(`<ui-code-editor language="markdown" ${SIZED}></ui-code-editor>`)
-    const r = resolve('product', 'md', 'md')
+    const r = rootResolve('md')
     await expect.poll(() => field.querySelector('[data-part="mode-toggle"]') !== null, { timeout: 5000 }).toBe(true)
     const cs = getComputedStyle(field)
     expect(px(cs.paddingTop), `${server.browser}: padding-block`).toBe(r.control.margin - 1)

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 import { server, cdp, page } from 'vitest/browser'
 import type { UITextElement } from './text.ts'
 
@@ -37,15 +38,15 @@ describe('ui-text browser-truth harness — the role×size matrix resolves to re
     document.body.append(el)
     const fontSize = getComputedStyle(el).fontSize
     expect(fontSize).toMatch(/px$/)
-    expect(Number.parseFloat(fontSize)).toBeCloseTo(resolve('product', 'md', 'md').type.body, 0)
+    expect(Number.parseFloat(fontSize)).toBeCloseTo(rootResolve('md').type.body, 0)
     el.remove()
   })
 
   it('display/sm → 27px · title/lg → 19px · body/md → 15px (the derived roles at the root register, ADR-0245 cl.7)', () => {
     const cases: Array<[string, string, number]> = [
-      ['display', 'sm', resolve('product', 'md', 'sm').type.display],
-      ['title', 'lg', resolve('product', 'md', 'lg').type.title],
-      ['body', 'md', resolve('product', 'md', 'md').type.body],
+      ['display', 'sm', rootResolve('sm').type.display],
+      ['title', 'lg', rootResolve('lg').type.title],
+      ['body', 'md', rootResolve('md').type.body],
     ]
     for (const [variant, size, px] of cases) {
       const el = document.createElement('ui-text')
@@ -99,7 +100,7 @@ describe('ui-text browser-truth harness — the role×size matrix resolves to re
     el.textContent = 'no variant'
     document.body.append(el)
     // body at size lg = 17px (vs. size md's 15px) proves the :not([variant]) compound selector is live
-    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(resolve('product', 'md', 'lg').type.body, 0)
+    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(rootResolve('lg').type.body, 0)
     el.remove()
   })
 })
@@ -144,7 +145,7 @@ describe('ui-text in a region — the type roles derive from the region n (ADR-0
 
     expect(compactPx).toBeLessThan(basePx)
     // derived, not a ratio: the heading role at the root (n 8) and in a widget / sm region (n 5)
-    expect(basePx).toBeCloseTo(resolve('product', 'md', 'md').type.heading, 0)
+    expect(basePx).toBeCloseTo(rootResolve('md').type.heading, 0)
     expect(compactPx).toBeCloseTo(resolve('widget', 'sm', 'md').type.heading, 0)
   })
 })
@@ -169,19 +170,19 @@ describe('ui-text compact-window override — body 15/13/11 below the 52.5rem li
 
   it('body/md (the bare default) computes 15px below the line too, the 1px drop is retired (ADR-0245 cl.7)', () => {
     const el = mountText({})
-    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(resolve('product', 'md', 'md').type.body, 0)
+    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(rootResolve('md').type.body, 0)
     el.remove()
   })
 
   it("bare size='lg' (the body-large row via :not([variant])) computes the derived 17px below the line", () => {
     const el = mountText({ size: 'lg' })
-    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(resolve('product', 'md', 'lg').type.body, 0)
+    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(rootResolve('lg').type.body, 0)
     el.remove()
   })
 
   it('a non-body role does NOT shift: headline/md stays at the derived heading role, 27px', () => {
     const el = mountText({ variant: 'headline' })
-    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(resolve('product', 'md', 'md').type.heading, 0)
+    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(rootResolve('md').type.heading, 0)
     el.remove()
   })
 

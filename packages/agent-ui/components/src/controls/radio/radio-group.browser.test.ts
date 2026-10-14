@@ -10,6 +10,7 @@
 
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 import { userEvent } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
@@ -87,7 +88,7 @@ describe('ui-radio-group browser smoke — component-owned layout (ADR-0103)', (
 
     const gapPx = (): number => px(getComputedStyle(el).rowGap)
     // --md-sys-space-sm is n at the region (ADR-0245 cl.6): 8 at the root, then a denser and a roomier region.
-    expect(gapPx()).toBe(resolve('product', 'md', 'md').control.margin)
+    expect(gapPx()).toBe(rootResolve('md').control.margin)
 
     wrap.setAttribute('data-tier', 'widget')
     wrap.setAttribute('data-scale', 'sm')

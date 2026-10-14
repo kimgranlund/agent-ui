@@ -23,11 +23,11 @@ import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import './super-shell.css'
 import { UISuperShellElement } from './super-shell.ts'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 
 // T-0121: the shell frame reads level tokens (ADR-0245 cl.6), so every px this file pins is derived from the
 // root register (product at scale md) through scale.mjs, never written as a literal.
-const ROOT = resolve('product', 'md', 'md')
+const ROOT = rootResolve('md')
 const BAR = ROOT.h + 2 * ROOT.widget.margin // bars and rails: a control row plus the widget margin above and below, 8n
 const GAP = ROOT.page.gutter // the inter-card gap: the layout gutter 3n
 const SEAM = ROOT.control.margin // the strip seams: the control inset n

@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { CFG, check, resolve, type Resolved } from './scale.mjs'
 import { BRIDGE_REL, LEGACY, OUT_REL, ROOT_DEFAULT, renderBridgeCss, renderFoundationsCss } from '../../../../../scripts/generate-foundations.mjs'
-import { GLYPH_FLOOR, glyphBox } from '../../../../../scripts/lib/foundations-rules.mjs'
+import { GLYPH_FLOOR, ROOT_REGISTER, STEP, glyphBox } from '../../../../../scripts/lib/foundations-rules.mjs'
 
 // ADR-0245 clause 1, 10a and 10c: the config gate, the generated-file drift gate, the cut and the bridge.
 // The 36-cell computed leg (tokens equal resolve() in both engines) is foundations.browser.test.ts.
@@ -82,12 +82,14 @@ describe('foundations: generated-file drift and the cut (ADR-0245 clause 10a)', 
     expect(bridge).toBe(renderBridgeCss())
   })
 
-  it('at the cut, ROOT_DEFAULT is true: :root takes product at scale md (Amendment 8) and the axes are unscoped', () => {
+  it('at the cut, ROOT_DEFAULT is true: :root takes the root register (ROOT_REGISTER, Amendment 8) and the axes are unscoped', () => {
     expect(ROOT_DEFAULT).toBe(true)
     const selectors = selectorsOf(committed)
     expect(selectors).toContain(':root')
     expect(selectors).toContain("[data-scale='sm']")
-    expect(committed).toMatch(/:root \{ --md-sys-tier-n0: 8; --md-sys-tier-a: 2; --md-sys-tier-k: 2; --md-sys-tier-g: 1;[^}]*--md-sys-scale-s: 0; \}/)
+    const [n0, a, k, g] = CFG.tiers[ROOT_REGISTER.tier]
+    const root = new RegExp(`:root \\{ --md-sys-tier-n0: ${n0}; --md-sys-tier-a: ${a}; --md-sys-tier-k: ${k}; --md-sys-tier-g: ${g};[^}]*--md-sys-scale-s: ${STEP[ROOT_REGISTER.scale]}; \\}`)
+    expect(committed).toMatch(root)
   })
 
   it('the rollback predicate bites: the pre-cut form keeps every selector on or inside a [data-tier] region', () => {
