@@ -228,7 +228,9 @@
       "tag": "ui-calendar",
       "tier": "pattern",
       "description": "A month-grid date picker form control that selects a single date or a start/end date range.",
-      "uses": [],
+      "uses": [
+        "ui-glyph"
+      ],
       "catalogs": [
         "agent-ui"
       ]
@@ -494,7 +496,9 @@
       "tag": "ui-disclosure",
       "tier": "pattern",
       "description": "A one-line summary that expands or collapses its content, built on the native <details> element.",
-      "uses": [],
+      "uses": [
+        "ui-glyph"
+      ],
       "catalogs": [
         "agent-ui"
       ]
@@ -604,7 +608,9 @@
       ],
       "tag": "ui-form-popover",
       "tier": "pattern",
-      "uses": [],
+      "uses": [
+        "ui-glyph"
+      ],
       "catalogs": [
         "agent-ui"
       ]

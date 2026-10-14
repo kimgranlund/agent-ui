@@ -251,12 +251,15 @@ append API (A2UI `updateDataModel` semantics).
 
 Every case still paints the host box and still announces (never throws — SPEC-R7): `[]`/absent/malformed
 input renders zero rows (the host stays `role=list` with zero items — an honest empty state, not a silent
-one); entries missing a string `label` or a finite numeric `value` are dropped, the remainder renders in
+one), and the empty host paints one bare track row from CSS so it never reads as a failed render (T-0149); entries missing a string `label` or a finite numeric `value` are dropped, the remainder renders in
 order; exactly one valid datum renders one full-length row (it is the max); all-equal positive values
 render every bar full length (equality visible at a glance); all-zero values render every bar zero-length
 (the printed `0`s carry the reading); all-negative values put the shared zero point at the track's
 inline-end, every bar extending toward inline-start of it (longest = most negative); duplicate labels
-render as separate rows (the list is positional, not keyed).
+render as separate rows (the list is positional, not keyed). Whenever a value is negative, every track
+carries `data-origin` and `--_bar-zero` (the shared origin, 0..100) and paints a `--ui-bar-chart-zero-ink`
+rule there, joined across the rows, so a diverging bar reads against a visible zero (T-0149); an
+all-positive chart draws none.
 
 ## Accessibility
 
@@ -634,9 +637,11 @@ who wants the OLD always-compact rendering even inside a stretched context keeps
 
 The fill has a ceiling, the **content cap** `--ui-calendar-max-inline-size` (ADR-0105 Amendment 2): seven
 tracks of `6n` (1.5 × the `4n` cell) plus the six gaps. In a column wider than that, the tracks stop at `6n`,
-the panel stops at the cap plus its inset and border, and it centres in the host, which still fills its
-container (ADR-0223). At page width the chevrons stay a month's width apart instead of the page's. Narrower
-than the cap, nothing changes.
+the panel stops at the cap plus its inset and border, and it keeps to the host's start edge, the text edge
+every other block follows, while the host still fills its container (ADR-0223; T-0149 moved it off centre).
+At page width the chevrons stay a month's width apart instead of the page's. Narrower than the cap, nothing
+changes. A disabled day is struck through as well as muted, so it never reads as an adjacent-month day, and
+the prev/next carets are `ui-glyph` marks (`caret-left`, `caret-right`) on the glyph box.
 
 ## Cell paint — two layers, so circles stay circles at any width (ADR-0105)
 
@@ -1596,7 +1601,8 @@ to the **topmost** segment of each stack.
 ## Degenerate data
 
 Every case still paints the host box and still announces (never throws): `[]`/absent/malformed `data`
-renders an empty host (the generated summary reads "no data"); an all-zero rendered set still resolves a
+renders an empty host (the generated summary reads "no data") that still draws its plot box's baseline
+gridline from CSS, so it reads as an empty chart, not a failed render (T-0149); an all-zero rendered set still resolves a
 real, positive scale and paints zero-length segments; a single category renders one column; a `highlight`
 index outside the rendered range is silently ignored (no callout, no error). **No sorting, no folding** —
 the mark makes no analysis; the agent orders its own data.
@@ -2006,7 +2012,7 @@ this prop, always, which is also what the fold's accessible name is scoped to.
 ## Styling
 
 The native `::marker`/`::-webkit-details-marker` is hidden and replaced by a fleet **chevron** affordance —
-sized `= font` (geometry.md's inline-affordance law, never the icon ramp), rotating 90deg under `[open]`.
+a `ui-glyph` caret on its glyph box in the 2n slot (never the icon ramp; T-0149), rotating 90deg under `[open]`.
 **Orientation carries the state** — never colour alone (ADR-0057) — and the rotation is **not animated**
 (no fold animation either): both are named v1 fences, not omissions (ADR-0113 cl.4). Geometry is Pattern-
 class (geometry.md's own "accordion" row): the summary is an interactive **control-height** row
@@ -2037,8 +2043,7 @@ GH #1102 law), so a contained outer fold never paints or pads a nested fold's pa
 The component sets **no** internals role and **no** host ARIA (SPEC-R17) — the `<details>`/`<summary>`
 part *is* the semantic element, carrying native button semantics and the expanded/collapsed announcement
 the platform supplies. The summary part carries `aria-labelledby` pointing at the summary-text span
-(ADR-0158 cl.4 — part-level ARIA on component-owned native elements, the same layer as the chevron's
-`aria-hidden`): the fold's accessible name is **always the `summary` prop**, never absorbed from a
+(ADR-0158 cl.4 — part-level ARIA on component-owned native elements): the fold's accessible name is **always the `summary` prop**, never absorbed from a
 `slot="summary"` control's text. The summary is natively focusable; Enter/Space toggle it exactly like a
 native `<button>`'s Space/Enter parity, with zero keyboard code in this control. A `forced-colors` block keeps
 the summary/body ink and the chevron visible as system inks (belt-and-suspenders — every value already
@@ -2728,10 +2733,12 @@ always gets the ramp's brightest step. Rounded caps read the boards' law via `st
 The **rings layer** — the concentric SVG marks — spans the host box edge-to-edge at zero inset (its own
 element box is never shrunk to reserve legend room). The **legend layer** — every label/value row, real
 DOM text — floats **on top**, inset from all four edges by ONE knob (`--ui-gauge-chrome-inset`,
-aliasing the shared `--ui-chart-chrome-inset`) and right-aligned within that padded box. The ring
-drawing itself is pinned to the box's start edge (`preserveAspectRatio="xMinYMid meet"`), so a wide host
-letterboxes genuinely empty room at the end edge for the legend — no shrinking, no overlap, by
-construction. Dropping this chart into a padding-less `ui-card`-style container reproduces the board
+aliasing the shared `--ui-chart-chrome-inset`). The ring drawing itself is pinned to the box's start edge
+(`preserveAspectRatio="xMinYMid meet"`), so a wide host letterboxes genuinely empty room past the rings for
+the legend — no shrinking, no overlap, by construction. The legend rows start one `--ui-gauge-legend-gap`
+(the group margin) past the outer ring, measured by gauge.ts as `--_gauge-ring-end`, so the rings and their
+key read as one start-aligned group however wide the box is (T-0149). With no data the gauge still draws
+its outer track at 0% (a `data-empty` track circle), so an empty gauge reads as a gauge, not a failed render. Dropping this chart into a padding-less `ui-card`-style container reproduces the board
 geometry with zero consumer CSS.
 
 ## Axis/today/provisional grammar: N/A
@@ -3777,7 +3784,8 @@ square viewBox — `variant="donut"` (default) cuts a hole at the ring's center,
 solid disc. Slice sweep is proportional to `value / Σ rendered` (the rendered total). Fill steps down a
 **single-family lightness ramp** — `--ui-pie-chart-slice-1-ink` (brightest) through `-6-ink` (dimmest),
 cycling past 6 slices — six pairwise-distinct primary **tone primitives** per scheme via `light-dark()`
-(light `primary-300 → -800`, dark `primary-200 → -700`, in 100-steps; strictly monotone, slice 1 always
+(light `primary-400, -600, -650, -700, -750, -800`, dark one 100-step brighter, the shared `_chart/` ramp since
+T-0149 opened the first two steps apart; strictly monotone, slice 1 always
 brightest — the ADR-0219 cl.4 Amendment: the originally-named emphasis-role chain resolved non-distinct
 and non-monotone in the shipped estate), surfaced as plain tokens so a consumer re-maps the ramp without
 touching the control; adjacent slices are separated by a constant-width, non-scaling stroke so identity
@@ -5529,10 +5537,12 @@ posture — the pre-wave shrink-to-content rendering. Either way, the host floor
 3(d)) that **survives both postures**, unlike an entry control's hug-only content floor: override the
 token, or set `inline-size` directly, to size the tile to a layout. Interior gap rides `--ui-stat-gap` off
 the space ladder (density-responsive for free). `variant="ring"` adds its own density-invariant
-diameter/thickness tokens — `--ui-stat-ring-size` (`4.5em` default) and `--ui-stat-ring-thickness` (`0.5em`
+diameter/thickness tokens — `--ui-stat-ring-size` (`6.5em` default) and `--ui-stat-ring-thickness` (`0.5em`
 default) — sized like the delta glyph's mark geometry, never off `data-scale` (a Display-class control,
-SPEC-R17). The ring size is a floor: a wider figure ("47 / 50") grows the ring so the value stays inside
-the hole (T-0141).
+SPEC-R17). Every ring is that one diameter, so a row of ring tiles reads as a set (T-0149). The figure fits
+the hole instead: it steps down from the heading size by its character count (`--_figure-ch`, set on the
+value part by stat.ts), between `--ui-stat-ring-figure-min` (the body size) and `--ui-stat-ring-figure-max`
+(the heading size), so a wide figure such as "47 / 50" stays inside the hole.
 
 ---
 
@@ -6296,6 +6306,11 @@ A wide table scrolls **inside the component's own container**, never the page (`
 interior scroll node) — number columns never wrap (`white-space: nowrap`), so a wide numeric table forces
 the scroll container rather than clipping a digit invisibly. A table narrower than its host fills the host's
 inline size (`inline-size: 100%`) — no orphaned gutter.
+
+A column hidden past an inline edge fades that edge over one control height (T-0149, the ui-card-content
+edge-fade recipe on the inline axis): the scroll node carries `data-fade-end` until it is scrolled to the end
+and `data-fade-start` once it has left the start, measured on scroll and on resize, so overlay scrollbars no
+longer hide that a table has more columns. A table that fits carries neither flag and is never masked.
 
 ## Accessibility
 
@@ -7064,8 +7079,10 @@ imperatively appended) — authored once, shared everywhere.
 
 - **`status`** (`''`/`pending`/`active`/`done`/`error`/`warning`, default `''`) — the item's lifecycle
   state. Each non-empty value renders a marker distinguished by **SHAPE**, never hue alone (ADR-0057):
-  `pending` a hollow ring, `active` a filled dot (with an optional pulse, static under reduced-motion),
-  `done` a built-in check glyph, `error` a built-in cross glyph (each knocked out of a filled status disc, T-0141), `warning` (ADR-0146 F7) a built-in
+  `pending` a hollow ring, `active` a ring holding a dot (with an optional pulse, static under reduced-motion),
+  `done` a built-in check glyph, `error` a built-in cross glyph (each knocked out of a filled status disc, T-0141); the
+  pending, active, done and error markers share the disc's one outer diameter, so the rail reads as one set
+  (T-0149), while a plain unstatused dot keeps the glyph box; `warning` (ADR-0146 F7) a built-in
   triangle-exclamation glyph — a lesser advisory outcome the single `error` state cannot express, its
   triangle shape never `error`'s cross recoloured. The colour channel is redundant.
 - **`label`** / **`description`** / **`timestamp`** (string, default `''`) — stamped into their content
