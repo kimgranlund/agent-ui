@@ -868,9 +868,9 @@ class Renderer implements RendererHost {
     const root = tree.rootElement
     if (root === undefined) return
     root.setAttribute('data-a2ui-surface', surfaceId) // per-surface DOM marker (GH #1165) — lets a host verify THIS surface's root is present
-    // ADR-0245 Amendment 2 (T-0119): the canvas register is the widget tier at scale md, sm / md / lg = 24 / 28 /
-    // 32, the same n as the page root, so a catalog size means what it says. A payload never names it; no
-    // catalog row changes.
+    // ADR-0245 Amendments 2, 3 and 8 (T-0119, T-0152): the canvas register is the widget tier at scale md,
+    // sm / md / lg = 20 / 24 / 28, deliberately denser than the product / md page root. A payload never names
+    // it; no catalog row changes (a2ui-runtime SPEC-R16).
     if (!root.hasAttribute('data-tier')) root.setAttribute('data-tier', 'widget')
     if (!root.hasAttribute('data-scale')) root.setAttribute('data-scale', 'md')
     this.#mountEl.appendChild(root)

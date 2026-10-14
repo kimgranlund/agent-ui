@@ -1,7 +1,7 @@
 # LLD — A2UI Renderer
 
 > Status: proposed · v0.5 · 2026-10-08 (v0.1 2026-06-26; v0.2 2026-10-05 adds the §6 `ControlLoader` seam and deferred apply, and the §9 `CONTROL_LOAD` row, ADR-0233, accepted; v0.3 adds the §6 catalog gate ahead of it, `preload`, the LLD-C14 manifest scan and the §9 `CATALOG_LOAD` row, ADR-0241, accepted; v0.4 adds the §6 settle seam, `pending` and `settled()`, and the warm memo, T-0039; v0.5 records the default `agent-ui` catalog through the same gate, ADR-0241 Amendment 1, ratified) · Layer: LLD (implementation plan)
-> Implements: [`../spec/a2ui-runtime.spec.md`](../spec/a2ui-runtime.spec.md) (SPEC-R1..R15, SPEC-N1..N6), targeting A2UI **v1.0**.
+> Implements: [`../spec/a2ui-runtime.spec.md`](../spec/a2ui-runtime.spec.md) (SPEC-R1..R16, SPEC-N1..N6), targeting A2UI **v1.0**.
 > Owns the shared **`validate.ts`** that the corpus LLD imports (validator parity, runtime SPEC-N6 / corpus SPEC-N1).
 > Altitude: adds the **how** on the `@agent-ui/components` signals kernel; cites `SPEC-R*` for behavior, never re-derives it.
 
@@ -66,6 +66,8 @@ interface Surface {
 **Patch-in (SPEC-R4 AC1).** When a later `updateComponents` delivers a previously-missing id, look it up in `pendingParents`, mount it under each waiting parent, and clear the entry — **no re-render of unaffected subtrees** (only the patched node mounts).
 
 **Edges:** second `root` → `IDGRAPH`, existing root kept (SPEC-R3 AC2); cycle in `child`/`children` → detected by DFS colouring → `IDGRAPH` on the back-edge; unreachable buffered components are inert until referenced.
+
+**Canvas register (SPEC-R16, T-0119).** `#attachRoot(surfaceId, tree)` appends a surface's rendered root under the mount once, on first mount after a valid `root`. In the same step it stamps the per-surface marker `data-a2ui-surface` and, only when absent, `data-tier="widget"` and `data-scale="md"` (`renderer.ts`, `#attachRoot`). The tier and scale are never read from a payload and no catalog row names them, so every control inside the surface derives its n from the widget tier at scale md (sm / md / lg = 20 / 24 / 28 px). `[scale]` and `[density]` are retired; the derivation is [`../references/geometry-sizing-spec.md`](../references/geometry-sizing-spec.md).
 
 **Render-depth guard (SPEC-R15, GH #473).** Before the cycle-DFS runs, an ITERATIVE (non-recursive) BFS from `root` checks whether the tree nests past `MAX_RENDER_DEPTH` (`protocol.ts`, 64). This ordering is load-bearing: the cycle-DFS above is native-recursive with no depth bound of its own, so it must never see a payload deep enough to overflow it. Exceeding the cap emits `error{code:"DEPTH_EXCEEDED"}` and freezes further mounting for that surface only (mirrors the cycle guard's `#cycleReported` freeze) — already-rendered content stays up, the stream and other surfaces continue (SPEC-N4). `validate.ts` (LLD-C11) runs the identical BFS, importing the SAME `MAX_RENDER_DEPTH` constant, and REJECTS (rather than degrades) a too-deep payload at admission time.
 
