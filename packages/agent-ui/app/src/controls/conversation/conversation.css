@@ -76,14 +76,19 @@
   --ui-conversation-reference-tag-gap: var(--md-sys-space-xs);
 
   /* T-0022: the activity strip's expands (step-mode rows' Details/Reasoning panels and the Raw output block).
-     The spacing, scrollbar and code-surface values are minted here and consumed in @scope below (the
-     SPEC-R11c spacing gate); the status-stream's own `--ui-status-stream-source-*` seams carry the type. */
-  --ui-conversation-strip-detail-gap: var(--md-sys-space-xs);
-  --ui-conversation-strip-code-pad: var(--md-sys-space-sm);
+     The scrollbar and code-surface values are minted here, the two spacing values in the narration token block
+     just below (T-0173), all consumed in @scope (the SPEC-R11c spacing gate); the status-stream's own
+     `--ui-status-stream-source-*` seams carry the type. */
   --ui-conversation-strip-code-radius: calc(var(--ui-conversation-radius) / 2);
   --ui-conversation-strip-code-surface: var(--md-sys-color-neutral-surface, transparent);
   --ui-conversation-strip-scrollbar-width: thin;
   --ui-conversation-strip-scrollbar-thumb: var(--md-sys-color-neutral-outline-variant, currentColor);
+}
+/* T-0173: the strip's spacing tokens resolve ON the strip, so they read the strip's own n (the chat's
+   register unless a region moves it), not a value frozen on the conversation; the strip's grid itself (columns, gaps, expand rows) is status-stream.css's. */
+:where(ui-conversation [data-part='narration']) {
+  --ui-conversation-strip-detail-gap: var(--md-sys-space-xs);
+  --ui-conversation-strip-code-pad: var(--md-sys-space-sm);
 }
 
 /* ════════════════ [ui-conversation] STYLES — @scope (ui-conversation) consumes ONLY --ui-conversation-* ══ */
@@ -225,11 +230,10 @@
        no longer inside the agent bubble, so the bubble token would visibly mismatch. The SAME
        per-mount override pattern `--ui-status-stream-max-block-size` above already uses. */
     --ui-status-stream-header-canvas: var(--ui-conversation-surface);
-    /* TKT-0078: the timeline family is deliberately type-agnostic (ADR-0122's ramp is geometry-only;
-       content inherits ambient type) — so the compact register is THIS consumer's to set. Unpinned, the
-       strip inherited the page-ambient 1rem and towered over the bubble's own 0.66–0.86rem ladder;
-       0.78rem is the existing meta register (the system-bubble row: above annotation, below body). */
-    font-size: 0.78rem;
+    /* TKT-0078: the timeline family is deliberately type-agnostic, so the strip's type is THIS consumer's to
+       set. T-0173 (Kim 2026-10-14): the strip matches the chat, so it takes the chat's register (no size pin)
+       and its type step through the ramp (the body step at the strip's n), not a hand-picked rem. */
+    font-size: var(--md-sys-type-body);
   }
 
   /* GH #722 (candidate 2, ruled 2026-08-12): a SETTLED narration strip grows to fit its finite steps —
@@ -253,24 +257,12 @@
     display: none;
   }
 
-  /* T-0022: every expand under a strip row: a compact, muted summary line (the disclosure's own default is a full
-     control-height row, which stacked tall gaps under every step), a beat of air above it, and body spacing
-     below, so a row's expand and the next row, or a Details panel and the Raw output beneath it, never touch.
-     The compaction goes through the disclosure's own custom properties, its sanctioned override surface. */
+  /* T-0022: every expand under a strip row reads as a muted summary line in the strip's own type. Its geometry
+     (label-column start, h summary row, gaps) is the strip's grid (T-0173, status-stream.css); this mount only
+     tunes type and ink, through the disclosure's own custom properties, its sanctioned override surface. */
   [data-part='narration'] ui-timeline-item > [data-part='detail'] {
-    margin-block-start: var(--ui-conversation-strip-detail-gap);
-    /* a grid item's automatic minimum is its content's min-content: an unwrapped line in the code box below would
-       widen the row's `1fr` track and push the time cell off the strip. Zero lets the track shrink and the box scroll. */
-    min-inline-size: 0;
-    --ui-disclosure-height: 1.75em;
     --ui-disclosure-font: 1em;
     --ui-disclosure-ink: var(--ui-conversation-ink-variant);
-    --ui-disclosure-gap: var(--ui-conversation-strip-detail-gap);
-  }
-  [data-part='narration'] ui-timeline-item > [data-part='detail'] [data-part='body'] {
-    padding-block-end: var(--ui-conversation-strip-detail-gap);
-    /* the summary's own inline start is half its height; the content lines up under it, not flush under the row */
-    padding-inline-start: calc(var(--ui-disclosure-height) / 2);
   }
 
   /* T-0022: thin, token-coloured scrollbars on every expand's own scroller (never the platform's thick default). */

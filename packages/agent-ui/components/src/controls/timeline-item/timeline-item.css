@@ -62,9 +62,12 @@
   --ui-timeline-item-marker-box: var(--md-sys-icon-box, var(--ui-timeline-item-marker-box-md));
   --ui-timeline-item-dot-size: var(--md-sys-glyph-box, var(--ui-timeline-item-dot-size-md));
   --ui-timeline-item-connector-width: var(--ui-timeline-item-connector-width-md);
-  --ui-timeline-item-gutter: var(--ui-timeline-item-gutter-md);
+  /* T-0173: the gutter IS the 2n marker column (it was a 20px ramp row, wider than the mark, so the label sat
+     off a grid that started at the mark) and the row gap is 2n, both at the element's own n; the per-size rows
+     above stay their fallback under [data-foundations="legacy"]. */
+  --ui-timeline-item-gutter: var(--md-sys-icon-box, var(--ui-timeline-item-gutter-md));
   --ui-timeline-item-column-gap: var(--md-sys-space-sm); /* TKT-0066 item 5 ruling: constants route through the own chain */
-  --ui-timeline-item-row-gap: var(--ui-timeline-item-row-gap-md);
+  --ui-timeline-item-row-gap: var(--md-sys-icon-box, var(--ui-timeline-item-row-gap-md));
   /* a slotted/consumer marker icon reads the CONTENT-ICON register, not this table (LLD §5). */
   --ui-timeline-item-icon-size: var(--md-sys-icon-box, var(--md-sys-icon-md));
 
@@ -80,16 +83,16 @@
   --ui-timeline-item-marker-box: var(--md-sys-icon-box, var(--ui-timeline-item-marker-box-sm));
   --ui-timeline-item-dot-size: var(--md-sys-glyph-box, var(--ui-timeline-item-dot-size-sm));
   --ui-timeline-item-connector-width: var(--ui-timeline-item-connector-width-sm);
-  --ui-timeline-item-gutter: var(--ui-timeline-item-gutter-sm);
-  --ui-timeline-item-row-gap: var(--ui-timeline-item-row-gap-sm);
+  --ui-timeline-item-gutter: var(--md-sys-icon-box, var(--ui-timeline-item-gutter-sm));
+  --ui-timeline-item-row-gap: var(--md-sys-icon-box, var(--ui-timeline-item-row-gap-sm));
   --ui-timeline-item-icon-size: var(--md-sys-icon-box, var(--md-sys-icon-sm));
 }
 :where(ui-timeline-item[size='lg']) {
   --ui-timeline-item-marker-box: var(--md-sys-icon-box, var(--ui-timeline-item-marker-box-lg));
   --ui-timeline-item-dot-size: var(--md-sys-glyph-box, var(--ui-timeline-item-dot-size-lg));
   --ui-timeline-item-connector-width: var(--ui-timeline-item-connector-width-lg);
-  --ui-timeline-item-gutter: var(--ui-timeline-item-gutter-lg);
-  --ui-timeline-item-row-gap: var(--ui-timeline-item-row-gap-lg);
+  --ui-timeline-item-gutter: var(--md-sys-icon-box, var(--ui-timeline-item-gutter-lg));
+  --ui-timeline-item-row-gap: var(--md-sys-icon-box, var(--ui-timeline-item-row-gap-lg));
   --ui-timeline-item-icon-size: var(--md-sys-icon-box, var(--md-sys-icon-lg));
 }
 

@@ -18,6 +18,8 @@ import { UIConversationElement } from './conversation.ts'
 import type { UIConversationDialogElement } from './conversation-dialog.ts'
 import type { UIConversationHeaderElement } from './conversation-header.ts'
 import { whenFlushed } from '@agent-ui/components'
+import { ROOT_REGISTER, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
+import { resolve as resolveRegister } from '../../../../shared/src/tokens/scale.mjs'
 import { createRenderer as warm } from '@agent-ui/a2ui'
 // ADR-0241 Amendment 1: the default catalog is a lazy record, so warm it at the top level, ahead of any renderer this
 // file builds (a renderer built before the body lands stays on the asynchronous path, so a beforeAll would be too late).
@@ -1750,4 +1752,117 @@ describe('ui-conversation cross-engine: the polished activity strip (T-0022)', (
     expect(copy.getBoundingClientRect().width, 'and hugs its label rather than filling the box').toBeLessThan(pre.getBoundingClientRect().width * 0.6)
     expect(copy.getBoundingClientRect().bottom, 'above the code box, not over it').toBeLessThanOrEqual(pre.getBoundingClientRect().top + 1)
   })
+})
+
+// T-0173: the activity strip sits on ONE geometry grid derived from the strip's own n (status-stream.css,
+// status-stream.md Geometry). Measured in a real engine at two registers: the chat (the page root register,
+// read from the generator's ROOT_REGISTER so a root move never strands this test) and the A2UI canvas
+// (widget / md, explicit). Every invariant is an equality against the strip's computed n, so a fixed px
+// gutter, an em-based indent or a gap resolved at the wrong n reddens it.
+describe('ui-conversation cross-engine: the activity strip sits on one grid derived from n (T-0173)', () => {
+  const frames = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
+  const LONG_JSON = JSON.stringify({ version: 'v1.0', updateComponents: { surfaceId: 'quokka-board', components: [{ id: 'root', component: 'Column', children: Array.from({ length: 24 }, (_, i) => `child-${i}`) }] } })
+  const textLeft = (n: Element): number => {
+    const walker = document.createTreeWalker(n, NodeFilter.SHOW_TEXT, { acceptNode: (t) => (t.textContent!.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP) })
+    const range = document.createRange()
+    range.selectNodeContents(walker.nextNode()!)
+    return range.getClientRects()[0]!.left
+  }
+  const cx = (n: Element): number => {
+    const r = n.getBoundingClientRect()
+    return r.left + r.width / 2
+  }
+
+  const registers = [
+    { name: `chat (root ${ROOT_REGISTER.tier} / ${ROOT_REGISTER.scale})`, attrs: {}, n: rootResolve('md').n },
+    { name: 'canvas (widget / md)', attrs: { 'data-tier': 'widget', 'data-scale': 'md' }, n: resolveRegister('widget', 'md', 'md', 'default').n },
+  ]
+  for (const register of registers) {
+    it(`${server.browser} ${register.name}: marker, rail, label column, expands and the trailing edge all derive from n`, async () => {
+      const region = document.createElement('div')
+      for (const [k, v] of Object.entries(register.attrs)) region.setAttribute(k, v)
+      document.body.append(region)
+      mounted.push(region)
+      const el = document.createElement('ui-conversation') as UIConversationElement
+      el.style.width = '380px'
+      el.style.height = '720px'
+      region.append(el)
+      el.steps = true
+      el.receipt = true
+      const handle = el.beginAgentTurn()
+      handle.step({ id: 'request', kind: 'request', label: 'Request sent', status: 'ok', durationMs: 420 })
+      handle.step({ id: 'validate', kind: 'validate', label: 'Validated', status: 'repaired', retries: 1, durationMs: 1200, summary: 'Model output did not parse, retried', details: ['Failed checks: PARSE', 'Round 1 failed, round 2 passed.'], raw: LONG_JSON })
+      handle.step({ id: 'components', kind: 'output', label: 'Updated the surface', status: 'ok', durationMs: 39000, summary: '25 components', details: ['Surface: quokka-board'] })
+      handle.footer({ rounds: 2, inputTokens: 3210, outputTokens: 845, model: 'model-x' })
+      handle.finalize()
+      await whenFlushed()
+      await frames()
+      const strip = el.querySelector('[data-part="narration"]') as HTMLElement
+      const header = strip.querySelector<HTMLElement>(':scope > [data-part="header"]')!
+      header.click() // open the receipt
+      await frames()
+      for (const s of strip.querySelectorAll<HTMLElement>('summary')) s.click()
+      await frames()
+
+      // n is the strip's own, and it is the register's n from the generator (no size pin on the chat strip)
+      const probe = document.createElement('span')
+      probe.style.inlineSize = 'var(--md-sys-inset)'
+      probe.style.display = 'block'
+      strip.append(probe)
+      const n = probe.getBoundingClientRect().width
+      probe.remove()
+      expect(n, 'the strip resolves a real n').toBeGreaterThan(0)
+      expect(n, `the strip takes the ${register.name} register's n`).toBe(register.n)
+
+      const items = [...strip.querySelectorAll<HTMLElement>(':scope > ui-timeline-item:not([data-note])')]
+      const steps = items.filter((i) => i.dataset.kind !== undefined)
+      expect(steps.length).toBe(3)
+
+      // 1. marker centre = rail centre = header marker centre
+      const headerMarkCx = cx(header.querySelector('[data-part="header-marker"]')!)
+      for (const step of steps) {
+        const marker = step.querySelector(':scope > [data-part="marker"]')!
+        expect(Math.abs(cx(marker.querySelector('[data-role="marker"]') ?? marker) - headerMarkCx), `${step.dataset.kind}: marker on the header's column`).toBeLessThanOrEqual(0.5)
+        const after = getComputedStyle(marker, '::after')
+        if (after.display !== 'none') {
+          const railCx = marker.getBoundingClientRect().left + Number.parseFloat(after.left) + Number.parseFloat(after.width) / 2
+          expect(Math.abs(railCx - headerMarkCx), `${step.dataset.kind}: the rail runs through the marker centre`).toBeLessThanOrEqual(0.5)
+        }
+      }
+
+      // 2. label, Details summary, detail text and the raw block share one left edge: the label column
+      const labelCol = textLeft(header.querySelector('[data-part="header-label"]')!)
+      const edges: Array<[string, number]> = []
+      for (const step of steps) edges.push([`${step.dataset.kind} label`, textLeft(step.querySelector(':scope > [data-role="label"]')!)])
+      for (const detail of strip.querySelectorAll<HTMLElement>('ui-timeline-item > [data-part="detail"]')) {
+        const who = (detail.parentElement as HTMLElement).dataset.kind ?? (detail.parentElement as HTMLElement).dataset.activity
+        edges.push([`${who} summary`, detail.querySelector('summary')!.getBoundingClientRect().left])
+        edges.push([`${who} body`, detail.querySelector('[data-role="source"]')!.getBoundingClientRect().left])
+      }
+      const raw = strip.querySelector<HTMLElement>('[data-activity="raw"]')!
+      edges.push(['raw Copy', raw.querySelector('[data-part="copy"]')!.getBoundingClientRect().left])
+      expect(edges.length).toBeGreaterThanOrEqual(10)
+      for (const [what, left] of edges) expect(Math.abs(left - labelCol), `${what} starts on the label column`).toBeLessThanOrEqual(0.5)
+      const detailText = steps[1]!.querySelector('[data-role="source"]')!
+      expect(Math.abs(textLeft(detailText) - labelCol), 'the Details text itself starts on the label column').toBeLessThanOrEqual(0.5)
+
+      // 3. every duration and the header's "Done" meta end on one trailing edge
+      const meta = header.querySelector('[data-part="header-meta"]')!
+      expect(meta.textContent).toContain('Done')
+      const rights = steps.map((s) => s.querySelector(':scope > [data-role="timestamp"]')!.getBoundingClientRect().right)
+      for (const r of rights) expect(Math.abs(r - meta.getBoundingClientRect().right), 'a duration ends on the header meta edge').toBeLessThanOrEqual(0.5)
+
+      // 4. the inline edge and marker to label are n, step row to step row is 2n (Kim 2026-10-14)
+      const stripLeft = strip.getBoundingClientRect().left
+      const headerMarker = header.querySelector('[data-part="header-marker"]')!.getBoundingClientRect()
+      expect(headerMarker.left - stripLeft, 'the inline edge is n').toBeCloseTo(n, 1)
+      expect(headerMarker.width, 'the marker column is 2n').toBeCloseTo(2 * n, 1)
+      expect(labelCol - headerMarker.right, 'marker to label is n').toBeCloseTo(n, 1)
+      const firstMarker = steps[0]!.querySelector(':scope > [data-part="marker"]')!.getBoundingClientRect()
+      expect(labelCol - firstMarker.right, 'a step marker to its label is n').toBeCloseTo(n, 1)
+      for (let i = 0; i < steps.length - 1; i += 1) {
+        expect(steps[i + 1]!.getBoundingClientRect().top - steps[i]!.getBoundingClientRect().bottom, `row ${i} to row ${i + 1} is 2n`).toBeCloseTo(2 * n, 1)
+      }
+    })
+  }
 })

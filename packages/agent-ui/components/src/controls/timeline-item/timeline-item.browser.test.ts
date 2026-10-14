@@ -45,17 +45,12 @@ describe('ui-timeline-item cross-engine geometry smoke — the marker-system exp
     // a plain unstatused dot: the glyph box (the status markers take the disc diameter since T-0149)
     const { item } = mount('<ui-timeline-item label="x"></ui-timeline-item>')
     // marker-box / dot ride the derived icon box (2n) and glyph box at the root register (ADR-0245 cl.2, cl.4); the
-    // connector width, gutter and row-gap stay literals.
-    const LITERALS: Record<string, [number, number, number]> = {
-      sm: [2, 18, 8],
-      md: [2, 20, 12],
-      lg: [2, 24, 16],
-    }
+    // gutter is the same 2n marker column and the row gap 2n (T-0173); only the connector width stays a literal.
     for (const size of ['sm', 'md', 'lg'] as const) {
       item.setAttribute('size', size)
       const r = rootResolve(size)
       const [mb, dot] = [r.icon, glyphBox(r)]
-      const [cw, gut, rg] = LITERALS[size]!
+      const [cw, gut, rg] = [2, 2 * r.n, 2 * r.n]
       expect(markerBox(item), `size=${size} marker-box`).toBeCloseTo(mb, 0)
       expect(dotSize(item), `size=${size} dot-size`).toBeCloseTo(dot, 0)
       expect(connectorWidth(item), `size=${size} connector-width`).toBeCloseTo(cw, 0)

@@ -1311,7 +1311,6 @@ export class UIConversationElement extends UIElement {
    *  the receipt pattern's two stream-level opt-ins; default false leaves the strip byte-identical. */
   #makeNarration(): UIStatusStreamElement {
     const narration = document.createElement('ui-status-stream') as UIStatusStreamElement
-    narration.setAttribute('size', 'sm')
     narration.setAttribute('label', 'Agent activity')
     narration.setAttribute('header', '')
     if (this.receipt) {

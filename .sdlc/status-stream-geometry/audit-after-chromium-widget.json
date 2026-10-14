@@ -1,0 +1,715 @@
+{
+ "register": "widget",
+ "n": "calc(6 + 1 * 0 + 1 * -1 + 0 * 0 * -1)",
+ "inset": "calc(calc(6 + 1 * 0 + 1 * -1 + 0 * 0 * -1) * 1px)",
+ "iconBox": "calc(calc(6 + 1 * 0 + 1 * -1 + 0 * 0 * -1) * 2px)",
+ "glyphBox": "max(8px, calc(calc(6 + 1 * 0 + 1 * -1 + 0 * 0 * -1) * 2px - 2 * calc(round(up, calc(6 + 1 * 0 + 1 * -1 + 0 * 0 * -1) / 4, 1) * 1px)))",
+ "fontSize": "12.48px",
+ "lineHeight": "normal",
+ "strip": {
+  "l": 13,
+  "r": 367,
+  "t": 13,
+  "b": 371.2,
+  "cx": 190,
+  "cy": 192.1,
+  "w": 354,
+  "h": 358.2
+ },
+ "header": {
+  "box": {
+   "l": 13,
+   "r": 367,
+   "t": 13,
+   "b": 33,
+   "cx": 190,
+   "cy": 23,
+   "w": 354,
+   "h": 20
+  },
+  "marker": {
+   "l": 18,
+   "r": 28,
+   "t": 17.5,
+   "b": 27.5,
+   "cx": 23,
+   "cy": 22.5,
+   "w": 10,
+   "h": 10
+  },
+  "markerSvg": {
+   "l": 18,
+   "r": 28,
+   "t": 17.5,
+   "b": 27.5,
+   "cx": 23,
+   "cy": 22.5,
+   "w": 10,
+   "h": 10
+  },
+  "label": {
+   "l": 33,
+   "t": 15,
+   "b": 30,
+   "cy": 22.5,
+   "text": "Agent activity"
+  },
+  "meta": {
+   "l": 270.19,
+   "r": 347,
+   "t": 15,
+   "b": 30,
+   "cx": 308.59,
+   "cy": 22.5,
+   "w": 76.81,
+   "h": 15
+  },
+  "caret": {
+   "l": 351,
+   "r": 363,
+   "t": 16.5,
+   "b": 28.5,
+   "cx": 357,
+   "cy": 22.5,
+   "w": 11.99,
+   "h": 11.99
+  },
+  "pad": "2px 5px",
+  "gap": "5px"
+ },
+ "items": [
+  {
+   "kind": "request",
+   "note": false,
+   "box": {
+    "l": 13,
+    "r": 367,
+    "t": 38,
+    "b": 53,
+    "cx": 190,
+    "cy": 45.5,
+    "w": 354,
+    "h": 15
+   },
+   "pad": "5px",
+   "cols": "10px 283.172px 25.8281px",
+   "colGap": "5px",
+   "rowGap": "5px",
+   "marker": {
+    "l": 18,
+    "r": 28,
+    "t": 40.5,
+    "b": 53,
+    "cx": 23,
+    "cy": 46.75,
+    "w": 10,
+    "h": 12.5
+   },
+   "glyph": {
+    "l": 18,
+    "r": 28,
+    "t": 40.5,
+    "b": 50.5,
+    "cx": 23,
+    "cy": 45.5,
+    "w": 10,
+    "h": 10
+   },
+   "rail": {
+    "cx": 23,
+    "w": "2px"
+   },
+   "label": {
+    "l": 33,
+    "t": 38,
+    "b": 53,
+    "cy": 45.5,
+    "text": "Request sent"
+   },
+   "desc": null,
+   "text": null,
+   "time": {
+    "l": 321.17,
+    "r": 347,
+    "t": 38,
+    "b": 53,
+    "cx": 334.09,
+    "cy": 45.5,
+    "w": 25.83,
+    "h": 15
+   },
+   "detail": null,
+   "summary": null,
+   "summaryText": null,
+   "chevron": null,
+   "body": null,
+   "source": null,
+   "sourceText": null,
+   "copy": null
+  },
+  {
+   "kind": "generate",
+   "note": false,
+   "box": {
+    "l": 13,
+    "r": 367,
+    "t": 58,
+    "b": 73,
+    "cx": 190,
+    "cy": 65.5,
+    "w": 354,
+    "h": 15
+   },
+   "pad": "5px",
+   "cols": "10px 283.172px 25.8281px",
+   "colGap": "5px",
+   "rowGap": "5px",
+   "marker": {
+    "l": 18,
+    "r": 28,
+    "t": 60.5,
+    "b": 73,
+    "cx": 23,
+    "cy": 66.75,
+    "w": 10,
+    "h": 12.5
+   },
+   "glyph": {
+    "l": 18,
+    "r": 28,
+    "t": 60.5,
+    "b": 70.5,
+    "cx": 23,
+    "cy": 65.5,
+    "w": 10,
+    "h": 10
+   },
+   "rail": {
+    "cx": 23,
+    "w": "2px"
+   },
+   "label": {
+    "l": 33,
+    "t": 58,
+    "b": 73,
+    "cy": 65.5,
+    "text": "Generated"
+   },
+   "desc": null,
+   "text": null,
+   "time": {
+    "l": 321.17,
+    "r": 347,
+    "t": 58,
+    "b": 73,
+    "cx": 334.09,
+    "cy": 65.5,
+    "w": 25.83,
+    "h": 15
+   },
+   "detail": null,
+   "summary": null,
+   "summaryText": null,
+   "chevron": null,
+   "body": null,
+   "source": null,
+   "sourceText": null,
+   "copy": null
+  },
+  {
+   "kind": "validate",
+   "note": false,
+   "box": {
+    "l": 13,
+    "r": 367,
+    "t": 78,
+    "b": 175,
+    "cx": 190,
+    "cy": 126.5,
+    "w": 354,
+    "h": 97
+   },
+   "pad": "5px",
+   "cols": "10px 283.172px 25.8281px",
+   "colGap": "5px",
+   "rowGap": "5px",
+   "marker": {
+    "l": 18,
+    "r": 28,
+    "t": 80.5,
+    "b": 175,
+    "cx": 23,
+    "cy": 127.75,
+    "w": 10,
+    "h": 94.5
+   },
+   "glyph": {
+    "l": 18,
+    "r": 28,
+    "t": 80.5,
+    "b": 90.5,
+    "cx": 23,
+    "cy": 85.5,
+    "w": 10,
+    "h": 10
+   },
+   "rail": {
+    "cx": 23,
+    "w": "2px"
+   },
+   "label": {
+    "l": 33,
+    "t": 78,
+    "b": 93,
+    "cy": 85.5,
+    "text": "Validated"
+   },
+   "desc": {
+    "l": 33,
+    "t": 93,
+    "b": 108,
+    "cy": 100.5,
+    "text": "Model output did not parse, re"
+   },
+   "text": null,
+   "time": {
+    "l": 321.17,
+    "r": 347,
+    "t": 78,
+    "b": 93,
+    "cx": 334.09,
+    "cy": 85.5,
+    "w": 25.83,
+    "h": 15
+   },
+   "detail": {
+    "l": 33,
+    "r": 347,
+    "t": 110,
+    "b": 175,
+    "cx": 190,
+    "cy": 142.5,
+    "w": 314,
+    "h": 65
+   },
+   "summary": {
+    "l": 33,
+    "r": 347,
+    "t": 110,
+    "b": 130,
+    "cx": 190,
+    "cy": 120,
+    "w": 314,
+    "h": 20
+   },
+   "summaryText": {
+    "l": 48,
+    "t": 111.75,
+    "b": 126.75,
+    "cy": 119.25,
+    "text": "Details"
+   },
+   "chevron": {
+    "l": 33,
+    "r": 43,
+    "t": 115,
+    "b": 125,
+    "cx": 38,
+    "cy": 120,
+    "w": 10,
+    "h": 10
+   },
+   "body": {
+    "l": 33,
+    "r": 347,
+    "t": 130,
+    "b": 175,
+    "cx": 190,
+    "cy": 152.5,
+    "w": 314,
+    "h": 45
+   },
+   "source": {
+    "l": 33,
+    "r": 347,
+    "t": 130,
+    "b": 175,
+    "cx": 190,
+    "cy": 152.5,
+    "w": 314,
+    "h": 45
+   },
+   "sourceText": {
+    "l": 33,
+    "t": 130,
+    "b": 145,
+    "cy": 137.5,
+    "text": "Failed checks: PARSE (model ou"
+   },
+   "copy": null
+  },
+  {
+   "kind": "output",
+   "note": false,
+   "box": {
+    "l": 13,
+    "r": 367,
+    "t": 180,
+    "b": 262,
+    "cx": 190,
+    "cy": 221,
+    "w": 354,
+    "h": 82
+   },
+   "pad": "5px",
+   "cols": "10px 286.844px 22.1562px",
+   "colGap": "5px",
+   "rowGap": "5px",
+   "marker": {
+    "l": 18,
+    "r": 28,
+    "t": 182.5,
+    "b": 262,
+    "cx": 23,
+    "cy": 222.25,
+    "w": 10,
+    "h": 79.5
+   },
+   "glyph": {
+    "l": 18,
+    "r": 28,
+    "t": 182.5,
+    "b": 192.5,
+    "cx": 23,
+    "cy": 187.5,
+    "w": 10,
+    "h": 10
+   },
+   "rail": {
+    "cx": 23,
+    "w": "2px"
+   },
+   "label": {
+    "l": 33,
+    "t": 180,
+    "b": 195,
+    "cy": 187.5,
+    "text": "Updated the surface"
+   },
+   "desc": {
+    "l": 33,
+    "t": 195,
+    "b": 210,
+    "cy": 202.5,
+    "text": "25 components"
+   },
+   "text": null,
+   "time": {
+    "l": 324.84,
+    "r": 347,
+    "t": 180,
+    "b": 195,
+    "cx": 335.92,
+    "cy": 187.5,
+    "w": 22.16,
+    "h": 15
+   },
+   "detail": {
+    "l": 33,
+    "r": 347,
+    "t": 212,
+    "b": 262,
+    "cx": 190,
+    "cy": 237,
+    "w": 314,
+    "h": 50
+   },
+   "summary": {
+    "l": 33,
+    "r": 347,
+    "t": 212,
+    "b": 232,
+    "cx": 190,
+    "cy": 222,
+    "w": 314,
+    "h": 20
+   },
+   "summaryText": {
+    "l": 48,
+    "t": 213.75,
+    "b": 228.75,
+    "cy": 221.25,
+    "text": "Details"
+   },
+   "chevron": {
+    "l": 33,
+    "r": 43,
+    "t": 217,
+    "b": 227,
+    "cx": 38,
+    "cy": 222,
+    "w": 10,
+    "h": 10
+   },
+   "body": {
+    "l": 33,
+    "r": 347,
+    "t": 232,
+    "b": 262,
+    "cx": 190,
+    "cy": 247,
+    "w": 314,
+    "h": 30
+   },
+   "source": {
+    "l": 33,
+    "r": 347,
+    "t": 232,
+    "b": 262,
+    "cx": 190,
+    "cy": 247,
+    "w": 314,
+    "h": 30
+   },
+   "sourceText": {
+    "l": 33,
+    "t": 232,
+    "b": 247,
+    "cy": 239.5,
+    "text": "Surface: quokka-board\nComponen"
+   },
+   "copy": null
+  },
+  {
+   "kind": "raw",
+   "note": true,
+   "box": {
+    "l": 13,
+    "r": 367,
+    "t": 267,
+    "b": 338.2,
+    "cx": 190,
+    "cy": 302.6,
+    "w": 354,
+    "h": 71.2
+   },
+   "pad": "5px",
+   "cols": "10px 309px 0px",
+   "colGap": "5px",
+   "rowGap": "5px",
+   "marker": {
+    "l": 18,
+    "r": 28,
+    "t": 269.5,
+    "b": 338.2,
+    "cx": 23,
+    "cy": 303.85,
+    "w": 10,
+    "h": 68.7
+   },
+   "glyph": null,
+   "rail": null,
+   "label": null,
+   "desc": null,
+   "text": null,
+   "time": {
+    "l": 0,
+    "r": 0,
+    "t": 0,
+    "b": 0,
+    "cx": 0,
+    "cy": 0,
+    "w": 0,
+    "h": 0
+   },
+   "detail": {
+    "l": 33,
+    "r": 347,
+    "t": 269,
+    "b": 338.2,
+    "cx": 190,
+    "cy": 303.6,
+    "w": 314,
+    "h": 69.2
+   },
+   "summary": {
+    "l": 33,
+    "r": 347,
+    "t": 269,
+    "b": 289,
+    "cx": 190,
+    "cy": 279,
+    "w": 314,
+    "h": 20
+   },
+   "summaryText": {
+    "l": 48,
+    "t": 270.75,
+    "b": 285.75,
+    "cy": 278.25,
+    "text": "Raw output"
+   },
+   "chevron": {
+    "l": 33,
+    "r": 43,
+    "t": 274,
+    "b": 284,
+    "cx": 38,
+    "cy": 279,
+    "w": 10,
+    "h": 10
+   },
+   "body": {
+    "l": 33,
+    "r": 347,
+    "t": 289,
+    "b": 338.2,
+    "cx": 190,
+    "cy": 313.6,
+    "w": 314,
+    "h": 49.2
+   },
+   "source": {
+    "l": 33,
+    "r": 347,
+    "t": 311,
+    "b": 338.2,
+    "cx": 190,
+    "cy": 324.6,
+    "w": 314,
+    "h": 27.2
+   },
+   "sourceText": {
+    "l": 39,
+    "t": 318,
+    "b": 330,
+    "cy": 324,
+    "text": "{\"version\":\"v1.0\",\"updateCompo"
+   },
+   "copy": {
+    "l": 33,
+    "r": 78.11,
+    "t": 289,
+    "b": 309,
+    "cx": 55.55,
+    "cy": 299,
+    "w": 45.11,
+    "h": 20
+   }
+  },
+  {
+   "kind": "footer",
+   "note": true,
+   "box": {
+    "l": 13,
+    "r": 367,
+    "t": 343.2,
+    "b": 358.2,
+    "cx": 190,
+    "cy": 350.7,
+    "w": 354,
+    "h": 15
+   },
+   "pad": "5px",
+   "cols": "10px 309px 0px",
+   "colGap": "5px",
+   "rowGap": "0px",
+   "marker": {
+    "l": 18,
+    "r": 28,
+    "t": 345.7,
+    "b": 358.2,
+    "cx": 23,
+    "cy": 351.95,
+    "w": 10,
+    "h": 12.5
+   },
+   "glyph": null,
+   "rail": null,
+   "label": null,
+   "desc": null,
+   "text": {
+    "l": 33,
+    "t": 343.2,
+    "b": 358.2,
+    "cy": 350.7,
+    "text": "2 rounds · 3,210 input tokens "
+   },
+   "time": {
+    "l": 0,
+    "r": 0,
+    "t": 0,
+    "b": 0,
+    "cx": 0,
+    "cy": 0,
+    "w": 0,
+    "h": 0
+   },
+   "detail": null,
+   "summary": null,
+   "summaryText": null,
+   "chevron": null,
+   "body": null,
+   "source": null,
+   "sourceText": null,
+   "copy": null
+  },
+  {
+   "kind": "model",
+   "note": true,
+   "box": {
+    "l": 13,
+    "r": 367,
+    "t": 358.2,
+    "b": 371.2,
+    "cx": 190,
+    "cy": 364.7,
+    "w": 354,
+    "h": 13
+   },
+   "pad": "5px",
+   "cols": "10px 309px 0px",
+   "colGap": "5px",
+   "rowGap": "0px",
+   "marker": {
+    "l": 18,
+    "r": 28,
+    "t": 359.7,
+    "b": 371.2,
+    "cx": 23,
+    "cy": 365.45,
+    "w": 10,
+    "h": 11.5
+   },
+   "glyph": null,
+   "rail": null,
+   "label": null,
+   "desc": null,
+   "text": {
+    "l": 33,
+    "t": 358.2,
+    "b": 371.2,
+    "cy": 364.7,
+    "text": "model-x"
+   },
+   "time": {
+    "l": 0,
+    "r": 0,
+    "t": 0,
+    "b": 0,
+    "cx": 0,
+    "cy": 0,
+    "w": 0,
+    "h": 0
+   },
+   "detail": null,
+   "summary": null,
+   "summaryText": null,
+   "chevron": null,
+   "body": null,
+   "source": null,
+   "sourceText": null,
+   "copy": null
+  }
+ ]
+}
