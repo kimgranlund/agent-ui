@@ -147,10 +147,13 @@ describe('button.css — interaction states from role ladders (ADR-0008)', () =>
     expect(css).not.toContain('color-mix(') // states are role steps, never a synthesized mix() (ADR-0008)
   })
 
-  it('disabled HOLDS at idle: -bg-hover/-bg-active repoint to the muted neutral, and the host is pointer-inert', () => {
+  it('disabled HOLDS at idle: -bg-hover/-bg-active repoint to the low-emphasis container (ghost: transparent), and the host is pointer-inert', () => {
     const b = variantBlock(":where(ui-button[disabled])")
-    expect(b).toMatch(/--ui-button-bg-hover:\s*var\(--md-sys-color-neutral-surface-high\)/)
-    expect(b).toMatch(/--ui-button-bg-active:\s*var\(--md-sys-color-neutral-surface-high\)/)
+    expect(b).toMatch(/--ui-button-bg-hover:\s*var\(--md-sys-color-neutral-container-disabled\)/)
+    expect(b).toMatch(/--ui-button-bg-active:\s*var\(--md-sys-color-neutral-container-disabled\)/)
+    const g = variantBlock(":where(ui-button[variant='ghost'][disabled])")
+    expect(g).toMatch(/--ui-button-bg-hover:\s*transparent/)
+    expect(g).toMatch(/--ui-button-bg-active:\s*transparent/)
     expect(stylesBlock).toMatch(/:scope:is\(\[disabled\]\)\s*\{[^}]*pointer-events:\s*none/) // :hover/:active can't match
   })
 })

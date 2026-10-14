@@ -157,8 +157,9 @@ Idle (unpressed): a ghost-like transparent-background pill with a neutral-family
 same channel `ui-button[variant='ghost']` uses. Pressed (`:state(pressed)`, mirrored by the `[pressed]`
 reflected attribute so the paint applies under jsdom too): a tonal `primary-container` fill with
 `primary-high` ink — the same channel `ui-button[variant='soft']` uses, and the same "primary marks ON"
-convention `ui-switch`/`ui-segmented-control` both already use. Disabled: muted neutral roles, pointer-inert
-(the `ui-button[disabled]` pattern). No `color-mix` — every colour is a role step (ADR-0008).
+convention `ui-switch`/`ui-segmented-control` both already use. Disabled takes the fleet disabled recipe
+(T-0139): unpressed keeps its unfilled outline at `neutral-outline-variant` with `neutral-on-surface-disabled` ink,
+pressed keeps a `primary-container-disabled` fill with `primary-on-surface-disabled` ink; pointer-inert. No `color-mix`: every colour is a role step (ADR-0008).
 
 ## Slots
 

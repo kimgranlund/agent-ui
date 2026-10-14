@@ -478,7 +478,8 @@ colour opinions; ADR-0008), so the change reads in the real palette and survives
 
 Keyboard focus draws the **shared focus ring** — a `:focus-visible` `outline` from the fleet-wide
 `--md-sys-color-focus-ring` role (ADR-0009): keyboard-only (no ring on a mouse click), identical across every control, and
-layout-neutral (`outline` paints outside the box, so the geometry law is untouched). `disabled` holds at idle —
+layout-neutral (`outline` paints outside the box, so the geometry law is untouched). `disabled` takes the fleet disabled recipe (T-0139): `neutral-container-disabled` fill (ghost stays transparent)
+and `neutral-on-surface-disabled` ink, quieter than every enabled variant. It holds at idle:
 `pointer-events: none` means `:hover`/`:active` never match, and a disabled host is out of the tab order, so the
 focus ring never lifts on it either.
 
@@ -1142,7 +1143,9 @@ next click/Space toggle (platform parity). While `indeterminate=true`, `ariaChec
 
 The host is an `inline-flex` row: the widget box (`::before`) is the first item; any slotted label text
 follows in the default slot. A 2px border + slight corner rounding (~box/5) frame the box; clicking or
-pressing Space keyup toggles `checked` (clearing `indeterminate` first if set).
+pressing Space keyup toggles `checked` (clearing `indeterminate` first if set). Disabled takes the fleet
+disabled recipe (T-0139): the border at `-outline-variant`, the checked fill at `primary-container-disabled` and
+the mark at `primary-on-surface-disabled`, so a locked box never vanishes.
 
 ## Sizes
 
@@ -4146,9 +4149,11 @@ the group's form value.
 The host is an **inline-flex row**: a circular `::before` pseudo-element (the ring, sized to
 `--md-sys-compact-{size}`), a circular `::after` pseudo-element (the checked **dot**, absolutely positioned and
 centred on `::before`), then any default-slot content (the optional label text). When checked, the ring
-**fills solid primary** (`::before` border + background both `--ui-radio-ink`) and the dot reads the bright
+**fills solid primary** (`::before` border `--ui-radio-ink`, background `--ui-radio-fill`, which is the ink while enabled) and the dot reads the bright
 `--md-sys-color-primary-on-primary` role — the same ring-fills / bright-glyph pairing `ui-switch` uses for its
 checked track + thumb, so the dot reads as a distinct indicator instead of disappearing into a same-hue ring.
+Disabled takes the fleet disabled recipe (T-0139): the ring at `-outline-variant`, the checked fill at
+`primary-container-disabled` (`--ui-radio-fill`, split from the ring) and the dot at `primary-on-surface-disabled`.
 The dot's diameter tracks the box size automatically via the 22%-inset law (`dot size = box − 2×22%-of-box`).
 
 ## Group coordination
@@ -6125,8 +6130,9 @@ neither the box nor the inset rides `--md-sys-density`.
 ## States + colour
 
 Unchecked: solid `--md-sys-color-neutral-track` track (the state-bearing track role, ADR-0059 — SC 1.4.11 3:1 on every plane; `-track-hover` on hover), near-white thumb. Checked: `--md-sys-color-primary` track
-(`--md-sys-color-primary-on-primary` thumb). Disabled: `--md-sys-color-neutral-surface-high` track, muted ink thumb — the
-host is pointer-inert (`pointer-events: none`), so `:hover` never lifts the state. A `:focus-visible`
+(`--md-sys-color-primary-on-primary` thumb). Disabled takes the fleet disabled recipe (T-0139): an `-outline-variant` edge over a `-container-disabled` track
+with an `-on-surface-disabled` thumb, neutral when off and primary when on, so the track never vanishes and locked
+on still differs from locked off. The host is pointer-inert (`pointer-events: none`), so `:hover` never lifts the state. A `:focus-visible`
 ring (keyboard-only, ADR-0009) uses the fleet `--md-sys-color-focus-ring` / `--md-sys-state-focus-ring-*` tokens.
 
 ## Form participation
@@ -7314,8 +7320,9 @@ Idle (unpressed): a ghost-like transparent-background pill with a neutral-family
 same channel `ui-button[variant='ghost']` uses. Pressed (`:state(pressed)`, mirrored by the `[pressed]`
 reflected attribute so the paint applies under jsdom too): a tonal `primary-container` fill with
 `primary-high` ink — the same channel `ui-button[variant='soft']` uses, and the same "primary marks ON"
-convention `ui-switch`/`ui-segmented-control` both already use. Disabled: muted neutral roles, pointer-inert
-(the `ui-button[disabled]` pattern). No `color-mix` — every colour is a role step (ADR-0008).
+convention `ui-switch`/`ui-segmented-control` both already use. Disabled takes the fleet disabled recipe
+(T-0139): unpressed keeps its unfilled outline at `neutral-outline-variant` with `neutral-on-surface-disabled` ink,
+pressed keeps a `primary-container-disabled` fill with `primary-on-surface-disabled` ink; pointer-inert. No `color-mix`: every colour is a role step (ADR-0008).
 
 ## Slots
 

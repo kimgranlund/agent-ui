@@ -87,14 +87,23 @@
   --ui-toggle-border: transparent;
 }
 
-/* [disabled] → muted neutral roles, overriding both idle AND pressed (source-order-last under :where()'s
-   zero specificity — the switch.css precedent: disabled always wins regardless of which state preceded it).
-   HOLDS at idle: the disabled host is pointer-inert (styles block), so :hover/:active never match it. */
+/* [disabled] → the fleet disabled recipe (T-0139), overriding both idle AND pressed (source-order-last under
+   :where()'s zero specificity, the switch.css precedent). Unpressed keeps its unfilled outline at outline-variant
+   with the low-emphasis ink, so it never reads pressed; pressed keeps a fill at the low-emphasis container, so
+   locked on still differs from locked off. HOLDS at idle: the disabled host is pointer-inert (styles block), so
+   :hover/:active never match it. */
 :where(ui-toggle[disabled]) {
-  --ui-toggle-bg: var(--md-sys-color-neutral-surface-high);
-  --ui-toggle-bg-hover: var(--md-sys-color-neutral-surface-high);
-  --ui-toggle-bg-active: var(--md-sys-color-neutral-surface-high);
-  --ui-toggle-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-toggle-bg: transparent;
+  --ui-toggle-bg-hover: transparent;
+  --ui-toggle-bg-active: transparent;
+  --ui-toggle-ink: var(--md-sys-color-neutral-on-surface-disabled);
+  --ui-toggle-border: var(--md-sys-color-neutral-outline-variant);
+}
+:where(ui-toggle[disabled]:is([pressed], :state(pressed))) {
+  --ui-toggle-bg: var(--md-sys-color-primary-container-disabled);
+  --ui-toggle-bg-hover: var(--md-sys-color-primary-container-disabled);
+  --ui-toggle-bg-active: var(--md-sys-color-primary-container-disabled);
+  --ui-toggle-ink: var(--md-sys-color-primary-on-surface-disabled);
   --ui-toggle-border: transparent;
 }
 

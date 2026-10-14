@@ -46,6 +46,8 @@
 
   /* Ink: the checked ring + FILL repoint (matches ui-switch's filled-track pattern). */
   --ui-radio-ink: var(--md-sys-color-primary);
+  /* Fill: the checked interior, the ring's ink while enabled; [disabled] splits it from the ring (T-0139). */
+  --ui-radio-fill: var(--ui-radio-ink);
 
   /* Dot: the checked glyph — BRIGHT on-primary, the ui-switch checked-thumb role (2026-07-07 fix). Was
      `--ui-radio-ink` reused (same blue as the ring/fill it sits on) — a same-hue dot never reads as a
@@ -66,13 +68,15 @@
   --ui-radio-gap: var(--md-sys-inset, var(--md-sys-gap-lg));
 }
 
-/* disabled → muted neutral roles. Holds at idle (pointer-inert below). Disabled is SC 1.4.11-EXEMPT
-   (ADR-0059 precedent: an inactive component doesn't need the checked ring/dot to stay distinguishable),
-   so ring, fill, AND dot collapse onto the SAME muted neutral — a flat disabled disc. */
+/* disabled → the fleet disabled recipe (T-0139): the ring keeps its outline at outline-variant, the checked fill
+   drops to the low-emphasis container and the dot to the low-emphasis ink (primary family when checked), so a
+   locked checked radio is quieter than the enabled one in both schemes and still reads checked. Holds at idle
+   (pointer-inert below). Disabled is SC 1.4.11-exempt (ADR-0059), so the quiet pair needs no 3:1. */
 :where(ui-radio[disabled]) {
-  --ui-radio-border: var(--md-sys-color-neutral-on-surface-variant);
-  --ui-radio-ink: var(--md-sys-color-neutral-on-surface-variant);
-  --ui-radio-dot: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-radio-border: var(--md-sys-color-neutral-outline-variant);
+  --ui-radio-ink: var(--md-sys-color-primary-outline-variant);
+  --ui-radio-fill: var(--md-sys-color-primary-container-disabled);
+  --ui-radio-dot: var(--md-sys-color-primary-on-surface-disabled);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-radio) consumes ONLY --ui-radio-* ════════════════ */
@@ -131,7 +135,7 @@
   :scope:is([checked])::before,
   :scope:state(checked)::before {
     border-color: var(--ui-radio-ink);
-    background: var(--ui-radio-ink);
+    background: var(--ui-radio-fill);
   }
 
   /* ── Dot (::after) — the bright checked glyph, centred on the ::before circle ────────────────────

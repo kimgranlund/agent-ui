@@ -82,14 +82,21 @@
   --ui-button-icon: var(--md-sys-icon-box, var(--md-sys-icon-lg)); /* §1-SET icon table (ADR-0035) */
 }
 
-/* disabled → muted neutral roles (overrides the family). HOLDS at idle: -bg-hover/-bg-active repoint to the
-   same muted neutral so no path lifts (and :hover/:active never match — the styles block makes the host
-   pointer-inert; ADR-0008). */
+/* disabled → the fleet disabled recipe (T-0139): the variant keeps its silhouette, a filled variant drops to the
+   low-emphasis container and every variant to the low-emphasis ink, so a disabled button is always quieter than
+   every enabled sibling. HOLDS at idle: -bg-hover/-bg-active repoint to the same value so no path lifts (and
+   :hover/:active never match; the styles block makes the host pointer-inert, ADR-0008). */
 :where(ui-button[disabled]) {
-  --ui-button-bg: var(--md-sys-color-neutral-surface-high);
-  --ui-button-bg-hover: var(--md-sys-color-neutral-surface-high);
-  --ui-button-bg-active: var(--md-sys-color-neutral-surface-high);
-  --ui-button-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-button-bg: var(--md-sys-color-neutral-container-disabled);
+  --ui-button-bg-hover: var(--md-sys-color-neutral-container-disabled);
+  --ui-button-bg-active: var(--md-sys-color-neutral-container-disabled);
+  --ui-button-ink: var(--md-sys-color-neutral-on-surface-disabled);
+}
+/* a disabled ghost stays unfilled: a grey pill beside a pager's current page reads as pressed (T-0139). */
+:where(ui-button[variant='ghost'][disabled]) {
+  --ui-button-bg: transparent;
+  --ui-button-bg-hover: transparent;
+  --ui-button-bg-active: transparent;
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-button) consumes ONLY --ui-button-* ════════════════ */
@@ -163,6 +170,12 @@
     min-inline-size: 0;
     max-inline-size: 100%;
     justify-self: center;
+  }
+
+  /* A ui-text label (the A2UI Button's child Text) paints its own surface ink, which hid the variant ink and the
+     disabled recipe behind near-black text. Inside the label it takes the button's ink instead (T-0139). */
+  :scope > [data-part='label'] > ui-text {
+    --ui-text-color: currentColor;
   }
 
   /* Alignment law (ADR-0171, GH #442, amended GH #450): a SINGLE adornment and its label pin to

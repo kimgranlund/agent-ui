@@ -137,7 +137,8 @@ colour opinions; ADR-0008), so the change reads in the real palette and survives
 
 Keyboard focus draws the **shared focus ring** — a `:focus-visible` `outline` from the fleet-wide
 `--md-sys-color-focus-ring` role (ADR-0009): keyboard-only (no ring on a mouse click), identical across every control, and
-layout-neutral (`outline` paints outside the box, so the geometry law is untouched). `disabled` holds at idle —
+layout-neutral (`outline` paints outside the box, so the geometry law is untouched). `disabled` takes the fleet disabled recipe (T-0139): `neutral-container-disabled` fill (ghost stays transparent)
+and `neutral-on-surface-disabled` ink, quieter than every enabled variant. It holds at idle:
 `pointer-events: none` means `:hover`/`:active` never match, and a disabled host is out of the tab order, so the
 focus ring never lifts on it either.
 

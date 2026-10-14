@@ -341,22 +341,15 @@ describe('ui-toggle — disabled-inert (real engine)', () => {
     expect(el.hasAttribute('pressed'), 'disabled must not commit a click even when dispatched directly (bypassing real pointer hit-testing)').toBe(false)
   })
 
-  // component-checker finding — a cascade-specificity regression pin: `:where(ui-toggle):state(pressed)`
+  // component-checker finding: a cascade-specificity regression pin. `:where(ui-toggle):state(pressed)`
   // (the `:state()` pseudo-class sitting OUTSIDE the `:where()` net) contributed its own (0,1,0)
-  // specificity, beating the fully `:where()`-wrapped `[disabled]` override (0,0,0) regardless of source
-  // order — `<ui-toggle pressed disabled>` painted as a fully active primary pill instead of muted. Fixed
-  // by moving `:state()` inside the parens (`:where(ui-toggle:state(pressed))`, toggle.css). Pinned here by
-  // comparing a `disabled`-only toggle against a `pressed disabled` toggle: the muted disabled paint must
-  // win identically regardless of whether `pressed` is also set — the exact combination the regression
-  // inverted, and the exact combination no prior test in this file covered.
-  it('disabled OVERRIDES pressed in the paint cascade — <ui-toggle pressed disabled> reads the SAME muted alpha as <ui-toggle disabled> (mutation-verified regression pin)', async () => {
-    // ALPHA, never a raw string compare — the SAME format-instability this file's own pressed-state-repaint
-    // block already routes around (two DIFFERENT elements, each real-engine-serialized independently, are
-    // exactly the case where that risk is highest). `pollStable`, not `pollUntil`, for every baseline here —
-    // every one of these three alphas becomes a target a LATER read re-compares against exactly, so each
-    // must be the truly settled end-state (a `background-color` transition interpolates its ALPHA channel
-    // too when animating from idle's 0 toward an opaque/semi-opaque target — "crossed > 0.01" can still be
-    // well short of the real value, the same trap this file's pressed-vs-refused test already hit once).
+  // specificity, beating the fully `:where()`-wrapped `[disabled]` overrides (0,0,0) regardless of source
+  // order, so `<ui-toggle pressed disabled>` painted as a fully active primary pill. The fleet disabled
+  // recipe (T-0139) gives locked pressed its own low-emphasis fill, so the pin is three-way: pressed+disabled
+  // paints a lighter fill than pressed-only (disabled wins) AND a fill disabled-only lacks (locked on reads on).
+  it('disabled OVERRIDES pressed in the paint cascade, and locked pressed still differs from locked unpressed (mutation-verified regression pin)', async () => {
+    // ALPHA, never a raw string compare: two different elements, each real-engine-serialized independently.
+    // `pollStable` for every read: a `background-color` transition interpolates its alpha too.
     const { el: disabledOnly } = mount(BARE)
     disabledOnly.setAttribute('disabled', '')
     const disabledOnlyAlpha = await pollStable(() => alphaOf(bg(disabledOnly)))
@@ -366,15 +359,14 @@ describe('ui-toggle — disabled-inert (real engine)', () => {
     pressedDisabled.setAttribute('disabled', '')
     await pressedDisabled.updateComplete
     const pressedDisabledAlpha = await pollStable(() => alphaOf(bg(pressedDisabled)))
-    expect(pressedDisabledAlpha, 'a pressed+disabled toggle must paint the SAME muted background alpha as disabled-only — pressed must not leak through the disabled override').toBeCloseTo(disabledOnlyAlpha, 2)
 
-    // Anti-vacuous: the disabled paint is genuinely DIFFERENT from the (uncontested) pressed paint, so the
-    // equality above is a real discriminator, not two coincidentally-equal alphas.
     const { el: pressedOnly } = mount(BARE) as unknown as { el: HTMLElement & { pressed: boolean; updateComplete: Promise<void> } }
     pressedOnly.pressed = true
     await pressedOnly.updateComplete
     const pressedOnlyAlpha = await pollStable(() => alphaOf(bg(pressedOnly)))
-    expect(Math.abs(pressedOnlyAlpha - disabledOnlyAlpha), 'anti-vacuous: pressed-only and disabled-only must paint at DIFFERENT alphas for the equality check above to mean anything').toBeGreaterThan(0.02)
+
+    expect(pressedOnlyAlpha - pressedDisabledAlpha, 'pressed must not leak through the disabled override: the locked fill is lighter than the enabled pressed fill').toBeGreaterThan(0.02)
+    expect(pressedDisabledAlpha - disabledOnlyAlpha, 'locked pressed must still paint a fill the locked unpressed toggle lacks').toBeGreaterThan(0.02)
   })
 })
 
