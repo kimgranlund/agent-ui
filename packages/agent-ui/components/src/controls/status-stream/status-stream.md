@@ -358,6 +358,28 @@ Appending an entry (or an `update` that grows visible content) scrolls the newes
 to read history, in which case new arrivals do not yank the viewport. Scrolling back to the bottom resumes
 follow. The stream owns its own scroll region (`overflow-y: auto`).
 
+## Geometry
+
+Every part of the strip sits on one grid derived from the strip's own `n` (ADR-0245), declared once as the
+`--ui-status-stream-*` grid tokens in `status-stream.css` and pushed into the composed parts through their
+public tokens (`--ui-timeline-item-*`, `--ui-disclosure-*`). A sized strip (the chat's `size="sm"`) or a
+region's tier and scale move `n`, and the whole grid moves with it (T-0173).
+
+| Column or gap | Value | What sits on it |
+|---|---|---|
+| inline edge | `n` | the header's and every entry's inline start (and end) |
+| marker column | `2n` | the header marker, each step marker, the rail (all centred on it) |
+| column gap | `n` | marker to label, label to the trailing cell |
+| label column | edge + `2n` + `n` | the header label, step labels and descriptions, the plan text, and every nested block: an expand's summary (its chevron slot starts here), its detail text, the raw output box and its Copy button |
+| trailing edge | edge, plus `n + 2n` with the receipt caret | each step duration and the header's meta ("Done in 39s") end here, in tabular figures |
+| row gap | `n` | step row to step row, and header to the first row |
+| expand summary | `h = 4n` | a Details, source or raw-output summary row (a control row on the library ramp) |
+| nest gap | `c` | a row's text to its expand |
+
+Status marks keep the `2n` icon box (geometry-sizing-spec §4.6 lists a status mark as an icon); the
+in-progress dot is the `2n - 2c` glyph box, centred in the same column. The measured invariants are pinned in
+two engines at two registers by `conversation.browser.test.ts` (T-0173).
+
 ## Accessibility
 
 `internals.role = 'log'` (a **polite** live region, never `assertive` by default), set in the constructor

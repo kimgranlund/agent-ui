@@ -41,13 +41,32 @@
      status-stream.test.ts's GH #722 drift gate asserts the two files' values stay byte-equal. */
   --ui-status-stream-header-marker-box: var(--md-sys-icon-box, 16px);
   --ui-status-stream-header-dot-size: var(--md-sys-glyph-box, 8px);
+
+  /* T-0173: the strip's ONE geometry grid, every value derived from the strip's own n (ADR-0245), so the
+     header, the step rows, their expands and the raw block line up at every tier and scale. Read on the
+     host, so a sized strip (the chat's size="sm") moves the whole grid with its n.
+       inset        n, the inline edge both the header and the entries start at
+       gap          n, the one gap: marker to label, label to trailing cell, row to row
+       mark-box     2n, the marker column (the header marker, every step marker and the rail centre on it)
+       label-start  2n + n, from a row's inline edge to its label column; every nested block starts here
+       trail-box    n + 2n, the header caret's slot, reserved at the end of every entry row so the
+                    durations and the header's "Done in" end on one trailing edge
+       expand-height  h = 4n, an expand's summary row (a control row on the library ramp)
+       nest-gap     c, the beat between a row's text and its expand */
+  --ui-status-stream-inset: var(--md-sys-space-sm);
+  --ui-status-stream-gap: var(--md-sys-space-sm);
+  --ui-status-stream-mark-box: var(--ui-status-stream-header-marker-box);
+  --ui-status-stream-label-start: calc(var(--ui-status-stream-mark-box) + var(--ui-status-stream-gap));
+  --ui-status-stream-trail-box: calc(var(--ui-status-stream-gap) + var(--ui-status-stream-mark-box));
+  --ui-status-stream-expand-height: var(--md-sys-height, var(--md-sys-height-md));
+  --ui-status-stream-nest-gap: var(--md-sys-space-xs);
   /* GH #722 (candidate 6, the other half) — entries carried ZERO inline inset while the header's own
      pad starts it space-sm in; the SAME inset on both is what makes the marker columns share one rail
      (the GH #626 bar-inset lesson: contents own their inset via a shared token, the rail stays
      padding-less). */
-  --ui-status-stream-entry-inline-inset: var(--md-sys-space-sm);
-  --ui-status-stream-header-gap: var(--md-sys-space-sm);
-  --ui-status-stream-header-pad: var(--md-sys-space-xs) var(--md-sys-space-sm);
+  --ui-status-stream-entry-inline-inset: var(--ui-status-stream-inset);
+  --ui-status-stream-header-gap: var(--ui-status-stream-gap);
+  --ui-status-stream-header-pad: var(--ui-status-stream-nest-gap) var(--ui-status-stream-inset);
   /* GH #291/ADR-0160 — the header lost its boxed background (Kim's 2026-07-27 ruling: the activity
      line floats directly on the page background, no box); `--ui-status-stream-header-surface`
      retired with it — nothing else in the fleet consumed that token (grep-confirmed). The border
@@ -98,7 +117,7 @@
   /* GH #722 (candidate 4, Kim-delegated ruling 2026-08-12) — breathing room between the header's
      bottom hairline and the first entry row (the screenshot's crowding); applies only when the
      opt-in header is present (headerless strips byte-identical). */
-  --ui-status-stream-leading-gap: var(--md-sys-space-xs);
+  --ui-status-stream-leading-gap: var(--ui-status-stream-gap); /* T-0173: the grid's one row gap */
 
   --ui-status-stream-plan-ink: var(--md-sys-color-neutral-on-surface-variant);
   --ui-status-stream-plan-gap: var(--md-sys-space-xs);
@@ -147,6 +166,17 @@
   --ui-timeline-item-marker-ink: var(--ui-status-stream-entry-done-ink);
 }
 
+/* T-0173: the composed entries take the strip's grid through ui-timeline-item's public tokens (the GH #1222
+   override point above): the marker column is the 2n mark box (timeline-item's own gutter is a fixed ramp
+   row, wider than the mark, which pushed every step label off the header's label column), and the column
+   and row gaps are the strip's n. Any depth, so a grouped entry's nested rail keeps the same grid. */
+:where(ui-status-stream) ui-timeline-item {
+  --ui-timeline-item-marker-box: var(--ui-status-stream-mark-box);
+  --ui-timeline-item-gutter: var(--ui-status-stream-mark-box);
+  --ui-timeline-item-column-gap: var(--ui-status-stream-gap);
+  --ui-timeline-item-row-gap: var(--ui-status-stream-gap);
+}
+
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-status-stream) consumes ONLY --ui-status-stream-* ════════════════ */
 
 @scope (ui-status-stream) {
@@ -188,7 +218,30 @@
      inside its parent's nested <ui-timeline> in the content column and is already indented by the
      parent's own grid — a second inset there would stagger the nested rail. */
   :scope > ui-timeline-item {
-    padding-inline-start: var(--ui-status-stream-entry-inline-inset);
+    padding-inline: var(--ui-status-stream-entry-inline-inset);
+  }
+  /* T-0173: with the receipt caret in the header (an opted-in role=button header), every entry also reserves
+     the caret's slot at its end, so the step durations and the header's meta share one trailing edge. */
+  :scope:has(> [data-part='header'][role='button']) > ui-timeline-item {
+    padding-inline-end: calc(var(--ui-status-stream-entry-inline-inset) + var(--ui-status-stream-trail-box));
+  }
+  /* T-0173: times read as tabular figures, so a column of durations never jitters or misaligns. */
+  :scope ui-timeline-item [data-role='timestamp'] {
+    font-variant-numeric: tabular-nums;
+  }
+  /* T-0173: an entry's expand (Details, the source reveal, the raw output) starts at the label column: the
+     disclosure's own inline pads drop to 0 so its chevron slot and its body text sit on the label's edge, its
+     summary is a control row (h), and a nest-gap of air separates it from the row text above. The
+     disclosure's custom properties are its sanctioned override surface. */
+  :scope ui-timeline-item > [data-part='detail'] {
+    --ui-disclosure-pad-inline: 0;
+    --ui-disclosure-body-pad-inline: 0;
+    --ui-disclosure-height: var(--ui-status-stream-expand-height);
+    --ui-disclosure-gap: var(--ui-status-stream-gap);
+    margin-block-start: var(--ui-status-stream-nest-gap);
+    /* a grid item's automatic minimum is its content's min-content: an unwrapped line in a code block would
+       widen the row's 1fr track and push the time cell off the strip; 0 lets the track shrink. */
+    min-inline-size: 0;
   }
 
   /* GH #722 (candidate 4) — the first entry directly under the header hairline gets the leading gap
@@ -297,7 +350,8 @@
     display: grid;
     gap: var(--ui-status-stream-plan-gap);
     padding-block: var(--ui-status-stream-plan-pad-block);
-    padding-inline-start: var(--ui-status-stream-entry-inline-inset);
+    /* T-0173: the plan text sits on the label column, like every row's label */
+    padding-inline-start: calc(var(--ui-status-stream-entry-inline-inset) + var(--ui-status-stream-label-start));
     color: var(--ui-status-stream-plan-ink);
   }
   :scope > [data-part='plan'] > [data-part='plan-label'] {
@@ -311,9 +365,9 @@
     margin: 0;
     display: grid;
     gap: var(--ui-status-stream-plan-gap);
-    /* the list's own numbers hang in a gutter matched to the plan text indent — 1.5em keeps two-digit
-       plans aligned without a second bespoke column system */
-    padding-inline-start: 1.5em;
+    /* T-0173: the list text starts on the label column too; its numbers hang outside it, into the marker
+       column's air (no second bespoke indent) */
+    padding-inline-start: 0;
   }
   /* The disclosure affordance — only an opted-in header carries role=button (status-stream.ts). */
   :scope > [data-part='header'][role='button'] {
