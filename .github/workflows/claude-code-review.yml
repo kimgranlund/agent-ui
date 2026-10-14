@@ -29,7 +29,7 @@ jobs:
         env:
           # T-0192: an org-level key needs the workspace header; Claude Code reads this env var. Empty when the
           # secret is unset, so a scoped key is unaffected.
-          ANTHROPIC_CUSTOM_HEADERS: ${{ secrets.ANTHROPIC_WORKSPACE_ID != '' && format('anthropic-workspace-id: {0}', secrets.ANTHROPIC_WORKSPACE_ID) || '' }}
+          ANTHROPIC_CUSTOM_HEADERS: "${{ secrets.ANTHROPIC_WORKSPACE_ID != '' && format('anthropic-workspace-id: {0}', secrets.ANTHROPIC_WORKSPACE_ID) || '' }}"
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           allowed_bots: 'adiahealth'
