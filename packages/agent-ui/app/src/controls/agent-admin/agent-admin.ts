@@ -117,7 +117,7 @@ import type { UITabsElement, UITabElement } from '@agent-ui/components/controls/
 // itself (`#compose()` below), removing one wrapper element from every agent-admin DOM tree.
 import '../super-shell/super-shell.ts'
 import type { UISuperShellElement } from '../super-shell/super-shell.ts'
-// GH #686's Amendment (LLD §16.5) retires `ui-master-detail` as the Author⇄Settings pairing vehicle
+// GH #686's Amendment (LLD §16.5) retires `ui-master-detail` as the Co-pilot⇄Settings pairing vehicle
 // entirely: the wireframe's all-active geometry does not fit its 40rem own-container dock floor. The
 // three places are three sibling regions now (`#compose`, below) — no more MD import at this element's
 // top level (`ui-settings`' OWN internal rail|panel `ui-master-detail`, composed inside the Settings
@@ -492,7 +492,7 @@ function preloadMarkdownRenderer(): void {
 }
 
 /**
- * GH #670 (Kim's 2026-08-10 fork ruling) — what an Author-card PRE-ARM pick asks the page's mint path to
+ * GH #670 (Kim's 2026-08-10 fork ruling) — what a Co-pilot-card PRE-ARM pick asks the page's mint path to
  * seed the newly-minted interviewer store with, handed over as `onGenerateRequest`'s one argument.
  *
  * The pick WINS by being seeded, never by a later overwrite: there is no write-then-correct step anywhere
@@ -505,7 +505,7 @@ function preloadMarkdownRenderer(): void {
  * where effort actually lives — see `#startFromFirstMessage`, the arm this pick seeds.
  */
 export interface GenerateSeed {
-  /** The model id picked on the unarmed Author card, before there was a store to hold it. */
+  /** The model id picked on the unarmed Co-pilot card, before there was a store to hold it. */
   model?: string
 }
 
@@ -618,7 +618,7 @@ export class UIAgentAdminElement extends UIElement {
    * `hidden` did.
    */
   #paneHolder: HTMLElement | null = null
-  // GH #686's Amendment retires `ui-master-detail` as the Author⇄Settings pairing vehicle entirely (the
+  // GH #686's Amendment retires `ui-master-detail` as the Co-pilot⇄Settings pairing vehicle entirely (the
   // wireframe's all-active geometry — three 296px-ish columns — does not fit the MD's 40rem own-container
   // dock floor, LLD §16). The three places are THREE SIBLING regions directly under `#paneHolder` now, in
   // `PANE_ORDER`: the chat conversation (`#conversation`, `data-part="chat-pane"`), a plain div
@@ -715,7 +715,7 @@ export class UIAgentAdminElement extends UIElement {
   // `#applyActionAvailability` funnel, on the two-axis rule (§5).
   #deleteAgentRow: HTMLElement | null = null
   /**
-   * GH #670 — the Author card's Model/Effort pick made BEFORE the flow is armed, held here until there is
+   * GH #670 — the Co-pilot card's Model/Effort pick made BEFORE the flow is armed, held here until there is
    * somewhere real to put it. It exists because the pickers are props-down/callbacks-up: armed, a pick
    * commits to its home and the home feeds the committed value back; UNARMED there is no interviewer store
    * and no interview, so the same callback used to write `this.authoringStore?.set('model', id)` into
@@ -1011,7 +1011,7 @@ export class UIAgentAdminElement extends UIElement {
 
   /** Build the ui-super-shell + the pane nav + the five composed entry-list sections + the composed
    *  ui-settings, once ever. ADR-0179 — `header` = the pane nav, `content` = the pane holder (the Chat
-   *  conversation + the Author⇄Settings pairing); the whole config column and both Context halves live
+   *  conversation + the Co-pilot⇄Settings pairing); the whole config column and both Context halves live
    *  in the Settings place as `data-segment` siblings, never a separate ui-tabs/reparenting shell.
    *  The store-driven CONTENT (each section's rendered entries) is the `connected()` effect's job, not
    *  this method's. */
@@ -2323,7 +2323,7 @@ export class UIAgentAdminElement extends UIElement {
   }
 
   /**
-   * ADR-0179 OQ4 (LLD §2) — the Author place's UNARMED state: a first-class place that vanishes when the
+   * ADR-0179 OQ4 (LLD §2) — the Co-pilot place's UNARMED state: a first-class place that vanishes when the
    * flow is unarmed would not be a place at all, so the region always exists and says what it is for.
    *
    * GH #666 — COMPOSER-FIRST (Kim's 2026-08-10 ruling on his own live report: "where am I supposed to
@@ -2416,7 +2416,7 @@ export class UIAgentAdminElement extends UIElement {
   }
 
   /**
-   * GH #670 — a Model pick from the Author card, at EITHER arming state (the one pre-arm-then-seed path
+   * GH #670 — a Model pick from the Co-pilot card, at EITHER arming state (the one pre-arm-then-seed path
    * Kim's fork-1/3 ruling names). ARMED it commits to the Builder's OWN store, which feeds the committed
    * value back down — writing it to the draft instead would let the interviewer's model choice silently
    * become the draft agent's. UNARMED there is no store to write, so the pick is REMEMBERED and seeds the
@@ -2444,7 +2444,7 @@ export class UIAgentAdminElement extends UIElement {
   }
 
   /**
-   * GH #666 — the composer-first entry: the first message typed into the UNARMED Author card ARMS the flow
+   * GH #666 — the composer-first entry: the first message typed into the UNARMED Co-pilot card ARMS the flow
    * and then lands in the Builder's transcript as the interview's opening turn. Nothing is swallowed — the
    * description the user typed is what the Builder answers.
    *
@@ -2453,7 +2453,7 @@ export class UIAgentAdminElement extends UIElement {
    * menu's identically-labelled item; `#requestGenerate` accordingly folded in here, its own single caller).
    * `#generateRequest` is the SAME page callback the roster menu's item runs (`createGeneratedAgent` — mint
    * the draft, assign `authoringStore`). Everything that follows is `#rewireAuthoringContext`'s
-   * already-shipped machinery: reset the interview, sync its config, land the user in Author. Arming here
+   * already-shipped machinery: reset the interview, sync its config, land the user in Co-pilot. Arming here
    * and arming from the roster therefore converge on identical state by construction — except the pre-arm
    * pick below, which only this entry carries (the roster menu, invoked from outside any specific card, has
    * no pick to carry).
@@ -2559,7 +2559,7 @@ export class UIAgentAdminElement extends UIElement {
   /**
    * ADR-0178 cl.5 (LLD-C6) — WHICH context drives the next turn, and everything that follows from it.
    *
-   * The authoring context resolves only while the flow is armed AND the active PLACE is Author; everything
+   * The authoring context resolves only while the flow is armed AND the active PLACE is Co-pilot; everything
    * else resolves to EXACTLY today's values, which is the zero-regression invariant this whole
    * dual-context scaffold rests on (asserted in the suite: an inactive flow builds a byte-identical
    * request).
@@ -2571,7 +2571,7 @@ export class UIAgentAdminElement extends UIElement {
    *   Below the triple line exactly one place paints, so "the active place" and "the composer the user can
    *   reach" are the same thing and `#pane` is a sound proxy for origin. At the triple line BOTH composers
    *   are on screen and typable at once. A user typing into CHAT's composer while the nav still says
-   *   Author would have resolved the AUTHORING quadruple under the pane-keyed selector — the turn landing
+   *   Co-pilot would have resolved the AUTHORING quadruple under the pane-keyed selector — the turn landing
    *   in the interview transcript and, gate ON, its patch reaching the draft. That is precisely the thing
    *   cl.4 promises cannot happen ("Chat stays pure test by construction"), and the pane proxy is what
    *   would have broken it. Origin is the property cl.4 actually rests on: per-pane composers mean each
@@ -2607,7 +2607,7 @@ export class UIAgentAdminElement extends UIElement {
    *
    * GH #666 (Kim's 2026-08-10 pixel ruling) — NO LONGER LAZY. ADR-0178 cl.5 mounted this on the first
    * `authoringStore` assignment so an element that never entered the flow carried no second conversation;
-   * that was a cost argument, and the ruling overrides it with a shape requirement: the Author place must
+   * that was a cost argument, and the ruling overrides it with a shape requirement: the Co-pilot place must
    * BE this card unarmed, with the same border, kicker and bottom-pinned composer as Test chat. A second
    * element that only imitated the card is the duplication the lazy mount was avoiding in the first place,
    * so the honest reading of cl.5 is to mount the real one. `#compose()` is now its only caller of
@@ -4338,7 +4338,7 @@ export class UIAgentAdminElement extends UIElement {
   }
 
   /**
-   * ADR-0179 OQ4 (LLD §2) — register the page's "start the guided flow" path, invoked by the Author card's
+   * ADR-0179 OQ4 (LLD §2) — register the page's "start the guided flow" path, invoked by the Co-pilot card's
    * own composer-first entry (`#startFromFirstMessage`). A CALLBACK registration, never a CustomEvent
    * (SPEC-R5's law, and the `UIConversationElement.onSubmit` idiom this copies): the mint path is
    * page-owned (`createGeneratedAgent` — a roster mint plus a `builderStore()` arm), and this component
@@ -4350,7 +4350,7 @@ export class UIAgentAdminElement extends UIElement {
    *
    * Safe BEFORE or AFTER connect, and that is a fix, not a nicety (GH #666 defect 1): the real page
    * registers on a detached element and appends it later, so this call used to land on a not-yet-built
-   * card and the reveal was silently lost — Kim's live Author column showed copy with no verb.
+   * card and the reveal was silently lost — Kim's live Co-pilot column showed copy with no verb.
    * `#reflectAuthorEntry` reads `#generateRequest` at build time, so both orders open.
    *
    * GH #670 — the callback receives a `GenerateSeed`: the Model pick the user made on the unarmed card,
@@ -4783,7 +4783,7 @@ export class UIAgentAdminElement extends UIElement {
     this.#turnCounter = 0
     this.#knownSurfaceIds.clear() // GH #525 — a new persona's surfaces are unrelated to the old ones
     this.#askSurfaceIds.clear() // GH #802 — and so are its asks: the answered history just went away with the log
-    // GH #670 — and so is an unarmed Author pick: a Model/Effort choice made while describing THIS persona's
+    // GH #670 — and so is an unarmed Co-pilot pick: a Model/Effort choice made while describing THIS persona's
     // successor must not silently seed the next persona's interview. The card re-paints neutral pickers on
     // the `#reflectAuthorEntry` the caller's `#rewireAuthoringContext` already runs.
     this.#preArm = {}

@@ -29,10 +29,11 @@ Idioms — how a fleet component is actually authored:
   `-on-{family}`, `-surface`, ...), so learning one family's roles teaches every family. This applies to
   YOUR own hand-authored HTML/CSS too, not just fleet tags — a raw `#4285f4` never matches the app's live
   theme; a token role always does.
-- **Size and density are attributes, not styles.** An ancestor `[scale]` (`ui-sm` … `content-lg`)
-  multiplies every descendant control's frame (height, icon size, padding); an ancestor `[density]`
-  (`compact` / `comfortable` / `spacious`) multiplies rhythm only — the icon↔label gaps, never the frame.
-  Set these on a WRAPPING element, never per-control CSS transforms or hand-scaled dimensions.
+- **Size and density are attributes, not styles.** An ancestor `data-tier` (`widget` / `product` /
+  `content` / `brand`) and `data-scale` (`sm` / `md` / `lg`) set the frame every descendant control
+  derives (height, icon size, padding); an ancestor `data-density` (`compact` / `default` / `spacious`)
+  moves rhythm only: the icon↔label gaps, never the frame. Set these on a WRAPPING element, never
+  per-control CSS transforms or hand-scaled dimensions.
 - **Events follow one closed vocabulary.** Listen for `change` · `input` · `select` · `open` · `close` ·
   `toggle` · `action` — a fleet control never emits a bespoke event name; check the listed control's own
   `events` before assuming one.

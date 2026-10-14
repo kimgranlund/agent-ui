@@ -17,10 +17,11 @@
 //   • the modality NAMES themselves (`A2UI`, `GenUI`) — word-bounded, so "genuine"/"ingenuity" never match;
 //   • the WIRE vocabulary (protocol.ts's own envelope/prop keys + the `action:{` payload shape #412's
 //     Admiral case baked into prose);
-//   • only the COMPOUND catalog type names (`TextField`, `BarChart`, …) — every single-word type the
-//     catalog ships (Card · Row · Text · List · Select · Progress · Stat · Grid · Table · Swatch · Ramp …)
-//     is also a plain English word a persona may legitimately use, so NONE of them is a term here.
+//   • only the COMPOUND catalog type names (`TextField`, `BarChart`, `QuestionCard`, …): every single-word
+//     type the catalogs ship (Card · Row · Text · List · Select · Progress · Stat · Grid · Table · Swatch ·
+//     Ramp …) is also a plain English word a persona may legitimately use, so NONE of them is a term here.
 
+import { SELECTION_PROJECTION } from '@agent-ui/a2ui/registry'
 import type { Entry } from '../entry-list/entry-data.ts'
 
 /** One modality's vocabulary: the Surface Option it belongs to, the label a warning names, and the terms
@@ -33,29 +34,18 @@ export interface ModalityVocabulary {
   terms: readonly string[]
 }
 
-/** The COMPOUND catalog type names — every `defaultCatalog.components` key made of two glued capitalized
- *  words (verified against `a2ui/src/catalog/default/catalog.json`, 2026-08-04). Listed literally rather
- *  than imported: this is a lint word list, deliberately frozen and reviewable, not a live mirror of the
- *  catalog — and `app` has no business pulling a2ui's catalog into a settings pane at runtime. */
+/** The COMPOUND catalog type names: every emittable type (a key of any base or persona `selection.json`
+ *  sidecar, which `selection-guidance.test.ts` holds equal to the catalogs) made of two or more glued
+ *  capitalized words. Derived from the generated, browser-safe `SELECTION_PROJECTION` (T-0159; the old hand
+ *  list froze on 2026-08-04 and missed 16 default compounds and every persona-fragment type), so a new
+ *  catalog type joins the list with no edit here and no catalog body is pulled into a settings pane. */
 const COMPOUND_CATALOG_TYPES: readonly string[] = [
-  'BarChart',
-  'CardContent',
-  'CardFooter',
-  'CardHeader',
-  'ColorPicker',
-  'ComboBox',
-  'FormPopover',
-  'FormProvider',
-  'MenuItem',
-  'RadioGroup',
-  'SegmentedControl',
-  'SliderMulti',
-  'SplitPane',
-  'SwiperItem',
-  'TabPanel',
-  'TextField',
-  'TimelineItem',
-]
+  ...new Set(
+    [...Object.values(SELECTION_PROJECTION.base), ...Object.values(SELECTION_PROJECTION.persona)].flatMap((types) =>
+      Object.keys(types).filter((type) => /^[A-Z][a-z0-9]+[A-Z]/.test(type)),
+    ),
+  ),
+].sort()
 
 /** The A2UI wire vocabulary — `protocol.ts`'s real envelope keys + component/action props, plus the two
  *  literal payload shapes persona prose has actually carried (`action:{…}` / `context:{…}`, GH #412's

@@ -110,6 +110,15 @@ describe('MODALITY_VOCABULARY — the list itself stays conservative', () => {
     expect(MODALITY_VOCABULARY.map((v) => v.surface)).toEqual(['a2ui', 'genui'])
   })
 
+  it('derives the compound type names from the live catalogs, persona fragments included (T-0159)', () => {
+    const a2ui = MODALITY_VOCABULARY.find((v) => v.surface === 'a2ui')!.terms
+    // The frozen 2026-08-04 hand list is a floor, and the derivation adds what it missed.
+    for (const type of ['BarChart', 'TextField', 'TimelineItem', 'GameHud', 'ProductCard', 'QuestionCard', 'CardTable', 'ContrastPair', 'BookingForm']) {
+      expect(a2ui, type).toContain(type)
+    }
+    expect(a2ui).not.toContain('Card') // single-word types stay out: plain English
+  })
+
   it('carries no term that is a plain lowercase English word (the false-positive class)', () => {
     // Every term must be either a compound/camel identifier, an all-caps acronym, or carry punctuation —
     // never something like "card" or "list" that a sentence could contain innocently.
