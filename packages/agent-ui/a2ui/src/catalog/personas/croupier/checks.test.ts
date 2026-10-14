@@ -580,3 +580,44 @@ describe('croupier action check: a table action moves the table and a deal takes
     expect(croupierActionApplied.check({ surfaces: semanticSurfaceViews({ turns: [] }, next), action: { ...action, name: 'hit' } })).toEqual([])
   })
 })
+
+// T-0172 (the live probe on afc073a3): Sonnet 5.5 hit to 21 against the dealer's 17 and settled. The settle check pays
+// out from the click-time bankroll by the result the hands show.
+describe('croupier action check: settlement pays out from the click-time bankroll (T-0172)', () => {
+  const table = { id: 'root', component: 'CardTable', phase: { path: '/phase' }, bet: { path: '/bet' }, bankroll: { path: '/bankroll' }, dealerHand: { path: '/dealerHand' }, playerHand: { path: '/playerHand' }, betAction: 'deal' }
+  const C = (rank: string, suit = 'clubs') => ({ rank, suit })
+  const settle = (bankroll: number, playerHand: unknown[], dealerHand: unknown[], bet = 0): A2uiOutput => [
+    { version: 'v1.0', createSurface: { surfaceId: 'table-1', catalogId: 'agent-ui--croupier' } },
+    { version: 'v1.0', updateComponents: { surfaceId: 'table-1', components: [table] } },
+    { version: 'v1.0', updateDataModel: { surfaceId: 'table-1', value: { bankroll, bet, phase: 'settled', playerHand, dealerHand } } },
+  ] as A2uiOutput
+  const run = (output: A2uiOutput, name: string, dataModel: Record<string, unknown>, context: Record<string, unknown> = {}) =>
+    croupierActionApplied.check({ surfaces: semanticSurfaceViews({ turns: [] }, output), action: { name, surfaceId: 'table-1', context, dataModel } })
+  const playing = (bankroll: number, bet = 50) => ({ bankroll, bet, phase: 'playing' })
+  const win = [C('9'), C('8'), C('4')]
+  const dealer17 = [C('K'), C('7')]
+
+  it('the traced Sonnet settle (450 to 550 on a 21 over 17 win) passes; from 950 it must read 1,050', () => {
+    expect(run(settle(550, win, dealer17), 'hit', playing(450))).toEqual([])
+    const findings = run(settle(550, win, dealer17), 'hit', playing(950))
+    expect(findings.map((f) => f.code)).toEqual(['BANKROLL_MISMATCH'])
+    expect(findings[0]!.message).toMatch(/a win \(21 over 17\) on a stake of 50, so the bankroll goes from 950 to 1050/)
+  })
+
+  it('a push pays the stake back, a loss pays nothing, a bust pays nothing', () => {
+    expect(run(settle(1000, [C('K'), C('7')], dealer17), 'stand', playing(950))).toEqual([])
+    expect(run(settle(950, [C('K'), C('6')], dealer17), 'stand', playing(950))).toEqual([])
+    expect(run(settle(950, [C('K'), C('6'), C('9')], dealer17), 'hit', playing(950))).toEqual([])
+    expect(run(settle(1100, [C('K'), C('6')], dealer17), 'stand', playing(950)).map((f) => f.code)).toEqual(['BANKROLL_MISMATCH'])
+  })
+
+  it('a natural settled on the deal takes the bet and pays 2.5x in one step (1,000 to 1,075 on 50)', () => {
+    expect(run(settle(1075, [C('A'), C('K')], [C('9'), C('7')]), 'deal', { bankroll: 1000, bet: 50, phase: 'betting' }, { bet: 50 })).toEqual([])
+    expect(run(settle(1025, [C('A'), C('K')], [C('9'), C('7')]), 'deal', { bankroll: 1000, bet: 50, phase: 'betting' }, { bet: 50 }).map((f) => f.code)).toEqual(['BANKROLL_MISMATCH'])
+  })
+
+  it('a double takes one more stake and pays on twice the bet (950 to 1,100 on a doubled 50 win)', () => {
+    expect(run(settle(1100, [C('6'), C('5'), C('K')], dealer17, 100), 'double', playing(950))).toEqual([])
+  })
+})
+

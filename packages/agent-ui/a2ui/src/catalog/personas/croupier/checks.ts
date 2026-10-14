@@ -482,6 +482,12 @@ function actionApplied(surfaces: readonly SurfaceView[], action: SemanticAction)
     const before = finiteNumber((action.dataModel as Record<string, unknown> | undefined)?.['bankroll'])
     const path = bindingPath(table['bankroll'])
     const after = path === undefined ? finiteNumber(table['bankroll']) : finiteNumber(readPointer(view.dataModel, path))
+    // A round that settles on this action is judged by the payout, never by the plain deal arithmetic.
+    if (phaseOf(table, view.dataModel) === 'settled') {
+      const settled = settleFinding(view, table, action, deal)
+      if (settled !== undefined) findings.push(settled)
+      continue
+    }
     if (deal && bet !== undefined && before !== undefined && after !== undefined && after !== before - bet)
       findings.push({
         code: 'BANKROLL_MISMATCH',
@@ -492,6 +498,63 @@ function actionApplied(surfaces: readonly SurfaceView[], action: SemanticAction)
       })
   }
   return findings
+}
+
+/** A settled hand's best total (an ace counts 11 while that stays at 21 or under), every card counted. */
+function bestTotal(cards: readonly Card[]): number {
+  const hard = cards.reduce((sum, c) => sum + RANK_VALUE[c.rank]!, 0)
+  return cards.some((c) => c.rank === 'A') && hard + 10 <= 21 ? hard + 10 : hard
+}
+
+/** A list of cards read off the data model at `path`, or undefined when any item is not a card. */
+function cardsAt(dataModel: unknown, path: string | undefined): Card[] | undefined {
+  const list = path === undefined ? undefined : readPointer(dataModel, path)
+  if (!Array.isArray(list)) return undefined
+  const cards = list.map(itemCard)
+  return cards.every((c): c is Card => c !== undefined) ? cards : undefined
+}
+
+/** What a settled round pays back on a stake already taken out at the deal: 2x on a win, 2.5x on a natural,
+ *  the stake on a push, nothing on a loss, with the result in words for the repair sentence. */
+function payout(player: readonly Card[], dealer: readonly Card[], stake: number): { amount: number; result: string } {
+  const p = bestTotal(player)
+  const d = bestTotal(dealer)
+  if (p > 21) return { amount: 0, result: `a bust (${p})` }
+  if (isNatural(player) && !isNatural(dealer)) return { amount: stake * 2.5, result: 'a natural' }
+  if (isNatural(dealer) && !isNatural(player)) return { amount: 0, result: 'a loss to the dealer\'s natural' }
+  if (d > 21) return { amount: stake * 2, result: `a win (the dealer bust on ${d})` }
+  if (p > d) return { amount: stake * 2, result: `a win (${p} over ${d})` }
+  if (p === d) return { amount: stake, result: `a push (${p})` }
+  return { amount: 0, result: `a loss (${p} under ${d})` }
+}
+
+/** T-0172 (the live probe on afc073a3): a round that settles on this action must pay out from the click-time
+ *  bankroll: on a deal (a natural), the bet comes out and the payout goes back in one step; on a hit, stand or
+ *  double, the stake (doubled on a double, the extra stake taken out) pays back by the result the hands show. */
+function settleFinding(view: SurfaceView, table: A2uiComponent, action: SemanticAction, deal: boolean): SemanticFinding | undefined {
+  if (phaseOf(table, view.dataModel) !== 'settled') return undefined
+  const clickTime = action.dataModel as Record<string, unknown> | undefined
+  if (clickTime?.['phase'] === 'settled') return undefined // already settled before this action
+  const before = finiteNumber(clickTime?.['bankroll'])
+  const bankrollPath = bindingPath(table['bankroll'])
+  const after = bankrollPath === undefined ? finiteNumber(table['bankroll']) : finiteNumber(readPointer(view.dataModel, bankrollPath))
+  const player = cardsAt(view.dataModel, bindingPath(table['playerHand']))
+  const dealer = cardsAt(view.dataModel, bindingPath(table['dealerHand']))
+  const bet = deal ? finiteNumber(action.context['bet']) : finiteNumber(clickTime?.['bet'])
+  if (before === undefined || after === undefined || player === undefined || dealer === undefined || bet === undefined || bet <= 0) return undefined
+  const doubled = /^double/i.test(action.name)
+  const stake = doubled ? bet * 2 : bet
+  const takenNow = deal ? bet : doubled ? bet : 0 // the stake leaves the bankroll at the deal; a double adds one more
+  const { amount, result } = payout(player, dealer, stake)
+  const expected = before - takenNow + amount
+  if (after === expected) return undefined
+  return {
+    code: 'BANKROLL_MISMATCH',
+    path: `${view.surfaceId}:${bankrollPath ?? table.id}`,
+    message:
+      `The round settles as ${result} on a stake of ${stake}, so the bankroll goes from ${before} to ${expected}` +
+      `${takenNow > 0 ? ` (${takenNow} taken out now, ${amount} paid back)` : ` (${amount} paid back)`}, but it reads ${after}. Write ${expected}.`,
+  }
 }
 
 /** T-0172: a table action moves the table, and a deal takes the bet out of the bankroll. */

@@ -154,7 +154,8 @@ export function payloadComponents(src, spans = braceSpans(src)) {
     const template = text.match(/['"]?componentId['"]?\s*:\s*['"]([^'"]+)['"]/)?.[1] ?? null
     const explicit = flat.match(/['"]?\bchildren['"]?\s*:\s*\[([^\]]*)\]/)?.[1]
     const children = explicit ? [...explicit.matchAll(/['"]([^'"]+)['"]/g)].map((r) => r[1]) : []
-    comps.push({ id, component: m[1], index: m.index, refs, template, children })
+    const child = flat.match(/['"]?\bchild['"]?\s*:\s*['"]([^'"]+)['"]/)?.[1] ?? null
+    comps.push({ id, component: m[1], index: m.index, refs, template, children, child })
   }
   return comps
 }
@@ -201,6 +202,15 @@ export function findingsIn(path, raw) {
       if (allButtons || templateButton) res['board-grid'].push({ index: c.index, text: snippet(c.index) })
     }
   }
+
+  // lone-button-frame (T-0172): a Card whose only content is one Button, directly or through a lone CardContent or CardFooter
+  const soleChild = (c) => (c.children.length === 1 ? c.children[0] : c.children.length === 0 && c.template === null ? c.child : null)
+  const loneButton = (c, depth) => {
+    const kid = byId.get(soleChild(c))
+    if (kid === undefined) return false
+    return kid.component === 'Button' || ((kid.component === 'CardContent' || kid.component === 'CardFooter') && depth < 2 && loneButton(kid, depth + 1))
+  }
+  for (const c of comps) if (c.component === 'Card' && loneButton(c, 0)) res['lone-button-frame'].push({ index: c.index, text: snippet(c.index) })
 
   // inline-geometry
   for (const f of inlineGeometry(src)) res['inline-geometry'].push({ index: f.index, text: snippet(f.index) })
@@ -358,6 +368,12 @@ function selftest() {
   rule('board-grid', 'a ui-grid beside one ui-button with no loop passes', n(F, `function f() { const g = el('ui-grid'); const b = el('ui-button') }`, 'board-grid') === 0)
 
   // inline-geometry
+  // lone-button-frame: the Sonnet 5.5 game picker of 2026-10-14 (a bordered Card per game Button)
+  rule('lone-button-frame', 'a Card whose only child is a Button is found', n(F, `const p = [{ id: 'g1', component: 'Card', children: ['b1'] }, { id: 'b1', component: 'Button', label: 'Blackjack' }]`, 'lone-button-frame') === 1)
+  rule('lone-button-frame', 'a Card holding one Button through a lone CardContent is found', n(F, `const p = [{ id: 'g1', component: 'Card', children: ['c1'] }, { id: 'c1', component: 'CardContent', child: 'b1' }, { id: 'b1', component: 'Button', label: 'Poker' }]`, 'lone-button-frame') === 1)
+  rule('lone-button-frame', 'a bare Card around a CardFooter with one Button is found', n(F, `const p = [{ id: 'g1', component: 'Card', children: ['f1'] }, { id: 'f1', component: 'CardFooter', children: ['b1'] }, { id: 'b1', component: 'Button', label: 'Hold em' }]`, 'lone-button-frame') === 1)
+  rule('lone-button-frame', 'a Row of Buttons, and a Card with a header and a Button, pass', n(F, `const p = [{ id: 'r', component: 'Row', children: ['a', 'b'] }, { id: 'a', component: 'Button' }, { id: 'b', component: 'Button' }, { id: 'k', component: 'Card', children: ['h', 'a'] }, { id: 'h', component: 'CardHeader', children: [] }]`, 'lone-button-frame') === 0)
+
   rule('inline-geometry', 'style.padding = 12px is found', n(F, `function f() { x.style.padding = '12px' }`, 'inline-geometry') === 1)
   rule('inline-geometry', 'cssText with a gap literal is found', n(F, `x.style.cssText = 'display:flex; gap:0.75rem;'`, 'inline-geometry') === 1)
   rule('inline-geometry', 'setProperty border-radius and a style="" attribute are found', n(F, `x.style.setProperty('border-radius', '4px'); h('<div style="margin: 8px">')`, 'inline-geometry') === 2)

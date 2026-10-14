@@ -662,7 +662,9 @@ const GREET_ID = 'greet-1'
  *  the plain CardContent text, once again as the button's own label, always byte-identical — so the
  *  label was dropped rather than kept in sync with itself; the `greeting-card` mini-skill's own
  *  teaching (`agent/prompts/mini-skills/greeting-card.md`) was updated in the same change to bless
- *  this bare-footer form instead of the superseded CardContent-label one. NOT an ask
+ *  this bare-footer form instead of the superseded CardContent-label one. T-0172 (Kim, 2026-10-14):
+ *  the mini-skill now teaches a Row of plain Buttons, never a Card around each Button; this judged
+ *  record keeps its per-option Cards until T-0193 re-admits it (dogfood-compose allowlist). NOT an ask
  *  despite riding the meta-line `ask` field for feed placement: the reserved `greet-1` id class
  *  (grammar.md's reserved-vocabulary sentence) — no commit button, no data model (`sendDataModel`
  *  omitted), no `ask-<n>` id consumed, and the answered-ask freeze never applies (a greet is never

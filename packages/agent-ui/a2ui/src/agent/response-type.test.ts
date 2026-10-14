@@ -46,6 +46,9 @@ describe('renderSurfaceTool', () => {
     expect(tool.description).toMatch(/scan, compare, fill in or act on/)
     expect(tool.description).toMatch(/update/)
   })
+  it('T-0172: asks for a short text reply beside every call (a Sonnet 5.5 greet shipped a surface with no words)', () => {
+    expect(tool.description).toMatch(/at least one short line of text to the user; the surface never replaces the reply/)
+  })
   it('serializes under 1500 chars', () => {
     expect(JSON.stringify(tool).length).toBeLessThan(1500)
   })

@@ -276,6 +276,8 @@ export interface TurnRecord {
   domHosts?: number
   /** The chat log's visible text outside every surface host after the turn; offline, the meta prose. */
   proseText: string
+  /** T-0172: a `--click` whose label no surface button carried; the run stops there and still reports. */
+  clickMissing?: { label: string; available: string[] }
   lint?: Array<{ rule: string; detail: string }>
   lintNotRun?: string[]
   screenshot?: string
@@ -298,7 +300,7 @@ export interface CheckOptions {
 }
 
 /** The named checks, in report order. */
-export const CHECK_NAMES = ['model-pick', 'no-halt', 'no-json-as-prose', 'no-surface-loss', 'action-updates-surface', 'expect-component', 'render-lint', 'reasoning'] as const
+export const CHECK_NAMES = ['model-pick', 'click-target', 'no-halt', 'no-json-as-prose', 'no-surface-loss', 'action-updates-surface', 'expect-component', 'render-lint', 'reasoning'] as const
 
 /** Run every named check over the turn records. Per-turn checks report one row per turn; the run-level
  *  ones (expect-component) one row. */
@@ -316,6 +318,12 @@ export function runChecks(turns: readonly TurnRecord[], opts: CheckOptions): Che
       if (opts.effort !== undefined && t.request.effort !== opts.effort) bad.push(`effort ${JSON.stringify(t.request.effort)} != ${opts.effort}`)
       out.push({ check: 'model-pick', turn: t.index, status: bad.length ? 'fail' : 'pass', detail: bad.length ? bad.join('; ') : `${t.request.model ?? '-'} / ${t.request.effort ?? '-'}` })
     }
+    // click-target (T-0172): a `--click` found its button. A missing one (the hand ended on 21, so no Stand) fails
+    // here by name and the run still writes its report, never an abort.
+    if (!('click' in t.step)) out.push({ check: 'click-target', turn: t.index, status: 'skip', detail: 'not a click turn' })
+    else if (t.clickMissing !== undefined)
+      out.push({ check: 'click-target', turn: t.index, status: 'fail', detail: `no surface button reading "${t.clickMissing.label}" (buttons: ${t.clickMissing.available.join(', ') || 'none'})` })
+    else out.push({ check: 'click-target', turn: t.index, status: 'pass', detail: `clicked "${t.step.click}"` })
     // no-halt: no terminal error line, no halt or error outcome in the trace, no non-2xx answer.
     const halted =
       meta.error !== undefined ? `error line: ${meta.error.slice(0, 160)}` :
@@ -348,6 +356,7 @@ export function runChecks(turns: readonly TurnRecord[], opts: CheckOptions): Che
     // prose alone (the Haiku 5.5 deal of 2026-10-14 narrated the cards and sent no update) fails.
     const clicked = 'click' in t.step ? t.request?.actionSurface : undefined
     if (!('click' in t.step)) out.push({ check: 'action-updates-surface', turn: t.index, status: 'skip', detail: 'not a click turn' })
+    else if (t.clickMissing !== undefined) out.push({ check: 'action-updates-surface', turn: t.index, status: 'skip', detail: 'nothing was clicked (see click-target)' })
     else if (clicked === undefined) out.push({ check: 'action-updates-surface', turn: t.index, status: 'skip', detail: 'the clicked surface id was not observed' })
     else if (halted !== undefined) out.push({ check: 'action-updates-surface', turn: t.index, status: 'skip', detail: 'the turn halted (see no-halt)' })
     else {

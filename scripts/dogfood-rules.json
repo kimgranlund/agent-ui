@@ -229,6 +229,13 @@
       "detect": "a payload Grid with three or more explicit children that are all Buttons, or a template child that is a Button; a file that appends ui-buttons into a ui-grid inside a loop"
     },
     {
+      "id": "lone-button-frame",
+      "adr": "T-0172 (Kim's ruling, 2026-10-14): a choice is a plain Button in a row, never a framed box per Button",
+      "use": "one Row of plain Buttons (A2UI: a Row whose children are the Buttons), or a ChoicePicker or SegmentedControl",
+      "not": "a Card whose only content is one Button, directly or through a lone CardContent or CardFooter (a bordered box around each choice)",
+      "detect": "a payload Card whose sole child, or sole CardContent or CardFooter child, is a Button"
+    },
+    {
       "id": "inline-geometry",
       "adr": "ADR-0245 clause 1: every margin, gutter, radius, height and type size derives from n",
       "use": "the derived tokens and the control's own size or the container's data-* register",

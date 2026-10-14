@@ -104,6 +104,8 @@ export async function runProbeSelftest(): Promise<number> {
   const green = runChecks([record(), click([UPDATE_LINE])], opts)
   expectThat(caseVerdict(green, []) === undefined, `checks: the canned green record is green (${caseVerdict(green, [])})`)
   expectThat(CHECK_NAMES.every((n) => green.some((c) => c.check === n && c.status !== 'skip')), 'checks: the canned green records exercise every check (each runs at least once)')
+  const missing = runChecks([record(), { ...click([]), lines: [], rounds: undefined, roundsSource: 'none', clickMissing: { label: 'Stand', available: ['Deal again'] } }], opts)
+  expectThat(caseVerdict(missing, ['click-target']) === undefined, `checks: a click whose button never appeared fails exactly click-target (${caseVerdict(missing, ['click-target'])})`)
   const prose = runChecks([record(), click([])], opts)
   expectThat(caseVerdict(prose, ['action-updates-surface']) === undefined, `checks: a click answered with prose alone fails action-updates-surface (${caseVerdict(prose, ['action-updates-surface'])})`)
   const NEXT_ROUND = ['{"version":"v1.0","createSurface":{"surfaceId":"table-2","catalogId":"agent-ui"}}', '{"version":"v1.0","updateComponents":{"surfaceId":"table-2","components":[{"id":"root","component":"Text","text":"Round 2"}]}}']
