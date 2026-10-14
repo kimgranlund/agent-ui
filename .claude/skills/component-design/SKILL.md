@@ -3,9 +3,10 @@ name: component-design
 description: >-
   The design INTAKE for a new or novel ui-* component — everything before code: classify, run the
   precedent sweep, fill the standard fork sheet, take the novelty leg, decide what the change
-  earns (ADR only for a contract-changing fork — proposed, never self-ratified), and produce the
-  decomposition + test plan that gate the build. Use for "design a new ui-* control", "plan the
-  intake for component X", "does this need an ADR", "no existing geometry row fits this". NOT for
+  earns (a contract-changing fork is decided in its ticket, its standing rule lands in the owning
+  reference doc), and produce the decomposition + test plan that gate the build. Use for "design a
+  new ui-* control", "plan the intake for component X", "where does this fork get recorded", "no
+  existing geometry row fits this". NOT for
   building to an already-frozen design (component-build) or law lookups alone (component-
   standards); NOT the size:big build-dispatch loop a big component build may also owe (due-
   process).
@@ -82,22 +83,22 @@ Load the map skills as you go: [[component-standards]] (law),
 5. **The novelty leg** — when NO precedent row/class fits (a genuinely new geometry shape,
    control class, or interaction family): derive from the mechanics in
    `geometry-sizing-spec.md` + the control-class frame laws, and **propose the new
-   row/class/mechanism as an explicit ADR fork with a firm recommendation**. When the
+   row/class/mechanism as an explicit fork with a firm recommendation in the ticket**. When the
    novelty is a GREENFIELD platform mechanism (the fleet's first scroll-snap, first popover,
    first view-transition…), add the fork-sheet check: **does the chosen mechanism honor
    every attribute the design configures?** (scroll-snap ignores custom timing props — a
    configured `easing`/`duration` silently no-ops on native snaps; the swiper intake's
    lesson: the mechanism's real capability surface bounds the prop surface, verify per prop) — the ADR-0048
    date/time-picker intake (a bespoke 2D grid control no ramp row covered) is the worked
-   precedent. Never silently invent geometry or a new event; the law grows by ratified
-   amendment only.
+   precedent. Never silently invent geometry or a new event; the law grows only by a decided
+   fork whose rule lands in `geometry.md` (or the reference doc that owns the axis).
 
 6. **Decide what the change earns.** Default-no on documents: a TICKET always; SPEC/LLD when
-   the work is multi-component or another seat builds it; **ADR only for contract-changing
-   forks** — status `proposed` with firm recommendations per fork, and **never self-ratified**
-   (only Kim flips a status, by explicit naming). Number = next free in the ADR FILE TREE
-   (`ls .claude/docs/adr/[0-9]*.md` — that directory carries no index file to add a row to, and
-   never may; Kim's no-index-file rule, `doc-standards` §1b). If the fork sheet's Props row lands on an
+   the work is multi-component or another seat builds it; **a contract-changing fork is decided in
+   the ticket**, with a firm recommendation per fork and Kim's answer recorded there, and the
+   standing rule it sets lands in the owning reference doc (`.claude/docs/references/geometry.md`,
+   `naming.md`, `tokens.md`, …) or skill in the same change. No ADR: the ADR folder is frozen
+   history (T-0164, `doc-standards` §1a). If the fork sheet's Props row lands on an
    array/aggregate value (not a scalar), run `references/mint-vs-compose.md`'s bindable-aggregate
    bar before defaulting to composition — it names exactly when that case earns a new primitive
    (ADR-0175); for any new-catalog-TYPE candidate, run the same reference's TYPE arm
@@ -128,8 +129,8 @@ Load the map skills as you go: [[component-standards]] (law),
 
 - [ ] Job stated; precedent rows recorded; three axes classified.
 - [ ] Fork sheet complete — every row decided or explicitly named as an open fork.
-- [ ] Contract-changing forks in a `proposed` ADR with firm recommendations (never
-      self-ratified); its number verified free against the ADR file tree.
+- [ ] Contract-changing forks decided in the ticket with firm recommendations; each standing
+      rule written into its owning reference doc or skill.
 - [ ] Decomposition coverage-clean; test plan meets the bar incl. any built-output leg.
 - [ ] Independent doc review PASSED; the design is frozen; the build brief names the LLD/spec
       as the contract.
@@ -146,5 +147,5 @@ the honest deviation records the build added. Read it before running your first 
 Every new component's names derive from ONE decision — the family name — via
 `.claude/docs/references/naming.md` §13's worked derivation. Run its §10 five-question rubric
 (namespace(s) entered · reserved-word/concept-canon collision · closed-set admission → the wave's
-ADR · prefix = ownership · derivability) at the intake, and check §12's recorded exceptions so a
+ticket · prefix = ownership · derivability) at the intake, and check §12's recorded exceptions so a
 deviation is either avoided or knowingly extended. Naming is not re-litigated at build.

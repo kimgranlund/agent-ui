@@ -60,4 +60,4 @@ byte-identical for every existing call site. The precedent is ADR-0170 cl.8: `En
 the catalog kind passes both `false` (`agent-admin.ts`'s catalog `mountEntryList` call) because its entries key an external registry —
 nothing to author or edit; adds come from the library menu alone. A suppressed `customAdd` is
 also a named future seam (the deferred catalog-CREATE affordance lands there). A new parameter
-in the signature, or a non-defaulting option, reopens ADR-0164 — it is not a local edit.
+in the signature, or a non-defaulting option, reopens the ADR-0164 decision (a ruling ticket for Kim), not a local edit.

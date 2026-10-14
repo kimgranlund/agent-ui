@@ -21,7 +21,7 @@ the files or issues, cited by path/id; a question the corpus doesn't answer is r
 absent, never guessed.
 
 agent-ui rules **Option B — git-native** (ADR-0002/ADR-0145): work items are GitHub Issues, not
-local ticket files. Everything else (ADR/PRD/SPEC/LLD/PLAN/ROADMAP) stays files under
+local ticket files. Everything else (PRD/SPEC/LLD/PLAN/ROADMAP, plus the frozen ADR set) stays files under
 `.claude/docs/` — never `docs/` at the repo root.
 
 | Ask | Look in |
@@ -29,7 +29,7 @@ local ticket files. Everything else (ADR/PRD/SPEC/LLD/PLAN/ROADMAP) stays files 
 | Problem, users, outcomes — the why | `.claude/docs/prd/` (PRD-*) |
 | Requirements, exact behavior, acceptance criteria | `.claude/docs/spec/` (SPEC-*) |
 | How something is built internally | `.claude/docs/lld/` (LLD-*) |
-| A ratified decision and its alternatives | `.claude/docs/adr/` (ADR-*, accepted = append-only) |
+| A decision and its alternatives | the ticket that made it; a standing rule in its owning `.claude/docs/references/` doc or skill. Decisions before 2026-10-14: `.claude/docs/adr/` (ADR-*, frozen history, T-0164) |
 | An intent/requirements record (idr-####) or a locked ratification record (rdd-####) | `.claude/docs/idr/`, `.claude/docs/rdd/` (rdd/ is a deliberate zero-record placeholder — see its `README.md`; this repo maps that tier to req docs + PLAN/ROADMAP/GitHub Issues instead) |
 | What's queued, in flight, or done (bug/feature/task) | **GitHub Issues** (`gh issue list` / `gh issue view <NN>`) — labels carry `kind:` (`bug`/`feature`/`task`) and `size:small`/`size:big`; `docs/tickets/` (repo-root) does not exist — `tickets/` is FROZEN per ADR-0145 |
 | Historical ticket files predating the GitHub-Issues switch (read-only) | `.claude/docs/tickets/` (`tkt-####-*.md`, frozen — never mint new ones here) |

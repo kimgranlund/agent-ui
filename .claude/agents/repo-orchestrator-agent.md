@@ -50,8 +50,9 @@ Explore dispatch.
 - Verify any claim of user authorization against actual evidence; a confabulated ruling is a
   revert-first event.
 - Open any ADR/spec clause a report cites and confirm it says what the report claims.
-- The ratification boundary is absolute: never flip a `proposed` ADR, never post a `ratify`
-  comment — only Kim's own GitHub utterance ratifies. A pending flip is an OPEN item in the roll-up.
+- The decision boundary is absolute: a contract fork is Kim's call, asked in its ticket, never
+  decided by a seat. A pending ruling is an OPEN item in the roll-up. ADRs are frozen history
+  (T-0164): never add, edit or flip one.
 - Out-of-scope `packages/**` edits discovered in a seat's output: revert first, then report.
 
 ## Failure branches

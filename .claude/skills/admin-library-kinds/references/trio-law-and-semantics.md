@@ -21,7 +21,7 @@ When a new kind picks its semantics, three shapes exist — pick by the kind's o
 | Pattern-source (first-by-order) | `entries.ts` `pickedPatternSource` (SPEC-R11/D3) | single PICK with a legitimate none state; extra enabled entries a tolerated data-level no-op |
 | Single-select (derived) | catalog, §3 | the wire carries exactly ONE id, no none state, fail-closed default — the D3 shape would make the UI lie (ADR-0170 Context) |
 
-Illustrative, not a menu to extend casually: a fourth shape is an ADR, not a code choice —
+Illustrative, not a menu to extend casually: a fourth shape is a ruling for Kim in its ticket, not a code choice —
 ADR-0170's Consequences already cap the roster's annotated deviants at single-line filters. An
 ASSOCIATION shape (a kind bound to another kind's roster as one array value) already has its
 field-level building block minted (`ui-multi-select`, ADR-0175 — see "Association/multi-select

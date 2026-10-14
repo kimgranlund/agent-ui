@@ -79,7 +79,9 @@ npm-workspaces monorepo; ten packages under `packages/agent-ui/*`.
   `/__a2ui/agent`); the harness PAGE stays site-internal.
 - `.claude/docs/`: adr, prd, spec, lld, rubrics, references, archive; `*.test.ts` co-located with
   source. Doc grammar + status law: `.claude/skills/doc-standards/`. `tickets/` is FROZEN (ADR-0145):
-  work items are GitHub Issues; ADR/PRD/SPEC/LLD and PLAN/ROADMAP stay files, always.
+  work items are GitHub Issues; PRD/SPEC/LLD and PLAN/ROADMAP stay files, always. `adr/` is FROZEN
+  (Kim 2026-10-14, T-0164): existing ADRs stay citable, nothing is added or changed; a decision lives
+  in the ticket that makes it and, as a standing rule, in the owning reference doc or skill.
   backend: B  # doc-writing-rules backend-resolver.md routing-table row, TICKET tier -> gh issue, ADR-0145
 
 ## Conventions (non-obvious only)
@@ -99,10 +101,10 @@ npm-workspaces monorepo; ten packages under `packages/agent-ui/*`.
   `--md-sys-color-{family}-{role}` / type scale `--md-sys-typescale-{role}-{size}-*` (ADR-0078).
   Event names ∈ `change · input · select · open · close · toggle · action` (ADR-0153).
 - Components are light-DOM by default; ARIA via `ElementInternals`, never host attributes; no native
-  form elements (the last carve-out, ui-table's, retired by the ratified ADR-0163 amendment;
+  form elements (the last carve-out, ui-table's, retired by the ADR-0163 amendment;
   descriptor-documented internal non-value activation `<button data-part>`s are the one sanctioned
   class).
-- Sizing is fill-by-default (ADR-0223, ratified + built): controls are block-level and fill their
+- Sizing is fill-by-default (ADR-0223, built): controls are block-level and fill their
   container; the one opt-out is the reflected `inline` boolean (hug). `sizing-gates.test.ts` is
   ENFORCING with an empty DEBT table: a new control ships conformant or reds the gate.
 - Props are typed signals via `static props` + `ReactiveProps<typeof props>`.

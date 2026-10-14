@@ -3,7 +3,9 @@
 > How we keep a growing component framework from drifting, bloating, or wasting context.
 > Companion to [`plan.md`](./plan.md) (what we build) and [`goals.md`](./goals.md) (when).
 > This system is designed against the orchestration rubric; the scorecard is at the end.
-> Ratified design changes (the repair-the-owner up-loop) are logged as ADRs in [`adr/`](./adr/).
+> Design decisions (the repair-the-owner up-loop) are recorded in the ticket that makes them and, when
+> they are standing rules, in the reference doc or skill that owns the area (Kim, 2026-10-14, T-0164).
+> [`adr/`](./adr/) is frozen history: existing ADRs stay citable, and nothing is added to the folder or changed in it.
 > A different axis — the ORDER a `size:big` build passes through, not the artifact/gate
 > architecture below — is owned by the `due-process` skill (GH #969); this doc governs WHAT gets
 > built, that skill governs the sequence any big build passes through to get there.
@@ -258,8 +260,8 @@ skill or agent text that asks for more ceremony.
 3. **Trivial diffs skip the checker seat.** Test-only, single-file, comment, config, and frontmatter
    diffs merge on CI plus claude-review.
 4. **Out-of-scope findings get filed, not fixed in flight.** Scope creep is never fix-first.
-5. **Ask the user only when a choice moves a ratified contract** (an ADR rule, a canonical hash, a
-   public API). Otherwise pick the option that matches existing runtime behavior, record it on the
+5. **Ask the user only when a choice moves a standing contract** (a rule in a reference doc or skill,
+   a canonical hash, a public API). Otherwise pick the option that matches existing runtime behavior, record it on the
    issue, and keep going.
 6. **One judge pass per seed.** Double-judging for calibration happens only when a rubric dimension is
    new or was just reworded.

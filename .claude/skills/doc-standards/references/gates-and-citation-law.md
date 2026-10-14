@@ -12,15 +12,11 @@
   own required-field validation at submission, not a repo-side lint.
 - `.claude/hooks/adr-status-guard.py` — REMOVED 2026-08-17 (Kim: "remove all hooks", repo-wide;
   `.claude/settings.json` carries no `hooks` key). No PreToolUse guard blocks a direct agent
-  Status-flip today; discipline rests entirely on agents never editing a Status cell by hand and
-  on `scripts/adr_ratify.py` below being the only sanctioned path. If this gap bites, re-mint the
-  guard rather than assuming it still exists.
-- `scripts/adr_ratify.py` — THE sanctioned flip path, BOTH modes: whole-ADR `proposed → accepted`
-  (a verified `ratify ADR-####` owner utterance) AND the GH #664 AMENDMENT mode — an in-body
-  `## Amendment (DATE, **proposed** — Kim ratifies) — TITLE` header (that literal marker grammar,
-  exactly one candidate, or the script fails closed) flipped by a `ratify ADR-#### amendment`
-  utterance; the Status cell and every accepted section stay byte-untouched. The script edits
-  files but does NOT commit — the host commits and pushes the flip.
+  Status-flip; since the ADR freeze (T-0164, 2026-10-14) no Status cell is flipped at all.
+- `scripts/adr_ratify.py`: RETIRED with the ADR system (T-0164). It was the flip executor for a
+  verified owner utterance, whole-ADR and amendment modes (ADR-0149, GH #664); nothing calls it
+  now. Its unit test `scripts/adr_ratify_test.py` still runs in `check:scripts` and stays green
+  until a cleanup ticket removes both.
 - scribe's `doc_lint.py` fit ONLY tickets here (YAML) while the file-based tier existed; with no
   new ticket files being authored, that particular fit is now moot going forward — the blockquote
   types stay out of its dialect regardless, do not "fix" a doc to satisfy it.

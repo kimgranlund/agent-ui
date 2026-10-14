@@ -1,12 +1,12 @@
-# Status dialects, the ADR-earns test, the intent-tier rule, and the status philosophy (doc-standards §1 / §1c / §1d / §2)
+# Status dialects, where a decision goes, the intent-tier rule, and the status philosophy (doc-standards §1 / §1c / §1d / §2)
 
 ## 1 · Status dialects (per type — three dialects, deliberate)
 
 | Type | Dialect | Vocabulary | Who flips |
 |---|---|---|---|
-| ADR | blockquote TABLE — `> \| **Status** \| <kw> \|`, six fixed rows (Status · Date · Proposed by · Ratified by · Repairs · Supersedes / Superseded by) | `proposed · accepted · superseded · deprecated` — ONE bare keyword, never trailing prose | **Only Kim ratifies → accepted**, via either signal (ADR-0149): the in-tree hand-edit, or a `ratify ADR-####` comment/review by Kim on GitHub, executed by `scripts/adr_ratify.py` (gh-verified owner utterance → Status + Ratified-by + derived-index regen, fail-closed — it writes NO index row; see §1b). A flip whose **Repairs** cell books items "on ratification" also files ONE OPEN tracking issue holding them verbatim (label `task`, GH #544) — **closing that issue is the record the repairs landed**; leaving it open is the only thing that makes an unexecuted booking visible. No PreToolUse guard blocks an agent Edit/Write flip today (removed 2026-08-17) — the script is the only SANCTIONED agent-side path by convention, not by enforcement; see `gates-and-citation-law.md §5` |
+| ADR (FROZEN, T-0164, 2026-10-14) | blockquote TABLE — `> \| **Status** \| <kw> \|`, six fixed rows (Status · Date · Proposed by · Ratified by · Repairs · Supersedes / Superseded by) | `proposed · accepted · superseded · deprecated` — ONE bare keyword, never trailing prose | **Nobody.** The ADR system is retired: Status cells and amendment headers stay as they stood at the freeze, `scripts/adr_ratify.py` is retired, and an amendment left `proposed` is listed in `adr-log-mechanics.md` with where its live rule sits. Historically only Kim flipped a cell (ADR-0149) |
 | Ticket (HISTORICAL — through TKT-0096) | YAML frontmatter (`doc-type: ticket`) | `open · doing · done · wontfix`; `kind: bug\|feature`; `size` on features only | Agents flip freely as work progresses |
-| SPEC / LLD / PRD | blockquote STATUS LINE — `> Status: <kw> · v# · <date> · Layer: …` | `proposed · accepted · superseded` | PRDs flip at Kim's ratification; SPEC/LLD — see §2 |
+| SPEC / LLD / PRD | blockquote STATUS LINE — `> Status: <kw> · v# · <date> · Layer: …` | `proposed · accepted · superseded` | PRDs flip when Kim accepts them; SPEC/LLD — see §2 |
 
 **Ticket, current (ADR-0145, 2026-07-18):** new work items are GitHub Issues, not files —
 `.claude/docs/tickets/` is a frozen historical archive from here on, never a target for new
@@ -25,10 +25,18 @@ onto real GitHub primitives, not a parallel taxonomy:
 | `status` | `wontfix` | Issue closed, close reason `not planned` | native GitHub field, not a label |
 | `## Findings` | dated entries, appended | dated Issue **comments**, appended | same discipline — the SAME verb `docs:file-bug`'s own dispatch contract already names |
 
-ADR/PRD/SPEC/LLD and living-state docs (PLAN/ROADMAP) are explicitly **never** delegated — they
-stay files on this map, always; only the TICKET tier moved.
+PRD/SPEC/LLD and living-state docs (PLAN/ROADMAP) are explicitly **never** delegated — they
+stay files on this map, always; only the TICKET tier moved. The ADR tier is frozen (§1c).
 
-## 1c · What earns an ADR — a decision, never a tracker
+## 1c · Where a decision goes (the ADR system is retired)
+
+**Kim, 2026-10-14 (T-0164):** "we should stop using ADR system". `.claude/docs/adr/` is frozen
+history: existing ADRs stay citable, nothing is added or changed. A decision is recorded in the
+ticket that makes it; when it is a standing rule, the reference doc or skill that owns the area
+states it (for example `.claude/docs/references/geometry.md` or `dogfood-lint.md`). The routing
+table below is current; the 2026-08-13 rule under it is kept as the history of why the ADR tier
+was narrow.
+
 
 **Kim's standing rule (2026-08-13), verbatim:**
 
@@ -46,12 +54,10 @@ alternatives that later work is bound by.
 | A work item — to do, doing, done, a bug | a **GitHub Issue** (ADR-0145, §1) — never an ADR |
 | A forward plan, sequencing, "what's next" | **PLAN / ROADMAP** (the living-state docs, §1) — never an ADR |
 | A status rollup, "what's still open" | generated on the fly (§1b, `adr-log-mechanics.md`) — never a committed file |
-| A ratified decision a future reader must cite | an **ADR** — `proposed`, and only Kim flips it (§1) |
+| A decision a future reader must cite | the **ticket** that makes it (its Goal or Resolution); a standing rule also lands in the owning **reference doc or skill**, never an ADR (frozen, §1) |
 
-`component-design` §6 owns the full earn-the-doc routing for a component intake ("Default-no
-on documents… **ADR only for contract-changing forks**") — cite it, don't restate it here. Both rules
-point the same way: the ADR tier is narrow on purpose, and an ADR minted to record activity rather
-than a decision is the defect this rule names.
+`component-design` §6 owns the earn-the-doc routing for a component intake (a contract-changing
+fork goes in the ticket, its standing rule in the owning reference doc); cite it, don't restate it here.
 
 ## 1d · The intent tier (IDR) and PRD granularity — Kim's 2026-08-18 tier ruling
 
@@ -99,11 +105,11 @@ whatever granularity fits, coarse→fine, each citing upward → ADR / SPEC / LL
 
 ## 2 · The status philosophy (why shipped specs still read `proposed`)
 
-**Deliberate convention, not rot.** The repo ratifies *decisions* (the ADR Status cell — the one
-human-gated field) and *builds* (the tree + gates + `done` tickets). SPEC/LLD statuses lag by
+**Deliberate convention, not rot.** The repo settles *decisions* (in the ticket, and as standing
+rules in reference docs; the frozen ADR Status cells are history) and *builds* (the tree + gates +
+`done` tickets). SPEC/LLD statuses lag by
 design — "when it disagrees with the tree, the tree wins" — so a `proposed` SPEC whose build
 shipped is normal; do NOT sweep-flip statuses to match ship state. A SPEC/LLD flips to `accepted`
 only when someone deliberately marks the contract stable (rare — grep the corpus for the current set; a copied count here decays, GH #761).
-Accepted ADRs are append-only: extensions land as `## Amendment` sections or as rows in the
-current wave's OWN proposed ADR, never edits to the accepted body (REV-annotated mechanical
-pointer repairs excepted).
+The frozen ADRs take no further sections or edits; a clause that went stale is superseded by the
+owning reference doc, not repaired in place.

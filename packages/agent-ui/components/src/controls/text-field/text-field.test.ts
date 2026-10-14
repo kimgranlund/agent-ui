@@ -1,10 +1,15 @@
-import { describe, it, expect, beforeAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { signal, effect, inspect, whenFlushed, type Signal } from '@agent-ui/components'
 import { UITextFieldElement } from './text-field.ts'
 import { currencySymbol, unitLabel } from '../../traits/value-codec.ts'
 import { phosphorPack } from '@agent-ui/icons/phosphor'
 import type { FormValue, ValidityResult } from '../../dom/form.ts'
 import { readFileSync } from 'node:fs'
+
+// The date picker loads its calendar with a dynamic import() on first open. Await that module here so it
+// never resolves after the environment is torn down (an EnvironmentTeardownError under heavy machine load).
+
+afterAll(async () => { await import('../calendar/calendar.ts') })
 declare const process: { cwd(): string }
 
 // G6 s8 — UITextFieldElement jsdom behaviour/value/validity/form/disabled/readonly/zero-residue probes

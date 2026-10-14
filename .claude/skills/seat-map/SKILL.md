@@ -19,7 +19,7 @@ disable-model-invocation: false
 | Docs-site pages / shell / non-preview prose | a site-authoring maker (the host session or an sdlc-lite builder preloading `site-authoring`) | an sdlc-lite verifier run (`run.sh`) |
 | Preview specimens + knobs in `site/lib/component-preview.ts` | `example-authoring-agent` | host judges representativeness |
 | Color / dimension tokens | the host session or an sdlc-lite builder | an sdlc-lite verifier run (`run.sh`) (consuming control, against `.claude/docs/rubrics/component.md`) |
-| PRD / SPEC / LLD / ADR authoring | the host session or an sdlc-lite builder | an sdlc-lite verifier run (`run.sh`) |
+| PRD / SPEC / LLD authoring (ADRs are frozen, T-0164) | the host session or an sdlc-lite builder | an sdlc-lite verifier run (`run.sh`) |
 | Non-UI code diffs / slices | an sdlc-lite builder via `run.sh` (`/sdlc-lite:chain` or `/sdlc-lite:build`) | an sdlc-lite verifier run (`run.sh`) |
 | Broad searches / codebase questions | `Explore` (read-only, conclusions not dumps) | none |
 | Measured experiment loops (regressions, tuning, stress) | the host session or an sdlc-lite builder | host verifies the report |

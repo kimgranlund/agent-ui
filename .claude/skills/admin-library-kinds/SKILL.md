@@ -55,7 +55,7 @@ user-authored entries stay append-protected (ADR-0178 Amendment;
 `mountEntryList(kind, addLabel, handlers, options?)` is FROZEN verbatim (ADR-0164 cl.3) —
 capability grows ONLY through the additive `EntryListOptions` bag, every new member optional with
 a byte-identical default for existing call sites. A new signature parameter, or a non-defaulting
-option, reopens ADR-0164. Full contract: `references/roster-and-interface.md`.
+option, reopens the ADR-0164 decision (a ruling ticket for Kim). Full contract: `references/roster-and-interface.md`.
 
 ## Single-select + association, in one line
 
@@ -70,5 +70,5 @@ its own future ADR. Full semantics: `references/single-select-catalog.md`.
 `id ≠ tool.name ≠ label` — three facts, three fields (ADR-0168 cl.2); a pack keying an external
 vocabulary supplies an explicit `id` so the stable key survives a label edit. Three shapes cover a
 new kind's selection semantics — Multi-enable, Pattern-source, Single-select — each with its own
-truth table; a fourth shape is an ADR, not a code choice. Full law + the semantics table:
+truth table; a fourth shape is a ruling for Kim in its ticket, not a code choice. Full law + the semantics table:
 `references/trio-law-and-semantics.md`.

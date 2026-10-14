@@ -39,8 +39,9 @@ what the gap actually is. No comment, no proof this phase ran.
 ## Phase 2 — Plan
 
 Decide which doc(s) the change actually EARNS per `doc-standards`:
-PRD/SPEC/LLD where warranted, **never the bundle by default**. An ADR is earned only by a genuine
-fork in an existing ratified decision, not a default step for every size:big item. Design is
+PRD/SPEC/LLD where warranted, **never the bundle by default**. A genuine fork in an existing
+decision is settled in the ticket, and the standing rule it sets lands in the owning reference doc or
+skill (the ADR folder is frozen, T-0164). Design is
 ruled before code: a build that starts writing source before this phase's docs land is out of
 sequence.
 

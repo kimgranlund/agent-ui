@@ -40,10 +40,10 @@ individually-green components). Design record: TKT-0064.
    in-scope control (the slices are small; never whole files). Every finding gets `file:line` evidence
    (the TKT-0042/0046 bar) and ONE of the four routes:
    - **DRIFT**: an outlier vs explicit canon → fix the outlier.
-   - **GAP**: canon is silent and builders diverged → a ruling or `proposed` ADR fork (the reviewer
+   - **GAP**: canon is silent and builders diverged → a ruling for Kim, filed as a ticket (the reviewer
      NEVER invents the rule; the gap itself is the finding).
-   - **UNRECORDED-DEVIATION**: looks deliberate but no ADR/issue/comment records it → a ratify-or-fix
-     decision (TKT-0062's select `:focus-visible` was exactly this, ratified retroactively).
+   - **UNRECORDED-DEVIATION**: looks deliberate but no record (ADR, issue, comment) holds it → a keep-or-fix
+     ticket for Kim (TKT-0062's select `:focus-visible` was exactly this, kept retroactively).
    - **MISSED-REUSE**: hand-rolled behavior a trait/base already owns (traits axis).
 4. **Verify (adversarial, BEFORE routing).** Open every cited law clause and confirm it says what the
    finding claims (verify-cited-authorities). Every BEHAVIORAL claim gets a real-browser probe on the
@@ -56,8 +56,8 @@ individually-green components). Design record: TKT-0064.
    `controls/styling-gates.test.ts`).
 5. **Consolidate → route.** Dedup across axes (one root cause can surface on two). Then TKT-0046's
    routing discipline verbatim: mechanical/low-risk fixes inline with dated Findings entries; clusters
-   needing design judgment → scoped follow-up GitHub issues; GAPs → law-doc amendments or `proposed` ADRs
-   (never self-ratified). One campaign GitHub issue anchors the run; the findings TABLE (control × checks ×
+   needing design judgment → scoped follow-up GitHub issues; GAPs → a ruling ticket for Kim, whose
+   answer lands as a law-doc edit (never self-decided). One campaign GitHub issue anchors the run; the findings TABLE (control × checks ×
    verdict) is the deliverable shape. **Run every specified probe BEFORE bundling rulings to Kim**: a
    finding routed as "needs a ruling" can dissolve under a cheap mutation probe (TKT-0068 item 3:
    "stale correction, delete or re-document?" resolved by MEASUREMENT (disable the code, run the
@@ -77,8 +77,8 @@ TKT-0046 proved single-context works for one axis); the phases are vehicle-neutr
 Campaign: <issue #> · axes: <list> · census: <N controls, M excluded per axis + why>
 Per axis: findings table (control × checks × verdict) · route counts (DRIFT/GAP/UNRECORDED/MISSED-REUSE)
 Verified: <behavioral probes run + results> · Dropped in verification: <count>
-Routed: <inline fixes w/ Findings entries> · <issues filed> · <law amendments / proposed ADRs>
-Ledger updates: <deviations ratified this run; append them to that axis's ledger in
+Routed: <inline fixes w/ Findings entries> · <issues filed> · <law-doc edits / ruling tickets>
+Ledger updates: <deviations Kim accepted this run; append them to that axis's ledger in
 `references/axis-packs.md`>
 ```
 
