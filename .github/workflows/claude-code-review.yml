@@ -24,6 +24,23 @@ jobs:
         with:
           fetch-depth: 1
 
+      # T-0153 (temporary): which credential does the API reject, and with what? Prints status and
+      # error type only, never a secret. Remove with the fix.
+      - name: Probe credentials
+        env:
+          PROBE_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PROBE_OAUTH: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          body='{"model":"claude-sonnet-5-5","max_tokens":8,"messages":[{"role":"user","content":"ok"}]}'
+          probe() {
+            code=$(curl -sS -o probe.out -w '%{http_code}' https://api.anthropic.com/v1/messages \
+              -H 'anthropic-version: 2023-06-01' -H 'content-type: application/json' "${@:2}" -d "$body") || code=curl-failed
+            echo "$1: HTTP $code $(jq -r '.error | "\(.type): \(.message)"' probe.out 2>/dev/null | cut -c1-200)"
+          }
+          probe api-key -H "x-api-key: $PROBE_KEY"
+          probe oauth -H "Authorization: Bearer $PROBE_OAUTH" -H 'anthropic-beta: oauth-2025-04-20'
+          exit 0
+
       - name: Run Claude Code Review
         uses: anthropics/claude-code-action@v1
         with:
