@@ -302,8 +302,10 @@ describe('render lint: every browsable A2UI catalog widget (T-0136)', () => {
 describe('render lint: the gate itself (T-0136)', () => {
   it('every rule measured something across the sweep, and no allowlist entry is stale', () => {
     console.log(`DOGFOOD_FOUND ${ENGINE} ${JSON.stringify([...found].sort())} measured ${JSON.stringify(measured)}`)
-    if (visited.size === 0) return // a filtered run visits nothing to judge
-    for (const r of RULES.render) expect(measured[r.id], `anti-vacuous: rule ${r.id} measured no element in the whole sweep`).toBeGreaterThan(0)
+    // a filtered run (-t) judges only the subjects it visited; the anti-vacuous count needs the whole sweep
+    if (visited.size === Object.keys(DEMOS).length + browsableNames().length) {
+      for (const r of RULES.render) expect(measured[r.id], `anti-vacuous: rule ${r.id} measured no element in the whole sweep`).toBeGreaterThan(0)
+    }
     const stale = [...allowed].filter((k) => visited.has(k.split('#')[0]!) && !found.has(k))
     expect(stale, 'an allowlist entry this engine no longer finds: delete its line (or add @chromium / @webkit)').toEqual([])
     const unreasoned = Object.entries(ALLOW as Record<string, string>).filter(([, why]) => typeof why !== 'string' || why.trim() === '' || why.startsWith('TODO'))
