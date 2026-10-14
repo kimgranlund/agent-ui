@@ -92,8 +92,9 @@
   --ui-conversation-composer-menu-padding: var(--md-sys-space-xs);
   /* Floor + ceiling, the ui-menu reasons verbatim: a panel that can be narrow needs a floor (ADR-0021's
      collapse trap; the JS placement measures the box on open, so a zero-width panel mis-positions too),
-     and an auto-width panel needs a cap that itself never exceeds a narrow viewport (GH #133/#134). */
-  --ui-conversation-composer-menu-min-inline-size: 12rem;
+     and an auto-width panel needs a cap that itself never exceeds a narrow viewport (GH #133/#134).
+     The floor is six control heights (24n, 192px at the root), so it grows with the register. */
+  --ui-conversation-composer-menu-min-inline-size: calc(var(--md-sys-height) * 6);
   --ui-conversation-composer-menu-max-inline-size: min(90vw, 24rem);
   --ui-conversation-composer-menu-max-block-size: min(50vh, 18rem); /* then scrolls — a roster is unbounded */
   --ui-conversation-composer-menu-item-pad-block: var(--md-sys-space-xs);
@@ -257,8 +258,8 @@
   }
   [data-part='context-chip-dismiss'],
   [data-part='reference-chip-dismiss'] {
-    --ui-button-height: 0.875rem;
-    --ui-button-icon: 0.625rem;
+    --ui-button-height: calc(var(--md-sys-icon-box) - var(--md-sys-c)); /* 2n - c: 14px at the root */
+    --ui-button-icon: calc(var(--md-sys-icon-box) - 3 * var(--md-sys-c)); /* the height less a c each side: 10px */
   }
   /* GH #1211 — the OPTIONAL secondary line (`ContextItem.description`, e.g. a file size or extraction
      state). Absent on every pre-#1211 chip (`#syncContextChips` never creates this part then), so this

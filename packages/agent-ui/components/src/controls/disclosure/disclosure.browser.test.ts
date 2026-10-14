@@ -57,12 +57,12 @@ describe('ui-disclosure — mounts + a real engine resolves the geometry (whole-
     const host = row.querySelector('ui-disclosure') as HTMLElement
     const summary = host.querySelector('[data-part="summary"]') as HTMLElement
 
-    // derived root register (ADR-0245, product / sm / md, n 6): height 4n = 24, font type.control = 12.
-    const d = resolve('product', 'sm', 'md')
+    // derived root register (ADR-0245, product / md / md, n 8): height 4n = 32, font type.control = 14.
+    const d = resolve('product', 'md', 'md')
     expect(px(getComputedStyle(summary).blockSize)).toBeCloseTo(d.h, 0)
     expect(px(getComputedStyle(summary).fontSize)).toBeCloseTo(d.type.control, 0)
     expect(px(getComputedStyle(summary).paddingBlockStart)).toBe(0) // NEVER block-padding (geometry.md)
-    // the slotless-edge inline pad: n = 6 (derived, ADR-0245; was h/2)
+    // the slotless-edge inline pad: n = 8 (derived, ADR-0245; was h/2)
     expect(px(getComputedStyle(summary).paddingInlineStart)).toBeCloseTo(d.n, 0)
     // the host box itself is non-collapsed (test-the-whole-shape — a bare instance must paint correct)
     const box = host.getBoundingClientRect()
@@ -74,10 +74,10 @@ describe('ui-disclosure — mounts + a real engine resolves the geometry (whole-
     const { host, chevron } = mount('<ui-disclosure summary="X"><p>Y</p></ui-disclosure>')
     const glyphSize = px(getComputedStyle(chevron).inlineSize)
     const fontSize = px(getComputedStyle(host.querySelector('[data-part="summary"]') as HTMLElement).fontSize)
-    // derived (ADR-0245): the chevron slot is 2n. At the root md (n 6) 2n equals the font (type.control 12), a
-    // tie the root's smaller ramp introduced (at n 7 it was 14 against 13), so this leg pins both derived values
-    // and containers-foundations.browser.test.ts pins the slot at n 5 / 6 / 7, where 2n and the font differ.
-    const d = resolve('product', 'sm', 'md')
+    // derived (ADR-0245): the chevron slot is 2n. At the root md (n 8) 2n is 16 against the font
+    // (type.control 14), so this leg pins both derived values and containers-foundations.browser.test.ts pins
+    // the slot at n 5 / 6 / 7.
+    const d = resolve('product', 'md', 'md')
     expect(fontSize).toBeCloseTo(d.type.control, 0)
     expect(glyphSize).toBeCloseTo(2 * d.n, 0)
 
@@ -149,7 +149,8 @@ describe('ui-disclosure — mounts + a real engine resolves the geometry (whole-
     const heightRoot = px(getComputedStyle(summary).blockSize)
     const padRoot = px(getComputedStyle(body).paddingBlockStart)
 
-    host.parentElement?.setAttribute('data-scale', 'md')
+    // the region must differ from the root's own scale (product / md since ADR-0245 Amendment 8), else nothing moves
+    host.parentElement?.setAttribute('data-scale', 'lg')
     const heightRoomy = px(getComputedStyle(summary).blockSize)
     const padRoomy = px(getComputedStyle(body).paddingBlockStart)
 

@@ -102,7 +102,7 @@ text content: the printed datum and the accessible name are the same string, in 
 
 ## Sizing
 
-The host defaults to a 4n square box, the icon tile (`--ui-swatch-box-size`, ADR-0245 Amendment 3; 24px at the root
+The host defaults to a 4n square box, the icon tile (`--ui-swatch-box-size`, ADR-0245 Amendment 3; 32px at the root
 md, `2rem` under the legacy opt-out), an EXPLICIT token size, not `auto`: a
 swatch has no intrinsic content, so a bare `<ui-swatch>` in an unstyled flex row still paints a visible,
 non-collapsed square with zero consumer CSS (ADR-0102 Lane A). There is no `size`/`data-scale` attribute and

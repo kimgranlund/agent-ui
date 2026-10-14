@@ -20,8 +20,8 @@ content.append(
   pageLead(
     'Every control’s n resolves from three inputs that inherit on their own: an ancestor data-tier (what a ' +
       'region is for: widget, product, content, brand), an ancestor data-scale (the whole region: sm, md, lg) and the ' +
-      'control’s own size (sm, md, lg). The document root is product at scale sm, so sm / md / lg controls read ' +
-      '20 / 24 / 28. Height, type, icon, padding and radius are all formulas of the same n, so they never drift apart; ' +
+      'control’s own size (sm, md, lg). The document root is product at scale md, so sm / md / lg controls read ' +
+      '24 / 32 / 40. Height, type, icon, padding and radius are all formulas of the same n, so they never drift apart; ' +
       'an ancestor data-density (compact, default, spacious) moves container spacing only.',
   ),
 )
@@ -100,7 +100,7 @@ content.append(
       'Each row is a real ui-button inside a data-tier and data-scale region; each column is its own size. The ' +
         'height below every button is read back live from the rendered DOM (getBoundingClientRect), an empirical ' +
         'fact, not an illustration. n = n0 + a·s + k·z + g·s·z per tier, so each row steps evenly: widget / sm ' +
-        'reads 20 · 24 · 28, the root product / sm 24 · 28 · 32, product / md (the A2UI canvas) 28 · 36 · 44.',
+        'reads 16 · 20 · 24, product / sm 20 · 24 · 28, the root product / md 24 · 32 · 40 (the A2UI canvas, widget / md, reads 20 · 24 · 28).',
   ),
   ]),
 )

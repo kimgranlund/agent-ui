@@ -126,6 +126,13 @@ ui-theme-provider.app-shell > .site-shell[data-narrow-open='start'] [data-site-n
   border-inline-end: none;
 }
 
+/* T-0158 (Kim 2026-10-14): the floating nav card drops each row's trailing `ui-*` tag, so the label column
+ * fits the overlay cap at a phone width (390px) without an ellipsis. Same overlay-state gate as above; the
+ * wide, in-flow rail keeps its tags. */
+ui-theme-provider.app-shell > .site-shell[data-narrow-open='start'] [data-site-nav] [data-part='activator'] > [data-role='tag'] {
+  display: none;
+}
+
 /* GH #183 follow-up (S1) — the header hairline + surface, spanning the OUTER bar box edge-to-edge, not
  * the inset `.app-context-header` piece below: `ui-super-shell` nests that content inside its own
  * `[data-part='bar-content']` wrapper, AFTER the leading nav-toggle button (`#compose`, super-shell.ts),

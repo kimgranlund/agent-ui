@@ -52,10 +52,11 @@ const variantNote = el('p', {}, [
 // ── [2] the donut center — a SIBLING composition in the consumer's OWN layout (ADR-0219 cl.6) ─────────────
 const centerDonut = pieChart(BUDGET_ALLOCATION, 'Budget allocation')
 applyDemoWidth(centerDonut, '100%')
+centerDonut.style.gridArea = '1 / 1 / 2 / -1' // the chart spans both tracks, so the caption's 8em track is the ring's own box
 const centerWrap = el('div', {
   style: 'display:grid; grid-template-columns: 8em 1fr; align-items:center;',
 }, [
-  el('div', { style: 'grid-column:1; grid-row:1; display:grid; place-items:center; pointer-events:none;' }, [
+  el('div', { style: 'grid-column:1; grid-row:1; z-index:1; display:grid; place-items:center; pointer-events:none;' }, [
     el('div', { style: 'display:flex; flex-direction:column; align-items:center; line-height:1.1;' }, [
       el('strong', { style: 'font-size:1.1em;' }, [text('83%')]),
       el('span', { style: 'font-size:0.7em; opacity:0.7;' }, [text('allocated')]),
@@ -98,7 +99,7 @@ const reset = uiButton('Reset', 'ghost')
 reset.addEventListener('click', () => write(REVENUE_BY_REGION))
 const liveBlock = el('div', { style: 'display:flex; flex-direction:column; gap:0.75rem; align-items:flex-start;' }, [
   live,
-  el('div', { style: 'display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;' }, [reshuffle, addRegion, reset, readout]),
+  el('div', { style: 'display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;' }, [el('div', { style: 'display:flex; gap:0.75rem; flex-wrap:wrap;' }, [reshuffle, addRegion, reset]), readout]),
 ])
 const liveNote = el('p', {}, [
   text('Every click writes '), code('data'), text(' with a new array; the whole mark rebuilds (A2UI '),

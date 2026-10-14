@@ -179,8 +179,8 @@ describe('mountEntryList — standalone, ZERO ui-agent-admin/agent-admin.css inv
     await field.updateComplete
     expect(field.rows).toBe(4)
     const fontSize = Number.parseFloat(getComputedStyle(field).fontSize)
-    // ADR-0245 cut: padding-block is the root register's control inset (n 6, scale.mjs resolve('product', 'sm', 'md').control.margin) minus the 1px border
-    const expected = 4 * (fontSize * 1.5) + 2 * (resolve('product', 'sm', 'md').control.margin - 1)
+    // ADR-0245 cut: padding-block is the root register's control inset (n 8, scale.mjs resolve('product', 'md', 'md').control.margin) minus the 1px border
+    const expected = 4 * (fontSize * 1.5) + 2 * (resolve('product', 'md', 'md').control.margin - 1)
     const computed = Number.parseFloat(getComputedStyle(field).minHeight)
     expect(computed).toBeCloseTo(expected, 1)
   })

@@ -34,11 +34,11 @@ import '@agent-ui/components/all' // self-defines ui-tabs / ui-tab / ui-tab-pane
 import './a2ui-live.css'
 import { resolve } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
 
-// The page gutter `--md-sys-space-xl` is the card margin at the root register (scale.mjs resolve('product', 'sm', 'md')).
-const GUTTER = resolve('product', 'sm', 'md').card.margin
+// The page gutter `--md-sys-space-xl` is the card margin at the root register (scale.mjs resolve('product', 'md', 'md')).
+const GUTTER = resolve('product', 'md', 'md').card.margin
 // T-0121: the shell's inter-card gap `--ui-super-shell-gap` is the layout gutter (resolve()'s page level),
 // derived, never a literal.
-const SHELL_GAP = resolve('product', 'sm', 'md').page.gutter
+const SHELL_GAP = resolve('product', 'md', 'md').page.gutter
 
 const mounted: HTMLElement[] = []
 afterEach(() => {

@@ -71,7 +71,9 @@ describe('ui-gauge — whole-shape (test-the-whole-shape)', () => {
 
 describe('ui-gauge — the two-layer full-bleed model, generalized to a radial mark (ADR-0228 cl.1-3; Kim reinforcement 1)', () => {
   it('the rings SVG layer spans the SAME box as the host, edge-to-edge, at zero inset', () => {
-    const gauge = mount(`<ui-gauge data='${SYSTEM_LOAD}'></ui-gauge>`) as HTMLElement
+    // The full-bleed model is the wide posture: under 28em the narrow query stacks the legend under a static rings
+    // box (gauge.css). 30em reads the host's own font, so the box stays wide at any root register.
+    const gauge = mount(`<ui-gauge data='${SYSTEM_LOAD}' style="inline-size: 30em"></ui-gauge>`) as HTMLElement
     const gaugeBox = gauge.getBoundingClientRect()
     const rings = gauge.querySelector('[data-part="rings"]') as unknown as HTMLElement
     const box = rings.getBoundingClientRect()

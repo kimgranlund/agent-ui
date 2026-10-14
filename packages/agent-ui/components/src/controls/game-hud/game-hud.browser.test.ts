@@ -145,7 +145,7 @@ describe('ui-game-hud: intent glyphs', () => {
   })
 
   it('a stat glyph is its own glyph box 2n - 2c, n clear of its label (ADR-0245 Amendment 6)', async () => {
-    const r = resolve('product', 'sm', 'md')
+    const r = resolve('product', 'md', 'md') // the root register (ADR-0245 Amendment 8)
     const el = hud(container('640px'), (h) => {
       h.stats = [{ label: 'Chips', value: 1, intent: 'success' }]
     })

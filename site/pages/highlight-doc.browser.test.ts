@@ -52,8 +52,8 @@ describe('highlight-doc — guide prose reads at the site prose treatment (GH #1
     const h = getComputedStyle(fidelity)
     const p = getComputedStyle(prose)
     expect(parseFloat(h.marginBlockStart)).toBeGreaterThanOrEqual(parseFloat(p.marginBlockEnd)) // heading gap > paragraph gap
-    // 2xl is 4m at the root register (24px at n 6, scale.mjs resolve('product', 'sm', 'md').m): exactly the token, never the UA 0.83em
-    expect(parseFloat(h.marginBlockStart)).toBeCloseTo(4 * resolve('product', 'sm', 'md').m, 1)
+    // 2xl is 4m at the root register (32px at n 8, scale.mjs resolve('product', 'md', 'md').m): exactly the token, never the UA 0.83em
+    expect(parseFloat(h.marginBlockStart)).toBeCloseTo(4 * resolve('product', 'md', 'md').m, 1)
     expect(parseFloat(h.marginBlockStart)).not.toBeCloseTo(0.83 * parseFloat(h.fontSize), 0)
     expect(parseFloat(p.marginBlockStart)).toBe(0)
     expect(p.maxInlineSize).toMatch(/px$/) // 72ch resolved to a real length, not `none`

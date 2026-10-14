@@ -9,13 +9,14 @@ import '@agent-ui/components/all'
 // ADR-0245 Amendment 4, the skill's control rule, measured per control in a real engine: box margin n, gutter c,
 // label inset n - c on the text slot, so the icon edge is n, icon to text is n and the text edge is 2n - c; min
 // width 4n; action labels align per the skill's table. Every control runs outside any region (the root register,
-// product at scale sm: text edge 8 / 10 / 12 at sm / md / lg) and inside a data-tier region (product at scale md).
+// product at scale md: text edge 10 / 14 / 17 at sm / md / lg) and inside a data-tier region that differs from it
+// (product at scale sm), so the region leg still proves the register moves the rule.
 // Expected px come from scale.mjs resolve(), never a pinned literal. Edges are measured from the control's padding
 // edge: the fleet writes padding = rule and draws its 1px border outside it.
 
 const REGISTERS: ReadonlyArray<readonly [string, Tier, Step, string]> = [
-  ['outside any region (the root register)', 'product', 'sm', ''],
-  ['inside data-tier="product" data-scale="md"', 'product', 'md', 'data-tier="product" data-scale="md"'],
+  ['outside any region (the root register)', 'product', 'md', ''],
+  ['inside data-tier="product" data-scale="sm"', 'product', 'sm', 'data-tier="product" data-scale="sm"'],
 ]
 const SIZES = ['sm', 'md', 'lg'] as const
 const TOLERANCE = 0.5

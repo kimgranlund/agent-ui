@@ -14,16 +14,16 @@ import { UISuperShellElement } from './super-shell.ts'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 // T-0121: the shell frame reads level tokens (ADR-0245 cl.6), so every default px this file pins is derived
-// from the root register (product at scale sm) through scale.mjs, never written as a literal. The one
-// exception is the pane width, a named content measure (15.75rem) that does not move with n.
-const ROOT = resolve('product', 'sm', 'md')
+// from the root register (product at scale md) through scale.mjs, never written as a literal. The pane width
+// is 42n, the nav label column's room (Kim 2026-10-14).
+const ROOT = resolve('product', 'md', 'md')
 const SHELL_GAP = ROOT.page.gutter // --ui-super-shell-gap: the layout gutter 3n
-const SHELL_PANE = 252 // --ui-super-shell-pane-size: the named content measure 15.75rem (Kim 2026-10-13)
+const SHELL_PANE = 42 * ROOT.n // --ui-super-shell-pane-size: 42n (Kim 2026-10-14)
 const SHELL_FLOOR = ROOT.page.margin * 6 // the pane and canvas floors: six layout margins, 24n
 // The dual-resizable fixtures below PIN their own frame (the retired module's values) so the window they
 // exercise, band line 640px < width < natural fit, exists and does not move with n: 252 + 18 + 162 + 18 + 252
-// = 702px. On the default tokens the natural fit is 2 x 252 + 2 x 3n + 24n, 684px at the root register, a
-// window that narrows as n does, so the fixtures keep a frame of their own.
+// = 702px. On the default tokens the natural fit is 2 x 42n + 2 x 3n + 24n, 912px at the root register, a
+// window that moves with n, so the fixtures keep a frame of their own.
 const DUAL_FRAME = { '--ui-super-shell-pane-size': '252px', '--ui-super-shell-canvas-min-size': '162px', '--ui-super-shell-gap': '18px' } as const
 function pinDualFrame(el: HTMLElement): void {
   for (const [name, value] of Object.entries(DUAL_FRAME)) el.style.setProperty(name, value)
@@ -253,7 +253,7 @@ describe('ui-super-shell — SPEC-R7a pane segments (AC10, wide)', () => {
     await el.updateComplete
 
     const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
-    expect(Math.round(pane.getBoundingClientRect().width), 'the pane sits at its 252px token default').toBe(SHELL_PANE)
+    expect(Math.round(pane.getBoundingClientRect().width), `the pane sits at its ${SHELL_PANE}px token default`).toBe(SHELL_PANE)
 
     const strip = pane.querySelector('[data-part="pane-tabs"]') as HTMLElement
     expect(strip.tagName.toLowerCase(), 'the strip IS the fleet control').toBe('ui-tabs')
@@ -848,7 +848,7 @@ describe('ui-super-shell — GH #220: a restored-after-hidden resizer carries th
   }
 
   it('publicly collapsed at mount → toggle restore → the trio is present and bound-correct, before any drag/keypress (then again via the prop round-trip)', async () => {
-    const el = mountCollapsedEnd(900) // wide: above the 640px line AND above natural fit — a plain inline restore
+    const el = mountCollapsedEnd(1000) // wide: above the 640px line AND above natural fit (912px at the root) so a plain inline restore
     await settleFit(el)
     expectNoTrio(el, 'end', 'precondition (collapsed at mount)')
 

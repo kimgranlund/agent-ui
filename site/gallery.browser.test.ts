@@ -169,20 +169,20 @@ describe('<component-gallery> — the ONE <ui-theme-provider> drives every speci
     const live = liveFor(card!, 'ui-button') as HTMLElement
     expect(live, 'no live ui-button rendered').not.toBeNull()
 
-    // ADR-0245 cl.2: the default is the root register, product at scale sm (a md button is 4n = 24px).
-    const heightSm = Number.parseFloat(getComputedStyle(live).blockSize)
-    expect(heightSm).toBe(resolve('product', 'sm', 'md').h)
-
-    await chooseOption(selectFor(gallery, 'Scale'), 'md')
+    // ADR-0245 Amendment 8: the default is the root register, product at scale md (a md button is 4n = 32px).
     const heightMd = Number.parseFloat(getComputedStyle(live).blockSize)
-    expect(heightMd, 'data-scale=md did not change the specimen height').toBe(resolve('product', 'md', 'md').h)
+    expect(heightMd).toBe(resolve('product', 'md', 'md').h)
+
+    await chooseOption(selectFor(gallery, 'Scale'), 'sm')
+    const heightSm = Number.parseFloat(getComputedStyle(live).blockSize)
+    expect(heightSm, 'data-scale=sm did not change the specimen height').toBe(resolve('product', 'sm', 'md').h)
 
     await chooseOption(selectFor(gallery, 'Tier'), 'content')
-    expect(Number.parseFloat(getComputedStyle(live).blockSize), 'data-tier=content did not change the height').toBe(resolve('content', 'md', 'md').h)
+    expect(Number.parseFloat(getComputedStyle(live).blockSize), 'data-tier=content did not change the height').toBe(resolve('content', 'sm', 'md').h)
 
     await chooseOption(selectFor(gallery, 'Tier'), 'product') // back to the defaults
-    await chooseOption(selectFor(gallery, 'Scale'), 'sm')
-    expect(Number.parseFloat(getComputedStyle(live).blockSize)).toBe(heightSm)
+    await chooseOption(selectFor(gallery, 'Scale'), 'md')
+    expect(Number.parseFloat(getComputedStyle(live).blockSize)).toBe(heightMd)
   })
 
   it('scheme flips a specimen\'s used colour, and reverts to the light default (anti-vacuous both ways)', async () => {
@@ -227,7 +227,7 @@ describe('<component-gallery> — the toolbar axis selects compute a real access
     const expectations: ReadonlyArray<[string, string]> = [
       ['Scheme', 'Scheme light'],
       ['Tier', 'Tier product'],
-      ['Scale', 'Scale sm'],
+      ['Scale', 'Scale md'],
       ['Theme', 'Theme default'],
     ]
     for (const [axis, name] of expectations) {

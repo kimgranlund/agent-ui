@@ -111,8 +111,8 @@ const LEVEL_PX = [
   ...[REGISTER.control, REGISTER.group, REGISTER.widget, REGISTER.card, REGISTER.page].flatMap((l) => [l.margin, l.gutter]),
 ]
 // super-shell.css's token block, in resolve()'s own terms (the CSS names the page level `layout`): bars and
-// rails a control row plus two widget margins (8n), the floors six page margins (24n). The pane width is a
-// named content measure (15.75rem), not a level, so it is no rung.
+// rails a control row plus two widget margins (8n), the floors six page margins (24n). The pane width (42n) is
+// a content measure in n, not a level, so it is no rung.
 const SHELL_PX = [REGISTER.h + 2 * REGISTER.widget.margin, 6 * REGISTER.page.margin]
 const LADDER_PX = [...new Set([...LEVEL_PX, ...SHELL_PX])]
 
@@ -326,8 +326,8 @@ describe('AC19 — the shell-family spacing-literal drift gate (SPEC-R11c/AC19)'
     for (const px of [REGISTER.c, n, n + REGISTER.c, 2 * n, 3 * n, 4 * n, 8 * n, 24 * n]) {
       expect(LADDER_PX, `${px}px is a rung`).toContain(px)
     }
-    // the pane width is a named content measure (15.75rem), not a level: neither it nor the retired 36n pane is a rung
-    expect(LADDER_PX).not.toContain(252)
+    // the pane width is a content measure (42n), not a level: neither it nor the retired 36n pane is a rung
+    expect(LADDER_PX).not.toContain(42 * n)
     expect(LADDER_PX).not.toContain(36 * n)
     // the retired 18px module is no rung of its own any more (it survives only where it equals a level)
     if (18 % n !== 0) expect(LADDER_PX).not.toContain(18)

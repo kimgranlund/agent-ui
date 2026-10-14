@@ -33,8 +33,8 @@ afterEach(() => {
 
 const px = (v: string): number => Number.parseFloat(v)
 
-// ADR-0245 cl.3: a plain page is the root register (product / sm), so the badge reads its derived geometry here
-const root = resolve('product', 'sm', 'md')
+// ADR-0245 cl.3: a plain page is the root register (product / md), so the badge reads its derived geometry here
+const root = resolve('product', 'md', 'md')
 
 /** Minimal CDP surface — `cdp()`'s public type is empty; the playwright provider gives `.send` at runtime. */
 interface CdpSession {
@@ -53,10 +53,10 @@ const alphaOf = (color: string): number => {
 // ── whole-shape + compact-realm geometry (SPEC-R13, ADR-0041) ────────────────────────────────────────
 
 describe('ui-badge whole-shape (SPEC-R13/R14 AC1, test-the-whole-shape)', () => {
-  it('a bare labeled badge in an unstyled flex row paints a non-collapsed box == the chip height 2n + 2c (16px at the root register, ADR-0245 Amendment 4)', () => {
+  it('a bare labeled badge in an unstyled flex row paints a non-collapsed box == the chip height 2n + 2c (20px at the root register, ADR-0245 Amendment 4)', () => {
     const el = mount('<ui-badge label="status"></ui-badge>')
     const cs = getComputedStyle(el)
-    expect(px(cs.blockSize), 'block-size must equal the chip height (2n + 2c, 16px at the root register)').toBeCloseTo(root.parts.badge, 0)
+    expect(px(cs.blockSize), 'block-size must equal the chip height (2n + 2c, 20px at the root register)').toBeCloseTo(root.parts.badge, 0)
     const rect = el.getBoundingClientRect()
     expect(rect.width, 'the host collapsed instead of painting a real pill').toBeGreaterThan(0)
     expect(rect.height, 'the host painted a zero-height box').toBeGreaterThan(0)
@@ -72,7 +72,7 @@ describe('ui-badge whole-shape (SPEC-R13/R14 AC1, test-the-whole-shape)', () => 
   it('border-radius resolves to the chip pill n + c, h/2 of the 2n + 2c box (ADR-0245 Amendment 5)', () => {
     const el = mount('<ui-badge label="status"></ui-badge>')
     const cs = getComputedStyle(el)
-    // getComputedStyle serializes border-radius as a length (px); n + c at the root register md is 8px.
+    // getComputedStyle serializes border-radius as a length (px); n + c at the root register md is 10px.
     expect(px(cs.borderTopLeftRadius)).toBeCloseTo(root.n + root.c, 1)
   })
 
@@ -112,7 +112,7 @@ describe('ui-badge geometry — the compact pad law, NOT h/2 (SPEC-R13 AC1, ADR-
       const el = mount(`<ui-badge label="status" size="${size}"></ui-badge>`)
       expect(px(getComputedStyle(el).blockSize), `a stray size="${size}" moved the box`).toBe(px(getComputedStyle(bare).blockSize))
     }
-    expect(px(getComputedStyle(bare).blockSize), 'the box is the context chip height 2n + 2c').toBe(resolve('product', 'sm', 'md').parts.badge) // 16
+    expect(px(getComputedStyle(bare).blockSize), 'the box is the context chip height 2n + 2c').toBe(resolve('product', 'md', 'md').parts.badge) // 20
   })
 })
 

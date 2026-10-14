@@ -25,7 +25,7 @@ describe('ui-button browser-truth harness (s12)', () => {
     const blockSize = getComputedStyle(el).blockSize
     expect(blockSize).toMatch(/px$/)
     expect(Number.parseFloat(blockSize)).toBeGreaterThan(0)
-    expect(Number.parseFloat(blockSize)).toBe(resolve('product', 'sm', 'md').h) // md frame @ scale 1, the ramp truly resolved
+    expect(Number.parseFloat(blockSize)).toBe(resolve('product', 'md', 'md').h) // md frame @ scale 1, the ramp truly resolved
 
     el.remove()
   })

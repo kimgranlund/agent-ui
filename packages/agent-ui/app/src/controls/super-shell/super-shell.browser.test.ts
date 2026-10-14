@@ -14,7 +14,7 @@ import { UISuperShellElement } from './super-shell.ts'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 // T-0121: a carded part's round corner is the card radius 3n at the root register, derived, never a literal.
-const ROUND = `${resolve('product', 'sm', 'md').card.radius}px`
+const ROUND = `${resolve('product', 'md', 'md').card.radius}px`
 
 const mounted: HTMLElement[] = []
 afterEach(() => { for (const el of mounted.splice(0)) el.remove() })
@@ -25,8 +25,9 @@ function mount(dir?: 'rtl'): UISuperShellElement {
   el.style.insetBlockStart = '0px'
   el.style.insetInlineStart = '0px'
   // SPEC-R4: @container hides [data-side] entirely below 40rem (640px) — stay comfortably above
-  // the narrow-auto-collapse breakpoint so this suite exercises the WIDE-mode bidi placement.
-  el.style.inlineSize = '900px'
+  // the narrow-auto-collapse breakpoint, and above natural fit (2 x 42n panes + 2 x 3n gaps + 24n canvas, 912px at
+  // the root) so neither side auto-collapses: this suite exercises the WIDE-mode bidi placement.
+  el.style.inlineSize = '1000px'
   el.style.blockSize = '300px'
   if (dir) el.setAttribute('dir', dir)
   const header = document.createElement('div')
@@ -155,7 +156,7 @@ describe('ui-super-shell cross-engine smoke — bar radius (GH #253)', () => {
   // stated PER SIDE, because that is what the narrowed ruling actually guarantees. Two traps, both from
   // cl.8:
   //   · the `borderRadius` SHORTHAND is barred here and in super-shell-bar-seam.browser.test.ts —
-  //     `0px 0px 18px 18px` (the card radius at the root register) satisfies `not.toBe('0px')` VACUOUSLY;
+  //     `0px 0px 24px 24px` (the card radius at the root register) satisfies `not.toBe('0px')` VACUOUSLY;
   //   · the negative control CANNOT live on `mountFullChrome()` — both bars authored means all four
   //     longhands compute `0`, so nothing survives for a mutation to remove and the control is
   //     unsatisfiable by construction. It runs on the HEADER-ONLY fixture below, whose block-END pair

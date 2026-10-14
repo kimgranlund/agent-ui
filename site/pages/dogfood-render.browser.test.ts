@@ -26,7 +26,7 @@ vi.setConfig({ testTimeout: 60_000 })
 // (T-0144) at 400 and 1000px, light and dark, and checks the computed style against the `render` rules of
 // scripts/dogfood-rules.json. Every geometry value comes from scale.mjs resolve() at the element's register: the
 // nearest data-tier, data-scale, data-size or size and data-density on the element or an ancestor (the cascade
-// foundations.gen.css builds), product at scale sm at the root. A finding is keyed `demo/<page>#<rule>`,
+// foundations.gen.css builds), product at scale md at the root (ADR-0245 Amendment 8). A finding is keyed `demo/<page>#<rule>`,
 // `widget/<Type>#<rule>` or `persona/<seed>#<rule>`; the gate fails on a key that
 // scripts/dogfood-render-allowlist.json does not list, and on a listed key this engine no longer finds (stale). A
 // key that holds in one engine only carries `@chromium` or `@webkit`. The last block is the negative control: one
@@ -70,7 +70,7 @@ export function registerOf(el: Element): Resolved {
     }
     if (density === null && DENSITIES.has(up.getAttribute('data-density') ?? '')) density = up.getAttribute('data-density')
   }
-  return resolve(tier ?? 'product', scale ?? 'sm', size ?? 'md', density ?? 'default')
+  return resolve(tier ?? 'product', scale ?? 'md', size ?? 'md', density ?? 'default')
 }
 
 let probe: HTMLElement | null = null
@@ -727,12 +727,12 @@ const PLANTS: Record<string, { bad: string; good: string; width?: number; rule?:
   },
   'entry-cell-radius': { bad: '<ui-otp-field length="4" style="--ui-otp-field-radius: 12px"></ui-otp-field>', good: '<ui-otp-field length="4"></ui-otp-field>' },
   'glyph-box': { bad: '<ui-glyph symbol="check" style="--ui-glyph-slot: 30px"></ui-glyph>', good: '<ui-glyph symbol="check"></ui-glyph>' },
-  // at n 5 the bare formula 2n - 2c is 6px, the floor 8px (T-0143); ui-glyph centres the floored box in its 2n slot
+  // at n 5 (product / sm at size sm; the root is product / md since Amendment 8) the bare formula 2n - 2c is 6px, the floor 8px (T-0143); ui-glyph centres the floored box in its 2n slot
   // (inset (2n - glyph box) / 2 = 1px), so the plant restores the old inset c (2px) a side and draws the unfloored 6px mark
   'glyph-box at n 5': {
     rule: 'glyph-box',
-    bad: '<div size="sm"><ui-glyph symbol="check" style="--ui-glyph-inset: 2px"></ui-glyph></div>',
-    good: '<div size="sm"><ui-glyph symbol="check"></ui-glyph></div>',
+    bad: '<div data-scale="sm" size="sm"><ui-glyph symbol="check" style="--ui-glyph-inset: 2px"></ui-glyph></div>',
+    good: '<div data-scale="sm" size="sm"><ui-glyph symbol="check"></ui-glyph></div>',
   },
   'dash-scale': { bad: GAUGE + '<style>ui-gauge [data-part="progress"] { vector-effect: non-scaling-stroke }</style>', good: GAUGE },
   'link-ink': { bad: '<ui-row><a href="#a">Raw link</a></ui-row>', good: '<ui-breadcrumb><a href="#a">Home</a><span>Here</span></ui-breadcrumb>' },

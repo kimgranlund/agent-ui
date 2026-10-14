@@ -78,8 +78,8 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
         heights.push(frameHeight(btn))
         fonts.push(fontPx(btn))
       }
-      // The derived ramp at the root register (product / sm), ADR-0245 cl.3: height 4n, font = control type.
-      const ramp = (['sm', 'md', 'lg'] as const).map((s) => resolve('product', 'sm', s))
+      // The derived ramp at the root register (product / md), ADR-0245 cl.3: height 4n, font = control type.
+      const ramp = (['sm', 'md', 'lg'] as const).map((s) => resolve('product', 'md', s))
       expect(heights[0]).toBeCloseTo(ramp[0].h, 0)
       expect(heights[1]).toBeCloseTo(ramp[1].h, 0)
       expect(heights[2]).toBeCloseTo(ramp[2].h, 0)
@@ -125,9 +125,9 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
       ['sm', 'widget', 'sm'],
     ] as const
     for (const [size, tier, scale] of cells) {
-      const r = resolve(tier ?? 'product', scale ?? 'sm', size)
+      const r = resolve(tier ?? 'product', scale ?? 'md', size)
       const got = read(size, tier, scale)
-      expect(got, `${size} @ ${tier ?? 'root'} / ${scale ?? 'sm'}`).toEqual({ h: r.h, f: r.type.control, icon: r.icon })
+      expect(got, `${size} @ ${tier ?? 'root'} / ${scale ?? 'md'}`).toEqual({ h: r.h, f: r.type.control, icon: r.icon })
       expect(Number.isInteger(got.f) && Number.isInteger(got.icon), 'derived values are whole px (M7)').toBe(true)
     }
   })
@@ -188,9 +188,9 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
     // is STRICTLY smaller than its icon-sized cell (18) — NOT the named --ui-ind oversize bug on the lead edge.
     const cs = getComputedStyle(caret)
     const caretContent = caret.getBoundingClientRect().width - px(cs.paddingInlineStart) - px(cs.paddingInlineEnd)
-    expect(caretContent, 'leading caret content box is not glyph-sized (the --ui-ind oversize bug on the leading edge)').toBeCloseTo(glyphBox(resolve('product', 'sm', 'md')), 0)
+    expect(caretContent, 'leading caret content box is not glyph-sized (the --ui-ind oversize bug on the leading edge)').toBeCloseTo(glyphBox(resolve('product', 'md', 'md')), 0)
     expect(caretContent, 'leading caret glyph is not strictly smaller than its icon-sized cell').toBeLessThan(iconCell)
-    // font <= icon cell, not <: at the root md the control type (n + 6 = 12) TIES the 2n icon box (12) at n 6;
+    // font <= icon cell, not <: the control type n + 6 TIES the 2n icon box at n 6 (an sm control at the root);
     // the strict form held only from n 7 up (skill v2). The glyph assertion above still proves caret < icon.
     expect(font, 'font exceeds the icon cell').toBeLessThanOrEqual(iconCell)
   })

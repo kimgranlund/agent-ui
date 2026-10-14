@@ -333,7 +333,7 @@ describe('ui-modal — [box-model] the dialog is a padding-less box; region padd
       ['content→footer', contentToFooter],
       ['footer→frame', footerToFrame],
     ] as const) {
-      expect(gap, `${server.browser}: ${label} gap is not ~n px (got ${gap})`).toBeCloseTo(resolve('product', 'sm', 'md').n, 0)
+      expect(gap, `${server.browser}: ${label} gap is not ~n px (got ${gap})`).toBeCloseTo(resolve('product', 'md', 'md').n, 0)
     }
   })
 
@@ -355,7 +355,7 @@ describe('ui-modal — [box-model] the dialog is a padding-less box; region padd
     expect(
       restingGap,
       `${server.browser}: the sticky header's own n margin did not survive scrolling (measured ${restingGap})`,
-    ).toBeCloseTo(resolve('product', 'sm', 'md').n, 0)
+    ).toBeCloseTo(resolve('product', 'md', 'md').n, 0)
   })
 })
 

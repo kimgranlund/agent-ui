@@ -12,10 +12,11 @@ vi.setConfig({ testTimeout: 30_000 })
 // ADR-0150: the fleet's default test viewport (414×896) sits BELOW the 52.5rem/840px compact-body line, so
 // the columns specimen would resolve to `stack` at load under the fleet default regardless of this page's own
 // `.reflow-frame` — the text.browser.test.ts DESKTOP-pin precedent, applied here so the columns habitat's
-// wide-by-default claim is real, not incidental. 1280px comfortably clears 840px even after the app shell's
-// own nav-rail chrome eats into `[data-page-content]`'s share of the viewport.
+// wide-by-default claim is real, not incidental. Measured (T-0165): at 1280px the 42n nav pane (T-0158) leaves
+// `[data-page-content]` 856px, and the frame's own 1rem padding + 1px border leave its container 822px, under
+// the 840px line; 1440px leaves the container ~960px, clear of it with room for the shell chrome.
 beforeAll(async () => {
-  await page.viewport(1280, 900)
+  await page.viewport(1440, 900)
 })
 
 // drill-demo.browser.test.ts — the PAGE-LEVEL proof that the demo's OWN three habitats (ADR-0195 Amendment,

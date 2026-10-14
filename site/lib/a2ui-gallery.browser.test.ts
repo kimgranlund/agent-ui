@@ -274,11 +274,14 @@ describe('a2ui-gallery — booking-reservation Calendar fills its field width (A
 
         if (label === 'wide') {
           // Wide: the grid sits AT the cap (well past the compact floor, the ticket #30 regression) and the
-          // panel centres in the field instead of stranding a half-empty panel.
+          // capped panel keeps to the start edge, the text edge every other block sits on (T-0149, the
+          // calendar.browser.test.ts precedent; it was centred before).
           expect(Math.abs(gridRect.width - cap), `[${scheme}, ${label}] grid (${gridRect.width}px) is not at the content cap (${cap}px)`).toBeLessThanOrEqual(1)
           const panel = calendar!.querySelector<HTMLElement>('[data-part="panel"]')!.getBoundingClientRect()
           const host = calendar!.getBoundingClientRect()
-          expect(Math.abs((panel.left - host.left) - (host.right - panel.right)), `[${scheme}, ${label}] the capped panel is not centred`).toBeLessThanOrEqual(1)
+          const start = panel.left - host.left, end = host.right - panel.right
+          expect(end, `[${scheme}, ${label}] anti-vacuous: the capped panel leaves room at the end`).toBeGreaterThan(20)
+          expect(Math.abs(start), `[${scheme}, ${label}] the capped panel is not on the start edge (${start})`).toBeLessThanOrEqual(1)
         } else {
           // Narrow: below the cap the grid still fills its field (small remainder = the panel's box insets).
           expect(

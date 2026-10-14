@@ -111,7 +111,7 @@ const MEMBERS = galleryMembers()
 const normalize = (s: string): string => s.trim().toLowerCase()
 
 // Vocabularies from the token system (never invented here): the ADR-0245 region axes, tier and scale (the root
-// reads product at scale sm), and the reserved theme-package seam (one member, 'default', in G8; ADR-0079 cl.3).
+// reads product at scale md), and the reserved theme-package seam (one member, 'default', in G8; ADR-0079 cl.3).
 type Tier = 'widget' | 'product' | 'content' | 'brand'
 type Scale = 'sm' | 'md' | 'lg'
 type Scheme = 'light' | 'dark'
@@ -160,7 +160,7 @@ export class ComponentGallery extends UIElement {
   readonly #filter = signal('')
   readonly #scheme = signal<Scheme>('light')
   readonly #tier = signal<Tier>('product')
-  readonly #scale = signal<Scale>('sm')
+  readonly #scale = signal<Scale>('md')
   readonly #theme = signal<string>('default')
   readonly #visible = computed<readonly GalleryMember[]>(() => {
     const q = normalize(this.#filter.value)

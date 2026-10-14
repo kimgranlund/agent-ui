@@ -20,10 +20,10 @@
   `m = max(n + a·d, floor((n + c) / 2) + 1)`. The widget, card and layout levels read m; the group level and
   every control value keep n.
 
-The nearest ancestor wins on each axis. **The root is `product` at scale `sm`**: sizes sm / md / lg are
-n 5 / 6 / 7, so heights **20 / 24 / 28** (Amendment 3: the skill's v2 anchors moved every tier one step down,
-and Kim took the shrink). A2UI surfaces sit at `data-tier="widget" data-scale="md"` (the canvas register, the
-same 20 / 24 / 28; Amendment 2), so a catalog size means what it says: a composite's `lg` action is 28px. A
+The nearest ancestor wins on each axis. **The root is `product` at scale `md`** (ADR-0245 Amendment 8): sizes
+sm / md / lg are n 6 / 8 / 10, so heights **24 / 32 / 40**, body 13 / 15 / 17 and control type 12 / 14 / 16. A2UI
+surfaces sit at `data-tier="widget" data-scale="md"` (the canvas register, n 5 / 6 / 7, heights 20 / 24 / 28;
+Amendment 2), one step below the page and deliberately denser (Kim, Amendment 8), so a catalog size means what it says: a composite's `lg` action is 28px. A
 page opts a region into another register with `data-tier` / `data-scale` / `data-density`; `[scale]` was
 retired into the first two and `[density]` into `data-density` (the bridge maps them for one release, W7
 removes it), and `[data-foundations="legacy"]` opts a region out for the same release.
@@ -56,7 +56,7 @@ height.
 
 - **The control rule** (ADR-0245 Amendment 4), one geometry for every control: box margin `n`
   (`--md-sys-inset`), gutter `c`, and the text slot carries the label inset `n - c` (`--md-sys-label-inset`).
-  So an icon sits `n` from the edge and `n` from the text, the **text edge is `2n - c`** (8 / 10 / 12 at the
+  So an icon sits `n` from the edge and `n` from the text, the **text edge is `2n - c`** (10 / 14 / 17 at the
   root), and a control is never narrower than `4n` (`min-inline-size: var(--ui-{name}-height)`, the ADR-0223
   R3(a) form, on the button, the entry hosts and the tab; a toggle and a segment keep the automatic content
   minimum, and the rule's own `4n - 2c` plus text keeps them at `4n`). Where the label is anonymous host content (toggle, segment, tab, menu and listbox rows) the host
@@ -104,7 +104,7 @@ The full per-control table is ADR-0245 clause 3 and Appendix B; the geometry pro
 
 ## Containers and placement
 
-Four levels, each at the container's own n and m (root md: n 6, c 2, m 6 at default density):
+Four levels, each at the container's own n and m (root md: n 8, c 2, m 8 at default density):
 
 | level | margin | gutter | radius | members |
 |---|---|---|---|---|
@@ -114,7 +114,7 @@ Four levels, each at the container's own n and m (root md: n 6, c 2, m 6 at defa
 | layout | `4m` | `3m` | `4m` | super-shell frame and bars, the docs page frame |
 
 `data-density` moves m one tier step `a` (compact down, spacious up), floored so a widget always
-out-margins a group: at the root md, compact m 5 gives card 15 / 10 / 15 and spacious m 8 gives 24 / 16 / 24.
+out-margins a group: at the root md, compact m 6 gives card 18 / 12 / 18 and spacious m 10 gives 30 / 20 / 30.
 
 A container pads with its **margin**; a boxed child at an edge sits at `margin - its own inset` through a
 negative margin of `--md-sys-inset` that resolves on the child, so its label lines up with the card's text.
@@ -127,15 +127,15 @@ level tokens. Padding now moves with n.
 ## Layout spacing
 
 `--md-sys-space-{xs..2xl}` is a generated alias layer over the same n, so the six A2UI `gap` enums keep
-their names and prompt bytes: `xs` c, `sm` n, `md` n + c, `lg` 2m, `xl` 3m, `2xl` 4m (2 / 6 / 8 / 12 / 18 /
-24 at n 6, default density). It is the space *between* components, not control geometry.
+their names and prompt bytes: `xs` c, `sm` n, `md` n + c, `lg` 2m, `xl` 3m, `2xl` 4m (2 / 8 / 10 / 16 / 24 /
+32 at the root md, n 8, default density). It is the space *between* components, not control geometry.
 
 ## Type
 
 `ui-text`'s API stands (nine variants, `size`, `as`, the ADR-0106/0109/0114 axes); each variant maps to a
 derived role (`--md-sys-type-*`) and `size` is z. The `--md-sys-typescale-*` rows are a generated alias
 layer until W7. Display is small in a product region by design; a hero takes its own tier (content md
-display 47, brand md display 75). ADR-0150's compact-window body drop is superseded: body at the root is 13.
+display 47, brand md display 75). ADR-0150's compact-window body drop is superseded: body at the root md is 15.
 Linear roles never go below 9px. The two small uppercase roles are the **section label** (`--md-sys-type-section-label`,
 round(body · 9/8)) and the **group label** (`--md-sys-type-group-label`, n/2 + 6.5, the only half-pixel role); the
 `kicker` and `overline` variants both read the group label.

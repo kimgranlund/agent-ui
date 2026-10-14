@@ -82,8 +82,9 @@ export function booleanKnob(targets: readonly HTMLElement[], prop: string, log: 
   return knobRow(prop, [button])
 }
 
-/** knobRow — a labelled `ui-row` of knob buttons (the real primitive laying out its own controls). */
+/** knobRow: a labelled `ui-row` of knob buttons (the real primitive laying out its own controls). The buttons
+ *  wrap as their own group, so a long value set never splits beside its label (the action-group lint, T-0144). */
 function knobRow(label: string, buttons: readonly HTMLElement[]): HTMLElement {
   const name = el('code', { class: 'demo-caption' }, [document.createTextNode(label)])
-  return el('ui-row', { gap: 'xs', align: 'center', wrap: '' }, [name, ...buttons])
+  return el('ui-row', { gap: 'xs', align: 'center', wrap: '' }, [name, el('ui-row', { gap: 'xs', wrap: '', inline: '' }, [...buttons])])
 }

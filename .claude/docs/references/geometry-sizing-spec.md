@@ -26,13 +26,13 @@ compact / default / spacious, -1 / 0 / +1) moves only the container unit `m = ma
 | tier | n0 / a / k / g | use |
 |---|---|---|
 | widget | 6 / 1 / 1 / 0 | tool panels, dense chrome |
-| product | 8 / 2 / 2 / 1 | app screens (the library root, at scale sm) |
+| product | 8 / 2 / 2 / 1 | app screens (the library root, at scale md since Amendment 8) |
 | content | 10 / 2 / 2 / 1 | reading and document surfaces |
 | brand | 14 / 2 / 2 / 1 | hero and marketing |
 
 Reachable heights (`4n`) at sm / md / lg: **widget** 16 / 20 / 24 at scale sm, 20 / 24 / 28 at md (the A2UI
-canvas, Amendment 2) and 24 / 28 / 32 at lg; **product** 20 / 24 / 28 at scale sm (the root), 24 / 32 / 40 at md
-and 28 / 40 / 52 at lg; content and brand step up likewise (`derive.out.md` holds every cell; Amendment 3 moved
+canvas, Amendment 2) and 24 / 28 / 32 at lg; **product** 20 / 24 / 28 at scale sm, 24 / 32 / 40 at md (the root,
+Amendment 8) and 28 / 40 / 52 at lg; content and brand step up likewise (`derive.out.md` holds every cell; Amendment 3 moved
 the anchors one step down from the 7 / 9 / 11 of the cut). The retired `[scale]` values map by purpose (`ui-sm` to
 widget/sm, `ui-md` to product/sm, `ui-lg` to product/md, `content-*` to content/sm, md, lg); the bridge
 applies the map for one release.
@@ -68,7 +68,8 @@ inside a `4n` height.
 ### 1.2 · What the derivation moved
 
 Against the old ramp the cut kept 24 and 28 at the root and moved lg 36 to 32; Amendment 3's v2 anchors then
-moved every root step one n down, to 20 / 24 / 28 (n 5 / 6 / 7), and the icon box to 10 / 12 / 14. The field
+moved every root step one n down, to 20 / 24 / 28 (n 5 / 6 / 7); Amendment 8 then moved the root to product / md,
+24 / 32 / 40 (n 6 / 8 / 10), and the icon box to 12 / 16 / 20. The field
 radius is n, the card radius 3m. The wire, the payloads and the K6 prompt budget move zero bytes (ADR-0245 cl.8).
 
 ### 1.3 · The dark launch, and what is transitional
@@ -122,7 +123,7 @@ The old `[scale]` tiers, their literal tables and Kim's `(scale × size)` lookup
 ADR-0245 and retired from `dimensions.css`, which now holds only constants (focus ring, scrollbar, motion,
 pending and working states, typefaces, the typescale weight, line-height and tracking legs). A control reads
 its size prop as z and inherits tier and scale from its region; nothing in a stylesheet names a height.
-The root is product at scale sm; an A2UI surface root carries `data-tier="widget" data-scale="md"`; a reading
+The root is product at scale md (Amendment 8); an A2UI surface root carries `data-tier="widget" data-scale="md"`; a reading
 column sets `data-tier="content"`. `[scale]` survives one release as a bridge alias of tier and scale,
 `[density]` of `data-density`.
 
@@ -134,8 +135,8 @@ column sets `data-tier="content"`. `[scale]` survives one release as a bridge al
 
 A functional mark (a caret, check, plus, minus, dot, x, ellipsis, warning, info) is a `ui-glyph`, drawn from
 one path table in `components` as a stroke path in a fixed viewBox with `vector-effect: non-scaling-stroke`,
-so the stroke is the token `--md-sys-glyph-stroke`. Its box is `max(8px, 2n - 2c)` (8 / 8 / 10 at the root's sm /
-md / lg; the 8px floor holds sm, ADR-0245 Amendment 7), always inside a `2n` slot, so an icon and a glyph in neighbouring slots share the slot box and the centre
+so the stroke is the token `--md-sys-glyph-stroke`. Its box is `max(8px, 2n - 2c)` (8 / 12 / 14 at the root's sm /
+md / lg; the 8px floor holds n 5 and below, ADR-0245 Amendment 7), always inside a `2n` slot, so an icon and a glyph in neighbouring slots share the slot box and the centre
 line. A caret is no longer drawn at the control font. A control with a child slot renders `<ui-glyph>`; a
 control that drew on a pseudo-element either gains a `ui-glyph` child or reads a generated mask token from the
 same table, and never re-draws a mark by hand.
@@ -143,7 +144,7 @@ same table, and never re-draws a mark by hand.
 ### 4.2 · Icon (leading)
 
 A leading icon (a field's `slot=icon`, a button's icon) is pictorial pack art (ADR-0065/0066) in the `2n` icon
-box (10 / 12 / 14 at the root). The standalone `<ui-icon>` is the same box.
+box (12 / 16 / 20 at the root). The standalone `<ui-icon>` is the same box.
 
 ### 4.3 · Padding
 
@@ -218,7 +219,7 @@ not universal.
 
 ### 4.9 · Containers, placement and radius (ADR-0245 cl.6)
 
-Four levels at the container's own n and m (root md, n 6, c 2, m 6): **group** (margin and radius `n + c`,
+Four levels at the container's own n and m (root md, n 8, c 2, m 8): **group** (margin and radius `n + c`,
 gutter `c`: segmented-control, table rows, tooltip; listbox panels keep the group padding `c` but take the
 concentric radius `2n + c`, their pill rows plus that inset, ADR-0245 Amendment 5), **widget** (`2m`, gutter `m`: popover,
 toast, form-popover panel), **card** (`3m`, gutter `2m`: card, modal, drawer, command-modal, the A2UI
@@ -273,8 +274,8 @@ their lists, so a sized control outside the class table fails `--strict` rather 
 
 ## 7 · Ratified decisions
 
-1. **ADR-0245 (Kim, 2026-10-13)** is the authority: one n per element, root `product` at scale `sm` (sizes
-   20 / 24 / 28 since Amendment 3), density on m, the A2UI canvas at widget / md (Amendment 2; step 0 had ruled
+1. **ADR-0245 (Kim, 2026-10-13)** is the authority: one n per element, root `product` at scale `md` (sizes
+   24 / 32 / 40 since Amendment 8; product / sm, 20 / 24 / 28, from Amendment 3), density on m, the A2UI canvas at widget / md (Amendment 2; step 0 had ruled
    product / md), the pill `2n` for button and toggle, the avatar a `4n` circle, the radio dot `glyph - 2`, the glyph stroke
    `max(1.5px, c/2)`, `icon` and `glyph` as separate boxes and elements with the shared `symbol` prop, four
    container levels, type derived behind `ui-text`'s unchanged API.

@@ -33,29 +33,29 @@ afterEach(() => {
 })
 
 describe('ui-avatar — control-height square box (SPEC-R20 AC1; ADR-0112 Amendment 3 — the button ladder, ADR-0038)', () => {
-  it('default (size=md, no ancestor [scale]) → 24×24 box (--md-sys-height-md at the root register, a button\'s height)', () => {
+  it('default (size=md, no ancestor [scale]) → 32×32 box (--md-sys-height-md at the root register, a button\'s height)', () => {
     const el = mount('<ui-avatar identity="Ada Lovelace"></ui-avatar>')
     const box = el.getBoundingClientRect()
-    expect(box.width).toBe(resolve('product', 'sm', 'md').h)
-    expect(box.height).toBe(resolve('product', 'sm', 'md').h)
+    expect(box.width).toBe(resolve('product', 'md', 'md').h)
+    expect(box.height).toBe(resolve('product', 'md', 'md').h)
   })
 
-  it('[size=sm] → 20px box; [size=lg] → 28px box (the control-height ladder, 4n at the root register since ADR-0245)', () => {
+  it('[size=sm] → 24px box; [size=lg] → 40px box (the control-height ladder, 4n at the root register since ADR-0245)', () => {
     const sm = mount('<ui-avatar identity="Ada Lovelace" size="sm"></ui-avatar>')
-    expect(sm.getBoundingClientRect().width).toBe(resolve('product', 'sm', 'sm').h)
+    expect(sm.getBoundingClientRect().width).toBe(resolve('product', 'md', 'sm').h)
 
     const lg = mount('<ui-avatar identity="Ada Lovelace" size="lg"></ui-avatar>')
-    expect(lg.getBoundingClientRect().width).toBe(resolve('product', 'sm', 'lg').h)
+    expect(lg.getBoundingClientRect().width).toBe(resolve('product', 'md', 'lg').h)
   })
 
-  it('data-scale md × size md → 32px (4n at product / md, ADR-0245 cl.3, the old ui-lg register)', () => {
+  it('data-scale lg × size md → 40px (4n at product / lg, ADR-0245 cl.3), a region off the product / md root', () => {
     const wrap = document.createElement('div')
-    wrap.setAttribute('data-scale', 'md')
+    wrap.setAttribute('data-scale', 'lg')
     wrap.innerHTML = '<ui-avatar identity="Ada Lovelace"></ui-avatar>'
     document.body.append(wrap)
     mounted.push(wrap)
     const el = wrap.querySelector('ui-avatar') as HTMLElement
-    expect(el.getBoundingClientRect().width).toBe(resolve('product', 'md', 'md').h)
+    expect(el.getBoundingClientRect().width).toBe(resolve('product', 'lg', 'md').h)
   })
 
   it('ui-avatar and ui-button share the same height row: the avatar box equals the derived control height (4n, ADR-0245)', () => {
@@ -66,7 +66,7 @@ describe('ui-avatar — control-height square box (SPEC-R20 AC1; ADR-0112 Amendm
     el.parentElement!.append(probe)
     const row = probe.getBoundingClientRect().height
     probe.remove()
-    expect(row).toBe(resolve('product', 'sm', 'md').h)
+    expect(row).toBe(resolve('product', 'md', 'md').h)
     expect(el.getBoundingClientRect().height).toBe(row)
   })
 
@@ -95,8 +95,17 @@ describe('ui-avatar — whole-shape: every fallback link actually paints (test-t
   })
 
   it('sm initials hold the 9px type floor (0.42 of the 20px sm box alone reads 8.4px); lg keeps the 0.42 ratio', () => {
-    const sm = mount('<ui-avatar identity="Ada Lovelace" size="sm"></ui-avatar>')
+    // The floor binds only where 0.42 of the sm box falls under 9px: the 20px sm box of an n 5 region (product / sm).
+    // At the product / md root the sm box is 24 and 0.42 of it already clears the floor, so the leg sits in that region.
+    const region = document.createElement('div')
+    region.setAttribute('data-tier', 'product')
+    region.setAttribute('data-scale', 'sm')
+    region.innerHTML = '<ui-avatar identity="Ada Lovelace" size="sm"></ui-avatar>'
+    document.body.append(region)
+    mounted.push(region)
+    const sm = region.querySelector('ui-avatar') as HTMLElement
     const smBox = sm.getBoundingClientRect().width
+    expect(smBox, 'the sm box is 4n at n 5').toBe(resolve('product', 'sm', 'sm').h)
     expect(smBox * 0.42, 'anti-vacuous: the bare ratio lands under the floor on the sm box').toBeLessThan(9)
     expect(parseFloat(getComputedStyle(sm.querySelector('[data-part="initials"]') as HTMLElement).fontSize)).toBeGreaterThanOrEqual(9)
     const lg = mount('<ui-avatar identity="Ada Lovelace" size="lg"></ui-avatar>')

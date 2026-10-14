@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 
 // S2 browser smoke — ui-slider-multi (decomp S2 · ADR-0041 · ADR-0042).
 // Probes (from the Wave-1 review lessons, all baked-in from the gate):
-//   AC1 (anti-vacuous exact-px geometry) — each thumb = --md-sys-compact-{size} − 4px per [size]×[scale];
+//   AC1 (anti-vacuous exact-px geometry): each thumb = --md-sys-compact-{size} − 2c per [size]×[scale];
 //       negative control: wrong size renders different px; host block-size = --md-sys-compact-{size}.
 //   AC2 (real dual-pointer-drag) — drag each thumb via pointerdown→pointermove→pointerup; nearer-thumb
 //       selection holds; lo≤hi invariant maintained during drag.
@@ -17,8 +17,8 @@ import './slider-multi.css'                          // the control stylesheet (
 import './slider-multi.ts'                           // self-define (registers ui-slider-multi)
 import { UISliderMultiElement } from './slider-multi.ts'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-// The page root register (no data-tier region): product / sm, n 5 / 6 / 7 for size sm / md / lg.
-const root = (size: 'sm' | 'md' | 'lg') => resolve('product', 'sm', size)
+// The page root register (no data-tier region): product / md, n 6 / 8 / 10 for size sm / md / lg.
+const root = (size: 'sm' | 'md' | 'lg') => resolve('product', 'md', size)
 
 /** Simulate a full drag gesture: pointerdown → pointermove → pointerup on an element. */
 function drag(target: HTMLElement, startX: number, endX: number, id = 1): void {
@@ -64,16 +64,16 @@ function stubRailCapture(el: UISliderMultiElement): void {
 }
 
 describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
-  // ── AC1: thumb = box − 4px (the ADR-0041 2px-inset law), exact px per [size]×[scale] ─────────────
+  // ── AC1: thumb = box − 2c (the ADR-0041 inset law at the derived c), exact px per [size]×[scale] ─────────────
 
-  it('AC1 default [size=md]: thumbs are (--md-sys-compact-md − 4px) = 8px (the derived compact ramp)', () => {
+  it('AC1 default [size=md]: thumbs are (--md-sys-compact-md − 2c) = 12px (the derived compact ramp)', () => {
     const el = document.createElement('ui-slider-multi')
     document.body.append(el)
 
-    // --md-sys-compact-md = 12px at the root (derived, ADR-0245) → thumb = 12 − 4 = 8px
+    // --md-sys-compact-md = 16px at the root (derived, ADR-0245) → thumb = 16 − 2×2 = 12px
     const loThumb = el.querySelector<HTMLElement>('.thumb[data-thumb="lo"]')!
     const hiThumb = el.querySelector<HTMLElement>('.thumb[data-thumb="hi"]')!
-    const thumb = root('md').icon - 4 // box − 4 = 12 − 4 = 8
+    const thumb = root('md').icon - 2 * root('md').c // box − 2c = 16 − 4 = 12
     expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(thumb)
     expect(Number.parseFloat(getComputedStyle(loThumb).height)).toBe(thumb)
     expect(Number.parseFloat(getComputedStyle(hiThumb).width)).toBe(thumb)
@@ -81,25 +81,25 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
     el.remove()
   })
 
-  it('AC1 [size=sm]: thumbs are (--md-sys-compact-sm − 4px) = 6px', () => {
+  it('AC1 [size=sm]: thumbs are (--md-sys-compact-sm − 2c) = 8px', () => {
     const el = document.createElement('ui-slider-multi')
     el.setAttribute('size', 'sm')
     document.body.append(el)
 
-    // --md-sys-compact-sm = 10px → thumb = 10 − 4 = 6px
+    // --md-sys-compact-sm = 12px → thumb = 12 − 2×2 = 8px
     const loThumb = el.querySelector<HTMLElement>('.thumb[data-thumb="lo"]')!
-    expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(root('sm').icon - 4)
+    expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(root('sm').icon - 2 * root('sm').c)
     el.remove()
   })
 
-  it('AC1 [size=lg]: thumbs are (--md-sys-compact-lg − 4px) = 10px', () => {
+  it('AC1 [size=lg]: thumbs are (--md-sys-compact-lg − 2c) = 14px', () => {
     const el = document.createElement('ui-slider-multi')
     el.setAttribute('size', 'lg')
     document.body.append(el)
 
-    // --md-sys-compact-lg = 14px → thumb = 14 − 4 = 10px
+    // --md-sys-compact-lg = 20px → thumb = 20 − 2×3 = 14px (c is 3 at n 10)
     const loThumb = el.querySelector<HTMLElement>('.thumb[data-thumb="lo"]')!
-    expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(root('lg').icon - 4)
+    expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(root('lg').icon - 2 * root('lg').c)
     el.remove()
   })
 
@@ -112,7 +112,7 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
 
     const smW = Number.parseFloat(getComputedStyle(sm.querySelector<HTMLElement>('.thumb')!).width)
     const lgW = Number.parseFloat(getComputedStyle(lg.querySelector<HTMLElement>('.thumb')!).width)
-    expect(smW).not.toBe(lgW) // 6 ≠ 10, not the same (anti-vacuous: different sizes render different px)
+    expect(smW).not.toBe(lgW) // 8 ≠ 14, not the same (anti-vacuous: different sizes render different px)
     sm.remove()
     lg.remove()
   })
@@ -125,7 +125,7 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
     const el = document.createElement('ui-slider-multi')
     document.body.append(el)
     const rows = getComputedStyle(el).gridTemplateRows.split(' ').map((v) => Number.parseFloat(v))
-    expect(rows[rows.length - 1]).toBe(root('md').icon) // --md-sys-compact-md = 12px at the root (derived, ADR-0245)
+    expect(rows[rows.length - 1]).toBe(root('md').icon) // --md-sys-compact-md = 16px at the root (derived, ADR-0245)
     el.remove()
   })
 
@@ -275,8 +275,8 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
       return w
     }
 
-    expect(makeWithDensity(null), 'the root thumb').toBe(resolve('product', 'sm', 'md').glyph)
-    expect(makeWithDensity('md'), 'the thumb at data-scale md').toBe(resolve('product', 'md', 'md').glyph)
+    expect(makeWithDensity(null), 'the root thumb').toBe(resolve('product', 'md', 'md').glyph)
+    expect(makeWithDensity('sm'), 'the thumb at data-scale sm').toBe(resolve('product', 'sm', 'md').glyph)
   })
 
   // ── forced-colors (AC3 — stylesheet presence; behavior is system-determined) ────────────────

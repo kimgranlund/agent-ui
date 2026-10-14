@@ -67,15 +67,15 @@ describe('ui-column browser-truth harness (s4)', () => {
 
     const gapPx = (): number => Number.parseFloat(getComputedStyle(el).rowGap)
     // ADR-0245 cl.6: gap md is the group margin n + c at the region's n (the [density] multiplier retired).
-    expect(gapPx()).toBe(resolve('product', 'sm', 'md').group.margin) // the root register: 9
+    expect(gapPx()).toBe(resolve('product', 'md', 'md').group.margin) // the root register: 10
 
     wrap.setAttribute('data-tier', 'widget')
     wrap.setAttribute('data-scale', 'sm')
-    expect(gapPx()).toBe(resolve('widget', 'sm', 'md').group.margin) // a denser region: 8
+    expect(gapPx()).toBe(resolve('widget', 'sm', 'md').group.margin) // a denser region: 7
 
     wrap.setAttribute('data-tier', 'product')
     wrap.setAttribute('data-scale', 'lg')
-    expect(gapPx()).toBe(resolve('product', 'lg', 'md').group.margin) // and a roomier one: 14
+    expect(gapPx()).toBe(resolve('product', 'lg', 'md').group.margin) // and a roomier one: 13
   })
 
   it('ADR-0030 fill-width: a width-LESS child FILLS the column width by default; align="start" shrink-wraps', () => {

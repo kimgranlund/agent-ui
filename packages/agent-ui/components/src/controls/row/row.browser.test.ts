@@ -57,11 +57,11 @@ describe('ui-row cross-engine smoke — flex grammar maps to computed props (s3)
     const { wrapper, row } = mount('600px')
     row.setAttribute('gap', 'md') // → var(--md-sys-space-md) = the group margin n + c
     const base = Number.parseFloat(getComputedStyle(row).columnGap)
-    expect(base).toBe(resolve('product', 'sm', 'md').group.margin) // the root register: 9
+    expect(base).toBe(resolve('product', 'md', 'md').group.margin) // the root register: 10
 
-    wrapper.setAttribute('data-scale', 'md') // the roomier register (inherits to the row)
+    wrapper.setAttribute('data-scale', 'lg') // the roomier register (inherits to the row)
     const roomy = Number.parseFloat(getComputedStyle(row).columnGap)
-    expect(roomy).toBe(resolve('product', 'md', 'md').group.margin) // 12
+    expect(roomy).toBe(resolve('product', 'lg', 'md').group.margin) // 13
     expect(roomy).toBeGreaterThan(base) // anti-vacuous: the gap actually grew
 
     wrapper.remove()

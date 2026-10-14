@@ -4,15 +4,14 @@ import { describe, it, expect } from 'vitest'
 //
 // ⭐ This suite RATIFIES the ADR-0042 Range half → accepted (G6.5):
 //   AC1: The host box = --md-sys-compact-{size} exact px per [size]×[scale] (anti-vacuous, negative controls).
-//   AC2: The thumb (::after) = box − 4px (the ADR-0041 cl.3 two-pixel-inset law, Range edition).
+//   AC2: The thumb (::after) = box − 2c (the ADR-0041 cl.3 inset law at the derived c, Range edition).
 //   AC3: A REAL pointer-drag (pointerdown→move) updates value snapped to step (the value-drag proof).
 //   AC4: Forced-colors — forced-color-adjust:none declared on rail and thumb (track survives HCM).
 //   C10: Reconnect produces exactly one response per keyboard event (no listener stacking).
 //
 // The widget-box ramp table (--md-sys-compact-{size} per [scale], dimensions.css):
-//   Default (derived, ADR-0245): sm=12px · md=14px · lg=16px
-//   content-lg:       sm=22px · md=24px · lg=28px
-// Thumb = box − 4px (−2px × each side; --md-sys-widget-inset=2px; ADR-0041 cl.3).
+//   The root (product / md, derived, ADR-0245): sm=12px · md=16px · lg=20px (2n)
+// Thumb = box − 2c (c each side; 4px at sm and md, 6px at lg where c = 3; ADR-0041 cl.3, ADR-0245 cl.3).
 //
 // These imports are direct (not through the barrel) because the retired component-styles CSS barrel (ADR-0233) is the host's
 // integration slice — it gains the slider @import at barrel-wiring time. The foundation CSS (tokens +
@@ -23,8 +22,8 @@ import './slider.css'                               // the control stylesheet (d
 import './slider.ts'                                // self-define (registers ui-slider)
 import type { UISliderElement } from './slider.ts'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-// The page root register (no data-tier region): product / sm, n 5 / 6 / 7 for size sm / md / lg.
-const root = (size: 'sm' | 'md' | 'lg') => resolve('product', 'sm', size)
+// The page root register (no data-tier region): product / md, n 6 / 8 / 10 for size sm / md / lg.
+const root = (size: 'sm' | 'md' | 'lg') => resolve('product', 'md', size)
 
 // ── helpers ──────────────────────────────────────────────────────────────────────────────────────
 
@@ -228,13 +227,13 @@ describe('ui-slider — thumb ring "pops" in both schemes without regressing the
     el.remove()
   })
 
-  it('the outer diameter of the ringed thumb is UNCHANGED — box − 4px still holds (border-box, ADR-0041 cl.3)', () => {
+  it('the outer diameter of the ringed thumb is UNCHANGED: box − 2c still holds (border-box, ADR-0041 cl.3)', () => {
     const el = document.createElement('ui-slider') as UISliderElement
     document.body.append(el)
     const cs = getComputedStyle(rail(el), '::after')
-    // default size=md: box=12px at the root (derived compact ramp, ADR-0245) → thumb=8px, border-box means the 2px ring border does NOT grow it.
-    expect(Number.parseFloat(cs.width)).toBe(root('md').icon - 4)
-    expect(Number.parseFloat(cs.height)).toBe(root('md').icon - 4)
+    // default size=md: box=16px at the root (derived compact ramp, ADR-0245) → thumb=12px, border-box means the 2px ring border does NOT grow it.
+    expect(Number.parseFloat(cs.width)).toBe(root('md').icon - 2 * root('md').c)
+    expect(Number.parseFloat(cs.height)).toBe(root('md').icon - 2 * root('md').c)
     el.remove()
   })
 })
@@ -249,7 +248,7 @@ describe('ui-slider — thumb ring "pops" in both schemes without regressing the
 // `.rail` rather than the host to preserve the ratified per-part contract.
 
 describe('ui-slider browser smoke (AC1 — .rail block-size exact px per [size]×[scale])', () => {
-  it('AC1 default: .rail block-size = 12px (--md-sys-compact-md, the derived compact ramp)', () => {
+  it('AC1 default: .rail block-size = 16px (--md-sys-compact-md, the derived compact ramp)', () => {
     const el = document.createElement('ui-slider') as UISliderElement
     document.body.append(el)
     // .rail's block-size = --md-sys-compact-md = 2n at the root on the derived ramp (ADR-0041 clause 2, ADR-0245)
@@ -258,7 +257,7 @@ describe('ui-slider browser smoke (AC1 — .rail block-size exact px per [size]�
     el.remove()
   })
 
-  it('AC1 [size=sm] → .rail block-size = 10px; [size=lg] → 14px (the compact widget ramp)', () => {
+  it('AC1 [size=sm] → .rail block-size = 12px; [size=lg] → 20px (the compact widget ramp)', () => {
     const sm = document.createElement('ui-slider') as UISliderElement
     sm.setAttribute('size', 'sm')
     document.body.append(sm)
@@ -272,7 +271,7 @@ describe('ui-slider browser smoke (AC1 — .rail block-size exact px per [size]�
     lg.remove()
   })
 
-  it('AC1 negative control: [size=sm] ≠ [size=md] (10px ≠ 12px, anti-vacuous box proof)', () => {
+  it('AC1 negative control: [size=sm] ≠ [size=md] (12px ≠ 16px, anti-vacuous box proof)', () => {
     const sm = document.createElement('ui-slider') as UISliderElement
     sm.setAttribute('size', 'sm')
     document.body.append(sm)
@@ -288,42 +287,42 @@ describe('ui-slider browser smoke (AC1 — .rail block-size exact px per [size]�
   })
 })
 
-// ── AC2: thumb = box − 4px (the ADR-0041 cl.3 two-pixel-inset proof, Range half) ────────────────
+// ── AC2: thumb = box − 2c (the ADR-0041 cl.3 inset proof at the derived c, Range half) ────────────────
 
-describe('ui-slider browser smoke (AC2 — thumb = box − 4px, the ADR-0042 Range-half ratification)', () => {
-  it('AC2 default (size=md): thumb ::after width = 8px (12px − 4px)', () => {
+describe('ui-slider browser smoke (AC2: thumb = box − 2c, the ADR-0042 Range-half ratification)', () => {
+  it('AC2 default (size=md): thumb ::after width = 12px (16px − 2c)', () => {
     const el = document.createElement('ui-slider') as UISliderElement
     document.body.append(el)
-    // --md-sys-compact-md=12px → thumb = 12 − 2×2 = 8px (ADR-0041 cl.3: thumb = box − 2×inset)
+    // --md-sys-compact-md=16px → thumb = 16 − 2×2 = 12px (ADR-0041 cl.3: thumb = box − 2×inset, the inset c)
     const cs = getComputedStyle(rail(el), '::after')
-    expect(Number.parseFloat(cs.width)).toBe(root('md').icon - 4)
-    expect(Number.parseFloat(cs.height)).toBe(root('md').icon - 4)
+    expect(Number.parseFloat(cs.width)).toBe(root('md').icon - 2 * root('md').c)
+    expect(Number.parseFloat(cs.height)).toBe(root('md').icon - 2 * root('md').c)
     el.remove()
   })
 
-  it('AC2 [size=sm] → thumb = 6px (10px − 4px)', () => {
+  it('AC2 [size=sm] → thumb = 8px (12px − 2c)', () => {
     const el = document.createElement('ui-slider') as UISliderElement
     el.setAttribute('size', 'sm')
     document.body.append(el)
-    // --md-sys-compact-sm=10px → thumb = 10 − 4 = 6px
+    // --md-sys-compact-sm=12px → thumb = 12 − 2×2 = 8px
     const cs = getComputedStyle(rail(el), '::after')
-    expect(Number.parseFloat(cs.width)).toBe(root('sm').icon - 4)
-    expect(Number.parseFloat(cs.height)).toBe(root('sm').icon - 4)
+    expect(Number.parseFloat(cs.width)).toBe(root('sm').icon - 2 * root('sm').c)
+    expect(Number.parseFloat(cs.height)).toBe(root('sm').icon - 2 * root('sm').c)
     el.remove()
   })
 
-  it('AC2 [size=lg] → thumb = 10px (14px − 4px)', () => {
+  it('AC2 [size=lg] → thumb = 14px (20px − 2c)', () => {
     const el = document.createElement('ui-slider') as UISliderElement
     el.setAttribute('size', 'lg')
     document.body.append(el)
-    // --md-sys-compact-lg=14px → thumb = 14 − 4 = 10px
+    // --md-sys-compact-lg=20px → thumb = 20 − 2×3 = 14px (c is 3 at n 10)
     const cs = getComputedStyle(rail(el), '::after')
-    expect(Number.parseFloat(cs.width)).toBe(root('lg').icon - 4)
-    expect(Number.parseFloat(cs.height)).toBe(root('lg').icon - 4)
+    expect(Number.parseFloat(cs.width)).toBe(root('lg').icon - 2 * root('lg').c)
+    expect(Number.parseFloat(cs.height)).toBe(root('lg').icon - 2 * root('lg').c)
     el.remove()
   })
 
-  it('AC2 negative control: [size=sm] thumb ≠ [size=lg] thumb (10px ≠ 14px — anti-vacuous)', () => {
+  it('AC2 negative control: [size=sm] thumb ≠ [size=lg] thumb (8px ≠ 14px, anti-vacuous)', () => {
     const sm = document.createElement('ui-slider') as UISliderElement
     sm.setAttribute('size', 'sm')
     document.body.append(sm)

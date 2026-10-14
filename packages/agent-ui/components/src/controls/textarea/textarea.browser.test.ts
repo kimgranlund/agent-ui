@@ -357,10 +357,10 @@ describe('ui-textarea cross-engine geometry smoke — the multi-line law (both e
       field.setAttribute('size', size)
       fonts.push(px(getComputedStyle(editor).fontSize))
     }
-    // the page root is product / sm (ADR-0245): the control type role at each size is the derived one
-    expect(fonts[0]).toBeCloseTo(resolve('product', 'sm', 'sm').type.control, 0)
-    expect(fonts[1]).toBeCloseTo(resolve('product', 'sm', 'md').type.control, 0)
-    expect(fonts[2]).toBeCloseTo(resolve('product', 'sm', 'lg').type.control, 0)
+    // the page root is product / md (ADR-0245): the control type role at each size is the derived one
+    expect(fonts[0]).toBeCloseTo(resolve('product', 'md', 'sm').type.control, 0)
+    expect(fonts[1]).toBeCloseTo(resolve('product', 'md', 'md').type.control, 0)
+    expect(fonts[2]).toBeCloseTo(resolve('product', 'md', 'lg').type.control, 0)
     expect(allDistinct(fonts), `editor fonts did not change across [size]: ${fonts.join()}`).toBe(true)
   })
 

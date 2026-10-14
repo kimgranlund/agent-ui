@@ -244,7 +244,7 @@ describe('ui-button BTN-CARET — caret = font, icon = icon (ADR-0012 §6, both 
     const caret = btn.querySelector('[data-role="caret"]') as HTMLElement
 
     const font = fontPx(btn) //              md font = 13 (control type)
-    const glyph = glyphBox(resolve('product', 'sm', 'md')) // the caret glyph = 10 (ADR-0245 cl.3)
+    const glyph = glyphBox(resolve('product', 'md', 'md')) // the caret glyph = 10 (ADR-0245 cl.3)
     const box = frameHeight(btn) //          md frame (border-box height) = 28
     const iconCell = caret.getBoundingClientRect().width // the cell border-box, icon-sized = --ui-button-icon = 18
     const caretContent = contentInline(caret) // glyph content box = cell − centering pad = font
@@ -256,7 +256,7 @@ describe('ui-button BTN-CARET — caret = font, icon = icon (ADR-0012 §6, both 
     // the ordering law: 0 < caret(=font) < icon ≤ box.
     expect(caretContent, 'caret content box is not positive').toBeGreaterThan(0)
     expect(caretContent, 'caret is not strictly smaller than the icon').toBeLessThan(iconContent)
-    // font <= icon cell, not <: at the root md the control type (n + 6 = 12) TIES the 2n icon box (12) at n 6;
+    // font <= icon cell, not <: the control type n + 6 TIES the 2n icon box at n 6 (an sm control at the root);
     // the strict form held only from n 7 up (skill v2). The caret < icon line above still proves the glyph order.
     expect(font, 'font exceeds the icon cell').toBeLessThanOrEqual(iconCell)
     expect(iconCell, 'the icon cell exceeds the box height').toBeLessThanOrEqual(box + 0.5)

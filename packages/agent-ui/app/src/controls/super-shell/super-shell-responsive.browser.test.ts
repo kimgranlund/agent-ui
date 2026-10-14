@@ -15,8 +15,8 @@ import { UISuperShellElement } from './super-shell.ts'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 // T-0121: the shell frame reads level tokens (ADR-0245 cl.6), so every px this file pins is derived from the
-// root register (product at scale sm) through scale.mjs, never written as a literal.
-const ROOT = resolve('product', 'sm', 'md')
+// root register (product at scale md) through scale.mjs, never written as a literal.
+const ROOT = resolve('product', 'md', 'md')
 const SHELL_BAR = ROOT.h + 2 * ROOT.widget.margin // --ui-super-shell-bar-size: a control row plus two widget margins, 8n
 const SHELL_INSET = ROOT.widget.margin // --ui-super-shell-overlay-inset: the widget margin 2n
 const SHELL_FLOOR = ROOT.page.margin * 6 // the canvas floors: six layout margins, 24n

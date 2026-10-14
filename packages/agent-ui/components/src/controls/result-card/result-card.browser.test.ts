@@ -2,12 +2,12 @@ import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
 
-/** The derived root register (product / sm / md, ADR-0245). */
-const ROOT = resolve('product', 'sm', 'md')
+/** The derived root register (product / md / md, ADR-0245 Amendment 8). */
+const ROOT = resolve('product', 'md', 'md')
 
 // result-card.browser.test.ts: the real-engine painted proof for ui-result-card (ADR-0244, ResultCard fork
 // sheet). jsdom is blind to layout, so this covers the whole-shape fill and hug, the ADR-0046 box model by
-// computed geometry, the no-edge-accent law, the producer buttons at the lg step (28px derived), and the stat wrap.
+// computed geometry, the no-edge-accent law, the producer buttons at the lg step (40px derived at the root), and the stat wrap.
 //
 // Side-effect imports, load-bearing order (ADR-0003): foundation roles and ramps first, then the sheets, then
 // the controls. The card mints no button, so the test brings ui-button itself (as the renderer would).
@@ -155,7 +155,7 @@ describe('ui-result-card: the ADR-0046 box model', () => {
 })
 
 describe('ui-result-card: the producer buttons at the lg step', () => {
-  it('every direct ui-button child carries size lg and renders the derived 28px tall', async () => {
+  it('every direct ui-button child carries size lg and renders the derived lg height', async () => {
     const el = winCard(container('480px'))
     const late = button('Show board')
     el.append(late)
@@ -164,7 +164,7 @@ describe('ui-result-card: the producer buttons at the lg step', () => {
     expect(buttons).toHaveLength(3)
     for (const b of buttons) {
       expect(b.getAttribute('size')).toBe('lg')
-      expect(b.getBoundingClientRect().height).toBeCloseTo(resolve('product', 'sm', 'lg').h, 0)
+      expect(b.getBoundingClientRect().height).toBeCloseTo(resolve('product', 'md', 'lg').h, 0)
     }
   })
 })
@@ -228,6 +228,8 @@ const foundationsPair = (tag: string, attrs: string): { out: HTMLElement; inside
   const [out, inside] = Array.from(wrap.querySelectorAll<HTMLElement>(tag)) as [HTMLElement, HTMLElement]
   return { out, inside }
 }
+/** The pair's explicit region (product / sm / md), no longer the root register since ADR-0245 Amendment 8. */
+const REGION = resolve('product', 'sm', 'md')
 
 describe('ui-result-card: the stat glyph (ADR-0245 Amendment 6)', () => {
   it('a stat glyph is its own glyph box 2n - 2c, n clear of its label', async () => {
@@ -247,11 +249,11 @@ describe('ui-result-card: ADR-0245 derived foundations, dark launch', () => {
   it('reads today\'s value outside a data-tier region and the derived value inside', () => {
     const { out, inside } = foundationsPair('ui-result-card', 'outcome="win" result-title="Blackjack"')
     expect(lengthOf(out, '--ui-result-card-outcome-radius')).toBe(999)
-    expect(lengthOf(inside, '--ui-result-card-outcome-radius')).toBe(ROOT.h) // any radius over half the pill's height is a pill
+    expect(lengthOf(inside, '--ui-result-card-outcome-radius')).toBe(REGION.h) // any radius over half the pill's height is a pill
     expect(lengthOf(out, '--ui-result-card-outcome-gap')).toBe(5)
-    expect(lengthOf(inside, '--ui-result-card-outcome-gap')).toBe(ROOT.n)
+    expect(lengthOf(inside, '--ui-result-card-outcome-gap')).toBe(REGION.n)
     expect(lengthOf(out, '--ui-result-card-stat-radius')).toBe(lengthOf(out, '--md-sys-shape-corner-base') - 2)
-    expect(lengthOf(inside, '--ui-result-card-stat-radius')).toBe(ROOT.n)
+    expect(lengthOf(inside, '--ui-result-card-stat-radius')).toBe(REGION.n)
     for (const el of [out, inside]) expect(lengthOf(el, '--ui-result-card-stat-gap')).toBe(2)
   })
 })

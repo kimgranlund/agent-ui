@@ -67,7 +67,7 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
     for (const r of rungs) expect(r.glyph, `n ${r.n}: scale.mjs keeps the skill's 2n - 2c`).toBe(2 * r.n - 2 * r.c)
     for (const r of rungs) expect(glyphBox(r), `n ${r.n}`).toBe(Math.max(GLYPH_FLOOR, 2 * r.n - 2 * r.c))
     expect(rungs.some((r) => r.n === 5 && glyphBox(r) === 8 && r.glyph === 6), 'anti-vacuous: an n 5 rung, where the floor binds').toBe(true)
-    expect(glyphBox(resolve('product', 'sm', 'md'))).toBe(8) // md and lg unchanged at the root
+    expect(glyphBox(resolve('product', 'sm', 'md'))).toBe(8) // md and lg unchanged at product / sm (the root before Amendment 8)
     expect(glyphBox(resolve('product', 'sm', 'lg'))).toBe(10)
     expect(committed).toContain(`--md-sys-glyph-box: max(${GLYPH_FLOOR}px, calc(var(--md-sys-n) * 2px - 2 * var(--md-sys-c)));`)
   })
@@ -82,12 +82,12 @@ describe('foundations: generated-file drift and the cut (ADR-0245 clause 10a)', 
     expect(bridge).toBe(renderBridgeCss())
   })
 
-  it('at the cut, ROOT_DEFAULT is true: :root takes product at scale sm and the axes are unscoped', () => {
+  it('at the cut, ROOT_DEFAULT is true: :root takes product at scale md (Amendment 8) and the axes are unscoped', () => {
     expect(ROOT_DEFAULT).toBe(true)
     const selectors = selectorsOf(committed)
     expect(selectors).toContain(':root')
     expect(selectors).toContain("[data-scale='sm']")
-    expect(committed).toMatch(/:root \{ --md-sys-tier-n0: 8; --md-sys-tier-a: 2; --md-sys-tier-k: 2; --md-sys-tier-g: 1;[^}]*--md-sys-scale-s: -1; \}/)
+    expect(committed).toMatch(/:root \{ --md-sys-tier-n0: 8; --md-sys-tier-a: 2; --md-sys-tier-k: 2; --md-sys-tier-g: 1;[^}]*--md-sys-scale-s: 0; \}/)
   })
 
   it('the rollback predicate bites: the pre-cut form keeps every selector on or inside a [data-tier] region', () => {
