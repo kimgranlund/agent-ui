@@ -90,7 +90,7 @@ dismissAllBtn.addEventListener('click', () => {
 })
 
 const controls = el('div', { style: 'display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center;' }, [
-  oneBtn, burstBtn, stickyBtn, dismissAllBtn,
+  el('div', { style: 'display:flex; gap:0.75rem; flex-wrap:wrap;' }, [oneBtn, burstBtn, stickyBtn, dismissAllBtn]),
   el('span', { style: 'font-family: var(--md-sys-typeface-mono); font-size: 0.85rem;' }, [text('stack: '), stackCount]),
 ])
 

@@ -136,7 +136,7 @@ const reset = uiButton('Reset', 'ghost')
 reset.addEventListener('click', () => write(P95_LATENCY_24H))
 const liveBlock = el('div', { style: 'display:flex; flex-direction:column; gap:0.75rem; align-items:flex-start;' }, [
   live,
-  el('div', { style: 'display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;' }, [push, spike, reset, readout]),
+  el('div', { style: 'display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;' }, [el('div', { style: 'display:flex; gap:0.75rem; flex-wrap:wrap;' }, [push, spike, reset]), readout]),
 ])
 const liveNote = el('p', {}, [
   text('Every click writes '), code('values'), text(' with a rolled window; the tile rebuilds as a whole (A2UI '),

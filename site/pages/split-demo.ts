@@ -142,7 +142,7 @@ const presetWide = uiButton('Wide list  [0.6, 0.4]', 'soft')
 presetWide.addEventListener('click', () => writeSizes([0.6, 0.4]))
 
 const presets = el('div', { style: 'display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center; margin-block-end:0.75rem;' }, [
-  presetNarrow, presetEven, presetWide, sizesReadout,
+  el('div', { style: 'display:flex; gap:0.75rem; flex-wrap:wrap;' }, [presetNarrow, presetEven, presetWide]), sizesReadout,
 ])
 const listFrame = el(
   'div',
