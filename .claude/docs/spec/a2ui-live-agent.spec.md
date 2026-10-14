@@ -1408,6 +1408,64 @@ allowlist above) — an unrecognized or absent value MUST be defaulted (never fo
   defaulted — a deterministic unit test over the membership guard (`validate-mode.test.ts`), `npm test`
   green, no key.
 
+**Default model (T-0180).** The registry's `defaultModel` for Anthropic is `claude-sonnet-5-5` (Sonnet 5.5,
+Execute tier), and agent-admin's authoring default is the same id. The retired id `claude-sonnet-5` is not
+rewritten in any store: a stored config, authoring store, persisted pick or model-inclusion record that names
+it reads as `claude-sonnet-5-5` through the sanitize path (`RETIRED_MODEL_IDS` in `agent-admin-schema.ts`),
+the same read-time discipline as the other defaults. The bare `/__a2ui/agent` default and the admin test
+chat's default differ by design (the latter is Haiku 5.5); see the LLD's provider section for the roster.
+
+### 3.4a The server-side turn trace log (T-0151)
+
+**SPEC-R32: The dev proxy records every live turn to a git-ignored, redacted, per-day log.** Every POST turn
+the dev proxy runs at `/__a2ui/agent`, on both routes (`chat`, `produce`) and whatever the outcome, MUST append
+exactly one JSON line to `.agent-traces/YYYY-MM-DD.jsonl` at the repo root (UTC date of the turn start), so an
+agent can triage a turn from disk instead of from a screenshot. The line carries the request (`user`, `agent`,
+`provider`, `model`, `effort`, `mode`, `catalogId`), the activity `steps` the UI shows, each self-correct
+`retries` entry with the validator failures behind it, the raw model text per `rounds` entry (with tool calls,
+usage, the thinking delta and character counts, and on a PARSE failure the position where the payload stopped
+parsing), the shipped `surface` operations, `usage`, `ms`, an `outcome` of `ok | error | halt | aborted |
+rejected`, and on failure the upstream status and body. *(→ PRD-G1, PRD-G6; T-0151)*
+- **AC1** *(format version)* Every line carries `v`, the trace line format version
+  (`TRACE_LINE_VERSION`, currently `1`). A reader keys on `v`; it is bumped only when a reader must know. A
+  torn last line (a crash mid-append) is skipped by readers, never fatal.
+- **AC2** *(redaction)* A line is serialized through `redactSecrets`, which replaces every configured
+  provider key by value and then key-shaped strings by pattern with `[redacted]`. The composed system prompt
+  is not recorded, and `dispatch` objects (which carry `apiKey`) never reach the collector. Raw text fields
+  are capped (`TRACE_TEXT_CAP`). The log still holds user and model text, which is why it is git-ignored.
+- **AC3** *(dev-only fence)* The writer is Node-only (`node:fs`) and lives in `tools/agent/trace-log.ts`,
+  imported by the dev proxy plugin alone. That plugin is `apply: 'serve'`, so `vite build` never runs it,
+  and the Cloudflare Worker never imports the module. The log is on by default under `vite dev`;
+  `A2UI_AGENT_TRACES=0` (or `false`, `off`) turns it off. The vocabulary reuses the devtools one where it
+  fits (`TurnEndStatus`, `TokenUsage`, the a2ui `readMetaLine` guard) without importing `@agent-ui/devtools`:
+  a2ui sits below devtools in the package DAG, and no key or `produce()` crosses into it (ADR-0073 clause 5).
+- **AC4** *(reading it)* `npm run traces` prints the last turns as a table (`-- --last N`), `-- --full N`
+  prints one turn in full, and `-- --dir <path>` reads another folder. An absent or empty log prints a note
+  and exits 0.
+- **AC5** *(relation to the browser-held TurnTrace)* This log is a second, richer record of the same turn,
+  not a replacement for the `TurnTrace` (§2) the meta-line carries to the browser. The line's `trace` member
+  is the picked subset (`rounds`, `healed`, `failureCodes`, `exemplarIds`, and the prompt-size facts); the
+  log adds what the browser never holds (raw per-round model text, upstream bodies, timings). The browser
+  `TurnTrace` stays the only trace on the validated A2UI wire, and nothing in this log is read back into a
+  prompt.
+
+### 3.4b Preset prose is gated against the live catalogs (T-0159)
+
+**SPEC-R33: Authored preset and library prose names only what the shipped catalogs carry.** The prose a
+preset ships (its `surfaceStyle`, skills and workflows) and the authored library packs MUST NOT name a
+compound component type, or a `Text` variant, that the committed `catalog.json` files do not carry. A preset
+is held to the default catalog plus its own `localPatterns` fragment; a shared library entry, which any
+persona may add, to the default catalog plus every fragment. The producer prompts and presets also no longer
+teach the retired `[scale]` and `[density]` attributes (the canvas register is the renderer's, runtime
+SPEC-R16). *(→ PRD-G6; T-0159)*
+- **AC1** `site/pages/agent-admin-presets.test.ts` reads every preset's authored text and every library
+  pack entry and fails on an unbacked type name or Text variant, with an anti-vacuity count and a control
+  that plants a fake type and the retired `body/sm` variant and expects each to be caught.
+- **AC2** The admin prompt lint derives its compound type list from the generated `SELECTION_PROJECTION`
+  (`prompt-lint.ts`), so a new catalog type joins the list with no edit there.
+- **AC3** A preset whose seeded prose changes bumps its `seedVersion` (agent-model SPEC-R5), so saved stores
+  take the new prose.
+
 ### 3.5 The visible proof
 
 **SPEC-R10 — Site page rides the standing gates.** The demo MUST ship a site page
@@ -1972,6 +2030,8 @@ function buildToolDispatch(active: readonly IntegrationManifest[], env: Record<s
 | SPEC-R26 | PRD-G6 (per-tool fail-soft discovery — one bad tool costs one tool, the disclosed second-server-loses consequence, an injectable sink guarding the SPEC-R16 AC2 parity gate; ADR-0177 cl.3/cl.4) |
 | SPEC-R27 | Constraint C2 + PRD-G7 (the committed-roster allowlist fence + dev-proxy boot-await + once-per-lifetime discovery + empty-roster byte-identity; ADR-0177 cl.4) |
 | SPEC-R28 | PRD-G7 (admin surfacing — the host GET trio route, the live-read integrations pack, the ONE sanctioned parity-test reshape; Kim's F1 ruling, GH #567 2026-08-07; ADR-0177 cl.2/cl.4) |
+| SPEC-R32 | PRD-G1/G6 (the dev proxy's per-turn server-side trace log: one redacted line per turn, `apply: 'serve'`, never in the Worker; the browser `TurnTrace` is unchanged; T-0151) |
+| SPEC-R33 | PRD-G6 (preset and library prose gated against the live catalogs; T-0159) |
 
 The keyless A2UI test kit (`packages/agent-ui/a2ui/tools/testkit/`, T-0011) re-proves rows of this SPEC through
 scripted doubles on the real seams, adding no requirement: SPEC-R5 validate-then-stream (meta-lines before content,

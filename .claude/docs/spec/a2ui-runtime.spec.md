@@ -100,6 +100,20 @@ strict admission-time REJECT rather than a graceful degrade. *(→ PRD-G1, PRD-G
 - **AC3** *Given* an already-mounted surface, *when* a later batch's root-reachable graph would
   exceed the cap, *then* the previously rendered content remains standing, untouched.
 
+**SPEC-R16: Canvas register on the surface root.** *(T-0119, ADR-0245 Amendments 2 and 3; recorded T-0183.)*
+When the renderer mounts a surface's root under its host, it MUST set `data-tier="widget"` and
+`data-scale="md"` on that root element if the root does not already carry them. A payload never names
+either attribute and no catalog row changes: the register belongs to the renderer, so a catalog `size`
+means the same thing in every surface. Under this register the control ramp is `sm` 20 / `md` 24 /
+`lg` 28 px, the library ramp, so a composite's `lg` action is 28 px. The `[scale]` and `[density]`
+attributes are retired in favour of `data-tier`, `data-scale` and `data-density`; source that still
+uses them fails the foundations census gate (`scripts/foundations-census.mjs --gate`). The derivation (one n per element) lives in
+[`../references/geometry-sizing-spec.md`](../references/geometry-sizing-spec.md). *(→ PRD-G1)*
+- **AC1** *Given* a surface whose root carries neither attribute, *when* the root mounts, *then* the
+  root element has `data-tier="widget"` and `data-scale="md"`.
+- **AC2** *Given* a root that already carries `data-tier` or `data-scale` (a host override), *when* it
+  mounts, *then* the renderer leaves each present attribute as it is and sets only the absent one.
+
 ### 3.4 Data model & binding
 
 **SPEC-R5 — Data model upsert + binding resolution.** `updateDataModel` MUST apply upsert semantics at the given JSON-Pointer `path` (whole-model when `path` is omitted, `""`, or `"/"` — the protocol defines `/` as the root-equivalent default, both v0.9/v1.0 §updateDataModel; ADR-0099), per surface. Bindings (`{path}`) MUST resolve against the surface data model and MUST re-resolve (update the widget) when the bound data changes. *(→ PRD-G1)*
@@ -326,6 +340,7 @@ interface A2uiRenderer {
 | SPEC-R13 | PRD-G6 (version coherence) |
 | SPEC-R14 | PRD-G1, PRD-G7 (server-initiated `callFunction` RPC) |
 | SPEC-R15 | PRD-G1, PRD-G4 (render-depth guard, fault isolation) |
+| SPEC-R16 | PRD-G1 (canvas register: the renderer, not the payload, owns tier and scale) |
 | SPEC-N3, N5 | PRD-G1 + Constraint C2 (zero-dep, leak-free) |
 
 _Covers PRD-G1 fully; PRD-G2/G4/G6/G7 are co-served with sibling SPECs (catalog, harness, streaming-pipeline). Status: each doc's own header (the tree wins); the original charter table is archived (frozen 2026-07-08)._

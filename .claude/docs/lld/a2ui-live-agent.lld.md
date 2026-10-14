@@ -152,6 +152,8 @@ packages/agent-ui/a2ui/tools/agent/    # the site/tools-scoped SHELL that STAYS 
   providers/openai.ts · gemini.ts      # LLD-C10 — the IMMEDIATE NEXT SLICES (host-verify each before building)
   agent-config-schema.ts               # ADR-0135 Piece-B — the site-config builder (imports the exported ../../src/agent/{produce,mini-skills,gen-ui-mode})
   dev-proxy-plugin.ts                  # LLD-C6 — Vite configureServer middleware (dev-only, `vite`+`node:http` — the key-holder fence); allowlist + loadEnv('.env')[envKey] over process.env; C10→C3; ADR-0090 §4: validateMode(); ADR-0138: reads capped body.personaSystem
+  trace-log.ts                         # T-0151, SPEC-R32: the per-turn trace log: `TurnTraceCollector` (wraps the provider, reads meta-lines with `readMetaLine`), `redactSecrets`, `readUpstreamError`, the one fs sink `appendTraceLine` (Node-only; dev-only, `.agent-traces/YYYY-MM-DD.jsonl`)
+  traces-cli.ts                        # T-0151: `npm run traces`: the last N turns as a table, `--full N` for one turn, `--dir` for another folder
 packages/agent-ui/a2ui/src/live-agent/ # the STANDING TESTS (the vitest+tsc include) — reach out into ../../tools/agent for the shell, ../agent for the exported core
   round-trip.test.ts · prompt-drift.test.ts · produce-loop.test.ts · providers-config.test.ts · build-key-safety.test.ts
   meta-line.test.ts                    # ADR-0088 §1 — the guard's discriminator, in isolation from produce(); ADR-0097 §1: +the ask field's shallow-validation legs
@@ -436,6 +438,16 @@ false` provider (or a missing module) returns the distinguishable "provider not 
 the proxy degrades to backbone-only (like the no-key path), NEVER an unhandled crash (SPEC-R11 AC4).
 **OpenAI + Gemini adapters are the immediate NEXT slices** (config rows present, `implemented: false`;
 host-verify each streaming contract before building — ADR-0073).
+
+**Turn trace log (SPEC-R32, T-0151).** `dev-proxy-plugin.ts` builds one `TurnTraceCollector` per POST turn (both
+arms), wraps the dispatched provider with `trace.wrapProvider` so each round's raw text, tool calls, usage and
+thinking counts are captured, feeds it every line the turn yields (`observeLine`), and calls
+`appendTraceLine` once at the turn's end (also on `fail`, `abort` and `reject`). The sink is the only `node:fs`
+touch; the collector and `redactSecrets` are pure, so `agent-trace.test.ts` pins the line shape with no
+filesystem. Line format version `TRACE_LINE_VERSION` (1). The directory is `defaultTracing(env)`-gated
+(`A2UI_AGENT_TRACES=0` off) and excluded from the Vite and Vitest watchers. The Worker host never imports
+`trace-log.ts`. The browser-held `TurnTrace` (LLD-C3 `traceFor`) is untouched: the line's `trace` member copies
+its picked fields, and the log adds the per-round raw text and upstream bodies the browser never holds.
 
 **Registry load (LLD-C11):** `providers-config.ts` exposes PURE validation/lookup/degrade helpers over
 an already-parsed `ProvidersConfig`; the Node reader (proxy + the vitest shape test) supplies it via

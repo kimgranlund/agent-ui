@@ -113,3 +113,30 @@ The hosts store an assistant turn as the reply text followed by the shipped A2UI
 ## 4. Acceptance summary
 
 Keyless: every AC above except the live halves of RTS-R10 runs under `npm test` or `check:scripts`. Live: Kim's `live --leg response-type` run fills K1 to K3 in the PRD.
+
+## 5. Planned: duplicate-root semantics and retry surface-loss (T-0172, not built)
+
+Status of this section: planned. Nothing below is shipped or tested yet; T-0172 builds it and rewrites this section to the shipped behaviour in the same change. Two failures seen in live traces on 2026-10-14 (`npm run traces`, T-0151) motivate it, one on the update turn, one in the self-correct loop.
+
+### RTS-P1: duplicate-root semantics on an existing surface
+
+Today a payload that re-sends `id:"root"` for a surface that already received its root in an earlier turn fails `IDGRAPH <surfaceId>:root` (runtime SPEC-R3 AC2), the old root is kept, and `produce()` feeds back the `duplicateRoot` hint (`IDGRAPH_HINTS` in `src/agent/produce.ts`): re-create the surface with the same `surfaceId` and a complete tree, or send only the changed components without `root`. Observed: a Croupier update turn resent `root` on `table-1` and a Concierge turn resent `root` on `greet-1` inside the same payload that created `ask-1`, so the whole payload was rejected.
+
+The planned requirement picks exactly one rule and states it in the a2ui producer reference doc:
+
+- Either a resent `root` with the same surface id replaces the surface's root (the validator treats `updateComponents` as an upsert by id and the duplicate-root check is relaxed for that case), or
+- the rule stays strict and the retry feedback names the exact repair for the offending surface ("drop the root line for greet-1, keep ask-1 unchanged").
+
+The deciding input is the A2UI v1.0 `updateComponents` upsert-by-id wording; the choice and its ADR-free citation go in T-0172's closing note, not in a new ADR clause.
+
+- AC1 (planned): a keyless regression replays the recorded Croupier and Concierge payloads through the validator and the self-correct path and fails before the fix.
+- AC2 (planned): whichever rule lands, the producer reference doc states it in one sentence and the `duplicateRoot` hint agrees with it.
+
+### RTS-P2: a retry must not silently lose a surface the failed round created
+
+Today a self-correct round is judged on its own payload. A round that rewrites its answer and drops a surface the failed round created still validates, so the turn ends `ok` with the requested surface missing and only a warning in the activity strip. Observed: the Concierge `ask-1` booking card was lost when the retry updated only `greet-1`.
+
+The planned requirement: at the end of a self-correct round, `produce()` compares the surface ids the failed round tried to create with the ids the retry ships (or already holds from earlier turns). A surface present before and absent after is a loss. A loss triggers one further retry whose feedback names the lost surface ids, or, when no round is left, a halt with a plain-words error. A turn that lost the surface the user asked for never ends as a pass.
+
+- AC3 (planned): a scripted turn whose round 1 creates `ask-1` and fails IDGRAPH, and whose round 2 passes without `ask-1`, does not end `ok`; it retries with the lost id named or halts.
+- AC4 (planned): a retry that keeps every surface the failed round created ships unchanged, byte for byte with today's loop (the RTS-R4 legacy guarantee holds).
