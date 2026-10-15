@@ -31,7 +31,8 @@ Process `.claude/docs/process.md` · Standards `.claude/docs/references/` · `si
   Test Chat headless (live spends API credit; `--replay <fixture>` is keyless), writes a report, screenshots and
   named checks (no halt, no A2UI JSON as prose, no surface lost to self-correct, render lint), exit 1 on a fail;
   `-- --from-trace last` turns a trace into a keyless replay regression. Local only, no CI job; `-- selftest`
-  rides `check:scripts`. Home: `scripts/e2e-admin/README.md`, T-0174.
+  rides `check:scripts`. Home: `scripts/e2e-admin/README.md`, T-0174. A live round of many probes runs through
+  `probe/run-capped.ts <live-commands.sh> --cap <usd>` (T-0225; README, Live rounds).
 - `npm run traces`: the last live agent turns from the dev proxy's git-ignored trace log
   (`.agent-traces/YYYY-MM-DD.jsonl`, one redacted line per turn, on under `npm run dev`,
   `A2UI_AGENT_TRACES=0` turns it off); `-- --full 1` prints the newest turn in full (T-0151).

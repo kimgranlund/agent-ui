@@ -69,7 +69,9 @@ the store again" (ADR-0136).
 (`context` | `invocable`), optional `idbRef` + `contentLength` for IDB-routed text. Kinds are the
 `ENTRY_KINDS` constants in `entries.ts`: `prompt-section`, `skill`, `workflow`, `resource`, `tool`,
 `pattern-source`, `catalog` (ADR-0170). Each kind is one ordered array under the store key
-`entries:<kind>`. A disabled entry is skipped, never removed (ADR-0132 Fork 4).
+`entries:<kind>`. A disabled entry is skipped, never removed (ADR-0132 Fork 4). A skill, workflow
+or resource reaches the prompt as an index line only (ADR-0190); its full content loads when the user
+names it. That leaves a preset's own facts unread (T-0231, a known gap: agent-content SPEC §8).
 
 **Composition.** `composeSystemPrompt(sections, team?)` (`entries.ts`) projects the enabled,
 in-context entries into one markdown prompt of `## {heading}` blocks; `composeLiveSystemPrompt`
@@ -216,7 +218,9 @@ header pointing here.
   `produce()` runs it on a round that already passed the shared validator, over each touched surface merged
   with the session; a finding (`{code, path, message}`) is fed back as a self-correct round, and at the round
   bound the valid payload ships tallied `SEMANTIC_UNCORRECTED` (ADR-0238). The first one is the
-  Croupier's hand check (a stated total must match the cards shown, and a natural blackjack leaves no Hit, Stand or Double). Not the A2UI protocol's `checks`
+  Croupier's hand check (a stated total must match the cards shown, and a natural blackjack leaves no Hit, Stand or Double).
+  It is the steering mechanism: a rule taught only in prose does not move composite choice live, a check does
+  ([spec/a2ui-catalog-architecture.spec.md](../spec/a2ui-catalog-architecture.spec.md) CA-R9, T-0225). Not the A2UI protocol's `checks`
   (input validation on a component) and not a model-graded round.
 - **prompt budget**: the declared character ceiling on the whole composed system prompt, per catalog
   family (`PROMPT_CHAR_BUDGET_BASE`, `PROMPT_CHAR_BUDGET_DERIVED` in `src/agent/prompt-budget.ts`). Each

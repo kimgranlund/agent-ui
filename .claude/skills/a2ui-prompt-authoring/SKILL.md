@@ -71,7 +71,12 @@ than you meant to, and an armed run on an UNCHANGED tree is a byte-identical no-
 - **The whole composed prompt has a character budget too.** `PROMPT_CHAR_BUDGET_BASE` and
   `PROMPT_CHAR_BUDGET_DERIVED` in `src/agent/prompt-budget.ts` (ADR-0234) cap the worst-case composition,
   gated by `src/live-agent/prompt-budget.test.ts`. When an edit reds it, re-author tersely or re-measure
-  deliberately (update the MEASURED note); never raise the ceiling just to get green.
+  deliberately (update the MEASURED note); never raise the ceiling just to get green. The site leg
+  (`site/pages/agent-admin-prompt-budget.test.ts`) composes each shipped preset's real persona, not a
+  16 KB stand-in (T-0207; worst 130,097 of 142,000, `agent-ui--croupier`, measured 2026-10-14).
+- **Nothing turn-variable in the cached prefix.** Tool descriptions and the system prompt open the
+  prompt-cache prefix, so they stay byte-stable across turns; per-turn facts such as the open surfaces
+  ride on the user turn (`[Open surfaces: ...]`, T-0206, response-type-selection SPEC RTS-R1 REV).
 - **Catalog-grounded ONLY:** every component/prop the body names must exist in
   `catalog/default/catalog.json` at its WIRE name (Stat's wire prop is `value`, not the DOM `figure`).
   Verify — there is no Divider, for example; teaching one causes validate-loop churn.
@@ -168,6 +173,12 @@ The arc's ordering, cheapest-correct-first:
    (`PersonaCatalogManifest.semanticChecks`, ADR-0238) whose finding feeds the repair round.
    Keep the teaching and the check naming the same paths (`/dealerHand`, `/dealerTotal`), or the
    check judges a shape the prompt never asked for.
+5. **A "use composite X" or "update the surface" rule is a hint until a check backs it.** Prose
+   alone moved neither composite choice nor surface updates live: the Croupier drew CardTable only
+   after `BET_TABLE_MISSING`, the T-0200 teaching changed nothing, and in round 2 (T-0225) the
+   Concierge drew its composite on 1 of 24 turns and the Lexicographer on 0 of 28. Every such rule
+   ships with a deterministic check in the repair loop (a semantic check or a probe
+   `--expect-turn`); the prose stays as the hint. Levers and order: catalog-architecture SPEC CA-R9.
 
 ## Worked precedents
 

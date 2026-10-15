@@ -43,4 +43,17 @@ Each turn records the request the page sent (model, effort, catalog), the wire l
 
 A probe fixture (`agent-ui-chat-probe` v1) holds the preset, the steps and, per produce request, the wire `lines` plus the model `rounds` behind them. `--from-trace` never hand-builds lines: each recorded round runs through the real `produce()` with the testkit's scripted provider, threading the session and passing the persona's semantic checks as the dev proxy does, so self-correct, check retries and halts are today's code. The generated `<name>.test.mjs` re-derives the lines the same way and asserts every DOM-free check is green; it runs in `npm test` (the `scripts` project). A test generated from a failing live trace is red until the producer fix lands, so commit it with that fix.
 
+A replay pinned to today's failures carries an `// expectedFail: T-NNNN` comment and asserts the exact failing `check:turn` list. When that ticket's fix lands, the list empties and the test goes red: flip it to `toEqual([])` in the fix's change (re-pin with a comment, as in #1995 and #1997). A lane rebased onto a main that pinned new replays re-runs `npx vitest run --project scripts scripts/e2e-admin/probe/replays/` and re-pins what its own fix flipped.
+
 `probe/fixtures/` holds the selftest cases: `green-button` and `recorded-haiku-hello` (the T-0174 live smoke) are green; `seeded-json-prose` must fail `no-json-as-prose` and `no-surface-loss`; `seeded-dropped-surface` must fail exactly `no-surface-loss`.
+
+## Live rounds
+
+A live round runs many probes in one go to find bugs, not to gate. Round 1 was T-0184 (the Croupier); round 2 was T-0225 (`.sdlc/live-round-2/report.md`).
+
+1. Scenarios are data in `probe/scenarios/*.ts` (one file per preset, `--expect-turn` per step). `node --experimental-strip-types scripts/e2e-admin/probe/scenarios/round.ts` prints the round's `live-commands.sh` (Haiku first, then Sonnet, then Opus, so a stop at the cap leaves the cheap cells filled); `round.test.mjs` pins the file to the generator.
+2. `node --experimental-strip-types scripts/e2e-admin/probe/run-capped.ts <live-commands.sh> --cap <usd>` runs it one probe at a time, skips a run whose `report.json` exists, and stops once the spend estimated from `.agent-traces/` reaches the cap. `--dry-run` lists the runs.
+3. Prices come from the claude-api skill's model table, never from memory (`PRICES` in `run-capped.ts`: Haiku 5.5 $0.10 / $0.50, Sonnet 5.5 $2 / $10, Opus 5.5 $4 / $20 per million input / output tokens). Seen so far: 8 Haiku runs about $0.23; round 2, 42 runs about $17.86 under a $20 cap; an Opus Croupier run about $1.20.
+4. Phase 2 turns the runs into a report (a findings table with trace lines as evidence), one ticket per root cause (not per symptom), and a keyless replay per finding via `--from-trace`, pinned as above.
+
+Model behavior seen live is in `.claude/docs/spec/agent-closed-loop.spec.md` §5.
