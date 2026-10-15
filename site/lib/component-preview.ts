@@ -898,9 +898,8 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
   // generic "Sample content" child fallback, because the card's `child` slot is an OPTIONAL extra block and a
   // stray Text after the body would misrepresent the real job.
   ProductCard: () => ({ rootRef: { action: { action: 'book_room', context: { room: 'harbour' } } }, extras: [] }),
-  // BoardGrid (ADR-0243 and its Amendment 2): the approved mockup's battle board, the same sea as
-  // frontier-board-grid-guesses' second board: hit (a filled dot, danger), miss (a ring, neutral) and a sunk
-  // ship (boxed squares, success). Read-only on the wire, so no action.
+  // BoardGrid (ADR-0243 and its Amendment 2): the approved mockup's battle board: hit (a filled dot, danger),
+  // miss (a ring, neutral) and a sunk ship (boxed squares, success). Read-only on the wire, so no action.
   BoardGrid: () => ({
     rootRef: {
       cells: [
