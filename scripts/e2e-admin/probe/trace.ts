@@ -182,9 +182,12 @@ export async function fixtureFromTrace(entries: readonly TraceEntry[], name: str
     }
   })
   const lines = await deriveLines(plan, { catalogId, resolveCatalog: nodeCatalogResolver(cwd) })
-  const steps: ProbeStep[] = entries.map((e, i) =>
-    e.line.user.startsWith('{') ? { click: clickLabel(e.line.user, lines.slice(0, i).flat()) } : { say: typedText(e.line.user) },
-  )
+  // T-0222: a client turn that carries an error, not an action, is page-fired (a renderer rejection's error turn).
+  const steps: ProbeStep[] = entries.map((e, i) => {
+    if (!e.line.user.startsWith('{')) return { say: typedText(e.line.user) }
+    const error = (plan[i]!.input as { message?: { error?: { code?: unknown } } }).message?.error
+    return error !== undefined ? { page: typeof error.code === 'string' ? error.code : 'error' } : { click: clickLabel(e.line.user, lines.slice(0, i).flat()) }
+  })
   const turns: ProbeTurn[] = entries.map((_entry, i) => ({ lines: lines[i]!, rounds: plan[i]!.rounds, input: plan[i]!.input }))
   return {
     kind: 'agent-ui-chat-probe',
@@ -230,7 +233,9 @@ export async function offlineReplay(fixture: ProbeFixture, cwd: string): Promise
       const fallback =
         step !== undefined && 'say' in step
           ? { kind: 'intent' as const, text: step.say }
-          : { kind: 'client' as const, message: { version: 'v1.0', action: { name: step?.click ?? 'click' } } }
+          : step !== undefined && 'page' in step
+            ? { kind: 'client' as const, message: { version: 'v1.0', error: { code: step.page } } }
+            : { kind: 'client' as const, message: { version: 'v1.0', action: { name: step !== undefined && 'click' in step ? step.click : 'click' } } }
       return { rounds: t.rounds!, input: t.input ?? fallback }
     })
     lines = await deriveLines(plan, { catalogId, resolveCatalog: nodeCatalogResolver(cwd) })

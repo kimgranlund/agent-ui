@@ -102,7 +102,7 @@ export function probeArgv(scenario: CroupierScenario, model: { id: string; short
   return [
     '--agent', 'croupier',
     '--model', model.id,
-    ...scenario.steps.flatMap((s) => [...('say' in s ? ['--say', s.say] : ['--click', s.click]), ...(s.expect ?? []).flatMap((c) => ['--expect-turn', c])]),
+    ...scenario.steps.flatMap((s) => [...('say' in s ? ['--say', s.say] : 'click' in s ? ['--click', s.click] : []), ...(s.expect ?? []).flatMap((c) => ['--expect-turn', c])]),
     ...scenario.expectComponents.flatMap((c) => ['--expect-component', c]),
     '--out', `${RUNS_DIR}/${name}`,
     '--name', name,
