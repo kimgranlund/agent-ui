@@ -103,7 +103,7 @@ describe('T-0207: the prompt budget over each shipped preset (real composed pers
     const worst = rows.reduce((a, b) => (b.total > a.total ? b : a))
     const largest = rows.reduce((a, b) => (b.personaChars > a.personaChars ? b : a))
     console.info(`[T-0207] largest persona ${largest.personaChars} (${largest.id}); worst ${worst.total} (${worst.catalogId}, ${worst.mode}) of ${worst.limit}, headroom ${worst.limit - worst.total}`)
-  })
+  }, 30_000) // composes every preset against every catalog, base plus persona shards (T-0240); 5 s is too tight on CI
 
   it('negative control: a seeded oversized preset goes over its budget', async () => {
     const croupier = AGENT_PRESETS.find((p) => p.id === 'croupier')!
