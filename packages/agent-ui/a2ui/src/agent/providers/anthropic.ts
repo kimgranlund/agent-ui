@@ -457,6 +457,7 @@ function buildArmBody(req: {
   modelSettings?: ModelSettings
   tools?: readonly ToolDef[]
   extraMessages?: readonly AnthropicMessage[]
+  toolChoice?: { name: string }
 }): Record<string, unknown> {
   const row = capabilitiesFor(req.model)
   const settings = normalizeModelSettings(req.model, req.modelSettings, req.effort)
@@ -478,7 +479,10 @@ function buildArmBody(req: {
     const mode = settings.thinking ?? 'adaptive'
     return mode === 'adaptive' ? { type: 'adaptive', display: settings.display ?? DEFAULT_DISPLAY } : { type: mode }
   }
-  const explicitThinking = settings.thinking !== undefined || settings.display !== undefined
+  // A display alone never adds the field when a forced tool would ride the body: the low arm keeps the
+  // RTS-R2 forced tool (thinking on rules it out), so show reasoning yields to the surface override there.
+  const forcedTool = req.toolChoice !== undefined && (req.tools?.length ?? 0) > 0 && !rejectsForcedToolChoice(req.model)
+  const explicitThinking = settings.thinking !== undefined || (settings.display !== undefined && !forcedTool)
   // 'low' (or unset) ⇒ no thinking field unless one was set. Haiku 5.5 gets its own scaled default
   // (HAIKU_55_MAX_TOKENS.default, T-0035) and, unset, an explicit `low` (T-0032: its API default is
   // `medium`). T-0185: an explicit effort on a model with a dial is always sent, so `low` reaches the API.

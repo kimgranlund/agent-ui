@@ -97,6 +97,14 @@ describe('buildRequestBody per model: only accepted params are sent (T-0185)', (
     expect(buildRequestBody({ ...BASE, model: 'claude-opus-5-5', effort: 'medium', modelSettings: { thinking: 'between_tools' } })['thinking']).toEqual({ type: 'adaptive', display: 'summarized' })
   })
 
+  it('the default show-reasoning display never costs Haiku 5.5 its forced tool_choice at low effort (RTS-R2)', () => {
+    const tools = [{ name: 't', description: 'd', input_schema: { type: 'object' } }]
+    const body = buildRequestBody({ ...BASE, model: 'claude-haiku-5-5', effort: 'low', modelSettings: { display: 'summarized' }, tools, toolChoice: { name: 't' } })
+    expect(body['tool_choice']).toEqual({ type: 'tool', name: 't' })
+    expect(body['thinking']).toBeUndefined()
+    expect(buildRequestBody({ ...BASE, model: 'claude-haiku-5-5', modelSettings: { display: 'summarized' }, tools, toolChoice: { name: 't' } })['tool_choice']).toEqual({ type: 'tool', name: 't' })
+  })
+
   it('show reasoning off sends display omitted; at low it still sends the thinking field so the choice reaches the API', () => {
     expect(buildRequestBody({ ...BASE, model: 'claude-opus-5-5', effort: 'high', modelSettings: { display: 'omitted' } })['thinking']).toEqual({ type: 'adaptive', display: 'omitted' })
     expect(buildRequestBody({ ...BASE, model: 'claude-sonnet-5-5', effort: 'low', modelSettings: { display: 'summarized' } })['thinking']).toEqual({ type: 'adaptive', display: 'summarized' })
