@@ -28,3 +28,8 @@ Author through the a2ui-payload-authoring seat and its validate loop; a2ui-revie
 ## Done when
 - Each of the four seeds validates against its persona catalog and scores 3 or higher from a2ui-review-agent, verdicts saved beside the handoff.
 - `npm run check` exit 0.
+
+## Acceptance criteria
+- `npx vitest run --project packages packages/agent-ui/a2ui/src/examples/domain-seeds.test.ts` exits 0: each of the four seeds in `packages/agent-ui/a2ui/src/examples/domain-seeds.ts` validates against its own catalog (persona seeds against the composed `agent-ui--croupier` / `agent-ui--concierge` document), renders with an empty error channel, and passes the live semantic checks (persona, hidden-state, composite-moment).
+- `python3 -c "import json,sys; v=json.load(open('.sdlc/domain-seeds/review-verdicts.json'))['verdicts']; sys.exit(0 if len(v)==4 and all(r['qualityScore']>=3 for r in v.values()) else 1)"` exits 0: the a2ui-review-agent VerdictsFile scores all four seeds 3 or higher.
+- `npm run check` exits 0.
