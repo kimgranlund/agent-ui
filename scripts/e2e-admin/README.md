@@ -48,7 +48,7 @@ A probe fixture (`agent-ui-chat-probe` v1) holds the preset, the steps and, per 
 
 A replay pinned to today's failures carries an `// expectedFail: T-NNNN` comment and asserts the exact failing `check:turn` list. When that ticket's fix lands, the list empties and the test goes red: flip it to `toEqual([])` in the fix's change (re-pin with a comment, as in #1995 and #1997). A lane rebased onto a main that pinned new replays re-runs `npx vitest run --project scripts scripts/e2e-admin/probe/replays/` and re-pins what its own fix flipped.
 
-`probe/fixtures/` holds the selftest cases: `green-button` and `recorded-haiku-hello` (the T-0174 live smoke) are green; `seeded-json-prose` must fail `no-json-as-prose` and `no-surface-loss`; `seeded-dropped-surface` must fail exactly `no-surface-loss`.
+`probe/fixtures/` holds the selftest cases: `green-button` and `recorded-haiku-hello` (the T-0174 live smoke, its Card-per-option surface hand-edited to a Row of plain Buttons in T-0257 so the lone-button-frame check stays green) are green; `seeded-json-prose` must fail `no-json-as-prose` and `no-surface-loss`; `seeded-dropped-surface` must fail exactly `no-surface-loss`.
 
 ## Live rounds
 
