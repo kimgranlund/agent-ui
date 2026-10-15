@@ -148,8 +148,9 @@ export interface TraceSection {
 }
 
 /** T-0239: how the turn's context was routed. The catalog and references are known before the model call,
- *  so they are recorded on every outcome; `miniSkills`, `sections` and `cacheBoundary` come from produce()'s
- *  trace and are absent on a turn that threw before its final meta-line. */
+ *  so they are recorded on every outcome that reaches it (a `rejected` line has none); `miniSkills` (the ids
+ *  selected, whether or not a mini-skills section was composed), `sections` and `cacheBoundary` come from
+ *  produce()'s trace and are absent on a turn that threw before its final meta-line. */
 export interface TraceRouting {
   catalog: { id: string; base: string; persona?: string; domains: string[] }
   references: TraceReference[]

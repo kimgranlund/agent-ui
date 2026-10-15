@@ -136,9 +136,15 @@ class Builder:
         for ex in trace.get('exemplarIds') or []:
             sid = self.source(f'exemplar:{ex}', f'corpus/{ex}')
             self.loaded(event, sid, 'trace.exemplarIds', dumps(ex))
+        # A selected mini-skill is loaded only when the turn composed a mini-skills section (an a2ui-off turn
+        # selects but composes none).
+        composed = any(s.get('id') == 'mini-skills' for s in sections or [])
         for ms in (routing or {}).get('miniSkills') or []:
             sid = self.source(f'mini-skill:{ms}', f'{MINI_SKILL_DIR}/{ms}.md')
-            self.loaded(event, sid, 'routing.miniSkills', dumps(ms))
+            if composed:
+                self.loaded(event, sid, 'routing.miniSkills', dumps(ms))
+            else:
+                self.indexed(event, sid, 'routing.miniSkills, selected with no mini-skills section composed', dumps(ms))
 
         # Referenced content: the routing block when present, else the framed blocks in the user text.
         if routing is not None:
@@ -254,7 +260,8 @@ def selftest() -> int:
                           'references': [{'kind': 'resource', 'name': 'property-knowledge-base', 'load': 'index-only', 'via': 'index'},
                                          {'kind': 'workflow', 'name': 'booking-flow', 'load': 'full', 'via': 'history'}],
                           'miniSkills': ['card-layout'], 'cacheBoundary': 20,
-                          'sections': [{'id': 'grammar', 'chars': 20, 'cache': 'stable'}, {'id': 'persona', 'chars': 10, 'cache': 'volatile'}]}}
+                          'sections': [{'id': 'grammar', 'chars': 20, 'cache': 'stable'}, {'id': 'mini-skills', 'chars': 5, 'cache': 'volatile'},
+                                       {'id': 'persona', 'chars': 10, 'cache': 'volatile'}]}}
     older = {'v': 1, 'at': '2026-10-15T10:01:00.000Z', 'route': 'produce', 'agent': 'croupier', 'model': 'm', 'outcome': 'ok',
              'user': '## Referenced for this message\n### blackjack (resource)\nrules\n\nLet\'s play.',
              'trace': {'rounds': 1, 'healed': 0, 'failureCodes': [], 'exemplarIds': ['ex-2'], 'promptChars': 40}}
@@ -275,6 +282,13 @@ def selftest() -> int:
     included = {(c['eventId'], c['sourceId']) for c in data['contextRecords']}
     check(('e0', 'workflow:booking-flow') in included and ('e0', 'persona:concierge') in included, 'included records for loaded sources')
     check([c['sourceId'] for c in data['candidates']] == ['resource:property-knowledge-base'], 'index-only entry is an available candidate')
+    off = dict(routed, routing=dict(routed['routing'], sections=[{'id': 'persona', 'chars': 10, 'cache': 'volatile'}]))
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, 't.jsonl')
+        with open(path, 'w', encoding='utf-8') as fh:
+            fh.write(dumps(off) + '\n')
+        off_states = {x['sourceId']: x['state'] for x in hydrate(path, REPO_ROOT)['events'][0]['exposures']}
+    check(off_states.get('mini-skill:card-layout') == 'discovered', 'a selected mini-skill with no section composed is not read')
     check(('e1', 'resource:blackjack') in included, 'an older line falls back to the framed user text')
     check(len(data['findings']) == 1 and data['findings'][0]['title'] == 'Turn 1 failed PARSE', 'one finding per failure code')
     for coll in ('contextRecords', 'candidates'):
