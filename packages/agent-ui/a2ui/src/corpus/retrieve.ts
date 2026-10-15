@@ -38,10 +38,17 @@
 // persona's fragment types) is in scope only on a turn whose catalog id IS that id; a record stamped with a base id
 // stays in scope for its base and every catalog derived from it. A croupier turn draws on the base and croupier
 // shards, a concierge turn never sees a croupier record, and a base turn sees neither.
+//
+// T-0253: the family rule, games only. A persona turn's composite family is the types its fragment homes
+// (`personas/<persona>`: CardTable and PlayingCard for croupier). Each game is its own family, so when the family is
+// non-empty a games record ranks first only if it uses a family type; another game's composite (a board on a card
+// table's turn) competes with the rest on a positive score. Other domains keep the T-0238 order, because their
+// composites serve one job together (a concierge turn still ranks the ServiceCard gateway first).
 
 import type { CorpusRecord, ModelVisibleFacet } from './record.ts'
 import { baseCatalogId } from './base-id.ts'
 import { CATALOG_LAYER_MAP, selectedDomains } from '../catalog/layers.ts'
+import { splitCatalogId } from '../catalog/catalog-id.ts'
 import { topKByCosine } from './text-similarity.ts'
 
 export interface RetrieveQuery {
@@ -72,6 +79,16 @@ function recordDomains(rec: CorpusRecord): string[] {
   return [...out]
 }
 
+/** T-0253: the domains whose composites are rival families (one game each), ranked by the persona's own family. */
+const FAMILY_DOMAINS: readonly string[] = ['games']
+
+/** T-0253: the domain-layer types a `<base>--<persona>` id's fragment homes (`[]` for a base id). */
+function familyTypes(catalogId: string): Set<string> {
+  const { tail } = splitCatalogId(catalogId)
+  const home = `personas/${tail}`
+  return new Set(tail === undefined ? [] : Object.entries(CATALOG_LAYER_MAP).flatMap(([t, r]) => (r.layer === 'domain' && r.home === home ? [t] : [])))
+}
+
 /**
  * TF-IDF cosine top-k retrieval (SPEC-R11) over `promptText` + `meta.componentsUsed`, scoped to
  * `query.catalogId`/`query.protocolVersion` and restricted to non-quarantined records of one
@@ -81,6 +98,7 @@ function recordDomains(rec: CorpusRecord): string[] {
  * T-0238: on a turn whose catalog selects domains (`selectedDomains`), a record using another domain's type is out
  * of scope, the turn's own domain records rank first (all of them, best match first), and the remaining slots take
  * only records that score above zero. Fewer than `k` results is the honest answer when nothing else matches.
+ * T-0253: on a persona turn whose fragment homes domain types, a games record ranks first only if it uses one of them.
  *
  * Never throws. Resolves to `[]` for: an empty `records` input, an empty scope after filtering
  * (SPEC-R11 AC2), `query.k <= 0`, or a query whose tokens share zero vocabulary with the scope — a
@@ -107,12 +125,15 @@ export function retrieve(records: readonly CorpusRecord[], query: RetrieveQuery)
 
   const byName = (a: CorpusRecord, b: CorpusRecord): number => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)
   const selected = selectedDomains(query.catalogId)
+  const family = familyTypes(query.catalogId)
+  const ofFamily = (r: CorpusRecord, domains: readonly string[]): boolean =>
+    family.size === 0 || !domains.some((d) => FAMILY_DOMAINS.includes(d)) || (r.meta.componentsUsed ?? []).some((t) => family.has(t))
   const own: CorpusRecord[] = []
   const rest: CorpusRecord[] = []
   for (const r of scope) {
     const domains = recordDomains(r)
     if (selected.length > 0 && domains.some((d) => !selected.includes(d))) continue
-    ;(domains.length > 0 && selected.length > 0 ? own : rest).push(r)
+    ;(domains.length > 0 && selected.length > 0 && ofFamily(r, domains) ? own : rest).push(r)
   }
   const ranked = topKByCosine(own, documentText, query.intent, own.length, byName)
   const first = [...ranked, ...own.filter((r) => !ranked.includes(r)).sort(byName)].slice(0, query.k)
