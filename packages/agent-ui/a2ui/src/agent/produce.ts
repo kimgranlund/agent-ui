@@ -1199,7 +1199,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   let textJsonlIgnored = false // RTS-R3: sticky, a capture round's text channel carried wire or genui lines that were dropped
   let textJsonlRouted = false // T-0172: sticky, a text round's prose carried A2UI lines that became the payload
   // T-0172: the action a client turn answers, read by the semantic checks (a no-payload round is judged too).
-  const turnAction = input.kind === 'client' ? semanticActionOf(input.message) : undefined
+  // T-0215: a press with no client `dataModel` reads the surface's data model replayed off the session.
+  const turnAction = input.kind === 'client' ? semanticActionOf(input.message, input.session) : undefined
   // T-0172: every surface a failed round of this turn created that no failure named; a later round that
   // passes without one has dropped it (SURFACE_DROPPED), never a success.
   const keptSurfaces = new Set<string>()

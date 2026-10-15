@@ -58,7 +58,8 @@ export interface SurfaceView {
 }
 
 /** T-0172: the user action a client turn answers: its name, the surface it came from, its resolved context, and
- *  the surface's data model as the client sent it at click time (the state BEFORE this turn's writes). */
+ *  the surface's data model at click time (the state BEFORE this turn's writes): as the client sent it, or (T-0215)
+ *  when the surface was created without `sendDataModel`, as the session's prior assistant turns left it. */
 export interface SemanticAction {
   readonly name: string
   readonly surfaceId: string
@@ -74,14 +75,17 @@ export interface SemanticCheckInput {
   readonly action?: SemanticAction
 }
 
-/** The `SemanticAction` of a client message (`{action:{name, surfaceId, context?, dataModel?}}`), or undefined. */
-export function semanticActionOf(message: unknown): SemanticAction | undefined {
+/** The `SemanticAction` of a client message (`{action:{name, surfaceId, context?, dataModel?}}`), or undefined.
+ *  T-0215: a message with no `dataModel` (a surface created without `sendDataModel`, the recorded Haiku 5.5 table)
+ *  takes the surface's data model replayed off `session`'s prior assistant turns, so a check never goes blind. */
+export function semanticActionOf(message: unknown, session?: SemanticTurnLog): SemanticAction | undefined {
   const a = typeof message === 'object' && message !== null ? (message as { action?: unknown }).action : undefined
   if (typeof a !== 'object' || a === null) return undefined
   const { name, surfaceId, context, dataModel } = a as Record<string, unknown>
   if (typeof name !== 'string' || typeof surfaceId !== 'string') return undefined
   const ctx = typeof context === 'object' && context !== null && !Array.isArray(context) ? (context as Record<string, unknown>) : {}
-  return { name, surfaceId, context: ctx, dataModel }
+  const clickTime = dataModel === undefined && session !== undefined ? replaySession(session).get(surfaceId)?.dataModel : dataModel
+  return { name, surfaceId, context: ctx, dataModel: clickTime }
 }
 
 /** A persona-declared semantic check (ADR-0238). Pure and synchronous; `[]` means consistent. */
@@ -184,12 +188,8 @@ function apply(views: Map<string, MutableView>, msg: unknown): string | undefine
   return undefined
 }
 
-/**
- * The surfaces a check judges: the session's prior ASSISTANT turns (stored validated JSONL, one message
- * per line) replayed in order, then this round's `output` on top. Only surfaces this round's `output`
- * creates or updates, and that survive to the end of it, are returned, in first-touch order.
- */
-export function semanticSurfaceViews(session: SemanticTurnLog, output: A2uiOutput): SurfaceView[] {
+/** The session's prior ASSISTANT turns (stored validated JSONL, one message per line) replayed in order. */
+function replaySession(session: SemanticTurnLog): Map<string, MutableView> {
   const views = new Map<string, MutableView>()
   for (const turn of session.turns) {
     if (turn.role !== 'assistant') continue
@@ -203,6 +203,16 @@ export function semanticSurfaceViews(session: SemanticTurnLog, output: A2uiOutpu
       }
     }
   }
+  return views
+}
+
+/**
+ * The surfaces a check judges: the session's prior ASSISTANT turns (stored validated JSONL, one message
+ * per line) replayed in order, then this round's `output` on top. Only surfaces this round's `output`
+ * creates or updates, and that survive to the end of it, are returned, in first-touch order.
+ */
+export function semanticSurfaceViews(session: SemanticTurnLog, output: A2uiOutput): SurfaceView[] {
+  const views = replaySession(session)
   const touched: string[] = []
   for (const msg of output) {
     const sid = apply(views, msg)
