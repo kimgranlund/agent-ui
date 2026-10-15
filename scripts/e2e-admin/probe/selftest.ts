@@ -132,6 +132,14 @@ export async function runProbeSelftest(): Promise<number> {
     const verdict = caseVerdict(runChecks([rec], o ?? opts), [check])
     expectThat(verdict === undefined, `checks: the ${label} record fails exactly ${check} (${verdict})`)
   }
+  // T-0235: live prose is the whole chat log, so a leak in turn 1 is still there on turn 2 and 3. Each prose check
+  // judges what the turn added: the old leak fails turn 1 only, and a new leak (or the same id again) fails its turn.
+  const LEAK = 'Here: {"version":"v1.0","createSurface":{"surfaceId":"t"}} Table-3 is open.'
+  const logTurn = (index: number, proseText: string): TurnRecord => record({ index, proseScope: 'log', proseText })
+  const liveChecks = runChecks([logTurn(0, 'Hi.'), logTurn(1, `Hi. ${LEAK}`), logTurn(2, `Hi. ${LEAK} Dealt.`), logTurn(3, `Hi. ${LEAK} Dealt. ${LEAK}`)], opts)
+  const failTurns = (name: string): string => liveChecks.filter((c) => c.check === name && c.status === 'fail').map((c) => c.turn).join(',')
+  for (const name of ['no-json-as-prose', 'no-internal-leak'])
+    expectThat(failTurns(name) === '1,3', `checks: a live leak fails ${name} on its own turn, a later new leak on its turn (failed turns ${failTurns(name)})`)
   // T-0222: a step that names its own expected component (`--expect-turn`) fails when its turn leaves no surface
   // holding it: hold'em Haiku dealt its opening hand in prose and passed, since a later turn shipped PlayingCard.
   // A step without one (a refused illegal move, answered in prose on purpose) is never judged per turn.

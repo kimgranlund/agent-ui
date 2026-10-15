@@ -250,25 +250,33 @@ const A2UI_IN_PROSE: readonly RegExp[] = [
   /\{\s*"a2uiMeta"\s*:/, // T-0213: a meta-line shown as the reply
 ]
 
-/** The first A2UI-shaped fragment in a prose text, or undefined. */
-export function a2uiInProse(text: string): string | undefined {
-  for (const re of A2UI_IN_PROSE) {
-    const m = re.exec(text)
-    if (m) return text.slice(Math.max(0, m.index - 20), m.index + 60).replace(/\s+/g, ' ')
+/** T-0235: the first match of `patterns` in `text` that `before` holds fewer times, so a fragment the turn added
+ *  to a cumulative chat log. With no `before`, the first match. Counting, not a prefix cut: the page re-renders
+ *  earlier bubbles (a page-fired turn replaces the note, tkt-0079), so the log does not only grow at its end. */
+function firstNewMatch(text: string, patterns: readonly RegExp[], before?: string): RegExpExecArray | undefined {
+  const count = (s: string, re: RegExp, hit: string): number => [...s.matchAll(re)].filter((m) => m[0] === hit).length
+  for (const re of patterns) {
+    const all = new RegExp(re.source, `${re.flags.replace('g', '')}g`)
+    for (const m of text.matchAll(all)) {
+      if (before === undefined || count(text, all, m[0]) > count(before, all, m[0])) return m as RegExpExecArray
+    }
   }
   return undefined
+}
+
+/** The first A2UI-shaped fragment in a prose text (one `before` does not already hold), or undefined. */
+export function a2uiInProse(text: string, before?: string): string | undefined {
+  const m = firstNewMatch(text, A2UI_IN_PROSE, before)
+  return m === undefined ? undefined : text.slice(Math.max(0, m.index - 20), m.index + 60).replace(/\s+/g, ' ')
 }
 
 /** T-0217: a repair round's correction note, or a surface id, in the chat prose. */
 const INTERNAL_IN_PROSE: readonly RegExp[] = [/\b(?:Corrected|Correction)\s*:/, /^\s*Fixed\b[.:!]/m, /\b(?:table|ask)-\d+\b/i]
 
-/** The first internal fragment (correction note or surface id) in a prose text, or undefined. */
-export function internalInProse(text: string): string | undefined {
-  for (const re of INTERNAL_IN_PROSE) {
-    const m = re.exec(text)
-    if (m) return m[0].trim()
-  }
-  return undefined
+/** The first internal fragment (correction note or surface id) in a prose text (one `before` does not already
+ *  hold), or undefined. */
+export function internalInProse(text: string, before?: string): string | undefined {
+  return firstNewMatch(text, INTERNAL_IN_PROSE, before)?.[0].trim()
 }
 
 // ── the turn record and the checks ────────────────────────────────────────────────────────────────────
@@ -296,6 +304,9 @@ export interface TurnRecord {
   domHosts?: number
   /** The chat log's visible text outside every surface host after the turn; offline, the meta prose. */
   proseText: string
+  /** T-0235: `log` when `proseText` is the whole chat log (live); the prose checks then judge only what the turn
+   *  added over the previous `log` record. Absent: the turn's own prose (offline). */
+  proseScope?: 'log'
   /** T-0172: a `--click` whose label no surface button carried; the run stops there and still reports. */
   clickMissing?: { label: string; available: string[] }
   lint?: Array<{ rule: string; detail: string }>
@@ -355,8 +366,11 @@ export function runChecks(turns: readonly TurnRecord[], opts: CheckOptions): Che
   const out: CheckResult[] = []
   const shippedSoFar: string[] = []
   const held = new Map<string, Set<string>>()
+  let logBefore: string | undefined
   for (const t of turns) {
     const meta = metaOf(t.lines)
+    const before = t.proseScope === 'log' ? (logBefore ?? '') : undefined
+    if (t.proseScope === 'log') logBefore = t.proseText
     // model-pick: the page sent the model and effort the probe asked for.
     if (opts.model === undefined && opts.effort === undefined) out.push({ check: 'model-pick', turn: t.index, status: 'skip', detail: 'no --model or --effort asked' })
     else if (t.request === undefined) out.push({ check: 'model-pick', turn: t.index, status: 'skip', detail: 'no request body observed' })
@@ -378,17 +392,17 @@ export function runChecks(turns: readonly TurnRecord[], opts: CheckOptions): Che
       t.trace !== undefined && (t.trace.outcome === 'halt' || t.trace.outcome === 'error') ? `trace outcome ${t.trace.outcome}` :
       t.httpStatus !== undefined && (t.httpStatus < 200 || t.httpStatus >= 300) ? `HTTP ${t.httpStatus}` : undefined
     out.push({ check: 'no-halt', turn: t.index, status: halted ? 'fail' : 'pass', detail: halted ?? `outcome ${t.trace?.outcome ?? 'ok'}` })
-    // no-json-as-prose: the chat log's prose (outside surface hosts) carries no A2UI JSON.
-    const leak = a2uiInProse(t.proseText)
+    // no-json-as-prose: the turn's prose (outside surface hosts; live, what it added to the log) carries no A2UI JSON.
+    const leak = a2uiInProse(t.proseText, before)
     out.push({ check: 'no-json-as-prose', turn: t.index, status: leak ? 'fail' : 'pass', detail: leak ? `A2UI JSON in the chat prose: ...${leak}...` : `${t.proseText.length} chars of prose, clean` })
     // no-internal-leak (T-0217): the chat prose shows no repair round ("Corrected:") and no surface id ("table-3").
-    const internal = internalInProse(t.proseText)
+    const internal = internalInProse(t.proseText, before)
     out.push({ check: 'no-internal-leak', turn: t.index, status: internal ? 'fail' : 'pass', detail: internal ? `internal text in the chat prose: "${internal}"` : 'no correction note or surface id' })
     // reply-text (T-0194): a turn that ships A2UI carries reply text on its own wire (note or text deltas), and
     // the chat never shows the "Emitted N A2UI message(s)" tally (a Sonnet 5.5 hello shipped only that).
     const content = t.lines.filter((l) => readMetaLine(l) === undefined && l.trim() !== '').length
     const replyText = meta.prose.join('').trim()
-    const tallyShown = /Emitted \d+ A2UI message\(s\)/.test(t.proseText)
+    const tallyShown = firstNewMatch(t.proseText, [/Emitted \d+ A2UI message\(s\)/], before) !== undefined
     if (halted !== undefined) out.push({ check: 'reply-text', turn: t.index, status: 'skip', detail: 'the turn halted (see no-halt)' })
     else if (content === 0) out.push({ check: 'reply-text', turn: t.index, status: 'skip', detail: 'no A2UI lines shipped (a text turn)' })
     else if (replyText === '' || tallyShown)
