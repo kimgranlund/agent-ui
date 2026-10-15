@@ -33,3 +33,7 @@ Evidence: T-0205 map `.sdlc/runtime/tasks/context-archaeology/archaeologist-L1.m
 
 ## Constraints
 No em dashes. Never hand-edit generated files; rerun their scripts. Live spend only through `chat:probe` under the stated cap.
+
+## Lane verify scope (conductor)
+One batched verifier for this lane (Kim's ruling: one verifier per bundle). Verify this handoff AND each of these, criterion by criterion, in the same tree; give one verdict per ticket under Criteria and one overall Verdict:
+- .sdlc/prompt-budget-real-presets/handoff.md
