@@ -13,8 +13,9 @@
 // turns/12s — the "livelock": macrotasks starved, so setTimeout/CDP went dark). Fixed in agent-admin.ts:
 // client turns are deferred to a fresh macrotask and consecutive error-driven turns are budgeted
 // (ERROR_TURN_BUDGET, the produce() maxRounds discipline) with a visible halt. The loop-regression test
-// below pins the poisoned shape forever; the TKT-0079 follow-through test un-skipped with a VALID
-// (update-only, no root-resend) reply.
+// below pins a poisoned reply (T-0227: T-0172 made a same-type root resend legal, so the poison is now a
+// dangling child reference); the TKT-0079 follow-through test un-skipped with a VALID (update-only, no
+// root-resend) reply.
 import { describe, it, expect, afterEach } from 'vitest'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
@@ -37,8 +38,7 @@ import type { AdminSurfaceTurnRequest, AdminSurfaceTurnEvent } from './agent-adm
 // the app package's tests stay app-scoped. TWO nodes (a Column root + a separate Button child), not the
 // old single root Button: a follow-up turn can then update the Button ALONE — a valid, update-only
 // cross-turn payload — where updating a lone root Button forced a root-resend, which the renderer's
-// cross-turn IDGRAPH guard (ADR-0128) rejects by design (the exact poisoned shape GH #63's loop test
-// below now pins deliberately).
+// cross-turn IDGRAPH guard (ADR-0128) rejected then (T-0172 has since made a same-type resend legal).
 const SEED_SURFACE_ID = 'canvas'
 const SEED_MESSAGES = [
   { version: 'v1.0', createSurface: { surfaceId: SEED_SURFACE_ID, catalogId: 'agent-ui' } },
@@ -64,13 +64,14 @@ const VALID_FOLLOWUP_LINE = JSON.stringify({
   },
 })
 
-/** The POISONED follow-up (GH #63's trigger): re-sends the ROOT on a live surface — the renderer's
- *  ADR-0128 IDGRAPH guard rejects it and emits an error client message every single time. */
-const ROOT_RESEND_LINE = JSON.stringify({
+/** The POISONED follow-up (GH #63's trigger, T-0227): resends the root listing a child no turn ever
+ *  delivered, so the renderer's finalize fails the id graph (`root->ghost`) and emits an error client
+ *  message every single time. The original root-resend poison is legal since T-0172. */
+const DANGLING_CHILD_LINE = JSON.stringify({
   version: 'v1.0',
   updateComponents: {
     surfaceId: SEED_SURFACE_ID,
-    components: [{ id: 'root', component: 'Column', children: ['btn'] }],
+    components: [{ id: 'root', component: 'Column', children: ['btn', 'ghost'] }],
   },
 })
 
@@ -274,8 +275,8 @@ describe('ui-agent-admin — GH #42: a REAL canvas click drives the next surface
     expect(secondRect.top, 'the new round renders BELOW the answered one').toBeGreaterThan(firstRect.top)
   })
 
-  it('GH #63 regression: a producer that answers every error turn with a poisoned root-resend HALTS at the budget instead of livelocking', async () => {
-    const { el, requests } = await mountWithScript(() => [{ kind: 'line', line: ROOT_RESEND_LINE }])
+  it('GH #63 regression: a producer that answers every error turn with a poisoned dangling child HALTS at the budget instead of livelocking', async () => {
+    const { el, requests } = await mountWithScript(() => [{ kind: 'line', line: DANGLING_CHILD_LINE }])
     const btn = await driveIntentToButton(el)
     btn.click()
 

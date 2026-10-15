@@ -1,0 +1,18 @@
+{
+ "subagent_type": "sdlc-lite:solo-L2",
+ "name": "0228-solo-L2",
+ "description": "Lane D small fixes (T-0228, T-0226, T-02 solo L2",
+ "model": "opus",
+ "effort": "medium",
+ "run_in_background": true,
+ "role": "solo",
+ "level": "L2",
+ "tier": "L2",
+ "prune": false,
+ "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ld/.sdlc/stray-screenshots-dirs/handoff.md",
+ "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ld/.sdlc/runtime/tasks/stray-screenshots-dirs",
+ "attempt_id": "1f604b46d9e2495db84102665121e83c",
+ "base_sha": "73b567b22cc7face54458f1699fac188c8a65c2b",
+ "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.23.1/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ld/.sdlc/stray-screenshots-dirs/handoff.md",
+ "prompt": "Lane D small fixes (T-0228, T-0226, T-0227, T-0224) | solo L2\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ld/.sdlc/stray-screenshots-dirs/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ld/.sdlc/runtime/tasks/stray-screenshots-dirs\nTree: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ld. cd /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ld && in every Bash call; edit only under that tree. Deliver every ticket in the handoff's ## Lane bundle, in order, one commit per ticket (`T-NNNN: <title>`), commit locally, no push. Gate: npm run check plus the touched folders' tests, run in the foreground through gate_lock.py. Write your report to solo-report.md in the artifacts dir.\n\nVerifier: do not start one (a sub-agent cannot spawn agents); the parent runs python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.23.1/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ld/.sdlc/stray-screenshots-dirs/handoff.md after your report."
+}

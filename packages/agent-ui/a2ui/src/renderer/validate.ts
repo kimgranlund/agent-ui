@@ -72,6 +72,7 @@ import { SUPPORTED_VERSIONS, MAX_RENDER_DEPTH } from '../protocol.ts'
 import type { A2uiComponent, Failure } from '../protocol.ts'
 import type { Catalog } from '../catalog/catalog.ts'
 import { validateCatalogConformance } from '../catalog/conformance.ts'
+import { applyComponentBatch } from './component-merge.ts'
 
 export interface ValidationVerdict {
   valid: boolean
@@ -144,7 +145,12 @@ export function validateA2ui(
 
 interface SurfaceGraph {
   rootCount: number // count of `root` deliveries (a second one is an IDGRAPH error)
-  byId: Map<string, A2uiComponent> // merged (upsert) view for dangling/cycle checks
+  byId: Map<string, A2uiComponent> // replayed view for dangling/cycle checks, built in `run` from `batches`
+  /** This payload's `updateComponents` deliveries, one entry per message, in stream order. `run` replays
+   *  them onto `byId` (over the seed, when one applies) the renderer's way (T-0226). */
+  batches: A2uiComponent[][]
+  /** The last `root` this payload delivered to the epoch, for the T-0172 type-change check. */
+  sentRoot: A2uiComponent | undefined
 }
 
 /** ADR-0064 amendment A2: one epoch of a surface's lifecycle within this payload (see module header). */
@@ -187,7 +193,7 @@ function run(
   const surfaces: PayloadSurfaces = { bySid: new Map(), deleted: new Set() }
   norm.messages.forEach((msg, i) => validateMessage(msg, i, catalog, failures, surfaces))
 
-  // TKT-0081 — merge each seeded surface's PRIOR graph UNDER this payload's deliveries, only for
+  // TKT-0081 — lay each seeded surface's PRIOR graph UNDER this payload's deliveries, only for
   // surfaces this payload actually touched (an untouched prior surface has nothing to judge). This
   // payload's records WIN an id collision (a resend REPLACES, the renderer's upsert). T-0172: that
   // includes `root`. `updateComponents` adds or updates by id (A2UI v1.0 §updateComponents; no rule
@@ -203,18 +209,23 @@ function run(
   // not preceded by a `deleteSurface` of this payload (the delete freed the seeded graph). The second
   // condition needs no check of its own: after a delete only a `createSurface` reopens the sid (the
   // erratum rule), so an epoch preceded by a delete is always `created`. Every later epoch is fresh.
-  if (sessionSeed !== undefined) {
-    for (const [sid, lifecycle] of surfaces.bySid) {
-      const seed = sessionSeed.get(sid)
-      const first = lifecycle.closed[0] ?? lifecycle.open
-      if (seed === undefined || first === undefined || first.created) continue
-      const sent = first.byId.get('root')
-      const seeded = seed.components.find((c) => c.id === 'root')
-      for (const comp of seed.components) if (!first.byId.has(comp.id)) first.byId.set(comp.id, comp)
-      if (seed.rootDelivered) {
-        if (first.rootCount === 0) first.rootCount = 1
-        else if (sent !== undefined && seeded !== undefined && sent.component !== seeded.component) first.rootCount += 1
+  //
+  // T-0226: each epoch's graph is then its batches replayed in order (`applyComponentBatch`, as the
+  // renderer applies them), so a resent container that drops a child disposes that child's subtree inside
+  // one payload too, seeded or not, and a later batch that lists it again without redelivering it dangles.
+  for (const [sid, lifecycle] of surfaces.bySid) {
+    const seed = sessionSeed?.get(sid)
+    const first = lifecycle.closed[0] ?? lifecycle.open
+    for (const epoch of lifecycle.open === undefined ? lifecycle.closed : [...lifecycle.closed, lifecycle.open]) {
+      if (epoch === first && seed !== undefined && !epoch.created) {
+        const seeded = seed.components.find((c) => c.id === 'root')
+        for (const comp of seed.components) epoch.byId.set(comp.id, comp)
+        if (seed.rootDelivered) {
+          if (epoch.rootCount === 0) epoch.rootCount = 1
+          else if (epoch.sentRoot !== undefined && seeded !== undefined && epoch.sentRoot.component !== seeded.component) epoch.rootCount += 1
+        }
       }
+      for (const batch of epoch.batches) applyComponentBatch(epoch.byId, batch)
     }
   }
 
@@ -343,6 +354,8 @@ function validateUpdateComponents(
   // The implicit open when no create precedes it (A2), unless the sid is deleted: then the renderer
   // drops this message, so it joins NO graph (its components still get the per-component checks below).
   const g = rejectIfDeleted(surfaces, body.surfaceId, failures) ? undefined : openEpoch(surfaces, body.surfaceId)
+  const batch: A2uiComponent[] = []
+  g?.batches.push(batch)
   body.components.forEach((c, ci) => {
     if (!isObject(c) || typeof c.id !== 'string' || typeof c.component !== 'string') {
       return push(failures, 'SCHEMA', `${loc}.updateComponents.components[${ci}]`)
@@ -351,8 +364,11 @@ function validateUpdateComponents(
 
     // id-graph accumulation
     if (g !== undefined) {
-      if (comp.id === 'root') g.rootCount++
-      g.byId.set(comp.id, comp)
+      if (comp.id === 'root') {
+        g.rootCount++
+        g.sentRoot = comp
+      }
+      batch.push(comp)
     }
 
     // Stage 3 — catalog conformance (CATALOG).
@@ -543,7 +559,7 @@ function openEpoch(surfaces: PayloadSurfaces, sid: string): Epoch {
     lifecycle = { closed: [], open: undefined }
     surfaces.bySid.set(sid, lifecycle)
   }
-  if (lifecycle.open === undefined) lifecycle.open = { rootCount: 0, byId: new Map(), created: false }
+  if (lifecycle.open === undefined) lifecycle.open = { rootCount: 0, byId: new Map(), batches: [], sentRoot: undefined, created: false }
   return lifecycle.open
 }
 

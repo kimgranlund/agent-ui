@@ -37,6 +37,7 @@ import {
   validateBuilderMission,
   validateEffort,
   validateResponsePreference,
+  validatePersonaSystem,
   isChatBody,
   resolveChatDispatch,
   selectCatalog,
@@ -263,7 +264,10 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
   })
   if (!dispatch.ok) return json(503, { error: dispatch.reason })
 
-  const persona = typeof personaSystem === 'string' && personaSystem.length <= 16_384 ? personaSystem : undefined
+  // T-0224: an over-cap persona is a loud 400 with a dev reason, never a turn run without it.
+  const personaCheck = validatePersonaSystem(personaSystem)
+  if (!personaCheck.ok) return json(400, { error: personaCheck.error })
+  const persona = personaCheck.persona
   // GH #240/ADR-0159 wave B — the client-requested per-step raw-source attachment, membership-validated
   // fail-closed exactly as the dev proxy does: ONLY the literal 'source' is honored ('full' stays
   // server-owned, never client-grantable); anything else ⇒ the 'stages' default. The reasoning excerpts are
