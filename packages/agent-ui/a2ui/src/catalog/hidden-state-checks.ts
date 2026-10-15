@@ -13,6 +13,9 @@
 // - the word game: a TextField gated by a `^[a-z]{N}$` regex check (the `word-tiles` idiom) that names a guess, or
 //   sits beside a BoardGrid;
 // - Battleship: a BoardGrid with an `actionName` (the board the player fires on, the `board-grid` idiom).
+// Both games ride base `agent-ui` and both draw a clickable BoardGrid, so each check also skips the other game's
+// surface (T-0263): a word cue (that TextField, or `/secret/word`) with no committed fleet is never judged for a fleet,
+// and a committed fleet with no word cue is never judged for a word.
 // DOM-less and node-free, like `semantic-check.ts`: both server hosts import it.
 
 import type { A2uiComponent } from '../protocol.ts'
@@ -62,6 +65,11 @@ function wordLength(view: SurfaceView): number | undefined {
   }
   return undefined
 }
+
+/** T-0263: the game cues a surface carries, so one game's check never judges the other's board. */
+const hasWordCue = (view: SurfaceView): boolean => wordLength(view) !== undefined || typeof readPointer(view.dataModel, '/secret/word') === 'string'
+const hasFleetCue = (view: SurfaceView): boolean =>
+  readPointer(view.dataModel, '/secret/fleet') !== undefined || readPointer(view.dataModel, '/secret/playerFleet') !== undefined
 
 /** The committed word, lowercased, when it is `n` letters; undefined otherwise. */
 function committedWord(dataModel: unknown, n: number): string | undefined {
@@ -114,7 +122,7 @@ export const wordSecretCheck: SemanticCheck = {
     const findings: SemanticFinding[] = []
     for (const view of surfaces) {
       const n = wordLength(view)
-      if (n === undefined) continue
+      if (n === undefined || (hasFleetCue(view) && typeof readPointer(view.dataModel, '/secret/word') !== 'string')) continue
       const secret = committedWord(view.dataModel, n)
       if (secret === undefined) {
         findings.push({
@@ -195,7 +203,9 @@ export const fleetSecretCheck: SemanticCheck = {
   requires: ['BoardGrid'],
   check({ surfaces, action }) {
     const findings: SemanticFinding[] = []
-    const targets = surfaces.filter((v) => boardGrids(v).some((b) => typeof b['actionName'] === 'string' && b['actionName'] !== ''))
+    const targets = surfaces.filter(
+      (v) => boardGrids(v).some((b) => typeof b['actionName'] === 'string' && b['actionName'] !== '') && !(hasWordCue(v) && !hasFleetCue(v)),
+    )
     let playerFleet: Set<string> | undefined
     for (const view of targets) {
       const fleet = committedFleet(view.dataModel, 'fleet')

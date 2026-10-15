@@ -143,3 +143,38 @@ describe('T-0230: fleet-secret', () => {
     expect(codes(fleetSecretCheck, [assistant(start)], [data('sea', { secret: { fleet: moved, playerFleet }, cells: [] })])).toEqual([])
   })
 })
+
+// T-0263: both games ride base `agent-ui` and both draw a clickable BoardGrid. A Haiku 5.5 word board with a
+// `pick_cell` actionName got FLEET_SECRET_MISSING (2026-10-15-r3-routing :110), and Haiku wrote a fleet into the word game.
+describe('T-0263: each hidden-state check judges only its own game', () => {
+  const wordBoard = (sid: string): A2uiServerMessage[] => [
+    { version: 'v1.0', createSurface: { surfaceId: sid, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: sid,
+        components: [
+          { id: 'root', component: 'Column', children: ['grid', 'guess'] },
+          { id: 'grid', component: 'BoardGrid', rows: 6, cols: 5, actionName: 'pick_cell', cells: { path: '/board/cells' } },
+          { id: 'guess', component: 'TextField', name: 'guess', value: { path: '/guess' }, checks: [{ call: 'regex', args: { value: { path: '/guess' }, pattern: '^[a-z]{5}$' }, message: 'Five letters' }] },
+        ],
+      },
+    } as A2uiServerMessage,
+  ]
+
+  it('a word board with a clickable BoardGrid gets no fleet check, committed word or not', () => {
+    expect(codes(fleetSecretCheck, [], [...wordBoard('ask-1'), data('ask-1', { secret: { word: 'stone' }, guess: '', board: { cells: [] } })])).toEqual([])
+    expect(codes(fleetSecretCheck, [], [...wordBoard('ask-1'), data('ask-1', { guess: '', board: { cells: [] } })])).toEqual([])
+    expect(codes(wordSecretCheck, [], [...wordBoard('ask-1'), data('ask-1', { guess: '', board: { cells: [] } })])).toEqual(['WORD_SECRET_MISSING ask-1:/secret/word'])
+  })
+
+  it('an Admiral board with a five-letter field gets no word check once its fleet is committed', () => {
+    const admiral = [...wordBoard('sea'), data('sea', { secret: { fleet, playerFleet }, board: { cells: [] } })]
+    expect(codes(wordSecretCheck, [], admiral)).toEqual([])
+    expect(codes(fleetSecretCheck, [], admiral)).toEqual([])
+  })
+
+  it('negative control: a plain Battleship board with no word cue still gets FLEET_SECRET_MISSING', () => {
+    expect(codes(fleetSecretCheck, [], [...waters('sea'), data('sea', { cells: [] })])).toHaveLength(2)
+  })
+})

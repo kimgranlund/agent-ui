@@ -6,14 +6,15 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0263. Live round 3 (2026-10-15-r3-routing :109-:110, Haiku 5.5). On the Lexicographer's word
-// board the Battleship hidden-state check fires (FLEET_SECRET_MISSING twice: /secret/fleet, /secret/playerFleet), the
-// repair writes a fleet into the word game, and the turn ships uncorrected. The rejected rounds' ask-1 is replaced by
-// the shipped ask-2, which no-surface-loss passes since T-0264.
-it('lexicographer-haiku-fleet-check: a word board gets the Battleship fleet check', async () => {
+// T-0263 (fixed). Live round 3 (2026-10-15-r3-routing :109-:110, Haiku 5.5). On the Lexicographer's word board (a
+// BoardGrid with a `pick_cell` actionName beside the regex guess field) the Battleship hidden-state check fired
+// (FLEET_SECRET_MISSING twice), the repair wrote a fleet into the word game, and the turn shipped uncorrected. The fleet
+// check now skips a surface with a word cue and no committed fleet, so the recorded rounds replay to a clean third
+// round: no FLEET_SECRET_MISSING, no SEMANTIC_UNCORRECTED. The rejected rounds' ask-1 is replaced by the shipped ask-2.
+it('lexicographer-haiku-fleet-check: a word board gets no Battleship fleet check', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./lexicographer-haiku-fleet-check.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
   expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual([])
   const trace = report.records[1].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
-  expect(trace.failureCodes).toEqual(['FLEET_SECRET_MISSING', 'FLEET_SECRET_MISSING', 'GAME_HUD_MISSING', 'SEMANTIC_UNCORRECTED', 'TEXT_JSONL_IGNORED'])
+  expect(trace).toMatchObject({ rounds: 3, failureCodes: ['GAME_HUD_MISSING', 'TEXT_JSONL_IGNORED'] })
 })
