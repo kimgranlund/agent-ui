@@ -209,13 +209,17 @@ export const CORE_PLAYBOOKS: readonly NewEntryInput[] = [
 ]
 
 export const HOSPITALITY_PLAYBOOKS: readonly NewEntryInput[] = [
-  // `booking-flow` keeps its own scenes rather than one BookingForm (T-0159): it is a step arc on one surface
-  // (Back at every scene, a confirm read-back, a settled receipt) and its stay dates are a range, which
-  // BookingForm's field kinds do not carry. The Concierge seeds it beside its BookingForm fragment.
+  // `booking-flow` keeps its own scenes 1 to 4 (T-0159): a step arc on one surface (Back at every scene) whose
+  // stay dates are a range, which BookingForm's field kinds do not carry. T-0266 (Kim's ruling): the confirm is a
+  // pre-filled BookingForm, never a read-back Card, an ask that already carries every detail goes straight to it,
+  // and the settle is a BookingConfirmation, never a Badge. The Concierge seeds it beside its BookingForm fragment.
   {
     label: 'booking-flow',
-    description: 'Hotel domain — a realistic room booking end to end: stay dates, guests, room and rate, extras (Back at every step), confirm, settled receipt, courtesy close.',
+    description: 'Hotel domain — a booking end to end: dates, guests, room, extras (Back at every step), a pre-filled BookingForm to confirm, a BookingConfirmation once booked.',
     content:
+      'A booking ask that already names every detail (a spa slot, a table or a tour with its day, time, ' +
+      'guests and name) skips the scenes: answer it at once with the step (5) BookingForm, pre-filled with ' +
+      'what the guest said, never a read-back Card or DescriptionList and never a re-ask of a value you hold. ' +
       'A room booking runs on ONE surface transitioned scene to scene — create it once, then advance ' +
       'each step via updateComponents/updateDataModel on that SAME surface (never a fresh surface per ' +
       'step, never redeliver the root). The scenes, in order: (1) stay dates — ONE Calendar with ' +
@@ -224,15 +228,19 @@ export const HOSPITALITY_PLAYBOOKS: readonly NewEntryInput[] = [
       'RadioGroup of room types with the nightly rate in each label, the recommended room preselected ' +
       'via the data model, plus a commit Button; (4) extras — independent Checkboxes (breakfast, spa ' +
       'credit, late check-out) each on its own data-model path, wrapped in a Column one per row, the ' +
-      'commit Button a sibling AFTER the Column; (5) confirm before concluding — a summary reading back ' +
-      'every submitted value humanized ("12–15 Jun · 3 nights", "2 guests", "Sea-view double · ' +
-      '€240/night", chosen extras as text — never a raw true/false, and an unchosen extra simply does ' +
-      'not appear), gated by ONE commit Button. Every scene after the first also carries a Back Button — ' +
+      'commit Button a sibling AFTER the Column; (5) confirm before concluding: ONE BookingForm on that ' +
+      'SAME surface, pre-filled for the guest to check, never a read-back Card. First write every value ' +
+      'you hold with ONE updateDataModel on the draft path, then bind the form\'s value to that path, one ' +
+      'field per detail (dateSingle for each date, so a stay is an Arrival and a Departure field; select ' +
+      'for the time, the room or the treatment; number for guests; text for the name; checkbox per ' +
+      'extra), and its child is ONE confirm Button with submit true and the draft in its action context. ' +
+      'Every scene after the first also carries a Back Button — ' +
       'an ordinary action beside Next/commit; Back and Next are scene transitions on the ONE still-open ' +
       'ask (never a new ask per step), and every draft answer lives under a shared "/draft/*" data-model ' +
       'prefix so nothing typed is lost when Back returns to an earlier scene. Only AFTER the user ' +
-      'confirms: the closing turn SETTLES the receipt — exactly one updateComponents on that SAME confirm ' +
-      'surface stripping its Back/Confirm buttons and adding a settled-status Badge ("Booked · #AB123") — ' +
+      'confirms: the closing turn SETTLES the booking with exactly one updateComponents on that SAME ' +
+      'surface whose root becomes ONE BookingConfirmation (a title such as "Booked · #AB123", literal rows ' +
+      'of {label, path}, never rows bound to a path, and data bound to the draft), never a Badge on a Card, ' +
       'then the courtesy-close note with "flowEnd": true, same turn, no other UI. Never collect payment ' +
       'details.',
   },

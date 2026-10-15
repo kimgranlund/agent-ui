@@ -24,3 +24,7 @@ All three models refuse to list treatments, and the services turn draws no Servi
 
 ## Context
 `site/pages/agent-admin-presets.ts:352` (`property-knowledge-base`) and the T-0231 House facts hold hours and policies but no treatment list. The models are right not to invent one. Found by T-0261.
+
+## Acceptance criteria
+- `npx vitest run --project site site/pages/agent-admin-app.test.ts site/pages/agent-admin-presets.test.ts site/pages/agent-admin-ambient-budget.test.ts site/pages/agent-admin-prompt-budget.test.ts site/lib/agent-manifest` exits 0: the Concierge House facts carry the spa treatment list (name, duration and price per treatment), stay modality-neutral and within budget, seedVersion is 12, and the manifest digest is fresh.
+- `npm run check` exits 0.

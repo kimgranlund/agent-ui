@@ -27,3 +27,13 @@ This is a guidance conflict, not a routing or model gap. Related: T-0197 (Bookin
 
 ## Ruling (Kim, 2026-10-15)
 When a booking ask already carries every detail, Concierge shows the BookingForm composite pre-filled for the guest to confirm, never a read-back Card. Change the booking-flow playbook to match the composite catalog, and have the composite-moment check enforce it.
+
+## Lane bundle
+This solo lane delivers these tickets in order, one commit each:
+- .sdlc/tickets/0266-concierge-booking-guidance-conflict/handoff.md
+- .sdlc/tickets/0267-concierge-no-spa-menu/handoff.md
+
+## Acceptance criteria
+- `npx vitest run packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts` exits 0: the recorded Sonnet read-back (DescriptionList and a "Confirm booking" Button) yields BOOKING_FORM_MISSING alone with a pre-fill repair, and the info-card, one-input and pre-filled BookingForm controls stay quiet (the read-back case fails on the pre-change detector).
+- `npx vitest run --project site site/pages/agent-admin-app.test.ts site/pages/agent-admin-presets.test.ts site/pages/agent-admin-ambient-budget.test.ts site/lib/agent-manifest` exits 0: the seeded `booking-flow` and the Concierge House facts teach the pre-filled BookingForm confirm and the BookingConfirmation settle (no read-back, no settled Badge), seedVersion is 11, and the manifest digest is fresh.
+- `npm run check` exits 0.
