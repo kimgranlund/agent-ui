@@ -25,3 +25,6 @@ The run id travels as a request field or header from `chat:probe` / `run-capped.
 - A probe selftest run writes trace lines whose `runId` matches its `report.json`; the ledger's trace line range agrees.
 - `engineer.py ingest` of a round folder with the updated manifest yields one conversation per run and maps completion; `fog.py validate` exit 0; the bundle detectors run (a test or the ingest output shows them active).
 - scripts/e2e-admin tests, the agent-trace tests and `npm run check` exit 0.
+
+## Conductor note (2026-10-15, Kim approved)
+Criterion 1 needs a live run. Kim approved ONE live Haiku probe (about $0.01) to prove it: `.env` is symlinked into this tree (never read or print it). Run one `npm run chat:probe -- --agent concierge --model claude-haiku-5-5 --say "hi"` (it starts the dev server itself if needed, else run `npm run dev` in the background first), then show that the new `.agent-traces` line for that turn has `runId` equal to the run's `report.json` `runId`. No other live calls.
