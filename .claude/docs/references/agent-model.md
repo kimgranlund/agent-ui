@@ -60,7 +60,7 @@ cl.4) whose one view is `AgentRosterView` = ordered agents + the active id. The 
 
 **Configuration.** One `SettingsStore` per agent (`settings/store.ts`: sync `get`/`set`, optional
 `subscribe`/`save`), seeded from the record's `seed`. `AgentConfigSnapshot` is the turn-time read of
-that store: `name`, `model`, `temperature`, `toolsEnabled`, the composed `systemPrompt`, and the
+that store: `name`, `model`, `toolsEnabled`, the composed `systemPrompt`, and the
 enabled labels per capability kind. It is a read, never a cache: live-apply is "the next turn reads
 the store again" (ADR-0136).
 
