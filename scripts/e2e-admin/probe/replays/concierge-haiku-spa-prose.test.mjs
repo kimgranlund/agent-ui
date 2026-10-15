@@ -7,7 +7,8 @@ import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
 // Pins the trace only: T-0231 and T-0214. Haiku 5.5 reviews a spa booking in prose with no surface, then says nothing
-// was reserved. No check fires; T-0231 (the booking flow is index-only) proposes the fix.
+// was reserved. T-0265: the concierge's surface-required check now sends turns 0 to 2 back with SURFACE_MISSING; the
+// fixture records no repaired round, so they ship tallied and every probe check stays green.
 it('concierge-haiku-spa-prose: the recorded turns replay with every probe check green', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./concierge-haiku-spa-prose.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())

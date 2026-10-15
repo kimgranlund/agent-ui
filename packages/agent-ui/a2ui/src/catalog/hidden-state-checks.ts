@@ -13,6 +13,8 @@
 // - the word game: a TextField gated by a `^[a-z]{N}$` regex check (the `word-tiles` idiom) that names a guess, or
 //   sits beside a BoardGrid;
 // - Battleship: a BoardGrid with an `actionName` (the board the player fires on, the `board-grid` idiom).
+// T-0265 adds one more Battleship check that reads the say turn's words rather than a surface: a typed shot at the
+// targeted board answered in prose alone, or a game asked for with no board.
 // Both games ride base `agent-ui` and both draw a clickable BoardGrid, so each check also skips the other game's
 // surface (T-0263): a word cue (that TextField, or `/secret/word`) with no committed fleet is never judged for a fleet,
 // and a committed fleet with no word cue is never judged for a word.
@@ -264,5 +266,50 @@ export const fleetSecretCheck: SemanticCheck = {
   },
 }
 
+/** T-0265: a shot the player types ("Fire at A2.", "B7"), its coordinate as the capture. */
+const TYPED_SHOT = /\b(?:fire|shoot|strike|attack|bomb|target)\b[^.?!]*?\b([a-j]\s?(?:10|[1-9]))\b|^\s*([a-j]\s?(?:10|[1-9]))[.!]?\s*$/i
+
+/**
+ * T-0265 (the recorded Haiku 5.5 Admiral, round 3 opening-salvo t4 and row-sweep t2): "Fire at A2." was answered
+ * with a meta-line targeting enemy-waters and the shot resolved in prose, so the board kept its old marks.
+ * ACTION_NOT_APPLIED: a say turn that types a shot and declares an open surface its target sends that surface no
+ * update and opens no new board. SURFACE_MISSING: a say turn that asks for a game of Battleship, not a question about
+ * it, answered with no surface at all.
+ */
+export const fleetShotAppliedCheck: SemanticCheck = {
+  id: 'fleet-shot-applied',
+  requires: ['BoardGrid'],
+  check({ surfaces, action, intent, target }) {
+    if (action !== undefined || intent === undefined) return []
+    if (target === undefined) {
+      if (surfaces.length > 0 || !/\bbattleships?\b/i.test(intent) || /\?\s*$/.test(intent.trim())) return []
+      return [
+        {
+          code: 'SURFACE_MISSING',
+          path: 'opening:battleship',
+          message:
+            'The player asked for a game of Battleship and this turn opens no board, so the game exists only in prose. ' +
+            'Call render_surface with a createSurface for the board the player fires on (a BoardGrid with an actionName) and commit both fleets at /secret, not only prose.',
+        },
+      ]
+    }
+    const m = TYPED_SHOT.exec(intent)
+    const cell = (m?.[1] ?? m?.[2])?.replace(/\s/g, '').toUpperCase()
+    if (cell === undefined) return []
+    // An update to the target, or a new board the player fires on (a fresh game), applies the shot.
+    const firingBoard = (v: SurfaceView): boolean => boardGrids(v).some((b) => typeof b['actionName'] === 'string' && b['actionName'] !== '')
+    if (surfaces.some((v) => v.surfaceId === target || (v.priorDataModel === undefined && firingBoard(v)))) return []
+    return [
+      {
+        code: 'ACTION_NOT_APPLIED',
+        path: `${target}:${cell}`,
+        message:
+          `The player fired at ${cell} on ${target}, and this turn sends it no update, so the board still shows the old marks. ` +
+          `Call render_surface with an updateDataModel for ${target}: the shot's mark on the board, your return fire on the player's board and the status, not only prose.`,
+      },
+    ]
+  },
+}
+
 /** Every hidden-state check, in the order the hosts run them. */
-export const HIDDEN_STATE_CHECKS: readonly SemanticCheck[] = [wordSecretCheck, fleetSecretCheck]
+export const HIDDEN_STATE_CHECKS: readonly SemanticCheck[] = [wordSecretCheck, fleetSecretCheck, fleetShotAppliedCheck]

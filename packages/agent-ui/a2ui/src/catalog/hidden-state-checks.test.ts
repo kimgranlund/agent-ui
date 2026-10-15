@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import type { A2uiOutput, A2uiServerMessage } from '../protocol.ts'
-import { fleetSecretCheck, gradeGuess, wordSecretCheck } from './hidden-state-checks.ts'
+import { fleetSecretCheck, fleetShotAppliedCheck, gradeGuess, HIDDEN_STATE_CHECKS, wordSecretCheck } from './hidden-state-checks.ts'
 import { semanticSurfaceViews } from './semantic-check.ts'
 import type { SemanticAction, SemanticTurnLog } from './semantic-check.ts'
 
@@ -176,5 +176,40 @@ describe('T-0263: each hidden-state check judges only its own game', () => {
 
   it('negative control: a plain Battleship board with no word cue still gets FLEET_SECRET_MISSING', () => {
     expect(codes(fleetSecretCheck, [], [...waters('sea'), data('sea', { cells: [] })])).toHaveLength(2)
+  })
+})
+
+// T-0265 (the recorded Haiku 5.5 Admiral, round 3 opening-salvo t4 and row-sweep t2): "Fire at A2." was answered with
+// a meta-line targeting enemy-waters and the shot resolved in prose, so the board kept its old marks.
+describe('T-0265: fleet-shot-applied', () => {
+  const session: SemanticTurnLog = { turns: [{ role: 'assistant', content: waters('enemy-waters').map((m) => JSON.stringify(m)).join('\n') }] }
+  const said = (intent: string, out: A2uiOutput = [], target?: string) =>
+    fleetShotAppliedCheck.check({ surfaces: semanticSurfaceViews(session, out), intent, ...(target !== undefined ? { target } : {}) })
+  const marked: A2uiOutput = [data('enemy-waters', { cells: [shot(1, 0, '✕')] })]
+
+  it('rides every catalog after the two secret checks', () => {
+    expect(HIDDEN_STATE_CHECKS.map((c) => c.id)).toEqual(['word-secret', 'fleet-secret', 'fleet-shot-applied'])
+  })
+
+  it('the recorded prose-only "Fire at A2." targeting enemy-waters is ACTION_NOT_APPLIED', () => {
+    const findings = said('Fire at A2.', [], 'enemy-waters')
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['ACTION_NOT_APPLIED', 'enemy-waters:A2']])
+    expect(findings[0]!.message).toMatch(/updateDataModel for enemy-waters/)
+    expect(said('b7', [], 'enemy-waters').map((f) => f.path)).toEqual(['enemy-waters:B7'])
+    expect(said('Fire at A2.', mine('home', []), 'enemy-waters').map((f) => f.code)).toEqual(['ACTION_NOT_APPLIED']) // a read-only board is not the target
+  })
+
+  it('an update to the target, a new firing board, a turn with no shot, or a click passes', () => {
+    expect(said('Fire at A2.', marked, 'enemy-waters')).toEqual([])
+    expect(said('Fire at A2.', waters('sea-2'), 'enemy-waters')).toEqual([])
+    expect(said('How many of your ships are still afloat?', [], 'enemy-waters')).toEqual([])
+    expect(fleetShotAppliedCheck.check({ surfaces: [], action: fire(0, 1) })).toEqual([])
+  })
+
+  it('a Battleship game asked for with no surface is SURFACE_MISSING; a question or a drawn board passes', () => {
+    expect(said('Battleship, please.').map((f) => [f.code, f.path])).toEqual([['SURFACE_MISSING', 'opening:battleship']])
+    expect(said("Let's play Battleship.", waters('sea'))).toEqual([])
+    expect(said('How do you play Battleship?')).toEqual([])
+    expect(said('Fire at A2.')).toEqual([]) // no target: nothing open to judge
   })
 })

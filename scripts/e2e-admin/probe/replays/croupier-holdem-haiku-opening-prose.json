@@ -1,0 +1,271 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "croupier-holdem-haiku-opening-prose",
+  "agent": "croupier",
+  "model": "claude-haiku-5-5",
+  "source": "2026-10-15.jsonl:107 (catalog agent-ui--croupier); round 3 run regress-croupier-texas-holdem-haiku-1 (T-0261), turns 0 to 0",
+  "steps": [
+    {
+      "say": "Let's play Texas hold'em."
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since no bankroll was\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" mentioned, I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" start the player\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" default 1,000 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"chips. The\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" user named the game direct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ly, so I'll set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" up round 1 at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" table, dealing hole c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ards to both players and moving into\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pre-flop betting.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" UI, I'll use a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" GameHud with P\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"layingCard components laid\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" out in a row for each\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and pl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"us a board for community cards.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Since blinds aren't\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" specified an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ywhere,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'll keep it simple\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with a small ante from\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" each player to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" build the pot, then offer\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Check/Bet/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Fold as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the pre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"flop action options.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Structuring the lay\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"out...\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Th\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"inking through the econom\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ics: bankroll of\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 1000 with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ante of 10 fe\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eding a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pot of 20, street\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" set to pre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"flop, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a status prompting the player to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" check or bet. I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m we\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ighing whether to deduct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the ante from the displ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ayed bankroll right\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" away or keep it as the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" seeded star\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting figure, le\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aning toward showing the post\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-ante b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ankroll for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" accuracy.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For actions I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" settling on Check, B\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"et 20, and Fold\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as the available\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" options, then\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" starting to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" l\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ay out the surface struct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ure for table\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-1 with the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" croupier catalog and the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" data model components\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm structuring a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Card as the root with header\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", content, and footer sections\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" —\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the header sh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ows \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Texas hold'em ·\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Round 1\\\" as a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" title, and the content hol\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ds a column\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with the HUD, deal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"er info, board,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and, and result line st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"acked together.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" footer, I'm ad\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding action\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" buttons (check, bet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", fold) in a row.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" The dealer and board rows\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" need templated card data p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ulled from pa\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ths like /dealerHand\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and /board, and I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" working\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" out how\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to sh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ape the GameHud st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ats array with label/value pair\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"s bound to /\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"bankroll and /pot\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" paths.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" inline data bin\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding inside array literals is ris\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ky, I'll switch to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" using Stat components with label and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" value\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" props bound direct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ly to paths, comb\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ined in a Row for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bankroll and pot —\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" this is a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" safer, catalog-comp\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"li\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ant approach.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\nNext I'm plan\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ning the createSurface message with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" croupier catalog ID\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", follow\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ed by an updateDataMod\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"el message setting initial values for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bankroll, pot,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" street, and status text.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Fin\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ish\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing with the dealer and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player hands\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", the dealer's c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ards face down and the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing two hole cards, with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" an empty board. I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keep the prose reply short\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ating the antes, p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot, and the player's options\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" check, bet, or fold\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"He\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ads-up hold'em it\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" is. Each of\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" us ant\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"es \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"10, so the pot is \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"20 \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"and you have 990 behind\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\". Your hole cards are\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" A♥ K\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"♦. The dealer's\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" two c\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ards are face down. Your move\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\": check, bet 20,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" or fold.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Heads-up hold'em it is. Each of us antes 10, so the pot is 20 and you have 990 behind. Your hole cards are A♥ K♦. The dealer's two cards are face down. Your move: check, bet 20, or fold.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"## Referenced for this message\\n### texas-holdem (resource)\\ntexas hold'em, hole cards, flop, turn, river, community cards\\n\\nHeads-up hold'em against the dealer: two hole cards each, then a shared flop (three cards), turn, and river, with a betting round before each street — check, bet, call, raise, or fold, staked from the running chip count. Best five-card hand from the seven wins the pot, standard rankings (high card up to royal flush). Reveal both hands honestly at showdown.\\n\\nLet's play Texas hold'em.\",\"k\":3},\"exemplarIds\":[\"domain-croupier-card-table-round\",\"frontier-round-outcome\",\"wallet-summary-card\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142000,\"total\":57472,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":4794},{\"id\":\"mini-skills\",\"chars\":1532},{\"id\":\"persona\",\"chars\":4854}],\"over\":false},\"usage\":{\"inputTokens\":4647,\"outputTokens\":4096,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"card-game-sheet\",\"card-layout\",\"login-form\"],\"cacheBoundary\":46292}}}"
+      ],
+      "rounds": [
+        {
+          "text": "Heads-up hold'em it is. Each of us antes 10, so the pot is 20 and you have 990 behind. Your hole cards are A♥ K♦. The dealer's two cards are face down. Your move: check, bet 20, or fold.",
+          "tools": []
+        }
+      ],
+      "routing": {
+        "domains": [
+          "croupier"
+        ],
+        "exemplars": [
+          "domain-croupier-card-table-round",
+          "frontier-round-outcome",
+          "wallet-summary-card"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "card-layout",
+            "load": "index-only"
+          },
+          {
+            "name": "game-table-chrome",
+            "load": "index-only"
+          },
+          {
+            "name": "game-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "index-only"
+          },
+          {
+            "name": "pontoon",
+            "load": "index-only"
+          },
+          {
+            "name": "texas-holdem",
+            "load": "index-only"
+          },
+          {
+            "name": "omaha",
+            "load": "index-only"
+          },
+          {
+            "name": "five-card-draw",
+            "load": "index-only"
+          },
+          {
+            "name": "seven-card-stud",
+            "load": "index-only"
+          },
+          {
+            "name": "shuffle",
+            "load": "index-only"
+          },
+          {
+            "name": "texas-holdem",
+            "load": "full"
+          }
+        ]
+      }
+    }
+  ]
+}

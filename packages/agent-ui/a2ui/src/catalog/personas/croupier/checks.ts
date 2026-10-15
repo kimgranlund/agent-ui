@@ -720,16 +720,41 @@ function typedMoveFindings(surfaces: readonly SurfaceView[], intent: string, tar
   ]
 }
 
+/** T-0265: the words of a say turn that starts a card game ("Let's play Texas hold'em.", "Deal me in"). */
+const PLAY_WORDS = /\b(play|deal|start|let'?s|another (game|round|hand))\b/i
+
+/** T-0265 (the recorded Haiku 5.5 openings, round 3 texas-holdem and five-card-draw turn 0): "Let's play Texas
+ *  hold'em." was dealt in prose ("Your hole cards are A♥ K♦") with no table. A say turn that asks to play a card game,
+ *  not a question about one, and declares no target must open a surface; an answer with none is SURFACE_MISSING. */
+function openingMissing(surfaces: readonly SurfaceView[], intent: string, target: string | undefined): SemanticFinding[] {
+  if (surfaces.length > 0 || target !== undefined || /\?\s*$/.test(intent.trim())) return []
+  const game = BLACKJACK_GAMES.exec(intent)?.[1] ?? POKER_GAMES.exec(intent)?.[1]
+  if (game === undefined || !PLAY_WORDS.test(intent)) return []
+  return [
+    {
+      code: 'SURFACE_MISSING',
+      path: `opening:${game.toLowerCase()}`,
+      message:
+        `The player asked to play ${game} and this turn opens no table, so the game exists only in prose. ` +
+        `Call render_surface with a createSurface for the game's table (a CardTable in phase "betting" for blackjack, the dealt cards and moves for poker), not only prose.`,
+    },
+  ]
+}
+
 /** T-0172: a table action moves the table, and a deal takes the bet out of the bankroll; T-0211: Deal again opens
  *  the next round in betting; T-0232: a say turn's first table opens in betting too; T-0214: a typed move at an
- *  open table updates it. */
+ *  open table updates it; T-0265: a game asked for opens a surface. */
 export const croupierActionApplied: SemanticCheck = {
   id: 'croupier-action-applied',
   requires: ['CardTable'],
   check: (input) => {
     if (input.action !== undefined) return actionApplied(input.surfaces, input.action)
     if (input.intent === undefined) return []
-    return [...openingFindings(input.surfaces, input.intent), ...(input.target !== undefined ? typedMoveFindings(input.surfaces, input.intent, input.target) : [])]
+    return [
+      ...openingFindings(input.surfaces, input.intent),
+      ...openingMissing(input.surfaces, input.intent, input.target),
+      ...(input.target !== undefined ? typedMoveFindings(input.surfaces, input.intent, input.target) : []),
+    ]
   },
 }
 
