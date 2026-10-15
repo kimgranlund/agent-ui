@@ -1,0 +1,313 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "croupier-pontoon-sonnet-1",
+  "agent": "croupier",
+  "model": "claude-sonnet-5-5",
+  "source": "probe live run 2026-10-15T06:03:50.227Z, traces 2026-10-15.jsonl:125,-",
+  "steps": [
+    {
+      "say": "Let's play pontoon.",
+      "expect": [
+        "CardTable"
+      ]
+    },
+    {
+      "click": "100"
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since there's no bankroll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" on file, I'll start\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" default of\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 1,000 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" up a fresh table for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ontoon. I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m th\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"inking through\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" how\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to struct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ure the deal—dealer\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ards face-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"down, player's sh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"own—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and deciding to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" just de\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"al with a default bet of \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"50 rather than building\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" out\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a separ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ate betting input\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" step.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll give\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the player 9♣ and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 6♦ for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a 15, gi\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ving them\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a legit\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"imate cho\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ice to stick or tw\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ist, and hide the deal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"er's two\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" cards as a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"abricated 13 under\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"neath. I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" laying out which\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" actions should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" be available—twist, stick\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", buy—since 15 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"qualifies for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ticking, and I'll ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ep the full\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 1,000 bankro\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll sh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"own with the 50 bet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sitting on\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the table before\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" writ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing a short recap of the r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ules and r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"endering the h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Pontoon it\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" is. This\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" is British blackjack,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" so both dealer cards st\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ay face-down and the deal\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"er wins all\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" ties. Twist h\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"its, and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" you can only\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" stick on 15 or better\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\". Buy do\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ubles your\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" stake for one\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" face-down card, and you\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" can repeat it. P\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ontoon (an\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" ace plus a ten-\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"card) pays 2:1\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" A five-card trick of\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 21 or under beats ever\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ything except pontoon. You\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" start with\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 1,000 chips and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" I\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'ve put \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"50 on this\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" hand. You h\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"old 15, so you\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" can stick.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"codes\":[\"PARSE\"],\"detail\":\"Round 1 failed:\\n  PARSE: the payload did not parse as JSON lines\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need to call\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" render_surface with a proper\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ontoon table set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"up,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" using the CardTable component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since pontoon is a bl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ackjack variant,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and fig\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ure out how to represent the d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealer's face\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-down c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ards within\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the hand data\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" structure.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" up the player with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and tot\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aling 15 and a b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ankroll of 1000 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"with a \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"50 bet, give\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the table\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" fresh id, and include action\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" buttons for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Twist, Stick,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and Buy that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" fit the current phase. I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll write a short prose re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ply first, then constru\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ct the create\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"/update data\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" model messages with the C\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ardTable root and its children.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"catalogId\\\":\\\"agent-ui--croupier\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"phase\\\":\\\"playing\\\",\\\"bankroll\\\":1000,\\\"bet\\\":50,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"clubs\\\",\\\"faceDown\\\":true},{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"faceDown\\\":true}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"6\\\",\\\"suit\\\":\\\"hearts\\\"}],\\\"dealerTotal\\\":\\\"?\\\",\\\"playerTotal\\\":15}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Pontoon\\\",\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"status\\\":\\\"Your move\\\",\\\"statusIntent\\\":\\\"info\\\",\\\"children\\\":[\\\"btn_twist\\\",\\\"btn_stick\\\",\\\"btn_buy\\\"]},{\\\"id\\\":\\\"btn_twist\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Twist\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"twist\\\"}},{\\\"id\\\":\\\"btn_stick\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Stick\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"stick\\\"}},{\\\"id\\\":\\\"btn_buy\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Buy\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"buy\\\"}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Pontoon it is: British blackjack. Both dealer cards stay face-down, and the dealer wins all ties. You can only stick on 15 or better. Buy doubles your stake for a face-down card. Pontoon pays 2:1, and a five-card trick beats everything except pontoon. You have 1,000 chips and 50 is on this hand. You hold 15, so you can stick.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"## Referenced for this message\\n### pontoon (resource)\\npontoon, twist, stick, buy, five-card trick — British blackjack\\n\\nBritish blackjack: BOTH dealer cards stay face-down and the dealer wins all ties. Twist = hit, stick = stand (only on 15 or better), buy = double the stake for a face-down card (repeatable). Pontoon (Ace + ten-card) pays 2:1; a five-card trick (five cards, 21 or under) beats everything but pontoon.\\n\\nLet's play pontoon.\",\"k\":3},\"exemplarIds\":[\"frontier-card-anatomy-ask\",\"plan-and-execute-approve-ask\",\"frontier-round-outcome\"],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"PARSE\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":57398,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":4231},{\"id\":\"mini-skills\",\"chars\":2021},{\"id\":\"persona\",\"chars\":4854}],\"over\":false},\"usage\":{\"inputTokens\":9357,\"outputTokens\":2851,\"cacheReadInputTokens\":35044,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-1\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"phase\":\"playing\",\"bankroll\":1000,\"bet\":50,\"dealerHand\":[{\"rank\":\"7\",\"suit\":\"clubs\",\"faceDown\":true},{\"rank\":\"K\",\"suit\":\"diamonds\",\"faceDown\":true}],\"playerHand\":[{\"rank\":\"9\",\"suit\":\"spades\"},{\"rank\":\"6\",\"suit\":\"hearts\"}],\"dealerTotal\":\"?\",\"playerTotal\":15}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Pontoon\",\"phase\":{\"path\":\"/phase\"},\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"status\":\"Your move\",\"statusIntent\":\"info\",\"children\":[\"btn_twist\",\"btn_stick\",\"btn_buy\"]},{\"id\":\"btn_twist\",\"component\":\"Button\",\"label\":\"Twist\",\"variant\":\"solid\",\"action\":{\"action\":\"twist\"}},{\"id\":\"btn_stick\",\"component\":\"Button\",\"label\":\"Stick\",\"variant\":\"soft\",\"action\":{\"action\":\"stick\"}},{\"id\":\"btn_buy\",\"component\":\"Button\",\"label\":\"Buy\",\"variant\":\"soft\",\"action\":{\"action\":\"buy\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Pontoon it is. This is British blackjack, so both dealer cards stay face-down and the dealer wins all ties. Twist hits, and you can only stick on 15 or better. Buy doubles your stake for one face-down card, and you can repeat it. Pontoon (an ace plus a ten-card) pays 2:1. A five-card trick of 21 or under beats everything except pontoon. You start with 1,000 chips and I've put 50 on this hand. You hold 15, so you can stick.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Your hand is 9♣ 6♦ for 15. Twist, stick or buy?",
+                "target": "table-1",
+                "messages": "[{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-1\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}},{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"phase\":\"playing\",\"bankroll\":1000,\"bet\":50,\"dealerHand\":[{\"rank\":\"8\",\"suit\":\"hearts\",\"faceDown\":true},{\"rank\":\"5\",\"suit\":\"spades\",\"faceDown\":true}],\"playerHand\":[{\"rank\":\"9\",\"suit\":\"clubs\"},{\"rank\":\"6\",\"suit\":\"diamonds\"}],\"dealerTotal\":\"?\",\"playerTotal\":15}}},{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Pontoon\",\"phase\":{\"path\":\"/phase\"},\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"status\":\"Your move\",\"statusIntent\":\"info\",\"children\":[\"btn_twist\",\"btn_stick\",\"btn_buy\"]},{\"id\":\"btn_twist\",\"component\":\"Button\",\"label\":\"Twist\",\"variant\":\"solid\",\"action\":{\"action\":\"twist\"}},{\"id\":\"btn_stick\",\"component\":\"Button\",\"label\":\"Stick\",\"variant\":\"soft\",\"action\":{\"action\":\"stick\"}},{\"id\":\"btn_buy\",\"component\":\"Button\",\"label\":\"Buy (double stake)\",\"variant\":\"soft\",\"action\":{\"action\":\"buy\"}}]}]"
+              }
+            }
+          ]
+        },
+        {
+          "text": "Pontoon it is: British blackjack. Both dealer cards stay face-down, and the dealer wins all ties. You can only stick on 15 or better. Buy doubles your stake for a face-down card. Pontoon pays 2:1, and a five-card trick beats everything except pontoon. You have 1,000 chips and 50 is on this hand. You hold 15, so you can stick.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Your hand is 9♠ 6♥ for 15, with 50 on the hand. Twist, stick or buy?",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-1",
+                      "catalogId": "agent-ui--croupier",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "phase": "playing",
+                        "bankroll": 1000,
+                        "bet": 50,
+                        "dealerHand": [
+                          {
+                            "rank": "7",
+                            "suit": "clubs",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "K",
+                            "suit": "diamonds",
+                            "faceDown": true
+                          }
+                        ],
+                        "playerHand": [
+                          {
+                            "rank": "9",
+                            "suit": "spades"
+                          },
+                          {
+                            "rank": "6",
+                            "suit": "hearts"
+                          }
+                        ],
+                        "dealerTotal": "?",
+                        "playerTotal": 15
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Pontoon",
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "status": "Your move",
+                          "statusIntent": "info",
+                          "children": [
+                            "btn_twist",
+                            "btn_stick",
+                            "btn_buy"
+                          ]
+                        },
+                        {
+                          "id": "btn_twist",
+                          "component": "Button",
+                          "label": "Twist",
+                          "variant": "solid",
+                          "action": {
+                            "action": "twist"
+                          }
+                        },
+                        {
+                          "id": "btn_stick",
+                          "component": "Button",
+                          "label": "Stick",
+                          "variant": "soft",
+                          "action": {
+                            "action": "stick"
+                          }
+                        },
+                        {
+                          "id": "btn_buy",
+                          "component": "Button",
+                          "label": "Buy",
+                          "variant": "soft",
+                          "action": {
+                            "action": "buy"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lines": []
+    }
+  ]
+}

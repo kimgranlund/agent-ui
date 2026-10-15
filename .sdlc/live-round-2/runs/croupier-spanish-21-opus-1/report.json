@@ -1,0 +1,2832 @@
+{
+  "kind": "agent-ui-chat-probe-report",
+  "version": 1,
+  "name": "croupier-spanish-21-opus-1",
+  "mode": "live",
+  "agent": "croupier",
+  "model": "claude-opus-5-5",
+  "at": "2026-10-15T06:34:44.534Z",
+  "turns": [
+    {
+      "index": 0,
+      "request": {
+        "model": "claude-opus-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--croupier",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since there's no bankro\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll on file, I'll default\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to 1,000 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and start round 1 for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Spanish 21 on\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" table-1,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" setting up\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a CardTable in the bet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting phase with no h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ands d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealt yet and no butt\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ons active, using a default bet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" of 25 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"before pro\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ceeding to the deal.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll make the root component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" single CardTable itself r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ather than w\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"rapping it,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with data f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ields for phase, bet,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bankroll, d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealer and player hands, tot\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"als, and status, and I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll enable sendData\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Model since it's a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" game surface.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Spanish 21 it\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" is. You\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" play on a 48-card de\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ck with every\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" ten-spot ta\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ken out (the J\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\", Q and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" K stay in\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\").\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Your 21 always wins,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and your blackjack beats\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" dealer's blackjack\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\". A\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"21 made with five or\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" more cards pays a\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" bonus, and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" so do\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 6-7-8 and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 7-7-7. You\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" can double after a\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" split,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and late surrender is allow\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ed. Everything else pl\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ays like reg\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ular blackjack.\\n\\nYou\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'re\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" starting with 1,000 \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"in chips. Set your b\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"et on the table and de\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"al when\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" you're ready.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"catalogId\\\":\\\"agent-ui--croupier\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"phase\\\":\\\"betting\\\",\\\"bet\\\":25,\\\"bankroll\\\":1000,\\\"dealerHand\\\":[],\\\"playerHand\\\":[],\\\"dealerTotal\\\":\\\"\\\",\\\"playerTotal\\\":\\\"\\\",\\\"status\\\":\\\"Place your bet\\\",\\\"statusIntent\\\":\\\"info\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Spanish 21 · Round 1\\\",\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":{\\\"path\\\":\\\"/statusIntent\\\"},\\\"betAction\\\":\\\"deal\\\"}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Spanish 21 it is. You play on a 48-card deck with every ten-spot taken out (the J, Q and K stay in). Your 21 always wins, and your blackjack beats the dealer's blackjack. A 21 made with five or more cards pays a bonus, and so do 6-7-8 and 7-7-7. You can double after a split, and late surrender is allowed. Everything else plays like regular blackjack.\\n\\nYou're starting with 1,000 in chips. Set your bet on the table and deal when you're ready.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"## Referenced for this message\\n### spanish-21 (resource)\\nspanish 21, no-tens deck, bonus 21s, late surrender\\n\\nBlackjack on a 48-card Spanish deck — every 10-spot removed, faces stay. A player 21 ALWAYS wins, and player blackjack beats dealer blackjack. Bonus payouts for a five-plus-card 21 and for 6-7-8 or 7-7-7; double-after-split and late surrender allowed. Deal and settle as blackjack otherwise.\\n\\nLet's play Spanish 21.\",\"k\":3},\"exemplarIds\":[\"listing-photo-grid\",\"frontier-round-outcome\",\"backable-wizard\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-opus-5-5\",\"prompt\":{\"limit\":142000,\"total\":59893,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":6726},{\"id\":\"mini-skills\",\"chars\":2021},{\"id\":\"persona\",\"chars\":4854}],\"over\":false},\"usage\":{\"inputTokens\":5769,\"outputTokens\":914,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-1\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"phase\":\"betting\",\"bet\":25,\"bankroll\":1000,\"dealerHand\":[],\"playerHand\":[],\"dealerTotal\":\"\",\"playerTotal\":\"\",\"status\":\"Place your bet\",\"statusIntent\":\"info\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21 · Round 1\",\"phase\":{\"path\":\"/phase\"},\"bet\":{\"path\":\"/bet\"},\"bankroll\":{\"path\":\"/bankroll\"},\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":{\"path\":\"/statusIntent\"},\"betAction\":\"deal\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Spanish 21 it is. You play on a 48-card deck with every ten-spot taken out (the J, Q and K stay in). Your 21 always wins, and your blackjack beats the dealer's blackjack. A 21 made with five or more cards pays a bonus, and so do 6-7-8 and 7-7-7. You can double after a split, and late surrender is allowed. Everything else plays like regular blackjack.\n\nYou're starting with 1,000 in chips. Set your bet on the table and deal when you're ready.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Spanish 21 table is open. Place your bet and deal.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-1",
+                      "catalogId": "agent-ui--croupier",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "phase": "betting",
+                        "bet": 25,
+                        "bankroll": 1000,
+                        "dealerHand": [],
+                        "playerHand": [],
+                        "dealerTotal": "",
+                        "playerTotal": "",
+                        "status": "Place your bet",
+                        "statusIntent": "info"
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Spanish 21 · Round 1",
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": {
+                            "path": "/statusIntent"
+                          },
+                          "betAction": "deal"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-15.jsonl:225",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          477
+        ]
+      },
+      "step": {
+        "say": "Let's play Spanish 21.",
+        "expect": [
+          "CardTable"
+        ]
+      },
+      "domHosts": 1,
+      "proseText": "You Let's play Spanish 21. spanish-21 Spanish 21 it is. You play on a 48-card deck with every ten-spot taken out (the J, Q and K stay in). Your 21 always wins, and your blackjack beats the dealer's blackjack. A 21 made with five or more cards pays a bonus, and so do 6-7-8 and 7-7-7. You can double after a split, and late surrender is allowed. Everything else plays like regular blackjack. You're starting with 1,000 in chips. Set your bet on the table and deal when you're ready.",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "turn-1.png"
+    },
+    {
+      "index": 1,
+      "request": {
+        "model": "claude-opus-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--croupier",
+        "inputKind": "client",
+        "actionSurface": "table-1"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm dealing the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" cards from\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a Spanish deck without\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 10s, with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a 100 bet on the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" table. I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m we\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ighing whether to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" show the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bankroll already\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" reduced to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 900 after the bet,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" or keep it separ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ate until\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" settlement—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"le\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aning toward displ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aying it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as 900 since that refl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ects the b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"et having\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" been deducted.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Now I'm set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting up the act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ual hand: player gets a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 16 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"with 9♠ and \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"7♥, dealer sh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ows K\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"♦ with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a hid\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"den h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ole card, avoiding any\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" natural bl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ackjack scenario. I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m structuring the action\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" buttons (Hit,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Stand, Double,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Surrender) as children in the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" CardTable's component tree\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", making\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sure the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" root type and all nec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"essary props stay consistent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", with the dealer's vis\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ible total show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing as 10.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"phase\\\":\\\"playing\\\",\\\"bet\\\":100,\\\"bankroll\\\":900,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"6\\\",\\\"suit\\\":\\\"clubs\\\",\\\"faceDown\\\":true}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"hearts\\\"}],\\\"dealerTotal\\\":\\\"10\\\",\\\"playerTotal\\\":\\\"16\\\",\\\"status\\\":\\\"Your move: 16 vs dealer's K\\\",\\\"statusIntent\\\":\\\"info\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Spanish 21 · Round 1\\\",\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":{\\\"path\\\":\\\"/statusIntent\\\"},\\\"betAction\\\":\\\"deal\\\",\\\"children\\\":[\\\"actions\\\"]},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":[\\\"btn_hit\\\",\\\"btn_stand\\\",\\\"btn_double\\\",\\\"btn_surrender\\\"]},{\\\"id\\\":\\\"btn_hit\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Hit\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"hit\\\"}},{\\\"id\\\":\\\"btn_stand\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Stand\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"stand\\\"}},{\\\"id\\\":\\\"btn_double\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Double\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"double\\\"}},{\\\"id\\\":\\\"btn_surrender\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Surrender\\\",\\\"variant\\\":\\\"ghost\\\",\\\"action\\\":{\\\"action\\\":\\\"surrender\\\"}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Cards are out: you have 16 against my King showing. Hit, stand, double or surrender?\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"The user triggered the \\\"deal\\\" action (from component root). Action context: {\\\"bet\\\":100,\\\"bankrollAfterBet\\\":900}. Current surface data model: {\\\"phase\\\":\\\"betting\\\",\\\"bet\\\":100,\\\"bankroll\\\":1000,\\\"dealerHand\\\":[],\\\"playerHand\\\":[],\\\"dealerTotal\\\":\\\"\\\",\\\"playerTotal\\\":\\\"\\\",\\\"status\\\":\\\"Place your bet\\\",\\\"statusIntent\\\":\\\"info\\\"}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[\"frontier-round-outcome\",\"agent-roster-drawer\",\"structured-container-trip-summary\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-opus-5-5\",\"prompt\":{\"limit\":142000,\"total\":57666,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":4336},{\"id\":\"mini-skills\",\"chars\":2115},{\"id\":\"persona\",\"chars\":4923}],\"over\":false},\"usage\":{\"inputTokens\":5318,\"outputTokens\":1123,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"phase\":\"playing\",\"bet\":100,\"bankroll\":900,\"dealerHand\":[{\"rank\":\"K\",\"suit\":\"diamonds\"},{\"rank\":\"6\",\"suit\":\"clubs\",\"faceDown\":true}],\"playerHand\":[{\"rank\":\"9\",\"suit\":\"spades\"},{\"rank\":\"7\",\"suit\":\"hearts\"}],\"dealerTotal\":\"10\",\"playerTotal\":\"16\",\"status\":\"Your move: 16 vs dealer's K\",\"statusIntent\":\"info\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21 · Round 1\",\"phase\":{\"path\":\"/phase\"},\"bet\":{\"path\":\"/bet\"},\"bankroll\":{\"path\":\"/bankroll\"},\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":{\"path\":\"/statusIntent\"},\"betAction\":\"deal\",\"children\":[\"actions\"]},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"btn_hit\",\"btn_stand\",\"btn_double\",\"btn_surrender\"]},{\"id\":\"btn_hit\",\"component\":\"Button\",\"label\":\"Hit\",\"variant\":\"solid\",\"action\":{\"action\":\"hit\"}},{\"id\":\"btn_stand\",\"component\":\"Button\",\"label\":\"Stand\",\"variant\":\"soft\",\"action\":{\"action\":\"stand\"}},{\"id\":\"btn_double\",\"component\":\"Button\",\"label\":\"Double\",\"variant\":\"soft\",\"action\":{\"action\":\"double\"}},{\"id\":\"btn_surrender\",\"component\":\"Button\",\"label\":\"Surrender\",\"variant\":\"ghost\",\"action\":{\"action\":\"surrender\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Cards are out: you have 16 against my King showing. Hit, stand, double or surrender?",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "phase": "playing",
+                        "bet": 100,
+                        "bankroll": 900,
+                        "dealerHand": [
+                          {
+                            "rank": "K",
+                            "suit": "diamonds"
+                          },
+                          {
+                            "rank": "6",
+                            "suit": "clubs",
+                            "faceDown": true
+                          }
+                        ],
+                        "playerHand": [
+                          {
+                            "rank": "9",
+                            "suit": "spades"
+                          },
+                          {
+                            "rank": "7",
+                            "suit": "hearts"
+                          }
+                        ],
+                        "dealerTotal": "10",
+                        "playerTotal": "16",
+                        "status": "Your move: 16 vs dealer's K",
+                        "statusIntent": "info"
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Spanish 21 · Round 1",
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": {
+                            "path": "/statusIntent"
+                          },
+                          "betAction": "deal",
+                          "children": [
+                            "actions"
+                          ]
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": [
+                            "btn_hit",
+                            "btn_stand",
+                            "btn_double",
+                            "btn_surrender"
+                          ]
+                        },
+                        {
+                          "id": "btn_hit",
+                          "component": "Button",
+                          "label": "Hit",
+                          "variant": "solid",
+                          "action": {
+                            "action": "hit"
+                          }
+                        },
+                        {
+                          "id": "btn_stand",
+                          "component": "Button",
+                          "label": "Stand",
+                          "variant": "soft",
+                          "action": {
+                            "action": "stand"
+                          }
+                        },
+                        {
+                          "id": "btn_double",
+                          "component": "Button",
+                          "label": "Double",
+                          "variant": "soft",
+                          "action": {
+                            "action": "double"
+                          }
+                        },
+                        {
+                          "id": "btn_surrender",
+                          "component": "Button",
+                          "label": "Surrender",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "surrender"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-15.jsonl:226",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          668
+        ]
+      },
+      "step": {
+        "click": "100"
+      },
+      "domHosts": 1,
+      "proseText": "You Let's play Spanish 21. spanish-21 Cards are out: you have 16 against my King showing. Hit, stand, double or surrender?",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "turn-2.png"
+    },
+    {
+      "index": 2,
+      "request": {
+        "model": "claude-opus-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--croupier",
+        "inputKind": "client",
+        "actionSurface": "table-1"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"The player has 16,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dealer sh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ows a 6 for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"16 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"total, so the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dealer must hit. I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll de\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"al the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dealer a \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"9 of clubs, p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ushing them to 25 and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" busting, which means the player w\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ins the h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Bankroll was\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" already deb\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ited for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the bet, so a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" win returns double\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the stake: 900 pl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"us 200 equ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"als 1100. I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" update the UI to show the sett\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"led result\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", zero out\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the pot in the same update,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and sw\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ap the action\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" buttons to a single \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Deal again\\\" button to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" start a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" new round.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"phase\\\":\\\"settled\\\",\\\"bet\\\":0,\\\"bankroll\\\":1100,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"6\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"clubs\\\"}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"hearts\\\"}],\\\"dealerTotal\\\":\\\"25\\\",\\\"playerTotal\\\":\\\"16\\\",\\\"status\\\":\\\"You win: dealer busts\\\",\\\"statusIntent\\\":\\\"success\\\",\\\"result\\\":\\\"You win. Dealer busts with 25 (K-6-9) against your 16 (9-7). +100 chips.\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Spanish 21 · Round 1\\\",\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":{\\\"path\\\":\\\"/statusIntent\\\"},\\\"result\\\":{\\\"path\\\":\\\"/result\\\"},\\\"betAction\\\":\\\"deal\\\",\\\"children\\\":[\\\"actions\\\"]},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":[\\\"btn_deal_again\\\"]},{\\\"id\\\":\\\"btn_deal_again\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Deal again\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"deal_again\\\",\\\"context\\\":{\\\"newRound\\\":true}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Dealer busts with 25. You win 100, and your bankroll is now 1,100.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":4,\"query\":{\"intent\":\"The user triggered the \\\"stand\\\" action (from component btn_stand). Current surface data model: {\\\"phase\\\":\\\"playing\\\",\\\"bet\\\":100,\\\"bankroll\\\":900,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"6\\\",\\\"suit\\\":\\\"clubs\\\",\\\"faceDown\\\":true}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"hearts\\\"}],\\\"dealerTotal\\\":\\\"10\\\",\\\"playerTotal\\\":\\\"16\\\",\\\"status\\\":\\\"Your move: 16 vs dealer's K\\\",\\\"statusIntent\\\":\\\"info\\\"}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[\"frontier-round-outcome\",\"frontier-review-split\",\"five-day-weather\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[\"TEXT_JSONL_IGNORED\"],\"model\":\"claude-opus-5-5\",\"prompt\":{\"limit\":142000,\"total\":59483,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":6057},{\"id\":\"mini-skills\",\"chars\":2212},{\"id\":\"persona\",\"chars\":4922}],\"over\":false},\"usage\":{\"inputTokens\":7179,\"outputTokens\":1331,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"phase\":\"settled\",\"bet\":0,\"bankroll\":1100,\"dealerHand\":[{\"rank\":\"K\",\"suit\":\"diamonds\"},{\"rank\":\"6\",\"suit\":\"clubs\"},{\"rank\":\"9\",\"suit\":\"clubs\"}],\"playerHand\":[{\"rank\":\"9\",\"suit\":\"spades\"},{\"rank\":\"7\",\"suit\":\"hearts\"}],\"dealerTotal\":\"25\",\"playerTotal\":\"16\",\"status\":\"You win: dealer busts\",\"statusIntent\":\"success\",\"result\":\"You win. Dealer busts with 25 (K-6-9) against your 16 (9-7). +100 chips.\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21 · Round 1\",\"phase\":{\"path\":\"/phase\"},\"bet\":{\"path\":\"/bet\"},\"bankroll\":{\"path\":\"/bankroll\"},\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":{\"path\":\"/statusIntent\"},\"result\":{\"path\":\"/result\"},\"betAction\":\"deal\",\"children\":[\"actions\"]},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"btn_deal_again\"]},{\"id\":\"btn_deal_again\",\"component\":\"Button\",\"label\":\"Deal again\",\"variant\":\"solid\",\"action\":{\"action\":\"deal_again\",\"context\":{\"newRound\":true}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"table-1\"}}}You stand on 16. My hole card is the 6 of clubs, which gives me 16, so I have to draw. I get the 9 of clubs: 25, and I bust. You win 100, and your bankroll is now 1,100.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Dealer busts with 25. You win 100, and your bankroll is now 1,100.",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "phase": "settled",
+                        "bet": 0,
+                        "bankroll": 1100,
+                        "dealerHand": [
+                          {
+                            "rank": "K",
+                            "suit": "diamonds"
+                          },
+                          {
+                            "rank": "6",
+                            "suit": "clubs"
+                          },
+                          {
+                            "rank": "9",
+                            "suit": "clubs"
+                          }
+                        ],
+                        "playerHand": [
+                          {
+                            "rank": "9",
+                            "suit": "spades"
+                          },
+                          {
+                            "rank": "7",
+                            "suit": "hearts"
+                          }
+                        ],
+                        "dealerTotal": "25",
+                        "playerTotal": "16",
+                        "status": "You win: dealer busts",
+                        "statusIntent": "success",
+                        "result": "You win. Dealer busts with 25 (K-6-9) against your 16 (9-7). +100 chips."
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Spanish 21 · Round 1",
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": {
+                            "path": "/statusIntent"
+                          },
+                          "result": {
+                            "path": "/result"
+                          },
+                          "betAction": "deal",
+                          "children": [
+                            "actions"
+                          ]
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": [
+                            "btn_deal_again"
+                          ]
+                        },
+                        {
+                          "id": "btn_deal_again",
+                          "component": "Button",
+                          "label": "Deal again",
+                          "variant": "solid",
+                          "action": {
+                            "action": "deal_again",
+                            "context": {
+                              "newRound": true
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-15.jsonl:227",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          450
+        ]
+      },
+      "step": {
+        "click": "Stand"
+      },
+      "domHosts": 1,
+      "proseText": "You Let's play Spanish 21. spanish-21 Dealer busts with 25. You win 100, and your bankroll is now 1,100.",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "turn-3.png"
+    },
+    {
+      "index": 3,
+      "request": {
+        "model": "claude-opus-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--croupier",
+        "inputKind": "client",
+        "actionSurface": "table-1"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m we\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ighing a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" conflict between the persona's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" instruction to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" leave finished rounds unt\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ouched as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" history versus the wire rule\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" lim\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"iting the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" UI to a single active call\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-to-action. Since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the wire rule\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" govern\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"s struct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ural affordances and over\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"rides persona voice, I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll str\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ip table\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-1's \\\"Deal again\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\\" button when\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" creating table-2's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" betting phase with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 1100 bankroll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll carry for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ward \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"100 as the default bet,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and skip the optional meta\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-line since na\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ming table-1 as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" mutated surface isn't\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" required\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" this\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" turn.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Round \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"2 is \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ready,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and your bankroll car\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ries over at\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 1,100. Set your\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" bet and deal when you're\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" ready.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Spanish 21 · Round 1\\\",\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":{\\\"path\\\":\\\"/statusIntent\\\"},\\\"result\\\":{\\\"path\\\":\\\"/result\\\"},\\\"betAction\\\":\\\"deal\\\"}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"catalogId\\\":\\\"agent-ui--croupier\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"value\\\":{\\\"phase\\\":\\\"betting\\\",\\\"bet\\\":100,\\\"bankroll\\\":1100,\\\"dealerHand\\\":[],\\\"playerHand\\\":[],\\\"dealerTotal\\\":\\\"\\\",\\\"playerTotal\\\":\\\"\\\",\\\"status\\\":\\\"Place your bet\\\",\\\"statusIntent\\\":\\\"info\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Spanish 21 · Round 2\\\",\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":{\\\"path\\\":\\\"/statusIntent\\\"},\\\"betAction\\\":\\\"deal\\\"}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Round 2 is ready, and your bankroll carries over at 1,100. Set your bet and deal when you're ready.\",\"trace\":{\"turnIndex\":6,\"query\":{\"intent\":\"The user triggered the \\\"deal_again\\\" action (from component btn_deal_again). Action context: {\\\"newRound\\\":true}. Current surface data model: {\\\"phase\\\":\\\"settled\\\",\\\"bet\\\":0,\\\"bankroll\\\":1100,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"6\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"clubs\\\"}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"hearts\\\"}],\\\"dealerTotal\\\":\\\"25\\\",\\\"playerTotal\\\":\\\"16\\\",\\\"status\\\":\\\"You win: dealer busts\\\",\\\"statusIntent\\\":\\\"success\\\",\\\"result\\\":\\\"You win. Dealer busts with 25 (K-6-9) against your 16 (9-7). +100 chips.\\\"}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[\"frontier-round-outcome\",\"frontier-greet-card\",\"plan-and-execute-plan\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-opus-5-5\",\"prompt\":{\"limit\":142000,\"total\":58560,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":4994},{\"id\":\"mini-skills\",\"chars\":2351},{\"id\":\"persona\",\"chars\":4923}],\"over\":false},\"usage\":{\"inputTokens\":7552,\"outputTokens\":1089,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21 · Round 1\",\"phase\":{\"path\":\"/phase\"},\"bet\":{\"path\":\"/bet\"},\"bankroll\":{\"path\":\"/bankroll\"},\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":{\"path\":\"/statusIntent\"},\"result\":{\"path\":\"/result\"},\"betAction\":\"deal\"}]}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-2\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-2\",\"value\":{\"phase\":\"betting\",\"bet\":100,\"bankroll\":1100,\"dealerHand\":[],\"playerHand\":[],\"dealerTotal\":\"\",\"playerTotal\":\"\",\"status\":\"Place your bet\",\"statusIntent\":\"info\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21 · Round 2\",\"phase\":{\"path\":\"/phase\"},\"bet\":{\"path\":\"/bet\"},\"bankroll\":{\"path\":\"/bankroll\"},\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":{\"path\":\"/statusIntent\"},\"betAction\":\"deal\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Round 2 is ready, and your bankroll carries over at 1,100. Set your bet and deal when you're ready.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Round 2 is ready with your 1,100 bankroll. Set your bet and deal.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Spanish 21 · Round 1",
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": {
+                            "path": "/statusIntent"
+                          },
+                          "result": {
+                            "path": "/result"
+                          },
+                          "betAction": "deal"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-2",
+                      "catalogId": "agent-ui--croupier",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-2",
+                      "value": {
+                        "phase": "betting",
+                        "bet": 100,
+                        "bankroll": 1100,
+                        "dealerHand": [],
+                        "playerHand": [],
+                        "dealerTotal": "",
+                        "playerTotal": "",
+                        "status": "Place your bet",
+                        "statusIntent": "info"
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-2",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Spanish 21 · Round 2",
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": {
+                            "path": "/statusIntent"
+                          },
+                          "betAction": "deal"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-15.jsonl:228",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          504
+        ]
+      },
+      "step": {
+        "click": "Deal again",
+        "expect": [
+          "CardTable"
+        ]
+      },
+      "domHosts": 2,
+      "proseText": "You Let's play Spanish 21. spanish-21 Dealer busts with 25. You win 100, and your bankroll is now 1,100. Round 2 is ready, and your bankroll carries over at 1,100. Set your bet and deal when you're ready.",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "turn-4.png"
+    },
+    {
+      "index": 4,
+      "request": {
+        "model": "claude-opus-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--croupier",
+        "inputKind": "client",
+        "actionSurface": "table-2"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For table-2's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" second round, I'll deal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player 8♦ and \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"3♣ for 11,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with the dealer show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing 5♥ and hol\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding J♠ face\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" down,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keeping the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Spanish deck's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" no-10s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" rule in mind. This g\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ives the player a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" str\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ong do\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ubling op\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"portunity against the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dealer's weak up\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"card.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"value\\\":{\\\"phase\\\":\\\"playing\\\",\\\"bet\\\":100,\\\"bankroll\\\":1000,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"5\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"J\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"3\\\",\\\"suit\\\":\\\"clubs\\\"}],\\\"dealerTotal\\\":\\\"5\\\",\\\"playerTotal\\\":\\\"11\\\",\\\"status\\\":\\\"Your move: 11 vs dealer's 5\\\",\\\"statusIntent\\\":\\\"info\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Spanish 21 · Round 2\\\",\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":{\\\"path\\\":\\\"/statusIntent\\\"},\\\"betAction\\\":\\\"deal\\\",\\\"children\\\":[\\\"actions\\\"]},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":[\\\"btn_hit\\\",\\\"btn_stand\\\",\\\"btn_double\\\",\\\"btn_surrender\\\"]},{\\\"id\\\":\\\"btn_hit\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Hit\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"hit\\\"}},{\\\"id\\\":\\\"btn_stand\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Stand\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"stand\\\"}},{\\\"id\\\":\\\"btn_double\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Double\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"double\\\"}},{\\\"id\\\":\\\"btn_surrender\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Surrender\\\",\\\"variant\\\":\\\"ghost\\\",\\\"action\\\":{\\\"action\\\":\\\"surrender\\\"}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You have 11 against my 5 showing. Hit, stand, double or surrender?\",\"target\":{\"surfaceId\":\"table-2\"},\"trace\":{\"turnIndex\":8,\"query\":{\"intent\":\"The user triggered the \\\"deal\\\" action (from component root). Action context: {\\\"bet\\\":100,\\\"bankrollAfterBet\\\":1000}. Current surface data model: {\\\"phase\\\":\\\"betting\\\",\\\"bet\\\":100,\\\"bankroll\\\":1100,\\\"dealerHand\\\":[],\\\"playerHand\\\":[],\\\"dealerTotal\\\":\\\"\\\",\\\"playerTotal\\\":\\\"\\\",\\\"status\\\":\\\"Place your bet\\\",\\\"statusIntent\\\":\\\"info\\\"}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[\"frontier-round-outcome\",\"agent-roster-drawer\",\"structured-container-trip-summary\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-opus-5-5\",\"prompt\":{\"limit\":142000,\"total\":57666,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":4336},{\"id\":\"mini-skills\",\"chars\":2115},{\"id\":\"persona\",\"chars\":4923}],\"over\":false},\"usage\":{\"inputTokens\":7973,\"outputTokens\":932,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-2\",\"value\":{\"phase\":\"playing\",\"bet\":100,\"bankroll\":1000,\"dealerHand\":[{\"rank\":\"5\",\"suit\":\"hearts\"},{\"rank\":\"J\",\"suit\":\"spades\",\"faceDown\":true}],\"playerHand\":[{\"rank\":\"8\",\"suit\":\"diamonds\"},{\"rank\":\"3\",\"suit\":\"clubs\"}],\"dealerTotal\":\"5\",\"playerTotal\":\"11\",\"status\":\"Your move: 11 vs dealer's 5\",\"statusIntent\":\"info\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21 · Round 2\",\"phase\":{\"path\":\"/phase\"},\"bet\":{\"path\":\"/bet\"},\"bankroll\":{\"path\":\"/bankroll\"},\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":{\"path\":\"/statusIntent\"},\"betAction\":\"deal\",\"children\":[\"actions\"]},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"btn_hit\",\"btn_stand\",\"btn_double\",\"btn_surrender\"]},{\"id\":\"btn_hit\",\"component\":\"Button\",\"label\":\"Hit\",\"variant\":\"solid\",\"action\":{\"action\":\"hit\"}},{\"id\":\"btn_stand\",\"component\":\"Button\",\"label\":\"Stand\",\"variant\":\"soft\",\"action\":{\"action\":\"stand\"}},{\"id\":\"btn_double\",\"component\":\"Button\",\"label\":\"Double\",\"variant\":\"soft\",\"action\":{\"action\":\"double\"}},{\"id\":\"btn_surrender\",\"component\":\"Button\",\"label\":\"Surrender\",\"variant\":\"ghost\",\"action\":{\"action\":\"surrender\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "target": "table-2",
+                "reply": "You have 11 against my 5 showing. Hit, stand, double or surrender?",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-2",
+                      "value": {
+                        "phase": "playing",
+                        "bet": 100,
+                        "bankroll": 1000,
+                        "dealerHand": [
+                          {
+                            "rank": "5",
+                            "suit": "hearts"
+                          },
+                          {
+                            "rank": "J",
+                            "suit": "spades",
+                            "faceDown": true
+                          }
+                        ],
+                        "playerHand": [
+                          {
+                            "rank": "8",
+                            "suit": "diamonds"
+                          },
+                          {
+                            "rank": "3",
+                            "suit": "clubs"
+                          }
+                        ],
+                        "dealerTotal": "5",
+                        "playerTotal": "11",
+                        "status": "Your move: 11 vs dealer's 5",
+                        "statusIntent": "info"
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-2",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Spanish 21 · Round 2",
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": {
+                            "path": "/statusIntent"
+                          },
+                          "betAction": "deal",
+                          "children": [
+                            "actions"
+                          ]
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": [
+                            "btn_hit",
+                            "btn_stand",
+                            "btn_double",
+                            "btn_surrender"
+                          ]
+                        },
+                        {
+                          "id": "btn_hit",
+                          "component": "Button",
+                          "label": "Hit",
+                          "variant": "solid",
+                          "action": {
+                            "action": "hit"
+                          }
+                        },
+                        {
+                          "id": "btn_stand",
+                          "component": "Button",
+                          "label": "Stand",
+                          "variant": "soft",
+                          "action": {
+                            "action": "stand"
+                          }
+                        },
+                        {
+                          "id": "btn_double",
+                          "component": "Button",
+                          "label": "Double",
+                          "variant": "soft",
+                          "action": {
+                            "action": "double"
+                          }
+                        },
+                        {
+                          "id": "btn_surrender",
+                          "component": "Button",
+                          "label": "Surrender",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "surrender"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-15.jsonl:229",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          255
+        ]
+      },
+      "step": {
+        "click": "100"
+      },
+      "domHosts": 2,
+      "proseText": "You Let's play Spanish 21. spanish-21 Dealer busts with 25. You win 100, and your bankroll is now 1,100. You have 11 against my 5 showing. Hit, stand, double or surrender?",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "turn-5.png"
+    },
+    {
+      "index": 5,
+      "request": {
+        "model": "claude-opus-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--croupier",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since the dealer shows\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" no\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" blackjack with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"5 up and J in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hole for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 15, the surrender st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ands: I forfeit half\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the bet, losing 50\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ta\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"king the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bankroll from 1100\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to 1050 after the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 100 b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"et de\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"duction and 50 return.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m revealing the hole card\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", settling the round at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealer total\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 15 since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"render ends play\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" before\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" any draw, and updating the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" table state\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to reflect the result before\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" off\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ering another\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" deal.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"value\\\":{\\\"phase\\\":\\\"settled\\\",\\\"bet\\\":0,\\\"bankroll\\\":1050,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"5\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"J\\\",\\\"suit\\\":\\\"spades\\\"}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"3\\\",\\\"suit\\\":\\\"clubs\\\"}],\\\"dealerTotal\\\":\\\"15\\\",\\\"playerTotal\\\":\\\"11\\\",\\\"status\\\":\\\"You surrendered\\\",\\\"statusIntent\\\":\\\"warning\\\",\\\"result\\\":\\\"Dealer wins by surrender. You gave up your 11 (8-3) against the dealer's 15 (5-J), and half your bet came back. -50 chips.\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Spanish 21 · Round 2\\\",\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":{\\\"path\\\":\\\"/statusIntent\\\"},\\\"result\\\":{\\\"path\\\":\\\"/result\\\"},\\\"betAction\\\":\\\"deal\\\",\\\"children\\\":[\\\"actions\\\"]},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":[\\\"btn_deal_again\\\"]},{\\\"id\\\":\\\"btn_deal_again\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Deal again\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"deal_again\\\",\\\"context\\\":{\\\"newRound\\\":true}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"For what it's worth, 11 against my 5 is usually a hand you'd double.\",\"target\":{\"surfaceId\":\"table-2\"},\"trace\":{\"turnIndex\":10,\"query\":{\"intent\":\"Late surrender.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[\"TEXT_JSONL_IGNORED\"],\"model\":\"claude-opus-5-5\",\"prompt\":{\"limit\":142000,\"total\":51215,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"persona\",\"chars\":4923}],\"over\":false},\"usage\":{\"inputTokens\":6001,\"outputTokens\":1014,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-2\",\"value\":{\"phase\":\"settled\",\"bet\":0,\"bankroll\":1050,\"dealerHand\":[{\"rank\":\"5\",\"suit\":\"hearts\"},{\"rank\":\"J\",\"suit\":\"spades\"}],\"playerHand\":[{\"rank\":\"8\",\"suit\":\"diamonds\"},{\"rank\":\"3\",\"suit\":\"clubs\"}],\"dealerTotal\":\"15\",\"playerTotal\":\"11\",\"status\":\"You surrendered\",\"statusIntent\":\"warning\",\"result\":\"Dealer wins by surrender. You gave up your 11 (8-3) against the dealer's 15 (5-J), and half your bet came back. -50 chips.\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21 · Round 2\",\"phase\":{\"path\":\"/phase\"},\"bet\":{\"path\":\"/bet\"},\"bankroll\":{\"path\":\"/bankroll\"},\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":{\"path\":\"/statusIntent\"},\"result\":{\"path\":\"/result\"},\"betAction\":\"deal\",\"children\":[\"actions\"]},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"btn_deal_again\"]},{\"id\":\"btn_deal_again\",\"component\":\"Button\",\"label\":\"Deal again\",\"variant\":\"solid\",\"action\":{\"action\":\"deal_again\",\"context\":{\"newRound\":true}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"table-2\"}}}You surrender. My hole card is the Jack, which gives me 15 and no blackjack, so late surrender goes through. Half your bet (50) comes back to you, and you lose the other 50. Your bankroll is now 1,050.\n\nFor what it's worth, 11 against my 5 is usually a hand you'd double.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "You surrendered and got 50 back, so your bankroll is 1,050.",
+                "target": "table-2",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-2",
+                      "value": {
+                        "phase": "settled",
+                        "bet": 0,
+                        "bankroll": 1050,
+                        "dealerHand": [
+                          {
+                            "rank": "5",
+                            "suit": "hearts"
+                          },
+                          {
+                            "rank": "J",
+                            "suit": "spades"
+                          }
+                        ],
+                        "playerHand": [
+                          {
+                            "rank": "8",
+                            "suit": "diamonds"
+                          },
+                          {
+                            "rank": "3",
+                            "suit": "clubs"
+                          }
+                        ],
+                        "dealerTotal": "15",
+                        "playerTotal": "11",
+                        "status": "You surrendered",
+                        "statusIntent": "warning",
+                        "result": "Dealer wins by surrender. You gave up your 11 (8-3) against the dealer's 15 (5-J), and half your bet came back. -50 chips."
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-2",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Spanish 21 · Round 2",
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": {
+                            "path": "/statusIntent"
+                          },
+                          "result": {
+                            "path": "/result"
+                          },
+                          "betAction": "deal",
+                          "children": [
+                            "actions"
+                          ]
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": [
+                            "btn_deal_again"
+                          ]
+                        },
+                        {
+                          "id": "btn_deal_again",
+                          "component": "Button",
+                          "label": "Deal again",
+                          "variant": "solid",
+                          "action": {
+                            "action": "deal_again",
+                            "context": {
+                              "newRound": true
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-15.jsonl:230",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          402
+        ]
+      },
+      "step": {
+        "say": "Late surrender."
+      },
+      "domHosts": 2,
+      "proseText": "You Let's play Spanish 21. spanish-21 Dealer busts with 25. You win 100, and your bankroll is now 1,100. You have 11 against my 5 showing. Hit, stand, double or surrender? You Late surrender. For what it's worth, 11 against my 5 is usually a hand you'd double.",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "turn-6.png"
+    },
+    {
+      "index": 6,
+      "request": {
+        "model": "claude-opus-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--croupier",
+        "inputKind": "client",
+        "actionSurface": "table-2"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Starting a new round now\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\":\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'll retire table-2\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"by stripping its Deal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" again\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" button and act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ions, then create table-3 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"seeded with 1050 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"in the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" betting phase,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" making sure the root update ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eps the same component type.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Round\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 3 is ready.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Your bankroll car\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ries over at 1,050,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" so set your bet and deal\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Spanish 21 · Round 2\\\",\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":{\\\"path\\\":\\\"/statusIntent\\\"},\\\"result\\\":{\\\"path\\\":\\\"/result\\\"},\\\"betAction\\\":\\\"deal\\\"}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"catalogId\\\":\\\"agent-ui--croupier\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"value\\\":{\\\"phase\\\":\\\"betting\\\",\\\"bet\\\":100,\\\"bankroll\\\":1050,\\\"dealerHand\\\":[],\\\"playerHand\\\":[],\\\"dealerTotal\\\":\\\"\\\",\\\"playerTotal\\\":\\\"\\\",\\\"status\\\":\\\"Place your bet\\\",\\\"statusIntent\\\":\\\"info\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Spanish 21 · Round 3\\\",\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":{\\\"path\\\":\\\"/statusIntent\\\"},\\\"betAction\\\":\\\"deal\\\"}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Round 3 is ready. Your bankroll carries over at 1,050, so set your bet and deal.\",\"trace\":{\"turnIndex\":12,\"query\":{\"intent\":\"The user triggered the \\\"deal_again\\\" action (from component btn_deal_again). Action context: {\\\"newRound\\\":true}. Current surface data model: {\\\"phase\\\":\\\"settled\\\",\\\"bet\\\":0,\\\"bankroll\\\":1050,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"5\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"J\\\",\\\"suit\\\":\\\"spades\\\"}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"3\\\",\\\"suit\\\":\\\"clubs\\\"}],\\\"dealerTotal\\\":\\\"15\\\",\\\"playerTotal\\\":\\\"11\\\",\\\"status\\\":\\\"You surrendered\\\",\\\"statusIntent\\\":\\\"warning\\\",\\\"result\\\":\\\"Dealer wins by surrender. You gave up your 11 (8-3) against the dealer's 15 (5-J), and half your bet came back. -50 chips.\\\"}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[\"frontier-round-outcome\",\"frontier-rating-review\",\"frontier-greet-card\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-opus-5-5\",\"prompt\":{\"limit\":142000,\"total\":56818,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3252},{\"id\":\"mini-skills\",\"chars\":2351},{\"id\":\"persona\",\"chars\":4923}],\"over\":false},\"usage\":{\"inputTokens\":9255,\"outputTokens\":854,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21 · Round 2\",\"phase\":{\"path\":\"/phase\"},\"bet\":{\"path\":\"/bet\"},\"bankroll\":{\"path\":\"/bankroll\"},\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":{\"path\":\"/statusIntent\"},\"result\":{\"path\":\"/result\"},\"betAction\":\"deal\"}]}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-3\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-3\",\"value\":{\"phase\":\"betting\",\"bet\":100,\"bankroll\":1050,\"dealerHand\":[],\"playerHand\":[],\"dealerTotal\":\"\",\"playerTotal\":\"\",\"status\":\"Place your bet\",\"statusIntent\":\"info\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-3\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21 · Round 3\",\"phase\":{\"path\":\"/phase\"},\"bet\":{\"path\":\"/bet\"},\"bankroll\":{\"path\":\"/bankroll\"},\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":{\"path\":\"/statusIntent\"},\"betAction\":\"deal\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Round 3 is ready. Your bankroll carries over at 1,050, so set your bet and deal.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Round 3 is ready. Your bankroll carries over at 1,050, so set your bet and deal.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-2",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Spanish 21 · Round 2",
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": {
+                            "path": "/statusIntent"
+                          },
+                          "result": {
+                            "path": "/result"
+                          },
+                          "betAction": "deal"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-3",
+                      "catalogId": "agent-ui--croupier",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-3",
+                      "value": {
+                        "phase": "betting",
+                        "bet": 100,
+                        "bankroll": 1050,
+                        "dealerHand": [],
+                        "playerHand": [],
+                        "dealerTotal": "",
+                        "playerTotal": "",
+                        "status": "Place your bet",
+                        "statusIntent": "info"
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-3",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Spanish 21 · Round 3",
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": {
+                            "path": "/statusIntent"
+                          },
+                          "betAction": "deal"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-15.jsonl:231",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          213
+        ]
+      },
+      "step": {
+        "click": "Deal again",
+        "expect": [
+          "CardTable"
+        ]
+      },
+      "domHosts": 3,
+      "proseText": "You Let's play Spanish 21. spanish-21 Dealer busts with 25. You win 100, and your bankroll is now 1,100. You have 11 against my 5 showing. Hit, stand, double or surrender? You Late surrender. For what it's worth, 11 against my 5 is usually a hand you'd double. Round 3 is ready. Your bankroll carries over at 1,050, so set your bet and deal.",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "turn-7.png"
+    },
+    {
+      "index": 7,
+      "request": {
+        "model": "claude-opus-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--croupier",
+        "inputKind": "client",
+        "actionSurface": "table-3"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm setting up round \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"3 on table-3 with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a $\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"50 bet against\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a $1000 bankro\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dealing the player a Que\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"en and 9\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for 19 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"while the dealer shows a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 7 with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a hid\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"den h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ole card\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", then\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" preparing the standard action options\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"value\\\":{\\\"phase\\\":\\\"playing\\\",\\\"bet\\\":50,\\\"bankroll\\\":1000,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"4\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"faceDown\\\":true}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"clubs\\\"}],\\\"dealerTotal\\\":\\\"7\\\",\\\"playerTotal\\\":\\\"19\\\",\\\"status\\\":\\\"Your move: 19 vs dealer's 7\\\",\\\"statusIntent\\\":\\\"info\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Spanish 21 · Round 3\\\",\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":{\\\"path\\\":\\\"/statusIntent\\\"},\\\"betAction\\\":\\\"deal\\\",\\\"children\\\":[\\\"actions\\\"]},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":[\\\"btn_hit\\\",\\\"btn_stand\\\",\\\"btn_double\\\",\\\"btn_surrender\\\"]},{\\\"id\\\":\\\"btn_hit\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Hit\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"hit\\\"}},{\\\"id\\\":\\\"btn_stand\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Stand\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"stand\\\"}},{\\\"id\\\":\\\"btn_double\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Double\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"double\\\"}},{\\\"id\\\":\\\"btn_surrender\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Surrender\\\",\\\"variant\\\":\\\"ghost\\\",\\\"action\\\":{\\\"action\\\":\\\"surrender\\\"}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You have 19 against my 7. Your move.\",\"target\":{\"surfaceId\":\"table-3\"},\"trace\":{\"turnIndex\":14,\"query\":{\"intent\":\"The user triggered the \\\"deal\\\" action (from component root). Action context: {\\\"bet\\\":50,\\\"bankrollAfterBet\\\":1000}. Current surface data model: {\\\"phase\\\":\\\"betting\\\",\\\"bet\\\":50,\\\"bankroll\\\":1050,\\\"dealerHand\\\":[],\\\"playerHand\\\":[],\\\"dealerTotal\\\":\\\"\\\",\\\"playerTotal\\\":\\\"\\\",\\\"status\\\":\\\"Place your bet\\\",\\\"statusIntent\\\":\\\"info\\\"}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[\"frontier-round-outcome\",\"agent-roster-drawer\",\"structured-container-trip-summary\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[\"TEXT_JSONL_IGNORED\"],\"model\":\"claude-opus-5-5\",\"prompt\":{\"limit\":142000,\"total\":57666,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":4336},{\"id\":\"mini-skills\",\"chars\":2115},{\"id\":\"persona\",\"chars\":4923}],\"over\":false},\"usage\":{\"inputTokens\":10407,\"outputTokens\":1035,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-3\",\"value\":{\"phase\":\"playing\",\"bet\":50,\"bankroll\":1000,\"dealerHand\":[{\"rank\":\"7\",\"suit\":\"spades\"},{\"rank\":\"4\",\"suit\":\"diamonds\",\"faceDown\":true}],\"playerHand\":[{\"rank\":\"Q\",\"suit\":\"hearts\"},{\"rank\":\"9\",\"suit\":\"clubs\"}],\"dealerTotal\":\"7\",\"playerTotal\":\"19\",\"status\":\"Your move: 19 vs dealer's 7\",\"statusIntent\":\"info\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-3\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21 · Round 3\",\"phase\":{\"path\":\"/phase\"},\"bet\":{\"path\":\"/bet\"},\"bankroll\":{\"path\":\"/bankroll\"},\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":{\"path\":\"/statusIntent\"},\"betAction\":\"deal\",\"children\":[\"actions\"]},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"btn_hit\",\"btn_stand\",\"btn_double\",\"btn_surrender\"]},{\"id\":\"btn_hit\",\"component\":\"Button\",\"label\":\"Hit\",\"variant\":\"soft\",\"action\":{\"action\":\"hit\"}},{\"id\":\"btn_stand\",\"component\":\"Button\",\"label\":\"Stand\",\"variant\":\"solid\",\"action\":{\"action\":\"stand\"}},{\"id\":\"btn_double\",\"component\":\"Button\",\"label\":\"Double\",\"variant\":\"soft\",\"action\":{\"action\":\"double\"}},{\"id\":\"btn_surrender\",\"component\":\"Button\",\"label\":\"Surrender\",\"variant\":\"ghost\",\"action\":{\"action\":\"surrender\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"table-3\"}}}You have 19 (Q-9), and my up card is a 7. Hit, stand, double or surrender?",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "You have 19 against my 7. Your move.",
+                "target": "table-3",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-3",
+                      "value": {
+                        "phase": "playing",
+                        "bet": 50,
+                        "bankroll": 1000,
+                        "dealerHand": [
+                          {
+                            "rank": "7",
+                            "suit": "spades"
+                          },
+                          {
+                            "rank": "4",
+                            "suit": "diamonds",
+                            "faceDown": true
+                          }
+                        ],
+                        "playerHand": [
+                          {
+                            "rank": "Q",
+                            "suit": "hearts"
+                          },
+                          {
+                            "rank": "9",
+                            "suit": "clubs"
+                          }
+                        ],
+                        "dealerTotal": "7",
+                        "playerTotal": "19",
+                        "status": "Your move: 19 vs dealer's 7",
+                        "statusIntent": "info"
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-3",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Spanish 21 · Round 3",
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": {
+                            "path": "/statusIntent"
+                          },
+                          "betAction": "deal",
+                          "children": [
+                            "actions"
+                          ]
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": [
+                            "btn_hit",
+                            "btn_stand",
+                            "btn_double",
+                            "btn_surrender"
+                          ]
+                        },
+                        {
+                          "id": "btn_hit",
+                          "component": "Button",
+                          "label": "Hit",
+                          "variant": "soft",
+                          "action": {
+                            "action": "hit"
+                          }
+                        },
+                        {
+                          "id": "btn_stand",
+                          "component": "Button",
+                          "label": "Stand",
+                          "variant": "solid",
+                          "action": {
+                            "action": "stand"
+                          }
+                        },
+                        {
+                          "id": "btn_double",
+                          "component": "Button",
+                          "label": "Double",
+                          "variant": "soft",
+                          "action": {
+                            "action": "double"
+                          }
+                        },
+                        {
+                          "id": "btn_surrender",
+                          "component": "Button",
+                          "label": "Surrender",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "surrender"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-15.jsonl:232",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          212
+        ]
+      },
+      "step": {
+        "click": "50"
+      },
+      "domHosts": 3,
+      "proseText": "You Let's play Spanish 21. spanish-21 Dealer busts with 25. You win 100, and your bankroll is now 1,100. You have 11 against my 5 showing. Hit, stand, double or surrender? You Late surrender. For what it's worth, 11 against my 5 is usually a hand you'd double. You have 19 against my 7. Your move.",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "turn-8.png"
+    },
+    {
+      "index": 8,
+      "request": {
+        "model": "claude-opus-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--croupier",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Dealing the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a 2 brings them to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 21 in this\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Spanish de\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ck game\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" without tens, and since this is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" only a three-card 21 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"with no bonus q\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ualifying, it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a stand\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ard 21 that autom\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"atically wins the round. The\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dealer's hole card g\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ets revealed and I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" settle with a 1:1\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" payout,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" adding 50.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"value\\\":{\\\"phase\\\":\\\"settled\\\",\\\"bet\\\":0,\\\"bankroll\\\":1100,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"4\\\",\\\"suit\\\":\\\"diamonds\\\"}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"hearts\\\"}],\\\"dealerTotal\\\":\\\"11\\\",\\\"playerTotal\\\":\\\"21\\\",\\\"status\\\":\\\"You win: player 21\\\",\\\"statusIntent\\\":\\\"success\\\",\\\"result\\\":\\\"You win. Your 21 (Q-9-2) always wins in Spanish 21, against the dealer's 11 (7-4). +50 chips.\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Spanish 21 · Round 3\\\",\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":{\\\"path\\\":\\\"/statusIntent\\\"},\\\"result\\\":{\\\"path\\\":\\\"/result\\\"},\\\"betAction\\\":\\\"deal\\\",\\\"children\\\":[\\\"actions\\\"]},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":[\\\"btn_deal_again\\\"]},{\\\"id\\\":\\\"btn_deal_again\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Deal again\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"deal_again\\\",\\\"context\\\":{\\\"newRound\\\":true}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You drew a 2 for 21, so you win 50. Bankroll: 1,100.\",\"target\":{\"surfaceId\":\"table-3\"},\"trace\":{\"turnIndex\":16,\"query\":{\"intent\":\"Hit.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[\"TEXT_JSONL_IGNORED\"],\"model\":\"claude-opus-5-5\",\"prompt\":{\"limit\":142000,\"total\":51215,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"persona\",\"chars\":4923}],\"over\":false},\"usage\":{\"inputTokens\":8422,\"outputTokens\":1278,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-3\",\"value\":{\"phase\":\"settled\",\"bet\":0,\"bankroll\":1100,\"dealerHand\":[{\"rank\":\"7\",\"suit\":\"spades\"},{\"rank\":\"4\",\"suit\":\"diamonds\"}],\"playerHand\":[{\"rank\":\"Q\",\"suit\":\"hearts\"},{\"rank\":\"9\",\"suit\":\"clubs\"},{\"rank\":\"2\",\"suit\":\"hearts\"}],\"dealerTotal\":\"11\",\"playerTotal\":\"21\",\"status\":\"You win: player 21\",\"statusIntent\":\"success\",\"result\":\"You win. Your 21 (Q-9-2) always wins in Spanish 21, against the dealer's 11 (7-4). +50 chips.\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-3\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21 · Round 3\",\"phase\":{\"path\":\"/phase\"},\"bet\":{\"path\":\"/bet\"},\"bankroll\":{\"path\":\"/bankroll\"},\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":{\"path\":\"/statusIntent\"},\"result\":{\"path\":\"/result\"},\"betAction\":\"deal\",\"children\":[\"actions\"]},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"btn_deal_again\"]},{\"id\":\"btn_deal_again\",\"component\":\"Button\",\"label\":\"Deal again\",\"variant\":\"solid\",\"action\":{\"action\":\"deal_again\",\"context\":{\"newRound\":true}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"table-3\"}}}Bold hit on 19, and it paid off. A 2 gives you 21, and in Spanish 21 your 21 always wins. My hole card was a 4, so I had 11. You win 50, and your bankroll is now 1,100.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "You drew a 2 for 21, so you win 50. Bankroll: 1,100.",
+                "target": "table-3",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-3",
+                      "value": {
+                        "phase": "settled",
+                        "bet": 0,
+                        "bankroll": 1100,
+                        "dealerHand": [
+                          {
+                            "rank": "7",
+                            "suit": "spades"
+                          },
+                          {
+                            "rank": "4",
+                            "suit": "diamonds"
+                          }
+                        ],
+                        "playerHand": [
+                          {
+                            "rank": "Q",
+                            "suit": "hearts"
+                          },
+                          {
+                            "rank": "9",
+                            "suit": "clubs"
+                          },
+                          {
+                            "rank": "2",
+                            "suit": "hearts"
+                          }
+                        ],
+                        "dealerTotal": "11",
+                        "playerTotal": "21",
+                        "status": "You win: player 21",
+                        "statusIntent": "success",
+                        "result": "You win. Your 21 (Q-9-2) always wins in Spanish 21, against the dealer's 11 (7-4). +50 chips."
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-3",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Spanish 21 · Round 3",
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": {
+                            "path": "/statusIntent"
+                          },
+                          "result": {
+                            "path": "/result"
+                          },
+                          "betAction": "deal",
+                          "children": [
+                            "actions"
+                          ]
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": [
+                            "btn_deal_again"
+                          ]
+                        },
+                        {
+                          "id": "btn_deal_again",
+                          "component": "Button",
+                          "label": "Deal again",
+                          "variant": "solid",
+                          "action": {
+                            "action": "deal_again",
+                            "context": {
+                              "newRound": true
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-15.jsonl:233",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          281
+        ]
+      },
+      "step": {
+        "say": "Hit."
+      },
+      "domHosts": 3,
+      "proseText": "You Let's play Spanish 21. spanish-21 Dealer busts with 25. You win 100, and your bankroll is now 1,100. You have 11 against my 5 showing. Hit, stand, double or surrender? You Late surrender. For what it's worth, 11 against my 5 is usually a hand you'd double. You have 19 against my 7. Your move. You Hit. You drew a 2 for 21, so you win 50. Bankroll: 1,100.",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "turn-9.png"
+    },
+    {
+      "index": 9,
+      "request": {
+        "model": "claude-opus-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--croupier",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Round 3 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"is already settled and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" there's no active hand, so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since the user said\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"Stand\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with nothing in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" play\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", I should just note\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" round's over and they\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" can h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"it Deal to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" start round 4, ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eping bankroll at \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"1,100.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"That hand is already\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" over. Your 21 (\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Q-9-2) won\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" it\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\", and your\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" bankroll is at\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 1,100. You\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" don\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'t have a live\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" hand to stand on\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" right now.\\n\\nTap **\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Deal again** on the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Round 3 table and I\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'ll set up Round 4\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" with your\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 1,100.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"That hand is already over. Your 21 (Q-9-2) won it, and your bankroll is at 1,100. You don't have a live hand to stand on right now.\\n\\nTap **Deal again** on the Round 3 table and I'll set up Round 4 with your 1,100.\",\"trace\":{\"turnIndex\":18,\"query\":{\"intent\":\"Stand.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-opus-5-5\",\"prompt\":{\"limit\":142000,\"total\":51215,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"persona\",\"chars\":4923}],\"over\":false},\"usage\":{\"inputTokens\":9061,\"outputTokens\":215,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}"
+      ],
+      "rounds": [
+        {
+          "text": "That hand is already over. Your 21 (Q-9-2) won it, and your bankroll is at 1,100. You don't have a live hand to stand on right now.\n\nTap **Deal again** on the Round 3 table and I'll set up Round 4 with your 1,100.",
+          "tools": []
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-15.jsonl:234",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          212
+        ]
+      },
+      "step": {
+        "say": "Stand."
+      },
+      "domHosts": 3,
+      "proseText": "You Let's play Spanish 21. spanish-21 Dealer busts with 25. You win 100, and your bankroll is now 1,100. You have 11 against my 5 showing. Hit, stand, double or surrender? You Late surrender. For what it's worth, 11 against my 5 is usually a hand you'd double. You have 19 against my 7. Your move. You Hit. You drew a 2 for 21, so you win 50. Bankroll: 1,100. You Stand. That hand is already over. Your 21 (Q-9-2) won it, and your bankroll is at 1,100. You don't have a live hand to stand on right now. Tap Deal again on the Round 3 table and I'll set up Round 4 with your 1,100.",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "turn-10.png"
+    }
+  ],
+  "checks": [
+    {
+      "check": "model-pick",
+      "turn": 0,
+      "status": "pass",
+      "detail": "claude-opus-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 0,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 0,
+      "status": "pass",
+      "detail": "481 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 0,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 0,
+      "status": "pass",
+      "detail": "888 chars of reply beside 3 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 0,
+      "status": "pass",
+      "detail": "rounds created [table-1], open [table-1] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "expect-component",
+      "turn": 0,
+      "status": "pass",
+      "detail": "table-1 holds CardTable"
+    },
+    {
+      "check": "render-lint",
+      "turn": 0,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 0,
+      "status": "pass",
+      "detail": "477 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 1,
+      "status": "pass",
+      "detail": "claude-opus-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 1,
+      "status": "pass",
+      "detail": "clicked \"100\""
+    },
+    {
+      "check": "no-halt",
+      "turn": 1,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 1,
+      "status": "pass",
+      "detail": "122 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 1,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 1,
+      "status": "pass",
+      "detail": "84 chars of reply beside 2 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 1,
+      "status": "pass",
+      "detail": "rounds created [], open [table-1] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 1,
+      "status": "pass",
+      "detail": "table-1 updated"
+    },
+    {
+      "check": "expect-component",
+      "turn": 1,
+      "status": "skip",
+      "detail": "no --expect-turn on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 1,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 1,
+      "status": "pass",
+      "detail": "668 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 2,
+      "status": "pass",
+      "detail": "claude-opus-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 2,
+      "status": "pass",
+      "detail": "clicked \"Stand\""
+    },
+    {
+      "check": "no-halt",
+      "turn": 2,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 2,
+      "status": "pass",
+      "detail": "104 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 2,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 2,
+      "status": "pass",
+      "detail": "66 chars of reply beside 2 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 2,
+      "status": "pass",
+      "detail": "rounds created [], open [table-1] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 2,
+      "status": "pass",
+      "detail": "table-1 updated"
+    },
+    {
+      "check": "expect-component",
+      "turn": 2,
+      "status": "skip",
+      "detail": "no --expect-turn on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 2,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 2,
+      "status": "pass",
+      "detail": "450 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 3,
+      "status": "pass",
+      "detail": "claude-opus-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 3,
+      "status": "pass",
+      "detail": "clicked \"Deal again\""
+    },
+    {
+      "check": "no-halt",
+      "turn": 3,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 3,
+      "status": "pass",
+      "detail": "204 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 3,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 3,
+      "status": "pass",
+      "detail": "198 chars of reply beside 4 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 3,
+      "status": "pass",
+      "detail": "rounds created [table-2], open [table-1, table-2] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 3,
+      "status": "pass",
+      "detail": "table-1 updated"
+    },
+    {
+      "check": "expect-component",
+      "turn": 3,
+      "status": "pass",
+      "detail": "table-1, table-2 holds CardTable"
+    },
+    {
+      "check": "render-lint",
+      "turn": 3,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 3,
+      "status": "pass",
+      "detail": "504 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 4,
+      "status": "pass",
+      "detail": "claude-opus-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 4,
+      "status": "pass",
+      "detail": "clicked \"100\""
+    },
+    {
+      "check": "no-halt",
+      "turn": 4,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 4,
+      "status": "pass",
+      "detail": "171 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 4,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 4,
+      "status": "pass",
+      "detail": "66 chars of reply beside 2 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 4,
+      "status": "pass",
+      "detail": "rounds created [], open [table-1, table-2] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 4,
+      "status": "pass",
+      "detail": "table-2 updated"
+    },
+    {
+      "check": "expect-component",
+      "turn": 4,
+      "status": "skip",
+      "detail": "no --expect-turn on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 4,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 4,
+      "status": "pass",
+      "detail": "255 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 5,
+      "status": "pass",
+      "detail": "claude-opus-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 5,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 5,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 5,
+      "status": "pass",
+      "detail": "260 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 5,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 5,
+      "status": "pass",
+      "detail": "68 chars of reply beside 2 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 5,
+      "status": "pass",
+      "detail": "rounds created [], open [table-1, table-2] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 5,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "expect-component",
+      "turn": 5,
+      "status": "skip",
+      "detail": "no --expect-turn on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 5,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 5,
+      "status": "pass",
+      "detail": "402 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 6,
+      "status": "pass",
+      "detail": "claude-opus-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 6,
+      "status": "pass",
+      "detail": "clicked \"Deal again\""
+    },
+    {
+      "check": "no-halt",
+      "turn": 6,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 6,
+      "status": "pass",
+      "detail": "341 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 6,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 6,
+      "status": "pass",
+      "detail": "160 chars of reply beside 4 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 6,
+      "status": "pass",
+      "detail": "rounds created [table-3], open [table-1, table-2, table-3] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 6,
+      "status": "pass",
+      "detail": "table-2 updated"
+    },
+    {
+      "check": "expect-component",
+      "turn": 6,
+      "status": "pass",
+      "detail": "table-2, table-3 holds CardTable"
+    },
+    {
+      "check": "render-lint",
+      "turn": 6,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 6,
+      "status": "pass",
+      "detail": "213 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 7,
+      "status": "pass",
+      "detail": "claude-opus-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 7,
+      "status": "pass",
+      "detail": "clicked \"50\""
+    },
+    {
+      "check": "no-halt",
+      "turn": 7,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 7,
+      "status": "pass",
+      "detail": "297 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 7,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 7,
+      "status": "pass",
+      "detail": "36 chars of reply beside 2 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 7,
+      "status": "pass",
+      "detail": "rounds created [], open [table-1, table-2, table-3] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 7,
+      "status": "pass",
+      "detail": "table-3 updated"
+    },
+    {
+      "check": "expect-component",
+      "turn": 7,
+      "status": "skip",
+      "detail": "no --expect-turn on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 7,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 7,
+      "status": "pass",
+      "detail": "212 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 8,
+      "status": "pass",
+      "detail": "claude-opus-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 8,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 8,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 8,
+      "status": "pass",
+      "detail": "359 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 8,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 8,
+      "status": "pass",
+      "detail": "52 chars of reply beside 2 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 8,
+      "status": "pass",
+      "detail": "rounds created [], open [table-1, table-2, table-3] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 8,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "expect-component",
+      "turn": 8,
+      "status": "skip",
+      "detail": "no --expect-turn on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 8,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 8,
+      "status": "pass",
+      "detail": "281 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 9,
+      "status": "pass",
+      "detail": "claude-opus-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 9,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 9,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 9,
+      "status": "pass",
+      "detail": "579 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 9,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 9,
+      "status": "skip",
+      "detail": "no A2UI lines shipped (a text turn)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 9,
+      "status": "pass",
+      "detail": "rounds created [], open [table-1, table-2, table-3] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 9,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "expect-component",
+      "turn": 9,
+      "status": "skip",
+      "detail": "no --expect-turn on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 9,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 9,
+      "status": "pass",
+      "detail": "212 thinking chars"
+    },
+    {
+      "check": "expect-component",
+      "status": "pass",
+      "detail": "found CardTable"
+    }
+  ],
+  "verdict": "pass"
+}

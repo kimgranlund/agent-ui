@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest'
 import { parseProbeCli } from '../cli.ts'
 import { ADMIRAL_SCENARIOS } from './admiral.ts'
 import { CONCIERGE_SCENARIOS } from './concierge.ts'
-import { CROUPIER_MODELS, CROUPIER_SCENARIOS } from './croupier.ts'
+import { CROUPIER_MODELS, CROUPIER_ROUND_SCENARIOS } from './croupier.ts'
 import { LEXICOGRAPHER_SCENARIOS } from './lexicographer.ts'
 import { MODEL_ORDER, ROUND_PRESETS, roundCommandsScript, roundRuns } from './round.ts'
 
@@ -32,7 +32,7 @@ describe('live round 2 scenarios', () => {
   })
 
   it('Croupier runs 8 games on Haiku, Sonnet and Opus 5.5; the other presets 3 scenarios on Haiku and Sonnet', () => {
-    expect(CROUPIER_SCENARIOS).toHaveLength(8)
+    expect(CROUPIER_ROUND_SCENARIOS).toHaveLength(8)
     expect(CROUPIER_MODELS.map((m) => m.id)).toEqual(['claude-haiku-5-5', 'claude-sonnet-5-5', 'claude-opus-5-5'])
     for (const [agent, scenarios] of Object.entries(NEW_PRESETS)) {
       expect(scenarios).toHaveLength(3)
@@ -57,6 +57,18 @@ describe('live round 2 scenarios', () => {
     const turnTypes = (scenarios) => new Set(scenarios.flatMap((s) => s.steps.flatMap((step) => step.expect ?? [])))
     expect([...turnTypes(CONCIERGE_SCENARIOS)].sort()).toEqual(['BookingConfirmation', 'BookingForm', 'ServiceCard'])
     for (const scenarios of [LEXICOGRAPHER_SCENARIOS, ADMIRAL_SCENARIOS]) expect([...turnTypes(scenarios)].sort()).toEqual(['BoardGrid', 'ResultCard'])
+  })
+
+  it('the round fixes its scenario defects: no click after a Hit, five stud streets, dated bookings, named knowledge', () => {
+    const steps = (name) => CROUPIER_ROUND_SCENARIOS.find((s) => s.name === name).steps
+    const rounds = steps('blackjack-rounds')
+    expect(rounds[rounds.findIndex((step) => step.click === 'Hit') + 1]).toEqual({ say: 'Stand.' })
+    const stud = steps('seven-card-stud')
+    expect(stud.slice(3, stud.findIndex((step) => step.click === 'Deal again')).every((step) => step.say === 'Check, or call if there is a bet.')).toBe(true)
+    expect(stud.findIndex((step) => step.click === 'Deal again')).toBe(7)
+    const says = CONCIERGE_SCENARIOS.flatMap((s) => s.steps.map((step) => step.say))
+    for (const text of says.filter((t) => /^Book|table at/.test(t))) expect(text).toMatch(/\d{1,2} November 2026/)
+    for (const text of says.filter((t) => /hours|close\?/.test(t))) expect(text).toContain('property-knowledge-base')
   })
 
   it('names and output folders are unique and follow runs/<preset>-<scenario>-<model>-1', () => {

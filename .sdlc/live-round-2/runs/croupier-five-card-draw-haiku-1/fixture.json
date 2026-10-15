@@ -1,0 +1,1788 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "croupier-five-card-draw-haiku-1",
+  "agent": "croupier",
+  "model": "claude-haiku-5-5",
+  "source": "probe live run 2026-10-15T05:40:23.495Z, traces 2026-10-15.jsonl:41,2026-10-15.jsonl:42,2026-10-15.jsonl:43,2026-10-15.jsonl:44,2026-10-15.jsonl:45,2026-10-15.jsonl:46,2026-10-15.jsonl:47,2026-10-15.jsonl:48,2026-10-15.jsonl:49,2026-10-15.jsonl:50",
+  "steps": [
+    {
+      "say": "Let's play five-card draw.",
+      "expect": [
+        "PlayingCard"
+      ]
+    },
+    {
+      "say": "Check, or call if there is a bet."
+    },
+    {
+      "say": "Discard my two lowest cards and draw."
+    },
+    {
+      "say": "Bet 50."
+    },
+    {
+      "click": "Deal again",
+      "expect": [
+        "PlayingCard"
+      ]
+    },
+    {
+      "say": "Fold."
+    },
+    {
+      "click": "Deal again",
+      "expect": [
+        "PlayingCard"
+      ]
+    },
+    {
+      "say": "Check, or call if there is a bet."
+    },
+    {
+      "say": "Stand pat, no discards."
+    },
+    {
+      "say": "Check, or call if there is a bet."
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Setting up a five-card dra\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"w table as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Croupier,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" using GameHud and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" P\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"layingCard components since there\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s no bankroll on file\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll start the player\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 1,000 chips with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a fresh table\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" id and de\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"al out\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" both the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player's and dealer's h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ands.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Rather than over\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"complicate\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the full bet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting/discard fl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ow, I'll sim\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"plify to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a de\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"al follow\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ed by a Check/B\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"et/Fold action for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the first betting round, matching\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the persona's poker action style\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". I'll render the hand\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" inside a Card with header\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"/content/footer, and fe\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ed GameHud a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" stats array of label\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"/value pairs plus prog\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ress info to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keep things\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" cons\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"istent.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" cards, I'll template the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player's hand from\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the data\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" path with rank/suit b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ound per card, and show the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" opponent's hand as five\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" static\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" face-down P\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"layingCards r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ather than f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"abricating h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"idden information\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". I'll pick a s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ample d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealt hand for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the player (something\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" like Q♠, 9\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"♥, 9♦,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 4♣, 2\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"♠\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for a pair of nines),\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bankroll to 1,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"000 with p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot starting at 0, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face those\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as H\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"UD stats.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ions I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" laying out Check, B\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"et \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"20, and Fold as bu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ttons in the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" foot\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"er, ad\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding a \\\"Your turn\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" badge in the header next\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to the title, and writing a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" short intro line\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" recapping the five-card dra\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"w rules without\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" using\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" meta-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ask pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ompts or toasts.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Now I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m struct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"uring the root as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a Column with cons\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"istent gap\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sp\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"acing to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hold all\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" these pieces together\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Building\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" out the card table\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\":\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a GameHud with ch\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ips/p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot stats and a status badge\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" betting round, then a Card\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" split\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" into header\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" (title + badge),\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" content (op\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ponent zone with face\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-down cards in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a row, and the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player's own\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and zone),\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and foot\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"er with the action\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" buttons.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For the dealer's five face\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-down cards, I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" assigning placeholder r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ank/suit values since Pl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ayingCard requires them even\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" when\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" faceDown hides the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" actual value\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll keep the HU\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"D stat formatted\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as a ch\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ips value pointing to the b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ankroll path.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Then I'm sequ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"encing the messages in order:\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" create\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Surface with the cro\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"upier catalog and send\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"DataModel en\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"abled, followed by update\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"DataModel with the full state\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" including play\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"erHand, then updateCom\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ponents last.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"No\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" me\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ta-line is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" needed since there\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s no new surface, \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ask, or flowEnd\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" here\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" — I'll just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" put the chat response\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" direct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ly in the reply field.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"catalogId\\\":\\\"agent-ui--croupier\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"bankroll\\\":1000,\\\"pot\\\":0,\\\"playerHand\\\":[{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"4\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"spades\\\"}]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"hud\\\",\\\"table\\\"]},{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Five-card draw\\\",\\\"status\\\":\\\"Betting round 1\\\",\\\"statusIntent\\\":\\\"info\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Chips\\\",\\\"value\\\":{\\\"path\\\":\\\"/bankroll\\\"}},{\\\"label\\\":\\\"Pot\\\",\\\"value\\\":{\\\"path\\\":\\\"/pot\\\"}}]},{\\\"id\\\":\\\"table\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"tbl_hd\\\",\\\"tbl_ct\\\",\\\"tbl_ft\\\"]},{\\\"id\\\":\\\"tbl_hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"tbl_title\\\",\\\"tbl_badge\\\"]},{\\\"id\\\":\\\"tbl_title\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Your hand\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"tbl_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Your turn\\\",\\\"intent\\\":\\\"info\\\",\\\"slot\\\":\\\"trailing\\\"},{\\\"id\\\":\\\"tbl_ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"opp_zone\\\",\\\"you_zone\\\"]},{\\\"id\\\":\\\"opp_zone\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"opp_label\\\",\\\"opp_row\\\"]},{\\\"id\\\":\\\"opp_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Dealer · 5 cards face down\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"opp_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"opp1\\\",\\\"opp2\\\",\\\"opp3\\\",\\\"opp4\\\",\\\"opp5\\\"]},{\\\"id\\\":\\\"opp1\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":\\\"A\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true,\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"opp2\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":\\\"A\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true,\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"opp3\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":\\\"A\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true,\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"opp4\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":\\\"A\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true,\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"opp5\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":\\\"A\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true,\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"you_zone\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"you_label\\\",\\\"you_row\\\"]},{\\\"id\\\":\\\"you_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"You · pair of nines\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"you_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":{\\\"path\\\":\\\"/playerHand\\\",\\\"componentId\\\":\\\"playerCard\\\"}},{\\\"id\\\":\\\"playerCard\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"faceDown\\\":false,\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"tbl_ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"actions\\\"]},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"btn_check\\\",\\\"btn_bet\\\",\\\"btn_fold\\\"]},{\\\"id\\\":\\\"btn_check\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Check\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"poker_check\\\",\\\"context\\\":{\\\"round\\\":\\\"table-1\\\"}}},{\\\"id\\\":\\\"btn_bet\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Bet 20\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"poker_bet\\\",\\\"context\\\":{\\\"round\\\":\\\"table-1\\\",\\\"amount\\\":20}}},{\\\"id\\\":\\\"btn_fold\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Fold\\\",\\\"variant\\\":\\\"ghost\\\",\\\"action\\\":{\\\"action\\\":\\\"poker_fold\\\",\\\"context\\\":{\\\"round\\\":\\\"table-1\\\"}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Five-card draw it is. Each player gets five cards face down, then a betting round, then up to three discards (four if you keep an Ace) and replacements, a final betting round, and showdown. Ties split the pot. You open with 1,000 chips. Your first five are below, and the dealer's are face down. Your move: check, bet 20, or fold.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"## Referenced for this message\\n### five-card-draw (resource)\\nfive-card draw, discard and draw, classic poker\\n\\nClassic draw poker: five cards each, face-down, then a betting round; each side may discard up to three cards (four when keeping an Ace) and draw replacements; one final betting round, then showdown. Standard rankings; tied hands split the pot.\\n\\nLet's play five-card draw.\",\"k\":3},\"exemplarIds\":[\"trivia-round-resume\",\"frontier-round-outcome\",\"crud-entry-list-drawer\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142000,\"total\":61669,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":8502},{\"id\":\"mini-skills\",\"chars\":2021},{\"id\":\"persona\",\"chars\":4854}],\"over\":false},\"usage\":{\"inputTokens\":6264,\"outputTokens\":3873,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-1\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":1000,\"pot\":0,\"playerHand\":[{\"rank\":\"Q\",\"suit\":\"spades\"},{\"rank\":\"9\",\"suit\":\"hearts\"},{\"rank\":\"9\",\"suit\":\"diamonds\"},{\"rank\":\"4\",\"suit\":\"clubs\"},{\"rank\":\"2\",\"suit\":\"spades\"}]}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"table\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Five-card draw\",\"status\":\"Betting round 1\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Chips\",\"value\":{\"path\":\"/bankroll\"}},{\"label\":\"Pot\",\"value\":{\"path\":\"/pot\"}}]},{\"id\":\"table\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"tbl_hd\",\"tbl_ct\",\"tbl_ft\"]},{\"id\":\"tbl_hd\",\"component\":\"CardHeader\",\"children\":[\"tbl_title\",\"tbl_badge\"]},{\"id\":\"tbl_title\",\"component\":\"Text\",\"text\":\"Your hand\",\"variant\":\"h4\"},{\"id\":\"tbl_badge\",\"component\":\"Badge\",\"label\":\"Your turn\",\"intent\":\"info\",\"slot\":\"trailing\"},{\"id\":\"tbl_ct\",\"component\":\"CardContent\",\"children\":[\"opp_zone\",\"you_zone\"]},{\"id\":\"opp_zone\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"opp_label\",\"opp_row\"]},{\"id\":\"opp_label\",\"component\":\"Text\",\"text\":\"Dealer · 5 cards face down\",\"variant\":\"label\"},{\"id\":\"opp_row\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"opp1\",\"opp2\",\"opp3\",\"opp4\",\"opp5\"]},{\"id\":\"opp1\",\"component\":\"PlayingCard\",\"rank\":\"A\",\"suit\":\"spades\",\"faceDown\":true,\"size\":\"md\"},{\"id\":\"opp2\",\"component\":\"PlayingCard\",\"rank\":\"A\",\"suit\":\"spades\",\"faceDown\":true,\"size\":\"md\"},{\"id\":\"opp3\",\"component\":\"PlayingCard\",\"rank\":\"A\",\"suit\":\"spades\",\"faceDown\":true,\"size\":\"md\"},{\"id\":\"opp4\",\"component\":\"PlayingCard\",\"rank\":\"A\",\"suit\":\"spades\",\"faceDown\":true,\"size\":\"md\"},{\"id\":\"opp5\",\"component\":\"PlayingCard\",\"rank\":\"A\",\"suit\":\"spades\",\"faceDown\":true,\"size\":\"md\"},{\"id\":\"you_zone\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"you_label\",\"you_row\"]},{\"id\":\"you_label\",\"component\":\"Text\",\"text\":\"You · pair of nines\",\"variant\":\"label\"},{\"id\":\"you_row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/playerHand\",\"componentId\":\"playerCard\"}},{\"id\":\"playerCard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":false,\"size\":\"md\"},{\"id\":\"tbl_ft\",\"component\":\"CardFooter\",\"children\":[\"actions\"]},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"children\":[\"btn_check\",\"btn_bet\",\"btn_fold\"]},{\"id\":\"btn_check\",\"component\":\"Button\",\"label\":\"Check\",\"variant\":\"solid\",\"action\":{\"action\":\"poker_check\",\"context\":{\"round\":\"table-1\"}}},{\"id\":\"btn_bet\",\"component\":\"Button\",\"label\":\"Bet 20\",\"variant\":\"soft\",\"action\":{\"action\":\"poker_bet\",\"context\":{\"round\":\"table-1\",\"amount\":20}}},{\"id\":\"btn_fold\",\"component\":\"Button\",\"label\":\"Fold\",\"variant\":\"ghost\",\"action\":{\"action\":\"poker_fold\",\"context\":{\"round\":\"table-1\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Five-card draw it is. Each player gets five cards face down, then a betting round, then up to three discards (four if you keep an Ace) and replacements, a final betting round, and showdown. Ties split the pot. You open with 1,000 chips. Your first five are below, and the dealer's are face down. Your move: check, bet 20, or fold.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-1",
+                      "catalogId": "agent-ui--croupier",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "bankroll": 1000,
+                        "pot": 0,
+                        "playerHand": [
+                          {
+                            "rank": "Q",
+                            "suit": "spades"
+                          },
+                          {
+                            "rank": "9",
+                            "suit": "hearts"
+                          },
+                          {
+                            "rank": "9",
+                            "suit": "diamonds"
+                          },
+                          {
+                            "rank": "4",
+                            "suit": "clubs"
+                          },
+                          {
+                            "rank": "2",
+                            "suit": "spades"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "table"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Five-card draw",
+                          "status": "Betting round 1",
+                          "statusIntent": "info",
+                          "stats": [
+                            {
+                              "label": "Chips",
+                              "value": {
+                                "path": "/bankroll"
+                              }
+                            },
+                            {
+                              "label": "Pot",
+                              "value": {
+                                "path": "/pot"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "id": "table",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "tbl_hd",
+                            "tbl_ct",
+                            "tbl_ft"
+                          ]
+                        },
+                        {
+                          "id": "tbl_hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "tbl_title",
+                            "tbl_badge"
+                          ]
+                        },
+                        {
+                          "id": "tbl_title",
+                          "component": "Text",
+                          "text": "Your hand",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "tbl_badge",
+                          "component": "Badge",
+                          "label": "Your turn",
+                          "intent": "info",
+                          "slot": "trailing"
+                        },
+                        {
+                          "id": "tbl_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "opp_zone",
+                            "you_zone"
+                          ]
+                        },
+                        {
+                          "id": "opp_zone",
+                          "component": "Column",
+                          "gap": "sm",
+                          "children": [
+                            "opp_label",
+                            "opp_row"
+                          ]
+                        },
+                        {
+                          "id": "opp_label",
+                          "component": "Text",
+                          "text": "Dealer · 5 cards face down",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "opp_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "children": [
+                            "opp1",
+                            "opp2",
+                            "opp3",
+                            "opp4",
+                            "opp5"
+                          ]
+                        },
+                        {
+                          "id": "opp1",
+                          "component": "PlayingCard",
+                          "rank": "A",
+                          "suit": "spades",
+                          "faceDown": true,
+                          "size": "md"
+                        },
+                        {
+                          "id": "opp2",
+                          "component": "PlayingCard",
+                          "rank": "A",
+                          "suit": "spades",
+                          "faceDown": true,
+                          "size": "md"
+                        },
+                        {
+                          "id": "opp3",
+                          "component": "PlayingCard",
+                          "rank": "A",
+                          "suit": "spades",
+                          "faceDown": true,
+                          "size": "md"
+                        },
+                        {
+                          "id": "opp4",
+                          "component": "PlayingCard",
+                          "rank": "A",
+                          "suit": "spades",
+                          "faceDown": true,
+                          "size": "md"
+                        },
+                        {
+                          "id": "opp5",
+                          "component": "PlayingCard",
+                          "rank": "A",
+                          "suit": "spades",
+                          "faceDown": true,
+                          "size": "md"
+                        },
+                        {
+                          "id": "you_zone",
+                          "component": "Column",
+                          "gap": "sm",
+                          "children": [
+                            "you_label",
+                            "you_row"
+                          ]
+                        },
+                        {
+                          "id": "you_label",
+                          "component": "Text",
+                          "text": "You · pair of nines",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "you_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/playerHand",
+                            "componentId": "playerCard"
+                          }
+                        },
+                        {
+                          "id": "playerCard",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "faceDown": false,
+                          "size": "md"
+                        },
+                        {
+                          "id": "tbl_ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "actions"
+                          ]
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "md",
+                          "children": [
+                            "btn_check",
+                            "btn_bet",
+                            "btn_fold"
+                          ]
+                        },
+                        {
+                          "id": "btn_check",
+                          "component": "Button",
+                          "label": "Check",
+                          "variant": "solid",
+                          "action": {
+                            "action": "poker_check",
+                            "context": {
+                              "round": "table-1"
+                            }
+                          }
+                        },
+                        {
+                          "id": "btn_bet",
+                          "component": "Button",
+                          "label": "Bet 20",
+                          "variant": "soft",
+                          "action": {
+                            "action": "poker_bet",
+                            "context": {
+                              "round": "table-1",
+                              "amount": 20
+                            }
+                          }
+                        },
+                        {
+                          "id": "btn_fold",
+                          "component": "Button",
+                          "label": "Fold",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "poker_fold",
+                            "context": {
+                              "round": "table-1"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Player checked\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", so I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll treat the dealer\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as checking too, moving things\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" into the draw phase. I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" need to update the inter\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face from\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting options\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to the discard sel\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ection, and since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the player hasn't specified\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" which cards to sw\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ap, I should pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ompt them for that.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I also notice the d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealer's hand is being\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"own as fabricated plac\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eholder cards rather than\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" real h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"idden data,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" so I should f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ix that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" by adding a proper deal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"erHand field\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to the data model. I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" build out the dra\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"w phase with a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" column\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" of checkboxes b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ound to disc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ard selections,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" plus \\\"Draw\\\" and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"Keep all\\\" butt\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ons to hand\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"le the st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and-pat option\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Now I need to update several\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" components for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the dra\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"w phase: the hud status\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" text\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" (chang\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing \\\"Betting round 1\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\\" to \\\"Draw\\\"),\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the table badge label, and the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" opponent row so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" its children bind to the new\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dealerHand path\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" instead of the old\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" fabricated data\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm also restructuring\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the footer area\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to add discard checkbox\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"es alongside the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" draw/stand buttons\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", which means resending the act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ions row and table content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" container with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the new child\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" list.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Checkbo\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"xes should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bind to the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" discard data model ent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ries with dist\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"inct names, and the draw\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" button should send its\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" action context\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with the model\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" data so selections are read\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" properly. I'll drop\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the unused check/bet/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"fold buttons from the re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ference list since they're no longer\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" needed, and write\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" prose expl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aining that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the dealer checks too,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" closing the first bet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting round, then\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" prompting the player to tick\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ards for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" discard and press Draw.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"You\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" check, and the dealer chec\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ks beh\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ind you, so the first betting\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" round closes. Now the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" draw: tick up to three\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" cards to discard (you h\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"old no Ace, so three\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" is the limit),\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" then press Draw,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" or Stand pat to\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" keep all five.\\n\\n\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"{\\\"a2uiMeta\\\":{\\\"note\\\":\\\"You check, the dealer checks, and we move to the draw. Tick up to three cards to discard, then Draw, or Stand pat.\\\",\\\"target\\\":{\\\"surfaceId\\\":\\\"table-1\\\"}}}\\n\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"bankroll\\\":1000,\\\"pot\\\":0,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"3\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"J\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"hearts\\\"}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"4\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"spades\\\"}],\\\"discard\\\":{\\\"c0\\\":false,\\\"c1\\\":false,\\\"c2\\\":false,\\\"c3\\\":false,\\\"c4\\\":false}}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Five-card draw\\\",\\\"status\\\":\\\"Draw phase\\\",\\\"statusIntent\\\":\\\"info\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Chips\\\",\\\"value\\\":{\\\"path\\\":\\\"/bankroll\\\"}},{\\\"label\\\":\\\"Pot\\\",\\\"value\\\":{\\\"path\\\":\\\"/pot\\\"}}]},{\\\"id\\\":\\\"tbl_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Discard\\\",\\\"intent\\\":\\\"info\\\",\\\"slot\\\":\\\"trailing\\\"},{\\\"id\\\":\\\"tbl_ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"opp_zone\\\",\\\"you_zone\\\",\\\"discard_col\\\"]},{\\\"id\\\":\\\"opp_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":{\\\"path\\\":\\\"/dealerHand\\\",\\\"componentId\\\":\\\"dealerCard\\\"}},{\\\"id\\\":\\\"dealerCard\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"faceDown\\\":true,\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"discard_col\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"discard_label\\\",\\\"c0\\\",\\\"c1\\\",\\\"c2\\\",\\\"c3\\\",\\\"c4\\\"]},{\\\"id\\\":\\\"discard_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Discard (up to three)\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"c0\\\",\\\"component\\\":\\\"Checkbox\\\",\\\"name\\\":\\\"c0\\\",\\\"label\\\":\\\"Q of spades\\\",\\\"checked\\\":{\\\"path\\\":\\\"/discard/c0\\\"}},{\\\"id\\\":\\\"c1\\\",\\\"component\\\":\\\"Checkbox\\\",\\\"name\\\":\\\"c1\\\",\\\"label\\\":\\\"9 of hearts\\\",\\\"checked\\\":{\\\"path\\\":\\\"/discard/c1\\\"}},{\\\"id\\\":\\\"c2\\\",\\\"component\\\":\\\"Checkbox\\\",\\\"name\\\":\\\"c2\\\",\\\"label\\\":\\\"9 of diamonds\\\",\\\"checked\\\":{\\\"path\\\":\\\"/discard/c2\\\"}},{\\\"id\\\":\\\"c3\\\",\\\"component\\\":\\\"Checkbox\\\",\\\"name\\\":\\\"c3\\\",\\\"label\\\":\\\"4 of clubs\\\",\\\"checked\\\":{\\\"path\\\":\\\"/discard/c3\\\"}},{\\\"id\\\":\\\"c4\\\",\\\"component\\\":\\\"Checkbox\\\",\\\"name\\\":\\\"c4\\\",\\\"label\\\":\\\"2 of spades\\\",\\\"checked\\\":{\\\"path\\\":\\\"/discard/c4\\\"}},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"justify\\\":\\\"end\\\",\\\"children\\\":[\\\"btn_stand\\\",\\\"btn_draw\\\"]},{\\\"id\\\":\\\"btn_stand\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Stand pat\\\",\\\"variant\\\":\\\"ghost\\\",\\\"action\\\":{\\\"action\\\":\\\"poker_stand_pat\\\",\\\"context\\\":{\\\"round\\\":\\\"table-1\\\"}}},{\\\"id\\\":\\\"btn_draw\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Draw\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"poker_draw\\\",\\\"context\\\":{\\\"round\\\":\\\"table-1\\\"}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You check, and the dealer checks behind you, so the first betting round closes. Now the draw: tick up to three cards to discard (you hold no Ace, so three is the limit), then press Draw, or Stand pat to keep all five.\\n\\n{\\\"a2uiMeta\\\":{\\\"note\\\":\\\"You check, the dealer checks, and we move to the draw. Tick up to three cards to discard, then Draw, or Stand pat.\\\",\\\"target\\\":{\\\"surfaceId\\\":\\\"table-1\\\"}}}\",\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Check, or call if there is a bet.\",\"k\":3},\"exemplarIds\":[\"booking-reservation\",\"frontier-button-icon-actions\",\"pattern-schedule-picker\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[\"TEXT_JSONL_ROUTED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142000,\"total\":57442,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5472},{\"id\":\"mini-skills\",\"chars\":755},{\"id\":\"persona\",\"chars\":4923}],\"over\":false},\"usage\":{\"inputTokens\":5980,\"outputTokens\":3054,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":1000,\"pot\":0,\"dealerHand\":[{\"rank\":\"K\",\"suit\":\"hearts\"},{\"rank\":\"7\",\"suit\":\"clubs\"},{\"rank\":\"3\",\"suit\":\"diamonds\"},{\"rank\":\"J\",\"suit\":\"spades\"},{\"rank\":\"8\",\"suit\":\"hearts\"}],\"playerHand\":[{\"rank\":\"Q\",\"suit\":\"spades\"},{\"rank\":\"9\",\"suit\":\"hearts\"},{\"rank\":\"9\",\"suit\":\"diamonds\"},{\"rank\":\"4\",\"suit\":\"clubs\"},{\"rank\":\"2\",\"suit\":\"spades\"}],\"discard\":{\"c0\":false,\"c1\":false,\"c2\":false,\"c3\":false,\"c4\":false}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Five-card draw\",\"status\":\"Draw phase\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Chips\",\"value\":{\"path\":\"/bankroll\"}},{\"label\":\"Pot\",\"value\":{\"path\":\"/pot\"}}]},{\"id\":\"tbl_badge\",\"component\":\"Badge\",\"label\":\"Discard\",\"intent\":\"info\",\"slot\":\"trailing\"},{\"id\":\"tbl_ct\",\"component\":\"CardContent\",\"children\":[\"opp_zone\",\"you_zone\",\"discard_col\"]},{\"id\":\"opp_row\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":{\"path\":\"/dealerHand\",\"componentId\":\"dealerCard\"}},{\"id\":\"dealerCard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":true,\"size\":\"md\"},{\"id\":\"discard_col\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"discard_label\",\"c0\",\"c1\",\"c2\",\"c3\",\"c4\"]},{\"id\":\"discard_label\",\"component\":\"Text\",\"text\":\"Discard (up to three)\",\"variant\":\"label\"},{\"id\":\"c0\",\"component\":\"Checkbox\",\"name\":\"c0\",\"label\":\"Q of spades\",\"checked\":{\"path\":\"/discard/c0\"}},{\"id\":\"c1\",\"component\":\"Checkbox\",\"name\":\"c1\",\"label\":\"9 of hearts\",\"checked\":{\"path\":\"/discard/c1\"}},{\"id\":\"c2\",\"component\":\"Checkbox\",\"name\":\"c2\",\"label\":\"9 of diamonds\",\"checked\":{\"path\":\"/discard/c2\"}},{\"id\":\"c3\",\"component\":\"Checkbox\",\"name\":\"c3\",\"label\":\"4 of clubs\",\"checked\":{\"path\":\"/discard/c3\"}},{\"id\":\"c4\",\"component\":\"Checkbox\",\"name\":\"c4\",\"label\":\"2 of spades\",\"checked\":{\"path\":\"/discard/c4\"}},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"justify\":\"end\",\"children\":[\"btn_stand\",\"btn_draw\"]},{\"id\":\"btn_stand\",\"component\":\"Button\",\"label\":\"Stand pat\",\"variant\":\"ghost\",\"action\":{\"action\":\"poker_stand_pat\",\"context\":{\"round\":\"table-1\"}}},{\"id\":\"btn_draw\",\"component\":\"Button\",\"label\":\"Draw\",\"variant\":\"solid\",\"action\":{\"action\":\"poker_draw\",\"context\":{\"round\":\"table-1\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "You check, and the dealer checks behind you, so the first betting round closes. Now the draw: tick up to three cards to discard (you hold no Ace, so three is the limit), then press Draw, or Stand pat to keep all five.\n\n{\"a2uiMeta\":{\"note\":\"You check, the dealer checks, and we move to the draw. Tick up to three cards to discard, then Draw, or Stand pat.\",\"target\":{\"surfaceId\":\"table-1\"}}}\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":1000,\"pot\":0,\"dealerHand\":[{\"rank\":\"K\",\"suit\":\"hearts\"},{\"rank\":\"7\",\"suit\":\"clubs\"},{\"rank\":\"3\",\"suit\":\"diamonds\"},{\"rank\":\"J\",\"suit\":\"spades\"},{\"rank\":\"8\",\"suit\":\"hearts\"}],\"playerHand\":[{\"rank\":\"Q\",\"suit\":\"spades\"},{\"rank\":\"9\",\"suit\":\"hearts\"},{\"rank\":\"9\",\"suit\":\"diamonds\"},{\"rank\":\"4\",\"suit\":\"clubs\"},{\"rank\":\"2\",\"suit\":\"spades\"}],\"discard\":{\"c0\":false,\"c1\":false,\"c2\":false,\"c3\":false,\"c4\":false}}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Five-card draw\",\"status\":\"Draw phase\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Chips\",\"value\":{\"path\":\"/bankroll\"}},{\"label\":\"Pot\",\"value\":{\"path\":\"/pot\"}}]},{\"id\":\"tbl_badge\",\"component\":\"Badge\",\"label\":\"Discard\",\"intent\":\"info\",\"slot\":\"trailing\"},{\"id\":\"tbl_ct\",\"component\":\"CardContent\",\"children\":[\"opp_zone\",\"you_zone\",\"discard_col\"]},{\"id\":\"opp_row\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":{\"path\":\"/dealerHand\",\"componentId\":\"dealerCard\"}},{\"id\":\"dealerCard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":true,\"size\":\"md\"},{\"id\":\"discard_col\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"discard_label\",\"c0\",\"c1\",\"c2\",\"c3\",\"c4\"]},{\"id\":\"discard_label\",\"component\":\"Text\",\"text\":\"Discard (up to three)\",\"variant\":\"label\"},{\"id\":\"c0\",\"component\":\"Checkbox\",\"name\":\"c0\",\"label\":\"Q of spades\",\"checked\":{\"path\":\"/discard/c0\"}},{\"id\":\"c1\",\"component\":\"Checkbox\",\"name\":\"c1\",\"label\":\"9 of hearts\",\"checked\":{\"path\":\"/discard/c1\"}},{\"id\":\"c2\",\"component\":\"Checkbox\",\"name\":\"c2\",\"label\":\"9 of diamonds\",\"checked\":{\"path\":\"/discard/c2\"}},{\"id\":\"c3\",\"component\":\"Checkbox\",\"name\":\"c3\",\"label\":\"4 of clubs\",\"checked\":{\"path\":\"/discard/c3\"}},{\"id\":\"c4\",\"component\":\"Checkbox\",\"name\":\"c4\",\"label\":\"2 of spades\",\"checked\":{\"path\":\"/discard/c4\"}},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"justify\":\"end\",\"children\":[\"btn_stand\",\"btn_draw\"]},{\"id\":\"btn_stand\",\"component\":\"Button\",\"label\":\"Stand pat\",\"variant\":\"ghost\",\"action\":{\"action\":\"poker_stand_pat\",\"context\":{\"round\":\"table-1\"}}},{\"id\":\"btn_draw\",\"component\":\"Button\",\"label\":\"Draw\",\"variant\":\"solid\",\"action\":{\"action\":\"poker_draw\",\"context\":{\"round\":\"table-1\"}}}]}}",
+          "tools": []
+        }
+      ]
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I should discard the two low\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"est cards,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 4\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" of clubs and 2\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" of spades, keeping\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the pair of nines pl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"us the queen,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" then de\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"al two replacement cards into\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the hand.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need to avoid dupl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"icates\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ards already d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealt — dealer has\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Kh, 7c, \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"3d, Js, \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"8h, player has Qs\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", 9h, 9d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", 4c, 2s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" —\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" so I'll give\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the player 6c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and 10d for the draw\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", keeping the pair of\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" nines. The dra\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"w is compl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ete, so now\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" moves to the final betting round\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" on the same surface, with p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot still\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" at 0 and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hand label updated to re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"flect \\\"p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"air of nines.\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to reset the discard check\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"boxes to false in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the data model and swap out the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" discard column for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" betting buttons (\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Check, Bet,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Fold),\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" replacing the old stand/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"draw buttons by reus\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing their component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ids.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" also need a badge for \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Final bets\\\" and a status update\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ading \\\"Final betting round.\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" The prose reply should expl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ain the discard of\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 4\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"♣ and 2♠,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the draw of 6♣\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and 10♦, note\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s still a pair of nines\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and l\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ay out the final betting options:\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" check, bet 20, or\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" fold. I'll include\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the meta-line targ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eting table-1 before the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" prose and call render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with no\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" further\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" cl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"arification needed.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"You discard\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the 4 of clubs\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 2 of spades, ke\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"eping the que\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"en and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the two nines. I draw\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 6 of clubs and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the 10 of diamon\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ds. You still hold a p\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"air of nines. The final bet\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ting round is next\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\":\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" check, bet 20, or\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" fold.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You discard the 4 of clubs and the 2 of spades, keeping the queen and the two nines. I draw the 6 of clubs and the 10 of diamonds. You still hold a pair of nines. The final betting round is next: check, bet 20, or fold.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":4,\"query\":{\"intent\":\"Discard my two lowest cards and draw.\",\"k\":3},\"exemplarIds\":[\"wallet-summary-card\",\"list-nested\",\"media-file-grid\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142000,\"total\":56783,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":4341},{\"id\":\"mini-skills\",\"chars\":1227},{\"id\":\"persona\",\"chars\":4923}],\"over\":false},\"usage\":{\"inputTokens\":7014,\"outputTokens\":2649,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"You discard the 4 of clubs and 2 of spades and keep Q, 9, 9. Drawn: 6 of clubs and 10 of diamonds. Still a pair of nines. Final betting round: check, bet 20, or fold.\",\"target\":{\"surfaceId\":\"table-1\"}}}\n\nYou discard the 4 of clubs and the 2 of spades, keeping the queen and the two nines. I draw the 6 of clubs and the 10 of diamonds. You still hold a pair of nines. The final betting round is next: check, bet 20, or fold.",
+          "tools": []
+        }
+      ]
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"The previous turn left\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" things inconsistent —\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the dealer's hand\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and disc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ard/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"draw weren't properly t\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"racked, and the player\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s hand still shows Q\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",9,9,4,2\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"without the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" claimed update\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" actually applied\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". I need to fix this hon\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"estly r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ather than continuing the error\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll settle on a cons\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"istent state: player hand bec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"omes Q♠,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"9♥,9♦,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"6♣,10♦\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" (pair of nines), d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealer st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ands with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" K♥,7♣,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"3♦,J♠,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"8♥ (king-high\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"). With the bet of 50\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", bankroll at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 1000, d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealer calls to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" make pot 100, and at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" showdown the pair of n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ines beats d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealer's high\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" card, so player wins the p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Bankroll sett\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"les to 1000 - \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"50 + 100 = \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"1050, pot res\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ets to zero, and I need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to update the table to show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" play\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"erHand, pot, b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ankroll, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"veal the dealer's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hand, along\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" result line and replac\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing the actions row with a \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Deal again\\\" button.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Updating component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" tree...\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I should also ac\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"knowledge hon\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"estly that my previous reply\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" claimed a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" swap that hadn't act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ually applied to the table,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" now corrected. For the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" showdown: dealer cal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ls 50, and my\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pair of nines with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a que\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"en kicker beats the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dealer's king-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"high hand (K♥\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" J♠ 8♥\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 7♣ 3\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"♦), win\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ning the 100 pot for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a net +50. I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" write the note as the reply content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" le\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ading with the meta-line before\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the tool call.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Now I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m updating the components:\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" H\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"UD stats re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"flect the b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ankroll and pot re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"set to 0 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"with status \\\"Round settled\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" (success intent),\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the table badge shows \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Settled,\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealer card fl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ips face\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" up\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", opponent label updates to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"Dealer · King\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" high,\\\" and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the player label sh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ows \\\"You · pair of n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ines.\\\" The result text announ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ces the dealer calling\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 50 and the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" win details,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and the foot\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"er ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eps just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the deal button\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for the next round.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"The de\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"al button now tri\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ggers a \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"deal_again\\\" action with a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" newRound context flag,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'm resetting the wh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ole data model — bankroll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 1050, pot to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 0, fresh d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealer and player hands, disc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ard p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ile cleared, and storing\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the last result for reference.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m also dropping any\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" stale check/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"old buttons since they're no\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" longer relevant in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the actions row.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Bet 50 go\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"es in\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\",\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and the dealer calls.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Before the show\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"down I\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" need\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" to correct my\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" last turn: I\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" described\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the disc\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ard and draw but never\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" updated your\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" c\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ards on the table.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Your hand is now Q\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"♠\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 9♥\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 9♦ 6\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"♣ 10♦. The\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" dealer's K\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"♥ 7\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"♣ 3♦\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" J♠ 8♥\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" is king high.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Your pair of nines w\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ins the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 100-\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"chip pot,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" so you're\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" up 50 at\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 1,050.\\n\\n\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"{\\\"a2uiMeta\\\":{\\\"note\\\":\\\"Dealer calls your 50. Showdown: your pair of nines beats the dealer's king high. You win the 100 pot, +50 chips, bankroll now 1,050. (Last turn I described the draw but hadn't updated your cards on the table; they now match the draw.)\\\",\\\"target\\\":{\\\"surfaceId\\\":\\\"table-1\\\"}}}\\n\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"bankroll\\\":1050,\\\"pot\\\":0,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"3\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"J\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"hearts\\\"}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"6\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"10\\\",\\\"suit\\\":\\\"diamonds\\\"}],\\\"discard\\\":{\\\"c0\\\":false,\\\"c1\\\":false,\\\"c2\\\":false,\\\"c3\\\":false,\\\"c4\\\":false}}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Five-card draw\\\",\\\"status\\\":\\\"Round settled\\\",\\\"statusIntent\\\":\\\"success\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Chips\\\",\\\"value\\\":{\\\"path\\\":\\\"/bankroll\\\"}},{\\\"label\\\":\\\"Pot\\\",\\\"value\\\":{\\\"path\\\":\\\"/pot\\\"}}]},{\\\"id\\\":\\\"tbl_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Settled\\\",\\\"intent\\\":\\\"success\\\",\\\"slot\\\":\\\"trailing\\\"},{\\\"id\\\":\\\"opp_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Dealer · king high\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"dealerCard\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"faceDown\\\":false,\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"you_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"You · pair of nines\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"tbl_ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"opp_zone\\\",\\\"you_zone\\\",\\\"result_text\\\"]},{\\\"id\\\":\\\"result_text\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Dealer calls 50. Showdown: your pair of nines beats the dealer's king high. You win the 100 pot: +50 chips, bankroll 1,050.\\\",\\\"variant\\\":\\\"body\\\",\\\"emphasis\\\":true},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"justify\\\":\\\"end\\\",\\\"children\\\":[\\\"btn_deal\\\"]},{\\\"id\\\":\\\"btn_deal\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Deal again\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"deal_again\\\",\\\"context\\\":{\\\"newRound\\\":true}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Bet 50 goes in, and the dealer calls. Before the showdown I need to correct my last turn: I described the discard and draw but never updated your cards on the table. Your hand is now Q♠ 9♥ 9♦ 6♣ 10♦. The dealer's K♥ 7♣ 3♦ J♠ 8♥ is king high. Your pair of nines wins the 100-chip pot, so you're up 50 at 1,050.\\n\\n{\\\"a2uiMeta\\\":{\\\"note\\\":\\\"Dealer calls your 50. Showdown: your pair of nines beats the dealer's king high. You win the 100 pot, +50 chips, bankroll now 1,050. (Last turn I described the draw but hadn't updated your cards on the table; they now match the draw.)\\\",\\\"target\\\":{\\\"surfaceId\\\":\\\"table-1\\\"}}}\",\"trace\":{\"turnIndex\":6,\"query\":{\"intent\":\"Bet 50.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[\"TEXT_JSONL_ROUTED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142000,\"total\":51970,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":755},{\"id\":\"persona\",\"chars\":4923}],\"over\":false},\"usage\":{\"inputTokens\":4953,\"outputTokens\":3184,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":1050,\"pot\":0,\"dealerHand\":[{\"rank\":\"K\",\"suit\":\"hearts\"},{\"rank\":\"7\",\"suit\":\"clubs\"},{\"rank\":\"3\",\"suit\":\"diamonds\"},{\"rank\":\"J\",\"suit\":\"spades\"},{\"rank\":\"8\",\"suit\":\"hearts\"}],\"playerHand\":[{\"rank\":\"Q\",\"suit\":\"spades\"},{\"rank\":\"9\",\"suit\":\"hearts\"},{\"rank\":\"9\",\"suit\":\"diamonds\"},{\"rank\":\"6\",\"suit\":\"clubs\"},{\"rank\":\"10\",\"suit\":\"diamonds\"}],\"discard\":{\"c0\":false,\"c1\":false,\"c2\":false,\"c3\":false,\"c4\":false}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Five-card draw\",\"status\":\"Round settled\",\"statusIntent\":\"success\",\"stats\":[{\"label\":\"Chips\",\"value\":{\"path\":\"/bankroll\"}},{\"label\":\"Pot\",\"value\":{\"path\":\"/pot\"}}]},{\"id\":\"tbl_badge\",\"component\":\"Badge\",\"label\":\"Settled\",\"intent\":\"success\",\"slot\":\"trailing\"},{\"id\":\"opp_label\",\"component\":\"Text\",\"text\":\"Dealer · king high\",\"variant\":\"label\"},{\"id\":\"dealerCard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":false,\"size\":\"md\"},{\"id\":\"you_label\",\"component\":\"Text\",\"text\":\"You · pair of nines\",\"variant\":\"label\"},{\"id\":\"tbl_ct\",\"component\":\"CardContent\",\"children\":[\"opp_zone\",\"you_zone\",\"result_text\"]},{\"id\":\"result_text\",\"component\":\"Text\",\"text\":\"Dealer calls 50. Showdown: your pair of nines beats the dealer's king high. You win the 100 pot: +50 chips, bankroll 1,050.\",\"variant\":\"body\",\"emphasis\":true},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"justify\":\"end\",\"children\":[\"btn_deal\"]},{\"id\":\"btn_deal\",\"component\":\"Button\",\"label\":\"Deal again\",\"variant\":\"solid\",\"action\":{\"action\":\"deal_again\",\"context\":{\"newRound\":true}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Bet 50 goes in, and the dealer calls. Before the showdown I need to correct my last turn: I described the discard and draw but never updated your cards on the table. Your hand is now Q♠ 9♥ 9♦ 6♣ 10♦. The dealer's K♥ 7♣ 3♦ J♠ 8♥ is king high. Your pair of nines wins the 100-chip pot, so you're up 50 at 1,050.\n\n{\"a2uiMeta\":{\"note\":\"Dealer calls your 50. Showdown: your pair of nines beats the dealer's king high. You win the 100 pot, +50 chips, bankroll now 1,050. (Last turn I described the draw but hadn't updated your cards on the table; they now match the draw.)\",\"target\":{\"surfaceId\":\"table-1\"}}}\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":1050,\"pot\":0,\"dealerHand\":[{\"rank\":\"K\",\"suit\":\"hearts\"},{\"rank\":\"7\",\"suit\":\"clubs\"},{\"rank\":\"3\",\"suit\":\"diamonds\"},{\"rank\":\"J\",\"suit\":\"spades\"},{\"rank\":\"8\",\"suit\":\"hearts\"}],\"playerHand\":[{\"rank\":\"Q\",\"suit\":\"spades\"},{\"rank\":\"9\",\"suit\":\"hearts\"},{\"rank\":\"9\",\"suit\":\"diamonds\"},{\"rank\":\"6\",\"suit\":\"clubs\"},{\"rank\":\"10\",\"suit\":\"diamonds\"}],\"discard\":{\"c0\":false,\"c1\":false,\"c2\":false,\"c3\":false,\"c4\":false}}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Five-card draw\",\"status\":\"Round settled\",\"statusIntent\":\"success\",\"stats\":[{\"label\":\"Chips\",\"value\":{\"path\":\"/bankroll\"}},{\"label\":\"Pot\",\"value\":{\"path\":\"/pot\"}}]},{\"id\":\"tbl_badge\",\"component\":\"Badge\",\"label\":\"Settled\",\"intent\":\"success\",\"slot\":\"trailing\"},{\"id\":\"opp_label\",\"component\":\"Text\",\"text\":\"Dealer · king high\",\"variant\":\"label\"},{\"id\":\"dealerCard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":false,\"size\":\"md\"},{\"id\":\"you_label\",\"component\":\"Text\",\"text\":\"You · pair of nines\",\"variant\":\"label\"},{\"id\":\"tbl_ct\",\"component\":\"CardContent\",\"children\":[\"opp_zone\",\"you_zone\",\"result_text\"]},{\"id\":\"result_text\",\"component\":\"Text\",\"text\":\"Dealer calls 50. Showdown: your pair of nines beats the dealer's king high. You win the 100 pot: +50 chips, bankroll 1,050.\",\"variant\":\"body\",\"emphasis\":true},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"justify\":\"end\",\"children\":[\"btn_deal\"]},{\"id\":\"btn_deal\",\"component\":\"Button\",\"label\":\"Deal again\",\"variant\":\"solid\",\"action\":{\"action\":\"deal_again\",\"context\":{\"newRound\":true}}}]}}",
+          "tools": []
+        }
+      ]
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the user pressed Deal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" again, I need to start a f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"resh round on table-2 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"with the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bankroll re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"set to 1050 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot at zero,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dealing a new five-card\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" draw hand f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"airly. I also\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" need to clean up table-1\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" by removing its\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" now\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-stale Deal button and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" other action buttons and badges\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" round is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" finished.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Bankroll stays at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 1050 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"after the win. For\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the new round I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll deal fresh five\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-card draw hands: player\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" gets a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pair of sevens, d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealer's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hand stays hidden.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" need to set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" up the first betting round with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Check,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Bet 20, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Fold options as action buttons\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" on a fresh game surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ep things\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" simple by omitting an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" explicit target since table-1\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" is just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" being retired.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Building\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the new surface's layout:\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" header with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"table title\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" opponent zone showing face\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-down dealer cards,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a player\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" zone showing the act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ual hand, and a footer\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with the three action buttons.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'll keep the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ose intro br\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ief, just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" noting the new\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" round\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and bankroll before\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" describ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing the pair of s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"evens.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For table-1,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'm retiring the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" old\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ions row by resending it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with emp\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ty children to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" clear\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ale de\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"al button, leaving the \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Round\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" settled\\\" badge intact since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" that's just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" historical status, not a live tur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"n indicator.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"New\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" round. Your\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" bankroll st\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ays\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" at 1,050. You h\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"old a pair of sevens\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\". The dealer's c\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ards are face\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" down.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Your move\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\": check, bet 20,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" or fold.\\n\\n\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"catalogId\\\":\\\"agent-ui--croupier\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"value\\\":{\\\"bankroll\\\":1050,\\\"pot\\\":0,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"10\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"6\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"6\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"4\\\",\\\"suit\\\":\\\"spades\\\"}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"J\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"3\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"diamonds\\\"}],\\\"discard\\\":{\\\"c0\\\":false,\\\"c1\\\":false,\\\"c2\\\":false,\\\"c3\\\":false,\\\"c4\\\":false}}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"hud\\\",\\\"table\\\"]},{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Five-card draw\\\",\\\"status\\\":\\\"Betting round 1\\\",\\\"statusIntent\\\":\\\"info\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Chips\\\",\\\"value\\\":{\\\"path\\\":\\\"/bankroll\\\"}},{\\\"label\\\":\\\"Pot\\\",\\\"value\\\":{\\\"path\\\":\\\"/pot\\\"}}]},{\\\"id\\\":\\\"table\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"tbl_hd\\\",\\\"tbl_ct\\\",\\\"tbl_ft\\\"]},{\\\"id\\\":\\\"tbl_hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"tbl_title\\\",\\\"tbl_badge\\\"]},{\\\"id\\\":\\\"tbl_title\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Your hand\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"tbl_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Your turn\\\",\\\"intent\\\":\\\"info\\\",\\\"slot\\\":\\\"trailing\\\"},{\\\"id\\\":\\\"tbl_ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"opp_zone\\\",\\\"you_zone\\\"]},{\\\"id\\\":\\\"opp_zone\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"opp_label\\\",\\\"opp_row\\\"]},{\\\"id\\\":\\\"opp_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Dealer · 5 cards face down\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"opp_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":{\\\"path\\\":\\\"/dealerHand\\\",\\\"componentId\\\":\\\"dealerCard\\\"}},{\\\"id\\\":\\\"dealerCard\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"faceDown\\\":true,\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"you_zone\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"you_label\\\",\\\"you_row\\\"]},{\\\"id\\\":\\\"you_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"You · pair of sevens\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"you_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":{\\\"path\\\":\\\"/playerHand\\\",\\\"componentId\\\":\\\"playerCard\\\"}},{\\\"id\\\":\\\"playerCard\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"faceDown\\\":false,\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"tbl_ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"actions\\\"]},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"btn_check\\\",\\\"btn_bet\\\",\\\"btn_fold\\\"]},{\\\"id\\\":\\\"btn_check\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Check\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"poker_check\\\",\\\"context\\\":{\\\"round\\\":\\\"table-2\\\"}}},{\\\"id\\\":\\\"btn_bet\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Bet 20\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"poker_bet\\\",\\\"context\\\":{\\\"round\\\":\\\"table-2\\\",\\\"amount\\\":20}}},{\\\"id\\\":\\\"btn_fold\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Fold\\\",\\\"variant\\\":\\\"ghost\\\",\\\"action\\\":{\\\"action\\\":\\\"poker_fold\\\",\\\"context\\\":{\\\"round\\\":\\\"table-2\\\"}}}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[]}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"New round. Your bankroll stays at 1,050. You hold a pair of sevens. The dealer's cards are face down. Your move: check, bet 20, or fold.\",\"trace\":{\"turnIndex\":8,\"query\":{\"intent\":\"The user triggered the \\\"deal_again\\\" action (from component btn_deal). Action context: {\\\"newRound\\\":true}. Current surface data model: {\\\"bankroll\\\":1050,\\\"pot\\\":0,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"3\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"J\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"hearts\\\"}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"6\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"10\\\",\\\"suit\\\":\\\"diamonds\\\"}],\\\"discard\\\":{\\\"c0\\\":false,\\\"c1\\\":false,\\\"c2\\\":false,\\\"c3\\\":false,\\\"c4\\\":false}}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[\"frontier-round-outcome\",\"agent-roster-drawer\",\"frontier-rating-review\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[\"TEXT_JSONL_ROUTED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142000,\"total\":56837,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3271},{\"id\":\"mini-skills\",\"chars\":2351},{\"id\":\"persona\",\"chars\":4923}],\"over\":false},\"usage\":{\"inputTokens\":8427,\"outputTokens\":3075,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-2\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-2\",\"value\":{\"bankroll\":1050,\"pot\":0,\"dealerHand\":[{\"rank\":\"10\",\"suit\":\"spades\"},{\"rank\":\"6\",\"suit\":\"hearts\"},{\"rank\":\"6\",\"suit\":\"clubs\"},{\"rank\":\"K\",\"suit\":\"diamonds\"},{\"rank\":\"4\",\"suit\":\"spades\"}],\"playerHand\":[{\"rank\":\"7\",\"suit\":\"spades\"},{\"rank\":\"7\",\"suit\":\"diamonds\"},{\"rank\":\"J\",\"suit\":\"hearts\"},{\"rank\":\"3\",\"suit\":\"clubs\"},{\"rank\":\"2\",\"suit\":\"diamonds\"}],\"discard\":{\"c0\":false,\"c1\":false,\"c2\":false,\"c3\":false,\"c4\":false}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"table\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Five-card draw\",\"status\":\"Betting round 1\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Chips\",\"value\":{\"path\":\"/bankroll\"}},{\"label\":\"Pot\",\"value\":{\"path\":\"/pot\"}}]},{\"id\":\"table\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"tbl_hd\",\"tbl_ct\",\"tbl_ft\"]},{\"id\":\"tbl_hd\",\"component\":\"CardHeader\",\"children\":[\"tbl_title\",\"tbl_badge\"]},{\"id\":\"tbl_title\",\"component\":\"Text\",\"text\":\"Your hand\",\"variant\":\"h4\"},{\"id\":\"tbl_badge\",\"component\":\"Badge\",\"label\":\"Your turn\",\"intent\":\"info\",\"slot\":\"trailing\"},{\"id\":\"tbl_ct\",\"component\":\"CardContent\",\"children\":[\"opp_zone\",\"you_zone\"]},{\"id\":\"opp_zone\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"opp_label\",\"opp_row\"]},{\"id\":\"opp_label\",\"component\":\"Text\",\"text\":\"Dealer · 5 cards face down\",\"variant\":\"label\"},{\"id\":\"opp_row\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":{\"path\":\"/dealerHand\",\"componentId\":\"dealerCard\"}},{\"id\":\"dealerCard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":true,\"size\":\"md\"},{\"id\":\"you_zone\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"you_label\",\"you_row\"]},{\"id\":\"you_label\",\"component\":\"Text\",\"text\":\"You · pair of sevens\",\"variant\":\"label\"},{\"id\":\"you_row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/playerHand\",\"componentId\":\"playerCard\"}},{\"id\":\"playerCard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":false,\"size\":\"md\"},{\"id\":\"tbl_ft\",\"component\":\"CardFooter\",\"children\":[\"actions\"]},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"children\":[\"btn_check\",\"btn_bet\",\"btn_fold\"]},{\"id\":\"btn_check\",\"component\":\"Button\",\"label\":\"Check\",\"variant\":\"solid\",\"action\":{\"action\":\"poker_check\",\"context\":{\"round\":\"table-2\"}}},{\"id\":\"btn_bet\",\"component\":\"Button\",\"label\":\"Bet 20\",\"variant\":\"soft\",\"action\":{\"action\":\"poker_bet\",\"context\":{\"round\":\"table-2\",\"amount\":20}}},{\"id\":\"btn_fold\",\"component\":\"Button\",\"label\":\"Fold\",\"variant\":\"ghost\",\"action\":{\"action\":\"poker_fold\",\"context\":{\"round\":\"table-2\"}}}]}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"children\":[]}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "New round. Your bankroll stays at 1,050. You hold a pair of sevens. The dealer's cards are face down. Your move: check, bet 20, or fold.\n\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-2\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}}\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-2\",\"value\":{\"bankroll\":1050,\"pot\":0,\"dealerHand\":[{\"rank\":\"10\",\"suit\":\"spades\"},{\"rank\":\"6\",\"suit\":\"hearts\"},{\"rank\":\"6\",\"suit\":\"clubs\"},{\"rank\":\"K\",\"suit\":\"diamonds\"},{\"rank\":\"4\",\"suit\":\"spades\"}],\"playerHand\":[{\"rank\":\"7\",\"suit\":\"spades\"},{\"rank\":\"7\",\"suit\":\"diamonds\"},{\"rank\":\"J\",\"suit\":\"hearts\"},{\"rank\":\"3\",\"suit\":\"clubs\"},{\"rank\":\"2\",\"suit\":\"diamonds\"}],\"discard\":{\"c0\":false,\"c1\":false,\"c2\":false,\"c3\":false,\"c4\":false}}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"table\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Five-card draw\",\"status\":\"Betting round 1\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Chips\",\"value\":{\"path\":\"/bankroll\"}},{\"label\":\"Pot\",\"value\":{\"path\":\"/pot\"}}]},{\"id\":\"table\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"tbl_hd\",\"tbl_ct\",\"tbl_ft\"]},{\"id\":\"tbl_hd\",\"component\":\"CardHeader\",\"children\":[\"tbl_title\",\"tbl_badge\"]},{\"id\":\"tbl_title\",\"component\":\"Text\",\"text\":\"Your hand\",\"variant\":\"h4\"},{\"id\":\"tbl_badge\",\"component\":\"Badge\",\"label\":\"Your turn\",\"intent\":\"info\",\"slot\":\"trailing\"},{\"id\":\"tbl_ct\",\"component\":\"CardContent\",\"children\":[\"opp_zone\",\"you_zone\"]},{\"id\":\"opp_zone\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"opp_label\",\"opp_row\"]},{\"id\":\"opp_label\",\"component\":\"Text\",\"text\":\"Dealer · 5 cards face down\",\"variant\":\"label\"},{\"id\":\"opp_row\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":{\"path\":\"/dealerHand\",\"componentId\":\"dealerCard\"}},{\"id\":\"dealerCard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":true,\"size\":\"md\"},{\"id\":\"you_zone\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"you_label\",\"you_row\"]},{\"id\":\"you_label\",\"component\":\"Text\",\"text\":\"You · pair of sevens\",\"variant\":\"label\"},{\"id\":\"you_row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/playerHand\",\"componentId\":\"playerCard\"}},{\"id\":\"playerCard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":false,\"size\":\"md\"},{\"id\":\"tbl_ft\",\"component\":\"CardFooter\",\"children\":[\"actions\"]},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"children\":[\"btn_check\",\"btn_bet\",\"btn_fold\"]},{\"id\":\"btn_check\",\"component\":\"Button\",\"label\":\"Check\",\"variant\":\"solid\",\"action\":{\"action\":\"poker_check\",\"context\":{\"round\":\"table-2\"}}},{\"id\":\"btn_bet\",\"component\":\"Button\",\"label\":\"Bet 20\",\"variant\":\"soft\",\"action\":{\"action\":\"poker_bet\",\"context\":{\"round\":\"table-2\",\"amount\":20}}},{\"id\":\"btn_fold\",\"component\":\"Button\",\"label\":\"Fold\",\"variant\":\"ghost\",\"action\":{\"action\":\"poker_fold\",\"context\":{\"round\":\"table-2\"}}}]}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"children\":[]}]}}",
+          "tools": []
+        }
+      ]
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since the user folds with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" no chips committ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ed, bankroll stays\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" at 1050 and the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pot res\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ets to 0. I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" update the table to show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a sim\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ple clos\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing state with the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" result and a Deal again button\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", keeping it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" min\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"imal without revealing deal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"er cards.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll reveal deal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"er's hand as K♦\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", 10♠, 6\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"♥, 6♣,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 4♠ — a p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"air of sixes —\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and update the oppon\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ent label accordingly. The\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" result text should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hon\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"estly note the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player folded a pair of s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"evens that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" would have beaten the deal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"er's p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"air of sixes, but\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since no chips were in the p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot, bankroll stays\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" at 1,050. I need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to resend tbl_bad\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ge, dealerCard,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" opp_label, tbl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"_ct, the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" new result_text, actions,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" button components.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll send only the changed\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" components: hud status, tb\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"l_badge, opp_\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"label, dealerCard with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" faceDown false, tb\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"l_ct with the result\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"_text added, actions containing\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a new btn_deal,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and bt\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"n_deal itself. The\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" other bu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ttons can stay unrefer\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"enced. No p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot or bankroll data update\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" needed since both\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" rem\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ain un\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"changed. I'll target\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" table-2 and use\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" render_surface with a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" brief prose reply including the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" meta-line.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"You folded. N\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"othing was in the pot,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" so your\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" bankroll stays at \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"1,050. The dealer\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" had\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" a pair of six\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"es, which your pair of s\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"evens would have beaten.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"components\\\":[{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Five-card draw\\\",\\\"status\\\":\\\"Round settled\\\",\\\"statusIntent\\\":\\\"neutral\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Chips\\\",\\\"value\\\":{\\\"path\\\":\\\"/bankroll\\\"}},{\\\"label\\\":\\\"Pot\\\",\\\"value\\\":{\\\"path\\\":\\\"/pot\\\"}}]},{\\\"id\\\":\\\"tbl_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Folded\\\",\\\"intent\\\":\\\"neutral\\\",\\\"slot\\\":\\\"trailing\\\"},{\\\"id\\\":\\\"opp_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Dealer · pair of sixes\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"dealerCard\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"faceDown\\\":false,\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"tbl_ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"opp_zone\\\",\\\"you_zone\\\",\\\"result_text\\\"]},{\\\"id\\\":\\\"result_text\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"You folded your pair of sevens. The pot was empty, so no chips moved: bankroll 1,050.\\\",\\\"variant\\\":\\\"body\\\",\\\"emphasis\\\":true},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"justify\\\":\\\"end\\\",\\\"children\\\":[\\\"btn_deal\\\"]},{\\\"id\\\":\\\"btn_deal\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Deal again\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"deal_again\\\",\\\"context\\\":{\\\"newRound\\\":true}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You folded. Nothing was in the pot, so your bankroll stays at 1,050. The dealer had a pair of sixes, which your pair of sevens would have beaten.\",\"target\":{\"surfaceId\":\"table-2\"},\"trace\":{\"turnIndex\":10,\"query\":{\"intent\":\"Fold.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142000,\"total\":51215,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"persona\",\"chars\":4923}],\"over\":false},\"usage\":{\"inputTokens\":7503,\"outputTokens\":1931,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Five-card draw\",\"status\":\"Round settled\",\"statusIntent\":\"neutral\",\"stats\":[{\"label\":\"Chips\",\"value\":{\"path\":\"/bankroll\"}},{\"label\":\"Pot\",\"value\":{\"path\":\"/pot\"}}]},{\"id\":\"tbl_badge\",\"component\":\"Badge\",\"label\":\"Folded\",\"intent\":\"neutral\",\"slot\":\"trailing\"},{\"id\":\"opp_label\",\"component\":\"Text\",\"text\":\"Dealer · pair of sixes\",\"variant\":\"label\"},{\"id\":\"dealerCard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":false,\"size\":\"md\"},{\"id\":\"tbl_ct\",\"component\":\"CardContent\",\"children\":[\"opp_zone\",\"you_zone\",\"result_text\"]},{\"id\":\"result_text\",\"component\":\"Text\",\"text\":\"You folded your pair of sevens. The pot was empty, so no chips moved: bankroll 1,050.\",\"variant\":\"body\",\"emphasis\":true},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"justify\":\"end\",\"children\":[\"btn_deal\"]},{\"id\":\"btn_deal\",\"component\":\"Button\",\"label\":\"Deal again\",\"variant\":\"solid\",\"action\":{\"action\":\"deal_again\",\"context\":{\"newRound\":true}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"You folded, so no chips moved. Your bankroll stays at 1,050. The dealer's hand is revealed: a pair of sixes, which your pair of sevens would have beaten.\",\"target\":{\"surfaceId\":\"table-2\"}}}\n\nYou folded. Nothing was in the pot, so your bankroll stays at 1,050. The dealer had a pair of sixes, which your pair of sevens would have beaten.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "You folded. Bankroll stays at 1,050.",
+                "target": "table-2",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-2",
+                      "components": [
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Five-card draw",
+                          "status": "Round settled",
+                          "statusIntent": "neutral",
+                          "stats": [
+                            {
+                              "label": "Chips",
+                              "value": {
+                                "path": "/bankroll"
+                              }
+                            },
+                            {
+                              "label": "Pot",
+                              "value": {
+                                "path": "/pot"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "id": "tbl_badge",
+                          "component": "Badge",
+                          "label": "Folded",
+                          "intent": "neutral",
+                          "slot": "trailing"
+                        },
+                        {
+                          "id": "opp_label",
+                          "component": "Text",
+                          "text": "Dealer · pair of sixes",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "dealerCard",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "faceDown": false,
+                          "size": "md"
+                        },
+                        {
+                          "id": "tbl_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "opp_zone",
+                            "you_zone",
+                            "result_text"
+                          ]
+                        },
+                        {
+                          "id": "result_text",
+                          "component": "Text",
+                          "text": "You folded your pair of sevens. The pot was empty, so no chips moved: bankroll 1,050.",
+                          "variant": "body",
+                          "emphasis": true
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "md",
+                          "justify": "end",
+                          "children": [
+                            "btn_deal"
+                          ]
+                        },
+                        {
+                          "id": "btn_deal",
+                          "component": "Button",
+                          "label": "Deal again",
+                          "variant": "solid",
+                          "action": {
+                            "action": "deal_again",
+                            "context": {
+                              "newRound": true
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"The user pressed deal again\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", so I need a fresh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" table-3 surface.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Table-2 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"still has a stale \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Deal again\\\" action button\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" from the finished round, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" surface is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" being\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" superseded, its action butt\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ons need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to be removed per the retire\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" rule.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"But the finished-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"round history rule says that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" once\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a round is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sett\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"led, its\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" surface should never be edited again\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" —\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'll leave table-2\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" untouched and just create table\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-3 fresh.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\nNow d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealing round 3 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"with bankroll at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 1050: gi\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ving the player a h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and with a pair of fours\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"us some\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" kick\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ers, and the dealer a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" jack-high hand with no\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pair.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm building the new surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with the same component structure as before\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\": a card header\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", dealer area\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with face-down c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ards lab\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eled \\\"5\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" cards face down,\\\" p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot at zero, and the us\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ual bet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting actions,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keeping the same \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ids-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and-templ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ates pattern used for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" table-2.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"New\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" round. Your\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" bankroll st\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ays at 1,050. You\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" hold a pair of fours\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\",\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and the dealer's cards\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" are face down. Your move:\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" check, bet 20, or\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" fold.\\n\\n\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"catalogId\\\":\\\"agent-ui--croupier\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"value\\\":{\\\"bankroll\\\":1050,\\\"pot\\\":0,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"10\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"5\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"J\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"3\\\",\\\"suit\\\":\\\"spades\\\"}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"4\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"4\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"hearts\\\"}],\\\"discard\\\":{\\\"c0\\\":false,\\\"c1\\\":false,\\\"c2\\\":false,\\\"c3\\\":false,\\\"c4\\\":false}}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"hud\\\",\\\"table\\\"]},{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Five-card draw\\\",\\\"status\\\":\\\"Betting round 1\\\",\\\"statusIntent\\\":\\\"info\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Chips\\\",\\\"value\\\":{\\\"path\\\":\\\"/bankroll\\\"}},{\\\"label\\\":\\\"Pot\\\",\\\"value\\\":{\\\"path\\\":\\\"/pot\\\"}}]},{\\\"id\\\":\\\"table\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"tbl_hd\\\",\\\"tbl_ct\\\",\\\"tbl_ft\\\"]},{\\\"id\\\":\\\"tbl_hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"tbl_title\\\",\\\"tbl_badge\\\"]},{\\\"id\\\":\\\"tbl_title\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Your hand\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"tbl_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Your turn\\\",\\\"intent\\\":\\\"info\\\",\\\"slot\\\":\\\"trailing\\\"},{\\\"id\\\":\\\"tbl_ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"opp_zone\\\",\\\"you_zone\\\"]},{\\\"id\\\":\\\"opp_zone\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"opp_label\\\",\\\"opp_row\\\"]},{\\\"id\\\":\\\"opp_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Dealer · 5 cards face down\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"opp_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":{\\\"path\\\":\\\"/dealerHand\\\",\\\"componentId\\\":\\\"dealerCard\\\"}},{\\\"id\\\":\\\"dealerCard\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"faceDown\\\":true,\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"you_zone\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"you_label\\\",\\\"you_row\\\"]},{\\\"id\\\":\\\"you_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"You · pair of fours\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"you_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":{\\\"path\\\":\\\"/playerHand\\\",\\\"componentId\\\":\\\"playerCard\\\"}},{\\\"id\\\":\\\"playerCard\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"faceDown\\\":false,\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"tbl_ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"actions\\\"]},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"btn_check\\\",\\\"btn_bet\\\",\\\"btn_fold\\\"]},{\\\"id\\\":\\\"btn_check\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Check\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"poker_check\\\",\\\"context\\\":{\\\"round\\\":\\\"table-3\\\"}}},{\\\"id\\\":\\\"btn_bet\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Bet 20\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"poker_bet\\\",\\\"context\\\":{\\\"round\\\":\\\"table-3\\\",\\\"amount\\\":20}}},{\\\"id\\\":\\\"btn_fold\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Fold\\\",\\\"variant\\\":\\\"ghost\\\",\\\"action\\\":{\\\"action\\\":\\\"poker_fold\\\",\\\"context\\\":{\\\"round\\\":\\\"table-3\\\"}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"New round. Your bankroll stays at 1,050. You hold a pair of fours, and the dealer's cards are face down. Your move: check, bet 20, or fold.\",\"trace\":{\"turnIndex\":12,\"query\":{\"intent\":\"The user triggered the \\\"deal_again\\\" action (from component btn_deal). Action context: {\\\"newRound\\\":true}. Current surface data model: {\\\"bankroll\\\":1050,\\\"pot\\\":0,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"10\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"6\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"6\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"4\\\",\\\"suit\\\":\\\"spades\\\"}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"J\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"3\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"diamonds\\\"}],\\\"discard\\\":{\\\"c0\\\":false,\\\"c1\\\":false,\\\"c2\\\":false,\\\"c3\\\":false,\\\"c4\\\":false}}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[\"frontier-round-outcome\",\"frontier-rating-review\",\"agent-roster-drawer\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[\"TEXT_JSONL_ROUTED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142000,\"total\":56837,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3271},{\"id\":\"mini-skills\",\"chars\":2351},{\"id\":\"persona\",\"chars\":4923}],\"over\":false},\"usage\":{\"inputTokens\":10701,\"outputTokens\":2225,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-3\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-3\",\"value\":{\"bankroll\":1050,\"pot\":0,\"dealerHand\":[{\"rank\":\"10\",\"suit\":\"diamonds\"},{\"rank\":\"5\",\"suit\":\"spades\"},{\"rank\":\"7\",\"suit\":\"hearts\"},{\"rank\":\"J\",\"suit\":\"clubs\"},{\"rank\":\"3\",\"suit\":\"spades\"}],\"playerHand\":[{\"rank\":\"4\",\"suit\":\"hearts\"},{\"rank\":\"4\",\"suit\":\"clubs\"},{\"rank\":\"K\",\"suit\":\"spades\"},{\"rank\":\"9\",\"suit\":\"diamonds\"},{\"rank\":\"2\",\"suit\":\"hearts\"}],\"discard\":{\"c0\":false,\"c1\":false,\"c2\":false,\"c3\":false,\"c4\":false}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-3\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"table\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Five-card draw\",\"status\":\"Betting round 1\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Chips\",\"value\":{\"path\":\"/bankroll\"}},{\"label\":\"Pot\",\"value\":{\"path\":\"/pot\"}}]},{\"id\":\"table\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"tbl_hd\",\"tbl_ct\",\"tbl_ft\"]},{\"id\":\"tbl_hd\",\"component\":\"CardHeader\",\"children\":[\"tbl_title\",\"tbl_badge\"]},{\"id\":\"tbl_title\",\"component\":\"Text\",\"text\":\"Your hand\",\"variant\":\"h4\"},{\"id\":\"tbl_badge\",\"component\":\"Badge\",\"label\":\"Your turn\",\"intent\":\"info\",\"slot\":\"trailing\"},{\"id\":\"tbl_ct\",\"component\":\"CardContent\",\"children\":[\"opp_zone\",\"you_zone\"]},{\"id\":\"opp_zone\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"opp_label\",\"opp_row\"]},{\"id\":\"opp_label\",\"component\":\"Text\",\"text\":\"Dealer · 5 cards face down\",\"variant\":\"label\"},{\"id\":\"opp_row\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":{\"path\":\"/dealerHand\",\"componentId\":\"dealerCard\"}},{\"id\":\"dealerCard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":true,\"size\":\"md\"},{\"id\":\"you_zone\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"you_label\",\"you_row\"]},{\"id\":\"you_label\",\"component\":\"Text\",\"text\":\"You · pair of fours\",\"variant\":\"label\"},{\"id\":\"you_row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/playerHand\",\"componentId\":\"playerCard\"}},{\"id\":\"playerCard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":false,\"size\":\"md\"},{\"id\":\"tbl_ft\",\"component\":\"CardFooter\",\"children\":[\"actions\"]},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"children\":[\"btn_check\",\"btn_bet\",\"btn_fold\"]},{\"id\":\"btn_check\",\"component\":\"Button\",\"label\":\"Check\",\"variant\":\"solid\",\"action\":{\"action\":\"poker_check\",\"context\":{\"round\":\"table-3\"}}},{\"id\":\"btn_bet\",\"component\":\"Button\",\"label\":\"Bet 20\",\"variant\":\"soft\",\"action\":{\"action\":\"poker_bet\",\"context\":{\"round\":\"table-3\",\"amount\":20}}},{\"id\":\"btn_fold\",\"component\":\"Button\",\"label\":\"Fold\",\"variant\":\"ghost\",\"action\":{\"action\":\"poker_fold\",\"context\":{\"round\":\"table-3\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "New round. Your bankroll stays at 1,050. You hold a pair of fours, and the dealer's cards are face down. Your move: check, bet 20, or fold.\n\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-3\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}}\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-3\",\"value\":{\"bankroll\":1050,\"pot\":0,\"dealerHand\":[{\"rank\":\"10\",\"suit\":\"diamonds\"},{\"rank\":\"5\",\"suit\":\"spades\"},{\"rank\":\"7\",\"suit\":\"hearts\"},{\"rank\":\"J\",\"suit\":\"clubs\"},{\"rank\":\"3\",\"suit\":\"spades\"}],\"playerHand\":[{\"rank\":\"4\",\"suit\":\"hearts\"},{\"rank\":\"4\",\"suit\":\"clubs\"},{\"rank\":\"K\",\"suit\":\"spades\"},{\"rank\":\"9\",\"suit\":\"diamonds\"},{\"rank\":\"2\",\"suit\":\"hearts\"}],\"discard\":{\"c0\":false,\"c1\":false,\"c2\":false,\"c3\":false,\"c4\":false}}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-3\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"table\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Five-card draw\",\"status\":\"Betting round 1\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Chips\",\"value\":{\"path\":\"/bankroll\"}},{\"label\":\"Pot\",\"value\":{\"path\":\"/pot\"}}]},{\"id\":\"table\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"tbl_hd\",\"tbl_ct\",\"tbl_ft\"]},{\"id\":\"tbl_hd\",\"component\":\"CardHeader\",\"children\":[\"tbl_title\",\"tbl_badge\"]},{\"id\":\"tbl_title\",\"component\":\"Text\",\"text\":\"Your hand\",\"variant\":\"h4\"},{\"id\":\"tbl_badge\",\"component\":\"Badge\",\"label\":\"Your turn\",\"intent\":\"info\",\"slot\":\"trailing\"},{\"id\":\"tbl_ct\",\"component\":\"CardContent\",\"children\":[\"opp_zone\",\"you_zone\"]},{\"id\":\"opp_zone\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"opp_label\",\"opp_row\"]},{\"id\":\"opp_label\",\"component\":\"Text\",\"text\":\"Dealer · 5 cards face down\",\"variant\":\"label\"},{\"id\":\"opp_row\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":{\"path\":\"/dealerHand\",\"componentId\":\"dealerCard\"}},{\"id\":\"dealerCard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":true,\"size\":\"md\"},{\"id\":\"you_zone\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"you_label\",\"you_row\"]},{\"id\":\"you_label\",\"component\":\"Text\",\"text\":\"You · pair of fours\",\"variant\":\"label\"},{\"id\":\"you_row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/playerHand\",\"componentId\":\"playerCard\"}},{\"id\":\"playerCard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":false,\"size\":\"md\"},{\"id\":\"tbl_ft\",\"component\":\"CardFooter\",\"children\":[\"actions\"]},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"children\":[\"btn_check\",\"btn_bet\",\"btn_fold\"]},{\"id\":\"btn_check\",\"component\":\"Button\",\"label\":\"Check\",\"variant\":\"solid\",\"action\":{\"action\":\"poker_check\",\"context\":{\"round\":\"table-3\"}}},{\"id\":\"btn_bet\",\"component\":\"Button\",\"label\":\"Bet 20\",\"variant\":\"soft\",\"action\":{\"action\":\"poker_bet\",\"context\":{\"round\":\"table-3\",\"amount\":20}}},{\"id\":\"btn_fold\",\"component\":\"Button\",\"label\":\"Fold\",\"variant\":\"ghost\",\"action\":{\"action\":\"poker_fold\",\"context\":{\"round\":\"table-3\"}}}]}}",
+          "tools": []
+        }
+      ]
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Both\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" players chec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ked on table-3, so I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" need to move that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" table into the draw phase and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" update the same\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" surface. I should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" also\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keep track\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" of earlier in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"consistencies in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the dealer's hand details\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ay care\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ful about accuracy going\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" forward, while\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" checking in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" on the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" state of table-2 as well\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Table-2 and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" table-1 both\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" still have stale states l\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ingering —\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" table-2 still shows a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"Deal again\\\" button that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s no\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" longer valid.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Since only one surface should inv\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ite action at a time, I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll strip that stale button\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" from table-2 while focus\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" live\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" action on table-3's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" draw phase, where the player\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" now\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"s to see\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" their c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ards face up with discard check\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"boxes for selec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting which to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sw\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ap.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I also\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to clear table-2's act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ions row by sending an empty\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" children array\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". Bankroll and p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot values\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ay as they\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" are. I'll write a short\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" prose reply with the meta\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-line describ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing the check\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"/draw trans\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ition, then call render\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"_surface with the updated component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" messages.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"You check, the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" dealer checks behind you\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\", and we\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" move to the draw. T\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ick up to\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" three cards to discard, then\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Draw, or Stand\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" pat to\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" keep your\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" pair of f\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ours.\\n\\n\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"{\\\"a2uiMeta\\\":{\\\"note\\\":\\\"You check, the dealer checks, and we move to the draw. Tick up to three cards to discard, then Draw, or Stand pat.\\\",\\\"target\\\":{\\\"surfaceId\\\":\\\"table-3\\\"}}}\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"value\\\":{\\\"bankroll\\\":1050,\\\"pot\\\":0,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"10\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"5\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"J\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"3\\\",\\\"suit\\\":\\\"spades\\\"}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"4\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"4\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"hearts\\\"}],\\\"discard\\\":{\\\"c0\\\":false,\\\"c1\\\":false,\\\"c2\\\":false,\\\"c3\\\":false,\\\"c4\\\":false}}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"components\\\":[{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Five-card draw\\\",\\\"status\\\":\\\"Draw phase\\\",\\\"statusIntent\\\":\\\"info\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Chips\\\",\\\"value\\\":{\\\"path\\\":\\\"/bankroll\\\"}},{\\\"label\\\":\\\"Pot\\\",\\\"value\\\":{\\\"path\\\":\\\"/pot\\\"}}]},{\\\"id\\\":\\\"tbl_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Discard\\\",\\\"intent\\\":\\\"info\\\",\\\"slot\\\":\\\"trailing\\\"},{\\\"id\\\":\\\"tbl_ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"opp_zone\\\",\\\"you_zone\\\",\\\"discard_col\\\"]},{\\\"id\\\":\\\"discard_col\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"discard_label\\\",\\\"c0\\\",\\\"c1\\\",\\\"c2\\\",\\\"c3\\\",\\\"c4\\\"]},{\\\"id\\\":\\\"discard_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Discard (up to three)\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"c0\\\",\\\"component\\\":\\\"Checkbox\\\",\\\"name\\\":\\\"c0\\\",\\\"label\\\":\\\"4 of hearts\\\",\\\"checked\\\":{\\\"path\\\":\\\"/discard/c0\\\"}},{\\\"id\\\":\\\"c1\\\",\\\"component\\\":\\\"Checkbox\\\",\\\"name\\\":\\\"c1\\\",\\\"label\\\":\\\"4 of clubs\\\",\\\"checked\\\":{\\\"path\\\":\\\"/discard/c1\\\"}},{\\\"id\\\":\\\"c2\\\",\\\"component\\\":\\\"Checkbox\\\",\\\"name\\\":\\\"c2\\\",\\\"label\\\":\\\"K of spades\\\",\\\"checked\\\":{\\\"path\\\":\\\"/discard/c2\\\"}},{\\\"id\\\":\\\"c3\\\",\\\"component\\\":\\\"Checkbox\\\",\\\"name\\\":\\\"c3\\\",\\\"label\\\":\\\"9 of diamonds\\\",\\\"checked\\\":{\\\"path\\\":\\\"/discard/c3\\\"}},{\\\"id\\\":\\\"c4\\\",\\\"component\\\":\\\"Checkbox\\\",\\\"name\\\":\\\"c4\\\",\\\"label\\\":\\\"2 of hearts\\\",\\\"checked\\\":{\\\"path\\\":\\\"/discard/c4\\\"}},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"justify\\\":\\\"end\\\",\\\"children\\\":[\\\"btn_stand\\\",\\\"btn_draw\\\"]},{\\\"id\\\":\\\"btn_stand\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Stand pat\\\",\\\"variant\\\":\\\"ghost\\\",\\\"action\\\":{\\\"action\\\":\\\"poker_stand_pat\\\",\\\"context\\\":{\\\"round\\\":\\\"table-3\\\"}}},{\\\"id\\\":\\\"btn_draw\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Draw\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"poker_draw\\\",\\\"context\\\":{\\\"round\\\":\\\"table-3\\\"}}}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"components\\\":[{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"justify\\\":\\\"end\\\",\\\"children\\\":[]}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You check, the dealer checks behind you, and we move to the draw. Tick up to three cards to discard, then Draw, or Stand pat to keep your pair of fours.\",\"target\":{\"surfaceId\":\"table-3\"},\"trace\":{\"turnIndex\":14,\"query\":{\"intent\":\"Check, or call if there is a bet.\",\"k\":3},\"exemplarIds\":[\"booking-reservation\",\"frontier-button-icon-actions\",\"pattern-schedule-picker\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[\"TEXT_JSONL_IGNORED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142000,\"total\":57442,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5472},{\"id\":\"mini-skills\",\"chars\":755},{\"id\":\"persona\",\"chars\":4923}],\"over\":false},\"usage\":{\"inputTokens\":12369,\"outputTokens\":2385,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-3\",\"value\":{\"bankroll\":1050,\"pot\":0,\"dealerHand\":[{\"rank\":\"10\",\"suit\":\"diamonds\"},{\"rank\":\"5\",\"suit\":\"spades\"},{\"rank\":\"7\",\"suit\":\"hearts\"},{\"rank\":\"J\",\"suit\":\"clubs\"},{\"rank\":\"3\",\"suit\":\"spades\"}],\"playerHand\":[{\"rank\":\"4\",\"suit\":\"hearts\"},{\"rank\":\"4\",\"suit\":\"clubs\"},{\"rank\":\"K\",\"suit\":\"spades\"},{\"rank\":\"9\",\"suit\":\"diamonds\"},{\"rank\":\"2\",\"suit\":\"hearts\"}],\"discard\":{\"c0\":false,\"c1\":false,\"c2\":false,\"c3\":false,\"c4\":false}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-3\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Five-card draw\",\"status\":\"Draw phase\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Chips\",\"value\":{\"path\":\"/bankroll\"}},{\"label\":\"Pot\",\"value\":{\"path\":\"/pot\"}}]},{\"id\":\"tbl_badge\",\"component\":\"Badge\",\"label\":\"Discard\",\"intent\":\"info\",\"slot\":\"trailing\"},{\"id\":\"tbl_ct\",\"component\":\"CardContent\",\"children\":[\"opp_zone\",\"you_zone\",\"discard_col\"]},{\"id\":\"discard_col\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"discard_label\",\"c0\",\"c1\",\"c2\",\"c3\",\"c4\"]},{\"id\":\"discard_label\",\"component\":\"Text\",\"text\":\"Discard (up to three)\",\"variant\":\"label\"},{\"id\":\"c0\",\"component\":\"Checkbox\",\"name\":\"c0\",\"label\":\"4 of hearts\",\"checked\":{\"path\":\"/discard/c0\"}},{\"id\":\"c1\",\"component\":\"Checkbox\",\"name\":\"c1\",\"label\":\"4 of clubs\",\"checked\":{\"path\":\"/discard/c1\"}},{\"id\":\"c2\",\"component\":\"Checkbox\",\"name\":\"c2\",\"label\":\"K of spades\",\"checked\":{\"path\":\"/discard/c2\"}},{\"id\":\"c3\",\"component\":\"Checkbox\",\"name\":\"c3\",\"label\":\"9 of diamonds\",\"checked\":{\"path\":\"/discard/c3\"}},{\"id\":\"c4\",\"component\":\"Checkbox\",\"name\":\"c4\",\"label\":\"2 of hearts\",\"checked\":{\"path\":\"/discard/c4\"}},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"justify\":\"end\",\"children\":[\"btn_stand\",\"btn_draw\"]},{\"id\":\"btn_stand\",\"component\":\"Button\",\"label\":\"Stand pat\",\"variant\":\"ghost\",\"action\":{\"action\":\"poker_stand_pat\",\"context\":{\"round\":\"table-3\"}}},{\"id\":\"btn_draw\",\"component\":\"Button\",\"label\":\"Draw\",\"variant\":\"solid\",\"action\":{\"action\":\"poker_draw\",\"context\":{\"round\":\"table-3\"}}}]}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"justify\":\"end\",\"children\":[]}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "You check, the dealer checks behind you, and we move to the draw. Tick up to three cards to discard, then Draw, or Stand pat to keep your pair of fours.\n\n{\"a2uiMeta\":{\"note\":\"You check, the dealer checks, and we move to the draw. Tick up to three cards to discard, then Draw, or Stand pat.\",\"target\":{\"surfaceId\":\"table-3\"}}}",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Checked. Choose up to three cards to discard, then Draw, or Stand pat.",
+                "target": "table-3",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-3",
+                      "value": {
+                        "bankroll": 1050,
+                        "pot": 0,
+                        "dealerHand": [
+                          {
+                            "rank": "10",
+                            "suit": "diamonds"
+                          },
+                          {
+                            "rank": "5",
+                            "suit": "spades"
+                          },
+                          {
+                            "rank": "7",
+                            "suit": "hearts"
+                          },
+                          {
+                            "rank": "J",
+                            "suit": "clubs"
+                          },
+                          {
+                            "rank": "3",
+                            "suit": "spades"
+                          }
+                        ],
+                        "playerHand": [
+                          {
+                            "rank": "4",
+                            "suit": "hearts"
+                          },
+                          {
+                            "rank": "4",
+                            "suit": "clubs"
+                          },
+                          {
+                            "rank": "K",
+                            "suit": "spades"
+                          },
+                          {
+                            "rank": "9",
+                            "suit": "diamonds"
+                          },
+                          {
+                            "rank": "2",
+                            "suit": "hearts"
+                          }
+                        ],
+                        "discard": {
+                          "c0": false,
+                          "c1": false,
+                          "c2": false,
+                          "c3": false,
+                          "c4": false
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-3",
+                      "components": [
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Five-card draw",
+                          "status": "Draw phase",
+                          "statusIntent": "info",
+                          "stats": [
+                            {
+                              "label": "Chips",
+                              "value": {
+                                "path": "/bankroll"
+                              }
+                            },
+                            {
+                              "label": "Pot",
+                              "value": {
+                                "path": "/pot"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "id": "tbl_badge",
+                          "component": "Badge",
+                          "label": "Discard",
+                          "intent": "info",
+                          "slot": "trailing"
+                        },
+                        {
+                          "id": "tbl_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "opp_zone",
+                            "you_zone",
+                            "discard_col"
+                          ]
+                        },
+                        {
+                          "id": "discard_col",
+                          "component": "Column",
+                          "gap": "sm",
+                          "children": [
+                            "discard_label",
+                            "c0",
+                            "c1",
+                            "c2",
+                            "c3",
+                            "c4"
+                          ]
+                        },
+                        {
+                          "id": "discard_label",
+                          "component": "Text",
+                          "text": "Discard (up to three)",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "c0",
+                          "component": "Checkbox",
+                          "name": "c0",
+                          "label": "4 of hearts",
+                          "checked": {
+                            "path": "/discard/c0"
+                          }
+                        },
+                        {
+                          "id": "c1",
+                          "component": "Checkbox",
+                          "name": "c1",
+                          "label": "4 of clubs",
+                          "checked": {
+                            "path": "/discard/c1"
+                          }
+                        },
+                        {
+                          "id": "c2",
+                          "component": "Checkbox",
+                          "name": "c2",
+                          "label": "K of spades",
+                          "checked": {
+                            "path": "/discard/c2"
+                          }
+                        },
+                        {
+                          "id": "c3",
+                          "component": "Checkbox",
+                          "name": "c3",
+                          "label": "9 of diamonds",
+                          "checked": {
+                            "path": "/discard/c3"
+                          }
+                        },
+                        {
+                          "id": "c4",
+                          "component": "Checkbox",
+                          "name": "c4",
+                          "label": "2 of hearts",
+                          "checked": {
+                            "path": "/discard/c4"
+                          }
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "md",
+                          "justify": "end",
+                          "children": [
+                            "btn_stand",
+                            "btn_draw"
+                          ]
+                        },
+                        {
+                          "id": "btn_stand",
+                          "component": "Button",
+                          "label": "Stand pat",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "poker_stand_pat",
+                            "context": {
+                              "round": "table-3"
+                            }
+                          }
+                        },
+                        {
+                          "id": "btn_draw",
+                          "component": "Button",
+                          "label": "Draw",
+                          "variant": "solid",
+                          "action": {
+                            "action": "poker_draw",
+                            "context": {
+                              "round": "table-3"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-2",
+                      "components": [
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "md",
+                          "justify": "end",
+                          "children": []
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Checking the show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"down: dealer sh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ows jack-high with no p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"air, while the player's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pair of fours w\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ins.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Since both s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ides checked,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" no\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" chips act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ually changed hands, so the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot stays at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" zero and b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ankr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"olls are unaffected.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Now I need to update the sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face for table-3 — m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ark it settled, show the result\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" text, flip the dealer\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s card face up, and sw\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ap out the action buttons for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a \\\"Deal again\\\" button\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". Table-1 and table\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-2 already had their actions\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" removed, so those\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" are fine as-is.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"components\\\":[{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Five-card draw\\\",\\\"status\\\":\\\"Round settled\\\",\\\"statusIntent\\\":\\\"success\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Chips\\\",\\\"value\\\":{\\\"path\\\":\\\"/bankroll\\\"}},{\\\"label\\\":\\\"Pot\\\",\\\"value\\\":{\\\"path\\\":\\\"/pot\\\"}}]},{\\\"id\\\":\\\"tbl_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Settled\\\",\\\"intent\\\":\\\"success\\\",\\\"slot\\\":\\\"trailing\\\"},{\\\"id\\\":\\\"opp_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Dealer · jack high\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"dealerCard\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"faceDown\\\":false,\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"tbl_ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"opp_zone\\\",\\\"you_zone\\\",\\\"result_text\\\"]},{\\\"id\\\":\\\"result_text\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Showdown: your pair of fours beats the dealer's jack high. The pot was empty, so no chips moved: bankroll 1,050.\\\",\\\"variant\\\":\\\"body\\\",\\\"emphasis\\\":true},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"justify\\\":\\\"end\\\",\\\"children\\\":[\\\"btn_deal\\\"]},{\\\"id\\\":\\\"btn_deal\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Deal again\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"deal_again\\\",\\\"context\\\":{\\\"newRound\\\":true}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You stood pat with your pair of fours. The dealer had jack high, so you win the showdown. The pot was empty because neither side bet, so no chips moved and your bankroll stays at 1,050.\",\"target\":{\"surfaceId\":\"table-3\"},\"trace\":{\"turnIndex\":16,\"query\":{\"intent\":\"Stand pat, no discards.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142000,\"total\":51215,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"persona\",\"chars\":4923}],\"over\":false},\"usage\":{\"inputTokens\":10841,\"outputTokens\":1368,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-3\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Five-card draw\",\"status\":\"Round settled\",\"statusIntent\":\"success\",\"stats\":[{\"label\":\"Chips\",\"value\":{\"path\":\"/bankroll\"}},{\"label\":\"Pot\",\"value\":{\"path\":\"/pot\"}}]},{\"id\":\"tbl_badge\",\"component\":\"Badge\",\"label\":\"Settled\",\"intent\":\"success\",\"slot\":\"trailing\"},{\"id\":\"opp_label\",\"component\":\"Text\",\"text\":\"Dealer · jack high\",\"variant\":\"label\"},{\"id\":\"dealerCard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":false,\"size\":\"md\"},{\"id\":\"tbl_ct\",\"component\":\"CardContent\",\"children\":[\"opp_zone\",\"you_zone\",\"result_text\"]},{\"id\":\"result_text\",\"component\":\"Text\",\"text\":\"Showdown: your pair of fours beats the dealer's jack high. The pot was empty, so no chips moved: bankroll 1,050.\",\"variant\":\"body\",\"emphasis\":true},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"justify\":\"end\",\"children\":[\"btn_deal\"]},{\"id\":\"btn_deal\",\"component\":\"Button\",\"label\":\"Deal again\",\"variant\":\"solid\",\"action\":{\"action\":\"deal_again\",\"context\":{\"newRound\":true}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"You stood pat with your pair of fours. The dealer had jack high, so you win the showdown. The pot was empty because neither side bet, so no chips moved and your bankroll stays at 1,050.\",\"target\":{\"surfaceId\":\"table-3\"}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-3\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Five-card draw\",\"status\":\"Round settled\",\"statusIntent\":\"success\",\"stats\":[{\"label\":\"Chips\",\"value\":{\"path\":\"/bankroll\"}},{\"label\":\"Pot\",\"value\":{\"path\":\"/pot\"}}]},{\"id\":\"tbl_badge\",\"component\":\"Badge\",\"label\":\"Settled\",\"intent\":\"success\",\"slot\":\"trailing\"},{\"id\":\"opp_label\",\"component\":\"Text\",\"text\":\"Dealer · jack high\",\"variant\":\"label\"},{\"id\":\"dealerCard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":false,\"size\":\"md\"},{\"id\":\"tbl_ct\",\"component\":\"CardContent\",\"children\":[\"opp_zone\",\"you_zone\",\"result_text\"]},{\"id\":\"result_text\",\"component\":\"Text\",\"text\":\"Showdown: your pair of fours beats the dealer's jack high. The pot was empty, so no chips moved: bankroll 1,050.\",\"variant\":\"body\",\"emphasis\":true},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"justify\":\"end\",\"children\":[\"btn_deal\"]},{\"id\":\"btn_deal\",\"component\":\"Button\",\"label\":\"Deal again\",\"variant\":\"solid\",\"action\":{\"action\":\"deal_again\",\"context\":{\"newRound\":true}}}]}}",
+          "tools": []
+        }
+      ]
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm no\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ticing the user\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s request to check or call do\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"esn't match\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the table\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" state,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since the round already\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" appears settled,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and I'm double-checking\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the dealer's hand and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot details for consistency before de\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ciding how to respond.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Double-checking the earl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ier rounds for consistency\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", nothing else looks off\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Since there's no open bet right\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" now and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" table-3 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"already settled at 1,050\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", there's nothing to call\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"—I'll just prompt\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" user to press\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Deal again to start\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a new round, keeping it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to pl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ain prose without any\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" surface changes.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"That\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" h\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"and is\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" already settled, so there's no\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" bet to call\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" You\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" st\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ood pat with your pair of\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" fours and be\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"at the dealer's jack\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" high.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Your bankroll is\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 1,050. Press **\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Deal again** on the table\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" to start a new round, or t\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ell me another\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" game to\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" play.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"That hand is already settled, so there's no bet to call. You stood pat with your pair of fours and beat the dealer's jack high. Your bankroll is 1,050. Press **Deal again** on the table to start a new round, or tell me another game to play.\",\"trace\":{\"turnIndex\":18,\"query\":{\"intent\":\"Check, or call if there is a bet.\",\"k\":3},\"exemplarIds\":[\"booking-reservation\",\"frontier-button-icon-actions\",\"pattern-schedule-picker\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142000,\"total\":57442,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5472},{\"id\":\"mini-skills\",\"chars\":755},{\"id\":\"persona\",\"chars\":4923}],\"over\":false},\"usage\":{\"inputTokens\":14045,\"outputTokens\":838,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}"
+      ],
+      "rounds": [
+        {
+          "text": "That hand is already settled, so there's no bet to call. You stood pat with your pair of fours and beat the dealer's jack high. Your bankroll is 1,050. Press **Deal again** on the table to start a new round, or tell me another game to play.",
+          "tools": []
+        }
+      ]
+    }
+  ]
+}

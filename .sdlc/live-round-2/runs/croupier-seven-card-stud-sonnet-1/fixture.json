@@ -1,0 +1,2025 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "croupier-seven-card-stud-sonnet-1",
+  "agent": "croupier",
+  "model": "claude-sonnet-5-5",
+  "source": "probe live run 2026-10-15T06:15:43.321Z, traces 2026-10-15.jsonl:156,2026-10-15.jsonl:157,2026-10-15.jsonl:158,2026-10-15.jsonl:159,2026-10-15.jsonl:160,2026-10-15.jsonl:161,-",
+  "steps": [
+    {
+      "say": "Let's play seven-card stud.",
+      "expect": [
+        "PlayingCard"
+      ]
+    },
+    {
+      "say": "Bring it in, or check, or call."
+    },
+    {
+      "say": "Bet 25."
+    },
+    {
+      "say": "Check, or call if there is a bet."
+    },
+    {
+      "say": "Check, or call if there is a bet."
+    },
+    {
+      "say": "Check, or call if there is a bet."
+    },
+    {
+      "click": "Deal again",
+      "expect": [
+        "PlayingCard"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" setting up a live seven-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"card stud table using\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the GameHud interface with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a fresh table\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" id and a \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"1,000 bankroll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", playing heads-up against\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dealer/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"croupier opponent. For\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" third street, each\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player gets two down c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ards and one up card, with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Check,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Bet, and Fold\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as the available actions.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll deal re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"asonable\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" cards: the player has h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"idden s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"evens and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a king pl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"us a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" visible nine,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dealer sh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ows a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" queen with two h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"idden cards. I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hand\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ling the ante by\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" de\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ducting 10 from\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" each side, bringing the b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ankroll to 990 and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the pot to 20, with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the player acting first since their\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" up\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" card is lower.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Now I'm building out\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the table surface with the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bankroll, pot,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealt cards.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For the dealer's face\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-down cards, I don\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'t act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ually know what they are\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" yet, so I'll just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" represent them as placeholder\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" static\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" cards mar\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ked face\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-down rather than trying to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"abricate or\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" le\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ak real values\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Now I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m struct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"uring the GameHud component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\": a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" title re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ading \\\"Seven-card st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ud,\\\" a status line show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing \\\"Third street · your action\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\\\" and a stats array with b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ound\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" values\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" like bankroll p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ulled from the data path.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll add a separate\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Text row\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Bankroll b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ound to its\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" path,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" then build the foot\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"er with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" action buttons for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Check, Bet \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"20, and Fold. The\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" over\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"all structure is a Card with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" header Text, a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" content Column hol\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding the hud, dealer\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ections, and bankroll,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" followed by the footer actions\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Seven-card stud:\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" each\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" player gets two down cards and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" one up card, then three more up\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" cards and a final down card,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" with betting after every street. The\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" best five of se\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ven c\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ards wins. I've\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" d\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ealt table\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"-1 with\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" a 10-ch\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ip ante each, and your b\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ankroll starts at 1\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\",000.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"catalogId\\\":\\\"agent-ui--croupier\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"bankroll\\\":990,\\\"stats\\\":[{\\\"label\\\":\\\"Pot\\\",\\\"value\\\":\\\"20\\\"},{\\\"label\\\":\\\"Ante\\\",\\\"value\\\":\\\"10\\\"},{\\\"label\\\":\\\"Street\\\",\\\"value\\\":\\\"3rd\\\"}],\\\"dealerHand\\\":[{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true},{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true},{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"clubs\\\",\\\"faceDown\\\":false}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"hearts\\\",\\\"faceDown\\\":false}]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"content\\\",\\\"footer\\\"]},{\\\"id\\\":\\\"content\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"col\\\"]},{\\\"id\\\":\\\"col\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"hud\\\",\\\"dealer_label\\\",\\\"dealer_row\\\",\\\"player_label\\\",\\\"player_row\\\",\\\"bankroll_row\\\"]},{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Seven-card stud\\\",\\\"status\\\":\\\"Third street: your action\\\",\\\"statusIntent\\\":\\\"info\\\",\\\"stats\\\":{\\\"path\\\":\\\"/stats\\\"}},{\\\"id\\\":\\\"dealer_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Dealer: 2 down, 1 up\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"dealer_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":{\\\"path\\\":\\\"/dealerHand\\\",\\\"componentId\\\":\\\"dealer_card\\\"}},{\\\"id\\\":\\\"dealer_card\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"faceDown\\\":{\\\"path\\\":\\\"faceDown\\\"},\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"player_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"You: 2 down, 1 up\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"player_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":{\\\"path\\\":\\\"/playerHand\\\",\\\"componentId\\\":\\\"player_card\\\"}},{\\\"id\\\":\\\"player_card\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"faceDown\\\":{\\\"path\\\":\\\"faceDown\\\"},\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"bankroll_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"align\\\":\\\"center\\\",\\\"children\\\":[\\\"bankroll_label\\\",\\\"bankroll_value\\\"]},{\\\"id\\\":\\\"bankroll_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Bankroll\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"bankroll_value\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"emphasis\\\":true,\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"footer\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"actions\\\"]},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"btn_bet\\\",\\\"btn_check\\\",\\\"btn_fold\\\"]},{\\\"id\\\":\\\"btn_bet\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Bet 20\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"stud_move\\\",\\\"context\\\":{\\\"move\\\":\\\"bet\\\",\\\"amount\\\":20}}},{\\\"id\\\":\\\"btn_check\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Check\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"stud_move\\\",\\\"context\\\":{\\\"move\\\":\\\"check\\\"}}},{\\\"id\\\":\\\"btn_fold\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Fold\\\",\\\"variant\\\":\\\"ghost\\\",\\\"action\\\":{\\\"action\\\":\\\"stud_move\\\",\\\"context\\\":{\\\"move\\\":\\\"fold\\\"}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"catalogId\\\":\\\"agent-ui--croupier\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"bankroll\\\":990,\\\"stats\\\":[{\\\"label\\\":\\\"Pot\\\",\\\"value\\\":\\\"20\\\"},{\\\"label\\\":\\\"Ante\\\",\\\"value\\\":\\\"10\\\"},{\\\"label\\\":\\\"Street\\\",\\\"value\\\":\\\"3rd\\\"}],\\\"dealerHand\\\":[{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true},{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true},{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"clubs\\\",\\\"faceDown\\\":false}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"hearts\\\",\\\"faceDown\\\":false}]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"content\\\",\\\"footer\\\"]},{\\\"id\\\":\\\"content\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"col\\\"]},{\\\"id\\\":\\\"col\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"hud\\\",\\\"dealer_label\\\",\\\"dealer_row\\\",\\\"player_label\\\",\\\"player_row\\\",\\\"bankroll_row\\\"]},{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Seven-card stud\\\",\\\"status\\\":\\\"Third street: your action\\\",\\\"statusIntent\\\":\\\"info\\\",\\\"stats\\\":{\\\"path\\\":\\\"/stats\\\"}},{\\\"id\\\":\\\"dealer_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Dealer: 2 down, 1 up\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"dealer_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":{\\\"path\\\":\\\"/dealerHand\\\",\\\"componentId\\\":\\\"dealer_card\\\"}},{\\\"id\\\":\\\"dealer_card\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"faceDown\\\":{\\\"path\\\":\\\"faceDown\\\"},\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"player_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"You: 2 down, 1 up\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"player_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":{\\\"path\\\":\\\"/playerHand\\\",\\\"componentId\\\":\\\"player_card\\\"}},{\\\"id\\\":\\\"player_card\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"faceDown\\\":{\\\"path\\\":\\\"faceDown\\\"},\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"bankroll_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"align\\\":\\\"center\\\",\\\"children\\\":[\\\"bankroll_label\\\",\\\"bankroll_value\\\"]},{\\\"id\\\":\\\"bankroll_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Bankroll\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"bankroll_value\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"emphasis\\\":true,\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"footer\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"actions\\\"]},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"btn_bet\\\",\\\"btn_check\\\",\\\"btn_fold\\\"]},{\\\"id\\\":\\\"btn_bet\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Bet 20\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"stud_move\\\",\\\"context\\\":{\\\"move\\\":\\\"bet\\\",\\\"amount\\\":20}}},{\\\"id\\\":\\\"btn_check\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Check\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"stud_move\\\",\\\"context\\\":{\\\"move\\\":\\\"check\\\"}}},{\\\"id\\\":\\\"btn_fold\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Fold\\\",\\\"variant\\\":\\\"ghost\\\",\\\"action\\\":{\\\"action\\\":\\\"stud_move\\\",\\\"context\\\":{\\\"move\\\":\\\"fold\\\"}}}]}}\",\"codes\":[\"CARD_DUPLICATE\"],\"detail\":\"Round 1 failed:\\n  CARD_DUPLICATE: at table-1:/dealerHand (table-1 deals the 2 of spades 2 times (/dealerHand/0, /dealerHand/1), but a poker deal is one deck. Deal real, distinct cards, the face-down ones too: a face-down card is the committed card the showdown turns up, never a placeholder.)\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need to re-render with dist\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"inct cards, cal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ling render_surface with complete\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" messages and no corre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ction not\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"es or surface id references. I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll open with \\\"I've d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealt the first hand\\\" and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" make\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sure the dealer's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hole cards are distinct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", like a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" face-down card\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" plus a vis\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ible 5.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For the dealer I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll set \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"2♠ and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 5♦ face down with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Q♣ show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and give\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the player 7♠, K\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"♦, 9♥\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" all visible since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player can\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" see their own c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ards. Bankroll st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ays at 990 with a p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot of 20 from\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 10 ante each.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"catalogId\\\":\\\"agent-ui--croupier\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"bankroll\\\":990,\\\"stats\\\":[{\\\"label\\\":\\\"Pot\\\",\\\"value\\\":\\\"20\\\"},{\\\"label\\\":\\\"Ante\\\",\\\"value\\\":\\\"10\\\"},{\\\"label\\\":\\\"Street\\\",\\\"value\\\":\\\"3rd\\\"}],\\\"dealerHand\\\":[{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true},{\\\"rank\\\":\\\"5\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"faceDown\\\":true},{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"clubs\\\",\\\"faceDown\\\":false}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"hearts\\\",\\\"faceDown\\\":false}]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"content\\\",\\\"footer\\\"]},{\\\"id\\\":\\\"content\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"col\\\"]},{\\\"id\\\":\\\"col\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"hud\\\",\\\"dealer_label\\\",\\\"dealer_row\\\",\\\"player_label\\\",\\\"player_row\\\",\\\"bankroll_row\\\"]},{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Seven-card stud\\\",\\\"status\\\":\\\"Third street: your action\\\",\\\"statusIntent\\\":\\\"info\\\",\\\"stats\\\":{\\\"path\\\":\\\"/stats\\\"}},{\\\"id\\\":\\\"dealer_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Dealer: 2 down, 1 up\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"dealer_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":{\\\"path\\\":\\\"/dealerHand\\\",\\\"componentId\\\":\\\"dealer_card\\\"}},{\\\"id\\\":\\\"dealer_card\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"faceDown\\\":{\\\"path\\\":\\\"faceDown\\\"},\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"player_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"You: 2 down, 1 up\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"player_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":{\\\"path\\\":\\\"/playerHand\\\",\\\"componentId\\\":\\\"player_card\\\"}},{\\\"id\\\":\\\"player_card\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"faceDown\\\":{\\\"path\\\":\\\"faceDown\\\"},\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"bankroll_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"align\\\":\\\"center\\\",\\\"children\\\":[\\\"bankroll_label\\\",\\\"bankroll_value\\\"]},{\\\"id\\\":\\\"bankroll_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Bankroll\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"bankroll_value\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"emphasis\\\":true,\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"footer\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"actions\\\"]},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"btn_bet\\\",\\\"btn_check\\\",\\\"btn_fold\\\"]},{\\\"id\\\":\\\"btn_bet\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Bet 20\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"stud_move\\\",\\\"context\\\":{\\\"move\\\":\\\"bet\\\",\\\"amount\\\":20}}},{\\\"id\\\":\\\"btn_check\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Check\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"stud_move\\\",\\\"context\\\":{\\\"move\\\":\\\"check\\\"}}},{\\\"id\\\":\\\"btn_fold\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Fold\\\",\\\"variant\\\":\\\"ghost\\\",\\\"action\\\":{\\\"action\\\":\\\"stud_move\\\",\\\"context\\\":{\\\"move\\\":\\\"fold\\\"}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Seven-card stud: each player gets two down cards and one up card, then three more up cards and a final down card, with betting after every street. The best five of seven cards wins. The first hand is dealt with a 10-chip ante each, and your bankroll started at 1,000. You're on third street and it's your action.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"## Referenced for this message\\n### seven-card-stud (resource)\\nseven-card stud, up cards, no community board\\n\\nNo shared board: two down cards and one up card each, betting, then three more up cards and a final down card, betting after every street. Up cards are dealt face-up on the table so the player can read them. Best five of the seven wins; standard rankings.\\n\\nLet's play seven-card stud.\",\"k\":3},\"exemplarIds\":[\"frontier-service-gateway\",\"frontier-image-hero-card\",\"wallet-summary-card\"],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"CARD_DUPLICATE\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":57433,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":4755},{\"id\":\"mini-skills\",\"chars\":1532},{\"id\":\"persona\",\"chars\":4854}],\"over\":false},\"usage\":{\"inputTokens\":10431,\"outputTokens\":4771,\"cacheReadInputTokens\":35044,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-1\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":990,\"stats\":[{\"label\":\"Pot\",\"value\":\"20\"},{\"label\":\"Ante\",\"value\":\"10\"},{\"label\":\"Street\",\"value\":\"3rd\"}],\"dealerHand\":[{\"rank\":\"2\",\"suit\":\"spades\",\"faceDown\":true},{\"rank\":\"5\",\"suit\":\"diamonds\",\"faceDown\":true},{\"rank\":\"Q\",\"suit\":\"clubs\",\"faceDown\":false}],\"playerHand\":[{\"rank\":\"7\",\"suit\":\"spades\",\"faceDown\":false},{\"rank\":\"K\",\"suit\":\"diamonds\",\"faceDown\":false},{\"rank\":\"9\",\"suit\":\"hearts\",\"faceDown\":false}]}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"content\",\"footer\"]},{\"id\":\"content\",\"component\":\"CardContent\",\"children\":[\"col\"]},{\"id\":\"col\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"dealer_label\",\"dealer_row\",\"player_label\",\"player_row\",\"bankroll_row\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Seven-card stud\",\"status\":\"Third street: your action\",\"statusIntent\":\"info\",\"stats\":{\"path\":\"/stats\"}},{\"id\":\"dealer_label\",\"component\":\"Text\",\"text\":\"Dealer: 2 down, 1 up\",\"variant\":\"label\"},{\"id\":\"dealer_row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/dealerHand\",\"componentId\":\"dealer_card\"}},{\"id\":\"dealer_card\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":{\"path\":\"faceDown\"},\"size\":\"md\"},{\"id\":\"player_label\",\"component\":\"Text\",\"text\":\"You: 2 down, 1 up\",\"variant\":\"label\"},{\"id\":\"player_row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/playerHand\",\"componentId\":\"player_card\"}},{\"id\":\"player_card\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":{\"path\":\"faceDown\"},\"size\":\"md\"},{\"id\":\"bankroll_row\",\"component\":\"Row\",\"gap\":\"sm\",\"align\":\"center\",\"children\":[\"bankroll_label\",\"bankroll_value\"]},{\"id\":\"bankroll_label\",\"component\":\"Text\",\"text\":\"Bankroll\",\"variant\":\"label\"},{\"id\":\"bankroll_value\",\"component\":\"Text\",\"text\":{\"path\":\"/bankroll\"},\"emphasis\":true,\"variant\":\"h4\"},{\"id\":\"footer\",\"component\":\"CardFooter\",\"children\":[\"actions\"]},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"btn_bet\",\"btn_check\",\"btn_fold\"]},{\"id\":\"btn_bet\",\"component\":\"Button\",\"label\":\"Bet 20\",\"variant\":\"solid\",\"action\":{\"action\":\"stud_move\",\"context\":{\"move\":\"bet\",\"amount\":20}}},{\"id\":\"btn_check\",\"component\":\"Button\",\"label\":\"Check\",\"variant\":\"soft\",\"action\":{\"action\":\"stud_move\",\"context\":{\"move\":\"check\"}}},{\"id\":\"btn_fold\",\"component\":\"Button\",\"label\":\"Fold\",\"variant\":\"ghost\",\"action\":{\"action\":\"stud_move\",\"context\":{\"move\":\"fold\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Seven-card stud: each player gets two down cards and one up card, then three more up cards and a final down card, with betting after every street. The best five of seven cards wins. I've dealt table-1 with a 10-chip ante each, and your bankroll starts at 1,000.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Third street is dealt. The dealer shows the Q♣ and you show the 9♥. Check, bet or fold?",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-1",
+                      "catalogId": "agent-ui--croupier",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "bankroll": 990,
+                        "stats": [
+                          {
+                            "label": "Pot",
+                            "value": "20"
+                          },
+                          {
+                            "label": "Ante",
+                            "value": "10"
+                          },
+                          {
+                            "label": "Street",
+                            "value": "3rd"
+                          }
+                        ],
+                        "dealerHand": [
+                          {
+                            "rank": "2",
+                            "suit": "spades",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "2",
+                            "suit": "spades",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "Q",
+                            "suit": "clubs",
+                            "faceDown": false
+                          }
+                        ],
+                        "playerHand": [
+                          {
+                            "rank": "7",
+                            "suit": "spades",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "K",
+                            "suit": "diamonds",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "9",
+                            "suit": "hearts",
+                            "faceDown": false
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "content",
+                            "footer"
+                          ]
+                        },
+                        {
+                          "id": "content",
+                          "component": "CardContent",
+                          "children": [
+                            "col"
+                          ]
+                        },
+                        {
+                          "id": "col",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "dealer_label",
+                            "dealer_row",
+                            "player_label",
+                            "player_row",
+                            "bankroll_row"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Seven-card stud",
+                          "status": "Third street: your action",
+                          "statusIntent": "info",
+                          "stats": {
+                            "path": "/stats"
+                          }
+                        },
+                        {
+                          "id": "dealer_label",
+                          "component": "Text",
+                          "text": "Dealer: 2 down, 1 up",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "dealer_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/dealerHand",
+                            "componentId": "dealer_card"
+                          }
+                        },
+                        {
+                          "id": "dealer_card",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "faceDown": {
+                            "path": "faceDown"
+                          },
+                          "size": "md"
+                        },
+                        {
+                          "id": "player_label",
+                          "component": "Text",
+                          "text": "You: 2 down, 1 up",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "player_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/playerHand",
+                            "componentId": "player_card"
+                          }
+                        },
+                        {
+                          "id": "player_card",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "faceDown": {
+                            "path": "faceDown"
+                          },
+                          "size": "md"
+                        },
+                        {
+                          "id": "bankroll_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            "bankroll_label",
+                            "bankroll_value"
+                          ]
+                        },
+                        {
+                          "id": "bankroll_label",
+                          "component": "Text",
+                          "text": "Bankroll",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "bankroll_value",
+                          "component": "Text",
+                          "text": {
+                            "path": "/bankroll"
+                          },
+                          "emphasis": true,
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "footer",
+                          "component": "CardFooter",
+                          "children": [
+                            "actions"
+                          ]
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "sm",
+                          "children": [
+                            "btn_bet",
+                            "btn_check",
+                            "btn_fold"
+                          ]
+                        },
+                        {
+                          "id": "btn_bet",
+                          "component": "Button",
+                          "label": "Bet 20",
+                          "variant": "solid",
+                          "action": {
+                            "action": "stud_move",
+                            "context": {
+                              "move": "bet",
+                              "amount": 20
+                            }
+                          }
+                        },
+                        {
+                          "id": "btn_check",
+                          "component": "Button",
+                          "label": "Check",
+                          "variant": "soft",
+                          "action": {
+                            "action": "stud_move",
+                            "context": {
+                              "move": "check"
+                            }
+                          }
+                        },
+                        {
+                          "id": "btn_fold",
+                          "component": "Button",
+                          "label": "Fold",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "stud_move",
+                            "context": {
+                              "move": "fold"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "Seven-card stud: each player gets two down cards and one up card, then three more up cards and a final down card, with betting after every street. The best five of seven cards wins. The first hand is dealt with a 10-chip ante each, and your bankroll started at 1,000. You're on third street and it's your action.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Third street is dealt: the dealer shows the Q of clubs, and you hold 7♠, K♦ and 9♥. Bet, check or fold?",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-1",
+                      "catalogId": "agent-ui--croupier",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "bankroll": 990,
+                        "stats": [
+                          {
+                            "label": "Pot",
+                            "value": "20"
+                          },
+                          {
+                            "label": "Ante",
+                            "value": "10"
+                          },
+                          {
+                            "label": "Street",
+                            "value": "3rd"
+                          }
+                        ],
+                        "dealerHand": [
+                          {
+                            "rank": "2",
+                            "suit": "spades",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "5",
+                            "suit": "diamonds",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "Q",
+                            "suit": "clubs",
+                            "faceDown": false
+                          }
+                        ],
+                        "playerHand": [
+                          {
+                            "rank": "7",
+                            "suit": "spades",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "K",
+                            "suit": "diamonds",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "9",
+                            "suit": "hearts",
+                            "faceDown": false
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "content",
+                            "footer"
+                          ]
+                        },
+                        {
+                          "id": "content",
+                          "component": "CardContent",
+                          "children": [
+                            "col"
+                          ]
+                        },
+                        {
+                          "id": "col",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "dealer_label",
+                            "dealer_row",
+                            "player_label",
+                            "player_row",
+                            "bankroll_row"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Seven-card stud",
+                          "status": "Third street: your action",
+                          "statusIntent": "info",
+                          "stats": {
+                            "path": "/stats"
+                          }
+                        },
+                        {
+                          "id": "dealer_label",
+                          "component": "Text",
+                          "text": "Dealer: 2 down, 1 up",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "dealer_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/dealerHand",
+                            "componentId": "dealer_card"
+                          }
+                        },
+                        {
+                          "id": "dealer_card",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "faceDown": {
+                            "path": "faceDown"
+                          },
+                          "size": "md"
+                        },
+                        {
+                          "id": "player_label",
+                          "component": "Text",
+                          "text": "You: 2 down, 1 up",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "player_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/playerHand",
+                            "componentId": "player_card"
+                          }
+                        },
+                        {
+                          "id": "player_card",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "faceDown": {
+                            "path": "faceDown"
+                          },
+                          "size": "md"
+                        },
+                        {
+                          "id": "bankroll_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            "bankroll_label",
+                            "bankroll_value"
+                          ]
+                        },
+                        {
+                          "id": "bankroll_label",
+                          "component": "Text",
+                          "text": "Bankroll",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "bankroll_value",
+                          "component": "Text",
+                          "text": {
+                            "path": "/bankroll"
+                          },
+                          "emphasis": true,
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "footer",
+                          "component": "CardFooter",
+                          "children": [
+                            "actions"
+                          ]
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "sm",
+                          "children": [
+                            "btn_bet",
+                            "btn_check",
+                            "btn_fold"
+                          ]
+                        },
+                        {
+                          "id": "btn_bet",
+                          "component": "Button",
+                          "label": "Bet 20",
+                          "variant": "solid",
+                          "action": {
+                            "action": "stud_move",
+                            "context": {
+                              "move": "bet",
+                              "amount": 20
+                            }
+                          }
+                        },
+                        {
+                          "id": "btn_check",
+                          "component": "Button",
+                          "label": "Check",
+                          "variant": "soft",
+                          "action": {
+                            "action": "stud_move",
+                            "context": {
+                              "move": "check"
+                            }
+                          }
+                        },
+                        {
+                          "id": "btn_fold",
+                          "component": "Button",
+                          "label": "Fold",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "stud_move",
+                            "context": {
+                              "move": "fold"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need to figure out who has\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the bring-in based\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" on the lowest upcard\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" —\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since the player\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ows a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 9 and the dealer\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" shows a que\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"en, the player is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ced to act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" first with the bring-in b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"et, not\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a check\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since checking isn't val\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"id on third street.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" correct the ear\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"lier mistake and update\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the surface with pro\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"per third\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-street controls: a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bring-in button\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" (5)\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and a complete button (10),\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eping the ante at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 10 and pot at \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"20, bankroll still \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"990. I'll resend the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" HUD and action\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" row\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with the f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ixed button set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and ask the user to choose\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" between b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ringing it in or\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" completing.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Seven-card stud\\\",\\\"status\\\":\\\"Third street: you bring it in\\\",\\\"statusIntent\\\":\\\"info\\\",\\\"stats\\\":{\\\"path\\\":\\\"/stats\\\"}},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"btn_bring\\\",\\\"btn_complete\\\",\\\"btn_fold\\\"]},{\\\"id\\\":\\\"btn_bring\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Bring it in 5\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"stud_move\\\",\\\"context\\\":{\\\"move\\\":\\\"bring-in\\\",\\\"amount\\\":5}}},{\\\"id\\\":\\\"btn_complete\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Complete to 10\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"stud_move\\\",\\\"context\\\":{\\\"move\\\":\\\"complete\\\",\\\"amount\\\":10}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You hold the low up card, so the bring-in is yours: bring it in for 5, complete to 10, or fold.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Bring it in, or check, or call.\",\"k\":3},\"exemplarIds\":[\"frontier-button-icon-actions\",\"booking-reservation\",\"contact-import-progress-to-summary\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":57898,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":6684},{\"id\":\"persona\",\"chars\":4922}],\"over\":false},\"usage\":{\"inputTokens\":6057,\"outputTokens\":1102,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Seven-card stud\",\"status\":\"Third street: you bring it in\",\"statusIntent\":\"info\",\"stats\":{\"path\":\"/stats\"}},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"btn_bring\",\"btn_complete\",\"btn_fold\"]},{\"id\":\"btn_bring\",\"component\":\"Button\",\"label\":\"Bring it in 5\",\"variant\":\"solid\",\"action\":{\"action\":\"stud_move\",\"context\":{\"move\":\"bring-in\",\"amount\":5}}},{\"id\":\"btn_complete\",\"component\":\"Button\",\"label\":\"Complete to 10\",\"variant\":\"soft\",\"action\":{\"action\":\"stud_move\",\"context\":{\"move\":\"complete\",\"amount\":10}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Your 9 is the lowest up card on the table (my Queen is higher), so the bring-in is yours. Check and call aren't open yet on third street, because there's nothing to call until someone bets. Your choices are to bring it in for 5, complete the bet to 10, or fold. I've updated the table, so pick one.\",\"target\":{\"surfaceId\":\"table-1\"}}}",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "You hold the low up card, so the bring-in is yours: bring it in for 5, complete to 10, or fold.",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Seven-card stud",
+                          "status": "Third street: you bring it in",
+                          "statusIntent": "info",
+                          "stats": {
+                            "path": "/stats"
+                          }
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "sm",
+                          "children": [
+                            "btn_bring",
+                            "btn_complete",
+                            "btn_fold"
+                          ]
+                        },
+                        {
+                          "id": "btn_bring",
+                          "component": "Button",
+                          "label": "Bring it in 5",
+                          "variant": "solid",
+                          "action": {
+                            "action": "stud_move",
+                            "context": {
+                              "move": "bring-in",
+                              "amount": 5
+                            }
+                          }
+                        },
+                        {
+                          "id": "btn_complete",
+                          "component": "Button",
+                          "label": "Complete to 10",
+                          "variant": "soft",
+                          "action": {
+                            "action": "stud_move",
+                            "context": {
+                              "move": "complete",
+                              "amount": 10
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"The user w\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ants to bet 25, which\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" is od\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"d given the earlier bring\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-in/complete structure I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" set up—I need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to reconcile this with the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" game\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s bet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting rules and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" also address\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" inconsistency in how\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the hands were displ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ayed,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealer's hand part\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ially h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"idden but\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the player's sh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"own fully face-up.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll acc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ept the bet,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" update the pot to 45\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and bankroll to \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"965, then have the dealer\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" call to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bring the pot to 70\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". Then I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" need to deal fourth street\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\": a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" new up card for each\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player, with the high\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"est board acting first—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"working\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" out the player\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s new card al\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ongside a straight draw poss\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ibility,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and the dealer show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing Q-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"J to determine who acts.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" updating the data model with the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" new bankroll, pot\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", street number\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and hand displ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ays, then r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ebuilding the action butt\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ons for Bet, Check\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and Fold.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Your 25 is a\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" raise over\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the bring-in,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" so\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" I\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'m\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" treating it as one. The d\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ealer calls, and the p\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ot is 70.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Fourth street is\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" dealt: you get\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the 8♠, gi\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ving you a 9-\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"8 board\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\", and the dealer gets\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the J\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"♦, show\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ing\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Q-J. The dealer\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'s\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" board\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" is higher, so they\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" act first and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" check. It\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'s on\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" you\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"bankroll\\\":965,\\\"stats\\\":[{\\\"label\\\":\\\"Pot\\\",\\\"value\\\":\\\"70\\\"},{\\\"label\\\":\\\"Ante\\\",\\\"value\\\":\\\"10\\\"},{\\\"label\\\":\\\"Street\\\",\\\"value\\\":\\\"4th\\\"}],\\\"dealerHand\\\":[{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true},{\\\"rank\\\":\\\"5\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"faceDown\\\":true},{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"clubs\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"J\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"faceDown\\\":false}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"hearts\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":false}]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Seven-card stud\\\",\\\"status\\\":\\\"Fourth street: dealer checks, your action\\\",\\\"statusIntent\\\":\\\"info\\\",\\\"stats\\\":{\\\"path\\\":\\\"/stats\\\"}},{\\\"id\\\":\\\"dealer_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Dealer: 2 down, 2 up (Q-J showing)\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"player_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"You: 2 down, 2 up (9-8 showing)\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"btn_bet\\\",\\\"btn_check\\\",\\\"btn_fold\\\"]},{\\\"id\\\":\\\"btn_bet\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Bet 20\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"stud_move\\\",\\\"context\\\":{\\\"move\\\":\\\"bet\\\",\\\"amount\\\":20}}},{\\\"id\\\":\\\"btn_check\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Check\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"stud_move\\\",\\\"context\\\":{\\\"move\\\":\\\"check\\\"}}},{\\\"id\\\":\\\"btn_fold\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Fold\\\",\\\"variant\\\":\\\"ghost\\\",\\\"action\\\":{\\\"action\\\":\\\"stud_move\\\",\\\"context\\\":{\\\"move\\\":\\\"fold\\\"}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Your 25 is a raise over the bring-in, so I'm treating it as one. The dealer calls, and the pot is 70. Fourth street is dealt: you get the 8♠, giving you a 9-8 board, and the dealer gets the J♦, showing Q-J. The dealer's board is higher, so they act first and check. It's on you.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":4,\"query\":{\"intent\":\"Bet 25.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":51969,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":755},{\"id\":\"persona\",\"chars\":4922}],\"over\":false},\"usage\":{\"inputTokens\":3755,\"outputTokens\":2115,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":965,\"stats\":[{\"label\":\"Pot\",\"value\":\"70\"},{\"label\":\"Ante\",\"value\":\"10\"},{\"label\":\"Street\",\"value\":\"4th\"}],\"dealerHand\":[{\"rank\":\"2\",\"suit\":\"spades\",\"faceDown\":true},{\"rank\":\"5\",\"suit\":\"diamonds\",\"faceDown\":true},{\"rank\":\"Q\",\"suit\":\"clubs\",\"faceDown\":false},{\"rank\":\"J\",\"suit\":\"diamonds\",\"faceDown\":false}],\"playerHand\":[{\"rank\":\"7\",\"suit\":\"spades\",\"faceDown\":false},{\"rank\":\"K\",\"suit\":\"diamonds\",\"faceDown\":false},{\"rank\":\"9\",\"suit\":\"hearts\",\"faceDown\":false},{\"rank\":\"8\",\"suit\":\"spades\",\"faceDown\":false}]}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Seven-card stud\",\"status\":\"Fourth street: dealer checks, your action\",\"statusIntent\":\"info\",\"stats\":{\"path\":\"/stats\"}},{\"id\":\"dealer_label\",\"component\":\"Text\",\"text\":\"Dealer: 2 down, 2 up (Q-J showing)\",\"variant\":\"label\"},{\"id\":\"player_label\",\"component\":\"Text\",\"text\":\"You: 2 down, 2 up (9-8 showing)\",\"variant\":\"label\"},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"btn_bet\",\"btn_check\",\"btn_fold\"]},{\"id\":\"btn_bet\",\"component\":\"Button\",\"label\":\"Bet 20\",\"variant\":\"solid\",\"action\":{\"action\":\"stud_move\",\"context\":{\"move\":\"bet\",\"amount\":20}}},{\"id\":\"btn_check\",\"component\":\"Button\",\"label\":\"Check\",\"variant\":\"soft\",\"action\":{\"action\":\"stud_move\",\"context\":{\"move\":\"check\"}}},{\"id\":\"btn_fold\",\"component\":\"Button\",\"label\":\"Fold\",\"variant\":\"ghost\",\"action\":{\"action\":\"stud_move\",\"context\":{\"move\":\"fold\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"table-1\"}}}\nYour 25 is a raise over the bring-in, so I'm treating it as one. The dealer calls, and the pot is 70. Fourth street is dealt: you get the 8♠, giving you a 9-8 board, and the dealer gets the J♦, showing Q-J. The dealer's board is higher, so they act first and check. It's on you.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Dealer checks on fourth street. Bet 20, check, or fold.",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "bankroll": 965,
+                        "stats": [
+                          {
+                            "label": "Pot",
+                            "value": "70"
+                          },
+                          {
+                            "label": "Ante",
+                            "value": "10"
+                          },
+                          {
+                            "label": "Street",
+                            "value": "4th"
+                          }
+                        ],
+                        "dealerHand": [
+                          {
+                            "rank": "2",
+                            "suit": "spades",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "5",
+                            "suit": "diamonds",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "Q",
+                            "suit": "clubs",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "J",
+                            "suit": "diamonds",
+                            "faceDown": false
+                          }
+                        ],
+                        "playerHand": [
+                          {
+                            "rank": "7",
+                            "suit": "spades",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "K",
+                            "suit": "diamonds",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "9",
+                            "suit": "hearts",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "8",
+                            "suit": "spades",
+                            "faceDown": false
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Seven-card stud",
+                          "status": "Fourth street: dealer checks, your action",
+                          "statusIntent": "info",
+                          "stats": {
+                            "path": "/stats"
+                          }
+                        },
+                        {
+                          "id": "dealer_label",
+                          "component": "Text",
+                          "text": "Dealer: 2 down, 2 up (Q-J showing)",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "player_label",
+                          "component": "Text",
+                          "text": "You: 2 down, 2 up (9-8 showing)",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "sm",
+                          "children": [
+                            "btn_bet",
+                            "btn_check",
+                            "btn_fold"
+                          ]
+                        },
+                        {
+                          "id": "btn_bet",
+                          "component": "Button",
+                          "label": "Bet 20",
+                          "variant": "solid",
+                          "action": {
+                            "action": "stud_move",
+                            "context": {
+                              "move": "bet",
+                              "amount": 20
+                            }
+                          }
+                        },
+                        {
+                          "id": "btn_check",
+                          "component": "Button",
+                          "label": "Check",
+                          "variant": "soft",
+                          "action": {
+                            "action": "stud_move",
+                            "context": {
+                              "move": "check"
+                            }
+                          }
+                        },
+                        {
+                          "id": "btn_fold",
+                          "component": "Button",
+                          "label": "Fold",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "stud_move",
+                            "context": {
+                              "move": "fold"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Both players\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" check on\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" fourth street, so I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" move\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealing fifth street.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I double-check the p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot math\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" (\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"antes tot\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aling 70 with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the bankroll ad\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"justments)\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and deal the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" next up card,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" giving the player a 10\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"♥.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I should include the target\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" declaration with sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"faceId in the me\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ta line before\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" calling the tool, then\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" proceed with the re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ply.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"You check, and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" so\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" does the dealer,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" so there's nothing to call\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" on\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" fourth street.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Fifth street is deal\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"t:\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" you get the 10♣,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" so\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" your board is 9-8-\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"10.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" The dealer gets the \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"3♥, so their board is\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Q-J-3. The\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" dealer's\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" board\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" is higher, so they act\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" first and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" bet 20. It's \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"20\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" to you\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" to\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" call.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"bankroll\\\":965,\\\"stats\\\":[{\\\"label\\\":\\\"Pot\\\",\\\"value\\\":\\\"90\\\"},{\\\"label\\\":\\\"To call\\\",\\\"value\\\":\\\"20\\\"},{\\\"label\\\":\\\"Street\\\",\\\"value\\\":\\\"5th\\\"}],\\\"dealerHand\\\":[{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true},{\\\"rank\\\":\\\"5\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"faceDown\\\":true},{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"clubs\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"J\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"3\\\",\\\"suit\\\":\\\"hearts\\\",\\\"faceDown\\\":false}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"hearts\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"10\\\",\\\"suit\\\":\\\"clubs\\\",\\\"faceDown\\\":false}]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Seven-card stud\\\",\\\"status\\\":\\\"Fifth street: dealer bets 20, your action\\\",\\\"statusIntent\\\":\\\"warning\\\",\\\"stats\\\":{\\\"path\\\":\\\"/stats\\\"}},{\\\"id\\\":\\\"dealer_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Dealer: 2 down, 3 up (Q-J-3 showing)\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"player_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"You: 2 down, 3 up (9-8-10 showing)\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"btn_call\\\",\\\"btn_fold\\\"]},{\\\"id\\\":\\\"btn_call\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Call 20\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"stud_move\\\",\\\"context\\\":{\\\"move\\\":\\\"call\\\",\\\"amount\\\":20}}},{\\\"id\\\":\\\"btn_fold\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Fold\\\",\\\"variant\\\":\\\"ghost\\\",\\\"action\\\":{\\\"action\\\":\\\"stud_move\\\",\\\"context\\\":{\\\"move\\\":\\\"fold\\\"}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You check, and so does the dealer, so there's nothing to call on fourth street. Fifth street is dealt: you get the 10♣, so your board is 9-8-10. The dealer gets the 3♥, so their board is Q-J-3. The dealer's board is higher, so they act first and bet 20. It's 20 to you to call.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":6,\"query\":{\"intent\":\"Check, or call if there is a bet.\",\"k\":3},\"exemplarIds\":[\"booking-reservation\",\"frontier-button-icon-actions\",\"pattern-schedule-picker\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":57441,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5472},{\"id\":\"mini-skills\",\"chars\":755},{\"id\":\"persona\",\"chars\":4922}],\"over\":false},\"usage\":{\"inputTokens\":6979,\"outputTokens\":1654,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":965,\"stats\":[{\"label\":\"Pot\",\"value\":\"90\"},{\"label\":\"To call\",\"value\":\"20\"},{\"label\":\"Street\",\"value\":\"5th\"}],\"dealerHand\":[{\"rank\":\"2\",\"suit\":\"spades\",\"faceDown\":true},{\"rank\":\"5\",\"suit\":\"diamonds\",\"faceDown\":true},{\"rank\":\"Q\",\"suit\":\"clubs\",\"faceDown\":false},{\"rank\":\"J\",\"suit\":\"diamonds\",\"faceDown\":false},{\"rank\":\"3\",\"suit\":\"hearts\",\"faceDown\":false}],\"playerHand\":[{\"rank\":\"7\",\"suit\":\"spades\",\"faceDown\":false},{\"rank\":\"K\",\"suit\":\"diamonds\",\"faceDown\":false},{\"rank\":\"9\",\"suit\":\"hearts\",\"faceDown\":false},{\"rank\":\"8\",\"suit\":\"spades\",\"faceDown\":false},{\"rank\":\"10\",\"suit\":\"clubs\",\"faceDown\":false}]}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Seven-card stud\",\"status\":\"Fifth street: dealer bets 20, your action\",\"statusIntent\":\"warning\",\"stats\":{\"path\":\"/stats\"}},{\"id\":\"dealer_label\",\"component\":\"Text\",\"text\":\"Dealer: 2 down, 3 up (Q-J-3 showing)\",\"variant\":\"label\"},{\"id\":\"player_label\",\"component\":\"Text\",\"text\":\"You: 2 down, 3 up (9-8-10 showing)\",\"variant\":\"label\"},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"btn_call\",\"btn_fold\"]},{\"id\":\"btn_call\",\"component\":\"Button\",\"label\":\"Call 20\",\"variant\":\"solid\",\"action\":{\"action\":\"stud_move\",\"context\":{\"move\":\"call\",\"amount\":20}}},{\"id\":\"btn_fold\",\"component\":\"Button\",\"label\":\"Fold\",\"variant\":\"ghost\",\"action\":{\"action\":\"stud_move\",\"context\":{\"move\":\"fold\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"table-1\"}}}\nYou check, and so does the dealer, so there's nothing to call on fourth street. Fifth street is dealt: you get the 10♣, so your board is 9-8-10. The dealer gets the 3♥, so their board is Q-J-3. The dealer's board is higher, so they act first and bet 20. It's 20 to you to call.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Fifth street: dealer bets 20. Call or fold.",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "bankroll": 965,
+                        "stats": [
+                          {
+                            "label": "Pot",
+                            "value": "90"
+                          },
+                          {
+                            "label": "To call",
+                            "value": "20"
+                          },
+                          {
+                            "label": "Street",
+                            "value": "5th"
+                          }
+                        ],
+                        "dealerHand": [
+                          {
+                            "rank": "2",
+                            "suit": "spades",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "5",
+                            "suit": "diamonds",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "Q",
+                            "suit": "clubs",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "J",
+                            "suit": "diamonds",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "3",
+                            "suit": "hearts",
+                            "faceDown": false
+                          }
+                        ],
+                        "playerHand": [
+                          {
+                            "rank": "7",
+                            "suit": "spades",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "K",
+                            "suit": "diamonds",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "9",
+                            "suit": "hearts",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "8",
+                            "suit": "spades",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "10",
+                            "suit": "clubs",
+                            "faceDown": false
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Seven-card stud",
+                          "status": "Fifth street: dealer bets 20, your action",
+                          "statusIntent": "warning",
+                          "stats": {
+                            "path": "/stats"
+                          }
+                        },
+                        {
+                          "id": "dealer_label",
+                          "component": "Text",
+                          "text": "Dealer: 2 down, 3 up (Q-J-3 showing)",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "player_label",
+                          "component": "Text",
+                          "text": "You: 2 down, 3 up (9-8-10 showing)",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "sm",
+                          "children": [
+                            "btn_call",
+                            "btn_fold"
+                          ]
+                        },
+                        {
+                          "id": "btn_call",
+                          "component": "Button",
+                          "label": "Call 20",
+                          "variant": "solid",
+                          "action": {
+                            "action": "stud_move",
+                            "context": {
+                              "move": "call",
+                              "amount": 20
+                            }
+                          }
+                        },
+                        {
+                          "id": "btn_fold",
+                          "component": "Button",
+                          "label": "Fold",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "stud_move",
+                            "context": {
+                              "move": "fold"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"There's a bet of 20\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to call, so I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" call it, b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ringing the bankroll down\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to 945 and the pot\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" up\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to 110,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" then move\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" on to dealing sixth\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" street.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"The\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bet/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"check/fold buttons from\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" before\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" still exist, so I just need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to resend the actions row with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" those children int\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"act.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"There\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'s\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" a bet,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" so you call \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"20 \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"and the pot is 110.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Sixth street is d\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ealt: you get the 2\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"♣, so your board is \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"9-8-10-2.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" The dealer gets the \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"4♠, so their board is\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Q-J-3-4\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\". The dealer's board is\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" still higher, so they act first\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and check. It's on you.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"bankroll\\\":945,\\\"stats\\\":[{\\\"label\\\":\\\"Pot\\\",\\\"value\\\":\\\"110\\\"},{\\\"label\\\":\\\"Ante\\\",\\\"value\\\":\\\"10\\\"},{\\\"label\\\":\\\"Street\\\",\\\"value\\\":\\\"6th\\\"}],\\\"dealerHand\\\":[{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true},{\\\"rank\\\":\\\"5\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"faceDown\\\":true},{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"clubs\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"J\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"3\\\",\\\"suit\\\":\\\"hearts\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"4\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":false}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"hearts\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"10\\\",\\\"suit\\\":\\\"clubs\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"clubs\\\",\\\"faceDown\\\":false}]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Seven-card stud\\\",\\\"status\\\":\\\"Sixth street: dealer checks, your action\\\",\\\"statusIntent\\\":\\\"info\\\",\\\"stats\\\":{\\\"path\\\":\\\"/stats\\\"}},{\\\"id\\\":\\\"dealer_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Dealer: 2 down, 4 up (Q-J-3-4 showing)\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"player_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"You: 2 down, 4 up (9-8-10-2 showing)\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"btn_bet\\\",\\\"btn_check\\\",\\\"btn_fold\\\"]}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"bankroll\\\":945,\\\"stats\\\":[{\\\"label\\\":\\\"Pot\\\",\\\"value\\\":\\\"110\\\"},{\\\"label\\\":\\\"Ante\\\",\\\"value\\\":\\\"10\\\"},{\\\"label\\\":\\\"Street\\\",\\\"value\\\":\\\"6th\\\"}],\\\"dealerHand\\\":[{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true},{\\\"rank\\\":\\\"5\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"faceDown\\\":true},{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"clubs\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"J\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"3\\\",\\\"suit\\\":\\\"hearts\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"4\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":false}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"hearts\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"10\\\",\\\"suit\\\":\\\"clubs\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"clubs\\\",\\\"faceDown\\\":false}]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Seven-card stud\\\",\\\"status\\\":\\\"Sixth street: dealer checks, your action\\\",\\\"statusIntent\\\":\\\"info\\\",\\\"stats\\\":{\\\"path\\\":\\\"/stats\\\"}},{\\\"id\\\":\\\"dealer_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Dealer: 2 down, 4 up (Q-J-3-4 showing)\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"player_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"You: 2 down, 4 up (9-8-10-2 showing)\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"btn_bet\\\",\\\"btn_check\\\",\\\"btn_fold\\\"]}]}}\",\"codes\":[\"IDGRAPH\"],\"detail\":\"Round 1 failed:\\n  IDGRAPH: component \\\"actions\\\" references \\\"btn_bet\\\", which no component in the payload or the session defines (dangling id)\\n  IDGRAPH: component \\\"actions\\\" references \\\"btn_check\\\", which no component in the payload or the session defines (dangling id)\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need to check which button\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" components are still val\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"id across turns—act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ions referenced btn_b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"et and btn_check,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" but I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" need to trace whether those were\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" defined in an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" earlier turn vers\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"us repl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aced by the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bring-in bu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ttons in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a later turn.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since the validator flags them\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as undefined, I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" just define btn_bet,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" btn_check, and btn\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"_fold explicitly in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" this payload, keeping b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ankroll and pot values\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" consistent with the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" prior turn. I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll reply with prose pl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"us the tool call upd\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ating the data model and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" components (hud, labels,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" actions, buttons), without\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" needing to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" rec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"reate the surface.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"bankroll\\\":945,\\\"stats\\\":[{\\\"label\\\":\\\"Pot\\\",\\\"value\\\":\\\"110\\\"},{\\\"label\\\":\\\"Ante\\\",\\\"value\\\":\\\"10\\\"},{\\\"label\\\":\\\"Street\\\",\\\"value\\\":\\\"6th\\\"}],\\\"dealerHand\\\":[{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true},{\\\"rank\\\":\\\"5\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"faceDown\\\":true},{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"clubs\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"J\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"3\\\",\\\"suit\\\":\\\"hearts\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"4\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":false}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true},{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"faceDown\\\":true},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"hearts\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"10\\\",\\\"suit\\\":\\\"clubs\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"clubs\\\",\\\"faceDown\\\":false}]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Seven-card stud\\\",\\\"status\\\":\\\"Sixth street: dealer checks, your action\\\",\\\"statusIntent\\\":\\\"info\\\",\\\"stats\\\":{\\\"path\\\":\\\"/stats\\\"}},{\\\"id\\\":\\\"dealer_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Dealer: 2 down, 4 up (Q-J-3-4 showing)\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"player_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"You: 2 down, 4 up (9-8-10-2 showing)\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"btn_bet\\\",\\\"btn_check\\\",\\\"btn_fold\\\"]},{\\\"id\\\":\\\"btn_bet\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Bet 20\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"stud_move\\\",\\\"context\\\":{\\\"move\\\":\\\"bet\\\",\\\"amount\\\":20}}},{\\\"id\\\":\\\"btn_check\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Check\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"stud_move\\\",\\\"context\\\":{\\\"move\\\":\\\"check\\\"}}},{\\\"id\\\":\\\"btn_fold\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Fold\\\",\\\"variant\\\":\\\"ghost\\\",\\\"action\\\":{\\\"action\\\":\\\"stud_move\\\",\\\"context\\\":{\\\"move\\\":\\\"fold\\\"}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"There's a bet, so you call 20 and the pot is 110. Sixth street is dealt: you get the 2♣, so your board is 9-8-10-2. The dealer gets the 4♠, so their board is Q-J-3-4. The dealer's board is still higher, so they act first and check. It's on you.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":8,\"query\":{\"intent\":\"Check, or call if there is a bet.\",\"k\":3},\"exemplarIds\":[\"booking-reservation\",\"frontier-button-icon-actions\",\"pattern-schedule-picker\"],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"IDGRAPH\",\"IDGRAPH\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":57441,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5472},{\"id\":\"mini-skills\",\"chars\":755},{\"id\":\"persona\",\"chars\":4922}],\"over\":false},\"usage\":{\"inputTokens\":16573,\"outputTokens\":3048,\"cacheReadInputTokens\":35044,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":945,\"stats\":[{\"label\":\"Pot\",\"value\":\"110\"},{\"label\":\"Ante\",\"value\":\"10\"},{\"label\":\"Street\",\"value\":\"6th\"}],\"dealerHand\":[{\"rank\":\"2\",\"suit\":\"spades\",\"faceDown\":true},{\"rank\":\"5\",\"suit\":\"diamonds\",\"faceDown\":true},{\"rank\":\"Q\",\"suit\":\"clubs\",\"faceDown\":false},{\"rank\":\"J\",\"suit\":\"diamonds\",\"faceDown\":false},{\"rank\":\"3\",\"suit\":\"hearts\",\"faceDown\":false},{\"rank\":\"4\",\"suit\":\"spades\",\"faceDown\":false}],\"playerHand\":[{\"rank\":\"7\",\"suit\":\"spades\",\"faceDown\":true},{\"rank\":\"K\",\"suit\":\"diamonds\",\"faceDown\":true},{\"rank\":\"9\",\"suit\":\"hearts\",\"faceDown\":false},{\"rank\":\"8\",\"suit\":\"spades\",\"faceDown\":false},{\"rank\":\"10\",\"suit\":\"clubs\",\"faceDown\":false},{\"rank\":\"2\",\"suit\":\"clubs\",\"faceDown\":false}]}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Seven-card stud\",\"status\":\"Sixth street: dealer checks, your action\",\"statusIntent\":\"info\",\"stats\":{\"path\":\"/stats\"}},{\"id\":\"dealer_label\",\"component\":\"Text\",\"text\":\"Dealer: 2 down, 4 up (Q-J-3-4 showing)\",\"variant\":\"label\"},{\"id\":\"player_label\",\"component\":\"Text\",\"text\":\"You: 2 down, 4 up (9-8-10-2 showing)\",\"variant\":\"label\"},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"btn_bet\",\"btn_check\",\"btn_fold\"]},{\"id\":\"btn_bet\",\"component\":\"Button\",\"label\":\"Bet 20\",\"variant\":\"solid\",\"action\":{\"action\":\"stud_move\",\"context\":{\"move\":\"bet\",\"amount\":20}}},{\"id\":\"btn_check\",\"component\":\"Button\",\"label\":\"Check\",\"variant\":\"soft\",\"action\":{\"action\":\"stud_move\",\"context\":{\"move\":\"check\"}}},{\"id\":\"btn_fold\",\"component\":\"Button\",\"label\":\"Fold\",\"variant\":\"ghost\",\"action\":{\"action\":\"stud_move\",\"context\":{\"move\":\"fold\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"table-1\"}}}\nThere's a bet, so you call 20 and the pot is 110. Sixth street is dealt: you get the 2♣, so your board is 9-8-10-2. The dealer gets the 4♠, so their board is Q-J-3-4. The dealer's board is still higher, so they act first and check. It's on you.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "target": "table-1",
+                "reply": "You called 20. Sixth street is dealt and the dealer checks.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "bankroll": 945,
+                        "stats": [
+                          {
+                            "label": "Pot",
+                            "value": "110"
+                          },
+                          {
+                            "label": "Ante",
+                            "value": "10"
+                          },
+                          {
+                            "label": "Street",
+                            "value": "6th"
+                          }
+                        ],
+                        "dealerHand": [
+                          {
+                            "rank": "2",
+                            "suit": "spades",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "5",
+                            "suit": "diamonds",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "Q",
+                            "suit": "clubs",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "J",
+                            "suit": "diamonds",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "3",
+                            "suit": "hearts",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "4",
+                            "suit": "spades",
+                            "faceDown": false
+                          }
+                        ],
+                        "playerHand": [
+                          {
+                            "rank": "7",
+                            "suit": "spades",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "K",
+                            "suit": "diamonds",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "9",
+                            "suit": "hearts",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "8",
+                            "suit": "spades",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "10",
+                            "suit": "clubs",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "2",
+                            "suit": "clubs",
+                            "faceDown": false
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Seven-card stud",
+                          "status": "Sixth street: dealer checks, your action",
+                          "statusIntent": "info",
+                          "stats": {
+                            "path": "/stats"
+                          }
+                        },
+                        {
+                          "id": "dealer_label",
+                          "component": "Text",
+                          "text": "Dealer: 2 down, 4 up (Q-J-3-4 showing)",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "player_label",
+                          "component": "Text",
+                          "text": "You: 2 down, 4 up (9-8-10-2 showing)",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "sm",
+                          "children": [
+                            "btn_bet",
+                            "btn_check",
+                            "btn_fold"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"table-1\"}}}\nThere's a bet, so you call 20 and the pot is 110. Sixth street is dealt: you get the 2♣, so your board is 9-8-10-2. The dealer gets the 4♠, so their board is Q-J-3-4. The dealer's board is still higher, so they act first and check. It's on you.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "target": "table-1",
+                "reply": "You call 20 and the pot is 110. Sixth street is dealt and the dealer checks. It's on you.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "bankroll": 945,
+                        "stats": [
+                          {
+                            "label": "Pot",
+                            "value": "110"
+                          },
+                          {
+                            "label": "Ante",
+                            "value": "10"
+                          },
+                          {
+                            "label": "Street",
+                            "value": "6th"
+                          }
+                        ],
+                        "dealerHand": [
+                          {
+                            "rank": "2",
+                            "suit": "spades",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "5",
+                            "suit": "diamonds",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "Q",
+                            "suit": "clubs",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "J",
+                            "suit": "diamonds",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "3",
+                            "suit": "hearts",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "4",
+                            "suit": "spades",
+                            "faceDown": false
+                          }
+                        ],
+                        "playerHand": [
+                          {
+                            "rank": "7",
+                            "suit": "spades",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "K",
+                            "suit": "diamonds",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "9",
+                            "suit": "hearts",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "8",
+                            "suit": "spades",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "10",
+                            "suit": "clubs",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "2",
+                            "suit": "clubs",
+                            "faceDown": false
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Seven-card stud",
+                          "status": "Sixth street: dealer checks, your action",
+                          "statusIntent": "info",
+                          "stats": {
+                            "path": "/stats"
+                          }
+                        },
+                        {
+                          "id": "dealer_label",
+                          "component": "Text",
+                          "text": "Dealer: 2 down, 4 up (Q-J-3-4 showing)",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "player_label",
+                          "component": "Text",
+                          "text": "You: 2 down, 4 up (9-8-10-2 showing)",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "sm",
+                          "children": [
+                            "btn_bet",
+                            "btn_check",
+                            "btn_fold"
+                          ]
+                        },
+                        {
+                          "id": "btn_bet",
+                          "component": "Button",
+                          "label": "Bet 20",
+                          "variant": "solid",
+                          "action": {
+                            "action": "stud_move",
+                            "context": {
+                              "move": "bet",
+                              "amount": 20
+                            }
+                          }
+                        },
+                        {
+                          "id": "btn_check",
+                          "component": "Button",
+                          "label": "Check",
+                          "variant": "soft",
+                          "action": {
+                            "action": "stud_move",
+                            "context": {
+                              "move": "check"
+                            }
+                          }
+                        },
+                        {
+                          "id": "btn_fold",
+                          "component": "Button",
+                          "label": "Fold",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "stud_move",
+                            "context": {
+                              "move": "fold"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Both\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" check\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" on sixth street, ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eping the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pot at 110 with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ankroll ste\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ady at 945. Mo\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ving to seventh street, I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" de\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"al each player a final down card,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" giving the player a J♠\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I check un\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"used cards and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" give\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the player a stra\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ight (\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"7 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"through J), while giving the d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealer a 9♦\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for a que\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"en-high h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" no pair.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Since the dealer's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" board is higher,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the dealer ac\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ts first and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bets 20,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" put\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting the dec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ision to call\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" or fold on the user.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I also need to f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ix the display cons\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"istency — the player's own h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ole cards had\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" faceDown set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" true by mistake in the pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ior turn, so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I should make\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sure the player can actually see\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" their own down cards (the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" J♠) rather than h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"iding them, even while kee\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ping the dealer's h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"idden card conc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealed.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Now I need to format\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" my reply:\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" short me\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ta line targ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eting the table\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" surface first, then\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the prose note, then the t\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ool call to render the surface.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"You check and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the dealer checks, so\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" there's nothing to call on\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" sixth street. The\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" pot st\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ays at 110. Sevent\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"h street is the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" final down card: you get the J\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"♠, which makes your\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" h\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"and 7-8-9-\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"10-J, a straight.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" The dealer gets a\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" down\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" card too\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" b\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ets 20.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" It's 20 to you to\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" call.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"bankroll\\\":945,\\\"stats\\\":[{\\\"label\\\":\\\"Pot\\\",\\\"value\\\":\\\"130\\\"},{\\\"label\\\":\\\"To call\\\",\\\"value\\\":\\\"20\\\"},{\\\"label\\\":\\\"Street\\\",\\\"value\\\":\\\"7th\\\"}],\\\"dealerHand\\\":[{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true},{\\\"rank\\\":\\\"5\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"faceDown\\\":true},{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"clubs\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"J\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"3\\\",\\\"suit\\\":\\\"hearts\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"4\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"faceDown\\\":true}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true},{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"faceDown\\\":true},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"hearts\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"10\\\",\\\"suit\\\":\\\"clubs\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"clubs\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"J\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true}]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Seven-card stud\\\",\\\"status\\\":\\\"Seventh street: dealer bets 20, your action\\\",\\\"statusIntent\\\":\\\"warning\\\",\\\"stats\\\":{\\\"path\\\":\\\"/stats\\\"}},{\\\"id\\\":\\\"dealer_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Dealer: 3 down, 4 up (Q-J-3-4 showing)\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"player_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"You: 3 down, 4 up (9-8-10-2 showing)\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"btn_call\\\",\\\"btn_fold\\\"]},{\\\"id\\\":\\\"btn_call\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Call 20\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"stud_move\\\",\\\"context\\\":{\\\"move\\\":\\\"call\\\",\\\"amount\\\":20}}},{\\\"id\\\":\\\"btn_fold\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Fold\\\",\\\"variant\\\":\\\"ghost\\\",\\\"action\\\":{\\\"action\\\":\\\"stud_move\\\",\\\"context\\\":{\\\"move\\\":\\\"fold\\\"}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You check and the dealer checks, so there's nothing to call on sixth street. The pot stays at 110. Seventh street is the final down card: you get the J♠, which makes your hand 7-8-9-10-J, a straight. The dealer gets a down card too and bets 20. It's 20 to you to call.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":10,\"query\":{\"intent\":\"Check, or call if there is a bet.\",\"k\":3},\"exemplarIds\":[\"booking-reservation\",\"frontier-button-icon-actions\",\"pattern-schedule-picker\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":57441,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5472},{\"id\":\"mini-skills\",\"chars\":755},{\"id\":\"persona\",\"chars\":4922}],\"over\":false},\"usage\":{\"inputTokens\":8732,\"outputTokens\":2100,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":945,\"stats\":[{\"label\":\"Pot\",\"value\":\"130\"},{\"label\":\"To call\",\"value\":\"20\"},{\"label\":\"Street\",\"value\":\"7th\"}],\"dealerHand\":[{\"rank\":\"2\",\"suit\":\"spades\",\"faceDown\":true},{\"rank\":\"5\",\"suit\":\"diamonds\",\"faceDown\":true},{\"rank\":\"Q\",\"suit\":\"clubs\",\"faceDown\":false},{\"rank\":\"J\",\"suit\":\"diamonds\",\"faceDown\":false},{\"rank\":\"3\",\"suit\":\"hearts\",\"faceDown\":false},{\"rank\":\"4\",\"suit\":\"spades\",\"faceDown\":false},{\"rank\":\"9\",\"suit\":\"diamonds\",\"faceDown\":true}],\"playerHand\":[{\"rank\":\"7\",\"suit\":\"spades\",\"faceDown\":true},{\"rank\":\"K\",\"suit\":\"diamonds\",\"faceDown\":true},{\"rank\":\"9\",\"suit\":\"hearts\",\"faceDown\":false},{\"rank\":\"8\",\"suit\":\"spades\",\"faceDown\":false},{\"rank\":\"10\",\"suit\":\"clubs\",\"faceDown\":false},{\"rank\":\"2\",\"suit\":\"clubs\",\"faceDown\":false},{\"rank\":\"J\",\"suit\":\"spades\",\"faceDown\":true}]}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Seven-card stud\",\"status\":\"Seventh street: dealer bets 20, your action\",\"statusIntent\":\"warning\",\"stats\":{\"path\":\"/stats\"}},{\"id\":\"dealer_label\",\"component\":\"Text\",\"text\":\"Dealer: 3 down, 4 up (Q-J-3-4 showing)\",\"variant\":\"label\"},{\"id\":\"player_label\",\"component\":\"Text\",\"text\":\"You: 3 down, 4 up (9-8-10-2 showing)\",\"variant\":\"label\"},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"btn_call\",\"btn_fold\"]},{\"id\":\"btn_call\",\"component\":\"Button\",\"label\":\"Call 20\",\"variant\":\"solid\",\"action\":{\"action\":\"stud_move\",\"context\":{\"move\":\"call\",\"amount\":20}}},{\"id\":\"btn_fold\",\"component\":\"Button\",\"label\":\"Fold\",\"variant\":\"ghost\",\"action\":{\"action\":\"stud_move\",\"context\":{\"move\":\"fold\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"table-1\"}}}\nYou check and the dealer checks, so there's nothing to call on sixth street. The pot stays at 110. Seventh street is the final down card: you get the J♠, which makes your hand 7-8-9-10-J, a straight. The dealer gets a down card too and bets 20. It's 20 to you to call.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Seventh street: dealer bets 20, you call or fold.",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "bankroll": 945,
+                        "stats": [
+                          {
+                            "label": "Pot",
+                            "value": "130"
+                          },
+                          {
+                            "label": "To call",
+                            "value": "20"
+                          },
+                          {
+                            "label": "Street",
+                            "value": "7th"
+                          }
+                        ],
+                        "dealerHand": [
+                          {
+                            "rank": "2",
+                            "suit": "spades",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "5",
+                            "suit": "diamonds",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "Q",
+                            "suit": "clubs",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "J",
+                            "suit": "diamonds",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "3",
+                            "suit": "hearts",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "4",
+                            "suit": "spades",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "9",
+                            "suit": "diamonds",
+                            "faceDown": true
+                          }
+                        ],
+                        "playerHand": [
+                          {
+                            "rank": "7",
+                            "suit": "spades",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "K",
+                            "suit": "diamonds",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "9",
+                            "suit": "hearts",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "8",
+                            "suit": "spades",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "10",
+                            "suit": "clubs",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "2",
+                            "suit": "clubs",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "J",
+                            "suit": "spades",
+                            "faceDown": true
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Seven-card stud",
+                          "status": "Seventh street: dealer bets 20, your action",
+                          "statusIntent": "warning",
+                          "stats": {
+                            "path": "/stats"
+                          }
+                        },
+                        {
+                          "id": "dealer_label",
+                          "component": "Text",
+                          "text": "Dealer: 3 down, 4 up (Q-J-3-4 showing)",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "player_label",
+                          "component": "Text",
+                          "text": "You: 3 down, 4 up (9-8-10-2 showing)",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "sm",
+                          "children": [
+                            "btn_call",
+                            "btn_fold"
+                          ]
+                        },
+                        {
+                          "id": "btn_call",
+                          "component": "Button",
+                          "label": "Call 20",
+                          "variant": "solid",
+                          "action": {
+                            "action": "stud_move",
+                            "context": {
+                              "move": "call",
+                              "amount": 20
+                            }
+                          }
+                        },
+                        {
+                          "id": "btn_fold",
+                          "component": "Button",
+                          "label": "Fold",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "stud_move",
+                            "context": {
+                              "move": "fold"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lines": []
+    }
+  ]
+}

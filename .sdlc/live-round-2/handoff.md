@@ -32,6 +32,10 @@ Run under a $20 cap, log every run to the test-log artifact, then a report with 
 - `npx vitest run scripts/e2e-admin/probe/run-capped.test.mjs` exits 0: fake traces, the runner stops before the run that would start at or over the cap, skips reported runs, and keeps its baseline across a restart.
 - `.sdlc/croupier-closed-loop/live-commands.sh` (T-0184 record) is unchanged: `git diff --exit-code -- .sdlc/croupier-closed-loop/live-commands.sh` exits 0.
 - `npm run check` exits 0.
+- Phase 2: `test -s .sdlc/live-round-2/report.md` exits 0: the report has a preset x scenario x model table and every finding with trace and screenshot evidence.
+- Phase 2: `npx vitest run scripts/e2e-admin/probe/replays/` exits 0: the six round 2 replays pin today's failures or the trace, each naming its ticket.
+- Phase 2: `npx vitest run scripts/e2e-admin/` exits 0, the scenario fixes included (one more stud street, a said Stand after a Hit, dated bookings, named knowledge).
+- Phase 2: `test -f .sdlc/producer-text-shape-reply-leak/handoff.md && test -f .sdlc/game-hidden-state-no-home/handoff.md && test -f .sdlc/preset-knowledge-index-only/handoff.md && test -f .sdlc/croupier-opening-skips-bet/handoff.md && test -f .sdlc/croupier-playing-table-no-moves/handoff.md && test -f .sdlc/narrated-surface-mechanics/handoff.md && test -f .sdlc/probe-live-prose-cumulative/handoff.md && test -f .sdlc/probe-from-trace-agent-default/handoff.md` exits 0: T-0229 to T-0236, one per new root cause.
 
 ## Plan review
 - conductor: the spend cap must not under-estimate. Check the price table in scripts/e2e-admin/probe/run-capped.ts against a cited source in the repo (providers.json, model-capabilities, or a doc). T-0184 assumed Haiku 1/5, Sonnet 3/15, Opus 5/25 USD per M tokens. If the table has no repo source, the verdict is fail with the fix: use the higher of the two per model, or read prices from one repo file.

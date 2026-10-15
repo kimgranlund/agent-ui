@@ -1,0 +1,1723 @@
+{
+  "kind": "agent-ui-chat-probe-report",
+  "version": 1,
+  "name": "croupier-seven-card-stud-haiku-1",
+  "mode": "live",
+  "agent": "croupier",
+  "model": "claude-haiku-5-5",
+  "at": "2026-10-15T05:44:22.434Z",
+  "turns": [
+    {
+      "index": 0,
+      "request": {
+        "model": "claude-haiku-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--croupier",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since there's no bankroll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" on record\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'll start the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player at 1,000 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ch\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ips for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" seven-card stud. I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m fig\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"uring out how to structure the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" de\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"al—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"two down c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ards and one up card\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" per player—and de\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ciding to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" use G\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ameHud for the score\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"status strip al\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ongside PlayingCard\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" components since there's no dedic\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ated po\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ker table component in the catalog\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For the first\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" street, I'll show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the player their\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" own down cards face-up (\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"since it's their hand) while\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keeping the house\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s down cards h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"idden, then pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ompt for a sim\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ple bet action.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" settling on an ante of \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"10 with a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 20-chip bet option\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" using a row of buttons for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Check/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Bet/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Fold to keep the bet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting structure manageable.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ketching the data model now\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" —\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bankroll, pot,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" game name\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", street, and h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and arrays with rank/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"suit/faceDown fl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ags for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" both player and house,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with spec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ific cards picked out for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" this\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" round\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m thinking through\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" layout, star\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting with a root wrapper\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll simplify to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a GameHud for title/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"status, with a separate row show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bankroll b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ound to a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" numeric value stored at /\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"bankroll so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it stays compact\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ly visible. Now I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m sketching the component t\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ree: root Card containing a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" header, body, and foot\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"er section\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"...\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Still ass\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"embling the lay\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"out...\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Swit\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ching to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Stat components\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot and bankroll inst\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ead works\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" better. I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" laying out the footer with a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" row of action buttons—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Check, Bet \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"20, Fold—styling\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"old as ghost and b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"et as solid, and noting\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" prose the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ante and current\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" street\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bet am\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ount for this\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" stud round.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Now I'm def\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ining the button\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ions with a standardized sh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ape mat\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ching the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" example\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pattern, then writing out\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the surface creation and data model\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" messages before\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" assembling the component list\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for the card\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Still laying out the component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" structure...\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm working out\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" how\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the house and player h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ands should be d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealt—house\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" g\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ets some\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" face-down cards, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m deciding whether to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" mark the player's own h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ole cards as vis\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ible since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" only they can see their\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"yway.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Pot is 20, b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ankroll 990.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Since the game was\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" expl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"icitly named r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ather than left\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to random\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pick, I don't need to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" add\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a selection note\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" write a br\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ief,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" clean\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" explanation of seven-card\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" stud rules and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" proceed without\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" extra meta-commentary\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Seven-card stud it\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" is. Ant\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"es are\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 10 each\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\", so the pot is 20\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and your bankroll is\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 990. You\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" have two h\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ole cards and one up card,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and the house sh\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ows an \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"8 \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"of clubs. Each street\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" is a\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" bet\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ting round, with five\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" c\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ards d\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ealt in\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" total: two down, then\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" one\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" up on\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" each of\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the next\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" three stre\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ets, and a final down card.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Best\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" five of se\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ven wins. Your move\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\": check\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" or\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" bet 20.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Seven-card stud it is. Antes are 10 each, so the pot is 20 and your bankroll is 990. You have two hole cards and one up card, and the house shows an 8 of clubs. Each street is a betting round, with five cards dealt in total: two down, then one up on each of the next three streets, and a final down card. Best five of seven wins. Your move: check or bet 20.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"## Referenced for this message\\n### seven-card-stud (resource)\\nseven-card stud, up cards, no community board\\n\\nNo shared board: two down cards and one up card each, betting, then three more up cards and a final down card, betting after every street. Up cards are dealt face-up on the table so the player can read them. Best five of the seven wins; standard rankings.\\n\\nLet's play seven-card stud.\",\"k\":3},\"exemplarIds\":[\"frontier-service-gateway\",\"frontier-image-hero-card\",\"wallet-summary-card\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142000,\"total\":57433,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":4755},{\"id\":\"mini-skills\",\"chars\":1532},{\"id\":\"persona\",\"chars\":4854}],\"over\":false},\"usage\":{\"inputTokens\":4448,\"outputTokens\":4096,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}"
+      ],
+      "rounds": [
+        {
+          "text": "Seven-card stud it is. Antes are 10 each, so the pot is 20 and your bankroll is 990. You have two hole cards and one up card, and the house shows an 8 of clubs. Each street is a betting round, with five cards dealt in total: two down, then one up on each of the next three streets, and a final down card. Best five of seven wins. Your move: check or bet 20.",
+          "tools": []
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-15.jsonl:51",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          2183
+        ]
+      },
+      "step": {
+        "say": "Let's play seven-card stud.",
+        "expect": [
+          "PlayingCard"
+        ]
+      },
+      "domHosts": 0,
+      "proseText": "You Let's play seven-card stud. seven-card-stud Seven-card stud it is. Antes are 10 each, so the pot is 20 and your bankroll is 990. You have two hole cards and one up card, and the house shows an 8 of clubs. Each street is a betting round, with five cards dealt in total: two down, then one up on each of the next three streets, and a final down card. Best five of seven wins. Your move: check or bet 20.",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "turn-1.png"
+    },
+    {
+      "index": 1,
+      "request": {
+        "model": "claude-haiku-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--croupier",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m real\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"izing the previ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ous turn inv\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ented po\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ker details—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"hole cards, an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" up card, a dealer's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" eight—without any\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" real game\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" state or surface act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ually being r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"endered. That's a fab\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"rication problem I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" need to address\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" rather than just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" continuing the h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" if that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" data were\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" real\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Adding GameHud and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" PlayingCard components to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the catalog. Re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"considering the bring-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"in rule—it's the for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ced post from\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the lowest up card, so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'll ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ep it simple by\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" treating the bring-in as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a small forced bet (say\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 5) and letting the action\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" proceed from there without over\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"complicating the mism\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"atch with the prior turn\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s wording.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" struct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ure the table state\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pot and bankroll values\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and render\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Check/Bet/F\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"old buttons as the available\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" actions going\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" forward.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Building\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the card lay\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"out...\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Adding a Fold button\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" al\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ongside Check and Bet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", keeping the footer sim\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ple.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'll set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the data model with bankroll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and pot values\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", making\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sure to use\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" updateDataModel so it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" persists, and create the surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" right catalog\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Id and sendDataModel\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" en\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"abled. For\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the \\\"bring it in\\\" ph\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"rasing, I'll cl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"arify in prose that this\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" version skips bring-in r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ules—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"antes are already\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" posted and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the first actor can check or b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"et 20,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with cal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ls\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" only following a bet.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"This is a fresh table,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" so no\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" meta-line or\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" target is needed—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"just use\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" table-1 as the id\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and write the mess\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ages directly.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Correction\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" to\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" my last\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" message\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\": st\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ud has\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" no bring-in in\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" this game\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" The antes are already\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" in the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" pot, so\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" you\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" can\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" only\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" check or bet \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"20 now\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\". A call only com\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"es up after\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" someone has bet.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Here is the table as\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" it\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" stands.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"catalogId\\\":\\\"agent-ui--croupier\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"bankroll\\\":990,\\\"pot\\\":20}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"card\\\"]},{\\\"id\\\":\\\"card\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"hd\\\",\\\"ct\\\",\\\"ft\\\"]},{\\\"id\\\":\\\"hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"title\\\"]},{\\\"id\\\":\\\"title\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Seven-card stud\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"hud\\\",\\\"dlbl\\\",\\\"drow\\\",\\\"plbl\\\",\\\"prow\\\"]},{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Round 1\\\",\\\"status\\\":\\\"Your move\\\",\\\"statusIntent\\\":\\\"info\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Bankroll\\\",\\\"value\\\":\\\"990\\\"},{\\\"label\\\":\\\"Pot\\\",\\\"value\\\":\\\"20\\\"}]},{\\\"id\\\":\\\"dlbl\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"House\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"drow\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"d1\\\",\\\"d2\\\"]},{\\\"id\\\":\\\"d1\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"clubs\\\",\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"d2\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":\\\"A\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true,\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"plbl\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"You\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"prow\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"p1\\\",\\\"p2\\\",\\\"p3\\\"]},{\\\"id\\\":\\\"p1\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"hearts\\\",\\\"faceDown\\\":true,\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"p2\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":\\\"4\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true,\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"p3\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"actions\\\"]},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"justify\\\":\\\"end\\\",\\\"children\\\":[\\\"btn_fold\\\",\\\"btn_check\\\",\\\"btn_bet\\\"]},{\\\"id\\\":\\\"btn_fold\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Fold\\\",\\\"variant\\\":\\\"ghost\\\",\\\"action\\\":{\\\"action\\\":\\\"fold\\\"}},{\\\"id\\\":\\\"btn_check\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Check\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"check\\\"}},{\\\"id\\\":\\\"btn_bet\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Bet 20\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"bet\\\",\\\"context\\\":{\\\"amount\\\":20}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Correction to my last message: stud has no bring-in in this game. The antes are already in the pot, so you can only check or bet 20 now. A call only comes up after someone has bet. Here is the table as it stands.\",\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Bring it in, or check, or call.\",\"k\":3},\"exemplarIds\":[\"frontier-button-icon-actions\",\"booking-reservation\",\"contact-import-progress-to-summary\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142000,\"total\":57830,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":6684},{\"id\":\"persona\",\"chars\":4854}],\"over\":false},\"usage\":{\"inputTokens\":4837,\"outputTokens\":3296,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-1\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":990,\"pot\":20}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"card\"]},{\"id\":\"card\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"hd\",\"ct\",\"ft\"]},{\"id\":\"hd\",\"component\":\"CardHeader\",\"children\":[\"title\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Seven-card stud\",\"variant\":\"h4\"},{\"id\":\"ct\",\"component\":\"CardContent\",\"children\":[\"hud\",\"dlbl\",\"drow\",\"plbl\",\"prow\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Round 1\",\"status\":\"Your move\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Bankroll\",\"value\":\"990\"},{\"label\":\"Pot\",\"value\":\"20\"}]},{\"id\":\"dlbl\",\"component\":\"Text\",\"text\":\"House\",\"variant\":\"label\"},{\"id\":\"drow\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"d1\",\"d2\"]},{\"id\":\"d1\",\"component\":\"PlayingCard\",\"rank\":\"8\",\"suit\":\"clubs\",\"size\":\"md\"},{\"id\":\"d2\",\"component\":\"PlayingCard\",\"rank\":\"A\",\"suit\":\"spades\",\"faceDown\":true,\"size\":\"md\"},{\"id\":\"plbl\",\"component\":\"Text\",\"text\":\"You\",\"variant\":\"label\"},{\"id\":\"prow\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"p1\",\"p2\",\"p3\"]},{\"id\":\"p1\",\"component\":\"PlayingCard\",\"rank\":\"K\",\"suit\":\"hearts\",\"faceDown\":true,\"size\":\"md\"},{\"id\":\"p2\",\"component\":\"PlayingCard\",\"rank\":\"4\",\"suit\":\"spades\",\"faceDown\":true,\"size\":\"md\"},{\"id\":\"p3\",\"component\":\"PlayingCard\",\"rank\":\"Q\",\"suit\":\"diamonds\",\"size\":\"md\"},{\"id\":\"ft\",\"component\":\"CardFooter\",\"children\":[\"actions\"]},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"justify\":\"end\",\"children\":[\"btn_fold\",\"btn_check\",\"btn_bet\"]},{\"id\":\"btn_fold\",\"component\":\"Button\",\"label\":\"Fold\",\"variant\":\"ghost\",\"action\":{\"action\":\"fold\"}},{\"id\":\"btn_check\",\"component\":\"Button\",\"label\":\"Check\",\"variant\":\"soft\",\"action\":{\"action\":\"check\"}},{\"id\":\"btn_bet\",\"component\":\"Button\",\"label\":\"Bet 20\",\"variant\":\"solid\",\"action\":{\"action\":\"bet\",\"context\":{\"amount\":20}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Correction to my last message: stud has no bring-in in this game. The antes are already in the pot, so you can only check or bet 20 now. A call only comes up after someone has bet. Here is the table as it stands.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Your table is set. Check or bet 20.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-1",
+                      "catalogId": "agent-ui--croupier",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "bankroll": 990,
+                        "pot": 20
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "card"
+                          ]
+                        },
+                        {
+                          "id": "card",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "hd",
+                            "ct",
+                            "ft"
+                          ]
+                        },
+                        {
+                          "id": "hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "title"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Seven-card stud",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "ct",
+                          "component": "CardContent",
+                          "children": [
+                            "hud",
+                            "dlbl",
+                            "drow",
+                            "plbl",
+                            "prow"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Round 1",
+                          "status": "Your move",
+                          "statusIntent": "info",
+                          "stats": [
+                            {
+                              "label": "Bankroll",
+                              "value": "990"
+                            },
+                            {
+                              "label": "Pot",
+                              "value": "20"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "dlbl",
+                          "component": "Text",
+                          "text": "House",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "drow",
+                          "component": "Row",
+                          "gap": "sm",
+                          "children": [
+                            "d1",
+                            "d2"
+                          ]
+                        },
+                        {
+                          "id": "d1",
+                          "component": "PlayingCard",
+                          "rank": "8",
+                          "suit": "clubs",
+                          "size": "md"
+                        },
+                        {
+                          "id": "d2",
+                          "component": "PlayingCard",
+                          "rank": "A",
+                          "suit": "spades",
+                          "faceDown": true,
+                          "size": "md"
+                        },
+                        {
+                          "id": "plbl",
+                          "component": "Text",
+                          "text": "You",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "prow",
+                          "component": "Row",
+                          "gap": "sm",
+                          "children": [
+                            "p1",
+                            "p2",
+                            "p3"
+                          ]
+                        },
+                        {
+                          "id": "p1",
+                          "component": "PlayingCard",
+                          "rank": "K",
+                          "suit": "hearts",
+                          "faceDown": true,
+                          "size": "md"
+                        },
+                        {
+                          "id": "p2",
+                          "component": "PlayingCard",
+                          "rank": "4",
+                          "suit": "spades",
+                          "faceDown": true,
+                          "size": "md"
+                        },
+                        {
+                          "id": "p3",
+                          "component": "PlayingCard",
+                          "rank": "Q",
+                          "suit": "diamonds",
+                          "size": "md"
+                        },
+                        {
+                          "id": "ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "actions"
+                          ]
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "md",
+                          "justify": "end",
+                          "children": [
+                            "btn_fold",
+                            "btn_check",
+                            "btn_bet"
+                          ]
+                        },
+                        {
+                          "id": "btn_fold",
+                          "component": "Button",
+                          "label": "Fold",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "fold"
+                          }
+                        },
+                        {
+                          "id": "btn_check",
+                          "component": "Button",
+                          "label": "Check",
+                          "variant": "soft",
+                          "action": {
+                            "action": "check"
+                          }
+                        },
+                        {
+                          "id": "btn_bet",
+                          "component": "Button",
+                          "label": "Bet 20",
+                          "variant": "solid",
+                          "action": {
+                            "action": "bet",
+                            "context": {
+                              "amount": 20
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-15.jsonl:52",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          1338
+        ]
+      },
+      "step": {
+        "say": "Bring it in, or check, or call."
+      },
+      "domHosts": 1,
+      "proseText": "You Let's play seven-card stud. seven-card-stud Seven-card stud it is. Antes are 10 each, so the pot is 20 and your bankroll is 990. You have two hole cards and one up card, and the house shows an 8 of clubs. Each street is a betting round, with five cards dealt in total: two down, then one up on each of the next three streets, and a final down card. Best five of seven wins. Your move: check or bet 20. You Bring it in, or check, or call. Correction to my last message: stud has no bring-in in this game. The antes are already in the pot, so you can only check or bet 20 now. A call only comes up after someone has bet. Here is the table as it stands.",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "turn-2.png"
+    },
+    {
+      "index": 2,
+      "request": {
+        "model": "claude-haiku-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--croupier",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need to re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"concile the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" card details\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" before\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" updating table-1 for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the player\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s 25 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"bet — the house's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" up/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"down cards and the player's h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ole cards seem incons\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"istent with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" what was sh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"own earlier, so I should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sort out the actual h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and before\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pro\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ceeding.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"With the pot at 20\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" from antes,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the player's 25 b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"et p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ushes it to 45,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and I'll have the house call\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" make\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it 70, then move\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealing fourth street up\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" cards to both player\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and house. I'll update the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" surface's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dataModel and components with the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" new cards and pot total\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keeping the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealing cho\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ices simple and reasonable\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need to update\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the house's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" up/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"down cards (\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"8 up,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Ace down, new\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 3 di\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"amonds up) and the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player's down cards (K h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"earts, 4 spades\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\") al\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ongside the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" new up cards (Q di\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"amonds, 9 h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"earts). I'll keep\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pot and bankroll t\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"racked through\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the data model while re-emit\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" changed components—hud, r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ows, new\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" cards, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" actions—to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" stay consistent.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"St\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ats should reflect bankro\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll 965 and pot \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"70, with pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ose noting the house cal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ls your 25.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"The\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" house cal\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ls your\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 25.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" The pot is now 70,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" your\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" bankroll is 965,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and f\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ourth street is dealt.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" You\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" get a \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"9 of hearts and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the house sh\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ows a\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 3 of diamonds\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\". You act first on\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" this\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" street, so\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" check or bet.\\n\\n\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"{\\\"a2uiMeta\\\":{\\\"note\\\":\\\"The house calls your 25. Pot is 70 and your bankroll is 965. Fourth street: you get a 9 of hearts, the house a 3 of diamonds. Your move: check or bet.\\\",\\\"target\\\":{\\\"surfaceId\\\":\\\"table-1\\\"}}}\\n\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"bankroll\\\":965,\\\"pot\\\":70}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Round 1\\\",\\\"status\\\":\\\"Your move\\\",\\\"statusIntent\\\":\\\"info\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Bankroll\\\",\\\"value\\\":\\\"965\\\"},{\\\"label\\\":\\\"Pot\\\",\\\"value\\\":\\\"70\\\"}]},{\\\"id\\\":\\\"drow\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"d1\\\",\\\"d2\\\",\\\"d3\\\"]},{\\\"id\\\":\\\"d3\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":\\\"3\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"prow\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"p1\\\",\\\"p2\\\",\\\"p3\\\",\\\"p4\\\"]},{\\\"id\\\":\\\"p4\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"hearts\\\",\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"justify\\\":\\\"end\\\",\\\"children\\\":[\\\"btn_fold\\\",\\\"btn_check\\\",\\\"btn_bet\\\"]},{\\\"id\\\":\\\"btn_bet\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Bet 25\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"bet\\\",\\\"context\\\":{\\\"amount\\\":25}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"The house calls your 25. The pot is now 70, your bankroll is 965, and fourth street is dealt. You get a 9 of hearts and the house shows a 3 of diamonds. You act first on this street, so check or bet.\\n\\n{\\\"a2uiMeta\\\":{\\\"note\\\":\\\"The house calls your 25. Pot is 70 and your bankroll is 965. Fourth street: you get a 9 of hearts, the house a 3 of diamonds. Your move: check or bet.\\\",\\\"target\\\":{\\\"surfaceId\\\":\\\"table-1\\\"}}}\",\"trace\":{\"turnIndex\":4,\"query\":{\"intent\":\"Bet 25.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[\"TEXT_JSONL_ROUTED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142000,\"total\":51969,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":755},{\"id\":\"persona\",\"chars\":4922}],\"over\":false},\"usage\":{\"inputTokens\":3253,\"outputTokens\":2197,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":965,\"pot\":70}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Round 1\",\"status\":\"Your move\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Bankroll\",\"value\":\"965\"},{\"label\":\"Pot\",\"value\":\"70\"}]},{\"id\":\"drow\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"d1\",\"d2\",\"d3\"]},{\"id\":\"d3\",\"component\":\"PlayingCard\",\"rank\":\"3\",\"suit\":\"diamonds\",\"size\":\"md\"},{\"id\":\"prow\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"p1\",\"p2\",\"p3\",\"p4\"]},{\"id\":\"p4\",\"component\":\"PlayingCard\",\"rank\":\"9\",\"suit\":\"hearts\",\"size\":\"md\"},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"justify\":\"end\",\"children\":[\"btn_fold\",\"btn_check\",\"btn_bet\"]},{\"id\":\"btn_bet\",\"component\":\"Button\",\"label\":\"Bet 25\",\"variant\":\"solid\",\"action\":{\"action\":\"bet\",\"context\":{\"amount\":25}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "The house calls your 25. The pot is now 70, your bankroll is 965, and fourth street is dealt. You get a 9 of hearts and the house shows a 3 of diamonds. You act first on this street, so check or bet.\n\n{\"a2uiMeta\":{\"note\":\"The house calls your 25. Pot is 70 and your bankroll is 965. Fourth street: you get a 9 of hearts, the house a 3 of diamonds. Your move: check or bet.\",\"target\":{\"surfaceId\":\"table-1\"}}}\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":965,\"pot\":70}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Round 1\",\"status\":\"Your move\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Bankroll\",\"value\":\"965\"},{\"label\":\"Pot\",\"value\":\"70\"}]},{\"id\":\"drow\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"d1\",\"d2\",\"d3\"]},{\"id\":\"d3\",\"component\":\"PlayingCard\",\"rank\":\"3\",\"suit\":\"diamonds\",\"size\":\"md\"},{\"id\":\"prow\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"p1\",\"p2\",\"p3\",\"p4\"]},{\"id\":\"p4\",\"component\":\"PlayingCard\",\"rank\":\"9\",\"suit\":\"hearts\",\"size\":\"md\"},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"justify\":\"end\",\"children\":[\"btn_fold\",\"btn_check\",\"btn_bet\"]},{\"id\":\"btn_bet\",\"component\":\"Button\",\"label\":\"Bet 25\",\"variant\":\"solid\",\"action\":{\"action\":\"bet\",\"context\":{\"amount\":25}}}]}}",
+          "tools": []
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-15.jsonl:53",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          987
+        ]
+      },
+      "step": {
+        "say": "Bet 25."
+      },
+      "domHosts": 1,
+      "proseText": "You Let's play seven-card stud. seven-card-stud Seven-card stud it is. Antes are 10 each, so the pot is 20 and your bankroll is 990. You have two hole cards and one up card, and the house shows an 8 of clubs. Each street is a betting round, with five cards dealt in total: two down, then one up on each of the next three streets, and a final down card. Best five of seven wins. Your move: check or bet 20. You Bring it in, or check, or call. Correction to my last message: stud has no bring-in in this game. The antes are already in the pot, so you can only check or bet 20 now. A call only comes up after someone has bet. Here is the table as it stands. You Bet 25. The house calls your 25. The pot is now 70, your bankroll is 965, and fourth street is dealt. You get a 9 of hearts and the house shows a 3 of diamonds. You act first on this street, so check or bet. {\"a2uiMeta\":{\"note\":\"The house calls your 25. Pot is 70 and your bankroll is 965. Fourth street: you get a 9 of hearts, the house a 3 of diamonds. Your move: check or bet.\",\"target\":{\"surfaceId\":\"table-1\"}}}",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "turn-3.png"
+    },
+    {
+      "index": 3,
+      "request": {
+        "model": "claude-haiku-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--croupier",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"The user checks, so now\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I need to decide the house's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" action as dealer — I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll have the house check as well\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" move on to d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealing fifth street.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ks, player's turn to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" check or bet \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"25. I need to update the sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the new f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ifth street\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" cards —\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" add the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 10 of h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"earts to the house\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s row\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and the 2 of club\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"s to the player's row,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keeping the face\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-down ace in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" place —\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and update the action buttons to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Check/Bet/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Fold while le\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aving bankroll and p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot unchanged.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"You\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" check, and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the house checks beh\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ind you\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\". Fifth street:\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" you get a 2 of cl\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ubs and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the house g\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ets a 10 of hear\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ts. The pot stays at\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 70.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Your move:\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" check or bet 25.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"\\n\\n\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"{\\\"a2uiMeta\\\":{\\\"note\\\":\\\"You check and the house checks. Fifth street: you get a 2 of clubs, the house a 10 of hearts. Pot is 70, bankroll 965. Your move: check or bet 25.\\\",\\\"target\\\":{\\\"surfaceId\\\":\\\"table-1\\\"}}}\\n\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"drow\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"d1\\\",\\\"d2\\\",\\\"d3\\\",\\\"d4\\\"]},{\\\"id\\\":\\\"d4\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":\\\"10\\\",\\\"suit\\\":\\\"hearts\\\",\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"prow\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"p1\\\",\\\"p2\\\",\\\"p3\\\",\\\"p4\\\",\\\"p5\\\"]},{\\\"id\\\":\\\"p5\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"clubs\\\",\\\"size\\\":\\\"md\\\"}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You check, and the house checks behind you. Fifth street: you get a 2 of clubs and the house gets a 10 of hearts. The pot stays at 70. Your move: check or bet 25.\\n\\n{\\\"a2uiMeta\\\":{\\\"note\\\":\\\"You check and the house checks. Fifth street: you get a 2 of clubs, the house a 10 of hearts. Pot is 70, bankroll 965. Your move: check or bet 25.\\\",\\\"target\\\":{\\\"surfaceId\\\":\\\"table-1\\\"}}}\",\"trace\":{\"turnIndex\":6,\"query\":{\"intent\":\"Check, or call if there is a bet.\",\"k\":3},\"exemplarIds\":[\"booking-reservation\",\"frontier-button-icon-actions\",\"pattern-schedule-picker\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[\"TEXT_JSONL_ROUTED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142000,\"total\":57441,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5472},{\"id\":\"mini-skills\",\"chars\":755},{\"id\":\"persona\",\"chars\":4922}],\"over\":false},\"usage\":{\"inputTokens\":6241,\"outputTokens\":1308,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"drow\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"d1\",\"d2\",\"d3\",\"d4\"]},{\"id\":\"d4\",\"component\":\"PlayingCard\",\"rank\":\"10\",\"suit\":\"hearts\",\"size\":\"md\"},{\"id\":\"prow\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"p1\",\"p2\",\"p3\",\"p4\",\"p5\"]},{\"id\":\"p5\",\"component\":\"PlayingCard\",\"rank\":\"2\",\"suit\":\"clubs\",\"size\":\"md\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "You check, and the house checks behind you. Fifth street: you get a 2 of clubs and the house gets a 10 of hearts. The pot stays at 70. Your move: check or bet 25.\n\n{\"a2uiMeta\":{\"note\":\"You check and the house checks. Fifth street: you get a 2 of clubs, the house a 10 of hearts. Pot is 70, bankroll 965. Your move: check or bet 25.\",\"target\":{\"surfaceId\":\"table-1\"}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"drow\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"d1\",\"d2\",\"d3\",\"d4\"]},{\"id\":\"d4\",\"component\":\"PlayingCard\",\"rank\":\"10\",\"suit\":\"hearts\",\"size\":\"md\"},{\"id\":\"prow\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"p1\",\"p2\",\"p3\",\"p4\",\"p5\"]},{\"id\":\"p5\",\"component\":\"PlayingCard\",\"rank\":\"2\",\"suit\":\"clubs\",\"size\":\"md\"}]}}",
+          "tools": []
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-15.jsonl:54",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          453
+        ]
+      },
+      "step": {
+        "say": "Check, or call if there is a bet."
+      },
+      "domHosts": 1,
+      "proseText": "You Let's play seven-card stud. seven-card-stud Seven-card stud it is. Antes are 10 each, so the pot is 20 and your bankroll is 990. You have two hole cards and one up card, and the house shows an 8 of clubs. Each street is a betting round, with five cards dealt in total: two down, then one up on each of the next three streets, and a final down card. Best five of seven wins. Your move: check or bet 20. You Bring it in, or check, or call. Correction to my last message: stud has no bring-in in this game. The antes are already in the pot, so you can only check or bet 20 now. A call only comes up after someone has bet. Here is the table as it stands. You Bet 25. The house calls your 25. The pot is now 70, your bankroll is 965, and fourth street is dealt. You get a 9 of hearts and the house shows a 3 of diamonds. You act first on this street, so check or bet. {\"a2uiMeta\":{\"note\":\"The house calls your 25. Pot is 70 and your bankroll is 965. Fourth street: you get a 9 of hearts, the house a 3 of diamonds. Your move: check or bet.\",\"target\":{\"surfaceId\":\"table-1\"}}} You Check, or call if there is a bet. You check, and the house checks behind you. Fifth street: you get a 2 of clubs and the house gets a 10 of hearts. The pot stays at 70. Your move: check or bet 25. {\"a2uiMeta\":{\"note\":\"You check and the house checks. Fifth street: you get a 2 of clubs, the house a 10 of hearts. Pot is 70, bankroll 965. Your move: check or bet 25.\",\"target\":{\"surfaceId\":\"table-1\"}}}",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "turn-4.png"
+    },
+    {
+      "index": 4,
+      "request": {
+        "model": "claude-haiku-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--croupier",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m tracking the h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and state\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealer—f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ifth street was dealt after\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" check-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"check\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" now the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" user rep\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eating \\\"check\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", or call if there's a b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"et\\\" lik\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ely signals their\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" action\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" on sixth street, mea\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ning it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s my tur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"n to advance the de\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"al again\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since the user chec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ks again, the house checks beh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ind, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I deal sixth street —\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" giving my\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"self another\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" up\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" card and let\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting bet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting contin\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ue from\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" there. I'll update\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the board\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with the new card, ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ep bankroll and pot\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" tracking consistent (\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"965 and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 70), and prompt the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" next check-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"or-bet decision.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Round 1\\\",\\\"status\\\":\\\"Your move\\\",\\\"statusIntent\\\":\\\"info\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Bankroll\\\",\\\"value\\\":\\\"965\\\"},{\\\"label\\\":\\\"Pot\\\",\\\"value\\\":\\\"70\\\"}]},{\\\"id\\\":\\\"prow\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"p1\\\",\\\"p2\\\",\\\"p3\\\",\\\"p4\\\",\\\"p5\\\",\\\"p6\\\"]},{\\\"id\\\":\\\"p6\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"diamonds\\\",\\\"size\\\":\\\"md\\\"}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You check, and the house checks behind you. Sixth street: you get a 7 of diamonds, the house gets nothing new yet. Pot is 70, bankroll 965. Your move: check or bet 25.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":8,\"query\":{\"intent\":\"Check, or call if there is a bet.\",\"k\":3},\"exemplarIds\":[\"booking-reservation\",\"frontier-button-icon-actions\",\"pattern-schedule-picker\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142000,\"total\":57441,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5472},{\"id\":\"mini-skills\",\"chars\":755},{\"id\":\"persona\",\"chars\":4922}],\"over\":false},\"usage\":{\"inputTokens\":6606,\"outputTokens\":1229,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Round 1\",\"status\":\"Your move\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Bankroll\",\"value\":\"965\"},{\"label\":\"Pot\",\"value\":\"70\"}]},{\"id\":\"prow\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"p1\",\"p2\",\"p3\",\"p4\",\"p5\",\"p6\"]},{\"id\":\"p6\",\"component\":\"PlayingCard\",\"rank\":\"7\",\"suit\":\"diamonds\",\"size\":\"md\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"You check, and the house checks behind you. Sixth street: you get a 7 of diamonds, the house gets nothing new yet. Pot is 70, bankroll 965. Your move: check or bet 25.\",\"target\":{\"surfaceId\":\"table-1\"}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Round 1\",\"status\":\"Your move\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Bankroll\",\"value\":\"965\"},{\"label\":\"Pot\",\"value\":\"70\"}]},{\"id\":\"prow\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"p1\",\"p2\",\"p3\",\"p4\",\"p5\",\"p6\"]},{\"id\":\"p6\",\"component\":\"PlayingCard\",\"rank\":\"7\",\"suit\":\"diamonds\",\"size\":\"md\"}]}}",
+          "tools": []
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-15.jsonl:55",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          530
+        ]
+      },
+      "step": {
+        "say": "Check, or call if there is a bet."
+      },
+      "domHosts": 1,
+      "proseText": "You Let's play seven-card stud. seven-card-stud Seven-card stud it is. Antes are 10 each, so the pot is 20 and your bankroll is 990. You have two hole cards and one up card, and the house shows an 8 of clubs. Each street is a betting round, with five cards dealt in total: two down, then one up on each of the next three streets, and a final down card. Best five of seven wins. Your move: check or bet 20. You Bring it in, or check, or call. Correction to my last message: stud has no bring-in in this game. The antes are already in the pot, so you can only check or bet 20 now. A call only comes up after someone has bet. Here is the table as it stands. You Bet 25. The house calls your 25. The pot is now 70, your bankroll is 965, and fourth street is dealt. You get a 9 of hearts and the house shows a 3 of diamonds. You act first on this street, so check or bet. {\"a2uiMeta\":{\"note\":\"The house calls your 25. Pot is 70 and your bankroll is 965. Fourth street: you get a 9 of hearts, the house a 3 of diamonds. Your move: check or bet.\",\"target\":{\"surfaceId\":\"table-1\"}}} You Check, or call if there is a bet. You check, and the house checks behind you. Fifth street: you get a 2 of clubs and the house gets a 10 of hearts. The pot stays at 70. Your move: check or bet 25. {\"a2uiMeta\":{\"note\":\"You check and the house checks. Fifth street: you get a 2 of clubs, the house a 10 of hearts. Pot is 70, bankroll 965. Your move: check or bet 25.\",\"target\":{\"surfaceId\":\"table-1\"}}} You Check, or call if there is a bet. You check, and the house checks behind you. Sixth street: you get a 7 of diamonds, the house gets nothing new yet. Pot is 70, bankroll 965. Your move: check or bet 25.",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "turn-5.png"
+    },
+    {
+      "index": 5,
+      "request": {
+        "model": "claude-haiku-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--croupier",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need to be\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" honest with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the user about this\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" - let\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" me trace back through the h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and to check for errors in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" how\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I tracked the house's up\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"cards across\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" fourth, fifth,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and sixth street.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Loo\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"king more\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" carefully, I see\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ixth street update fail\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ed to de\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"al the house a new up\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"card, which is a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" real error since every\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player gets a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" card each street in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" stud. I should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" also double check\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" who\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" supposed to act first based on\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the highest show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and, since that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" determ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ines bet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting order thro\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ughout.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Neither side has a pair\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" so the house just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" checks behind. I need to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" update the display\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with the new card\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot and the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" house's j\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ack of\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" clubs.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"I made\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" a mistake last\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" turn.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" In stud, the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" house gets an up card on every\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" street, so I\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" should\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" have dealt it\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" one\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" on sixth street. The house\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" now sh\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ows a j\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ack of clubs. Your\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"7 of diamonds is\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" on your\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" board\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".\\n\\nP\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ot is 70 \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"and your bankroll is \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"965. You\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" have\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" no p\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"air;\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" house has no\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" pair either. Your move:\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" check or bet 25.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"\\n\\n\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"{\\\"a2uiMeta\\\":{\\\"note\\\":\\\"Correction: the house gets a sixth-street up card, a jack of clubs. Your 7 of diamonds is on your board. Pot is 70, bankroll 965. Your move: check or bet 25.\\\",\\\"target\\\":{\\\"surfaceId\\\":\\\"table-1\\\"}}}\\n\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"drow\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"d1\\\",\\\"d2\\\",\\\"d3\\\",\\\"d4\\\",\\\"d5\\\"]},{\\\"id\\\":\\\"d5\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":\\\"J\\\",\\\"suit\\\":\\\"clubs\\\",\\\"size\\\":\\\"md\\\"}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"I made a mistake last turn. In stud, the house gets an up card on every street, so I should have dealt it one on sixth street. The house now shows a jack of clubs. Your 7 of diamonds is on your board.\\n\\nPot is 70 and your bankroll is 965. You have no pair; the house has no pair either. Your move: check or bet 25.\\n\\n{\\\"a2uiMeta\\\":{\\\"note\\\":\\\"Correction: the house gets a sixth-street up card, a jack of clubs. Your 7 of diamonds is on your board. Pot is 70, bankroll 965. Your move: check or bet 25.\\\",\\\"target\\\":{\\\"surfaceId\\\":\\\"table-1\\\"}}}\",\"trace\":{\"turnIndex\":10,\"query\":{\"intent\":\"Check, or call if there is a bet.\",\"k\":3},\"exemplarIds\":[\"booking-reservation\",\"frontier-button-icon-actions\",\"pattern-schedule-picker\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[\"TEXT_JSONL_ROUTED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142000,\"total\":57441,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5472},{\"id\":\"mini-skills\",\"chars\":755},{\"id\":\"persona\",\"chars\":4922}],\"over\":false},\"usage\":{\"inputTokens\":6885,\"outputTokens\":1609,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"drow\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"d1\",\"d2\",\"d3\",\"d4\",\"d5\"]},{\"id\":\"d5\",\"component\":\"PlayingCard\",\"rank\":\"J\",\"suit\":\"clubs\",\"size\":\"md\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "I made a mistake last turn. In stud, the house gets an up card on every street, so I should have dealt it one on sixth street. The house now shows a jack of clubs. Your 7 of diamonds is on your board.\n\nPot is 70 and your bankroll is 965. You have no pair; the house has no pair either. Your move: check or bet 25.\n\n{\"a2uiMeta\":{\"note\":\"Correction: the house gets a sixth-street up card, a jack of clubs. Your 7 of diamonds is on your board. Pot is 70, bankroll 965. Your move: check or bet 25.\",\"target\":{\"surfaceId\":\"table-1\"}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"drow\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"d1\",\"d2\",\"d3\",\"d4\",\"d5\"]},{\"id\":\"d5\",\"component\":\"PlayingCard\",\"rank\":\"J\",\"suit\":\"clubs\",\"size\":\"md\"}]}}",
+          "tools": []
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-15.jsonl:56",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          636
+        ]
+      },
+      "step": {
+        "say": "Check, or call if there is a bet."
+      },
+      "domHosts": 1,
+      "proseText": "You Let's play seven-card stud. seven-card-stud Seven-card stud it is. Antes are 10 each, so the pot is 20 and your bankroll is 990. You have two hole cards and one up card, and the house shows an 8 of clubs. Each street is a betting round, with five cards dealt in total: two down, then one up on each of the next three streets, and a final down card. Best five of seven wins. Your move: check or bet 20. You Bring it in, or check, or call. Correction to my last message: stud has no bring-in in this game. The antes are already in the pot, so you can only check or bet 20 now. A call only comes up after someone has bet. Here is the table as it stands. You Bet 25. The house calls your 25. The pot is now 70, your bankroll is 965, and fourth street is dealt. You get a 9 of hearts and the house shows a 3 of diamonds. You act first on this street, so check or bet. {\"a2uiMeta\":{\"note\":\"The house calls your 25. Pot is 70 and your bankroll is 965. Fourth street: you get a 9 of hearts, the house a 3 of diamonds. Your move: check or bet.\",\"target\":{\"surfaceId\":\"table-1\"}}} You Check, or call if there is a bet. You check, and the house checks behind you. Fifth street: you get a 2 of clubs and the house gets a 10 of hearts. The pot stays at 70. Your move: check or bet 25. {\"a2uiMeta\":{\"note\":\"You check and the house checks. Fifth street: you get a 2 of clubs, the house a 10 of hearts. Pot is 70, bankroll 965. Your move: check or bet 25.\",\"target\":{\"surfaceId\":\"table-1\"}}} You Check, or call if there is a bet. You check, and the house checks behind you. Sixth street: you get a 7 of diamonds, the house gets nothing new yet. Pot is 70, bankroll 965. Your move: check or bet 25. You Check, or call if there is a bet. I made a mistake last turn. In stud, the house gets an up card on every street, so I should have dealt it one on sixth street. The house now shows a jack of clubs. Your 7 of diamonds is on your board. Pot is 70 and your bankroll is 965. You have no pair; the house has no pair either. Your move: check or bet 25. {\"a2uiMeta\":{\"note\":\"Correction: the house gets a sixth-street up card, a jack of clubs. Your 7 of diamonds is on your board. Pot is 70, bankroll 965. Your move: check or bet 25.\",\"target\":{\"surfaceId\":\"table-1\"}}}",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "turn-6.png"
+    },
+    {
+      "index": 6,
+      "step": {
+        "click": "Deal again",
+        "expect": [
+          "PlayingCard"
+        ]
+      },
+      "lines": [],
+      "roundsSource": "none",
+      "clickMissing": {
+        "label": "Deal again",
+        "available": [
+          "Fold",
+          "Check",
+          "Bet 25"
+        ]
+      },
+      "proseText": "You Let's play seven-card stud. seven-card-stud Seven-card stud it is. Antes are 10 each, so the pot is 20 and your bankroll is 990. You have two hole cards and one up card, and the house shows an 8 of clubs. Each street is a betting round, with five cards dealt in total: two down, then one up on each of the next three streets, and a final down card. Best five of seven wins. Your move: check or bet 20. You Bring it in, or check, or call. Correction to my last message: stud has no bring-in in this game. The antes are already in the pot, so you can only check or bet 20 now. A call only comes up after someone has bet. Here is the table as it stands. You Bet 25. The house calls your 25. The pot is now 70, your bankroll is 965, and fourth street is dealt. You get a 9 of hearts and the house shows a 3 of diamonds. You act first on this street, so check or bet. {\"a2uiMeta\":{\"note\":\"The house calls your 25. Pot is 70 and your bankroll is 965. Fourth street: you get a 9 of hearts, the house a 3 of diamonds. Your move: check or bet.\",\"target\":{\"surfaceId\":\"table-1\"}}} You Check, or call if there is a bet. You check, and the house checks behind you. Fifth street: you get a 2 of clubs and the house gets a 10 of hearts. The pot stays at 70. Your move: check or bet 25. {\"a2uiMeta\":{\"note\":\"You check and the house checks. Fifth street: you get a 2 of clubs, the house a 10 of hearts. Pot is 70, bankroll 965. Your move: check or bet 25.\",\"target\":{\"surfaceId\":\"table-1\"}}} You Check, or call if there is a bet. You check, and the house checks behind you. Sixth street: you get a 7 of diamonds, the house gets nothing new yet. Pot is 70, bankroll 965. Your move: check or bet 25. You Check, or call if there is a bet. I made a mistake last turn. In stud, the house gets an up card on every street, so I should have dealt it one on sixth street. The house now shows a jack of clubs. Your 7 of diamonds is on your board. Pot is 70 and your bankroll is 965. You have no pair; the house has no pair either. Your move: check or bet 25. {\"a2uiMeta\":{\"note\":\"Correction: the house gets a sixth-street up card, a jack of clubs. Your 7 of diamonds is on your board. Pot is 70, bankroll 965. Your move: check or bet 25.\",\"target\":{\"surfaceId\":\"table-1\"}}}",
+      "screenshot": "turn-7.png"
+    }
+  ],
+  "checks": [
+    {
+      "check": "model-pick",
+      "turn": 0,
+      "status": "pass",
+      "detail": "claude-haiku-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 0,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 0,
+      "status": "pass",
+      "detail": "405 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 0,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 0,
+      "status": "skip",
+      "detail": "no A2UI lines shipped (a text turn)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 0,
+      "status": "pass",
+      "detail": "rounds created [], open [] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "expect-component",
+      "turn": 0,
+      "status": "fail",
+      "detail": "no surface this turn updated holds PlayingCard (touched none)"
+    },
+    {
+      "check": "render-lint",
+      "turn": 0,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 0,
+      "status": "pass",
+      "detail": "2183 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 1,
+      "status": "pass",
+      "detail": "claude-haiku-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 1,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 1,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 1,
+      "status": "pass",
+      "detail": "654 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 1,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 1,
+      "status": "pass",
+      "detail": "424 chars of reply beside 3 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 1,
+      "status": "pass",
+      "detail": "rounds created [table-1], open [table-1] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 1,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "expect-component",
+      "turn": 1,
+      "status": "skip",
+      "detail": "no --expect-turn on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 1,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 1,
+      "status": "pass",
+      "detail": "1338 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 2,
+      "status": "pass",
+      "detail": "claude-haiku-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 2,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 2,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 2,
+      "status": "fail",
+      "detail": "A2UI JSON in the chat prose: ...t, so check or bet. {\"a2uiMeta\":{\"note\":\"The house calls your 25. Pot is 70 and ..."
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 2,
+      "status": "fail",
+      "detail": "internal text in the chat prose: \"table-1\""
+    },
+    {
+      "check": "reply-text",
+      "turn": 2,
+      "status": "pass",
+      "detail": "816 chars of reply beside 2 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 2,
+      "status": "pass",
+      "detail": "rounds created [], open [table-1] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 2,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "expect-component",
+      "turn": 2,
+      "status": "skip",
+      "detail": "no --expect-turn on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 2,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 2,
+      "status": "pass",
+      "detail": "987 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 3,
+      "status": "pass",
+      "detail": "claude-haiku-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 3,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 3,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 3,
+      "status": "fail",
+      "detail": "A2UI JSON in the chat prose: ...t, so check or bet. {\"a2uiMeta\":{\"note\":\"The house calls your 25. Pot is 70 and ..."
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 3,
+      "status": "fail",
+      "detail": "internal text in the chat prose: \"table-1\""
+    },
+    {
+      "check": "reply-text",
+      "turn": 3,
+      "status": "pass",
+      "detail": "734 chars of reply beside 1 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 3,
+      "status": "pass",
+      "detail": "rounds created [], open [table-1] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 3,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "expect-component",
+      "turn": 3,
+      "status": "skip",
+      "detail": "no --expect-turn on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 3,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 3,
+      "status": "pass",
+      "detail": "453 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 4,
+      "status": "pass",
+      "detail": "claude-haiku-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 4,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 4,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 4,
+      "status": "fail",
+      "detail": "A2UI JSON in the chat prose: ...t, so check or bet. {\"a2uiMeta\":{\"note\":\"The house calls your 25. Pot is 70 and ..."
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 4,
+      "status": "fail",
+      "detail": "internal text in the chat prose: \"table-1\""
+    },
+    {
+      "check": "reply-text",
+      "turn": 4,
+      "status": "pass",
+      "detail": "167 chars of reply beside 1 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 4,
+      "status": "pass",
+      "detail": "rounds created [], open [table-1] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 4,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "expect-component",
+      "turn": 4,
+      "status": "skip",
+      "detail": "no --expect-turn on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 4,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 4,
+      "status": "pass",
+      "detail": "530 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 5,
+      "status": "pass",
+      "detail": "claude-haiku-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 5,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 5,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 5,
+      "status": "fail",
+      "detail": "A2UI JSON in the chat prose: ...t, so check or bet. {\"a2uiMeta\":{\"note\":\"The house calls your 25. Pot is 70 and ..."
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 5,
+      "status": "fail",
+      "detail": "internal text in the chat prose: \"Correction:\""
+    },
+    {
+      "check": "reply-text",
+      "turn": 5,
+      "status": "pass",
+      "detail": "1058 chars of reply beside 1 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 5,
+      "status": "pass",
+      "detail": "rounds created [], open [table-1] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 5,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "expect-component",
+      "turn": 5,
+      "status": "skip",
+      "detail": "no --expect-turn on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 5,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 5,
+      "status": "pass",
+      "detail": "636 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 6,
+      "status": "skip",
+      "detail": "no request body observed"
+    },
+    {
+      "check": "click-target",
+      "turn": 6,
+      "status": "fail",
+      "detail": "no surface button reading \"Deal again\" (buttons: Fold, Check, Bet 25)"
+    },
+    {
+      "check": "no-halt",
+      "turn": 6,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 6,
+      "status": "fail",
+      "detail": "A2UI JSON in the chat prose: ...t, so check or bet. {\"a2uiMeta\":{\"note\":\"The house calls your 25. Pot is 70 and ..."
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 6,
+      "status": "fail",
+      "detail": "internal text in the chat prose: \"Correction:\""
+    },
+    {
+      "check": "reply-text",
+      "turn": 6,
+      "status": "skip",
+      "detail": "no A2UI lines shipped (a text turn)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 6,
+      "status": "skip",
+      "detail": "no round data (roundsSource none)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 6,
+      "status": "skip",
+      "detail": "nothing was clicked (see click-target)"
+    },
+    {
+      "check": "expect-component",
+      "turn": 6,
+      "status": "skip",
+      "detail": "nothing was clicked (see click-target)"
+    },
+    {
+      "check": "render-lint",
+      "turn": 6,
+      "status": "skip",
+      "detail": "no DOM (offline replay)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 6,
+      "status": "skip",
+      "detail": "effort unknown"
+    },
+    {
+      "check": "expect-component",
+      "status": "pass",
+      "detail": "found PlayingCard"
+    }
+  ],
+  "verdict": "fail"
+}
