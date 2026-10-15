@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:b01ea45748e2 -->
+<!-- sdlc-lite:managed:start v1 sha256:69f9a10cc75e -->
 # Work records
 
 This folder holds SDLC Lite tickets, task records, `roadmap.md`, `notes.md`, and `config`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -9,7 +9,7 @@ This folder holds SDLC Lite tickets, task records, `roadmap.md`, `notes.md`, and
 
 ## Stages
 
-- proposed: 10
+- proposed: 11
   - T-0187 split-pane demo stacks or scrolls at 400px instead of overflowing the column (split-pane-narrow-fit)
   - T-0188 line-chart projected dash: user-unit dash or a ruled screen-px exemption (line-chart-projected-dash)
   - T-0189 playing-card corner index: a type floor or a ruled pictorial exemption (playing-card-type-floor)
@@ -20,6 +20,7 @@ This folder holds SDLC Lite tickets, task records, `roadmap.md`, `notes.md`, and
   - T-0197 BookingForm field kinds (dateRange, radio, time, stepper) and sharing it with the Maitre d' (bookingform-kinds)
   - T-0198 Step flow pattern: step n of m, Back and Next, shared /draft data (step-flow)
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (itinerary-compare)
+  - T-0255 GitHub workflows cut to the CI check; review, regen, deploy and publish run locally (local-first-workflows)
 - ready: 21
   - T-0160 Agent content as files: extract preset and pack seeds to .md manifests with a generated, drift-gated registry (agent-content-files)
   - T-0161 Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind (agent-content-overlays)
