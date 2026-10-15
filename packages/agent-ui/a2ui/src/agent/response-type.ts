@@ -24,17 +24,19 @@ export function renderSurfaceTool(openSurfaceIds: readonly string[]): ToolDef {
       'Render or change the A2UI surface. Call this when the answer is a structure the user must scan, compare, ' +
       'fill in or act on (a comparison, table, steps, schedule, form or choice); facts, definitions and opinions ' +
       'stay plain text. To explain and show, write the explanation as text, then call this too. Every call ' +
-      'follows at least one short line of text to the user; the surface never replaces the reply. ' +
+      'carries `reply`, one short line to the user shown as your chat reply; the surface never replaces it. ' +
       `${open} Prefer an update to an open surface over creating a new one when one fits. ` +
       '`messages` is the A2UI message list in order, each entry ONE message object (createSurface, ' +
       'updateComponents, updateDataModel or deleteSurface), never a JSON string; `target` is the surface id it updates.',
     input_schema: {
       type: 'object',
       properties: {
+        // T-0194: required, so a surface turn always carries a line to the user (Sonnet 5.5 sent none).
+        reply: { type: 'string' },
         messages: { type: 'array', items: { type: 'object' } },
         target: { type: 'string' },
       },
-      required: ['messages'],
+      required: ['reply', 'messages'],
     },
   }
 }
@@ -49,6 +51,12 @@ export function renderSurfaceJsonl(input: Record<string, unknown>): string {
   const { messages, jsonl } = input
   if (Array.isArray(messages)) return messages.map((m) => (typeof m === 'string' ? m : JSON.stringify(m))).join('\n')
   return typeof jsonl === 'string' ? jsonl : ''
+}
+
+/** T-0194: the trimmed `reply` line a `render_surface` call carries, or '' (a recording made before the field). */
+export function renderSurfaceReply(input: Record<string, unknown>): string {
+  const { reply } = input
+  return typeof reply === 'string' ? reply.trim() : ''
 }
 
 const TEXT_PHRASES = ['just tell me', 'no card', 'text only', "don't show", 'skip the ui']

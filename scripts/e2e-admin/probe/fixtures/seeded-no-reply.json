@@ -1,0 +1,75 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "seeded-no-reply",
+  "agent": "croupier",
+  "source": "hand-authored for the probe selftest (T-0194: a surface turn with no reply text, the Sonnet 5.5 hello of 2026-10-14 that showed only 'Emitted 2 A2UI message(s)') (catalog agent-ui)",
+  "steps": [
+    {
+      "say": "hello"
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"hello\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\"}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"canvas\",\"catalogId\":\"agent-ui\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"canvas\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"btn\"]},{\"id\":\"btn\",\"component\":\"Button\",\"variant\":\"solid\",\"label\":\"Deal\",\"action\":{\"action\":\"deal\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "canvas",
+                      "catalogId": "agent-ui"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "canvas",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "children": [
+                            "btn"
+                          ]
+                        },
+                        {
+                          "id": "btn",
+                          "component": "Button",
+                          "variant": "solid",
+                          "label": "Deal",
+                          "action": {
+                            "action": "deal"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "hello"
+      }
+    }
+  ],
+  "expect": {
+    "components": [
+      "Button"
+    ]
+  }
+}

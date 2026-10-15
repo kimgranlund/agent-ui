@@ -327,7 +327,8 @@ stays hidden — the narration strip beside it (above) is the only thing visible
 phase of a live turn. It reveals on the FIRST real content of any kind: a streamed `setNote()` token
 (painted into the DOM immediately, not buffered for `finalize()` alone — a consumer may call `setNote`
 repeatedly as text accretes), a fresh mounted surface (`ingestLine`/`mountGenui`), the settled-turn
-action-chip row, or `finalize()`'s own fallback tally. A turn that ends via `fail()` without ever
+action-chip row. A turn with no note keeps an empty bubble: its message tally is a strip row in step
+mode and the category rows say the same otherwise, never bubble text (T-0194). A turn that ends via `fail()` without ever
 producing content simply stays hidden — `fail()` never touches the agent bubble, it only adds a
 separate system bubble carrying the error text. A **resumed** turn (`intoSurface`, TKT-0079) is
 unaffected — it can only resume because its bubble already has content, so it stays visible throughout.

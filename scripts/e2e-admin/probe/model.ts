@@ -300,7 +300,7 @@ export interface CheckOptions {
 }
 
 /** The named checks, in report order. */
-export const CHECK_NAMES = ['model-pick', 'click-target', 'no-halt', 'no-json-as-prose', 'no-surface-loss', 'action-updates-surface', 'expect-component', 'render-lint', 'reasoning'] as const
+export const CHECK_NAMES = ['model-pick', 'click-target', 'no-halt', 'no-json-as-prose', 'reply-text', 'no-surface-loss', 'action-updates-surface', 'expect-component', 'render-lint', 'reasoning'] as const
 
 /** Run every named check over the turn records. Per-turn checks report one row per turn; the run-level
  *  ones (expect-component) one row. */
@@ -333,6 +333,16 @@ export function runChecks(turns: readonly TurnRecord[], opts: CheckOptions): Che
     // no-json-as-prose: the chat log's prose (outside surface hosts) carries no A2UI JSON.
     const leak = a2uiInProse(t.proseText)
     out.push({ check: 'no-json-as-prose', turn: t.index, status: leak ? 'fail' : 'pass', detail: leak ? `A2UI JSON in the chat prose: ...${leak}...` : `${t.proseText.length} chars of prose, clean` })
+    // reply-text (T-0194): a turn that ships A2UI carries reply text on its own wire (note or text deltas), and
+    // the chat never shows the "Emitted N A2UI message(s)" tally (a Sonnet 5.5 hello shipped only that).
+    const content = t.lines.filter((l) => readMetaLine(l) === undefined && l.trim() !== '').length
+    const replyText = meta.prose.join('').trim()
+    const tallyShown = /Emitted \d+ A2UI message\(s\)/.test(t.proseText)
+    if (halted !== undefined) out.push({ check: 'reply-text', turn: t.index, status: 'skip', detail: 'the turn halted (see no-halt)' })
+    else if (content === 0) out.push({ check: 'reply-text', turn: t.index, status: 'skip', detail: 'no A2UI lines shipped (a text turn)' })
+    else if (replyText === '' || tallyShown)
+      out.push({ check: 'reply-text', turn: t.index, status: 'fail', detail: tallyShown ? 'the chat shows the message tally in place of a reply' : `${content} A2UI line(s) shipped with no reply text` })
+    else out.push({ check: 'reply-text', turn: t.index, status: 'pass', detail: `${replyText.length} chars of reply beside ${content} A2UI line(s)` })
     // no-surface-loss: every surface a round created is open after the turn (shipped, and mounted).
     for (const s of shippedSurfaces(t.lines)) if (!shippedSoFar.includes(s)) shippedSoFar.push(s)
     if (t.rounds === undefined || t.rounds.length === 0) {

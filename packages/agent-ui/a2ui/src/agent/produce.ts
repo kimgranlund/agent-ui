@@ -113,7 +113,7 @@ import { isGenuiCandidate, readGenuiLine, utf8ByteLength, GENUI_MAX_HTML_BYTES }
 import type { GenuiSurfaceConfig } from './genui-surface-config.ts'
 import { runSemanticChecks, semanticActionOf, semanticSurfaceViews } from '../catalog/semantic-check.ts'
 import type { SemanticCheck } from '../catalog/semantic-check.ts'
-import { RENDER_SURFACE_TOOL_NAME, detectUserOverride, isLegacyShape, renderSurfaceJsonl, renderSurfaceTool } from './response-type.ts'
+import { RENDER_SURFACE_TOOL_NAME, detectUserOverride, isLegacyShape, renderSurfaceJsonl, renderSurfaceReply, renderSurfaceTool } from './response-type.ts'
 import type { ResponsePreference } from './response-type.ts'
 
 const PROTOCOL_VERSION = 'v1.0'
@@ -1258,11 +1258,11 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     }
     // RTS-R1: on a turn that offers `render_surface`, this round's executor captures its input and answers
     // `received`; every other name goes to the caller's executor. Reset every round.
-    let capture = undefined as { jsonl: string; target: string | undefined } | undefined
+    let capture = undefined as { jsonl: string; reply: string; target: string | undefined } | undefined
     const captureTool: ExecuteTool = async (name, toolInput, signal) => {
       if (name === RENDER_SURFACE_TOOL_NAME) {
         const toolTarget = toolInput['target']
-        capture = { jsonl: renderSurfaceJsonl(toolInput), target: typeof toolTarget === 'string' && toolTarget !== '' ? toolTarget : undefined }
+        capture = { jsonl: renderSurfaceJsonl(toolInput), reply: renderSurfaceReply(toolInput), target: typeof toolTarget === 'string' && toolTarget !== '' ? toolTarget : undefined }
         return 'received'
       }
       if (opts.executeTool === undefined) throw new Error(`no executor for tool ${name}`)
@@ -1373,8 +1373,11 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         const kept = lines.filter((l) => !isWireLine(l.trim()))
         if (kept.length !== lines.length) textJsonlIgnored = true
         reply = kept.join('\n')
+        // T-0194: the tool's required `reply` line is the reply when the text channel is empty (Sonnet 5.5
+        // called the tool with no text); text that already streamed wins.
+        if (reply.trim() === '') reply = captured.reply
         // The repair round shows the model its own attempt: the reply text, then the payload it sent.
-        lastRaw = [raw.trim(), captured.jsonl.trim()].filter((s) => s !== '').join('\n')
+        lastRaw = [raw.trim() || captured.reply, captured.jsonl.trim()].filter((s) => s !== '').join('\n')
       }
       reply = reply.trim()
       if (reply !== '') note = reply

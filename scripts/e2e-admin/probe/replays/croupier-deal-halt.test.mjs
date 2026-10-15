@@ -6,8 +6,10 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-it('croupier-deal-halt: the recorded turns replay with every probe check green', async () => {
+// T-0194: these rounds were recorded before `render_surface` required its `reply` line and carry no text, so
+// both turns fail `reply-text` (the defect T-0194 fixes, kept as recorded); every other check stays green.
+it('croupier-deal-halt: the recorded turns replay with every probe check green but reply-text', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./croupier-deal-halt.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed).toEqual([])
+  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual(['reply-text:0', 'reply-text:1'])
 })

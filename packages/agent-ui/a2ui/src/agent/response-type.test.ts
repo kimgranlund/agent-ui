@@ -8,6 +8,7 @@ import {
   detectUserOverride,
   isLegacyShape,
   renderSurfaceJsonl,
+  renderSurfaceReply,
   renderSurfaceTool,
 } from './response-type.ts'
 
@@ -27,10 +28,15 @@ describe('renderSurfaceTool', () => {
     expect(tool.name).toBe('render_surface')
     expect(tool.input_schema).toEqual({
       type: 'object',
-      properties: { messages: { type: 'array', items: { type: 'object' } }, target: { type: 'string' } },
-      required: ['messages'],
+      properties: { reply: { type: 'string' }, messages: { type: 'array', items: { type: 'object' } }, target: { type: 'string' } },
+      required: ['reply', 'messages'],
     })
     expect(tool.description).toMatch(/never a JSON string/)
+  })
+  it('T-0194: reads the trimmed `reply` line, else empty', () => {
+    expect(renderSurfaceReply({ reply: '  Welcome to the table.  ', messages: [] })).toBe('Welcome to the table.')
+    expect(renderSurfaceReply({ messages: [] })).toBe('')
+    expect(renderSurfaceReply({ reply: 7 })).toBe('')
   })
   it('T-0172: reads structured `messages` as one JSON line each, still reads a legacy `jsonl` string, else empty', () => {
     const create = { version: 'v1.0', createSurface: { surfaceId: 's', catalogId: 'agent-ui' } }
@@ -46,8 +52,8 @@ describe('renderSurfaceTool', () => {
     expect(tool.description).toMatch(/scan, compare, fill in or act on/)
     expect(tool.description).toMatch(/update/)
   })
-  it('T-0172: asks for a short text reply beside every call (a Sonnet 5.5 greet shipped a surface with no words)', () => {
-    expect(tool.description).toMatch(/at least one short line of text to the user; the surface never replaces the reply/)
+  it('T-0172, T-0194: every call carries a short reply line (a Sonnet 5.5 greet shipped a surface with no words)', () => {
+    expect(tool.description).toMatch(/carries `reply`, one short line to the user shown as your chat reply; the surface never replaces it/)
   })
   it('serializes under 1500 chars', () => {
     expect(JSON.stringify(tool).length).toBeLessThan(1500)
