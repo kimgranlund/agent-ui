@@ -31,15 +31,17 @@ function stubProvider(output: string): AgentProvider {
 }
 
 // ADR-0234 (proposed): trace.prompt reports the composed prompt's section sizes, which this gate steers
-// by design. The comparison drops that one field and nothing else, and throws when no line carries it,
-// so it can never pass vacuously.
+// by design, and T-0239's trace.cacheBoundary is the size of the stable sections it composes. The comparison
+// drops those two fields and nothing else, and throws when no line carries the prompt, so it can never pass
+// vacuously.
 function withoutTracePrompt(lines: readonly string[]): string[] {
   let stripped = 0
   const out = lines.map((line) => {
-    const parsed = JSON.parse(line) as { a2uiMeta?: { trace?: { prompt?: unknown } } }
+    const parsed = JSON.parse(line) as { a2uiMeta?: { trace?: { prompt?: unknown; cacheBoundary?: unknown } } }
     const trace = parsed.a2uiMeta?.trace
     if (trace?.prompt === undefined) return line
     delete trace.prompt
+    delete trace.cacheBoundary
     stripped++
     return JSON.stringify(parsed)
   })

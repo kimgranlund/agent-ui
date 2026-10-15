@@ -110,6 +110,10 @@ export interface TurnTrace {
   prompt?: PromptBudgetReport
   /** ADR-0234 (proposed): provider-reported token usage summed over the turn; absent when none arrived. */
   usage?: TokenUsage
+  /** T-0239: the mini-skill ids `selectMiniSkills` picked for this turn, in prompt order. */
+  miniSkillIds?: string[]
+  /** T-0239: the characters of the stable, cached system-prompt prefix (T-0206); the sections after it are volatile. */
+  cacheBoundary?: number
 }
 
 /** ADR-0234 (proposed): provider-billed token counts for one upstream request, or a sum over a turn. The

@@ -13,6 +13,7 @@ import { GENERIC_FAILURE_MESSAGE } from '../../tools/agent/chat-validation.ts'
 import {
   TurnTraceCollector,
   agentLabel,
+  catalogRouting,
   defaultTracing,
   describeFailure,
   devFailureReason,
@@ -375,5 +376,73 @@ describe('the Croupier case is readable from the trace file (T-0151)', () => {
     expect(describeFailure({ code: 'IDGRAPH', path: 'greet-1:cycle' })).toContain('cycle')
     expect(diagnoseParse('{"a2uiMeta":{"note":"x"}}\n{"ok":1}\n{"broken":')).toMatchObject({ line: 2 })
     expect(diagnoseParse('{"ok":1}')).toBeUndefined()
+  })
+})
+
+// ── per-turn routing (T-0239) ───────────────────────────────────────────────────────────────────────
+// The trace line records how the turn's context was routed: the catalog's persona and domains, the selected
+// mini-skills, each system-prompt section with its cache side, and every capability entry the context named
+// with its load mode. Driven through the real dev proxy and produce(); only the provider is scripted.
+
+const INDEX_TEACHING = 'The capability lists below are an INDEX: one line per item, its name and a short description.'
+const CONCIERGE_PERSONA = [
+  'You are the Concierge of a small hotel.',
+  INDEX_TEACHING,
+  '## Resources available to you\n- property-knowledge-base \u2014 Facilities, hours and policies.\n- curated-local-guides',
+  '## Workflows available to you\n- booking-flow \u2014 Book a spa slot, a table or a tour.',
+].join('\n\n')
+const BOOKING_FRAMED = '## Referenced for this message\n### booking-flow (workflow)\nBook a spa slot.\n\n1. Ask the day.\n\nBook me a massage.'
+const BLACKJACK_FRAMED = '## Referenced for this message\n### blackjack (resource)\nthe classic house game\n\nTwo cards each.\n\nLet\'s play blackjack.'
+
+describe('the trace line records per-turn routing (T-0239)', () => {
+  it('a croupier turn: persona catalog, mini-skills, sections with the cache boundary, a framed resource loaded in full', async () => {
+    state.script = [TURN1_ROUND2]
+    const out = await post('/produce', { ...produceBody({ kind: 'intent', text: BLACKJACK_FRAMED, session: { turns: [] } }), personaSystem: 'You are the Croupier.\n\n' + INDEX_TEACHING + '\n\n## Skills available to you\n- house-voice \u2014 Warm and brief.' })
+    expect(out.status).toBe(200)
+    const line = writtenLines().at(-1)!
+    expect(line.outcome).toBe('ok')
+    const routing = line.routing!
+    expect(routing.catalog).toEqual({ id: 'agent-ui--croupier', base: 'agent-ui', persona: 'croupier', domains: [] })
+    expect(routing.references).toEqual([
+      { kind: 'skill', name: 'house-voice', load: 'index-only', via: 'index' },
+      { kind: 'resource', name: 'blackjack', load: 'full', via: 'message' },
+    ])
+    expect(routing.miniSkills).toEqual(expect.arrayContaining([expect.any(String)]))
+    const sections = routing.sections!
+    expect(sections.map((s) => s.id).slice(0, 3)).toEqual(['grammar', 'components', 'functions'])
+    expect(sections.filter((s) => s.cache === 'stable').map((s) => s.id)).toEqual(['grammar', 'components', 'functions'])
+    expect(sections.at(-1)).toMatchObject({ id: 'persona', cache: 'volatile' })
+    expect(routing.cacheBoundary).toBe(sections.slice(0, 3).reduce((n, s) => n + s.chars, 0))
+    expect(sections.reduce((n, s) => n + s.chars, 0)).toBe(line.trace?.promptChars)
+    // Names and kinds only: no entry content reaches the routing block.
+    expect(JSON.stringify(routing)).not.toContain('Two cards each')
+  })
+
+  it('a concierge turn: the knowledge base is index-only, the booking flow loaded in full from history', async () => {
+    state.script = ['{"a2uiMeta":{"note":"The pool opens at 06:00."}}']
+    const session = { turns: [{ role: 'user', content: BOOKING_FRAMED }, { role: 'assistant', content: '{"a2uiMeta":{"note":"Which day?"}}' }] }
+    const out = await post('/produce', { ...produceBody({ kind: 'intent', text: 'What are the pool hours?', session }), catalogId: 'agent-ui--concierge', personaSystem: CONCIERGE_PERSONA })
+    expect(out.status).toBe(200)
+    const line = writtenLines().at(-1)!
+    expect(line).toMatchObject({ agent: 'concierge', outcome: 'ok' })
+    const routing = line.routing!
+    expect(routing.catalog).toEqual({ id: 'agent-ui--concierge', base: 'agent-ui', persona: 'concierge', domains: [] })
+    expect(routing.references).toEqual([
+      { kind: 'resource', name: 'property-knowledge-base', load: 'index-only', via: 'index' },
+      { kind: 'resource', name: 'curated-local-guides', load: 'index-only', via: 'index' },
+      { kind: 'workflow', name: 'booking-flow', load: 'index-only', via: 'index' },
+      { kind: 'workflow', name: 'booking-flow', load: 'full', via: 'history' },
+    ])
+    expect(Array.isArray(routing.miniSkills)).toBe(true)
+    expect(routing.sections?.find((s) => s.id === 'persona')).toMatchObject({ cache: 'volatile' })
+  })
+
+  it('reads a domain catalog id and keeps the host-known routing on a failed turn', () => {
+    expect(catalogRouting('agent-ui')).toEqual({ id: 'agent-ui', base: 'agent-ui', domains: [] })
+    expect(catalogRouting('agent-ui--design+games')).toEqual({ id: 'agent-ui--design+games', base: 'agent-ui', domains: ['design', 'games'] })
+    const failed = new TurnTraceCollector({ route: 'produce', provider: 'anthropic', model: 'm', user: BLACKJACK_FRAMED })
+    failed.noteRouting('agent-ui--croupier', undefined)
+    failed.fail(new Error(UPSTREAM_401))
+    expect(failed.finish().routing).toEqual({ catalog: { id: 'agent-ui--croupier', base: 'agent-ui', persona: 'croupier', domains: [] }, references: [{ kind: 'resource', name: 'blackjack', load: 'full', via: 'message' }] })
   })
 })
