@@ -233,12 +233,12 @@ async function newTraceLines(dir: string, before: number, want: number, runId: s
   }
 }
 
-/** Play one step, then wait until it has settled. T-0222: the turn count moves on any finished turn, and the
- *  page fires its own error turns after a renderer rejection (five-card draw on Sonnet: two before Bet 50's
- *  answer), so the wait is for the step's own exchange, its turn, and a quiet page, never the first turn. */
 /** T-0271: how far a click step got before it threw, so click-target tells a missing button from a dead click. */
 type ClickReach = Partial<Pick<ClickMissing, 'clicked' | 'inNewestSurface' | 'requested'>>
 
+/** Play one step, then wait until it has settled. T-0222: the turn count moves on any finished turn, and the
+ *  page fires its own error turns after a renderer rejection (five-card draw on Sonnet: two before Bet 50's
+ *  answer), so the wait is for the step's own exchange, its turn, and a quiet page, never the first turn. */
 async function playStep(admin: AdminPage, step: ProbeStep, seen: () => Exchange[], inFlight: () => number, quietMs: number, reach: ClickReach = {}): Promise<void> {
   const since = await admin.liveTurnCount()
   if ('say' in step) await admin.sendTestChat(step.say)
