@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L2",
+  "name": "0106-solo-L2",
+  "description": "T-0106 solo L2 BookingForm: two",
+  "model": "sonnet",
+  "effort": "high",
+  "prompt": "T-0106 BookingForm: two date input | solo L2\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-df/.sdlc/bookingform-date-fields/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-df/.sdlc/bookingform-date-fields\nImplement per .sdlc/0106-bookingform-date-fields/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L2",
+  "tier": "L2",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-df/.sdlc/bookingform-date-fields/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-df/.sdlc/bookingform-date-fields",
+  "attempt_id": "af8121436ff54947b2f83047753fde65",
+  "base_sha": "cbe71eb1d14fbfbb3bc43006326392f0efb4dd7f",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.6/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-df/.sdlc/bookingform-date-fields/handoff.md"
+}

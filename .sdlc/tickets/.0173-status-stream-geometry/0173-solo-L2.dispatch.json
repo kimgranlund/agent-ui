@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L2",
+  "name": "0173-solo-L2",
+  "description": "T-0173 solo L2 ui-status-stream and",
+  "model": "opus",
+  "effort": "medium",
+  "prompt": "T-0173 ui-status-stream and its parts | solo L2\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-s1/.sdlc/status-stream-geometry/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-s1/.sdlc/status-stream-geometry\nImplement per .sdlc/0173-status-stream-geometry/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L2",
+  "tier": "L2",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-s1/.sdlc/status-stream-geometry/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-s1/.sdlc/status-stream-geometry",
+  "attempt_id": "22686524e8b4458aa7bb2e7e75e28544",
+  "base_sha": "406498f0e69b33c8fd26f04767a2ec4405dd14ab",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.7/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-s1/.sdlc/status-stream-geometry/handoff.md"
+}

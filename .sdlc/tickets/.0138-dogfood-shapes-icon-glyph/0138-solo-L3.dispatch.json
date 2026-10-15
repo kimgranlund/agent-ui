@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L3",
+  "name": "0138-solo-L3",
+  "description": "T-0138 solo L3 Dogfood: OTP",
+  "model": "opus",
+  "effort": "high",
+  "prompt": "T-0138 Dogfood: OTP round squares, pill | solo L3\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ds/.sdlc/dogfood-shapes-icon-glyph/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ds/.sdlc/dogfood-shapes-icon-glyph\nImplement per .sdlc/0138-dogfood-shapes-icon-glyph/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L3",
+  "tier": "L3",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ds/.sdlc/dogfood-shapes-icon-glyph/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ds/.sdlc/dogfood-shapes-icon-glyph",
+  "attempt_id": "bfc55f362c3b4601b60cfe0cc483acd9",
+  "base_sha": "4bece84ea54b92ffe30d6ce83696809fdfac884b",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.7/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ds/.sdlc/dogfood-shapes-icon-glyph/handoff.md"
+}

@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L3",
+  "name": "0141-solo-L3",
+  "description": "T-0141 solo L3 Dogfood: gauge,",
+  "model": "opus",
+  "effort": "high",
+  "prompt": "T-0141 Dogfood: gauge, stat, breadcrumb | solo L3\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-dg/.sdlc/dogfood-data-charts-nav/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-dg/.sdlc/dogfood-data-charts-nav\nImplement per .sdlc/0141-dogfood-data-charts-nav/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L3",
+  "tier": "L3",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-dg/.sdlc/dogfood-data-charts-nav/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-dg/.sdlc/dogfood-data-charts-nav",
+  "attempt_id": "32077d17465b44bda2bdcdb327a69ac6",
+  "base_sha": "4bece84ea54b92ffe30d6ce83696809fdfac884b",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.7/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-dg/.sdlc/dogfood-data-charts-nav/handoff.md"
+}

@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L2",
+  "name": "0159-solo-L2",
+  "description": "T-0159 solo L2 Agent-admin presets",
+  "model": "opus",
+  "effort": "medium",
+  "prompt": "T-0159 Agent-admin presets and producer | solo L2\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-p1/.sdlc/preset-producer-drift/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-p1/.sdlc/preset-producer-drift\nImplement per .sdlc/0159-preset-producer-drift/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L2",
+  "tier": "L2",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-p1/.sdlc/preset-producer-drift/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-p1/.sdlc/preset-producer-drift",
+  "attempt_id": "03be8fe923ad48f6a4336350ed37134e",
+  "base_sha": "7a528be43124f0f572370357f197deb0cf4abbb8",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.7/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-p1/.sdlc/preset-producer-drift/handoff.md"
+}

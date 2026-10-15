@@ -1,0 +1,21 @@
+{
+  "attempt_id": "93df438adc724678a56005c3c60373de",
+  "name": "plan-reviewer-L1",
+  "role": "plan-reviewer",
+  "level": "L1",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "fable",
+  "effort": "high",
+  "routing_reason": "plan-reviewer L1: planner L3 plan, design-only lane, batched review",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T21:56:17.218297+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.sdlc/0014-asset-embed/handoff.md",
+  "owner_pid": 42649,
+  "handoff_sha256": "52b07fdab7d75193b3195e748dcec82767b9eecb8c8318612a844911978d2e08",
+  "process_pid": 42819,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T22:06:35.631604+00:00"
+}

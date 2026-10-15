@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L2",
+  "name": "0061-solo-L2",
+  "description": "T-0061 solo L2 response-type selection:",
+  "model": "sonnet",
+  "effort": "high",
+  "prompt": "T-0061 response-type selection: the | solo L2\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-msf/.sdlc/rts-missed-surface/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-msf/.sdlc/rts-missed-surface\nImplement per .sdlc/0061-rts-missed-surface/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L2",
+  "tier": "L2",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-msf/.sdlc/rts-missed-surface/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-msf/.sdlc/rts-missed-surface",
+  "attempt_id": "344a706b1243495f8f6c862e7c030e0b",
+  "base_sha": "f268dd5514aca034ecb2a6d9cabcc4371288e983",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.2/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-msf/.sdlc/rts-missed-surface/handoff.md"
+}

@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L2",
+  "name": "0181-solo-L2",
+  "description": "T-0181 solo L2 SPEC: agent",
+  "model": "opus",
+  "effort": "medium",
+  "prompt": "T-0181 SPEC: agent closed-loop testing | solo L2\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-sp1/.sdlc/spec-closed-loop/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-sp1/.sdlc/spec-closed-loop\nImplement per .sdlc/0181-spec-closed-loop/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L2",
+  "tier": "L2",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-sp1/.sdlc/spec-closed-loop/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-sp1/.sdlc/spec-closed-loop",
+  "attempt_id": "78eee1da55d34f369025d64de004f1aa",
+  "base_sha": "efa2932a8cae16409f9b7723df993250243ffa9a",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.7/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-sp1/.sdlc/spec-closed-loop/handoff.md"
+}

@@ -1,7 +1,7 @@
 # T-0208 live probe (step 2): Haiku 5.5, sample 1
 
-Run: `node --experimental-strip-types scripts/e2e-admin/probe/run-capped.ts .sdlc/composite-moment-checks/live-commands.sh --cap 3`
-Total estimated spend $0.06 (cap $3). Run output is under `.sdlc/composite-moment-checks/runs/`. Probe exit 1 on all three: the `expect-*` and `no-json-as-prose` checks failed, as listed.
+Run: `node --experimental-strip-types scripts/e2e-admin/probe/run-capped.ts .sdlc/tickets/.0208-composite-moment-checks/live-commands.sh --cap 3`
+Total estimated spend $0.06 (cap $3). Run output is under `.sdlc/tickets/.0208-composite-moment-checks/runs/`. Probe exit 1 on all three: the `expect-*` and `no-json-as-prose` checks failed, as listed.
 
 | Preset / scenario | Composite drawn | Codes fired (repair rounds) | Spend |
 |---|---|---|---|

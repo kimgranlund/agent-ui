@@ -1,0 +1,21 @@
+{
+  "attempt_id": "8c99ccc3cb7e4d198c821e65bf4f4d6a",
+  "name": "planner-L3-2",
+  "role": "planner",
+  "level": "L3",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "opus",
+  "effort": "xhigh",
+  "routing_reason": "planner L3 replan: specgate refused the plan with 13 findings (duplicate criterion spans across steps) and step 1 predates the ADR-0233 ratification",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T16:21:55.999664+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.sdlc/work/no-barrels/handoff.md",
+  "owner_pid": 25179,
+  "handoff_sha256": "e6e2192a0de67f7eee49672433b11050af41eb563f3522aca46a235c137f35a6",
+  "process_pid": 25213,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T16:43:35.950953+00:00"
+}

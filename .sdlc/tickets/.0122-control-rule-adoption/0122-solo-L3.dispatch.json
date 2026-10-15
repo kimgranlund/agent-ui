@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L3",
+  "name": "0122-solo-L3",
+  "description": "T-0122 solo L3 Adopt the",
+  "model": "opus",
+  "effort": "xhigh",
+  "prompt": "T-0122 Adopt the skill's control rule | solo L3\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-cr/.sdlc/control-rule-adoption/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-cr/.sdlc/control-rule-adoption\nImplement per .sdlc/0122-control-rule-adoption/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L3",
+  "tier": "L3",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-cr/.sdlc/control-rule-adoption/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-cr/.sdlc/control-rule-adoption",
+  "attempt_id": "ade398de7604412aada6f750ab328340",
+  "base_sha": "e2a4351554227f14b030f6a7ca65f7f6a0c113ac",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.6/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-cr/.sdlc/control-rule-adoption/handoff.md"
+}

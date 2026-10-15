@@ -1,0 +1,21 @@
+{
+  "attempt_id": "cc63050df7e4416f90cbe03af41efe38",
+  "name": "verifier-L3",
+  "role": "verifier",
+  "level": "L3",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "fable",
+  "effort": "xhigh",
+  "routing_reason": "Caller selected this role and level; no task-specific rationale supplied.",
+  "reason_source": "fallback",
+  "status": "interrupted",
+  "started_at": "2026-10-06T18:55:23.040780+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-replay",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.sdlc/0018-devtools-meta-replay/handoff.md",
+  "owner_pid": 88581,
+  "handoff_sha256": "f6f013a1da29b65710d7a8a92dbb529a4074e294f7c8fb58d5abe180346f2949",
+  "process_pid": 88612,
+  "exit_code": 143,
+  "finished_at": "2026-10-06T19:05:35.264086+00:00"
+}

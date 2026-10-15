@@ -1,0 +1,536 @@
+a2ui-canvas-widget-md -> 0119-a2ui-canvas-widget-md
+a2ui-skills-refresh -> 0062-a2ui-skills-refresh
+a2ui-test-kit -> 0011-a2ui-test-kit
+activity-errors-card-polish -> 0019-activity-errors-card-polish
+activity-strip-polish -> 0022-activity-strip-polish
+admin-error-turn-per-violation -> 0221-admin-error-turn-per-violation
+admin-headless-flows -> 0010-admin-headless-flows
+admin-temperature-switch-product-photos -> 0129-admin-temperature-switch-product-photos
+admiral-board-actionname -> 0128-admiral-board-actionname
+agent-activity-steps -> 0016-agent-activity-steps
+agent-behavior-evals -> 0005-agent-behavior-evals
+agent-content-compiler -> 0163-agent-content-compiler
+agent-content-files -> 0160-agent-content-files
+agent-content-overlays -> 0161-agent-content-overlays
+agent-content-schema-forms -> 0162-agent-content-schema-forms
+agent-trace-capture -> 0151-agent-trace-capture
+agent-trace-routing-fields -> 0239-agent-trace-routing-fields
+agents-md-single-source -> 0249-agents-md-single-source
+amount-picker -> 0196-amount-picker
+anthropic-workspace-id -> 0192-anthropic-workspace-id
+asset-embed -> 0014-asset-embed
+basic-teaching-module -> 0077-basic-teaching-module
+bookingform-date-cards -> 0092-bookingform-date-cards
+bookingform-date-fields -> 0106-bookingform-date-fields
+bookingform-field-kinds -> 0079-bookingform-field-kinds
+bookingform-kinds -> 0197-bookingform-kinds
+bookingform-layout -> 0085-bookingform-layout
+budget-gate-persona-shards -> 0254-budget-gate-persona-shards
+cardtable-bet-phase -> 0088-cardtable-bet-phase
+cardtable-nested-cards -> 0204-cardtable-nested-cards
+catalog-architecture -> 0201-catalog-architecture
+catalog-id-readers -> 0210-catalog-id-readers
+catalog-previews-all -> 0064-catalog-previews-all
+catalog-tier-counts -> 0076-catalog-tier-counts
+catalog-w0 -> 0202-catalog-w0
+chat-plain-words-error -> 0024-chat-plain-words-error
+chat-probe-capture-defects -> 0222-chat-probe-capture-defects
+chat-probe-loop -> 0174-chat-probe-loop
+chat-repair-leaks-to-prose -> 0217-chat-repair-leaks-to-prose
+claude-md-em-dash -> 0054-claude-md-em-dash
+claude-review-action-broken -> 0153-claude-review-action-broken
+claude-review-still-failing -> 0191-claude-review-still-failing
+composer-model-controls -> 0203-composer-model-controls
+composite-moment-checks -> 0208-composite-moment-checks
+concurrency-ceiling-amendment -> 0009-concurrency-ceiling-amendment
+confirm-receipt -> 0195-confirm-receipt
+context-archaeology -> 0205-context-archaeology
+context-budget-trace -> 0003-context-budget-trace
+context-single-source -> 0209-context-single-source
+control-rule-adoption -> 0122-control-rule-adoption
+correctness-producer -> 0172-correctness-producer
+correctness-renderer -> 0171-correctness-renderer
+croupier-bet-check-poker -> 0212-croupier-bet-check-poker
+croupier-cardtable -> 0073-croupier-cardtable
+croupier-checks-need-data-model -> 0215-croupier-checks-need-data-model
+croupier-closed-loop -> 0184-croupier-closed-loop
+croupier-deal-again-skips-bet -> 0211-croupier-deal-again-skips-bet
+croupier-first-deal-debit -> 0216-croupier-first-deal-debit
+croupier-followups -> 0194-croupier-followups
+croupier-haiku-faces-padding -> 0004-croupier-haiku-faces-padding
+croupier-haiku-state-in-prose -> 0214-croupier-haiku-state-in-prose
+croupier-hand-consistency -> 0017-croupier-hand-consistency
+croupier-natural-blackjack -> 0020-croupier-natural-blackjack
+croupier-opening-skips-bet -> 0232-croupier-opening-skips-bet
+croupier-playing-table-no-moves -> 0233-croupier-playing-table-no-moves
+croupier-poker-placeholder-hole-cards -> 0218-croupier-poker-placeholder-hole-cards
+croupier-rerecord-haiku-5-5 -> 0033-croupier-rerecord-haiku-5-5
+croupier-round-surface -> 0002-croupier-round-surface
+croupier-rules-correctness-check -> 0219-croupier-rules-correctness-check
+default-lazy-slices -> 0037-default-lazy-slices
+default-widget-rows -> 0072-default-widget-rows
+derived-inherit-base-idioms -> 0068-derived-inherit-base-idioms
+devtools-meta-replay -> 0018-devtools-meta-replay
+docs-demos-400px-overflow -> 0130-docs-demos-400px-overflow
+docs-stale-records -> 0047-docs-stale-records
+dogfood-a2ui-app -> 0142-dogfood-a2ui-app
+dogfood-data-charts-nav -> 0141-dogfood-data-charts-nav
+dogfood-design-review -> 0137-dogfood-design-review
+dogfood-disabled-recipe -> 0139-dogfood-disabled-recipe
+dogfood-entry-atoms -> 0140-dogfood-entry-atoms
+dogfood-lint -> 0136-dogfood-lint
+dogfood-lint-rules-2 -> 0144-dogfood-lint-rules-2
+dogfood-review-2 -> 0145-dogfood-review-2
+dogfood-rulings-2 -> 0143-dogfood-rulings-2
+dogfood-selection-guidance -> 0008-dogfood-selection-guidance
+dogfood-shapes-icon-glyph -> 0138-dogfood-shapes-icon-glyph
+dogfood3-app-chat -> 0147-dogfood3-app-chat
+dogfood3-data-nav -> 0149-dogfood3-data-nav
+dogfood3-demos -> 0150-dogfood3-demos
+dogfood3-entry -> 0148-dogfood3-entry
+dogfood3-widgets -> 0146-dogfood3-widgets
+domain-exemplars -> 0240-domain-exemplars
+domain-seeds -> 0245-domain-seeds
+drill-400px-overflow-flake -> 0244-drill-400px-overflow-flake
+drill-panel-narrow-fit -> 0186-drill-panel-narrow-fit
+drop-unused-shared-deps -> 0057-drop-unused-shared-deps
+entry-docs-dag -> 0048-entry-docs-dag
+entry-plan-docs-refresh -> 0251-entry-plan-docs-refresh
+eval-judged-checks -> 0178-eval-judged-checks
+eval-matrix-baselines -> 0179-eval-matrix-baselines
+eval-report -> 0177-eval-report
+eval-scenarios-store -> 0176-eval-scenarios-store
+exemplar-routing-off-domain -> 0238-exemplar-routing-off-domain
+explicit-low-effort -> 0032-explicit-low-effort
+flagship-rerecord-haiku-5-5 -> 0056-flagship-rerecord-haiku-5-5
+fog-bundle-rounds -> 0248-fog-bundle-rounds
+foundations-a01 -> 0094-foundations-a01
+foundations-a02 -> 0095-foundations-a02
+foundations-a03 -> 0096-foundations-a03
+foundations-a04 -> 0097-foundations-a04
+foundations-a05 -> 0098-foundations-a05
+foundations-a06 -> 0099-foundations-a06
+foundations-a07 -> 0100-foundations-a07
+foundations-a08 -> 0101-foundations-a08
+foundations-a09 -> 0102-foundations-a09
+foundations-a10 -> 0103-foundations-a10
+foundations-cut -> 0107-foundations-cut
+foundations-doc-repairs -> 0118-foundations-doc-repairs
+foundations-look-verify -> 0132-foundations-look-verify
+foundations-repin-a01 -> 0108-foundations-repin-a01
+foundations-repin-a02 -> 0109-foundations-repin-a02
+foundations-repin-a03 -> 0110-foundations-repin-a03
+foundations-repin-a04 -> 0111-foundations-repin-a04
+foundations-repin-a05 -> 0112-foundations-repin-a05
+foundations-repin-a06 -> 0113-foundations-repin-a06
+foundations-repin-a07 -> 0114-foundations-repin-a07
+foundations-repin-a08 -> 0115-foundations-repin-a08
+foundations-repin-a10 -> 0116-foundations-repin-a10
+foundations-verify-1 -> 0104-foundations-verify-1
+foundations-verify-2 -> 0105-foundations-verify-2
+foundations-wave0 -> 0093-foundations-wave0
+game-hidden-state-no-home -> 0230-game-hidden-state-no-home
+games-rank-by-family -> 0253-games-rank-by-family
+gh63-poison-producer -> 0227-gh63-poison-producer
+haiku-5-5 -> 0030-haiku-5-5
+haiku-5-5-max-tokens -> 0035-haiku-5-5-max-tokens
+harness-wiring-fix -> 0049-harness-wiring-fix
+inner-radius-quizmaster-stylist -> 0223-inner-radius-quizmaster-stylist
+itinerary-compare -> 0199-itinerary-compare
+kicker-too-large -> 0117-kicker-too-large
+lazy-a2ui-tests -> 0041-lazy-a2ui-tests
+lazy-catalog-adr-seam -> 0027-lazy-catalog-adr-seam
+lazy-catalog-records -> 0029-lazy-catalog-records
+lazy-catalog-renderer -> 0028-lazy-catalog-renderer
+lazy-default-flip -> 0042-lazy-default-flip
+lazy-settle-seam -> 0039-lazy-settle-seam
+lazy-site-callers -> 0040-lazy-site-callers
+lexicon-false-positives -> 0063-lexicon-false-positives
+line-chart-projected-dash -> 0188-line-chart-projected-dash
+lint-allowlist-owners -> 0170-lint-allowlist-owners
+lint-dead-plumbing -> 0169-lint-dead-plumbing
+lint-root-derived -> 0167-lint-root-derived
+lint-rulings-coverage -> 0168-lint-rulings-coverage
+live-round-2 -> 0225-live-round-2
+local-first-workflows -> 0255-local-first-workflows
+look-verify-fixes -> 0133-look-verify-fixes
+math-foundations-adr -> 0091-math-foundations-adr
+model-capability-settings -> 0185-model-capability-settings
+narrated-surface-mechanics -> 0234-narrated-surface-mechanics
+option-deck -> 0193-option-deck
+package-deps-audit -> 0053-package-deps-audit
+persona-exemplar-fixture-defects -> 0246-persona-exemplar-fixture-defects
+persona-library-barrel-import -> 0058-persona-library-barrel-import
+persona-manifest -> 0012-persona-manifest
+persona-registry -> 0013-persona-registry
+persona-sidecars-bar -> 0078-persona-sidecars-bar
+persona-silent-drop -> 0224-persona-silent-drop
+pill-radius-fields-badges -> 0134-pill-radius-fields-badges
+playing-card-center-suit -> 0080-playing-card-center-suit
+playing-card-type-floor -> 0189-playing-card-type-floor
+post-shrink-floor-and-stale-tests -> 0127-post-shrink-floor-and-stale-tests
+preset-contradictions -> 0066-preset-contradictions
+preset-knowledge-index-only -> 0231-preset-knowledge-index-only
+preset-producer-drift -> 0159-preset-producer-drift
+preset-widgets-design -> 0065-preset-widgets-design
+probe-from-trace-agent-default -> 0236-probe-from-trace-agent-default
+probe-live-prose-cumulative -> 0235-probe-live-prose-cumulative
+producer-reply-meta-line-prose -> 0213-producer-reply-meta-line-prose
+producer-text-shape-reply-leak -> 0229-producer-text-shape-reply-leak
+prompt-budget-real-presets -> 0207-prompt-budget-real-presets
+prompt-cache-stable-first -> 0206-prompt-cache-stable-first
+questioncard-match-mockup -> 0082-questioncard-match-mockup
+quizmaster-questioncard -> 0074-quizmaster-questioncard
+quizmaster-seed-bump -> 0036-quizmaster-seed-bump
+quizmaster-test-strengthen -> 0045-quizmaster-test-strengthen
+reasoning-panel -> 0021-reasoning-panel
+remove-ops -> 0001-remove-ops
+renderer-forward-control-action -> 0081-renderer-forward-control-action
+renderer-lazy-spike -> 0055-renderer-lazy-spike
+repin-md-a01 -> 0154-repin-md-a01
+repin-md-a02-a04 -> 0155-repin-md-a02-a04
+repin-md-a05-a10 -> 0156-repin-md-a05-a10
+repin-md-app-unlaned -> 0157-repin-md-app-unlaned
+repin-md-last-reds -> 0158-repin-md-last-reds
+repin-v2-app-a2ui-site -> 0126-repin-v2-app-a2ui-site
+repin-v2-containers-widgets -> 0125-repin-v2-containers-widgets
+repin-v2-entry-action -> 0123-repin-v2-entry-action
+repin-v2-indicators-atoms-nav -> 0124-repin-v2-indicators-atoms-nav
+repo-cleanup-oct -> 0250-repo-cleanup-oct
+response-type-selection -> 0060-response-type-selection
+result-card -> 0089-result-card
+retire-adr-system -> 0164-retire-adr-system
+retry-tests-and-docs -> 0006-retry-tests-and-docs
+root-product-md -> 0152-root-product-md
+rootmd-drill-demo -> 0165-rootmd-drill-demo
+rootmd-eval-catalog-overflow -> 0166-rootmd-eval-catalog-overflow
+round-archive -> 0241-round-archive
+rts-missed-surface -> 0061-rts-missed-surface
+sdlc-topics-layout -> 0242-sdlc-topics-layout
+shell-geometry-fixes -> 0121-shell-geometry-fixes
+shopkeeper-preset -> 0075-shopkeeper-preset
+sidecar-browser-projection -> 0025-sidecar-browser-projection
+sidecar-why-rewrite -> 0007-sidecar-why-rewrite
+site-demo-inline-literals -> 0190-site-demo-inline-literals
+site-nav-red -> 0043-site-nav-red
+size-budget-split-design -> 0026-size-budget-split-design
+skill-v2-sync -> 0120-skill-v2-sync
+skills-em-dash-1 -> 0050-skills-em-dash-1
+skills-em-dash-2 -> 0051-skills-em-dash-2
+skills-em-dash-3 -> 0052-skills-em-dash-3
+sonnet-5-5 -> 0180-sonnet-5-5
+spec-a2ui-upserts -> 0183-spec-a2ui-upserts
+spec-agent-content -> 0182-spec-agent-content
+spec-closed-loop -> 0181-spec-closed-loop
+specs-skills-scrub -> 0252-specs-skills-scrub
+split-pane-narrow-fit -> 0187-split-pane-narrow-fit
+stale-surface-docs-audioplayer-preview -> 0131-stale-surface-docs-audioplayer-preview
+status-stream-geometry -> 0173-status-stream-geometry
+step-flow -> 0198-step-flow
+stray-screenshots-dirs -> 0228-stray-screenshots-dirs
+stringified-tool-input -> 0034-stringified-tool-input
+stylist-contrast-pair -> 0090-stylist-contrast-pair
+sub-tag-aliases -> 0015-sub-tag-aliases
+swiper-disconnect-test -> 0044-swiper-disconnect-test
+swiper-item-demo-red -> 0038-swiper-item-demo-red
+teach-existing-composites -> 0200-teach-existing-composites
+text-field-date-type -> 0135-text-field-date-type
+textfield-date-iso -> 0175-textfield-date-iso
+thinking-blocks-passthrough -> 0031-thinking-blocks-passthrough
+tier-rename-compound -> 0086-tier-rename-compound
+turn-deadline -> 0023-turn-deadline
+ui-board-grid -> 0069-ui-board-grid
+ui-game-hud -> 0071-ui-game-hud
+ui-product-card -> 0070-ui-product-card
+untrack-fixture-scratch -> 0059-untrack-fixture-scratch
+upsert-closed-loop-docs-2 -> 0243-upsert-closed-loop-docs-2
+upsert-round2-learnings -> 0237-upsert-round2-learnings
+validate-dropped-child-same-payload -> 0226-validate-dropped-child-same-payload
+validate-payload-persona-ids -> 0247-validate-payload-persona-ids
+validator-renderer-id-graph-gap -> 0220-validator-renderer-id-graph-gap
+visual-nav-overlay-red -> 0046-visual-nav-overlay-red
+widget-patterns-next -> 0087-widget-patterns-next
+widgets-adr-0243 -> 0067-widgets-adr-0243
+widgets-container-gutters -> 0084-widgets-container-gutters
+widgets-match-mockups -> 0083-widgets-match-mockups
+rewrite .claude/docs/adr/0241-lazy-catalog-bodies-behind-an-eager-manifest.md
+rewrite .claude/docs/adr/0244-next-preset-widgets-result-card-contrast-pair.md
+rewrite .claude/docs/adr/0245-foundations-derive-from-one-n.md
+rewrite .claude/docs/lld/response-type-selection.lld.md
+rewrite .claude/docs/prd/response-type-selection.prd.md
+rewrite .sdlc/a2ui-canvas-widget-md/0119-solo-L3.dispatch.json
+rewrite .sdlc/a2ui-skills-refresh/handoff.md
+rewrite .sdlc/a2ui-test-kit/architect-L1.md
+rewrite .sdlc/a2ui-test-kit/decompose/report.md
+rewrite .sdlc/a2ui-test-kit/handoff.md
+rewrite .sdlc/a2ui-test-kit/planner-L3-2.md
+rewrite .sdlc/a2ui-test-kit/planner-L3-3.md
+rewrite .sdlc/a2ui-test-kit/planner-L3.md
+rewrite .sdlc/admin-headless-flows/architect-L1.md
+rewrite .sdlc/admin-headless-flows/decompose/report.md
+rewrite .sdlc/admin-headless-flows/planner-L3.md
+rewrite .sdlc/admin-headless-flows/step-2/handoff.md
+rewrite .sdlc/admin-temperature-switch-product-photos/0129-solo-L2.dispatch.json
+rewrite .sdlc/admiral-board-actionname/0128-solo-L2.dispatch.json
+rewrite .sdlc/agent-behavior-evals/planner-L3-2.md
+rewrite .sdlc/agent-behavior-evals/planner-L3.md
+rewrite .sdlc/agent-behavior-evals/step-1/handoff.md
+rewrite .sdlc/agent-trace-capture/0151-solo-L3.dispatch.json
+rewrite .sdlc/archive/fleet-retro-2026-10-12-12.md
+rewrite .sdlc/archive/pause-2026-10-06.md
+rewrite .sdlc/asset-embed/architect-L1.md
+rewrite .sdlc/asset-embed/decompose/report.md
+rewrite .sdlc/asset-embed/planner-L3.md
+rewrite .sdlc/asset-embed/step-1/handoff.md
+rewrite .sdlc/asset-embed/step-2/handoff.md
+rewrite .sdlc/asset-embed/step-3/handoff.md
+rewrite .sdlc/asset-embed/step-4/handoff.md
+rewrite .sdlc/bookingform-date-cards/0092-solo-L2.dispatch.json
+rewrite .sdlc/bookingform-date-fields/0106-solo-L2.dispatch.json
+rewrite .sdlc/bookingform-layout/0085-solo-L3.dispatch.json
+rewrite .sdlc/cardtable-bet-phase/0088-solo-L3.dispatch.json
+rewrite .sdlc/catalog-previews-all/handoff.md
+rewrite .sdlc/chat-probe-loop/handoff.md
+rewrite .sdlc/composite-moment-checks/handoff.md
+rewrite .sdlc/context-budget-trace/architect-L1.md
+rewrite .sdlc/context-budget-trace/decompose/report.md
+rewrite .sdlc/context-budget-trace/handoff.md
+rewrite .sdlc/context-budget-trace/planner-L3-2.md
+rewrite .sdlc/context-budget-trace/planner-L3.md
+rewrite .sdlc/context-budget-trace/step-1.superseded-1/handoff.md
+rewrite .sdlc/context-budget-trace/step-1/handoff.md
+rewrite .sdlc/context-budget-trace/step-3.superseded-1/handoff.md
+rewrite .sdlc/context-budget-trace/step-3/handoff.md
+rewrite .sdlc/control-rule-adoption/0122-solo-L3.dispatch.json
+rewrite .sdlc/control-rule-adoption/handoff.md
+rewrite .sdlc/control-rule-adoption/solo-report.md
+rewrite .sdlc/correctness-renderer/0171-solo-L2.dispatch.json
+rewrite .sdlc/croupier-cardtable/handoff.md
+rewrite .sdlc/croupier-cardtable/planner-L3.md
+rewrite .sdlc/croupier-cardtable/step-1/handoff.md
+rewrite .sdlc/croupier-cardtable/step-2/handoff.md
+rewrite .sdlc/croupier-checks-need-data-model/handoff.md
+rewrite .sdlc/croupier-closed-loop/0184-solo-L2.dispatch.json
+rewrite .sdlc/croupier-closed-loop/verifier-L2.md
+rewrite .sdlc/croupier-followups/0194-solo-L2.dispatch.json
+rewrite .sdlc/croupier-opening-skips-bet/handoff.md
+rewrite .sdlc/default-lazy-slices/design.md
+rewrite .sdlc/default-lazy-slices/handoff.md
+rewrite .sdlc/default-lazy-slices/measure/check-design.mjs
+rewrite .sdlc/default-lazy-slices/measure/prototype.mjs
+rewrite .sdlc/default-lazy-slices/solo-L2-default-lazy-slices.dispatch.json
+rewrite .sdlc/default-widget-rows/0072-solo-L2.dispatch.json
+rewrite .sdlc/default-widget-rows/handoff.md
+rewrite .sdlc/derived-inherit-base-idioms/handoff.md
+rewrite .sdlc/docs-demos-400px-overflow/0130-solo-L2.dispatch.json
+rewrite .sdlc/dogfood-a2ui-app/0142-solo-L2.dispatch.json
+rewrite .sdlc/dogfood-a2ui-app/handoff.md
+rewrite .sdlc/dogfood-data-charts-nav/0141-solo-L3.dispatch.json
+rewrite .sdlc/dogfood-data-charts-nav/handoff.md
+rewrite .sdlc/dogfood-design-review/part-a/handoff.md
+rewrite .sdlc/dogfood-design-review/part-a/ui-designer-L1.md
+rewrite .sdlc/dogfood-design-review/part-b/handoff.md
+rewrite .sdlc/dogfood-design-review/part-c/handoff.md
+rewrite .sdlc/dogfood-design-review/part-c/ui-designer-L1.md
+rewrite .sdlc/dogfood-disabled-recipe/0139-solo-L2.dispatch.json
+rewrite .sdlc/dogfood-disabled-recipe/handoff.md
+rewrite .sdlc/dogfood-entry-atoms/0140-solo-L2.dispatch.json
+rewrite .sdlc/dogfood-entry-atoms/handoff.md
+rewrite .sdlc/dogfood-lint-rules-2/0144-solo-L3.dispatch.json
+rewrite .sdlc/dogfood-lint/0136-solo-L3.dispatch.json
+rewrite .sdlc/dogfood-review-2/handoff.md
+rewrite .sdlc/dogfood-review-2/part-a/handoff.md
+rewrite .sdlc/dogfood-review-2/part-a/ui-designer-L1.md
+rewrite .sdlc/dogfood-review-2/part-b/handoff.md
+rewrite .sdlc/dogfood-review-2/part-b/ui-designer-L1.md
+rewrite .sdlc/dogfood-review-2/part-c/handoff.md
+rewrite .sdlc/dogfood-review-2/part-c/ui-designer-L1.md
+rewrite .sdlc/dogfood-rulings-2/0143-solo-L3.dispatch.json
+rewrite .sdlc/dogfood-selection-guidance/architect-L1.md
+rewrite .sdlc/dogfood-selection-guidance/decompose/report.md
+rewrite .sdlc/dogfood-selection-guidance/planner-L3.md
+rewrite .sdlc/dogfood-selection-guidance/step-1/handoff.md
+rewrite .sdlc/dogfood-selection-guidance/step-2/handoff.md
+rewrite .sdlc/dogfood-shapes-icon-glyph/0138-solo-L3.dispatch.json
+rewrite .sdlc/dogfood-shapes-icon-glyph/handoff.md
+rewrite .sdlc/dogfood3-app-chat/0147-solo-L2.dispatch.json
+rewrite .sdlc/dogfood3-data-nav/0149-solo-L3.dispatch.json
+rewrite .sdlc/dogfood3-demos/0150-solo-L2.dispatch.json
+rewrite .sdlc/dogfood3-entry/0148-solo-L3.dispatch.json
+rewrite .sdlc/dogfood3-widgets/0146-solo-L2.dispatch.json
+rewrite .sdlc/domain-exemplars/handoff.md
+rewrite .sdlc/drop-unused-shared-deps/handoff.md
+rewrite .sdlc/evals/rounds/2026-10-15-t0208-probe/live-commands.sh
+rewrite .sdlc/evals/rounds/2026-10-15-t0208-probe/report.md
+rewrite .sdlc/foundations-a01/0094-solo-L2.dispatch.json
+rewrite .sdlc/foundations-a02/0095-solo-L2.dispatch.json
+rewrite .sdlc/foundations-a03/0096-solo-L2.dispatch.json
+rewrite .sdlc/foundations-a04/0097-solo-L2.dispatch.json
+rewrite .sdlc/foundations-a05/0098-solo-L2.dispatch.json
+rewrite .sdlc/foundations-a06/0099-solo-L2.dispatch.json
+rewrite .sdlc/foundations-a07/0100-solo-L2.dispatch.json
+rewrite .sdlc/foundations-a08/0101-solo-L2.dispatch.json
+rewrite .sdlc/foundations-a09/0102-solo-L2.dispatch.json
+rewrite .sdlc/foundations-a10/0103-solo-L2.dispatch.json
+rewrite .sdlc/foundations-cut/0107-solo-L3.dispatch.json
+rewrite .sdlc/foundations-cut/handoff.md
+rewrite .sdlc/foundations-doc-repairs/0118-solo-L2.dispatch.json
+rewrite .sdlc/foundations-look-verify/handoff.md
+rewrite .sdlc/foundations-look-verify/verifier-L2-2.md
+rewrite .sdlc/foundations-look-verify/verifier-L2.md
+rewrite .sdlc/foundations-repin-a01/0108-solo-L2.dispatch.json
+rewrite .sdlc/foundations-repin-a01/handoff.md
+rewrite .sdlc/foundations-repin-a02/0109-solo-L2.dispatch.json
+rewrite .sdlc/foundations-repin-a02/handoff.md
+rewrite .sdlc/foundations-repin-a03/0110-solo-L2.dispatch.json
+rewrite .sdlc/foundations-repin-a03/handoff.md
+rewrite .sdlc/foundations-repin-a04/0111-solo-L2.dispatch.json
+rewrite .sdlc/foundations-repin-a04/handoff.md
+rewrite .sdlc/foundations-repin-a05/0112-solo-L2.dispatch.json
+rewrite .sdlc/foundations-repin-a05/handoff.md
+rewrite .sdlc/foundations-repin-a06/0113-solo-L2.dispatch.json
+rewrite .sdlc/foundations-repin-a06/handoff.md
+rewrite .sdlc/foundations-repin-a07/0114-solo-L2.dispatch.json
+rewrite .sdlc/foundations-repin-a07/handoff.md
+rewrite .sdlc/foundations-repin-a08/0115-solo-L2.dispatch.json
+rewrite .sdlc/foundations-repin-a08/handoff.md
+rewrite .sdlc/foundations-repin-a10/0116-solo-L2.dispatch.json
+rewrite .sdlc/foundations-repin-a10/handoff.md
+rewrite .sdlc/foundations-verify-1/verifier-L2-2.md
+rewrite .sdlc/foundations-verify-2/verifier-L2-2.md
+rewrite .sdlc/foundations-wave0/0093-solo-L3.dispatch.json
+rewrite .sdlc/game-hidden-state-no-home/handoff.md
+rewrite .sdlc/kicker-too-large/0117-solo-L2.dispatch.json
+rewrite .sdlc/lazy-a2ui-tests/handoff.md
+rewrite .sdlc/lazy-catalog-adr-seam/handoff.md
+rewrite .sdlc/lazy-catalog-records/handoff.md
+rewrite .sdlc/lazy-catalog-renderer/handoff.md
+rewrite .sdlc/lazy-default-flip/handoff.md
+rewrite .sdlc/lazy-settle-seam/handoff.md
+rewrite .sdlc/lazy-site-callers/handoff.md
+rewrite .sdlc/lexicon-false-positives/0063-solo-L1.dispatch.json
+rewrite .sdlc/lexicon-false-positives/verifier-L1.md
+rewrite .sdlc/lint-allowlist-owners/0170-solo-L2.dispatch.json
+rewrite .sdlc/lint-root-derived/0167-solo-L2.dispatch.json
+rewrite .sdlc/live-round-2/handoff.md
+rewrite .sdlc/look-verify-fixes/0133-solo-L2.dispatch.json
+rewrite .sdlc/look-verify-fixes/handoff.md
+rewrite .sdlc/math-foundations-adr/0091-solo-L3.dispatch.json
+rewrite .sdlc/model-capability-settings/0185-solo-L2.dispatch.json
+rewrite .sdlc/model-capability-settings/verifier-L3.md
+rewrite .sdlc/notes.md
+rewrite .sdlc/package-deps-audit/check.sh
+rewrite .sdlc/package-deps-audit/findings.md
+rewrite .sdlc/package-deps-audit/handoff.md
+rewrite .sdlc/package-deps-audit/solo-L1-package-deps-audit.dispatch.json
+rewrite .sdlc/persona-library-barrel-import/handoff.md
+rewrite .sdlc/persona-manifest/architect-L1.md
+rewrite .sdlc/persona-manifest/decompose/report.md
+rewrite .sdlc/persona-manifest/handoff.md
+rewrite .sdlc/persona-manifest/planner-L3-2.md
+rewrite .sdlc/persona-manifest/planner-L3.md
+rewrite .sdlc/persona-manifest/step-1/handoff.md
+rewrite .sdlc/persona-registry/architect-L1.md
+rewrite .sdlc/persona-registry/decompose/report.md
+rewrite .sdlc/pill-radius-fields-badges/0134-solo-L3.dispatch.json
+rewrite .sdlc/post-shrink-floor-and-stale-tests/0127-solo-L2.dispatch.json
+rewrite .sdlc/preset-knowledge-index-only/handoff.md
+rewrite .sdlc/preset-producer-drift/0159-solo-L2.dispatch.json
+rewrite .sdlc/preset-widgets-design/architect-L1.md
+rewrite .sdlc/preset-widgets-design/design.md
+rewrite .sdlc/preset-widgets-design/handoff.md
+rewrite .sdlc/preset-widgets-design/measure/probe.ts
+rewrite .sdlc/prompt-cache-stable-first/handoff.md
+rewrite .sdlc/questioncard-match-mockup/0082-solo-L3.dispatch.json
+rewrite .sdlc/questioncard-match-mockup/verifier-L2.md
+rewrite .sdlc/quizmaster-questioncard/handoff.md
+rewrite .sdlc/quizmaster-questioncard/planner-L2.md
+rewrite .sdlc/quizmaster-questioncard/step-1/handoff.md
+rewrite .sdlc/quizmaster-questioncard/step-1/verifier-L2.md
+rewrite .sdlc/reasoning-panel/solo-M-reasoning-panel.dispatch.json
+rewrite .sdlc/renderer-forward-control-action/0081-solo-L2.dispatch.json
+rewrite .sdlc/renderer-lazy-spike/handoff.md
+rewrite .sdlc/renderer-lazy-spike/measure/check-design.mjs
+rewrite .sdlc/renderer-lazy-spike/measure/prototype.mjs
+rewrite .sdlc/renderer-lazy-spike/verifier-L2.md
+rewrite .sdlc/repin-md-a01/handoff.md
+rewrite .sdlc/repin-md-a02-a04/0155-solo-L2.dispatch.json
+rewrite .sdlc/repin-md-a02-a04/handoff.md
+rewrite .sdlc/repin-md-a05-a10/handoff.md
+rewrite .sdlc/repin-md-app-unlaned/handoff.md
+rewrite .sdlc/repin-v2-app-a2ui-site/0126-solo-L2.dispatch.json
+rewrite .sdlc/repin-v2-app-a2ui-site/handoff.md
+rewrite .sdlc/repin-v2-containers-widgets/0125-solo-L2.dispatch.json
+rewrite .sdlc/repin-v2-containers-widgets/handoff.md
+rewrite .sdlc/repin-v2-entry-action/0123-solo-L2.dispatch.json
+rewrite .sdlc/repin-v2-entry-action/handoff.md
+rewrite .sdlc/repin-v2-indicators-atoms-nav/0124-solo-L2.dispatch.json
+rewrite .sdlc/repin-v2-indicators-atoms-nav/handoff.md
+rewrite .sdlc/repo-cleanup-oct/copied-records.txt
+rewrite .sdlc/response-type-selection/architect-L1.md
+rewrite .sdlc/response-type-selection/decompose/report.md
+rewrite .sdlc/response-type-selection/handoff.md
+rewrite .sdlc/response-type-selection/plan-reviewer-L1.md
+rewrite .sdlc/response-type-selection/planner-L3-2.md
+rewrite .sdlc/response-type-selection/planner-L3.md
+rewrite .sdlc/response-type-selection/step-1/handoff.md
+rewrite .sdlc/response-type-selection/step-3/builder-L3.md
+rewrite .sdlc/response-type-selection/step-3/handoff.md
+rewrite .sdlc/response-type-selection/step-4/builder-L4-2.md
+rewrite .sdlc/response-type-selection/step-4/builder-L4.md
+rewrite .sdlc/response-type-selection/step-4/handoff.md
+rewrite .sdlc/response-type-selection/step-9/handoff.md
+rewrite .sdlc/response-type-selection/step-9/verifier-L3.md
+rewrite .sdlc/result-card/0089-solo-L3.dispatch.json
+rewrite .sdlc/result-card/handoff.md
+rewrite .sdlc/result-card/measure/probe.ts
+rewrite .sdlc/retire-adr-system/0164-solo-L2.dispatch.json
+rewrite .sdlc/retry-tests-and-docs/step-1/handoff.md
+rewrite .sdlc/root-product-md/handoff.md
+rewrite .sdlc/round-archive/handoff.md
+rewrite .sdlc/rts-missed-surface/0061-solo-L2.dispatch.json
+rewrite .sdlc/rts-missed-surface/handoff.md
+rewrite .sdlc/rts-missed-surface/verifier-L2.md
+rewrite .sdlc/shell-geometry-fixes/0121-solo-L3.dispatch.json
+rewrite .sdlc/shell-geometry-fixes/capture.mjs
+rewrite .sdlc/shell-geometry-fixes/px-table.mjs
+rewrite .sdlc/shopkeeper-preset/0075-solo-L2.dispatch.json
+rewrite .sdlc/shopkeeper-preset/handoff.md
+rewrite .sdlc/size-budget-split-design/handoff.md
+rewrite .sdlc/size-budget-split-design/measure/check-design.mjs
+rewrite .sdlc/size-budget-split-design/solo-M-size-budget-split-design.dispatch.json
+rewrite .sdlc/skill-v2-sync/0120-solo-L3.dispatch.json
+rewrite .sdlc/skills-em-dash-1/T-0050-solo.dispatch.json
+rewrite .sdlc/skills-em-dash-2/T-0051-solo.dispatch.json
+rewrite .sdlc/skills-em-dash-3/T-0052-solo.dispatch.json
+rewrite .sdlc/spec-closed-loop/0181-solo-L2.dispatch.json
+rewrite .sdlc/stale-surface-docs-audioplayer-preview/0131-solo-L2.dispatch.json
+rewrite .sdlc/status-stream-geometry/0173-solo-L2.dispatch.json
+rewrite .sdlc/status-stream-geometry/handoff.md
+rewrite .sdlc/stray-screenshots-dirs/handoff.md
+rewrite .sdlc/stylist-contrast-pair/0090-solo-L3.dispatch.json
+rewrite .sdlc/stylist-contrast-pair/handoff.md
+rewrite .sdlc/teach-existing-composites/0200-solo-L2.dispatch.json
+rewrite .sdlc/text-field-date-type/0135-solo-L3.dispatch.json
+rewrite .sdlc/tier-rename-compound/0086-solo-L2.dispatch.json
+rewrite .sdlc/ui-board-grid/handoff.md
+rewrite .sdlc/ui-board-grid/planner-L3-2.md
+rewrite .sdlc/ui-board-grid/refusals.jsonl
+rewrite .sdlc/ui-board-grid/step-1.superseded-1/builder-L3.md
+rewrite .sdlc/ui-board-grid/step-1.superseded-1/handoff.md
+rewrite .sdlc/ui-board-grid/step-1/handoff.md
+rewrite .sdlc/ui-game-hud/handoff.md
+rewrite .sdlc/ui-game-hud/planner-L3.md
+rewrite .sdlc/ui-game-hud/step-1/handoff.md
+rewrite .sdlc/ui-product-card/handoff.md
+rewrite .sdlc/upsert-closed-loop-docs-2/handoff.md
+rewrite .sdlc/validator-renderer-id-graph-gap/handoff.md
+rewrite .sdlc/widget-patterns-next/0087-solo-L3.dispatch.json
+rewrite .sdlc/widget-patterns-next/handoff.md
+rewrite .sdlc/widget-patterns-next/measure/probe.ts
+rewrite .sdlc/widgets-adr-0243/handoff.md
+rewrite .sdlc/widgets-container-gutters/0084-solo-L3.dispatch.json
+rewrite .sdlc/widgets-match-mockups/0083-solo-L3.dispatch.json
+rewrite .sdlc/widgets-match-mockups/handoff.md
+rewrite .sdlc/widgets-match-mockups/verifier-L2.md
+rewrite packages/agent-ui/a2ui/src/catalog/personas/croupier/hands.fixture.ts

@@ -1,0 +1,5 @@
+Manifest: .sdlc/0010-admin-headless-flows/decompose/manifest-v1.json (technical-architecture · plan) · coverage_check: clean
+Quadrant: load-bearing
+Outside-in: 16 leaves, file-disjoint by owning file; one serial prep slice (n1 extracts the vite boot/teardown trio so a third copy is never written); one serial integration slice (n14 package.json + tsconfig.tools.json) before the docs scrub (n15); n16 (CI workflow) is Kim-gated. No pure-structure node; no node hosts two unrelated interfaces.
+Inside-out: 30 capabilities, none unhosted. Two actions name a limit rather than a solution: the 120 s client timeout in admin-live-runner.ts is a module constant, so the abort path (a27) is a connection abort and an in-band error line, never a real timeout; the devtools meta replay the handoff listed as slice 2 is deliberately NOT an action here (SPEC-R3/R10 pin replay to the `line` sequence; fixtures carry raw wire lines, so nothing in this ticket needs it; a follow-up ticket with a spec amendment).
+Hand-off: /plan

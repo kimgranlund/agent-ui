@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L2",
+  "name": "0114-solo-L2",
+  "description": "T-0114 solo L2 Cut re-pin",
+  "model": "sonnet",
+  "effort": "high",
+  "prompt": "T-0114 Cut re-pin lane a07 (app): update | solo L2\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-rpa07/.sdlc/foundations-repin-a07/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-rpa07/.sdlc/foundations-repin-a07\nImplement per .sdlc/0114-foundations-repin-a07/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L2",
+  "tier": "L2",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-rpa07/.sdlc/foundations-repin-a07/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-rpa07/.sdlc/foundations-repin-a07",
+  "attempt_id": "930a4b3afea140e4b7d8204e78fc7dea",
+  "base_sha": "6b5f2d1cdc2535616745086371ce4c21562a6192",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.6/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-rpa07/.sdlc/foundations-repin-a07/handoff.md"
+}

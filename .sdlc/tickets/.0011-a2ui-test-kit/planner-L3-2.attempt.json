@@ -1,0 +1,21 @@
+{
+  "attempt_id": "b4220ba2fd704177ab5de726ddd3fa7c",
+  "name": "planner-L3-2",
+  "role": "planner",
+  "level": "L3",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "opus",
+  "effort": "xhigh",
+  "routing_reason": "planner L3 replan: specgate refused T-0011 plan (duplicate criterion spans)",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-06T13:00:19.280003+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.sdlc/0011-a2ui-test-kit/handoff.md",
+  "owner_pid": 62284,
+  "handoff_sha256": "c444f75c2bbcd67fa54efb2cd79882cd09efdf063888f87c921fb559e71b310e",
+  "process_pid": 62325,
+  "exit_code": 0,
+  "finished_at": "2026-10-06T13:09:00.533642+00:00"
+}

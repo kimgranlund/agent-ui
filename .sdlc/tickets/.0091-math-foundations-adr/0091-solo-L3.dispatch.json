@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L3",
+  "name": "0091-solo-L3",
+  "description": "T-0091 solo L3 Foundations overhaul",
+  "model": "opus",
+  "effort": "xhigh",
+  "prompt": "T-0091 Foundations overhaul ADR: derive | solo L3\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-fd/.sdlc/math-foundations-adr/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-fd/.sdlc/math-foundations-adr\nImplement per .sdlc/0091-math-foundations-adr/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L3",
+  "tier": "L3",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-fd/.sdlc/math-foundations-adr/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-fd/.sdlc/math-foundations-adr",
+  "attempt_id": "a6c6ac1db8c24f5d856f421a110d1e3f",
+  "base_sha": "c9c018532a1d40a302901093443433dc25a85b9c",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.5/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-fd/.sdlc/math-foundations-adr/handoff.md"
+}

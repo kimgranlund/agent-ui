@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L2",
+  "name": "0164-solo-L2",
+  "description": "T-0164 solo L2 Retire the",
+  "model": "opus",
+  "effort": "medium",
+  "prompt": "T-0164 Retire the ADR system: decisions | solo L2\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-adr/.sdlc/retire-adr-system/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-adr/.sdlc/retire-adr-system\nImplement per .sdlc/0164-retire-adr-system/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L2",
+  "tier": "L2",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-adr/.sdlc/retire-adr-system/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-adr/.sdlc/retire-adr-system",
+  "attempt_id": "b455ad17bbdf458f9a0be61a361c8fc7",
+  "base_sha": "305540bdc4c920668a2f18992bc3144e73e0f938",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.7/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-adr/.sdlc/retire-adr-system/handoff.md"
+}

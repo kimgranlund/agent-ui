@@ -1,0 +1,21 @@
+{
+  "attempt_id": "e3e19ea8cd684d03a35cf92b3429edc6",
+  "name": "builder-L4",
+  "role": "builder",
+  "level": "L4",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "opus",
+  "effort": "xhigh",
+  "routing_reason": "builder L4 per plan step 1: new loader, coverage gate with negative controls, five authored sidecars",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T04:25:55.111443+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.sdlc/work/catalog-notfor-intents/step-1/handoff.md",
+  "owner_pid": 965,
+  "handoff_sha256": "74dce0e8ce79d3429ece8a22159b627e396ad31efeee158d901874996e75479d",
+  "process_pid": 996,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T04:42:20.813567+00:00"
+}

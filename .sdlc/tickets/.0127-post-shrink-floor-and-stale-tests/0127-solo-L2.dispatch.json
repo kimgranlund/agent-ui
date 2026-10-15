@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L2",
+  "name": "0127-solo-L2",
+  "description": "T-0127 solo L2 Post-shrink cleanup:",
+  "model": "sonnet",
+  "effort": "high",
+  "prompt": "T-0127 Post-shrink cleanup: four | solo L2\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ps/.sdlc/post-shrink-floor-and-stale-tests/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ps/.sdlc/post-shrink-floor-and-stale-tests\nImplement per .sdlc/0127-post-shrink-floor-and-stale-tests/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L2",
+  "tier": "L2",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ps/.sdlc/post-shrink-floor-and-stale-tests/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ps/.sdlc/post-shrink-floor-and-stale-tests",
+  "attempt_id": "72828e0a2f044d8fa53b9262cc46af07",
+  "base_sha": "e2a4351554227f14b030f6a7ca65f7f6a0c113ac",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.6/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ps/.sdlc/post-shrink-floor-and-stale-tests/handoff.md"
+}

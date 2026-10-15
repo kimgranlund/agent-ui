@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L2",
+  "name": "0100-solo-L2",
+  "description": "T-0100 solo L2 Foundations lane",
+  "model": "sonnet",
+  "effort": "high",
+  "prompt": "T-0100 Foundations lane a07: migrate the | solo L2\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-a07/.sdlc/foundations-a07/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-a07/.sdlc/foundations-a07\nImplement per .sdlc/0100-foundations-a07/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L2",
+  "tier": "L2",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-a07/.sdlc/foundations-a07/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-a07/.sdlc/foundations-a07",
+  "attempt_id": "4b986aae2a4048ffb0adaf894c9e360e",
+  "base_sha": "fc153e5690a7b983332d7b025e7f8071aa87fbac",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.6/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-a07/.sdlc/foundations-a07/handoff.md"
+}

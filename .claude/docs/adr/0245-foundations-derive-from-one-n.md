@@ -949,7 +949,7 @@ The px that move, at the root sm · md · lg (`derive.out.md` section 18 has eve
 Repairs in the same change: `geometry.md`, `geometry-sizing-spec.md` §4.3 and §4.4, `tokens.md`, `derive.mjs`
 section 18, and the `button`, `toggle`, `text-field`, `textarea`, `select`, `combo-box`, `multi-select`, `tabs`,
 `menu`, `segmented-control`, `badge` and `checkbox` descriptors. Every test that pins an old edge is listed by
-census lane in `.sdlc/control-rule-adoption/repin-list.md` and re-pinned by its lane.
+census lane in `.sdlc/tickets/.0122-control-rule-adoption/repin-list.md` and re-pinned by its lane.
 
 ## Amendment 5 (2026-10-13, T-0134): everything pill, and panels nest concentrically
 
@@ -1127,7 +1127,7 @@ n. It supersedes Amendment 3 item 2's root ("the root stays product at scale sm,
    the sized controls at product / md; the docs site's sizing page, the glyph page's root specimen and the component
    gallery's default scale read product / md. Every fleet test that pins a root px or reads
    `resolve('product', 'sm', …)` as "the root" is re-pinned by its census lane from
-   `.sdlc/root-product-md/repin-list.md`.
+   `.sdlc/tickets/.0152-root-product-md/repin-list.md`.
 
 The root controls, before → after at sm · md · lg (`derive.out.md` section 21):
 

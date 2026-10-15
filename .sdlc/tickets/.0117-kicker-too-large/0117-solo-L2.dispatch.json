@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L2",
+  "name": "0117-solo-L2",
+  "description": "T-0117 solo L2 ui-text kicker",
+  "model": "sonnet",
+  "effort": "high",
+  "prompt": "T-0117 ui-text kicker is too large after | solo L2\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-kk/.sdlc/kicker-too-large/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-kk/.sdlc/kicker-too-large\nImplement per .sdlc/0117-kicker-too-large/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L2",
+  "tier": "L2",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-kk/.sdlc/kicker-too-large/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-kk/.sdlc/kicker-too-large",
+  "attempt_id": "c569736c1bf74c79a03a15f01ac14715",
+  "base_sha": "1546ed04089896797730dd39c4e36cd87a426a0c",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.6/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-kk/.sdlc/kicker-too-large/handoff.md"
+}

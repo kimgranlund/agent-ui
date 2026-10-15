@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L2",
+  "name": "0170-solo-L2",
+  "description": "T-0170 solo L2 Every lint",
+  "model": "opus",
+  "effort": "medium",
+  "prompt": "T-0170 Every lint allowlist entry has an | solo L2\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-al/.sdlc/lint-allowlist-owners/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-al/.sdlc/lint-allowlist-owners\nImplement per .sdlc/0170-lint-allowlist-owners/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L2",
+  "tier": "L2",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-al/.sdlc/lint-allowlist-owners/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-al/.sdlc/lint-allowlist-owners",
+  "attempt_id": "e488cc2851af424cab05c499d6129171",
+  "base_sha": "50d71f299a4312c0c88ffd4e9b04ed44caf76a2f",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.7/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-al/.sdlc/lint-allowlist-owners/handoff.md"
+}

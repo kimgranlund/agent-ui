@@ -1,0 +1,16 @@
+{
+  "subagent_type": "sdlc-lite:solo-M",
+  "name": "solo-M-size-budget-split-design",
+  "description": "solo M: size-budget-split-design",
+  "model": "sonnet",
+  "effort": "xhigh",
+  "prompt": "Handoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-spike/.sdlc/size-budget-split-design/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-spike/.sdlc/size-budget-split-design\nImplement per .sdlc/0026-size-budget-split-design/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L2",
+  "tier": "M",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-spike/.sdlc/size-budget-split-design/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-spike/.sdlc/size-budget-split-design",
+  "attempt_id": "b037835b3ae848f7b8b61f790bf185d1",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.21.1/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-spike/.sdlc/size-budget-split-design/handoff.md"
+}
