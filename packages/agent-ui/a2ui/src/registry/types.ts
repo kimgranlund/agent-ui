@@ -65,6 +65,15 @@ export type GuidanceMap = Readonly<Record<string, GuidanceEntry>>
 export interface SelectionProjection {
   readonly base: Readonly<Record<string, GuidanceMap>>
   readonly persona: Readonly<Record<string, GuidanceMap>>
+  /** T-0202 (CA-R4): each shipped domain sidecar (`domainId`): its own types and the `notFor` edges it appends to
+   *  base entries. Omitted while no domain ships, so the committed projection's bytes stay put. */
+  readonly domain?: Readonly<Record<string, DomainGuidance>>
+}
+
+/** One domain sidecar: its own types' guidance and the base type to edges it appends (D8). */
+export interface DomainGuidance {
+  readonly types: GuidanceMap
+  readonly append: Readonly<Record<string, readonly GuidanceEdge[]>>
 }
 
 /**

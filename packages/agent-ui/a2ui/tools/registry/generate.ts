@@ -76,6 +76,10 @@ export function formatSelectionProjection(projection: SelectionProjection): stri
     '  persona: {',
     ...block(projection.persona),
     '  },',
+    // T-0202: the domain sidecars, one line each, only once a domain ships (no byte move before W1).
+    ...(projection.domain === undefined || Object.keys(projection.domain).length === 0
+      ? []
+      : ['  domain: {', ...Object.entries(projection.domain).map(([id, g]) => `    ${literal(id)}: ${literal(g)},`), '  },']),
     '}',
     '',
   ].join('\n')

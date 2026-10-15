@@ -8,7 +8,8 @@
 // pure lookup over it: no `node:*`, no import from `src/agent/`, and the same id rules as the Node resolver
 // `selectionGuidanceForId`, held equal by `selection.test.ts`.
 
-import type { GuidanceMap, SelectionProjection } from './types.ts'
+import type { GuidanceEntry, GuidanceMap, SelectionProjection } from './types.ts'
+import { parseDomainCatalogId } from '../catalog/catalog-id.ts'
 import { SELECTION_PROJECTION } from './selection-projection.gen.ts'
 
 const EMPTY: GuidanceMap = {}
@@ -27,6 +28,18 @@ export function selectionProjectionFor(catalogId: string, projection: SelectionP
   const personaId = catalogId.slice(sep + 2)
   if (!Object.hasOwn(projection.base, baseId)) return EMPTY
   const base = projection.base[baseId]!
-  if (!Object.hasOwn(projection.persona, personaId)) return base
-  return { ...base, ...projection.persona[personaId]! }
+  if (Object.hasOwn(projection.persona, personaId)) return { ...base, ...projection.persona[personaId]! }
+  // T-0202: a canonical `<base>--<d1>+<d2>` id composes each known domain on (its types, then its appended base
+  // edges), the same rules as the Node resolver; a reversed spelling or an unknown domain is the base.
+  const domains = parseDomainCatalogId(catalogId)?.domains
+  const shipped = projection.domain ?? {}
+  if (domains === undefined || !domains.every((d) => Object.hasOwn(shipped, d))) return base
+  const out: Record<string, GuidanceEntry> = { ...base }
+  for (const d of domains) Object.assign(out, shipped[d]!.types)
+  for (const d of domains) {
+    for (const [t, edges] of Object.entries(shipped[d]!.append)) {
+      if (Object.hasOwn(out, t)) out[t] = { intents: out[t]!.intents, notFor: [...out[t]!.notFor, ...edges] }
+    }
+  }
+  return out
 }

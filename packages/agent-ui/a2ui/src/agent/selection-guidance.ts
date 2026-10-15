@@ -23,6 +23,7 @@
 
 import type { Catalog } from '../catalog/catalog.ts'
 import { listAssets, readAsset } from './asset-source.ts'
+import { parseDomainCatalogId } from '../catalog/catalog-id.ts'
 
 /** One `notFor` edge: a confusable sibling type and the axis that separates it from this type. */
 export interface SelectionEdge {
@@ -67,7 +68,10 @@ const WHY_CHARS_MAX = 90
 
 const MIDDLE_DOT = '·'
 const EM_DASH = '\u2014'
-const PIN_KEYS = ['catalogId', 'personaId'] as const
+const PIN_KEYS = ['catalogId', 'personaId', 'domainId'] as const
+/** T-0202 (CA-R4, CA-R9, D8): the one extra key a domain sidecar may carry, `appendNotFor`: base type to the
+ *  `notFor` edges the domain appends to that base entry inside its derived catalog. */
+const APPEND_KEY = 'appendNotFor'
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 
@@ -117,6 +121,11 @@ function loadEntry(typeName: string, raw: unknown): SelectionEntry {
     intents.push(intent)
   }
 
+  return Object.freeze({ intents: Object.freeze(intents), notFor: loadEdges(typeName, rawNotFor) })
+}
+
+/** One type's `notFor` list under the edge rules (shape, caps, separators, no self, duplicate or restating edge). */
+function loadEdges(typeName: string, rawNotFor: unknown[]): readonly SelectionEdge[] {
   if (rawNotFor.length > NOT_FOR_MAX) throw cap(`"${typeName}" has ${rawNotFor.length} notFor edges (0..${NOT_FOR_MAX})`)
   const notFor: SelectionEdge[] = []
   const targets = new Set<string>()
@@ -139,8 +148,7 @@ function loadEntry(typeName: string, raw: unknown): SelectionEntry {
     targets.add(type)
     notFor.push(Object.freeze({ type, why }))
   }
-
-  return Object.freeze({ intents: Object.freeze(intents), notFor: Object.freeze(notFor) })
+  return Object.freeze(notFor)
 }
 
 /**
@@ -150,10 +158,29 @@ function loadEntry(typeName: string, raw: unknown): SelectionEntry {
  * is checked by the module-load reader below, not here.
  */
 export function loadSelectionGuidance(doc: unknown): SelectionGuidance {
+  return loadSidecar(doc).types
+}
+
+/** Base type to the `notFor` edges a domain appends to its entry (CA-R9, D8). Empty for a base or persona sidecar. */
+export type AppendedEdges = Readonly<Record<string, readonly SelectionEdge[]>>
+
+/** One domain sidecar loaded: its own types' guidance and the edges it appends to base entries. */
+export interface DomainSelection {
+  readonly types: SelectionGuidance
+  readonly append: AppendedEdges
+}
+
+/** The `appendNotFor` map of a domain sidecar document, validated as `loadSelectionGuidance` validates it. */
+export function loadAppendedEdges(doc: unknown): AppendedEdges {
+  return loadSidecar(doc).append
+}
+
+function loadSidecar(doc: unknown): DomainSelection {
   if (!isObject(doc)) throw malformed('the document must be a JSON object')
   const pins = PIN_KEYS.filter((k) => Object.hasOwn(doc, k))
-  if (pins.length !== 1 || !hasExactKeys(doc, [pins[0]!, 'types'])) {
-    throw malformed('the document must hold exactly one of "catalogId"/"personaId" plus "types"')
+  const keys = pins.length === 1 && pins[0] === 'domainId' && Object.hasOwn(doc, APPEND_KEY) ? [pins[0], 'types', APPEND_KEY] : [pins[0]!, 'types']
+  if (pins.length !== 1 || !hasExactKeys(doc, keys)) {
+    throw malformed('the document must hold exactly one of "catalogId"/"personaId"/"domainId" plus "types" (a domain may add "appendNotFor")')
   }
   const pin = doc[pins[0]!]
   if (typeof pin !== 'string' || pin.length === 0) throw malformed(`"${pins[0]}" must be a non-empty string`)
@@ -161,6 +188,48 @@ export function loadSelectionGuidance(doc: unknown): SelectionGuidance {
 
   const out: Record<string, SelectionEntry> = {}
   for (const [typeName, raw] of Object.entries(doc.types)) out[typeName] = loadEntry(typeName, raw)
+
+  const append: Record<string, readonly SelectionEdge[]> = {}
+  const rawAppend = doc[APPEND_KEY]
+  if (rawAppend !== undefined) {
+    if (!isObject(rawAppend)) throw malformed(`"${APPEND_KEY}" must be an object`)
+    for (const [typeName, edges] of Object.entries(rawAppend)) {
+      assertSafeText(`${APPEND_KEY} type name "${typeName}"`, typeName)
+      if (!Array.isArray(edges) || edges.length === 0) throw malformed(`"${APPEND_KEY}.${typeName}" must be a non-empty array of edges`)
+      append[typeName] = loadEdges(typeName, edges)
+    }
+  }
+  return Object.freeze({ types: Object.freeze(out), append: Object.freeze(append) })
+}
+
+/**
+ * T-0202 (CA-R4, CA-R9, D8): a base catalog's guidance with domains composed on. Each domain adds its own types'
+ * entries and appends its `appendNotFor` edges after the base entry's own (intents and existing edges never
+ * change). A domain entry that would replace a base or earlier domain entry, an append onto a type that is not a
+ * base entry, or an append that breaks the per-entry edge cap or repeats a target throws `MALFORMED`: the
+ * guidance twin of reject-loud. The shipped sidecars are held to these rules by `catalog/selection-guidance.test.ts`.
+ */
+export function composeSelectionGuidance(base: SelectionGuidance, domains: readonly (readonly [string, DomainSelection])[]): SelectionGuidance {
+  const out: Record<string, SelectionEntry> = { ...base }
+  for (const [domainId, { types }] of domains) {
+    for (const [t, entry] of Object.entries(types)) {
+      if (Object.hasOwn(out, t)) throw malformed(`domain "${domainId}" replaces the entry for "${t}"`)
+      out[t] = entry
+    }
+  }
+  for (const [domainId, { append }] of domains) {
+    for (const [t, edges] of Object.entries(append)) {
+      if (!Object.hasOwn(base, t)) throw malformed(`domain "${domainId}" appends to "${t}", which is not a base entry`)
+      const entry = out[t]!
+      const notFor = [...entry.notFor]
+      for (const e of edges) {
+        if (notFor.some((x) => x.type === e.type)) throw malformed(`domain "${domainId}" appends "${t}" -> "${e.type}" twice`)
+        notFor.push(e)
+      }
+      if (notFor.length > NOT_FOR_MAX) throw cap(`domain "${domainId}" leaves "${t}" with ${notFor.length} notFor edges (0..${NOT_FOR_MAX})`)
+      out[t] = Object.freeze({ intents: entry.intents, notFor: Object.freeze(notFor) })
+    }
+  }
   return Object.freeze(out)
 }
 
@@ -190,12 +259,32 @@ const PERSONA_GUIDANCE: Readonly<Record<string, SelectionGuidance>> = Object.fre
   Object.fromEntries(PERSONA_IDS.map((id) => [id, readPinned(`personas/${id}/selection.json`, 'personaId', id)])),
 )
 
+/** The domains with an embedded sidecar: the directory names under `catalog/domains/`, none until W1 lands one. */
+function embeddedDomainIds(): readonly string[] {
+  try {
+    return listAssets('catalog/domains')
+  } catch {
+    return [] // no sidecar under catalog/domains/ yet (`listAssets` throws on an empty prefix)
+  }
+}
+
+const DOMAIN_GUIDANCE: Readonly<Record<string, DomainSelection>> = Object.freeze(
+  Object.fromEntries(
+    embeddedDomainIds().map((id) => {
+      const types = readPinned(`domains/${id}/selection.json`, 'domainId', id)
+      return [id, Object.freeze({ types, append: loadAppendedEdges(JSON.parse(readAsset(`catalog/domains/${id}/selection.json`))) })]
+    }),
+  ),
+)
+
 const EMPTY: SelectionGuidance = Object.freeze({})
 
 /**
  * Resolve a catalog id to its guidance: `agent-ui` and `a2ui-basic` map to their own sidecars; a derived
  * `<base>--<persona>` id (`compose.ts` `derivedCatalogId`, split on the FIRST `--`) maps to the base
  * entries plus the persona's (base only when the persona half is unknown, empty when the base half is).
+ * T-0202: a domain id `<base>--<d1>+<d2>` (canonical spelling, every domain embedded) maps to the base with
+ * each domain composed on (`composeSelectionGuidance`); a reversed spelling or an unknown domain is the base.
  * Any other id, including the inbound-only canonical-URI alias, maps to `{}`. The id-keyed seam for a
  * consumer with no `Catalog` object (`dogfood-inventory.ts`).
  */
@@ -206,8 +295,10 @@ export function selectionGuidanceForId(id: string): SelectionGuidance {
   const personaId = id.slice(sep + 2)
   if (!Object.hasOwn(BASE_GUIDANCE, baseId)) return EMPTY
   const base = BASE_GUIDANCE[baseId]!
-  if (!Object.hasOwn(PERSONA_GUIDANCE, personaId)) return base
-  return Object.freeze({ ...base, ...PERSONA_GUIDANCE[personaId]! })
+  if (Object.hasOwn(PERSONA_GUIDANCE, personaId)) return Object.freeze({ ...base, ...PERSONA_GUIDANCE[personaId]! })
+  const domains = parseDomainCatalogId(id)?.domains
+  if (domains === undefined || !domains.every((d) => Object.hasOwn(DOMAIN_GUIDANCE, d))) return base
+  return composeSelectionGuidance(base, domains.map((d) => [d, DOMAIN_GUIDANCE[d]!] as const))
 }
 
 /** Resolve a catalog to its guidance, keyed on `catalogId` only (`selectionGuidanceForId`'s rules). */

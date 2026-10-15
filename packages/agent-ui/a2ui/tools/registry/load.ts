@@ -22,7 +22,7 @@ import { EXCLUSION_ALLOWLIST } from '../../src/catalog/default/exclusions.ts'
 import { FEED_EXCLUDED, FEED_SURFACE_TYPES } from '../../src/agent/feed-catalog.ts'
 import { MINI_SKILLS } from '../../src/agent/mini-skills.ts'
 import { GENUI_PACKS } from '../../src/agent/prompts/genui-packs.ts'
-import { loadSelectionGuidance } from '../../src/agent/selection-guidance.ts'
+import { loadAppendedEdges, loadSelectionGuidance } from '../../src/agent/selection-guidance.ts'
 import type { SelectionGuidance } from '../../src/agent/selection-guidance.ts'
 import type {
   CatalogSource,
@@ -50,6 +50,11 @@ export const PERSONA_FRAGMENTS: readonly { readonly personaId: string; readonly 
   { personaId: 'stylist', targetCatalogs: ['agent-ui'] },
 ]
 
+/** T-0202 (catalog architecture CA-R7): the shipped domain fragments and their bases, hard-coded and held equal to
+ *  `SHIPPED_DOMAIN_CATALOG_MANIFESTS` by `registry-wiring.test.ts`. Empty until W1 lands the first domain; their
+ *  sidecars reach the selection projection under `domain`, which is omitted while this list is empty. */
+export const DOMAIN_FRAGMENTS: readonly { readonly domainId: string; readonly targetCatalogs: readonly string[] }[] = []
+
 /** The corpus shard kinds, one folder each under `corpus/`. */
 const CORPUS_KINDS = ['exemplar', 'multi-turn', 'repair'] as const
 const CORPUS_VERSION = 'v1_0'
@@ -61,7 +66,7 @@ const sortedNames = (root: string, rel: string, ext: string): string[] =>
   (readdirSync(join(root, rel)) as string[]).filter((n) => n.endsWith(ext)).sort()
 
 /** A `selection.json` pinned to `pinKey: pinValue`; a pin mismatch is a mis-mapped file and fails here. */
-function readSidecar(root: string, rel: string, pinKey: 'catalogId' | 'personaId', pinValue: string): SelectionGuidance {
+function readSidecar(root: string, rel: string, pinKey: 'catalogId' | 'personaId' | 'domainId', pinValue: string): SelectionGuidance {
   const doc = readJson(root, rel) as Record<string, unknown>
   if (doc[pinKey] !== pinValue) throw new Error(`registry load: ${rel} must pin ${pinKey} "${pinValue}"`)
   return loadSelectionGuidance(doc)
@@ -133,6 +138,16 @@ export function loadRegistrySources(root: string): RegistrySources {
         readSidecar(root, `${CATALOG_DIR}/personas/${personaId}/selection.json`, 'personaId', personaId),
       ]),
     ) as Record<string, GuidanceMap>,
+    ...(DOMAIN_FRAGMENTS.length === 0
+      ? {}
+      : {
+          domain: Object.fromEntries(
+            DOMAIN_FRAGMENTS.map(({ domainId }) => {
+              const rel = `${CATALOG_DIR}/domains/${domainId}/selection.json`
+              return [domainId, { types: readSidecar(root, rel, 'domainId', domainId), append: loadAppendedEdges(readJson(root, rel)) }]
+            }),
+          ),
+        }),
   }
 
   const miniSkills: MiniSkillSource[] = MINI_SKILLS.map((m) => {

@@ -43,6 +43,23 @@ export class Registry implements CatalogRegistry {
   readonly #catalogs = new Map<string, CatalogEntry>()
   // ADR-0241: recorded-but-unloaded catalogs. An id is in at most one of `#catalogs` and `#records`.
   readonly #records = new Map<string, LazyCatalogRecord>()
+  // T-0202 (catalog architecture CA-R2): a multi-domain id is known by parsing it, so an id with no record asks
+  // this resolver once and records what it returns (`records.ts` `catalogRecordFor`).
+  readonly #resolve: ((id: string) => LazyCatalogRecord | undefined) | undefined
+
+  constructor(options: { resolveRecord?: (id: string) => LazyCatalogRecord | undefined } = {}) {
+    this.#resolve = options.resolveRecord
+  }
+
+  // The record for an unregistered id: a recorded one, else the resolver's, recorded on first sight.
+  #recordFor(id: string): LazyCatalogRecord | undefined {
+    const recorded = this.#records.get(id)
+    if (recorded !== undefined || this.#catalogs.has(id) || this.#resolve === undefined) return recorded
+    const resolved = this.#resolve(id)
+    if (resolved === undefined || resolved.id !== id) return undefined
+    this.#record(resolved)
+    return this.#records.get(id)
+  }
 
   register(
     catalog: unknown,
@@ -81,7 +98,7 @@ export class Registry implements CatalogRegistry {
     // Last-wins (SPEC-R6/N1): a project catalog MAY intentionally shadow a prior registration — its own
     // id (re-register), the default's id, or a recorded lazy id (ADR-0241). The override is logged so it
     // is never silent.
-    if (shadowing && this.knows(loaded.catalogId)) warnOverride(loaded.catalogId)
+    if (shadowing && (this.#catalogs.has(loaded.catalogId) || this.#records.has(loaded.catalogId))) warnOverride(loaded.catalogId)
     // ADR-0169 cl.8: the optional per-catalog function-impl override, stored only when provided (a plain
     // `functions` key of `undefined` would still satisfy the optional-field type but pollutes intent).
     // ADR-0233: the optional control loader follows the same rule.
@@ -101,7 +118,12 @@ export class Registry implements CatalogRegistry {
    * (a mismatched id, a factory gap) leaves the record in place, and `ensure` reports it as before.
    */
   registerLazy(record: LazyCatalogRecord): void {
-    if (this.knows(record.id)) warnOverride(record.id)
+    if (this.#catalogs.has(record.id) || this.#records.has(record.id)) warnOverride(record.id)
+    this.#record(record)
+  }
+
+  // Record `record`, replacing any entry under its id, and adopt an already-loaded body (the warm memo).
+  #record(record: LazyCatalogRecord): void {
     this.#catalogs.delete(record.id)
     this.#records.set(record.id, record)
     const body = loadedCatalogBody(record)
@@ -115,12 +137,14 @@ export class Registry implements CatalogRegistry {
 
   /** A registered id or a recorded (not yet loaded) one. `get` answers only for a loaded catalog. */
   knows(id: string): boolean {
+    if (this.#catalogs.has(id) || this.#records.has(id)) return true
+    this.#recordFor(id) // a resolved record may adopt a warm body at once, landing in `#catalogs`
     return this.#catalogs.has(id) || this.#records.has(id)
   }
 
   /** The record of a recorded, not yet loaded id (ADR-0241 cl.7, the `callFunction` manifest scan). */
   recordOf(id: string): LazyCatalogRecord | undefined {
-    return this.#records.get(id)
+    return this.#recordFor(id)
   }
 
   /**
@@ -131,7 +155,8 @@ export class Registry implements CatalogRegistry {
    */
   ensure(id: string): Promise<void> {
     if (this.#catalogs.has(id)) return Promise.resolve()
-    const record = this.#records.get(id)
+    const record = this.#recordFor(id)
+    if (this.#catalogs.has(id)) return Promise.resolve() // the resolver's record adopted a warm body
     if (record === undefined) return Promise.reject(new CatalogLoadError(id, `no catalog record for "${id}"`))
     return loadCatalogBody(record).then(
       (body) => {

@@ -12,7 +12,7 @@ import {
   renderSelectionClause,
   SelectionGuidanceError,
 } from '../../src/agent/selection-guidance.ts'
-import type { SelectionGuidance } from '../../src/agent/selection-guidance.ts'
+import type { AppendedEdges, SelectionGuidance } from '../../src/agent/selection-guidance.ts'
 
 /** The loader's verdict on a document: `null` when it loads, else the error code. */
 export function loadDefect(doc: unknown): string | null {
@@ -64,4 +64,51 @@ export function reciprocityDefects(guidance: SelectionGuidance, exempt: Readonly
 export function orphanDirs(onDisk: readonly string[], allowed: readonly string[]): string[] {
   const ok = new Set(allowed)
   return onDisk.filter((d) => !ok.has(d))
+}
+
+// ---- T-0202 (catalog architecture CA-R4, CA-R9, D8): the domain sidecar edge law ----
+
+/** No-replace: a domain's own `types` key that names a base type (a domain never replaces a base entry). */
+export function replaceDefects(domainId: string, own: SelectionGuidance, baseTypes: ReadonlySet<string>): string[] {
+  return Object.keys(own)
+    .filter((t) => baseTypes.has(t))
+    .map((t) => `domain "${domainId}" replaces the base entry "${t}"`)
+}
+
+/** Cross-domain: a domain's own entries name only its own types or base types, and an appended edge names only
+ *  the domain's own types (it points a base entry at the domain composite), so each domain also composes alone. */
+export function crossDomainDefects(
+  domainId: string,
+  own: SelectionGuidance,
+  append: AppendedEdges,
+  baseTypes: ReadonlySet<string>,
+): string[] {
+  const out: string[] = []
+  for (const [a, entry] of Object.entries(own)) {
+    for (const { type: b } of entry.notFor) {
+      if (!Object.hasOwn(own, b) && !baseTypes.has(b)) out.push(`domain "${domainId}": ${a} -> ${b} names a type outside the domain and its base`)
+    }
+  }
+  for (const [a, edges] of Object.entries(append)) {
+    for (const { type: b } of edges) {
+      if (!Object.hasOwn(own, b)) out.push(`domain "${domainId}": appended ${a} -> ${b} names a type the domain does not declare`)
+    }
+  }
+  return out
+}
+
+/** Append-only: an appended edge lands on a base entry, never repeats an edge that entry already has, and leaves
+ *  the entry within the per-entry edge cap (4). */
+export function appendDefects(domainId: string, append: AppendedEdges, base: SelectionGuidance): string[] {
+  const out: string[] = []
+  for (const [t, edges] of Object.entries(append)) {
+    const entry = base[t]
+    if (entry === undefined) {
+      out.push(`domain "${domainId}" appends to "${t}", which is not a base entry`)
+      continue
+    }
+    for (const e of edges) if (entry.notFor.some((x) => x.type === e.type)) out.push(`domain "${domainId}" repeats the base edge ${t} -> ${e.type}`)
+    if (entry.notFor.length + edges.length > 4) out.push(`domain "${domainId}" leaves "${t}" with ${entry.notFor.length + edges.length} notFor edges (0..4)`)
+  }
+  return out
 }

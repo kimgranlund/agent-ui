@@ -22,10 +22,12 @@ import { selectCatalog as selectCatalogShared } from '../../src/renderer/wire-to
 // persona manifests, imported by LEAF PATH (never `catalog/index.ts`/`catalog/personas/index.ts`,
 // both of which pull in `@agent-ui/components`'s DOM self-define via `factories.ts` — a hard crash in
 // this Node/Workers module). See `buildCatalogMap`'s own doc comment below.
-import { composePersonaCatalogDocs, semanticChecksForCatalog } from '../../src/catalog/compose.ts'
+import { composeDomainCatalogDocs, composePersonaCatalogDocs, domainSemanticChecksForCatalog, semanticChecksForCatalog } from '../../src/catalog/compose.ts'
+import { gateChecksOnCatalog } from '../../src/catalog/semantic-check.ts'
 import type { SemanticCheck } from '../../src/catalog/semantic-check.ts'
 import type { Catalog } from '../../src/catalog/catalog.ts'
 import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from '../../src/catalog/personas/manifests.ts'
+import { SHIPPED_DOMAIN_CATALOG_MANIFESTS } from '../../src/catalog/domains/manifests.ts'
 import { ProduceHalt } from '../../src/agent/produce.ts'
 import { AgentTimeoutError } from '../../src/agent/deadlines.ts'
 import { ANTHROPIC_WORKSPACE_ENV } from '../../src/agent/providers/anthropic.ts'
@@ -168,7 +170,12 @@ export const selectCatalog = selectCatalogShared
  * adds NOTHING and the turn is byte-identical to a host without this hook.
  */
 export function semanticChecksDeps(catalog: Catalog): { semanticChecks?: readonly SemanticCheck[] } {
-  const semanticChecks = semanticChecksForCatalog(catalog.catalogId, SHIPPED_PERSONA_CATALOG_MANIFESTS)
+  // T-0202 (D4): the persona's checks and every domain's the id holds, each kept only when this catalog declares
+  // the types it reads (`gateChecksOnCatalog`).
+  const semanticChecks = gateChecksOnCatalog(
+    [...semanticChecksForCatalog(catalog.catalogId, SHIPPED_PERSONA_CATALOG_MANIFESTS), ...domainSemanticChecksForCatalog(catalog.catalogId, SHIPPED_DOMAIN_CATALOG_MANIFESTS)],
+    catalog,
+  )
   return semanticChecks.length > 0 ? { semanticChecks } : {}
 }
 
@@ -178,7 +185,8 @@ export function buildCatalogMap(catalog: Catalog, basicCatalog: Catalog): Map<st
     [basicCatalog.catalogId, basicCatalog],
   ])
   const derived = composePersonaCatalogDocs(bases, SHIPPED_PERSONA_CATALOG_MANIFESTS)
-  return new Map<string, Catalog>([...bases, ...derived])
+  const domains = composeDomainCatalogDocs(bases, SHIPPED_DOMAIN_CATALOG_MANIFESTS) // T-0202: every domain set per base
+  return new Map<string, Catalog>([...bases, ...derived, ...domains])
 }
 
 /**

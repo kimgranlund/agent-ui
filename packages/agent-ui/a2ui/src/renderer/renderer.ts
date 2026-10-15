@@ -112,7 +112,7 @@ import { untracked, type Scope } from '@agent-ui/components'
 import { Registry } from '../catalog/registry.ts'
 import type { WidgetFactory } from '../catalog/types.ts'
 import { factoriesOf, resolveFactory } from '../catalog/variant.ts'
-import { BUILTIN_CATALOG_RECORDS } from '../catalog/records.ts'
+import { BUILTIN_CATALOG_RECORDS, catalogRecordFor } from '../catalog/records.ts'
 import type {
   A2uiCreateSurface,
   A2uiUpdateComponents,
@@ -219,7 +219,7 @@ export function createRenderer(options: RendererOptions = {}): RendererHost {
 }
 
 class Renderer implements RendererHost {
-  readonly #registry = new Registry()
+  readonly #registry = new Registry({ resolveRecord: catalogRecordFor })
   readonly #store = new SurfaceStore()
   readonly #trees = new Map<string, SurfaceTree>()
   readonly #attached = new Set<string>() // surfaceIds whose rendered root is in the mount DOM

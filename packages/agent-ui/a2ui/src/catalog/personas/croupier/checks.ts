@@ -357,6 +357,7 @@ function checkSurface(view: SurfaceView): SemanticFinding[] {
 /** GH #1795: the cards a hand shows, the list it is drawn from, and the total it states must agree. */
 export const croupierHandConsistency: SemanticCheck = {
   id: 'croupier-hand-consistency',
+  requires: ['CardTable', 'PlayingCard'],
   check: (input) => input.surfaces.flatMap(checkSurface),
 }
 
@@ -441,6 +442,7 @@ function betStepWithoutTable(view: SurfaceView): SemanticFinding[] {
 /** T-0172: one bet, one set of bet controls (the CardTable's own strip). */
 export const croupierBetControls: SemanticCheck = {
   id: 'croupier-bet-controls',
+  requires: ['CardTable'],
   check: (input) => input.surfaces.flatMap((view) => [...betControls(view), ...betStepWithoutTable(view)]),
 }
 
@@ -560,6 +562,7 @@ function settleFinding(view: SurfaceView, table: A2uiComponent, action: Semantic
 /** T-0172: a table action moves the table, and a deal takes the bet out of the bankroll. */
 export const croupierActionApplied: SemanticCheck = {
   id: 'croupier-action-applied',
+  requires: ['CardTable'],
   check: (input) => (input.action === undefined ? [] : actionApplied(input.surfaces, input.action)),
 }
 

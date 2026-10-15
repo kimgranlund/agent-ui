@@ -39,7 +39,8 @@ import { derivedCatalogIdsFor } from '../catalog/compose.ts'
 import { isVariantDispatch } from '../catalog/variant.ts'
 import type { VariantDispatch, WidgetFactory } from '../catalog/types.ts'
 import { selectionGuidanceForId } from '../agent/selection-guidance.ts'
-import { PERSONA_FRAGMENTS, loadRegistrySources } from '../../tools/registry/load.ts'
+import { DOMAIN_FRAGMENTS, PERSONA_FRAGMENTS, loadRegistrySources } from '../../tools/registry/load.ts'
+import { SHIPPED_DOMAIN_CATALOG_MANIFESTS } from '../catalog/domains/manifests.ts'
 import { composeRegistry, registryViewFor, tagForType, typeForTag } from './compose.ts'
 import { selectCapabilities } from './select.ts'
 
@@ -281,6 +282,14 @@ describe('personas: the loader list equals the shipped manifests, and the views 
     const loader = PERSONA_FRAGMENTS.map((p) => ({ personaId: p.personaId, targetCatalogs: [...p.targetCatalogs] })).sort((a, b) => (a.personaId < b.personaId ? -1 : 1))
     expect(shipped.length).toBeGreaterThan(0)
     expect(loader).toEqual(shipped)
+  })
+
+  it('T-0202: the hard-coded domain list and targets equal SHIPPED_DOMAIN_CATALOG_MANIFESTS (none ship before W1)', () => {
+    const byId = (a: { domainId: string }, b: { domainId: string }): number => (a.domainId < b.domainId ? -1 : 1)
+    const shipped = SHIPPED_DOMAIN_CATALOG_MANIFESTS.map((m) => ({ domainId: m.domainId, targetCatalogs: [...(m.targetCatalogs ?? [])] })).sort(byId)
+    const loader = DOMAIN_FRAGMENTS.map((d) => ({ domainId: d.domainId, targetCatalogs: [...d.targetCatalogs] })).sort(byId)
+    expect(loader).toEqual(shipped)
+    expect(SOURCES.guidance.domain === undefined).toBe(DOMAIN_FRAGMENTS.length === 0)
   })
 
   it('the derived ids the registry offers equal the ids the renderer registers (`derivedCatalogIdsFor`)', () => {
