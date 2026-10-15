@@ -455,11 +455,47 @@ function betStepWithoutTable(view: SurfaceView): SemanticFinding[] {
   ]
 }
 
-/** T-0172: one bet, one set of bet controls (the CardTable's own strip). */
+/** T-0233: the player's move words across the blackjack family (pontoon twists, sticks and buys). Wider than
+ *  `MOVE_WORDS`, which names only what a natural forbids. */
+const PLAYER_MOVES: ReadonlySet<string> = new Set(['hit', 'stand', 'double', 'split', 'surrender', 'twist', 'stick', 'buy'])
+
+/** A Button offers a move when its id, label or action name carries a player move word. */
+function offersMove(comp: A2uiComponent, dataModel: unknown): boolean {
+  const label = resolveProp(comp['label'], dataModel, undefined)
+  return [comp.id, typeof label === 'string' ? label : '', actionName(comp)].some((text) =>
+    text.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase().split(/[^a-z]+/).some((t) => PLAYER_MOVES.has(t)),
+  )
+}
+
+/** T-0233 (the recorded Haiku 5.5 repair round, 2026-10-15.jsonl:2): a bet answer resent its CardTable in phase
+ *  playing with `children: []`, and the turn shipped with no Hit or Stand. A table in the playing phase whose player
+ *  hand is dealt, not a natural and not bust, needs at least one move Button on the surface (in the table or beside
+ *  it). A hand the check cannot resolve is never judged. */
+function movesMissing(view: SurfaceView): SemanticFinding[] {
+  const findings: SemanticFinding[] = []
+  const comps = [...view.components.values()]
+  if (comps.some((c) => c.component === 'Button' && offersMove(c, view.dataModel))) return []
+  for (const table of comps) {
+    if (table.component !== 'CardTable' || phaseOf(table, view.dataModel) !== 'playing') continue
+    const cards = handList(table, 'player', view.dataModel)?.map(itemCard)
+    if (cards === undefined || cards.length === 0 || !cards.every((c): c is Card => c !== undefined)) continue
+    if (isNatural(cards) || bestTotal(cards) > 21) continue
+    findings.push({
+      code: 'MOVES_MISSING',
+      path: `${view.surfaceId}:${table.id}`,
+      message:
+        `${table.id} is in the playing phase with the player on ${describeCards(cards)}, and the surface offers no move. ` +
+        `Give the table its move Buttons as children: Hit and Stand (and Double on the first two cards; Twist, Stick and Buy in pontoon).`,
+    })
+  }
+  return findings
+}
+
+/** T-0172: one bet, one set of bet controls (the CardTable's own strip); T-0233: a playing table offers the moves. */
 export const croupierBetControls: SemanticCheck = {
   id: 'croupier-bet-controls',
   requires: ['CardTable'],
-  check: (input) => input.surfaces.flatMap((view) => [...betControls(view), ...betStepWithoutTable(view)]),
+  check: (input) => input.surfaces.flatMap((view) => [...betControls(view), ...betStepWithoutTable(view), ...movesMissing(view)]),
 }
 
 const DEAL_ACTION = /^(deal|place_?bet|bet|deal_blackjack)$/i
@@ -635,12 +671,66 @@ function settleFinding(view: SurfaceView, table: A2uiComponent, action: Semantic
   }
 }
 
+/** T-0232 (the recorded Sonnet 5.5 opening, 2026-10-15.jsonl:104): "Let's play blackjack." opened table-1 dealt at
+ *  a 50 stake the model picked, with no bet strip. On a say turn, a CardTable on a surface no earlier turn wrote is
+ *  the game's first table, and it opens in betting with empty hands unless the user's own words name a stake ("Deal
+ *  me in for 100"; a game name such as "21" is not one). A surface that names another game keeps its own opening. */
+function openingFindings(surfaces: readonly SurfaceView[], intent: string): SemanticFinding[] {
+  if (/\d/.test(intent.replace(new RegExp(BLACKJACK_GAMES.source, 'gi'), ' '))) return []
+  const findings: SemanticFinding[] = []
+  for (const view of surfaces) {
+    if (view.priorDataModel !== undefined) continue // the session already holds this table: not an opening
+    const comps = [...view.components.values()]
+    if (namesOtherGame(comps)) continue
+    for (const table of comps) {
+      if (table.component !== 'CardTable') continue
+      const dealt = PARTICIPANTS.filter((p) => (handList(table, p, view.dataModel)?.length ?? 0) > 0)
+      const phase = phaseOf(table, view.dataModel)
+      if (phase === 'betting' && dealt.length === 0) continue
+      findings.push({
+        code: 'NEW_ROUND_NOT_BETTING',
+        path: `${view.surfaceId}:${table.id}`,
+        message:
+          `The player asked for a game and named no stake, but ${view.surfaceId}'s ${table.id} opens in phase "${phase}"` +
+          `${dealt.length > 0 ? ` with cards already in ${dealt.map((p) => `/${p}Hand`).join(' and ')}` : ''}. ` +
+          `A game opens in phase "betting" with empty /dealerHand and /playerHand and "betAction":"deal": the player picks the first stake on the table's bet strip, never one you choose.`,
+      })
+    }
+  }
+  return findings
+}
+
+/** T-0214: the table move a player types ("Bet 50.", "Hit me", "Discard two and draw"), as a lower-case word. */
+const TYPED_MOVE = /\b(deal|bet|raise|call|check|fold|hit|stand|double|split|surrender|twist|stick|buy|draw|discard)\b/i
+
+/** T-0214 (the recorded Haiku 5.5 five-card draw, 2026-10-15.jsonl:48): "Bet 50." was answered with a meta-line
+ *  targeting table-1 and the showdown in prose, and table-1 kept its Check and Bet. A say turn that names a table
+ *  move and declares an open table its target must update that table, or open a new one (the next round). */
+function typedMoveFindings(surfaces: readonly SurfaceView[], intent: string, target: string): SemanticFinding[] {
+  const word = TYPED_MOVE.exec(intent)?.[1]?.toLowerCase()
+  if (word === undefined || surfaces.some((v) => v.surfaceId === target || (v.priorDataModel === undefined && [...v.components.values()].some((c) => c.component === 'CardTable')))) return []
+  return [
+    {
+      code: 'ACTION_NOT_APPLIED',
+      path: `${target}:${word}`,
+      message:
+        `The player typed "${intent.trim()}" at ${target}, and this turn sends it no update, so the table still shows the old state. ` +
+        `Call render_surface with an updateDataModel for ${target}: the new cards, totals, phase, result and bankroll, and the moves the player has now, not only prose.`,
+    },
+  ]
+}
+
 /** T-0172: a table action moves the table, and a deal takes the bet out of the bankroll; T-0211: Deal again opens
- *  the next round in betting. */
+ *  the next round in betting; T-0232: a say turn's first table opens in betting too; T-0214: a typed move at an
+ *  open table updates it. */
 export const croupierActionApplied: SemanticCheck = {
   id: 'croupier-action-applied',
   requires: ['CardTable'],
-  check: (input) => (input.action === undefined ? [] : actionApplied(input.surfaces, input.action)),
+  check: (input) => {
+    if (input.action !== undefined) return actionApplied(input.surfaces, input.action)
+    if (input.intent === undefined) return []
+    return [...openingFindings(input.surfaces, input.intent), ...(input.target !== undefined ? typedMoveFindings(input.surfaces, input.intent, input.target) : [])]
+  },
 }
 
 const POKER_GAMES = /\b(poker|stud|hold ?['’]?em|holdem|omaha|razz|five[- ]card draw|draw poker)\b/i

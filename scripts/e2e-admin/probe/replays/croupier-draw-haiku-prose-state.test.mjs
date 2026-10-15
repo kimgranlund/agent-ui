@@ -6,8 +6,13 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-it('croupier-draw-haiku-prose-state: the recorded turns replay with every probe check green', async () => {
+// T-0214: turn 4 ("Bet 50.") targets table-1 in its meta-line and settles the showdown in prose with no update, so
+// table-1 keeps Check and Bet. The action check now sends it back with ACTION_NOT_APPLIED, and the probe's
+// action-updates-surface judges the targeted say turn. The fixture records no repaired round, so both stay red here.
+it('croupier-draw-haiku-prose-state: the prose-only "Bet 50." gets ACTION_NOT_APPLIED and fails action-updates-surface', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./croupier-draw-haiku-prose-state.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed).toEqual([])
+  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual(['action-updates-surface:3'])
+  const trace = report.records[3].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
+  expect(trace.failureCodes).toEqual(['ACTION_NOT_APPLIED', 'SEMANTIC_UNCORRECTED'])
 })

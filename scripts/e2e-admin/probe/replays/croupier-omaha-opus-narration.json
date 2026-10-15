@@ -780,6 +780,10 @@
         {
           "text": "I check behind, and the turn is the **K♦**. The board is now 9♠ 4♥ 2♣ K♦ and the pot is still 20.\n\nLast turn I described round 2 but never actually built its table, so I've built it now as table-2. Your hole cards are 5♦ 6♣ J♦ 10♥. I've also removed the Deal again button from round 1, so only this table takes moves now.\n\nYou don't have a pair yet. On the river, a **3** gives you a straight from 2 to 6 (your 5♦ 6♣), and a **Q** gives you a straight from 9 to K (your J♦ 10♥). You act first: check, or bet up to the pot (20).",
           "tools": []
+        },
+        {
+          "text": "I check behind, and the turn is the **K♦**. The board is now 9♠ 4♥ 2♣ K♦ and the pot is still 20.\n\nYou don't have a pair yet. On the river, a **3** gives you a straight from 2 to 6 (your 5♦ 6♣), and a **Q** gives you a straight from 9 to K (your J♦ 10♥). You act first: check, or bet up to the pot (20).",
+          "tools": []
         }
       ],
       "input": {

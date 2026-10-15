@@ -674,6 +674,7 @@ function messagesFor(
       idgraphHint(failures) +
       (failures.some((f) => f.code === 'NET_NOOP') ? NET_NOOP_HINT : '') + // GH #1142 — the net-no-op correction round's guidance
       (failures.some((f) => f.code === 'FLOW_END_MISSING') ? FLOW_END_HINT : '') + // GH #1168 — the missing-flowEnd correction round's guidance
+      (failures.some((f) => f.code === 'NARRATED_MECHANICS') ? NARRATION_HINT : '') + // T-0234: a narrated reply's guidance
       (failures.some((f) => f.detail !== undefined) ? SEMANTIC_HINT : '') + // ADR-0238: a semantic-finding round's guidance
       keepSurfacesHint(lastOutput, input.session, failures) // T-0172: never lose a surface the failed round created
     turns.push({
@@ -1075,6 +1076,31 @@ const SEMANTIC_HINT =
   ' Those findings are contradictions inside your content, not schema errors: change the values so ' +
   'what the surface states agrees with what it shows, and keep every other line as it was.'
 
+/** T-0234: the self-correct sentence for a NARRATED_MECHANICS round. */
+const NARRATION_HINT =
+  ' NARRATED_MECHANICS means your reply talked about the surfaces or an earlier turn instead of the game or the ' +
+  'booking: state only where things stand now (the cards, totals, options, the booking details). Never name a ' +
+  'surface id, never say you built, removed, replaced or corrected something, and never apologize for an earlier ' +
+  'turn; a fix is made silently on the surface.'
+
+/** T-0234: a reply opening a correction of an earlier turn ("I need to correct my last turn", "Last turn I described
+ *  round 2 but never actually built its table", "correction: Q♦ Q♣"), as the live round 2 traces recorded it. */
+const CORRECTION_IN_REPLY =
+  /\b(?:I (?:also )?need to correct\b|I made a mistake\b|(?:correction|corrected)\s*:|last (?:turn|message|round) I (?:described|announced|said|showed)\b|never (?:actually )?(?:built|updated)\b)/i
+
+/** T-0234: the NARRATED_MECHANICS failure for a reply that names one of `surfaceIds` as a whole token (an id with a
+ *  digit or a hyphen: a plain-word id such as "booking" is an ordinary word too) or opens a correction of an earlier
+ *  turn, else undefined. The path is the fragment found. */
+function narratedMechanics(reply: string | undefined, surfaceIds: Iterable<string>): RoundFailure | undefined {
+  if (reply === undefined || reply.trim() === '') return undefined
+  for (const sid of surfaceIds) {
+    if (!/[-\d]/.test(sid)) continue
+    if (new RegExp(`(?<![\\w-])${sid.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\w-])`).test(reply)) return { code: 'NARRATED_MECHANICS', path: sid }
+  }
+  const m = CORRECTION_IN_REPLY.exec(reply)
+  return m === null ? undefined : { code: 'NARRATED_MECHANICS', path: m[0] }
+}
+
 /** T-0172: the surfaces a round's payload creates that the session does not already hold. */
 function newSurfaceIds(output: A2uiOutput, session: Session): Set<string> {
   const known = sessionKnownSurfaceIds(session)
@@ -1122,6 +1148,15 @@ function keepSurfacesHint(failed: A2uiOutput | undefined, session: Session, fail
 /** The bounded turn: `produceTurn`'s whole loop under one absolute deadline (T-0023, `withTurnDeadline`). The
  * composed signal replaces `opts.signal` for the loop, so the provider fetch, its body read and every
  * in-flight tool call (`executeTool`'s third argument) stop together when the limit is reached. */
+
+/** T-0232: the user's typed words of an intent turn. An attached entry rides the text framed ahead of them under
+ *  `## Referenced for this message` (`@agent-ui/app` entries.ts `resolveTurnReferences`, typed text last), and its
+ *  rules prose is not what the user said. */
+function typedWords(text: string): string {
+  if (!text.startsWith('## Referenced for this message\n')) return text
+  return text.slice(text.lastIndexOf('\n\n') + 2)
+}
+
 export async function* produce(input: TurnInput, deps: ProduceDeps, opts: ProduceOptions): AsyncIterable<string> {
   yield* withTurnDeadline((signal) => produceTurn(input, deps, { ...opts, signal }), opts.signal, opts.turnDeadlineMs)
 }
@@ -1191,6 +1226,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   let netNoopFedBack = false // GH #1142 — the ONE correction round the net-no-op dodge gets; on recurrence (or a last-round hit) the group is stripped instead, never a ProduceHalt on an otherwise-valid turn
   // ADR-0234 (proposed): the opt-in hard stop: an over-budget prompt halts before ANY provider call.
   if (opts.promptBudget?.mode === 'halt' && promptReport.over) throw new ProduceHalt([{ code: 'PROMPT_OVER_BUDGET', path: '' }])
+  let narrationFedBack = false // T-0234: the ONE correction round a reply that narrates the surfaces gets; on refusal it ships tallied NARRATION_UNCORRECTED
   let flowEndFedBack = false // GH #1168 — the ONE correction round a closing-shaped turn missing `flowEnd` gets; on refusal (or a last-round hit) the turn ships UNCHANGED — the runtime never synthesizes the field, only tallies FLOW_END_UNCORRECTED on the trace
 
   // RTS-R6: the effective override. The intent's own words win as the latest instruction, else the request's
@@ -1218,6 +1254,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   // T-0172: the action a client turn answers, read by the semantic checks (a no-payload round is judged too).
   // T-0215: a press with no client `dataModel` reads the surface's data model replayed off the session.
   const turnAction = input.kind === 'client' ? semanticActionOf(input.message, input.session) : undefined
+  // T-0232: a say turn's own words, so a check can tell a stake the user typed from one the model picked.
+  const turnIntent = input.kind === 'intent' ? typedWords(input.text) : undefined
   // T-0172: every surface a failed round of this turn created that no failure named; a later round that
   // passes without one has dropped it (SURFACE_DROPPED), never a success.
   const keptSurfaces = new Set<string>()
@@ -1449,6 +1487,10 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     }
     lastCaptureRound = captured !== undefined || routed !== undefined
     degrade = lastCaptureRound && note !== undefined && note.trim() !== '' ? { note, plan, personaPatch, flowEnd, team, target } : undefined
+    // T-0214: on a say turn, the open surface this round declares it changes (the meta-line or the capture's own
+    // target), so the checks can judge a typed move answered in prose alone.
+    const declaredTarget = target?.surfaceId ?? capture?.target
+    const roundTarget = turnIntent !== undefined && declaredTarget !== undefined && sessionKnownSurfaceIds(input.session).has(declaredTarget) ? declaredTarget : undefined
     // genui-surface SPEC-R1 — peeled SECOND, still BEFORE heal/validate: a genui line (valid or not) never
     // reaches the shared A2UI healer/validator, which doesn't know this kind exists. Recomputed FRESH every
     // round (never carried over): a round's genui candidate belongs to THAT round's own raw output, never
@@ -1516,10 +1558,11 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       }
       // T-0172: an action turn answered with no payload is still judged (`surfaces` empty), so a check can catch
       // a click narrated in prose that never reached the surface. A finding spends a repair round while one is
-      // left (worded for render_surface when the tool is offered); on the last round it ships tallied.
+      // left (worded for render_surface when the tool is offered); on the last round it ships tallied. T-0214: a say
+      // turn that targets an open surface is judged the same way, so a typed move narrated in prose is repaired.
       const actionSemanticTally: string[] = []
-      if (turnAction !== undefined && deps.semanticChecks !== undefined && deps.semanticChecks.length > 0 && genuiLine === undefined) {
-        const semantic = runSemanticChecks(deps.semanticChecks, { surfaces: [], action: turnAction })
+      if ((turnAction !== undefined || roundTarget !== undefined) && deps.semanticChecks !== undefined && deps.semanticChecks.length > 0 && genuiLine === undefined) {
+        const semantic = runSemanticChecks(deps.semanticChecks, turnAction !== undefined ? { surfaces: [], action: turnAction } : { surfaces: [], intent: turnIntent!, target: roundTarget! })
         if (semantic.findings.length > 0 && round < opts.maxRounds - 1) {
           failures = semantic.findings.map((f) => ({ code: f.code, path: f.path, detail: f.message }))
           lastCaptureRound = offeredTools !== undefined
@@ -1528,8 +1571,17 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         if (semantic.findings.length > 0) actionSemanticTally.push('SEMANTIC_UNCORRECTED')
         if (semantic.errored.length > 0) actionSemanticTally.push('SEMANTIC_CHECK_ERROR')
       }
+      // T-0234: a reply that narrates the surfaces gets one targeted round, then ships tallied.
+      const narrated = narratedMechanics(note, sessionKnownSurfaceIds(input.session))
+      if (narrated !== undefined && !narrationFedBack && round < opts.maxRounds - 1) {
+        narrationFedBack = true
+        failures = [narrated]
+        lastCaptureRound = offeredTools !== undefined
+        continue
+      }
       const failureCodes = (failuresFedBack ?? []).map((f) => f.code)
       failureCodes.push(...actionSemanticTally)
+      if (narrated !== undefined) failureCodes.push('NARRATION_UNCORRECTED') // T-0234: a factual tally, never a halt
       if (genuiMultiplicityHit) failureCodes.push('GENUI_MULTIPLICITY') // SPEC-R1 — a factual tally, never a retry trigger
       if (flowEndFedBack && flowEnd === undefined) failureCodes.push('FLOW_END_UNCORRECTED') // GH #1168 — the model refused the correction round; ships unchanged, tallied (the NET_NOOP_STRIPPED naming shape)
       // SPEC-N4/SPEC-R1 — a genui structural failure on THIS shipping round is dropped from the wire
@@ -1593,7 +1645,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       // payload ships with a tally instead (see the header). Skipped entirely when no check is declared.
       const semanticTally: string[] = []
       if (deps.semanticChecks !== undefined && deps.semanticChecks.length > 0) {
-        const semantic = runSemanticChecks(deps.semanticChecks, { surfaces: semanticSurfaceViews(input.session, assembled.output), ...(turnAction !== undefined ? { action: turnAction } : {}) })
+        const semantic = runSemanticChecks(deps.semanticChecks, { surfaces: semanticSurfaceViews(input.session, assembled.output), ...(turnAction !== undefined ? { action: turnAction } : {}), ...(turnIntent !== undefined ? { intent: turnIntent } : {}), ...(roundTarget !== undefined ? { target: roundTarget } : {}) })
         if (semantic.findings.length > 0 && round < opts.maxRounds - 1) {
           failures = semantic.findings.map((f) => ({ code: f.code, path: f.path, detail: f.message }))
           continue
@@ -1601,6 +1653,14 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         if (semantic.findings.length > 0) semanticTally.push('SEMANTIC_UNCORRECTED')
         if (semantic.errored.length > 0) semanticTally.push('SEMANTIC_CHECK_ERROR')
       }
+      // T-0234: a reply that narrates the surfaces (the session's, or this payload's own) gets one targeted round.
+      const narrated = narratedMechanics(note, new Set([...sessionKnownSurfaceIds(input.session), ...assembled.output.map(messageSurfaceId).filter((sid): sid is string => sid !== undefined)]))
+      if (narrated !== undefined && !narrationFedBack && round < opts.maxRounds - 1) {
+        narrationFedBack = true
+        failures = [narrated]
+        continue
+      }
+      if (narrated !== undefined) semanticTally.push('NARRATION_UNCORRECTED') // T-0234: a factual tally, never a halt
       // GH #1142 — the net-no-op dodge (a surface created AND deleted in this same turn, closing GH
       // #1061's producer strand). The dodge gets exactly ONE targeted correction round through the
       // existing ADR-0187 atFinalize self-correct seam (NET_NOOP + NET_NOOP_HINT: emit no A2UI instead);

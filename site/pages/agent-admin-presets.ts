@@ -97,6 +97,11 @@ export interface AgentPreset {
    *  grammar blocks (`system-prompt.ts`), which compose independently of what any persona says; a persona
    *  that assumed one dialect broke the moment the admin flipped Surface Options (ADR-0138's boundary). */
   surfaceStyle: string
+  /** T-0231: the facts this persona must always know (hours, policies, schedules), seeded as a "House facts"
+   *  prompt section after Surface style. Capability entries reach the prompt as index lines only (ADR-0190
+   *  rev.2), and a guest never names a resource, so a fact the agent must answer unprompted lives here, the
+   *  ruled escape hatch. Plain facts, modality-neutral like `surfaceStyle`. Absent: no section. */
+  houseFacts?: string
   skills: readonly SeedEntry[]
   workflows: readonly SeedEntry[]
   resources: readonly SeedEntry[]
@@ -300,7 +305,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'concierge', // GH #46 — upgraded IN PLACE to the Hotel Concierge (same id: persisted stores key on it)
     category: 'hospitality', // GH #143
-    seedVersion: 9, // T-0200: facility-info-card is one ServiceCard per facility; migrates pre-v9 stores. 8: T-0159: gallery-swiper caption variant, the amenity-service-card ServiceCard skill; migrates pre-v8 stores. 7: GH #1203 — `booking-flow` names the Back affordance + settled receipt (ADR-0198 B1/B2); migrates pre-#1203 stores (6: GH #1171 arc rewrite; 5: GH #497 local pattern set)
+    seedVersion: 10, // T-0231: the hours, policies and tour days ride a House facts prompt section, since a guest never names the resources that hold them; migrates pre-v10 stores. 9: T-0200: facility-info-card is one ServiceCard per facility; migrates pre-v9 stores. 8: T-0159: gallery-swiper caption variant, the amenity-service-card ServiceCard skill; migrates pre-v8 stores. 7: GH #1203 — `booking-flow` names the Back affordance + settled receipt (ADR-0198 B1/B2); migrates pre-#1203 stores (6: GH #1171 arc rewrite; 5: GH #497 local pattern set)
     label: 'The Hotel Concierge',
     tagline: 'The full hospitality stack: booking forms + galleries + itineraries + live weather/FX integrations (GH #46/#49)',
     config: { name: 'The Hotel Concierge', model: 'claude-sonnet-5-5', toolsEnabled: true },
@@ -331,6 +336,13 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'Weather for itineraries and FX for international guests come from your integrations — surface ' +
       'the results INSIDE the relevant panel, never as a raw dump. Prose stays in chat; structured ' +
       'facts always get a surface.',
+    houseFacts:
+      'Pool and gym: 06:00 to 22:00. Spa: 09:00 to 20:00; book treatments at least a day ahead in season. ' +
+      'Check-in 15:00, Check-out 11:00; late check-out to 14:00 subject to availability. Cancellation is free up to ' +
+      '48 hours before arrival, one night’s rate after. Old Town walking tour: daily at 10:00 from the lobby. ' +
+      'Half-day coastal boat tour: Tuesday, Thursday and Saturday. Harbor cruise: daily at 17:00. Maritime Museum: ' +
+      'closed Mondays. Bookings (rooms, tables, spa, tours) are yours to take: gather the details, read them back, ' +
+      'and confirm once the guest agrees. A confirmed booking is held; never tell a guest nothing was reserved.',
     // 'hotel-booking-form' EXCLUDED (not a `pick` list — the OTHER five entries stay unfiltered so a
     // future HOSPITALITY_SKILLS addition is picked up automatically, GH #497's own scoping).
     skills: seedFrom(HOSPITALITY_SKILLS).filter((s) => s.id !== 'hotel-booking-form'),
@@ -775,7 +787,8 @@ function expand(kind: string, seeds: readonly SeedEntry[]): Entry[] {
  *  scripts a picked source or curates a catalog shelf; the admin picks per agent, same as any
  *  hand-authored entry). The prompt sections are the three
  *  shipped builtins with Foundation's CONTENT rewritten to the persona (ids, labels, and non-deletability
- *  untouched — ADR-0132 cl.2) + the persona's "Surface style" custom section appended; `disabledBuiltins`
+ *  untouched — ADR-0132 cl.2) + the persona's "Surface style" custom section appended (and its "House facts"
+ *  section after it, when the preset has one, T-0231); `disabledBuiltins`
  *  seeds those builtins toggled off (never removed, Fork 4). */
 export function presetSeed(preset: AgentPreset): Record<string, unknown> {
   const sections: Entry[] = [
@@ -794,6 +807,20 @@ export function presetSeed(preset: AgentPreset): Record<string, unknown> {
       enabled: true,
       builtin: false, // the one persona section a user may delete
     },
+    ...(preset.houseFacts === undefined
+      ? []
+      : [
+          {
+            id: 'house-facts',
+            kind: ENTRY_KINDS.promptSection,
+            label: 'House facts',
+            description: 'The facts this agent always knows: hours, policies and schedules (T-0231).',
+            content: preset.houseFacts,
+            order: DEFAULT_PROMPT_SECTIONS.length + 1,
+            enabled: true,
+            builtin: false,
+          },
+        ]),
   ]
   return {
     ...preset.config,

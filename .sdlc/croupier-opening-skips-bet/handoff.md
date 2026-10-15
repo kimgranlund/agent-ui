@@ -7,6 +7,8 @@ size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
 created: 2026-10-15
+branch: fix/lane-h-agent-behavior
+worktree: .claude/worktrees/wave-lh
 router: .sdlc/AGENTS.md  # how to claim and close this ticket
 ---
 
@@ -33,3 +35,12 @@ The failing test lands before or with the fix, never after. No em dashes.
 - (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.test.ts` exits 0: a say turn whose new CardTable is dealt with no stake in the user's words gets NEW_ROUND_NOT_BETTING; a typed stake passes.
 - `npx vitest run scripts/e2e-admin/probe/replays/croupier-sonnet-opening-dealt.test.mjs` exits 0 with the replay now recording the repair round, or the test rewritten to expect the finding.
 - `npm run check` exits 0.
+
+## Lane verify scope
+This verifier checks FOUR tickets, each against the acceptance criteria in its own handoff, and returns one verdict line per ticket plus one overall verdict. Do not stop after this handoff:
+1. .sdlc/croupier-opening-skips-bet/handoff.md (T-0232)
+2. .sdlc/croupier-playing-table-no-moves/handoff.md (T-0233)
+3. .sdlc/croupier-haiku-state-in-prose/handoff.md (T-0214)
+4. .sdlc/narrated-surface-mechanics/handoff.md (T-0234)
+T-0231 in the same lane already passed its own verifier.
+Diff base for all four: the lane base 6fabea0d (git diff 6fabea0d..HEAD); the base sha printed in the dispatch is a later bookkeeping commit.

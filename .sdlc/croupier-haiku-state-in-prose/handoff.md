@@ -7,6 +7,8 @@ size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
 created: 2026-10-14
+branch: fix/lane-h-agent-behavior
+worktree: .claude/worktrees/wave-lh
 router: .sdlc/AGENTS.md  # how to claim and close this ticket
 ---
 
@@ -29,3 +31,9 @@ Live round 2 (T-0225, `.sdlc/evals/rounds/2026-10-15-r2-presets/report.md`, trac
 
 ## Constraints
 The failing test lands before or with the fix, never after. No em dashes.
+
+## Acceptance criteria
+Written by the solo lane (the ticket had none), scoped to the Context proposal:
+- (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.test.ts` exits 0: a say turn whose meta-line targets an open table and whose words name a table move ("Bet 50.") gets ACTION_NOT_APPLIED when this turn sends that table no update; an update to it, or a say turn with no move word or no target, passes.
+- `npx vitest run scripts/e2e-admin/probe/replays/croupier-draw-haiku-prose-state.test.mjs` exits 0 with the replay recording ACTION_NOT_APPLIED on turn 4 and the probe's `action-updates-surface` failing that say turn (the fixture records no repaired round).
+- `npm run check` exits 0.

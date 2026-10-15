@@ -7,6 +7,8 @@ size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
 created: 2026-10-15
+branch: fix/lane-h-agent-behavior
+worktree: .claude/worktrees/wave-lh
 router: .sdlc/AGENTS.md  # how to claim and close this ticket
 ---
 
@@ -29,7 +31,21 @@ By design (ADR-0190 rev.2, GH #891 and #1030, `packages/agent-ui/app/src/control
 ## Constraints
 The prompt budget (`src/agent/prompt-budget.ts`) is never raised just to get green. No em dashes.
 
+## Decision
+Option taken: a `prompt-section` (the ruled escape hatch). `AgentPreset.houseFacts` seeds a "House facts" section after Surface style; the Concierge's carries the pool, gym and spa hours, check-in and check-out, cancellation, tour days, and one booking line (take the booking, read it back, confirm; a confirmed booking is held). The resources and the `booking-flow` playbook stay index-only: the playbook's full arc is not made ambient here (no per-entry "always loaded" availability), so the Haiku booking replay is judged by T-0214's checks, not by this ticket.
+
 ## Acceptance criteria
 - A decision line in this ticket naming the option taken.
 - A unit test on the composed concierge prompt shows the pool, gym and spa hours present without a tag.
 - `npm run check` exits 0.
+
+## Lane bundle
+This solo lane delivers these tickets in order, one commit each, then one batched verifier checks all of them. Each fix is a check or data rule that bites (prose alone does not steer, T-0208), proven by a keyless replay or test that fails before it:
+- .sdlc/preset-knowledge-index-only/handoff.md
+- .sdlc/croupier-opening-skips-bet/handoff.md
+- .sdlc/croupier-playing-table-no-moves/handoff.md
+- .sdlc/croupier-haiku-state-in-prose/handoff.md
+- .sdlc/narrated-surface-mechanics/handoff.md
+
+## Lane verify scope
+One batched verifier checks all five tickets in ## Lane bundle against their own handoff criteria, from the lane base: .sdlc/preset-knowledge-index-only, .sdlc/croupier-opening-skips-bet, .sdlc/croupier-playing-table-no-moves, .sdlc/croupier-haiku-state-in-prose, .sdlc/narrated-surface-mechanics. One verdict per ticket, then one overall verdict.

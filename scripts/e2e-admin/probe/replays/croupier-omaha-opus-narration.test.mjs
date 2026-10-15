@@ -6,10 +6,14 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0234. In an ordinary turn Opus 5.5 narrates its own repair ("I've built it now as table-2"). When the
-// producer finds it, flip to `toEqual([])`.
-it('croupier-omaha-opus-narration: the recorded turns replay with the surface id narrated in turn 4', async () => {
+// T-0234: in an ordinary turn Opus 5.5 narrated its own repair ("I've built it now as table-2"). The producer now sends
+// that reply back with NARRATED_MECHANICS. Turn 4's second round is AUTHORED (the live turn had one round): the same
+// reply with the narration cut, so the replay shows the repaired turn. Without the finding round 1 ships and
+// no-internal-leak:4 fails.
+it('croupier-omaha-opus-narration: the narrated turn 4 is repaired and every probe check is green', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./croupier-omaha-opus-narration.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual(['no-internal-leak:4'])
+  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual([])
+  const trace = report.records[4].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
+  expect(trace).toMatchObject({ rounds: 2, failureCodes: ['NARRATED_MECHANICS'] })
 })
