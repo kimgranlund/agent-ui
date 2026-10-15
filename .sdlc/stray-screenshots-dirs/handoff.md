@@ -34,3 +34,6 @@ Lane base 73b567b2. One verifier checks all four tickets.
 - T-0227: `npx vitest run --config vitest.browser.config.ts --project packages packages/agent-ui/app/src/controls/agent-admin/agent-admin-click-turn.browser.test.ts` exits 0; the GH #63 case fails when the `ERROR_TURN_BUDGET` halt in `agent-admin.ts` is disabled.
 - T-0224: `npx vitest run packages/agent-ui/a2ui/src/live-agent/persona-cap.test.ts site/lib/admin-live-runner.test.ts` exits 0; the dev proxy, Worker and runner cases fail with the three source files at 73b567b2.
 - `npm run check` exits 0.
+
+## Lane verify scope
+One batched verifier checks every ticket in ## Lane bundle against its own handoff criteria, from base 73b567b2: .sdlc/stray-screenshots-dirs, .sdlc/validate-dropped-child-same-payload, .sdlc/gh63-poison-producer, .sdlc/persona-silent-drop. One verdict per ticket, then one overall verdict.
