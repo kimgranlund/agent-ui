@@ -192,6 +192,9 @@ export default defineConfig({
       // recordTurn's meta-vs-line routing) and must not drag in the Node-first `./agent` barrel
       // (system-prompt.ts/mini-skills.ts `readFileSync` at load).
       '@agent-ui/a2ui/agent/meta-line': r('./packages/agent-ui/a2ui/src/agent/meta-line.ts'),
+      // T-0185: the a2ui `./agent/model-capabilities` subpath, the pure per-model capability table the
+      // agent-admin settings pane reads; placed before `./agent` for the same prefix-match reason.
+      '@agent-ui/a2ui/agent/model-capabilities': r('./packages/agent-ui/a2ui/src/agent/model-capabilities.ts'),
       // The a2ui `./agent/agent-transport` subpath (ADR-0137's seam file, browser-safe pure types +
       // zero node imports) — mirrors the package's exports map, placed BEFORE the broader `./agent`
       // entry for the same prefix-match reason as `meta-line`/`genui-line` above. `@agent-ui/devtools`

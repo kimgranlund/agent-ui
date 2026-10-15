@@ -107,6 +107,7 @@ import { withTurnDeadline } from './deadlines.ts'
 import { readMetaLine } from './meta-line.ts'
 import type { AskDeclaration, PersonaPatch, PlanDeclaration, TargetDeclaration, TeamDeclaration, TokenUsage, TurnProgress, TurnTrace } from './meta-line.ts'
 import type { GenUiMode } from './gen-ui-mode.ts'
+import type { ModelSettings } from './model-capabilities.ts'
 import { MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, selectMiniSkills } from './mini-skills.ts'
 import { FEED_SURFACE_TYPE_SET } from './feed-catalog.ts'
 import { isGenuiCandidate, readGenuiLine, utf8ByteLength, GENUI_MAX_HTML_BYTES } from './genui-line.ts'
@@ -148,6 +149,8 @@ export interface ProduceOptions {
    * a prompt-composition one. Absent ⇒ the request shape is byte-identical to before (the adapter's own
    * default applies, per `AgentProvider.stream`'s doc). */
   effort?: Effort
+  /** T-0185: the agent's model settings, relayed verbatim to `deps.provider.stream` like `effort`. */
+  modelSettings?: ModelSettings
   /** Retrieval top-k (defaults to 3). */
   k?: number
   /** ADR-0090 §1/§4 — the per-turn Gen-UI disposition, threaded to `buildSystemPrompt`. Absent ⇒
@@ -1274,6 +1277,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       system,
       messages: messagesFor(input, failures, lastRaw, deps.catalog, lastOutput, lastCaptureRound),
       effort: roundEffort,
+      ...(opts.modelSettings !== undefined ? { modelSettings: opts.modelSettings } : {}),
       onEvent,
       // GH #49 — relayed verbatim; the adapter owns the tool loop. Its TEXT stays buffered for the whole
       // round (intentional — GH #290's fix is scoped to PROGRESS delivery only), but its onEvent 'tool'

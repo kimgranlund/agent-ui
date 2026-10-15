@@ -10,6 +10,7 @@
 import { produce } from '../../../src/agent/produce.ts'
 import { withTurnDeadline, TURN_DEADLINE_MS } from '../../../src/agent/deadlines.ts'
 import type { ProduceDeps } from '../../../src/agent/produce.ts'
+import { normalizeModelSettings } from '../../../src/agent/model-capabilities.ts'
 import { formatErrorLine } from '../../../src/agent/meta-line.ts'
 import { resolvePair, validateProvidersConfig } from '../providers-config.ts'
 import type { ProvidersConfig } from '../providers-config.ts'
@@ -164,7 +165,7 @@ async function handleStatus(env: Env): Promise<Response> {
 }
 
 async function handleChat(request: Request, env: Env): Promise<Response> {
-  const body = JSON.parse(await readBody(request)) as { system?: unknown; model?: unknown; messages?: unknown; effort?: unknown; integrations?: unknown }
+  const body = JSON.parse(await readBody(request)) as { system?: unknown; model?: unknown; messages?: unknown; effort?: unknown; integrations?: unknown; modelSettings?: unknown }
   // ADR-0168 cl.5 (GH #402) — read BEFORE the guard: `isChatBody`'s predicate deliberately does not mention
   // `integrations` (optional + fail-closed downstream, never part of the 400 contract), and narrowing to
   // that predicate type drops the key. Same line, same reason, as dev-proxy-plugin.ts's `/chat` twin.
@@ -200,7 +201,7 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
   // produce() uses), composed over `request.signal`, which still propagates unchanged.
   try {
     for await (const fragment of withTurnDeadline(
-      (signal) => dispatch.provider.stream({ model, system, messages, effort: effort as Effort | undefined, signal, ...toolOpts }),
+      (signal) => dispatch.provider.stream({ model, system, messages, effort: effort as Effort | undefined, ...(body.modelSettings !== undefined ? { modelSettings: normalizeModelSettings(model, body.modelSettings, effort as Effort | undefined) } : {}), signal, ...toolOpts }),
       request.signal,
       TURN_DEADLINE_MS,
     )) {
@@ -227,7 +228,7 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
 // lazy-headersSent equivalent), so this must run BEFORE the Response is constructed, not inside the
 // detached write-loop's catch.
 async function handleProduce(request: Request, env: Env): Promise<Response> {
-  const { input, provider, model, mode, personaSystem, integrations, progressDetail, progressReasoning, genui, a2ui, authoring, builderMission, effort, responsePreference, prefers, catalogId } = JSON.parse(await readBody(request)) as {
+  const { input, provider, model, mode, personaSystem, integrations, progressDetail, progressReasoning, genui, a2ui, authoring, builderMission, effort, modelSettings, responsePreference, prefers, catalogId } = JSON.parse(await readBody(request)) as {
     input: unknown
     provider: string
     model: string
@@ -241,6 +242,7 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
     authoring?: unknown
     builderMission?: unknown
     effort?: unknown
+    modelSettings?: unknown
     responsePreference?: unknown
     prefers?: unknown
     catalogId?: unknown
@@ -326,6 +328,7 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
         ...(authoringSurface !== undefined ? { authoringSurface } : {}), // SPEC-R30 — the validated persona-authoring gate
         ...(builderMissionGate !== undefined ? { builderMission: builderMissionGate } : {}), // SPEC-R31 — the validated builder-mission gate
         ...(validatedEffort !== undefined ? { effort: validatedEffort } : {}), // the validated reasoning-effort dial
+        ...(modelSettings !== undefined ? { modelSettings: normalizeModelSettings(String(model), modelSettings, validatedEffort) } : {}), // T-0185: capability-checked
         ...(validatedResponsePreference !== undefined ? { responsePreference: validatedResponsePreference } : {}), ...(validatedPrefers !== undefined ? { prefers: validatedPrefers } : {}), // T-0060: the validated response-type override and persona hint
         signal: request.signal, // GH #106 — cancel the paid upstream call if the client disconnects
         ...toolOpts,
