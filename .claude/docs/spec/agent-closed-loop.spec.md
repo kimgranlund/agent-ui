@@ -40,7 +40,8 @@ The code table is the owner: `CHECK_NAMES` and `runChecks` in `scripts/e2e-admin
 |---|---|---|---|
 | `model-pick` | fail | the produce request does not carry the requested model or effort | shipped, T-0174 |
 | `no-halt` | fail | an error meta-line, a `halt` or `error` trace outcome, or a non-2xx answer | shipped, T-0174 |
-| `no-json-as-prose` | fail | the visible chat prose carries A2UI JSON | shipped, T-0174 |
+| `no-json-as-prose` | fail | the visible chat prose carries A2UI JSON or a meta-line | shipped, T-0174; meta-line shape T-0213 |
+| `no-internal-leak` | fail | the visible chat prose shows a repair round's correction note or a surface id | shipped, T-0217 |
 | `no-surface-loss` | fail | a surface some round created never shipped, or fewer hosts mounted than shipped | shipped, T-0174 |
 | `expect-component` | fail | an expected component type never shipped, or a step's own expected type is on no surface its turn updated (`--expect-turn`, T-0222) | shipped, T-0174 |
 | `render-lint` | fail | a `scripts/dogfood-rules.json` rule the probe runs finds a surface element | shipped, T-0174 (three rules; the rest listed as not run) |

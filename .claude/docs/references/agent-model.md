@@ -166,7 +166,7 @@ header pointing here.
   flow tests the agent-admin app. Both eval and kit files end `*.scenario.json`; the `kind` tells them
   apart.
 - **check**: one named verdict over one probe or eval turn (`model-pick`, `no-halt`, `no-json-as-prose`,
-  `no-surface-loss`, `expect-component`, `render-lint`, `reasoning`; `CHECK_NAMES` in
+  `no-internal-leak`, `no-surface-loss`, `expect-component`, `render-lint`, `reasoning`; `CHECK_NAMES` in
   `probe/model.ts`), status `pass`, `fail`, `warn` or `skip` (CL-R2). Not a **semantic check** (a
   persona's in-loop domain check that feeds a self-correct round), not the A2UI protocol's `checks`, and
   not a kit finding code.

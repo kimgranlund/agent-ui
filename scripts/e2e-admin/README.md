@@ -32,7 +32,8 @@ Each turn records the request the page sent (model, effort, catalog), the wire l
 |---|---|
 | `model-pick` | the produce request does not carry the `--model` or `--effort` asked for (picked through the composer's own pickers) |
 | `no-halt` | an error meta-line, a `halt` or `error` trace outcome, or a non-2xx answer |
-| `no-json-as-prose` | the chat log's visible prose (outside surface hosts and the activity strip) carries A2UI JSON |
+| `no-json-as-prose` | the chat log's visible prose (outside surface hosts and the activity strip) carries A2UI JSON, or a `{"a2uiMeta"` meta-line (T-0213) |
+| `no-internal-leak` | the chat prose shows a repair round's correction note (`Corrected:`, a leading `Fixed.`) or a surface id (`table-3`, `ask-2`) (T-0217) |
 | `no-surface-loss` | a surface some round created (round text or `render_surface` payload) never shipped, or fewer hosts mounted than shipped; skipped with no round data or on a halted turn |
 | `expect-component` | a `--expect-component` type never shipped (one run row), or a step's `--expect-turn` type is on no surface its turn updated (one row per turn) |
 | `render-lint` | the `nested-card`, `type-floor` or `column` rule of `scripts/dogfood-rules.json` finds a surface element; the other rules need the full render-lint harness and are listed as not run |

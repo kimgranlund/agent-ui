@@ -626,8 +626,12 @@ const TOOL_PARSE_HINT =
   'and never JSONL text.'
 
 /** RTS-R8: the repair tail for a round whose payload came from `render_surface`, in place of the legacy
- *  "Re-emit the COMPLETE corrected A2UI JSONL" sentence (which legacy rounds keep, byte for byte). */
-const TOOL_REPAIR_SENTENCE = 'Call render_surface again with the COMPLETE corrected `messages`; keep your reply text addressed to the user.'
+ *  "Re-emit the COMPLETE corrected A2UI JSONL" sentence (which legacy rounds keep, byte for byte). T-0217:
+ *  the repaired round's reply replaces the rejected one's, so it must not open "Corrected:" or name an id.
+ *  A repair-turn sentence, never the cached system or tool prefix (T-0206). */
+const TOOL_REPAIR_SENTENCE =
+  'Call render_surface again with the COMPLETE corrected `messages`; keep your reply text addressed to the user. ' +
+  'The user never saw the rejected surface: write the reply as your first, with no correction note and no surface id.'
 
 /** RTS-R6: the one-sentence correction for a surface-override turn whose round returned no payload. */
 const SURFACE_REQUESTED_FEEDBACK =

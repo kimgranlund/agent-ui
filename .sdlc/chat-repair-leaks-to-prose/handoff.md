@@ -27,3 +27,9 @@ Guess: the repair message invites a correction note, and the reply of the repair
 
 ## Constraints
 The failing test lands before or with the fix, never after. No em dashes.
+
+## Acceptance criteria
+- (red) `node scripts/chat-probe.mjs selftest` exits 0: a `Corrected:` note or a `table-3` style surface id in chat prose fails the new `no-internal-leak` check.
+- (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/produce-response-type.test.ts` exits 0: the render_surface repair feedback tells the model the user never saw the rejected surface, so the reply carries no correction note and no surface id.
+- `npx vitest run scripts/e2e-admin/probe/replays` exits 0.
+- `npm run check` exits 0.

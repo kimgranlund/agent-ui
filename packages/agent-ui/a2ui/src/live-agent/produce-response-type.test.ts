@@ -414,6 +414,8 @@ describe('degrade at the bound', () => {
     const feedback = lastUserMessage(req)
     expect(feedback).toMatch(/CATALOG/)
     expect(feedback).toContain('Call render_surface again with the COMPLETE corrected `messages`; keep your reply text addressed to the user.')
+    // T-0217: the user never saw the rejected round, so the repaired reply carries no correction note or id.
+    expect(feedback).toContain('The user never saw the rejected surface: write the reply as your first, with no correction note and no surface id.')
     expect(feedback).not.toContain('Re-emit the COMPLETE corrected A2UI JSONL')
     const attempt = req.messages.at(-2)!
     expect(attempt.role).toBe('assistant')

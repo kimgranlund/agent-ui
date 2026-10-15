@@ -259,6 +259,18 @@ export function a2uiInProse(text: string): string | undefined {
   return undefined
 }
 
+/** T-0217: a repair round's correction note, or a surface id, in the chat prose. */
+const INTERNAL_IN_PROSE: readonly RegExp[] = [/\b(?:Corrected|Correction)\s*:/, /^\s*Fixed\b[.:!]/m, /\b(?:table|ask)-\d+\b/i]
+
+/** The first internal fragment (correction note or surface id) in a prose text, or undefined. */
+export function internalInProse(text: string): string | undefined {
+  for (const re of INTERNAL_IN_PROSE) {
+    const m = re.exec(text)
+    if (m) return m[0].trim()
+  }
+  return undefined
+}
+
 // ── the turn record and the checks ────────────────────────────────────────────────────────────────────
 
 export interface TraceRef {
@@ -320,7 +332,7 @@ export interface CheckOptions {
 }
 
 /** The named checks, in report order. */
-export const CHECK_NAMES = ['model-pick', 'click-target', 'no-halt', 'no-json-as-prose', 'reply-text', 'no-surface-loss', 'action-updates-surface', 'expect-component', 'render-lint', 'reasoning'] as const
+export const CHECK_NAMES = ['model-pick', 'click-target', 'no-halt', 'no-json-as-prose', 'no-internal-leak', 'reply-text', 'no-surface-loss', 'action-updates-surface', 'expect-component', 'render-lint', 'reasoning'] as const
 
 /** Apply these lines to `held`, each open surface's component types (a deleted surface drops out). */
 export function holdTypes(held: Map<string, Set<string>>, lines: readonly string[]): void {
@@ -369,6 +381,9 @@ export function runChecks(turns: readonly TurnRecord[], opts: CheckOptions): Che
     // no-json-as-prose: the chat log's prose (outside surface hosts) carries no A2UI JSON.
     const leak = a2uiInProse(t.proseText)
     out.push({ check: 'no-json-as-prose', turn: t.index, status: leak ? 'fail' : 'pass', detail: leak ? `A2UI JSON in the chat prose: ...${leak}...` : `${t.proseText.length} chars of prose, clean` })
+    // no-internal-leak (T-0217): the chat prose shows no repair round ("Corrected:") and no surface id ("table-3").
+    const internal = internalInProse(t.proseText)
+    out.push({ check: 'no-internal-leak', turn: t.index, status: internal ? 'fail' : 'pass', detail: internal ? `internal text in the chat prose: "${internal}"` : 'no correction note or surface id' })
     // reply-text (T-0194): a turn that ships A2UI carries reply text on its own wire (note or text deltas), and
     // the chat never shows the "Emitted N A2UI message(s)" tally (a Sonnet 5.5 hello shipped only that).
     const content = t.lines.filter((l) => readMetaLine(l) === undefined && l.trim() !== '').length

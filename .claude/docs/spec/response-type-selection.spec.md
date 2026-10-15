@@ -72,7 +72,7 @@ When the turn's declared tools are all terminal (no integration tool active) and
 
 ### RTS-R8: degrade to text at the round bound
 
-A payload that fails validation is a self-correct round on today's loop with today's codes; the feedback message names the tool: "Call render_surface again with the COMPLETE corrected JSONL; keep your reply text addressed to the user". At the last round, when the payload is still invalid and the text channel is non-empty, the turn ships as text: the leading meta-line with `note`, `rounds`, the last round's failure codes plus `SURFACE_DEGRADED`, and no A2UI line. When the text is empty, `ProduceHalt` is thrown as today.
+A payload that fails validation is a self-correct round on today's loop with today's codes; the feedback message names the tool: "Call render_surface again with the COMPLETE corrected `messages`; keep your reply text addressed to the user. The user never saw the rejected surface: write the reply as your first, with no correction note and no surface id." (T-0217). At the last round, when the payload is still invalid and the text channel is non-empty, the turn ships as text: the leading meta-line with `note`, `rounds`, the last round's failure codes plus `SURFACE_DEGRADED`, and no A2UI line. When the text is empty, `ProduceHalt` is thrown as today.
 
 - AC1: a scripted turn with three invalid payloads and the text "Here is the plan." ships note-only with `failureCodes` ending in `SURFACE_DEGRADED` and outcome `eventual-text` in the eval's observation.
 - AC2: three invalid legacy rounds still halt (the `repair-halt` scripted turn, unchanged).

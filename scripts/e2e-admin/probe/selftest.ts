@@ -117,7 +117,7 @@ export async function runProbeSelftest(): Promise<number> {
   const seeded: Array<[string, TurnRecord, string, typeof opts?]> = [
     ['halt', record({ lines: ['{"a2uiMeta":{"error":"produce: no valid surface"}}'], trace: { id: 'd:1', outcome: 'halt', retries: [], thinkingChars: [1] } }), 'no-halt', { ...opts, expectComponents: [] }],
     ['json prose', record({ proseText: 'Here: {"version":"v1.0","createSurface":{"surfaceId":"t"}}' }), 'no-json-as-prose'],
-    ['meta-line prose', record({ proseText: '{"a2uiMeta":{"note":"Seven-card stud it is.","ask":{"surfaceId":"ask-2"}}}' }), 'no-json-as-prose'],
+    ['meta-line prose', record({ proseText: '{"a2uiMeta":{"note":"Seven-card stud it is."}}' }), 'no-json-as-prose'],
     ['dropped', record({ rounds: [{ text: `${BUTTON_LINES.join('\n')}\n{"version":"v1.0","createSurface":{"surfaceId":"ask-1"`, tools: [] }] }), 'no-surface-loss'],
     ['unmounted', record({ domHosts: 0 }), 'no-surface-loss'],
     ['missing type', record(), 'expect-component', { ...opts, expectComponents: ['CardTable'] }],
@@ -125,6 +125,8 @@ export async function runProbeSelftest(): Promise<number> {
     ['lint', record({ lint: [{ rule: 'nested-card', detail: 'ui-card inside a ui-card' }] }), 'render-lint'],
     ['no reply', record({ lines: BUTTON_LINES, proseText: '' }), 'reply-text'],
     ['tally shown', record({ proseText: 'Here. Emitted 2 A2UI message(s): createSurface, updateComponents.' }), 'reply-text'],
+    ['correction note', record({ proseText: 'Corrected: the 250 bet is now taken out of your bankroll, which leaves 750.' }), 'no-internal-leak'],
+    ['surface id', record({ proseText: 'Table-3 is open. Set your bet and deal.' }), 'no-internal-leak'],
   ]
   for (const [label, rec, check, o] of seeded) {
     const verdict = caseVerdict(runChecks([rec], o ?? opts), [check])
