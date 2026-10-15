@@ -2,13 +2,11 @@
 id: T-0240
 title: "Domain exemplars: CardTable, BookingForm and BoardGrid examples the producer can retrieve, plus a preset-to-domain mapping"
 type: feature        # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0245]          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
 created: 2026-10-15
-branch: feat/domain-exemplars-plumbing
-worktree: .claude/worktrees/wave-dx
 router: .sdlc/AGENTS.md  # how to claim and close this ticket
 ---
 
@@ -42,3 +40,9 @@ verifier: L3
 - `node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus/import-seeds.ts` exits 0 as an all-E_DUP no-op (every shelved seed already admitted and judged).
 - `test -f packages/agent-ui/a2ui/corpus/verdicts/2026-10-15t16-24-49z--t0240-domain-exemplars.json` exits 0: the judged wave's verdicts file is archived with the shards.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-15 · lane: full L3 · verdict: closed by reason (Merged in #2016: per-persona corpus shards, seven seeds admitted, board-grid seed dropped, verifier L3 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none
