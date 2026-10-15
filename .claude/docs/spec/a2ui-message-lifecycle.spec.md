@@ -122,7 +122,7 @@ The stable-wrapper shape stays the cheaper producer habit, not a MUST.
 **SPEC-R3 — This document is the single normative owner of the decision layer.** No other document restates
 these rules; `a2ui-catalog.spec.md` and `a2ui-runtime.spec.md` are cited, not edited, by this wave (ADR-0126 F1).
 Three build-phase teaching surfaces conform to this SPEC without duplicating its prose verbatim:
-1. The live-agent machine system prompt (`tools/agent/system-prompt.ts`'s `GRAMMAR`) — the LLD names the exact
+1. The live-agent machine system prompt (`a2ui/src/agent/system-prompt.ts`'s `GRAMMAR`) — the LLD names the exact
    insertion point (ADR-0126 F2).
 2. The `a2ui-payload-authoring` skill's mental model (`.claude/skills/a2ui-payload-authoring/SKILL.md`) — widened from three message
    kinds to four, plus one new "Common trap" entry for SPEC-R2.

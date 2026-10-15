@@ -24,7 +24,7 @@
 
 PRD A-3 recorded B6 as blocked on a2ui streaming-pipeline **LLD-C1 (JSONL codec)** and **LLD-C3 (transport abstraction)**, both unbuilt. Re-examined at B6 intake against the shipped tree:
 
-1. **The producer exists.** The streaming family's LLD-C2 (generation pipeline driver) was realized by the live-agent wave: `packages/agent-ui/a2ui/tools/agent/produce.ts` — its own header reads *"the bounded runtime loop (streaming LLD-C2 realized)"* — generate → validate → self-correct, bounded, validate-then-stream. The bridge carries what this loop (or a recording of it) emits.
+1. **The producer exists.** The streaming family's LLD-C2 (generation pipeline driver) was realized by the live-agent wave: `packages/agent-ui/a2ui/src/agent/produce.ts` — its own header reads *"the bounded runtime loop (streaming LLD-C2 realized)"* — generate → validate → self-correct, bounded, validate-then-stream. The bridge carries what this loop (or a recording of it) emits.
 2. **The JSONL codec is not on the bridge's path.** HV-8's resolution pins the carriage: *"Each A2UI envelope (e.g., `updateComponents`) corresponds to the payload of a single A2A message Part."* One envelope per `DataPart`, as **structured JSON** — no line framing exists on the A2A wire, so a JSONL codec module has nothing to do here. Consumer-side, the shipped renderer host already ingests per-line (`host.ingest(line)`): unwrapping a DataPart is `JSON.stringify(part.data)` at the seam — a serialization call, not a codec. Producer-side healing already happened inside `produce()` before anything streamed; DataParts carry post-validation structured data, never raw model text.
 3. **The transport abstraction is not on the bridge's path.** The carrier is `@agent-ui/a2a`'s own shipped channel contract (SPEC-R8: loopback in `src/channel/loopback.ts`, HTTP under `tools/http/`), order-gated by SPEC-N5. The a2ui `Transport` interface (streaming LLD-C3) was that family's plug-adapter seam; a2ui SPEC-R5's *observable* contract — capabilities in `Message.metadata`, order preserved — is checkable without it. If the a2ui family later builds LLD-C3, this module already has the right shape to slot behind it (§3's `wrap`/`unwrap` are exactly a `Transport.send`/`receive` core).
 
@@ -32,7 +32,7 @@ PRD A-3 recorded B6 as blocked on a2ui streaming-pipeline **LLD-C1 (JSONL codec)
 
 ## 3. Bridge mapping — LLD-C1/C2 (the SPEC-R16 realization; every shape cites HV-8)
 
-**Home (PRD-D2, ratified):** `a2ui/tools/pipeline/transports/a2a.ts` — the exact path the a2ui streaming LLD-C5 planned, with the ratified cross-package edge a2ui-tools → `@agent-ui/a2a`. **Split note (SPEC-N1/N2):** the module is pure and browser-safe — type-only imports from `@agent-ui/a2a`, zero runtime imports, no Node builtins — because the static-built feed page consumes it (the `tools/agent/recorded-transport.ts` precedent: tools modules that are pure data/logic ARE site-bundleable; the never-in-a-consumer-bundle rule guards the package *barrel*, which does not export this). It never enters `@agent-ui/a2ui`'s `src/index.ts`.
+**Home (PRD-D2, ratified):** `a2ui/tools/pipeline/transports/a2a.ts` — the exact path the a2ui streaming LLD-C5 planned, with the ratified cross-package edge a2ui-tools → `@agent-ui/a2a`. **Split note (SPEC-N1/N2):** the module is pure and browser-safe — type-only imports from `@agent-ui/a2a`, zero runtime imports, no Node builtins — because the static-built feed page consumes it (the `a2ui/src/agent/recorded-transport.ts` precedent: tools modules that are pure data/logic ARE site-bundleable; the never-in-a-consumer-bundle rule guards the package *barrel*, which does not export this). It never enters `@agent-ui/a2ui`'s `src/index.ts`.
 
 ```ts
 // tools/pipeline/transports/a2a.ts — type-only imports both ways; zero runtime deps
@@ -169,7 +169,7 @@ One writer per file; shared files (`main.ts`, `_page.ts`, `package.json`) deferr
 2. **S1 — fan-out (3 writers, no shared files):** LLD-C3 smoke ‖ LLD-C4+C5 fixture + standing gate ‖ LLD-C6 derivation lib + jsdom tests. *(checkpoints: SPEC-R16 AC1 leg green; gate green over the fixture AND red over each negative control; lib tests green — n2 · n3a/n3b · n4a/n4b)*
 3. **S2 —** LLD-C7 page (+css/html). *(checkpoint: recorded replay renders under `vite dev` with network disabled — n4c)*
 4. **S3 —** browser leg. *(checkpoint: `npm run test:browser` green on the new file — n4d)*
-5. **S4 — INTEGRATION (serial):** nav card (`main.ts` A2A cluster) + `_page.ts` link + site canon/TOC gate re-sync + `vite build` && dist grep + full `npm run check && npm test` + `test:browser` + the a2ui streaming-pipeline LLD row flips (C2 → realized-by `tools/agent/produce.ts`; C5 → realized-by this wave's module). *(checkpoint: all gates green repo-wide — n5/n6)*
+5. **S4 — INTEGRATION (serial):** nav card (`main.ts` A2A cluster) + `_page.ts` link + site canon/TOC gate re-sync + `vite build` && dist grep + full `npm run check && npm test` + `test:browser` + the a2ui streaming-pipeline LLD row flips (C2 → realized-by `a2ui/src/agent/produce.ts`; C5 → realized-by this wave's module). *(checkpoint: all gates green repo-wide — n5/n6)*
 
 ## 10. Open forks (awaiting Kim — firm recommendations; none blocks S0–S1)
 

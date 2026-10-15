@@ -370,7 +370,7 @@ exception citing ADR-0227 cl.5.
 | Skill-pack shelf | IndexedDB adapter | database `agent-ui-skill-packs`, keys `skill-packs:<packId>` | `skill-pack-store.ts` |
 | Teams | localStorage adapter | namespace `agent-ui-agent-teams`, key `<teamId>` | `agent-team.ts` |
 | Conversation history, Dialog Turns, Effort | element lifetime only | none | `agent-admin.ts` |
-| Seed content (presets, Builder preset, packs, mini-skills, GenUI packs): planned, T-0160 | build time only, no runtime tier | the generated `registry.gen.ts` over the content root | `scripts/generate-agent-content.mjs` (planned) |
+| Seed content (presets, Builder preset, packs, mini-skills, GenUI packs): planned, T-0160 | build time only, no runtime tier | the generated `registry.gen.ts` over the content root | `scripts/generate-agent-assets.mjs` (planned) |
 | User overlays on seeds: planned, T-0161 | localStorage adapter (large text on the IndexedDB adapter) | keyed by `id@baseVersion`; namespace chosen by T-0161 | the overlay store (planned) |
 
 Owner: ADR-0193 cl.2, cl.3, Amendment A1; ADR-0208 D3; ADR-0227 cl.2. The two planned rows are

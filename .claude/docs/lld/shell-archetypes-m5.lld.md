@@ -1,6 +1,7 @@
 # LLD — Shell archetypes M5
 
 > Status: proposed · v0.1 · 2026-07-20 · Layer: LLD (implementation plan)
+> Superseded in part: `ui-app-shell` was removed on 2026-07-25 (GH #249, ADR-0156); its replacement is `ui-super-shell` (`packages/agent-ui/app/src/controls/super-shell/`, contract [`shell-archetypes-m5.spec.md`](../spec/shell-archetypes-m5.spec.md)). Text naming `ui-app-shell` below is history; the rest stands.
 > Implements: [`../spec/shell-archetypes-m5.spec.md`](../spec/shell-archetypes-m5.spec.md) (`SPEC-R1…R4`, plus the v0.2 amendment `SPEC-R5` this LLD's C3 drives). Refines ADR-0151 (in-flight on PR #45).
 > Altitude: owns **how the rest of M5 is built** — the five-round review plan's own component map, concrete interfaces, and build sequence. Behavior is the SPEC's; this doc never re-derives it. **§7's fork is RESOLVED — Kim ruled Option C (2026-07-20), recorded as [ADR-0156](../adr/0156-deprecate-app-shell-for-super-shell-family.md) (proposed); §7.1 closes with the ruling.**
 

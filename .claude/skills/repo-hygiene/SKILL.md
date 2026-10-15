@@ -47,12 +47,10 @@ can hold.
 
 ## Gated actions (mechanized, not proposal-only)
 
-`harness:repo-cleaner`'s standing charter runs everything else as a PROPOSED plan only — but this
-repo's own gated branch-reap script is one of the named exceptions ("running a host repo's own
-gated branch-reap script where one exists"), the same tier as `campaign_close.py` verifying a PR
-`MERGED` before a remote-branch delete: a mechanized, independently-verified gate the seat may
-EXECUTE directly, not merely surface. Two scripts hold that tier here, chained in that order
-(worktree removal, then branch deletion — GH #1440):
+Every other cleanup runs as a PROPOSED plan only. The exception is a mechanized,
+independently-verified gate a seat may EXECUTE directly, not merely surface. Two scripts hold
+that tier here (`npm run ops:reap-worktrees` and `npm run ops:reap-branches`, dry-run by
+default), chained in that order (worktree removal, then branch deletion, GH #1440):
 
 - `node scripts/reap-worktrees.mjs --execute` — removes a `.claude/worktrees/` entry only when
   ALL of clean (`git status --porcelain` empty), branch provably disposed (PR MERGED at this tip,
@@ -60,8 +58,8 @@ EXECUTE directly, not merely surface. Two scripts hold that tier here, chained i
 - `node scripts/reap-branches.mjs --execute` — deletes the now-orphaned local branch under the
   same provably-disposed gate.
 
-Both refuse loudly (dry-run table, non-zero exit) rather than guess — `repo-cleaner` trusts their
-verdict, it never re-derives disposal itself.
+Both refuse loudly (dry-run table, non-zero exit) rather than guess; a seat trusts their
+verdict and never re-derives disposal itself.
 
 ## Upstream tools that disagree with the house
 
@@ -103,8 +101,7 @@ verdict, it never re-derives disposal itself.
 
 - **Generated/derived files in conflict: take MAIN's side, then RE-RUN THE OPERATION.** The
   regenerate-never-hand-merge bullets above, sharpened by side and widened to operation-carrying
-  state files: `adr-queue.json` → main's version + re-run `adr_queue.py`'s clear;
-  `theme-provider-built.css` → the vite fixture rebuild; dogfood assets / llms-full → their regen
+  state files: `theme-provider-built.css` → the vite fixture rebuild; dogfood assets / llms-full → their regen
   scripts. Never default to `--theirs` on generated output — a careless `--theirs` resurrected
   3 already-cleared queue rows (2026-08-18).
 - **After ANY conflict resolution, grep the file for live markers** —

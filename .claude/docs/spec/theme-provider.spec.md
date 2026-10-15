@@ -9,7 +9,7 @@
 > multi-component intake in this doc set (chart/report/feed/content-family, router) authored a sibling PRD
 > before its SPEC, because each was new product surface needing Problem/Users/Outcomes discovery. This
 > intake is not that: it is a scoped promotion of an already-designed, already-shipped contract
-> (`site/lib/theme-provider.ts`, ADR-0079 cl.3) whose problem statement and acceptance criteria already
+> (`packages/agent-ui/components/src/controls/theme-provider/theme-provider.ts`, ADR-0079 cl.3) whose problem statement and acceptance criteria already
 > live in TKT-0003 (a TICKET, which carries Summary/Acceptance/Links per its own type contract). Authoring
 > a PRD here would restate TKT-0003's content under different frontmatter — the exact "restated substrate"
 > failure `doc-authoring-standards` itself names. **Known, deliberate gap:** `doc-authoring-standards`'
@@ -30,7 +30,7 @@
 
 ## 1. Purpose
 
-Contract the promotion ADR-0117 ratifies: `site/lib/theme-provider.ts`'s CONTRACT (not its file) ships as
+Contract the promotion ADR-0117 ratifies: `packages/agent-ui/components/src/controls/theme-provider/theme-provider.ts`'s CONTRACT (not its file) ships as
 `ui-theme-provider`, a real `@agent-ui/components` control, with one deliberate behavioral fix (`scheme`
 unset no longer collapses to light) and one deliberate scope fence held (the multi-theme package-swapping
 system stays out — the attribute ships wired, inert). This SPEC is normative for the component's contract,
@@ -153,7 +153,7 @@ recorded reason citing this SPEC and ADR-0117. *(ADR-0117 cl.4)*
 
 ### 3.3 Site migration
 
-**SPEC-R9 — Zero site-local survivor.** After this SPEC's build lands, `site/lib/theme-provider.ts` MUST NOT
+**SPEC-R9 — Zero site-local survivor.** After this SPEC's build lands, `packages/agent-ui/components/src/controls/theme-provider/theme-provider.ts` MUST NOT
 exist, and no LIVE, functional site source may reference the bare, unprefixed tag `theme-provider` — not a
 definition, not a selector, not a `querySelector`/`createElement` call, not forward-looking prose. Every
 site consumer of the theming wrapper MUST construct/import `ui-theme-provider` from `@agent-ui/components`.

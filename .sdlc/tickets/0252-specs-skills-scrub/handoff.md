@@ -27,3 +27,10 @@ Do not flip `proposed` statuses on shipped specs (doc-standards section 2). Keep
 - A backticked-path existence check over `.claude/docs` and `.claude/skills` reports no missing path outside history sections (script saved beside the handoff).
 - The 9 app-shell docs carry a superseded line naming the replacement.
 - `doc_lint`, the skill and wiring checks in `check:scripts`, and `npm run check` exit 0.
+
+## Acceptance criteria
+- `python3 .sdlc/tickets/0252-specs-skills-scrub/path_check.py` exits 0 (rules and the allowlist with reasons are in the script docstring and `path_check.allow.txt`).
+- `test -z "$(grep -L '^> Superseded' .claude/docs/spec/agent-app-shell.spec.md .claude/docs/lld/agent-app-shell.lld.md .claude/docs/spec/app-surfaces-m4.spec.md .claude/docs/lld/app-surfaces-m4.lld.md .claude/docs/spec/shell-archetypes-m5.spec.md .claude/docs/lld/shell-archetypes-m5.lld.md .claude/docs/lld/shell-responsive.lld.md .claude/docs/spec/nav-rail-family.spec.md .claude/docs/lld/nav-rail-family.lld.md .claude/docs/prd/agent-app-surfaces.prd.md)"` exits 0, and no status line changed: `! git diff 39415bf5 -- .claude/docs | grep -q '^[-+]> Status'` exits 0.
+- `npx vitest run site/lib/docs-grammar.test.ts site/lib/adr.test.ts site/lib/sitemap.test.ts` exits 0.
+- `npm run check` exits 0.
+- `test ! -e scripts/catalog-attr-diff.mjs` exits 0; `scripts/generate-sitemap.d.mts` stays (it is the type surface `site/lib/sitemap.test.ts` imports).

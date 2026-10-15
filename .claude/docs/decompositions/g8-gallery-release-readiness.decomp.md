@@ -48,7 +48,7 @@
 
 | # | Node | Task | Owning seat | Depends on |
 |---|---|---|---|---|
-| T1 | n1a | `<component-gallery>` + `<theme-provider>` (`site/lib/theme-provider.ts`) + `gallery.html`/`pages/gallery.ts` + ungrouped NAV link | `system-builder` (site infra — NOT `component-builder`: the gallery is deliberately not a fleet `ui-*` control) | ADR-0079 ratified or provisionally green-lit |
+| T1 | n1a | `<component-gallery>` + `<theme-provider>` (`packages/agent-ui/components/src/controls/theme-provider/theme-provider.ts`) + `gallery.html`/`pages/gallery.ts` + ungrouped NAV link | `system-builder` (site infra — NOT `component-builder`: the gallery is deliberately not a fleet `ui-*` control) | ADR-0079 ratified or provisionally green-lit |
 | T2 | n1b | Gallery gates: jsdom probes + cross-engine browser smoke (whole-shape · theme axes · forced-colors) | same seat as T1 (tests ride with the build) | T1 |
 | T3 | n1c | Independent review of the gallery, pre-commit | `component-reviewer` (read-only) | T2 |
 | T4 | n2a | Per-control `exports` map + drift gate | `system-builder` (packaging) | ADR-0080 |

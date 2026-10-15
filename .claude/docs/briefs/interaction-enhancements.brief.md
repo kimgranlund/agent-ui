@@ -166,7 +166,7 @@ ADR-0183 (accepted 2026-08-12, GH #740) shipped the arc — note ADR-0184 is the
 reasoning-trace decision, unrelated to VT:
 
 - **EXISTS**: the ONE shared seam `withViewTransition(mutate, enabled)` + `viewTransitionAvailable()`
-  in `components/dom/view-transition.ts` (opt-in AND API-present AND not reduced-motion; sync
+  in `components/src/dom/view-transition.ts` (opt-in AND API-present AND not reduced-motion; sync
   otherwise). S1: `ui-router-outlet view-transitions`. S2: `ui-super-shell viewTransitions`
   (segment swaps only). S3: docs-site MPA `@view-transition` CSS (Level 2, zero JS).
 - **DEFERRED by its own ADR (cl.6)**: S4, A2UI streamed re-renders — booked follow-up; the design

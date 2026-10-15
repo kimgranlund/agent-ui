@@ -242,13 +242,13 @@ Gate set referenced below, by name:
 
 ### W1: persona fragments become domain fragments
 
-- Do: croupier and quizmaster fragments merge into `domains/games/`; concierge into `domains/hospitality/`; stylist into `domains/design/`. Presets switch `localPatterns` to `domains` (§4 for the four that had a fragment; every other preset may wait for W2). Derived ids change (`agent-ui--croupier` to `agent-ui--games`); the alias table serves old stored values (D6). Bump each touched preset's `seedVersion`.
+- Do (W1, not yet built; `domains/index.ts` ships the empty W0 list): croupier and quizmaster fragments merge into `domains/games/`; concierge into `domains/hospitality/`; stylist into `domains/design/`. Presets switch `localPatterns` to `domains` (§4 for the four that had a fragment; every other preset may wait for W2). Derived ids change (`agent-ui--croupier` to `agent-ui--games`); the alias table serves old stored values (D6). Bump each touched preset's `seedVersion`.
 - Gates: G-records, G-registry, G-selection, G-manifests, G-assets, G-presets, G-eval, G-probe for croupier, quizmaster, concierge, stylist. G-baseline moves only if a pinned mini-skill body changes (`game-table-chrome.md`'s scope line); recapture through the flow.
 - Rollback: revert; a store holding `games` sanitizes to none on the old code, and the reverted presets reseed their old `localPatterns` on the next version bump.
 
 ### W2: default domain types move out (one PR per domain)
 
-- Do, in this order so each preset already loads its domain: give every remaining preset its §4 domains first, then move BoardGrid and GameHud to games; ProductCard to a new `domains/commerce/`; ServiceCard to hospitality; Ramp and Ladder to design. Cut the default edges CA-R4 lists. Re-home or filter the corpus records that use a moved type. Re-measure the budgets (CA-R5). Add the first moment checks, ServiceCard on hospitality and BoardGrid or GameHud on games, each with a replay of the live trace that showed the miss (CA-R9).
+- Do (W2, not yet built), in this order so each preset already loads its domain: give every remaining preset its §4 domains first, then move BoardGrid and GameHud to games; ProductCard to a new `domains/commerce/`; ServiceCard to hospitality; Ramp and Ladder to design. Cut the default edges CA-R4 lists. Re-home or filter the corpus records that use a moved type. Re-measure the budgets (CA-R5). Add the first moment checks, ServiceCard on hospitality and BoardGrid or GameHud on games, each with a replay of the live trace that showed the miss (CA-R9).
 - Precondition: D3 decided and the coverage law edited in [`a2ui-catalog.spec.md`](./a2ui-catalog.spec.md) SPEC-N2 by the same PR as the first move.
 - Gates: G-coverage, G-selection, G-baseline (the default inventory changes, so the baseline moves: recapture through the flow), G-assets, G-registry, G-records, G-manifests, G-presets, G-eval, corpus admission, G-probe for every preset whose catalog changed.
 - Rollback: revert the domain's PR; the types return to the default, the baseline and budgets revert with it.

@@ -149,3 +149,12 @@ Subagents inherit the repo CLAUDE.md, so briefs copy the *directive*, not the la
   not a registered peer in that repo's `fleet.json`, this seat mints records (file-bug /
   file-task) and never authors a PR or claims a version slot; claude-plugins #966 lost the slot
   race twice to that repo's own loop. Hand the fix to that repo's marshal through the record.
+
+## Closed loop: live agent behavior
+
+A brief about how the live agent behaves (a halt, a lost surface, a wrong response type) routes
+through the closed loop before any seat edits a prompt or the producer: `npm run chat:probe` drives the real agent-admin Test Chat headless (live, or keyless with
+`--replay`), `scripts/e2e-admin/probe/run-capped.ts` runs a capped live round of many probes, and
+every round's traces, payloads and ledgers land in `.sdlc/evals/rounds/<YYYY-MM-DD>-<slug>/`
+(index `.sdlc/evals/README.md`). Contract: `.claude/docs/spec/agent-closed-loop.spec.md`; how-to:
+`scripts/e2e-admin/README.md` (Live rounds).

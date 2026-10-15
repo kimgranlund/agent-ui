@@ -1,7 +1,7 @@
 # SPEC — A2UI Runtime (`@agent-ui/a2ui` renderer)
 
 > Status: proposed · v0.5 · 2026-10-08 (v0.1 2026-06-26; v0.2 2026-10-05 adds SPEC-R9 AC3, deferred apply behind a catalog's `controls` loader, and the `CONTROL_LOAD` internal code, ADR-0233, accepted; v0.3 adds SPEC-R9 AC4, deferred catalog load behind a recorded catalog id, the `CATALOG_LOAD` internal code and `preload`, ADR-0241, accepted; v0.4 adds the settle seam to SPEC-R9 AC4, `pending` and `settled()`, and the warm memo, T-0039; v0.5 makes the default `agent-ui` catalog a recorded id too, ADR-0241 Amendment 1, ratified) · Layer: SPEC (execution contract)
-> Refines: [`../a2ui-expert-system.prd.md`](../prd/a2ui-expert-system.prd.md) — primarily **PRD-G1**; supports PRD-G2, PRD-G4, PRD-G6, PRD-G7. Target protocol: **A2UI v1.0** (Constraint C1; v0.9.1 supported via version pin).
+> Refines: [`../prd/a2ui-expert-system.prd.md`](../prd/a2ui-expert-system.prd.md) — primarily **PRD-G1**; supports PRD-G2, PRD-G4, PRD-G6, PRD-G7. Target protocol: **A2UI v1.0** (Constraint C1; v0.9.1 supported via version pin).
 > Refined by: [`../lld/a2ui-renderer.lld.md`](../lld/a2ui-renderer.lld.md). The component **catalog** (type→widget mapping) is owned by [`./a2ui-catalog.spec.md`](./a2ui-catalog.spec.md); this SPEC owns the *runtime that consumes a stream and drives a catalog*.
 > Altitude: owns the renderer **behavior + message contract**. Module/signal internals are the LLD's. Requirements reference PRD goal IDs; they do not restate them.
 > Requirement IDs are file-scoped (`SPEC-R1…`); cross-document references qualify by doc name (e.g. "corpus SPEC-R8").

@@ -10,7 +10,7 @@
 ## 1. Component map (traceability · realized-state 2026-07-02)
 
 **Every LLD-C\* module below is UNBUILT as a `src/stream/`/`tools/pipeline/` module — with two
-pointer-recorded exceptions: LLD-C2's driver is REALIZED off-family by `a2ui/tools/agent/produce.ts` (see
+pointer-recorded exceptions: LLD-C2's driver is REALIZED off-family by `a2ui/src/agent/produce.ts` (see
 its row, re-synced 2026-07-08), and LLD-C5 is now REALIZED at its planned path by the A2A family's B6
 bridge build (see its row, re-synced 2026-07-08).** The consumer-side
 streaming *behaviors* are already REALIZED — but they live in the RENDERER under the runtime SPEC's
@@ -22,10 +22,10 @@ out-of-order tolerance (`renderer/tree.ts`, runtime SPEC-R3/R4/N1), validate-at-
 | ID | Component | Implements | File (under `packages/agent-ui/a2ui/`) | Scope | State |
 |---|---|---|---|---|---|
 | **LLD-C1** | JSONL codec | SPEC-R1 | `src/stream/codec.ts` | runtime | unbuilt |
-| **LLD-C2** | Generation pipeline driver | SPEC-R2 | `tools/pipeline/produce.ts` | dev/CI | **REALIZED (2026-07-08 re-sync)** — by the live-agent wave's `tools/agent/produce.ts` (its header: "streaming LLD-C2 realized"): generate→validate→self-correct, bounded, validate-then-stream. The planned `tools/pipeline/produce.ts` module is superseded by that realization; no second driver gets built |
+| **LLD-C2** | Generation pipeline driver | SPEC-R2 | `tools/pipeline/produce.ts` | dev/CI | **REALIZED (2026-07-08 re-sync)** — by the live-agent wave's `a2ui/src/agent/produce.ts` (its header: "streaming LLD-C2 realized"): generate→validate→self-correct, bounded, validate-then-stream. The planned `tools/pipeline/produce.ts` module is superseded by that realization; no second driver gets built |
 | **LLD-C3** | Transport abstraction + stdio | SPEC-R3, R8 | `src/stream/transport.ts` + `tools/pipeline/stdio.ts` | runtime (iface) / dev (stdio) | unbuilt |
 | **LLD-C4** | AG-UI adapter | SPEC-R4 | `tools/pipeline/transports/ag-ui.ts` | dev/server | unbuilt |
-| **LLD-C5** | A2A adapter | SPEC-R5 | `tools/pipeline/transports/a2a.ts` | dev/server | **REALIZED (2026-07-08, B6)** — by the A2A family's bridge build ([`../../lld/a2a-a2ui-bridge.lld.md`](./a2a-a2ui-bridge.lld.md), its LLD-C1/C2), at the exact planned path, on the `@agent-ui/a2a` substrate: `envelopeToPart`/`partToEnvelope`/`wrapServerTurn`/`unwrapTurn`/`wrapClientTurn`, one envelope per tagged DataPart, `a2uiClientCapabilities` on every client→server message (HV-8). SPEC-R5 stays this family's contract; acceptance is proven by that build's `bridge.test.ts` (SPEC-R16 AC1) |
+| **LLD-C5** | A2A adapter | SPEC-R5 | `tools/pipeline/transports/a2a.ts` | dev/server | **REALIZED (2026-07-08, B6)** — by the A2A family's bridge build ([`./a2a-a2ui-bridge.lld.md`](./a2a-a2ui-bridge.lld.md), its LLD-C1/C2), at the exact planned path, on the `@agent-ui/a2a` substrate: `envelopeToPart`/`partToEnvelope`/`wrapServerTurn`/`unwrapTurn`/`wrapClientTurn`, one envelope per tagged DataPart, `a2uiClientCapabilities` on every client→server message (HV-8). SPEC-R5 stays this family's contract; acceptance is proven by that build's `bridge.test.ts` (SPEC-R16 AC1) |
 | **LLD-C6** | MCP server | SPEC-R6 | `tools/pipeline/mcp-server.ts` | dev/CLI | unbuilt · blocked by corpus store (retrieve/admit) |
 | **LLD-C7** | Conformance/negotiation | SPEC-R7, N3 | `src/stream/conformance.ts` | runtime | unbuilt |
 
@@ -71,7 +71,7 @@ async function* produce(task, opts) {
 
 **LLD-C4 AG-UI.** Map each A2UI message to an AG-UI event over SSE/HTTP/WS; preserve order via the event sequence. Conformance smoke (SPEC-R4 AC1) reconstructs the stream from the AG-UI event log.
 
-**LLD-C5 A2A — REALIZED (2026-07-08, B6).** Carry messages as A2A `Message`s; place `a2uiClientCapabilities` in the A2A `Message.metadata` (SPEC-R5 AC1). Surface creation handshakes capabilities before content. Built exactly this way by the A2A family's bridge LLD (`../../lld/a2a-a2ui-bridge.lld.md`, its §3): `wrapServerTurn` carries one A2UI envelope per tagged `DataPart`; `wrapClientTurn` is the sole client-message composer and places the caps object on every call by construction (no caps-less code path) — the "before content" ordering is structural (caps ride the message's own `metadata`, not a leading part).
+**LLD-C5 A2A — REALIZED (2026-07-08, B6).** Carry messages as A2A `Message`s; place `a2uiClientCapabilities` in the A2A `Message.metadata` (SPEC-R5 AC1). Surface creation handshakes capabilities before content. Built exactly this way by the A2A family's bridge LLD (`./a2a-a2ui-bridge.lld.md`, its §3): `wrapServerTurn` carries one A2UI envelope per tagged `DataPart`; `wrapClientTurn` is the sole client-message composer and places the caps object on every call by construction (no caps-less code path) — the "before content" ordering is structural (caps ride the message's own `metadata`, not a leading part).
 
 **Ordering (SPEC-R8/N4):** each transport guarantees in-order delivery; a sequence test tags messages with an index and asserts monotonic receipt across all three. Backpressure: `send` awaits the consumer's drain (async iterable pull) — a slow consumer throttles production without loss.
 

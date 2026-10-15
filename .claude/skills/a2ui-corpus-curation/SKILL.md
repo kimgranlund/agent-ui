@@ -114,7 +114,8 @@ contract:
 
 **Catalog-ownership check before any cross-store payload edit** (2026-08-17, GH #1155's no-op
 verdict): a payload store outside this repo sharing a prop NAME with the default catalog does not
-share the CONTRACT — nano-ui/gen-ui-kit's `catalog-a2ui_0_9.json` still legitimately declares
+share the CONTRACT — the separate nano-ui/gen-ui-kit repository's `catalog-a2ui_0_9.json` (not a file
+here; this repo's copy of the upstream basic catalog is `packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json`) still legitimately declares
 `size` after this repo's #1148 scrub removed it, and their `Card`/`Header` vocabulary is not this
 catalog at all. Before stripping/migrating any stored payload, verify WHICH catalog it validates
 against; a different catalog makes the migration a corruption, not a fix.

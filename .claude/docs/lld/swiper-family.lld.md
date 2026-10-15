@@ -73,7 +73,7 @@ side effect); `component-styles.css` imports all five sheets, PRIMARY first (the
 | LLD-C5 | the infinite loop (clone-teleport + loop a11y) | §5 · `swiper.ts` |
 | LLD-C6 | keyboard + focus safety | §6 · `swiper.ts` |
 | LLD-C7 | bindable `active` + `select` commit | §4 · `swiper.ts` |
-| LLD-C8 | geometry, tokens, whole-shape, reduced-motion | §7 · `swiper.css` (PRIMARY) + `swiper-item/-pagination/-paddles/-label.css` (REV 2026-07-10, five files) |
+| LLD-C8 | geometry, tokens, whole-shape, reduced-motion | §7 · `swiper.css` (PRIMARY) + `swiper-item.css`, `swiper-pagination.css`, `swiper-paddles.css`, `swiper-label.css` (REV 2026-07-10, five files) |
 | LLD-C9 | `ui-swiper-pagination` drive | §3.3 · §9 · `swiper-pagination.ts` |
 | LLD-C10 | `ui-swiper-paddles` drive | §3.3 · §9 · `swiper-paddles.ts` |
 | LLD-C11 | `ui-swiper-label` + region-label wiring | §3.3 · §9 · `swiper-label.ts` |

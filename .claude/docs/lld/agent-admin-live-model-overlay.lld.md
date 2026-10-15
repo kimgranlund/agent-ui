@@ -23,7 +23,7 @@
 ADR-0136 Fork 2 reads "reuse `AgentTransport`/`dev-proxy-plugin.ts`/`produce()`". Reading the shipped
 mechanism shows `produce()` is **not reusable for this surface, and reusing it would be wrong**:
 
-- `produce()` (`a2ui/tools/agent/produce.ts`) is the **A2UI-generation loop** — it retrieves corpus
+- `produce()` (`a2ui/src/agent/produce.ts`) is the **A2UI-generation loop** — it retrieves corpus
   exemplars, builds its own catalog-derived system prompt (`buildSystemPrompt`, with **no injection point
   for a caller-supplied system prompt**), then heals/validates the output as **A2UI JSONL**, self-correcting
   or halting on anything that isn't a valid surface payload.

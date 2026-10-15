@@ -46,7 +46,8 @@ builds; it never grades its own output (the `a2ui-review-agent` critic does — 
 - **Wire tolerances**: `.claude/docs/references/wire-tolerances.md` indexes every deliberate
   inbound Postel arm, backed by `renderer/wire-tolerances.ts`. A new synonym or graceful degrade is a
   row there (sanctioning record + a test that fires if it silently widens), never an ad-hoc branch.
-- **Decided history** — the A2UI ADR line in `.claude/docs/adr/`: 0011 (action shape) · 0024
+- **Decided history** — the A2UI ADR line in `.claude/docs/adr/` (frozen 2026-10-14, T-0164; a later
+  decision lives in its `.sdlc/tickets/` ticket and the owning reference doc or skill): 0011 (action shape) · 0024
   (v1.0 lists are POSITIONAL — the index IS the key) · 0026/0027/0028 (function calls · `${…}`
   interpolation · fn-expression grammar) · 0029 (`checks` → setCustomValidity) · 0031 (rich internal
   errors → the TWO-code wire vocab at `#emit`) · 0034 (`callFunction`/`callableFrom`,

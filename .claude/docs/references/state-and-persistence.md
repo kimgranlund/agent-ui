@@ -10,7 +10,7 @@
 > failure record §6 distills). Related decisions: [ADR-0050](../adr/0050-form-provider-context-registration.md) ·
 > [ADR-0051](../adr/0051-uiformelement-field-labelling-seam.md) · [ADR-0117](../adr/0117-theme-provider-shipped-component.md) ·
 > [ADR-0192](../adr/0192-agent-ui-data-package.md) · [ADR-0193](../adr/0193-shared-storage-adapter-seam.md).
-> Worked reference: `packages/agent-ui/app/src/controls/agent-admin/persona-roster-source.ts` +
+> Worked reference: `packages/agent-ui/app/src/controls/agent-admin/agent-roster-source.ts` +
 > `site/pages/agent-admin-app.ts` (ADR-0227 wave 1, PR #1543). Distilled 2026-08-20 (GH #1546).
 
 ## 0 · Route by question
@@ -106,7 +106,7 @@ The grammar's realization for CRUD-shaped shared state is already ratified (ADR-
 
 The worked example is the persona roster (wave 1, PR #1543):
 
-- **The source** — `packages/agent-ui/app/src/controls/agent-admin/persona-roster-source.ts`:
+- **The source** — `packages/agent-ui/app/src/controls/agent-admin/agent-roster-source.ts`:
   `createPersonaRosterSource<P>()` returns a `DataSource<P>` (`read · list · create · update · remove
   · subscribe`, the last wired to the adapter's cross-tab seam) that is the ONE owner of the roster's
   persisted records, persisting through `createLocalStorageAdapter` under the legacy namespace so
