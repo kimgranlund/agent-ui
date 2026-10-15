@@ -93,10 +93,12 @@ export const CROUPIER_SCENARIOS: readonly CroupierScenario[] = SCENARIOS.map(wit
 /** Scenario defects live round 2 found (T-0225 report), fixed for the next round only: the T-0184 `live-commands.sh`
  *  is a finished run record built from SCENARIOS as they were. A Hit can bust, so the Stand after it is a `--say` (Opus
  *  5.5 busted and found no Stand). Stud has five betting streets, so round 1 needs one more check before Deal again
- *  (all three models were still on seventh street). */
+ *  (all three models were still on seventh street). T-0272: a house that deals fixed-limit stud with no bring-in
+ *  refuses "Bring it in" and "Bet 25" (live round 3, Opus and Haiku), so every round 1 street is a check or call: six
+ *  of them for five streets, one spare. */
 const ROUND_STEPS: Readonly<Record<string, ProbeStep[]>> = {
   'blackjack-rounds': [say("Let's play blackjack."), click('100'), click('Stand'), DEAL_AGAIN, click('50'), click('Hit'), say('Stand.'), DEAL_AGAIN, click('25'), click('Stand')],
-  'seven-card-stud': [say("Let's play seven-card stud."), say('Bring it in, or check, or call.'), say('Bet 25.'), say(CHECK_OR_CALL), say(CHECK_OR_CALL), say(CHECK_OR_CALL), say(CHECK_OR_CALL), DEAL_AGAIN, say('Fold.'), DEAL_AGAIN, say('Bet 50.')],
+  'seven-card-stud': [say("Let's play seven-card stud."), ...Array.from({ length: 6 }, () => say(CHECK_OR_CALL)), DEAL_AGAIN, say('Fold.'), DEAL_AGAIN, say('Bet 50.')],
 }
 
 /** The live-round scenarios: SCENARIOS with the round's fixes. */

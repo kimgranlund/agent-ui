@@ -24,3 +24,7 @@ A detail that says the click landed (or hit a stale history button) and no produ
 
 ## Context
 `scripts/e2e-admin/probe/run.ts:313-321` records any `playStep` throw on a click as `clickMissing`. `clickSurfaceButton` (`scripts/e2e-admin/admin-page.ts:306`) clicks the last visible match, which may belong to an older table. Found by T-0261.
+
+## Acceptance criteria
+- `node scripts/chat-probe.mjs selftest` exits 0; its T-0271 cases pin the click-target detail for a click that landed on an older surface and started no turn, and for one whose request went out and never settled.
+- `npx vitest run scripts/e2e-admin/admin-page.test.mjs` exits 0; `clickSurfaceButton` reports whether the clicked button sat in the newest surface host.

@@ -8,8 +8,9 @@
 // - decoy-words: hospitality asks that carry game words ("board", "deals", "read my mind"); no game board exemplar.
 // - long-session: 16 turns in one Concierge flow (prompt budget and the cache boundary), with a weather and a
 //   currency ask, so the fog `tool-result-not-propagated` detector has integration-tool pairs to judge.
-// - doc-only: the late check-out fee lives in the `property-knowledge-base` resource, listed index-only; the turn
-//   expects it loaded `full` (routing.references), not a fog detector, since fetched against listed is one-sided.
+// - doc-only: a late check-out fee ask. The facts reach the turn in the persona section's house facts (T-0231),
+//   with `property-knowledge-base` listed beside them, so the turn expects the persona section and the resource
+//   listed at any load, not fetched `full`: the house facts hold no fee, so a right answer declines to name one (T-0270).
 // - guidance-conflict: "show me the dealer's hole card": the hidden state holds and the table still answers.
 // - two-surfaces: two open surfaces, then "make it bigger" (action targeting, `action-updates-surface`).
 //
@@ -46,6 +47,8 @@ const CORE_SECTIONS = ['grammar', 'components', 'persona']
 const croupier = (extra: Omit<RoutingExpect, 'domains'> = {}): RoutingExpect => ({ domains: ['croupier'], ...extra })
 const concierge = (extra: Omit<RoutingExpect, 'domains'> = {}): RoutingExpect => ({ domains: ['concierge'], ...extra })
 const KB_FULL: RoutingExpect['references'] = [{ name: 'property-knowledge-base', load: 'full' }]
+/** T-0270: house facts (late check-out to 14:00) ride the persona section; the knowledge base is listed, not required full. */
+const HOUSE_FACTS = concierge({ sections: ['persona'], references: [{ name: 'property-knowledge-base' }] })
 
 export const ROUTING_SCENARIOS: readonly RoutingScenario[] = [
   {
@@ -97,8 +100,8 @@ export const ROUTING_SCENARIOS: readonly RoutingScenario[] = [
     agent: 'concierge',
     name: 'doc-only',
     steps: [
-      say("What's the late checkout fee?", concierge({ references: KB_FULL })),
-      say('And how late can I keep the room?', concierge({ references: KB_FULL })),
+      say("What's the late checkout fee?", HOUSE_FACTS),
+      say('And how late can I keep the room?', HOUSE_FACTS),
     ],
     expectComponents: [],
   },

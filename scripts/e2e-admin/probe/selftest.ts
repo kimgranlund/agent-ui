@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url'
 import type { AgentTraceLine } from '../../../packages/agent-ui/a2ui/tools/agent/trace-log.ts'
 import { SetupError, type DevServerKit } from '../runner.ts'
 import { parseProbeCli } from './cli.ts'
-import { CHECK_NAMES, FixtureError, ownExchange, pageStep, parseProbeFixture, runChecks, type CheckResult, type ProbeFixture, type TurnRecord } from './model.ts'
+import { CHECK_NAMES, clickMissingDetail, FixtureError, ownExchange, pageStep, parseProbeFixture, runChecks, type CheckResult, type ProbeFixture, type TurnRecord } from './model.ts'
 import { fixtureFromTrace, offlineReplay, resolveTraceSpec, typedText, type TraceEntry } from './trace.ts'
 
 export const PROBE_FIXTURES_DIR = fileURLToPath(new URL('./fixtures/', import.meta.url))
@@ -119,6 +119,12 @@ export async function runProbeSelftest(): Promise<number> {
   expectThat(CHECK_NAMES.every((n) => green.some((c) => c.check === n && c.status !== 'skip')), 'checks: the canned green records exercise every check (each runs at least once)')
   const missing = runChecks([record(), { ...click([]), lines: [], rounds: undefined, roundsSource: 'none', clickMissing: { label: 'Stand', available: ['Deal again'] } }], opts)
   expectThat(caseVerdict(missing, ['click-target']) === undefined, `checks: a click whose button never appeared fails exactly click-target (${caseVerdict(missing, ['click-target'])})`)
+  // T-0271: a listed button that was clicked and started no turn says so, never "no surface button".
+  const dead = runChecks([record(), { ...click([]), lines: [], rounds: undefined, roundsSource: 'none', clickMissing: { label: 'Deal again', available: ['Deal again', 'Deal'], clicked: true, inNewestSurface: false } }], opts)
+  const deadDetail = dead.find((c) => c.check === 'click-target' && c.status === 'fail')?.detail ?? ''
+  expectThat(caseVerdict(dead, ['click-target']) === undefined && deadDetail === 'clicked "Deal again" on an older surface in the log, not the newest, but no produce request followed (buttons: Deal again, Deal)', `checks: a click that landed and started no turn fails click-target and says it landed (${deadDetail})`)
+  const unsettled = clickMissingDetail({ label: 'Hit', available: ['Hit'], clicked: true, inNewestSurface: true, requested: true })
+  expectThat(unsettled === 'clicked "Hit", its action request went out, but the turn never settled (buttons: Hit)', `checks: a click whose request went out and never settled says so (${unsettled})`)
   const prose = runChecks([record(), click([])], opts)
   expectThat(caseVerdict(prose, ['action-updates-surface']) === undefined, `checks: a click answered with prose alone fails action-updates-surface (${caseVerdict(prose, ['action-updates-surface'])})`)
   const NEXT_ROUND = ['{"version":"v1.0","createSurface":{"surfaceId":"table-2","catalogId":"agent-ui"}}', '{"version":"v1.0","updateComponents":{"surfaceId":"table-2","components":[{"id":"root","component":"Text","text":"Round 2"}]}}']

@@ -64,7 +64,8 @@ describe('live round 2 scenarios', () => {
     const rounds = steps('blackjack-rounds')
     expect(rounds[rounds.findIndex((step) => step.click === 'Hit') + 1]).toEqual({ say: 'Stand.' })
     const stud = steps('seven-card-stud')
-    expect(stud.slice(3, stud.findIndex((step) => step.click === 'Deal again')).every((step) => step.say === 'Check, or call if there is a bet.')).toBe(true)
+    // T-0272: every round 1 street is a check or call, legal under fixed-limit house rules with no bring-in.
+    expect(stud.slice(1, stud.findIndex((step) => step.click === 'Deal again')).every((step) => step.say === 'Check, or call if there is a bet.')).toBe(true)
     expect(stud.findIndex((step) => step.click === 'Deal again')).toBe(7)
     const says = CONCIERGE_SCENARIOS.flatMap((s) => s.steps.map((step) => step.say))
     for (const text of says.filter((t) => /^Book|table at/.test(t))) expect(text).toMatch(/\d{1,2} November 2026/)

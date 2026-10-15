@@ -20,7 +20,7 @@ import type { RecordRouteLike } from '../record.ts'
 import { bootVite, launchChromium, newFlowContext, stopVite, type DevServerKit, type ViteHandle } from '../runner.ts'
 import { scrubJson, type AdminScenario } from '../scenario.ts'
 import { evidenceDir } from './evidence.ts'
-import { formatTable, ownExchange, pageStep, runChecks, type CheckResult, type ProbeFixture, type ProbeRound, type ProbeStep, type TurnRecord } from './model.ts'
+import { formatTable, ownExchange, pageStep, runChecks, type CheckResult, type ClickMissing, type ProbeFixture, type ProbeRound, type ProbeStep, type TurnRecord } from './model.ts'
 import { readTraceEntries, routingSeen, toProbeRounds, traceRef, TRACE_DIR, type TraceEntry } from './trace.ts'
 
 export interface ProbePlan {
@@ -233,14 +233,18 @@ async function newTraceLines(dir: string, before: number, want: number, runId: s
   }
 }
 
+/** T-0271: how far a click step got before it threw, so click-target tells a missing button from a dead click. */
+type ClickReach = Partial<Pick<ClickMissing, 'clicked' | 'inNewestSurface' | 'requested'>>
+
 /** Play one step, then wait until it has settled. T-0222: the turn count moves on any finished turn, and the
  *  page fires its own error turns after a renderer rejection (five-card draw on Sonnet: two before Bet 50's
  *  answer), so the wait is for the step's own exchange, its turn, and a quiet page, never the first turn. */
-async function playStep(admin: AdminPage, step: ProbeStep, seen: () => Exchange[], inFlight: () => number, quietMs: number): Promise<void> {
+async function playStep(admin: AdminPage, step: ProbeStep, seen: () => Exchange[], inFlight: () => number, quietMs: number, reach: ClickReach = {}): Promise<void> {
   const since = await admin.liveTurnCount()
   if ('say' in step) await admin.sendTestChat(step.say)
-  else if ('click' in step) await admin.clickSurfaceButton(step.click)
+  else if ('click' in step) Object.assign(reach, { clicked: true }, await admin.clickSurfaceButton(step.click))
   await pollUntil(async () => seen(), (s) => ownExchange(step, s.map((x) => x.request)) >= 0, "the step's own produce exchange")
+  reach.requested = true
   await admin.waitForTurn(since)
   let count = -1
   let quietFrom = Date.now()
@@ -309,16 +313,18 @@ export async function probeOnce(shared: SharedRun, plan: ProbePlan, root: string
       if ('page' in step) continue // a replayed page-fired turn: the page fires it again and it is recorded where it lands
       const traceBefore = plan.mode === 'live' ? traceCount(traceDir) : 0
       const before = edgeSeq()
+      const reach: ClickReach = {}
       try {
-        await playStep(admin, step, () => exchangesAfter(before), inFlight, QUIET_MS[plan.mode])
+        await playStep(admin, step, () => exchangesAfter(before), inFlight, QUIET_MS[plan.mode], reach)
       } catch (err) {
         // T-0172: a click whose button never appeared is a named check failure (click-target), not an abort:
-        // record the turn, keep the screenshot, stop playing, and still write the report.
+        // record the turn, keep the screenshot, stop playing, and still write the report. T-0271: so is a click that
+        // landed and started no turn; `reach` says how far it got.
         if (!('click' in step)) throw err
         const available = await admin.surfaceButtonLabels('chat').catch(() => [] as string[])
         const shot = path.join(shotDir, `turn-${turns.length + 1}.png`)
         await page.screenshot({ path: shot, fullPage: true })
-        turns.push({ index: turns.length, step, lines: [], roundsSource: 'none', clickMissing: { label: step.click, available }, proseText: await proseText(page), proseScope: 'log', screenshot: shot })
+        turns.push({ index: turns.length, step, lines: [], roundsSource: 'none', clickMissing: { label: step.click, available, ...reach }, proseText: await proseText(page), proseScope: 'log', screenshot: shot })
         break
       }
       await page.waitForTimeout(600) // the surface settles a frame after the turn count moves
