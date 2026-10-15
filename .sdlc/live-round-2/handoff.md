@@ -32,3 +32,7 @@ Run under a $20 cap, log every run to the test-log artifact, then a report with 
 - `npx vitest run scripts/e2e-admin/probe/run-capped.test.mjs` exits 0: fake traces, the runner stops before the run that would start at or over the cap, skips reported runs, and keeps its baseline across a restart.
 - `.sdlc/croupier-closed-loop/live-commands.sh` (T-0184 record) is unchanged: `git diff --exit-code -- .sdlc/croupier-closed-loop/live-commands.sh` exits 0.
 - `npm run check` exits 0.
+
+## Plan review
+- conductor: the spend cap must not under-estimate. Check the price table in scripts/e2e-admin/probe/run-capped.ts against a cited source in the repo (providers.json, model-capabilities, or a doc). T-0184 assumed Haiku 1/5, Sonnet 3/15, Opus 5/25 USD per M tokens. If the table has no repo source, the verdict is fail with the fix: use the higher of the two per model, or read prices from one repo file.
+- conductor correction (replaces the rule above): my rule was a plan defect. The authoritative price source is the claude-api skill, `shared/models.md` (bundled skill 2.1.295): Haiku 5.5 $0.10/$0.50 per MTok up to 100K prompt tokens ($0.50/$2.50 above), Sonnet 5.5 $2/$10, Opus 5.5 $4/$20. The T-0184 assumption (1/5, 3/15, 5/25) was from memory and wrong. Criterion: the run-capped.ts table matches those rows and cites the claude-api skill. The Haiku long-prompt tier may stay unmodelled (probe prompts are under 100K tokens). Also observe `npm run check` exit 0 (wait for a gate slot).
