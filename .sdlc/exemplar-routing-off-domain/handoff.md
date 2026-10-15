@@ -27,3 +27,10 @@ Likely a cause of composite non-use beside T-0208 and T-0231. Retrieval: produce
 
 ## Lane note (conductor)
 Parallel lanes: T-0208 (feat/composite-moment-checks: catalog/composite-moments.ts, compose.ts semantic-check wiring) and T-0230/T-0229 (fix/hidden-state-text-shape: Lexicographer and Admiral state, produce.ts text-shape parsing). Stay in exemplar retrieval and the corpus; if a change in produce.ts is unavoidable, keep it to the retrieval call and say so in the report.
+
+## Acceptance criteria
+- `npx vitest run packages/agent-ui/a2ui/src/corpus/retrieve.test.ts packages/agent-ui/a2ui/src/corpus/retrieve-presets.test.ts` exits 0; the domain-rule block covers exclusion of another domain's composite, own-domain-first ranking, no zero-score fill, and a base turn keeping every record.
+- `retrieve-presets.test.ts` pins the top 3 for all 15 shipped presets and fails (croupier, concierge, admiral) against `git show e20f10bf:packages/agent-ui/a2ui/src/corpus/retrieve.ts`.
+- `npm run check` exits 0; `npx vitest run packages/agent-ui/a2ui/src/corpus packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent` exits 0 (no prompt-equivalence recapture needed).
+- No `produce.ts` edit; no shard, record schema, or persona-seed change.
+- Held: Done-when 3 (new CardTable, BookingForm, BoardGrid corpus exemplars) is not delivered: persona-fragment types cannot enter the agent-ui shard (admission validates against the base catalog, persona seeds are page fixtures only), and a BoardGrid admission needs an a2ui-review-agent verdict.
