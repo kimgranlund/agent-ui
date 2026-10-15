@@ -47,19 +47,19 @@
       "id": "n02",
       "prompt": "delete the remote branch for PR #1450 now that it's merged",
       "expect": "no-trigger",
-      "note": "true owner: harness:repo-cleaner — the gated execution, not the judgment call"
+      "note": "true owner: the gated reap scripts (`npm run ops:reap-branches`) — the gated execution, not the judgment call"
     },
     {
       "id": "n03",
       "prompt": "clean up my local git state — dangling worktrees, stale branches",
       "expect": "no-trigger",
-      "note": "true owner: harness:clean-git"
+      "note": "true owner: `npm run ops:reap-worktrees` then `ops:reap-branches`"
     },
     {
       "id": "n04",
       "prompt": "give me the current repo work-state report — what's blocked on me, what's ready to close",
       "expect": "no-trigger",
-      "note": "true owner: harness:check-state"
+      "note": "true owner: sdlc-lite:board (`.sdlc/tickets/roadmap.md`)"
     }
   ]
 }

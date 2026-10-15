@@ -196,3 +196,4 @@ papered over inside the payload.
 | `selection.json` (beside each catalog's `catalog.json`) | Choosing between confusable types: per type, `use:` intents and `not for:` siblings with the axis that separates them (ADR-0232); the composed prompt shows the same clause on each inventory line |
 | `src/examples/` + `corpus/exemplar/v1_0/agent-ui.jsonl` | Real payloads to condition on before composing |
 | `a2ui-harness-wiring.lld.md` §6 | The full bounded-loop contract and round-orchestration rules |
+| `scripts/e2e-admin/README.md` (Live rounds) | Seeing how the live producer composes a payload: `npm run chat:probe` (live or `--replay`), a capped round with `probe/run-capped.ts`, round archives in `.sdlc/evals/rounds/`; contract `agent-closed-loop.spec.md` |

@@ -57,9 +57,9 @@
     },
     {
       "id": "n04",
-      "prompt": "write the ADR for the new drawer family's shell decision",
+      "prompt": "record the decision for the new drawer family's shell",
       "expect": "no-trigger",
-      "note": "true owner: docs:make-doc"
+      "note": "true owner: the ticket that makes it plus its owning reference doc (doc-standards); the ADR log is frozen (T-0164)"
     }
   ]
 }

@@ -29,7 +29,7 @@ alongside this table, don't re-derive the grammar here.
 | How something is built internally | `.claude/docs/lld/` (LLD-C#) |
 | A decision and its alternatives | the ticket that made it (GitHub Issue or `.sdlc/tickets/<NNNN-slug>/handoff.md`, T-0242); a standing rule in its owning `.claude/docs/references/` doc or skill. Decisions before 2026-10-14: `.claude/docs/adr/` (ADR-####, frozen history, T-0164) |
 | **What's queued or in flight — LIVE work items** | **`.sdlc/tickets/`** (sdlc-lite topics layout, T-0242; created, closed and archived through the `sdlc-lite:ticket` skill, roadmap generated at `.sdlc/tickets/roadmap.md`). GitHub Issues and `.claude/docs/tickets/` are history (ADR-0145). AGENTS.md's "Where truth lives" Work items row is the owning statement of this convention. |
-| Historical ticket records (TKT-0001–0096, all closed) | `.claude/docs/tickets/` — a FROZEN archive since 2026-07-18 (ADR-0145); answer "which tickets are open" from GitHub Issues, NEVER from here (a zero-open read of this directory is the false zero-board) |
+| Historical ticket records (TKT-0001–0096, all closed) | `.claude/docs/tickets/` (the still-cited ones) and `.claude/docs/archive/tickets/` (archived as cited nowhere, T-0252), FROZEN since 2026-07-18 (ADR-0145); answer "which tickets are open" from `.sdlc/tickets/roadmap.md`, NEVER from here (a zero-open read of this directory is the false zero-board) |
 | Structural breakdowns behind a build | `.claude/docs/decompositions/` (`*.decomp.json`) |
 | Sequenced steps, near-term execution state | `.claude/docs/plan.md` (one file, not a directory) |
 | Forward horizon — Now/Next/Later | `.claude/docs/roadmap.md` (one file; named in CLAUDE.md's header line) |
@@ -41,8 +41,8 @@ alongside this table, don't re-derive the grammar here.
 | Investigation + audit reports | `.claude/docs/reports/` (where present — some waves file reports as issue comments instead) |
 | Superseded charters, historical records | `.claude/docs/archive/` (banner + pointer, never deleted) |
 
-(Before answering "absent" for any row, sweep for near-miss locations too — a loose `NOTES.md`, a
-doc-shaped README section — a false "this project has none of that" is this skill's own worst
+(Before answering "absent" for any row, sweep for near-miss locations too (the SDLC Lite notes file
+`.sdlc/notes/notes.md`, a doc-shaped README section) — a false "this project has none of that" is this skill's own worst
 failure. The 2026-08-11 audit caught this skill itself committing that failure on the live-work
 row: three weeks routing "which tickets are open" to a frozen archive.)
 

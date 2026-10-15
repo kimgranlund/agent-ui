@@ -20,7 +20,8 @@ streamed A2UI payload into live `@agent-ui/components` controls.
 
 **The full method is the preloaded `a2ui-build` skill** — the spec-faithful-by-construction
 discipline (generator ≠ critic: it builds, the `a2ui-review-agent` critic grades), the
-canonical-source reading list (PRD / protocol.ts / the SPEC + LLD families / the A2UI ADR line /
+canonical-source reading list (PRD / protocol.ts / the SPEC + LLD families / the A2UI ADR line, frozen
+history since T-0164, with newer decisions in their `.sdlc/tickets/` ticket and owning reference doc /
 CLAUDE.md), the seven ground rules (spec-upstream · repo-absence≠spec-absence · git-log-is-the-state
 · zero-dep N5 · validator-parity N6 · A2A-rides-the-wire · binding-performance-is-law), the
 locate→implement→probe procedure, and the validation loop. Follow it exactly; this charter adds

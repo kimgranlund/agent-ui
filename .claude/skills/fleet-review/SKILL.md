@@ -19,7 +19,8 @@ Vertical review (one component vs the law, at its DoD) cannot see BETWEEN compon
 slices the other way: one context holds every component's treatment of ONE concern, so drift becomes
 visible. Worked precedent: TKT-0046 (styling axis, manual; findings table, 1 mechanical fix, 3 routed
 clusters). Motivating incident: TKT-0062 (four cross-component defects among five same-day,
-individually-green components). Design record: TKT-0064.
+individually-green components). Design record: TKT-0064. (TKT-#### records are frozen history in
+`.claude/docs/tickets/`; new work is filed as `.sdlc/tickets/` tickets, T-0242.)
 
 ## The five phases
 
@@ -56,8 +57,9 @@ individually-green components). Design record: TKT-0064.
    `controls/styling-gates.test.ts`).
 5. **Consolidate → route.** Dedup across axes (one root cause can surface on two). Then TKT-0046's
    routing discipline verbatim: mechanical/low-risk fixes inline with dated Findings entries; clusters
-   needing design judgment → scoped follow-up GitHub issues; GAPs → a ruling ticket for Kim, whose
-   answer lands as a law-doc edit (never self-decided). One campaign GitHub issue anchors the run; the findings TABLE (control × checks ×
+   needing design judgment → scoped follow-up tickets (`sdlc-lite:ticket`, `.sdlc/tickets/`); GAPs → a
+   ruling ticket for Kim, whose answer lands as a law-doc edit (never self-decided). One campaign
+   ticket in `.sdlc/tickets/` anchors the run; the findings TABLE (control × checks ×
    verdict) is the deliverable shape. **Run every specified probe BEFORE bundling rulings to Kim**: a
    finding routed as "needs a ruling" can dissolve under a cheap mutation probe (TKT-0068 item 3:
    "stale correction, delete or re-document?" resolved by MEASUREMENT (disable the code, run the

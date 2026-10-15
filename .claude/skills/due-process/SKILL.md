@@ -17,7 +17,7 @@ user-invocable: true
 Owner ruling (find-intent round, 2026-08-15, GH #969): every `size:big` work item in this repo
 runs this four-phase loop before it closes. Each phase names ONE checkable exit artifact — the
 loop is auditable from the issue thread alone, never taken on trust. `size:small` is unaffected;
-its existing path (dispatch-ticket's own solo-first small build) carries no new step from this
+its existing path (the sdlc-lite solo lane, `.sdlc/AGENTS.md`) carries no new step from this
 skill.
 
 This skill governs the ORDER a size:big build passes through. `.claude/docs/process.md` governs
@@ -51,8 +51,8 @@ none were earned and why, when the change is process/skill-shaped rather than co
 ## Phase 3 — Execute
 
 Sliced builds under the existing dated-Findings write-back contract
-(`teamwork:dispatch-ticket`'s contract when that's the caller; this repo's own build discipline
-otherwise). Gates run FOREGROUND, judged by exit codes only — never piped through `grep`/`head`
+(the sdlc-lite lane `steps.py lane` picks for the ticket: the solo agent for levels L1 and L2,
+`/sdlc-lite:chain` for an L4 or L5 step, a merge step or cross-cutting scope; `.sdlc/AGENTS.md`). Gates run FOREGROUND, judged by exit codes only — never piped through `grep`/`head`
 (`AGENTS.md` "Gates"; a piped grep-count masked a red gate and an OOM'd browser run,
 2026-07-19). This is where `.claude/docs/process.md`'s trip-wires and standing gates apply.
 
@@ -85,22 +85,22 @@ applies, named explicitly, not silently assumed.
 
 ## Scope
 
-- `size:small` is explicitly out of scope. Its existing lighter path (dispatch-ticket's
-  solo-first small build, one fresh-context checker pass before the loop closes) is unchanged.
+- `size:small` is explicitly out of scope. Its existing lighter path (the sdlc-lite solo lane,
+  one independent verifier before the ticket closes) is unchanged.
 - Never contradicts `.claude/docs/process.md` — when the two disagree on WHAT artifact a change
   needs, process.md's placement rules win; this skill only ever adds the ORDER, never a
   competing artifact taxonomy.
 
 ## Enforcement — how a size:big dispatch actually carries this
 
-Repo-local seam, no edit to the `teamwork` plugin (`dispatch-ticket`/`build-leader` live outside
-this repo, in `nonoun-plugins` — out of scope here, flagged instead of edited):
+Repo-local seam: work in this repo runs through the sdlc-lite lanes (`.sdlc/AGENTS.md`, roles
+launched with `run.sh` or the solo agent); no teamwork-plugin build seat is used here:
 
 - **`seat-map`'s "Dispatch laws" section carries the mandatory clause** every
   `repo-orchestrator-agent` dispatch brief copies in (seat-map is that seat's own preloaded
   skill) — a size:big campaign brief cites `due-process` by name before design work starts.
-- **Every Agent-tool subagent operating in this repo inherits its `CLAUDE.md`** — including a
-  `teamwork:build-leader`/`dispatch-ticket` dispatch reached from outside this repo. (A `context:
+- **Every Agent-tool subagent operating in this repo inherits its `CLAUDE.md`** — including an
+  sdlc-lite solo, builder or verifier. (A `context:
   fork`-style skill invocation, e.g. `Explore`/`Plan`, does not carry the same project-CLAUDE.md
   inheritance guarantee — this line covers Agent-tool subagent dispatches only.) The AGENTS.md Process
   one-line pointer is what makes the loop visible even when no `repo-orchestrator-agent` campaign

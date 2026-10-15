@@ -60,8 +60,8 @@ failure, not a silent ignore.
 
 ## TextField — text/number/date/time input
 `catalog.json:32-50`. `value: { prop:"value", event:"change" }` (two-way). Bindable: `value`, `label`,
-`placeholder`, `disabled`, `required`. Plain: `size` (`sm md lg`), `readonly`, `name`, `type`, `currency`,
-`unit`, `step`, `min`, `max`. `type` ∈ `text email url tel password search number currency unit percent date time`.
+`placeholder`, `disabled`, `required`. Plain: `readonly`, `name`, `type`, `currency`,
+`unit`, `step`, `min`, `max` (no `size`: the field takes the surface's scale, ADR-0245). `type` ∈ `text email url tel password search number currency unit percent date time color`.
 A `checks` array (reactive validity, `{call,args,message}`) is a protocol feature, not a catalog row —
 `references/bindings-actions-checks.md`.
 ```json

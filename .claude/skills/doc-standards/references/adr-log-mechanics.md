@@ -57,15 +57,18 @@ stands. Everything below §1a describes how the log ran before the freeze, so a 
   2026-08-13). Accepted ADRs still cite that file (and those § names) in their own historical prose —
   those cites are append-only history, deliberately left verbatim; resolve any of them HERE.
 
-**Numbering & files.** One file per ADR, `NNNN-short-kebab-title.md`. `NNNN` is a zero-padded
-sequential integer, **never reused**; `0000-template.md` is the template — copy it. Claim the next
-number against the FILE TREE, never against a lagging index. Known gaps stay gaps (the
+**Numbering & files (frozen set).** No ADR number is claimed any more: the log froze on
+2026-10-14 (T-0164) and a new decision lives in the ticket that makes it and, as a standing rule,
+in its owning reference doc or skill. The rules below describe the frozen set as it stands. One
+file per ADR, `NNNN-short-kebab-title.md`; `NNNN` is a zero-padded sequential integer, never
+reused; `0000-template.md` was the template. Known gaps stay gaps (the
 `KNOWN_GAPS` allowlist in `site/lib/docs-grammar.test.ts` S8 is their home). The `Repairs:` cell
 links the owning-doc IDs the change edits (`PRD-G#`/`SPEC-R#`/`LLD-C#`) — the ADR records *why*,
 the owning doc still holds the *fact*.
 
-**Amendment vs supersession vs extension.** The test is whether the original **Decision still
-stands**. All three are append-only with respect to an accepted decision's substance:
+**Amendment vs supersession vs extension (how the log worked until the freeze).** Read this to
+interpret an existing ADR; a stale clause today is superseded in its owning doc (top of this file),
+never by a new ADR or amendment. The test was whether the original **Decision still stands**. All three are append-only with respect to an accepted decision's substance:
 
 | | the original Decision … | record as |
 |---|---|---|

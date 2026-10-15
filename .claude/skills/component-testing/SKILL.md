@@ -64,4 +64,9 @@ per-control pair (`@agent-ui/components/controls/{name}.css` + `controls/{name}`
 Design-time law → [[component-standards]] · descriptor schema/packaging →
 [[component-packaging]] · the build procedure these gates close →
 [[component-build]] · the intake that writes the test PLAN →
-[[component-design]].
+[[component-design]]. Live agent behavior on a rendered surface (not a control's own gates) is the
+closed loop: `npm run chat:probe` drives the real agent-admin Test Chat headless (live, or keyless with
+`--replay`), `scripts/e2e-admin/probe/run-capped.ts` runs a capped live round of many probes, and
+every round's traces, payloads and ledgers land in `.sdlc/evals/rounds/<YYYY-MM-DD>-<slug>/`
+(index `.sdlc/evals/README.md`). Contract: `.claude/docs/spec/agent-closed-loop.spec.md`; how-to:
+`scripts/e2e-admin/README.md` (Live rounds).

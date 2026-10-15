@@ -28,13 +28,13 @@
     },
     {
       "id": "t05",
-      "prompt": "is this change to an accepted ADR an amendment, or does it need a full supersession?",
+      "prompt": "a clause in an accepted ADR went stale; do I add an amendment or record the change somewhere else now that the log is frozen?",
       "expect": "trigger",
       "axis": "adr-log-mechanics"
     },
     {
       "id": "t06",
-      "prompt": "how do I claim the next free ADR number without racing a stale index file?",
+      "prompt": "can I still claim the next free ADR number, or where does a new decision go now that the ADR log is frozen?",
       "expect": "trigger",
       "axis": "adr-log-mechanics"
     },
