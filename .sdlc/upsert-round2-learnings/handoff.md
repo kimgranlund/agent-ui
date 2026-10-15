@@ -29,6 +29,6 @@ Every standing rule the closed-loop work (T-0174 onward) and live rounds 1 and 2
 
 ## Acceptance criteria
 - Learnings 1 to 7 each land once with ticket ids, others cross-link: 1 CA-R9 round-2 sentence, prompt-authoring Triage item 5, agent-model `semantic check` entry; 2 payload-authoring Common traps, agent-content §8 item 5; 3 agent-content §8 item 4, agent-model §1 Capabilities; 4 prompt-authoring budget and cache bullets; 5 `scripts/e2e-admin/README.md` Live rounds and re-pin paragraph, closed-loop CL-R3 and CL-R7 (stale price-table clause repaired), CLAUDE.md chat:probe line; 6 closed-loop §5 Model notes; 7 seat-map Merge-queue traps.
-- `python3 /Users/kimgranlund/.claude/plugins/cache/nonoun-plugins/docs/1.22.5/scripts/doc_lint.py` on the nine touched documents exits 0.
+- `python3 /Users/kimgranlund/.claude/plugins/cache/nonoun-plugins/docs/1.22.5/scripts/doc_lint.py .claude/docs/references/agent-model.md .claude/docs/spec/a2ui-catalog-architecture.spec.md .claude/docs/spec/agent-closed-loop.spec.md .claude/docs/spec/agent-content.spec.md .claude/skills/a2ui-payload-authoring/SKILL.md .claude/skills/a2ui-prompt-authoring/SKILL.md .claude/skills/seat-map/SKILL.md CLAUDE.md scripts/e2e-admin/README.md` exits 0.
 - `npm run check` exits 0.
-- `git diff -U0 e20f10bf` adds no em dash; no file under `.claude/docs/adr/` changes.
+- The diff from e20f10bf adds no em dash, and no file under `.claude/docs/adr/` changes.
