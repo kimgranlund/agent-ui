@@ -11,7 +11,7 @@
  * short table, and exits 1 when a named check fails.
  *
  * Replay (keyless): `--replay <fixture.json>` answers every model call from the fixture.
- * `--from-trace <spec>` turns trace lines into a fixture plus a vitest regression (default folder
+ * `--from-trace <spec> [--agent <preset id>]` turns trace lines into a fixture plus a vitest regression (default folder
  * `scripts/e2e-admin/probe/replays/`). `selftest` is the fast DOM-free leg (in `check:scripts`);
  * `selftest --browser` replays the selftest fixtures in the real page.
  *
@@ -63,8 +63,14 @@ if (command.mode === 'from-trace') {
     usage(err instanceof Error ? err.message : String(err))
   }
   const first = entries[0].line
-  const name = command.name ?? `${first.agent ?? 'agent'}-${entries[0].id.replace(/\.jsonl:/, '-')}`.toLowerCase().replace(/[^a-z0-9._-]/g, '-')
-  const fixture = await fixtureFromTrace(entries, name, process.cwd())
+  const name = command.name ?? `${command.agent ?? first.agent ?? 'agent'}-${entries[0].id.replace(/\.jsonl:/, '-')}`.toLowerCase().replace(/[^a-z0-9._-]/g, '-')
+  let fixture
+  try {
+    fixture = await fixtureFromTrace(entries, name, process.cwd(), command.agent !== undefined ? { agent: command.agent } : {})
+  } catch (err) {
+    if (err instanceof SetupError) usage(err.message)
+    throw err
+  }
   const out = path.resolve(process.cwd(), command.out ?? REPLAYS_DIR)
   mkdirSync(out, { recursive: true })
   writeFileSync(path.join(out, `${name}.json`), `${JSON.stringify(scrubJson(fixture, process.env), null, 2)}\n`)

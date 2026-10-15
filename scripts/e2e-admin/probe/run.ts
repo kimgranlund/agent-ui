@@ -149,7 +149,8 @@ async function pick(page: Page, menu: 'models' | 'effort', value: string): Promi
 }
 
 /** The chat log's visible prose: rendered text outside every surface host and outside the activity strip
- *  (whose collapsed "Raw output" detail shows the wire lines on purpose). */
+ *  (whose collapsed "Raw output" detail shows the wire lines on purpose). It is the whole log, so its record
+ *  carries `proseScope: 'log'` and the prose checks judge only what the turn added (T-0235). */
 function proseText(page: Page): Promise<string> {
   return page.evaluate((pane) => {
     const log = document.querySelector(`${pane} [data-part="log"]`)
@@ -307,7 +308,7 @@ export async function probeOnce(shared: SharedRun, plan: ProbePlan, root: string
         const available = await admin.surfaceButtonLabels('chat').catch(() => [] as string[])
         const shot = path.join(plan.out, `turn-${turns.length + 1}.png`)
         await page.screenshot({ path: shot, fullPage: true })
-        turns.push({ index: turns.length, step, lines: [], roundsSource: 'none', clickMissing: { label: step.click, available }, proseText: await proseText(page), screenshot: path.basename(shot) })
+        turns.push({ index: turns.length, step, lines: [], roundsSource: 'none', clickMissing: { label: step.click, available }, proseText: await proseText(page), proseScope: 'log', screenshot: path.basename(shot) })
         break
       }
       await page.waitForTimeout(600) // the surface settles a frame after the turn count moves
@@ -349,6 +350,7 @@ export async function probeOnce(shared: SharedRun, plan: ProbePlan, root: string
           step,
           domHosts: await admin.surfaceHostCount('chat'),
           proseText: await proseText(page),
+          proseScope: 'log',
           lint: lint.findings,
           lintNotRun: lint.notRun,
           screenshot: path.basename(shot),

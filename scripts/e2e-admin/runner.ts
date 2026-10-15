@@ -51,10 +51,8 @@ export const VIEWPORT = { width: 1440, height: 900 } as const
 const VITE_READY_TIMEOUT_MS = 90_000
 const WARM_UP_TIMEOUT_MS = 120_000
 
-/** A usage or setup problem: the run exits 2. */
-export class SetupError extends Error {
-  override name = 'SetupError'
-}
+import { SetupError } from './setup-error.ts'
+export { SetupError }
 
 // ── argument parsing (all of it runs before vite boots) ───────────────────────────────────────────────
 
