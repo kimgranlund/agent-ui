@@ -55,5 +55,5 @@ per-control subpath imports for tree-shaking.
 
 Project-scoped documentation — the architecture plan, per-milestone goals, the coherence process,
 and the full reference/ADR/spec/ticket corpus — lives under [`.claude/docs/`](.claude/docs/). See
-[CLAUDE.md](CLAUDE.md) for the conventions an agent (or a new contributor) needs to work in this
+[AGENTS.md](AGENTS.md) for the conventions an agent (or a new contributor) needs to work in this
 codebase, and [CONTRIBUTING.md](CONTRIBUTING.md) for how a change gets made and landed here.

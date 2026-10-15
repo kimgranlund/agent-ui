@@ -9,7 +9,7 @@ on:
 # times this week) and at publish time — the #1700 sitemap-drift regression reached main
 # because no PR CI ran site/lib/sitemap.test.ts. This job is the mechanical backstop and the only
 # workflow GitHub runs on a PR (T-0255); review is the per-ticket verifiers, locally. Never test:browser here — the six-shard
-# real-engine gate is deliberately local-only per CLAUDE.md.
+# real-engine gate is deliberately local-only per AGENTS.md (Gates).
 concurrency:
   group: ci-${{ github.event.pull_request.number }}
   cancel-in-progress: true

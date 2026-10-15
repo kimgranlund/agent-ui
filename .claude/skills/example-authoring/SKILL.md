@@ -26,7 +26,7 @@ disable-model-invocation: false
   ui-* control APIs you consume for knobs (`ui-select` `value`+`select`, `ui-segmented-control`/`ui-segment`
   `checked`+`change` (ADR-0095, small closed enums), `ui-checkbox`/`ui-switch` `checked`+`change`,
   `ui-slider` range, `ui-text-field` `value`+`input`).
-- **Conventions / gates** — `CLAUDE.md`; the site drift gates (site-canon / coverage / toc / nav) and the
+- **Conventions / gates** — `AGENTS.md` (Hard conventions, Gates); the site drift gates (site-canon / coverage / toc / nav) and the
   descriptor↔props trip-wire that pins any derived table.
 
 ## The two standing laws

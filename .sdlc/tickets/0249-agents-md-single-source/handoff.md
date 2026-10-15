@@ -22,3 +22,10 @@ Audit findings: CLAUDE.md carries ~140 lines Codex never sees (Commands 12-56, L
 - Every fact the audit listed as CLAUDE.md-only is in AGENTS.md or a doc it links.
 - AGENTS.md names `.sdlc/tickets/` as the work-item home and the local gate once (`npm run check` plus touched tests; CI runs the full suite).
 - `tickets.py check` and `npm run check` exit 0.
+
+## Acceptance criteria
+- `CLAUDE.md` holds only the sdlc-lite managed block whose body is `@AGENTS.md`; `grep -n 'CLAUDE.md' AGENTS.md` shows no line that sends a reader to CLAUDE.md for content.
+- Each audit fact (Commands, Layout, Conventions, Inner loop, the gate paragraph) is in `AGENTS.md` or `.claude/docs/references/commands.md`, which `AGENTS.md` links.
+- `AGENTS.md` names `.sdlc/tickets/` as the work-item home and states the local gate once (`npm run check` plus touched folders' tests; CI runs the full suite).
+- Live section pointers to the old CLAUDE.md sections (skills, doctrine manifest, layering test comments, getting-started page) name AGENTS.md.
+- `python3 <sdlc-lite>/scripts/tickets.py check` and `npm run check` exit 0.

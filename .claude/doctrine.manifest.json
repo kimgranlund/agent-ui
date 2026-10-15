@@ -49,7 +49,7 @@
    "title": "Event-name vocabulary (ADR-0153 closed set): skills that teach event naming must CITE the gate constant `ALLOWED_EVENTS`, never carry their own copied member list — the copied-list class already drifted past ADR-0153's seventh member once (GH #754)",
    "severity": "major",
    "canon_file": "packages/agent-ui/components/src/controls/naming-gates.test.ts",
-   "canon_ref": "the ALLOWED_EVENTS gate constant (canon per naming.md §4 / CLAUDE.md §Conventions; grown by ADR-0153)",
+   "canon_ref": "the ALLOWED_EVENTS gate constant (canon per naming.md §4 / AGENTS.md §Hard conventions; grown by ADR-0153)",
    "dependents": [
     {
      "file": ".claude/skills/component-design/SKILL.md",
@@ -68,8 +68,8 @@
    "mode": "require",
    "title": "Import-DAG canon (ADR-0115/0119/0139/0192/0200, 'Imports point inward only' + per-package layering.test.ts trip-wires): component-patterns' package-mint rows must keep naming layering.test.ts as the enforcement surface every mint extends",
    "severity": "major",
-   "canon_file": "CLAUDE.md",
-   "canon_ref": "§Conventions 'Imports point inward only. Cross-package DAG: ...' — enforced by the per-package layering.test.ts trip-wires (ADR-0115/0139/0192/0200)",
+   "canon_file": "AGENTS.md",
+   "canon_ref": "§Packages 'Imports point inward only. DAG: ...' — enforced by the per-package layering.test.ts trip-wires (ADR-0115/0139/0192/0200)",
    "dependents": [
     {
      "file": ".claude/skills/component-patterns/references/patterns-table.md",

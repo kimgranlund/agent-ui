@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 
 // Trip-wire (D2 ruling, GH #761): @agent-ui/a2a is a ZERO-DEP LEAF (`icons`/`a2a` import nothing —
-// CLAUDE.md §Conventions; the package is wire types + validation pinned to A2A spec v0.3.0, the
+// AGENTS.md §Packages; the package is wire types + validation pinned to A2A spec v0.3.0, the
 // tic-tac-toe arena, and corpus shards). Every non-test module under a2a/src/** imports ONLY local
 // `./`/`../` paths — no other @agent-ui package (importing a2ui here would close a cycle with the
 // A2UI-over-A2A bridge), no node builtins in shipped source (the arena's node-side harness lives in

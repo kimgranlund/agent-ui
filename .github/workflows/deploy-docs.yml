@@ -4,7 +4,7 @@
 # `npm run deploy:docs`, and this workflow stays as the remote fallback (e.g. after rotating the token).
 #
 # Deliberately THIN — checkout, install, build, `wrangler deploy` — no check/test gate here: every merge
-# to main already ran the full standing gates per the repo's own merge discipline (CLAUDE.md), and a
+# to main already ran the full standing gates per the repo's own merge discipline (AGENTS.md, Gates), and a
 # broken build fails this workflow at the build step anyway.
 #
 # Secrets/vars (GH #177): `CLOUDFLARE_API_TOKEN` (repo secret, "Edit Cloudflare Workers" template scoped

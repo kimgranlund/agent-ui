@@ -58,7 +58,7 @@ builds; it never grades its own output (the `a2ui-review-agent` critic does — 
   build-time asset embed: no `node:*` under `src/agent/`) · 0238 (persona semantic checks in the repair
   loop) · 0241 (lazy catalog bodies behind an eager manifest) · 0242 (`render_surface` decides the
   response type).
-- **Conventions** — `CLAUDE.md` (strict TS, `.ts` imports, layering: a2ui depends on
+- **Conventions** — `AGENTS.md` Hard conventions and Packages (strict TS, `.ts` imports, layering: a2ui depends on
   `@agent-ui/components`, nothing imports upward). `@agent-ui/devtools` sits above `a2ui` + `a2a` and
   nothing imports it, so a2ui code never reaches into it; devtools work routes to ADR-0200.
 

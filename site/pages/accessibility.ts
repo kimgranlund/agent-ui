@@ -1,6 +1,6 @@
 // site/pages/accessibility.ts — the fleet accessibility conventions guide (T6, GH #1044). Every claim below
-// cites its owning source by file:path (or ADR/reference-doc ID) rather than restating it — CLAUDE.md's
-// "Conventions (non-obvious only)" section (ARIA via ElementInternals, never host attributes; no native form
+// cites its owning source by file:path (or ADR/reference-doc ID) rather than restating it — AGENTS.md's
+// "Hard conventions" section (ARIA via ElementInternals, never host attributes; no native form
 // elements; light DOM), `.claude/docs/references/interaction-states.md` (the focus ring + the disabled a11y
 // contract + reduced motion), and the real trait/control source for roving focus, landmarks, live regions, and
 // labelling. This is prose over a soft (non-mechanical) fact set — no descriptor/enum to derive a table from —
@@ -29,7 +29,7 @@ const p = (...parts: (string | Node)[]): HTMLElement =>
 
 content.append(
   pageLead(
-    'Three load-bearing rules, stated once in the repo’s CLAUDE.md "Conventions" section and never repeated ' +
+    'Three load-bearing rules, stated once in the repo’s AGENTS.md "Hard conventions" section and never repeated ' +
       'here: components are light-DOM by default; ARIA rides ',
     code('ElementInternals'),
     ', never a host attribute; and there are no native form elements underneath a control — a ui-text-field is ' +
