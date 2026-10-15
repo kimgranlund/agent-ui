@@ -32,6 +32,6 @@ T-0217 taught the repair round's sentence that the user never saw the rejected r
 Prompt edits follow the `a2ui-prompt-authoring` recapture flow. No em dashes.
 
 ## Acceptance criteria
-- (red) A producer test: a reply that names a surface id of the session, or opens a correction of an earlier turn, gets a finding and one repair round.
+- (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/produce-narration.test.ts` exits 0, a producer test: a reply that names a surface id of the session, or opens a correction of an earlier turn, gets a finding and one repair round.
 - `npx vitest run scripts/e2e-admin/probe/replays/croupier-omaha-opus-narration.test.mjs` exits 0 with its expectation updated to the repaired turn.
 - `npm run check` exits 0.

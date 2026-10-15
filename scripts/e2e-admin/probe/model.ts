@@ -189,7 +189,7 @@ export function shippedComponent(lines: readonly string[], id: string): Record<s
 }
 
 /** What the meta-lines say about the turn: the terminal error, the runtime trace, the prose shown
- *  (note and streamed text deltas), and whether reasoning excerpts rode the progress channel. */
+ *  (the note, else the streamed text deltas), and whether reasoning excerpts rode the progress channel. */
 export function metaOf(lines: readonly string[]): {
   error?: string
   rounds?: number
@@ -216,7 +216,9 @@ export function metaOf(lines: readonly string[]): {
     const progress = meta.progress
     if (isObject(progress) && typeof progress.reasoning === 'string') out.reasoningChars += progress.reasoning.length
   }
-  if (delta !== '') out.prose.push(delta)
+  // T-0234: the chat paints streamed text until a note replaces it (conversation.ts `textDelta`), so a repaired
+  // turn's final note is what the user reads; the streamed text counts only when no note arrived.
+  if (delta !== '' && out.prose.length === 0) out.prose.push(delta)
   return out
 }
 
