@@ -15,7 +15,7 @@ An ordinary turn's reply talks about the game or the booking, never about the su
 
 ## Repro
 1. `npx vitest run scripts/e2e-admin/probe/replays/croupier-omaha-opus-narration.test.mjs` (pinned to `no-internal-leak:4`).
-2. Read `.sdlc/live-round-2/runs/croupier-omaha-opus-1/turn-5.png`.
+2. Read `.sdlc/live-round-2/runs/croupier-omaha-opus-1/turn-5.png` (git-ignored pngs, in the wave-r2 worktree).
 
 ## Expected
 Turn 4's reply states the turn card and the player's options.

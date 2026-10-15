@@ -15,7 +15,7 @@ The Lexicographer's secret word and the Admiral's fleets are committed at game s
 
 ## Repro
 1. `npx vitest run scripts/e2e-admin/probe/replays/lexicographer-haiku-no-secret.test.mjs` (pins the trace; turns 3 and 4 also leak, T-0229).
-2. Read `.sdlc/live-round-2/runs/lexicographer-invalid-then-replay-haiku-1/turn-4.png` and `turn-5.png`.
+2. Read `.sdlc/live-round-2/runs/lexicographer-invalid-then-replay-haiku-1/turn-4.png` and `turn-5.png` (git-ignored pngs, in the wave-r2 worktree).
 
 ## Expected
 The word game's first turn commits the secret, and each guess is marked against it. Battleship commits both fleets at the start: the Admiral resolves its return fire against the player's fleet and every shot against its own.

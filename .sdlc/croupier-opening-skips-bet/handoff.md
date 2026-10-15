@@ -15,7 +15,7 @@ A Croupier game's first table opens in the betting phase, so the player picks th
 
 ## Repro
 1. `npx vitest run scripts/e2e-admin/probe/replays/croupier-sonnet-opening-dealt.test.mjs` (pins the trace; every check is green today).
-2. Open `.sdlc/live-round-2/runs/croupier-blackjack-rounds-sonnet-1/turn-1.png`.
+2. Open `.sdlc/live-round-2/runs/croupier-blackjack-rounds-sonnet-1/turn-1.png` (git-ignored pngs, in the wave-r2 worktree).
 
 ## Expected
 "Let's play blackjack." opens one CardTable in phase betting, empty hands, bankroll 1,000, `"betAction":"deal"`.

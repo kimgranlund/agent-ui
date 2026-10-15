@@ -25,5 +25,7 @@ Haiku 5.5 dealt five-card draw, hold'em and Omaha in prose with no surface (texa
 ## Context
 Guess: `croupierActionApplied` only judges a click, and only blackjack action names; a typed move or a poker turn that names a target table is never checked. Proposed: judge a typed turn that the meta-line targets at an open table the same way, and extend the probe's `action-updates-surface` to a say turn with a `target`. Found by T-0184 (`.sdlc/croupier-closed-loop/report.md`); run folders and screenshots under `.sdlc/croupier-closed-loop/runs/` in the T-0184 lane commit; the trace file is git-ignored in the wave-cl worktree.
 
+Live round 2 (T-0225, `.sdlc/live-round-2/report.md`, traces in the wave-r2 worktree) widens this past Haiku and the Croupier: Opus 5.5 played an Omaha round 2 flop in prose with no table (`2026-10-15.jsonl:259`), the Admiral on Haiku said "my fleet board is now revealed below" with no surface touched (:98), and the Concierge on Haiku reviewed a spa booking in prose with no surface (:58). Croupier Haiku again: the opening (:26, :51), the Omaha turn card (:38), the draw (:43), three prose-only rounds after a bet (:14).
+
 ## Constraints
 The failing test lands before or with the fix, never after. No em dashes.

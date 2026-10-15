@@ -8,7 +8,7 @@ import { offlineReplay } from '../trace.ts'
 
 // expectedFail: T-0229 (turns 3 and 4 are the text shape with a trailing meta-line). T-0230: no secret word is ever
 // committed, so the marks are made up and turn 3 admits it; no check reads that. The fixture's agent was hand-set to
-// lexicographer: the trace has no agent label and `--from-trace` defaulted it to croupier (T-0235).
+// lexicographer: the trace has no agent label and `--from-trace` defaulted it to croupier (T-0236).
 it('lexicographer-haiku-no-secret: the recorded turns replay with the made-up marks and the trailing meta-lines', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./lexicographer-haiku-no-secret.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())

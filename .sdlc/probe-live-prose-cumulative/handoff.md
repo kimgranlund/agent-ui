@@ -15,21 +15,19 @@ router: .sdlc/AGENTS.md  # how to claim and close this ticket
 
 ## Repro
 1. Read `.sdlc/live-round-2/runs/croupier-five-card-draw-haiku-1/report.json`: `no-json-as-prose` and `no-internal-leak` fail on turns 2 to 10 (18 fails) for one leak in turn 2's reply (`2026-10-15.jsonl:42`).
-2. Read `scripts/e2e-admin/probe/replays/lexicographer-haiku-no-secret.json`: `"agent": "croupier"` was written for a Lexicographer trace.
 
 ## Expected
-The live report fails `no-json-as-prose` on turn 2 only, as the offline replay of the same trace does (`croupier-draw-haiku-meta-tail`, `no-json-as-prose:1`). `--from-trace` on a trace with no `agent` label asks for `--agent` or reads it from the request, never defaults to croupier.
+The live report fails `no-json-as-prose` on turn 2 only, as the offline replay of the same trace does (`croupier-draw-haiku-meta-tail`, `no-json-as-prose:1`).
 
 ## Actual
-Live `proseText` is the whole chat log (`scripts/e2e-admin/probe/run.ts` `proseText(page)`), so every later turn re-reads the leak; offline `proseText` is the turn's own prose (`trace.ts`). In live round 2 the 27 `no-json-as-prose` and 33 `no-internal-leak` fails come from 12 leaking replies. `trace.ts:168` sets `first.line.agent ?? 'croupier'`, and the dev proxy's trace has no `agent` for a preset on the base catalog (`agentLabel` derives it from a persona catalog id), so every Lexicographer and Admiral trace converts as croupier.
+Live `proseText` is the whole chat log (`scripts/e2e-admin/probe/run.ts` `proseText(page)`), so every later turn re-reads the leak; offline `proseText` is the turn's own prose (`trace.ts`). In live round 2 the 27 `no-json-as-prose` and 33 `no-internal-leak` fails come from 13 replies: the 12 T-0229 leaks and Opus 5.5's narrated surface id (:260, T-0234).
 
 ## Context
-The page re-renders earlier bubbles on a page-fired turn (the note is replaced by design, tkt-0079), so the live delta is not always a prefix. Options: record each turn's own bubble text in `run.ts`, or judge only a leak absent from the previous turn's prose. Found by T-0225 (`.sdlc/live-round-2/report.md`).
+The page re-renders earlier bubbles on a page-fired turn (the note is replaced by design, tkt-0079), so the live delta is not always a prefix. Options: record each turn's own bubble text in `run.ts`, or judge only a leak absent from the previous turn's prose. Found by T-0225 (`.sdlc/live-round-2/report.md`); the `--from-trace` agent default is T-0236.
 
 ## Constraints
 The failing test lands before or with the fix, never after. No em dashes.
 
 ## Acceptance criteria
 - (red) `node scripts/chat-probe.mjs selftest` exits 0: a live record whose earlier turn leaked fails the prose checks only on that turn; a later new leak still fails.
-- (red) A `--from-trace` test: a trace line with no `agent` and catalog `agent-ui` never yields agent croupier.
 - `npm run check` exits 0.

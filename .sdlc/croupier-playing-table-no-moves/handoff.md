@@ -15,7 +15,7 @@ A CardTable in the playing phase always offers the player's moves, or the turn i
 
 ## Repro
 1. `npx vitest run scripts/e2e-admin/probe/replays/croupier-rounds-haiku-no-moves.test.mjs` (pinned; turn 1 also leaks a meta-line, T-0229).
-2. Open `.sdlc/live-round-2/runs/croupier-blackjack-rounds-haiku-1/turn-2.png`: the next step finds no Stand ("buttons: none").
+2. Open `.sdlc/live-round-2/runs/croupier-blackjack-rounds-haiku-1/turn-2.png` (git-ignored, in the wave-r2 worktree): the next step finds no Stand ("buttons: none").
 
 ## Expected
 After the 100 press the table shows the dealt hands and Hit and Stand (and Double where legal).
