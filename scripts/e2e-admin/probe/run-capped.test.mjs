@@ -1,11 +1,11 @@
 // T-0225: the capped live-round runner, keyless. Fake traces stand in for the dev proxy: each fake probe appends
 // one trace line, and the runner must stop before the run that would start at or over the cap, skip runs that
 // already reported, and keep its baseline across a restart.
-import { appendFileSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { estimateSpend, parseCommands, roundStart, runCapped, traceSpend } from './run-capped.ts'
+import { estimateSpend, parseCommands, roundStart, runCapped, runRound, traceSpend } from './run-capped.ts'
 
 const line = (at, model, usage) => JSON.stringify({ at, model, usage })
 const SCRIPT = ['#!/usr/bin/env bash', '# header', '', ...[1, 2, 3, 4, 5].map((i) => `npm run chat:probe -- --agent croupier --say hi --out runs/r${i} --name r${i}`)].join('\n')
@@ -64,5 +64,98 @@ describe('run-capped', () => {
     const file = join(mkdtempSync(join(tmpdir(), 'run-capped-')), 'runs', '.capped-start')
     expect(roundStart(file, () => '2026-10-14T10:00:00.000Z')).toBe('2026-10-14T10:00:00.000Z')
     expect(roundStart(file, () => '2026-10-14T23:00:00.000Z')).toBe('2026-10-14T10:00:00.000Z')
+  })
+
+  // T-0241: the round archives its traces, ledger and manifest, also when the cap stops it.
+  describe('archive', () => {
+    const ROUND = ['croupier-deal-haiku-1', 'croupier-deal-sonnet-1', 'admiral-salvo-sonnet-1'].map(
+      (n) => `npm run chat:probe -- --agent ${n.split('-')[0]} --model claude-${n.split('-').at(-2)}-5-5 --say "Let's go." --out .sdlc/rt/runs/${n} --name ${n}`,
+    ).join('\n')
+    const SINCE = '2026-10-14T10:00:00.000Z'
+
+    /** A tmp root with traces before and after the round window, and a fake probe that appends one turn per run. */
+    function setup() {
+      const root = mkdtempSync(join(tmpdir(), 'run-capped-archive-'))
+      const traces = join(root, '.agent-traces')
+      mkdirSync(traces)
+      writeFileSync(join(traces, '2026-10-13.jsonl'), line('2026-10-13T09:00:00.000Z', 'claude-opus-5-5', { outputTokens: 1_000 }) + '\n')
+      writeFileSync(join(traces, '2026-10-14.jsonl'), line('2026-10-14T09:59:59.000Z', 'claude-opus-5-5', { outputTokens: 1_000 }) + '\n')
+      // A turn after the window closes (another session's), present before the round starts so nothing races.
+      writeFileSync(join(traces, '2026-10-15.jsonl'), line('2026-10-15T23:00:00.000Z', 'claude-opus-5-5', { outputTokens: 1_000 }) + '\n')
+      let tick = 0
+      const now = () => `2026-10-14T10:${String(tick++).padStart(2, '0')}:00.000Z`
+      const exec = (cmd) => {
+        const model = /--model (\S+)/.exec(cmd)[1]
+        // Two turns per run, each 100k input and 100k output tokens.
+        for (let i = 0; i < 2; i++) appendFileSync(join(traces, '2026-10-14.jsonl'), line(now(), model, { inputTokens: 100_000, outputTokens: 100_000 }) + '\n')
+        const out = join(root, /--out (\S+)/.exec(cmd)[1])
+        mkdirSync(out, { recursive: true })
+        writeFileSync(join(out, 'report.json'), JSON.stringify({ verdict: cmd.includes('admiral') ? 'fail' : 'pass' }))
+        return cmd.includes('admiral') ? 1 : 0
+      }
+      return { root, now, exec, round: join(root, '.sdlc', 'rt') }
+    }
+    const read = (f) => readFileSync(f, 'utf8').trim().split('\n').map((l) => JSON.parse(l))
+
+    it('writes traces/, ledger.jsonl and round.json with the window lines, ranges and totals', () => {
+      const { root, now, exec, round } = setup()
+      writeFileSync(join(root, 'live.sh'), ROUND)
+      const result = runRound({ root, liveCommands: 'live.sh', commands: parseCommands(ROUND), cap: 100, since: SINCE, exec, commit: 'abc123', now })
+      expect(result).toMatchObject({ ran: 3, capped: false })
+
+      // Only in-window lines: no file for the day before or the turn after, and the 09:59 line is dropped.
+      expect(existsSync(join(round, 'traces', '2026-10-13.jsonl'))).toBe(false)
+      expect(existsSync(join(round, 'traces', '2026-10-15.jsonl'))).toBe(false)
+      const kept = read(join(round, 'traces', '2026-10-14.jsonl'))
+      expect(kept).toHaveLength(6)
+      expect(kept.every((d) => d.at >= SINCE)).toBe(true)
+
+      const ledger = read(join(round, 'ledger.jsonl'))
+      expect(ledger.map((r) => [r.scenario, r.agent, r.model, r.exitCode, r.verdict])).toEqual([
+        ['croupier-deal', 'croupier', 'claude-haiku-5-5', 0, 'pass'],
+        ['croupier-deal', 'croupier', 'claude-sonnet-5-5', 0, 'pass'],
+        ['admiral-salvo', 'admiral', 'claude-sonnet-5-5', 1, 'fail'],
+      ])
+      expect(ledger.map((r) => r.traces)).toEqual([1, 3, 5].map((from) => [{ file: 'traces/2026-10-14.jsonl', from, to: from + 1 }]))
+      expect(ledger[0].tokens).toEqual({ input: 200_000, output: 200_000, cacheRead: 0, cacheCreation: 0 })
+      // Haiku: 0.2M x $0.10 + 0.2M x $0.50; Sonnet: 0.2M x $2 + 0.2M x $10.
+      expect(ledger.map((r) => r.costUsd)).toEqual([0.12, 2.4, 2.4])
+      expect(ledger[0].startedAt < ledger[0].endedAt).toBe(true)
+
+      const manifest = JSON.parse(readFileSync(join(round, 'round.json'), 'utf8'))
+      expect(manifest).toMatchObject({ commit: 'abc123', liveCommands: 'live.sh', cap: 100, stop: 'done', window: { since: SINCE } })
+      expect(manifest.prices.source).toMatch(/claude-api/)
+      expect(manifest.totals).toEqual({ runs: 3, traceLines: 6, tokens: { input: 600_000, output: 600_000, cacheRead: 0, cacheCreation: 0 }, costUsd: 4.92 })
+      expect(manifest.files.screenshots).toMatch(/out of git/)
+      expect(readFileSync(join(round, '.gitignore'), 'utf8')).toContain('runs/*/*.png')
+    })
+
+    it('still writes the archive when the cap stops the round, and keeps earlier rows on a restart', () => {
+      const { root, now, exec, round } = setup()
+      const commands = parseCommands(ROUND)
+      // The first run (Haiku, $0.12) fits; the second would start at or over a $0.10 cap.
+      const first = runRound({ root, liveCommands: 'live.sh', commands, cap: 0.1, since: SINCE, exec, commit: 'abc123', now })
+      expect(first).toMatchObject({ ran: 1, capped: true })
+      expect(JSON.parse(readFileSync(join(round, 'round.json'), 'utf8'))).toMatchObject({ stop: 'cap', totals: { runs: 1, traceLines: 2 } })
+      expect(read(join(round, 'ledger.jsonl'))).toHaveLength(1)
+
+      // A restart under a raised cap skips the reported run and the ledger keeps its row.
+      runRound({ root, liveCommands: 'live.sh', commands, cap: 100, since: SINCE, exec, commit: 'abc123', now })
+      const ledger = read(join(round, 'ledger.jsonl'))
+      expect(ledger.map((r) => r.name)).toEqual(['croupier-deal-haiku-1', 'croupier-deal-sonnet-1', 'admiral-salvo-sonnet-1'])
+      expect(ledger[0].traces).toEqual([{ file: 'traces/2026-10-14.jsonl', from: 1, to: 2 }])
+      expect(JSON.parse(readFileSync(join(round, 'round.json'), 'utf8'))).toMatchObject({ stop: 'done', totals: { runs: 3, costUsd: 4.92 } })
+    })
+
+    it('marks a crashed round and keeps the runs it finished', () => {
+      const { root, now, exec, round } = setup()
+      let n = 0
+      const crashing = (cmd) => {
+        if (++n === 2) throw new Error('probe crashed')
+        return exec(cmd)
+      }
+      expect(() => runRound({ root, liveCommands: 'live.sh', commands: parseCommands(ROUND), cap: 100, since: SINCE, exec: crashing, commit: 'abc123', now })).toThrow('probe crashed')
+      expect(JSON.parse(readFileSync(join(round, 'round.json'), 'utf8'))).toMatchObject({ stop: 'crash', totals: { runs: 1 } })
+    })
   })
 })
