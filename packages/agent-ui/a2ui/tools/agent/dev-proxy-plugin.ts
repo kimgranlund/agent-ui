@@ -104,6 +104,7 @@ import {
 } from './chat-validation.ts'
 import type { ChatDispatch } from './chat-validation.ts'
 // T-0151: the per-turn trace log (`.agent-traces/YYYY-MM-DD.jsonl`), Node-only and dev-only like this file.
+import { readRunId, RUN_ID_HEADER } from './run-id.ts'
 import { TurnTraceCollector, agentLabel, appendTraceLine, defaultTracing, devFailureReason, TRACE_DIR_NAME } from './trace-log.ts'
 export { validateMode, validateGenuiSurface, validateA2uiEnabled, validateAuthoringSurface, validateEffort, isChatBody, resolveChatDispatch }
 export type { ChatDispatch }
@@ -197,6 +198,12 @@ export function projectServiceRows(
     })
   }
   return rows
+}
+
+/** T-0259: the probe run id a request carries in `x-a2ui-run-id`; absent outside probe runs. Tolerates a request
+ *  with no header map (route tests drive the middleware with a bare request). */
+function runIdOf(req: { headers?: Record<string, unknown> }): string | undefined {
+  return readRunId(req.headers?.[RUN_ID_HEADER])
 }
 
 export function a2uiDevProxyPlugin(opts?: {
@@ -360,8 +367,10 @@ export function a2uiDevProxyPlugin(opts?: {
               const dispatch = resolveChatDispatch(config, env, model)
               const lastUser = [...messages].reverse().find((m) => m.role === 'user')
               const chatAgent = agentLabel((body as { agent?: unknown }).agent, undefined)
+              const chatRunId = runIdOf(req)
               const trace = new TurnTraceCollector({
                 route: 'chat',
+                ...(chatRunId !== undefined ? { runId: chatRunId } : {}),
                 provider: dispatch.ok ? dispatch.provider : 'unknown',
                 model,
                 user: typeof lastUser?.content === 'string' ? lastUser.content : '',
@@ -467,8 +476,10 @@ export function a2uiDevProxyPlugin(opts?: {
               const turnAgent = agentLabel(agent, catalogId)
               const turnEffort = validateEffort(effort)
               const turnMode = validateMode(mode)
+              const turnRunId = runIdOf(req)
               const trace = new TurnTraceCollector({
                 route: 'produce',
+                ...(turnRunId !== undefined ? { runId: turnRunId } : {}),
                 provider: String(provider),
                 model: String(model),
                 user: produceUserText(input),

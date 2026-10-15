@@ -1,16 +1,17 @@
 {
   "version": 1,
-  "notes": "context-fog-of-war bundle mapping for a live round folder (.sdlc/evals/rounds/<date>-<slug>/), T-0248. One dev proxy trace line (traces/<day>.jsonl, T-0151) is one model_request. conversationId is the line's catalogId: a trace line carries no probe-run identity, so turns partition by catalog (persona catalogs agent-ui--<persona>; admiral and lexicographer share the base catalog agent-ui on rounds 1 to 3). requestId is the line's `at` ISO time, unique per line in every committed round; it identifies the turn, it is not a causal join. includedChunkIds are trace.exemplarIds, the corpus exemplars framed into the system prompt; `complete` is not mapped because no field states that list is the full submitted context, so the omission detectors abstain. Not mappable in this vocabulary (kept as hashed artifacts): runs/*/report.json and fixture.json (they join to a trace line by `<day>.jsonl:<line>`, which no canonical event type can target), the routing block of T-0239 and later lines (sections, mini-skills and references are object lists or need a load state), retries and failure codes (no canonical event), and usage.",
+  "notes": "context-fog-of-war bundle mapping for a live round folder (.sdlc/evals/rounds/<date>-<slug>/), T-0248, revised T-0259. One dev proxy trace line (traces/<day>.jsonl, T-0151) is one model_request. conversationId is the line's runId: the id a probe sent as the x-a2ui-run-id header (run-id.ts), so a round imports as one conversation per probe run. A line with no runId (a turn from the dev UI, or any round archived before T-0259, which use fog-manifest-v1.json) is excluded with a missing-conversation-id warning, never grouped by guess. requestId is the line's `at` ISO time, unique per line in every committed round; it identifies the turn, it is not a causal join. includedChunkIds are trace.exemplarIds, the corpus exemplars framed into the system prompt. complete is trace.exemplarsComplete, written true on every line whose turn reached a final meta-line: produce() frames every retrieved exemplar into the system prompt (fewShot maps the whole list, no budget trim), so exemplarIds is the full exemplar list that turn submitted. It states completeness for the exemplar namespace only; the other context sources (mini-skills, references, sections) are not chunk ids and stay unmapped. No retrieval or tool_result event is recorded in a trace line, so retrieved-not-submitted and tool-result-not-propagated have no linked pair to assess: they report no eligible candidates, which is absent telemetry, not evidence of a healthy run. Not mappable in this vocabulary (kept as hashed artifacts): runs/*/report.json and fixture.json (they join to a trace line by `<day>.jsonl:<line>`, which no canonical event type can target), the routing block of T-0239 and later lines (sections, mini-skills and references are object lists or need a load state), retries and failure codes (no canonical event), and usage.",
   "rules": [
     {
       "filePattern": "traces/*.jsonl",
       "recordPath": "",
       "eventType": "model_request",
       "fields": {
-        "conversationId": "/catalogId",
+        "conversationId": "/runId",
         "requestId": "/at",
         "timestamp": "/at",
-        "includedChunkIds": "/trace/exemplarIds"
+        "includedChunkIds": "/trace/exemplarIds",
+        "complete": "/trace/exemplarsComplete"
       }
     }
   ]

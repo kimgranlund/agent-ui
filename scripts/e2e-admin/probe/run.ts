@@ -7,9 +7,11 @@
 // writes the trace; this process never reads a key. Replay: the e2e-admin intercept answers every model
 // call from the fixture's lines, so nothing leaves the machine.
 
+import { randomBytes } from 'node:crypto'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import type { Browser, BrowserContext, Page } from 'playwright'
+import { newRunId, withRunId } from '../../../packages/agent-ui/a2ui/tools/agent/run-id.ts'
 import { CFG } from '../../../packages/agent-ui/shared/src/tokens/scale.mjs'
 import RULES from '../../dogfood-rules.json' with { type: 'json' }
 import { ADMIN_SELECTORS, openAdmin, pollUntil, setDefaultWaitMs, type AdminPage } from '../admin-page.ts'
@@ -42,6 +44,8 @@ export interface ProbeReport {
   agent: string
   model?: string
   effort?: string
+  /** T-0259: live only. The id this run sent as `x-a2ui-run-id`; the dev proxy writes it on the run's trace lines. */
+  runId?: string
   at: string
   turns: TurnRecord[]
   checks: CheckResult[]
@@ -98,7 +102,7 @@ function project(body: unknown): NonNullable<TurnRecord['request']> {
 
 /** Live edge: model calls go out to the dev proxy and are teed; status and integrations pass through;
  *  any request off the vite origin is aborted. */
-function installLiveEdge(context: BrowserContext, origin: string, edge: LiveEdge): Promise<unknown> {
+function installLiveEdge(context: BrowserContext, origin: string, edge: LiveEdge, runId: string): Promise<unknown> {
   return context.route('**/*', async (raw) => {
     const route = raw as unknown as RecordRouteLike
     const request = route.request()
@@ -111,7 +115,7 @@ function installLiveEdge(context: BrowserContext, origin: string, edge: LiveEdge
     try {
       let response
       try {
-        response = await route.fetch({ timeout: LIVE_FETCH_TIMEOUT_MS })
+        response = await route.fetch({ timeout: LIVE_FETCH_TIMEOUT_MS, headers: withRunId((request as unknown as { headers(): Record<string, string> }).headers(), runId) })
       } catch {
         return route.abort()
       }
@@ -262,6 +266,7 @@ export async function probeOnce(shared: SharedRun, plan: ProbePlan, root: string
   const origin = new URL(shared.vite.base).origin
   const context = await newFlowContext(shared.browser)
   const edge: LiveEdge = { exchanges: [], seq: 0, inFlight: 0 }
+  const runId = plan.mode === 'live' ? newRunId(plan.name, randomBytes(4).toString('hex')) : undefined
   const traceDir = path.join(root, TRACE_DIR)
   mkdirSync(plan.out, { recursive: true })
   // T-0256: screenshots go to the evidence cache, never the repo; `turns[].screenshot` is the absolute path.
@@ -278,7 +283,7 @@ export async function probeOnce(shared: SharedRun, plan: ProbePlan, root: string
       wire = installIntercept(context, seedScenario, origin)
       await wire.ready
     } else {
-      await installLiveEdge(context, origin, edge)
+      await installLiveEdge(context, origin, edge, runId!)
     }
     // Every produce exchange after `after` (an edge seq), in request order.
     const exchangesAfter = (after: number): Exchange[] =>
@@ -374,6 +379,7 @@ export async function probeOnce(shared: SharedRun, plan: ProbePlan, root: string
     agent: plan.agent,
     ...(plan.model !== undefined ? { model: plan.model } : {}),
     ...(plan.effort !== undefined ? { effort: plan.effort } : {}),
+    ...(runId !== undefined ? { runId } : {}),
     at: new Date().toISOString(),
     turns,
     checks,

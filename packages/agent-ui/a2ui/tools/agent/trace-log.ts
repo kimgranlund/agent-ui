@@ -7,6 +7,9 @@
 // mini-skills, each system-prompt section with its size and cache side, and every capability entry the
 // context named with its load mode (an index line, or the full text framed into a user message).
 //
+// `runId` (T-0259) is the probe run's id from the `x-a2ui-run-id` header (`run-id.ts`), absent for a turn from
+// the dev UI; the fog-of-war round manifest keys one conversation per run on it.
+//
 // Dev only. The dev proxy is `apply: 'serve'`, so `vite build` never runs it, and the Cloudflare Worker
 // never imports this module (it is Node-only: `node:fs`). Keys are never written: the line is serialized
 // through `redactSecrets`, which replaces every configured provider key by value and then key-shaped
@@ -179,7 +182,9 @@ export interface AgentTraceLine {
   rounds: TraceRound[]
   surface: TraceSurface
   usage?: TokenUsage
-  trace?: Pick<TurnTrace, 'rounds' | 'healed' | 'failureCodes' | 'exemplarIds'> & { promptChars?: number; promptOver?: boolean }
+  /** T-0259: the probe run this turn belongs to (`x-a2ui-run-id`, `run-id.ts`); absent outside probe runs. */
+  runId?: string
+  trace?: Pick<TurnTrace, 'rounds' | 'healed' | 'failureCodes' | 'exemplarIds'> & { promptChars?: number; promptOver?: boolean; exemplarsComplete?: true }
   routing?: TraceRouting
   reply?: string
   warnings: string[]
@@ -421,6 +426,8 @@ export interface TurnTraceStart {
   effort?: string
   mode?: string
   catalogId?: string
+  /** T-0259: the probe run id from the request header, already validated by `readRunId`. */
+  runId?: string
 }
 
 /**
@@ -657,6 +664,7 @@ export class TurnTraceCollector {
       ...(s.effort !== undefined ? { effort: s.effort } : {}),
       ...(s.mode !== undefined ? { mode: s.mode } : {}),
       ...(s.catalogId !== undefined ? { catalogId: s.catalogId } : {}),
+      ...(s.runId !== undefined ? { runId: s.runId } : {}),
       user: cap(s.user),
       outcome,
       steps: this.#steps,
@@ -671,6 +679,10 @@ export class TurnTraceCollector {
               healed: t.healed,
               failureCodes: t.failureCodes,
               exemplarIds: t.exemplarIds,
+              // T-0259: produce() frames every retrieved exemplar into the system prompt (`fewShot` maps the whole
+              // list, no budget trim), so `exemplarIds` is the full exemplar list this turn submitted. The fog
+              // manifest maps it to `complete` for the exemplar namespace only; it says nothing of other sources.
+              exemplarsComplete: true,
               ...(t.prompt !== undefined ? { promptChars: t.prompt.total, promptOver: t.prompt.over } : {}),
             },
           }

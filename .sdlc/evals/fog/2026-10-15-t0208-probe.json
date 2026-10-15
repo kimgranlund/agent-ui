@@ -2,13 +2,13 @@
   "round": "2026-10-15-t0208-probe",
   "ticket": "T-0248",
   "reportId": "1a866967ce85b090959d5165",
-  "mapping": ".sdlc/evals/fog-manifest.json",
+  "mapping": ".sdlc/evals/fog-manifest-v1.json",
   "mappingHash": "c2396ca6924269db821c94fbbb10d441bdee96a55d964454e328d528a0eb7d1f",
   "bundleFingerprint": "866eb5ea3ec8a55a88b999373706cae8c8d939bbf62153f932fd21aaa0125558",
   "engineeringRun": "run-269970d2c1579d363a8dc77d",
   "events": 14,
   "sources": 29,
   "findings": 0,
-  "ingest": "python3 ~/.claude/skills/context-fog-of-war/scripts/engineer.py ingest .sdlc/evals/rounds/2026-10-15-t0208-probe --mapping .sdlc/evals/fog-manifest.json --out <dir>",
+  "ingest": "python3 ~/.claude/skills/context-fog-of-war/scripts/engineer.py ingest .sdlc/evals/rounds/2026-10-15-t0208-probe --mapping .sdlc/evals/fog-manifest-v1.json --out <dir>",
   "publish": "python3 ~/.claude/skills/context-fog-of-war/scripts/library.py publish <dir>/session.json"
 }

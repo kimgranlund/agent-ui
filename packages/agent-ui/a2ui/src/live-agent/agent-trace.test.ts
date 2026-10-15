@@ -24,6 +24,7 @@ import {
   tracesEnabled,
 } from '../../tools/agent/trace-log.ts'
 import type { AgentTraceLine } from '../../tools/agent/trace-log.ts'
+import { newRunId, readRunId, RUN_ID_HEADER, withRunId } from '../../tools/agent/run-id.ts'
 import { runCli } from '../../tools/agent/traces-cli.ts'
 import type { AgentProvider, ProviderEvent } from '../agent/agent-transport.ts'
 
@@ -185,11 +186,12 @@ afterAll(() => {
 })
 
 /** Run one POST turn to its end; return everything written to the response. */
-async function post(url: string, body: unknown): Promise<{ status: number; text: string }> {
+async function post(url: string, body: unknown, headers?: Record<string, string>): Promise<{ status: number; text: string }> {
   const listeners: Record<string, Array<(arg?: unknown) => void>> = {}
   const req = {
     method: 'POST',
     url,
+    ...(headers !== undefined ? { headers } : {}),
     on(event: string, cb: (arg?: unknown) => void) {
       ;(listeners[event] ??= []).push(cb)
       if (event === 'end')
@@ -444,5 +446,52 @@ describe('the trace line records per-turn routing (T-0239)', () => {
     failed.noteRouting('agent-ui--croupier', undefined)
     failed.fail(new Error(UPSTREAM_401))
     expect(failed.finish().routing).toEqual({ catalog: { id: 'agent-ui--croupier', base: 'agent-ui', persona: 'croupier', domains: [] }, references: [{ kind: 'resource', name: 'blackjack', load: 'full', via: 'message' }] })
+  })
+})
+
+describe('the trace line carries the probe run id (T-0259)', () => {
+  const quick = (): void => {
+    state.script = ['{"a2uiMeta":{"note":"The pool opens at 06:00."}}']
+  }
+  const body = (): Record<string, unknown> => ({ input: { kind: 'intent', text: 'pool hours', session: { turns: [] } }, provider: 'anthropic', model: 'claude-sonnet-5-5', catalogId: 'agent-ui--concierge' })
+
+  it('a produce turn sent with x-a2ui-run-id writes it as runId; a turn without the header writes none', async () => {
+    quick()
+    expect((await post('/produce', body(), { [RUN_ID_HEADER]: 'concierge-spa-haiku-1-a1b2c3d4' })).status).toBe(200)
+    expect(writtenLines().at(-1)).toMatchObject({ route: 'produce', outcome: 'ok', runId: 'concierge-spa-haiku-1-a1b2c3d4' })
+    quick()
+    await post('/produce', body())
+    expect(writtenLines().at(-1)).not.toHaveProperty('runId')
+  })
+
+  it('a header that is not an id is dropped, never trimmed into another id', async () => {
+    for (const bad of ['', 'has space', '../etc', 'x'.repeat(81), '-leading-dash']) {
+      quick()
+      await post('/produce', body(), { [RUN_ID_HEADER]: bad })
+      expect(writtenLines().at(-1)).not.toHaveProperty('runId')
+    }
+  })
+
+  it('a turn that reached its final meta-line states its exemplar list is complete; a rejected turn does not', async () => {
+    quick()
+    await post('/produce', body(), { [RUN_ID_HEADER]: 'r-1' })
+    expect(writtenLines().at(-1)?.trace).toMatchObject({ exemplarsComplete: true })
+    const rejected = new TurnTraceCollector({ route: 'produce', provider: 'anthropic', model: 'm', user: 'u', runId: 'r-2' })
+    rejected.reject(400, 'bad pair')
+    expect(rejected.finish()).toMatchObject({ outcome: 'rejected', runId: 'r-2' })
+    expect(rejected.finish().trace).toBeUndefined()
+  })
+
+  it('the id grammar: readRunId accepts a header list, newRunId stays inside the grammar', () => {
+    expect(readRunId(['a-1', 'b'])).toBe('a-1')
+    expect(readRunId(undefined)).toBeUndefined()
+    expect(readRunId(42)).toBeUndefined()
+    const id = newRunId('concierge spa/booking!', 'deadbeef')
+    expect(id).toBe('concierge-spa-booking--deadbeef')
+    expect(readRunId(id)).toBe(id)
+    expect(readRunId(newRunId('', 'deadbeef'))).toBe('run-deadbeef')
+    expect(readRunId(newRunId('n'.repeat(200), 'deadbeef'))).toBeDefined()
+    // The probe forwards the page's headers and adds its id, replacing a page-sent one of any casing.
+    expect(withRunId({ 'content-type': 'application/json', 'X-A2UI-Run-Id': 'stale' }, 'r-9')).toEqual({ 'content-type': 'application/json', [RUN_ID_HEADER]: 'r-9' })
   })
 })
