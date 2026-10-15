@@ -1,0 +1,21 @@
+{
+  "attempt_id": "187c6108323c4c719a4cb7c7db50d358",
+  "name": "planner-L2",
+  "role": "planner",
+  "level": "L2",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "opus",
+  "effort": "medium",
+  "routing_reason": "planner L2: runtime abort propagation with a deterministic red-then-green test",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T05:46:09.545930+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/gap-dev-proxy-abort",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/gap-dev-proxy-abort/.sdlc/dev-proxy-abort/handoff.md",
+  "owner_pid": 62000,
+  "handoff_sha256": "d99906c85a02c3251c9bba40e9687b8a090e982c796132ee604c2e2e9b01597e",
+  "process_pid": 62361,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T05:52:15.112558+00:00"
+}

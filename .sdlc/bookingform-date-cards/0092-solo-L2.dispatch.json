@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L2",
+  "name": "0092-solo-L2",
+  "description": "T-0092 solo L2 BookingForm: arrival",
+  "model": "sonnet",
+  "effort": "high",
+  "prompt": "T-0092 BookingForm: arrival and | solo L2\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-dc/.sdlc/bookingform-date-cards/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-dc/.sdlc/bookingform-date-cards\nImplement per .sdlc/bookingform-date-cards/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L2",
+  "tier": "L2",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-dc/.sdlc/bookingform-date-cards/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-dc/.sdlc/bookingform-date-cards",
+  "attempt_id": "5426f28de4114ead86f69cb7fb55b9d2",
+  "base_sha": "5084b0ddebd888471db9c251b332241faefbd3c6",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.5/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-dc/.sdlc/bookingform-date-cards/handoff.md"
+}

@@ -1,0 +1,21 @@
+{
+  "attempt_id": "52b0ae7159054e3c909985922fef0255",
+  "name": "builder-L3",
+  "role": "builder",
+  "level": "L3",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "opus",
+  "effort": "high",
+  "routing_reason": "builder L3 per plan step 1: provider timeout semantics with fake-timer tests and a red-then-green proof",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T06:57:13.202984+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/gap-sse-deadline",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/gap-sse-deadline/.sdlc/sse-deadline/step-1/handoff.md",
+  "owner_pid": 20063,
+  "handoff_sha256": "7ebadf8f064a14eaa1250b2f7d27b59edb80bdf4780e36502379da727a3a0c7e",
+  "process_pid": 20091,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T07:01:43.402480+00:00"
+}

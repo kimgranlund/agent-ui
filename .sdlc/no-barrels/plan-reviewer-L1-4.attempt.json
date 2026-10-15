@@ -1,0 +1,21 @@
+{
+  "attempt_id": "5d56f7eea7c84d14804560d5619c2ce2",
+  "name": "plan-reviewer-L1-4",
+  "role": "plan-reviewer",
+  "level": "L1",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "fable",
+  "effort": "high",
+  "routing_reason": "plan-reviewer L1: replan is always reviewed (L3 step 8 plan)",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-06T00:58:32.518686+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-nobarrels",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-nobarrels/.sdlc/no-barrels/handoff.md",
+  "owner_pid": 76152,
+  "handoff_sha256": "ee9042468f4f1481adaae867f310baaa724c385098ee9c73a9e8bfcdeb94ee74",
+  "process_pid": 76202,
+  "exit_code": 0,
+  "finished_at": "2026-10-06T01:10:14.042920+00:00"
+}

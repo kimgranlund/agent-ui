@@ -1,0 +1,69 @@
+<!-- role=architect level=L1 model=fable effort=high -->
+## Approach
+
+The genui dogfood inventory gets selection guidance by reusing the ADR-0232 catalog sidecar through a tag mapping, not by adding a descriptor field. `dogfoodInventory()` keeps its descriptor-derived rows and, for every row whose `ui-*` tag resolves to a default-catalog type, appends the same ` · use: <intents>` and ` · not for: <target> (<why>)` clause `catalogInventory` already renders, with one dialect difference: `notFor` targets are re-spelled as `ui-*` tags, because the genui author writes tags, never catalog type ids. The clause sits between the `(attrs: ...)` clause and the trailing `(family: ...)` clause, so the existing drift-gate regexes (row head anchored at line start, family clause anchored at line end) keep working unchanged.
+
+The tag-to-type rule is the fleet's one established rule: `pascal(tag)` plus the single `ui-audio` to `AudioPlayer` rename (`catalog/default/index.test.ts:110-135`). It becomes an exported pure function `catalogTypeForTag` in `dogfood-inventory.ts`, and its independent ground truth is the renderer's own binding, `WidgetFactory.tag` (`catalog/types.ts:21`): a new parity leg asserts `catalogTypeForTag(f.tag) === typeId` over every `defaultFactories` entry whose tag starts with `ui-` (`Option` and `MenuItem` are `div[role=...]` and fall out of the rule by that prefix). Measured today: 82 rows, 88 taught tags, 71 rows map to an entry, 11 do not (`ui-audio` maps once the rename is applied; the residue is `ui-command-modal`, `ui-otp-field`, `ui-playing-card`, `ui-sandbox-frame`, `ui-status-stream`, `ui-swiper-label`, `ui-swiper-paddles`, `ui-swiper-pagination`, `ui-theme-provider`, `ui-toast-region`, exactly the fleet controls outside the default catalog). The only `notFor` edge that does not resolve under bare pascal is `Video` to `AudioPlayer`, which the rename closes. An edge whose target no taught tag can name throws (the ADR-0232 `UNRESOLVED` discipline), never drops silently.
+
+Two seams open in `selection-guidance.ts` so the dogfood path shares code instead of copying it: an id-keyed resolver (`dogfood-inventory.ts` has no `Catalog` object and cannot import `defaultCatalog`, which pulls the components barrel through a bare specifier into plain Node) and a clause core parameterised by a target labeller, which `renderSelectionClause(entry, catalog)` wraps with identity labels and the `UNRESOLVED` throw. The catalog inventory's bytes do not move, so the four composed baseline keys stay uncaptured; only `genuiDogfoodTeaching` recaptures, because the teaching paragraph "Reading the inventory below" must describe the new clause. Decided limits: base `agent-ui` guidance only (persona sidecars are persona-scoped, so `ui-playing-card` stays clause-less although croupier has an entry); family-sibling entries (`CardHeader`/`CardContent`/`CardFooter`, `Tab`, `TabPanel`, `DrillPanel`) are not rendered because they have no row of their own.
+
+Budget effect, ADR-0232 cl.5 formula (round up to 100, plus 300): guidance clause sum 8 424 measured, `DOGFOOD_GUIDANCE_CHAR_BUDGET = 8_800`; whole inventory 19 341 to 27 765 measured, `DOGFOOD_INVENTORY_CHAR_BUDGET` 19 600 to 28 100 via a SPEC-R13(b) v0.11 amendment. Two constants keep the two movers (control mints vs guidance) separately visible for T-0003's section trace. Full clause is the recommendation (the same confusable pairs confuse the genui author; a half clause would be a second dialect); use-only (2 691 chars) is the named fallback if Kim judges roughly 2 100 extra tokens per dogfood turn too costly. The probe built the clause string by hand, so the builder re-measures; T-0007's ten `why` rewrites move the sum inside the 300-char headroom. Decision record: an appended, dated amendment block on ADR-0232 (proposed, never self-ratified), not a new ADR; 0233 is taken by no-barrels.
+
+## Interfaces
+
+- `packages/agent-ui/a2ui/src/agent/selection-guidance.ts`: new `selectionGuidanceForId(catalogId: string): SelectionGuidance` (the existing `selectionGuidanceFor(catalog)` delegates to it, same resolution rules); new `renderSelectionClauseWith(entry, labelFor: (type: string) => string): string` as the one formatter; `renderSelectionClause(entry, catalog)` keeps its signature and output bytes. Both new names land on the `@agent-ui/a2ui/agent` subpath through `src/agent/index.ts:28`, so the ADR-0232 cl.2 loader API list gains them in the amendment.
+- `packages/agent-ui/a2ui/src/agent/dogfood-inventory.ts`: new exported `catalogTypeForTag(tag: string): string`; `dogfoodInventory()` row format gains the clause before the family clause; new `DOGFOOD_GUIDANCE_CHAR_BUDGET`; `DOGFOOD_INVENTORY_CHAR_BUDGET` bumped with a dated MEASURED note; header row-format note updated. Imports stay relative (`./selection-guidance.ts`), `NODE_ALLOWED` unchanged.
+- `packages/agent-ui/a2ui/src/agent/prompts/genui-dogfood-teaching.md`: the "Reading the inventory below" paragraph names the `use:`/`not for:` clause; `prompt-equivalence.baseline.json` `genuiDogfoodTeaching` recaptured through `recapture-baseline.test.ts` only.
+- `packages/agent-ui/a2ui/src/live-agent/prompt-drift.test.ts`: dogfood legs: every catalog-mapped row carries ` · use: `; clause-less rows equal the non-mapped set; clause-sum budget; negative control (an edge to a type with no `ui-` tag throws); stale "≤ 16 000" titles at line 239 (and `dogfood-inventory.test.ts:45`) repaired.
+- `packages/agent-ui/a2ui/src/live-agent/dogfood-inventory-parity.test.ts`: new describe, `catalogTypeForTag(f.tag) === typeId` over `defaultFactories` (`catalog/default/factories.ts:1436`) filtered to `ui-` tags.
+- Docs: `.claude/docs/adr/0232-catalog-selection-guidance-sidecar.md` amendment block (retires the line-89 Consequences bullet, lists the dogfood consumer and the two exports); `.claude/docs/spec/genui-surface.spec.md` v0.11 (SPEC-R13(b) line format and budget); `.claude/docs/lld/genui-dogfood.lld.md` LLD-C3 REV; `.claude/skills/a2ui-prompt-authoring/SKILL.md` sidecar bullet (a sidecar edit also moves the drift-gated dogfood inventory, no recapture, budget leg instead).
+- No new file, no Worker registration: `default/selection.json` is already in `fs-shim-content.ts:117`.
+
+## Constraints and assumptions
+
+- `src/agent/` admits only relative or `node:*` specifiers, so the dogfood module cannot import `defaultCatalog` or `@agent-ui/components/descriptor`: verified by `gates.test.ts:87-94` and the module headers of `dogfood-inventory.ts` and `selection-guidance.ts`.
+- `pascal(tag)` plus the `ui-audio` rename is the fleet's whole tag-to-type rule: verified by `index.test.ts:110-135`, `descriptor-agreement.test.ts` `pascal`, and the probe (71 of 82 rows resolve; the only non-pascal edge is `Video` to `AudioPlayer`).
+- `Option` and `MenuItem` are the only default types without a `ui-` tag: verified by `factories.ts:530` and `:575` (`div[role=option]`, `div[role=menuitem]`) and the `^  tag:` grep over `factories.ts`.
+- No `notFor` edge among mapped rows targets `Option`/`MenuItem`: verified by the probe over `default/selection.json`.
+- The existing drift regexes tolerate a clause between attrs and family: verified by reading `tagsNamedInRenderedProse` (`prompt-drift.test.ts:194-203`, head anchored at line start, family anchored at line end); `dogfood-tag-set-equality.test.ts` uses `dogfoodInventoryTags()`, not the prose.
+- Sidecar `intents`/`why` strings are component-level, not catalog-specific: verified by a vocabulary grep over the sidecar (no `props`, `ChildList`, `binding`, `A2UI`, `catalog` hits; three benign "surface"/"type to filter" hits).
+- The dogfood block is absent from the four composed baseline keys, so only `genuiDogfoodTeaching` recaptures: verified by `grep -c "GenUI document"` on the baseline (0) and `prompt-equivalence.test.ts:36-41`; the recapture writer rewrites the whole file (`recapture-baseline.test.ts:34-44`), so a diff touching only that field is the byte-identity proof.
+- Teaching file has room for one more paragraph: verified by `wc -c` (4 706 of the 8 000 SPEC-R13(a) budget).
+- A descriptor-side field would collide with the ratified no-barrels work adding `uses:` to the same frontmatter and `component-descriptor.ts` validator: verified by `.sdlc/no-barrels/architect-L1.md:14` and `handoff.md` Ratification.
+- Kim accepts roughly +8.4k chars per dogfood turn (full clause) rather than the use-only fallback: unverified.
+- The dogfood path has ever run under a wrangler build: unverified (see Risks).
+
+## Rejected alternatives
+
+- Descriptor frontmatter `intents`/`notFor`: duplicates 71 entries into a second source that drifts from the sidecar; touches the schema the ratified ADR-0233 work is editing now; needs nested-sequence parsing in the local reader plus parity extension; unreadable on the Worker anyway (`fs-shim-content.ts` DIRS has no `controls/` keys); ADR-0232 already rejected this home for the catalog.
+- A `tag` field per sidecar entry: breaks ADR-0232 cl.1's exact-keys rule, touches all five sidecars, the Worker shim and the baseline, for one rename the existing fleet rule already encodes.
+- A third hand-copy of the pascal rule without a parity gate: GH #346's root cause was two derivations that disagreed; the rule is exported once and gated against `WidgetFactory.tag`.
+- Dropping unresolvable edges silently: contradicts the "whole truth or nothing" law both inventories carry; a loud throw plus a negative control is the ADR-0232 shape.
+- Unioning persona sidecars into the dogfood guidance: persona `why`s are written against that persona's catalog; the inventory is fleet-wide and catalog-agnostic; one row (`ui-playing-card`) is not worth a scoping rule. Recorded as an owned limit.
+- A separate "choosing between components" section: loses locality next to the attrs the model reads; stays the ADR-0232 named fallback if a later wave blows the budget.
+- A new ADR: no new decision class; the home (sidecar), schema and clause law are unchanged; a second consumer plus a tag labeller is an amendment to ADR-0232, the same way ADR-0232 amended ADR-0071.
+
+## Risks
+
+- Per-turn cost: the dogfood segment grows about 44% (19 341 to 27 765 chars); with A2UI on as well the whole prompt moves from about 61k to about 70k chars. If Kim rejects it, the use-only fallback (2 691 chars) is a one-line change in the labeller call, but the model loses the disambiguation half.
+- New coupling: a future sidecar edge to `Option` or `MenuItem` throws in the dogfood renderer and reds `prompt-drift`; the fix is a mapping rule or a sidecar change, not a dogfood bug. The gate message must say so.
+- Pre-existing Worker gap, out of scope: `dogfoodInventory()` on the deployed Worker already throws at `readdirSync(CONTROLS_DIR)` because `fs-shim-content.ts` DIRS has zero `controls/` keys; this design adds no registration and fixes nothing there. GH #1815 item 4 is the nearest tracker.
+- Budget headroom: T-0007's ten `why` rewrites and this ticket both move the clause sum and must land serialized; the 300-char headroom may need re-measuring after T-0007.
+- The probe hand-built the clause string; if the builder's formatter differs by even a separator the measured numbers shift, so the constants are set from the builder's own measurement, never from this report.
+
+## Carry forward
+
+- Manifest `.sdlc/dogfood-selection-guidance/decompose/manifest-v1.json`, coverage_check clean in default and `--strict`; report at `decompose/report.md` (conductor adds the handoff Context line).
+- Dogfood inventory today: 19 341 chars, 82 rows, 88 taught tags (probe over `dogfoodInventory()` and `dogfoodInventoryTags()`, cwd repo root).
+- 71 rows map to a `default/selection.json` entry; residue of 11 named in Approach (probe; the only non-pascal case is `ui-audio` to `AudioPlayer`, `catalog/default/index.test.ts:131-135`).
+- Projected clause sum with tag-named targets 8 424 (use-only 2 691, not-for-only 5 732); projected inventory 27 765 (probe; builder re-measures).
+- `WidgetFactory.tag` at `packages/agent-ui/a2ui/src/catalog/types.ts:21`; `defaultFactories` at `catalog/default/factories.ts:1436`; non-`ui-` tags only at `factories.ts:530` and `:575`.
+- `catalogInventory` at `src/agent/system-prompt.ts:191-202`; `genuiBlock` composes the dogfood segment at `:327-337`.
+- `selectionGuidanceFor`/`renderSelectionClause`/`SELECTION_GUIDANCE_CHAR_BUDGET` at `src/agent/selection-guidance.ts` (budget 8 600, measured 8 277, line ~239); exported wholesale by `src/agent/index.ts:28`.
+- `tagsNamedInRenderedProse` at `src/live-agent/prompt-drift.test.ts:194-203`; dogfood legs `:205-242`; stale "≤ 16 000" titles at `prompt-drift.test.ts:239` and `dogfood-inventory.test.ts:45`.
+- `NODE_ALLOWED` at `src/agent/gates.test.ts:108-114`; `fs-shim.test.ts:150-155` lists the aliased modules; `fs-shim-content.ts:117` already bundles `default/selection.json`; DIRS (`:126`) has no `controls/` key.
+- Baseline: `prompt-equivalence.test.ts:36-41` pins `genuiDogfoodTeaching` only; writer `recapture-baseline.test.ts:34-44` rewrites the whole file; teaching file 4 706 chars of 8 000.
+- SPEC-R13 text at `.claude/docs/spec/genui-surface.spec.md:642-668` (v0.10 budget 19 000; code constant 19 600); LLD-C3 at `.claude/docs/lld/genui-dogfood.lld.md:33` and `:111`.
+- ADR-0232 Consequences bullet to retire at `.claude/docs/adr/0232-catalog-selection-guidance-sidecar.md:89`; cl.2 loader API list to extend; next free ADR number is 0234.
+- Scrub grep (`dogfood inventory|carries no guidance|no guidance` over the handoff's scrub list) hit only ADR-0232:89; `agent-model.md` and `a2ui/AGENTS.md` carry no dogfood row-format text.
+- Serialize with T-0007 (`.sdlc/sidecar-why-rewrite`) and T-0003 (`.sdlc/context-budget-trace`): both touch the clause sum or the baseline.

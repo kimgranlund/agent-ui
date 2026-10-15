@@ -1,0 +1,21 @@
+{
+  "attempt_id": "3b37cac3341e432fb0d8d4536c3789c7",
+  "name": "filer-L1",
+  "role": "filer",
+  "level": "L1",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "sonnet",
+  "effort": "medium",
+  "routing_reason": "filer L1 draft for the finished sse-deadline task",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T07:03:49.798986+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/gap-sse-deadline",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/gap-sse-deadline/.sdlc/sse-deadline/handoff.md",
+  "owner_pid": 50780,
+  "handoff_sha256": "30974e694381ed0352d2971cb22647d18c144e80f0ce2b42fa49eaa83c2c1544",
+  "process_pid": 50818,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T07:04:09.918674+00:00"
+}

@@ -1,0 +1,21 @@
+{
+  "attempt_id": "98d8d1d3323e426aa8d7bc641d3b0b6c",
+  "name": "verifier-L2",
+  "role": "verifier",
+  "level": "L2",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "sonnet",
+  "effort": "high",
+  "routing_reason": "verifier L2 derived from build L3 per level-rubric",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T16:38:07.904244+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-retrytests",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-retrytests/.sdlc/retry-tests-and-docs/step-1/handoff.md",
+  "owner_pid": 5408,
+  "handoff_sha256": "b23591ac6412272fed3e84afd6bafecd0004a9e66057f6cb303832eee025dba0",
+  "process_pid": 5439,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T16:39:28.702240+00:00"
+}

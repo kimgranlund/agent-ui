@@ -2,7 +2,7 @@
 id: T-0215
 title: "Croupier bankroll checks go blind when the table has no sendDataModel"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -42,3 +42,9 @@ One batched verifier for this lane (Kim's ruling: one verifier per bundle). Veri
 - .sdlc/croupier-bet-check-poker/handoff.md
 - .sdlc/croupier-poker-placeholder-hole-cards/handoff.md
 - .sdlc/croupier-rules-correctness-check/handoff.md
+
+## Outcome
+
+2026-10-14 · lane: full L1 · verdict: closed by reason (Merged in #1994; batched lane verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

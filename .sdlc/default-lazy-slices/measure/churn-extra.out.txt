@@ -1,0 +1,4 @@
+# extra runs
+V0 the 17 V1-failing files on the UNFLIPPED worktree (baseline): test files run 17, failing 0; tests 775, passed 775, failed 0
+V1 tools project (packages/agent-ui/a2ui/tools, node env: kit mount, structural-transcript CLI): test files run 31, failing 0; tests 385, passed 385, failed 0
+cold probe (V1 clone, scratch test, since deleted): ui-surface-host, a2ui-basic surface (a lazy record on main today), sync ingest x2 + finalize: PROBE sync: emptyFinal=true root=false | after settle: emptyFinal=true root=true

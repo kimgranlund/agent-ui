@@ -1,0 +1,21 @@
+{
+  "attempt_id": "087df220b293460485f6f98fd0fc76a3",
+  "name": "planner-L2",
+  "role": "planner",
+  "level": "L2",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "opus",
+  "effort": "medium",
+  "routing_reason": "planner L2: retry semantics (what is retryable, abort safety, no duplicate output) with fake-timer tests",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T07:04:14.622416+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/gap-retry",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/gap-retry/.sdlc/transport-retry/handoff.md",
+  "owner_pid": 52290,
+  "handoff_sha256": "92df6c8180c6a6a849a9f45bf74040417a2ad84e0f27aa00573af0cd5210f8c5",
+  "process_pid": 52324,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T07:06:39.330871+00:00"
+}

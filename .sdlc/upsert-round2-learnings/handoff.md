@@ -2,7 +2,7 @@
 id: T-0237
 title: "Upsert docs and skills with the closed-loop and live round 1 and 2 learnings"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -32,3 +32,9 @@ Every standing rule the closed-loop work (T-0174 onward) and live rounds 1 and 2
 - `python3 /Users/kimgranlund/.claude/plugins/cache/nonoun-plugins/docs/1.22.5/scripts/doc_lint.py .claude/docs/references/agent-model.md .claude/docs/spec/a2ui-catalog-architecture.spec.md .claude/docs/spec/agent-closed-loop.spec.md .claude/docs/spec/agent-content.spec.md .claude/skills/a2ui-payload-authoring/SKILL.md .claude/skills/a2ui-prompt-authoring/SKILL.md .claude/skills/seat-map/SKILL.md CLAUDE.md scripts/e2e-admin/README.md` exits 0.
 - `npm run check` exits 0.
 - The diff from e20f10bf adds no em dash, and no file under `.claude/docs/adr/` changes.
+
+## Outcome
+
+2026-10-15 · lane: solo L2 · verdict: closed by reason (Merged in #1999; verifier L2 pass) · verifier: none · base: none
+- Changed: Docs and skills carry the closed-loop and live round learnings
+- Commits: none

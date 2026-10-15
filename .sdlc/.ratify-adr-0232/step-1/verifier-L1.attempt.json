@@ -1,0 +1,21 @@
+{
+  "attempt_id": "5a5ae41c0a0548eaa127ff1a1a32569d",
+  "name": "verifier-L1",
+  "role": "verifier",
+  "level": "L1",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "sonnet",
+  "effort": "medium",
+  "routing_reason": "verifier L1 directly: the builder blocked only on two defective conductor-written criteria (now fixed), and its edits are in the tree; a blocked builder is not rerun",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T05:17:31.971996+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.sdlc/ratify-adr-0232/step-1/handoff.md",
+  "owner_pid": 11731,
+  "handoff_sha256": "ea7340815f4710dab75074c5eb4b8c99f983d2badf2a00f51a5094e3d87a7562",
+  "process_pid": 11782,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T05:18:34.114257+00:00"
+}

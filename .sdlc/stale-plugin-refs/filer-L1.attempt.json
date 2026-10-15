@@ -1,0 +1,21 @@
+{
+  "attempt_id": "b6bf83ce30bb47a3a4c9efa4eedd4252",
+  "name": "filer-L1",
+  "role": "filer",
+  "level": "L1",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "sonnet",
+  "effort": "medium",
+  "routing_reason": "filer L1 draft for the finished stale-plugin-refs task",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T06:02:17.998120+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/stale-plugin-refs",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/stale-plugin-refs/.sdlc/stale-plugin-refs/handoff.md",
+  "owner_pid": 91483,
+  "handoff_sha256": "1c3755fae470806ba5be5a33fbda44fdcdf2238bb4cb9a75be75ca6efa494d17",
+  "process_pid": 91601,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T06:02:42.407246+00:00"
+}

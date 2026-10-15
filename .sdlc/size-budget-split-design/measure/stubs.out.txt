@@ -1,0 +1,17 @@
+E0 baseline (npm run size prints 71231 for this row): 71231
+-- body-by-body leave-one-out --
+default catalog.json                                                     marginal  68132  delta   -3099
+a2ui-basic catalog.json                                                  marginal  70342  delta    -889
+3 persona fragments (catalog.json)                                       marginal  70919  delta    -312
+all 5 catalog documents                                                  marginal  66437  delta   -4794
+default factories                                                        marginal  69346  delta   -1885
+a2ui-basic factories + functions                                         marginal  68758  delta   -2473
+persona packages (index.ts: fragments, factories, checks, manifests)     marginal  69781  delta   -1450
+compose.ts (with personas stubbed)                                       marginal  69049  delta   -2182
+-- option scopes (bodies stubbed, nothing added back) --
+A  documents lazy, factories eager (all 5 docs)                          marginal  66437  delta   -4794
+B  non-default: a2ui-basic (doc+factories+fns) + personas + compose      marginal  65433  delta   -5798
+B  as above, keep a2ui-basic `functions` defs as eager manifest          marginal  65641  delta   -5590
+C  every built-in body: default+basic+personas+compose                   marginal  59667  delta  -11564
+C  as above, keep default+basic `functions` defs as eager manifest       marginal  59963  delta  -11268
+D  whole renderer lazy at surface-host (renderer.ts stubbed)             marginal  44536  delta  -26695

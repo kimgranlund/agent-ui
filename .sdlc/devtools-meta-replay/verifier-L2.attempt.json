@@ -1,0 +1,21 @@
+{
+  "attempt_id": "caaf9727d4394c84839c2856a2032688",
+  "name": "verifier-L2",
+  "role": "verifier",
+  "level": "L2",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "sonnet",
+  "effort": "high",
+  "routing_reason": "T-0018 verifier rerun at L2 after exit 137 on L3 (user-approved)",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-06T22:17:39.471780+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-replay",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.sdlc/devtools-meta-replay/handoff.md",
+  "owner_pid": 59744,
+  "handoff_sha256": "f6f013a1da29b65710d7a8a92dbb529a4074e294f7c8fb58d5abe180346f2949",
+  "process_pid": 59811,
+  "exit_code": 0,
+  "finished_at": "2026-10-06T22:21:54.070573+00:00"
+}

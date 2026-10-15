@@ -1,0 +1,443 @@
+{
+  "domain": "technical-architecture",
+  "plan": true,
+  "nodes": [
+    {
+      "id": "sys",
+      "label": "catalog selection guidance (intents + notFor) for every agent-emittable A2UI type",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "sub_data",
+      "label": "sidecar data: one selection.json per catalog and per persona fragment (never imported by browser code)",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "n_sel_default",
+      "label": "packages/agent-ui/a2ui/src/catalog/default/selection.json (80 types, catalogId agent-ui)",
+      "leaf": true,
+      "accept": "`npx vitest run --project packages packages/agent-ui/a2ui/src/catalog/selection-guidance.test.ts` exits 0 with the default-catalog bijection + reciprocity cases green"
+    },
+    {
+      "id": "n_sel_basic",
+      "label": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/selection.json (14 types, catalogId a2ui-basic)",
+      "leaf": true,
+      "accept": "same test file: a2ui-basic bijection + reciprocity cases green; `a2ui-basic/index.test.ts` still exits 0 (no new type keys, interop purity untouched)"
+    },
+    {
+      "id": "n_sel_personas",
+      "label": "packages/agent-ui/a2ui/src/catalog/personas/<concierge|croupier|fixture-demo>/selection.json (personaId-keyed fragment guidance)",
+      "leaf": true,
+      "accept": "same test file: every type in every SHIPPED_PERSONA_CATALOG_MANIFESTS fragment has an entry; fragment-to-base edges resolve against the composed catalog; `compose.test.ts` exits 0"
+    },
+    {
+      "id": "sub_loader",
+      "label": "Node-only loader + renderer (a2ui src/agent)",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "n_loader",
+      "label": "packages/agent-ui/a2ui/src/agent/selection-guidance.ts: SelectionEntry and SelectionGuidance types, loadSelectionGuidance(doc), selectionGuidanceFor(catalog) incl. derived `<base>--<persona>` union, renderSelectionClause(entry), SELECTION_GUIDANCE_CHAR_BUDGET",
+      "leaf": true,
+      "accept": "co-located `selection-guidance.unit.test.ts` exits 0: malformed input throws typed errors (negative controls), derived-id union resolves base + persona, unknown catalogId yields empty guidance (degrade), the rendered clause shape is pinned"
+    },
+    {
+      "id": "n_inventory",
+      "label": "system-prompt.ts catalogInventory: append ` · use: a; b · not for: T (why), U (why)` after `(props: ...)` on the same line",
+      "leaf": true,
+      "accept": "`prompt-drift.test.ts` exits 0: sectionIds stays set-equal to the catalog; every default type's line carries its clause; a planted catalog with no guidance renders today's line byte-identically"
+    },
+    {
+      "id": "n_agent_barrel",
+      "label": "agent/index.ts re-exports selection-guidance.ts on the ./agent subpath (ADR-0137); root barrel untouched",
+      "leaf": true,
+      "accept": "`gates.test.ts` exits 0 (identity gate: root barrel exports none of it) and an import of `@agent-ui/a2ui/agent` under node --experimental-strip-types resolves `selectionGuidanceFor`"
+    },
+    {
+      "id": "sub_gates",
+      "label": "gates and pins",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "n_gate_coverage",
+      "label": "packages/agent-ui/a2ui/src/catalog/selection-guidance.test.ts: bijection per catalog; intents 1..3 (each <=60 chars, never the type name); notFor <=4 edges (why non-empty, <=90 chars, never just the target name); targets resolve, no self, no dup; reciprocity inside first-party catalogs; planted negative controls",
+      "leaf": true,
+      "accept": "the file exits 0 on the real tree AND each negative control (missing entry, extra entry, self edge, one-way edge, restating intent) is asserted to FAIL the predicate"
+    },
+    {
+      "id": "n_gate_budget",
+      "label": "prompt-drift.test.ts budget leg: rendered guidance delta <= SELECTION_GUIDANCE_CHAR_BUDGET (measured + headroom, evidence-revisable, never truncation)",
+      "leaf": true,
+      "accept": "`prompt-drift.test.ts` exits 0 and the budget constant's doc comment records the measured chars + date"
+    },
+    {
+      "id": "n_gate_fence",
+      "label": "agent/gates.test.ts NODE_ALLOWED gains src/agent/selection-guidance.ts",
+      "leaf": true,
+      "accept": "`gates.test.ts` exits 0 with node:fs imported only from the allowed set"
+    },
+    {
+      "id": "n_shim",
+      "label": "tools/agent/worker/fs-shim-content.ts registers every selection.json path (wrangler.jsonc Text rule covers *.md and *.jsonl only: either JSON.stringify the JSON import or add **/selection.json to the rule globs)",
+      "leaf": true,
+      "accept": "`fs-shim-content-drift.test.ts` and `fs-shim.test.ts` exit 0; the Worker dry-run build exits 0"
+    },
+    {
+      "id": "n_baseline",
+      "label": "live-agent/prompt-equivalence.baseline.json recaptured (the four composed keys move; miniSkills, genuiPacks, genuiDogfoodTeaching unchanged)",
+      "leaf": true,
+      "accept": "`RECAPTURE_BASELINE=1 npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/recapture-baseline.test.ts` then `prompt-equivalence.test.ts` exits 0; the baseline diff touches only the four prompt keys"
+    },
+    {
+      "id": "n_size",
+      "label": "app marginal bundle budget unchanged (no catalog.json growth, no browser import of selection.json)",
+      "leaf": true,
+      "accept": "`npm run size` exits 0 with APP_MARGINAL_BUDGET not re-based"
+    },
+    {
+      "id": "sub_docs",
+      "label": "decision record + contract docs",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "n_adr",
+      "label": ".claude/docs/adr/0232-catalog-selection-guidance-sidecar.md (number verified at build): status proposed; amends ADR-0071 inventory line; extends ADR-0087 include-or-recorded discipline to guidance coverage; relates ADR-0097 (policy beside the agent), ADR-0135 (Node-only prompt assets + fs-shim), ADR-0169 and ADR-0172 (per-catalog + derived), ADR-0173 (descriptor untouched)",
+      "leaf": true,
+      "accept": "the repo's ADR docs-grammar gate exits 0; Status cell reads `proposed`; `doc_lint` exits 0"
+    },
+    {
+      "id": "n_spec_lld",
+      "label": "a2ui-live-agent.spec.md SPEC-R6 clause + a2ui-live-agent.lld.md LLD-C4 row describe the guidance clause, its budget and the sidecar source",
+      "leaf": true,
+      "accept": "`doc_lint` + `npm run check` exit 0; both files mention selection.json"
+    },
+    {
+      "id": "n_rubric",
+      "label": "rubrics/a2ui-catalog.md gains D7 Selection guidance (gate: bijection and reciprocity; review: intents are the job in user words, why is the discriminating axis, no mini-skill sentence duplicated)",
+      "leaf": true,
+      "accept": "`doc_lint` exits 0; a2ui-review-standards routing resolves D7"
+    },
+    {
+      "id": "n_skills",
+      "label": "skills: component-catalog (machine source for by-job routing), a2ui-payload-authoring (pick by intents, honor notFor), a2ui-prompt-authoring (selection.json is byte-pinned surface + shim registration), a2ui-multi-catalog (per-catalog + persona sidecar, derived union), a2ui-build + a2ui-catalog-rendering-review references catalog-pipeline.md Layer 1 (row lands WITH its entry), component-design Catalog posture",
+      "leaf": true,
+      "accept": "`python3 scripts/claude_wiring_check.py` exits 0 and each named skill file mentions selection.json"
+    },
+    {
+      "id": "n_agents",
+      "label": ".claude/agents/a2ui-build-agent.md + a2ui-payload-authoring-agent.md name the selection entry as part of a catalog row and as a type-choice input",
+      "leaf": true,
+      "accept": "`python3 scripts/claude_wiring_check.py` exits 0; both agent files mention selection guidance"
+    },
+    {
+      "id": "n_human_twin",
+      "label": "site/pages/choosing.ts header + a2ui-catalog.spec.md 5.2 intro + agent-model.md glossary cite selection.json as the machine twin of the 5.2 rulings",
+      "leaf": true,
+      "accept": "`npm run check` exits 0 (check:site covers choosing.ts); `doc_lint` exits 0; all three files mention selection.json"
+    },
+    {
+      "id": "n_descriptor_note",
+      "label": "descriptor-schema docs (component-packaging, component-standards descriptor-generation.md, ADR-0173 notes) explicitly unchanged: the ADR records why the descriptor is NOT the home",
+      "leaf": true,
+      "justify": "affordance",
+      "accept": "ADR-0232 Rejected-alternatives names the descriptor home with its two reasons (no descriptor for a2ui-basic and persona types; ADR-0173 cl.5 hand-curated catalog content)"
+    }
+  ],
+  "actions": [
+    {
+      "id": "a_author_default",
+      "label": "author intents + notFor for every default-catalog type"
+    },
+    {
+      "id": "a_author_basic",
+      "label": "author intents + notFor for every a2ui-basic type"
+    },
+    {
+      "id": "a_author_personas",
+      "label": "author guidance for every shipped persona-fragment type"
+    },
+    {
+      "id": "a_validate_shape",
+      "label": "validate entry shape and per-entry caps at load, typed errors"
+    },
+    {
+      "id": "a_resolve_edges",
+      "label": "resolve notFor targets against the catalog's own type set, including the derived base+persona union"
+    },
+    {
+      "id": "a_reciprocity",
+      "label": "require confusable pairs to be reciprocal inside a first-party catalog"
+    },
+    {
+      "id": "a_bijection",
+      "label": "fail a new emittable type that ships without guidance (and an entry with no type)"
+    },
+    {
+      "id": "a_antirestate",
+      "label": "reject guidance that restates the type name instead of a job or an axis"
+    },
+    {
+      "id": "a_render",
+      "label": "show each type's guidance to the model in the catalog-derived inventory"
+    },
+    {
+      "id": "a_budget",
+      "label": "bound the guidance bytes in the prompt, measured and revisable"
+    },
+    {
+      "id": "a_byte_pin",
+      "label": "move the byte-pinned prompt baseline deliberately, never silently"
+    },
+    {
+      "id": "a_zero_bundle",
+      "label": "ship zero guidance bytes in the browser renderer bundle (app marginal budget has zero headroom)"
+    },
+    {
+      "id": "a_worker",
+      "label": "serve the sidecar in the Cloudflare Worker runtime (no fs)"
+    },
+    {
+      "id": "a_derived",
+      "label": "compose guidance for derived catalogs from base + persona"
+    },
+    {
+      "id": "a_expose",
+      "label": "expose a typed reader for evals and tools on the ./agent subpath"
+    },
+    {
+      "id": "a_degrade",
+      "label": "compose today's inventory line unchanged for a catalog with no guidance"
+    },
+    {
+      "id": "a_record_decision",
+      "label": "record the contract fork as a proposed ADR, never self-ratified"
+    },
+    {
+      "id": "a_spec_update",
+      "label": "amend the prompt-composition SPEC and LLD rows the change invalidates"
+    },
+    {
+      "id": "a_grade",
+      "label": "give the critic a rubric dimension for the new field"
+    },
+    {
+      "id": "a_route_docs",
+      "label": "update every skill, agent and doc that describes the catalog row, inventory or selection guidance"
+    },
+    {
+      "id": "a_fence",
+      "label": "keep the a2ui zero-dep Node-only fence honest for the new loader"
+    },
+    {
+      "id": "a_human_twin",
+      "label": "keep the human-facing rulings (spec 5.2, choosing guide) pointed at the machine source"
+    },
+    {
+      "id": "a_no_rebase",
+      "label": "prove the app marginal bundle budget did not move"
+    }
+  ],
+  "hosts": [
+    {
+      "action": "a_author_default",
+      "node": "n_sel_default"
+    },
+    {
+      "action": "a_author_basic",
+      "node": "n_sel_basic"
+    },
+    {
+      "action": "a_author_personas",
+      "node": "n_sel_personas"
+    },
+    {
+      "action": "a_validate_shape",
+      "node": "n_loader"
+    },
+    {
+      "action": "a_resolve_edges",
+      "node": "n_loader"
+    },
+    {
+      "action": "a_resolve_edges",
+      "node": "n_gate_coverage"
+    },
+    {
+      "action": "a_reciprocity",
+      "node": "n_gate_coverage"
+    },
+    {
+      "action": "a_bijection",
+      "node": "n_gate_coverage"
+    },
+    {
+      "action": "a_antirestate",
+      "node": "n_gate_coverage"
+    },
+    {
+      "action": "a_render",
+      "node": "n_inventory"
+    },
+    {
+      "action": "a_render",
+      "node": "n_loader"
+    },
+    {
+      "action": "a_budget",
+      "node": "n_gate_budget"
+    },
+    {
+      "action": "a_budget",
+      "node": "n_loader"
+    },
+    {
+      "action": "a_byte_pin",
+      "node": "n_baseline"
+    },
+    {
+      "action": "a_zero_bundle",
+      "node": "n_loader"
+    },
+    {
+      "action": "a_zero_bundle",
+      "node": "n_size"
+    },
+    {
+      "action": "a_no_rebase",
+      "node": "n_size"
+    },
+    {
+      "action": "a_worker",
+      "node": "n_shim"
+    },
+    {
+      "action": "a_derived",
+      "node": "n_loader"
+    },
+    {
+      "action": "a_derived",
+      "node": "n_sel_personas"
+    },
+    {
+      "action": "a_expose",
+      "node": "n_agent_barrel"
+    },
+    {
+      "action": "a_degrade",
+      "node": "n_inventory"
+    },
+    {
+      "action": "a_degrade",
+      "node": "n_loader"
+    },
+    {
+      "action": "a_record_decision",
+      "node": "n_adr"
+    },
+    {
+      "action": "a_spec_update",
+      "node": "n_spec_lld"
+    },
+    {
+      "action": "a_grade",
+      "node": "n_rubric"
+    },
+    {
+      "action": "a_route_docs",
+      "node": "n_skills"
+    },
+    {
+      "action": "a_route_docs",
+      "node": "n_agents"
+    },
+    {
+      "action": "a_route_docs",
+      "node": "n_descriptor_note"
+    },
+    {
+      "action": "a_fence",
+      "node": "n_gate_fence"
+    },
+    {
+      "action": "a_human_twin",
+      "node": "n_human_twin"
+    }
+  ],
+  "edges": [
+    {
+      "from": "n_loader",
+      "to": "n_sel_default",
+      "why": "the sidecar schema (keys, caps, catalogId and personaId pin) is defined by the loader; authoring 80 entries before the shape is fixed invites a rewrite"
+    },
+    {
+      "from": "n_loader",
+      "to": "n_sel_basic",
+      "why": "same schema dependency"
+    },
+    {
+      "from": "n_loader",
+      "to": "n_sel_personas",
+      "why": "same schema dependency plus the derived-union contract"
+    },
+    {
+      "from": "n_loader",
+      "to": "n_inventory",
+      "why": "catalogInventory calls selectionGuidanceFor + renderSelectionClause"
+    },
+    {
+      "from": "n_loader",
+      "to": "n_gate_coverage",
+      "why": "the gate imports the loader's types and predicates"
+    },
+    {
+      "from": "n_sel_default",
+      "to": "n_gate_budget",
+      "why": "the budget is MEASURED off the real authored default sidecar, then headroom is added"
+    },
+    {
+      "from": "n_sel_default",
+      "to": "n_baseline",
+      "why": "the recapture must run on the final authored text; an early capture pins a draft"
+    },
+    {
+      "from": "n_inventory",
+      "to": "n_baseline",
+      "why": "the rendered clause format must be final before capture"
+    },
+    {
+      "from": "n_sel_default",
+      "to": "n_shim",
+      "why": "the shim registers real file paths"
+    },
+    {
+      "from": "n_sel_basic",
+      "to": "n_shim",
+      "why": "the shim registers real file paths"
+    },
+    {
+      "from": "n_sel_personas",
+      "to": "n_shim",
+      "why": "the shim registers real file paths"
+    },
+    {
+      "from": "n_adr",
+      "to": "n_skills",
+      "why": "skills cite the ADR number and its clause ids"
+    },
+    {
+      "from": "n_adr",
+      "to": "n_spec_lld",
+      "why": "SPEC and LLD rows cite the ADR"
+    },
+    {
+      "from": "n_adr",
+      "to": "n_rubric",
+      "why": "D7 anchors cite the ADR and the gate file"
+    }
+  ]
+}

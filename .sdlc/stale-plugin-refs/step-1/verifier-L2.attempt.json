@@ -1,0 +1,21 @@
+{
+  "attempt_id": "9bb8320c9f0b4673a8d01528442a8d3d",
+  "name": "verifier-L2",
+  "role": "verifier",
+  "level": "L2",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "sonnet",
+  "effort": "high",
+  "routing_reason": "verifier L2 derived from build L3 per level-rubric",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T06:00:50.192727+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/stale-plugin-refs",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/stale-plugin-refs/.sdlc/stale-plugin-refs/step-1/handoff.md",
+  "owner_pid": 74165,
+  "handoff_sha256": "993a9b43071f47a192ad954d1d9f44288bb13923c24da5c0dce3613dcc4ea0fd",
+  "process_pid": 74261,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T06:01:57.278365+00:00"
+}

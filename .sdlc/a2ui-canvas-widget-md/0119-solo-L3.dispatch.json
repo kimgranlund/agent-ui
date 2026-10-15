@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L3",
+  "name": "0119-solo-L3",
+  "description": "T-0119 solo L3 A2UI canvas",
+  "model": "opus",
+  "effort": "xhigh",
+  "prompt": "T-0119 A2UI canvas on the widget tier at | solo L3\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ca/.sdlc/a2ui-canvas-widget-md/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ca/.sdlc/a2ui-canvas-widget-md\nImplement per .sdlc/a2ui-canvas-widget-md/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L3",
+  "tier": "L3",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ca/.sdlc/a2ui-canvas-widget-md/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ca/.sdlc/a2ui-canvas-widget-md",
+  "attempt_id": "8103e607bdc346769509055ea3deafd6",
+  "base_sha": "b8645a5b931d1ca136998921462ea40106e8c11f",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.6/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ca/.sdlc/a2ui-canvas-widget-md/handoff.md"
+}

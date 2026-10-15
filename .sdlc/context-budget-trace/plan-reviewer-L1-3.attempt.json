@@ -1,0 +1,21 @@
+{
+  "attempt_id": "2312fdc2961b482ebd8d1e547b57954f",
+  "name": "plan-reviewer-L1-3",
+  "role": "plan-reviewer",
+  "level": "L1",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "fable",
+  "effort": "high",
+  "routing_reason": "plan-reviewer L1 rerun after session-limit 429; replan is always reviewed",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T17:14:55.401359+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-budget",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-budget/.sdlc/context-budget-trace/handoff.md",
+  "owner_pid": 55463,
+  "handoff_sha256": "ef338c278308b2bfbf24394dc6eb229ff1e542edb0cc8e892a26c803472bbb7d",
+  "process_pid": 55555,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T17:19:31.310325+00:00"
+}

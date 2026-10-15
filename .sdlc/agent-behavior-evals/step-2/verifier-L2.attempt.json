@@ -1,0 +1,21 @@
+{
+  "attempt_id": "60bb6f70fc3c4213aa8ef17768f4c0b3",
+  "name": "verifier-L2",
+  "role": "verifier",
+  "level": "L2",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "sonnet",
+  "effort": "high",
+  "routing_reason": "verifier L2 for builder L3 step 2",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T17:05:00.895736+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-evals",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-evals/.sdlc/agent-behavior-evals/step-2/handoff.md",
+  "owner_pid": 50367,
+  "handoff_sha256": "723f76bdbbd8fc73f704b5c756a09dbbbdf18238916d783e19ff3f357908d1b4",
+  "process_pid": 50579,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T17:09:35.851484+00:00"
+}

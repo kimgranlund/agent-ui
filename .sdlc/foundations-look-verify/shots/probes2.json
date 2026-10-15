@@ -1,0 +1,37 @@
+{
+ "comboAlign": {
+  "editorTextLeft": 305,
+  "optionTextLeft": [
+   305,
+   305,
+   305
+  ]
+ },
+ "clip": {
+  "badge-demo@400": [
+   "div.app-page|auto|scrollable=true <= figure:label=\"\" — the min-i"
+  ],
+  "glyph-doc@400": [
+   "pre.code-block|auto|scrollable=true <= code:<ui-glyph symbol=\"ca"
+  ],
+  "icon-demo@400": [
+   "div.app-page|auto|scrollable=true <= figure:font-size: 3rem"
+  ],
+  "table-demo@400": [
+   "div.|auto|scrollable=true <= ui-table:Accounts — July sign"
+  ],
+  "button-doc@400": [
+   "pre.code-block|auto|scrollable=true <= code:<ui-button>Save</ui-"
+  ],
+  "button-doc@1000": [
+   "pre.code-block|auto|scrollable=true <= code:<ui-button>Save</ui-"
+  ]
+ },
+ "adminTabsAll": [
+  "Agent",
+  "Capabilities",
+  "Surface",
+  "System(folded)",
+  "Dialog(folded)"
+ ]
+}

@@ -2,7 +2,7 @@
 id: T-0167
 title: "Lints read the root and canvas register from the generator, not a pinned sm"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: [T-0152]    # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -34,3 +34,7 @@ No lint or test hard-codes the page root register: one shared `ROOT_REGISTER` re
 - `npx vitest run --config vitest.browser.config.ts --project site site/pages/dogfood-render.browser.test.ts` exits 0 in Chromium and WebKit, the root-register leg and the canvas `data-scale` md asserts included.
 - `git grep -n "resolve('product', 'md'" -- '*.ts'` lists only lines inside explicit `data-tier` / `data-scale` region legs, none that mean the root; root reads go through `rootResolve` from `scripts/lib/foundations-rules.mjs`.
 - The root-register leg reads `getComputedStyle(document.documentElement)`'s `--md-sys-tier-*` and `--md-sys-scale-s`, decodes them through `CFG.tiers` and `STEP`, and compares them to `ROOT_REGISTER`, never to `registerOf`'s fallback (the flip proof is in solo's report).
+
+## Closed
+
+2026-10-14: merged as PR #1970

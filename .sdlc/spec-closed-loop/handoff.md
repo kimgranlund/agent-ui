@@ -2,7 +2,7 @@
 id: T-0181
 title: "SPEC: agent closed-loop testing (one scenario contract, check registry, trace to replay, signal row, replay vs live, cap, judge, baselines) + glossary"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -34,3 +34,7 @@ The closed-loop testing system has a contract before T-0176..T-0179 build on it:
 - `npx vitest run --project site site/lib/docs-grammar.test.ts` exits 0.
 - `grep -c "CL-R10" .claude/docs/spec/agent-closed-loop.spec.md` exits 0 (the SPEC covers the ten areas, CL-R1 to CL-R10).
 - `grep -n "probe fixture\|eval scenario\|signal row\|\*\*check\*\*" .claude/docs/references/agent-model.md` exits 0 (the four glossary entries).
+
+## Closed
+
+2026-10-14: merged as PR #1977

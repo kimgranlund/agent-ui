@@ -1,0 +1,14 @@
+patched renderer.ts: PC drops 8 imports + 4 calls; PB drops 5 imports + 3 calls
+baseline marginal 71231 B gz (lazy, informational: 511313)
+P0 renderer drops catalog imports+registrations; bodies, barrel re-exports intact      marginal 56261  delta -14970  (lazy gz 515636, delta 4323)
+PB default eager+sync; a2ui-basic (2 ids) + personas behind records+manifest+ensure    marginal 66214  delta -5017  (lazy gz 518030, delta 6717)
+PC every built-in body behind records+manifest+ensure                                  marginal 57167  delta -14064  (lazy gz 527092, delta 15779)
+P0: catalog modules still in the eager closure: catalog/naming.ts, catalog/catalog.ts, catalog/variant.ts, catalog/functions.ts, catalog/conformance.ts, catalog/registry.ts
+PC lazy chunks that hold catalog modules (standalone gz):
+  basic-body-CWKzXmvY.js         gz  4544  catalog/a2ui-basic/catalog.json, catalog/a2ui-basic/index.ts, catalog/a2ui-basic/factories.ts, catalog/a2ui-basic/functions.ts, basic-body.ts
+  controls-Df-pr9go.js           gz  2648  catalog/default/factories.ts, catalog/controls.ts
+  default-body-DGduYQ28.js       gz  3442  catalog/default/catalog.json, catalog/default/index.ts, default-body.ts
+  persona-body-CxdaJWxN.js       gz   119  persona-body.ts
+  personas-B9ucMRs9.js           gz  2809  catalog/compose.ts, catalog/personas/fixture-demo/catalog.json, catalog/personas/fixture-demo/manifest.ts, catalog/personas/fixture-demo/factories.ts, catalog/personas/fixture-demo/index.ts
+baseline  agent-admin chunk gz 33616, holds persona package modules itself: false, imports the persona chunk: n/a (no separate persona chunk)
+PC        agent-admin chunk gz 33642, holds persona package modules itself: false, imports the persona chunk: true

@@ -1,0 +1,21 @@
+{
+  "attempt_id": "294ffe2ea4d345fe8df7307c05161e41",
+  "name": "planner-L3-2",
+  "role": "planner",
+  "level": "L3",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "opus",
+  "effort": "xhigh",
+  "routing_reason": "planner L3 replan: builder step 1 blocked on a plan defect (stream-equality pins)",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T16:56:07.960841+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-budget",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-budget/.sdlc/context-budget-trace/handoff.md",
+  "owner_pid": 44551,
+  "handoff_sha256": "ef338c278308b2bfbf24394dc6eb229ff1e542edb0cc8e892a26c803472bbb7d",
+  "process_pid": 44589,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T17:12:20.941357+00:00"
+}

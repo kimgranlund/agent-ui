@@ -1,0 +1,21 @@
+{
+  "attempt_id": "464fbb338c51454ab85c7eb5f998379c",
+  "name": "plan-reviewer-L1",
+  "role": "plan-reviewer",
+  "level": "L1",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "fable",
+  "effort": "high",
+  "routing_reason": "plan-reviewer L1: a replan is always reviewed",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T07:17:25.346114+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/gap-retry",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/gap-retry/.sdlc/transport-retry/handoff.md",
+  "owner_pid": 13570,
+  "handoff_sha256": "c6169301a301ebe31a54caf8f3a6442131a3480ebb264c5cf83130878e948e46",
+  "process_pid": 13606,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T07:23:45.706563+00:00"
+}

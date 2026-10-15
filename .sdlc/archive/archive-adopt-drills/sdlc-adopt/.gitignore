@@ -1,0 +1,51 @@
+# Logs
+# KEEP-LIST (Kim-ruled 2026-08-09, twice): the rules below match nothing TODAY by design — they are
+# PREVENTIVE (see PR #632's per-rule reasoning; .claude/docs/other is ADR-0074's token-export path).
+# gitignore_check.py flagging them as "matches nothing" is expected and accepted — do NOT trim them
+# again; a sweep proposing their removal must read this note and stand down.
+*.log
+npm-debug.log*
+
+node_modules
+dist
+# scripts/publish/publish-packages.mjs's scratch publish-payload staging dir (per-package transformed
+# package.json + compiled dist/) — never committed, rebuilt fresh on every publish run.
+.publish
+# Scratch/cache dirs test build-shelling gates create at repo root (light-dark-minify.test.ts's
+# dist-tkt0002-gate-scratch, theme-provider-build-fixture.test.ts's dist-theme-provider-gate-scratch, and
+# build-css.ts's dist-shared-build-cache) — each is try/finally-cleaned in the normal case, but a wildcard
+# closes the gap for an interrupted run (a crashed process, Ctrl-C mid-test) rather than relying on that alone.
+dist-*
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.sw?
+
+# reference dumps (design-token exports, etc.) — not source of truth, not committed
+.claude/docs/other
+.claude/docs/brand
+.claude/worktrees
+.env
+
+# Vitest browser-mode run artifacts (Playwright screenshots/attachments) — on-failure debris only.
+# ADR-0110: `__baselines__/` (committed visual-regression reference PNGs) is DELIBERATELY NOT listed
+# here and must stay tracked — do not add a blanket `__baselines__` ignore.
+.vitest-attachments/
+**/__screenshots__/
+
+# eval-a2ui-catalog.mjs's own default --out (rubric a2ui-catalog-example.md §5) — per-card JSON +
+# summary.md, written fresh on every run of the new standing test:eval-catalog gate (GH #1356);
+# never committed, gate-verdicts-only (no baseline PNGs live here).
+/screenshots/
+
+# GenUI B3 judged eval (GH #1584, genui-b3-judged-eval.lld.md §5) — per-run reports (misses, timings,
+# raw replies for E_JUDGE_PARSE post-mortems) from `npm run eval:genui-corpus -- generate|judge`; never
+# committed, the same gate-verdicts-only posture as /screenshots/ above.
+packages/agent-ui/a2ui/corpus-genui/runs/
+.sdlc/runtime/
+.sdlc/launcher.env
+.claude/settings.local.json

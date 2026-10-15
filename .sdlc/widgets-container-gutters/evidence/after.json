@@ -1,0 +1,439 @@
+{
+ "ProductCard": {
+  "surfaceContentW": 480,
+  "rootTag": "ui-column",
+  "widgetW": 480,
+  "widgetPad": "0px 0px 0px 0px",
+  "widgetGap": "normal",
+  "kids": [
+   "media l1 pad 0px mar 0px",
+   "body l1 pad 12px 18px mar 0px"
+  ],
+  "gaps": [
+   "media->body: 0"
+  ],
+  "parts": {
+   "title": {
+    "box": {
+     "l": 19,
+     "t": 311.75,
+     "r": 19,
+     "b": 121
+    },
+    "ink": {
+     "l": 19,
+     "t": 314.75,
+     "r": 448.89,
+     "b": 124
+    }
+   },
+   "subtitle": {
+    "box": {
+     "l": 19,
+     "t": 343.75,
+     "r": 19,
+     "b": 93
+    },
+    "ink": {
+     "l": 19,
+     "t": 344.75,
+     "r": 451.92,
+     "b": 95
+    }
+   },
+   "rating": {
+    "box": {
+     "l": 19,
+     "t": 371.75,
+     "r": 19,
+     "b": 65
+    },
+    "ink": {
+     "l": 19,
+     "t": 372.75,
+     "r": 446.92,
+     "b": 67
+    }
+   },
+   "price": {
+    "box": {
+     "l": 19,
+     "t": 407.75,
+     "r": 404.06,
+     "b": 21
+    },
+    "ink": {
+     "l": 19,
+     "t": 408.75,
+     "r": 446.77,
+     "b": 22
+    }
+   },
+   "action": {
+    "box": {
+     "l": 386.14,
+     "t": 407.75,
+     "r": 19,
+     "b": 13
+    },
+    "ink": {
+     "l": 405.14,
+     "t": 416.75,
+     "r": 64.66,
+     "b": 22
+    }
+   }
+  }
+ },
+ "BoardGrid": {
+  "surfaceContentW": 480,
+  "rootTag": "ui-column",
+  "widgetW": 480,
+  "widgetPad": "6px 6px 6px 6px",
+  "widgetGap": "4px",
+  "kids": [],
+  "gaps": [],
+  "parts": {
+   "cell": {
+    "box": {
+     "l": 6,
+     "t": 6,
+     "r": 428,
+     "b": 156
+    },
+    "ink": {
+     "l": 23.22,
+     "t": 20,
+     "r": 445.23,
+     "b": 170
+    }
+   }
+  },
+  "cellGap": 4,
+  "boards": [
+   {
+    "w": 480,
+    "pad": "6px",
+    "gap": "4px"
+   },
+   {
+    "w": 480,
+    "pad": "6px",
+    "gap": "4px"
+   }
+  ],
+  "column": {
+   "w": 480,
+   "gap": "8px",
+   "kids": [
+    "ui-text w480 l0",
+    "ui-board-grid w480 l0",
+    "ui-text w480 l0",
+    "ui-board-grid w480 l0"
+   ]
+  }
+ },
+ "GameHud": {
+  "surfaceContentW": 480,
+  "rootTag": "ui-game-hud",
+  "widgetW": 480,
+  "widgetPad": "12px 18px 12px 18px",
+  "widgetGap": "8px",
+  "kids": [
+   "header l19 pad 0px mar 0px",
+   "progress l19 pad 0px mar 0px",
+   "stats l19 pad 0px mar 0px"
+  ],
+  "gaps": [
+   "header->progress: 8",
+   "progress->stats: 8"
+  ],
+  "parts": {
+   "title": {
+    "box": {
+     "l": 19,
+     "t": 13,
+     "r": 337.38,
+     "b": 140.98
+    },
+    "ink": {
+     "l": 19,
+     "t": 16,
+     "r": 449.34,
+     "b": 143.98
+    }
+   },
+   "status": {
+    "box": {
+     "l": 370.39,
+     "t": 16,
+     "r": 19,
+     "b": 143.98
+    },
+    "ink": {
+     "l": 395.64,
+     "t": 16.5,
+     "r": 76.98,
+     "b": 145.48
+    }
+   },
+   "progressText": {
+    "box": {
+     "l": 19,
+     "t": 45,
+     "r": 19,
+     "b": 115.84
+    },
+    "ink": {
+     "l": 19,
+     "t": 46,
+     "r": 453.33,
+     "b": 116.98
+    }
+   },
+   "track": {
+    "box": {
+     "l": 19,
+     "t": 64.14,
+     "r": 19,
+     "b": 105.84
+    },
+    "ink": {
+     "l": 19,
+     "t": 64.14,
+     "r": 19,
+     "b": 105.84
+    }
+   },
+   "stats": {
+    "box": {
+     "l": 19,
+     "t": 80.14,
+     "r": 19,
+     "b": 13
+    },
+    "ink": {
+     "l": 39.39,
+     "t": 89.14,
+     "r": 431.72,
+     "b": 75.84
+    }
+   },
+   "statLabel": {
+    "box": {
+     "l": 39.39,
+     "t": 88.14,
+     "r": 327,
+     "b": 74.13
+    },
+    "ink": {
+     "l": 39.39,
+     "t": 89.14,
+     "r": 431.72,
+     "b": 75.84
+    }
+   }
+  }
+ },
+ "CardTable": {
+  "surfaceContentW": 480,
+  "rootTag": "ui-card",
+  "widgetW": 480,
+  "widgetPad": "12px 18px 12px 18px",
+  "widgetGap": "18px",
+  "kids": [
+   "head l19 pad 0px mar 0px",
+   "zone l19 pad 0px mar 0px",
+   "zone l19 pad 0px mar 0px",
+   "readout l19 pad 0px mar 0px",
+   "ui-button l216.3 pad 0px 18px mar 0px",
+   "ui-button l283 pad 0px 18px mar 0px",
+   "ui-button l371.44 pad 0px 18px mar 0px"
+  ],
+  "gaps": [
+   "head->zone: 18",
+   "zone->zone: 18",
+   "zone->readout: 26",
+   "readout->ui-button: -28",
+   "ui-button->ui-button: -36",
+   "ui-button->ui-button: -36"
+  ],
+  "parts": {
+   "title": {
+    "box": {
+     "l": 19,
+     "t": 13,
+     "r": 389.09,
+     "b": 424.75
+    },
+    "ink": {
+     "l": 19,
+     "t": 16,
+     "r": 450.45,
+     "b": 427.75
+    }
+   },
+   "status": {
+    "box": {
+     "l": 370.39,
+     "t": 16,
+     "r": 19,
+     "b": 427.75
+    },
+    "ink": {
+     "l": 395.64,
+     "t": 16.5,
+     "r": 76.98,
+     "b": 429.25
+    }
+   },
+   "zoneLabel": {
+    "box": {
+     "l": 19,
+     "t": 55,
+     "r": 19,
+     "b": 386.75
+    },
+    "ink": {
+     "l": 19,
+     "t": 56,
+     "r": 450.78,
+     "b": 388.75
+    }
+   },
+   "felt": {
+    "box": {
+     "l": 19,
+     "t": 83,
+     "r": 19,
+     "b": 245.88
+    },
+    "ink": {
+     "l": 35.36,
+     "t": 97.63,
+     "r": 437.36,
+     "b": 352.13
+    }
+   },
+   "readout": {
+    "box": {
+     "l": 19,
+     "t": 420.75,
+     "r": 271.7,
+     "b": 21
+    },
+    "ink": {
+     "l": 19,
+     "t": 421.75,
+     "r": 451.69,
+     "b": 23
+    }
+   },
+   "button": {
+    "box": {
+     "l": 216.3,
+     "t": 412.75,
+     "r": 205,
+     "b": 13
+    },
+    "ink": {
+     "l": 235.3,
+     "t": 421.75,
+     "r": 233.14,
+     "b": 22
+    }
+   }
+  }
+ },
+ "QuestionCard": {
+  "surfaceContentW": 480,
+  "rootTag": "ui-column",
+  "widgetW": 480,
+  "widgetPad": "12px 18px 12px 18px",
+  "widgetGap": "8px",
+  "kids": [
+   "head l19 pad 0px mar 0px",
+   "question l19 pad 0px mar 0px",
+   "options l19 pad 0px mar 0px",
+   "ui-button l19 pad 0px 18px mar 0px"
+  ],
+  "gaps": [
+   "head->question: 8",
+   "question->options: 8",
+   "options->ui-button: 8"
+  ],
+  "parts": {
+   "label": {
+    "box": {
+     "l": 19,
+     "t": 14,
+     "r": 338.16,
+     "b": 298
+    },
+    "ink": {
+     "l": 28.75,
+     "t": 14.5,
+     "r": 441.16,
+     "b": 299.5
+    }
+   },
+   "meta": {
+    "box": {
+     "l": 364.88,
+     "t": 13,
+     "r": 19,
+     "b": 297
+    },
+    "ink": {
+     "l": 364.88,
+     "t": 14,
+     "r": 106.09,
+     "b": 299
+    }
+   },
+   "question": {
+    "box": {
+     "l": 19,
+     "t": 41,
+     "r": 19,
+     "b": 265
+    },
+    "ink": {
+     "l": 19,
+     "t": 44,
+     "r": 445.02,
+     "b": 268
+    }
+   },
+   "option": {
+    "box": {
+     "l": 19,
+     "t": 73,
+     "r": 19,
+     "b": 213
+    },
+    "ink": {
+     "l": 38.59,
+     "t": 87,
+     "r": 432.61,
+     "b": 228
+    }
+   },
+   "explanation": null,
+   "button": {
+    "box": {
+     "l": 19,
+     "t": 281,
+     "r": 320.98,
+     "b": 13
+    },
+    "ink": {
+     "l": 38,
+     "t": 290,
+     "r": 430.86,
+     "b": 22
+    }
+   }
+  }
+ }
+}

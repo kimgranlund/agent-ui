@@ -1,0 +1,4 @@
+VB real-engine (chromium), files that mount ui-surface-host, run in the scratch clone under V2 (facade + module-level warm): 3 distinct test files (the reporter lists each twice), 81 tests, 0 failing
+  PASSED  packages/agent-ui/app/src/controls/conversation/conversation.browser.test.ts  52 tests
+  PASSED  packages/agent-ui/app/src/controls/surface-host/surface-host-working.browser.test.ts  5 tests
+  PASSED  packages/agent-ui/app/src/controls/surface-host/surface-host.browser.test.ts  24 tests

@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L3",
+  "name": "0088-solo-L3",
+  "description": "T-0088 solo L3 CardTable: the",
+  "model": "opus",
+  "effort": "xhigh",
+  "prompt": "T-0088 CardTable: the betting phase of a | solo L3\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-cb/.sdlc/cardtable-bet-phase/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-cb/.sdlc/cardtable-bet-phase\nImplement per .sdlc/cardtable-bet-phase/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L3",
+  "tier": "L3",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-cb/.sdlc/cardtable-bet-phase/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-cb/.sdlc/cardtable-bet-phase",
+  "attempt_id": "1243d644a3f443daa28275388d80d5a3",
+  "base_sha": "219526ebcea53778c76827224fb3e4128107f7a5",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.5/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-cb/.sdlc/cardtable-bet-phase/handoff.md"
+}

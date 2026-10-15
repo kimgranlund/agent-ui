@@ -1,0 +1,49 @@
+# T-0037 test churn, measured in scratch clones of main@f5b38eea (never in this worktree). Method in design.md section 5.
+# candidate set: candidate-tests.txt (72 jsdom test files that mention createRenderer, surface-host, conversation, the kit mount, the records or the a2ui barrel)
+
+V1 flip only, no test edits, no warm-memo: test files run 72, failing 17; tests 2183, passed 2076, failed 102
+  FAIL site/lib/component-preview-catalog.test.ts  3/83
+       TypeError: Cannot read properties of null (reading 'tagName')
+       TypeError: Cannot set properties of null (setting 'value')
+  FAIL site/pages/a2ui-live.ask-lifecycle.test.ts  1/20
+       AssertionError: the ask must be a REAL, clickable createRenderer()-hosted control tree: expected null not to b
+  FAIL site/pages/devtools-harness.test.ts  2/7
+       AssertionError: expected { seq: 4, …(4) } to match object { kind: 'render', …(2) }
+       AssertionError: expected { seq: 9, …(4) } to match object { kind: 'render', …(2) }
+  FAIL a2ui/src/catalog/records.test.ts  1/15
+       AssertionError: expected [ 'a2ui-basic', …(8) ] to deeply equal [ 'a2ui-basic', …(7) ]
+  FAIL a2ui/src/examples/backable-wizard.test.ts  4/11
+       AssertionError: expected null not to be null
+       AssertionError: the confirm scene must render ONE DescriptionList (ADR-0201 receipt clause): expected null not
+  FAIL a2ui/src/examples/examples.test.ts  2/191
+       AssertionError: expected null to be 2 // Object.is equality
+       AssertionError: expected '' to contain 'Revenue'
+  FAIL a2ui/src/renderer/bound-text.test.ts  5/5
+       AssertionError: expected undefined to be '9♣' // Object.is equality
+       AssertionError: expected [] to deeply equal [ '9♠', '7♦' ]
+  FAIL a2ui/src/renderer/builtin-controls.test.ts  1/12
+       AssertionError: expected [] to deeply equal [ [ 'agent-ui', { …(2) } ] ]
+  FAIL a2ui/src/renderer/card-header-slot.test.ts  2/2
+       AssertionError: expected null not to be null
+       TypeError: Cannot read properties of null (reading 'querySelector')
+  FAIL a2ui/src/renderer/checkbox-group-layout.test.ts  2/2
+       AssertionError: the root Column did not mint a ui-column: expected null not to be null
+       TypeError: Cannot read properties of null (reading 'children')
+  FAIL a2ui/src/renderer/renderer-persona-catalogs.test.ts  1/11
+       AssertionError: expected null not to be null
+  FAIL a2ui/src/renderer/renderer.test.ts  29/51
+       TypeError: Cannot read properties of null (reading 'children')
+       AssertionError: expected null to be an instance of UIButtonElement
+  FAIL a2ui/src/live-agent/round-trip.test.ts  3/10
+       AssertionError: expected null not to be null
+       AssertionError: expected '' to contain 'Ready'
+  FAIL a2ui/src/live-agent/structural-transcript.test.ts  2/6
+       AssertionError: expected null not to be null
+  FAIL app/src/controls/surface-host/surface-host.test.ts  28/50
+       AssertionError: the reconnected instance never rendered again: expected null not to be null
+       AssertionError: expected 0 to be greater than 0
+  FAIL app/src/controls/conversation/conversation.test.ts  12/146
+       AssertionError: expected '' to contain 'ready'
+       AssertionError: expected 0 to be greater than 0
+  FAIL a2ui/src/catalog/default/index.test.ts  4/154
+       AssertionError: expected null to be truthy

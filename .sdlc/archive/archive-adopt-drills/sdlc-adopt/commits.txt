@@ -1,0 +1,5 @@
+59963d29 2026-09-20 verdict: survey
+43ab9e2b 2026-09-20 survey: A1 complete, nine scout findings assembled, awaiting verifier verdict
+2c6a270b 2026-09-20 launch: seats up
+f240526c 2026-09-20 preflight: record before launch
+efb46358 2026-09-20 gitignore: sdlc runtime and local settings

@@ -1,0 +1,802 @@
+{
+ "data/table-demo/400/light": {
+  "url": "http://localhost:5317/table-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "data/table-demo/400/dark": {
+  "url": "http://localhost:5317/table-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "data/table-demo/1000/light": {
+  "url": "http://localhost:5317/table-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "data/table-demo/1000/dark": {
+  "url": "http://localhost:5317/table-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "data/calendar-demo/400/light": {
+  "url": "http://localhost:5317/calendar-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "data/calendar-demo/400/dark": {
+  "url": "http://localhost:5317/calendar-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "data/calendar-demo/1000/light": {
+  "url": "http://localhost:5317/calendar-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "data/calendar-demo/1000/dark": {
+  "url": "http://localhost:5317/calendar-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "data/timeline-demo/400/light": {
+  "url": "http://localhost:5317/timeline-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "data/timeline-demo/400/dark": {
+  "url": "http://localhost:5317/timeline-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "data/timeline-demo/1000/light": {
+  "url": "http://localhost:5317/timeline-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "data/timeline-demo/1000/dark": {
+  "url": "http://localhost:5317/timeline-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "data/stat-demo/400/light": {
+  "url": "http://localhost:5317/stat-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "data/stat-demo/400/dark": {
+  "url": "http://localhost:5317/stat-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "data/stat-demo/1000/light": {
+  "url": "http://localhost:5317/stat-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "data/stat-demo/1000/dark": {
+  "url": "http://localhost:5317/stat-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "data/sparkline-demo/400/light": {
+  "url": "http://localhost:5317/sparkline-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "data/sparkline-demo/400/dark": {
+  "url": "http://localhost:5317/sparkline-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "data/sparkline-demo/1000/light": {
+  "url": "http://localhost:5317/sparkline-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "data/sparkline-demo/1000/dark": {
+  "url": "http://localhost:5317/sparkline-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "charts/bar-chart-demo/400/light": {
+  "url": "http://localhost:5317/bar-chart-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "charts/bar-chart-demo/400/dark": {
+  "url": "http://localhost:5317/bar-chart-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "charts/bar-chart-demo/1000/light": {
+  "url": "http://localhost:5317/bar-chart-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "charts/bar-chart-demo/1000/dark": {
+  "url": "http://localhost:5317/bar-chart-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "charts/column-chart-demo/400/light": {
+  "url": "http://localhost:5317/column-chart-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "charts/column-chart-demo/400/dark": {
+  "url": "http://localhost:5317/column-chart-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "charts/column-chart-demo/1000/light": {
+  "url": "http://localhost:5317/column-chart-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "charts/column-chart-demo/1000/dark": {
+  "url": "http://localhost:5317/column-chart-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "charts/gauge-demo/400/light": {
+  "url": "http://localhost:5317/gauge-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "charts/gauge-demo/400/dark": {
+  "url": "http://localhost:5317/gauge-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "charts/gauge-demo/1000/light": {
+  "url": "http://localhost:5317/gauge-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "charts/gauge-demo/1000/dark": {
+  "url": "http://localhost:5317/gauge-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "containers/card-demo/400/light": {
+  "url": "http://localhost:5317/card-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "containers/card-demo/400/dark": {
+  "url": "http://localhost:5317/card-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "containers/card-demo/1000/light": {
+  "url": "http://localhost:5317/card-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "containers/card-demo/1000/dark": {
+  "url": "http://localhost:5317/card-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "containers/modal-demo/400/light": {
+  "url": "http://localhost:5317/modal-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "containers/modal-demo/400/dark": {
+  "url": "http://localhost:5317/modal-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "containers/modal-demo/1000/light": {
+  "url": "http://localhost:5317/modal-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "containers/modal-demo/1000/dark": {
+  "url": "http://localhost:5317/modal-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "containers/drawer-demo/400/light": {
+  "url": "http://localhost:5317/drawer-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "containers/drawer-demo/400/dark": {
+  "url": "http://localhost:5317/drawer-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "containers/drawer-demo/1000/light": {
+  "url": "http://localhost:5317/drawer-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "containers/drawer-demo/1000/dark": {
+  "url": "http://localhost:5317/drawer-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "containers/popover-demo/400/light": {
+  "url": "http://localhost:5317/popover-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "containers/popover-demo/400/dark": {
+  "url": "http://localhost:5317/popover-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "containers/popover-demo/1000/light": {
+  "url": "http://localhost:5317/popover-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "containers/popover-demo/1000/dark": {
+  "url": "http://localhost:5317/popover-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "containers/toast-demo/400/light": {
+  "url": "http://localhost:5317/toast-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "containers/toast-demo/400/dark": {
+  "url": "http://localhost:5317/toast-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "containers/toast-demo/1000/light": {
+  "url": "http://localhost:5317/toast-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "containers/toast-demo/1000/dark": {
+  "url": "http://localhost:5317/toast-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "containers/disclosure-demo/400/light": {
+  "url": "http://localhost:5317/disclosure-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "containers/disclosure-demo/400/dark": {
+  "url": "http://localhost:5317/disclosure-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "containers/disclosure-demo/1000/light": {
+  "url": "http://localhost:5317/disclosure-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "containers/disclosure-demo/1000/dark": {
+  "url": "http://localhost:5317/disclosure-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/product-card-demo/400/light": {
+  "url": "http://localhost:5317/product-card-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/product-card-demo/400/dark": {
+  "url": "http://localhost:5317/product-card-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/product-card-demo/1000/light": {
+  "url": "http://localhost:5317/product-card-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/product-card-demo/1000/dark": {
+  "url": "http://localhost:5317/product-card-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/result-card-demo/400/light": {
+  "url": "http://localhost:5317/result-card-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/result-card-demo/400/dark": {
+  "url": "http://localhost:5317/result-card-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/result-card-demo/1000/light": {
+  "url": "http://localhost:5317/result-card-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/result-card-demo/1000/dark": {
+  "url": "http://localhost:5317/result-card-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/board-grid-demo/400/light": {
+  "url": "http://localhost:5317/board-grid-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/board-grid-demo/400/dark": {
+  "url": "http://localhost:5317/board-grid-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/board-grid-demo/1000/light": {
+  "url": "http://localhost:5317/board-grid-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/board-grid-demo/1000/dark": {
+  "url": "http://localhost:5317/board-grid-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/game-hud-demo/400/light": {
+  "url": "http://localhost:5317/game-hud-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/game-hud-demo/400/dark": {
+  "url": "http://localhost:5317/game-hud-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/game-hud-demo/1000/light": {
+  "url": "http://localhost:5317/game-hud-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/game-hud-demo/1000/dark": {
+  "url": "http://localhost:5317/game-hud-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/BookingForm/400/light": {
+  "url": "http://localhost:5317/a2ui-catalog.html?catalog=a2ui-basic--concierge",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/BookingForm/400/dark": {
+  "url": "http://localhost:5317/a2ui-catalog.html?catalog=a2ui-basic--concierge",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/BookingForm/1000/light": {
+  "url": "http://localhost:5317/a2ui-catalog.html?catalog=a2ui-basic--concierge",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/BookingForm/1000/dark": {
+  "url": "http://localhost:5317/a2ui-catalog.html?catalog=a2ui-basic--concierge",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/CardTable/400/light": {
+  "url": "http://localhost:5317/a2ui-catalog.html?catalog=a2ui-basic--croupier",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/CardTable/400/dark": {
+  "url": "http://localhost:5317/a2ui-catalog.html?catalog=a2ui-basic--croupier",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/CardTable/1000/light": {
+  "url": "http://localhost:5317/a2ui-catalog.html?catalog=a2ui-basic--croupier",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/CardTable/1000/dark": {
+  "url": "http://localhost:5317/a2ui-catalog.html?catalog=a2ui-basic--croupier",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/QuestionCard/400/light": {
+  "url": "http://localhost:5317/a2ui-catalog.html?catalog=a2ui-basic--quizmaster",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/QuestionCard/400/dark": {
+  "url": "http://localhost:5317/a2ui-catalog.html?catalog=a2ui-basic--quizmaster",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/QuestionCard/1000/light": {
+  "url": "http://localhost:5317/a2ui-catalog.html?catalog=a2ui-basic--quizmaster",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/QuestionCard/1000/dark": {
+  "url": "http://localhost:5317/a2ui-catalog.html?catalog=a2ui-basic--quizmaster",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/ContrastPair/400/light": {
+  "url": "http://localhost:5317/a2ui-catalog.html?catalog=agent-ui--stylist",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/ContrastPair/400/dark": {
+  "url": "http://localhost:5317/a2ui-catalog.html?catalog=agent-ui--stylist",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/ContrastPair/1000/light": {
+  "url": "http://localhost:5317/a2ui-catalog.html?catalog=agent-ui--stylist",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "a2ui/ContrastPair/1000/dark": {
+  "url": "http://localhost:5317/a2ui-catalog.html?catalog=agent-ui--stylist",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "shell/button-doc/400/light": {
+  "url": "http://localhost:5317/button-doc.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "shell/button-doc/400/dark": {
+  "url": "http://localhost:5317/button-doc.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "shell/button-doc/1000/light": {
+  "url": "http://localhost:5317/button-doc.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "shell/button-doc/1000/dark": {
+  "url": "http://localhost:5317/button-doc.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "shell/agent-admin-app/400/light": {
+  "url": "http://localhost:5317/agent-admin-app.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "shell/agent-admin-app/400/dark": {
+  "url": "http://localhost:5317/agent-admin-app.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "shell/agent-admin-app/1000/light": {
+  "url": "http://localhost:5317/agent-admin-app.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "shell/agent-admin-app/1000/dark": {
+  "url": "http://localhost:5317/agent-admin-app.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "shell/a2ui-chat/400/light": {
+  "url": "http://localhost:5317/a2ui-chat.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "shell/a2ui-chat/400/dark": {
+  "url": "http://localhost:5317/a2ui-chat.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "shell/a2ui-chat/1000/light": {
+  "url": "http://localhost:5317/a2ui-chat.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "shell/a2ui-chat/1000/dark": {
+  "url": "http://localhost:5317/a2ui-chat.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ }
+}

@@ -1,0 +1,21 @@
+{
+  "attempt_id": "9ed8735702924766a008ebd5de84527d",
+  "name": "planner-L2",
+  "role": "planner",
+  "level": "L2",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "opus",
+  "effort": "medium",
+  "routing_reason": "planner L2: ~20 live doc/skill/agent files, judgment on which mentions are historical",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T05:45:40.261775+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/stale-plugin-refs",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/stale-plugin-refs/.sdlc/stale-plugin-refs/handoff.md",
+  "owner_pid": 47013,
+  "handoff_sha256": "1c3755fae470806ba5be5a33fbda44fdcdf2238bb4cb9a75be75ca6efa494d17",
+  "process_pid": 47294,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T05:52:23.613554+00:00"
+}

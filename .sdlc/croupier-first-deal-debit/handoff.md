@@ -2,7 +2,7 @@
 id: T-0216
 title: "Croupier first deal never takes the bet out of the bankroll and needs a repair round"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -34,3 +34,9 @@ The failing test lands before or with the fix, never after. No em dashes.
 - The recorded fixture still replays: `npx vitest run --project scripts scripts/e2e-admin/probe/replays/croupier-first-deal-debit.test.mjs` exits 0.
 - `npm run check` exits 0.
 - Not measured live (no spend in this lane): whether Sonnet 5.5 now writes `bankrollAfterBet` on round 1 is a T-0184 scenario rerun (`scripts/e2e-admin/probe/scenarios/croupier.ts`). The offline replay runs no semantic checks, so the Repro span is green on the broken tree too; it stays as recorded evidence.
+
+## Outcome
+
+2026-10-14 · lane: full L1 · verdict: closed by reason (Merged in #1994; batched lane verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

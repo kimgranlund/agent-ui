@@ -1,0 +1,32 @@
+{
+  "attempt_id": "07f5457e6cb54e2c83973286bf0e3291",
+  "name": "planner-L3",
+  "agent_name": "0060-planner-L3",
+  "role": "planner",
+  "level": "L3",
+  "backend": "claude",
+  "transport": "subagent",
+  "model": "opus",
+  "effort": "xhigh",
+  "routing_reason": "third restart after crash: planner orphaned before reporting",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-09T16:14:31.192566+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-rts",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-rts/.sdlc/response-type-selection/handoff.md",
+  "parent_pid": 2841,
+  "parent_pid_source": "claude",
+  "handoff_sha256": "e9c7e5b54b5d19ad081cace20f05737bd455b60964d08850c3bc9b47d13f8db6",
+  "worktrees_before": [
+    "/Users/kimgranlund/Projects/nonoun/agent-ui",
+    "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-rts"
+  ],
+  "branches_before": [
+    "feat/response-type-selection",
+    "main"
+  ],
+  "exit_code": 0,
+  "finished_at": "2026-10-09T16:44:13.100139+00:00",
+  "result_sha256": "994263ddbaa66e978eea97b787d22ace11836ec6e291fe79eedc916c938dcdf7",
+  "agent_id": "a0060-planner-L3-51221b8fa0cf76b2"
+}

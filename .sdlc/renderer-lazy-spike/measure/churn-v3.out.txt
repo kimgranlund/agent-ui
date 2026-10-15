@@ -1,0 +1,1 @@
+V3 facade + function-level warm (createRenderer() tells the facade), no test edits: test files run 101, failing 0; tests 2145, passed 2139, failed 0

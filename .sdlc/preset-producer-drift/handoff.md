@@ -2,7 +2,7 @@
 id: T-0159
 title: "Agent-admin presets and producer: retire [scale]/[density] teaching, fix preset drift, gate preset prose against the live catalog"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0152]    # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -46,3 +46,7 @@ verifier: L3
 - `npx vitest run packages/agent-ui/app/src/controls/agent-admin` exits 0.
 - `! grep -q "ui-sm" packages/agent-ui/a2ui/src/agent/prompts/genui-dogfood-teaching.md` exits 0.
 - `grep '"ui-theme-provider"' packages/agent-ui/a2ui/src/agent/dogfood-fleet.gen.ts | grep data-tier | grep -v 'scale: enum'` exits 0.
+
+## Closed
+
+2026-10-14: merged (queue)

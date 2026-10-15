@@ -1,0 +1,504 @@
+{
+ "before": {
+  "persona-concierge-booking": [
+   {
+    "tag": "ui-text-field",
+    "label": "Sat, Nov 14, 2026",
+    "size": "",
+    "height": 28
+   },
+   {
+    "tag": "ui-button",
+    "label": "Change arrival date",
+    "size": "sm",
+    "height": 18
+   },
+   {
+    "tag": "ui-text-field",
+    "label": "Tue, Nov 17, 2026",
+    "size": "",
+    "height": 28
+   },
+   {
+    "tag": "ui-button",
+    "label": "Change departure date",
+    "size": "sm",
+    "height": 18
+   },
+   {
+    "tag": "ui-select",
+    "label": "King roomRoom typeKing r",
+    "size": "",
+    "height": 28
+   },
+   {
+    "tag": "ui-button",
+    "label": "Book now",
+    "size": "md",
+    "height": 28
+   }
+  ],
+  "persona-concierge-stay-details": [
+   {
+    "tag": "ui-text-field",
+    "label": "Ada Lovelace",
+    "size": "",
+    "height": 28
+   },
+   {
+    "tag": "ui-text-field",
+    "label": "2",
+    "size": "",
+    "height": 28
+   },
+   {
+    "tag": "ui-text-field",
+    "label": "Sat, Nov 14, 2026",
+    "size": "",
+    "height": 28
+   },
+   {
+    "tag": "ui-button",
+    "label": "Change arrival date",
+    "size": "sm",
+    "height": 18
+   },
+   {
+    "tag": "ui-text-field",
+    "label": "Tue, Nov 17, 2026",
+    "size": "",
+    "height": 28
+   },
+   {
+    "tag": "ui-button",
+    "label": "Change departure date",
+    "size": "sm",
+    "height": 18
+   },
+   {
+    "tag": "ui-button",
+    "label": "Reserve",
+    "size": "md",
+    "height": 28
+   }
+  ],
+  "persona-croupier-opening-hand": [
+   {
+    "tag": "ui-button",
+    "label": "Hit",
+    "size": "",
+    "height": 28
+   },
+   {
+    "tag": "ui-button",
+    "label": "Stand",
+    "size": "",
+    "height": 28
+   }
+  ],
+  "persona-croupier-card-table": [
+   {
+    "tag": "ui-button",
+    "label": "+10",
+    "size": "lg",
+    "height": 0
+   },
+   {
+    "tag": "ui-button",
+    "label": "+25",
+    "size": "lg",
+    "height": 0
+   },
+   {
+    "tag": "ui-button",
+    "label": "+50",
+    "size": "lg",
+    "height": 0
+   },
+   {
+    "tag": "ui-button",
+    "label": "+100",
+    "size": "lg",
+    "height": 0
+   },
+   {
+    "tag": "ui-text-field",
+    "label": "50",
+    "size": "lg",
+    "height": 0
+   },
+   {
+    "tag": "ui-button",
+    "label": "Clear",
+    "size": "lg",
+    "height": 0
+   },
+   {
+    "tag": "ui-button",
+    "label": "Hit",
+    "size": "lg",
+    "height": 36
+   },
+   {
+    "tag": "ui-button",
+    "label": "Stand",
+    "size": "lg",
+    "height": 36
+   },
+   {
+    "tag": "ui-button",
+    "label": "Double",
+    "size": "lg",
+    "height": 36
+   }
+  ],
+  "persona-croupier-card-table-betting": [
+   {
+    "tag": "ui-button",
+    "label": "+10",
+    "size": "lg",
+    "height": 36
+   },
+   {
+    "tag": "ui-button",
+    "label": "+25",
+    "size": "lg",
+    "height": 36
+   },
+   {
+    "tag": "ui-button",
+    "label": "+50",
+    "size": "lg",
+    "height": 36
+   },
+   {
+    "tag": "ui-button",
+    "label": "+100",
+    "size": "lg",
+    "height": 36
+   },
+   {
+    "tag": "ui-text-field",
+    "label": "50",
+    "size": "lg",
+    "height": 36
+   },
+   {
+    "tag": "ui-button",
+    "label": "Clear",
+    "size": "lg",
+    "height": 36
+   },
+   {
+    "tag": "ui-button",
+    "label": "Deal",
+    "size": "lg",
+    "height": 36
+   }
+  ],
+  "persona-croupier-card-table-settled": [
+   {
+    "tag": "ui-button",
+    "label": "+10",
+    "size": "lg",
+    "height": 0
+   },
+   {
+    "tag": "ui-button",
+    "label": "+25",
+    "size": "lg",
+    "height": 0
+   },
+   {
+    "tag": "ui-button",
+    "label": "+50",
+    "size": "lg",
+    "height": 0
+   },
+   {
+    "tag": "ui-button",
+    "label": "+100",
+    "size": "lg",
+    "height": 0
+   },
+   {
+    "tag": "ui-text-field",
+    "label": "50",
+    "size": "lg",
+    "height": 0
+   },
+   {
+    "tag": "ui-button",
+    "label": "Clear",
+    "size": "lg",
+    "height": 0
+   },
+   {
+    "tag": "ui-button",
+    "label": "Deal again",
+    "size": "lg",
+    "height": 36
+   }
+  ],
+  "persona-quizmaster-question": [
+   {
+    "tag": "ui-button",
+    "label": "Check answer",
+    "size": "lg",
+    "height": 36
+   }
+  ],
+  "persona-stylist-contrast": []
+ },
+ "after": {
+  "persona-concierge-booking": [
+   {
+    "tag": "ui-text-field",
+    "label": "Sat, Nov 14, 2026",
+    "size": "sm",
+    "height": 28
+   },
+   {
+    "tag": "ui-button",
+    "label": "Change arrival date",
+    "size": "sm",
+    "height": 14
+   },
+   {
+    "tag": "ui-text-field",
+    "label": "Tue, Nov 17, 2026",
+    "size": "sm",
+    "height": 28
+   },
+   {
+    "tag": "ui-button",
+    "label": "Change departure date",
+    "size": "sm",
+    "height": 14
+   },
+   {
+    "tag": "ui-select",
+    "label": "King roomRoom typeKing r",
+    "size": "sm",
+    "height": 28
+   },
+   {
+    "tag": "ui-button",
+    "label": "Book now",
+    "size": "sm",
+    "height": 28
+   }
+  ],
+  "persona-concierge-stay-details": [
+   {
+    "tag": "ui-text-field",
+    "label": "Ada Lovelace",
+    "size": "sm",
+    "height": 28
+   },
+   {
+    "tag": "ui-text-field",
+    "label": "2",
+    "size": "sm",
+    "height": 28
+   },
+   {
+    "tag": "ui-text-field",
+    "label": "Sat, Nov 14, 2026",
+    "size": "sm",
+    "height": 28
+   },
+   {
+    "tag": "ui-button",
+    "label": "Change arrival date",
+    "size": "sm",
+    "height": 14
+   },
+   {
+    "tag": "ui-text-field",
+    "label": "Tue, Nov 17, 2026",
+    "size": "sm",
+    "height": 28
+   },
+   {
+    "tag": "ui-button",
+    "label": "Change departure date",
+    "size": "sm",
+    "height": 14
+   },
+   {
+    "tag": "ui-button",
+    "label": "Reserve",
+    "size": "sm",
+    "height": 28
+   }
+  ],
+  "persona-croupier-opening-hand": [
+   {
+    "tag": "ui-button",
+    "label": "Hit",
+    "size": "sm",
+    "height": 28
+   },
+   {
+    "tag": "ui-button",
+    "label": "Stand",
+    "size": "sm",
+    "height": 28
+   }
+  ],
+  "persona-croupier-card-table": [
+   {
+    "tag": "ui-button",
+    "label": "+10",
+    "size": "md",
+    "height": 0
+   },
+   {
+    "tag": "ui-button",
+    "label": "+25",
+    "size": "md",
+    "height": 0
+   },
+   {
+    "tag": "ui-button",
+    "label": "+50",
+    "size": "md",
+    "height": 0
+   },
+   {
+    "tag": "ui-button",
+    "label": "+100",
+    "size": "md",
+    "height": 0
+   },
+   {
+    "tag": "ui-text-field",
+    "label": "50",
+    "size": "md",
+    "height": 0
+   },
+   {
+    "tag": "ui-button",
+    "label": "Clear",
+    "size": "md",
+    "height": 0
+   },
+   {
+    "tag": "ui-button",
+    "label": "Hit",
+    "size": "md",
+    "height": 36
+   },
+   {
+    "tag": "ui-button",
+    "label": "Stand",
+    "size": "md",
+    "height": 36
+   },
+   {
+    "tag": "ui-button",
+    "label": "Double",
+    "size": "md",
+    "height": 36
+   }
+  ],
+  "persona-croupier-card-table-betting": [
+   {
+    "tag": "ui-button",
+    "label": "+10",
+    "size": "md",
+    "height": 36
+   },
+   {
+    "tag": "ui-button",
+    "label": "+25",
+    "size": "md",
+    "height": 36
+   },
+   {
+    "tag": "ui-button",
+    "label": "+50",
+    "size": "md",
+    "height": 36
+   },
+   {
+    "tag": "ui-button",
+    "label": "+100",
+    "size": "md",
+    "height": 36
+   },
+   {
+    "tag": "ui-text-field",
+    "label": "50",
+    "size": "md",
+    "height": 36
+   },
+   {
+    "tag": "ui-button",
+    "label": "Clear",
+    "size": "md",
+    "height": 36
+   },
+   {
+    "tag": "ui-button",
+    "label": "Deal",
+    "size": "md",
+    "height": 36
+   }
+  ],
+  "persona-croupier-card-table-settled": [
+   {
+    "tag": "ui-button",
+    "label": "+10",
+    "size": "md",
+    "height": 0
+   },
+   {
+    "tag": "ui-button",
+    "label": "+25",
+    "size": "md",
+    "height": 0
+   },
+   {
+    "tag": "ui-button",
+    "label": "+50",
+    "size": "md",
+    "height": 0
+   },
+   {
+    "tag": "ui-button",
+    "label": "+100",
+    "size": "md",
+    "height": 0
+   },
+   {
+    "tag": "ui-text-field",
+    "label": "50",
+    "size": "md",
+    "height": 0
+   },
+   {
+    "tag": "ui-button",
+    "label": "Clear",
+    "size": "md",
+    "height": 0
+   },
+   {
+    "tag": "ui-button",
+    "label": "Deal again",
+    "size": "md",
+    "height": 36
+   }
+  ],
+  "persona-quizmaster-question": [
+   {
+    "tag": "ui-button",
+    "label": "Check answer",
+    "size": "md",
+    "height": 36
+   }
+  ],
+  "persona-stylist-contrast": []
+ }
+}

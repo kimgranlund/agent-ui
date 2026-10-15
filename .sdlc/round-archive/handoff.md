@@ -2,7 +2,7 @@
 id: T-0241
 title: "Live rounds archive their traces, payloads and spend ledger automatically"
 type: feature        # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -56,3 +56,9 @@ Kim chose `.sdlc/evals/rounds/` (an allowed top-level `.sdlc` dir per `.sdlc/AGE
 - `.sdlc/evals/README.md` lists the committed rounds (2026-10-14-r1-croupier, 2026-10-15-r2-presets); T-0208's round joins when that ticket lands on main.
 
 - conductor: the branch was rebased; diff scope against `7558540a34a99c4cacf36088512258509539e65f` (merge-base with origin/main), not the prompt's base sha, which is the branch tip.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged in #2003: rounds archive traces, ledgers and round.json, README entry files, .sdlc/evals/rounds home) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

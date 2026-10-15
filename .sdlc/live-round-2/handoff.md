@@ -2,7 +2,7 @@
 id: T-0225
 title: "Live round 2: Croupier on 3 models plus Concierge, Lexicographer and Admiral scenarios, $20 cap"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: [T-0222]          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -42,3 +42,9 @@ Run under a $20 cap, log every run to the test-log artifact, then a report with 
 ## Plan review
 - conductor: the spend cap must not under-estimate. Check the price table in scripts/e2e-admin/probe/run-capped.ts against a cited source in the repo (providers.json, model-capabilities, or a doc). T-0184 assumed Haiku 1/5, Sonnet 3/15, Opus 5/25 USD per M tokens. If the table has no repo source, the verdict is fail with the fix: use the higher of the two per model, or read prices from one repo file.
 - conductor correction (replaces the rule above): my rule was a plan defect. The authoritative price source is the claude-api skill, `shared/models.md` (bundled skill 2.1.295): Haiku 5.5 $0.10/$0.50 per MTok up to 100K prompt tokens ($0.50/$2.50 above), Sonnet 5.5 $2/$10, Opus 5.5 $4/$20. The T-0184 assumption (1/5, 3/15, 5/25) was from memory and wrong. Criterion: the run-capped.ts table matches those rows and cites the claude-api skill. The Haiku long-prompt tier may stay unmodelled (probe prompts are under 100K tokens). Also observe `npm run check` exit 0 (wait for a gate slot).
+
+## Outcome
+
+2026-10-15 · lane: solo L2 · verdict: closed by reason (Merged in #1996 (phase 1) and #1998 (phase 2); verifier L2 pass on both) · verifier: none · base: none
+- Changed: Live round 2: 42 runs, report, T-0229 to T-0236, replays, scenario fixes
+- Commits: none

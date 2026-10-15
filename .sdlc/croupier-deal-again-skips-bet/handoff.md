@@ -2,7 +2,7 @@
 id: T-0211
 title: "Croupier Deal again deals at the old bet instead of opening the bet strip"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -33,3 +33,9 @@ The failing test lands before or with the fix, never after. No em dashes.
 - The touched folders stay green: `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog packages/agent-ui/a2ui/src/live-agent/produce-semantic-checks.test.ts` exits 0.
 - The recorded fixture still replays with its known probe-level fail (T-0222): `npx vitest run --project scripts scripts/e2e-admin/probe/replays/croupier-deal-again-old-bet.test.mjs` exits 0.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-14 · lane: full L1 · verdict: closed by reason (Merged in #1994; batched lane verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

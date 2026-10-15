@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L3",
+  "name": "0089-solo-L3",
+  "description": "T-0089 solo L3 ResultCard: a",
+  "model": "opus",
+  "effort": "xhigh",
+  "prompt": "T-0089 ResultCard: a default-catalog | solo L3\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-rc/.sdlc/result-card/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-rc/.sdlc/result-card\nImplement per .sdlc/result-card/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L3",
+  "tier": "L3",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-rc/.sdlc/result-card/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-rc/.sdlc/result-card",
+  "attempt_id": "a7fe4fdec3a447d68e9f90691957c0e6",
+  "base_sha": "587bda3d75c7e1f5238dec99a6b53e74564a8d52",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.6/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-rc/.sdlc/result-card/handoff.md"
+}

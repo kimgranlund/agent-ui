@@ -1,0 +1,4 @@
+PROBE first host: sync text="" emptyFinalSync=false
+PROBE first host: painted after 15 setTimeout(0) ticks, painted=true emptyFinalAfter=false
+PROBE later host: sync painted=true emptyFinal=false
+      Tests  1 passed (1)

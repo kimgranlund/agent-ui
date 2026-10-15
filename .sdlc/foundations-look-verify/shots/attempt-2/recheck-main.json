@@ -1,0 +1,145 @@
+{
+ "repo": "/Users/kimgranlund/Projects/nonoun/agent-ui",
+ "escapees": {
+  "badge-demo": {
+   "count": 0,
+   "sample": []
+  },
+  "icon-demo": {
+   "count": 0,
+   "sample": []
+  },
+  "avatar-demo": {
+   "count": 0,
+   "sample": []
+  },
+  "text-demo": {
+   "count": 0,
+   "sample": []
+  },
+  "glyph-doc": {
+   "count": 0,
+   "sample": []
+  },
+  "text-field-demo": {
+   "count": 0,
+   "sample": []
+  },
+  "textarea-demo": {
+   "count": 0,
+   "sample": []
+  },
+  "select-demo": {
+   "count": 0,
+   "sample": []
+  },
+  "combo-box-demo": {
+   "count": 0,
+   "sample": []
+  },
+  "multi-select-demo": {
+   "count": 0,
+   "sample": []
+  },
+  "otp-field-demo": {
+   "count": 0,
+   "sample": []
+  }
+ },
+ "avatar": {
+  "400/light": [
+   "no-initials",
+   "no-initials",
+   "IS|9px|box 20",
+   "TH|9px|box 20",
+   "no-initials"
+  ],
+  "1000/light": [
+   "no-initials",
+   "no-initials",
+   "IS|9px|box 20",
+   "TH|9px|box 20",
+   "no-initials"
+  ],
+  "400/dark": [
+   "no-initials",
+   "no-initials",
+   "IS|9px|box 20",
+   "TH|9px|box 20",
+   "no-initials"
+  ],
+  "1000/dark": [
+   "no-initials",
+   "no-initials",
+   "IS|9px|box 20",
+   "TH|9px|box 20",
+   "no-initials"
+  ]
+ },
+ "search": {
+  "400/light": [
+   {
+    "cols": "12px 322px 0px",
+    "svgs": 2,
+    "magnifierParts": [
+     "span[leading-adornment] svg=1"
+    ],
+    "kids": [
+     "span[leading-adornment] x=7 w=12",
+     "div[editor] x=21 w=322",
+     "div[] x=-24 w=0",
+     "span[trailing-adornment] x=-24 w=0"
+    ],
+    "hostW": 352
+   }
+  ],
+  "1000/light": [
+   {
+    "cols": "12px 386px 0px",
+    "svgs": 2,
+    "magnifierParts": [
+     "span[leading-adornment] svg=1"
+    ],
+    "kids": [
+     "span[leading-adornment] x=7 w=12",
+     "div[editor] x=21 w=386",
+     "div[] x=-294 w=0",
+     "span[trailing-adornment] x=-294 w=0"
+    ],
+    "hostW": 416
+   }
+  ],
+  "400/dark": [
+   {
+    "cols": "12px 322px 0px",
+    "svgs": 2,
+    "magnifierParts": [
+     "span[leading-adornment] svg=1"
+    ],
+    "kids": [
+     "span[leading-adornment] x=7 w=12",
+     "div[editor] x=21 w=322",
+     "div[] x=-24 w=0",
+     "span[trailing-adornment] x=-24 w=0"
+    ],
+    "hostW": 352
+   }
+  ],
+  "1000/dark": [
+   {
+    "cols": "12px 386px 0px",
+    "svgs": 2,
+    "magnifierParts": [
+     "span[leading-adornment] svg=1"
+    ],
+    "kids": [
+     "span[leading-adornment] x=7 w=12",
+     "div[editor] x=21 w=386",
+     "div[] x=-294 w=0",
+     "span[trailing-adornment] x=-294 w=0"
+    ],
+    "hostW": 416
+   }
+  ]
+ }
+}

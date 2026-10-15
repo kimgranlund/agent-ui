@@ -1,0 +1,21 @@
+{
+  "attempt_id": "9b910c2498224f6f90dc4b19c6f29b91",
+  "name": "planner-L3-2",
+  "role": "planner",
+  "level": "L3",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "opus",
+  "effort": "xhigh",
+  "routing_reason": "planner L3: plan reviewer replan verdict (criteria use a variable worktree path the stray-worktree hook denies)",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T06:22:11.356309+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/gap-dev-proxy-abort",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/gap-dev-proxy-abort/.sdlc/dev-proxy-abort/handoff.md",
+  "owner_pid": 33428,
+  "handoff_sha256": "d2040932d3f8916a6535fad6ab3df86f50248a5a03f315c42abe5c49f4bb805b",
+  "process_pid": 33468,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T06:35:59.478347+00:00"
+}

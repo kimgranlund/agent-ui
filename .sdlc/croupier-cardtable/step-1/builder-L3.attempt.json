@@ -1,0 +1,38 @@
+{
+  "attempt_id": "9245d26353444b76b9da10f2e81b73a6",
+  "name": "builder-L3",
+  "agent_name": "0073-s1-builder-L3",
+  "role": "builder",
+  "level": "L3",
+  "backend": "claude",
+  "transport": "subagent",
+  "model": "opus",
+  "effort": "high",
+  "routing_reason": "T-0073 step 1 CardTable type, factory, hand-check, seeds, L3 per plan",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-12T19:06:01.002547+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-p1",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-p1/.sdlc/croupier-cardtable/step-1/handoff.md",
+  "parent_pid": 3025,
+  "parent_pid_source": "claude",
+  "handoff_sha256": "bc4cdfe97905cf292d6451bbe468f1cce67ddd22943b98c8c600512a96a727d3",
+  "worktrees_before": [
+    "/Users/kimgranlund/Projects/nonoun/agent-ui",
+    "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-p1",
+    "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-p2",
+    "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-r1",
+    "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-s1"
+  ],
+  "branches_before": [
+    "feat/croupier-cardtable",
+    "feat/default-widget-rows",
+    "feat/quizmaster-questioncard",
+    "feat/shopkeeper-preset",
+    "main"
+  ],
+  "exit_code": 0,
+  "finished_at": "2026-10-12T19:15:31.985283+00:00",
+  "result_sha256": "16660f1601172d74a592091338d3df074792ff994138447594426aa4f3e9b7a7",
+  "agent_id": "a0073-s1-builder-L3-7353b58208fb5596"
+}

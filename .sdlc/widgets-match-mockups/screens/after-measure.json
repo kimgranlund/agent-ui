@@ -1,0 +1,209 @@
+{
+  "real": {
+    "buttons": [
+      {
+        "text": "Book",
+        "w": 74.9,
+        "h": 36,
+        "font": "16px",
+        "weight": "400"
+      },
+      {
+        "text": "Book",
+        "w": 74.9,
+        "h": 36,
+        "font": "16px",
+        "weight": "400"
+      },
+      {
+        "text": "Book",
+        "w": 74.9,
+        "h": 36,
+        "font": "16px",
+        "weight": "400"
+      },
+      {
+        "text": "Book",
+        "w": 74.9,
+        "h": 36,
+        "font": "16px",
+        "weight": "400"
+      },
+      {
+        "text": "Book",
+        "w": 74.9,
+        "h": 36,
+        "font": "16px",
+        "weight": "400"
+      },
+      {
+        "text": "Add to cart",
+        "w": 118.5,
+        "h": 36,
+        "font": "16px",
+        "weight": "400"
+      },
+      {
+        "text": "Selected",
+        "w": 101.8,
+        "h": 36,
+        "font": "16px",
+        "weight": "400"
+      },
+      {
+        "text": "Unavailable",
+        "w": 121.3,
+        "h": 36,
+        "font": "16px",
+        "weight": "400"
+      },
+      {
+        "text": "Hit",
+        "w": 58.7,
+        "h": 36,
+        "font": "16px",
+        "weight": "400"
+      },
+      {
+        "text": "Stand",
+        "w": 80.4,
+        "h": 36,
+        "font": "16px",
+        "weight": "400"
+      },
+      {
+        "text": "Double",
+        "w": 89.6,
+        "h": 36,
+        "font": "16px",
+        "weight": "400"
+      },
+      {
+        "text": "Hit",
+        "w": 57.3,
+        "h": 36,
+        "font": "16px",
+        "weight": "400"
+      },
+      {
+        "text": "Stand",
+        "w": 77,
+        "h": 36,
+        "font": "16px",
+        "weight": "400"
+      },
+      {
+        "text": "Double",
+        "w": 85.4,
+        "h": 36,
+        "font": "16px",
+        "weight": "400"
+      },
+      {
+        "text": "Check answer",
+        "w": 140,
+        "h": 36,
+        "font": "16px",
+        "weight": "400"
+      },
+      {
+        "text": "Check answer",
+        "w": 131.8,
+        "h": 36,
+        "font": "16px",
+        "weight": "400"
+      },
+      {
+        "text": "Check answer",
+        "w": 140,
+        "h": 36,
+        "font": "16px",
+        "weight": "400"
+      }
+    ],
+    "cells": [
+      {
+        "text": "C-",
+        "w": 46,
+        "h": 46,
+        "font": "16px",
+        "weight": "700"
+      },
+      {
+        "text": "",
+        "w": 46,
+        "h": 46,
+        "font": "16px",
+        "weight": "700"
+      }
+    ],
+    "stars": [
+      "★★★★★4.8 out of 5",
+      "★★★★☆4.2 out of 5(318)",
+      "★★★☆☆3.5 out of 5"
+    ],
+    "oldPrice": [
+      "was $120"
+    ],
+    "states": [
+      {
+        "title": "Harbour View Suite, king bed",
+        "selected": false,
+        "disabled": false,
+        "outline": "3px none",
+        "actionDisabled": false
+      },
+      {
+        "title": "Merino travel sweater, charcoal, relaxed fit with a long title that clamps at two lines",
+        "selected": false,
+        "disabled": false,
+        "outline": "3px none",
+        "actionDisabled": false
+      },
+      {
+        "title": "Bronze astrolabe, 14th century",
+        "selected": false,
+        "disabled": false,
+        "outline": "3px none",
+        "actionDisabled": null
+      },
+      {
+        "title": "Garden Room, twin beds",
+        "selected": true,
+        "disabled": false,
+        "outline": "2px solid",
+        "actionDisabled": false
+      },
+      {
+        "title": "Penthouse, two bedrooms",
+        "selected": false,
+        "disabled": true,
+        "outline": "3px none",
+        "actionDisabled": true
+      }
+    ],
+    "cards": [
+      {
+        "text": "9♣9♣♣♣♣♣♣♣♣♣♣",
+        "w": 75,
+        "h": 116.7,
+        "font": "15px",
+        "weight": "400"
+      }
+    ],
+    "badges": [
+      {
+        "text": "Your turn",
+        "bg": "oklch(0.6039 0.1033 151.92 / 0.2)"
+      },
+      {
+        "text": "Your turn",
+        "bg": "oklch(0.6039 0.1033 151.92 / 0.2)"
+      }
+    ],
+    "totals": [
+      "showing 9",
+      "Total 17"
+    ]
+  }
+}

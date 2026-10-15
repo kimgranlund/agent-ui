@@ -1,0 +1,45 @@
+{
+ "navPane": [
+  "div[pane].|w 252",
+  "ui-nav-rail.|w 252"
+ ],
+ "tabs:agent-admin-app": [
+  "Agent",
+  "Capabilities",
+  "Surface"
+ ],
+ "tabs:agent-admin": [
+  "",
+  "",
+  ""
+ ],
+ "align:select-demo": {
+  "triggerTextLeft": 305,
+  "editorContentLeft": null,
+  "optionTextLeft": [
+   305,
+   305,
+   305
+  ],
+  "hostLeft": 294,
+  "visibleOptions": 3
+ },
+ "align:combo-box-demo": {
+  "triggerTextLeft": null,
+  "editorContentLeft": 304,
+  "optionTextLeft": [],
+  "hostLeft": 294,
+  "visibleOptions": 0
+ },
+ "align:multi-select-demo": {
+  "triggerTextLeft": 321,
+  "editorContentLeft": null,
+  "optionTextLeft": [
+   321,
+   321,
+   321
+  ],
+  "hostLeft": 294,
+  "visibleOptions": 3
+ }
+}

@@ -1,0 +1,16 @@
+{
+  "subagent_type": "sdlc-lite:solo-L2",
+  "name": "solo-L2-default-lazy-slices",
+  "description": "solo L2: default-lazy-slices",
+  "model": "sonnet",
+  "effort": "xhigh",
+  "prompt": "Handoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-optc/.sdlc/default-lazy-slices/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-optc/.sdlc/default-lazy-slices\nImplement per .sdlc/default-lazy-slices/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L2",
+  "tier": "L2",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-optc/.sdlc/default-lazy-slices/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-optc/.sdlc/default-lazy-slices",
+  "attempt_id": "b8a362bfe4814766af37da573ced5d7d",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.21.2/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-optc/.sdlc/default-lazy-slices/handoff.md"
+}

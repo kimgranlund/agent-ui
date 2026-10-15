@@ -2,7 +2,7 @@
 id: T-0185
 title: "Agent settings driven by a per-model capability table (effort, thinking, display, max tokens, cache TTL, server tools); drop dead temperature"
 type: feature         # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0172]    # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -46,3 +46,9 @@ verifier: L3
 - `npm run e2e:admin` exits 0.
 - Opus 5.5 is in the agent-admin picker roster, included and not the default, and the preset check bites on a seeded bad config: both covered by the agent-admin and site spans above.
 - Moved to a follow-up ticket by the conductor (2026-10-14): the composer split (3b), server tools in requests, the mid-conversation `output_config` beta header and the Model section screenshot. Live probes are the conductor's.
+
+## Outcome
+
+2026-10-14 · lane: full L2 · verdict: closed by reason (Merged in #1990; verifier L3 pass in wave-mc; live probes Opus 5.5 and Haiku 5.5 16/16) · verifier: none · base: none
+- Changed: Model settings come from a per-model capability table; temperature gone; Opus 5.5 in the picker
+- Commits: none

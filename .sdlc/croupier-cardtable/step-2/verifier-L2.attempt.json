@@ -1,0 +1,38 @@
+{
+  "attempt_id": "565f7816cd5f45edbcc2008eb999fd98",
+  "name": "verifier-L2",
+  "agent_name": "0073-s2-verifier-L2",
+  "role": "verifier",
+  "level": "L2",
+  "backend": "claude",
+  "transport": "subagent",
+  "model": "sonnet",
+  "effort": "high",
+  "routing_reason": "T-0073 single independent verifier over the whole ticket diff",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-12T19:28:45.582175+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-p1",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-p1/.sdlc/croupier-cardtable/step-2/handoff.md",
+  "parent_pid": 3025,
+  "parent_pid_source": "claude",
+  "handoff_sha256": "0a1c291ad6ba65cd1870d5bf509301d968038dbc8bd8befcf06c988f39c422db",
+  "worktrees_before": [
+    "/Users/kimgranlund/Projects/nonoun/agent-ui",
+    "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-p1",
+    "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-p2",
+    "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-r1",
+    "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-s1"
+  ],
+  "branches_before": [
+    "feat/croupier-cardtable",
+    "feat/default-widget-rows",
+    "feat/quizmaster-questioncard",
+    "feat/shopkeeper-preset",
+    "main"
+  ],
+  "exit_code": 0,
+  "finished_at": "2026-10-12T19:38:23.526773+00:00",
+  "result_sha256": "83ca33e4721ee54b365adff2d2fb10eefaf8d7f221380765d76e7f24eb8adc2a",
+  "agent_id": "a0073-s2-verifier-L2-89bd7defbb8ed2c8"
+}

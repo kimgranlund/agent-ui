@@ -1,0 +1,9 @@
+K6 bound 46430 (42,209 * 1.1). Default agent-ui + tool today: 45454 (976 spare)
+
+Synthetic default-catalog row cost (inventory line + selection clause), chars:
+  ResultCard         row  124 + clause 162 =  286 -> K6 45740
+  ContrastPair       row   94 + clause  97 =  191 -> K6 45645
+  AvailabilityPicker row   87 + clause 118 =  205 -> K6 45659
+  StatGroup          row   49 + clause  86 =  135 -> K6 45589
+
+Radio.disabled wire prop: +19

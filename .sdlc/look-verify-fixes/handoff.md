@@ -2,7 +2,7 @@
 id: T-0133
 title: "Look check fixes: sm avatar initials under 9px, badge and icon demos overflow at 400px, doubled search icon"
 type: bug             # feature | bug | chore | spike | idea
-status: ready
+status: done
 size: L2
 priority: P1
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -23,3 +23,7 @@ The batched look verifier (T-0132, .sdlc/foundations-look-verify/verifier-L2.md)
 - `npx vitest run packages/agent-ui/components/src/controls/avatar packages/agent-ui/components/src/controls/text-field site/pages site/lib` exits 0.
 - `node scripts/generate-agent-assets.mjs --check` exits 0.
 - Before and after screenshots of avatar-demo, badge-demo, icon-demo and text-field-demo at 400 and 1000 sit in `.sdlc/look-verify-fixes/before` and `.sdlc/look-verify-fixes/after`; 1000 is unchanged for badge-demo and icon-demo.
+
+## Closed
+
+2026-10-13: merged as #1950

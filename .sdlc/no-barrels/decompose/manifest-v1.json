@@ -1,0 +1,551 @@
+{
+  "domain": "technical-architecture",
+  "plan": true,
+  "nodes": [
+    {
+      "id": "sys",
+      "label": "agent-ui without barrels",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "comp",
+      "label": "components package",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "comp-descriptor",
+      "label": "descriptor/: `uses` grammar + validation + registry/all generator module",
+      "leaf": true,
+      "accept": "`npm test -- packages/agent-ui/components/src/descriptor` exits 0 with a BAD_USES negative control; `generateControlsRegistry()` is one exported function reused by the CLI and the drift gate"
+    },
+    {
+      "id": "comp-folders",
+      "label": "controls/{name}/ (87 folders): descriptor `uses:` + {name}.css `@import` prologue, codemod-written",
+      "leaf": true,
+      "accept": "codemod `node scripts/codemod-uses.mjs` is idempotent (second run = no diff); `{name}.ts` files unchanged (git diff --stat shows only *.md and *.css)"
+    },
+    {
+      "id": "comp-shared-css",
+      "label": "src/shared-styles.css: the once-linked seam sheet (_surface/container, container-box, _chart/chart-axis)",
+      "leaf": true,
+      "accept": "exported as `./shared-styles.css`, relative @imports only; `all.gen.css` imports it first; no control sheet @imports a `_`-folder sheet (gate)"
+    },
+    {
+      "id": "comp-registry",
+      "label": "src/controls/registry.gen.ts: tag -> { load, css, uses } generated from descriptors",
+      "leaf": true,
+      "accept": "regenerate-and-compare drift gate green; `npm run size` registry row <= 2 KB gz eager (absolute, type-only + thunks + URLs)"
+    },
+    {
+      "id": "comp-all",
+      "label": "src/all.gen.ts + src/all.gen.css: the demo-only `all` entry (./all, ./all.css)",
+      "leaf": true,
+      "accept": "crawl gate: neither `.` nor any `./controls/*` reaches all.gen.ts; trip-wire: no non-test file under packages/*/src imports `@agent-ui/components/all`; all.gen.css @import set == fleet (the C2 bijection, retargeted)"
+    },
+    {
+      "id": "comp-loader",
+      "label": "src/controls/loader.ts: ensureControls(tags, {css}) over the registry: sync fast path, define + link css only for tags it defined, resolve on load|error",
+      "leaf": true,
+      "accept": "browser test: all tags already defined => returns a resolved promise and links nothing; ensureControls(['ui-table']) on a bare page defines ui-table + its uses closure and links table.css once (second call links nothing); a stylesheet error warns and resolves; a missing tag rejects naming it; `css: 'host'` never touches document.head"
+    },
+    {
+      "id": "comp-gates",
+      "label": "gates: uses-driftwire, css-uses, foreign-:where, css-order-shuffle (browser), exports-drift, all-purity",
+      "leaf": true,
+      "accept": "each gate ships a negative control that reds it (checks-that-bite); `npm test` exits 0"
+    },
+    {
+      "id": "comp-pkg",
+      "label": "components/package.json: generator-written `./controls/{name}` + `./controls/{name}.css` entries, ./registry, ./all, ./all.css, ./shared-styles.css, `sideEffects`",
+      "leaf": true,
+      "accept": "`sideEffects` == [\"./src/controls/**\", \"./src/all.gen.ts\", \"./src/**/*.css\"]; exports drift gate re-derives the controls block byte-identically; `./components` and `./component-styles.css` absent at the final slice"
+    },
+    {
+      "id": "a2ui",
+      "label": "a2ui package",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "a2ui-entry",
+      "label": "catalog/types.ts + registry.ts: `controls?: ControlLoader` on CatalogEntry, 4th register() arg",
+      "leaf": true,
+      "accept": "register(catalog, factories, functions, controls) stores the loader; absent loader == today's byte-identical sync path (existing renderer tests unchanged, green)"
+    },
+    {
+      "id": "a2ui-catalogs",
+      "label": "catalog/default + a2ui-basic: factories drop the fleet import; index wires `@agent-ui/components/registry`",
+      "leaf": true,
+      "accept": "grep `components/components` under packages/agent-ui/a2ui/src (non-test) == 0; `npm run size` a2ui/app eager rows drop (app . eager measured 114640 -> ~67 KB gz in the stub experiment)"
+    },
+    {
+      "id": "a2ui-personas",
+      "label": "catalog/compose.ts + personas/*: PersonaCatalogPackage.controls merged by composePersonaCatalogs",
+      "leaf": true,
+      "accept": "croupier declares `controls: [playingCardControl]`; a fragment with a control outside components registers and renders in the browser test; manifests.ts stays components-free (GH #516 gate green)"
+    },
+    {
+      "id": "a2ui-renderer",
+      "label": "renderer: per-surface deferred apply until ensure(tags) resolves; CONTROL_LOAD error + placeholders",
+      "leaf": true,
+      "accept": "browser test: a surface using ui-table on a page that pre-defines nothing renders styled after apply; a loader rejection emits CONTROL_LOAD and the surface shows a2ui-placeholder nodes; message order per surface preserved"
+    },
+    {
+      "id": "scripts",
+      "label": "scripts/",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "scr-gen",
+      "label": "scripts/generate-controls.mjs: registry.gen.ts, all.gen.ts, all.gen.css, package.json controls block",
+      "leaf": true,
+      "accept": "two consecutive runs produce no diff; the drift gate imports the same function"
+    },
+    {
+      "id": "scr-size",
+      "label": "scripts/measure-size.mjs: family row -> ./all, registry absolute row, app row downward re-base, anti-vacuous CONTROL_ENTRIES count",
+      "leaf": true,
+      "accept": "`npm run size` exits 0 after the migration; CONTROL_ENTRIES.length > 80 asserted; app marginal re-based to measured + headroom (ADR-0197 cl.5 downward)"
+    },
+    {
+      "id": "scr-publish",
+      "label": "scripts/publish/publish-packages.mjs + verify-consumer-install.mjs: sideEffects ./src->./dist rewrite; per-control smoke recipe",
+      "leaf": true,
+      "accept": "publish-packages.test.mjs covers the sideEffects rewrite; the smoke main.js imports controls/button + controls/button.css and asserts --ui-button-* in built CSS"
+    },
+    {
+      "id": "scr-dogfood",
+      "label": "scripts/build-dogfood-assets.mjs: ENTRY_SOURCE -> all + all.css + shared-styles",
+      "leaf": true,
+      "accept": "dogfood-assets-freshness.test.ts green after regeneration; DOGFOOD_TAGS count unchanged"
+    },
+    {
+      "id": "consumers",
+      "label": "consumers",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "site",
+      "label": "site/pages/_page.ts cascade -> all; 38 type-only barrel imports -> per-control `import type`; 9 runtime imports",
+      "leaf": true,
+      "accept": "grep `components/components` under site/ == 0; `npm run check` exits 0; site browser shard green"
+    },
+    {
+      "id": "app",
+      "label": "app: 4 type-only barrel imports -> per-control paths; sideEffects declared",
+      "leaf": true,
+      "accept": "grep `components/components` under packages/agent-ui/app/src == 0; app layering test green"
+    },
+    {
+      "id": "tests",
+      "label": "80 test files + 92 component-styles.css browser tests -> ./all + ./all.css (or per-control)",
+      "leaf": true,
+      "accept": "grep `components/components|component-styles.css` under packages/ site/ == 0; `npm run test:browser` exits 0"
+    },
+    {
+      "id": "configs",
+      "label": "vitest.config.ts aliases (lines 269-286), vite.config.ts comment, vitest.browser.config.ts",
+      "leaf": true,
+      "accept": "aliases point at all.gen.css / shared-styles.css; no alias names a deleted file"
+    },
+    {
+      "id": "other-pkgs",
+      "label": "shared, icons, a2a, router, code, data, devtools package.json: `sideEffects`",
+      "leaf": true,
+      "accept": "each package declares sideEffects (icons: [\"./src/phosphor/**\"]; css-bearing packages list \"./src/**/*.css\"); publish rewrite covers them"
+    },
+    {
+      "id": "retire",
+      "label": "retire controls/index.ts + component-styles.css + exports; rewrite barrels.test.ts, family-coherence C1/C2",
+      "leaf": true,
+      "accept": "files deleted; `npm run check && npm test && npm run size` exit 0; T4 gate now folders <-> registry.gen.ts <-> exports entries"
+    },
+    {
+      "id": "docs",
+      "label": "records",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "adr",
+      "label": "ADR-0233 (proposed): per-control entries + generated registry + demo-only all; supersedes ADR-0003's barrel clause; amends ADR-0080 cl.1-2 and ADR-0040's family row",
+      "leaf": true,
+      "accept": "status `proposed`, Ratified-by empty; names every repaired record; doc_lint green"
+    },
+    {
+      "id": "doc-repairs",
+      "label": "component-packaging.md, goals.md:192/442, component-build SKILL.md:36/81/115, component-packaging SKILL.md, release-facts.md:38, components/README.md, AGENTS.md entries",
+      "leaf": true,
+      "accept": "grep `controls/index.ts|component-styles.css|components/components` under .claude/docs/references .claude/skills README == 0 outside ADR history"
+    }
+  ],
+  "actions": [
+    {
+      "id": "a1",
+      "label": "register a control explicitly, one entry module per control, no family barrel"
+    },
+    {
+      "id": "a2",
+      "label": "declare what a control needs (uses) in its descriptor"
+    },
+    {
+      "id": "a3",
+      "label": "verify uses == the sibling controls reached by real imports (static + import())"
+    },
+    {
+      "id": "a4",
+      "label": "verify a control sheet @imports exactly its uses' sheets and never a seam"
+    },
+    {
+      "id": "a5",
+      "label": "expose per-control CSS as a package subpath"
+    },
+    {
+      "id": "a6",
+      "label": "keep a control's sheet self-contained for a static consumer"
+    },
+    {
+      "id": "a7",
+      "label": "link cross-family seams once, before any control sheet (the order guarantee)"
+    },
+    {
+      "id": "a8",
+      "label": "prove control sheets are order-independent"
+    },
+    {
+      "id": "a9",
+      "label": "generate the tag -> module/css/uses registry from descriptors"
+    },
+    {
+      "id": "a10",
+      "label": "provide one demo-only all entry, kept out of package code"
+    },
+    {
+      "id": "a11",
+      "label": "maintain package exports without hand-editing, drift-gated"
+    },
+    {
+      "id": "a12",
+      "label": "declare honest sideEffects so bundlers prune"
+    },
+    {
+      "id": "a13",
+      "label": "keep publish and the consumer-install smoke meaningful"
+    },
+    {
+      "id": "a14",
+      "label": "load only the controls a surface uses (JS + CSS), persona controls included"
+    },
+    {
+      "id": "a15",
+      "label": "render a surface whose controls are not yet defined without a new upgrade path"
+    },
+    {
+      "id": "a16",
+      "label": "let a catalog entry carry its control loader"
+    },
+    {
+      "id": "a17",
+      "label": "let a persona fragment declare its own controls"
+    },
+    {
+      "id": "a18",
+      "label": "stop eager fleet imports in catalog factory modules"
+    },
+    {
+      "id": "a19",
+      "label": "move the docs site onto all + per-control types"
+    },
+    {
+      "id": "a20",
+      "label": "move app off the family barrel"
+    },
+    {
+      "id": "a21",
+      "label": "move tests off both barrels"
+    },
+    {
+      "id": "a22",
+      "label": "retarget test/build config aliases"
+    },
+    {
+      "id": "a23",
+      "label": "keep the size gate honest: family row, registry row, app re-base, anti-vacuous"
+    },
+    {
+      "id": "a24",
+      "label": "rebuild the dogfood asset pair from the new entry"
+    },
+    {
+      "id": "a25",
+      "label": "retire both barrels and their gates"
+    },
+    {
+      "id": "a26",
+      "label": "ratify by a proposed ADR and repair every stale record"
+    },
+    {
+      "id": "a27",
+      "label": "touch 87 folders mechanically, idempotently, gate-proven"
+    },
+    {
+      "id": "a28",
+      "label": "measure bundle-size effects against npm run size"
+    },
+    {
+      "id": "a29",
+      "label": "validate uses entries in the descriptor grammar"
+    },
+    {
+      "id": "a30",
+      "label": "declare sideEffects in the other eight packages"
+    }
+  ],
+  "hosts": [
+    {
+      "action": "a1",
+      "node": "comp-pkg"
+    },
+    {
+      "action": "a1",
+      "node": "comp-folders"
+    },
+    {
+      "action": "a2",
+      "node": "comp-folders"
+    },
+    {
+      "action": "a29",
+      "node": "comp-descriptor"
+    },
+    {
+      "action": "a3",
+      "node": "comp-gates"
+    },
+    {
+      "action": "a4",
+      "node": "comp-gates"
+    },
+    {
+      "action": "a5",
+      "node": "comp-pkg"
+    },
+    {
+      "action": "a6",
+      "node": "comp-folders"
+    },
+    {
+      "action": "a7",
+      "node": "comp-shared-css"
+    },
+    {
+      "action": "a8",
+      "node": "comp-gates"
+    },
+    {
+      "action": "a9",
+      "node": "comp-registry"
+    },
+    {
+      "action": "a9",
+      "node": "comp-descriptor"
+    },
+    {
+      "action": "a9",
+      "node": "scr-gen"
+    },
+    {
+      "action": "a10",
+      "node": "comp-all"
+    },
+    {
+      "action": "a11",
+      "node": "scr-gen"
+    },
+    {
+      "action": "a11",
+      "node": "comp-gates"
+    },
+    {
+      "action": "a12",
+      "node": "comp-pkg"
+    },
+    {
+      "action": "a30",
+      "node": "other-pkgs"
+    },
+    {
+      "action": "a13",
+      "node": "scr-publish"
+    },
+    {
+      "action": "a14",
+      "node": "comp-loader"
+    },
+    {
+      "action": "a15",
+      "node": "a2ui-renderer"
+    },
+    {
+      "action": "a16",
+      "node": "a2ui-entry"
+    },
+    {
+      "action": "a16",
+      "node": "a2ui-catalogs"
+    },
+    {
+      "action": "a17",
+      "node": "a2ui-personas"
+    },
+    {
+      "action": "a18",
+      "node": "a2ui-catalogs"
+    },
+    {
+      "action": "a19",
+      "node": "site"
+    },
+    {
+      "action": "a20",
+      "node": "app"
+    },
+    {
+      "action": "a21",
+      "node": "tests"
+    },
+    {
+      "action": "a22",
+      "node": "configs"
+    },
+    {
+      "action": "a23",
+      "node": "scr-size"
+    },
+    {
+      "action": "a24",
+      "node": "scr-dogfood"
+    },
+    {
+      "action": "a25",
+      "node": "retire"
+    },
+    {
+      "action": "a26",
+      "node": "adr"
+    },
+    {
+      "action": "a26",
+      "node": "doc-repairs"
+    },
+    {
+      "action": "a27",
+      "node": "comp-folders"
+    },
+    {
+      "action": "a28",
+      "node": "scr-size"
+    }
+  ],
+  "edges": [
+    {
+      "from": "comp-descriptor",
+      "to": "comp-folders",
+      "why": "the codemod writes `uses:` in the grammar the validator accepts"
+    },
+    {
+      "from": "comp-folders",
+      "to": "comp-registry",
+      "why": "the generator reads `uses:` from every descriptor"
+    },
+    {
+      "from": "comp-registry",
+      "to": "scr-gen",
+      "why": "the CLI emits the registry/all/exports from the same generator function"
+    },
+    {
+      "from": "scr-gen",
+      "to": "comp-all",
+      "why": "all.gen.* are generator outputs"
+    },
+    {
+      "from": "scr-gen",
+      "to": "comp-pkg",
+      "why": "the controls block of exports is generator-written"
+    },
+    {
+      "from": "comp-registry",
+      "to": "comp-loader",
+      "why": "ensureControls reads the registry"
+    },
+    {
+      "from": "comp-loader",
+      "to": "a2ui-entry",
+      "why": "ControlLoader is the type the entry carries"
+    },
+    {
+      "from": "a2ui-entry",
+      "to": "a2ui-renderer",
+      "why": "the renderer reads entry.controls"
+    },
+    {
+      "from": "a2ui-entry",
+      "to": "a2ui-catalogs",
+      "why": "default/a2ui-basic pass the loader at register()"
+    },
+    {
+      "from": "a2ui-entry",
+      "to": "a2ui-personas",
+      "why": "compose merges loaders onto the derived entry"
+    },
+    {
+      "from": "comp-pkg",
+      "to": "site",
+      "why": "per-control css subpaths and ./all must resolve before consumers move"
+    },
+    {
+      "from": "comp-pkg",
+      "to": "tests",
+      "why": "same"
+    },
+    {
+      "from": "comp-pkg",
+      "to": "scr-publish",
+      "why": "sideEffects + new entries are what the rewrite and smoke exercise"
+    },
+    {
+      "from": "a2ui-catalogs",
+      "to": "retire",
+      "why": "the last runtime importer of the family barrel"
+    },
+    {
+      "from": "site",
+      "to": "retire",
+      "why": "last site importers"
+    },
+    {
+      "from": "tests",
+      "to": "retire",
+      "why": "last test importers"
+    },
+    {
+      "from": "scr-dogfood",
+      "to": "retire",
+      "why": "the dogfood entry names the barrel until retargeted"
+    },
+    {
+      "from": "retire",
+      "to": "scr-size",
+      "why": "the family row retargets once controls/index.ts is gone"
+    },
+    {
+      "from": "retire",
+      "to": "doc-repairs",
+      "why": "records describe the final shape"
+    }
+  ]
+}

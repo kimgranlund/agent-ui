@@ -1,0 +1,21 @@
+{
+  "attempt_id": "7cd35f6fd8f84087bf53e421ef931cc5",
+  "name": "planner-L2",
+  "role": "planner",
+  "level": "L2",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "opus",
+  "effort": "medium",
+  "routing_reason": "planner L2: runtime timeout semantics on the provider stream with fake-timer tests",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T06:54:51.760089+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/gap-sse-deadline",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/gap-sse-deadline/.sdlc/sse-deadline/handoff.md",
+  "owner_pid": 96989,
+  "handoff_sha256": "30974e694381ed0352d2971cb22647d18c144e80f0ce2b42fa49eaa83c2c1544",
+  "process_pid": 97060,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T06:57:06.952851+00:00"
+}

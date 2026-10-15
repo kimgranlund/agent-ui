@@ -1,0 +1,718 @@
+{
+ "actions/button-demo/400/light": {
+  "url": "http://localhost:5317/button-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "actions/button-demo/400/dark": {
+  "url": "http://localhost:5317/button-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "actions/button-demo/1000/light": {
+  "url": "http://localhost:5317/button-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "actions/button-demo/1000/dark": {
+  "url": "http://localhost:5317/button-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "actions/toggle-demo/400/light": {
+  "url": "http://localhost:5317/toggle-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "actions/toggle-demo/400/dark": {
+  "url": "http://localhost:5317/toggle-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "actions/toggle-demo/1000/light": {
+  "url": "http://localhost:5317/toggle-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "actions/toggle-demo/1000/dark": {
+  "url": "http://localhost:5317/toggle-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "actions/segmented-control-demo/400/light": {
+  "url": "http://localhost:5317/segmented-control-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "actions/segmented-control-demo/400/dark": {
+  "url": "http://localhost:5317/segmented-control-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "actions/segmented-control-demo/1000/light": {
+  "url": "http://localhost:5317/segmented-control-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "actions/segmented-control-demo/1000/dark": {
+  "url": "http://localhost:5317/segmented-control-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "entry/text-field-demo/400/light": {
+  "url": "http://localhost:5317/text-field-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "entry/text-field-demo/400/dark": {
+  "url": "http://localhost:5317/text-field-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "entry/text-field-demo/1000/light": {
+  "url": "http://localhost:5317/text-field-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "entry/text-field-demo/1000/dark": {
+  "url": "http://localhost:5317/text-field-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "entry/textarea-demo/400/light": {
+  "url": "http://localhost:5317/textarea-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "entry/textarea-demo/400/dark": {
+  "url": "http://localhost:5317/textarea-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "entry/textarea-demo/1000/light": {
+  "url": "http://localhost:5317/textarea-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "entry/textarea-demo/1000/dark": {
+  "url": "http://localhost:5317/textarea-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "entry/select-demo/400/light": {
+  "url": "http://localhost:5317/select-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "entry/select-demo/400/dark": {
+  "url": "http://localhost:5317/select-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "entry/select-demo/1000/light": {
+  "url": "http://localhost:5317/select-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "entry/select-demo/1000/dark": {
+  "url": "http://localhost:5317/select-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "entry/combo-box-demo/400/light": {
+  "url": "http://localhost:5317/combo-box-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "entry/combo-box-demo/400/dark": {
+  "url": "http://localhost:5317/combo-box-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "entry/combo-box-demo/1000/light": {
+  "url": "http://localhost:5317/combo-box-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "entry/combo-box-demo/1000/dark": {
+  "url": "http://localhost:5317/combo-box-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "entry/multi-select-demo/400/light": {
+  "url": "http://localhost:5317/multi-select-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "entry/multi-select-demo/400/dark": {
+  "url": "http://localhost:5317/multi-select-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "entry/multi-select-demo/1000/light": {
+  "url": "http://localhost:5317/multi-select-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "entry/multi-select-demo/1000/dark": {
+  "url": "http://localhost:5317/multi-select-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "entry/otp-field-demo/400/light": {
+  "url": "http://localhost:5317/otp-field-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "entry/otp-field-demo/400/dark": {
+  "url": "http://localhost:5317/otp-field-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "entry/otp-field-demo/1000/light": {
+  "url": "http://localhost:5317/otp-field-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "entry/otp-field-demo/1000/dark": {
+  "url": "http://localhost:5317/otp-field-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "indicators/checkbox-demo/400/light": {
+  "url": "http://localhost:5317/checkbox-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "indicators/checkbox-demo/400/dark": {
+  "url": "http://localhost:5317/checkbox-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "indicators/checkbox-demo/1000/light": {
+  "url": "http://localhost:5317/checkbox-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "indicators/checkbox-demo/1000/dark": {
+  "url": "http://localhost:5317/checkbox-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "indicators/radio-demo/400/light": {
+  "url": "http://localhost:5317/radio-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "indicators/radio-demo/400/dark": {
+  "url": "http://localhost:5317/radio-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "indicators/radio-demo/1000/light": {
+  "url": "http://localhost:5317/radio-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "indicators/radio-demo/1000/dark": {
+  "url": "http://localhost:5317/radio-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "indicators/switch-demo/400/light": {
+  "url": "http://localhost:5317/switch-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "indicators/switch-demo/400/dark": {
+  "url": "http://localhost:5317/switch-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "indicators/switch-demo/1000/light": {
+  "url": "http://localhost:5317/switch-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "indicators/switch-demo/1000/dark": {
+  "url": "http://localhost:5317/switch-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "indicators/slider-demo/400/light": {
+  "url": "http://localhost:5317/slider-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "indicators/slider-demo/400/dark": {
+  "url": "http://localhost:5317/slider-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "indicators/slider-demo/1000/light": {
+  "url": "http://localhost:5317/slider-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "indicators/slider-demo/1000/dark": {
+  "url": "http://localhost:5317/slider-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "atoms/badge-demo/400/light": {
+  "url": "http://localhost:5317/badge-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "atoms/badge-demo/400/dark": {
+  "url": "http://localhost:5317/badge-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "atoms/badge-demo/1000/light": {
+  "url": "http://localhost:5317/badge-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "atoms/badge-demo/1000/dark": {
+  "url": "http://localhost:5317/badge-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "atoms/avatar-demo/400/light": {
+  "url": "http://localhost:5317/avatar-demo.html",
+  "hOverflow": 0,
+  "tiny": [
+   "span.|8.4px|IS",
+   "span.|8.4px|TH"
+  ],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "atoms/avatar-demo/400/dark": {
+  "url": "http://localhost:5317/avatar-demo.html",
+  "hOverflow": 0,
+  "tiny": [
+   "span.|8.4px|IS",
+   "span.|8.4px|TH"
+  ],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "atoms/avatar-demo/1000/light": {
+  "url": "http://localhost:5317/avatar-demo.html",
+  "hOverflow": 0,
+  "tiny": [
+   "span.|8.4px|IS",
+   "span.|8.4px|TH"
+  ],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "atoms/avatar-demo/1000/dark": {
+  "url": "http://localhost:5317/avatar-demo.html",
+  "hOverflow": 0,
+  "tiny": [
+   "span.|8.4px|IS",
+   "span.|8.4px|TH"
+  ],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "atoms/text-demo/400/light": {
+  "url": "http://localhost:5317/text-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "atoms/text-demo/400/dark": {
+  "url": "http://localhost:5317/text-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "atoms/text-demo/1000/light": {
+  "url": "http://localhost:5317/text-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "atoms/text-demo/1000/dark": {
+  "url": "http://localhost:5317/text-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "atoms/glyph-doc/400/light": {
+  "url": "http://localhost:5317/glyph-doc.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "atoms/glyph-doc/400/dark": {
+  "url": "http://localhost:5317/glyph-doc.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "atoms/glyph-doc/1000/light": {
+  "url": "http://localhost:5317/glyph-doc.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "atoms/glyph-doc/1000/dark": {
+  "url": "http://localhost:5317/glyph-doc.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "atoms/icon-demo/400/light": {
+  "url": "http://localhost:5317/icon-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "atoms/icon-demo/400/dark": {
+  "url": "http://localhost:5317/icon-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "atoms/icon-demo/1000/light": {
+  "url": "http://localhost:5317/icon-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "atoms/icon-demo/1000/dark": {
+  "url": "http://localhost:5317/icon-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "navigation/tabs-demo/400/light": {
+  "url": "http://localhost:5317/tabs-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "navigation/tabs-demo/400/dark": {
+  "url": "http://localhost:5317/tabs-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "navigation/tabs-demo/1000/light": {
+  "url": "http://localhost:5317/tabs-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "navigation/tabs-demo/1000/dark": {
+  "url": "http://localhost:5317/tabs-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "navigation/pagination-demo/400/light": {
+  "url": "http://localhost:5317/pagination-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "navigation/pagination-demo/400/dark": {
+  "url": "http://localhost:5317/pagination-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "navigation/pagination-demo/1000/light": {
+  "url": "http://localhost:5317/pagination-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "navigation/pagination-demo/1000/dark": {
+  "url": "http://localhost:5317/pagination-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "navigation/breadcrumb-demo/400/light": {
+  "url": "http://localhost:5317/breadcrumb-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "navigation/breadcrumb-demo/400/dark": {
+  "url": "http://localhost:5317/breadcrumb-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "navigation/breadcrumb-demo/1000/light": {
+  "url": "http://localhost:5317/breadcrumb-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "navigation/breadcrumb-demo/1000/dark": {
+  "url": "http://localhost:5317/breadcrumb-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "navigation/menu-demo/400/light": {
+  "url": "http://localhost:5317/menu-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "navigation/menu-demo/400/dark": {
+  "url": "http://localhost:5317/menu-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "navigation/menu-demo/1000/light": {
+  "url": "http://localhost:5317/menu-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ },
+ "navigation/menu-demo/1000/dark": {
+  "url": "http://localhost:5317/menu-demo.html",
+  "hOverflow": 0,
+  "tiny": [],
+  "clipped": [],
+  "offRight": [],
+  "errs": []
+ }
+}

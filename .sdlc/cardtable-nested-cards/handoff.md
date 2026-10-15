@@ -2,7 +2,7 @@
 id: T-0204
 title: "CardTable surface nests bordered cards: doubled borders and repeat-rounded children"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -43,3 +43,9 @@ Kim's screenshots: before-kim-1.png (whole table), before-kim-2.png (the doubled
 - `npm run check` exits 0.
 - Evidence beside this handoff: before-probe-dark.png and after-probe-dark.png (chat-probe replay croupier-haiku-hit, dark, the surface host), before-working-300.png (the working glow at 22px around the 18px card).
 - Right-edge overflow did not reproduce (bare host at 200 to 480px and the real page at 640 and 1440px: every CardTable part ends at least 19px inside the host); not changed.
+
+## Outcome
+
+2026-10-14 · lane: solo L2 · verdict: closed by reason (Merged in #1991; verifier L2 pass in wave-nc) · verifier: none · base: none
+- Changed: A card-rooted surface takes the card's corner; CardTable felts use the inner radius
+- Commits: none

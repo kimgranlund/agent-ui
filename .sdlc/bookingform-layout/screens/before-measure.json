@@ -1,0 +1,422 @@
+{
+  "concierge-stay-details-400": {
+    "calendarsInline": 2,
+    "fieldLabels": [],
+    "fieldRects": [
+      {
+        "path": "guestName",
+        "x": 32,
+        "y": 113,
+        "w": 336,
+        "h": 28
+      },
+      {
+        "path": "guests",
+        "x": 32,
+        "y": 141,
+        "w": 336,
+        "h": 28
+      },
+      {
+        "path": "checkIn",
+        "x": 32,
+        "y": 169,
+        "w": 336,
+        "h": 282
+      },
+      {
+        "path": "checkOut",
+        "x": 32,
+        "y": 451,
+        "w": 336,
+        "h": 282
+      }
+    ],
+    "form": {
+      "x": 32,
+      "y": 89,
+      "w": 336,
+      "h": 671
+    },
+    "card": {
+      "x": 32,
+      "y": 772,
+      "w": 336,
+      "h": 179
+    },
+    "rows": [
+      {
+        "x": 45,
+        "y": 811,
+        "w": 310,
+        "h": 33,
+        "text": "GuestAda Lovelace"
+      },
+      {
+        "x": 45,
+        "y": 844,
+        "w": 310,
+        "h": 33,
+        "text": "Guests2"
+      },
+      {
+        "x": 45,
+        "y": 878,
+        "w": 310,
+        "h": 33,
+        "text": "Check-in2026-11-14"
+      },
+      {
+        "x": 45,
+        "y": 911,
+        "w": 310,
+        "h": 33,
+        "text": "Check-out2026-11-17"
+      }
+    ],
+    "buttonH": [
+      28
+    ]
+  },
+  "concierge-booking-400": {
+    "calendarsInline": 1,
+    "fieldLabels": [],
+    "fieldRects": [
+      {
+        "path": "checkIn",
+        "x": 32,
+        "y": 198,
+        "w": 336,
+        "h": 282
+      },
+      {
+        "path": "roomType",
+        "x": 32,
+        "y": 479,
+        "w": 336,
+        "h": 43
+      },
+      {
+        "path": "breakfast",
+        "x": 32,
+        "y": 522,
+        "w": 336,
+        "h": 19
+      }
+    ],
+    "form": {
+      "x": 32,
+      "y": 174,
+      "w": 336,
+      "h": 395
+    },
+    "card": {
+      "x": 32,
+      "y": 581,
+      "w": 336,
+      "h": 146
+    },
+    "rows": [
+      {
+        "x": 45,
+        "y": 620,
+        "w": 310,
+        "h": 33,
+        "text": "Check-in2026-11-14"
+      },
+      {
+        "x": 45,
+        "y": 653,
+        "w": 310,
+        "h": 33,
+        "text": "Room typeking"
+      },
+      {
+        "x": 45,
+        "y": 686,
+        "w": 310,
+        "h": 33,
+        "text": "Breakfasttrue"
+      }
+    ],
+    "buttonH": [
+      28
+    ]
+  },
+  "basic-concierge-booking-400": {
+    "calendarsInline": 1,
+    "fieldLabels": [],
+    "fieldRects": [
+      {
+        "path": "checkIn",
+        "x": 32,
+        "y": 204,
+        "w": 336,
+        "h": 282
+      },
+      {
+        "path": "roomType",
+        "x": 32,
+        "y": 485,
+        "w": 336,
+        "h": 43
+      },
+      {
+        "path": "breakfast",
+        "x": 32,
+        "y": 528,
+        "w": 336,
+        "h": 19
+      }
+    ],
+    "form": {
+      "x": 32,
+      "y": 180,
+      "w": 336,
+      "h": 395
+    },
+    "card": {
+      "x": 32,
+      "y": 575,
+      "w": 336,
+      "h": 146
+    },
+    "rows": [
+      {
+        "x": 45,
+        "y": 614,
+        "w": 310,
+        "h": 33,
+        "text": "Check-in2026-11-14"
+      },
+      {
+        "x": 45,
+        "y": 647,
+        "w": 310,
+        "h": 33,
+        "text": "Room typetwin"
+      },
+      {
+        "x": 45,
+        "y": 680,
+        "w": 310,
+        "h": 33,
+        "text": "Breakfastfalse"
+      }
+    ],
+    "buttonH": [
+      28
+    ]
+  },
+  "errors-400": [],
+  "concierge-stay-details-1000": {
+    "calendarsInline": 2,
+    "fieldLabels": [],
+    "fieldRects": [
+      {
+        "path": "guestName",
+        "x": 260,
+        "y": 106,
+        "w": 480,
+        "h": 28
+      },
+      {
+        "path": "guests",
+        "x": 260,
+        "y": 134,
+        "w": 480,
+        "h": 28
+      },
+      {
+        "path": "checkIn",
+        "x": 260,
+        "y": 162,
+        "w": 480,
+        "h": 283
+      },
+      {
+        "path": "checkOut",
+        "x": 260,
+        "y": 445,
+        "w": 480,
+        "h": 283
+      }
+    ],
+    "form": {
+      "x": 260,
+      "y": 82,
+      "w": 480,
+      "h": 674
+    },
+    "card": {
+      "x": 260,
+      "y": 768,
+      "w": 480,
+      "h": 190
+    },
+    "rows": [
+      {
+        "x": 273,
+        "y": 807,
+        "w": 454,
+        "h": 36,
+        "text": "GuestAda Lovelace"
+      },
+      {
+        "x": 273,
+        "y": 843,
+        "w": 454,
+        "h": 36,
+        "text": "Guests2"
+      },
+      {
+        "x": 273,
+        "y": 879,
+        "w": 454,
+        "h": 36,
+        "text": "Check-in2026-11-14"
+      },
+      {
+        "x": 273,
+        "y": 915,
+        "w": 454,
+        "h": 36,
+        "text": "Check-out2026-11-17"
+      }
+    ],
+    "buttonH": [
+      28
+    ]
+  },
+  "concierge-booking-1000": {
+    "calendarsInline": 1,
+    "fieldLabels": [],
+    "fieldRects": [
+      {
+        "path": "checkIn",
+        "x": 260,
+        "y": 192,
+        "w": 480,
+        "h": 283
+      },
+      {
+        "path": "roomType",
+        "x": 260,
+        "y": 475,
+        "w": 480,
+        "h": 44
+      },
+      {
+        "path": "breakfast",
+        "x": 260,
+        "y": 519,
+        "w": 480,
+        "h": 20
+      }
+    ],
+    "form": {
+      "x": 260,
+      "y": 168,
+      "w": 480,
+      "h": 399
+    },
+    "card": {
+      "x": 260,
+      "y": 579,
+      "w": 480,
+      "h": 154
+    },
+    "rows": [
+      {
+        "x": 273,
+        "y": 618,
+        "w": 454,
+        "h": 36,
+        "text": "Check-in2026-11-14"
+      },
+      {
+        "x": 273,
+        "y": 653,
+        "w": 454,
+        "h": 36,
+        "text": "Room typeking"
+      },
+      {
+        "x": 273,
+        "y": 689,
+        "w": 454,
+        "h": 36,
+        "text": "Breakfasttrue"
+      }
+    ],
+    "buttonH": [
+      28
+    ]
+  },
+  "basic-concierge-booking-1000": {
+    "calendarsInline": 1,
+    "fieldLabels": [],
+    "fieldRects": [
+      {
+        "path": "checkIn",
+        "x": 260,
+        "y": 198,
+        "w": 480,
+        "h": 283
+      },
+      {
+        "path": "roomType",
+        "x": 260,
+        "y": 481,
+        "w": 480,
+        "h": 44
+      },
+      {
+        "path": "breakfast",
+        "x": 260,
+        "y": 525,
+        "w": 480,
+        "h": 20
+      }
+    ],
+    "form": {
+      "x": 260,
+      "y": 174,
+      "w": 480,
+      "h": 399
+    },
+    "card": {
+      "x": 260,
+      "y": 573,
+      "w": 480,
+      "h": 154
+    },
+    "rows": [
+      {
+        "x": 273,
+        "y": 612,
+        "w": 454,
+        "h": 36,
+        "text": "Check-in2026-11-14"
+      },
+      {
+        "x": 273,
+        "y": 647,
+        "w": 454,
+        "h": 36,
+        "text": "Room typetwin"
+      },
+      {
+        "x": 273,
+        "y": 683,
+        "w": 454,
+        "h": 36,
+        "text": "Breakfastfalse"
+      }
+    ],
+    "buttonH": [
+      28
+    ]
+  },
+  "errors-1000": []
+}

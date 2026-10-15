@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L2",
+  "name": "0086-solo-L2",
+  "description": "T-0086 solo L2 Rename the",
+  "model": "sonnet",
+  "effort": "high",
+  "prompt": "T-0086 Rename the A2UI catalog page's | solo L2\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-tr/.sdlc/tier-rename-compound/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-tr/.sdlc/tier-rename-compound\nImplement per .sdlc/tier-rename-compound/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L2",
+  "tier": "L2",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-tr/.sdlc/tier-rename-compound/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-tr/.sdlc/tier-rename-compound",
+  "attempt_id": "6cf07991a5204686ae276b2b63f2d2a0",
+  "base_sha": "69679a73594a2aae6c3a40dccc810470d7d65fc0",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.4/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-tr/.sdlc/tier-rename-compound/handoff.md"
+}

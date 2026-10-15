@@ -2,7 +2,7 @@
 id: T-0208
 title: "Composite steering as checks: generate 'use composite X' repair findings from selection.json, not prose"
 type: feature        # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -31,3 +31,9 @@ No em dashes. Never hand-edit generated files; rerun their scripts. Live spend o
 
 ## Round 2 evidence (2026-10-15)
 Live round 2 (`.sdlc/live-round-2/report.md` on main, #1998): Concierge used a composite on 1 of 24 turns, Lexicographer on 0 of 28, Admiral drew BoardGrid but never GameHud or ResultCard, on Haiku and Sonnet. The scenarios in `scripts/e2e-admin/probe/scenarios/{concierge,lexicographer,admiral}.ts` carry `--expect-turn` for the intended composite; the replays under `scripts/e2e-admin/probe/replays/` pin today's misses. A done T-0208 should flip those to the composite on a replay where the check now repairs the turn. Coordinate with T-0230 (hidden state in the data model), running in a parallel lane on fix/hidden-state-text-shape: do not edit the Lexicographer or Admiral data-model rules; only the composite moment checks.
+
+## Outcome
+
+2026-10-15 · lane: full L3 · verdict: closed by reason (Merged in #2002: composite moment checks generated from one table; live probe repaired Lexicographer and Admiral into BoardGrid and GameHud) · verifier: none · base: none
+- Changed: see commits
+- Commits: none
