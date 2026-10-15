@@ -5,7 +5,7 @@ import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, write
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { estimateSpend, parseCommands, roundStart, runCapped, runRound, traceSpend } from './run-capped.ts'
+import { describeRound, estimateSpend, listRound, parseCommands, roundStart, runCapped, runRound, traceSpend, writeRoundReadme } from './run-capped.ts'
 
 const line = (at, model, usage) => JSON.stringify({ at, model, usage })
 const SCRIPT = ['#!/usr/bin/env bash', '# header', '', ...[1, 2, 3, 4, 5].map((i) => `npm run chat:probe -- --agent croupier --say hi --out runs/r${i} --name r${i}`)].join('\n')
@@ -156,6 +156,71 @@ describe('run-capped', () => {
       }
       expect(() => runRound({ root, liveCommands: 'live.sh', commands: parseCommands(ROUND), cap: 100, since: SINCE, exec: crashing, commit: 'abc123', now })).toThrow('probe crashed')
       expect(JSON.parse(readFileSync(join(round, 'round.json'), 'utf8'))).toMatchObject({ stop: 'crash', totals: { runs: 1 } })
+    })
+  })
+
+  // T-0241 scope addition: the README names exactly the files in the folder, no more and no fewer.
+  describe('README', () => {
+    /** The paths a README claims: the Files bullets plus each Runs row's folder joined with its file cells. */
+    function claimed(readme) {
+      const paths = []
+      for (const l of readme.split('\n')) {
+        const bullet = /^- `([^`]+)`: /.exec(l)
+        if (bullet && !l.startsWith('- `report.json`') && !l.startsWith('- `fixture.json`') && !l.startsWith('- `turn-<n>.png`')) paths.push(bullet[1])
+        const row = /^\| `(runs\/[^`]+\/)` \|.*\| ([^|]*) \|$/.exec(l)
+        if (row) for (const m of row[2].matchAll(/`([^`]+)`/g)) paths.push(row[1] + m[1])
+      }
+      return paths.sort()
+    }
+
+    it('the archive README lists every file the archive wrote and none it did not', () => {
+      const root = mkdtempSync(join(tmpdir(), 'run-capped-readme-'))
+      mkdirSync(join(root, '.agent-traces'))
+      let tick = 0
+      const now = () => `2026-10-14T11:${String(tick++).padStart(2, '0')}:00.000Z`
+      const script = 'npm run chat:probe -- --agent croupier --model claude-haiku-5-5 --out .sdlc/rr/runs/croupier-deal-haiku-1 --name croupier-deal-haiku-1'
+      runRound({
+        root,
+        liveCommands: 'live.sh',
+        commands: parseCommands(script),
+        cap: 100,
+        since: '2026-10-14T11:00:00.000Z',
+        commit: 'abc123',
+        now,
+        exec: (cmd) => {
+          appendFileSync(join(root, '.agent-traces', '2026-10-14.jsonl'), line(now(), 'claude-haiku-5-5', { outputTokens: 10 }) + '\n')
+          const out = join(root, /--out (\S+)/.exec(cmd)[1])
+          mkdirSync(out, { recursive: true })
+          writeFileSync(join(out, 'report.json'), JSON.stringify({ verdict: 'pass', agent: 'croupier', model: 'claude-haiku-5-5' }))
+          writeFileSync(join(out, 'fixture.json'), '{}')
+          writeFileSync(join(out, 'turn-1.png'), '')
+          return 0
+        },
+      })
+      const dir = join(root, '.sdlc', 'rr')
+      const readme = readFileSync(join(dir, 'README.md'), 'utf8')
+      expect(listRound(dir)).toEqual(['.gitignore', 'README.md', 'ledger.jsonl', 'round.json', 'runs/croupier-deal-haiku-1/fixture.json', 'runs/croupier-deal-haiku-1/report.json', 'runs/croupier-deal-haiku-1/turn-1.png', 'traces/2026-10-14.jsonl'])
+      expect(claimed(readme)).toEqual(listRound(dir))
+      expect(readme).toContain('commit `abc123`')
+      expect(readme).toContain('--replay .sdlc/rr/runs/<name>/fixture.json')
+      expect(readme).not.toContain('Not described')
+    })
+
+    it('--describe on a backfilled folder lists exactly its contents and claims no absent file', () => {
+      const dir = join(mkdtempSync(join(tmpdir(), 'run-capped-describe-')), 'live-round-x')
+      mkdirSync(join(dir, 'traces'), { recursive: true })
+      mkdirSync(join(dir, 'runs', 'admiral-concede-sonnet-1'), { recursive: true })
+      writeFileSync(join(dir, 'traces', '2026-10-15.jsonl'), '{}\n')
+      writeFileSync(join(dir, 'traces', 'runner-ledger.log'), '[1/1] rc=0 $0.10 :: runs/admiral-concede-sonnet-1\n')
+      writeFileSync(join(dir, 'runs', 'admiral-concede-sonnet-1', 'report.json'), JSON.stringify({ verdict: 'fail', agent: 'admiral', model: 'claude-sonnet-5-5', at: '2026-10-15T01:00:00.000Z' }))
+      writeFileSync(join(dir, 'handoff.md'), '')
+      writeRoundReadme(dir)
+      const readme = readFileSync(join(dir, 'README.md'), 'utf8')
+      expect(claimed(readme)).toEqual(listRound(dir))
+      expect(claimed(readme)).toEqual(['README.md', 'handoff.md', 'runs/admiral-concede-sonnet-1/report.json', 'traces/2026-10-15.jsonl', 'traces/runner-ledger.log'])
+      expect(readme).toMatch(/hand-copied runner log|hand-copied by the conductor on 2026-10-15/)
+      expect(readme).not.toMatch(/`round\.json`:|`ledger\.jsonl`:|`live-commands\.sh`:|`report\.md`:/)
+      expect(describeRound(dir)).toBe(readme)
     })
   })
 })
