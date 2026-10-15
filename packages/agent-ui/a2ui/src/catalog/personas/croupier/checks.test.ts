@@ -515,6 +515,40 @@ describe('croupier bet controls: the CardTable owns the bet phase (T-0172)', () 
   })
 })
 
+// T-0233 (the recorded Haiku 5.5 repair round, 2026-10-15.jsonl:2): the bet answer resent the CardTable in phase playing
+// with `children: []`, so the player had no Hit or Stand. A playing table offers the player's moves.
+describe('croupier bet controls: a playing table offers the moves (T-0233)', () => {
+  const C = (rank: string, faceDown = false) => ({ rank, suit: 'hearts', ...(faceDown ? { faceDown } : {}) })
+  const table = (children: string[]) => ({ id: 'root', component: 'CardTable', phase: { path: '/phase' }, bet: { path: '/bet' }, bankroll: { path: '/bankroll' }, dealerHand: { path: '/dealerHand' }, playerHand: { path: '/playerHand' }, betAction: 'deal', children })
+  const payload = (components: Record<string, unknown>[], value: Record<string, unknown>): A2uiOutput => [
+    { version: 'v1.0', createSurface: { surfaceId: 'table-1', catalogId: 'agent-ui--croupier' } },
+    { version: 'v1.0', updateDataModel: { surfaceId: 'table-1', value: { bankroll: 900, bet: 100, dealerHand: [C('10'), C('6', true)], ...value } } },
+    { version: 'v1.0', updateComponents: { surfaceId: 'table-1', components } },
+  ] as A2uiOutput
+  const run = (output: A2uiOutput) => croupierBetControls.check({ surfaces: semanticSurfaceViews({ turns: [] }, output) })
+  const button = (id: string, label: string) => ({ id, component: 'Button', label, action: { action: id } })
+
+  it('the recorded repair (phase playing, children []) is MOVES_MISSING', () => {
+    const findings = run(payload([table([])], { phase: 'playing', playerHand: [C('9'), C('7')] }))
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['MOVES_MISSING', 'table-1:root']])
+    expect(findings[0]!.message).toMatch(/Hit and Stand/)
+  })
+
+  it('Hit and Stand, or pontoon\'s Twist and Stick, in the table or beside it, pass', () => {
+    expect(run(payload([table(['hit', 'stand']), button('hit', 'Hit'), button('stand', 'Stand')], { phase: 'playing', playerHand: [C('9'), C('7')] }))).toEqual([])
+    expect(run(payload([table(['twist', 'stick']), button('twist', 'Twist'), button('stick', 'Stick')], { phase: 'playing', playerHand: [C('9'), C('7')] }))).toEqual([])
+    const beside = [{ id: 'col', component: 'Column', children: ['root', 'moves'] }, table([]), { id: 'moves', component: 'Row', children: ['hit'] }, button('hit', 'Hit')]
+    expect(run(payload(beside, { phase: 'playing', playerHand: [C('9'), C('7')] }))).toEqual([])
+  })
+
+  it('a settled, betting, natural or bust table has no moves to offer and passes', () => {
+    expect(run(payload([table([])], { phase: 'settled', playerHand: [C('9'), C('7')] }))).toEqual([])
+    expect(run(payload([table([])], { phase: 'betting', playerHand: [], dealerHand: [] }))).toEqual([])
+    expect(run(payload([table([])], { phase: 'playing', playerHand: [C('A'), C('K')] }))).toEqual([])
+    expect(run(payload([table([])], { phase: 'playing', playerHand: [C('K'), C('8'), C('5')] }))).toEqual([])
+  })
+})
+
 // T-0172: the live Haiku 5.5 probe built the bet step as a Card with a Slider and a Deal Button, no CardTable.
 describe('croupier bet controls: a bet step with no CardTable (T-0172 live probe)', () => {
   const surface = (components: Record<string, unknown>[]): A2uiOutput => [

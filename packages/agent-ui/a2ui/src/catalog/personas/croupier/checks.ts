@@ -455,11 +455,47 @@ function betStepWithoutTable(view: SurfaceView): SemanticFinding[] {
   ]
 }
 
-/** T-0172: one bet, one set of bet controls (the CardTable's own strip). */
+/** T-0233: the player's move words across the blackjack family (pontoon twists, sticks and buys). Wider than
+ *  `MOVE_WORDS`, which names only what a natural forbids. */
+const PLAYER_MOVES: ReadonlySet<string> = new Set(['hit', 'stand', 'double', 'split', 'surrender', 'twist', 'stick', 'buy'])
+
+/** A Button offers a move when its id, label or action name carries a player move word. */
+function offersMove(comp: A2uiComponent, dataModel: unknown): boolean {
+  const label = resolveProp(comp['label'], dataModel, undefined)
+  return [comp.id, typeof label === 'string' ? label : '', actionName(comp)].some((text) =>
+    text.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase().split(/[^a-z]+/).some((t) => PLAYER_MOVES.has(t)),
+  )
+}
+
+/** T-0233 (the recorded Haiku 5.5 repair round, 2026-10-15.jsonl:2): a bet answer resent its CardTable in phase
+ *  playing with `children: []`, and the turn shipped with no Hit or Stand. A table in the playing phase whose player
+ *  hand is dealt, not a natural and not bust, needs at least one move Button on the surface (in the table or beside
+ *  it). A hand the check cannot resolve is never judged. */
+function movesMissing(view: SurfaceView): SemanticFinding[] {
+  const findings: SemanticFinding[] = []
+  const comps = [...view.components.values()]
+  if (comps.some((c) => c.component === 'Button' && offersMove(c, view.dataModel))) return []
+  for (const table of comps) {
+    if (table.component !== 'CardTable' || phaseOf(table, view.dataModel) !== 'playing') continue
+    const cards = handList(table, 'player', view.dataModel)?.map(itemCard)
+    if (cards === undefined || cards.length === 0 || !cards.every((c): c is Card => c !== undefined)) continue
+    if (isNatural(cards) || bestTotal(cards) > 21) continue
+    findings.push({
+      code: 'MOVES_MISSING',
+      path: `${view.surfaceId}:${table.id}`,
+      message:
+        `${table.id} is in the playing phase with the player on ${describeCards(cards)}, and the surface offers no move. ` +
+        `Give the table its move Buttons as children: Hit and Stand (and Double on the first two cards; Twist, Stick and Buy in pontoon).`,
+    })
+  }
+  return findings
+}
+
+/** T-0172: one bet, one set of bet controls (the CardTable's own strip); T-0233: a playing table offers the moves. */
 export const croupierBetControls: SemanticCheck = {
   id: 'croupier-bet-controls',
   requires: ['CardTable'],
-  check: (input) => input.surfaces.flatMap((view) => [...betControls(view), ...betStepWithoutTable(view)]),
+  check: (input) => input.surfaces.flatMap((view) => [...betControls(view), ...betStepWithoutTable(view), ...movesMissing(view)]),
 }
 
 const DEAL_ACTION = /^(deal|place_?bet|bet|deal_blackjack)$/i

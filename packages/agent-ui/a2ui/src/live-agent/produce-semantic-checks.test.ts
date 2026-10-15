@@ -165,9 +165,14 @@ describe('produce() + croupier action check: a table action answered by prose al
     message: { version: 'v1.0', action: { surfaceId: 'table-1', actionId: 'a1', name: 'deal', sourceComponentId: 'root', timestamp: '0', context: { bet: 50 }, dataModel: { phase: 'betting', bankroll: 1000, bet: 50, dealerHand: [], playerHand: [] } } },
   }
   const PROSE = '{"a2uiMeta":{"note":"Dealt."}}\nI dealt you a 9 and a 7 for 16; the dealer shows a 10.'
+  // T-0233: a playing table offers the moves, so the deal adds Hit and Stand to the table.
+  const MOVES =
+    '{"version":"v1.0","updateComponents":{"surfaceId":"table-1","components":[{"id":"root","component":"CardTable","title":"Blackjack","phase":{"path":"/phase"},"bet":{"path":"/bet"},"bankroll":{"path":"/bankroll"},"dealerHand":{"path":"/dealerHand"},"playerHand":{"path":"/playerHand"},"betAction":"deal","children":["hit","stand"]},' +
+    '{"id":"hit","component":"Button","label":"Hit","action":{"event":{"name":"hit"}}},{"id":"stand","component":"Button","label":"Stand","action":{"event":{"name":"stand"}}}]}}'
   const DEAL =
     '{"a2uiMeta":{"note":"Dealt."}}\n' +
-    '{"version":"v1.0","updateDataModel":{"surfaceId":"table-1","value":{"phase":"playing","bankroll":950,"bet":50,"dealerHand":[{"rank":"10","suit":"spades"},{"rank":"6","suit":"clubs","faceDown":true}],"playerHand":[{"rank":"9","suit":"hearts"},{"rank":"7","suit":"clubs"}],"dealerTotal":"10 showing","playerTotal":16}}}'
+    '{"version":"v1.0","updateDataModel":{"surfaceId":"table-1","value":{"phase":"playing","bankroll":950,"bet":50,"dealerHand":[{"rank":"10","suit":"spades"},{"rank":"6","suit":"clubs","faceDown":true}],"playerHand":[{"rank":"9","suit":"hearts"},{"rank":"7","suit":"clubs"}],"dealerTotal":"10 showing","playerTotal":16}}}\n' +
+    MOVES
 
   it('round 1 prose only spends a repair round naming ACTION_NOT_APPLIED; round 2 ships the deal', async () => {
     const s = scripted([PROSE, DEAL])
@@ -176,7 +181,7 @@ describe('produce() + croupier action check: a table action answered by prose al
     expect(s.reqs[1]!.messages.at(-1)!.content).toContain('ACTION_NOT_APPLIED at table-1:deal')
     const final = lines.filter((l) => readMetaLine(l)?.a2uiMeta.textDelta === undefined) // round 1 streamed its prose as deltas
     expect(traceOf(final)).toMatchObject({ rounds: 2, failureCodes: ['ACTION_NOT_APPLIED'] })
-    expect(content(final)).toEqual([JSON.parse(DEAL.split('\n')[1]!)])
+    expect(content(final)).toEqual(DEAL.split('\n').slice(1).map((l) => JSON.parse(l)))
   })
 
   it('a bankroll of 500 after a 50 bet from 1,000 spends a repair round (BANKROLL_MISMATCH)', async () => {
@@ -207,7 +212,10 @@ describe('produce() + croupier action check: a table created without sendDataMod
     message: { version: 'v1.0', action: { surfaceId: 'table-1', actionId: 'a1', name, sourceComponentId: 'root', timestamp: '0', context } },
   })
   const deal = pressOn([{ role: 'user', content: 'Blackjack, please.' }, { role: 'assistant', content: TABLE_TURN }], 'deal', { bet: 250 })
-  const write = (value: Record<string, unknown>) => `{"a2uiMeta":{"note":"Dealt."}}\n${JSON.stringify({ version: 'v1.0', updateDataModel: { surfaceId: 'table-1', value } })}`
+  // T-0233: a playing table offers the moves, so a write that leaves it playing carries Hit and Stand.
+  const MOVES = JSON.stringify({ version: 'v1.0', updateComponents: { surfaceId: 'table-1', components: [{ ...JSON.parse(TABLE), children: ['hit', 'stand'] }, { id: 'hit', component: 'Button', label: 'Hit', action: { event: { name: 'hit' } } }, { id: 'stand', component: 'Button', label: 'Stand', action: { event: { name: 'stand' } } }] } })
+  const write = (value: Record<string, unknown>) =>
+    `{"a2uiMeta":{"note":"Dealt."}}\n${JSON.stringify({ version: 'v1.0', updateDataModel: { surfaceId: 'table-1', value } })}${value['phase'] === 'playing' ? `\n${MOVES}` : ''}`
   const C = (rank: string, faceDown = false) => ({ rank, suit: 'clubs', ...(faceDown ? { faceDown } : {}) })
   const dealt = (bankroll: number) => write({ bankroll, bet: 250, phase: 'playing', dealerHand: [C('9'), C('K', true)], playerHand: [C('10'), C('7')] })
 
