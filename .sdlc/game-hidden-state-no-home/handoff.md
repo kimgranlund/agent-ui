@@ -36,3 +36,6 @@ Hidden game state lives in the game surface's own data model under the reserved 
 - A decision line in this ticket: where hidden game state lives (data model field or host-held), and who may read it.
 - (red) A check (a persona `semanticChecks` entry or a producer finding) fails a guess or shot turn whose marks or result disagree with the committed answer, with a unit test on the recorded `lexicographer-haiku-no-secret` turns: `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog/hidden-state-checks.test.ts -t T-0230` exits 0.
 - `npm run check` exits 0.
+
+## Lane verify scope (conductor)
+One batched verifier for this lane. Verify this handoff AND .sdlc/producer-text-shape-reply-leak/handoff.md, criterion by criterion, in the same tree; one verdict per ticket under Criteria and one overall Verdict.
