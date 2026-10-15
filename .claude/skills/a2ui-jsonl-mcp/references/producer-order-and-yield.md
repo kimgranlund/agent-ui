@@ -57,7 +57,9 @@ T-0172 rules (2026-10-14 traces):
 - An action turn is judged even when its round sends no payload: the semantic checks read the action
   (`SemanticCheckInput.action`, the click's name, surface, context and click-time data model), so a click
   answered in prose alone spends a repair round (the Croupier's `ACTION_NOT_APPLIED`) and ships tallied at the
-  bound.
+  bound. A say turn is judged the same way (`intent`, plus `target` when its meta-line names an open surface): a
+  typed move or shot at that surface with no update is `ACTION_NOT_APPLIED`, and a game opening or a Concierge
+  services, booking or confirm ask answered with no surface is `SURFACE_MISSING` (T-0265).
 - A self-correct round never loses a surface: a session-new surface the failed round created that no
   failure names must come back. The repair message names it ("Keep `ask-1` ..."); a later valid round
   without it spends a `SURFACE_DROPPED` round, and on the last round halts with `SURFACE_DROPPED`.

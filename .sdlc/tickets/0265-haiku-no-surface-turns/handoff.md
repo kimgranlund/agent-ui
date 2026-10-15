@@ -27,3 +27,14 @@ No check fires on these turns. ACTION_NOT_APPLIED (12 fires, all Haiku Croupier)
 
 ## Context
 This follows up T-0214, which was fixed for Croupier moves. Sonnet and Opus never showed this shape in round 3. Found by T-0261.
+
+## Acceptance criteria
+verifier: L3
+
+- (red) `npx vitest run scripts/e2e-admin/probe/replays/croupier-holdem-haiku-opening-prose.test.mjs` exits 0: the recorded hold'em opening dealt in prose with no table ships with failure codes `SURFACE_MISSING, SEMANTIC_UNCORRECTED` (a repair round was spent on it).
+- (red) `npx vitest run scripts/e2e-admin/probe/replays/admiral-haiku-shot-prose.test.mjs` exits 0: "Fire at A2." targeting enemy-waters with no update ships with `ACTION_NOT_APPLIED, SEMANTIC_UNCORRECTED`, the shot that did update enemy-waters keeps no code, and the probe fails only `action-updates-surface:2`.
+- (red) `npx vitest run scripts/e2e-admin/probe/replays/concierge-haiku-booking-prose.test.mjs` exits 0: the spa services ask, the booking and the confirm turn, each answered in prose with no surface, ship with `SURFACE_MISSING, SEMANTIC_UNCORRECTED`.
+- (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog/personas/concierge/checks.test.ts` exits 0: a services, booking or confirm say turn with no surface is SURFACE_MISSING; one that ships a surface, a question with no booking or services word, and a client turn pass.
+- `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.test.ts packages/agent-ui/a2ui/src/catalog/hidden-state-checks.test.ts packages/agent-ui/a2ui/src/live-agent/produce-semantic-checks.test.ts packages/agent-ui/a2ui/src/catalog/semantic-check.test.ts` exits 0: a game opening with no table is SURFACE_MISSING (a rules question and a dealt opening pass); a typed shot at a targeted open board with no update is ACTION_NOT_APPLIED; a note-only say turn with no target is judged.
+- `npx vitest run scripts/e2e-admin/probe` exits 0: every recorded replay and the trace pins still pass.
+- `npm run check` exits 0.

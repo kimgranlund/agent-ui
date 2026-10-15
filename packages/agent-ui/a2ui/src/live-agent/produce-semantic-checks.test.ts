@@ -237,3 +237,32 @@ describe('produce() + croupier action check: a table created without sendDataMod
     expect(traceOf(lines).failureCodes).toEqual(['BANKROLL_MISMATCH'])
   })
 })
+
+// T-0265 (the recorded Haiku 5.5 hold'em opening, round 3 texas-holdem turn 0): "Let's play Texas hold'em." was dealt
+// in prose with no table and no target. A note-only say turn with no target is now judged too.
+describe('produce() + croupier opening check: a game asked for in prose alone is repaired (T-0265)', () => {
+  const opening: TurnInput = { kind: 'intent', text: "Let's play Texas hold'em.", session: { turns: [] } }
+  const PROSE = '{"a2uiMeta":{"note":"Heads-up hold\'em it is. Your hole cards are A♥ K♦."}}'
+  const TABLE =
+    '{"a2uiMeta":{"note":"Your table is open."}}\n' +
+    '{"version":"v1.0","createSurface":{"surfaceId":"table-1","catalogId":"agent-ui--croupier"}}\n' +
+    '{"version":"v1.0","updateComponents":{"surfaceId":"table-1","components":[{"id":"root","component":"Text","text":"Texas hold\'em"}]}}'
+
+  it('round 1 prose only spends a repair round naming SURFACE_MISSING; round 2 ships the table', async () => {
+    const s = scripted([PROSE, TABLE])
+    const lines = await collect(produce(opening, deps(s.provider, croupierSemanticChecks), { maxRounds: 3 }))
+    expect(s.calls()).toBe(2)
+    expect(s.reqs[1]!.messages.at(-1)!.content).toContain('SURFACE_MISSING')
+    const final = lines.filter((l) => readMetaLine(l)?.a2uiMeta.textDelta === undefined)
+    expect(traceOf(final)).toMatchObject({ rounds: 2, failureCodes: ['SURFACE_MISSING'] })
+  })
+
+  it('a rules question answered in prose, or no checks declared, ships on round 1', async () => {
+    const ask = scripted([PROSE])
+    await collect(produce({ ...opening, text: "How do you play Texas hold'em?" }, deps(ask.provider, croupierSemanticChecks), { maxRounds: 3 }))
+    expect(ask.calls()).toBe(1)
+    const off = scripted([PROSE])
+    await collect(produce(opening, deps(off.provider), { maxRounds: 3 }))
+    expect(off.calls()).toBe(1)
+  })
+})

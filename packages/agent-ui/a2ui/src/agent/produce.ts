@@ -1577,10 +1577,14 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       // T-0172: an action turn answered with no payload is still judged (`surfaces` empty), so a check can catch
       // a click narrated in prose that never reached the surface. A finding spends a repair round while one is
       // left (worded for render_surface when the tool is offered); on the last round it ships tallied. T-0214: a say
-      // turn that targets an open surface is judged the same way, so a typed move narrated in prose is repaired.
+      // turn that targets an open surface is judged the same way, so a typed move narrated in prose is repaired. T-0265:
+      // every say turn is, so a game opening or a booking answered in prose alone is repaired too.
       const actionSemanticTally: string[] = []
-      if ((turnAction !== undefined || roundTarget !== undefined) && deps.semanticChecks !== undefined && deps.semanticChecks.length > 0 && genuiLine === undefined) {
-        const semantic = runSemanticChecks(deps.semanticChecks, turnAction !== undefined ? { surfaces: [], action: turnAction } : { surfaces: [], intent: turnIntent!, target: roundTarget! })
+      if ((turnAction !== undefined || turnIntent !== undefined) && deps.semanticChecks !== undefined && deps.semanticChecks.length > 0 && genuiLine === undefined) {
+        const semantic = runSemanticChecks(
+          deps.semanticChecks,
+          turnAction !== undefined ? { surfaces: [], action: turnAction } : { surfaces: [], intent: turnIntent!, ...(roundTarget !== undefined ? { target: roundTarget } : {}) },
+        )
         if (semantic.findings.length > 0 && round < opts.maxRounds - 1) {
           failures = semantic.findings.map((f) => ({ code: f.code, path: f.path, detail: f.message }))
           lastCaptureRound = offeredTools !== undefined

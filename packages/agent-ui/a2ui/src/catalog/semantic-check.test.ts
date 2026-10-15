@@ -10,6 +10,7 @@ import type { Session } from '../agent/agent-transport.ts'
 import type { A2uiOutput } from '../protocol.ts'
 import { semanticChecksForCatalog } from './compose.ts'
 import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from './personas/manifests.ts'
+import { conciergeSemanticChecks } from './personas/concierge/checks.ts'
 import { croupierSemanticChecks } from './personas/croupier/checks.ts'
 
 const jsonl = (out: A2uiOutput): string => out.map((m) => JSON.stringify(m)).join('\n')
@@ -113,8 +114,12 @@ describe('semanticChecksForCatalog: the selected catalog id resolves its persona
     expect(semanticChecksForCatalog('a2ui-basic--croupier', SHIPPED_PERSONA_CATALOG_MANIFESTS)).toBe(croupierSemanticChecks)
   })
 
+  it('a derived concierge id resolves the concierge checks (T-0265)', () => {
+    expect(semanticChecksForCatalog('agent-ui--concierge', SHIPPED_PERSONA_CATALOG_MANIFESTS)).toBe(conciergeSemanticChecks)
+  })
+
   it('a base id, a persona that declares none, and an unknown id resolve to no checks', () => {
-    for (const id of ['agent-ui', 'a2ui-basic', 'agent-ui--concierge', 'agent-ui--fixture-demo', 'agent-ui--nobody', '']) {
+    for (const id of ['agent-ui', 'a2ui-basic', 'agent-ui--fixture-demo', 'agent-ui--nobody', '']) {
       expect(semanticChecksForCatalog(id, SHIPPED_PERSONA_CATALOG_MANIFESTS), id).toEqual([])
     }
   })

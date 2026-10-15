@@ -909,3 +909,30 @@ describe('croupier rules check: the result line and a buy agree with the cards a
     expect(rules(after(C('4', 'diamonds')), press('twist'))).toEqual([])
   })
 })
+
+// T-0265 (the recorded Haiku 5.5 openings, round 3 texas-holdem and five-card-draw turn 0): the game was dealt in
+// prose with no table, no target and no surface.
+describe('croupier action check: a game asked for opens a surface (T-0265)', () => {
+  const said = (intent: string, surfaces: A2uiOutput = [], target?: string) =>
+    croupierActionApplied.check({ surfaces: semanticSurfaceViews({ turns: [] }, surfaces), intent, ...(target !== undefined ? { target } : {}) })
+  const table: A2uiOutput = [
+    { version: 'v1.0', createSurface: { surfaceId: 'table-1', catalogId: 'agent-ui--croupier' } },
+    { version: 'v1.0', updateComponents: { surfaceId: 'table-1', components: [{ id: 'root', component: 'Text', text: 'Five-card draw' }] } },
+  ] as A2uiOutput
+
+  it("the recorded prose-only openings are SURFACE_MISSING", () => {
+    const findings = said("Let's play Texas hold'em.")
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['SURFACE_MISSING', "opening:hold'em"]])
+    expect(findings[0]!.message).toMatch(/createSurface/)
+    expect(said("Let's play five-card draw.").map((f) => f.code)).toEqual(['SURFACE_MISSING'])
+    expect(said('Deal me in for a hand of blackjack').map((f) => f.code)).toEqual(['SURFACE_MISSING'])
+  })
+
+  it('a turn that opens a surface, a question, a turn with no game named, or a targeted turn passes', () => {
+    expect(said("Let's play five-card draw.", table)).toEqual([])
+    expect(said("How do you play Texas hold'em?")).toEqual([])
+    expect(said("Let's play.")).toEqual([])
+    expect(said('Check, or call if there is a bet.')).toEqual([])
+    expect(said("Let's play another hand of blackjack.", [], 'table-1')).toEqual([])
+  })
+})

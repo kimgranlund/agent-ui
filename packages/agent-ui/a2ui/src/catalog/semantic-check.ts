@@ -75,7 +75,8 @@ export interface SemanticAction {
 
 /** What a check reads: every surface this round's payload creates or updates, in first-touch order, and (T-0172)
  *  the action the turn answers, when it is a client turn. A round with no payload is judged too on an action turn,
- *  with `surfaces` empty, so a check can see that the clicked surface got no update. */
+ *  with `surfaces` empty, so a check can see that the clicked surface got no update, and (T-0265) on a say turn, so a
+ *  check can see an ask that should open or change a surface answered in prose alone. */
 export interface SemanticCheckInput {
   readonly surfaces: readonly SurfaceView[]
   readonly action?: SemanticAction

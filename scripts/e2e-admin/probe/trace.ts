@@ -15,6 +15,7 @@ import type { AgentTraceLine } from '../../../packages/agent-ui/a2ui/tools/agent
 import type { TurnInput, Turn } from '../../../packages/agent-ui/a2ui/src/agent/agent-transport.ts'
 import type { Catalog } from '../../../packages/agent-ui/a2ui/src/catalog/catalog.ts'
 import { splitCatalogId } from '../../../packages/agent-ui/a2ui/src/catalog/catalog-id.ts'
+import { conciergeSemanticChecks } from '../../../packages/agent-ui/a2ui/src/catalog/personas/concierge/checks.ts'
 import { croupierSemanticChecks } from '../../../packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.ts'
 import { HIDDEN_STATE_CHECKS } from '../../../packages/agent-ui/a2ui/src/catalog/hidden-state-checks.ts'
 import { compositeMomentChecks } from '../../../packages/agent-ui/a2ui/src/catalog/composite-moments.ts'
@@ -126,7 +127,7 @@ function scriptedRound(round: ProbeRound): string | ScriptedToolRound {
 /** T-0222: the persona semantic checks the dev proxy passes `produce()` (`semanticChecksDeps`), by persona id.
  *  Plain Node cannot import the persona manifests (their catalog JSON imports), so this names each persona's
  *  checks module; `trace.test.mjs` pins it to `SHIPPED_PERSONA_CATALOG_MANIFESTS`. */
-export const PERSONA_SEMANTIC_CHECKS: Readonly<Record<string, readonly SemanticCheck[]>> = { croupier: croupierSemanticChecks }
+export const PERSONA_SEMANTIC_CHECKS: Readonly<Record<string, readonly SemanticCheck[]>> = { concierge: conciergeSemanticChecks, croupier: croupierSemanticChecks }
 
 /** The semantic checks a live turn on this catalog ran: its persona's (`<base>--<persona>`), (T-0230) the
  *  hidden game state checks every catalog runs, then (T-0208) the composite-moment checks, gated on the types the catalog declares, as `semanticChecksDeps` does. */
