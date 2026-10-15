@@ -2,7 +2,7 @@
 id: T-0219
 title: "Croupier result narration and rule moves go unchecked against the cards"
 type: bug             # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -27,3 +27,10 @@ The hand check (`checks.ts`) parses totals only, never a result line. Proposed: 
 
 ## Constraints
 The failing test lands before or with the fix, never after. No em dashes.
+
+## Acceptance criteria
+- (red) A new `croupier-rules` check: a CardTable's result or status line whose "X beats Y", "X loses to Y" or "wins with X over Y" claim contradicts itself (a lower total beating a higher one, a bust winning), or that calls a surrender a comparison, is RESULT_CONTRADICTS_CARDS (the recorded "You surrender. Dealer 18 beats your soft 20."); a Pontoon buy press that deals the bought card face up is BUY_CARD_FACE_UP: `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.test.ts -t T-0219` exits 0.
+- The touched folders stay green: `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog packages/agent-ui/a2ui/src/live-agent` exits 0.
+- The recorded fixture still replays: `npx vitest run --project scripts scripts/e2e-admin/probe/replays/croupier-spanish-surrender-narration.test.mjs` exits 0 (the offline replay runs no semantic checks, so the Repro span is green on the broken tree too; it stays as recorded evidence).
+- `npm run check` exits 0.
+- Left open: a buy typed as chat ("Buy a card.", the recorded pontoon-sonnet-1 turn 7) carries no action, so the check cannot see it; the Omaha pot-limit legality narration (omaha-haiku-1 turn 9) needs a judged check, not a regex.

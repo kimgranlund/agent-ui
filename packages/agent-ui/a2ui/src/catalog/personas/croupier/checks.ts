@@ -717,4 +717,81 @@ export const croupierDeck: SemanticCheck = {
     input.surfaces.flatMap((view) => [...duplicateCards(view), ...(input.action === undefined ? [] : changedHoleCards(view, input.action))]),
 }
 
-export const croupierSemanticChecks: readonly SemanticCheck[] = [croupierHandConsistency, croupierBetControls, croupierActionApplied, croupierDeck]
+const LOSER = String.raw`(?:your|my|the dealer['’]s|the player['’]s|dealer['’]s|player['’]s|the dealer|the player|dealer|player)?\s*(?:soft|hard)?\s*(\d+)`
+const WINNER = String.raw`(\d+)(?:\s*\([^)]*\))?`
+/** A result line's comparisons: "18 beats your soft 20", "wins with 19 (10, 5, 4) over the dealer's 18", "16 loses to 18". */
+const CLAIMS: readonly { re: RegExp; winnerFirst: boolean }[] = [
+  { re: new RegExp(String.raw`${WINNER}\s+beats\s+${LOSER}`, 'gi'), winnerFirst: true },
+  { re: new RegExp(String.raw`wins with\s+${WINNER}\s+over\s+${LOSER}`, 'gi'), winnerFirst: true },
+  { re: new RegExp(String.raw`${WINNER}\s+loses to\s+${LOSER}`, 'gi'), winnerFirst: false },
+]
+
+/** RESULT_CONTRADICTS_CARDS: a CardTable's `result` or `status` line may not claim a lower total beats a higher one or
+ *  a bust (over 21) wins, and a surrender ends the hand with no comparison at all (Haiku 5.5 Spanish 21: "You
+ *  surrender. Dealer 18 beats your soft 20."). */
+function resultClaims(view: SurfaceView): SemanticFinding[] {
+  const findings: SemanticFinding[] = []
+  for (const table of view.components.values()) {
+    if (table.component !== 'CardTable') continue
+    for (const prop of ['result', 'status'] as const) {
+      const text = resolveProp(table[prop], view.dataModel, undefined)
+      if (typeof text !== 'string') continue
+      const faults: string[] = []
+      let compared = false
+      for (const { re, winnerFirst } of CLAIMS) {
+        for (const m of text.matchAll(re)) {
+          compared = true
+          const [a, b] = [Number(m[1]), Number(m[2])]
+          const [winner, loser] = winnerFirst ? [a, b] : [b, a]
+          if (winner > 21) faults.push(`a bust (${winner}) never wins`)
+          else if (loser <= 21 && winner <= loser) faults.push(`${winner} does not beat ${loser}`)
+        }
+      }
+      if (compared && /\bsurrender/i.test(text)) faults.push('a surrender ends the hand with no comparison of totals')
+      if (faults.length === 0) continue
+      findings.push({
+        code: 'RESULT_CONTRADICTS_CARDS',
+        path: `${view.surfaceId}:${table.id}.${prop}`,
+        message:
+          `${table.id}'s ${prop} reads "${text}", but ${faults.join(', and ')}. ` +
+          `State the result the cards give: the higher total at 21 or under wins, a bust loses, and a surrender reads "You surrender: half your bet back" with the new bankroll.`,
+      })
+    }
+  }
+  return findings
+}
+
+const BUY_ACTION = /^buy(_?card)?$/i
+
+/** BUY_CARD_FACE_UP: in Pontoon a bought card is dealt face down (a twist is face up), so a buy press on the clicked
+ *  table appends only face-down player cards (Sonnet 5.5 bought a card face up). */
+function boughtFaceUp(view: SurfaceView, action: SemanticAction): SemanticFinding[] {
+  if (view.surfaceId !== action.surfaceId || !BUY_ACTION.test(action.name)) return []
+  if (!/\bpontoon\b/i.test(literalWords(view.components.values()))) return []
+  const findings: SemanticFinding[] = []
+  for (const table of view.components.values()) {
+    if (table.component !== 'CardTable') continue
+    const before = handList(table, 'player', action.dataModel)?.length
+    const now = handList(table, 'player', view.dataModel)
+    if (before === undefined || now === undefined) continue
+    const where = bindingPath(table['playerHand'])
+    now.forEach((card, i) => {
+      if (i < before || (isRecord(card) && card['faceDown'] === true)) return
+      findings.push({
+        code: 'BUY_CARD_FACE_UP',
+        path: `${view.surfaceId}:${where === undefined ? table.id : `${where}/${i}`}`,
+        message: `The player bought a card, and ${where ?? table.id} deals it face up. In Pontoon a bought card is dealt face down ("faceDown":true); only a twist is dealt face up.`,
+      })
+    })
+  }
+  return findings
+}
+
+/** T-0219: what the Croupier states agrees with the cards and the game's rules. */
+export const croupierRules: SemanticCheck = {
+  id: 'croupier-rules',
+  requires: ['CardTable'],
+  check: (input) => input.surfaces.flatMap((view) => [...resultClaims(view), ...(input.action === undefined ? [] : boughtFaceUp(view, input.action))]),
+}
+
+export const croupierSemanticChecks: readonly SemanticCheck[] = [croupierHandConsistency, croupierBetControls, croupierActionApplied, croupierDeck, croupierRules]

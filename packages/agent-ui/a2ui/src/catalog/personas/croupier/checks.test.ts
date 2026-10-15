@@ -464,9 +464,9 @@ describe('croupier hand check: what it never judges', () => {
 })
 
 describe('croupier manifest declares the check (ADR-0238 wiring)', () => {
-  it('croupierManifest.semanticChecks is the hand, bet-controls and action checks (T-0172) and the deck check (T-0218)', () => {
+  it('croupierManifest.semanticChecks is the hand, bet-controls and action checks (T-0172) the deck check (T-0218) and the rules check (T-0219)', () => {
     expect(croupierManifest.semanticChecks).toBe(croupierSemanticChecks)
-    expect(croupierSemanticChecks.map((c) => c.id)).toEqual(['croupier-hand-consistency', 'croupier-bet-controls', 'croupier-action-applied', 'croupier-deck'])
+    expect(croupierSemanticChecks.map((c) => c.id)).toEqual(['croupier-hand-consistency', 'croupier-bet-controls', 'croupier-action-applied', 'croupier-deck', 'croupier-rules'])
   })
 })
 
@@ -755,5 +755,53 @@ describe('croupier deck check: a poker deal is one committed deck (T-0218)', () 
     expect(deck(omaha('table-1', { dealerHand: redraw, playerHand: player }, 'Five-card draw'), action)).toEqual([])
     expect(deck(omaha('table-1', { dealerHand: redraw, playerHand: player }), { ...action, context: { newRound: true } })).toEqual([])
     expect(deck(omaha('table-2', { dealerHand: redraw, playerHand: player }), action)).toEqual([])
+  })
+})
+
+// T-0219 (the recorded Spanish 21 Haiku 5.5 turn, 2026-10-15.jsonl:20, and the Pontoon Sonnet 5.5 buy, :90): a result
+// line that says 18 beats a soft 20, or calls a surrender a comparison, and a bought card dealt face up.
+describe('croupier rules check: the result line and a buy agree with the cards and the rules (T-0219)', () => {
+  const RULE_CODES = ['RESULT_CONTRADICTS_CARDS', 'BUY_CARD_FACE_UP']
+  const C = (rank: string, suit: string, faceDown = false) => ({ rank, suit, ...(faceDown ? { faceDown } : {}) })
+  const table = (title: string, extra: Record<string, unknown> = {}) => ({ id: 'root', component: 'CardTable', title, phase: { path: '/phase' }, status: { path: '/status' }, bankroll: { path: '/bankroll' }, bet: { path: '/bet' }, dealerHand: { path: '/dealerHand' }, playerHand: { path: '/playerHand' }, betAction: 'deal', ...extra })
+  const surface = (title: string, value: Record<string, unknown>, extra: Record<string, unknown> = {}): A2uiOutput => [
+    { version: 'v1.0', createSurface: { surfaceId: 'table-2', catalogId: 'agent-ui--croupier' } },
+    { version: 'v1.0', updateDataModel: { surfaceId: 'table-2', value } },
+    { version: 'v1.0', updateComponents: { surfaceId: 'table-2', components: [table(title, extra)] } },
+  ] as A2uiOutput
+  const rules = (output: A2uiOutput, action?: { name: string; surfaceId: string; context: Record<string, unknown>; dataModel: unknown }) =>
+    croupierSemanticChecks
+      .flatMap((c) => c.check({ surfaces: semanticSurfaceViews({ turns: [] }, output), ...(action !== undefined ? { action } : {}) }))
+      .filter((f) => RULE_CODES.includes(f.code))
+  const settled = (status: string, extra: Record<string, unknown> = {}) =>
+    surface('Spanish 21', { bankroll: 850, bet: 0, phase: 'settled', status, dealerHand: [C('8', 'spades'), C('Q', 'hearts')], playerHand: [C('A', 'hearts'), C('9', 'clubs')] }, extra)
+
+  it('the recorded surrender line ("Dealer 18 beats your soft 20") is RESULT_CONTRADICTS_CARDS naming both faults', () => {
+    const f = rules(settled('You surrender. Dealer 18 beats your soft 20. You lose 50.'))
+    expect(f.map((x) => [x.code, x.path])).toEqual([['RESULT_CONTRADICTS_CARDS', 'table-2:root.status']])
+    expect(f[0]!.message).toMatch(/18 does not beat 20/)
+    expect(f[0]!.message).toMatch(/surrender/)
+    expect(rules(settled('You surrender: half your 100 back, bankroll 850.'))).toEqual([])
+  })
+
+  it('true comparisons pass, in every recorded wording; a bust never wins and a lower total never beats a higher one', () => {
+    for (const ok of ["You win: 19 (10, 5, 4) beats the dealer's 18. +200 chips.", "Player wins with 19 (10, 5, 4) over the dealer's 18 (8, 7, 3).", 'Dealer wins: 18 (9, 5, 4) beats your 16.', 'Your 20 beats the dealer\'s 24, a bust.', 'Your 16 loses to the dealer\'s 18.']) {
+      expect(rules(settled(ok)), ok).toEqual([])
+    }
+    for (const bad of ['Your 16 beats the dealer\'s 18.', "Your 23 beats the dealer's 19.", 'Dealer wins with 17 over your 20.', 'Your 20 loses to the dealer\'s 18.']) {
+      expect(rules(settled(bad)).map((x) => x.code), bad).toEqual(['RESULT_CONTRADICTS_CARDS'])
+    }
+    expect(rules(settled('Settled.', { result: 'Your 16 beats the dealer\'s 18.' })).map((x) => x.path)).toEqual(['table-2:root.result'])
+  })
+
+  it('a Pontoon buy deals the bought card face down; a twist deals face up', () => {
+    const before = { bankroll: 800, bet: 100, phase: 'playing', dealerHand: [C('8', 'spades', true), C('7', 'diamonds', true)], playerHand: [C('10', 'hearts'), C('5', 'clubs')] }
+    const after = (third: Record<string, unknown>) => surface('Pontoon', { ...before, bankroll: 700, bet: 200, playerHand: [...before.playerHand, third] })
+    const press = (name: string) => ({ name, surfaceId: 'table-2', context: {}, dataModel: before })
+    const f = rules(after(C('4', 'diamonds')), press('buy'))
+    expect(f.map((x) => [x.code, x.path])).toEqual([['BUY_CARD_FACE_UP', 'table-2:/playerHand/2']])
+    expect(f[0]!.message).toMatch(/face down/)
+    expect(rules(after(C('4', 'diamonds', true)), press('buy'))).toEqual([])
+    expect(rules(after(C('4', 'diamonds')), press('twist'))).toEqual([])
   })
 })
