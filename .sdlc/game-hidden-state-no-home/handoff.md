@@ -29,7 +29,13 @@ The foundation prose says "hold a secret five-letter word fixed for the whole ga
 ## Constraints
 The failing test lands before or with the fix, never after. No em dashes.
 
+## Decision
+Hidden game state lives in the game surface's own data model under the reserved key `/secret` (the word game: `/secret/word`; Battleship: `/secret/fleet` for the Admiral's ships and `/secret/playerFleet` for the player's, both committed on the opening turn, as `{row, col}` lists in the board's own coordinates). It is a client-visible field bound to no component, the T-0218 face-down hole-card precedent: the producer reads it back from its own earlier wire lines and the action's data model, the host's semantic checks read it, and a player sees it only by inspecting the wire. Host-held state is rejected: nothing survives between turns except the session lines and the data models, and it would need a new store and trust path. The checks run on every catalog (the Lexicographer and Admiral turn on plain `agent-ui`, where no persona or domain check resolves), gated on the types they read and silent unless a surface carries the word-game or Battleship signature.
+
 ## Acceptance criteria
 - A decision line in this ticket: where hidden game state lives (data model field or host-held), and who may read it.
-- (red) A check (a persona `semanticChecks` entry or a producer finding) fails a guess or shot turn whose marks or result disagree with the committed answer, with a unit test on the recorded `lexicographer-haiku-no-secret` turns.
+- (red) A check (a persona `semanticChecks` entry or a producer finding) fails a guess or shot turn whose marks or result disagree with the committed answer, with a unit test on the recorded `lexicographer-haiku-no-secret` turns: `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog/hidden-state-checks.test.ts -t T-0230` exits 0.
 - `npm run check` exits 0.
+
+## Lane verify scope (conductor)
+One batched verifier for this lane. Verify this handoff AND .sdlc/producer-text-shape-reply-leak/handoff.md, criterion by criterion, in the same tree; one verdict per ticket under Criteria and one overall Verdict.

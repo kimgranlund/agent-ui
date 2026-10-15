@@ -298,6 +298,17 @@ function isWireLine(line: string): boolean {
   return line.startsWith('{') && (isGenuiCandidate(line) || heal(line, { protocolVersion: PROTOCOL_VERSION }).ok)
 }
 
+/** T-0229: a line that opens an A2UI message (`{"version"`) but is not one, because it does not parse. It is payload,
+ *  so it goes to the repair round with the routed lines, never into the reply. */
+function isBrokenWireLine(line: string): boolean {
+  return /^\{\s*"version"\s*:/.test(line) && !isLegacyShape(line)
+}
+
+/** T-0229: a text-channel line that is never reply text: an A2UI line (whole or broken) or a meta-line. */
+function isEnvelopeLine(line: string): boolean {
+  return isLegacyShape(line) || isBrokenWireLine(line) || readMetaLine(line) !== undefined
+}
+
 /** RTS-R3/R4: the round is the legacy shape, so today's body runs on it unchanged. The first line after the
  *  meta-line, inside an outer code fence when there is one (`stripOuterFence` admits that today), decides. */
 function isLegacyRound(raw: string, afterMeta: string): boolean {
@@ -1317,8 +1328,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       replyFrom ??= replyStart(raw, ended)
       if (typeof replyFrom !== 'number') return undefined
       // T-0172: an A2UI line inside the prose is the payload (routed below), never reply text, so a line
-      // that opens with `{` is held until it is whole and skipped when it is one. Other text streams as it
-      // arrives, mid-line included.
+      // that opens with `{` is held until it is whole and skipped when it is one. T-0229: so is a meta-line
+      // after the prose, and an A2UI line that does not parse. Other text streams as it arrives, mid-line included.
       let pos = Math.max(replyFrom, deltaEnd)
       let out = ''
       while (pos < raw.length) {
@@ -1327,7 +1338,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         if (pos === replyFrom || raw[pos - 1] === '\n') {
           const head = raw.slice(pos, nl === -1 ? raw.length : nl).trimStart()
           if (nl === -1 && !ended && (head === '' || head.startsWith('{'))) break
-          if (head.startsWith('{') && isLegacyShape(head.trim())) {
+          if (head.startsWith('{') && isEnvelopeLine(head.trim())) {
             pos = end
             continue
           }
@@ -1374,8 +1385,10 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     // T-0172: a text round whose prose carries A2UI lines (Haiku 5.5 wrote its surface as text instead of
     // calling the tool, 2026-10-14) routes them as the payload, as a capture round's would be, instead of
     // showing raw JSON in the chat. Only on a turn that offers `render_surface`.
+    // T-0229: an A2UI line that does not parse routes with them, so it is repaired instead of shown as prose.
+    const isRoutable = (l: string): boolean => isLegacyShape(l) || isBrokenWireLine(l)
     const routedLines =
-      textRound && offeredTools !== undefined ? afterMeta.split('\n').filter((l) => isLegacyShape(l.trim())) : []
+      textRound && offeredTools !== undefined ? afterMeta.split('\n').filter((l) => isRoutable(l.trim())) : []
     const routed = routedLines.length > 0 ? routedLines.join('\n') : undefined
     if (routed !== undefined) textJsonlRouted = true
     if (captured !== undefined || textRound) {
@@ -1383,9 +1396,26 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       if (routed !== undefined) {
         reply = afterMeta
           .split('\n')
-          .filter((l) => !isLegacyShape(l.trim()))
+          .filter((l) => !isRoutable(l.trim()))
           .join('\n')
           .replace(/```(?:jsonl?)?[ \t]*\n(?:[ \t]*\n)*[ \t]*```/g, '') // the fence that held only the routed lines
+      }
+      // T-0229: Haiku 5.5's text shape puts the meta-line AFTER the prose (trace 2026-10-15.jsonl:42), where the
+      // leading peel never looks. It is peeled wherever it sits: its declarations stand where the leading peel set
+      // none, and its note stays the fallback for an empty text channel (T-0194), so the prose is the reply.
+      if (textRound) {
+        const replyLines = reply.split('\n')
+        const tail = replyLines.map((l) => readMetaLine(l.trim())).find((m) => m !== undefined)?.a2uiMeta
+        if (tail !== undefined) {
+          reply = replyLines.filter((l) => readMetaLine(l.trim()) === undefined).join('\n')
+          note ??= tail.note
+          ask ??= tail.ask
+          plan ??= tail.plan
+          personaPatch ??= tail.personaPatch
+          flowEnd ??= tail.flowEnd
+          team ??= tail.team
+          target ??= tail.target
+        }
       }
       if (captured !== undefined) {
         // The tool payload wins: wire or genui lines in the text channel are dropped from the reply.

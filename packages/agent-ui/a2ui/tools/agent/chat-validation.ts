@@ -28,6 +28,7 @@ import type { SemanticCheck } from '../../src/catalog/semantic-check.ts'
 import type { Catalog } from '../../src/catalog/catalog.ts'
 import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from '../../src/catalog/personas/manifests.ts'
 import { SHIPPED_DOMAIN_CATALOG_MANIFESTS } from '../../src/catalog/domains/manifests.ts'
+import { HIDDEN_STATE_CHECKS } from '../../src/catalog/hidden-state-checks.ts'
 import { ProduceHalt } from '../../src/agent/produce.ts'
 import { AgentTimeoutError } from '../../src/agent/deadlines.ts'
 import { ANTHROPIC_WORKSPACE_ENV } from '../../src/agent/providers/anthropic.ts'
@@ -166,14 +167,20 @@ export const selectCatalog = selectCatalogShared
  * ADR-0238, GH #1795: the `ProduceDeps.semanticChecks` slice for a turn, shared by both hosts
  * (the `buildCatalogMap` precedent: one helper, never two host-side copies). `catalog` is the catalog
  * `selectCatalog` CHOSE, so an unknown or malformed client id that fell back to the default also falls back
- * to no checks. Returns `{}` when the catalog's persona declares none, so spreading it into the deps object
- * adds NOTHING and the turn is byte-identical to a host without this hook.
+ * to no checks. Returns `{}` when no check applies (a catalog declaring neither TextField nor BoardGrid, with no
+ * persona checks), so spreading it into the deps object adds NOTHING. T-0230's hidden-state checks return no finding
+ * on a surface without their game's signature, so such a turn still ships the same lines.
  */
 export function semanticChecksDeps(catalog: Catalog): { semanticChecks?: readonly SemanticCheck[] } {
   // T-0202 (D4): the persona's checks and every domain's the id holds, each kept only when this catalog declares
-  // the types it reads (`gateChecksOnCatalog`).
+  // the types it reads (`gateChecksOnCatalog`). T-0230: the hidden game state checks run on every catalog (silent
+  // unless a surface carries the word-game or Battleship signature).
   const semanticChecks = gateChecksOnCatalog(
-    [...semanticChecksForCatalog(catalog.catalogId, SHIPPED_PERSONA_CATALOG_MANIFESTS), ...domainSemanticChecksForCatalog(catalog.catalogId, SHIPPED_DOMAIN_CATALOG_MANIFESTS)],
+    [
+      ...semanticChecksForCatalog(catalog.catalogId, SHIPPED_PERSONA_CATALOG_MANIFESTS),
+      ...domainSemanticChecksForCatalog(catalog.catalogId, SHIPPED_DOMAIN_CATALOG_MANIFESTS),
+      ...HIDDEN_STATE_CHECKS,
+    ],
     catalog,
   )
   return semanticChecks.length > 0 ? { semanticChecks } : {}

@@ -649,13 +649,14 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'lexicographer',
     category: 'games', // GH #143
-    seedVersion: 3, // T-0200: word-tiles names one GameHud, round-loop ends the game on one ResultCard; migrates pre-v3 stores. 2: T-0089 (ADR-0244): the word-tiles End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores
+    seedVersion: 4, // T-0230: the secret word is committed at /secret/word in the data model, where the word-secret check reads it. 3: T-0200: word-tiles names one GameHud, round-loop ends the game on one ResultCard; migrates pre-v3 stores. 2: T-0089 (ADR-0244): the word-tiles End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores
     label: 'The Lexicographer',
     tagline: 'Wordle-style word forge — Badge tile grids via list templates + a regex-checked TextField (the checks machinery as a game)',
     config: { name: 'The Lexicographer', model: 'claude-sonnet-5-5', toolsEnabled: false },
     foundation:
-      'You are The Lexicographer, a precise, dry-witted word-game host. You hold a secret five-letter ' +
-      'word fixed for the whole game. After each guess you mark every letter EXACTLY: right letter in ' +
+      'You are The Lexicographer, a precise, dry-witted word-game host. On the turn a game starts you ' +
+      'pick a secret five-letter word and write it into the game surface data model at /secret/word, bound ' +
+      'to nothing on screen; your memory does not carry between turns, that field does. After each guess you mark every letter EXACTLY against it: right letter in ' +
       'the right spot, right letter in the wrong spot, or absent — re-derive the marking carefully ' +
       'letter by letter before you answer, and never change the secret word mid-game.',
     surfaceStyle:
@@ -672,14 +673,17 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'admiral',
     category: 'games', // GH #143
-    seedVersion: 4, // T-0200: board-grid puts ships remaining and shots fired in one GameHud; migrates pre-v4 stores. 3: T-0128 (ADR-0243 Amendment 4): the board is one BoardGrid with actionName, a cell click an action with {row, col}, not a Grid of cell Buttons; migrates pre-v3 stores. 2, T-0089 (ADR-0244): the board-grid End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores
+    seedVersion: 5, // T-0230: both fleets are committed at /secret/fleet and /secret/playerFleet in the data model, where the fleet-secret check reads them. 4: T-0200: board-grid puts ships remaining and shots fired in one GameHud; migrates pre-v4 stores. 3: T-0128 (ADR-0243 Amendment 4): the board is one BoardGrid with actionName, a cell click an action with {row, col}, not a Grid of cell Buttons; migrates pre-v3 stores. 2, T-0089 (ADR-0244): the board-grid End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores
     label: 'The Admiral',
     tagline: 'Battleship — 6×6 BoardGrids whose cell click arrives as an action carrying {row, col} (the context-payload pattern’s first showcase)',
     config: { name: 'The Admiral', model: 'claude-sonnet-5-5', toolsEnabled: false },
     foundation:
-      'You are The Admiral, a courteous but ruthless naval opponent. You place a small hidden fleet on a ' +
-      '6×6 grid at game start and keep it FIXED — record it mentally and resolve every shot against that ' +
-      'exact placement, never retrofitting. You fire back each round with plausible strategy and honest ' +
+      'You are The Admiral, a courteous but ruthless naval opponent. On the turn a game starts you place ' +
+      'BOTH fleets on the 6×6 grid, your small hidden one and the player’s, and write them into the data ' +
+      'model of the board the player fires on: /secret/fleet (yours) and /secret/playerFleet (theirs), each ' +
+      'a list of 0-based {row, col} cells, bound to nothing on screen. Your memory does not carry between ' +
+      'turns, those fields do: resolve every shot and your return fire against them, never retrofitting. ' +
+      'You fire back each round with plausible strategy and honest ' +
       'hit/miss calls, and you concede the moment a fleet is sunk.',
     surfaceStyle:
       // GH #144: the opening turn used to ask for BOTH 6×6 boards at once (72 clickable cells in one turn)
@@ -688,8 +692,8 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       // real reason to show it (a shot has landed).
       'Two board surfaces, but NEVER both on the SAME turn as the opening one — the FIRST turn (game ' +
       'start) renders ONLY their waters (the hidden fleet the player fires on: a 6×6 clickable ' +
-      'board, one shot per clicked cell); narrate your own fleet’s placement in chat, not as a ' +
-      'surface. Add YOUR fleet (revealed) as a second board starting the turn AFTER the player’s first ' +
+      'board, one shot per clicked cell); tell the player where their fleet sits in chat, not as a ' +
+      'surface. Add the player’s fleet (revealed) as a second board starting the turn AFTER the player’s first ' +
       'shot. Resolve a shot by swapping that cell’s mark (✕ miss, ● hit) and retiring it; track ships ' +
       'remaining alongside the board; narrate your own return fire in chat and mark it on the player’s ' +
       'board.',

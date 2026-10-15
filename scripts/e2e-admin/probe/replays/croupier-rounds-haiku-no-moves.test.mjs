@@ -6,11 +6,11 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0229 (the trailing meta-line in turn 1's reply). T-0233: the ACTION_NOT_APPLIED repair round resends
-// the CardTable in phase playing with `children: []`, so Hit and Stand are gone, and no check names it. When T-0229
-// lands, flip to `toEqual([])`; T-0233 adds its own finding to the turn-1 trace.
-it('croupier-rounds-haiku-no-moves: the recorded bet answer leaks its meta-line and drops the move buttons', async () => {
+// T-0229 (fixed): the trailing meta-line in turn 1's reply is peeled, so no probe check fails. expectedFail: T-0233:
+// the ACTION_NOT_APPLIED repair round resends the CardTable in phase playing with `children: []`, so Hit and Stand
+// are gone, and no check names it yet; T-0233 adds its own finding to the turn-1 trace.
+it('croupier-rounds-haiku-no-moves: the recorded bet answer drops the move buttons', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./croupier-rounds-haiku-no-moves.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual(['no-json-as-prose:1', 'no-internal-leak:1'])
+  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual([])
 })

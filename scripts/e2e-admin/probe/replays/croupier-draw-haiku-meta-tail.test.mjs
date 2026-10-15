@@ -6,10 +6,10 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0229. Haiku answered turn 1 in the text shape (prose, then a meta-line, then wire lines) and the
-// trailing meta-line, with its surface id, stays in the reply. When produce() peels it, flip to `toEqual([])`.
-it('croupier-draw-haiku-meta-tail: the recorded turns replay with the trailing meta-line in the chat prose', async () => {
+// T-0229 (fixed): Haiku answered turn 1 in the text shape (prose, then a meta-line, then wire lines). produce() now
+// peels the trailing meta-line wherever it sits, so the reply is the prose alone and its target still applies.
+it('croupier-draw-haiku-meta-tail: the recorded text-shape turn shows only its prose', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./croupier-draw-haiku-meta-tail.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual(['no-json-as-prose:1', 'no-internal-leak:1'])
+  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual([])
 })

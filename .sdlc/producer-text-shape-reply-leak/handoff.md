@@ -30,6 +30,6 @@ Guess: `peelMetaLine` (`packages/agent-ui/a2ui/src/agent/produce.ts`) peels only
 The failing test lands before or with the fix, never after. No em dashes.
 
 ## Acceptance criteria
-- (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/produce-response-type.test.ts` exits 0: prose, then a meta-line, then wire lines ships the prose as the reply and applies the meta-line's target; an unparseable A2UI line never reaches the reply.
+- (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/produce-response-type.test.ts -t T-0229` exits 0: prose, then a meta-line, then wire lines ships the prose as the reply and applies the meta-line's target; an unparseable A2UI line never reaches the reply.
 - `npx vitest run scripts/e2e-admin/probe/replays/croupier-draw-haiku-meta-tail.test.mjs` exits 0 with its expectation flipped to `toEqual([])`.
 - `npm run check` exits 0.

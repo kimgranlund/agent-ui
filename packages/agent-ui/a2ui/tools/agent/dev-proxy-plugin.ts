@@ -507,7 +507,8 @@ export function a2uiDevProxyPlugin(opts?: {
               // unknown id, never a 400/mixed catalog+prompt); reaches both the prompt and the validator
               // through the ONE existing `deps.catalog` seam (produce.ts) — no second threading path.
               // ADR-0238: the SELECTED catalog's persona semantic checks ride the same deps object
-              // (`semanticChecksDeps` adds nothing when the persona declares none, so such a turn is byte-identical).
+              // (`semanticChecksDeps` also adds T-0230's hidden-state checks on every catalog, silent unless a surface
+              // carries the word-game or Battleship signature).
               const selectedCatalog = selectCatalog(catalogs, catalogId, catalog)
               const deps: ProduceDeps = {
                 provider: trace.wrapProvider(dispatch.provider),
