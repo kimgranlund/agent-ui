@@ -430,6 +430,9 @@ export interface CheckOptions {
   /** The requested pick; checked against what the page sent. */
   model?: string
   effort?: string
+  /** T-0260: a live run's id (`x-a2ui-run-id`). Set, a turn with a routing oracle and no routing read from its
+   *  trace line fails `routing-expect`: the routing is unknown, and a skip would hide the trace gap. */
+  runId?: string
 }
 
 /** The named checks, in report order. */
@@ -556,7 +559,9 @@ export function runChecks(turns: readonly TurnRecord[], opts: CheckOptions): Che
     // trace line. Judged on a halted turn too: the routing is fixed before the model answers.
     const routing = t.step.expectRouting
     if (routing === undefined) out.push({ check: 'routing-expect', turn: t.index, status: 'skip', detail: 'no --expect-routing on this step' })
-    else if (t.routing === undefined) out.push({ check: 'routing-expect', turn: t.index, status: 'skip', detail: 'no routing recorded for this turn (no trace line with a routing block)' })
+    else if (t.routing === undefined && opts.runId !== undefined)
+      out.push({ check: 'routing-expect', turn: t.index, status: 'fail', detail: t.trace === undefined ? `no trace line for runId ${opts.runId}` : `trace line ${t.trace.id} has no routing block` })
+    else if (t.routing === undefined) out.push({ check: 'routing-expect', turn: t.index, status: 'skip', detail: 'no routing recorded for this replayed turn (the fixture turn has no routing)' })
     else {
       const misses = routingMisses(routing, t.routing)
       out.push({ check: 'routing-expect', turn: t.index, status: misses.length ? 'fail' : 'pass', detail: misses.length ? misses.join('; ') : 'routing as expected' })

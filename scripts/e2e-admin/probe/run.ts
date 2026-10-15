@@ -373,7 +373,12 @@ export async function probeOnce(shared: SharedRun, plan: ProbePlan, root: string
     await context.unrouteAll({ behavior: 'ignoreErrors' }).catch(() => {})
     await context.close().catch(() => {})
   }
-  const checks = runChecks(turns, { expectComponents: plan.expectComponents, ...(plan.model !== undefined ? { model: plan.model } : {}), ...(plan.effort !== undefined ? { effort: plan.effort } : {}) })
+  const checks = runChecks(turns, {
+    expectComponents: plan.expectComponents,
+    ...(plan.model !== undefined ? { model: plan.model } : {}),
+    ...(plan.effort !== undefined ? { effort: plan.effort } : {}),
+    ...(runId !== undefined ? { runId } : {}),
+  })
   return {
     kind: 'agent-ui-chat-probe-report',
     version: 1,

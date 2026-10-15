@@ -188,7 +188,14 @@ export async function runProbeSelftest(): Promise<number> {
   expectThat(pageParsed, 'desync: a fixture keeps its page steps')
   const quiet = runChecks([record({ trace: { id: 'd:1', outcome: 'ok', retries: [], thinkingChars: [0] } })], opts)
   expectThat(statusOf(quiet, 'reasoning') === 'warn' && caseVerdict(quiet, []) === undefined, 'checks: no thinking text is a warn, never a fail')
-  expectThat(statusOf(runChecks([record({ routing: undefined })], opts), 'routing-expect') === 'skip', 'checks: a turn with no recorded routing skips routing-expect (never a vacuous pass)')
+  expectThat(statusOf(runChecks([record({ routing: undefined })], opts), 'routing-expect') === 'skip', 'checks: a replayed turn with no saved routing skips routing-expect (never a vacuous pass)')
+  // A live turn with an oracle and no trace line for its run fails: the routing is unknown, and a skip would hide the gap.
+  const untraced = runChecks([record({ routing: undefined, trace: undefined })], { ...opts, runId: 'probe-x-1a2b' })
+  const untracedRow = untraced.find((c) => c.check === 'routing-expect')
+  expectThat(caseVerdict(untraced, ['routing-expect']) === undefined && untracedRow?.detail === 'no trace line for runId probe-x-1a2b', `checks: a live oracle with no trace line fails routing-expect, naming the run id (${untracedRow?.detail})`)
+  const unrouted = runChecks([record({ routing: undefined })], { ...opts, runId: 'probe-x-1a2b' })
+  expectThat(statusOf(unrouted, 'routing-expect') === 'fail', 'checks: a live oracle whose trace line has no routing block fails routing-expect')
+  expectThat(statusOf(runChecks([record({ step: { say: 'hi' }, routing: undefined, trace: undefined })], { ...opts, runId: 'probe-x-1a2b' }), 'routing-expect') === 'skip', 'checks: a live step with no oracle still skips routing-expect')
   const roundless = runChecks([record({ rounds: undefined, roundsSource: 'none' })], opts)
   expectThat(statusOf(roundless, 'no-surface-loss') === 'skip', 'checks: no round data skips the loss check (never a vacuous pass)')
 
