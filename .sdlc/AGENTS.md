@@ -99,3 +99,7 @@ Ticket lifecycle:
 5. Land: `python3 <plugin-root>/scripts/fanout.py land <branch>` for a lane branch, else merge the branch.
 6. Close: `python3 <plugin-root>/scripts/tickets.py --root .sdlc close <folder> --changed "<one line>"`, as in Close a ticket above.
 <!-- sdlc-lite:managed:end -->
+
+## Planned: the topics layout (T-0242)
+
+Ticket folders sit directly under `.sdlc/<slug>/` today. T-0242 (ready, after T-0208, T-0239 and T-0241) moves every ticket to `.sdlc/tickets/<slug>/`, other task dirs to `.sdlc/work/`, and `notes.md` to `notes/notes.md`, with `tickets.py migrate-layout --rewrite-refs`. Until it lands, cite `.sdlc/<slug>/`; nothing moves by hand. `.sdlc/evals/` (live round archives, T-0241) holds no handoff, so it is not a task dir; T-0242's dry run confirms it stays.

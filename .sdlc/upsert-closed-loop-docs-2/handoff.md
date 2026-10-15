@@ -31,3 +31,18 @@ After T-0208, T-0239 and T-0241 merge, every record they and the work since T-02
 - doc_lint plus `npm run check` exit 0; the sitemap carve-out runs if an ADR title, L1 descriptor or changelog is touched.
 - `git grep` finds no stale path to `.sdlc/croupier-closed-loop/runs`, `.sdlc/live-round-2/runs` or `live-probe.md` in live docs.
 - No em dashes added; ADRs untouched.
+
+## Acceptance criteria
+- `python3 /Users/kimgranlund/.claude/plugins/cache/nonoun-plugins/docs/1.22.5/scripts/doc_lint.py .claude/docs/references/agent-model.md .claude/docs/spec/a2ui-catalog-architecture.spec.md .claude/docs/spec/agent-closed-loop.spec.md .claude/docs/spec/agent-content.spec.md .claude/skills/a2ui-corpus-curation/SKILL.md .claude/skills/a2ui-payload-authoring/SKILL.md .claude/skills/a2ui-prompt-authoring/SKILL.md .claude/skills/project-facts/SKILL.md .claude/skills/seat-map/SKILL.md .sdlc/AGENTS.md CLAUDE.md scripts/e2e-admin/README.md` exits 0
+- `npm run check` exits 0
+- `git grep -n -e 'croupier-closed-loop/runs' -e 'live-round-2/runs' -e 'live-probe.md'` hits only `.sdlc/round-archive/handoff.md` and this handoff (ticket records), no live doc
+- `npx vitest run --project scripts scripts/e2e-admin/probe/run-capped.test.mjs scripts/e2e-admin/probe/scenarios/` exits 0 (closed-loop SPEC CL-R11 AC1)
+- `python3 scripts/agent-traces-to-fog.py selftest` exits 0 (CL-R12 AC1)
+- `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/agent-trace.test.ts` exits 0 (CL-R12 AC1)
+- `git diff f48c6636 -- . ':!.sdlc/upsert-closed-loop-docs-2' | grep '^+' | grep -c '—'` prints 0; no file under `.claude/docs/adr/` changed
+- The closed-loop SPEC CL-R2 probe table lists exactly the names in `CHECK_NAMES` (`scripts/e2e-admin/probe/model.ts`), and the producer check family codes match `composite-moments.ts` and `hidden-state-checks.ts`
+
+## Conductor additions (2026-10-15)
+- Also land `.sdlc/evals/context-fog-of-war-claude-parity.md` (the report for the context-fog-of-war author) and list it in `.sdlc/evals/README.md` if the index has a non-round section; do not reword it beyond fixing stale paths.
+- Also land the new ticket folder `.sdlc/drill-400px-overflow-flake/` (T-0244) as is.
+- T-0239 and T-0241 merged (#2004, #2003, #2005): cite `scripts/agent-traces-to-fog.py`, the `routing` trace block and `.sdlc/evals/rounds/<date>-<slug>/` as the round home.

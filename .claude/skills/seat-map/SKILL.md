@@ -92,6 +92,11 @@ Subagents inherit the repo CLAUDE.md, so briefs copy the *directive*, not the la
   affected-test run. A stale-base lane can also collide with
   replays pinned on main (`scripts/e2e-admin/probe/replays/`): after the rebase, re-run them and
   re-pin what the lane's fix flipped (`scripts/e2e-admin/README.md`, Fixtures and regressions).
+  Parallel lanes that each add a check family append to the same host wiring lists
+  (`a2ui/tools/agent/dev-proxy-plugin.ts`, `a2ui/tools/agent/worker/index.ts`,
+  `scripts/e2e-admin/probe/trace.ts`, `a2ui/src/catalog/semantic-check.ts`; T-0208 and T-0230 both did,
+  #2000 and #2002): the second to merge rebases onto the first, keeps both entries, and re-runs both
+  families' tests and the replays before its affected-test run.
 - **Concurrency ceiling (Kim ruling 2026-08-20).** At most **3 gate-running lanes** concurrent
   on this host (10 cores: `(cores − 2) / 3`, rounded down; each lane's vitest + a checker's
   Chromium shard is ~3 cores of real load); builders beyond the ceiling QUEUE, they don't fan

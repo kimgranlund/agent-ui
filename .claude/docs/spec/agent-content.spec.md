@@ -240,7 +240,12 @@ ticket against this SPEC runs that ticket's named tests and checks each cited `f
 4. Known gap, context loading (T-0231): skills, playbooks (workflows) and resources reach the prompt as index lines
    only (ADR-0190), so a preset's own hours, policies or booking flow never load unless the user names the item,
    which attaches it. Live round 2 (T-0225): the Concierge said it lacked hours its `property-knowledge-base`
-   holds, and Haiku never followed `booking-flow`. Until T-0231 rules, probe scenarios name the item.
-5. Known gap, hidden state (T-0230): a persona's skill content has no home for state the user must trust (a secret
-   word, a fleet) other than the surface data model; the rule is in the `a2ui-payload-authoring` skill, Common
-   traps.
+   holds, and Haiku never followed `booking-flow`. Until T-0231 rules, probe scenarios name the item. The gap is
+   visible per turn: each trace line's `routing.references[]` lists every entry with `load: 'index-only'` or
+   `'full'` (T-0239, agent-closed-loop CL-R12).
+5. Hidden state, decided (T-0230): state the user must trust (a secret word, a fleet) lives in the game surface's own
+   data model under the reserved key `/secret` (`/secret/word`; `/secret/fleet` and `/secret/playerFleet` as `{row,
+   col}` lists), committed on the opening turn and bound to no component. It is client-visible, the T-0218
+   face-down hole-card precedent, and the producer and the host's checks read it
+   (`packages/agent-ui/a2ui/src/catalog/hidden-state-checks.ts`, every catalog). Host-held state was rejected. The
+   authoring rule is in the `a2ui-payload-authoring` skill, Common traps.
