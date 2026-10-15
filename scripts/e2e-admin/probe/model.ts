@@ -379,8 +379,8 @@ export interface TurnRecord {
   /** T-0235: `log` when `proseText` is the whole chat log (live); the prose checks then judge only what the turn
    *  added over the previous `log` record. Absent: the turn's own prose (offline). */
   proseScope?: 'log'
-  /** T-0172: a `--click` whose label no surface button carried; the run stops there and still reports. */
-  clickMissing?: { label: string; available: string[] }
+  /** T-0172: a `--click` that played no turn; the run stops there and still reports. */
+  clickMissing?: ClickMissing
   lint?: Array<{ rule: string; detail: string }>
   lintNotRun?: string[]
   /** T-0256: absolute path in the local evidence cache (`evidence.ts`); local only, may be gone. */
@@ -415,6 +415,26 @@ export function ownExchange(step: ProbeStep, seen: ReadonlyArray<{ inputKind?: s
 
 /** The step a page-fired exchange is recorded under: its error code, else its input kind. */
 export const pageStep = (seen: { inputKind?: string; inputError?: string }): ProbeStep => ({ page: seen.inputError ?? seen.inputKind ?? 'unknown' })
+
+/** T-0172: a `--click` step that played no turn: `available` is the visible surface buttons after it. T-0271: absent
+ *  `clicked`, no button carried the label; set, the button was clicked (`inNewestSurface` false: a history surface's)
+ *  and no action request followed, or one did (`requested`) and its turn never settled. */
+export interface ClickMissing {
+  label: string
+  available: string[]
+  clicked?: boolean
+  inNewestSurface?: boolean
+  requested?: boolean
+}
+
+/** The click-target detail for a click that played no turn. */
+export function clickMissingDetail(m: ClickMissing): string {
+  const buttons = `(buttons: ${m.available.join(', ') || 'none'})`
+  if (m.clicked !== true) return `no surface button reading "${m.label}" ${buttons}`
+  const where = m.inNewestSurface === false ? ' on an older surface in the log, not the newest' : ''
+  const after = m.requested === true ? 'its action request went out, but the turn never settled' : 'but no produce request followed'
+  return `clicked "${m.label}"${where}, ${after} ${buttons}`
+}
 
 export type CheckStatus = 'pass' | 'fail' | 'warn' | 'skip'
 
@@ -473,11 +493,11 @@ export function runChecks(turns: readonly TurnRecord[], opts: CheckOptions): Che
       if (opts.effort !== undefined && t.request.effort !== opts.effort) bad.push(`effort ${JSON.stringify(t.request.effort)} != ${opts.effort}`)
       out.push({ check: 'model-pick', turn: t.index, status: bad.length ? 'fail' : 'pass', detail: bad.length ? bad.join('; ') : `${t.request.model ?? '-'} / ${t.request.effort ?? '-'}` })
     }
-    // click-target (T-0172): a `--click` found its button. A missing one (the hand ended on 21, so no Stand) fails
-    // here by name and the run still writes its report, never an abort.
+    // click-target (T-0172): a `--click` found its button and started its turn. A missing one (the hand ended on 21,
+    // so no Stand) or a dead click (T-0271) fails here by name and the run still writes its report, never an abort.
     if (!('click' in t.step)) out.push({ check: 'click-target', turn: t.index, status: 'skip', detail: 'not a click turn' })
     else if (t.clickMissing !== undefined)
-      out.push({ check: 'click-target', turn: t.index, status: 'fail', detail: `no surface button reading "${t.clickMissing.label}" (buttons: ${t.clickMissing.available.join(', ') || 'none'})` })
+      out.push({ check: 'click-target', turn: t.index, status: 'fail', detail: clickMissingDetail(t.clickMissing) })
     else out.push({ check: 'click-target', turn: t.index, status: 'pass', detail: `clicked "${t.step.click}"` })
     // no-halt: no terminal error line, no halt or error outcome in the trace, no non-2xx answer.
     const halted =

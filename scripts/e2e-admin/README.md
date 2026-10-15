@@ -31,7 +31,7 @@ Each turn records the request the page sent (model, effort, catalog), the wire l
 | Check | Fails when |
 |---|---|
 | `model-pick` | the produce request does not carry the `--model` or `--effort` asked for (picked through the composer's own pickers) |
-| `click-target` | a `--click` step finds no visible surface button with that label (T-0172) |
+| `click-target` | a `--click` step finds no visible surface button with that label (T-0172), or clicks one and starts no turn; the detail says which, and whether the button sat on an older surface (T-0271) |
 | `no-halt` | an error meta-line, a `halt` or `error` trace outcome, or a non-2xx answer |
 | `no-json-as-prose` | the chat log's visible prose (outside surface hosts and the activity strip) carries A2UI JSON, or a `{"a2uiMeta"` meta-line (T-0213) |
 | `no-internal-leak` | the chat prose shows a repair round's correction note (`Corrected:`, a leading `Fixed.`) or a surface id (`table-3`, `ask-2`) (T-0217) |

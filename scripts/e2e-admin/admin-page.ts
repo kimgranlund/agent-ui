@@ -302,16 +302,19 @@ export class AdminPage {
 
   /** Wait for a visible surface button reading `label` in the pane, then click the last one (the real A2UI
    *  action path). T-0184: the last visible match is the newest surface's; a finished round's table stays in
-   *  the log as history with its hidden bet strip and its own "Deal again", so the first match is stale. */
-  async clickSurfaceButton(label: string, pane: ConversationPane = 'chat'): Promise<void> {
+   *  the log as history with its hidden bet strip and its own "Deal again", so the first match is stale.
+   *  T-0271: resolves whether the clicked button sat in the pane's newest surface host (false: a history surface). */
+  async clickSurfaceButton(label: string, pane: ConversationPane = 'chat'): Promise<{ inNewestSurface: boolean }> {
     const selector = `${paneSelector(pane)} ${ADMIN_SELECTORS.surfaceButton}`
     await pollUntil(() => this.surfaceButtonLabels(pane), (labels) => labels.includes(label), `a visible surface button reading "${label}" in the ${pane} pane`)
-    await this.page.evaluate(
-      ({ s, l }) => {
+    return this.page.evaluate(
+      ({ s, h, l }) => {
         const button = [...document.querySelectorAll<HTMLElement>(s)].filter((b) => b.textContent?.trim() === l && b.checkVisibility()).at(-1)
         button?.click()
+        const newest = [...document.querySelectorAll(h)].at(-1)
+        return { inNewestSurface: button !== undefined && newest !== undefined && newest.contains(button) }
       },
-      { s: selector, l: label },
+      { s: selector, h: `${paneSelector(pane)} ${ADMIN_SELECTORS.surfaceHost}`, l: label },
     )
   }
 

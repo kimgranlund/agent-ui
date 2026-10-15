@@ -28,7 +28,11 @@ describe('AdminPage surface buttons', () => {
     for (const b of document.querySelectorAll('ui-button')) b.addEventListener('click', () => clicked.push(b.textContent))
     document.querySelector('ui-surface-host:last-child').insertAdjacentHTML('beforeend', '<div hidden><ui-button>Hit</ui-button></div>')
     document.querySelector('ui-surface-host:last-child div[hidden] ui-button').addEventListener('click', () => clicked.push('hidden Hit'))
-    await new AdminPage(page).clickSurfaceButton('Hit')
+    expect(await new AdminPage(page).clickSurfaceButton('Hit')).toEqual({ inNewestSurface: true })
     expect(clicked).toEqual(['Hit'])
+  })
+
+  it('says when the clicked button sits on an older surface (T-0271)', async () => {
+    expect(await new AdminPage(page).clickSurfaceButton('Deal again')).toEqual({ inNewestSurface: false })
   })
 })
