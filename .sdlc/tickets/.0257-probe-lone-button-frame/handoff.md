@@ -2,13 +2,11 @@
 id: T-0257
 title: "chat:probe browser selftest fails lone-button-frame on recorded-haiku-hello"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
 created: 2026-10-15
-branch: fix/probe-lone-button-frame
-worktree: .claude/worktrees/wave-lb
 router: .sdlc/tickets/AGENTS.md  # how to claim and close this ticket
 ---
 
@@ -33,3 +31,9 @@ The failing check lands before or with the fix. No allowlist line unless the fin
 
 ## Conductor note for the verifier
 The fix hand-edits a recorded live fixture (`recorded-haiku-hello.json`) so the selftest goes green. Judge whether that keeps the fixture honest: the selftest is a keyless green-path check of the probe pipeline, but if Haiku really produces the framed-choice pattern, the edited fixture hides it. Acceptable only if the source field says it was hand-edited and the real failure stays covered somewhere (a negative fixture, or a ticket). Say which in your verdict.
+
+## Outcome
+
+2026-10-15 · lane: full L1 · verdict: closed by reason (Merged in #2024: browser selftest green; Haiku hello replay fixed; real output tracked in T-0258) · verifier: none · base: none
+- Changed: see commits
+- Commits: none
