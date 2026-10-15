@@ -235,7 +235,7 @@
     padding: 0;
     background: none;
     border: none;
-    --ui-surface-host-working-radius: var(--md-sys-card-radius, var(--md-sys-shape-corner-base, 12px));
+    --ui-surface-host-working-radius: var(--md-sys-card-radius);
   }
 
   /* GH 1164 — :state(superseded): the settled-history dim. A LATER turn shifted the conversation's
