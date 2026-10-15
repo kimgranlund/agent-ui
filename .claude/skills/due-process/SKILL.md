@@ -102,6 +102,6 @@ this repo, in `nonoun-plugins` — out of scope here, flagged instead of edited)
 - **Every Agent-tool subagent operating in this repo inherits its `CLAUDE.md`** — including a
   `teamwork:build-leader`/`dispatch-ticket` dispatch reached from outside this repo. (A `context:
   fork`-style skill invocation, e.g. `Explore`/`Plan`, does not carry the same project-CLAUDE.md
-  inheritance guarantee — this line covers Agent-tool subagent dispatches only.) `CLAUDE.md`'s
+  inheritance guarantee — this line covers Agent-tool subagent dispatches only.) The AGENTS.md Process
   one-line pointer is what makes the loop visible even when no `repo-orchestrator-agent` campaign
   is involved.
