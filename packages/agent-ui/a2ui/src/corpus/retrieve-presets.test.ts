@@ -7,6 +7,7 @@
 // lexicographer and admiral turn now each rank its own composite first) and three frontier seeds. T-0253 re-pinned
 // croupier and quizmaster after the games family rule: another game's board no longer ranks on a card table's turn.
 // T-0268 adds the Lexicographer's opening turns, which reach the word board through its prompt's "word game".
+// T-0273 adds croupier "Hit" turns: another game's board is out of scope on a card table's turn.
 import { describe, it, expect } from 'vitest'
 import { readdirSync, readFileSync } from 'node:fs'
 import { retrieve } from './retrieve.ts'
@@ -68,6 +69,13 @@ describe('retrieve: a games preset ranks its own composite family first (T-0253)
   it('croupier: the CardTable leads and no BoardGrid is in the top 3', () => {
     const got = top3('agent-ui--croupier', 'Deal again')
     expect(uses(got[0]!, 'CardTable')).toBe(true)
+    expect(got.filter((r) => uses(r, 'BoardGrid')).map((r) => r.name)).toEqual([])
+  })
+
+  // T-0273: "hit" is Battleship vocabulary too; another game's board is out of scope on a card table's turn.
+  it.each(['Hit me again.', 'Hit.', 'Hit me until I bust.'])('croupier "%s": the CardTable leads and no BoardGrid is in the top 3', (turn) => {
+    const got = top3('agent-ui--croupier', turn)
+    expect(got[0]!.name).toBe('domain-croupier-card-table-round')
     expect(got.filter((r) => uses(r, 'BoardGrid')).map((r) => r.name)).toEqual([])
   })
 

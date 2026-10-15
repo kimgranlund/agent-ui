@@ -24,3 +24,9 @@ Read `.sdlc/evals/rounds/2026-10-15-r3-routing/traces/2026-10-15.jsonl` lines 42
 
 ## Context
 `packages/agent-ui/a2ui/src/corpus/retrieve-presets.test.ts` pins only "Deal again". Guess: "hit" is Battleship vocabulary, and the T-0253 family rule does not demote another game's board below non-game exemplars. Found by T-0261.
+
+## Acceptance criteria
+- `npx vitest run packages/agent-ui/a2ui/src/corpus/retrieve-presets.test.ts` exits 0, with "Hit me again.", "Hit." and "Hit me until I bust." on `agent-ui--croupier` ranking `domain-croupier-card-table-round` first and no BoardGrid record in the top 3 (these three cases fail on the T-0253 rule), and every earlier preset pin unchanged.
+- `npx vitest run packages/agent-ui/a2ui/src/corpus/retrieve.test.ts` exits 0: on a family turn another game's composite never surfaces, even on a better match.
+- `npx vitest run packages/agent-ui/a2ui/src/corpus packages/agent-ui/a2ui/tools/corpus packages/agent-ui/a2ui/tools/agent` exits 0.
+- `npm run check` exits 0.

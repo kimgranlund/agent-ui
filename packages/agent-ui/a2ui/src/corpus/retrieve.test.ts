@@ -465,8 +465,9 @@ describe('retrieve: the selected-domain rule (T-0238)', () => {
   ]
 
   it('a domain turn never retrieves another domain composite, and ranks its own first', () => {
-    const names = retrieve(records, query({ intent: 'show the game board', catalogId: 'agent-ui--croupier' })).map((r) => r.name)
-    expect(names).toEqual(['board', 'plain'])
+    // T-0273: a croupier turn now drops the board too (another game's composite), so a concierge turn shows the rule.
+    const names = retrieve(records, query({ intent: 'show the game board', catalogId: 'agent-ui--concierge' })).map((r) => r.name)
+    expect(names).toEqual(['service', 'plain'])
   })
 
   it('the turn domain record ranks first even when another record matches better', () => {
@@ -476,10 +477,10 @@ describe('retrieve: the selected-domain rule (T-0238)', () => {
     expect(names).toEqual(['table', 'unrelated'])
   })
 
-  it('T-0253: another game composite never ranks first on a family turn, and competes on score only', () => {
+  it('T-0253 and T-0273: another game composite never surfaces on a family turn, even on a better match', () => {
     const table = exemplar({ name: 'table', promptText: 'deal the cards', componentsUsed: ['CardTable', 'Text'] })
     expect(retrieve([table, ...records], query({ intent: 'deal again', catalogId: 'agent-ui--croupier' })).map((r) => r.name)).toEqual(['table'])
-    expect(retrieve([table, ...records], query({ intent: 'show the game board', catalogId: 'agent-ui--croupier' })).map((r) => r.name)).toEqual(['table', 'board', 'plain'])
+    expect(retrieve([table, ...records], query({ intent: 'show the game board', catalogId: 'agent-ui--croupier' })).map((r) => r.name)).toEqual(['table', 'plain'])
   })
 
   it('the fallback tier never pads with a zero-score record', () => {

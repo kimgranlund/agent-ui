@@ -41,9 +41,11 @@
 //
 // T-0253: the family rule, games only. A persona turn's composite family is the types its fragment homes
 // (`personas/<persona>`: CardTable and PlayingCard for croupier). Each game is its own family, so when the family is
-// non-empty a games record ranks first only if it uses a family type; another game's composite (a board on a card
-// table's turn) competes with the rest on a positive score. Other domains keep the T-0238 order, because their
+// non-empty a games record ranks first only if it uses a family type. Other domains keep the T-0238 order, because their
 // composites serve one job together (a concierge turn still ranks the ServiceCard gateway first).
+//
+// T-0273: another game's composite (a board on a card table's turn) never surfaces on a family turn. Under T-0253 it
+// competed with the rest on a positive score, so "Hit." ranked the Battleship board second on shared vocabulary.
 
 import type { CorpusRecord, ModelVisibleFacet } from './record.ts'
 import { baseCatalogId } from './base-id.ts'
@@ -98,7 +100,8 @@ function familyTypes(catalogId: string): Set<string> {
  * T-0238: on a turn whose catalog selects domains (`selectedDomains`), a record using another domain's type is out
  * of scope, the turn's own domain records rank first (all of them, best match first), and the remaining slots take
  * only records that score above zero. Fewer than `k` results is the honest answer when nothing else matches.
- * T-0253: on a persona turn whose fragment homes domain types, a games record ranks first only if it uses one of them.
+ * T-0253: on a persona turn whose fragment homes domain types, a games record ranks first only if it uses one of them;
+ * T-0273: a games record that uses none of them is out of scope on that turn.
  *
  * Never throws. Resolves to `[]` for: an empty `records` input, an empty scope after filtering
  * (SPEC-R11 AC2), `query.k <= 0`, or a query whose tokens share zero vocabulary with the scope — a
@@ -133,7 +136,8 @@ export function retrieve(records: readonly CorpusRecord[], query: RetrieveQuery)
   for (const r of scope) {
     const domains = recordDomains(r)
     if (selected.length > 0 && domains.some((d) => !selected.includes(d))) continue
-    ;(domains.length > 0 && selected.length > 0 && ofFamily(r, domains) ? own : rest).push(r)
+    if (selected.length > 0 && !ofFamily(r, domains)) continue // T-0273: another game's composite
+    ;(domains.length > 0 && selected.length > 0 ? own : rest).push(r)
   }
   const ranked = topKByCosine(own, documentText, query.intent, own.length, byName)
   const first = [...ranked, ...own.filter((r) => !ranked.includes(r)).sort(byName)].slice(0, query.k)
