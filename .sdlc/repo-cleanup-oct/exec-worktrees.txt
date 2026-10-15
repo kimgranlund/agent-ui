@@ -1,0 +1,36 @@
+# reap-worktrees — EXECUTE (repo: /Users/kimgranlund/Projects/nonoun/agent-ui)
+  /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ci  ci/review-oauth           REAP              PR #1964 MERGED at this tip
+  /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-cl  chore/croupier-closed-loop  KEEP(dirty)       git status --porcelain is non-empty
+  /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-cm  feat/composite-moment-checks  REAP              PR #2002 MERGED at this tip
+  /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-cr  fix/croupier-rules-money  REAP              PR #1994 MERGED at this tip
+  /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-d3  fix/dogfood3-demos        KEEP(dirty)       git status --porcelain is non-empty
+  /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-dl  chore/upsert-round2-learnings  REAP              PR #1999 MERGED at this tip
+  /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-dx  feat/domain-exemplars-plumbing  KEEP(dirty)       git status --porcelain is non-empty
+  /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-e3  fix/dogfood3-entry        KEEP(dirty)       git status --porcelain is non-empty
+  /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ex  fix/exemplar-routing-off-domain  REAP              PR #2001 MERGED at this tip
+  /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-hs  fix/hidden-state-text-shape  REAP              PR #2000 MERGED at this tip
+  /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-lr  chore/live-round-2        REAP              PR #1996 MERGED at this tip
+  /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-mc  chore/model-capability-settings  KEEP(dirty)       git status --porcelain is non-empty
+  /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-n3  fix/dogfood3-data-nav     KEEP(dirty)       git status --porcelain is non-empty
+  /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-nc  fix/cardtable-nested-cards  REAP              PR #1991 MERGED at this tip
+  /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-pb  fix/chat-probe-capture-defects  KEEP(dirty)       git status --porcelain is non-empty
+  /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-pr  fix/producer-renderer-leaks  REAP              PR #1997 MERGED at this tip
+  /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-r2  chore/live-round-2-run    REAP              PR #1998 MERGED at this tip
+  /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ra  feat/round-archive        REAP              PR #2003 MERGED at this tip
+  /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-rt  feat/prompt-cache-budget  REAP              PR #1993 MERGED at this tip
+  /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-tr  feat/agent-trace-routing-fields  REAP              PR #2004 MERGED at this tip
+  /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-w3  fix/dogfood3-widgets      KEEP(dirty)       git status --porcelain is non-empty
+  removed /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ci
+  removed /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-cm
+  removed /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-cr
+  removed /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-dl
+  removed /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ex
+  removed /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-hs
+  removed /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-lr
+  removed /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-nc
+  removed /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-pr
+  removed /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-r2
+  removed /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-ra
+  removed /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-rt
+  removed /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-tr
+reap-worktrees · ok · 0 fail / 8 warn

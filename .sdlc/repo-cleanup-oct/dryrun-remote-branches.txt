@@ -1,0 +1,15 @@
+KEEP                                                   no merged PR
+DELETE   chore/sdlc-store-sync                         PR #2005 merged at tip
+DELETE   chore/track-sdlc                              PR #2014 merged at tip
+KEEP     feat/foundations-repin-a01                    no merged PR
+KEEP     feat/foundations-repin-a02                    no merged PR
+KEEP     feat/foundations-repin-a03                    no merged PR
+KEEP     feat/foundations-repin-a04                    no merged PR
+KEEP     feat/foundations-repin-a05                    no merged PR
+KEEP     feat/foundations-repin-a06                    no merged PR
+KEEP     feat/foundations-repin-a07                    no merged PR
+KEEP     feat/foundations-repin-a08                    no merged PR
+KEEP     feat/foundations-repin-a10                    no merged PR
+DELETE   fix/lane-d-small-fixes                        PR #2006 merged at tip
+KEEP     integ/foundations-wave1                       no merged PR
+KEEP     main                                          default
