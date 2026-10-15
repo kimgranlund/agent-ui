@@ -45,7 +45,7 @@
 
 import { topKByCosine } from '../corpus/text-similarity.ts'
 import { baseCatalogId } from '../corpus/base-id.ts'
-import { catalogIdDomains } from '../catalog/catalog-id.ts'
+import { selectedDomains } from '../catalog/layers.ts'
 import { parseFrontmatter } from './prompts/frontmatter.ts'
 import { listAssets, readAsset } from './asset-source.ts'
 
@@ -64,7 +64,7 @@ export interface MiniSkill {
    *  a mini-skill selected on a non-`agent-ui` turn used to inject wrong-dialect teaching with no guard. */
   catalogId: string
   /** T-0202 (catalog architecture CA-R4): the domain whose types `body` names (`domain:` frontmatter). The module
-   *  is selected only on a turn whose effective catalog holds that domain (`catalogIdDomains`), so a plain base
+   *  is selected only on a turn whose effective catalog holds that domain (`selectedDomains`), so a plain base
    *  turn is never taught a domain type it cannot emit. Absent: any turn on the base. */
   domain?: string
 }
@@ -118,7 +118,7 @@ export const MINI_SKILLS: MiniSkill[] = loadMiniSkills()
  */
 export function selectMiniSkills(intent: string, registry: readonly MiniSkill[], cap: number, catalogId: string): MiniSkill[] {
   const base = baseCatalogId(catalogId)
-  const domains = catalogIdDomains(catalogId)
+  const domains = selectedDomains(catalogId) // T-0207: a persona catalog selects its fragment's domain
   const inScope = registry.filter((m) => m.catalogId === base && (m.domain === undefined || domains.includes(m.domain)))
   return topKByCosine(inScope, (m) => m.triggers, intent, cap, (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0), 0)
 }

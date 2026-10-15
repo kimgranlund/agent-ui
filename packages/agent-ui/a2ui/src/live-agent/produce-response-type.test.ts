@@ -177,12 +177,14 @@ describe('render_surface tool round', () => {
     expect(contentOf(lines).join('\n')).not.toContain('NotARealComponent')
   })
 
-  it('the tool description names the open surfaces of the session', async () => {
+  it('the user turn names the open surfaces of the session; the tool description stays stable (T-0206)', async () => {
     const session = appendAssistantTurn(appendUserTurn({ turns: [] }, 'a submit button'), VALID)
     const { provider, reqs } = scripted([{ text: 'Sure.' }])
     await run(intentOf('add a caption', session), provider)
-    const tool = reqs()[0]!.tools!.find((t) => t.name === 'render_surface')!
-    expect(tool.description).toContain('Open surfaces: main.')
+    const req = reqs()[0]!
+    expect(req.messages.at(-1)!.content).toBe('add a caption\n\n[Open surfaces: main.]')
+    const tool = req.tools!.find((t) => t.name === 'render_surface')!
+    expect(tool.description).not.toContain('Open surfaces')
   })
 
   it("the tool's target states the meta-line target arm when the text declared none", async () => {

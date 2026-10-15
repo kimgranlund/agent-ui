@@ -6,7 +6,10 @@
 // Each row also names the catalog that declares the type today (`home`). A domain-layer row homed in `default` is a
 // type the SPEC moves out in W2 (§5.3); the row and the move change together. `layers.test.ts` holds the map equal
 // to the catalogs: a type with no row, a row whose home does not declare its type, or a layer its home cannot hold
-// reds the gate. Content is SPEC §5's classification (AC2). Pure data, no import.
+// reds the gate. Content is SPEC §5's classification (AC2). Pure data plus the selected-domain read (T-0207), whose
+// one import is the import-free id grammar.
+
+import { catalogIdDomains } from './catalog-id.ts'
 
 /** The three layers (CA-R1). The agentic layer lives inside the `agent-ui` base (D1). */
 export type CatalogLayer = 'core' | 'agentic' | 'domain'
@@ -67,3 +70,21 @@ export const CATALOG_LAYER_MAP: Readonly<Record<string, LayerRow>> = Object.free
 /** Fragments outside the map: `fixture-demo` is the composition mechanism's test fixture, never a shipped pattern
  *  (persona SPEC-N6), so its type belongs to no layer. */
 export const LAYER_MAP_EXEMPT_HOMES: readonly string[] = ['personas/fixture-demo']
+
+/** T-0207 (CA-R4): the domains an effective catalog id selects: its `+` tail (`catalogIdDomains`), plus the domain of
+ *  every row a `<base>--<persona>` fragment homes (`agent-ui--croupier` selects `games`). A base id selects none. */
+export function selectedDomains(catalogId: string): readonly string[] {
+  const sep = catalogId.indexOf('--')
+  if (sep === -1) return []
+  const home = `personas/${catalogId.slice(sep + 2)}`
+  const fromPersona = Object.values(CATALOG_LAYER_MAP).flatMap((r) => (r.home === home && r.domain !== undefined ? [r.domain] : []))
+  return [...new Set([...catalogIdDomains(catalogId), ...fromPersona])]
+}
+
+/** T-0207: a domain-layer type whose domain `selected` lacks. Its selection guidance (its clause, and every edge
+ *  naming it) leaves the inventory. Rows still homed in `default` are exempt until W2 moves each to its domain and
+ *  presets declare their domains first (SPEC §5.3), so no turn's prompt moves before then. */
+export function isUnselectedDomainType(type: string, selected: readonly string[]): boolean {
+  const row = Object.hasOwn(CATALOG_LAYER_MAP, type) ? CATALOG_LAYER_MAP[type]! : undefined
+  return row !== undefined && row.layer === 'domain' && row.home !== 'default' && !selected.includes(row.domain!)
+}

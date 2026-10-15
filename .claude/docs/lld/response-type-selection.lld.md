@@ -13,7 +13,7 @@ There is no decision point. `grammar.md` decides in prose; `produce()` (`package
 
 | Module | Change | SPEC |
 |---|---|---|
-| `src/agent/response-type.ts` (new, pure, zero-dep) | `RESPONSE_TYPES`, `ResponsePreference`, `RENDER_SURFACE_TOOL_NAME`, `renderSurfaceTool(openSurfaceIds): ToolDef`, `detectUserOverride(input): 'text' \| 'surface' \| undefined`, `classifyResponse(hasText, hasSurface)`, `isLegacyShape(text)` | R1, R6, R10 |
+| `src/agent/response-type.ts` (new, pure, zero-dep) | `RESPONSE_TYPES`, `ResponsePreference`, `RENDER_SURFACE_TOOL_NAME`, `renderSurfaceTool(): ToolDef`, `openSurfacesNote(openSurfaceIds)` (T-0206), `detectUserOverride(input): 'text' \| 'surface' \| undefined`, `classifyResponse(hasText, hasSurface)`, `isLegacyShape(text)` | R1, R6, R10 |
 | `src/agent/agent-transport.ts` | `stream` request gains `terminalTools?` and `toolChoice?` (additive, documented as ignorable) | R2 |
 | `src/agent/providers/anthropic.ts` | terminal-only round yields text live and ends on a terminal call without continuation; mixed rounds keep the GH #49 law; `buildRequestBody` maps `toolChoice` only when no `thinking` is sent | R2 |
 | `src/agent/meta-line.ts` | `textDelta?: string` on the envelope type and `readMetaLine` (shallow, drops only itself) | R5 |

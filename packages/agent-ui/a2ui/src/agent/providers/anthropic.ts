@@ -20,7 +20,7 @@
 // tool loop sends them back unmodified with the tool results; that replay is request-side only.
 
 import type { AgentProvider, Turn, Effort, ProviderEvent, ToolDef } from '../agent-transport.ts'
-import type { ModelSettings } from '../model-capabilities.ts'
+import type { CacheTtl, ModelSettings } from '../model-capabilities.ts'
 import { capabilitiesFor, normalizeModelSettings, DEFAULT_DISPLAY } from '../model-capabilities.ts'
 import type { TokenUsage } from '../meta-line.ts'
 import { AgentTimeoutError } from '../deadlines.ts'
@@ -429,6 +429,8 @@ const HAIKU_55_MAX_TOKENS = { default: 5376, medium: 4096, high: 5376, xhigh: 81
 export function buildRequestBody(req: {
   model: string
   system: string
+  /** T-0206: chars into `system` where the stable prefix ends (see `AgentProvider.stream`). */
+  systemCacheBoundary?: number
   messages: Turn[]
   effort?: Effort
   /** T-0185: the agent's model settings, checked against the capability table here. */
@@ -448,10 +450,23 @@ export function buildRequestBody(req: {
   return { ...body, tool_choice: { type: 'tool', name: req.toolChoice.name } }
 }
 
+/** The `system` param. T-0206: with a stable-prefix boundary, a block array whose one `cache_control`
+ *  breakpoint closes the prefix (grammar, components, functions), so repeat turns of one agent read it from
+ *  cache; the volatile rest follows uncached. No empty text block is ever sent (the API rejects one). T-0185:
+ *  with no boundary, a cache TTL caches the whole prompt as one block, and no TTL sends the plain string. */
+function systemField(system: string, boundary: number | undefined, ttl: CacheTtl | undefined): string | Record<string, unknown>[] {
+  const cacheControl = { type: 'ephemeral', ...(ttl !== undefined ? { ttl } : {}) }
+  if (boundary === undefined || boundary <= 0) return ttl !== undefined ? [{ type: 'text', text: system, cache_control: cacheControl }] : system
+  const prefix = system.slice(0, boundary)
+  const rest = system.slice(boundary)
+  return [{ type: 'text', text: prefix, cache_control: cacheControl }, ...(rest !== '' ? [{ type: 'text', text: rest }] : [])]
+}
+
 /** `buildRequestBody` without the `tool_choice` mapping: the effort arms. */
 function buildArmBody(req: {
   model: string
   system: string
+  systemCacheBoundary?: number
   messages: Turn[]
   effort?: Effort
   modelSettings?: ModelSettings
@@ -461,8 +476,7 @@ function buildArmBody(req: {
 }): Record<string, unknown> {
   const row = capabilitiesFor(req.model)
   const settings = normalizeModelSettings(req.model, req.modelSettings, req.effort)
-  // T-0185: a cache TTL turns the system prompt into one cached text block.
-  const system = settings.cacheTtl !== undefined ? [{ type: 'text', text: req.system, cache_control: { type: 'ephemeral', ttl: settings.cacheTtl } }] : req.system
+  const system = systemField(req.system, req.systemCacheBoundary, settings.cacheTtl)
   const base = {
     model: req.model,
     system,

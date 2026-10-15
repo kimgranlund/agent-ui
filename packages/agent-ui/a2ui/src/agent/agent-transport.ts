@@ -140,6 +140,10 @@ export interface AgentProvider {
   stream(req: {
     model: string
     system: string
+    /** T-0206: OPTIONAL count of chars into `system` that are stable across one agent's turns (the
+     *  `effort?` additive precedent: an adapter that ignores it is byte-behavior-unchanged). The Anthropic
+     *  adapter closes that prefix with its one prompt-cache breakpoint. */
+    systemCacheBoundary?: number
     messages: Turn[]
     /** Optional reasoning-effort dial. This is the SEAM's contract, not a guarantee every adapter already
      *  meets: an adapter SHOULD ignore an effort level it can't map (a degraded DIAL, never a degraded

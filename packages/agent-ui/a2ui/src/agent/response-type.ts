@@ -15,9 +15,9 @@ export type ResponsePreference = (typeof RESPONSE_PREFERENCES)[number]
 
 export const RENDER_SURFACE_TOOL_NAME = 'render_surface'
 
-/** The `render_surface` tool definition, naming every surface currently open. */
-export function renderSurfaceTool(openSurfaceIds: readonly string[]): ToolDef {
-  const open = openSurfaceIds.length > 0 ? `Open surfaces: ${openSurfaceIds.join(', ')}.` : 'No surface is open yet.'
+/** The `render_surface` tool definition. T-0206: byte-stable across turns, because tools open the
+ *  prompt-cache prefix; the open surfaces ride on the user turn instead (`openSurfacesNote`). */
+export function renderSurfaceTool(): ToolDef {
   return {
     name: RENDER_SURFACE_TOOL_NAME,
     description:
@@ -25,7 +25,7 @@ export function renderSurfaceTool(openSurfaceIds: readonly string[]): ToolDef {
       'fill in or act on (a comparison, table, steps, schedule, form or choice); facts, definitions and opinions ' +
       'stay plain text. To explain and show, write the explanation as text, then call this too. Every call ' +
       'carries `reply`, one short line to the user shown as your chat reply; the surface never replaces it. ' +
-      `${open} Prefer an update to an open surface over creating a new one when one fits. ` +
+      'Prefer an update to an open surface over creating a new one when one fits. ' +
       '`messages` is the A2UI message list in order, each entry ONE message object (createSurface, ' +
       'updateComponents, updateDataModel or deleteSurface), never a JSON string; `target` is the surface id it updates.',
     input_schema: {
@@ -39,6 +39,12 @@ export function renderSurfaceTool(openSurfaceIds: readonly string[]): ToolDef {
       required: ['reply', 'messages'],
     },
   }
+}
+
+/** T-0206: the line appended to the current user turn naming every surface open in the session, or ''
+ *  when none is (the tool description used to carry it, which changed the cached prefix every turn). */
+export function openSurfacesNote(openSurfaceIds: readonly string[]): string {
+  return openSurfaceIds.length > 0 ? `[Open surfaces: ${openSurfaceIds.join(', ')}.]` : ''
 }
 
 /**
