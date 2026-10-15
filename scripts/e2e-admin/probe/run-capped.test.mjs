@@ -5,7 +5,7 @@ import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, write
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { describeEvals, describeRound, estimateSpend, listRound, parseCommands, roundStart, runCapped, runRound, traceSpend, writeRoundReadme } from './run-capped.ts'
+import { describeCommands, describeEvals, describeRound, estimateSpend, listRound, parseCommands, roundStart, runCapped, runRound, shellWords, traceSpend, writeRoundReadme } from './run-capped.ts'
 
 const line = (at, model, usage) => JSON.stringify({ at, model, usage })
 const SCRIPT = ['#!/usr/bin/env bash', '# header', '', ...[1, 2, 3, 4, 5].map((i) => `npm run chat:probe -- --agent croupier --say hi --out runs/r${i} --name r${i}`)].join('\n')
@@ -20,6 +20,14 @@ describe('run-capped', () => {
     ].join('\n')
     expect(estimateSpend(jsonl)).toBeCloseTo(2 + 0.6 + 4)
     expect(estimateSpend(jsonl, '2026-10-14T11:00:00Z')).toBeCloseTo(0.6 + 4)
+  })
+
+  it('T-0260: describes each command as the probe parses it, and names the first one it would refuse', () => {
+    expect(shellWords('npm run chat:probe -- --say "Let\'s \\"go\\" \\$5" --out runs/a')).toEqual(['npm', 'run', 'chat:probe', '--', '--say', 'Let\'s "go" $5', '--out', 'runs/a'])
+    const ok = 'npm run chat:probe -- --agent croupier --say hi --expect-routing "{\\"domains\\":[\\"croupier\\"]}" --out runs/r1 --name r1'
+    expect(describeCommands(ok)).toEqual(['r1: croupier on the default model, 1 steps, 0 --expect-turn, 1 --expect-routing'])
+    expect(() => describeCommands(`${ok}\nnpm run chat:probe -- --agent croupier --say hi --expect-routing "{\\"domain\\":[]}" --out runs/r2`)).toThrow(/run 2 \(runs\/r2\): --expect-routing.domain: unknown field/)
+    expect(() => describeCommands('npm run chat:probe -- --say hi --out runs/r3')).toThrow(/run 1 \(runs\/r3\): a live probe needs --agent/)
   })
 
   it('parses the probe lines of a live-commands.sh with their out folders', () => {

@@ -36,3 +36,10 @@ Kim 2026-10-15: add a routing pressure pack to round 3, designed so context-fog-
 
 ## Conductor note (2026-10-15, from T-0259)
 The fog `tool-result-not-propagated` detector only has eligible pairs on turns that call an integration tool. Include at least one tool-using scenario in the pack so that detector is live in round 3. Fetched-vs-listed references are not mappable from the proxy (one side only); the doc-only scenario asserts via `routing.references` and the reply, not a fog detector.
+
+## Acceptance criteria
+- `node scripts/chat-probe.mjs selftest` exits 0: seeded-wrong-routing replays red on exactly routing-expect (the red control), green-button replays green with a matching oracle.
+- `npx vitest run scripts/e2e-admin` exits 0 (routing.test.mjs pins routing-pack.sh to its generator and every step's oracle).
+- `node --experimental-strip-types scripts/e2e-admin/probe/run-capped.ts --describe scripts/e2e-admin/probe/scenarios/routing-pack.sh` exits 0 (12 runs parse as live probes, keyless).
+- `node --experimental-strip-types scripts/e2e-admin/probe/run-capped.ts scripts/e2e-admin/probe/scenarios/routing-pack.sh --cap 5 --dry-run` exits 0.
+- `npm run check` exits 0.

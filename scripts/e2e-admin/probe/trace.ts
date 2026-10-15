@@ -32,6 +32,7 @@ import {
   type ProbeRound,
   type ProbeStep,
   type ProbeTurn,
+  type RoutingSeen,
   type TraceRef,
   type TurnRecord,
 } from './model.ts'
@@ -87,6 +88,20 @@ export function traceRef(entry: TraceEntry): TraceRef {
     outcome: entry.line.outcome,
     retries: entry.line.retries.map((r) => ({ round: r.round, codes: r.failures.map((f) => f.code) })),
     thinkingChars: entry.line.rounds.map((r) => r.thinking?.chars ?? 0),
+  }
+}
+
+/** T-0260: the routing a trace line recorded, flattened for `routing-expect`: the catalog persona and domains,
+ *  the framed exemplar ids (T-0259 `events`, else the produce trace's retrieved ids), the composed section ids and
+ *  the references. Undefined for a line with no `routing` block (before T-0239, or rejected before the model). */
+export function routingSeen(line: AgentTraceLine): RoutingSeen | undefined {
+  const r = line.routing
+  if (r === undefined) return undefined
+  return {
+    domains: [...(r.catalog.persona !== undefined ? [r.catalog.persona] : []), ...r.catalog.domains],
+    exemplars: [...(line.events?.framedExemplarIds ?? line.trace?.exemplarIds ?? [])],
+    sections: (r.sections ?? []).map((s) => s.id),
+    references: r.references.map((x) => ({ name: x.name, load: x.load })),
   }
 }
 
@@ -195,7 +210,10 @@ export async function fixtureFromTrace(entries: readonly TraceEntry[], name: str
     const error = (plan[i]!.input as { message?: { error?: { code?: unknown } } }).message?.error
     return error !== undefined ? { page: typeof error.code === 'string' ? error.code : 'error' } : { click: clickLabel(e.line.user, lines.slice(0, i).flat()) }
   })
-  const turns: ProbeTurn[] = entries.map((_entry, i) => ({ lines: lines[i]!, rounds: plan[i]!.rounds, input: plan[i]!.input }))
+  const turns: ProbeTurn[] = entries.map((entry, i) => {
+    const routing = routingSeen(entry.line)
+    return { lines: lines[i]!, rounds: plan[i]!.rounds, input: plan[i]!.input, ...(routing !== undefined ? { routing } : {}) }
+  })
   return {
     kind: 'agent-ui-chat-probe',
     version: 1,
@@ -258,6 +276,7 @@ export async function offlineReplay(fixture: ProbeFixture, cwd: string): Promise
     lines: lines[i]!,
     ...(t.rounds !== undefined ? { rounds: t.rounds } : {}),
     roundsSource: t.rounds !== undefined ? 'fixture' : 'none',
+    ...(t.routing !== undefined ? { routing: t.routing } : {}),
     proseText: metaOf(lines[i]!).prose.join('\n'),
   }))
   const checks = runChecks(records, { expectComponents: fixture.expect?.components ?? [] })

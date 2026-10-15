@@ -49,6 +49,7 @@ The code table is the owner: `CHECK_NAMES` and `runChecks` in `scripts/e2e-admin
 | `no-surface-loss` | fail | a surface some round created never shipped, or fewer hosts mounted than shipped | shipped, T-0174 |
 | `action-updates-surface` | fail | a click turn neither updates the clicked surface nor hands the flow to a surface it creates | shipped, T-0172 |
 | `expect-component` | fail | an expected component type never shipped, or a step's own expected type is on no surface its turn updated (`--expect-turn`, T-0222) | shipped, T-0174 |
+| `routing-expect` | fail | a step's declared routing (`--expect-routing`: domains, exemplars include and exclude, sections, references with load) misses the turn's trace `routing` block, read by run id live and from the fixture on replay | shipped, T-0260 |
 | `render-lint` | fail | a `scripts/dogfood-rules.json` rule the probe runs finds a surface element | shipped, T-0174 (three rules; the rest listed as not run) |
 | `reasoning` | warn | effort above low but no thinking text in the trace | shipped, T-0174; still warn after T-0172 merged, so a flip to fail is a new ticket |
 | `data-model` | fail | a JSON-pointer assertion on the surface data model does not hold | planned, T-0176 |
@@ -162,13 +163,17 @@ Phase 2, the follow-through:
 
 - AC1: `npx vitest run --project scripts scripts/e2e-admin/probe/run-capped.test.mjs scripts/e2e-admin/probe/scenarios/` exits 0 (cap stop, resume skip, archive writers, index, scenario pin).
 
-### CL-R12: routing observability (shipped, T-0239)
+### CL-R12: routing observability (shipped, T-0239; expected routing T-0260)
 
 Every producer trace line that reaches the model carries a `routing` block (`TraceRouting`, `packages/agent-ui/a2ui/tools/agent/trace-log.ts`): the effective catalog read as base, persona and domains; the referenced skills, playbooks and resources, each with `load` (`index-only` or `full`) and `via` (`index`, `message`, `history`); the selected mini-skill ids; the system prompt sections with char counts and cache side (`stable` or `volatile`); and the cache boundary. Entry content, keys and user secrets are never logged. This is where an index-only miss (T-0231) or an off-domain exemplar (T-0238) shows per turn without hand analysis.
 
 `python3 scripts/agent-traces-to-fog.py <trace.jsonl> --out <session.json>` hydrates a trace file (a day file, or a round's `traces/`) into a context-fog-of-war v2 session: one event per turn, its exposures as sources, retries and failure codes as findings evidence; lines without `routing` fall back to `exemplarIds` and `promptChars`. The skill's `fog.py validate` and `fog.py render` read it, and `library.py publish` puts it in the user-level report library. Its keyless `selftest` rides `check:scripts`. The first example is the round 2 atlas: `.sdlc/evals/rounds/2026-10-15-r2-presets/traces/2026-10-15.jsonl` hydrated to 281 events, 66 sources and 91 findings (`.sdlc/evals/context-fog-of-war-claude-parity.md`, the update of 2026-10-15). A round folder also ingests through the skill's own bundle path with the committed mapping `.sdlc/evals/fog-manifest.json` (T-0248): one `model_request` per trace line and its exemplar ids as chunks, published per round with the report id kept in `.sdlc/evals/fog/<round>.json` and shown in the round README; the adapter stays for what that vocabulary cannot carry (sections, mini-skills, references, failure codes).
 
 - AC1: `python3 scripts/agent-traces-to-fog.py selftest` exits 0, and `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/agent-trace.test.ts` asserts the routing block for a croupier and a concierge turn.
+
+Expected routing (T-0260): a scenario step may declare the routing its turn should get (`--expect-routing`), and the `routing-expect` check (CL-R2) compares it to the turn's `routing` block, so a round shows expected against actual exposure per turn. The routing pressure pack (`scripts/e2e-admin/probe/scenarios/routing.ts`, round 3) puts an oracle on every step of six scenarios: domain switch, decoy words, a long session with integration-tool turns (so the fog `tool-result-not-propagated` detector has pairs), a doc-only answer whose index-only resource must load `full`, a guidance conflict on hidden state, and two open surfaces then "make it bigger".
+
+- AC2: `node scripts/chat-probe.mjs selftest` exits 0 with the seeded wrong-routing replay red on exactly `routing-expect`, and `npx vitest run scripts/e2e-admin/probe/scenarios/routing.test.mjs` pins the pack to its generator.
 
 ## 3. Negative requirements
 
@@ -180,7 +185,7 @@ Every producer trace line that reaches the model carries a `routing` block (`Tra
 
 ## 4. Acceptance summary
 
-Keyless, running today: CL-R2 AC1, CL-R3 AC1, CL-R11 AC1 and CL-R12 AC1, plus the round-cap half of CL-R7 AC1 (`run-capped.test.mjs`, T-0225) and the producer check families' unit tests (`composite-moments.test.ts`, `hidden-state-checks.test.ts`). Keyless, planned: CL-R1, R4, R5 and R6 AC1, and the per-run half of CL-R7 AC1, landing with T-0176 and T-0179 under `npm test` or `check:scripts`. Live and manual: a capped round on a real key (CL-R11; rounds so far in `.sdlc/evals/README.md`), CL-R8's judge selftest and T-0179's baseline run, each reporting its cost.
+Keyless, running today: CL-R2 AC1, CL-R3 AC1, CL-R11 AC1 and CL-R12 AC1 and AC2, plus the round-cap half of CL-R7 AC1 (`run-capped.test.mjs`, T-0225) and the producer check families' unit tests (`composite-moments.test.ts`, `hidden-state-checks.test.ts`). Keyless, planned: CL-R1, R4, R5 and R6 AC1, and the per-run half of CL-R7 AC1, landing with T-0176 and T-0179 under `npm test` or `check:scripts`. Live and manual: a capped round on a real key (CL-R11; rounds so far in `.sdlc/evals/README.md`), CL-R8's judge selftest and T-0179's baseline run, each reporting its cost.
 
 ## 5. Model notes (seen live)
 

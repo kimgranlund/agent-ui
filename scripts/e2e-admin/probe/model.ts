@@ -13,9 +13,30 @@ import { renderSurfaceJsonl } from '../../../packages/agent-ui/a2ui/src/agent/re
 // ── the probe fixture (`agent-ui-chat-probe` v1) ──────────────────────────────────────────────────────
 
 /** `expect` (T-0222, `--expect-turn`): component types this step's turn must leave on a surface it updates.
+ *  `expectRouting` (T-0260, `--expect-routing`): the routing this step's turn must get, read against its trace.
  *  `page` (T-0222): a turn the page fired itself (an error turn after a renderer rejection), recorded as its own
  *  row; a replay never plays it, the page fires it again. */
-export type ProbeStep = ({ say: string } | { click: string } | { page: string }) & { expect?: string[] }
+export type ProbeStep = ({ say: string } | { click: string } | { page: string }) & { expect?: string[]; expectRouting?: RoutingExpect }
+
+/** T-0260: the routing a step's turn should get. `domains`: each is the turn's catalog persona or one of its
+ *  domains. `exemplars`: ids the turn's framed exemplars must hold (`include`) or must not (`exclude`).
+ *  `sections`: system prompt section ids that must be composed. `references`: entries that must reach the turn,
+ *  at `load` when given (`full` when an index-only doc must be fetched). */
+export interface RoutingExpect {
+  domains?: string[]
+  exemplars?: { include?: string[]; exclude?: string[] }
+  sections?: string[]
+  references?: Array<{ name: string; load?: 'full' | 'index-only' }>
+}
+
+/** T-0260: what the turn's trace line recorded about its routing (`routing`, `events`), flattened for the check. */
+export interface RoutingSeen {
+  /** The catalog persona, then its domains. */
+  domains: string[]
+  exemplars: string[]
+  sections: string[]
+  references: Array<{ name: string; load: string }>
+}
 
 /** One provider call as the trace log records it: the raw text and the tool calls (`render_surface`
  *  carries the payload on a capture round). */
@@ -29,6 +50,8 @@ export interface ProbeRound {
 export interface ProbeTurn {
   lines: string[]
   rounds?: ProbeRound[]
+  /** T-0260: the routing the trace recorded for this turn, so `routing-expect` judges a replay keyless. */
+  routing?: RoutingSeen
   /** The produce input the rounds answered (the trace's user text or action), for the offline replay. */
   input?: { kind: 'intent'; text: string } | { kind: 'client'; message: unknown }
 }
@@ -59,6 +82,46 @@ function strings(v: unknown, path: string): string[] {
   return v as string[]
 }
 
+/** T-0260: validate an `expectRouting` value. Throws `FixtureError` naming the first bad field. */
+export function parseRoutingExpect(v: unknown, path: string): RoutingExpect {
+  if (!isObject(v)) throw new FixtureError(`${path} must be an object`)
+  for (const key of Object.keys(v)) if (!['domains', 'exemplars', 'sections', 'references'].includes(key)) throw new FixtureError(`${path}.${key}: unknown field`)
+  const out: RoutingExpect = {}
+  if (v.domains !== undefined) out.domains = strings(v.domains, `${path}.domains`)
+  if (v.sections !== undefined) out.sections = strings(v.sections, `${path}.sections`)
+  if (v.exemplars !== undefined) {
+    const ex = v.exemplars
+    if (!isObject(ex) || Object.keys(ex).some((k) => k !== 'include' && k !== 'exclude')) throw new FixtureError(`${path}.exemplars must be {include?, exclude?}`)
+    out.exemplars = {
+      ...(ex.include !== undefined ? { include: strings(ex.include, `${path}.exemplars.include`) } : {}),
+      ...(ex.exclude !== undefined ? { exclude: strings(ex.exclude, `${path}.exemplars.exclude`) } : {}),
+    }
+  }
+  if (v.references !== undefined) {
+    if (!Array.isArray(v.references)) throw new FixtureError(`${path}.references must be an array`)
+    out.references = v.references.map((r, i) => {
+      if (!isObject(r) || typeof r.name !== 'string' || (r.load !== undefined && r.load !== 'full' && r.load !== 'index-only'))
+        throw new FixtureError(`${path}.references[${i}] must be {name, load?: "full" | "index-only"}`)
+      return r.load !== undefined ? { name: r.name, load: r.load } : { name: r.name }
+    })
+  }
+  if (Object.keys(out).length === 0) throw new FixtureError(`${path} names no routing to expect`)
+  return out
+}
+
+function parseRoutingSeen(v: unknown, path: string): RoutingSeen {
+  if (!isObject(v) || !Array.isArray(v.references)) throw new FixtureError(`${path} must be {domains, exemplars, sections, references}`)
+  return {
+    domains: strings(v.domains, `${path}.domains`),
+    exemplars: strings(v.exemplars, `${path}.exemplars`),
+    sections: strings(v.sections, `${path}.sections`),
+    references: v.references.map((r, i) => {
+      if (!isObject(r) || typeof r.name !== 'string' || typeof r.load !== 'string') throw new FixtureError(`${path}.references[${i}] must be {name, load}`)
+      return { name: r.name, load: r.load }
+    }),
+  }
+}
+
 /** Parse and validate one probe fixture text. Throws `FixtureError` naming the first bad field. */
 export function parseProbeFixture(text: string): ProbeFixture {
   let raw: unknown
@@ -80,9 +143,12 @@ export function parseProbeFixture(text: string): ProbeFixture {
   }
   if (!Array.isArray(raw.steps) || raw.steps.length === 0) throw new FixtureError('steps must be a non-empty array')
   const steps = raw.steps.map((s, i): ProbeStep => {
-    const bad = (): FixtureError => new FixtureError(`steps[${i}] must be {"say": string}, {"click": string} or {"page": string}, with an optional "expect" string array`)
-    if (!isObject(s) || Object.keys(s).some((k) => !['say', 'click', 'page', 'expect'].includes(k))) throw bad()
-    const expect = s.expect !== undefined ? { expect: strings(s.expect, `steps[${i}].expect`) } : {}
+    const bad = (): FixtureError => new FixtureError(`steps[${i}] must be {"say": string}, {"click": string} or {"page": string}, with an optional "expect" string array and "expectRouting"`)
+    if (!isObject(s) || Object.keys(s).some((k) => !['say', 'click', 'page', 'expect', 'expectRouting'].includes(k))) throw bad()
+    const expect = {
+      ...(s.expect !== undefined ? { expect: strings(s.expect, `steps[${i}].expect`) } : {}),
+      ...(s.expectRouting !== undefined ? { expectRouting: parseRoutingExpect(s.expectRouting, `steps[${i}].expectRouting`) } : {}),
+    }
     const kinds = (['say', 'click', 'page'] as const).filter((k) => s[k] !== undefined)
     if (kinds.length !== 1 || typeof s[kinds[0]!] !== 'string') throw bad()
     const kind = kinds[0]!
@@ -99,6 +165,7 @@ export function parseProbeFixture(text: string): ProbeFixture {
         return { text: r.text, tools: (r.tools as Array<{ name: string; input: unknown }>).map((x) => ({ name: String(x.name), input: x.input })) }
       })
     }
+    if (t.routing !== undefined) turn.routing = parseRoutingSeen(t.routing, `turns[${i}].routing`)
     if (t.input !== undefined) {
       const input = t.input
       if (isObject(input) && input.kind === 'intent' && typeof input.text === 'string') turn.input = { kind: 'intent', text: input.text }
@@ -318,6 +385,23 @@ export interface TurnRecord {
   lintNotRun?: string[]
   /** T-0256: absolute path in the local evidence cache (`evidence.ts`); local only, may be gone. */
   screenshot?: string
+  /** T-0260: the routing the turn's trace line recorded (live: the line with this run's id; replay: the fixture). */
+  routing?: RoutingSeen
+}
+
+/** T-0260: every way `seen` misses `want`, in plain words; empty when the routing matches. */
+export function routingMisses(want: RoutingExpect, seen: RoutingSeen): string[] {
+  const out: string[] = []
+  for (const d of want.domains ?? []) if (!seen.domains.includes(d)) out.push(`domain ${d} not routed (got ${seen.domains.join(', ') || 'none'})`)
+  for (const id of want.exemplars?.include ?? []) if (!seen.exemplars.includes(id)) out.push(`exemplar ${id} not framed`)
+  for (const id of want.exemplars?.exclude ?? []) if (seen.exemplars.includes(id)) out.push(`exemplar ${id} framed but excluded`)
+  for (const id of want.sections ?? []) if (!seen.sections.includes(id)) out.push(`section ${id} not composed`)
+  for (const r of want.references ?? []) {
+    const got = seen.references.filter((x) => x.name === r.name)
+    if (got.length === 0) out.push(`reference ${r.name} not routed`)
+    else if (r.load !== undefined && !got.some((x) => x.load === r.load)) out.push(`reference ${r.name} loaded ${got.map((x) => x.load).join('+')}, not ${r.load}`)
+  }
+  return out
 }
 
 /** T-0222: the index of the exchange that answers `step` among the produce requests seen since it was played:
@@ -346,10 +430,13 @@ export interface CheckOptions {
   /** The requested pick; checked against what the page sent. */
   model?: string
   effort?: string
+  /** T-0260: a live run's id (`x-a2ui-run-id`). Set, a turn with a routing oracle and no routing read from its
+   *  trace line fails `routing-expect`: the routing is unknown, and a skip would hide the trace gap. */
+  runId?: string
 }
 
 /** The named checks, in report order. */
-export const CHECK_NAMES = ['model-pick', 'click-target', 'no-halt', 'no-json-as-prose', 'no-internal-leak', 'reply-text', 'no-surface-loss', 'action-updates-surface', 'expect-component', 'render-lint', 'reasoning'] as const
+export const CHECK_NAMES = ['model-pick', 'click-target', 'no-halt', 'no-json-as-prose', 'no-internal-leak', 'reply-text', 'no-surface-loss', 'action-updates-surface', 'expect-component', 'routing-expect', 'render-lint', 'reasoning'] as const
 
 /** Apply these lines to `held`, each open surface's component types (a deleted surface drops out). */
 export function holdTypes(held: Map<string, Set<string>>, lines: readonly string[]): void {
@@ -468,6 +555,17 @@ export function runChecks(turns: readonly TurnRecord[], opts: CheckOptions): Che
           ? { check: 'expect-component', turn: t.index, status: 'pass', detail: `${holding.join(', ')} holds ${want.join(' or ')}` }
           : { check: 'expect-component', turn: t.index, status: 'fail', detail: `no surface this turn updated holds ${want.join(' or ')} (touched ${touchedSurfaces(t.lines).join(', ') || 'none'})` },
       )
+    // routing-expect (T-0260): a step that declares its routing (`--expect-routing`) got it, read from the turn's
+    // trace line. Judged on a halted turn too: the routing is fixed before the model answers.
+    const routing = t.step.expectRouting
+    if (routing === undefined) out.push({ check: 'routing-expect', turn: t.index, status: 'skip', detail: 'no --expect-routing on this step' })
+    else if (t.routing === undefined && opts.runId !== undefined)
+      out.push({ check: 'routing-expect', turn: t.index, status: 'fail', detail: t.trace === undefined ? `no trace line for runId ${opts.runId}` : `trace line ${t.trace.id} has no routing block` })
+    else if (t.routing === undefined) out.push({ check: 'routing-expect', turn: t.index, status: 'skip', detail: 'no routing recorded for this replayed turn (the fixture turn has no routing)' })
+    else {
+      const misses = routingMisses(routing, t.routing)
+      out.push({ check: 'routing-expect', turn: t.index, status: misses.length ? 'fail' : 'pass', detail: misses.length ? misses.join('; ') : 'routing as expected' })
+    }
     // render-lint: the dogfood render rules over the turn's surfaces.
     if (t.lint === undefined) out.push({ check: 'render-lint', turn: t.index, status: 'skip', detail: 'page' in t.step ? 'a page-fired row (the step row lints the page)' : 'no DOM (offline replay)' })
     else {

@@ -21,7 +21,7 @@ import { bootVite, launchChromium, newFlowContext, stopVite, type DevServerKit, 
 import { scrubJson, type AdminScenario } from '../scenario.ts'
 import { evidenceDir } from './evidence.ts'
 import { formatTable, ownExchange, pageStep, runChecks, type CheckResult, type ProbeFixture, type ProbeRound, type ProbeStep, type TurnRecord } from './model.ts'
-import { readTraceEntries, toProbeRounds, traceRef, TRACE_DIR, type TraceEntry } from './trace.ts'
+import { readTraceEntries, routingSeen, toProbeRounds, traceRef, TRACE_DIR, type TraceEntry } from './trace.ts'
 
 export interface ProbePlan {
   mode: 'live' | 'replay'
@@ -222,11 +222,12 @@ async function renderLint(page: Page): Promise<{ findings: Array<{ rule: string;
 /** Every trace line count, so the lines a turn appends can be told apart. */
 const traceCount = (dir: string): number => readTraceEntries(dir).length
 
-async function newTraceLines(dir: string, before: number, want: number): Promise<TraceEntry[]> {
+/** T-0260: the produce lines appended since `before` that carry this run's id (`x-a2ui-run-id`, T-0259). */
+async function newTraceLines(dir: string, before: number, want: number, runId: string | undefined): Promise<TraceEntry[]> {
   const deadline = Date.now() + TRACE_SETTLE_MS
   for (;;) {
     const entries = readTraceEntries(dir)
-    const fresh = entries.slice(before).filter((e) => e.line.route === 'produce')
+    const fresh = entries.slice(before).filter((e) => e.line.route === 'produce' && (runId === undefined || e.line.runId === runId))
     if (fresh.length >= want || Date.now() >= deadline) return fresh
     await new Promise((resolve) => setTimeout(resolve, 200))
   }
@@ -324,13 +325,14 @@ export async function probeOnce(shared: SharedRun, plan: ProbePlan, root: string
       // T-0222: the step's own exchange becomes its row; every page-fired one in the window becomes its own row.
       const seen = exchangesAfter(before)
       const own = ownExchange(step, seen.map((x) => x.request))
-      const traced = plan.mode === 'live' ? await newTraceLines(traceDir, traceBefore, seen.length) : []
+      const traced = plan.mode === 'live' ? await newTraceLines(traceDir, traceBefore, seen.length, runId) : []
       const used = new Set<TraceEntry>()
       for (const [i, exchange] of seen.entries()) {
         const trace = traced.find((e) => !used.has(e) && e.line.user === exchange.user) ?? traced.find((e) => !used.has(e))
         if (trace !== undefined) used.add(trace)
         let rounds: ProbeRound[] | undefined
         let roundsSource: TurnRecord['roundsSource'] = 'none'
+        const routing = trace !== undefined ? routingSeen(trace.line) : exchange.turnIndex !== undefined ? plan.fixture?.turns[exchange.turnIndex]?.routing : undefined
         if (trace !== undefined) {
           rounds = toProbeRounds(trace.line)
           roundsSource = 'trace'
@@ -346,6 +348,7 @@ export async function probeOnce(shared: SharedRun, plan: ProbePlan, root: string
           ...(rounds !== undefined ? { rounds } : {}),
           roundsSource,
           ...(trace !== undefined ? { trace: traceRef(trace) } : {}),
+          ...(routing !== undefined ? { routing } : {}),
         }
         if (i !== own) {
           turns.push({ ...row, step: pageStep(exchange.request), proseText: '' })
@@ -370,7 +373,12 @@ export async function probeOnce(shared: SharedRun, plan: ProbePlan, root: string
     await context.unrouteAll({ behavior: 'ignoreErrors' }).catch(() => {})
     await context.close().catch(() => {})
   }
-  const checks = runChecks(turns, { expectComponents: plan.expectComponents, ...(plan.model !== undefined ? { model: plan.model } : {}), ...(plan.effort !== undefined ? { effort: plan.effort } : {}) })
+  const checks = runChecks(turns, {
+    expectComponents: plan.expectComponents,
+    ...(plan.model !== undefined ? { model: plan.model } : {}),
+    ...(plan.effort !== undefined ? { effort: plan.effort } : {}),
+    ...(runId !== undefined ? { runId } : {}),
+  })
   return {
     kind: 'agent-ui-chat-probe-report',
     version: 1,
@@ -450,7 +458,7 @@ export function fixtureFromReport(report: ProbeReport): ProbeFixture {
     ...(report.effort !== undefined ? { effort: report.effort } : {}),
     source: `probe ${report.mode} run ${report.at}${report.turns.some((t) => t.trace) ? `, traces ${report.turns.map((t) => t.trace?.id ?? '-').join(',')}` : ''}`,
     steps: report.turns.map((t) => t.step),
-    turns: report.turns.map((t) => ({ lines: t.lines, ...(t.rounds !== undefined ? { rounds: t.rounds } : {}) })),
+    turns: report.turns.map((t) => ({ lines: t.lines, ...(t.rounds !== undefined ? { rounds: t.rounds } : {}), ...(t.routing !== undefined ? { routing: t.routing } : {}) })),
   }
 }
 

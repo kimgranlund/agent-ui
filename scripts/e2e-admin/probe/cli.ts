@@ -1,8 +1,8 @@
 // scripts/e2e-admin/probe/cli.ts: argument parsing for `npm run chat:probe` (T-0174). Pure: every usage
 // problem is a `SetupError` raised before vite boots. `--say` and `--click` keep their command-line order.
 
-import { SetupError } from '../runner.ts'
-import type { ProbeStep } from './model.ts'
+import { SetupError } from '../setup-error.ts'
+import { FixtureError, parseRoutingExpect, type ProbeStep } from './model.ts'
 
 export type ProbeCommand =
   | {
@@ -21,15 +21,16 @@ export type ProbeCommand =
 
 export const PROBE_USAGE = [
   'usage: npm run chat:probe -- --agent <preset id> [--model <id>] [--effort <level>] --say "<text>" [--click <label>] [--say ...]',
-  '                            [--expect-turn <Type>]... [--expect-component <Type>]... [--out <dir>] [--name <name>]     (live: spends API credit)',
-  '       (--expect-turn: the step before it must update a surface holding <Type>; --expect-component: any turn ships <Type>)',
+  '                            [--expect-turn <Type>]... [--expect-routing <json>]... [--expect-component <Type>]... [--out <dir>] [--name <name>]     (live: spends API credit)',
+  '       (--expect-turn: the step before it must update a surface holding <Type>; --expect-component: any turn ships <Type>;',
+  '        --expect-routing: the step before it must get this routing, {domains, exemplars: {include, exclude}, sections, references})',
   '       npm run chat:probe -- --replay <fixture.json> [--expect-component <Type>]... [--out <dir>]   (keyless)',
   '       npm run chat:probe -- --from-trace <last | last:<k> | <day>.jsonl:<line>[,...]> [--agent <preset id>] [--out <dir>] [--name <name>]',
   '       npm run chat:probe -- selftest [--browser]',
 ].join('\n')
 
-const VALUE_FLAGS = ['--agent', '--model', '--effort', '--say', '--click', '--expect-turn', '--expect-component', '--replay', '--out', '--name', '--from-trace'] as const
-const REPEATABLE = ['--say', '--click', '--expect-turn', '--expect-component']
+const VALUE_FLAGS = ['--agent', '--model', '--effort', '--say', '--click', '--expect-turn', '--expect-routing', '--expect-component', '--replay', '--out', '--name', '--from-trace'] as const
+const REPEATABLE = ['--say', '--click', '--expect-turn', '--expect-routing', '--expect-component']
 
 export function parseProbeCli(argv: readonly string[]): ProbeCommand {
   if (argv[0] === 'selftest') {
@@ -51,6 +52,22 @@ export function parseProbeCli(argv: readonly string[]): ProbeCommand {
       const step = steps.at(-1)
       if (step === undefined) throw new SetupError('--expect-turn follows the --say or --click it applies to')
       step.expect = [...(step.expect ?? []), value]
+    } else if (flag === '--expect-routing') {
+      // T-0260: one JSON oracle per step, checked against the turn's trace `routing` block (`routing-expect`).
+      const step = steps.at(-1)
+      if (step === undefined) throw new SetupError('--expect-routing follows the --say or --click it applies to')
+      if (step.expectRouting !== undefined) throw new SetupError('--expect-routing given twice for one step')
+      let raw: unknown
+      try {
+        raw = JSON.parse(value)
+      } catch {
+        throw new SetupError(`--expect-routing takes JSON, got ${value.slice(0, 60)}`)
+      }
+      try {
+        step.expectRouting = parseRoutingExpect(raw, '--expect-routing')
+      } catch (err) {
+        throw err instanceof FixtureError ? new SetupError(err.message) : err
+      }
     } else if (flag === '--expect-component') expectComponents.push(value)
     else {
       if (single.has(flag) && !REPEATABLE.includes(flag)) throw new SetupError(`${flag} given twice`)
