@@ -25,3 +25,9 @@ Round 2 of :110 shows `FLEET_SECRET_MISSING: Surface "ask-1" is a Battleship boa
 
 ## Context
 `packages/agent-ui/a2ui/src/catalog/hidden-state-checks.ts`: both games ride the base `agent-ui` catalog (no domain, T-0240), so the check picks the game from the surface shape, and a BoardGrid with a TextField reads as Battleship. Guess: it needs a game cue, such as the preset id or the data-model keys (`/secret/word` against `/sea`). Found by T-0261.
+
+## Acceptance criteria
+- `npx vitest run packages/agent-ui/a2ui/src/catalog/hidden-state-checks.test.ts` exits 0: a word board with a clickable BoardGrid gets no fleet check (word committed or not) and still gets WORD_SECRET_MISSING with no word; a board with a committed fleet and a five-letter field gets no word check; a plain Battleship board with no word cue still gets FLEET_SECRET_MISSING.
+- `npx vitest run scripts/e2e-admin/probe/replays/lexicographer-haiku-fleet-check.test.mjs` exits 0: the recorded rounds replay with no FLEET_SECRET_MISSING and no SEMANTIC_UNCORRECTED on turn 1, and every probe check is green.
+- `npx vitest run packages/agent-ui/a2ui/src/catalog scripts/e2e-admin/probe` exits 0.
+- `npm run check` exits 0.

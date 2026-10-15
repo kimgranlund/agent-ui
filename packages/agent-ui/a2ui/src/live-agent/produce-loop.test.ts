@@ -517,6 +517,35 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
     expect(feedback.content).toMatch(/CATALOG at content\.gap \(CardContent has no "gap" property; valid properties: scrollable\)/)
   })
 
+  // T-0264: a Haiku 5.5 Stand retry put `surfaceId` on the message envelope beside `updateDataModel`, got the bare
+  // "SCHEMA at [0].updateDataModel.surfaceId", and answered its last round in prose. The feedback now names the move.
+  it('T-0264: a surfaceId beside the operation key is named in the SCHEMA feedback with the move inside', async () => {
+    const MISPLACED =
+      '{"version":"v1.0","updateDataModel":{"value":{"n":1}},"surfaceId":"main"}\n' +
+      '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}\n' +
+      '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[{"id":"root","component":"Button","label":"Hi","action":{"action":"submit"}}]}}'
+    const { provider, calls, reqs } = stubProvider([MISPLACED, VALID])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    for await (const _ of produce(intent, deps, { maxRounds: 3 })) void _
+
+    expect(calls()).toBe(2)
+    const feedback = reqs()[1]!.messages.find((m) => m.role === 'user' && /INVALID/.test(m.content))!
+    expect(feedback.content).toContain(
+      'SCHEMA at [0].updateDataModel.surfaceId (this message has "surfaceId" beside "updateDataModel"; move it inside: {"version":"v1.0","updateDataModel":{"surfaceId":"main",...}})',
+    )
+  })
+
+  it('T-0264: a SCHEMA miss with no envelope surfaceId keeps the bare path', async () => {
+    const MISSING = '{"version":"v1.0","updateDataModel":{"value":{"n":1}}}'
+    const { provider, reqs } = stubProvider([MISSING, VALID])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    for await (const _ of produce(intent, deps, { maxRounds: 3 })) void _
+
+    const feedback = reqs()[1]!.messages.find((m) => m.role === 'user' && /INVALID/.test(m.content))!
+    expect(feedback.content).toContain('SCHEMA at [0].updateDataModel.surfaceId')
+    expect(feedback.content).not.toContain('move it inside')
+  })
+
   // GH #307 investigation — a PARSE failure (assembleFromRaw's per-line split handed an unparseable
   // fragment) carried NO diagnostic detail; live reproduction (the quiz persona's game loop) caught a
   // real model repeating the SAME mistake — a single JSON message pretty-printed across several physical

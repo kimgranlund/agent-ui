@@ -9,6 +9,7 @@ import type { SurfaceView } from './semantic-check.ts'
 import type { A2uiComponent } from '../protocol.ts'
 import { loadCatalog } from './catalog.ts'
 import { composeCatalog, loadCatalogFragment } from './compose.ts'
+import { validateCatalogConformance } from './conformance.ts'
 import defaultCatalogRaw from './default/catalog.json'
 import basicCatalogRaw from './a2ui-basic/catalog.json'
 import conciergeFragmentRaw from './personas/concierge/catalog.json'
@@ -86,6 +87,35 @@ describe('composite moment checks (T-0208)', () => {
     expect(f!.message).toContain('root (a Grid)')
     expect(f!.message).toContain('a board of cells to target or mark')
     expect(f!.message).toContain('Make it ONE BoardGrid')
+  })
+
+  it('T-0262: the BookingConfirmation repair asks for literal rows of {label, path} in the Card\'s place, not inside it', () => {
+    const [f] = runSemanticChecks(compositeMomentChecks, { surfaces: [view(HAND_BUILT['BookingConfirmation']!, 'ask-2')] }).findings
+    expect(f!.message).toContain('rows as a literal array of {label, path}')
+    expect(f!.message).toContain('never bind rows itself')
+    expect(f!.message).toContain('in place of the hand-built Card, never inside one')
+    expect(f!.message).toContain('a root Card needs the surface re-created')
+    expect(f!.message).not.toContain('rows bound to')
+  })
+
+  it('T-0262: the shape the repair asks for passes the concierge catalog, and a bound rows fails it', () => {
+    const concierge = composeCatalog(loadCatalog(defaultCatalogRaw), loadCatalogFragment(conciergeFragmentRaw), 'concierge')
+    const asked: A2uiComponent = { id: 'root', component: 'BookingConfirmation', title: 'Spa booking confirmed', data: { path: '/booking' }, rows: [{ label: 'Date', path: 'date' }] }
+    expect(validateCatalogConformance(asked, concierge)).toEqual([])
+    expect(validateCatalogConformance({ ...asked, rows: { path: '/booking/rows' } }, concierge)).toEqual([{ code: 'CATALOG', path: 'root.rows' }])
+  })
+
+  it('T-0262: the recorded Opus repair (a BookingConfirmation inside the old Card) yields BOOKING_CONFIRMATION_WRAPPED', () => {
+    const recorded: A2uiComponent[] = [
+      { id: 'root', component: 'Card', elevation: '1', children: ['body'] },
+      { id: 'body', component: 'CardContent', children: ['confirmation'] },
+      { id: 'confirmation', component: 'BookingConfirmation', title: 'Spa booking confirmed', data: { path: '/booking' }, rows: [] },
+    ]
+    expect(codes(recorded)).toEqual(['BOOKING_CONFIRMATION_WRAPPED'])
+    const [f] = runSemanticChecks(compositeMomentChecks, { surfaces: [view(recorded, 'ask-2')] }).findings
+    expect(f!.path).toBe('ask-2:root')
+    expect(f!.message).toContain('wraps its BookingConfirmation in root (a Card)')
+    expect(codes([{ id: 'root', component: 'Column', children: ['confirmation'] }, recorded[2]!])).toEqual([])
   })
 
   it('the recorded Lexicographer guess field yields BOARD_GRID_MISSING', () => {

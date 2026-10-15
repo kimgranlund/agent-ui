@@ -6,16 +6,17 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0262. Live round 3 (2026-10-15-r3-routing :283-:286, Opus 5.5). The confirm turn's
-// BOOKING_CONFIRMATION_MISSING repair keeps the hand-built Card and puts BookingConfirmation inside it, which the
-// browser render-lint fails as nested-card (DOM-only, not in this keyless leg). Pinned: the repair fired and the
-// shipped surface still holds the wrapping Card.
-it('concierge-opus-nested-confirmation: the BookingConfirmation repair keeps the wrapping Card', async () => {
+// T-0262 (fixed). Live round 3 (2026-10-15-r3-routing :283-:286, Opus 5.5). The confirm turn's
+// BOOKING_CONFIRMATION_MISSING repair kept the hand-built Card and put BookingConfirmation inside it, which the browser
+// render-lint failed as nested-card. That round now gets BOOKING_CONFIRMATION_WRAPPED. Turn 3's third round is AUTHORED
+// (the live turn had two): the root was the Card, so it re-creates ask-2 with its booking data and one root
+// BookingConfirmation with literal {label, path} rows. The replay shows the repaired turn and ships no Card.
+it('concierge-opus-nested-confirmation: the wrapped BookingConfirmation is sent back and ships unwrapped', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./concierge-opus-nested-confirmation.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
   expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual([])
   const trace = report.records[3].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
-  expect(trace.failureCodes).toEqual(['BOOKING_CONFIRMATION_MISSING', 'TEXT_JSONL_IGNORED'])
+  expect(trace).toMatchObject({ rounds: 3, failureCodes: ['BOOKING_CONFIRMATION_WRAPPED', 'TEXT_JSONL_IGNORED'] })
   const types = report.records[3].lines.flatMap((l) => JSON.parse(l).updateComponents?.components ?? []).map((c) => c.component)
-  expect(types).toEqual(expect.arrayContaining(['Card', 'BookingConfirmation']))
+  expect(types).toEqual(['BookingConfirmation'])
 })

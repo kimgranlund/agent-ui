@@ -3,7 +3,8 @@
 // Each row of `COMPOSITE_MOMENTS` names a registered composite, one of its `selection.json` intents (the moment),
 // and a narrow structural detector for a surface that hand-builds that moment without it (CA-R9 lever 3). One
 // generator turns every row into a `SemanticCheck` (ADR-0238) whose finding sends the model back to make the
-// surface ONE composite. The check `requires` the composite (and any type it reads), so `gateChecksOnCatalog`
+// surface ONE composite. A row's `notInside` also sends back a composite wrapped in a card of its own (T-0262,
+// `<COMPOSITE>_WRAPPED`). The check `requires` the composite (and any type it reads), so `gateChecksOnCatalog`
 // keeps a row on exactly the catalogs that can emit it: the booking rows ride `<base>--concierge`, the games rows
 // ride `agent-ui` until the games types move to a domain, and `a2ui-basic` gets none.
 //
@@ -41,6 +42,8 @@ export interface CompositeMoment {
   readonly inputCue?: { readonly types: readonly string[]; readonly cue: RegExp; readonly words: RegExp }
   /** A Grid with at least `min` explicit children, all of type `child`. */
   readonly gridOf?: { readonly child: string; readonly min: number }
+  /** T-0262: types the composite must not sit inside (it draws its own card); a wrapper yields `<COMPOSITE>_WRAPPED`. */
+  readonly notInside?: readonly string[]
 }
 
 const BOOKING_INPUTS = ['TextField', 'Calendar', 'Select', 'ComboBox', 'Slider', 'RadioGroup', 'ChoiceGroup'] as const
@@ -61,8 +64,12 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
   {
     composite: 'BookingConfirmation',
     moment: 'confirm a completed booking',
-    repair: 'with its title and summary rows bound to the booking, and drop the hand-built rows.',
+    repair:
+      "in place of the hand-built Card, never inside one: resend the Card's id as the BookingConfirmation (a root Card needs the " +
+      'surface re-created and its data model sent again), with its title, data bound to the booking object, and rows as a literal ' +
+      'array of {label, path} where each path is a key of that object (never bind rows itself); drop the hand-built rows.',
     lacks: ['BookingForm'],
+    notInside: ['Card'],
     noInputs: BOOKING_INPUTS,
     words: /\b(confirmed|booked|reserved|confirmation)\b/i,
   },
@@ -146,6 +153,29 @@ function strays(m: CompositeMoment, view: SurfaceView): A2uiComponent[] {
   return m.words === undefined ? [] : worded.filter((c) => m.words!.test(wordsOf(c)))
 }
 
+/** The ids a component lists as `child` or explicit `children` (a template ChildList names no fixed ids). */
+const childIds = (c: A2uiComponent): string[] => [
+  ...(typeof c.child === 'string' ? [c.child] : []),
+  ...(Array.isArray(c.children) ? c.children.filter((id): id is string => typeof id === 'string') : []),
+]
+
+/** T-0262: the components of `view` of a `notInside` type whose subtree holds `m`'s composite, or `[]`. */
+function wrappers(m: CompositeMoment, view: SurfaceView): A2uiComponent[] {
+  if (m.notInside === undefined) return []
+  const parent = new Map<string, A2uiComponent>()
+  for (const c of view.components.values()) for (const id of childIds(c)) parent.set(id, c)
+  const found = new Map<string, A2uiComponent>()
+  for (const c of view.components.values()) {
+    if (c.component !== m.composite) continue
+    const seen = new Set<string>([c.id])
+    for (let p = parent.get(c.id); p !== undefined && !seen.has(p.id); p = parent.get(p.id)) {
+      seen.add(p.id)
+      if (m.notInside.includes(p.component)) found.set(p.id, p)
+    }
+  }
+  return [...found.values()]
+}
+
 /** The one generator: a row of `COMPOSITE_MOMENTS` as a semantic check. */
 export function compositeMomentCheck(m: CompositeMoment): SemanticCheck {
   const code = `${upperSnake(m.composite)}_MISSING`
@@ -155,6 +185,17 @@ export function compositeMomentCheck(m: CompositeMoment): SemanticCheck {
     check({ surfaces }): readonly SemanticFinding[] {
       const findings: SemanticFinding[] = []
       for (const view of surfaces) {
+        const wrapped = wrappers(m, view)
+        if (wrapped.length > 0) {
+          findings.push({
+            code: `${upperSnake(m.composite)}_WRAPPED`,
+            path: `${view.surfaceId}:${wrapped[0]!.id}`,
+            message:
+              `${view.surfaceId} wraps its ${m.composite} in ${wrapped.map((c) => `${c.id} (a ${c.component})`).join(', ')}, a card around a card. ` +
+              `Make it ONE ${m.composite} ${m.repair}`,
+          })
+          continue
+        }
         const found = strays(m, view)
         if (found.length === 0) continue
         findings.push({

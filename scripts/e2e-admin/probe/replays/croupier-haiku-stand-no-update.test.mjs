@@ -6,13 +6,17 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0264. Live round 3 (2026-10-15-r3-routing :34-:36, Haiku 5.5). The Stand click gets
-// ACTION_NOT_APPLIED, the retry's wire line fails SCHEMA, and the third round passes with no wire at all: the hand
-// settles in prose, the table never updates, and the next Deal again has no button.
-it('croupier-haiku-stand-no-update: the ACTION_NOT_APPLIED retry ends with no surface', async () => {
+// T-0264 (fixed). Live round 3 (2026-10-15-r3-routing :34-:36, Haiku 5.5). The Stand click got ACTION_NOT_APPLIED,
+// the retry's settled table failed SCHEMA only because `surfaceId` sat beside `updateDataModel`, and the third round
+// answered in prose with no wire, so the table kept Hit and Stand. The SCHEMA feedback now names that key and the move
+// inside. Turn 2's third round is AUTHORED to it (round 2's own messages, `surfaceId` moved inside), so the replay
+// shows the settled table with Deal again.
+it('croupier-haiku-stand-no-update: the ACTION_NOT_APPLIED retry ships the settled table', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./croupier-haiku-stand-no-update.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual(['action-updates-surface:2'])
+  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual([])
   const trace = report.records[2].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
-  expect(trace.failureCodes).toEqual(['SCHEMA', 'SEMANTIC_UNCORRECTED', 'TEXT_JSONL_ROUTED'])
+  expect(trace).toMatchObject({ rounds: 3, failureCodes: ['SCHEMA', 'TEXT_JSONL_ROUTED'] })
+  const labels = report.records[2].lines.flatMap((l) => JSON.parse(l).updateComponents?.components ?? []).map((c) => c.label).filter(Boolean)
+  expect(labels).toEqual(['Deal again'])
 })

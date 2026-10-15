@@ -520,104 +520,42 @@
                 "messages": [
                   {
                     "version": "v1.0",
-                    "updateDataModel": {
-                      "surfaceId": "ask-2",
-                      "path": "/booking/title",
-                      "value": "Spa booking confirmed"
-                    }
-                  },
-                  {
-                    "version": "v1.0",
-                    "updateDataModel": {
-                      "surfaceId": "ask-2",
-                      "path": "/booking/rows",
-                      "value": [
-                        {
-                          "label": "Treatment",
-                          "value": "Massage"
-                        },
-                        {
-                          "label": "Duration",
-                          "value": "60 minutes"
-                        },
-                        {
-                          "label": "Date",
-                          "value": "Thursday 19 November 2026"
-                        },
-                        {
-                          "label": "Time",
-                          "value": "15:00 (ends 16:00)"
-                        },
-                        {
-                          "label": "Guests",
-                          "value": "1"
-                        },
-                        {
-                          "label": "Name",
-                          "value": "Alex Moreau"
-                        }
-                      ]
-                    }
-                  },
-                  {
-                    "version": "v1.0",
                     "updateComponents": {
                       "surfaceId": "ask-2",
                       "components": [
                         {
                           "id": "card",
                           "component": "BookingConfirmation",
-                          "title": {
-                            "path": "/booking/title"
+                          "title": "Spa booking confirmed",
+                          "data": {
+                            "path": "/booking"
                           },
-                          "rows": {
-                            "path": "/booking/rows"
-                          }
-                        }
-                      ]
-                    }
-                  }
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "text": "{\"a2uiMeta\":{\"note\":\"We put together your spa booking and you confirmed it. Your 60-minute massage is held for Alex Moreau on Thursday 19 November 2026 at 15:00, and the spa has received it. Thanks for walking through it with me! Any further questions, or are we all set?\",\"flowEnd\":true,\"target\":{\"surfaceId\":\"ask-2\"}}}\n\nWe put together your spa booking and you confirmed it. Your 60-minute massage is held for Alex Moreau on Thursday 19 November 2026 at 15:00, and the spa has received it. Thanks for walking through it with me! Any further questions, or are we all set?",
-          "tools": [
-            {
-              "name": "render_surface",
-              "input": {
-                "reply": "Your massage is booked for Alex Moreau on Thursday 19 November 2026 at 15:00.",
-                "target": "ask-2",
-                "messages": [
-                  {
-                    "version": "v1.0",
-                    "updateComponents": {
-                      "surfaceId": "ask-2",
-                      "components": [
-                        {
-                          "id": "card",
-                          "component": "Card",
-                          "elevation": "1",
-                          "children": [
-                            "hd",
-                            "ct"
+                          "rows": [
+                            {
+                              "label": "Treatment",
+                              "path": "treatment"
+                            },
+                            {
+                              "label": "Duration (minutes)",
+                              "path": "duration"
+                            },
+                            {
+                              "label": "Date",
+                              "path": "date"
+                            },
+                            {
+                              "label": "Time",
+                              "path": "time"
+                            },
+                            {
+                              "label": "Guests",
+                              "path": "guests"
+                            },
+                            {
+                              "label": "Name",
+                              "path": "name"
+                            }
                           ]
-                        },
-                        {
-                          "id": "hd",
-                          "component": "CardHeader",
-                          "children": [
-                            "hdt",
-                            "hdb"
-                          ]
-                        },
-                        {
-                          "id": "hdb",
-                          "component": "Badge",
-                          "label": "Booked",
-                          "intent": "success"
                         }
                       ]
                     }

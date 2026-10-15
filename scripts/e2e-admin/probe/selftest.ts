@@ -202,6 +202,12 @@ export async function runProbeSelftest(): Promise<number> {
   const unrouted = runChecks([record({ routing: undefined })], { ...opts, runId: 'probe-x-1a2b' })
   expectThat(statusOf(unrouted, 'routing-expect') === 'fail', 'checks: a live oracle whose trace line has no routing block fails routing-expect')
   expectThat(statusOf(runChecks([record({ step: { say: 'hi' }, routing: undefined, trace: undefined })], { ...opts, runId: 'probe-x-1a2b' }), 'routing-expect') === 'skip', 'checks: a live step with no oracle still skips routing-expect')
+  // T-0264: only the last round ships. A surface a rejected round created and the shipped round replaced (Haiku 5.5:
+  // ask-1 rejected BET_TABLE_MISSING, table-1 shipped) is dropped by the repair, never lost; a turn that ships none fails.
+  const renamed = record({ rounds: [{ text: '{"version":"v1.0","createSurface":{"surfaceId":"ask-1","catalogId":"agent-ui"}}', tools: [] }, { text: BUTTON_LINES.join('\n'), tools: [] }] })
+  expectThat(statusOf(runChecks([renamed], opts), 'no-surface-loss') === 'pass', 'checks: a rejected round\'s surface the shipped round replaced passes no-surface-loss')
+  const shippedNone = record({ lines: ['{"a2uiMeta":{"note":"Sorry."}}'], proseText: 'Sorry.', rounds: renamed.rounds })
+  expectThat(statusOf(runChecks([shippedNone], { ...opts, expectComponents: [] }), 'no-surface-loss') === 'fail', 'checks: a turn that ships no surface after a round created one fails no-surface-loss')
   const roundless = runChecks([record({ rounds: undefined, roundsSource: 'none' })], opts)
   expectThat(statusOf(roundless, 'no-surface-loss') === 'skip', 'checks: no round data skips the loss check (never a vacuous pass)')
 

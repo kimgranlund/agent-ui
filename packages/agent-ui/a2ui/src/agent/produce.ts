@@ -671,7 +671,7 @@ function messagesFor(
       return turns
     }
     const summary = failures
-      .map((f) => `${f.code}${f.path ? ` at ${f.path}` : ''}${expectedTypeNote(f, catalog, lastOutput)}${f.detail ? `: ${f.detail}` : ''}`)
+      .map((f) => `${f.code}${f.path ? ` at ${f.path}` : ''}${expectedTypeNote(f, catalog, lastOutput)}${misplacedSurfaceIdNote(f, lastOutput)}${f.detail ? `: ${f.detail}` : ''}`)
       .join('; ')
     const hint =
       (failures.some((f) => f.code === 'PARSE') ? (toolRound ? TOOL_PARSE_HINT : PARSE_HINT) : '') +
@@ -732,6 +732,18 @@ function expectedTypeNote(failure: RoundFailure, catalog: Catalog, lastOutput: A
   return validProps.length > 0
     ? ` (${component.component} has no "${propName}" property; valid properties: ${validProps.join(', ')})`
     : ` (${component.component} has no declared properties)`
+}
+
+/** T-0264: a `SCHEMA` failure on `[i].<kind>.surfaceId` whose message carries `surfaceId` on the envelope, beside
+ *  `<kind>`, names the misplaced key and the move; `''` otherwise. A Haiku 5.5 Stand retry wrote
+ *  `{"version","updateDataModel":{"value"},"surfaceId"}`, read the bare path as unfixable and answered in prose. */
+function misplacedSurfaceIdNote(failure: RoundFailure, lastOutput: A2uiOutput | undefined): string {
+  const m = /^\[(\d+)\]\.(\w+)\.surfaceId$/.exec(failure.path)
+  if (failure.code !== 'SCHEMA' || m === null || lastOutput === undefined) return ''
+  const msg = lastOutput[Number(m[1])] as unknown as Record<string, unknown> | undefined
+  const sid = msg?.['surfaceId']
+  if (typeof sid !== 'string' || msg?.[m[2]!] === undefined) return ''
+  return ` (this message has "surfaceId" beside "${m[2]}"; move it inside: {"version":"v1.0","${m[2]}":{"surfaceId":${JSON.stringify(sid)},...}})`
 }
 
 /** Strip a single wrapping markdown code fence (```json … ```), if the model added one despite the
