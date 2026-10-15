@@ -1,0 +1,199 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "croupier-blackjack-rounds-sonnet-1",
+  "agent": "croupier",
+  "model": "claude-sonnet-5-5",
+  "source": "probe live run 2026-10-15T05:56:56.257Z, traces 2026-10-15.jsonl:104,-",
+  "steps": [
+    {
+      "say": "Let's play blackjack.",
+      "expect": [
+        "CardTable"
+      ]
+    },
+    {
+      "click": "100"
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I should set up a fresh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" table with a default\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bankroll of 1,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"000 since none was spec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ified, and start with the betting\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" phase so the user can\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" place\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a bet via\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the strip before the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ards are dealt.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Blackjack it\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" is. The dealer st\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ands on all\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 17s,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" a natural p\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ays 3:2, a win\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" pays 1:1, and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" equal totals push. You start\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" with\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 1,000 chips and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" a 50 b\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"et is\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" down\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\". I\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'m show\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ing a 10,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and you have 14.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"catalogId\\\":\\\"agent-ui--croupier\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"phase\\\":\\\"playing\\\",\\\"bankroll\\\":1000,\\\"bet\\\":50,\\\"status\\\":\\\"Your turn\\\",\\\"dealerTotal\\\":\\\"10\\\",\\\"playerTotal\\\":\\\"14\\\",\\\"dealerHand\\\":[{\\\"rank\\\":\\\"10\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"clubs\\\",\\\"faceDown\\\":true}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"6\\\",\\\"suit\\\":\\\"diamonds\\\"}]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Blackjack\\\",\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":\\\"info\\\",\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"children\\\":[\\\"btn_hit\\\",\\\"btn_stand\\\",\\\"btn_double\\\"]},{\\\"id\\\":\\\"btn_hit\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Hit\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"hit\\\",\\\"wantResponse\\\":true}},{\\\"id\\\":\\\"btn_stand\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Stand\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"stand\\\",\\\"wantResponse\\\":true}},{\\\"id\\\":\\\"btn_double\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Double\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"double\\\",\\\"wantResponse\\\":true}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Blackjack it is. The dealer stands on all 17s, a natural pays 3:2, a win pays 1:1, and equal totals push. You start with 1,000 chips and a 50 bet is down. I'm showing a 10, and you have 14.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"## Referenced for this message\\n### blackjack (resource)\\nblackjack, 21, hit, stand, double, split: the classic house game\\n\\nTwo cards each; dealer shows one, hole card face-down. Values: pips as printed, faces 10, Ace 1 or 11. A natural (Ace + ten-card on the deal) ends the round at once: reveal the hole card, settle it (3:2 unless the dealer also has 21, then a push), and offer no hit, stand or double. Otherwise the player acts first: hit, stand, double (one card, doubled stake), split pairs; over 21 busts immediately. Dealer then reveals and draws to 17, standing on all 17s. Blackjack (Ace + ten-card) pays 3:2, a win pays 1:1, equal totals push.\\n\\nLet's play blackjack.\",\"k\":3},\"exemplarIds\":[\"frontier-round-outcome\",\"frontier-review-split\",\"trivia-round-resume\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":60013,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":6516},{\"id\":\"mini-skills\",\"chars\":2351},{\"id\":\"persona\",\"chars\":4854}],\"over\":false},\"usage\":{\"inputTokens\":5678,\"outputTokens\":1447,\"cacheReadInputTokens\":0,\"cacheCreationInputTokens\":17522}}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-1\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"phase\":\"playing\",\"bankroll\":1000,\"bet\":50,\"status\":\"Your turn\",\"dealerTotal\":\"10\",\"playerTotal\":\"14\",\"dealerHand\":[{\"rank\":\"10\",\"suit\":\"hearts\"},{\"rank\":\"9\",\"suit\":\"clubs\",\"faceDown\":true}],\"playerHand\":[{\"rank\":\"8\",\"suit\":\"spades\"},{\"rank\":\"6\",\"suit\":\"diamonds\"}]}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Blackjack\",\"phase\":{\"path\":\"/phase\"},\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":\"info\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"children\":[\"btn_hit\",\"btn_stand\",\"btn_double\"]},{\"id\":\"btn_hit\",\"component\":\"Button\",\"label\":\"Hit\",\"variant\":\"solid\",\"action\":{\"action\":\"hit\",\"wantResponse\":true}},{\"id\":\"btn_stand\",\"component\":\"Button\",\"label\":\"Stand\",\"variant\":\"soft\",\"action\":{\"action\":\"stand\",\"wantResponse\":true}},{\"id\":\"btn_double\",\"component\":\"Button\",\"label\":\"Double\",\"variant\":\"soft\",\"action\":{\"action\":\"double\",\"wantResponse\":true}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Blackjack it is. The dealer stands on all 17s, a natural pays 3:2, a win pays 1:1, and equal totals push. You start with 1,000 chips and a 50 bet is down. I'm showing a 10, and you have 14.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Your move: Hit, Stand or Double.",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-1",
+                      "catalogId": "agent-ui--croupier",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "phase": "playing",
+                        "bankroll": 1000,
+                        "bet": 50,
+                        "status": "Your turn",
+                        "dealerTotal": "10",
+                        "playerTotal": "14",
+                        "dealerHand": [
+                          {
+                            "rank": "10",
+                            "suit": "hearts"
+                          },
+                          {
+                            "rank": "9",
+                            "suit": "clubs",
+                            "faceDown": true
+                          }
+                        ],
+                        "playerHand": [
+                          {
+                            "rank": "8",
+                            "suit": "spades"
+                          },
+                          {
+                            "rank": "6",
+                            "suit": "diamonds"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Blackjack",
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": "info",
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "children": [
+                            "btn_hit",
+                            "btn_stand",
+                            "btn_double"
+                          ]
+                        },
+                        {
+                          "id": "btn_hit",
+                          "component": "Button",
+                          "label": "Hit",
+                          "variant": "solid",
+                          "action": {
+                            "action": "hit",
+                            "wantResponse": true
+                          }
+                        },
+                        {
+                          "id": "btn_stand",
+                          "component": "Button",
+                          "label": "Stand",
+                          "variant": "soft",
+                          "action": {
+                            "action": "stand",
+                            "wantResponse": true
+                          }
+                        },
+                        {
+                          "id": "btn_double",
+                          "component": "Button",
+                          "label": "Double",
+                          "variant": "soft",
+                          "action": {
+                            "action": "double",
+                            "wantResponse": true
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lines": []
+    }
+  ]
+}

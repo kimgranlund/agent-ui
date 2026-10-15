@@ -81,11 +81,26 @@ const SCENARIOS: readonly CroupierScenario[] = [
   },
 ]
 
-/** Each scenario with its deals (the opening step and every Deal again) expecting the table component. */
-export const CROUPIER_SCENARIOS: readonly CroupierScenario[] = SCENARIOS.map((s) => ({
+/** The deals (the opening step and every Deal again) expect the table component. */
+const withDealExpect = (s: CroupierScenario): CroupierScenario => ({
   ...s,
   steps: s.steps.map((step, i) => (i === 0 || step === DEAL_AGAIN ? { ...step, expect: s.expectComponents } : step)),
-}))
+})
+
+/** Each scenario with its deals expecting the table component. */
+export const CROUPIER_SCENARIOS: readonly CroupierScenario[] = SCENARIOS.map(withDealExpect)
+
+/** Scenario defects live round 2 found (T-0225 report), fixed for the next round only: the T-0184 `live-commands.sh`
+ *  is a finished run record built from SCENARIOS as they were. A Hit can bust, so the Stand after it is a `--say` (Opus
+ *  5.5 busted and found no Stand). Stud has five betting streets, so round 1 needs one more check before Deal again
+ *  (all three models were still on seventh street). */
+const ROUND_STEPS: Readonly<Record<string, ProbeStep[]>> = {
+  'blackjack-rounds': [say("Let's play blackjack."), click('100'), click('Stand'), DEAL_AGAIN, click('50'), click('Hit'), say('Stand.'), DEAL_AGAIN, click('25'), click('Stand')],
+  'seven-card-stud': [say("Let's play seven-card stud."), say('Bring it in, or check, or call.'), say('Bet 25.'), say(CHECK_OR_CALL), say(CHECK_OR_CALL), say(CHECK_OR_CALL), say(CHECK_OR_CALL), DEAL_AGAIN, say('Fold.'), DEAL_AGAIN, say('Bet 50.')],
+}
+
+/** The live-round scenarios: SCENARIOS with the round's fixes. */
+export const CROUPIER_ROUND_SCENARIOS: readonly CroupierScenario[] = SCENARIOS.map((s) => withDealExpect({ ...s, steps: ROUND_STEPS[s.name] ?? s.steps }))
 
 /** The picker's Anthropic 5.5 models in spend order (Opus 5.5 joined the picker in T-0185; live round 2, T-0225). */
 export const CROUPIER_MODELS: ReadonlyArray<{ id: string; short: string }> = [

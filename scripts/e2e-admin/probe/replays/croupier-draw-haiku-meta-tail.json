@@ -1,0 +1,339 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "croupier-draw-haiku-meta-tail",
+  "agent": "croupier",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "2026-10-15.jsonl:41,2026-10-15.jsonl:42 (catalog agent-ui--croupier)",
+  "steps": [
+    {
+      "say": "Let's play five-card draw."
+    },
+    {
+      "say": "Check, or call if there is a bet."
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"note\":\"Five-card draw it is. Each player gets five cards face down, then a betting round, then up to three discards (four if you keep an Ace) and replacements, a final betting round, and showdown. Ties split the pot. You open with 1,000 chips. Your first five are below, and the dealer's are face down. Your move: check, bet 20, or fold.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"## Referenced for this message\\n### five-card-draw (resource)\\nfive-card draw, discard and draw, classic poker\\n\\nClassic draw poker: five cards each, face-down, then a betting round; each side may discard up to three cards (four when keeping an Ace) and draw replacements; one final betting round, then showdown. Standard rankings; tied hands split the pot.\\n\\nLet's play five-card draw.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":48313,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":2021}],\"over\":false}}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-1\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":1000,\"pot\":0,\"playerHand\":[{\"rank\":\"Q\",\"suit\":\"spades\"},{\"rank\":\"9\",\"suit\":\"hearts\"},{\"rank\":\"9\",\"suit\":\"diamonds\"},{\"rank\":\"4\",\"suit\":\"clubs\"},{\"rank\":\"2\",\"suit\":\"spades\"}]}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"table\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Five-card draw\",\"status\":\"Betting round 1\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Chips\",\"value\":{\"path\":\"/bankroll\"}},{\"label\":\"Pot\",\"value\":{\"path\":\"/pot\"}}]},{\"id\":\"table\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"tbl_hd\",\"tbl_ct\",\"tbl_ft\"]},{\"id\":\"tbl_hd\",\"component\":\"CardHeader\",\"children\":[\"tbl_title\",\"tbl_badge\"]},{\"id\":\"tbl_title\",\"component\":\"Text\",\"text\":\"Your hand\",\"variant\":\"h4\"},{\"id\":\"tbl_badge\",\"component\":\"Badge\",\"label\":\"Your turn\",\"intent\":\"info\",\"slot\":\"trailing\"},{\"id\":\"tbl_ct\",\"component\":\"CardContent\",\"children\":[\"opp_zone\",\"you_zone\"]},{\"id\":\"opp_zone\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"opp_label\",\"opp_row\"]},{\"id\":\"opp_label\",\"component\":\"Text\",\"text\":\"Dealer · 5 cards face down\",\"variant\":\"label\"},{\"id\":\"opp_row\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"opp1\",\"opp2\",\"opp3\",\"opp4\",\"opp5\"]},{\"id\":\"opp1\",\"component\":\"PlayingCard\",\"rank\":\"A\",\"suit\":\"spades\",\"faceDown\":true,\"size\":\"md\"},{\"id\":\"opp2\",\"component\":\"PlayingCard\",\"rank\":\"A\",\"suit\":\"spades\",\"faceDown\":true,\"size\":\"md\"},{\"id\":\"opp3\",\"component\":\"PlayingCard\",\"rank\":\"A\",\"suit\":\"spades\",\"faceDown\":true,\"size\":\"md\"},{\"id\":\"opp4\",\"component\":\"PlayingCard\",\"rank\":\"A\",\"suit\":\"spades\",\"faceDown\":true,\"size\":\"md\"},{\"id\":\"opp5\",\"component\":\"PlayingCard\",\"rank\":\"A\",\"suit\":\"spades\",\"faceDown\":true,\"size\":\"md\"},{\"id\":\"you_zone\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"you_label\",\"you_row\"]},{\"id\":\"you_label\",\"component\":\"Text\",\"text\":\"You · pair of nines\",\"variant\":\"label\"},{\"id\":\"you_row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/playerHand\",\"componentId\":\"playerCard\"}},{\"id\":\"playerCard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":false,\"size\":\"md\"},{\"id\":\"tbl_ft\",\"component\":\"CardFooter\",\"children\":[\"actions\"]},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"children\":[\"btn_check\",\"btn_bet\",\"btn_fold\"]},{\"id\":\"btn_check\",\"component\":\"Button\",\"label\":\"Check\",\"variant\":\"solid\",\"action\":{\"action\":\"poker_check\",\"context\":{\"round\":\"table-1\"}}},{\"id\":\"btn_bet\",\"component\":\"Button\",\"label\":\"Bet 20\",\"variant\":\"soft\",\"action\":{\"action\":\"poker_bet\",\"context\":{\"round\":\"table-1\",\"amount\":20}}},{\"id\":\"btn_fold\",\"component\":\"Button\",\"label\":\"Fold\",\"variant\":\"ghost\",\"action\":{\"action\":\"poker_fold\",\"context\":{\"round\":\"table-1\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Five-card draw it is. Each player gets five cards face down, then a betting round, then up to three discards (four if you keep an Ace) and replacements, a final betting round, and showdown. Ties split the pot. You open with 1,000 chips. Your first five are below, and the dealer's are face down. Your move: check, bet 20, or fold.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-1",
+                      "catalogId": "agent-ui--croupier",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "bankroll": 1000,
+                        "pot": 0,
+                        "playerHand": [
+                          {
+                            "rank": "Q",
+                            "suit": "spades"
+                          },
+                          {
+                            "rank": "9",
+                            "suit": "hearts"
+                          },
+                          {
+                            "rank": "9",
+                            "suit": "diamonds"
+                          },
+                          {
+                            "rank": "4",
+                            "suit": "clubs"
+                          },
+                          {
+                            "rank": "2",
+                            "suit": "spades"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "table"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Five-card draw",
+                          "status": "Betting round 1",
+                          "statusIntent": "info",
+                          "stats": [
+                            {
+                              "label": "Chips",
+                              "value": {
+                                "path": "/bankroll"
+                              }
+                            },
+                            {
+                              "label": "Pot",
+                              "value": {
+                                "path": "/pot"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "id": "table",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "tbl_hd",
+                            "tbl_ct",
+                            "tbl_ft"
+                          ]
+                        },
+                        {
+                          "id": "tbl_hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "tbl_title",
+                            "tbl_badge"
+                          ]
+                        },
+                        {
+                          "id": "tbl_title",
+                          "component": "Text",
+                          "text": "Your hand",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "tbl_badge",
+                          "component": "Badge",
+                          "label": "Your turn",
+                          "intent": "info",
+                          "slot": "trailing"
+                        },
+                        {
+                          "id": "tbl_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "opp_zone",
+                            "you_zone"
+                          ]
+                        },
+                        {
+                          "id": "opp_zone",
+                          "component": "Column",
+                          "gap": "sm",
+                          "children": [
+                            "opp_label",
+                            "opp_row"
+                          ]
+                        },
+                        {
+                          "id": "opp_label",
+                          "component": "Text",
+                          "text": "Dealer · 5 cards face down",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "opp_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "children": [
+                            "opp1",
+                            "opp2",
+                            "opp3",
+                            "opp4",
+                            "opp5"
+                          ]
+                        },
+                        {
+                          "id": "opp1",
+                          "component": "PlayingCard",
+                          "rank": "A",
+                          "suit": "spades",
+                          "faceDown": true,
+                          "size": "md"
+                        },
+                        {
+                          "id": "opp2",
+                          "component": "PlayingCard",
+                          "rank": "A",
+                          "suit": "spades",
+                          "faceDown": true,
+                          "size": "md"
+                        },
+                        {
+                          "id": "opp3",
+                          "component": "PlayingCard",
+                          "rank": "A",
+                          "suit": "spades",
+                          "faceDown": true,
+                          "size": "md"
+                        },
+                        {
+                          "id": "opp4",
+                          "component": "PlayingCard",
+                          "rank": "A",
+                          "suit": "spades",
+                          "faceDown": true,
+                          "size": "md"
+                        },
+                        {
+                          "id": "opp5",
+                          "component": "PlayingCard",
+                          "rank": "A",
+                          "suit": "spades",
+                          "faceDown": true,
+                          "size": "md"
+                        },
+                        {
+                          "id": "you_zone",
+                          "component": "Column",
+                          "gap": "sm",
+                          "children": [
+                            "you_label",
+                            "you_row"
+                          ]
+                        },
+                        {
+                          "id": "you_label",
+                          "component": "Text",
+                          "text": "You · pair of nines",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "you_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/playerHand",
+                            "componentId": "playerCard"
+                          }
+                        },
+                        {
+                          "id": "playerCard",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "faceDown": false,
+                          "size": "md"
+                        },
+                        {
+                          "id": "tbl_ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "actions"
+                          ]
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "md",
+                          "children": [
+                            "btn_check",
+                            "btn_bet",
+                            "btn_fold"
+                          ]
+                        },
+                        {
+                          "id": "btn_check",
+                          "component": "Button",
+                          "label": "Check",
+                          "variant": "solid",
+                          "action": {
+                            "action": "poker_check",
+                            "context": {
+                              "round": "table-1"
+                            }
+                          }
+                        },
+                        {
+                          "id": "btn_bet",
+                          "component": "Button",
+                          "label": "Bet 20",
+                          "variant": "soft",
+                          "action": {
+                            "action": "poker_bet",
+                            "context": {
+                              "round": "table-1",
+                              "amount": 20
+                            }
+                          }
+                        },
+                        {
+                          "id": "btn_fold",
+                          "component": "Button",
+                          "label": "Fold",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "poker_fold",
+                            "context": {
+                              "round": "table-1"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "## Referenced for this message\n### five-card-draw (resource)\nfive-card draw, discard and draw, classic poker\n\nClassic draw poker: five cards each, face-down, then a betting round; each side may discard up to three cards (four when keeping an Ace) and draw replacements; one final betting round, then showdown. Standard rankings; tied hands split the pot.\n\nLet's play five-card draw."
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"You check, and the dealer checks behind you, so the first betting round closes. Now the draw: tick up to three cards to discard (you hold no Ace, so three is the limit), then press Draw, or Stand pat to keep all five.\\n\\n{\\\"a2uiMeta\\\":{\\\"note\\\":\\\"You check, the dealer checks, and we move to the draw. Tick up to three cards to discard, then Draw, or Stand pat.\\\",\\\"target\\\":{\\\"surfaceId\\\":\\\"table-1\\\"}}}\\n\"}}",
+        "{\"a2uiMeta\":{\"note\":\"You check, and the dealer checks behind you, so the first betting round closes. Now the draw: tick up to three cards to discard (you hold no Ace, so three is the limit), then press Draw, or Stand pat to keep all five.\\n\\n{\\\"a2uiMeta\\\":{\\\"note\\\":\\\"You check, the dealer checks, and we move to the draw. Tick up to three cards to discard, then Draw, or Stand pat.\\\",\\\"target\\\":{\\\"surfaceId\\\":\\\"table-1\\\"}}}\",\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Check, or call if there is a bet.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[\"TEXT_JSONL_ROUTED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":47047,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":755}],\"over\":false}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":1000,\"pot\":0,\"dealerHand\":[{\"rank\":\"K\",\"suit\":\"hearts\"},{\"rank\":\"7\",\"suit\":\"clubs\"},{\"rank\":\"3\",\"suit\":\"diamonds\"},{\"rank\":\"J\",\"suit\":\"spades\"},{\"rank\":\"8\",\"suit\":\"hearts\"}],\"playerHand\":[{\"rank\":\"Q\",\"suit\":\"spades\"},{\"rank\":\"9\",\"suit\":\"hearts\"},{\"rank\":\"9\",\"suit\":\"diamonds\"},{\"rank\":\"4\",\"suit\":\"clubs\"},{\"rank\":\"2\",\"suit\":\"spades\"}],\"discard\":{\"c0\":false,\"c1\":false,\"c2\":false,\"c3\":false,\"c4\":false}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Five-card draw\",\"status\":\"Draw phase\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Chips\",\"value\":{\"path\":\"/bankroll\"}},{\"label\":\"Pot\",\"value\":{\"path\":\"/pot\"}}]},{\"id\":\"tbl_badge\",\"component\":\"Badge\",\"label\":\"Discard\",\"intent\":\"info\",\"slot\":\"trailing\"},{\"id\":\"tbl_ct\",\"component\":\"CardContent\",\"children\":[\"opp_zone\",\"you_zone\",\"discard_col\"]},{\"id\":\"opp_row\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":{\"path\":\"/dealerHand\",\"componentId\":\"dealerCard\"}},{\"id\":\"dealerCard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":true,\"size\":\"md\"},{\"id\":\"discard_col\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"discard_label\",\"c0\",\"c1\",\"c2\",\"c3\",\"c4\"]},{\"id\":\"discard_label\",\"component\":\"Text\",\"text\":\"Discard (up to three)\",\"variant\":\"label\"},{\"id\":\"c0\",\"component\":\"Checkbox\",\"name\":\"c0\",\"label\":\"Q of spades\",\"checked\":{\"path\":\"/discard/c0\"}},{\"id\":\"c1\",\"component\":\"Checkbox\",\"name\":\"c1\",\"label\":\"9 of hearts\",\"checked\":{\"path\":\"/discard/c1\"}},{\"id\":\"c2\",\"component\":\"Checkbox\",\"name\":\"c2\",\"label\":\"9 of diamonds\",\"checked\":{\"path\":\"/discard/c2\"}},{\"id\":\"c3\",\"component\":\"Checkbox\",\"name\":\"c3\",\"label\":\"4 of clubs\",\"checked\":{\"path\":\"/discard/c3\"}},{\"id\":\"c4\",\"component\":\"Checkbox\",\"name\":\"c4\",\"label\":\"2 of spades\",\"checked\":{\"path\":\"/discard/c4\"}},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"justify\":\"end\",\"children\":[\"btn_stand\",\"btn_draw\"]},{\"id\":\"btn_stand\",\"component\":\"Button\",\"label\":\"Stand pat\",\"variant\":\"ghost\",\"action\":{\"action\":\"poker_stand_pat\",\"context\":{\"round\":\"table-1\"}}},{\"id\":\"btn_draw\",\"component\":\"Button\",\"label\":\"Draw\",\"variant\":\"solid\",\"action\":{\"action\":\"poker_draw\",\"context\":{\"round\":\"table-1\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "You check, and the dealer checks behind you, so the first betting round closes. Now the draw: tick up to three cards to discard (you hold no Ace, so three is the limit), then press Draw, or Stand pat to keep all five.\n\n{\"a2uiMeta\":{\"note\":\"You check, the dealer checks, and we move to the draw. Tick up to three cards to discard, then Draw, or Stand pat.\",\"target\":{\"surfaceId\":\"table-1\"}}}\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":1000,\"pot\":0,\"dealerHand\":[{\"rank\":\"K\",\"suit\":\"hearts\"},{\"rank\":\"7\",\"suit\":\"clubs\"},{\"rank\":\"3\",\"suit\":\"diamonds\"},{\"rank\":\"J\",\"suit\":\"spades\"},{\"rank\":\"8\",\"suit\":\"hearts\"}],\"playerHand\":[{\"rank\":\"Q\",\"suit\":\"spades\"},{\"rank\":\"9\",\"suit\":\"hearts\"},{\"rank\":\"9\",\"suit\":\"diamonds\"},{\"rank\":\"4\",\"suit\":\"clubs\"},{\"rank\":\"2\",\"suit\":\"spades\"}],\"discard\":{\"c0\":false,\"c1\":false,\"c2\":false,\"c3\":false,\"c4\":false}}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Five-card draw\",\"status\":\"Draw phase\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Chips\",\"value\":{\"path\":\"/bankroll\"}},{\"label\":\"Pot\",\"value\":{\"path\":\"/pot\"}}]},{\"id\":\"tbl_badge\",\"component\":\"Badge\",\"label\":\"Discard\",\"intent\":\"info\",\"slot\":\"trailing\"},{\"id\":\"tbl_ct\",\"component\":\"CardContent\",\"children\":[\"opp_zone\",\"you_zone\",\"discard_col\"]},{\"id\":\"opp_row\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":{\"path\":\"/dealerHand\",\"componentId\":\"dealerCard\"}},{\"id\":\"dealerCard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":true,\"size\":\"md\"},{\"id\":\"discard_col\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"discard_label\",\"c0\",\"c1\",\"c2\",\"c3\",\"c4\"]},{\"id\":\"discard_label\",\"component\":\"Text\",\"text\":\"Discard (up to three)\",\"variant\":\"label\"},{\"id\":\"c0\",\"component\":\"Checkbox\",\"name\":\"c0\",\"label\":\"Q of spades\",\"checked\":{\"path\":\"/discard/c0\"}},{\"id\":\"c1\",\"component\":\"Checkbox\",\"name\":\"c1\",\"label\":\"9 of hearts\",\"checked\":{\"path\":\"/discard/c1\"}},{\"id\":\"c2\",\"component\":\"Checkbox\",\"name\":\"c2\",\"label\":\"9 of diamonds\",\"checked\":{\"path\":\"/discard/c2\"}},{\"id\":\"c3\",\"component\":\"Checkbox\",\"name\":\"c3\",\"label\":\"4 of clubs\",\"checked\":{\"path\":\"/discard/c3\"}},{\"id\":\"c4\",\"component\":\"Checkbox\",\"name\":\"c4\",\"label\":\"2 of spades\",\"checked\":{\"path\":\"/discard/c4\"}},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"justify\":\"end\",\"children\":[\"btn_stand\",\"btn_draw\"]},{\"id\":\"btn_stand\",\"component\":\"Button\",\"label\":\"Stand pat\",\"variant\":\"ghost\",\"action\":{\"action\":\"poker_stand_pat\",\"context\":{\"round\":\"table-1\"}}},{\"id\":\"btn_draw\",\"component\":\"Button\",\"label\":\"Draw\",\"variant\":\"solid\",\"action\":{\"action\":\"poker_draw\",\"context\":{\"round\":\"table-1\"}}}]}}",
+          "tools": []
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "Check, or call if there is a bet."
+      }
+    }
+  ]
+}

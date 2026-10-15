@@ -1,0 +1,150 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "croupier-rounds-haiku-no-moves",
+  "agent": "croupier",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "2026-10-15.jsonl:1,2026-10-15.jsonl:2 (catalog agent-ui--croupier)",
+  "steps": [
+    {
+      "say": "Let's play blackjack."
+    },
+    {
+      "click": "deal"
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"Blackjack it is. Two cards each, the dealer shows one card and holds the other face down. A natural pays 3:2, a win pays 1:1, and equal totals push. The dealer draws to 17 and stands on all 17s. You have 1,000 chips to start. Place your bet at the table below.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Blackjack it is. Two cards each, the dealer shows one card and holds the other face down. A natural pays 3:2, a win pays 1:1, and equal totals push. The dealer draws to 17 and stands on all 17s. You have 1,000 chips to start. Place your bet at the table below.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"## Referenced for this message\\n### blackjack (resource)\\nblackjack, 21, hit, stand, double, split: the classic house game\\n\\nTwo cards each; dealer shows one, hole card face-down. Values: pips as printed, faces 10, Ace 1 or 11. A natural (Ace + ten-card on the deal) ends the round at once: reveal the hole card, settle it (3:2 unless the dealer also has 21, then a push), and offer no hit, stand or double. Otherwise the player acts first: hit, stand, double (one card, doubled stake), split pairs; over 21 busts immediately. Dealer then reveals and draws to 17, standing on all 17s. Blackjack (Ace + ten-card) pays 3:2, a win pays 1:1, equal totals push.\\n\\nLet's play blackjack.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":48643,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":2351}],\"over\":false}}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-1\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":1000,\"bet\":0,\"phase\":\"betting\",\"dealerHand\":[],\"playerHand\":[],\"dealerTotal\":\"\",\"playerTotal\":\"\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Blackjack\",\"phase\":\"betting\",\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"status\":\"Place your bet\",\"statusIntent\":\"neutral\",\"betAction\":\"deal\",\"children\":[]}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Blackjack it is. Two cards each, the dealer shows one card and holds the other face down. A natural pays 3:2, a win pays 1:1, and equal totals push. The dealer draws to 17 and stands on all 17s. You have 1,000 chips to start. Place your bet at the table below.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Blackjack it is. Two cards each, the dealer shows one card and holds the other face down. A natural pays 3:2, a win pays 1:1, and equal totals push. The dealer draws to 17 and stands on all 17s. You have 1,000 chips to start. Place your bet at the table below.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-1",
+                      "catalogId": "agent-ui--croupier",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "bankroll": 1000,
+                        "bet": 0,
+                        "phase": "betting",
+                        "dealerHand": [],
+                        "playerHand": [],
+                        "dealerTotal": "",
+                        "playerTotal": ""
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Blackjack",
+                          "phase": "betting",
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "status": "Place your bet",
+                          "statusIntent": "neutral",
+                          "betAction": "deal",
+                          "children": []
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "## Referenced for this message\n### blackjack (resource)\nblackjack, 21, hit, stand, double, split: the classic house game\n\nTwo cards each; dealer shows one, hole card face-down. Values: pips as printed, faces 10, Ace 1 or 11. A natural (Ace + ten-card on the deal) ends the round at once: reveal the hole card, settle it (3:2 unless the dealer also has 21, then a push), and offer no hit, stand or double. Otherwise the player acts first: hit, stand, double (one card, doubled stake), split pairs; over 21 busts immediately. Dealer then reveals and draws to 17, standing on all 17s. Blackjack (Ace + ten-card) pays 3:2, a win pays 1:1, equal totals push.\n\nLet's play blackjack."
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"Your bet is down. You have 17 (9 and 8) against my King showing. Hit or stand?\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Your 100 bet is down, leaving 900. You have 17 (9 and 8) against my King showing. Hit or stand?\\n\\n{\\\"a2uiMeta\\\":{\\\"note\\\":\\\"Bet is down. Your move.\\\",\\\"target\\\":{\\\"surfaceId\\\":\\\"table-1\\\"}}}\",\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"The user triggered the \\\"deal\\\" action (from component root). Action context: {\\\"bet\\\":100,\\\"bankrollAfterBet\\\":900}. Current surface data model: {\\\"bankroll\\\":1000,\\\"bet\\\":100,\\\"phase\\\":\\\"betting\\\",\\\"dealerHand\\\":[],\\\"playerHand\\\":[],\\\"dealerTotal\\\":\\\"\\\",\\\"playerTotal\\\":\\\"\\\"}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"ACTION_NOT_APPLIED\",\"TEXT_JSONL_ROUTED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":48407,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":2115}],\"over\":false}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":900,\"bet\":100,\"phase\":\"playing\",\"dealerHand\":[{\"rank\":\"K\",\"suit\":\"spades\"},{\"rank\":\"6\",\"suit\":\"hearts\",\"faceDown\":true}],\"playerHand\":[{\"rank\":\"9\",\"suit\":\"clubs\"},{\"rank\":\"8\",\"suit\":\"diamonds\"}],\"dealerTotal\":\"10 showing\",\"playerTotal\":\"17\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Blackjack\",\"phase\":\"playing\",\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"status\":\"Your move: hit or stand\",\"statusIntent\":\"neutral\",\"betAction\":\"deal\",\"children\":[]}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Bet of 100 is down. Dealing now.\",\"target\":{\"surfaceId\":\"table-1\"}}}\n\nYour bet is down. You have 17 (9 and 8) against my King showing. Hit or stand?",
+          "tools": []
+        },
+        {
+          "text": "Your 100 bet is down, leaving 900. You have 17 (9 and 8) against my King showing. Hit or stand?\n\n{\"a2uiMeta\":{\"note\":\"Bet is down. Your move.\",\"target\":{\"surfaceId\":\"table-1\"}}}\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":900,\"bet\":100,\"phase\":\"playing\",\"dealerHand\":[{\"rank\":\"K\",\"suit\":\"spades\"},{\"rank\":\"6\",\"suit\":\"hearts\",\"faceDown\":true}],\"playerHand\":[{\"rank\":\"9\",\"suit\":\"clubs\"},{\"rank\":\"8\",\"suit\":\"diamonds\"}],\"dealerTotal\":\"10 showing\",\"playerTotal\":\"17\"}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Blackjack\",\"phase\":\"playing\",\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"status\":\"Your move: hit or stand\",\"statusIntent\":\"neutral\",\"betAction\":\"deal\",\"children\":[]}]}}",
+          "tools": []
+        }
+      ],
+      "input": {
+        "kind": "client",
+        "message": {
+          "version": "v1.0",
+          "action": {
+            "surfaceId": "table-1",
+            "actionId": "a2ui-action-1",
+            "name": "deal",
+            "sourceComponentId": "root",
+            "timestamp": "2026-10-15T05:20:44.012Z",
+            "context": {
+              "bet": 100,
+              "bankrollAfterBet": 900
+            },
+            "dataModel": {
+              "bankroll": 1000,
+              "bet": 100,
+              "phase": "betting",
+              "dealerHand": [],
+              "playerHand": [],
+              "dealerTotal": "",
+              "playerTotal": ""
+            }
+          }
+        }
+      }
+    }
+  ]
+}

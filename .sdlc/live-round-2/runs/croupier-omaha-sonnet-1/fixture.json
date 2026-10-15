@@ -1,0 +1,2384 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "croupier-omaha-sonnet-1",
+  "agent": "croupier",
+  "model": "claude-sonnet-5-5",
+  "source": "probe live run 2026-10-15T06:08:45.890Z, traces 2026-10-15.jsonl:136,2026-10-15.jsonl:137,2026-10-15.jsonl:138,2026-10-15.jsonl:139,2026-10-15.jsonl:140,2026-10-15.jsonl:141,2026-10-15.jsonl:142,2026-10-15.jsonl:143,2026-10-15.jsonl:144,2026-10-15.jsonl:145",
+  "steps": [
+    {
+      "say": "Let's play Omaha.",
+      "expect": [
+        "PlayingCard"
+      ]
+    },
+    {
+      "say": "Check, or call if there is a bet."
+    },
+    {
+      "say": "Bet the pot."
+    },
+    {
+      "say": "Check, or call if there is a bet."
+    },
+    {
+      "say": "Check, or call if there is a bet."
+    },
+    {
+      "click": "Deal again",
+      "expect": [
+        "PlayingCard"
+      ]
+    },
+    {
+      "say": "Fold."
+    },
+    {
+      "click": "Deal again",
+      "expect": [
+        "PlayingCard"
+      ]
+    },
+    {
+      "say": "Bet the pot."
+    },
+    {
+      "say": "Check, or call if there is a bet."
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm setting up Om\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aha with a round table\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face, using the GameHud\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" PlayingCard components\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" there's no bl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ackjack-specific lay\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"out needed here. With no b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ankroll on record\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll default to 1,000 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and start\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dealing the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" preflop round with four\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hole cards per\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ep it simple: heads-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"up against\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the dealer with antes of\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 10 each, gi\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ving a pot of 20 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bankroll of 990 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"after my\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ante,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" using\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pot-limit betting for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ions (\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Check, Bet 20\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Fold). I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" struct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"uring the data model with b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ankroll, pot, street\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ields, d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealing the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player A\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"♠\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" K♠ 9♥\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 8♥\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" while the dealer's hand\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" stays face down.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For the dealer's hid\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"den cards, I'll still\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" assign real values\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" (Q♦ Q\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"♣ J♦ \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"10♣) since they're need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ed for later settlement, just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" fl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"agged as face\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" down so they aren't reveal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ed in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"endered display. Now I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m la\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ying out the sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face with a root\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" column\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" contain\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing a card header show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing the hand title and street\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" badge.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For the stats display, I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m considering using\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" GameHud with bound st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ats for bankroll and p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot, or alternatively using\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" separ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ate Stat components bound to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" their\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" respective paths — leaning\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" toward GameHud as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the prim\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ary container\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" its title and status re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"flecting the current\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hand state.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm planning the board as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" an empty Row since it's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" preflop,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with a caption noting no c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ards yet, then\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" templating player and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dealer hands as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" PlayingCard components\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bound to the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hand data,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dealer's card mar\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ked face-down. For\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the footer, I'll l\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ay out\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Check, Bet, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Fold as a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" button\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" row with var\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ying visual emphasis.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Omaha it\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" is, he\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ads-up against\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" me\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\". Each\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" player gets four hole cards\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" You must use exactly two of\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" them plus ex\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"actly three board\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" cards.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Bet\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ting is pot-limit.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Each of\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" us ant\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"es 10 and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the pot starts at 20\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\". You open\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" with 1,000 chips\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\", so you have\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 990 after the ante.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"catalogId\\\":\\\"agent-ui--croupier\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"bankroll\\\":990,\\\"pot\\\":20,\\\"street\\\":\\\"Pre-flop\\\",\\\"playerHand\\\":[{\\\"rank\\\":\\\"A\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"hearts\\\"}],\\\"dealerHand\\\":[{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"J\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"10\\\",\\\"suit\\\":\\\"clubs\\\"}],\\\"board\\\":[]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"header\\\",\\\"content\\\",\\\"footer\\\"]},{\\\"id\\\":\\\"header\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"title\\\",\\\"street_badge\\\"]},{\\\"id\\\":\\\"title\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Omaha · Round 1\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"street_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Pre-flop\\\",\\\"intent\\\":\\\"info\\\"},{\\\"id\\\":\\\"content\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"col\\\"]},{\\\"id\\\":\\\"col\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"stats\\\",\\\"dealer_label\\\",\\\"dealer_row\\\",\\\"board_label\\\",\\\"board_row\\\",\\\"player_label\\\",\\\"player_row\\\",\\\"rule\\\"]},{\\\"id\\\":\\\"stats\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"lg\\\",\\\"children\\\":[\\\"stat_bank\\\",\\\"stat_pot\\\"]},{\\\"id\\\":\\\"stat_bank\\\",\\\"component\\\":\\\"Stat\\\",\\\"label\\\":\\\"Bankroll\\\",\\\"value\\\":{\\\"path\\\":\\\"/bankroll\\\"}},{\\\"id\\\":\\\"stat_pot\\\",\\\"component\\\":\\\"Stat\\\",\\\"label\\\":\\\"Pot\\\",\\\"value\\\":{\\\"path\\\":\\\"/pot\\\"}},{\\\"id\\\":\\\"dealer_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Dealer · 4 hole cards\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"dealer_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":{\\\"path\\\":\\\"/dealerHand\\\",\\\"componentId\\\":\\\"dealer_card\\\"}},{\\\"id\\\":\\\"dealer_card\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"faceDown\\\":true,\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"board_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Board · no cards yet, the flop comes next\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"board_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":{\\\"path\\\":\\\"/board\\\",\\\"componentId\\\":\\\"board_card\\\"}},{\\\"id\\\":\\\"board_card\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"player_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"You · 4 hole cards\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"player_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":{\\\"path\\\":\\\"/playerHand\\\",\\\"componentId\\\":\\\"player_card\\\"}},{\\\"id\\\":\\\"player_card\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"rule\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Use exactly two hole cards and three board cards. Pot-limit: the biggest bet is the current pot (20).\\\",\\\"variant\\\":\\\"caption\\\"},{\\\"id\\\":\\\"footer\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"actions\\\"]},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"btn_check\\\",\\\"btn_bet\\\",\\\"btn_fold\\\"]},{\\\"id\\\":\\\"btn_check\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Check\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"poker_action\\\",\\\"context\\\":{\\\"move\\\":\\\"check\\\"}}},{\\\"id\\\":\\\"btn_bet\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Bet 20 (pot)\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"poker_action\\\",\\\"context\\\":{\\\"move\\\":\\\"bet\\\",\\\"amount\\\":20}}},{\\\"id\\\":\\\"btn_fold\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Fold\\\",\\\"variant\\\":\\\"ghost\\\",\\\"action\\\":{\\\"action\\\":\\\"poker_action\\\",\\\"context\\\":{\\\"move\\\":\\\"fold\\\"}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Omaha it is, heads-up against me. Each player gets four hole cards. You must use exactly two of them plus exactly three board cards. Betting is pot-limit. Each of us antes 10 and the pot starts at 20. You open with 1,000 chips, so you have 990 after the ante.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"## Referenced for this message\\n### omaha (resource)\\nomaha hold'em, four hole cards, exactly two plus three, pot limit\\n\\nHold'em variant: FOUR hole cards each, same streets and betting rounds. A hand must use exactly two hole cards plus exactly three board cards — no more, no fewer. Traditionally pot-limit; otherwise settle as hold'em.\\n\\nLet's play Omaha.\",\"k\":3},\"exemplarIds\":[\"wallet-summary-card\",\"list-nested\",\"pattern-settings-form\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":58856,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5845},{\"id\":\"mini-skills\",\"chars\":1865},{\"id\":\"persona\",\"chars\":4854}],\"over\":false},\"usage\":{\"inputTokens\":5061,\"outputTokens\":3054,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-1\",\"catalogId\":\"agent-ui--croupier\"}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":990,\"pot\":20,\"street\":\"Pre-flop\",\"playerHand\":[{\"rank\":\"A\",\"suit\":\"spades\"},{\"rank\":\"K\",\"suit\":\"spades\"},{\"rank\":\"9\",\"suit\":\"hearts\"},{\"rank\":\"8\",\"suit\":\"hearts\"}],\"dealerHand\":[{\"rank\":\"Q\",\"suit\":\"diamonds\"},{\"rank\":\"Q\",\"suit\":\"clubs\"},{\"rank\":\"J\",\"suit\":\"diamonds\"},{\"rank\":\"10\",\"suit\":\"clubs\"}],\"board\":[]}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"header\",\"content\",\"footer\"]},{\"id\":\"header\",\"component\":\"CardHeader\",\"children\":[\"title\",\"street_badge\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Omaha · Round 1\",\"variant\":\"h4\"},{\"id\":\"street_badge\",\"component\":\"Badge\",\"label\":\"Pre-flop\",\"intent\":\"info\"},{\"id\":\"content\",\"component\":\"CardContent\",\"children\":[\"col\"]},{\"id\":\"col\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"stats\",\"dealer_label\",\"dealer_row\",\"board_label\",\"board_row\",\"player_label\",\"player_row\",\"rule\"]},{\"id\":\"stats\",\"component\":\"Row\",\"gap\":\"lg\",\"children\":[\"stat_bank\",\"stat_pot\"]},{\"id\":\"stat_bank\",\"component\":\"Stat\",\"label\":\"Bankroll\",\"value\":{\"path\":\"/bankroll\"}},{\"id\":\"stat_pot\",\"component\":\"Stat\",\"label\":\"Pot\",\"value\":{\"path\":\"/pot\"}},{\"id\":\"dealer_label\",\"component\":\"Text\",\"text\":\"Dealer · 4 hole cards\",\"variant\":\"label\"},{\"id\":\"dealer_row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/dealerHand\",\"componentId\":\"dealer_card\"}},{\"id\":\"dealer_card\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":true,\"size\":\"md\"},{\"id\":\"board_label\",\"component\":\"Text\",\"text\":\"Board · no cards yet, the flop comes next\",\"variant\":\"label\"},{\"id\":\"board_row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/board\",\"componentId\":\"board_card\"}},{\"id\":\"board_card\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"size\":\"md\"},{\"id\":\"player_label\",\"component\":\"Text\",\"text\":\"You · 4 hole cards\",\"variant\":\"label\"},{\"id\":\"player_row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/playerHand\",\"componentId\":\"player_card\"}},{\"id\":\"player_card\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"size\":\"md\"},{\"id\":\"rule\",\"component\":\"Text\",\"text\":\"Use exactly two hole cards and three board cards. Pot-limit: the biggest bet is the current pot (20).\",\"variant\":\"caption\"},{\"id\":\"footer\",\"component\":\"CardFooter\",\"children\":[\"actions\"]},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"children\":[\"btn_check\",\"btn_bet\",\"btn_fold\"]},{\"id\":\"btn_check\",\"component\":\"Button\",\"label\":\"Check\",\"variant\":\"solid\",\"action\":{\"action\":\"poker_action\",\"context\":{\"move\":\"check\"}}},{\"id\":\"btn_bet\",\"component\":\"Button\",\"label\":\"Bet 20 (pot)\",\"variant\":\"soft\",\"action\":{\"action\":\"poker_action\",\"context\":{\"move\":\"bet\",\"amount\":20}}},{\"id\":\"btn_fold\",\"component\":\"Button\",\"label\":\"Fold\",\"variant\":\"ghost\",\"action\":{\"action\":\"poker_action\",\"context\":{\"move\":\"fold\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Omaha it is, heads-up against me. Each player gets four hole cards. You must use exactly two of them plus exactly three board cards. Betting is pot-limit. Each of us antes 10 and the pot starts at 20. You open with 1,000 chips, so you have 990 after the ante.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Your four hole cards are dealt: A♠ K♠ 9♥ 8♥. Check, bet the pot (20), or fold?",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-1",
+                      "catalogId": "agent-ui--croupier"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "bankroll": 990,
+                        "pot": 20,
+                        "street": "Pre-flop",
+                        "playerHand": [
+                          {
+                            "rank": "A",
+                            "suit": "spades"
+                          },
+                          {
+                            "rank": "K",
+                            "suit": "spades"
+                          },
+                          {
+                            "rank": "9",
+                            "suit": "hearts"
+                          },
+                          {
+                            "rank": "8",
+                            "suit": "hearts"
+                          }
+                        ],
+                        "dealerHand": [
+                          {
+                            "rank": "Q",
+                            "suit": "diamonds"
+                          },
+                          {
+                            "rank": "Q",
+                            "suit": "clubs"
+                          },
+                          {
+                            "rank": "J",
+                            "suit": "diamonds"
+                          },
+                          {
+                            "rank": "10",
+                            "suit": "clubs"
+                          }
+                        ],
+                        "board": []
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "header",
+                            "content",
+                            "footer"
+                          ]
+                        },
+                        {
+                          "id": "header",
+                          "component": "CardHeader",
+                          "children": [
+                            "title",
+                            "street_badge"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Omaha · Round 1",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "street_badge",
+                          "component": "Badge",
+                          "label": "Pre-flop",
+                          "intent": "info"
+                        },
+                        {
+                          "id": "content",
+                          "component": "CardContent",
+                          "children": [
+                            "col"
+                          ]
+                        },
+                        {
+                          "id": "col",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "stats",
+                            "dealer_label",
+                            "dealer_row",
+                            "board_label",
+                            "board_row",
+                            "player_label",
+                            "player_row",
+                            "rule"
+                          ]
+                        },
+                        {
+                          "id": "stats",
+                          "component": "Row",
+                          "gap": "lg",
+                          "children": [
+                            "stat_bank",
+                            "stat_pot"
+                          ]
+                        },
+                        {
+                          "id": "stat_bank",
+                          "component": "Stat",
+                          "label": "Bankroll",
+                          "value": {
+                            "path": "/bankroll"
+                          }
+                        },
+                        {
+                          "id": "stat_pot",
+                          "component": "Stat",
+                          "label": "Pot",
+                          "value": {
+                            "path": "/pot"
+                          }
+                        },
+                        {
+                          "id": "dealer_label",
+                          "component": "Text",
+                          "text": "Dealer · 4 hole cards",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "dealer_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/dealerHand",
+                            "componentId": "dealer_card"
+                          }
+                        },
+                        {
+                          "id": "dealer_card",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "faceDown": true,
+                          "size": "md"
+                        },
+                        {
+                          "id": "board_label",
+                          "component": "Text",
+                          "text": "Board · no cards yet, the flop comes next",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "board_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/board",
+                            "componentId": "board_card"
+                          }
+                        },
+                        {
+                          "id": "board_card",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "size": "md"
+                        },
+                        {
+                          "id": "player_label",
+                          "component": "Text",
+                          "text": "You · 4 hole cards",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "player_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/playerHand",
+                            "componentId": "player_card"
+                          }
+                        },
+                        {
+                          "id": "player_card",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "size": "md"
+                        },
+                        {
+                          "id": "rule",
+                          "component": "Text",
+                          "text": "Use exactly two hole cards and three board cards. Pot-limit: the biggest bet is the current pot (20).",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "footer",
+                          "component": "CardFooter",
+                          "children": [
+                            "actions"
+                          ]
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "md",
+                          "children": [
+                            "btn_check",
+                            "btn_bet",
+                            "btn_fold"
+                          ]
+                        },
+                        {
+                          "id": "btn_check",
+                          "component": "Button",
+                          "label": "Check",
+                          "variant": "solid",
+                          "action": {
+                            "action": "poker_action",
+                            "context": {
+                              "move": "check"
+                            }
+                          }
+                        },
+                        {
+                          "id": "btn_bet",
+                          "component": "Button",
+                          "label": "Bet 20 (pot)",
+                          "variant": "soft",
+                          "action": {
+                            "action": "poker_action",
+                            "context": {
+                              "move": "bet",
+                              "amount": 20
+                            }
+                          }
+                        },
+                        {
+                          "id": "btn_fold",
+                          "component": "Button",
+                          "label": "Fold",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "poker_action",
+                            "context": {
+                              "move": "fold"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since the player checked, I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll check too with no bets\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" going\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" in, then de\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"al the flop—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"being\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" careful to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" av\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"oid any\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" cards already used\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" from\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the de\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ck (As, Ks,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 9h, 8h,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Qd, Q\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"c, Jd, 10\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"c)\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" before updating the table display\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll keep the board template\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and header\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" badge show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing \\\"Flop\\\" with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" actions unchanged, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" have\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the dealer sim\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ply check behind r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ather than bet. I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" write the response as plain prose\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with the meta target\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" line\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" declaring the table\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" surface first.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"You check\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" I check beh\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ind. The flop is J\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"♥, 7♥\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and 2♣. The\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" pot stays at 20,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" it\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'s your action\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"path\\\":\\\"/board\\\",\\\"value\\\":[{\\\"rank\\\":\\\"J\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"clubs\\\"}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"path\\\":\\\"/street\\\",\\\"value\\\":\\\"Flop\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"street_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Flop\\\",\\\"intent\\\":\\\"info\\\"},{\\\"id\\\":\\\"board_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Board · flop\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"rule\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Use exactly two hole cards and three board cards. Both players checked; the pot stays at 20, which is also the biggest bet allowed.\\\",\\\"variant\\\":\\\"caption\\\"}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You check and I check behind. The flop is J♥, 7♥ and 2♣. The pot stays at 20, and it's your action.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Check, or call if there is a bet.\",\"k\":3},\"exemplarIds\":[\"booking-reservation\",\"frontier-button-icon-actions\",\"pattern-schedule-picker\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":57441,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5472},{\"id\":\"mini-skills\",\"chars\":755},{\"id\":\"persona\",\"chars\":4922}],\"over\":false},\"usage\":{\"inputTokens\":6005,\"outputTokens\":1270,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"path\":\"/board\",\"value\":[{\"rank\":\"J\",\"suit\":\"hearts\"},{\"rank\":\"7\",\"suit\":\"hearts\"},{\"rank\":\"2\",\"suit\":\"clubs\"}]}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"path\":\"/street\",\"value\":\"Flop\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"street_badge\",\"component\":\"Badge\",\"label\":\"Flop\",\"intent\":\"info\"},{\"id\":\"board_label\",\"component\":\"Text\",\"text\":\"Board · flop\",\"variant\":\"label\"},{\"id\":\"rule\",\"component\":\"Text\",\"text\":\"Use exactly two hole cards and three board cards. Both players checked; the pot stays at 20, which is also the biggest bet allowed.\",\"variant\":\"caption\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"table-1\"}}}\n\nYou check and I check behind. The flop is J♥, 7♥ and 2♣. The pot stays at 20, and it's your action.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Flop is down: J♥ 7♥ 2♣. Pot is 20. Your action.",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "path": "/board",
+                      "value": [
+                        {
+                          "rank": "J",
+                          "suit": "hearts"
+                        },
+                        {
+                          "rank": "7",
+                          "suit": "hearts"
+                        },
+                        {
+                          "rank": "2",
+                          "suit": "clubs"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "path": "/street",
+                      "value": "Flop"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "street_badge",
+                          "component": "Badge",
+                          "label": "Flop",
+                          "intent": "info"
+                        },
+                        {
+                          "id": "board_label",
+                          "component": "Text",
+                          "text": "Board · flop",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "rule",
+                          "component": "Text",
+                          "text": "Use exactly two hole cards and three board cards. Both players checked; the pot stays at 20, which is also the biggest bet allowed.",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm updating the bank\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"roll after the p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot bet (\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"990→970, pot now\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 40),\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" then working out the dealer's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" best\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hand using the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" board j\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"acks and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" que\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ens to determ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ine the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"air str\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ength.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Dealer hol\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ds an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" overpair of\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" queens and calls the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 20, bringing the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pot to 60.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" then deal the turn card,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eping the board sim\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ple, and move the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" action for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ward into\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the next bet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting street\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to update the surface with a me\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ta-line targeting the table\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", then render the updated components\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" — street badge, board label,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot am\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ount, b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ankroll, and the action\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" buttons (\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"check, bet 60, f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"old) with the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" new tur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"n card re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"flected on the board.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"You bet \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"20, the pot.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" I call with\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 20 \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"more, so the pot is \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"60\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and your bankroll is\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 970. The turn is\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 4♠. It\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'s your action.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"path\\\":\\\"/bankroll\\\",\\\"value\\\":970}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"path\\\":\\\"/pot\\\",\\\"value\\\":60}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"path\\\":\\\"/street\\\",\\\"value\\\":\\\"Turn\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"path\\\":\\\"/board\\\",\\\"value\\\":[{\\\"rank\\\":\\\"J\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"4\\\",\\\"suit\\\":\\\"spades\\\"}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"street_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Turn\\\",\\\"intent\\\":\\\"info\\\"},{\\\"id\\\":\\\"board_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Board · turn\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"rule\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Use exactly two hole cards and three board cards. You bet 20 on the flop and I called. The pot is 60, which is the biggest bet allowed.\\\",\\\"variant\\\":\\\"caption\\\"},{\\\"id\\\":\\\"btn_bet\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Bet 60 (pot)\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"poker_action\\\",\\\"context\\\":{\\\"move\\\":\\\"bet\\\",\\\"amount\\\":60}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You bet 20, the pot. I call with 20 more, so the pot is 60 and your bankroll is 970. The turn is the 4♠. It's your action.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":4,\"query\":{\"intent\":\"Bet the pot.\",\"k\":3},\"exemplarIds\":[\"frontier-review-split\",\"listing-photo-grid\",\"five-day-weather\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":57705,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5736},{\"id\":\"mini-skills\",\"chars\":755},{\"id\":\"persona\",\"chars\":4922}],\"over\":false},\"usage\":{\"inputTokens\":6666,\"outputTokens\":1596,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"path\":\"/bankroll\",\"value\":970}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"path\":\"/pot\",\"value\":60}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"path\":\"/street\",\"value\":\"Turn\"}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"path\":\"/board\",\"value\":[{\"rank\":\"J\",\"suit\":\"hearts\"},{\"rank\":\"7\",\"suit\":\"hearts\"},{\"rank\":\"2\",\"suit\":\"clubs\"},{\"rank\":\"4\",\"suit\":\"spades\"}]}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"street_badge\",\"component\":\"Badge\",\"label\":\"Turn\",\"intent\":\"info\"},{\"id\":\"board_label\",\"component\":\"Text\",\"text\":\"Board · turn\",\"variant\":\"label\"},{\"id\":\"rule\",\"component\":\"Text\",\"text\":\"Use exactly two hole cards and three board cards. You bet 20 on the flop and I called. The pot is 60, which is the biggest bet allowed.\",\"variant\":\"caption\"},{\"id\":\"btn_bet\",\"component\":\"Button\",\"label\":\"Bet 60 (pot)\",\"variant\":\"soft\",\"action\":{\"action\":\"poker_action\",\"context\":{\"move\":\"bet\",\"amount\":60}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"table-1\"}}}\n\nYou bet 20, the pot. I call with 20 more, so the pot is 60 and your bankroll is 970. The turn is the 4♠. It's your action.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "target": "table-1",
+                "reply": "You bet the pot and I called. Turn is the 4♠, and the pot is 60.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "path": "/bankroll",
+                      "value": 970
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "path": "/pot",
+                      "value": 60
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "path": "/street",
+                      "value": "Turn"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "path": "/board",
+                      "value": [
+                        {
+                          "rank": "J",
+                          "suit": "hearts"
+                        },
+                        {
+                          "rank": "7",
+                          "suit": "hearts"
+                        },
+                        {
+                          "rank": "2",
+                          "suit": "clubs"
+                        },
+                        {
+                          "rank": "4",
+                          "suit": "spades"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "street_badge",
+                          "component": "Badge",
+                          "label": "Turn",
+                          "intent": "info"
+                        },
+                        {
+                          "id": "board_label",
+                          "component": "Text",
+                          "text": "Board · turn",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "rule",
+                          "component": "Text",
+                          "text": "Use exactly two hole cards and three board cards. You bet 20 on the flop and I called. The pot is 60, which is the biggest bet allowed.",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "btn_bet",
+                          "component": "Button",
+                          "label": "Bet 60 (pot)",
+                          "variant": "soft",
+                          "action": {
+                            "action": "poker_action",
+                            "context": {
+                              "move": "bet",
+                              "amount": 60
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealing the river since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I checked behind, ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eping the pot at 60\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and let\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting the player act first on\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" this new street. Double-chec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"king the bankroll math:\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 990 minus the \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"20 call\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" le\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aves 970, cons\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"istent with the 20\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ante plus 20 b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"et plus 20 call making\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" up the pot.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll pick a ne\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"utral river card not\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" already in play, then\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" update the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" table\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" state\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with the new\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" street badge, board,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and bet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting options\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" while keeping the dealer\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s hand h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"idden, streaming the pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ose first with the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" meta-line targeting table\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-1.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"You check and I check behind.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" The river is the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 3♦. The pot\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" stays at 60, and it\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'s your action.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"path\\\":\\\"/street\\\",\\\"value\\\":\\\"River\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"path\\\":\\\"/board\\\",\\\"value\\\":[{\\\"rank\\\":\\\"J\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"4\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"3\\\",\\\"suit\\\":\\\"diamonds\\\"}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"street_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"River\\\",\\\"intent\\\":\\\"info\\\"},{\\\"id\\\":\\\"board_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Board · river\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"rule\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Use exactly two hole cards and three board cards. Both players checked the turn; the pot is 60, which is the biggest bet allowed.\\\",\\\"variant\\\":\\\"caption\\\"}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You check and I check behind. The river is the 3♦. The pot stays at 60, and it's your action.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":6,\"query\":{\"intent\":\"Check, or call if there is a bet.\",\"k\":3},\"exemplarIds\":[\"booking-reservation\",\"frontier-button-icon-actions\",\"pattern-schedule-picker\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":57441,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5472},{\"id\":\"mini-skills\",\"chars\":755},{\"id\":\"persona\",\"chars\":4922}],\"over\":false},\"usage\":{\"inputTokens\":6917,\"outputTokens\":861,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"path\":\"/street\",\"value\":\"River\"}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"path\":\"/board\",\"value\":[{\"rank\":\"J\",\"suit\":\"hearts\"},{\"rank\":\"7\",\"suit\":\"hearts\"},{\"rank\":\"2\",\"suit\":\"clubs\"},{\"rank\":\"4\",\"suit\":\"spades\"},{\"rank\":\"3\",\"suit\":\"diamonds\"}]}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"street_badge\",\"component\":\"Badge\",\"label\":\"River\",\"intent\":\"info\"},{\"id\":\"board_label\",\"component\":\"Text\",\"text\":\"Board · river\",\"variant\":\"label\"},{\"id\":\"rule\",\"component\":\"Text\",\"text\":\"Use exactly two hole cards and three board cards. Both players checked the turn; the pot is 60, which is the biggest bet allowed.\",\"variant\":\"caption\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"table-1\"}}}\nYou check and I check behind. The river is the 3♦. The pot stays at 60, and it's your action.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "River is the 3♦. Pot stays at 60, your action.",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "path": "/street",
+                      "value": "River"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "path": "/board",
+                      "value": [
+                        {
+                          "rank": "J",
+                          "suit": "hearts"
+                        },
+                        {
+                          "rank": "7",
+                          "suit": "hearts"
+                        },
+                        {
+                          "rank": "2",
+                          "suit": "clubs"
+                        },
+                        {
+                          "rank": "4",
+                          "suit": "spades"
+                        },
+                        {
+                          "rank": "3",
+                          "suit": "diamonds"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "street_badge",
+                          "component": "Badge",
+                          "label": "River",
+                          "intent": "info"
+                        },
+                        {
+                          "id": "board_label",
+                          "component": "Text",
+                          "text": "Board · river",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "rule",
+                          "component": "Text",
+                          "text": "Use exactly two hole cards and three board cards. Both players checked the turn; the pot is 60, which is the biggest bet allowed.",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm working out\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the showdown with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hole cards A\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"♠K\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"♠9♥8♥\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" against dealer's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Q♦Q♣J\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"♦10♣ on a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" J♥7♥2\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"♣4♠3♦\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" board, chec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"king whether the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player can\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" build a flush using\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"9♥8♥ pl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"us the two he\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"art cards on the board.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I realize there's no flush\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" (only two hearts) and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" no straight either\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", so the player's best hand\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" is sim\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ply \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ace-high with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" A\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-K-J-7-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"4. The dealer, however\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", can pair que\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ens using\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Q♦Q♣\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" J-7-4 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"kickers, which\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" beats the player\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s ace-high, so the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dealer tak\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"es the \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"60 pot and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the player's bankroll sett\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"les at 970 after losing\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the 30 they\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" put\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" in.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Now I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" updating the U\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" showdown: revealing the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dealer's h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ole cards,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" chang\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing the street badge to \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Showdown,\\\" swapping the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" rule text for the result line,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" resetting the pot to \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"0, and replacing the action\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" buttons with a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" single \\\"Deal again\\\" button\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" while keeping the bankro\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll at 970.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"You\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" check\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and I check behind,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" so we go to showdown.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" I tur\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"n over\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Q♦\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Q♣ J♦\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 10♣.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"\\n\\nI\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" win with a pair of queens\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\", Q♥\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"...\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" corre\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ction\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\":\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Q\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"♦ Q♣ with\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" J\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"♥\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 7♥ 4\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"♠, which\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" mak\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"es\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Q-Q-J-7\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"-4. You hold \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ace-high,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" A\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"♠ K♠ with\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" J♥ 7♥\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 4♠, and your\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 9♥\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 8♥ make\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" no p\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"air,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" straight or flush on\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" this\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" board. I\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" take the 60 \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"pot. Your net for\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the round is −\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"30, already\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" pa\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"id in,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" so your bankroll st\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ays at 970.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"path\\\":\\\"/pot\\\",\\\"value\\\":0}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"path\\\":\\\"/bankroll\\\",\\\"value\\\":970}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"path\\\":\\\"/street\\\",\\\"value\\\":\\\"Showdown\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"street_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Showdown\\\",\\\"intent\\\":\\\"danger\\\"},{\\\"id\\\":\\\"dealer_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Dealer · pair of queens\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"dealer_card\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"faceDown\\\":false,\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"board_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Board · river\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"player_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"You · ace-high\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"rule\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Dealer wins: Q♦ Q♣ with J♥ 7♥ 4♠ makes a pair of queens, beating your ace-high (A♠ K♠ with J♥ 7♥ 4♠). Pot of 60 goes to the dealer. Your net this round is −30; bankroll 970.\\\",\\\"variant\\\":\\\"body\\\",\\\"emphasis\\\":true},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"btn_deal\\\"]},{\\\"id\\\":\\\"btn_deal\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Deal again\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"deal_again\\\",\\\"context\\\":{\\\"newRound\\\":true}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You check and I check behind, so we go to showdown. I turn over Q♦ Q♣ J♦ 10♣.\\n\\nI win with a pair of queens, Q♥... correction: Q♦ Q♣ with J♥ 7♥ 4♠, which makes Q-Q-J-7-4. You hold ace-high, A♠ K♠ with J♥ 7♥ 4♠, and your 9♥ 8♥ make no pair, straight or flush on this board. I take the 60 pot. Your net for the round is −30, already paid in, so your bankroll stays at 970.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":8,\"query\":{\"intent\":\"Check, or call if there is a bet.\",\"k\":3},\"exemplarIds\":[\"booking-reservation\",\"frontier-button-icon-actions\",\"pattern-schedule-picker\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":57441,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5472},{\"id\":\"mini-skills\",\"chars\":755},{\"id\":\"persona\",\"chars\":4922}],\"over\":false},\"usage\":{\"inputTokens\":7302,\"outputTokens\":1812,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"path\":\"/pot\",\"value\":0}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"path\":\"/bankroll\",\"value\":970}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"path\":\"/street\",\"value\":\"Showdown\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"street_badge\",\"component\":\"Badge\",\"label\":\"Showdown\",\"intent\":\"danger\"},{\"id\":\"dealer_label\",\"component\":\"Text\",\"text\":\"Dealer · pair of queens\",\"variant\":\"label\"},{\"id\":\"dealer_card\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":false,\"size\":\"md\"},{\"id\":\"board_label\",\"component\":\"Text\",\"text\":\"Board · river\",\"variant\":\"label\"},{\"id\":\"player_label\",\"component\":\"Text\",\"text\":\"You · ace-high\",\"variant\":\"label\"},{\"id\":\"rule\",\"component\":\"Text\",\"text\":\"Dealer wins: Q♦ Q♣ with J♥ 7♥ 4♠ makes a pair of queens, beating your ace-high (A♠ K♠ with J♥ 7♥ 4♠). Pot of 60 goes to the dealer. Your net this round is −30; bankroll 970.\",\"variant\":\"body\",\"emphasis\":true},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"children\":[\"btn_deal\"]},{\"id\":\"btn_deal\",\"component\":\"Button\",\"label\":\"Deal again\",\"variant\":\"solid\",\"action\":{\"action\":\"deal_again\",\"context\":{\"newRound\":true}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "You check and I check behind, so we go to showdown. I turn over Q♦ Q♣ J♦ 10♣.\n\nI win with a pair of queens, Q♥... correction: Q♦ Q♣ with J♥ 7♥ 4♠, which makes Q-Q-J-7-4. You hold ace-high, A♠ K♠ with J♥ 7♥ 4♠, and your 9♥ 8♥ make no pair, straight or flush on this board. I take the 60 pot. Your net for the round is −30, already paid in, so your bankroll stays at 970.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Showdown: I win with a pair of queens against your ace-high. Net −30, bankroll 970.",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "path": "/pot",
+                      "value": 0
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "path": "/bankroll",
+                      "value": 970
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "path": "/street",
+                      "value": "Showdown"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "street_badge",
+                          "component": "Badge",
+                          "label": "Showdown",
+                          "intent": "danger"
+                        },
+                        {
+                          "id": "dealer_label",
+                          "component": "Text",
+                          "text": "Dealer · pair of queens",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "dealer_card",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "faceDown": false,
+                          "size": "md"
+                        },
+                        {
+                          "id": "board_label",
+                          "component": "Text",
+                          "text": "Board · river",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "player_label",
+                          "component": "Text",
+                          "text": "You · ace-high",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "rule",
+                          "component": "Text",
+                          "text": "Dealer wins: Q♦ Q♣ with J♥ 7♥ 4♠ makes a pair of queens, beating your ace-high (A♠ K♠ with J♥ 7♥ 4♠). Pot of 60 goes to the dealer. Your net this round is −30; bankroll 970.",
+                          "variant": "body",
+                          "emphasis": true
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "md",
+                          "children": [
+                            "btn_deal"
+                          ]
+                        },
+                        {
+                          "id": "btn_deal",
+                          "component": "Button",
+                          "label": "Deal again",
+                          "variant": "solid",
+                          "action": {
+                            "action": "deal_again",
+                            "context": {
+                              "newRound": true
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need to set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" up a fresh table for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the next Omaha round,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" seeding\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bankroll of 970 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" leaving the prior round's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" history\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" unt\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ouched. T\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"racking back\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" through\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the bank\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"roll math:\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ant\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"es of 10 each br\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ought it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to 990, then\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a 20 bet brought\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it down\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to 970, with the pot\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"itting at 60 after\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the ante and mat\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ching bets.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For the new round, I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" de\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"duct another \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ante of 10,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bringing the bankroll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to 960 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pot to 20, ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eping this consistent with how\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the previous round displayed fig\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ures.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dealing fresh hands\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for both player\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and dealer, making sure\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" no cards duplicate across\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the table\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ticking with the same\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Card component used\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" previously rather than switching to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" CardTable. I also need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to reconcile the r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ule about retiring st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ale action\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" buttons on\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the fin\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ished table-1 against the r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ule that history is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" never edited again -- the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" finished round should rem\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ain unt\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ouched as a histor\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ical record.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Round 2\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\", same\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" game\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\": Omaha,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" heads-up,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" pot-\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"limit. You start from\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 970 and each of\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" us ant\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"es 10. That\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" le\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"aves you\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"960 and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" pot at 20. Your\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" hole cards are K\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"♥\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" K♣\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 7♠ 6\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"♠, and the action is on\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" you.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[]}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"catalogId\\\":\\\"agent-ui--croupier\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"value\\\":{\\\"bankroll\\\":960,\\\"pot\\\":20,\\\"street\\\":\\\"Pre-flop\\\",\\\"playerHand\\\":[{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"6\\\",\\\"suit\\\":\\\"spades\\\"}],\\\"dealerHand\\\":[{\\\"rank\\\":\\\"A\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"5\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"3\\\",\\\"suit\\\":\\\"spades\\\"}],\\\"board\\\":[]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"header\\\",\\\"content\\\",\\\"footer\\\"]},{\\\"id\\\":\\\"header\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"title\\\",\\\"street_badge\\\"]},{\\\"id\\\":\\\"title\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Omaha · Round 2\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"street_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Pre-flop\\\",\\\"intent\\\":\\\"info\\\"},{\\\"id\\\":\\\"content\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"col\\\"]},{\\\"id\\\":\\\"col\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"stats\\\",\\\"dealer_label\\\",\\\"dealer_row\\\",\\\"board_label\\\",\\\"board_row\\\",\\\"player_label\\\",\\\"player_row\\\",\\\"rule\\\"]},{\\\"id\\\":\\\"stats\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"lg\\\",\\\"children\\\":[\\\"stat_bank\\\",\\\"stat_pot\\\"]},{\\\"id\\\":\\\"stat_bank\\\",\\\"component\\\":\\\"Stat\\\",\\\"label\\\":\\\"Bankroll\\\",\\\"value\\\":{\\\"path\\\":\\\"/bankroll\\\"}},{\\\"id\\\":\\\"stat_pot\\\",\\\"component\\\":\\\"Stat\\\",\\\"label\\\":\\\"Pot\\\",\\\"value\\\":{\\\"path\\\":\\\"/pot\\\"}},{\\\"id\\\":\\\"dealer_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Dealer · 4 hole cards\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"dealer_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":{\\\"path\\\":\\\"/dealerHand\\\",\\\"componentId\\\":\\\"dealer_card\\\"}},{\\\"id\\\":\\\"dealer_card\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"faceDown\\\":true,\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"board_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Board · no cards yet, the flop comes next\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"board_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":{\\\"path\\\":\\\"/board\\\",\\\"componentId\\\":\\\"board_card\\\"}},{\\\"id\\\":\\\"board_card\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"player_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"You · 4 hole cards\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"player_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":{\\\"path\\\":\\\"/playerHand\\\",\\\"componentId\\\":\\\"player_card\\\"}},{\\\"id\\\":\\\"player_card\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"rule\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Use exactly two hole cards and three board cards. Pot-limit: the biggest bet is the current pot (20). Each player anted 10.\\\",\\\"variant\\\":\\\"caption\\\"},{\\\"id\\\":\\\"footer\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"actions\\\"]},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"btn_check\\\",\\\"btn_bet\\\",\\\"btn_fold\\\"]},{\\\"id\\\":\\\"btn_check\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Check\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"poker_action\\\",\\\"context\\\":{\\\"move\\\":\\\"check\\\"}}},{\\\"id\\\":\\\"btn_bet\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Bet 20 (pot)\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"poker_action\\\",\\\"context\\\":{\\\"move\\\":\\\"bet\\\",\\\"amount\\\":20}}},{\\\"id\\\":\\\"btn_fold\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Fold\\\",\\\"variant\\\":\\\"ghost\\\",\\\"action\\\":{\\\"action\\\":\\\"poker_action\\\",\\\"context\\\":{\\\"move\\\":\\\"fold\\\"}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Round 2, same game: Omaha, heads-up, pot-limit. You start from 970 and each of us antes 10. That leaves you 960 and the pot at 20. Your hole cards are K♥ K♣ 7♠ 6♠, and the action is on you.\",\"target\":{\"surfaceId\":\"table-2\"},\"trace\":{\"turnIndex\":10,\"query\":{\"intent\":\"The user triggered the \\\"deal_again\\\" action (from component btn_deal). Action context: {\\\"newRound\\\":true}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[\"frontier-round-outcome\",\"agent-roster-drawer\",\"frontier-review-split\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":58062,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":4497},{\"id\":\"mini-skills\",\"chars\":2351},{\"id\":\"persona\",\"chars\":4922}],\"over\":false},\"usage\":{\"inputTokens\":8341,\"outputTokens\":2544,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"children\":[]}]}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-2\",\"catalogId\":\"agent-ui--croupier\"}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-2\",\"value\":{\"bankroll\":960,\"pot\":20,\"street\":\"Pre-flop\",\"playerHand\":[{\"rank\":\"K\",\"suit\":\"hearts\"},{\"rank\":\"K\",\"suit\":\"clubs\"},{\"rank\":\"7\",\"suit\":\"spades\"},{\"rank\":\"6\",\"suit\":\"spades\"}],\"dealerHand\":[{\"rank\":\"A\",\"suit\":\"diamonds\"},{\"rank\":\"9\",\"suit\":\"clubs\"},{\"rank\":\"5\",\"suit\":\"hearts\"},{\"rank\":\"3\",\"suit\":\"spades\"}],\"board\":[]}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"header\",\"content\",\"footer\"]},{\"id\":\"header\",\"component\":\"CardHeader\",\"children\":[\"title\",\"street_badge\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Omaha · Round 2\",\"variant\":\"h4\"},{\"id\":\"street_badge\",\"component\":\"Badge\",\"label\":\"Pre-flop\",\"intent\":\"info\"},{\"id\":\"content\",\"component\":\"CardContent\",\"children\":[\"col\"]},{\"id\":\"col\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"stats\",\"dealer_label\",\"dealer_row\",\"board_label\",\"board_row\",\"player_label\",\"player_row\",\"rule\"]},{\"id\":\"stats\",\"component\":\"Row\",\"gap\":\"lg\",\"children\":[\"stat_bank\",\"stat_pot\"]},{\"id\":\"stat_bank\",\"component\":\"Stat\",\"label\":\"Bankroll\",\"value\":{\"path\":\"/bankroll\"}},{\"id\":\"stat_pot\",\"component\":\"Stat\",\"label\":\"Pot\",\"value\":{\"path\":\"/pot\"}},{\"id\":\"dealer_label\",\"component\":\"Text\",\"text\":\"Dealer · 4 hole cards\",\"variant\":\"label\"},{\"id\":\"dealer_row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/dealerHand\",\"componentId\":\"dealer_card\"}},{\"id\":\"dealer_card\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":true,\"size\":\"md\"},{\"id\":\"board_label\",\"component\":\"Text\",\"text\":\"Board · no cards yet, the flop comes next\",\"variant\":\"label\"},{\"id\":\"board_row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/board\",\"componentId\":\"board_card\"}},{\"id\":\"board_card\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"size\":\"md\"},{\"id\":\"player_label\",\"component\":\"Text\",\"text\":\"You · 4 hole cards\",\"variant\":\"label\"},{\"id\":\"player_row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/playerHand\",\"componentId\":\"player_card\"}},{\"id\":\"player_card\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"size\":\"md\"},{\"id\":\"rule\",\"component\":\"Text\",\"text\":\"Use exactly two hole cards and three board cards. Pot-limit: the biggest bet is the current pot (20). Each player anted 10.\",\"variant\":\"caption\"},{\"id\":\"footer\",\"component\":\"CardFooter\",\"children\":[\"actions\"]},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"children\":[\"btn_check\",\"btn_bet\",\"btn_fold\"]},{\"id\":\"btn_check\",\"component\":\"Button\",\"label\":\"Check\",\"variant\":\"solid\",\"action\":{\"action\":\"poker_action\",\"context\":{\"move\":\"check\"}}},{\"id\":\"btn_bet\",\"component\":\"Button\",\"label\":\"Bet 20 (pot)\",\"variant\":\"soft\",\"action\":{\"action\":\"poker_action\",\"context\":{\"move\":\"bet\",\"amount\":20}}},{\"id\":\"btn_fold\",\"component\":\"Button\",\"label\":\"Fold\",\"variant\":\"ghost\",\"action\":{\"action\":\"poker_action\",\"context\":{\"move\":\"fold\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Round 2, same game: Omaha, heads-up, pot-limit. You start from 970 and each of us antes 10. That leaves you 960 and the pot at 20. Your hole cards are K♥ K♣ 7♠ 6♠, and the action is on you.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Round 2 is dealt: you hold K♥ K♣ 7♠ 6♠, the pot is 20 and your bankroll is 960.",
+                "target": "table-2",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "md",
+                          "children": []
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-2",
+                      "catalogId": "agent-ui--croupier"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-2",
+                      "value": {
+                        "bankroll": 960,
+                        "pot": 20,
+                        "street": "Pre-flop",
+                        "playerHand": [
+                          {
+                            "rank": "K",
+                            "suit": "hearts"
+                          },
+                          {
+                            "rank": "K",
+                            "suit": "clubs"
+                          },
+                          {
+                            "rank": "7",
+                            "suit": "spades"
+                          },
+                          {
+                            "rank": "6",
+                            "suit": "spades"
+                          }
+                        ],
+                        "dealerHand": [
+                          {
+                            "rank": "A",
+                            "suit": "diamonds"
+                          },
+                          {
+                            "rank": "9",
+                            "suit": "clubs"
+                          },
+                          {
+                            "rank": "5",
+                            "suit": "hearts"
+                          },
+                          {
+                            "rank": "3",
+                            "suit": "spades"
+                          }
+                        ],
+                        "board": []
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-2",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "header",
+                            "content",
+                            "footer"
+                          ]
+                        },
+                        {
+                          "id": "header",
+                          "component": "CardHeader",
+                          "children": [
+                            "title",
+                            "street_badge"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Omaha · Round 2",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "street_badge",
+                          "component": "Badge",
+                          "label": "Pre-flop",
+                          "intent": "info"
+                        },
+                        {
+                          "id": "content",
+                          "component": "CardContent",
+                          "children": [
+                            "col"
+                          ]
+                        },
+                        {
+                          "id": "col",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "stats",
+                            "dealer_label",
+                            "dealer_row",
+                            "board_label",
+                            "board_row",
+                            "player_label",
+                            "player_row",
+                            "rule"
+                          ]
+                        },
+                        {
+                          "id": "stats",
+                          "component": "Row",
+                          "gap": "lg",
+                          "children": [
+                            "stat_bank",
+                            "stat_pot"
+                          ]
+                        },
+                        {
+                          "id": "stat_bank",
+                          "component": "Stat",
+                          "label": "Bankroll",
+                          "value": {
+                            "path": "/bankroll"
+                          }
+                        },
+                        {
+                          "id": "stat_pot",
+                          "component": "Stat",
+                          "label": "Pot",
+                          "value": {
+                            "path": "/pot"
+                          }
+                        },
+                        {
+                          "id": "dealer_label",
+                          "component": "Text",
+                          "text": "Dealer · 4 hole cards",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "dealer_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/dealerHand",
+                            "componentId": "dealer_card"
+                          }
+                        },
+                        {
+                          "id": "dealer_card",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "faceDown": true,
+                          "size": "md"
+                        },
+                        {
+                          "id": "board_label",
+                          "component": "Text",
+                          "text": "Board · no cards yet, the flop comes next",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "board_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/board",
+                            "componentId": "board_card"
+                          }
+                        },
+                        {
+                          "id": "board_card",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "size": "md"
+                        },
+                        {
+                          "id": "player_label",
+                          "component": "Text",
+                          "text": "You · 4 hole cards",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "player_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/playerHand",
+                            "componentId": "player_card"
+                          }
+                        },
+                        {
+                          "id": "player_card",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "size": "md"
+                        },
+                        {
+                          "id": "rule",
+                          "component": "Text",
+                          "text": "Use exactly two hole cards and three board cards. Pot-limit: the biggest bet is the current pot (20). Each player anted 10.",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "footer",
+                          "component": "CardFooter",
+                          "children": [
+                            "actions"
+                          ]
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "md",
+                          "children": [
+                            "btn_check",
+                            "btn_bet",
+                            "btn_fold"
+                          ]
+                        },
+                        {
+                          "id": "btn_check",
+                          "component": "Button",
+                          "label": "Check",
+                          "variant": "solid",
+                          "action": {
+                            "action": "poker_action",
+                            "context": {
+                              "move": "check"
+                            }
+                          }
+                        },
+                        {
+                          "id": "btn_bet",
+                          "component": "Button",
+                          "label": "Bet 20 (pot)",
+                          "variant": "soft",
+                          "action": {
+                            "action": "poker_action",
+                            "context": {
+                              "move": "bet",
+                              "amount": 20
+                            }
+                          }
+                        },
+                        {
+                          "id": "btn_fold",
+                          "component": "Button",
+                          "label": "Fold",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "poker_action",
+                            "context": {
+                              "move": "fold"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since the player\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" folded\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" on\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" this round, the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dealer wins the pot\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" by\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" default and I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" don\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'t need to reveal d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealer cards.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" upd\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ating the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" table state\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to reflect the fold:\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"leared, bankroll re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"duced by the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ante already\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and pre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"paring the result line with a \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Deal again\\\" option\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"You fold.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" I\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" take the 20 pot with\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" no\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" show\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"down,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" so my hand stays h\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"idden. You\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'re\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" out\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 10 \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ante, a\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" net of −10 \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"for the round, and your bank\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"roll st\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ays at 960.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"path\\\":\\\"/pot\\\",\\\"value\\\":0}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"path\\\":\\\"/bankroll\\\",\\\"value\\\":960}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"path\\\":\\\"/street\\\",\\\"value\\\":\\\"Folded\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"components\\\":[{\\\"id\\\":\\\"street_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Folded\\\",\\\"intent\\\":\\\"warning\\\"},{\\\"id\\\":\\\"rule\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Dealer wins: you folded pre-flop, so the dealer takes the 20 pot without a showdown. Your net this round is −10 (your ante); bankroll 960.\\\",\\\"variant\\\":\\\"body\\\",\\\"emphasis\\\":true},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"btn_deal\\\"]},{\\\"id\\\":\\\"btn_deal\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Deal again\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"deal_again\\\",\\\"context\\\":{\\\"newRound\\\":true}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You fold. I take the 20 pot with no showdown, so my hand stays hidden. You're out the 10 ante, a net of −10 for the round, and your bankroll stays at 960.\",\"target\":{\"surfaceId\":\"table-2\"},\"trace\":{\"turnIndex\":12,\"query\":{\"intent\":\"Fold.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":51214,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"persona\",\"chars\":4922}],\"over\":false},\"usage\":{\"inputTokens\":7035,\"outputTokens\":976,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-2\",\"path\":\"/pot\",\"value\":0}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-2\",\"path\":\"/bankroll\",\"value\":960}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-2\",\"path\":\"/street\",\"value\":\"Folded\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"street_badge\",\"component\":\"Badge\",\"label\":\"Folded\",\"intent\":\"warning\"},{\"id\":\"rule\",\"component\":\"Text\",\"text\":\"Dealer wins: you folded pre-flop, so the dealer takes the 20 pot without a showdown. Your net this round is −10 (your ante); bankroll 960.\",\"variant\":\"body\",\"emphasis\":true},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"children\":[\"btn_deal\"]},{\"id\":\"btn_deal\",\"component\":\"Button\",\"label\":\"Deal again\",\"variant\":\"solid\",\"action\":{\"action\":\"deal_again\",\"context\":{\"newRound\":true}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"table-2\"}}}\nYou fold. I take the 20 pot with no showdown, so my hand stays hidden. You're out the 10 ante, a net of −10 for the round, and your bankroll stays at 960.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "target": "table-2",
+                "reply": "You folded. The dealer takes the 20 pot, and your bankroll is 960.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-2",
+                      "path": "/pot",
+                      "value": 0
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-2",
+                      "path": "/bankroll",
+                      "value": 960
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-2",
+                      "path": "/street",
+                      "value": "Folded"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-2",
+                      "components": [
+                        {
+                          "id": "street_badge",
+                          "component": "Badge",
+                          "label": "Folded",
+                          "intent": "warning"
+                        },
+                        {
+                          "id": "rule",
+                          "component": "Text",
+                          "text": "Dealer wins: you folded pre-flop, so the dealer takes the 20 pot without a showdown. Your net this round is −10 (your ante); bankroll 960.",
+                          "variant": "body",
+                          "emphasis": true
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "md",
+                          "children": [
+                            "btn_deal"
+                          ]
+                        },
+                        {
+                          "id": "btn_deal",
+                          "component": "Button",
+                          "label": "Deal again",
+                          "variant": "solid",
+                          "action": {
+                            "action": "deal_again",
+                            "context": {
+                              "newRound": true
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Starting round 3 on\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" table-3 with a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" fresh \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ante,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bankroll now\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 950. Table-2's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" round just finished, so I need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to remove its action buttons\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" too\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", consistent with how I ret\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ired table-1 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" once\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" round is over\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", it should stop loo\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"king live and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" rem\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ain as history.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Round 3,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" still\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Omaha,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" heads-up and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" pot-limit. Your\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"960 is car\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ried over.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Each of us antes 10\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\", which leaves you 950\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and the pot at 20\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\". Your hole cards are\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Q♠ J♠\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 10♥ 9\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"♦, and the action is on\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" you.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"components\\\":[{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[]}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"catalogId\\\":\\\"agent-ui--croupier\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"value\\\":{\\\"bankroll\\\":950,\\\"pot\\\":20,\\\"street\\\":\\\"Pre-flop\\\",\\\"playerHand\\\":[{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"J\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"10\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"diamonds\\\"}],\\\"dealerHand\\\":[{\\\"rank\\\":\\\"A\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"A\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"4\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"clubs\\\"}],\\\"board\\\":[]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"header\\\",\\\"content\\\",\\\"footer\\\"]},{\\\"id\\\":\\\"header\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"title\\\",\\\"street_badge\\\"]},{\\\"id\\\":\\\"title\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Omaha · Round 3\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"street_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Pre-flop\\\",\\\"intent\\\":\\\"info\\\"},{\\\"id\\\":\\\"content\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"col\\\"]},{\\\"id\\\":\\\"col\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"stats\\\",\\\"dealer_label\\\",\\\"dealer_row\\\",\\\"board_label\\\",\\\"board_row\\\",\\\"player_label\\\",\\\"player_row\\\",\\\"rule\\\"]},{\\\"id\\\":\\\"stats\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"lg\\\",\\\"children\\\":[\\\"stat_bank\\\",\\\"stat_pot\\\"]},{\\\"id\\\":\\\"stat_bank\\\",\\\"component\\\":\\\"Stat\\\",\\\"label\\\":\\\"Bankroll\\\",\\\"value\\\":{\\\"path\\\":\\\"/bankroll\\\"}},{\\\"id\\\":\\\"stat_pot\\\",\\\"component\\\":\\\"Stat\\\",\\\"label\\\":\\\"Pot\\\",\\\"value\\\":{\\\"path\\\":\\\"/pot\\\"}},{\\\"id\\\":\\\"dealer_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Dealer · 4 hole cards\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"dealer_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":{\\\"path\\\":\\\"/dealerHand\\\",\\\"componentId\\\":\\\"dealer_card\\\"}},{\\\"id\\\":\\\"dealer_card\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"faceDown\\\":true,\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"board_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Board · no cards yet, the flop comes next\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"board_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":{\\\"path\\\":\\\"/board\\\",\\\"componentId\\\":\\\"board_card\\\"}},{\\\"id\\\":\\\"board_card\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"player_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"You · 4 hole cards\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"player_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":{\\\"path\\\":\\\"/playerHand\\\",\\\"componentId\\\":\\\"player_card\\\"}},{\\\"id\\\":\\\"player_card\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"rule\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Use exactly two hole cards and three board cards. Pot-limit: the biggest bet is the current pot (20). Each player anted 10.\\\",\\\"variant\\\":\\\"caption\\\"},{\\\"id\\\":\\\"footer\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"actions\\\"]},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"btn_check\\\",\\\"btn_bet\\\",\\\"btn_fold\\\"]},{\\\"id\\\":\\\"btn_check\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Check\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"poker_action\\\",\\\"context\\\":{\\\"move\\\":\\\"check\\\"}}},{\\\"id\\\":\\\"btn_bet\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Bet 20 (pot)\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"poker_action\\\",\\\"context\\\":{\\\"move\\\":\\\"bet\\\",\\\"amount\\\":20}}},{\\\"id\\\":\\\"btn_fold\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Fold\\\",\\\"variant\\\":\\\"ghost\\\",\\\"action\\\":{\\\"action\\\":\\\"poker_action\\\",\\\"context\\\":{\\\"move\\\":\\\"fold\\\"}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Round 3, still Omaha, heads-up and pot-limit. Your 960 is carried over. Each of us antes 10, which leaves you 950 and the pot at 20. Your hole cards are Q♠ J♠ 10♥ 9♦, and the action is on you.\",\"target\":{\"surfaceId\":\"table-3\"},\"trace\":{\"turnIndex\":14,\"query\":{\"intent\":\"The user triggered the \\\"deal_again\\\" action (from component btn_deal). Action context: {\\\"newRound\\\":true}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[\"frontier-round-outcome\",\"agent-roster-drawer\",\"frontier-review-split\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":58062,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":4497},{\"id\":\"mini-skills\",\"chars\":2351},{\"id\":\"persona\",\"chars\":4922}],\"over\":false},\"usage\":{\"inputTokens\":10380,\"outputTokens\":2133,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"children\":[]}]}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-3\",\"catalogId\":\"agent-ui--croupier\"}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-3\",\"value\":{\"bankroll\":950,\"pot\":20,\"street\":\"Pre-flop\",\"playerHand\":[{\"rank\":\"Q\",\"suit\":\"spades\"},{\"rank\":\"J\",\"suit\":\"spades\"},{\"rank\":\"10\",\"suit\":\"hearts\"},{\"rank\":\"9\",\"suit\":\"diamonds\"}],\"dealerHand\":[{\"rank\":\"A\",\"suit\":\"clubs\"},{\"rank\":\"A\",\"suit\":\"hearts\"},{\"rank\":\"4\",\"suit\":\"diamonds\"},{\"rank\":\"2\",\"suit\":\"clubs\"}],\"board\":[]}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-3\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"header\",\"content\",\"footer\"]},{\"id\":\"header\",\"component\":\"CardHeader\",\"children\":[\"title\",\"street_badge\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Omaha · Round 3\",\"variant\":\"h4\"},{\"id\":\"street_badge\",\"component\":\"Badge\",\"label\":\"Pre-flop\",\"intent\":\"info\"},{\"id\":\"content\",\"component\":\"CardContent\",\"children\":[\"col\"]},{\"id\":\"col\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"stats\",\"dealer_label\",\"dealer_row\",\"board_label\",\"board_row\",\"player_label\",\"player_row\",\"rule\"]},{\"id\":\"stats\",\"component\":\"Row\",\"gap\":\"lg\",\"children\":[\"stat_bank\",\"stat_pot\"]},{\"id\":\"stat_bank\",\"component\":\"Stat\",\"label\":\"Bankroll\",\"value\":{\"path\":\"/bankroll\"}},{\"id\":\"stat_pot\",\"component\":\"Stat\",\"label\":\"Pot\",\"value\":{\"path\":\"/pot\"}},{\"id\":\"dealer_label\",\"component\":\"Text\",\"text\":\"Dealer · 4 hole cards\",\"variant\":\"label\"},{\"id\":\"dealer_row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/dealerHand\",\"componentId\":\"dealer_card\"}},{\"id\":\"dealer_card\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":true,\"size\":\"md\"},{\"id\":\"board_label\",\"component\":\"Text\",\"text\":\"Board · no cards yet, the flop comes next\",\"variant\":\"label\"},{\"id\":\"board_row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/board\",\"componentId\":\"board_card\"}},{\"id\":\"board_card\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"size\":\"md\"},{\"id\":\"player_label\",\"component\":\"Text\",\"text\":\"You · 4 hole cards\",\"variant\":\"label\"},{\"id\":\"player_row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/playerHand\",\"componentId\":\"player_card\"}},{\"id\":\"player_card\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"size\":\"md\"},{\"id\":\"rule\",\"component\":\"Text\",\"text\":\"Use exactly two hole cards and three board cards. Pot-limit: the biggest bet is the current pot (20). Each player anted 10.\",\"variant\":\"caption\"},{\"id\":\"footer\",\"component\":\"CardFooter\",\"children\":[\"actions\"]},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"children\":[\"btn_check\",\"btn_bet\",\"btn_fold\"]},{\"id\":\"btn_check\",\"component\":\"Button\",\"label\":\"Check\",\"variant\":\"solid\",\"action\":{\"action\":\"poker_action\",\"context\":{\"move\":\"check\"}}},{\"id\":\"btn_bet\",\"component\":\"Button\",\"label\":\"Bet 20 (pot)\",\"variant\":\"soft\",\"action\":{\"action\":\"poker_action\",\"context\":{\"move\":\"bet\",\"amount\":20}}},{\"id\":\"btn_fold\",\"component\":\"Button\",\"label\":\"Fold\",\"variant\":\"ghost\",\"action\":{\"action\":\"poker_action\",\"context\":{\"move\":\"fold\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Round 3, still Omaha, heads-up and pot-limit. Your 960 is carried over. Each of us antes 10, which leaves you 950 and the pot at 20. Your hole cards are Q♠ J♠ 10♥ 9♦, and the action is on you.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Round 3 is dealt: you hold Q♠ J♠ 10♥ 9♦, bankroll 950, pot 20.",
+                "target": "table-3",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-2",
+                      "components": [
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "md",
+                          "children": []
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-3",
+                      "catalogId": "agent-ui--croupier"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-3",
+                      "value": {
+                        "bankroll": 950,
+                        "pot": 20,
+                        "street": "Pre-flop",
+                        "playerHand": [
+                          {
+                            "rank": "Q",
+                            "suit": "spades"
+                          },
+                          {
+                            "rank": "J",
+                            "suit": "spades"
+                          },
+                          {
+                            "rank": "10",
+                            "suit": "hearts"
+                          },
+                          {
+                            "rank": "9",
+                            "suit": "diamonds"
+                          }
+                        ],
+                        "dealerHand": [
+                          {
+                            "rank": "A",
+                            "suit": "clubs"
+                          },
+                          {
+                            "rank": "A",
+                            "suit": "hearts"
+                          },
+                          {
+                            "rank": "4",
+                            "suit": "diamonds"
+                          },
+                          {
+                            "rank": "2",
+                            "suit": "clubs"
+                          }
+                        ],
+                        "board": []
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-3",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "header",
+                            "content",
+                            "footer"
+                          ]
+                        },
+                        {
+                          "id": "header",
+                          "component": "CardHeader",
+                          "children": [
+                            "title",
+                            "street_badge"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Omaha · Round 3",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "street_badge",
+                          "component": "Badge",
+                          "label": "Pre-flop",
+                          "intent": "info"
+                        },
+                        {
+                          "id": "content",
+                          "component": "CardContent",
+                          "children": [
+                            "col"
+                          ]
+                        },
+                        {
+                          "id": "col",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "stats",
+                            "dealer_label",
+                            "dealer_row",
+                            "board_label",
+                            "board_row",
+                            "player_label",
+                            "player_row",
+                            "rule"
+                          ]
+                        },
+                        {
+                          "id": "stats",
+                          "component": "Row",
+                          "gap": "lg",
+                          "children": [
+                            "stat_bank",
+                            "stat_pot"
+                          ]
+                        },
+                        {
+                          "id": "stat_bank",
+                          "component": "Stat",
+                          "label": "Bankroll",
+                          "value": {
+                            "path": "/bankroll"
+                          }
+                        },
+                        {
+                          "id": "stat_pot",
+                          "component": "Stat",
+                          "label": "Pot",
+                          "value": {
+                            "path": "/pot"
+                          }
+                        },
+                        {
+                          "id": "dealer_label",
+                          "component": "Text",
+                          "text": "Dealer · 4 hole cards",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "dealer_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/dealerHand",
+                            "componentId": "dealer_card"
+                          }
+                        },
+                        {
+                          "id": "dealer_card",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "faceDown": true,
+                          "size": "md"
+                        },
+                        {
+                          "id": "board_label",
+                          "component": "Text",
+                          "text": "Board · no cards yet, the flop comes next",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "board_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/board",
+                            "componentId": "board_card"
+                          }
+                        },
+                        {
+                          "id": "board_card",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "size": "md"
+                        },
+                        {
+                          "id": "player_label",
+                          "component": "Text",
+                          "text": "You · 4 hole cards",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "player_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/playerHand",
+                            "componentId": "player_card"
+                          }
+                        },
+                        {
+                          "id": "player_card",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "size": "md"
+                        },
+                        {
+                          "id": "rule",
+                          "component": "Text",
+                          "text": "Use exactly two hole cards and three board cards. Pot-limit: the biggest bet is the current pot (20). Each player anted 10.",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "footer",
+                          "component": "CardFooter",
+                          "children": [
+                            "actions"
+                          ]
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "md",
+                          "children": [
+                            "btn_check",
+                            "btn_bet",
+                            "btn_fold"
+                          ]
+                        },
+                        {
+                          "id": "btn_check",
+                          "component": "Button",
+                          "label": "Check",
+                          "variant": "solid",
+                          "action": {
+                            "action": "poker_action",
+                            "context": {
+                              "move": "check"
+                            }
+                          }
+                        },
+                        {
+                          "id": "btn_bet",
+                          "component": "Button",
+                          "label": "Bet 20 (pot)",
+                          "variant": "soft",
+                          "action": {
+                            "action": "poker_action",
+                            "context": {
+                              "move": "bet",
+                              "amount": 20
+                            }
+                          }
+                        },
+                        {
+                          "id": "btn_fold",
+                          "component": "Button",
+                          "label": "Fold",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "poker_action",
+                            "context": {
+                              "move": "fold"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Continuing table\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-3: d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealer's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pair of aces calls the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 20 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"bet, b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ringing the pot to 60\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and my\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bankroll down\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to 930. Now I need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to deal a flop, pic\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"king cards that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" don't conflict with the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Q♠ J\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"♠ 10♥\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 9♦ and A\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"♣ A♥ 4\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"♦ 2♣\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" already in play.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm settling on K\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"♦ 8♣ \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"3♠ for the flop\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", giving the player a g\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"utshot-type\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" draw against the d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealer's pair.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll update the U\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the biggest bet re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"flects the new\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 60 pot and the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bet button re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ads \\\"Bet 60 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"(pot),\\\" leaving\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" tables \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"1 and 2 unt\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ouched since their action\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" rows are already c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"leared, and I'll make\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sure to include the pro\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"per target met\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"adata for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" table\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-3's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"You bet \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"20, the pot, and I\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" call with 20 more. The\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" pot is now\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 60 and your bankro\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ll is 930. The flop\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" is K♦, 8\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"♣ and 3♠.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" It's your action.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"path\\\":\\\"/bankroll\\\",\\\"value\\\":930}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"path\\\":\\\"/pot\\\",\\\"value\\\":60}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"path\\\":\\\"/street\\\",\\\"value\\\":\\\"Flop\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"path\\\":\\\"/board\\\",\\\"value\\\":[{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"3\\\",\\\"suit\\\":\\\"spades\\\"}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"components\\\":[{\\\"id\\\":\\\"street_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Flop\\\",\\\"intent\\\":\\\"info\\\"},{\\\"id\\\":\\\"board_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Board · flop\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"rule\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Use exactly two hole cards and three board cards. You bet 20 pre-flop and I called. The pot is 60, which is the biggest bet allowed.\\\",\\\"variant\\\":\\\"caption\\\"},{\\\"id\\\":\\\"btn_bet\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Bet 60 (pot)\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"poker_action\\\",\\\"context\\\":{\\\"move\\\":\\\"bet\\\",\\\"amount\\\":60}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You bet 20, the pot, and I call with 20 more. The pot is now 60 and your bankroll is 930. The flop is K♦, 8♣ and 3♠. It's your action.\",\"target\":{\"surfaceId\":\"table-3\"},\"trace\":{\"turnIndex\":16,\"query\":{\"intent\":\"Bet the pot.\",\"k\":3},\"exemplarIds\":[\"frontier-review-split\",\"listing-photo-grid\",\"five-day-weather\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":57705,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5736},{\"id\":\"mini-skills\",\"chars\":755},{\"id\":\"persona\",\"chars\":4922}],\"over\":false},\"usage\":{\"inputTokens\":12030,\"outputTokens\":1396,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-3\",\"path\":\"/bankroll\",\"value\":930}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-3\",\"path\":\"/pot\",\"value\":60}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-3\",\"path\":\"/street\",\"value\":\"Flop\"}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-3\",\"path\":\"/board\",\"value\":[{\"rank\":\"K\",\"suit\":\"diamonds\"},{\"rank\":\"8\",\"suit\":\"clubs\"},{\"rank\":\"3\",\"suit\":\"spades\"}]}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-3\",\"components\":[{\"id\":\"street_badge\",\"component\":\"Badge\",\"label\":\"Flop\",\"intent\":\"info\"},{\"id\":\"board_label\",\"component\":\"Text\",\"text\":\"Board · flop\",\"variant\":\"label\"},{\"id\":\"rule\",\"component\":\"Text\",\"text\":\"Use exactly two hole cards and three board cards. You bet 20 pre-flop and I called. The pot is 60, which is the biggest bet allowed.\",\"variant\":\"caption\"},{\"id\":\"btn_bet\",\"component\":\"Button\",\"label\":\"Bet 60 (pot)\",\"variant\":\"soft\",\"action\":{\"action\":\"poker_action\",\"context\":{\"move\":\"bet\",\"amount\":60}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"table-3\"}}}\nYou bet 20, the pot, and I call with 20 more. The pot is now 60 and your bankroll is 930. The flop is K♦, 8♣ and 3♠. It's your action.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "target": "table-3",
+                "reply": "You bet 20 and I called. The flop is K♦ 8♣ 3♠, the pot is 60, and it's your action.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-3",
+                      "path": "/bankroll",
+                      "value": 930
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-3",
+                      "path": "/pot",
+                      "value": 60
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-3",
+                      "path": "/street",
+                      "value": "Flop"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-3",
+                      "path": "/board",
+                      "value": [
+                        {
+                          "rank": "K",
+                          "suit": "diamonds"
+                        },
+                        {
+                          "rank": "8",
+                          "suit": "clubs"
+                        },
+                        {
+                          "rank": "3",
+                          "suit": "spades"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-3",
+                      "components": [
+                        {
+                          "id": "street_badge",
+                          "component": "Badge",
+                          "label": "Flop",
+                          "intent": "info"
+                        },
+                        {
+                          "id": "board_label",
+                          "component": "Text",
+                          "text": "Board · flop",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "rule",
+                          "component": "Text",
+                          "text": "Use exactly two hole cards and three board cards. You bet 20 pre-flop and I called. The pot is 60, which is the biggest bet allowed.",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "btn_bet",
+                          "component": "Button",
+                          "label": "Bet 60 (pot)",
+                          "variant": "soft",
+                          "action": {
+                            "action": "poker_action",
+                            "context": {
+                              "move": "bet",
+                              "amount": 60
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the player checked\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the dealer checked behind\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealing the turn card,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" making sure to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pick one\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" not already used\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" among the known\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ole and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" board cards—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"something\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" like 5♥ works.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'm also consid\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ering whether to update the table r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"endering for this\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"age.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"You check and I check behind.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" The turn is the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 5♥. The pot\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" stays at 60, and it\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'s your action.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"path\\\":\\\"/street\\\",\\\"value\\\":\\\"Turn\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"path\\\":\\\"/board\\\",\\\"value\\\":[{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"3\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"5\\\",\\\"suit\\\":\\\"hearts\\\"}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"components\\\":[{\\\"id\\\":\\\"street_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Turn\\\",\\\"intent\\\":\\\"info\\\"},{\\\"id\\\":\\\"board_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Board · turn\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"rule\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Use exactly two hole cards and three board cards. Both players checked the flop; the pot is 60, which is the biggest bet allowed.\\\",\\\"variant\\\":\\\"caption\\\"}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You check and I check behind. The turn is the 5♥. The pot stays at 60, and it's your action.\",\"target\":{\"surfaceId\":\"table-3\"},\"trace\":{\"turnIndex\":18,\"query\":{\"intent\":\"Check, or call if there is a bet.\",\"k\":3},\"exemplarIds\":[\"booking-reservation\",\"frontier-button-icon-actions\",\"pattern-schedule-picker\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":57441,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5472},{\"id\":\"mini-skills\",\"chars\":755},{\"id\":\"persona\",\"chars\":4922}],\"over\":false},\"usage\":{\"inputTokens\":12276,\"outputTokens\":867,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-3\",\"path\":\"/street\",\"value\":\"Turn\"}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-3\",\"path\":\"/board\",\"value\":[{\"rank\":\"K\",\"suit\":\"diamonds\"},{\"rank\":\"8\",\"suit\":\"clubs\"},{\"rank\":\"3\",\"suit\":\"spades\"},{\"rank\":\"5\",\"suit\":\"hearts\"}]}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-3\",\"components\":[{\"id\":\"street_badge\",\"component\":\"Badge\",\"label\":\"Turn\",\"intent\":\"info\"},{\"id\":\"board_label\",\"component\":\"Text\",\"text\":\"Board · turn\",\"variant\":\"label\"},{\"id\":\"rule\",\"component\":\"Text\",\"text\":\"Use exactly two hole cards and three board cards. Both players checked the flop; the pot is 60, which is the biggest bet allowed.\",\"variant\":\"caption\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"table-3\"}}}\nYou check and I check behind. The turn is the 5♥. The pot stays at 60, and it's your action.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Turn is the 5♥. Pot stays at 60.",
+                "target": "table-3",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-3",
+                      "path": "/street",
+                      "value": "Turn"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-3",
+                      "path": "/board",
+                      "value": [
+                        {
+                          "rank": "K",
+                          "suit": "diamonds"
+                        },
+                        {
+                          "rank": "8",
+                          "suit": "clubs"
+                        },
+                        {
+                          "rank": "3",
+                          "suit": "spades"
+                        },
+                        {
+                          "rank": "5",
+                          "suit": "hearts"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-3",
+                      "components": [
+                        {
+                          "id": "street_badge",
+                          "component": "Badge",
+                          "label": "Turn",
+                          "intent": "info"
+                        },
+                        {
+                          "id": "board_label",
+                          "component": "Text",
+                          "text": "Board · turn",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "rule",
+                          "component": "Text",
+                          "text": "Use exactly two hole cards and three board cards. Both players checked the flop; the pot is 60, which is the biggest bet allowed.",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

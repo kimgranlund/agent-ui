@@ -1,0 +1,35 @@
+---
+id: T-0235
+title: "chat:probe live prose checks read the whole chat, so one leak fails every later turn"
+type: bug             # feature | bug | chore | spike | idea
+status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
+priority: P3         # P1 | P2 | P3
+depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
+created: 2026-10-15
+router: .sdlc/AGENTS.md  # how to claim and close this ticket
+---
+
+## Goal
+`chat:probe`'s prose checks judge each turn's own prose, live as offline, so one leak fails one turn.
+
+## Repro
+1. Read `.sdlc/live-round-2/runs/croupier-five-card-draw-haiku-1/report.json`: `no-json-as-prose` and `no-internal-leak` fail on turns 2 to 10 (18 fails) for one leak in turn 2's reply (`2026-10-15.jsonl:42`).
+2. Read `scripts/e2e-admin/probe/replays/lexicographer-haiku-no-secret.json`: `"agent": "croupier"` was written for a Lexicographer trace.
+
+## Expected
+The live report fails `no-json-as-prose` on turn 2 only, as the offline replay of the same trace does (`croupier-draw-haiku-meta-tail`, `no-json-as-prose:1`). `--from-trace` on a trace with no `agent` label asks for `--agent` or reads it from the request, never defaults to croupier.
+
+## Actual
+Live `proseText` is the whole chat log (`scripts/e2e-admin/probe/run.ts` `proseText(page)`), so every later turn re-reads the leak; offline `proseText` is the turn's own prose (`trace.ts`). In live round 2 the 27 `no-json-as-prose` and 33 `no-internal-leak` fails come from 12 leaking replies. `trace.ts:168` sets `first.line.agent ?? 'croupier'`, and the dev proxy's trace has no `agent` for a preset on the base catalog (`agentLabel` derives it from a persona catalog id), so every Lexicographer and Admiral trace converts as croupier.
+
+## Context
+The page re-renders earlier bubbles on a page-fired turn (the note is replaced by design, tkt-0079), so the live delta is not always a prefix. Options: record each turn's own bubble text in `run.ts`, or judge only a leak absent from the previous turn's prose. Found by T-0225 (`.sdlc/live-round-2/report.md`).
+
+## Constraints
+The failing test lands before or with the fix, never after. No em dashes.
+
+## Acceptance criteria
+- (red) `node scripts/chat-probe.mjs selftest` exits 0: a live record whose earlier turn leaked fails the prose checks only on that turn; a later new leak still fails.
+- (red) A `--from-trace` test: a trace line with no `agent` and catalog `agent-ui` never yields agent croupier.
+- `npm run check` exits 0.

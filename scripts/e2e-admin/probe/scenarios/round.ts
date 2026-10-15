@@ -9,7 +9,7 @@
 import type { ProbeStep } from '../model.ts'
 import { ADMIRAL_MODELS, ADMIRAL_SCENARIOS } from './admiral.ts'
 import { CONCIERGE_MODELS, CONCIERGE_SCENARIOS } from './concierge.ts'
-import { CROUPIER_MODELS, CROUPIER_SCENARIOS, quote } from './croupier.ts'
+import { CROUPIER_MODELS, CROUPIER_ROUND_SCENARIOS, quote } from './croupier.ts'
 import { LEXICOGRAPHER_MODELS, LEXICOGRAPHER_SCENARIOS } from './lexicographer.ts'
 
 export interface RoundScenario {
@@ -33,7 +33,7 @@ export interface RoundPreset {
 }
 
 export const ROUND_PRESETS: readonly RoundPreset[] = [
-  { agent: 'croupier', scenarios: CROUPIER_SCENARIOS, models: CROUPIER_MODELS },
+  { agent: 'croupier', scenarios: CROUPIER_ROUND_SCENARIOS, models: CROUPIER_MODELS },
   { agent: 'concierge', scenarios: CONCIERGE_SCENARIOS, models: CONCIERGE_MODELS },
   { agent: 'lexicographer', scenarios: LEXICOGRAPHER_SCENARIOS, models: LEXICOGRAPHER_MODELS },
   { agent: 'admiral', scenarios: ADMIRAL_SCENARIOS, models: ADMIRAL_MODELS },
