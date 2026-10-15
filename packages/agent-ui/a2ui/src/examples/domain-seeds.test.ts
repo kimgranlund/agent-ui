@@ -1,4 +1,4 @@
-// domain-seeds.test.ts: the validity gate for the four T-0245 domain seeds. Each validates 0-failure against its
+// domain-seeds.test.ts: the validity gate for the T-0245 domain seeds and the T-0274 game over. Each validates 0-failure against its
 // own catalog (the default `agent-ui`, or the derived `<base>--<persona>` document `composePersonaCatalogDocs`
 // composes, which the `validate-payload` CLI cannot load), renders through a real renderer with an empty error
 // channel, and passes every semantic check its preset runs live: the persona's own checks, the hidden-state checks
@@ -52,8 +52,8 @@ function liveChecks(catalogId: string, catalog: Catalog) {
 const isError = (m: A2uiClientMessage): m is Extract<A2uiClientMessage, { error: unknown }> => 'error' in m
 
 describe('the T-0245 domain seeds', () => {
-  it('are four, each shelved exactly once (T-0240: the base two on allSeeds, the persona two on allPersonaCorpusSeeds)', () => {
-    expect(domainSeeds).toHaveLength(4)
+  it('are five, each shelved exactly once (T-0240: the base seeds on allSeeds, the persona two on allPersonaCorpusSeeds)', () => {
+    expect(domainSeeds).toHaveLength(5)
     const names = [...allSeeds, ...allBasicSeeds, ...allPersonaSeeds, ...allPersonaCorpusSeeds, ...allMultiTurnSeeds, ...allRepairSeeds].map((s) => s.name)
     expect(names.filter((n, i) => names.indexOf(n) !== i)).toEqual([])
     for (const seed of domainSeeds) expect(names.filter((n) => n === seed.name), seed.name).toHaveLength(1)
