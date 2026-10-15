@@ -2,6 +2,10 @@
 
 The code + prose family for agent-ui: a zero-dependency highlighter core, seven hand-rolled tokenizers, a sanitized markdown renderer, and an editable-first source editor (the editor pack lazy-loads CodeMirror 6 per mount — no CodeMirror in your bundle otherwise).
 
+> Published on npm as `@agent-ui-kit/code`; inside this repository the workspace package is `@agent-ui/code`,
+> renamed at publish time. The latest release is 0.1.0 (tag `v0.1.0`); the source on `main` is unreleased
+> work past it.
+
 ## Install
 
 ```sh

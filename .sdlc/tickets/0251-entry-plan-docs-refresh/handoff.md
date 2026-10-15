@@ -25,3 +25,12 @@ Source: the 2026-10-15 repo scrub audits (https://claude.ai/artifact/WKiuHupQFWh
 ## Done when
 - Each named problem is fixed; every command a doc names exists in package.json.
 - `doc_lint` on the touched docs and `npm run check` exit 0.
+
+## Acceptance criteria
+- README.md names all ten packages, both dependency exceptions (CodeMirror ADR-0139, pdfjs-dist ADR-0202), `check` as tsc plus check:site, check:tools and check:scripts, the inner-loop gate (check plus touched tests, CI runs the suite) and the release status (v0.1.0 of eight packages, `data` and `devtools` unpublished, `main` unreleased).
+- CONTRIBUTING.md names `doc-standards` and `component-design`, calls ADRs frozen, covers sdlc-lite lanes, `.sdlc/tickets/` and the merge queue, and links AGENTS.md.
+- CHANGELOG.md is a pointer (merged PRs, release tags); the old text is at `.claude/docs/archive/changelog-to-2026-10-15.md`; `node scripts/generate-sitemap.mjs` and `node scripts/generate-llms-full.mjs` leave no diff, and `npx vitest run site/lib/sitemap.test.ts site/lib/llms.test.ts site/lib/docs-grammar.test.ts site/lib/command-palette.test.ts` exits 0.
+- `packages/agent-ui/data/README.md` and `packages/agent-ui/devtools/README.md` exist; every package README notes the `@agent-ui-kit/*` publish name and its release status.
+- `docs/AGENTS.md` has one line outside the managed block saying `.claude/docs/` keeps its own scheme.
+- plan.md says ten packages (tree includes code, data, devtools), the ADR-0245 sizing law and a non-planning status; goals.md carries a 2026-10-15 state line and a DoD without the `[size]/[scale]/[density]` axes; roadmap.md §2 is dated 2026-10-15 and names the closed loop; process.md names the sdlc-lite lanes and a live-round rule.
+- Every npm run command named in the touched docs exists in package.json; doc_lint on each touched doc and `npm run check` exit 0; no added line carries an em dash.

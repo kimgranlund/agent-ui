@@ -1,59 +1,65 @@
 # agent-ui
 
-A zero-dependency, signals-based web-component library in strict, modern TypeScript — FACE
-(Framework-Agnostic Custom Elements) custom elements with light DOM, ARIA via `ElementInternals`
-only (no native form elements), a tagged-template renderer, and typed-signal props. First component
-family: FACE form controls.
+A zero-dependency, signals-based web-component library in strict, modern TypeScript: FACE
+(form-associated custom elements) with light DOM, ARIA via `ElementInternals` only (no native form
+elements), a tagged-template renderer, typed-signal props and traits. On top of it sit the A2UI
+generative-UI layer, the A2A protocol layer and the app compositions they power.
 
-The one ruled exception is the opt-in `@agent-ui/code/editor` surface, which adopts CodeMirror 6
-(lazy-loaded) — every other default barrel in the library stays dependency-free.
+Two ruled dependency exceptions, both opt-in and lazy-loaded, never on a default barrel: CodeMirror 6
+on `@agent-ui/code/editor` (ADR-0139) and pdfjs-dist on the `@agent-ui/app` ingestion seam (ADR-0202).
+
+## Release status
+
+The source on `main` is unreleased. Workspace packages are named `@agent-ui/*`, versioned `0.0.0` and
+marked private; at publish time `npm run publish:packages` renames them to `@agent-ui-kit/*` and
+releases them in lockstep. The latest release is `v0.1.0` (2026-08-26) of eight packages; `data` and
+`devtools` have never been published. Where releases and merged changes are listed:
+[CHANGELOG.md](CHANGELOG.md).
 
 ## Packages
 
-An npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
+An npm-workspaces monorepo of ten packages under `packages/agent-ui/*`. The layering and the import
+rules between them are in [AGENTS.md](AGENTS.md).
 
-- `@agent-ui/shared` — cross-cutting tokens/styles/utility types (color, dimensional, and runtime).
-- `@agent-ui/components` — the whole framework: the signals kernel (`reactive/`), the base element
-  classes (`dom/`), reusable traits (`traits/`), and the full `ui-*` FACE control suite
-  (`controls/`).
-- `@agent-ui/a2ui` — the A2UI (Agent2UI) Generative-UI runtime: a renderer, validator, and default
-  catalog for streaming agent-composed interfaces, plus the Node-first agent producer toolkit.
-- `@agent-ui/a2a` — the A2A (Agent2Agent) protocol layer: wire types and validation pinned to
-  spec v0.3.0.
-- `@agent-ui/icons` — a swappable icon-pack adapter, with a Phosphor pack shipped as `./phosphor`.
-- `@agent-ui/app` — app-surface compositions (an application shell, master-detail, settings, and
-  the `ui-agent-admin` reference app) built on top of components + a2ui + shared.
-- `@agent-ui/router` — a memory-first SPA router with opt-in URL reflection.
-- `@agent-ui/code` — the code+prose family: a zero-dep core plus opt-in subpath packs for syntax
-  highlighting, markdown rendering, and the CodeMirror-backed editable source editor.
+| Package | What it is |
+| --- | --- |
+| `@agent-ui/shared` | tokens, utility types, the `StorageAdapter` persistence seam |
+| `@agent-ui/components` | the framework: signals kernel, base elements, traits and the `ui-*` controls |
+| `@agent-ui/a2ui` | A2UI: renderer, validator, catalogs and the agent producer toolkit |
+| `@agent-ui/a2a` | Agent2Agent wire types and validation pinned to spec v0.3.0 |
+| `@agent-ui/icons` | swappable icon-pack adapter with a Phosphor pack on `./phosphor` |
+| `@agent-ui/app` | app-surface compositions: `ui-super-shell`, its presets and the agent-admin app |
+| `@agent-ui/router` | memory-first SPA router with opt-in URL reflection |
+| `@agent-ui/code` | code and prose: highlighting, markdown and the CodeMirror editor |
+| `@agent-ui/data` | headless data layer: the `DataSource<T>` seam and signal-backed resources |
+| `@agent-ui/devtools` | chat and A2UI dev and debug harness: transports, capture and replay |
 
 ## Getting started
 
 ```sh
 npm install
-npm run dev     # the docs site (site/) — the app entry point, with live examples for every control
+npm run dev     # the docs site (site/), the app entry, with live examples for every control
 npm run build   # production build of the docs site
 ```
 
 The docs site's own [Getting started](site/pages/getting-started.ts) page is the fullest
-walkthrough: workspace packages, the load-bearing CSS import order, a minimal runnable example, and
-per-control subpath imports for tree-shaking.
+walkthrough: workspace packages, the CSS import order, a minimal runnable example, and per-control
+subpath imports.
 
 ## Commands
 
-- `npm run check` — the standing type gate: `tsc` (packages) → `check:site` (the docs site's own
-  `tsconfig.json`) → `check:tools` (`tsconfig.tools.json`, scripts + a2ui tools). All `noEmit` —
-  type-checking only, no build output.
-- `npm test` — the full Vitest suite (jsdom), once. `npm run test:watch` for watch mode.
-  `npm run test:browser` runs the real-engine (Chromium/WebKit) suite.
-- `npm run dev` / `npm run build` — the docs site.
-- `npm run size` — the bundle-size budget check.
+- `npm run check`: the standing gate, `tsc` then `check:site`, `check:tools` and `check:scripts`
+  (type checks plus the repo's script selftests and generated-file freshness checks).
+- `npm test`: the full Vitest (jsdom) suite, run by CI on every pull request.
+- `npm run test:browser`: the real-engine browser shards.
+- `npm run size`: the bundle-size budget check.
 
-`npm run check && npm test` must stay green before any change is considered done.
+Locally a change runs `npm run check` plus the tests of the folders it touched; CI runs the full suite
+and a pull request merges on CI green. The full command list and gate rules are in
+[AGENTS.md](AGENTS.md).
 
 ## Going deeper
 
-Project-scoped documentation — the architecture plan, per-milestone goals, the coherence process,
-and the full reference/ADR/spec/ticket corpus — lives under [`.claude/docs/`](.claude/docs/). See
-[AGENTS.md](AGENTS.md) for the conventions an agent (or a new contributor) needs to work in this
-codebase, and [CONTRIBUTING.md](CONTRIBUTING.md) for how a change gets made and landed here.
+- [AGENTS.md](AGENTS.md): conventions, gates and where each kind of truth lives.
+- [CONTRIBUTING.md](CONTRIBUTING.md): how a change gets made and landed.
+- [`.claude/docs/`](.claude/docs/): plan, goals, roadmap, process, references and design documents.

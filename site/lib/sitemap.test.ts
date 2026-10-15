@@ -137,7 +137,8 @@ describe('changelog-index.json — byte-identical to a fresh generation', () => 
     const parsed = JSON.parse(fresh) as SitemapEntry[]
     const changelog = read('CHANGELOG.md')
     const headingCount = (changelog.match(/^## /gm) ?? []).length
-    expect(parsed.length).toBeGreaterThan(5)
+    // CHANGELOG.md is a pointer with two `## ` sections since T-0251 (old text archived); the floor stays above 1
+    expect(parsed.length).toBeGreaterThan(1)
     expect(parsed.length).toBe(headingCount)
     for (const e of parsed) expect(e.url).toMatch(/^\.\/changelog\.html#[a-z0-9-]+$/)
   })

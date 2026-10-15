@@ -65,6 +65,16 @@ Update 2026-10-04: PR #1791 disabled the nonoun-plugins (llm, harness, docs, tea
 agent-protocols, design) in this repo, so those global plugin agents no longer load here; no repo-local
 component-review or token seat loads either, and the independent check runs as an sdlc-lite verifier run (`run.sh`).
 
+**Who does the work now (2026-10-15).** The plugin-era seats above are history. Work items are SDLC
+Lite tickets in `.sdlc/tickets/` (claim and close: `.sdlc/AGENTS.md`). `steps.py lane <ticket dir>` picks
+the lane: `solo` (the default for small and medium tickets: one agent reads, changes, checks and
+reports), `fix` (a one-file change, only when asked or when the lane script prints it) or `chain`
+(plan, build and verify in steps, for large, merge or cross-cutting work). One independent verifier on a
+different model family checks each ticket, and a pass is final. The repo-local agents in
+`.claude/agents/` (`component-build-agent`, `a2ui-build-agent`, `a2ui-payload-authoring-agent`,
+`a2ui-review-agent`, `example-authoring-agent`, `repo-orchestrator-agent`) still exist for their areas; seat ownership is the
+`seat-map` skill. Gates and conventions: root `AGENTS.md`.
+
 ## 1. Trip-wires — the loud contracts (determinism → code)
 
 These cost ~zero agent tokens and catch the bulk of drift/bloat deterministically. Each is a true/false
@@ -265,6 +275,13 @@ skill or agent text that asks for more ceremony.
    issue, and keep going.
 6. **One judge pass per seed.** Double-judging for calibration happens only when a rubric dimension is
    new or was just reworded.
+7. **Live rounds run capped, find bugs and never gate (Kim, 2026-10-15).** A round of live agent probes
+   spends real credit, so it runs through `probe/run-capped.ts` with a stated `--cap` in dollars, one
+   probe at a time, from the main checkout, and archives every trace, payload and ledger row under
+   `.sdlc/evals/rounds/<date>-<slug>/`. A failure it finds becomes a ticket and, where it can, a keyless
+   replay regression; the round itself is evidence, not a gate. Procedure: `scripts/e2e-admin/README.md`,
+   Live rounds; contract: `spec/agent-closed-loop.spec.md` CL-R7 (cap), CL-R11 (lifecycle), CL-R12
+   (routing observability).
 
 ## What we do NOT build (anti-ceremony)
 
