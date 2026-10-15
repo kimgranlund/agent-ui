@@ -5,7 +5,7 @@ import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, write
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { describeRound, estimateSpend, listRound, parseCommands, roundStart, runCapped, runRound, traceSpend, writeRoundReadme } from './run-capped.ts'
+import { describeEvals, describeRound, estimateSpend, listRound, parseCommands, roundStart, runCapped, runRound, traceSpend, writeRoundReadme } from './run-capped.ts'
 
 const line = (at, model, usage) => JSON.stringify({ at, model, usage })
 const SCRIPT = ['#!/usr/bin/env bash', '# header', '', ...[1, 2, 3, 4, 5].map((i) => `npm run chat:probe -- --agent croupier --say hi --out runs/r${i} --name r${i}`)].join('\n')
@@ -221,6 +221,55 @@ describe('run-capped', () => {
       expect(readme).toMatch(/hand-copied runner log|hand-copied by the conductor on 2026-10-15/)
       expect(readme).not.toMatch(/`round\.json`:|`ledger\.jsonl`:|`live-commands\.sh`:|`report\.md`:/)
       expect(describeRound(dir)).toBe(readme)
+    })
+  })
+
+  // T-0241 scope addition 2: one home for every round, `.sdlc/evals/rounds/<date>-<slug>/`, and its index.
+  describe('evals home', () => {
+    it('--round writes under evals/rounds/<date>-<slug>/, reuses it on a restart and regenerates the index row', () => {
+      const root = mkdtempSync(join(tmpdir(), 'run-capped-evals-'))
+      mkdirSync(join(root, '.agent-traces'))
+      // An earlier round already in the home, backfilled (no round.json).
+      const old = join(root, '.sdlc', 'evals', 'rounds', '2026-10-14-r1-croupier', 'runs', 'blackjack-moves-haiku-1')
+      mkdirSync(old, { recursive: true })
+      writeFileSync(join(old, 'report.json'), JSON.stringify({ verdict: 'fail', agent: 'croupier', model: 'claude-haiku-5-5' }))
+      writeFileSync(join(root, '.sdlc', 'evals', 'rounds', '2026-10-14-r1-croupier', 'live-commands.sh'), '# T-0184 Croupier closed-loop live runs.\n')
+      // The generated script points at some other folder; --round retargets it.
+      const script = ['# T-0300 smoke round', ...['croupier-deal-haiku-1', 'croupier-deal-sonnet-1'].map((n) => `npm run chat:probe -- --agent croupier --model claude-${n.split('-').at(-2)}-5-5 --out .sdlc/elsewhere/runs/${n} --name ${n}`)].join('\n')
+      writeFileSync(join(root, 'live.sh'), script)
+      let day = '2026-10-16'
+      let tick = 0
+      const now = () => `${day}T12:${String(tick++).padStart(2, '0')}:00.000Z`
+      const ran = []
+      const exec = (cmd) => {
+        ran.push(/--out (\S+)/.exec(cmd)[1])
+        appendFileSync(join(root, '.agent-traces', `${day}.jsonl`), line(now(), 'claude-haiku-5-5', { outputTokens: 1_000_000 }) + '\n')
+        const out = join(root, /--out (\S+)/.exec(cmd)[1])
+        mkdirSync(out, { recursive: true })
+        writeFileSync(join(out, 'report.json'), JSON.stringify({ verdict: 'pass', agent: 'croupier', model: /--model (\S+)/.exec(cmd)[1] }))
+        return 0
+      }
+      const first = runRound({ root, liveCommands: 'live.sh', commands: parseCommands(script), cap: 0.4, round: 'smoke', exec, commit: 'abc123', now })
+      expect(first).toMatchObject({ ran: 1, capped: true })
+      const home = '.sdlc/evals/rounds/2026-10-16-smoke'
+      expect(ran).toEqual([`${home}/runs/croupier-deal-haiku-1`])
+      expect(readFileSync(join(root, home, 'live-commands.sh'), 'utf8')).toContain(`--out ${home}/runs/croupier-deal-sonnet-1`)
+      expect(readFileSync(join(root, home, 'runs', '.capped-start'), 'utf8').trim()).toBe('2026-10-16T12:01:00.000Z')
+
+      // A restart on a later day keeps the folder its round start named.
+      day = '2026-10-17'
+      runRound({ root, liveCommands: 'live.sh', commands: parseCommands(script), cap: 100, round: 'smoke', exec, commit: 'abc123', now })
+      expect(ran).toEqual([`${home}/runs/croupier-deal-haiku-1`, `${home}/runs/croupier-deal-sonnet-1`])
+      expect(existsSync(join(root, '.sdlc', 'evals', 'rounds', '2026-10-17-smoke'))).toBe(false)
+      expect(JSON.parse(readFileSync(join(root, home, 'round.json'), 'utf8'))).toMatchObject({ liveCommands: `${home}/live-commands.sh`, totals: { runs: 2 } })
+
+      const index = readFileSync(join(root, '.sdlc', 'evals', 'README.md'), 'utf8')
+      expect(index).toBe(describeEvals(join(root, '.sdlc', 'evals')))
+      const rows = index.split('\n').filter((l) => /^\| \d{4}-/.test(l))
+      expect(rows).toEqual([
+        '| 2026-10-14 | [2026-10-14-r1-croupier](rounds/2026-10-14-r1-croupier/) | T-0184 | croupier | claude-haiku-5-5 | 1 | 0 | unknown |',
+        '| 2026-10-16 | [2026-10-16-smoke](rounds/2026-10-16-smoke/README.md) | T-0300 | croupier | claude-haiku-5-5, claude-sonnet-5-5 | 2 | 2 | $1.00 |',
+      ])
     })
   })
 })

@@ -5,8 +5,13 @@
 // are priced as input and cache writes at 1.25x input, an overestimate.
 //
 // usage: node --experimental-strip-types scripts/e2e-admin/probe/run-capped.ts <live-commands.sh> --cap <usd>
-//          [--root <dir>] [--max <n>] [--dry-run]
+//          [--round <slug>] [--root <dir>] [--max <n>] [--dry-run]
 //        node --experimental-strip-types scripts/e2e-admin/probe/run-capped.ts --describe <round dir>
+//        node --experimental-strip-types scripts/e2e-admin/probe/run-capped.ts --index [<evals dir>]
+//
+// `--round <slug>` writes the round to `.sdlc/evals/rounds/<YYYY-MM-DD>-<slug>/` (the date of the round start; a
+// restart reuses the folder): every `--out` is retargeted to its `runs/`, the live-commands file is copied in, and
+// `.sdlc/evals/README.md`, the index of every round, is regenerated with each archive.
 //
 // Runs go in file order (the generated script lists Haiku, then Sonnet, then Opus). A run whose `--out` folder
 // already holds `report.json` is skipped. A probe that exits 1 (a failed check) does not stop the round.
@@ -297,6 +302,8 @@ export function archiveRound(o: ArchiveOptions): { runs: number; tokens: Tokens;
   }
   writeFileSync(join(o.roundDir, 'round.json'), `${JSON.stringify(round, null, 2)}\n`)
   writeRoundReadme(o.roundDir)
+  const evals = dirname(dirname(o.roundDir))
+  if (basename(dirname(o.roundDir)) === 'rounds' && basename(evals) === 'evals') writeEvalsIndex(evals)
   return { runs: rows.length, tokens: totals, costUsd }
 }
 
@@ -353,19 +360,32 @@ function describeFile(rel: string, archived: boolean, commit: string): string | 
   return undefined
 }
 
+/** Each run folder under `runs/` with what its report says. */
+function roundRuns(roundDir: string, files: string[] = listRound(roundDir)): RunSummary[] {
+  const names = [...new Set(files.filter((f) => /^runs\/[^/]+\/[^/]+$/.test(f)).map((f) => f.split('/')[1]))].sort()
+  return names.map((name) => {
+    const r = readJson(join(roundDir, 'runs', name, 'report.json'))
+    const str = (k: string): string => (typeof r?.[k] === 'string' ? (r[k] as string) : '')
+    return { name, agent: str('agent'), model: str('model'), verdict: str('verdict') || 'no report', at: str('at') }
+  })
+}
+
+const uniq = (xs: string[]): string => [...new Set(xs.filter((x) => x !== ''))].sort().join(', ') || 'none recorded'
+
+/** A round folder's path from the repo root (`.sdlc/...`), or its name when it is not under `.sdlc/`. */
+function repoPath(dir: string): string {
+  const at = dir.lastIndexOf('/.sdlc/')
+  return at >= 0 ? dir.slice(at + 1) : basename(dir)
+}
+
 /** The README for a round folder, from what is actually in it. */
 export function describeRound(roundDir: string): string {
   const files = [...new Set([...listRound(roundDir), 'README.md'])].sort()
   const manifest = existsSync(join(roundDir, 'round.json')) ? readJson(join(roundDir, 'round.json')) : undefined
   const archived = manifest !== undefined
   const commit = typeof manifest?.commit === 'string' && manifest.commit !== '' ? manifest.commit : 'not recorded'
-  const runNames = [...new Set(files.filter((f) => /^runs\/[^/]+\/[^/]+$/.test(f)).map((f) => f.split('/')[1]))].sort()
-  const runs: RunSummary[] = runNames.map((name) => {
-    const r = readJson(join(roundDir, 'runs', name, 'report.json'))
-    const str = (k: string): string => (typeof r?.[k] === 'string' ? (r[k] as string) : '')
-    return { name, agent: str('agent'), model: str('model'), verdict: str('verdict') || 'no report', at: str('at') }
-  })
-  const uniq = (xs: string[]): string => [...new Set(xs.filter((x) => x !== ''))].sort().join(', ') || 'none recorded'
+  const runs = roundRuns(roundDir, files)
+  const runNames = runs.map((r) => r.name)
   const lines: string[] = [`# Live round: ${basename(roundDir)}`, '']
   lines.push(archived ? `Archived by \`scripts/e2e-admin/probe/run-capped.ts\` (T-0241). Regenerated with the archive; do not edit by hand.` : `Backfilled by hand on 2026-10-15 (before T-0241): there is no \`round.json\` or \`ledger.jsonl\`, so the commit, cap and window were not recorded. Described by \`run-capped.ts --describe\`.`, '')
   lines.push('## The round', '')
@@ -392,7 +412,7 @@ export function describeRound(roundDir: string): string {
     lines.push('', '## Runs', '')
     lines.push('`runs/<name>/` holds one probe run, written by `npm run chat:probe` (`scripts/chat-probe.mjs`, `probe/run.ts`) at its `--out`:', '')
     lines.push("- `report.json`: `verdict`, `checks[]` (`check`, `turn`, `status`, `detail`), `turns[]` (request, rounds, trace, prose, lint, screenshot), `agent`, `model`, `at`. Read: `jq -c '.checks[] | select(.status==\"fail\")' runs/<name>/report.json`.")
-    lines.push('- `fixture.json`: the recorded model answers of the run. Replay it keylessly: `npm run chat:probe -- --replay .sdlc/' + basename(roundDir) + '/runs/<name>/fixture.json`.')
+    lines.push('- `fixture.json`: the recorded model answers of the run. Replay it keylessly: `npm run chat:probe -- --replay ' + repoPath(roundDir) + '/runs/<name>/fixture.json`.')
     lines.push(`- \`turn-<n>.png\`: the Test Chat screenshot after turn n; git-ignored (\`${SCREENSHOTS}\`), so present only on the disk that ran the round.`, '')
     lines.push('| Run | Agent | Model | Verdict | Files |', '| --- | --- | --- | --- | --- |')
     for (const r of runs) {
@@ -401,6 +421,64 @@ export function describeRound(roundDir: string): string {
     }
   }
   return `${lines.join('\n')}\n`
+}
+
+export const EVALS_ROUNDS = '.sdlc/evals/rounds'
+
+/** The first ticket id a round names: `round.json`, then the live-commands header, then its report. */
+function roundTicket(roundDir: string): string {
+  for (const f of ['round.json', 'live-commands.sh', 'report.md']) {
+    const m = existsSync(join(roundDir, f)) ? /T-\d{4}/.exec(readFileSync(join(roundDir, f), 'utf8')) : null
+    if (m) return m[0]
+  }
+  return ''
+}
+
+/** The `.sdlc/evals/README.md` index: one row per folder under `rounds/`, oldest first. */
+export function describeEvals(evalsDir: string): string {
+  const roundsDir = join(evalsDir, 'rounds')
+  const ids = existsSync(roundsDir) ? readdirSync(roundsDir, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name).sort() : []
+  const lines = [
+    '# Evals',
+    '',
+    'Generated by `scripts/e2e-admin/probe/run-capped.ts` (T-0241) whenever a round archives, or by `run-capped.ts --index .sdlc/evals`; do not edit by hand.',
+    '',
+    '- `rounds/<YYYY-MM-DD>-<slug>/`: one live test round each. Its `README.md` is the entry file: every file present, where it came from and how to read it. Screenshots (`rounds/*/runs/*/*.png`) stay out of git; JSON, traces and ledgers are committed.',
+    '- `fog/`: reserved for context-fog-of-war exports (T-0239).',
+    '',
+    '| Date | Round | Ticket | Agents | Models | Runs | Pass | Spend |',
+    '| --- | --- | --- | --- | --- | --- | --- | --- |',
+  ]
+  for (const id of ids) {
+    const dir = join(roundsDir, id)
+    const runs = roundRuns(dir)
+    const cost = (readJson(join(dir, 'round.json'))?.totals as { costUsd?: number } | undefined)?.costUsd
+    const date = /^\d{4}-\d{2}-\d{2}/.exec(id)?.[0] ?? ''
+    lines.push(`| ${date} | [${id}](rounds/${id}/${existsSync(join(dir, 'README.md')) ? 'README.md' : ''}) | ${roundTicket(dir) || '-'} | ${uniq(runs.map((r) => r.agent))} | ${uniq(runs.map((r) => r.model))} | ${runs.length} | ${runs.filter((r) => r.verdict === 'pass').length} | ${typeof cost === 'number' ? `$${cost.toFixed(2)}` : 'unknown'} |`)
+  }
+  return `${lines.join('\n')}\n`
+}
+
+/** Write `README.md` into the evals folder; returns its path. */
+export function writeEvalsIndex(evalsDir: string): string {
+  const file = join(evalsDir, 'README.md')
+  writeFileSync(file, describeEvals(evalsDir))
+  return file
+}
+
+/** The round folder for `--round <slug>`: an existing `<date>-<slug>` (a restart) or a new one dated today. */
+export function roundFolder(root: string, slug: string, now: () => string = () => new Date().toISOString()): string {
+  const dir = join(root, EVALS_ROUNDS)
+  const found = existsSync(dir) ? readdirSync(dir).filter((d) => d.slice(11) === slug && /^\d{4}-\d{2}-\d{2}-/.test(d)).sort().at(-1) : undefined
+  return `${EVALS_ROUNDS}/${found ?? `${now().slice(0, 10)}-${slug}`}`
+}
+
+/** Point every command's `--out` at `<round>/runs/<its folder name>`. */
+export function retarget(commands: Array<{ cmd: string; out: string }>, round: string): Array<{ cmd: string; out: string }> {
+  return commands.map((c) => {
+    const out = `${round}/runs/${basename(c.out)}`
+    return { cmd: c.cmd.replace(`--out ${c.out}`, `--out ${out}`), out }
+  })
 }
 
 /** Write `README.md` into a round folder; returns its path. */
@@ -415,7 +493,10 @@ export interface RoundOptions {
   liveCommands: string
   commands: Array<{ cmd: string; out: string }>
   cap: number
-  since: string
+  /** The round start; defaults to `<round>/runs/.capped-start` (written on the first call). */
+  since?: string
+  /** Write the round to `.sdlc/evals/rounds/<date>-<slug>/`, retargeting every `--out` there. */
+  round?: string
   exec: (cmd: string) => number
   commit: string
   max?: number
@@ -426,18 +507,33 @@ export interface RoundOptions {
 /** Run a round under the cap and archive it after every run and once more at the end, whatever stops it. */
 export function runRound(o: RoundOptions): CappedResult {
   const now = o.now ?? (() => new Date().toISOString())
-  const runsDir = o.commands[0]?.out ? dirname(o.commands[0].out) : dirname(o.liveCommands)
-  const roundDir = join(o.root, o.commands[0]?.out ? dirname(runsDir) : runsDir)
+  let commands = o.commands
+  let liveCommands = o.liveCommands
+  if (o.round !== undefined) {
+    const round = roundFolder(o.root, o.round, now)
+    commands = retarget(o.commands, round)
+    liveCommands = `${round}/live-commands.sh`
+    const src = join(o.root, o.liveCommands)
+    if (existsSync(src) && !existsSync(join(o.root, liveCommands))) {
+      let text = readFileSync(src, 'utf8')
+      o.commands.forEach((c, i) => (text = text.replace(`--out ${c.out}`, `--out ${commands[i].out}`)))
+      mkdirSync(join(o.root, round), { recursive: true })
+      writeFileSync(join(o.root, liveCommands), text)
+    }
+  }
+  const runsDir = commands[0]?.out ? dirname(commands[0].out) : dirname(liveCommands)
+  const roundDir = join(o.root, commands[0]?.out ? dirname(runsDir) : runsDir)
+  const since = o.since ?? roundStart(join(o.root, runsDir, '.capped-start'), now)
   const runs: RunRecord[] = []
   const archive = (stop: ArchiveOptions['stop']): void => {
-    archiveRound({ root: o.root, roundDir, since: o.since, until: now(), runs, commit: o.commit, liveCommands: o.liveCommands, cap: o.cap, stop })
+    archiveRound({ root: o.root, roundDir, since, until: now(), runs, commit: o.commit, liveCommands, cap: o.cap, stop })
   }
   let stop: ArchiveOptions['stop'] = 'crash'
   try {
     const result = runCapped({
-      commands: o.commands,
+      commands,
       cap: o.cap,
-      spend: () => traceSpend(o.root, o.since),
+      spend: () => traceSpend(o.root, since),
       exec: o.exec,
       done: (out) => existsSync(join(o.root, out, 'report.json')),
       max: o.max,
@@ -473,16 +569,20 @@ function main(argv: string[]): number {
     process.stdout.write(`${writeRoundReadme(argv[1])}\n`)
     return 0
   }
-  const file = argv.find((a, i) => !a.startsWith('--') && !['--cap', '--root', '--max'].includes(argv[i - 1] ?? ''))
+  if (argv[0] === '--index') {
+    const dir = argv[1] ?? EVALS_ROUNDS.replace(/\/rounds$/, '')
+    process.stdout.write(`${writeEvalsIndex(dir)}\n`)
+    return 0
+  }
+  const file = argv.find((a, i) => !a.startsWith('--') && !['--cap', '--root', '--max', '--round'].includes(argv[i - 1] ?? ''))
   const flag = (name: string): string | undefined => (argv.includes(name) ? argv[argv.indexOf(name) + 1] : undefined)
   const cap = Number(flag('--cap'))
   if (file === undefined || !Number.isFinite(cap) || cap <= 0) {
-    process.stderr.write('usage: run-capped.ts <live-commands.sh> --cap <usd> [--root <dir>] [--max <n>] [--dry-run]\n')
+    process.stderr.write('usage: run-capped.ts <live-commands.sh> --cap <usd> [--round <slug>] [--root <dir>] [--max <n>] [--dry-run]\n')
     return 2
   }
   const root = flag('--root') ?? process.cwd()
   const commands = parseCommands(readFileSync(file, 'utf8'))
-  const runsDir = commands[0]?.out ? dirname(commands[0].out) : dirname(file)
   const max = flag('--max') !== undefined ? Number(flag('--max')) : undefined
   const log = (line: string): void => void process.stdout.write(`${line}\n`)
   if (argv.includes('--dry-run')) {
@@ -495,7 +595,7 @@ function main(argv: string[]): number {
     liveCommands: file,
     commands,
     cap,
-    since: roundStart(join(root, runsDir, '.capped-start')),
+    round: flag('--round'),
     exec: (cmd) => spawnSync(cmd, { shell: true, cwd: root, stdio: 'inherit' }).status ?? 1,
     commit: spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).stdout?.trim() ?? '',
     max,
