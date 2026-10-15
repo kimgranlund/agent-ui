@@ -8,11 +8,12 @@ import { offlineReplay } from '../trace.ts'
 
 // expectedFail: T-0263. Live round 3 (2026-10-15-r3-routing :109-:110, Haiku 5.5). On the Lexicographer's word
 // board the Battleship hidden-state check fires (FLEET_SECRET_MISSING twice: /secret/fleet, /secret/playerFleet), the
-// repair writes a fleet into the word game, and the turn ships uncorrected; the board ask surface is lost.
+// repair writes a fleet into the word game, and the turn ships uncorrected. The rejected rounds' ask-1 is replaced by
+// the shipped ask-2, which no-surface-loss passes since T-0264.
 it('lexicographer-haiku-fleet-check: a word board gets the Battleship fleet check', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./lexicographer-haiku-fleet-check.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual(['no-surface-loss:1'])
+  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual([])
   const trace = report.records[1].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
   expect(trace.failureCodes).toEqual(['FLEET_SECRET_MISSING', 'FLEET_SECRET_MISSING', 'GAME_HUD_MISSING', 'SEMANTIC_UNCORRECTED', 'TEXT_JSONL_IGNORED'])
 })

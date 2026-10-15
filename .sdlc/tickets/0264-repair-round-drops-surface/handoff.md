@@ -25,3 +25,10 @@ At :36 (Haiku), round 1 gets ACTION_NOT_APPLIED and round 2's wire fails SCHEMA.
 
 ## Context
 Guess: the final round is judged only on its own findings, and a no-wire round has none. Producer retry loop: `packages/agent-ui/a2ui/src/agent/produce.ts`. Found by T-0261.
+
+## Acceptance criteria
+- `npx vitest run packages/agent-ui/a2ui/src/live-agent/produce-loop.test.ts` exits 0: a `SCHEMA` failure on `[i].<kind>.surfaceId` whose message carries `surfaceId` beside the operation key is fed back with that key named and the move inside; a SCHEMA miss with no envelope `surfaceId` keeps the bare path.
+- `npx vitest run scripts/e2e-admin/probe/replays/croupier-haiku-stand-no-update.test.mjs` exits 0: with round 3 authored to that feedback (round 2's own messages, `surfaceId` moved inside), the Stand turn updates table-1 to the settled hand with Deal again and every probe check is green.
+- `npm run chat:probe -- selftest` exits 0: a surface a rejected round created and the shipped round replaced passes `no-surface-loss`, and a turn that ships no surface after a round created one still fails it. The four round 3 `no-surface-loss` fails were three such replacements (a check false positive, no producer loss) and one SURFACE_DEGRADED turn that shipped nothing (`regress-lexicographer-invalid-then-replay-haiku-1` t5), which still fails.
+- `npx vitest run packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent scripts/e2e-admin/probe` exits 0.
+- `npm run check` exits 0.

@@ -7,10 +7,11 @@ import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
 // T-0184 finding, fixed by T-0212 (#1994): BET_TABLE_MISSING no longer fires on a poker bet step, so round 1's
-// ask-1 now ships. The fixture still carries the recorded repair round, whose ask-2 replays but never ships: that
-// one failure is a replay artifact of the old trace, so the test pins it exactly and asserts ask-1 is not lost.
+// ask-1 now ships. The fixture still carries the recorded repair round, whose ask-2 replays but never ships; since
+// T-0264 no-surface-loss reads that as a surface the shipped ask-1 stands in for, so every check is green.
 it('croupier-stud-bet-table-missing: round 1 ask-1 ships now that the bet check skips poker (T-0212)', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./croupier-stud-bet-table-missing.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed.map((c) => [c.check, c.turn, c.detail])).toEqual([['no-surface-loss', 0, 'created in a round but never shipped: ask-2']])
+  expect(report.failed).toEqual([])
+  expect(report.checks.find((c) => c.check === 'no-surface-loss' && c.turn === 0)?.detail).toContain('open [ask-1]')
 })

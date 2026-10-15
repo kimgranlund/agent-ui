@@ -521,7 +521,10 @@ export function runChecks(turns: readonly TurnRecord[], opts: CheckOptions): Che
     else if (replyText === '' || tallyShown)
       out.push({ check: 'reply-text', turn: t.index, status: 'fail', detail: tallyShown ? 'the chat shows the message tally in place of a reply' : `${content} A2UI line(s) shipped with no reply text` })
     else out.push({ check: 'reply-text', turn: t.index, status: 'pass', detail: `${replyText.length} chars of reply beside ${content} A2UI line(s)` })
-    // no-surface-loss: every surface a round created is open after the turn (shipped, and mounted).
+    // no-surface-loss: every surface a round created is open after the turn (shipped, and mounted). T-0264: only the
+    // last round ships, so a surface a rejected round created and the shipped round replaced (ask-1 rejected, table-1
+    // shipped in its place) was dropped by the repair, never shown. A round's surface is lost when the turn creates
+    // fewer surfaces than that round made, so a surface fell out, or none at all.
     for (const s of shippedSurfaces(t.lines)) if (!shippedSoFar.includes(s)) shippedSoFar.push(s)
     if (t.rounds === undefined || t.rounds.length === 0) {
       out.push({ check: 'no-surface-loss', turn: t.index, status: 'skip', detail: 'no round data (roundsSource none)' })
@@ -529,14 +532,21 @@ export function runChecks(turns: readonly TurnRecord[], opts: CheckOptions): Che
       out.push({ check: 'no-surface-loss', turn: t.index, status: 'skip', detail: 'the turn halted (see no-halt): nothing shipped to compare' })
     } else {
       const created = [...new Set(t.rounds.flatMap(createdInRound))]
-      const lost = created.filter((s) => !shippedSoFar.includes(s))
+      const shippedCount = shippedSurfaces(t.lines).length
+      const lost = [...new Set(t.rounds.flatMap((r) => {
+        const made = createdInRound(r)
+        return made.length > shippedCount ? made.filter((s) => !shippedSoFar.includes(s)) : []
+      }))]
+      const replaced = created.filter((s) => !shippedSoFar.includes(s) && !lost.includes(s))
       const unmounted = t.domHosts !== undefined && t.domHosts < shippedSoFar.length ? `${shippedSoFar.length} surfaces shipped, ${t.domHosts} hosts mounted` : undefined
       const bad = [lost.length ? `created in a round but never shipped: ${lost.join(', ')}` : '', unmounted ?? ''].filter(Boolean)
       out.push({
         check: 'no-surface-loss',
         turn: t.index,
         status: bad.length ? 'fail' : 'pass',
-        detail: bad.length ? bad.join('; ') : `rounds created [${created.join(', ')}], open [${shippedSoFar.join(', ')}] (${t.roundsSource})`,
+        detail: bad.length
+          ? bad.join('; ')
+          : `rounds created [${created.join(', ')}], open [${shippedSoFar.join(', ')}]${replaced.length ? `, replaced by the repair [${replaced.join(', ')}]` : ''} (${t.roundsSource})`,
       })
     }
     // action-updates-surface (T-0172): a turn that answers a click updates the surface it came from, or hands the
