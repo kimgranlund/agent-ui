@@ -266,7 +266,7 @@ export const domainLexicographerGameOverSeed: ExampleSeed = {
   description:
     'A five-letter word game the player gave up on two guesses in, on one surface: a ResultCard with the lose ' +
     'outcome, the title Word forge, a summary that reveals the word (HEART) and guesses-used and letters-placed ' +
-    'stat tiles, all bound to the data model, holding a New game Button whose action starts a fresh word. Below ' +
+    'stat tiles bound to the data model, holding a New game Button whose action starts a fresh word. Below ' +
     'it the 6 by 5 read-only BoardGrid stays settled, its bound cells still marking CRANE and TEARS letter by ' +
     'letter against the answer committed at /secret/word (success right spot, warning wrong spot, neutral ' +
     'absent), and no guess input remains.',
