@@ -18,7 +18,7 @@ import type { AgentTraceLine } from '../../../packages/agent-ui/a2ui/tools/agent
 import { SetupError, type DevServerKit } from '../runner.ts'
 import { parseProbeCli } from './cli.ts'
 import { CHECK_NAMES, FixtureError, ownExchange, pageStep, parseProbeFixture, runChecks, type CheckResult, type ProbeFixture, type TurnRecord } from './model.ts'
-import { offlineReplay, resolveTraceSpec, typedText, type TraceEntry } from './trace.ts'
+import { fixtureFromTrace, offlineReplay, resolveTraceSpec, typedText, type TraceEntry } from './trace.ts'
 
 export const PROBE_FIXTURES_DIR = fileURLToPath(new URL('./fixtures/', import.meta.url))
 
@@ -78,6 +78,8 @@ export async function runProbeSelftest(): Promise<number> {
   const live = parseProbeCli(['--agent', 'croupier', '--model', 'claude-haiku-5-5', '--say', 'hi', '--click', 'Deal', '--say', 'again'])
   expectThat(live.mode === 'probe' && live.steps.length === 3 && 'click' in live.steps[1]!, 'cli: steps keep their order')
   expectThat(parseProbeCli(['--from-trace', 'last:2']).mode === 'from-trace', 'cli: --from-trace')
+  const traced = parseProbeCli(['--from-trace', 'last', '--agent', 'lexicographer'])
+  expectThat(traced.mode === 'from-trace' && traced.agent === 'lexicographer', 'cli: --from-trace takes --agent')
   const turnExpect = parseProbeCli(['--agent', 'croupier', '--say', 'deal', '--expect-turn', 'CardTable', '--click', 'Stand'])
   expectThat(turnExpect.mode === 'probe' && JSON.stringify(turnExpect.steps) === '[{"say":"deal","expect":["CardTable"]},{"click":"Stand"}]', 'cli: --expect-turn attaches to the step before it')
   for (const bad of [['--say', 'hi'], ['--agent', 'x'], ['--agent', 'x', '--click', 'y'], ['--bogus', '1'], ['--from-trace', 'last', '--say', 'x'], ['--agent', 'x', '--expect-turn', 'T', '--say', 'hi']]) {
@@ -188,6 +190,17 @@ export async function runProbeSelftest(): Promise<number> {
   }
   expectThat(chatRefused, 'trace: a chat line is refused')
   expectThat(typedText('## Referenced for this message\n### x\nbody\n\nBlack jack') === 'Black jack', 'trace: the typed text drops the referenced block')
+  // T-0236: the dev proxy logs no agent for a preset on the base catalog (a Lexicographer turn); the conversion asks
+  // for --agent and never guesses croupier.
+  const baseTurn: TraceEntry[] = [{ id: 'c.jsonl:1', line: { ...line('produce', 'Define ephemeral.'), model: 'm', catalogId: 'agent-ui' } }]
+  let unnamed: string
+  try {
+    unnamed = `agent ${(await fixtureFromTrace(baseTurn, 'x', process.cwd())).agent}`
+  } catch (err) {
+    unnamed = err instanceof SetupError && err.message.includes('--agent') ? 'refused' : `threw ${String(err)}`
+  }
+  expectThat(unnamed === 'refused', `trace: a line with no agent on the base catalog asks for --agent (${unnamed})`)
+  expectThat((await fixtureFromTrace(baseTurn, 'x', process.cwd(), { agent: 'lexicographer' })).agent === 'lexicographer', 'trace: --agent names the preset of a line with no agent')
 
   // the offline replay of the fixtures through the real produce()
   for (const c of SELFTEST_CASES) {

@@ -16,7 +16,7 @@ export type ProbeCommand =
       out?: string
       name?: string
     }
-  | { mode: 'from-trace'; spec: string; out?: string; name?: string }
+  | { mode: 'from-trace'; spec: string; agent?: string; out?: string; name?: string }
   | { mode: 'selftest'; browser: boolean }
 
 export const PROBE_USAGE = [
@@ -24,7 +24,7 @@ export const PROBE_USAGE = [
   '                            [--expect-turn <Type>]... [--expect-component <Type>]... [--out <dir>] [--name <name>]     (live: spends API credit)',
   '       (--expect-turn: the step before it must update a surface holding <Type>; --expect-component: any turn ships <Type>)',
   '       npm run chat:probe -- --replay <fixture.json> [--expect-component <Type>]... [--out <dir>]   (keyless)',
-  '       npm run chat:probe -- --from-trace <last | last:<k> | <day>.jsonl:<line>[,...]> [--out <dir>] [--name <name>]',
+  '       npm run chat:probe -- --from-trace <last | last:<k> | <day>.jsonl:<line>[,...]> [--agent <preset id>] [--out <dir>] [--name <name>]',
   '       npm run chat:probe -- selftest [--browser]',
 ].join('\n')
 
@@ -62,9 +62,10 @@ export function parseProbeCli(argv: readonly string[]): ProbeCommand {
   if (name !== undefined && !/^[a-z0-9][a-z0-9._-]*$/.test(name)) throw new SetupError('--name takes lowercase letters, digits, dot, dash and underscore')
   const spec = single.get('--from-trace')
   if (spec !== undefined) {
-    const extra = [...single.keys()].filter((k) => !['--from-trace', '--out', '--name'].includes(k))
-    if (extra.length > 0 || steps.length > 0 || expectComponents.length > 0) throw new SetupError(`--from-trace takes only --out and --name`)
-    return { mode: 'from-trace', spec, ...(out !== undefined ? { out } : {}), ...(name !== undefined ? { name } : {}) }
+    const extra = [...single.keys()].filter((k) => !['--from-trace', '--agent', '--out', '--name'].includes(k))
+    if (extra.length > 0 || steps.length > 0 || expectComponents.length > 0) throw new SetupError(`--from-trace takes only --agent, --out and --name`)
+    const agent = single.get('--agent')
+    return { mode: 'from-trace', spec, ...(agent !== undefined ? { agent } : {}), ...(out !== undefined ? { out } : {}), ...(name !== undefined ? { name } : {}) }
   }
   const replay = single.get('--replay')
   const agent = single.get('--agent')

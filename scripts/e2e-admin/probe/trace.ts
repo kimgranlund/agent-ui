@@ -22,6 +22,7 @@ import { gateChecksOnCatalog, type SemanticCheck } from '../../../packages/agent
 import { runProducerTurn } from '../../../packages/agent-ui/a2ui/tools/testkit/producer-leg.ts'
 import { nodeCatalogResolver } from '../../../packages/agent-ui/a2ui/tools/testkit/load.node.ts'
 import type { ScriptedToolRound } from '../../../packages/agent-ui/a2ui/tools/testkit/scenario.ts'
+import { SetupError } from '../runner.ts'
 import {
   metaOf,
   runChecks,
@@ -162,13 +163,16 @@ function clickLabel(user: string, earlier: readonly string[]): string {
   return typeof action.name === 'string' ? action.name : 'unknown action'
 }
 
-/** Build a probe fixture from trace entries (oldest first). The first must be an intent turn. */
-export async function fixtureFromTrace(entries: readonly TraceEntry[], name: string, cwd: string): Promise<ProbeFixture> {
+/** Build a probe fixture from trace entries (oldest first). The first must be an intent turn. The preset is
+ *  `opts.agent`, else the trace's `agent`; the dev proxy logs none for a preset on the base catalog, and then the
+ *  conversion asks for `--agent` rather than guess one (T-0236). */
+export async function fixtureFromTrace(entries: readonly TraceEntry[], name: string, cwd: string, opts: { agent?: string } = {}): Promise<ProbeFixture> {
   const first = entries[0]
   if (first === undefined) throw new Error('no trace entries to convert')
   if (first.line.user.startsWith('{')) throw new Error(`trace line ${first.id} is a client turn; start the conversion at the intent turn (try last:<k>)`)
   const catalogId = first.line.catalogId ?? 'agent-ui'
-  const agent = first.line.agent ?? 'croupier'
+  const agent = opts.agent ?? first.line.agent
+  if (agent === undefined) throw new SetupError(`trace line ${first.id} names no agent (catalog ${catalogId}); pass --agent <preset id>`)
   const plan = entries.map((e) => {
     const client = e.line.user.startsWith('{')
     let message: unknown
