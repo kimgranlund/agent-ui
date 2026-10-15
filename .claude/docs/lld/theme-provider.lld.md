@@ -294,9 +294,9 @@ freshness test on PR CI three times in one weekend (#1596 -> #1590/#1597 -> #159
 published-bundle class, so the freshness proof stayed a mechanical gate but moved OFF the PR-blocking
 path:
 
-- `.github/workflows/theme-provider-fixture-regen.yml` runs on every push to `main`, re-running
-  `scripts/regen-theme-provider-fixture.ts` (same `buildSiteCssShared` helper) and opening ONE bot PR per
-  drift (no PR when bytes already match).
+- The merge queue runs `npm run regen:theme-provider-fixture` before every merge (T-0255 retired the
+  regen-on-main workflow), re-running `scripts/regen-theme-provider-fixture.ts` (same `buildSiteCssShared`
+  helper); nothing changes when bytes already match.
 - `theme-provider-build-fixture.test.ts`'s freshness assertion now branches on `GITHUB_EVENT_NAME ===
   'pull_request'`: on a PR run, a mismatch WARNS (console) instead of failing, a CSS PR is never red for
   fixture drift alone. Everywhere else (local `npm test`, a push-to-main run) the byte check still holds,

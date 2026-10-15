@@ -1,7 +1,7 @@
 # report-ci-failure — shared `if: failure()` reporter for a workflow whose red run blocks nothing
-# and pushes nothing (GH #1722): consumer-smoke.yml, publish.yml, deploy-docs.yml,
-# theme-provider-fixture-regen.yml. `claude-code-review.yml` and `ci.yml` stay OUT of scope — their
-# failures already block a PR visibly, so they need no separate reporting loop.
+# and pushes nothing (GH #1722): deploy-docs.yml (the only caller since T-0255 cut the other
+# workflows). `ci.yml` stays OUT of scope — its failures already block a PR visibly, so it needs no
+# separate reporting loop.
 #
 # Opens (or comments on, never duplicates) a `bug` + `ci-failure`-labeled issue titled
 # `[ci-failure] <workflow>` — a stable marker this action searches on before creating a new one —

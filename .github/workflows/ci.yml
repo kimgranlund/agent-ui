@@ -7,8 +7,8 @@ on:
 # Deterministic PR gate: check + jsdom tests on every push, not just on builders' machines.
 # Before this workflow, `npm run check`/`npm test` ran solely locally (red-under-load three
 # times this week) and at publish time — the #1700 sitemap-drift regression reached main
-# because no PR CI ran site/lib/sitemap.test.ts. This job is the mechanical backstop;
-# claude-review stays the separate semantic check. Never test:browser here — the six-shard
+# because no PR CI ran site/lib/sitemap.test.ts. This job is the mechanical backstop and the only
+# workflow GitHub runs on a PR (T-0255); review is the per-ticket verifiers, locally. Never test:browser here — the six-shard
 # real-engine gate is deliberately local-only per CLAUDE.md.
 concurrency:
   group: ci-${{ github.event.pull_request.number }}

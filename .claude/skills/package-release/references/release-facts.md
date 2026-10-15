@@ -39,8 +39,7 @@ procedure documents.
   imports sibling control sheets, ADR-0233) and the demo-only `all.css` must stay RELATIVE-imports-only
   (CDN-safe today) while `foundation-styles.css` is known-bare (browsers can't resolve its `@import`s;
   the recipes link shared's `tokens.css` + `dimensions.css` directly instead). A sheet edit that introduces a bare
-  `@import` silently breaks the documented recipe — the SHIPPED install-from-registry smoke
-  (`.github/workflows/consumer-smoke.yml`) is the gate that catches it (GH #71, closed — the
+  `@import` silently breaks the documented recipe — `node scripts/verify-consumer-install.mjs`, the SHIPPED install-from-registry smoke run locally, is the gate that catches it (GH #71, closed — the
   should-catch-it framing this line once carried is history, GH #761).
 - **`sideEffects` ships with the transform** (ADR-0233): `transformPackageJson` carries a workspace
   manifest's `sideEffects` into the published one, each pattern mapped `./src/` to `./dist/` and `.ts`

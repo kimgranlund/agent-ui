@@ -195,7 +195,7 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0188 | [line-chart-projected-dash](line-chart-projected-dash/handoff.md) | line-chart projected dash: user-unit dash or a ruled screen-px exemption | chore | L2 | P2 | none | ⏳ proposed |
 | T-0189 | [playing-card-type-floor](playing-card-type-floor/handoff.md) | playing-card corner index: a type floor or a ruled pictorial exemption | chore | L2 | P2 | none | ⏳ proposed |
 | T-0190 | [site-demo-inline-literals](site-demo-inline-literals/handoff.md) | site demos: inline type sizes and off-ramp spacing literals move to tokens | chore | L2 | P2 | none | ⏳ proposed |
-| T-0191 | [claude-review-still-failing](claude-review-still-failing/handoff.md) | claude-review still fails in 0.5s with a working API key (not the credential) | bug | L1 | P3 | none | 🔴 blocked |
+| T-0191 | [claude-review-still-failing](claude-review-still-failing/handoff.md) | claude-review still fails in 0.5s with a working API key (not the credential) | bug | L1 | P3 | none | 🟢 done |
 | T-0192 | [anthropic-workspace-id](anthropic-workspace-id/handoff.md) | Support ANTHROPIC_WORKSPACE_ID: dev proxy, Worker, chat:probe and CI send anthropic-workspace-id so org-level keys work | feature | L1 | P1 | none | 🟢 done |
 | T-0193 | [option-deck](option-deck/handoff.md) | OptionDeck: a general-purpose 'pick one to start' catalog pattern where each option is a selectable card | feature | L3 | P2 | T-0172 | ⏳ proposed |
 | T-0194 | [croupier-followups](croupier-followups/handoff.md) | A surface turn must carry a human reply line (Sonnet 5.5 greeting ships only 'Emitted N A2UI message(s)') | bug | L2 | P1 | T-0172 | 🟢 done |
@@ -259,4 +259,4 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0252 | [specs-skills-scrub](specs-skills-scrub/handoff.md) | Spec and LLD path scrub, app-shell superseded markers, skills and agents scrub, old tickets archived | chore | L2 | P2 | T-0249 | 🔵 ready |
 | T-0253 | [games-rank-by-family](games-rank-by-family/handoff.md) | Within the games domain, retrieval ranks a preset's own composite family first | bug | L2 | P2 | T-0240 | 🔵 ready |
 | T-0254 | [budget-gate-persona-shards](budget-gate-persona-shards/handoff.md) | Prompt budget gate measures the persona example shards too | chore | L1 | P2 | T-0240 | 🔵 ready |
-| T-0255 | [local-first-workflows](local-first-workflows/handoff.md) | GitHub workflows cut to the CI check; review, regen, deploy and publish run locally | chore | L2 | P2 | none | ⏳ proposed |
+| T-0255 | [local-first-workflows](local-first-workflows/handoff.md) | GitHub workflows cut to the CI check; review, regen, deploy and publish run locally | chore | L1 | P2 | none | 🔵 ready |

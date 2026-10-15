@@ -258,7 +258,7 @@ skill or agent text that asks for more ceremony.
    or filed as one follow-up issue, or dropped. Lows never trigger a second round. A fix round is not
    re-reviewed unless it changed logic.
 3. **Trivial diffs skip the checker seat.** Test-only, single-file, comment, config, and frontmatter
-   diffs merge on CI plus claude-review.
+   diffs merge on CI alone (the `ci.yml` check is the only GitHub workflow on a PR; review is the per-ticket verifiers, locally).
 4. **Out-of-scope findings get filed, not fixed in flight.** Scope creep is never fix-first.
 5. **Ask the user only when a choice moves a standing contract** (a rule in a reference doc or skill,
    a canonical hash, a public API). Otherwise pick the option that matches existing runtime behavior, record it on the
