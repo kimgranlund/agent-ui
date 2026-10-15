@@ -11,7 +11,7 @@ router: .sdlc/tickets/AGENTS.md  # how to claim and close this ticket
 ---
 
 ## Goal
-A Lexicographer game start retrieves the word board exemplar and draws BoardGrid and GameHud, and a give-up draws ResultCard.
+A Lexicographer game start retrieves the word board exemplar and draws BoardGrid and GameHud. (The give-up ResultCard moved to T-0274, conductor 2026-10-15.)
 
 ## Repro
 1. Keyless: `retrieve` at k 3 on the `agent-ui` catalog for "Start a new word game." and "New word game, please." ranks no `domain-lexicographer-word-board` (top: backable-wizard, notification-status-stack, crud-entry-list-drawer). Every "My guess: ..." ranks it first.
@@ -37,4 +37,6 @@ verifier: L3
 - `node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus/import-seeds.ts --dry-run` exits 0 with 0 admitted (the prompt-only edit keeps the record's canonical hash, so the seed and the shard agree).
 - `npx vitest run packages/agent-ui/a2ui/src/corpus packages/agent-ui/a2ui/src/examples packages/agent-ui/a2ui/tools/corpus` exits 0.
 - `npm run check` exits 0.
-- Open, not met by this change: the give-up turn drawing ResultCard. The only ResultCard exemplar is a blackjack win and "I give up" shares no vocabulary with any game record; it needs a Lexicographer game-over seed through a judged admission (follow-up ticket).
+
+## Scope change (conductor, 2026-10-15)
+The verifier L3 failed only the give-up ResultCard bullet, which the solo had reported as unmet and as needing a judged corpus admission. That half moved to T-0274; this ticket is the opening-turn retrieval only.
