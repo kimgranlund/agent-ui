@@ -508,7 +508,7 @@ export function a2uiDevProxyPlugin(opts?: {
               // through the ONE existing `deps.catalog` seam (produce.ts) — no second threading path.
               // ADR-0238: the SELECTED catalog's persona semantic checks ride the same deps object
               // (`semanticChecksDeps` also adds T-0230's hidden-state checks on every catalog, silent unless a surface
-              // carries the word-game or Battleship signature).
+              // carries the word-game or Battleship signature, and T-0208's composite-moment checks its types allow).
               const selectedCatalog = selectCatalog(catalogs, catalogId, catalog)
               const deps: ProduceDeps = {
                 provider: trace.wrapProvider(dispatch.provider),

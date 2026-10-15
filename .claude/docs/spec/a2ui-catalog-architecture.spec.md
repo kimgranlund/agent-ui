@@ -130,6 +130,8 @@ Recommendation: use all three, with the check as the guarantee. Write intents in
 
 - AC1: the first two moment checks, ServiceCard on hospitality and BoardGrid or GameHud on games, are each red on a replay of the trace above and green after the repair round.
 - AC2: a plain `agent-ui` turn and a turn on another domain run neither check.
+
+T-0208 ships the moment checks before W2 as one data table, `src/catalog/composite-moments.ts`, keyed on the composite's catalog presence (`requires`) rather than on a domain, so a plain `agent-ui` turn runs the games rows (BoardGrid, GameHud, ResultCard) until W2 moves the games types, and the gate then follows them with no code change.
 - AC3: `chat:probe` scenarios for the Concierge facilities ask and the Lexicographer start carry `expect-component` for the composite, on Haiku 5.5 and Sonnet 5.5.
 
 ## 3. Negative requirements

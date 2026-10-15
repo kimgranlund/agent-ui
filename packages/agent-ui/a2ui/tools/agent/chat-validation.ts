@@ -29,6 +29,7 @@ import type { Catalog } from '../../src/catalog/catalog.ts'
 import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from '../../src/catalog/personas/manifests.ts'
 import { SHIPPED_DOMAIN_CATALOG_MANIFESTS } from '../../src/catalog/domains/manifests.ts'
 import { HIDDEN_STATE_CHECKS } from '../../src/catalog/hidden-state-checks.ts'
+import { compositeMomentChecks } from '../../src/catalog/composite-moments.ts'
 import { ProduceHalt } from '../../src/agent/produce.ts'
 import { AgentTimeoutError } from '../../src/agent/deadlines.ts'
 import { ANTHROPIC_WORKSPACE_ENV } from '../../src/agent/providers/anthropic.ts'
@@ -167,19 +168,22 @@ export const selectCatalog = selectCatalogShared
  * ADR-0238, GH #1795: the `ProduceDeps.semanticChecks` slice for a turn, shared by both hosts
  * (the `buildCatalogMap` precedent: one helper, never two host-side copies). `catalog` is the catalog
  * `selectCatalog` CHOSE, so an unknown or malformed client id that fell back to the default also falls back
- * to no checks. Returns `{}` when no check applies (a catalog declaring neither TextField nor BoardGrid, with no
+ * to the default catalog's checks. Returns `{}` when no check applies (a catalog declaring neither TextField nor BoardGrid, with no
  * persona checks), so spreading it into the deps object adds NOTHING. T-0230's hidden-state checks return no finding
- * on a surface without their game's signature, so such a turn still ships the same lines.
+ * on a surface without their game's signature, so such a turn still ships the same lines. T-0208: the composite-moment
+ * checks (`src/catalog/composite-moments.ts`) ride every catalog that holds their composite, so a plain `agent-ui`
+ * turn runs the games rows.
  */
 export function semanticChecksDeps(catalog: Catalog): { semanticChecks?: readonly SemanticCheck[] } {
   // T-0202 (D4): the persona's checks and every domain's the id holds, each kept only when this catalog declares
   // the types it reads (`gateChecksOnCatalog`). T-0230: the hidden game state checks run on every catalog (silent
-  // unless a surface carries the word-game or Battleship signature).
+  // unless a surface carries the word-game or Battleship signature). T-0208: then the composite-moment checks.
   const semanticChecks = gateChecksOnCatalog(
     [
       ...semanticChecksForCatalog(catalog.catalogId, SHIPPED_PERSONA_CATALOG_MANIFESTS),
       ...domainSemanticChecksForCatalog(catalog.catalogId, SHIPPED_DOMAIN_CATALOG_MANIFESTS),
       ...HIDDEN_STATE_CHECKS,
+      ...compositeMomentChecks,
     ],
     catalog,
   )

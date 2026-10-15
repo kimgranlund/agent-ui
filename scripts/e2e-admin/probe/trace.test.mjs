@@ -21,10 +21,11 @@ describe('offline replay semantic checks', () => {
 
   it('resolve the same checks the dev proxy passes for a persona catalog and a base catalog', () => {
     const resolve = nodeCatalogResolver(process.cwd())
-    for (const id of ['agent-ui--croupier', 'agent-ui']) {
+    for (const id of ['agent-ui--croupier', 'agent-ui--concierge', 'agent-ui']) {
       const catalog = resolve(id)
       expect(replaySemanticChecks(catalog).map((c) => c.id)).toEqual((semanticChecksDeps(catalog).semanticChecks ?? []).map((c) => c.id))
     }
     expect(replaySemanticChecks(resolve('agent-ui--croupier')).length).toBeGreaterThan(0)
+    expect(replaySemanticChecks(resolve('agent-ui')).length).toBeGreaterThan(0) // T-0208: the composite-moment checks
   })
 })

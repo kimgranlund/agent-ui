@@ -1,0 +1,170 @@
+// composite-moments.test.ts: T-0208's data-driven composite-moment checks: each row fires on its hand-built
+// surface and stays quiet on the composite, the negative controls stay quiet, the catalog gate keeps each row
+// where its types live, and every row's moment is one of its composite's selection intents.
+
+import { describe, expect, it } from 'vitest'
+import { COMPOSITE_MOMENTS, compositeMomentChecks } from './composite-moments.ts'
+import { gateChecksOnCatalog, runSemanticChecks } from './semantic-check.ts'
+import type { SurfaceView } from './semantic-check.ts'
+import type { A2uiComponent } from '../protocol.ts'
+import { loadCatalog } from './catalog.ts'
+import { composeCatalog, loadCatalogFragment } from './compose.ts'
+import defaultCatalogRaw from './default/catalog.json'
+import basicCatalogRaw from './a2ui-basic/catalog.json'
+import conciergeFragmentRaw from './personas/concierge/catalog.json'
+import defaultSelection from './default/selection.json'
+import conciergeSelection from './personas/concierge/selection.json'
+
+const view = (components: A2uiComponent[], surfaceId = 's1'): SurfaceView => ({
+  surfaceId,
+  components: new Map(components.map((c) => [c.id, c])),
+  dataModel: undefined,
+})
+const codes = (components: A2uiComponent[]): string[] => runSemanticChecks(compositeMomentChecks, { surfaces: [view(components)] }).findings.map((f) => f.code)
+
+const HAND_BUILT: Record<string, A2uiComponent[]> = {
+  BookingForm: [
+    { id: 'root', component: 'Card', children: ['t', 'date', 'party', 'go'] },
+    { id: 't', component: 'Text', text: 'Reserve a table' },
+    { id: 'date', component: 'Calendar', label: 'Date' },
+    { id: 'party', component: 'Slider', label: 'Guests' },
+    { id: 'go', component: 'Button', label: 'Book' },
+  ],
+  BookingConfirmation: [
+    { id: 'root', component: 'Card', children: ['t', 'when'] },
+    { id: 't', component: 'Text', text: 'Your table is confirmed' },
+    { id: 'when', component: 'Text', text: 'Friday at 8pm' },
+  ],
+  BoardGrid: [
+    { id: 'root', component: 'Grid', children: ['c1', 'c2', 'c3'] },
+    { id: 'c1', component: 'Button', label: 'A1' },
+    { id: 'c2', component: 'Button', label: 'A2' },
+    { id: 'c3', component: 'Button', label: 'A3' },
+  ],
+  GameHud: [
+    { id: 'root', component: 'Column', children: ['score', 'board'] },
+    { id: 'score', component: 'Text', text: 'Shots remaining: 12' },
+    { id: 'board', component: 'BoardGrid', rows: 3, cols: 3, cells: { path: '/cells' }, actionName: 'fire' },
+  ],
+  ResultCard: [
+    { id: 'root', component: 'Column', children: ['hud', 'board', 'over'] },
+    { id: 'hud', component: 'GameHud', title: 'Battleship', status: 'Done' },
+    { id: 'board', component: 'BoardGrid', rows: 3, cols: 3, cells: { path: '/cells' }, actionName: 'fire' },
+    { id: 'over', component: 'Text', text: 'Game over, you won' },
+  ],
+}
+
+const COMPOSED: Record<string, A2uiComponent[]> = {
+  BookingForm: [{ id: 'root', component: 'BookingForm', title: 'Reserve a table', fields: [] }],
+  BookingConfirmation: [{ id: 'root', component: 'BookingConfirmation', title: 'Booking confirmed', rows: [] }],
+  BoardGrid: [{ id: 'root', component: 'BoardGrid', rows: 3, cols: 3, cells: { path: '/cells' }, actionName: 'mark' }],
+  GameHud: [
+    { id: 'root', component: 'Column', children: ['hud', 'board'] },
+    { id: 'hud', component: 'GameHud', title: 'Battleship', status: 'Shots remaining: 12' },
+    { id: 'board', component: 'BoardGrid', rows: 3, cols: 3, cells: { path: '/cells' }, actionName: 'fire' },
+  ],
+  ResultCard: [
+    { id: 'root', component: 'Column', children: ['board', 'res'] },
+    { id: 'board', component: 'BoardGrid', rows: 3, cols: 3, cells: { path: '/cells' }, actionName: 'fire' },
+    { id: 'res', component: 'ResultCard', outcome: 'win', title: 'You won', summary: 'Game over' },
+  ],
+}
+
+const codeOf = (composite: string): string => `${composite.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_MISSING`
+
+describe('composite moment checks (T-0208)', () => {
+  for (const { composite } of COMPOSITE_MOMENTS) {
+    it(`${composite}: the hand-built surface yields ${codeOf(composite)} alone and the composite surface yields none`, () => {
+      expect(codes(HAND_BUILT[composite]!)).toEqual([codeOf(composite)])
+      expect(codes(COMPOSED[composite]!)).toEqual([])
+    })
+  }
+
+  it('the finding names the surface, the strays, the moment and the repair', () => {
+    const [f] = runSemanticChecks(compositeMomentChecks, { surfaces: [view(HAND_BUILT['BoardGrid']!, 'board-1')] }).findings
+    expect(f!.path).toBe('board-1:root')
+    expect(f!.message).toContain('root (a Grid)')
+    expect(f!.message).toContain('a board of cells to target or mark')
+    expect(f!.message).toContain('Make it ONE BoardGrid')
+  })
+
+  it('the recorded Lexicographer guess field yields BOARD_GRID_MISSING', () => {
+    expect(
+      codes([
+        { id: 'root', component: 'Card', children: ['title', 'guess_field', 'go'] },
+        { id: 'title', component: 'Text', text: 'Six guesses. Five letters each.' },
+        { id: 'guess_field', component: 'TextField', label: 'Your guess (five lowercase letters)', name: 'guess', value: { path: '/draft/guess' } },
+        { id: 'go', component: 'Button', label: 'Submit guess' },
+      ]),
+    ).toEqual(['BOARD_GRID_MISSING'])
+  })
+
+  it('negative control: a croupier CardTable betting surface yields none', () => {
+    expect(
+      codes([
+        { id: 'root', component: 'CardTable', phase: 'betting', bet: { path: '/bet' }, bankroll: { path: '/bankroll' }, betAction: 'deal', title: 'Blackjack' },
+      ]),
+    ).toEqual([])
+  })
+
+  it('negative control: a CardTable three-button grid betting strip yields no BOARD_GRID_MISSING', () => {
+    expect(
+      codes([
+        { id: 'root', component: 'Column', children: ['table', 'bets'] },
+        { id: 'table', component: 'CardTable', phase: 'betting', bet: { path: '/bet' }, bankroll: { path: '/bankroll' }, betAction: 'deal', title: 'Blackjack' },
+        { id: 'bets', component: 'Grid', children: ['b1', 'b2', 'b3'] },
+        { id: 'b1', component: 'Button', label: 'Bet 5' },
+        { id: 'b2', component: 'Button', label: 'Bet 10' },
+        { id: 'b3', component: 'Button', label: 'Bet 25' },
+      ]),
+    ).not.toContain('BOARD_GRID_MISSING')
+  })
+
+  it('negative control: a Mentalist number-guess TextField yields none', () => {
+    expect(
+      codes([
+        { id: 'root', component: 'Card', children: ['t', 'guess', 'go'] },
+        { id: 't', component: 'Text', text: 'I am thinking of a number from 1 to 100' },
+        { id: 'guess', component: 'TextField', label: 'Your guess', name: 'guess', value: { path: '/guess' } },
+        { id: 'go', component: 'Button', label: 'Guess' },
+      ]),
+    ).toEqual([])
+  })
+
+  it('negative control: ResultCard words with no BoardGrid yield none', () => {
+    expect(codes([{ id: 't', component: 'Text', text: 'Game over, you won. Play again?' }])).toEqual([])
+  })
+
+  it('negative control: a GameHud-word Text with no BoardGrid yields none', () => {
+    expect(codes([{ id: 't', component: 'Text', text: 'Score: 3, attempts remaining: 2' }])).toEqual([])
+  })
+
+  it('the catalog gate keeps the booking rows only on agent-ui--concierge, the games rows on agent-ui, and none on a2ui-basic', () => {
+    const base = loadCatalog(defaultCatalogRaw)
+    const concierge = composeCatalog(base, loadCatalogFragment(conciergeFragmentRaw), 'concierge')
+    const basic = loadCatalog(basicCatalogRaw)
+    const ids = (catalog: { components: Readonly<Record<string, unknown>> }) => gateChecksOnCatalog(compositeMomentChecks, catalog).map((c) => c.id)
+    const games = ['composite-moment-board-grid', 'composite-moment-game-hud', 'composite-moment-result-card']
+    expect(ids(base)).toEqual(games)
+    expect(concierge.catalogId).toBe('agent-ui--concierge')
+    expect(ids(concierge)).toEqual(['composite-moment-booking-form', 'composite-moment-booking-confirmation', ...games])
+    expect(ids(basic)).toEqual([])
+  })
+
+  it("every row's moment is one of its composite's selection intents", () => {
+    const types = { ...defaultSelection.types, ...conciergeSelection.types } as Record<string, { intents: string[] }>
+    for (const m of COMPOSITE_MOMENTS) expect(types[m.composite]?.intents, m.composite).toContain(m.moment)
+  })
+
+  it('every check id and code follows the naming', () => {
+    expect(compositeMomentChecks.map((c) => c.id)).toEqual([
+      'composite-moment-booking-form',
+      'composite-moment-booking-confirmation',
+      'composite-moment-board-grid',
+      'composite-moment-game-hud',
+      'composite-moment-result-card',
+    ])
+    expect(COMPOSITE_MOMENTS.map((m) => codeOf(m.composite))).toEqual(['BOOKING_FORM_MISSING', 'BOOKING_CONFIRMATION_MISSING', 'BOARD_GRID_MISSING', 'GAME_HUD_MISSING', 'RESULT_CARD_MISSING'])
+    for (const [i, m] of COMPOSITE_MOMENTS.entries()) expect(compositeMomentChecks[i]!.requires).toEqual([m.composite, ...(m.requires ?? [])])
+  })
+})
