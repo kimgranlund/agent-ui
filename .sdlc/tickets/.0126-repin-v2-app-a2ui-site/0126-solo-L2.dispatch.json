@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L2",
+  "name": "0126-solo-L2",
+  "description": "T-0126 solo L2 Skill v2",
+  "model": "sonnet",
+  "effort": "high",
+  "prompt": "T-0126 Skill v2 re-pin: app, a2ui, code | solo L2\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-v2rd/.sdlc/repin-v2-app-a2ui-site/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-v2rd/.sdlc/repin-v2-app-a2ui-site\nImplement per .sdlc/0126-repin-v2-app-a2ui-site/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L2",
+  "tier": "L2",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-v2rd/.sdlc/repin-v2-app-a2ui-site/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-v2rd/.sdlc/repin-v2-app-a2ui-site",
+  "attempt_id": "034e25aaa73442b1945f92ebf29d698c",
+  "base_sha": "2c3e5e6948d2d630b4078d718dcefd15f6af9716",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.6/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-v2rd/.sdlc/repin-v2-app-a2ui-site/handoff.md"
+}

@@ -1,0 +1,325 @@
+0001-remove-ops -> .0001-remove-ops
+0002-croupier-round-surface -> .0002-croupier-round-surface
+0003-context-budget-trace -> .0003-context-budget-trace
+0004-croupier-haiku-faces-padding -> .0004-croupier-haiku-faces-padding
+0005-agent-behavior-evals -> .0005-agent-behavior-evals
+0006-retry-tests-and-docs -> .0006-retry-tests-and-docs
+0007-sidecar-why-rewrite -> .0007-sidecar-why-rewrite
+0008-dogfood-selection-guidance -> .0008-dogfood-selection-guidance
+0009-concurrency-ceiling-amendment -> .0009-concurrency-ceiling-amendment
+0010-admin-headless-flows -> .0010-admin-headless-flows
+0011-a2ui-test-kit -> .0011-a2ui-test-kit
+0012-persona-manifest -> .0012-persona-manifest
+0013-persona-registry -> .0013-persona-registry
+0014-asset-embed -> .0014-asset-embed
+0015-sub-tag-aliases -> .0015-sub-tag-aliases
+0016-agent-activity-steps -> .0016-agent-activity-steps
+0017-croupier-hand-consistency -> .0017-croupier-hand-consistency
+0018-devtools-meta-replay -> .0018-devtools-meta-replay
+0019-activity-errors-card-polish -> .0019-activity-errors-card-polish
+0020-croupier-natural-blackjack -> .0020-croupier-natural-blackjack
+0021-reasoning-panel -> .0021-reasoning-panel
+0022-activity-strip-polish -> .0022-activity-strip-polish
+0023-turn-deadline -> .0023-turn-deadline
+0024-chat-plain-words-error -> .0024-chat-plain-words-error
+0025-sidecar-browser-projection -> .0025-sidecar-browser-projection
+0026-size-budget-split-design -> .0026-size-budget-split-design
+0027-lazy-catalog-adr-seam -> .0027-lazy-catalog-adr-seam
+0028-lazy-catalog-renderer -> .0028-lazy-catalog-renderer
+0029-lazy-catalog-records -> .0029-lazy-catalog-records
+0030-haiku-5-5 -> .0030-haiku-5-5
+0031-thinking-blocks-passthrough -> .0031-thinking-blocks-passthrough
+0032-explicit-low-effort -> .0032-explicit-low-effort
+0033-croupier-rerecord-haiku-5-5 -> .0033-croupier-rerecord-haiku-5-5
+0034-stringified-tool-input -> .0034-stringified-tool-input
+0035-haiku-5-5-max-tokens -> .0035-haiku-5-5-max-tokens
+0036-quizmaster-seed-bump -> .0036-quizmaster-seed-bump
+0037-default-lazy-slices -> .0037-default-lazy-slices
+0038-swiper-item-demo-red -> .0038-swiper-item-demo-red
+0039-lazy-settle-seam -> .0039-lazy-settle-seam
+0040-lazy-site-callers -> .0040-lazy-site-callers
+0041-lazy-a2ui-tests -> .0041-lazy-a2ui-tests
+0042-lazy-default-flip -> .0042-lazy-default-flip
+0043-site-nav-red -> .0043-site-nav-red
+0044-swiper-disconnect-test -> .0044-swiper-disconnect-test
+0045-quizmaster-test-strengthen -> .0045-quizmaster-test-strengthen
+0046-visual-nav-overlay-red -> .0046-visual-nav-overlay-red
+0047-docs-stale-records -> .0047-docs-stale-records
+0048-entry-docs-dag -> .0048-entry-docs-dag
+0049-harness-wiring-fix -> .0049-harness-wiring-fix
+0050-skills-em-dash-1 -> .0050-skills-em-dash-1
+0051-skills-em-dash-2 -> .0051-skills-em-dash-2
+0052-skills-em-dash-3 -> .0052-skills-em-dash-3
+0053-package-deps-audit -> .0053-package-deps-audit
+0054-claude-md-em-dash -> .0054-claude-md-em-dash
+0055-renderer-lazy-spike -> .0055-renderer-lazy-spike
+0056-flagship-rerecord-haiku-5-5 -> .0056-flagship-rerecord-haiku-5-5
+0057-drop-unused-shared-deps -> .0057-drop-unused-shared-deps
+0058-persona-library-barrel-import -> .0058-persona-library-barrel-import
+0059-untrack-fixture-scratch -> .0059-untrack-fixture-scratch
+0060-response-type-selection -> .0060-response-type-selection
+0061-rts-missed-surface -> .0061-rts-missed-surface
+0062-a2ui-skills-refresh -> .0062-a2ui-skills-refresh
+0063-lexicon-false-positives -> .0063-lexicon-false-positives
+0064-catalog-previews-all -> .0064-catalog-previews-all
+0065-preset-widgets-design -> .0065-preset-widgets-design
+0066-preset-contradictions -> .0066-preset-contradictions
+0067-widgets-adr-0243 -> .0067-widgets-adr-0243
+0068-derived-inherit-base-idioms -> .0068-derived-inherit-base-idioms
+0069-ui-board-grid -> .0069-ui-board-grid
+0070-ui-product-card -> .0070-ui-product-card
+0071-ui-game-hud -> .0071-ui-game-hud
+0072-default-widget-rows -> .0072-default-widget-rows
+0073-croupier-cardtable -> .0073-croupier-cardtable
+0074-quizmaster-questioncard -> .0074-quizmaster-questioncard
+0075-shopkeeper-preset -> .0075-shopkeeper-preset
+0076-catalog-tier-counts -> .0076-catalog-tier-counts
+0077-basic-teaching-module -> .0077-basic-teaching-module
+0078-persona-sidecars-bar -> .0078-persona-sidecars-bar
+0079-bookingform-field-kinds -> .0079-bookingform-field-kinds
+0080-playing-card-center-suit -> .0080-playing-card-center-suit
+0081-renderer-forward-control-action -> .0081-renderer-forward-control-action
+0082-questioncard-match-mockup -> .0082-questioncard-match-mockup
+0083-widgets-match-mockups -> .0083-widgets-match-mockups
+0084-widgets-container-gutters -> .0084-widgets-container-gutters
+0085-bookingform-layout -> .0085-bookingform-layout
+0086-tier-rename-compound -> .0086-tier-rename-compound
+0087-widget-patterns-next -> .0087-widget-patterns-next
+0088-cardtable-bet-phase -> .0088-cardtable-bet-phase
+0089-result-card -> .0089-result-card
+0090-stylist-contrast-pair -> .0090-stylist-contrast-pair
+0091-math-foundations-adr -> .0091-math-foundations-adr
+0092-bookingform-date-cards -> .0092-bookingform-date-cards
+0093-foundations-wave0 -> .0093-foundations-wave0
+0094-foundations-a01 -> .0094-foundations-a01
+0095-foundations-a02 -> .0095-foundations-a02
+0096-foundations-a03 -> .0096-foundations-a03
+0097-foundations-a04 -> .0097-foundations-a04
+0098-foundations-a05 -> .0098-foundations-a05
+0099-foundations-a06 -> .0099-foundations-a06
+0100-foundations-a07 -> .0100-foundations-a07
+0101-foundations-a08 -> .0101-foundations-a08
+0102-foundations-a09 -> .0102-foundations-a09
+0103-foundations-a10 -> .0103-foundations-a10
+0104-foundations-verify-1 -> .0104-foundations-verify-1
+0105-foundations-verify-2 -> .0105-foundations-verify-2
+0106-bookingform-date-fields -> .0106-bookingform-date-fields
+0107-foundations-cut -> .0107-foundations-cut
+0108-foundations-repin-a01 -> .0108-foundations-repin-a01
+0109-foundations-repin-a02 -> .0109-foundations-repin-a02
+0110-foundations-repin-a03 -> .0110-foundations-repin-a03
+0111-foundations-repin-a04 -> .0111-foundations-repin-a04
+0112-foundations-repin-a05 -> .0112-foundations-repin-a05
+0113-foundations-repin-a06 -> .0113-foundations-repin-a06
+0114-foundations-repin-a07 -> .0114-foundations-repin-a07
+0115-foundations-repin-a08 -> .0115-foundations-repin-a08
+0116-foundations-repin-a10 -> .0116-foundations-repin-a10
+0117-kicker-too-large -> .0117-kicker-too-large
+0118-foundations-doc-repairs -> .0118-foundations-doc-repairs
+0119-a2ui-canvas-widget-md -> .0119-a2ui-canvas-widget-md
+0120-skill-v2-sync -> .0120-skill-v2-sync
+0121-shell-geometry-fixes -> .0121-shell-geometry-fixes
+0122-control-rule-adoption -> .0122-control-rule-adoption
+0123-repin-v2-entry-action -> .0123-repin-v2-entry-action
+0124-repin-v2-indicators-atoms-nav -> .0124-repin-v2-indicators-atoms-nav
+0125-repin-v2-containers-widgets -> .0125-repin-v2-containers-widgets
+0126-repin-v2-app-a2ui-site -> .0126-repin-v2-app-a2ui-site
+0127-post-shrink-floor-and-stale-tests -> .0127-post-shrink-floor-and-stale-tests
+0128-admiral-board-actionname -> .0128-admiral-board-actionname
+0129-admin-temperature-switch-product-photos -> .0129-admin-temperature-switch-product-photos
+0130-docs-demos-400px-overflow -> .0130-docs-demos-400px-overflow
+0131-stale-surface-docs-audioplayer-preview -> .0131-stale-surface-docs-audioplayer-preview
+0132-foundations-look-verify -> .0132-foundations-look-verify
+0133-look-verify-fixes -> .0133-look-verify-fixes
+0134-pill-radius-fields-badges -> .0134-pill-radius-fields-badges
+0135-text-field-date-type -> .0135-text-field-date-type
+0136-dogfood-lint -> .0136-dogfood-lint
+0137-dogfood-design-review -> .0137-dogfood-design-review
+0138-dogfood-shapes-icon-glyph -> .0138-dogfood-shapes-icon-glyph
+0139-dogfood-disabled-recipe -> .0139-dogfood-disabled-recipe
+0140-dogfood-entry-atoms -> .0140-dogfood-entry-atoms
+0141-dogfood-data-charts-nav -> .0141-dogfood-data-charts-nav
+0142-dogfood-a2ui-app -> .0142-dogfood-a2ui-app
+0143-dogfood-rulings-2 -> .0143-dogfood-rulings-2
+0144-dogfood-lint-rules-2 -> .0144-dogfood-lint-rules-2
+0145-dogfood-review-2 -> .0145-dogfood-review-2
+0146-dogfood3-widgets -> .0146-dogfood3-widgets
+0147-dogfood3-app-chat -> .0147-dogfood3-app-chat
+0148-dogfood3-entry -> .0148-dogfood3-entry
+0149-dogfood3-data-nav -> .0149-dogfood3-data-nav
+0150-dogfood3-demos -> .0150-dogfood3-demos
+0151-agent-trace-capture -> .0151-agent-trace-capture
+0152-root-product-md -> .0152-root-product-md
+0153-claude-review-action-broken -> .0153-claude-review-action-broken
+0154-repin-md-a01 -> .0154-repin-md-a01
+0155-repin-md-a02-a04 -> .0155-repin-md-a02-a04
+0156-repin-md-a05-a10 -> .0156-repin-md-a05-a10
+0157-repin-md-app-unlaned -> .0157-repin-md-app-unlaned
+0158-repin-md-last-reds -> .0158-repin-md-last-reds
+0159-preset-producer-drift -> .0159-preset-producer-drift
+0164-retire-adr-system -> .0164-retire-adr-system
+0165-rootmd-drill-demo -> .0165-rootmd-drill-demo
+0166-rootmd-eval-catalog-overflow -> .0166-rootmd-eval-catalog-overflow
+0167-lint-root-derived -> .0167-lint-root-derived
+0170-lint-allowlist-owners -> .0170-lint-allowlist-owners
+0171-correctness-renderer -> .0171-correctness-renderer
+0172-correctness-producer -> .0172-correctness-producer
+0173-status-stream-geometry -> .0173-status-stream-geometry
+0174-chat-probe-loop -> .0174-chat-probe-loop
+0175-textfield-date-iso -> .0175-textfield-date-iso
+0180-sonnet-5-5 -> .0180-sonnet-5-5
+0181-spec-closed-loop -> .0181-spec-closed-loop
+0182-spec-agent-content -> .0182-spec-agent-content
+0183-spec-a2ui-upserts -> .0183-spec-a2ui-upserts
+0184-croupier-closed-loop -> .0184-croupier-closed-loop
+0185-model-capability-settings -> .0185-model-capability-settings
+0186-drill-panel-narrow-fit -> .0186-drill-panel-narrow-fit
+0191-claude-review-still-failing -> .0191-claude-review-still-failing
+0192-anthropic-workspace-id -> .0192-anthropic-workspace-id
+0194-croupier-followups -> .0194-croupier-followups
+0200-teach-existing-composites -> .0200-teach-existing-composites
+0201-catalog-architecture -> .0201-catalog-architecture
+0202-catalog-w0 -> .0202-catalog-w0
+0204-cardtable-nested-cards -> .0204-cardtable-nested-cards
+0206-prompt-cache-stable-first -> .0206-prompt-cache-stable-first
+0207-prompt-budget-real-presets -> .0207-prompt-budget-real-presets
+0208-composite-moment-checks -> .0208-composite-moment-checks
+0210-catalog-id-readers -> .0210-catalog-id-readers
+0211-croupier-deal-again-skips-bet -> .0211-croupier-deal-again-skips-bet
+0212-croupier-bet-check-poker -> .0212-croupier-bet-check-poker
+0213-producer-reply-meta-line-prose -> .0213-producer-reply-meta-line-prose
+0214-croupier-haiku-state-in-prose -> .0214-croupier-haiku-state-in-prose
+0215-croupier-checks-need-data-model -> .0215-croupier-checks-need-data-model
+0216-croupier-first-deal-debit -> .0216-croupier-first-deal-debit
+0217-chat-repair-leaks-to-prose -> .0217-chat-repair-leaks-to-prose
+0218-croupier-poker-placeholder-hole-cards -> .0218-croupier-poker-placeholder-hole-cards
+0219-croupier-rules-correctness-check -> .0219-croupier-rules-correctness-check
+0220-validator-renderer-id-graph-gap -> .0220-validator-renderer-id-graph-gap
+0221-admin-error-turn-per-violation -> .0221-admin-error-turn-per-violation
+0222-chat-probe-capture-defects -> .0222-chat-probe-capture-defects
+0223-inner-radius-quizmaster-stylist -> .0223-inner-radius-quizmaster-stylist
+0224-persona-silent-drop -> .0224-persona-silent-drop
+0225-live-round-2 -> .0225-live-round-2
+0226-validate-dropped-child-same-payload -> .0226-validate-dropped-child-same-payload
+0227-gh63-poison-producer -> .0227-gh63-poison-producer
+0228-stray-screenshots-dirs -> .0228-stray-screenshots-dirs
+0229-producer-text-shape-reply-leak -> .0229-producer-text-shape-reply-leak
+0230-game-hidden-state-no-home -> .0230-game-hidden-state-no-home
+0231-preset-knowledge-index-only -> .0231-preset-knowledge-index-only
+0232-croupier-opening-skips-bet -> .0232-croupier-opening-skips-bet
+0233-croupier-playing-table-no-moves -> .0233-croupier-playing-table-no-moves
+0234-narrated-surface-mechanics -> .0234-narrated-surface-mechanics
+0235-probe-live-prose-cumulative -> .0235-probe-live-prose-cumulative
+0236-probe-from-trace-agent-default -> .0236-probe-from-trace-agent-default
+0237-upsert-round2-learnings -> .0237-upsert-round2-learnings
+0238-exemplar-routing-off-domain -> .0238-exemplar-routing-off-domain
+0239-agent-trace-routing-fields -> .0239-agent-trace-routing-fields
+0240-domain-exemplars -> .0240-domain-exemplars
+0241-round-archive -> .0241-round-archive
+0243-upsert-closed-loop-docs-2 -> .0243-upsert-closed-loop-docs-2
+0244-drill-400px-overflow-flake -> .0244-drill-400px-overflow-flake
+0245-domain-seeds -> .0245-domain-seeds
+0248-fog-bundle-rounds -> .0248-fog-bundle-rounds
+0250-repo-cleanup-oct -> .0250-repo-cleanup-oct
+0255-local-first-workflows -> .0255-local-first-workflows
+rewrite .claude/docs/adr/0241-lazy-catalog-bodies-behind-an-eager-manifest.md
+rewrite .claude/docs/adr/0244-next-preset-widgets-result-card-contrast-pair.md
+rewrite .claude/docs/adr/0245-foundations-derive-from-one-n.md
+rewrite .claude/docs/lld/response-type-selection.lld.md
+rewrite .claude/docs/prd/response-type-selection.prd.md
+rewrite .sdlc/0008-dogfood-selection-guidance/architect-L1.md
+rewrite .sdlc/0008-dogfood-selection-guidance/planner-L3.md
+rewrite .sdlc/0013-persona-registry/architect-L1.md
+rewrite .sdlc/0027-lazy-catalog-adr-seam/handoff.md
+rewrite .sdlc/0028-lazy-catalog-renderer/handoff.md
+rewrite .sdlc/0029-lazy-catalog-records/handoff.md
+rewrite .sdlc/0037-default-lazy-slices/design.md
+rewrite .sdlc/0037-default-lazy-slices/handoff.md
+rewrite .sdlc/0039-lazy-settle-seam/handoff.md
+rewrite .sdlc/0040-lazy-site-callers/handoff.md
+rewrite .sdlc/0041-lazy-a2ui-tests/handoff.md
+rewrite .sdlc/0042-lazy-default-flip/handoff.md
+rewrite .sdlc/0055-renderer-lazy-spike/handoff.md
+rewrite .sdlc/0057-drop-unused-shared-deps/handoff.md
+rewrite .sdlc/0058-persona-library-barrel-import/handoff.md
+rewrite .sdlc/0060-response-type-selection/handoff.md
+rewrite .sdlc/0060-response-type-selection/planner-L3-2.md
+rewrite .sdlc/0060-response-type-selection/planner-L3.md
+rewrite .sdlc/0061-rts-missed-surface/handoff.md
+rewrite .sdlc/0061-rts-missed-surface/verifier-L2.md
+rewrite .sdlc/0063-lexicon-false-positives/verifier-L1.md
+rewrite .sdlc/0065-preset-widgets-design/architect-L1.md
+rewrite .sdlc/0065-preset-widgets-design/design.md
+rewrite .sdlc/0065-preset-widgets-design/handoff.md
+rewrite .sdlc/0067-widgets-adr-0243/handoff.md
+rewrite .sdlc/0068-derived-inherit-base-idioms/handoff.md
+rewrite .sdlc/0069-ui-board-grid/handoff.md
+rewrite .sdlc/0069-ui-board-grid/refusals.jsonl
+rewrite .sdlc/0069-ui-board-grid/step-1.superseded-1/handoff.md
+rewrite .sdlc/0069-ui-board-grid/step-1/handoff.md
+rewrite .sdlc/0070-ui-product-card/handoff.md
+rewrite .sdlc/0071-ui-game-hud/handoff.md
+rewrite .sdlc/0071-ui-game-hud/planner-L3.md
+rewrite .sdlc/0071-ui-game-hud/step-1/handoff.md
+rewrite .sdlc/0072-default-widget-rows/handoff.md
+rewrite .sdlc/0073-croupier-cardtable/handoff.md
+rewrite .sdlc/0073-croupier-cardtable/planner-L3.md
+rewrite .sdlc/0073-croupier-cardtable/step-1/handoff.md
+rewrite .sdlc/0073-croupier-cardtable/step-2/handoff.md
+rewrite .sdlc/0074-quizmaster-questioncard/handoff.md
+rewrite .sdlc/0074-quizmaster-questioncard/planner-L2.md
+rewrite .sdlc/0074-quizmaster-questioncard/step-1/handoff.md
+rewrite .sdlc/0075-shopkeeper-preset/handoff.md
+rewrite .sdlc/0087-widget-patterns-next/handoff.md
+rewrite .sdlc/0087-widget-patterns-next/measure/probe.ts
+rewrite .sdlc/0089-result-card/measure/probe.ts
+rewrite .sdlc/0105-foundations-verify-2/verifier-L2-2.md
+rewrite .sdlc/0108-foundations-repin-a01/handoff.md
+rewrite .sdlc/0109-foundations-repin-a02/handoff.md
+rewrite .sdlc/0110-foundations-repin-a03/handoff.md
+rewrite .sdlc/0111-foundations-repin-a04/handoff.md
+rewrite .sdlc/0112-foundations-repin-a05/handoff.md
+rewrite .sdlc/0113-foundations-repin-a06/handoff.md
+rewrite .sdlc/0114-foundations-repin-a07/handoff.md
+rewrite .sdlc/0115-foundations-repin-a08/handoff.md
+rewrite .sdlc/0116-foundations-repin-a10/handoff.md
+rewrite .sdlc/0123-repin-v2-entry-action/handoff.md
+rewrite .sdlc/0124-repin-v2-indicators-atoms-nav/handoff.md
+rewrite .sdlc/0125-repin-v2-containers-widgets/handoff.md
+rewrite .sdlc/0126-repin-v2-app-a2ui-site/handoff.md
+rewrite .sdlc/0133-look-verify-fixes/handoff.md
+rewrite .sdlc/0138-dogfood-shapes-icon-glyph/handoff.md
+rewrite .sdlc/0139-dogfood-disabled-recipe/handoff.md
+rewrite .sdlc/0140-dogfood-entry-atoms/handoff.md
+rewrite .sdlc/0141-dogfood-data-charts-nav/handoff.md
+rewrite .sdlc/0142-dogfood-a2ui-app/handoff.md
+rewrite .sdlc/0145-dogfood-review-2/handoff.md
+rewrite .sdlc/0145-dogfood-review-2/part-a/handoff.md
+rewrite .sdlc/0145-dogfood-review-2/part-a/ui-designer-L1.md
+rewrite .sdlc/0145-dogfood-review-2/part-b/handoff.md
+rewrite .sdlc/0145-dogfood-review-2/part-b/ui-designer-L1.md
+rewrite .sdlc/0145-dogfood-review-2/part-c/handoff.md
+rewrite .sdlc/0145-dogfood-review-2/part-c/ui-designer-L1.md
+rewrite .sdlc/0154-repin-md-a01/handoff.md
+rewrite .sdlc/0155-repin-md-a02-a04/handoff.md
+rewrite .sdlc/0156-repin-md-a05-a10/handoff.md
+rewrite .sdlc/0157-repin-md-app-unlaned/handoff.md
+rewrite .sdlc/0206-prompt-cache-stable-first/handoff.md
+rewrite .sdlc/0208-composite-moment-checks/handoff.md
+rewrite .sdlc/0215-croupier-checks-need-data-model/handoff.md
+rewrite .sdlc/0220-validator-renderer-id-graph-gap/handoff.md
+rewrite .sdlc/0225-live-round-2/handoff.md
+rewrite .sdlc/0228-stray-screenshots-dirs/handoff.md
+rewrite .sdlc/0230-game-hidden-state-no-home/handoff.md
+rewrite .sdlc/0231-preset-knowledge-index-only/handoff.md
+rewrite .sdlc/0232-croupier-opening-skips-bet/handoff.md
+rewrite .sdlc/0240-domain-exemplars/handoff.md
+rewrite .sdlc/0241-round-archive/handoff.md
+rewrite .sdlc/0243-upsert-closed-loop-docs-2/handoff.md
+rewrite .sdlc/0250-repo-cleanup-oct/copied-records.txt
+rewrite .sdlc/archive/fleet-retro-2026-10-12-12.md
+rewrite .sdlc/archive/pause-2026-10-06.md
+rewrite .sdlc/evals/rounds/2026-10-15-t0208-probe/live-commands.sh
+rewrite .sdlc/evals/rounds/2026-10-15-t0208-probe/report.md
+rewrite .sdlc/notes.md
+rewrite packages/agent-ui/a2ui/src/catalog/personas/croupier/hands.fixture.ts

@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L2",
+  "name": "0123-solo-L2",
+  "description": "T-0123 solo L2 Skill v2",
+  "model": "sonnet",
+  "effort": "high",
+  "prompt": "T-0123 Skill v2 re-pin: entry and action | solo L2\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-v2ra/.sdlc/repin-v2-entry-action/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-v2ra/.sdlc/repin-v2-entry-action\nImplement per .sdlc/0123-repin-v2-entry-action/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L2",
+  "tier": "L2",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-v2ra/.sdlc/repin-v2-entry-action/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-v2ra/.sdlc/repin-v2-entry-action",
+  "attempt_id": "74e7cc0bfffe45ad8317d0d8989bcc22",
+  "base_sha": "2c3e5e6948d2d630b4078d718dcefd15f6af9716",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.6/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-v2ra/.sdlc/repin-v2-entry-action/handoff.md"
+}

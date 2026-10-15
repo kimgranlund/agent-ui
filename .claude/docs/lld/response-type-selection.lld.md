@@ -3,7 +3,7 @@
 > Status: proposed · v0.2 · 2026-10-09 · Layer: LLD (implementation plan) · architect seat, sdlc-lite run `response-type-selection` (T-0060)
 > Implements: [`../spec/response-type-selection.spec.md`](../spec/response-type-selection.spec.md) (RTS-R1 to R11, RTS-N1 to N4) under [ADR-0242](../adr/0242-render-surface-terminal-tool-response-type.md) (proposed; the build starts from the ratified text). Why: [`../prd/response-type-selection.prd.md`](../prd/response-type-selection.prd.md).
 > Folds into on build: [`./a2ui-live-agent.lld.md`](./a2ui-live-agent.lld.md) LLD-C3 (the loop) and LLD-C10 (the adapter). The tree wins over this document when they disagree.
-> Build breakdown with runnable acceptance per step, builder levels, disjoint file lists and the merge order: `.sdlc/response-type-selection/breakdown.md` (the sdlc-lite artifacts dir; its decompose manifest is `decompose/manifest-v1.json`).
+> Build breakdown with runnable acceptance per step, builder levels, disjoint file lists and the merge order: `.sdlc/tickets/.0060-response-type-selection/breakdown.md` (the sdlc-lite artifacts dir; its decompose manifest is `decompose/manifest-v1.json`).
 
 ## 1. How `produce()` decides today (the baseline the design starts from)
 

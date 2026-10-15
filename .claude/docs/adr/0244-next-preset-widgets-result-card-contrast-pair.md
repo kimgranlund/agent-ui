@@ -48,7 +48,7 @@ preset is seeded with, not observed live: only the Croupier has recorded fixture
   unavailability (`calendar.md:75-90`).
 - **The budget.** K6 (the default `agent-ui` composition plus the tool) is 45,454 chars against the 46,430
   bound, 976 spare (PRD `response-type-selection` K6 row, T-0083). A synthetic probe
-  (`.sdlc/widget-patterns-next/measure/probe.ts`, the T-0065 script) prices rows at ResultCard +286,
+  (`.sdlc/tickets/.0087-widget-patterns-next/measure/probe.ts`, the T-0065 script) prices rows at ResultCard +286,
   AvailabilityPicker +205, ContrastPair +191, StatGroup +135, and a `Radio.disabled` wire prop at +19. The
   same probe predicted +835 for ADR-0243's three rows; T-0072 measured +985 once the sidecar gate forced
   reciprocal `notFor` edges, so these figures run about 18 percent low.

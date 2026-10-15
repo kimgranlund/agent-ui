@@ -1,0 +1,21 @@
+{
+  "attempt_id": "04d063f54b9847e5a3407ea52d880042",
+  "name": "verifier-L2",
+  "role": "verifier",
+  "level": "L2",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "sonnet",
+  "effort": "high",
+  "routing_reason": "independent verify of solo T-0020, L2 (M)",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-06T23:03:14.427351+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-natural",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.sdlc/0020-croupier-natural-blackjack/handoff.md",
+  "owner_pid": 5070,
+  "handoff_sha256": "b2e62f0e1c41e8db3e61dab20cce22e0e7c80ac44b9fce4d6f4f0caf8a9d4581",
+  "process_pid": 5122,
+  "exit_code": 0,
+  "finished_at": "2026-10-06T23:07:14.552994+00:00"
+}

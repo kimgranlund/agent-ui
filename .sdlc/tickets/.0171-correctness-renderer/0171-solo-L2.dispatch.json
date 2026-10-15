@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L2",
+  "name": "0171-solo-L2",
+  "description": "T-0171 solo L2 Correctness: renderer",
+  "model": "opus",
+  "effort": "medium",
+  "prompt": "T-0171 Correctness: renderer bindProp | solo L2\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-c1/.sdlc/correctness-renderer/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-c1/.sdlc/correctness-renderer\nImplement per .sdlc/0171-correctness-renderer/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L2",
+  "tier": "L2",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-c1/.sdlc/correctness-renderer/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-c1/.sdlc/correctness-renderer",
+  "attempt_id": "ce48748a950f4a4dad21b18a0e653651",
+  "base_sha": "7a528be43124f0f572370357f197deb0cf4abbb8",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.7/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-c1/.sdlc/correctness-renderer/handoff.md"
+}

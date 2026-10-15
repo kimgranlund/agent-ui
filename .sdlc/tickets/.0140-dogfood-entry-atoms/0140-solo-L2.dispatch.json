@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L2",
+  "name": "0140-solo-L2",
+  "description": "T-0140 solo L2 Dogfood: text-field,",
+  "model": "opus",
+  "effort": "medium",
+  "prompt": "T-0140 Dogfood: text-field, select | solo L2\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-de/.sdlc/dogfood-entry-atoms/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-de/.sdlc/dogfood-entry-atoms\nImplement per .sdlc/0140-dogfood-entry-atoms/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L2",
+  "tier": "L2",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-de/.sdlc/dogfood-entry-atoms/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-de/.sdlc/dogfood-entry-atoms",
+  "attempt_id": "80a3234ea02c4f6a9f017b9095343ec3",
+  "base_sha": "4bece84ea54b92ffe30d6ce83696809fdfac884b",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.7/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-de/.sdlc/dogfood-entry-atoms/handoff.md"
+}

@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L2",
+  "name": "0167-solo-L2",
+  "description": "T-0167 solo L2 Lints read",
+  "model": "opus",
+  "effort": "medium",
+  "prompt": "T-0167 Lints read the root and canvas | solo L2\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-l1/.sdlc/lint-root-derived/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-l1/.sdlc/lint-root-derived\nImplement per .sdlc/0167-lint-root-derived/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L2",
+  "tier": "L2",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-l1/.sdlc/lint-root-derived/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-l1/.sdlc/lint-root-derived",
+  "attempt_id": "cd06b571569f4d7db8ef32f25c8402d9",
+  "base_sha": "7a528be43124f0f572370357f197deb0cf4abbb8",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.7/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-l1/.sdlc/lint-root-derived/handoff.md"
+}

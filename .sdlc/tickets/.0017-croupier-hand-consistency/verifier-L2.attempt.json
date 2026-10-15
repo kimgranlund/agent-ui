@@ -1,0 +1,21 @@
+{
+  "attempt_id": "324ba6e540cc40c0bc96d86e4efe2965",
+  "name": "verifier-L2",
+  "role": "verifier",
+  "level": "L2",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "sonnet",
+  "effort": "high",
+  "routing_reason": "Caller selected this role and level; no task-specific rationale supplied.",
+  "reason_source": "fallback",
+  "status": "completed",
+  "started_at": "2026-10-06T14:24:33.370621+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-croupier2",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.sdlc/0017-croupier-hand-consistency/handoff.md",
+  "owner_pid": 60085,
+  "handoff_sha256": "d5bce9bafd5e9a95b274503dd9a3c015b17853c714dae2cc069fb3995f7f930a",
+  "process_pid": 60162,
+  "exit_code": 0,
+  "finished_at": "2026-10-06T14:30:05.145026+00:00"
+}

@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L3",
+  "name": "0085-solo-L3",
+  "description": "T-0085 solo L3 BookingForm and",
+  "model": "opus",
+  "effort": "xhigh",
+  "prompt": "T-0085 BookingForm and | solo L3\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-bl/.sdlc/bookingform-layout/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-bl/.sdlc/bookingform-layout\nImplement per .sdlc/0085-bookingform-layout/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L3",
+  "tier": "L3",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-bl/.sdlc/bookingform-layout/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-bl/.sdlc/bookingform-layout",
+  "attempt_id": "ab7e20b7c5724e369c5f4de517b21c3b",
+  "base_sha": "69679a73594a2aae6c3a40dccc810470d7d65fc0",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.4/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-bl/.sdlc/bookingform-layout/handoff.md"
+}

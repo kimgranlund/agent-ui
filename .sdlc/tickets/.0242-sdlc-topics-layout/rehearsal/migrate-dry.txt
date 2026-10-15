@@ -1,0 +1,449 @@
+move .0001-remove-ops -> tickets/.0001-remove-ops
+move .0002-croupier-round-surface -> tickets/.0002-croupier-round-surface
+move .0003-context-budget-trace -> tickets/.0003-context-budget-trace
+move .0004-croupier-haiku-faces-padding -> tickets/.0004-croupier-haiku-faces-padding
+move .0005-agent-behavior-evals -> tickets/.0005-agent-behavior-evals
+move .0006-retry-tests-and-docs -> tickets/.0006-retry-tests-and-docs
+move .0007-sidecar-why-rewrite -> tickets/.0007-sidecar-why-rewrite
+move .0008-dogfood-selection-guidance -> tickets/.0008-dogfood-selection-guidance
+move .0009-concurrency-ceiling-amendment -> tickets/.0009-concurrency-ceiling-amendment
+move .0010-admin-headless-flows -> tickets/.0010-admin-headless-flows
+move .0011-a2ui-test-kit -> tickets/.0011-a2ui-test-kit
+move .0012-persona-manifest -> tickets/.0012-persona-manifest
+move .0013-persona-registry -> tickets/.0013-persona-registry
+move .0014-asset-embed -> tickets/.0014-asset-embed
+move .0015-sub-tag-aliases -> tickets/.0015-sub-tag-aliases
+move .0016-agent-activity-steps -> tickets/.0016-agent-activity-steps
+move .0017-croupier-hand-consistency -> tickets/.0017-croupier-hand-consistency
+move .0018-devtools-meta-replay -> tickets/.0018-devtools-meta-replay
+move .0019-activity-errors-card-polish -> tickets/.0019-activity-errors-card-polish
+move .0020-croupier-natural-blackjack -> tickets/.0020-croupier-natural-blackjack
+move .0021-reasoning-panel -> tickets/.0021-reasoning-panel
+move .0022-activity-strip-polish -> tickets/.0022-activity-strip-polish
+move .0023-turn-deadline -> tickets/.0023-turn-deadline
+move .0024-chat-plain-words-error -> tickets/.0024-chat-plain-words-error
+move .0025-sidecar-browser-projection -> tickets/.0025-sidecar-browser-projection
+move .0026-size-budget-split-design -> tickets/.0026-size-budget-split-design
+move .0027-lazy-catalog-adr-seam -> tickets/.0027-lazy-catalog-adr-seam
+move .0028-lazy-catalog-renderer -> tickets/.0028-lazy-catalog-renderer
+move .0029-lazy-catalog-records -> tickets/.0029-lazy-catalog-records
+move .0030-haiku-5-5 -> tickets/.0030-haiku-5-5
+move .0031-thinking-blocks-passthrough -> tickets/.0031-thinking-blocks-passthrough
+move .0032-explicit-low-effort -> tickets/.0032-explicit-low-effort
+move .0033-croupier-rerecord-haiku-5-5 -> tickets/.0033-croupier-rerecord-haiku-5-5
+move .0034-stringified-tool-input -> tickets/.0034-stringified-tool-input
+move .0035-haiku-5-5-max-tokens -> tickets/.0035-haiku-5-5-max-tokens
+move .0036-quizmaster-seed-bump -> tickets/.0036-quizmaster-seed-bump
+move .0037-default-lazy-slices -> tickets/.0037-default-lazy-slices
+move .0038-swiper-item-demo-red -> tickets/.0038-swiper-item-demo-red
+move .0039-lazy-settle-seam -> tickets/.0039-lazy-settle-seam
+move .0040-lazy-site-callers -> tickets/.0040-lazy-site-callers
+move .0041-lazy-a2ui-tests -> tickets/.0041-lazy-a2ui-tests
+move .0042-lazy-default-flip -> tickets/.0042-lazy-default-flip
+move .0043-site-nav-red -> tickets/.0043-site-nav-red
+move .0044-swiper-disconnect-test -> tickets/.0044-swiper-disconnect-test
+move .0045-quizmaster-test-strengthen -> tickets/.0045-quizmaster-test-strengthen
+move .0046-visual-nav-overlay-red -> tickets/.0046-visual-nav-overlay-red
+move .0047-docs-stale-records -> tickets/.0047-docs-stale-records
+move .0048-entry-docs-dag -> tickets/.0048-entry-docs-dag
+move .0049-harness-wiring-fix -> tickets/.0049-harness-wiring-fix
+move .0050-skills-em-dash-1 -> tickets/.0050-skills-em-dash-1
+move .0051-skills-em-dash-2 -> tickets/.0051-skills-em-dash-2
+move .0052-skills-em-dash-3 -> tickets/.0052-skills-em-dash-3
+move .0053-package-deps-audit -> tickets/.0053-package-deps-audit
+move .0054-claude-md-em-dash -> tickets/.0054-claude-md-em-dash
+move .0055-renderer-lazy-spike -> tickets/.0055-renderer-lazy-spike
+move .0056-flagship-rerecord-haiku-5-5 -> tickets/.0056-flagship-rerecord-haiku-5-5
+move .0057-drop-unused-shared-deps -> tickets/.0057-drop-unused-shared-deps
+move .0058-persona-library-barrel-import -> tickets/.0058-persona-library-barrel-import
+move .0059-untrack-fixture-scratch -> tickets/.0059-untrack-fixture-scratch
+move .0060-response-type-selection -> tickets/.0060-response-type-selection
+move .0061-rts-missed-surface -> tickets/.0061-rts-missed-surface
+move .0062-a2ui-skills-refresh -> tickets/.0062-a2ui-skills-refresh
+move .0063-lexicon-false-positives -> tickets/.0063-lexicon-false-positives
+move .0064-catalog-previews-all -> tickets/.0064-catalog-previews-all
+move .0065-preset-widgets-design -> tickets/.0065-preset-widgets-design
+move .0066-preset-contradictions -> tickets/.0066-preset-contradictions
+move .0067-widgets-adr-0243 -> tickets/.0067-widgets-adr-0243
+move .0068-derived-inherit-base-idioms -> tickets/.0068-derived-inherit-base-idioms
+move .0069-ui-board-grid -> tickets/.0069-ui-board-grid
+move .0070-ui-product-card -> tickets/.0070-ui-product-card
+move .0071-ui-game-hud -> tickets/.0071-ui-game-hud
+move .0072-default-widget-rows -> tickets/.0072-default-widget-rows
+move .0073-croupier-cardtable -> tickets/.0073-croupier-cardtable
+move .0074-quizmaster-questioncard -> tickets/.0074-quizmaster-questioncard
+move .0075-shopkeeper-preset -> tickets/.0075-shopkeeper-preset
+move .0076-catalog-tier-counts -> tickets/.0076-catalog-tier-counts
+move .0077-basic-teaching-module -> tickets/.0077-basic-teaching-module
+move .0078-persona-sidecars-bar -> tickets/.0078-persona-sidecars-bar
+move .0079-bookingform-field-kinds -> tickets/.0079-bookingform-field-kinds
+move .0080-playing-card-center-suit -> tickets/.0080-playing-card-center-suit
+move .0081-renderer-forward-control-action -> tickets/.0081-renderer-forward-control-action
+move .0082-questioncard-match-mockup -> tickets/.0082-questioncard-match-mockup
+move .0083-widgets-match-mockups -> tickets/.0083-widgets-match-mockups
+move .0084-widgets-container-gutters -> tickets/.0084-widgets-container-gutters
+move .0085-bookingform-layout -> tickets/.0085-bookingform-layout
+move .0086-tier-rename-compound -> tickets/.0086-tier-rename-compound
+move .0087-widget-patterns-next -> tickets/.0087-widget-patterns-next
+move .0088-cardtable-bet-phase -> tickets/.0088-cardtable-bet-phase
+move .0089-result-card -> tickets/.0089-result-card
+move .0090-stylist-contrast-pair -> tickets/.0090-stylist-contrast-pair
+move .0091-math-foundations-adr -> tickets/.0091-math-foundations-adr
+move .0092-bookingform-date-cards -> tickets/.0092-bookingform-date-cards
+move .0093-foundations-wave0 -> tickets/.0093-foundations-wave0
+move .0094-foundations-a01 -> tickets/.0094-foundations-a01
+move .0095-foundations-a02 -> tickets/.0095-foundations-a02
+move .0096-foundations-a03 -> tickets/.0096-foundations-a03
+move .0097-foundations-a04 -> tickets/.0097-foundations-a04
+move .0098-foundations-a05 -> tickets/.0098-foundations-a05
+move .0099-foundations-a06 -> tickets/.0099-foundations-a06
+move .0100-foundations-a07 -> tickets/.0100-foundations-a07
+move .0101-foundations-a08 -> tickets/.0101-foundations-a08
+move .0102-foundations-a09 -> tickets/.0102-foundations-a09
+move .0103-foundations-a10 -> tickets/.0103-foundations-a10
+move .0104-foundations-verify-1 -> tickets/.0104-foundations-verify-1
+move .0105-foundations-verify-2 -> tickets/.0105-foundations-verify-2
+move .0106-bookingform-date-fields -> tickets/.0106-bookingform-date-fields
+move .0107-foundations-cut -> tickets/.0107-foundations-cut
+move .0108-foundations-repin-a01 -> tickets/.0108-foundations-repin-a01
+move .0109-foundations-repin-a02 -> tickets/.0109-foundations-repin-a02
+move .0110-foundations-repin-a03 -> tickets/.0110-foundations-repin-a03
+move .0111-foundations-repin-a04 -> tickets/.0111-foundations-repin-a04
+move .0112-foundations-repin-a05 -> tickets/.0112-foundations-repin-a05
+move .0113-foundations-repin-a06 -> tickets/.0113-foundations-repin-a06
+move .0114-foundations-repin-a07 -> tickets/.0114-foundations-repin-a07
+move .0115-foundations-repin-a08 -> tickets/.0115-foundations-repin-a08
+move .0116-foundations-repin-a10 -> tickets/.0116-foundations-repin-a10
+move .0117-kicker-too-large -> tickets/.0117-kicker-too-large
+move .0118-foundations-doc-repairs -> tickets/.0118-foundations-doc-repairs
+move .0119-a2ui-canvas-widget-md -> tickets/.0119-a2ui-canvas-widget-md
+move .0120-skill-v2-sync -> tickets/.0120-skill-v2-sync
+move .0121-shell-geometry-fixes -> tickets/.0121-shell-geometry-fixes
+move .0122-control-rule-adoption -> tickets/.0122-control-rule-adoption
+move .0123-repin-v2-entry-action -> tickets/.0123-repin-v2-entry-action
+move .0124-repin-v2-indicators-atoms-nav -> tickets/.0124-repin-v2-indicators-atoms-nav
+move .0125-repin-v2-containers-widgets -> tickets/.0125-repin-v2-containers-widgets
+move .0126-repin-v2-app-a2ui-site -> tickets/.0126-repin-v2-app-a2ui-site
+move .0127-post-shrink-floor-and-stale-tests -> tickets/.0127-post-shrink-floor-and-stale-tests
+move .0128-admiral-board-actionname -> tickets/.0128-admiral-board-actionname
+move .0129-admin-temperature-switch-product-photos -> tickets/.0129-admin-temperature-switch-product-photos
+move .0130-docs-demos-400px-overflow -> tickets/.0130-docs-demos-400px-overflow
+move .0131-stale-surface-docs-audioplayer-preview -> tickets/.0131-stale-surface-docs-audioplayer-preview
+move .0132-foundations-look-verify -> tickets/.0132-foundations-look-verify
+move .0133-look-verify-fixes -> tickets/.0133-look-verify-fixes
+move .0134-pill-radius-fields-badges -> tickets/.0134-pill-radius-fields-badges
+move .0135-text-field-date-type -> tickets/.0135-text-field-date-type
+move .0136-dogfood-lint -> tickets/.0136-dogfood-lint
+move .0137-dogfood-design-review -> tickets/.0137-dogfood-design-review
+move .0138-dogfood-shapes-icon-glyph -> tickets/.0138-dogfood-shapes-icon-glyph
+move .0139-dogfood-disabled-recipe -> tickets/.0139-dogfood-disabled-recipe
+move .0140-dogfood-entry-atoms -> tickets/.0140-dogfood-entry-atoms
+move .0141-dogfood-data-charts-nav -> tickets/.0141-dogfood-data-charts-nav
+move .0142-dogfood-a2ui-app -> tickets/.0142-dogfood-a2ui-app
+move .0143-dogfood-rulings-2 -> tickets/.0143-dogfood-rulings-2
+move .0144-dogfood-lint-rules-2 -> tickets/.0144-dogfood-lint-rules-2
+move .0145-dogfood-review-2 -> tickets/.0145-dogfood-review-2
+move .0146-dogfood3-widgets -> tickets/.0146-dogfood3-widgets
+move .0147-dogfood3-app-chat -> tickets/.0147-dogfood3-app-chat
+move .0148-dogfood3-entry -> tickets/.0148-dogfood3-entry
+move .0149-dogfood3-data-nav -> tickets/.0149-dogfood3-data-nav
+move .0150-dogfood3-demos -> tickets/.0150-dogfood3-demos
+move .0151-agent-trace-capture -> tickets/.0151-agent-trace-capture
+move .0152-root-product-md -> tickets/.0152-root-product-md
+move .0153-claude-review-action-broken -> tickets/.0153-claude-review-action-broken
+move .0154-repin-md-a01 -> tickets/.0154-repin-md-a01
+move .0155-repin-md-a02-a04 -> tickets/.0155-repin-md-a02-a04
+move .0156-repin-md-a05-a10 -> tickets/.0156-repin-md-a05-a10
+move .0157-repin-md-app-unlaned -> tickets/.0157-repin-md-app-unlaned
+move .0158-repin-md-last-reds -> tickets/.0158-repin-md-last-reds
+move .0159-preset-producer-drift -> tickets/.0159-preset-producer-drift
+move .0164-retire-adr-system -> tickets/.0164-retire-adr-system
+move .0165-rootmd-drill-demo -> tickets/.0165-rootmd-drill-demo
+move .0166-rootmd-eval-catalog-overflow -> tickets/.0166-rootmd-eval-catalog-overflow
+move .0167-lint-root-derived -> tickets/.0167-lint-root-derived
+move .0170-lint-allowlist-owners -> tickets/.0170-lint-allowlist-owners
+move .0171-correctness-renderer -> tickets/.0171-correctness-renderer
+move .0172-correctness-producer -> tickets/.0172-correctness-producer
+move .0173-status-stream-geometry -> tickets/.0173-status-stream-geometry
+move .0174-chat-probe-loop -> tickets/.0174-chat-probe-loop
+move .0175-textfield-date-iso -> tickets/.0175-textfield-date-iso
+move .0180-sonnet-5-5 -> tickets/.0180-sonnet-5-5
+move .0181-spec-closed-loop -> tickets/.0181-spec-closed-loop
+move .0182-spec-agent-content -> tickets/.0182-spec-agent-content
+move .0183-spec-a2ui-upserts -> tickets/.0183-spec-a2ui-upserts
+move .0184-croupier-closed-loop -> tickets/.0184-croupier-closed-loop
+move .0185-model-capability-settings -> tickets/.0185-model-capability-settings
+move .0186-drill-panel-narrow-fit -> tickets/.0186-drill-panel-narrow-fit
+move .0191-claude-review-still-failing -> tickets/.0191-claude-review-still-failing
+move .0192-anthropic-workspace-id -> tickets/.0192-anthropic-workspace-id
+move .0194-croupier-followups -> tickets/.0194-croupier-followups
+move .0200-teach-existing-composites -> tickets/.0200-teach-existing-composites
+move .0201-catalog-architecture -> tickets/.0201-catalog-architecture
+move .0202-catalog-w0 -> tickets/.0202-catalog-w0
+move .0204-cardtable-nested-cards -> tickets/.0204-cardtable-nested-cards
+move .0206-prompt-cache-stable-first -> tickets/.0206-prompt-cache-stable-first
+move .0207-prompt-budget-real-presets -> tickets/.0207-prompt-budget-real-presets
+move .0208-composite-moment-checks -> tickets/.0208-composite-moment-checks
+move .0210-catalog-id-readers -> tickets/.0210-catalog-id-readers
+move .0211-croupier-deal-again-skips-bet -> tickets/.0211-croupier-deal-again-skips-bet
+move .0212-croupier-bet-check-poker -> tickets/.0212-croupier-bet-check-poker
+move .0213-producer-reply-meta-line-prose -> tickets/.0213-producer-reply-meta-line-prose
+move .0214-croupier-haiku-state-in-prose -> tickets/.0214-croupier-haiku-state-in-prose
+move .0215-croupier-checks-need-data-model -> tickets/.0215-croupier-checks-need-data-model
+move .0216-croupier-first-deal-debit -> tickets/.0216-croupier-first-deal-debit
+move .0217-chat-repair-leaks-to-prose -> tickets/.0217-chat-repair-leaks-to-prose
+move .0218-croupier-poker-placeholder-hole-cards -> tickets/.0218-croupier-poker-placeholder-hole-cards
+move .0219-croupier-rules-correctness-check -> tickets/.0219-croupier-rules-correctness-check
+move .0220-validator-renderer-id-graph-gap -> tickets/.0220-validator-renderer-id-graph-gap
+move .0221-admin-error-turn-per-violation -> tickets/.0221-admin-error-turn-per-violation
+move .0222-chat-probe-capture-defects -> tickets/.0222-chat-probe-capture-defects
+move .0223-inner-radius-quizmaster-stylist -> tickets/.0223-inner-radius-quizmaster-stylist
+move .0224-persona-silent-drop -> tickets/.0224-persona-silent-drop
+move .0225-live-round-2 -> tickets/.0225-live-round-2
+move .0226-validate-dropped-child-same-payload -> tickets/.0226-validate-dropped-child-same-payload
+move .0227-gh63-poison-producer -> tickets/.0227-gh63-poison-producer
+move .0228-stray-screenshots-dirs -> tickets/.0228-stray-screenshots-dirs
+move .0229-producer-text-shape-reply-leak -> tickets/.0229-producer-text-shape-reply-leak
+move .0230-game-hidden-state-no-home -> tickets/.0230-game-hidden-state-no-home
+move .0231-preset-knowledge-index-only -> tickets/.0231-preset-knowledge-index-only
+move .0232-croupier-opening-skips-bet -> tickets/.0232-croupier-opening-skips-bet
+move .0233-croupier-playing-table-no-moves -> tickets/.0233-croupier-playing-table-no-moves
+move .0234-narrated-surface-mechanics -> tickets/.0234-narrated-surface-mechanics
+move .0235-probe-live-prose-cumulative -> tickets/.0235-probe-live-prose-cumulative
+move .0236-probe-from-trace-agent-default -> tickets/.0236-probe-from-trace-agent-default
+move .0237-upsert-round2-learnings -> tickets/.0237-upsert-round2-learnings
+move .0238-exemplar-routing-off-domain -> tickets/.0238-exemplar-routing-off-domain
+move .0239-agent-trace-routing-fields -> tickets/.0239-agent-trace-routing-fields
+move .0240-domain-exemplars -> tickets/.0240-domain-exemplars
+move .0241-round-archive -> tickets/.0241-round-archive
+move .0243-upsert-closed-loop-docs-2 -> tickets/.0243-upsert-closed-loop-docs-2
+move .0244-drill-400px-overflow-flake -> tickets/.0244-drill-400px-overflow-flake
+move .0245-domain-seeds -> tickets/.0245-domain-seeds
+move .0248-fog-bundle-rounds -> tickets/.0248-fog-bundle-rounds
+move .0250-repo-cleanup-oct -> tickets/.0250-repo-cleanup-oct
+move .0255-local-first-workflows -> tickets/.0255-local-first-workflows
+move 0160-agent-content-files -> tickets/0160-agent-content-files
+move 0161-agent-content-overlays -> tickets/0161-agent-content-overlays
+move 0162-agent-content-schema-forms -> tickets/0162-agent-content-schema-forms
+move 0163-agent-content-compiler -> tickets/0163-agent-content-compiler
+move 0168-lint-rulings-coverage -> tickets/0168-lint-rulings-coverage
+move 0169-lint-dead-plumbing -> tickets/0169-lint-dead-plumbing
+move 0176-eval-scenarios-store -> tickets/0176-eval-scenarios-store
+move 0177-eval-report -> tickets/0177-eval-report
+move 0178-eval-judged-checks -> tickets/0178-eval-judged-checks
+move 0179-eval-matrix-baselines -> tickets/0179-eval-matrix-baselines
+move 0187-split-pane-narrow-fit -> tickets/0187-split-pane-narrow-fit
+move 0188-line-chart-projected-dash -> tickets/0188-line-chart-projected-dash
+move 0189-playing-card-type-floor -> tickets/0189-playing-card-type-floor
+move 0190-site-demo-inline-literals -> tickets/0190-site-demo-inline-literals
+move 0193-option-deck -> tickets/0193-option-deck
+move 0195-confirm-receipt -> tickets/0195-confirm-receipt
+move 0196-amount-picker -> tickets/0196-amount-picker
+move 0197-bookingform-kinds -> tickets/0197-bookingform-kinds
+move 0198-step-flow -> tickets/0198-step-flow
+move 0199-itinerary-compare -> tickets/0199-itinerary-compare
+move 0203-composer-model-controls -> tickets/0203-composer-model-controls
+move 0205-context-archaeology -> tickets/0205-context-archaeology
+move 0209-context-single-source -> tickets/0209-context-single-source
+move 0242-sdlc-topics-layout -> tickets/0242-sdlc-topics-layout
+move 0246-persona-exemplar-fixture-defects -> tickets/0246-persona-exemplar-fixture-defects
+move 0247-validate-payload-persona-ids -> tickets/0247-validate-payload-persona-ids
+move 0249-agents-md-single-source -> tickets/0249-agents-md-single-source
+move 0251-entry-plan-docs-refresh -> tickets/0251-entry-plan-docs-refresh
+move 0252-specs-skills-scrub -> tickets/0252-specs-skills-scrub
+move 0253-games-rank-by-family -> tickets/0253-games-rank-by-family
+move 0254-budget-gate-persona-shards -> tickets/0254-budget-gate-persona-shards
+move agents-md -> work/agents-md
+move archive -> work/archive
+move catalog-notfor-intents -> work/catalog-notfor-intents
+move dev-proxy-abort -> work/dev-proxy-abort
+move harness-gaps -> work/harness-gaps
+move nested-agents-md -> work/nested-agents-md
+move no-barrels -> work/no-barrels
+move notes.md -> notes/notes.md
+move rebase-retry -> work/rebase-retry
+move roadmap.md -> tickets/roadmap.md
+move sse-deadline -> work/sse-deadline
+move stale-plugin-refs -> work/stale-plugin-refs
+move tool-dispatch-timeout -> work/tool-dispatch-timeout
+move transport-retry -> work/transport-retry
+rewrite .claude/docs/adr/0241-lazy-catalog-bodies-behind-an-eager-manifest.md
+rewrite .claude/docs/adr/0244-next-preset-widgets-result-card-contrast-pair.md
+rewrite .claude/docs/adr/0245-foundations-derive-from-one-n.md
+rewrite .claude/docs/lld/response-type-selection.lld.md
+rewrite .claude/docs/prd/response-type-selection.prd.md
+rewrite .sdlc/.0003-context-budget-trace/architect-L1.md
+rewrite .sdlc/.0003-context-budget-trace/decompose/report.md
+rewrite .sdlc/.0008-dogfood-selection-guidance/architect-L1.md
+rewrite .sdlc/.0008-dogfood-selection-guidance/planner-L3.md
+rewrite .sdlc/.0008-dogfood-selection-guidance/step-1/handoff.md
+rewrite .sdlc/.0010-admin-headless-flows/planner-L3.md
+rewrite .sdlc/.0012-persona-manifest/architect-L1.md
+rewrite .sdlc/.0012-persona-manifest/handoff.md
+rewrite .sdlc/.0012-persona-manifest/planner-L3-2.md
+rewrite .sdlc/.0012-persona-manifest/planner-L3.md
+rewrite .sdlc/.0012-persona-manifest/step-1/handoff.md
+rewrite .sdlc/.0012-persona-manifest/step-2/handoff.md
+rewrite .sdlc/.0013-persona-registry/architect-L1.md
+rewrite .sdlc/.0013-persona-registry/handoff.md
+rewrite .sdlc/.0014-asset-embed/architect-L1.md
+rewrite .sdlc/.0014-asset-embed/handoff.md
+rewrite .sdlc/.0014-asset-embed/plan-reviewer-L1.md
+rewrite .sdlc/.0014-asset-embed/planner-L3.md
+rewrite .sdlc/.0014-asset-embed/step-2/handoff.md
+rewrite .sdlc/.0014-asset-embed/step-5/handoff.md
+rewrite .sdlc/.0026-size-budget-split-design/measure/lib.mjs
+rewrite .sdlc/.0027-lazy-catalog-adr-seam/handoff.md
+rewrite .sdlc/.0028-lazy-catalog-renderer/handoff.md
+rewrite .sdlc/.0029-lazy-catalog-records/handoff.md
+rewrite .sdlc/.0037-default-lazy-slices/design.md
+rewrite .sdlc/.0037-default-lazy-slices/handoff.md
+rewrite .sdlc/.0037-default-lazy-slices/measure/lib.mjs
+rewrite .sdlc/.0039-lazy-settle-seam/handoff.md
+rewrite .sdlc/.0040-lazy-site-callers/handoff.md
+rewrite .sdlc/.0041-lazy-a2ui-tests/handoff.md
+rewrite .sdlc/.0042-lazy-default-flip/handoff.md
+rewrite .sdlc/.0053-package-deps-audit/audit.mjs
+rewrite .sdlc/.0055-renderer-lazy-spike/handoff.md
+rewrite .sdlc/.0055-renderer-lazy-spike/measure/lib.mjs
+rewrite .sdlc/.0057-drop-unused-shared-deps/handoff.md
+rewrite .sdlc/.0058-persona-library-barrel-import/handoff.md
+rewrite .sdlc/.0060-response-type-selection/handoff.md
+rewrite .sdlc/.0060-response-type-selection/planner-L3-2.md
+rewrite .sdlc/.0060-response-type-selection/planner-L3.md
+rewrite .sdlc/.0061-rts-missed-surface/handoff.md
+rewrite .sdlc/.0061-rts-missed-surface/verifier-L2.md
+rewrite .sdlc/.0063-lexicon-false-positives/verifier-L1.md
+rewrite .sdlc/.0065-preset-widgets-design/architect-L1.md
+rewrite .sdlc/.0065-preset-widgets-design/design.md
+rewrite .sdlc/.0065-preset-widgets-design/handoff.md
+rewrite .sdlc/.0065-preset-widgets-design/measure/probe.ts
+rewrite .sdlc/.0067-widgets-adr-0243/handoff.md
+rewrite .sdlc/.0068-derived-inherit-base-idioms/handoff.md
+rewrite .sdlc/.0069-ui-board-grid/handoff.md
+rewrite .sdlc/.0069-ui-board-grid/refusals.jsonl
+rewrite .sdlc/.0069-ui-board-grid/step-1.superseded-1/handoff.md
+rewrite .sdlc/.0069-ui-board-grid/step-1/handoff.md
+rewrite .sdlc/.0070-ui-product-card/handoff.md
+rewrite .sdlc/.0071-ui-game-hud/handoff.md
+rewrite .sdlc/.0071-ui-game-hud/planner-L3.md
+rewrite .sdlc/.0071-ui-game-hud/step-1/handoff.md
+rewrite .sdlc/.0072-default-widget-rows/handoff.md
+rewrite .sdlc/.0073-croupier-cardtable/handoff.md
+rewrite .sdlc/.0073-croupier-cardtable/planner-L3.md
+rewrite .sdlc/.0073-croupier-cardtable/step-1/handoff.md
+rewrite .sdlc/.0073-croupier-cardtable/step-2/handoff.md
+rewrite .sdlc/.0074-quizmaster-questioncard/handoff.md
+rewrite .sdlc/.0074-quizmaster-questioncard/planner-L2.md
+rewrite .sdlc/.0074-quizmaster-questioncard/step-1/handoff.md
+rewrite .sdlc/.0075-shopkeeper-preset/handoff.md
+rewrite .sdlc/.0087-widget-patterns-next/handoff.md
+rewrite .sdlc/.0087-widget-patterns-next/measure/probe.ts
+rewrite .sdlc/.0089-result-card/measure/probe.ts
+rewrite .sdlc/.0104-foundations-verify-1/verifier-L2-2.md
+rewrite .sdlc/.0105-foundations-verify-2/verifier-L2-2.md
+rewrite .sdlc/.0107-foundations-cut/handoff.md
+rewrite .sdlc/.0108-foundations-repin-a01/handoff.md
+rewrite .sdlc/.0109-foundations-repin-a02/handoff.md
+rewrite .sdlc/.0110-foundations-repin-a03/handoff.md
+rewrite .sdlc/.0111-foundations-repin-a04/handoff.md
+rewrite .sdlc/.0112-foundations-repin-a05/handoff.md
+rewrite .sdlc/.0113-foundations-repin-a06/handoff.md
+rewrite .sdlc/.0114-foundations-repin-a07/handoff.md
+rewrite .sdlc/.0115-foundations-repin-a08/handoff.md
+rewrite .sdlc/.0116-foundations-repin-a10/handoff.md
+rewrite .sdlc/.0118-foundations-doc-repairs/handoff.md
+rewrite .sdlc/.0121-shell-geometry-fixes/capture.mjs
+rewrite .sdlc/.0121-shell-geometry-fixes/px-table.mjs
+rewrite .sdlc/.0123-repin-v2-entry-action/handoff.md
+rewrite .sdlc/.0124-repin-v2-indicators-atoms-nav/handoff.md
+rewrite .sdlc/.0125-repin-v2-containers-widgets/handoff.md
+rewrite .sdlc/.0126-repin-v2-app-a2ui-site/handoff.md
+rewrite .sdlc/.0133-look-verify-fixes/handoff.md
+rewrite .sdlc/.0138-dogfood-shapes-icon-glyph/handoff.md
+rewrite .sdlc/.0139-dogfood-disabled-recipe/handoff.md
+rewrite .sdlc/.0140-dogfood-entry-atoms/handoff.md
+rewrite .sdlc/.0141-dogfood-data-charts-nav/handoff.md
+rewrite .sdlc/.0142-dogfood-a2ui-app/handoff.md
+rewrite .sdlc/.0144-dogfood-lint-rules-2/handoff.md
+rewrite .sdlc/.0145-dogfood-review-2/handoff.md
+rewrite .sdlc/.0145-dogfood-review-2/part-a/handoff.md
+rewrite .sdlc/.0145-dogfood-review-2/part-a/ui-designer-L1.md
+rewrite .sdlc/.0145-dogfood-review-2/part-b/handoff.md
+rewrite .sdlc/.0145-dogfood-review-2/part-b/ui-designer-L1.md
+rewrite .sdlc/.0145-dogfood-review-2/part-c/handoff.md
+rewrite .sdlc/.0145-dogfood-review-2/part-c/ui-designer-L1.md
+rewrite .sdlc/.0153-claude-review-action-broken/handoff.md
+rewrite .sdlc/.0154-repin-md-a01/handoff.md
+rewrite .sdlc/.0155-repin-md-a02-a04/handoff.md
+rewrite .sdlc/.0156-repin-md-a05-a10/handoff.md
+rewrite .sdlc/.0157-repin-md-app-unlaned/handoff.md
+rewrite .sdlc/.0164-retire-adr-system/handoff.md
+rewrite .sdlc/.0164-retire-adr-system/solo-report.md
+rewrite .sdlc/.0171-correctness-renderer/handoff.md
+rewrite .sdlc/.0172-correctness-producer/handoff.md
+rewrite .sdlc/.0206-prompt-cache-stable-first/handoff.md
+rewrite .sdlc/.0208-composite-moment-checks/handoff.md
+rewrite .sdlc/.0215-croupier-checks-need-data-model/handoff.md
+rewrite .sdlc/.0220-validator-renderer-id-graph-gap/handoff.md
+rewrite .sdlc/.0225-live-round-2/handoff.md
+rewrite .sdlc/.0228-stray-screenshots-dirs/handoff.md
+rewrite .sdlc/.0230-game-hidden-state-no-home/handoff.md
+rewrite .sdlc/.0231-preset-knowledge-index-only/handoff.md
+rewrite .sdlc/.0232-croupier-opening-skips-bet/handoff.md
+rewrite .sdlc/.0240-domain-exemplars/handoff.md
+rewrite .sdlc/.0241-round-archive/handoff.md
+rewrite .sdlc/.0243-upsert-closed-loop-docs-2/handoff.md
+rewrite .sdlc/.0250-repo-cleanup-oct/copied-records.txt
+rewrite .sdlc/.0255-local-first-workflows/handoff.md
+rewrite .sdlc/0168-lint-rulings-coverage/handoff.md
+rewrite .sdlc/archive/fleet-retro-2026-10-12-12.md
+rewrite .sdlc/archive/foundations-campaign-plan.md
+rewrite .sdlc/archive/long-run-2026-10-05/goal.md
+rewrite .sdlc/archive/pause-2026-10-06.md
+rewrite .sdlc/catalog-notfor-intents/architect-L1.md
+rewrite .sdlc/catalog-notfor-intents/decompose/report.md
+rewrite .sdlc/catalog-notfor-intents/handoff.md
+rewrite .sdlc/catalog-notfor-intents/planner-L3.md
+rewrite .sdlc/catalog-notfor-intents/step-1/handoff.md
+rewrite .sdlc/dev-proxy-abort/handoff.md
+rewrite .sdlc/dev-proxy-abort/planner-L3-2.md
+rewrite .sdlc/dev-proxy-abort/planner-L3.md
+rewrite .sdlc/dev-proxy-abort/step-1/handoff.md
+rewrite .sdlc/evals/rounds/2026-10-15-t0208-probe/live-commands.sh
+rewrite .sdlc/evals/rounds/2026-10-15-t0208-probe/report.md
+rewrite .sdlc/harness-gaps/scout-L1-2.md
+rewrite .sdlc/nested-agents-md/handoff.md
+rewrite .sdlc/nested-agents-md/planner-L3.md
+rewrite .sdlc/nested-agents-md/step-1/handoff.md
+rewrite .sdlc/no-barrels/architect-L1.md
+rewrite .sdlc/no-barrels/decompose/report.md
+rewrite .sdlc/no-barrels/handoff.md
+rewrite .sdlc/no-barrels/plan-reviewer-L1-4.md
+rewrite .sdlc/no-barrels/plan-reviewer-L1-5.md
+rewrite .sdlc/no-barrels/planner-L3-2.md
+rewrite .sdlc/no-barrels/planner-L3-3.md
+rewrite .sdlc/no-barrels/planner-L3-4.md
+rewrite .sdlc/no-barrels/planner-L3-5.md
+rewrite .sdlc/no-barrels/planner-L3-6.md
+rewrite .sdlc/no-barrels/planner-L3.md
+rewrite .sdlc/no-barrels/step-1/handoff.md
+rewrite .sdlc/no-barrels/step-3/builder-L4.md
+rewrite .sdlc/no-barrels/step-3/handoff.md
+rewrite .sdlc/no-barrels/step-4/builder-L4.md
+rewrite .sdlc/no-barrels/step-5/builder-L4-2.md
+rewrite .sdlc/no-barrels/step-5/builder-L4.md
+rewrite .sdlc/no-barrels/step-5/handoff.md
+rewrite .sdlc/no-barrels/step-5/logs/bite.sh
+rewrite .sdlc/no-barrels/step-6/builder-L3-2.md
+rewrite .sdlc/no-barrels/step-6/builder-L3.md
+rewrite .sdlc/no-barrels/step-7/builder-L3-2.md
+rewrite .sdlc/no-barrels/step-7/builder-L3.md
+rewrite .sdlc/no-barrels/step-7/verifier-L2.md
+rewrite .sdlc/no-barrels/step-8/handoff.md
+rewrite .sdlc/notes.md
+rewrite .sdlc/rebase-retry/step-1/handoff.md
+rewrite .sdlc/transport-retry/planner-L3.md
+rewrite packages/agent-ui/a2ui/src/catalog/personas/croupier/hands.fixture.ts
+config ticket_root: tickets
+config layout: topics

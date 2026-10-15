@@ -1,0 +1,21 @@
+{
+  "attempt_id": "7edf60984cb2400ca34e79eda285c623",
+  "name": "planner-L3",
+  "role": "planner",
+  "level": "L3",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "opus",
+  "effort": "xhigh",
+  "routing_reason": "planner L3: reverses a documented design, touches ADR-0129 routing and byte-pinned prompts",
+  "reason_source": "caller",
+  "status": "failed",
+  "started_at": "2026-10-05T02:07:09.121359+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.sdlc/0002-croupier-round-surface/handoff.md",
+  "owner_pid": 56593,
+  "handoff_sha256": "a9eed99222a1b8db696c3938e0439057efed625b03847fc5e944877fd987723b",
+  "process_pid": 56655,
+  "exit_code": 143,
+  "finished_at": "2026-10-05T02:27:32.901211+00:00"
+}

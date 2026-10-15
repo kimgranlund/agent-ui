@@ -1,0 +1,16 @@
+{
+  "subagent_type": "sdlc-lite:solo-M",
+  "name": "solo-M-reasoning-panel",
+  "description": "solo M: reasoning-panel",
+  "model": "sonnet",
+  "effort": "xhigh",
+  "prompt": "Handoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.sdlc/0021-reasoning-panel/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.sdlc/reasoning-panel\nDeliver ticket T-0021. Read .sdlc/0021-reasoning-panel/handoff.md in /Users/kimgranlund/Projects/nonoun/agent-ui. Work ONLY in your cwd, worktree .claude/worktrees/wave-reasoning on branch feat/reasoning-panel. Do not create branches or worktrees. Commit locally; no push or PR; the ADR stays proposed. Report sha, ADR number and gate exit codes.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L2",
+  "tier": "M",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.sdlc/0021-reasoning-panel/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.sdlc/0021-reasoning-panel",
+  "attempt_id": "34dbcd933be243508b3a777033932147",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.21.0/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.sdlc/0021-reasoning-panel/handoff.md"
+}

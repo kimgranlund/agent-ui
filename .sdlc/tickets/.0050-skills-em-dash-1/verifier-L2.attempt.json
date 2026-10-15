@@ -1,0 +1,40 @@
+{
+  "attempt_id": "7eeb16825c00451b9723399983aeddd1",
+  "name": "verifier-L2",
+  "agent_name": "verifier-L2-skills-em-dash-1",
+  "role": "verifier",
+  "level": "L2",
+  "backend": "claude",
+  "transport": "subagent",
+  "model": "opus",
+  "effort": "high",
+  "routing_reason": "Caller selected this role and level; no task-specific rationale supplied.",
+  "reason_source": "fallback",
+  "status": "completed",
+  "started_at": "2026-10-08T20:43:55.310092+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.sdlc/0050-skills-em-dash-1/handoff.md",
+  "parent_pid": 73779,
+  "parent_pid_source": "claude",
+  "handoff_sha256": "23a2895aef600097d62bce4557d478b63007e39d5931620699fedf2a0f58266c",
+  "worktrees_before": [
+    "/Users/kimgranlund/Projects/nonoun/agent-ui",
+    "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/agent-a7283ba8de615a4c7",
+    "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/agent-a7b702a2e1ac4bfc7",
+    "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/agent-a99ad30cd2c7a0cb9",
+    "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-da",
+    "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-db",
+    "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-dc"
+  ],
+  "branches_before": [
+    "chore/docs-stale-records",
+    "chore/entry-docs-dag",
+    "chore/harness-wiring-fix",
+    "main",
+    "worktree-agent-a7283ba8de615a4c7",
+    "worktree-agent-a7b702a2e1ac4bfc7",
+    "worktree-agent-a99ad30cd2c7a0cb9"
+  ],
+  "exit_code": 0,
+  "finished_at": "2026-10-08T20:54:08.064297+00:00"
+}

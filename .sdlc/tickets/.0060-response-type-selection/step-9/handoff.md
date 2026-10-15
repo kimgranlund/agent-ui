@@ -1,0 +1,22 @@
+## Task goal
+A chat turn picks its response type deliberately: plain text, an A2UI surface, or text then a surface, with text streaming first so the chat feels fast. Decided inside the turn by the model through a `render_surface` tool (text is the default), not by a router model call in front of it.
+
+## Step 9: Records repaired and gates green
+level: L2
+### Do
+The ADR-0242 Repairs cell; the gates green step. Depends on: steps 1 to 8. The response-type SPEC and LLD field split and the `TEXT_JSONL_IGNORED` ruling already landed with step 1; this step does not re-edit them. Records:
+- `.claude/docs/spec/a2ui-live-agent.spec.md`: an amendment pointer row to `response-type-selection.spec.md` on SPEC-R4, R5, R6, R11 and a version bump. `.claude/docs/lld/a2ui-live-agent.lld.md`: fold LLD-C3 (the loop) and LLD-C10 (the adapter terminal round). `.claude/docs/references/agent-model.md`: glossary rows for the `render_surface` tool and the `textDelta` arm. `.claude/skills/a2ui-jsonl-mcp/references/producer-order-and-yield.md`: the `textDelta` arm and the tool round in the yield order. ADR-0242 stays `proposed`: its ratification is Kim's (standing grant, the conductor reports it), never a builder's.
+- `.claude/docs/prd/response-type-selection.prd.md` Result column: K3 call counts, K4, K5, K6, K7 from this tree's keyless runs (the selftest rows, the produce tests and kit scenarios, the step 5 measurement, the gates below); K1, K2 and the K3 time-to-first-token half stay `pending-live`, filled from `.sdlc/0060-response-type-selection/live-baseline.txt` (Baseline column) when the conductor has saved it.
+- `CHANGELOG.md` entry; then `node scripts/generate-sitemap.mjs` (the changelog carve-out, CLAUDE.md).
+Then run every gate and fix any red the earlier steps introduced (scope allows their files; this is the one step that may re-open any earlier step's file, after all of them pass). A gate already red at this step's base is builder Status `inherited red`. No em dash in any added line (the ADR H1 keeps its parsed one).
+### Acceptance criteria
+- (red) `grep -qF "render_surface" .claude/docs/references/agent-model.md && grep -qF "textDelta" .claude/skills/a2ui-jsonl-mcp/references/producer-order-and-yield.md`
+- (red) `grep -qF "response-type-selection.spec.md" .claude/docs/spec/a2ui-live-agent.spec.md && grep -qF "render_surface" .claude/docs/lld/a2ui-live-agent.lld.md`
+- (red) `grep -qF "render_surface" CHANGELOG.md`
+- (red) `python3 -c "import sys; rows=[l for l in open('.claude/docs/prd/response-type-selection.prd.md') if l.startswith(('| K4', '| K5', '| K6', '| K7'))]; cells=[r.rstrip().rstrip('|').split('|')[-1].strip() for r in rows]; sys.exit(0 if len(rows) == 4 and all(c not in ('', 'pending') for c in cells) else 1)"`
+- (guard) `for f in .claude/docs/spec/a2ui-live-agent.spec.md .claude/docs/lld/a2ui-live-agent.lld.md .claude/docs/references/agent-model.md .claude/docs/prd/response-type-selection.prd.md .claude/docs/spec/response-type-selection.spec.md .claude/docs/lld/response-type-selection.lld.md; do python3 /Users/kimgranlund/.claude/plugins/cache/nonoun-plugins/docs/1.22.5/scripts/doc_lint.py "$f" > /dev/null || exit 1; done`
+- (guard) `npx vitest run --project site site/lib/docs-grammar.test.ts site/lib/adr.test.ts site/lib/sitemap.test.ts`
+- (guard) `{ git diff "$(git merge-base HEAD main)" -- . ":(exclude).sdlc" ":(exclude).worktrees" ":(exclude)site/public"; git ls-files -z --others --exclude-standard -- . ":(exclude).sdlc" ":(exclude).worktrees" ":(exclude)site/public" | xargs -0 -I{} sed "s/^/+/" {}; } | python3 -c "import sys; bad=[l for l in sys.stdin.read().splitlines() if l.startswith('+') and not l.startswith('+++') and not l.startswith('+# ADR-') and chr(0x2014) in l]; print(chr(10).join(bad[:5])); sys.exit(1 if bad else 0)"`
+- (guard) `npm run check`
+- (guard) `npm test`
+- (guard) `for f in $(git diff --name-only "$SDLC_BASE_SHA" -- . ":(exclude).sdlc" ":(exclude).worktrees"; git ls-files --others --exclude-standard -- . ":(exclude).sdlc" ":(exclude).worktrees"); do case "$f" in .claude/docs/*|.claude/skills/a2ui-jsonl-mcp/*|CHANGELOG.md|CLAUDE.md|site/public/*|site/lib/*|site/pages/*|packages/agent-ui/a2ui/src/agent/*|packages/agent-ui/a2ui/src/live-agent/*|packages/agent-ui/a2ui/tools/agent/*|packages/agent-ui/a2ui/tools/agent-eval/*|packages/agent-ui/a2ui/tools/testkit/scenarios/*|packages/agent-ui/app/src/controls/agent-admin/*|packages/agent-ui/app/src/controls/conversation/*) ;; *) echo "out of scope: $f"; exit 1;; esac; done`
