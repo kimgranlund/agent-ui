@@ -2,7 +2,7 @@
 // own catalog (the default `agent-ui`, or the derived `<base>--<persona>` document `composePersonaCatalogDocs`
 // composes, which the `validate-payload` CLI cannot load), renders through a real renderer with an empty error
 // channel, and passes every semantic check its preset runs live: the persona's own checks, the hidden-state checks
-// and the composite-moment checks (`semanticChecksDeps`), each gated on the catalog the seed targets.
+// the composite-moment checks and the framed-choice check (`semanticChecksDeps`), each gated on the catalog the seed targets.
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import '@agent-ui/components/all' // ADR-0233: the catalog factories import no control; the test defines the fleet
@@ -17,6 +17,7 @@ import { composePersonaCatalogDocs } from '../catalog/compose.ts'
 import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from '../catalog/personas/manifests.ts'
 import { HIDDEN_STATE_CHECKS } from '../catalog/hidden-state-checks.ts'
 import { compositeMomentChecks } from '../catalog/composite-moments.ts'
+import { framedChoiceCheck } from '../catalog/framed-choice-check.ts'
 import { gateChecksOnCatalog, runSemanticChecks, semanticSurfaceViews } from '../catalog/semantic-check.ts'
 import type { Catalog } from '../catalog/catalog.ts'
 
@@ -41,11 +42,11 @@ const BASES = new Map<string, Catalog>([
 ])
 const CATALOGS: ReadonlyMap<string, Catalog> = new Map([...BASES, ...composePersonaCatalogDocs(BASES, SHIPPED_PERSONA_CATALOG_MANIFESTS)])
 
-/** The checks a live turn on `catalogId` runs: the persona's own, then the hidden-state and composite-moment rows. */
+/** The checks a live turn on `catalogId` runs: the persona's own, then the hidden-state and composite-moment rows and the framed-choice check. */
 function liveChecks(catalogId: string, catalog: Catalog) {
   const persona = catalogId.split('--')[1]
   const own = SHIPPED_PERSONA_CATALOG_MANIFESTS.find((m) => m.personaId === persona)?.semanticChecks ?? []
-  return gateChecksOnCatalog([...own, ...HIDDEN_STATE_CHECKS, ...compositeMomentChecks], catalog)
+  return gateChecksOnCatalog([...own, ...HIDDEN_STATE_CHECKS, ...compositeMomentChecks, framedChoiceCheck], catalog)
 }
 
 const isError = (m: A2uiClientMessage): m is Extract<A2uiClientMessage, { error: unknown }> => 'error' in m
