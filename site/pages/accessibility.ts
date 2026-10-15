@@ -29,7 +29,7 @@ const p = (...parts: (string | Node)[]): HTMLElement =>
 
 content.append(
   pageLead(
-    'Three load-bearing rules, stated once in the repo’s CLAUDE.md "Conventions" section and never repeated ' +
+    'Three load-bearing rules, stated once in the repo’s AGENTS.md "Hard conventions" section and never repeated ' +
       'here: components are light-DOM by default; ARIA rides ',
     code('ElementInternals'),
     ', never a host attribute; and there are no native form elements underneath a control — a ui-text-field is ' +

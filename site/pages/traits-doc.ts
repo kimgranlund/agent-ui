@@ -2,7 +2,7 @@
 // (./traits/overlay, ./traits/list-reorder, ./traits/scroll-spy) plus the ./dogfood-frame asset pair.
 // Traits live in components/src/traits/ — NOT controls/ — so they carry no descriptor `.md` and sit
 // OUTSIDE the site-coverage/site-toc/site-canon descriptor-driven gates (those walk controls/src/
-// controls only, CLAUDE.md's Layout section): this is an ungrouped site-level GUIDE page, the SAME
+// controls only, AGENTS.md's Packages section): this is an ungrouped site-level GUIDE page, the SAME
 // posture as router-doc.ts/data-doc.ts/highlight-doc.ts.
 //
 // DERIVE-FIRST: the subpath table is read from @agent-ui/components' own package.json `exports` map
@@ -114,7 +114,7 @@ function listOf(items: readonly Node[]): HTMLElement {
 const { content } = mountPage({
   title: '@agent-ui/components — traits',
   intro:
-    'Traits are the layer BELOW controls (CLAUDE.md’s Layout section: reactive ← dom ← traits ← controls) — ' +
+    'Traits are the layer BELOW controls (AGENTS.md’s Packages section: reactive ← dom ← traits ← controls) — ' +
     'stateless `(host, opts) => cleanup` behaviours (and a couple of stateful controllers) invoked directly ' +
     'from a control’s own `connected()`. Most traits live entirely inside `components/src/traits/` with no ' +
     'subpath export at all; exactly three are published as their own `@agent-ui/components/traits/*` ' +

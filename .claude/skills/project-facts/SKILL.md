@@ -28,7 +28,7 @@ alongside this table, don't re-derive the grammar here.
 | Requirements, exact behavior, acceptance criteria | `.claude/docs/spec/` (SPEC-R#/N#) |
 | How something is built internally | `.claude/docs/lld/` (LLD-C#) |
 | A decision and its alternatives | the ticket that made it (GitHub Issue or `.sdlc/tickets/<NNNN-slug>/handoff.md`, T-0242); a standing rule in its owning `.claude/docs/references/` doc or skill. Decisions before 2026-10-14: `.claude/docs/adr/` (ADR-####, frozen history, T-0164) |
-| **What's queued or in flight — LIVE work items** | **GitHub Issues** (`gh issue list`; ADR-0145 — labels: `bug`/`enhancement`/`task` for kind, `size:small`/`size:big`, `doing` for in-progress; status = Issue state + close-reason (`completed`/`not planned`); Findings = dated issue comments). CLAUDE.md's `.claude/docs/` bullet is the owning statement of this convention. |
+| **What's queued or in flight — LIVE work items** | **`.sdlc/tickets/`** (sdlc-lite topics layout, T-0242; created, closed and archived through the `sdlc-lite:ticket` skill, roadmap generated at `.sdlc/tickets/roadmap.md`). GitHub Issues and `.claude/docs/tickets/` are history (ADR-0145). AGENTS.md's "Where truth lives" Work items row is the owning statement of this convention. |
 | Historical ticket records (TKT-0001–0096, all closed) | `.claude/docs/tickets/` — a FROZEN archive since 2026-07-18 (ADR-0145); answer "which tickets are open" from GitHub Issues, NEVER from here (a zero-open read of this directory is the false zero-board) |
 | Structural breakdowns behind a build | `.claude/docs/decompositions/` (`*.decomp.json`) |
 | Sequenced steps, near-term execution state | `.claude/docs/plan.md` (one file, not a directory) |

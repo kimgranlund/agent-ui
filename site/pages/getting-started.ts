@@ -2,7 +2,7 @@
 // cascade every page (including this one) already demonstrates, and a minimal runnable example. The per-control
 // subpath list is DERIVED — read at build time from @agent-ui/components' real package.json `exports` map
 // (Vite `?raw` + JSON.parse, the frontmatter.ts convention) — never hand-typed, so a new/renamed control's
-// export flows here with zero edits. The package-map prose is hand-authored (cited to CLAUDE.md's Layout
+// export flows here with zero edits. The package-map prose is hand-authored (cited to AGENTS.md's Packages
 // section by ID — the T6 soft-staleness rule, docs-author's method §5): there is no single machine-readable
 // "what is this package for" source to parse.
 import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls (ADR-0003)
@@ -46,7 +46,7 @@ content.append(
   ]),
 )
 
-// ── the workspace packages (hand-authored — cited to CLAUDE.md's Layout section, soft staleness) ──────────────
+// ── the workspace packages (hand-authored — cited to AGENTS.md's Packages section, soft staleness) ──────────────
 content.append(heading(2, 'The workspace packages'))
 content.append(
   el('p', {}, [

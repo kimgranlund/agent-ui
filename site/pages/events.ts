@@ -1,4 +1,4 @@
-// site/pages/events.ts — the event vocabulary + interop reference (GH #1045). CLAUDE.md's Conventions
+// site/pages/events.ts — the event vocabulary + interop reference (GH #1045). AGENTS.md's Hard conventions
 // section states the closed seven (`change · input · select · open · close · toggle · action`) as fleet
 // law; this page is that law's SECOND consumer, not a restatement: the mechanics (bubbles/composed/
 // cancelable) are sliced VERBATIM from `UIElement.emit` (dom/element.ts), and the per-control event
@@ -56,7 +56,7 @@ function code(text: string): HTMLElement {
 const { content } = mountPage({
   title: 'Events',
   intro:
-    'The closed event vocabulary every `ui-*` control emits from — seven names, no more (CLAUDE.md’s Conventions ' +
+    'The closed event vocabulary every `ui-*` control emits from — seven names, no more (AGENTS.md’s Hard conventions ' +
     'section; naming.md §4). This page derives the mechanics from the real `UIElement.emit` seam, the per-control ' +
     'inventory from every shipped descriptor’s `events[]` sequence, and cites the ADR that minted each name — plus ' +
     'a live event log over a real ui-select and ui-switch.',
