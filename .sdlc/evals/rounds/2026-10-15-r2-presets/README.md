@@ -22,7 +22,6 @@ Backfilled by hand on 2026-10-15 (before T-0241): there is no `round.json` or `l
 - `report.md`: The phase 2 round report written by the conductor: findings with trace lines as evidence and the tickets filed. Hand-written.
 - `runs/.capped-start`: The round start (ISO), written once by `run-capped.ts` so a restart keeps the same spend baseline and trace window.
 - `traces/2026-10-15.jsonl`: Dev proxy trace lines (T-0151), one redacted JSON line per agent turn: `at`, `agent`, `model`, `user`, `outcome`, `steps`, `usage`; hand-copied by the conductor on 2026-10-15 from a worktree's `.agent-traces/` (rounds before T-0241). Read: `jq -c '{at, agent, model, outcome, usage}' traces/2026-10-15.jsonl`; same shape as `npm run traces` reads.
-- `traces/runner-ledger.log`: The capped runner's stdout, hand-copied by the conductor on 2026-10-15 from a /tmp log (rounds before T-0241 had no `ledger.jsonl`): each run's probe output, then `[i/n] rc=<exit> $<spend so far> :: <out>`. Read: `grep -E '^\[[0-9]+/' traces/runner-ledger.log`.
 
 ## Runs
 
@@ -30,49 +29,49 @@ Backfilled by hand on 2026-10-15 (before T-0241): there is no `round.json` or `l
 
 - `report.json`: `verdict`, `checks[]` (`check`, `turn`, `status`, `detail`), `turns[]` (request, rounds, trace, prose, lint, screenshot), `agent`, `model`, `at`. Read: `jq -c '.checks[] | select(.status=="fail")' runs/<name>/report.json`.
 - `fixture.json`: the recorded model answers of the run. Replay it keylessly: `npm run chat:probe -- --replay 2026-10-15-r2-presets/runs/<name>/fixture.json`.
-- `turn-<n>.png`: the Test Chat screenshot after turn n; git-ignored (`runs/*/*.png`), so present only on the disk that ran the round.
+- `turn-<n>.png`: the Test Chat screenshot after turn n. Not in this folder or in git (T-0256): it is in the local evidence cache, `$AGENT_UI_EVIDENCE_DIR (default `~/Library/Caches/agent-ui/evidence` on macOS, `${XDG_CACHE_HOME:-~/.cache}/agent-ui/evidence` elsewhere)/<round>/<run>/turn-<n>.png`, so present only on the machine that ran the round and possibly gone. Each `report.json` turn names its screenshot by absolute path.
 
 | Run | Agent | Model | Verdict | Files |
 | --- | --- | --- | --- | --- |
-| `runs/admiral-concede-haiku-1/` | admiral | claude-haiku-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` `turn-4.png` |
-| `runs/admiral-concede-sonnet-1/` | admiral | claude-sonnet-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` `turn-4.png` |
-| `runs/admiral-opening-salvo-haiku-1/` | admiral | claude-haiku-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` |
-| `runs/admiral-opening-salvo-sonnet-1/` | admiral | claude-sonnet-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` |
-| `runs/admiral-row-sweep-haiku-1/` | admiral | claude-haiku-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` `turn-7.png` `turn-8.png` |
-| `runs/admiral-row-sweep-sonnet-1/` | admiral | claude-sonnet-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` `turn-7.png` `turn-8.png` |
-| `runs/concierge-dinner-at-vela-haiku-1/` | concierge | claude-haiku-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` |
-| `runs/concierge-dinner-at-vela-sonnet-1/` | concierge | claude-sonnet-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` |
-| `runs/concierge-facilities-then-tour-haiku-1/` | concierge | claude-haiku-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` |
-| `runs/concierge-facilities-then-tour-sonnet-1/` | concierge | claude-sonnet-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` |
-| `runs/concierge-spa-booking-haiku-1/` | concierge | claude-haiku-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` `turn-4.png` |
-| `runs/concierge-spa-booking-sonnet-1/` | concierge | claude-sonnet-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` `turn-4.png` |
-| `runs/croupier-blackjack-moves-haiku-1/` | croupier | claude-haiku-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-10.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` `turn-7.png` `turn-8.png` `turn-9.png` |
-| `runs/croupier-blackjack-moves-opus-1/` | croupier | claude-opus-5-5 | pass | `fixture.json` `report.json` `turn-1.png` `turn-10.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` `turn-7.png` `turn-8.png` `turn-9.png` |
-| `runs/croupier-blackjack-moves-sonnet-1/` | croupier | claude-sonnet-5-5 | pass | `fixture.json` `report.json` `turn-1.png` `turn-10.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` `turn-7.png` `turn-8.png` `turn-9.png` |
-| `runs/croupier-blackjack-rounds-haiku-1/` | croupier | claude-haiku-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` |
-| `runs/croupier-blackjack-rounds-opus-1/` | croupier | claude-opus-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` `turn-7.png` |
-| `runs/croupier-blackjack-rounds-sonnet-1/` | croupier | claude-sonnet-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` |
-| `runs/croupier-five-card-draw-haiku-1/` | croupier | claude-haiku-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-10.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` `turn-7.png` `turn-8.png` `turn-9.png` |
-| `runs/croupier-five-card-draw-opus-1/` | croupier | claude-opus-5-5 | pass | `fixture.json` `report.json` `turn-1.png` `turn-10.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` `turn-7.png` `turn-8.png` `turn-9.png` |
-| `runs/croupier-five-card-draw-sonnet-1/` | croupier | claude-sonnet-5-5 | pass | `fixture.json` `report.json` `turn-1.png` `turn-10.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` `turn-7.png` `turn-8.png` `turn-9.png` |
-| `runs/croupier-omaha-haiku-1/` | croupier | claude-haiku-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` |
-| `runs/croupier-omaha-opus-1/` | croupier | claude-opus-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-10.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` `turn-7.png` `turn-8.png` `turn-9.png` |
-| `runs/croupier-omaha-sonnet-1/` | croupier | claude-sonnet-5-5 | pass | `fixture.json` `report.json` `turn-1.png` `turn-10.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` `turn-7.png` `turn-8.png` `turn-9.png` |
-| `runs/croupier-pontoon-haiku-1/` | croupier | claude-haiku-5-5 | pass | `fixture.json` `report.json` `turn-1.png` `turn-10.png` `turn-11.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` `turn-7.png` `turn-8.png` `turn-9.png` |
-| `runs/croupier-pontoon-opus-1/` | croupier | claude-opus-5-5 | pass | `fixture.json` `report.json` `turn-1.png` `turn-10.png` `turn-11.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` `turn-7.png` `turn-8.png` `turn-9.png` |
-| `runs/croupier-pontoon-sonnet-1/` | croupier | claude-sonnet-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` |
-| `runs/croupier-seven-card-stud-haiku-1/` | croupier | claude-haiku-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` `turn-7.png` |
-| `runs/croupier-seven-card-stud-opus-1/` | croupier | claude-opus-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` `turn-7.png` |
-| `runs/croupier-seven-card-stud-sonnet-1/` | croupier | claude-sonnet-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` `turn-7.png` |
-| `runs/croupier-spanish-21-haiku-1/` | croupier | claude-haiku-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` |
-| `runs/croupier-spanish-21-opus-1/` | croupier | claude-opus-5-5 | pass | `fixture.json` `report.json` `turn-1.png` `turn-10.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` `turn-7.png` `turn-8.png` `turn-9.png` |
-| `runs/croupier-spanish-21-sonnet-1/` | croupier | claude-sonnet-5-5 | pass | `fixture.json` `report.json` `turn-1.png` `turn-10.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` `turn-7.png` `turn-8.png` `turn-9.png` |
-| `runs/croupier-texas-holdem-haiku-1/` | croupier | claude-haiku-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-10.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` `turn-7.png` `turn-8.png` `turn-9.png` |
-| `runs/croupier-texas-holdem-opus-1/` | croupier | claude-opus-5-5 | pass | `fixture.json` `report.json` `turn-1.png` `turn-10.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` `turn-7.png` `turn-8.png` `turn-9.png` |
-| `runs/croupier-texas-holdem-sonnet-1/` | croupier | claude-sonnet-5-5 | pass | `fixture.json` `report.json` `turn-1.png` `turn-10.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` `turn-7.png` `turn-8.png` `turn-9.png` |
-| `runs/lexicographer-give-up-haiku-1/` | lexicographer | claude-haiku-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` `turn-4.png` |
-| `runs/lexicographer-give-up-sonnet-1/` | lexicographer | claude-sonnet-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` `turn-4.png` |
-| `runs/lexicographer-invalid-then-replay-haiku-1/` | lexicographer | claude-haiku-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` |
-| `runs/lexicographer-invalid-then-replay-sonnet-1/` | lexicographer | claude-sonnet-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` |
-| `runs/lexicographer-six-guesses-haiku-1/` | lexicographer | claude-haiku-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` |
-| `runs/lexicographer-six-guesses-sonnet-1/` | lexicographer | claude-sonnet-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` |
+| `runs/admiral-concede-haiku-1/` | admiral | claude-haiku-5-5 | fail | `fixture.json` `report.json` |
+| `runs/admiral-concede-sonnet-1/` | admiral | claude-sonnet-5-5 | fail | `fixture.json` `report.json` |
+| `runs/admiral-opening-salvo-haiku-1/` | admiral | claude-haiku-5-5 | fail | `fixture.json` `report.json` |
+| `runs/admiral-opening-salvo-sonnet-1/` | admiral | claude-sonnet-5-5 | fail | `fixture.json` `report.json` |
+| `runs/admiral-row-sweep-haiku-1/` | admiral | claude-haiku-5-5 | fail | `fixture.json` `report.json` |
+| `runs/admiral-row-sweep-sonnet-1/` | admiral | claude-sonnet-5-5 | fail | `fixture.json` `report.json` |
+| `runs/concierge-dinner-at-vela-haiku-1/` | concierge | claude-haiku-5-5 | fail | `fixture.json` `report.json` |
+| `runs/concierge-dinner-at-vela-sonnet-1/` | concierge | claude-sonnet-5-5 | fail | `fixture.json` `report.json` |
+| `runs/concierge-facilities-then-tour-haiku-1/` | concierge | claude-haiku-5-5 | fail | `fixture.json` `report.json` |
+| `runs/concierge-facilities-then-tour-sonnet-1/` | concierge | claude-sonnet-5-5 | fail | `fixture.json` `report.json` |
+| `runs/concierge-spa-booking-haiku-1/` | concierge | claude-haiku-5-5 | fail | `fixture.json` `report.json` |
+| `runs/concierge-spa-booking-sonnet-1/` | concierge | claude-sonnet-5-5 | fail | `fixture.json` `report.json` |
+| `runs/croupier-blackjack-moves-haiku-1/` | croupier | claude-haiku-5-5 | fail | `fixture.json` `report.json` |
+| `runs/croupier-blackjack-moves-opus-1/` | croupier | claude-opus-5-5 | pass | `fixture.json` `report.json` |
+| `runs/croupier-blackjack-moves-sonnet-1/` | croupier | claude-sonnet-5-5 | pass | `fixture.json` `report.json` |
+| `runs/croupier-blackjack-rounds-haiku-1/` | croupier | claude-haiku-5-5 | fail | `fixture.json` `report.json` |
+| `runs/croupier-blackjack-rounds-opus-1/` | croupier | claude-opus-5-5 | fail | `fixture.json` `report.json` |
+| `runs/croupier-blackjack-rounds-sonnet-1/` | croupier | claude-sonnet-5-5 | fail | `fixture.json` `report.json` |
+| `runs/croupier-five-card-draw-haiku-1/` | croupier | claude-haiku-5-5 | fail | `fixture.json` `report.json` |
+| `runs/croupier-five-card-draw-opus-1/` | croupier | claude-opus-5-5 | pass | `fixture.json` `report.json` |
+| `runs/croupier-five-card-draw-sonnet-1/` | croupier | claude-sonnet-5-5 | pass | `fixture.json` `report.json` |
+| `runs/croupier-omaha-haiku-1/` | croupier | claude-haiku-5-5 | fail | `fixture.json` `report.json` |
+| `runs/croupier-omaha-opus-1/` | croupier | claude-opus-5-5 | fail | `fixture.json` `report.json` |
+| `runs/croupier-omaha-sonnet-1/` | croupier | claude-sonnet-5-5 | pass | `fixture.json` `report.json` |
+| `runs/croupier-pontoon-haiku-1/` | croupier | claude-haiku-5-5 | pass | `fixture.json` `report.json` |
+| `runs/croupier-pontoon-opus-1/` | croupier | claude-opus-5-5 | pass | `fixture.json` `report.json` |
+| `runs/croupier-pontoon-sonnet-1/` | croupier | claude-sonnet-5-5 | fail | `fixture.json` `report.json` |
+| `runs/croupier-seven-card-stud-haiku-1/` | croupier | claude-haiku-5-5 | fail | `fixture.json` `report.json` |
+| `runs/croupier-seven-card-stud-opus-1/` | croupier | claude-opus-5-5 | fail | `fixture.json` `report.json` |
+| `runs/croupier-seven-card-stud-sonnet-1/` | croupier | claude-sonnet-5-5 | fail | `fixture.json` `report.json` |
+| `runs/croupier-spanish-21-haiku-1/` | croupier | claude-haiku-5-5 | fail | `fixture.json` `report.json` |
+| `runs/croupier-spanish-21-opus-1/` | croupier | claude-opus-5-5 | pass | `fixture.json` `report.json` |
+| `runs/croupier-spanish-21-sonnet-1/` | croupier | claude-sonnet-5-5 | pass | `fixture.json` `report.json` |
+| `runs/croupier-texas-holdem-haiku-1/` | croupier | claude-haiku-5-5 | fail | `fixture.json` `report.json` |
+| `runs/croupier-texas-holdem-opus-1/` | croupier | claude-opus-5-5 | pass | `fixture.json` `report.json` |
+| `runs/croupier-texas-holdem-sonnet-1/` | croupier | claude-sonnet-5-5 | pass | `fixture.json` `report.json` |
+| `runs/lexicographer-give-up-haiku-1/` | lexicographer | claude-haiku-5-5 | fail | `fixture.json` `report.json` |
+| `runs/lexicographer-give-up-sonnet-1/` | lexicographer | claude-sonnet-5-5 | fail | `fixture.json` `report.json` |
+| `runs/lexicographer-invalid-then-replay-haiku-1/` | lexicographer | claude-haiku-5-5 | fail | `fixture.json` `report.json` |
+| `runs/lexicographer-invalid-then-replay-sonnet-1/` | lexicographer | claude-sonnet-5-5 | fail | `fixture.json` `report.json` |
+| `runs/lexicographer-six-guesses-haiku-1/` | lexicographer | claude-haiku-5-5 | fail | `fixture.json` `report.json` |
+| `runs/lexicographer-six-guesses-sonnet-1/` | lexicographer | claude-sonnet-5-5 | fail | `fixture.json` `report.json` |

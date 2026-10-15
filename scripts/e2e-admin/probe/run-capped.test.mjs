@@ -126,8 +126,8 @@ describe('run-capped', () => {
       expect(manifest).toMatchObject({ commit: 'abc123', liveCommands: 'live.sh', cap: 100, stop: 'done', window: { since: SINCE } })
       expect(manifest.prices.source).toMatch(/claude-api/)
       expect(manifest.totals).toEqual({ runs: 3, traceLines: 6, tokens: { input: 600_000, output: 600_000, cacheRead: 0, cacheCreation: 0 }, costUsd: 4.92 })
-      expect(manifest.files.screenshots).toMatch(/out of git/)
-      expect(readFileSync(join(round, '.gitignore'), 'utf8')).toContain('runs/*/*.png')
+      expect(manifest.files.screenshots).toMatch(/local cache outside the repo/)
+      expect(existsSync(join(round, '.gitignore'))).toBe(false)
     })
 
     it('still writes the archive when the cap stops the round, and keeps earlier rows on a restart', () => {
@@ -193,13 +193,13 @@ describe('run-capped', () => {
           mkdirSync(out, { recursive: true })
           writeFileSync(join(out, 'report.json'), JSON.stringify({ verdict: 'pass', agent: 'croupier', model: 'claude-haiku-5-5' }))
           writeFileSync(join(out, 'fixture.json'), '{}')
-          writeFileSync(join(out, 'turn-1.png'), '')
           return 0
         },
       })
       const dir = join(root, '.sdlc', 'rr')
       const readme = readFileSync(join(dir, 'README.md'), 'utf8')
-      expect(listRound(dir)).toEqual(['.gitignore', 'README.md', 'ledger.jsonl', 'round.json', 'runs/croupier-deal-haiku-1/fixture.json', 'runs/croupier-deal-haiku-1/report.json', 'runs/croupier-deal-haiku-1/turn-1.png', 'traces/2026-10-14.jsonl'])
+      expect(listRound(dir)).toEqual(['README.md', 'ledger.jsonl', 'round.json', 'runs/croupier-deal-haiku-1/fixture.json', 'runs/croupier-deal-haiku-1/report.json', 'traces/2026-10-14.jsonl'])
+      expect(readme).toContain('local evidence cache')
       expect(claimed(readme)).toEqual(listRound(dir))
       expect(readme).toContain('commit `abc123`')
       expect(readme).toContain('--replay .sdlc/rr/runs/<name>/fixture.json')
