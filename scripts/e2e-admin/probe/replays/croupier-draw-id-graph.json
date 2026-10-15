@@ -1,0 +1,943 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "croupier-draw-id-graph",
+  "agent": "croupier",
+  "model": "claude-sonnet-5-5",
+  "effort": "medium",
+  "source": "2026-10-15.jsonl:110,2026-10-15.jsonl:111,2026-10-15.jsonl:112,2026-10-15.jsonl:113,2026-10-15.jsonl:114 (catalog agent-ui--croupier)",
+  "steps": [
+    {
+      "say": "Let's play five-card draw."
+    },
+    {
+      "say": "Check."
+    },
+    {
+      "say": "Discard my two lowest cards and draw."
+    },
+    {
+      "click": "unknown action"
+    },
+    {
+      "click": "unknown action"
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"Five-card draw it is. Each of us gets five cards, then there's a betting round. After that we can each discard up to three cards (four if you keep an Ace) and draw replacements. Then comes a final betting round and a showdown, and ties split the pot. We each ante 10, so your bankroll starts at 1,000 and drops to 990. Your hand: a pair of kings. Your move is Check, Bet or Fold.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Five-card draw it is. Each of us gets five cards, then there's a betting round. After that we can each discard up to three cards (four if you keep an Ace) and draw replacements. Then comes a final betting round and a showdown, and ties split the pot. We each ante 10, so your bankroll starts at 1,000 and drops to 990. Your hand: a pair of kings. Your move is Check, Bet or Fold.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"## Referenced for this message\\n### five-card-draw (resource)\\nfive-card draw, discard and draw, classic poker\\n\\nClassic draw poker: five cards each, face-down, then a betting round; each side may discard up to three cards (four when keeping an Ace) and draw replacements; one final betting round, then showdown. Standard rankings; tied hands split the pot.\\n\\nLet's play five-card draw.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":48322,\"sections\":[{\"id\":\"grammar\",\"chars\":25639},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":2021}],\"over\":false}}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-1\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":990,\"pot\":20,\"playerHand\":[{\"rank\":\"K\",\"suit\":\"spades\",\"faceDown\":false},{\"rank\":\"K\",\"suit\":\"diamonds\",\"faceDown\":false},{\"rank\":\"7\",\"suit\":\"clubs\",\"faceDown\":false},{\"rank\":\"4\",\"suit\":\"hearts\",\"faceDown\":false},{\"rank\":\"2\",\"suit\":\"spades\",\"faceDown\":false}],\"dealerHand\":[{\"rank\":\"A\",\"suit\":\"spades\",\"faceDown\":true},{\"rank\":\"A\",\"suit\":\"spades\",\"faceDown\":true},{\"rank\":\"A\",\"suit\":\"spades\",\"faceDown\":true},{\"rank\":\"A\",\"suit\":\"spades\",\"faceDown\":true},{\"rank\":\"A\",\"suit\":\"spades\",\"faceDown\":true}]}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"hd\",\"ct\",\"ft\"]},{\"id\":\"hd\",\"component\":\"CardHeader\",\"children\":[\"title\",\"phase\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Five-card draw\",\"variant\":\"h4\"},{\"id\":\"phase\",\"component\":\"Badge\",\"label\":\"First bet\",\"intent\":\"info\",\"slot\":\"trailing\"},{\"id\":\"ct\",\"component\":\"CardContent\",\"children\":[\"col\"]},{\"id\":\"col\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"bank\",\"dealerLbl\",\"dealerRow\",\"playerLbl\",\"playerRow\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Round 1\",\"status\":\"Ante 10 each\",\"statusIntent\":\"neutral\",\"stats\":[{\"label\":\"Pot\",\"value\":\"20\"},{\"label\":\"Phase\",\"value\":\"Bet 1 of 2\"}]},{\"id\":\"bank\",\"component\":\"Stat\",\"label\":\"Bankroll\",\"value\":{\"path\":\"/bankroll\"}},{\"id\":\"dealerLbl\",\"component\":\"Text\",\"text\":\"Dealer — 5 cards face down\",\"variant\":\"label\"},{\"id\":\"dealerRow\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/dealerHand\",\"componentId\":\"dCard\"}},{\"id\":\"dCard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":{\"path\":\"faceDown\"},\"size\":\"sm\"},{\"id\":\"playerLbl\",\"component\":\"Text\",\"text\":\"You — pair of kings\",\"variant\":\"label\"},{\"id\":\"playerRow\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/playerHand\",\"componentId\":\"pCard\"}},{\"id\":\"pCard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":{\"path\":\"faceDown\"},\"size\":\"md\"},{\"id\":\"ft\",\"component\":\"CardFooter\",\"children\":[\"acts\"]},{\"id\":\"acts\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"bCheck\",\"bBet\",\"bFold\"]},{\"id\":\"bCheck\",\"component\":\"Button\",\"label\":\"Check\",\"variant\":\"soft\",\"action\":{\"action\":\"check\"}},{\"id\":\"bBet\",\"component\":\"Button\",\"label\":\"Bet 20\",\"variant\":\"solid\",\"action\":{\"action\":\"bet\",\"context\":{\"amount\":20}}},{\"id\":\"bFold\",\"component\":\"Button\",\"label\":\"Fold\",\"variant\":\"ghost\",\"action\":{\"action\":\"fold\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Five-card draw it is. Each of us gets five cards, then there's a betting round. After that we can each discard up to three cards (four if you keep an Ace) and draw replacements. Then comes a final betting round and a showdown, and ties split the pot. We each ante 10, so your bankroll starts at 1,000 and drops to 990. Your hand: a pair of kings. Your move is Check, Bet or Fold.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Cards are dealt. You hold a pair of kings. Check, bet 20 or fold?",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-1",
+                      "catalogId": "agent-ui--croupier",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "bankroll": 990,
+                        "pot": 20,
+                        "playerHand": [
+                          {
+                            "rank": "K",
+                            "suit": "spades",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "K",
+                            "suit": "diamonds",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "7",
+                            "suit": "clubs",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "4",
+                            "suit": "hearts",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "2",
+                            "suit": "spades",
+                            "faceDown": false
+                          }
+                        ],
+                        "dealerHand": [
+                          {
+                            "rank": "A",
+                            "suit": "spades",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "A",
+                            "suit": "spades",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "A",
+                            "suit": "spades",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "A",
+                            "suit": "spades",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "A",
+                            "suit": "spades",
+                            "faceDown": true
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "hd",
+                            "ct",
+                            "ft"
+                          ]
+                        },
+                        {
+                          "id": "hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "title",
+                            "phase"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Five-card draw",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "phase",
+                          "component": "Badge",
+                          "label": "First bet",
+                          "intent": "info",
+                          "slot": "trailing"
+                        },
+                        {
+                          "id": "ct",
+                          "component": "CardContent",
+                          "children": [
+                            "col"
+                          ]
+                        },
+                        {
+                          "id": "col",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "bank",
+                            "dealerLbl",
+                            "dealerRow",
+                            "playerLbl",
+                            "playerRow"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Round 1",
+                          "status": "Ante 10 each",
+                          "statusIntent": "neutral",
+                          "stats": [
+                            {
+                              "label": "Pot",
+                              "value": "20"
+                            },
+                            {
+                              "label": "Phase",
+                              "value": "Bet 1 of 2"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "bank",
+                          "component": "Stat",
+                          "label": "Bankroll",
+                          "value": {
+                            "path": "/bankroll"
+                          }
+                        },
+                        {
+                          "id": "dealerLbl",
+                          "component": "Text",
+                          "text": "Dealer — 5 cards face down",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "dealerRow",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/dealerHand",
+                            "componentId": "dCard"
+                          }
+                        },
+                        {
+                          "id": "dCard",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "faceDown": {
+                            "path": "faceDown"
+                          },
+                          "size": "sm"
+                        },
+                        {
+                          "id": "playerLbl",
+                          "component": "Text",
+                          "text": "You — pair of kings",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "playerRow",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/playerHand",
+                            "componentId": "pCard"
+                          }
+                        },
+                        {
+                          "id": "pCard",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "faceDown": {
+                            "path": "faceDown"
+                          },
+                          "size": "md"
+                        },
+                        {
+                          "id": "ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "acts"
+                          ]
+                        },
+                        {
+                          "id": "acts",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": [
+                            "bCheck",
+                            "bBet",
+                            "bFold"
+                          ]
+                        },
+                        {
+                          "id": "bCheck",
+                          "component": "Button",
+                          "label": "Check",
+                          "variant": "soft",
+                          "action": {
+                            "action": "check"
+                          }
+                        },
+                        {
+                          "id": "bBet",
+                          "component": "Button",
+                          "label": "Bet 20",
+                          "variant": "solid",
+                          "action": {
+                            "action": "bet",
+                            "context": {
+                              "amount": 20
+                            }
+                          }
+                        },
+                        {
+                          "id": "bFold",
+                          "component": "Button",
+                          "label": "Fold",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "fold"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "## Referenced for this message\n### five-card-draw (resource)\nfive-card draw, discard and draw, classic poker\n\nClassic draw poker: five cards each, face-down, then a betting round; each side may discard up to three cards (four when keeping an Ace) and draw replacements; one final betting round, then showdown. Standard rankings; tied hands split the pot.\n\nLet's play five-card draw."
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"note\":\"Checked. Choose up to three cards to discard, then draw.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Check.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":46301,\"sections\":[{\"id\":\"grammar\",\"chars\":25639},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145}],\"over\":false}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"path\":\"/discard\",\"value\":[\"7clubs\",\"4hearts\",\"2spades\"]}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"phase\",\"component\":\"Badge\",\"label\":\"Draw\",\"intent\":\"info\",\"slot\":\"trailing\"},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Round 1\",\"status\":\"Both checked\",\"statusIntent\":\"neutral\",\"stats\":[{\"label\":\"Pot\",\"value\":\"20\"},{\"label\":\"Phase\",\"value\":\"Draw\"}]},{\"id\":\"col\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"bank\",\"dealerLbl\",\"dealerRow\",\"playerLbl\",\"playerRow\",\"discardSel\"]},{\"id\":\"discardSel\",\"component\":\"MultiSelect\",\"label\":\"Discard (up to 3)\",\"name\":\"discard\",\"value\":{\"path\":\"/discard\"},\"options\":[{\"value\":\"Kspades\",\"label\":\"K of spades\"},{\"value\":\"Kdiamonds\",\"label\":\"K of diamonds\"},{\"value\":\"7clubs\",\"label\":\"7 of clubs\"},{\"value\":\"4hearts\",\"label\":\"4 of hearts\"},{\"value\":\"2spades\",\"label\":\"2 of spades\"}]},{\"id\":\"acts\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"bDraw\",\"bFold\"]},{\"id\":\"bDraw\",\"component\":\"Button\",\"label\":\"Draw\",\"variant\":\"solid\",\"action\":{\"action\":\"draw\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"You check and I check behind, so the pot stays at 20. Now the draw: pick up to three cards to discard (you hold no Ace, so three is the limit). I've preselected 7, 4 and 2 to keep your kings.\",\"target\":{\"surfaceId\":\"table-1\"}}}",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "target": "table-1",
+                "reply": "Checked. Choose up to three cards to discard, then draw.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "path": "/discard",
+                      "value": [
+                        "7clubs",
+                        "4hearts",
+                        "2spades"
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "phase",
+                          "component": "Badge",
+                          "label": "Draw",
+                          "intent": "info",
+                          "slot": "trailing"
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Round 1",
+                          "status": "Both checked",
+                          "statusIntent": "neutral",
+                          "stats": [
+                            {
+                              "label": "Pot",
+                              "value": "20"
+                            },
+                            {
+                              "label": "Phase",
+                              "value": "Draw"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "col",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "bank",
+                            "dealerLbl",
+                            "dealerRow",
+                            "playerLbl",
+                            "playerRow",
+                            "discardSel"
+                          ]
+                        },
+                        {
+                          "id": "discardSel",
+                          "component": "MultiSelect",
+                          "label": "Discard (up to 3)",
+                          "name": "discard",
+                          "value": {
+                            "path": "/discard"
+                          },
+                          "options": [
+                            {
+                              "value": "Kspades",
+                              "label": "K of spades"
+                            },
+                            {
+                              "value": "Kdiamonds",
+                              "label": "K of diamonds"
+                            },
+                            {
+                              "value": "7clubs",
+                              "label": "7 of clubs"
+                            },
+                            {
+                              "value": "4hearts",
+                              "label": "4 of hearts"
+                            },
+                            {
+                              "value": "2spades",
+                              "label": "2 of spades"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "acts",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": [
+                            "bDraw",
+                            "bFold"
+                          ]
+                        },
+                        {
+                          "id": "bDraw",
+                          "component": "Button",
+                          "label": "Draw",
+                          "variant": "solid",
+                          "action": {
+                            "action": "draw"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "Check."
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"Discarded the 4 of hearts and 2 of spades. You drew the Q of hearts and 7 of diamonds, so you now hold two pair, kings and sevens. The dealer drew two as well. Final bet: Check, Bet 20 or Fold.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Discarded the 4 of hearts and 2 of spades. You drew the Q of hearts and 7 of diamonds, so you now hold two pair, kings and sevens. The dealer drew two as well. Final bet: Check, Bet 20 or Fold.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":4,\"query\":{\"intent\":\"Discard my two lowest cards and draw.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":47528,\"sections\":[{\"id\":\"grammar\",\"chars\":25639},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1227}],\"over\":false}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"path\":\"/playerHand\",\"value\":[{\"rank\":\"K\",\"suit\":\"spades\",\"faceDown\":false},{\"rank\":\"K\",\"suit\":\"diamonds\",\"faceDown\":false},{\"rank\":\"7\",\"suit\":\"clubs\",\"faceDown\":false},{\"rank\":\"Q\",\"suit\":\"hearts\",\"faceDown\":false},{\"rank\":\"7\",\"suit\":\"diamonds\",\"faceDown\":false}]}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"path\":\"/discard\",\"value\":[]}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"phase\",\"component\":\"Badge\",\"label\":\"Final bet\",\"intent\":\"info\",\"slot\":\"trailing\"},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Round 1\",\"status\":\"Drew 2, dealer drew 2\",\"statusIntent\":\"neutral\",\"stats\":[{\"label\":\"Pot\",\"value\":\"20\"},{\"label\":\"Phase\",\"value\":\"Bet 2 of 2\"}]},{\"id\":\"dealerLbl\",\"component\":\"Text\",\"text\":\"Dealer — drew 2, 5 cards face down\",\"variant\":\"label\"},{\"id\":\"playerLbl\",\"component\":\"Text\",\"text\":\"You — two pair, kings and sevens\",\"variant\":\"label\"},{\"id\":\"col\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"bank\",\"dealerLbl\",\"dealerRow\",\"playerLbl\",\"playerRow\"]},{\"id\":\"acts\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"bCheck\",\"bBet\",\"bFold\"]}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Discarded the 4 of hearts and 2 of spades. You drew the Q of hearts and 7 of diamonds, so you now hold two pair, kings and sevens. The dealer drew two as well. Final bet: Check, Bet 20 or Fold.\",\"target\":{\"surfaceId\":\"table-1\"}}}\n\nDiscarded the 4 of hearts and 2 of spades. You drew the Q of hearts and 7 of diamonds, so you now hold two pair, kings and sevens. The dealer drew two as well. Final bet: Check, Bet 20 or Fold.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "target": "table-1",
+                "reply": "You drew two cards: two pair, kings and sevens. Final bet is open.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "path": "/playerHand",
+                      "value": [
+                        {
+                          "rank": "K",
+                          "suit": "spades",
+                          "faceDown": false
+                        },
+                        {
+                          "rank": "K",
+                          "suit": "diamonds",
+                          "faceDown": false
+                        },
+                        {
+                          "rank": "7",
+                          "suit": "clubs",
+                          "faceDown": false
+                        },
+                        {
+                          "rank": "Q",
+                          "suit": "hearts",
+                          "faceDown": false
+                        },
+                        {
+                          "rank": "7",
+                          "suit": "diamonds",
+                          "faceDown": false
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "path": "/discard",
+                      "value": []
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "phase",
+                          "component": "Badge",
+                          "label": "Final bet",
+                          "intent": "info",
+                          "slot": "trailing"
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Round 1",
+                          "status": "Drew 2, dealer drew 2",
+                          "statusIntent": "neutral",
+                          "stats": [
+                            {
+                              "label": "Pot",
+                              "value": "20"
+                            },
+                            {
+                              "label": "Phase",
+                              "value": "Bet 2 of 2"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "dealerLbl",
+                          "component": "Text",
+                          "text": "Dealer — drew 2, 5 cards face down",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "playerLbl",
+                          "component": "Text",
+                          "text": "You — two pair, kings and sevens",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "col",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "bank",
+                            "dealerLbl",
+                            "dealerRow",
+                            "playerLbl",
+                            "playerRow"
+                          ]
+                        },
+                        {
+                          "id": "acts",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": [
+                            "bCheck",
+                            "bBet",
+                            "bFold"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "Discard my two lowest cards and draw."
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"note\":\"Fixed. The final-bet buttons are back on the table: Check, Bet 20 or Fold. You hold two pair, kings and sevens.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":6,\"query\":{\"intent\":\"The previous surface was rejected (VALIDATION_FAILED on surface table-1): id-graph violation: acts->bBet (at acts->bBet). Emit a corrected, valid A2UI surface.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":48024,\"sections\":[{\"id\":\"grammar\",\"chars\":25639},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1723}],\"over\":false}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"path\":\"/playerHand\",\"value\":[{\"rank\":\"K\",\"suit\":\"spades\",\"faceDown\":false},{\"rank\":\"K\",\"suit\":\"diamonds\",\"faceDown\":false},{\"rank\":\"7\",\"suit\":\"clubs\",\"faceDown\":false},{\"rank\":\"Q\",\"suit\":\"hearts\",\"faceDown\":false},{\"rank\":\"7\",\"suit\":\"diamonds\",\"faceDown\":false}]}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"phase\",\"component\":\"Badge\",\"label\":\"Final bet\",\"intent\":\"info\",\"slot\":\"trailing\"},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Round 1\",\"status\":\"Drew 2, dealer drew 2\",\"statusIntent\":\"neutral\",\"stats\":[{\"label\":\"Pot\",\"value\":\"20\"},{\"label\":\"Phase\",\"value\":\"Bet 2 of 2\"}]},{\"id\":\"dealerLbl\",\"component\":\"Text\",\"text\":\"Dealer — drew 2, 5 cards face down\",\"variant\":\"label\"},{\"id\":\"playerLbl\",\"component\":\"Text\",\"text\":\"You — two pair, kings and sevens\",\"variant\":\"label\"},{\"id\":\"col\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"bank\",\"dealerLbl\",\"dealerRow\",\"playerLbl\",\"playerRow\"]},{\"id\":\"ft\",\"component\":\"CardFooter\",\"children\":[\"acts\"]},{\"id\":\"acts\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"bCheck\",\"bBet\",\"bFold\"]},{\"id\":\"bCheck\",\"component\":\"Button\",\"label\":\"Check\",\"variant\":\"soft\",\"action\":{\"action\":\"check\"}},{\"id\":\"bBet\",\"component\":\"Button\",\"label\":\"Bet 20\",\"variant\":\"solid\",\"action\":{\"action\":\"bet\",\"context\":{\"amount\":20}}},{\"id\":\"bFold\",\"component\":\"Button\",\"label\":\"Fold\",\"variant\":\"ghost\",\"action\":{\"action\":\"fold\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Fixed. The final-bet buttons are back on the table: Check, Bet 20 or Fold. You hold two pair, kings and sevens.\",\"target\":{\"surfaceId\":\"table-1\"}}}",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Fixed. The final-bet buttons are back on the table: Check, Bet 20 or Fold. You hold two pair, kings and sevens.",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "path": "/playerHand",
+                      "value": [
+                        {
+                          "rank": "K",
+                          "suit": "spades",
+                          "faceDown": false
+                        },
+                        {
+                          "rank": "K",
+                          "suit": "diamonds",
+                          "faceDown": false
+                        },
+                        {
+                          "rank": "7",
+                          "suit": "clubs",
+                          "faceDown": false
+                        },
+                        {
+                          "rank": "Q",
+                          "suit": "hearts",
+                          "faceDown": false
+                        },
+                        {
+                          "rank": "7",
+                          "suit": "diamonds",
+                          "faceDown": false
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "phase",
+                          "component": "Badge",
+                          "label": "Final bet",
+                          "intent": "info",
+                          "slot": "trailing"
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Round 1",
+                          "status": "Drew 2, dealer drew 2",
+                          "statusIntent": "neutral",
+                          "stats": [
+                            {
+                              "label": "Pot",
+                              "value": "20"
+                            },
+                            {
+                              "label": "Phase",
+                              "value": "Bet 2 of 2"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "dealerLbl",
+                          "component": "Text",
+                          "text": "Dealer — drew 2, 5 cards face down",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "playerLbl",
+                          "component": "Text",
+                          "text": "You — two pair, kings and sevens",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "col",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "bank",
+                            "dealerLbl",
+                            "dealerRow",
+                            "playerLbl",
+                            "playerRow"
+                          ]
+                        },
+                        {
+                          "id": "ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "acts"
+                          ]
+                        },
+                        {
+                          "id": "acts",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": [
+                            "bCheck",
+                            "bBet",
+                            "bFold"
+                          ]
+                        },
+                        {
+                          "id": "bCheck",
+                          "component": "Button",
+                          "label": "Check",
+                          "variant": "soft",
+                          "action": {
+                            "action": "check"
+                          }
+                        },
+                        {
+                          "id": "bBet",
+                          "component": "Button",
+                          "label": "Bet 20",
+                          "variant": "solid",
+                          "action": {
+                            "action": "bet",
+                            "context": {
+                              "amount": 20
+                            }
+                          }
+                        },
+                        {
+                          "id": "bFold",
+                          "component": "Button",
+                          "label": "Fold",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "fold"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "client",
+        "message": {
+          "version": "v1.0",
+          "error": {
+            "code": "VALIDATION_FAILED",
+            "surfaceId": "table-1",
+            "message": "id-graph violation: acts->bBet (at acts->bBet)"
+          }
+        }
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"Fixed. The final-bet buttons are back. You hold two pair, kings and sevens. Your move: Check, Bet 20 or Fold.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Fixed. The final-bet buttons are back. You hold two pair, kings and sevens. Your move: Check, Bet 20 or Fold.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":8,\"query\":{\"intent\":\"The previous surface was rejected (VALIDATION_FAILED on surface table-1): id-graph violation: acts->bCheck (at acts->bCheck). Emit a corrected, valid A2UI surface.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":48024,\"sections\":[{\"id\":\"grammar\",\"chars\":25639},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1723}],\"over\":false}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"path\":\"/playerHand\",\"value\":[{\"rank\":\"K\",\"suit\":\"spades\",\"faceDown\":false},{\"rank\":\"K\",\"suit\":\"diamonds\",\"faceDown\":false},{\"rank\":\"7\",\"suit\":\"clubs\",\"faceDown\":false},{\"rank\":\"Q\",\"suit\":\"hearts\",\"faceDown\":false},{\"rank\":\"7\",\"suit\":\"diamonds\",\"faceDown\":false}]}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"path\":\"/discard\",\"value\":[]}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"phase\",\"component\":\"Badge\",\"label\":\"Final bet\",\"intent\":\"info\",\"slot\":\"trailing\"},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Round 1\",\"status\":\"Drew 2, dealer drew 2\",\"statusIntent\":\"neutral\",\"stats\":[{\"label\":\"Pot\",\"value\":\"20\"},{\"label\":\"Phase\",\"value\":\"Bet 2 of 2\"}]},{\"id\":\"dealerLbl\",\"component\":\"Text\",\"text\":\"Dealer — drew 2, 5 cards face down\",\"variant\":\"label\"},{\"id\":\"playerLbl\",\"component\":\"Text\",\"text\":\"You — two pair, kings and sevens\",\"variant\":\"label\"},{\"id\":\"col\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"bank\",\"dealerLbl\",\"dealerRow\",\"playerLbl\",\"playerRow\"]},{\"id\":\"acts\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"bCheck\",\"bBet\",\"bFold\"]},{\"id\":\"bCheck\",\"component\":\"Button\",\"label\":\"Check\",\"variant\":\"soft\",\"action\":{\"action\":\"check\"}},{\"id\":\"bBet\",\"component\":\"Button\",\"label\":\"Bet 20\",\"variant\":\"solid\",\"action\":{\"action\":\"bet\",\"context\":{\"amount\":20}}},{\"id\":\"bFold\",\"component\":\"Button\",\"label\":\"Fold\",\"variant\":\"ghost\",\"action\":{\"action\":\"fold\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Fixing the table: the final-bet buttons were missing. Check, Bet 20 or Fold?\",\"target\":{\"surfaceId\":\"table-1\"}}}\nFixed. The final-bet buttons are back. You hold two pair, kings and sevens. Your move: Check, Bet 20 or Fold.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Final bet is open: Check, Bet 20 or Fold.",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "path": "/playerHand",
+                      "value": [
+                        {
+                          "rank": "K",
+                          "suit": "spades",
+                          "faceDown": false
+                        },
+                        {
+                          "rank": "K",
+                          "suit": "diamonds",
+                          "faceDown": false
+                        },
+                        {
+                          "rank": "7",
+                          "suit": "clubs",
+                          "faceDown": false
+                        },
+                        {
+                          "rank": "Q",
+                          "suit": "hearts",
+                          "faceDown": false
+                        },
+                        {
+                          "rank": "7",
+                          "suit": "diamonds",
+                          "faceDown": false
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "path": "/discard",
+                      "value": []
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "phase",
+                          "component": "Badge",
+                          "label": "Final bet",
+                          "intent": "info",
+                          "slot": "trailing"
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Round 1",
+                          "status": "Drew 2, dealer drew 2",
+                          "statusIntent": "neutral",
+                          "stats": [
+                            {
+                              "label": "Pot",
+                              "value": "20"
+                            },
+                            {
+                              "label": "Phase",
+                              "value": "Bet 2 of 2"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "dealerLbl",
+                          "component": "Text",
+                          "text": "Dealer — drew 2, 5 cards face down",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "playerLbl",
+                          "component": "Text",
+                          "text": "You — two pair, kings and sevens",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "col",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "bank",
+                            "dealerLbl",
+                            "dealerRow",
+                            "playerLbl",
+                            "playerRow"
+                          ]
+                        },
+                        {
+                          "id": "acts",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": [
+                            "bCheck",
+                            "bBet",
+                            "bFold"
+                          ]
+                        },
+                        {
+                          "id": "bCheck",
+                          "component": "Button",
+                          "label": "Check",
+                          "variant": "soft",
+                          "action": {
+                            "action": "check"
+                          }
+                        },
+                        {
+                          "id": "bBet",
+                          "component": "Button",
+                          "label": "Bet 20",
+                          "variant": "solid",
+                          "action": {
+                            "action": "bet",
+                            "context": {
+                              "amount": 20
+                            }
+                          }
+                        },
+                        {
+                          "id": "bFold",
+                          "component": "Button",
+                          "label": "Fold",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "fold"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "client",
+        "message": {
+          "version": "v1.0",
+          "error": {
+            "code": "VALIDATION_FAILED",
+            "surfaceId": "table-1",
+            "message": "id-graph violation: acts->bCheck (at acts->bCheck)"
+          }
+        }
+      }
+    }
+  ]
+}

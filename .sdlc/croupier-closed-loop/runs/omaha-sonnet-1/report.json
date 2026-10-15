@@ -1,0 +1,1385 @@
+{
+  "kind": "agent-ui-chat-probe-report",
+  "version": 1,
+  "name": "omaha-sonnet-1",
+  "mode": "live",
+  "agent": "croupier",
+  "model": "claude-sonnet-5-5",
+  "at": "2026-10-15T02:08:38.214Z",
+  "turns": [
+    {
+      "index": 0,
+      "step": {
+        "say": "Let's play Omaha."
+      },
+      "request": {
+        "model": "claude-sonnet-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--croupier",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Setting up a f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"resh Omaha h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the player against the dealer,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" starting b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ankroll at 1,000\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"with a new table. I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" deal four hole cards to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the player and four\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"idden c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ards to the dealer, le\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aving the board empty for pre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"flop action\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" check, bet, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" fold options under\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pot-limit rules.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For the board,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'll bind it to an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" empty board\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" path with a caption no\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting it's waiting for the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" flop. That\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" cov\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ers the layout struct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ure, so now\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'll move\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" on\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to writing the actual prose\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" response\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Omaha it\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" is. Each player gets four\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" hole cards.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" You must use exactly two of\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" them plus ex\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"actly three board cards.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" The game is pot-limit\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" We\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" each\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ante \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"20, and you're\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" star\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ting from\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 1,000 \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"chips.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"catalogId\\\":\\\"agent-ui--croupier\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"bankroll\\\":980,\\\"pot\\\":40,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"clubs\\\",\\\"faceDown\\\":true},{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"clubs\\\",\\\"faceDown\\\":true},{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"clubs\\\",\\\"faceDown\\\":true},{\\\"rank\\\":\\\"2\\\",\\\"suit\\\":\\\"clubs\\\",\\\"faceDown\\\":true}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"A\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"hearts\\\",\\\"faceDown\\\":false},{\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"hearts\\\",\\\"faceDown\\\":false}],\\\"board\\\":[]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"hud\\\",\\\"table\\\"]},{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Omaha · Pre-flop\\\",\\\"status\\\":\\\"Your turn\\\",\\\"statusIntent\\\":\\\"info\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Bankroll\\\",\\\"value\\\":{\\\"path\\\":\\\"/bankroll\\\"}},{\\\"label\\\":\\\"Pot\\\",\\\"value\\\":{\\\"path\\\":\\\"/pot\\\"}}]},{\\\"id\\\":\\\"table\\\",\\\"component\\\":\\\"Card\\\",\\\"children\\\":[\\\"content\\\",\\\"footer\\\"]},{\\\"id\\\":\\\"content\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"col\\\"]},{\\\"id\\\":\\\"col\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"dl\\\",\\\"drow\\\",\\\"bl\\\",\\\"brow\\\",\\\"pl\\\",\\\"prow\\\"]},{\\\"id\\\":\\\"dl\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Dealer (4 hole cards)\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"drow\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":{\\\"path\\\":\\\"/dealerHand\\\",\\\"componentId\\\":\\\"dcard\\\"}},{\\\"id\\\":\\\"dcard\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"faceDown\\\":{\\\"path\\\":\\\"faceDown\\\"},\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"bl\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Board: flop comes after betting\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"brow\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":{\\\"path\\\":\\\"/board\\\",\\\"componentId\\\":\\\"bcard\\\"}},{\\\"id\\\":\\\"bcard\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"pl\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"You (use exactly 2 of 4)\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"prow\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":{\\\"path\\\":\\\"/playerHand\\\",\\\"componentId\\\":\\\"pcard\\\"}},{\\\"id\\\":\\\"pcard\\\",\\\"component\\\":\\\"PlayingCard\\\",\\\"rank\\\":{\\\"path\\\":\\\"rank\\\"},\\\"suit\\\":{\\\"path\\\":\\\"suit\\\"},\\\"faceDown\\\":{\\\"path\\\":\\\"faceDown\\\"},\\\"size\\\":\\\"md\\\"},{\\\"id\\\":\\\"footer\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"actions\\\"]},{\\\"id\\\":\\\"actions\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"bet\\\",\\\"check\\\",\\\"fold\\\"]},{\\\"id\\\":\\\"bet\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Bet 40\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"omaha_action\\\",\\\"context\\\":{\\\"move\\\":\\\"bet\\\",\\\"amount\\\":40}}},{\\\"id\\\":\\\"check\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Check\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"omaha_action\\\",\\\"context\\\":{\\\"move\\\":\\\"check\\\"}}},{\\\"id\\\":\\\"fold\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Fold\\\",\\\"variant\\\":\\\"ghost\\\",\\\"action\\\":{\\\"action\\\":\\\"omaha_action\\\",\\\"context\\\":{\\\"move\\\":\\\"fold\\\"}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Omaha it is. Each player gets four hole cards. You must use exactly two of them plus exactly three board cards. The game is pot-limit. We each ante 20, and you're starting from 1,000 chips.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"## Referenced for this message\\n### omaha (resource)\\nomaha hold'em, four hole cards, exactly two plus three, pot limit\\n\\nHold'em variant: FOUR hole cards each, same streets and betting rounds. A hand must use exactly two hole cards plus exactly three board cards — no more, no fewer. Traditionally pot-limit; otherwise settle as hold'em.\\n\\nLet's play Omaha.\",\"k\":3},\"exemplarIds\":[\"wallet-summary-card\",\"list-nested\",\"pattern-settings-form\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":58865,\"sections\":[{\"id\":\"grammar\",\"chars\":25639},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5845},{\"id\":\"mini-skills\",\"chars\":1865},{\"id\":\"persona\",\"chars\":4854}],\"over\":false},\"usage\":{\"inputTokens\":22591,\"outputTokens\":2074,\"cacheReadInputTokens\":0,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-1\",\"catalogId\":\"agent-ui--croupier\"}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":980,\"pot\":40,\"dealerHand\":[{\"rank\":\"2\",\"suit\":\"clubs\",\"faceDown\":true},{\"rank\":\"2\",\"suit\":\"clubs\",\"faceDown\":true},{\"rank\":\"2\",\"suit\":\"clubs\",\"faceDown\":true},{\"rank\":\"2\",\"suit\":\"clubs\",\"faceDown\":true}],\"playerHand\":[{\"rank\":\"A\",\"suit\":\"spades\",\"faceDown\":false},{\"rank\":\"K\",\"suit\":\"spades\",\"faceDown\":false},{\"rank\":\"9\",\"suit\":\"hearts\",\"faceDown\":false},{\"rank\":\"8\",\"suit\":\"hearts\",\"faceDown\":false}],\"board\":[]}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"table\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Omaha · Pre-flop\",\"status\":\"Your turn\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Bankroll\",\"value\":{\"path\":\"/bankroll\"}},{\"label\":\"Pot\",\"value\":{\"path\":\"/pot\"}}]},{\"id\":\"table\",\"component\":\"Card\",\"children\":[\"content\",\"footer\"]},{\"id\":\"content\",\"component\":\"CardContent\",\"children\":[\"col\"]},{\"id\":\"col\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"dl\",\"drow\",\"bl\",\"brow\",\"pl\",\"prow\"]},{\"id\":\"dl\",\"component\":\"Text\",\"text\":\"Dealer (4 hole cards)\",\"variant\":\"label\"},{\"id\":\"drow\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/dealerHand\",\"componentId\":\"dcard\"}},{\"id\":\"dcard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":{\"path\":\"faceDown\"},\"size\":\"md\"},{\"id\":\"bl\",\"component\":\"Text\",\"text\":\"Board: flop comes after betting\",\"variant\":\"label\"},{\"id\":\"brow\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/board\",\"componentId\":\"bcard\"}},{\"id\":\"bcard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"size\":\"md\"},{\"id\":\"pl\",\"component\":\"Text\",\"text\":\"You (use exactly 2 of 4)\",\"variant\":\"label\"},{\"id\":\"prow\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/playerHand\",\"componentId\":\"pcard\"}},{\"id\":\"pcard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":{\"path\":\"faceDown\"},\"size\":\"md\"},{\"id\":\"footer\",\"component\":\"CardFooter\",\"children\":[\"actions\"]},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"children\":[\"bet\",\"check\",\"fold\"]},{\"id\":\"bet\",\"component\":\"Button\",\"label\":\"Bet 40\",\"variant\":\"solid\",\"action\":{\"action\":\"omaha_action\",\"context\":{\"move\":\"bet\",\"amount\":40}}},{\"id\":\"check\",\"component\":\"Button\",\"label\":\"Check\",\"variant\":\"soft\",\"action\":{\"action\":\"omaha_action\",\"context\":{\"move\":\"check\"}}},{\"id\":\"fold\",\"component\":\"Button\",\"label\":\"Fold\",\"variant\":\"ghost\",\"action\":{\"action\":\"omaha_action\",\"context\":{\"move\":\"fold\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Omaha it is. Each player gets four hole cards. You must use exactly two of them plus exactly three board cards. The game is pot-limit. We each ante 20, and you're starting from 1,000 chips.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Cards are out. Your move: check, bet (up to the 40 pot), or fold.",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-1",
+                      "catalogId": "agent-ui--croupier"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "bankroll": 980,
+                        "pot": 40,
+                        "dealerHand": [
+                          {
+                            "rank": "2",
+                            "suit": "clubs",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "2",
+                            "suit": "clubs",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "2",
+                            "suit": "clubs",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "2",
+                            "suit": "clubs",
+                            "faceDown": true
+                          }
+                        ],
+                        "playerHand": [
+                          {
+                            "rank": "A",
+                            "suit": "spades",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "K",
+                            "suit": "spades",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "9",
+                            "suit": "hearts",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "8",
+                            "suit": "hearts",
+                            "faceDown": false
+                          }
+                        ],
+                        "board": []
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "table"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Omaha · Pre-flop",
+                          "status": "Your turn",
+                          "statusIntent": "info",
+                          "stats": [
+                            {
+                              "label": "Bankroll",
+                              "value": {
+                                "path": "/bankroll"
+                              }
+                            },
+                            {
+                              "label": "Pot",
+                              "value": {
+                                "path": "/pot"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "id": "table",
+                          "component": "Card",
+                          "children": [
+                            "content",
+                            "footer"
+                          ]
+                        },
+                        {
+                          "id": "content",
+                          "component": "CardContent",
+                          "children": [
+                            "col"
+                          ]
+                        },
+                        {
+                          "id": "col",
+                          "component": "Column",
+                          "gap": "sm",
+                          "children": [
+                            "dl",
+                            "drow",
+                            "bl",
+                            "brow",
+                            "pl",
+                            "prow"
+                          ]
+                        },
+                        {
+                          "id": "dl",
+                          "component": "Text",
+                          "text": "Dealer (4 hole cards)",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "drow",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/dealerHand",
+                            "componentId": "dcard"
+                          }
+                        },
+                        {
+                          "id": "dcard",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "faceDown": {
+                            "path": "faceDown"
+                          },
+                          "size": "md"
+                        },
+                        {
+                          "id": "bl",
+                          "component": "Text",
+                          "text": "Board: flop comes after betting",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "brow",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/board",
+                            "componentId": "bcard"
+                          }
+                        },
+                        {
+                          "id": "bcard",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "size": "md"
+                        },
+                        {
+                          "id": "pl",
+                          "component": "Text",
+                          "text": "You (use exactly 2 of 4)",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "prow",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/playerHand",
+                            "componentId": "pcard"
+                          }
+                        },
+                        {
+                          "id": "pcard",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "faceDown": {
+                            "path": "faceDown"
+                          },
+                          "size": "md"
+                        },
+                        {
+                          "id": "footer",
+                          "component": "CardFooter",
+                          "children": [
+                            "actions"
+                          ]
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "md",
+                          "children": [
+                            "bet",
+                            "check",
+                            "fold"
+                          ]
+                        },
+                        {
+                          "id": "bet",
+                          "component": "Button",
+                          "label": "Bet 40",
+                          "variant": "solid",
+                          "action": {
+                            "action": "omaha_action",
+                            "context": {
+                              "move": "bet",
+                              "amount": 40
+                            }
+                          }
+                        },
+                        {
+                          "id": "check",
+                          "component": "Button",
+                          "label": "Check",
+                          "variant": "soft",
+                          "action": {
+                            "action": "omaha_action",
+                            "context": {
+                              "move": "check"
+                            }
+                          }
+                        },
+                        {
+                          "id": "fold",
+                          "component": "Button",
+                          "label": "Fold",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "omaha_action",
+                            "context": {
+                              "move": "fold"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-15.jsonl:105",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          481
+        ]
+      },
+      "domHosts": 1,
+      "proseText": "You Let's play Omaha. omaha Omaha it is. Each player gets four hole cards. You must use exactly two of them plus exactly three board cards. The game is pot-limit. We each ante 20, and you're starting from 1,000 chips.",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "turn-1.png"
+    },
+    {
+      "index": 1,
+      "step": {
+        "say": "Check."
+      },
+      "request": {
+        "model": "claude-sonnet-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--croupier",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need to update table-1 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"in place to deal the flop\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eping the dealer's check\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and pot at 40 with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the meta-line target\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" int\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"act. I'll de\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"al a flop like\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Q♠ J♦\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 5♠ against the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player's hand of A♠\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" K♠ 9\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"♥ 8♥ using\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the render_surface tool.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"You check, and the deal\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"er checks behind. The\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" flop is Q♠\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 10♥ 4\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"♠. You hold A♠\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" K♠ 9\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"♥ 8♥, which\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" gives you a straight draw\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" that\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" needs a Jack.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Your move.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"path\\\":\\\"/board\\\",\\\"value\\\":[{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"10\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"4\\\",\\\"suit\\\":\\\"spades\\\"}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Omaha · Flop\\\",\\\"status\\\":\\\"Your turn\\\",\\\"statusIntent\\\":\\\"info\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Bankroll\\\",\\\"value\\\":{\\\"path\\\":\\\"/bankroll\\\"}},{\\\"label\\\":\\\"Pot\\\",\\\"value\\\":{\\\"path\\\":\\\"/pot\\\"}}]},{\\\"id\\\":\\\"bl\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Board: flop\\\",\\\"variant\\\":\\\"label\\\"}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You check, and the dealer checks behind. The flop is Q♠ 10♥ 4♠. You hold A♠ K♠ 9♥ 8♥, which gives you a straight draw that needs a Jack. Your move.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Check.\",\"k\":3},\"exemplarIds\":[\"booking-reservation\",\"ops-report\",\"agent-roster-drawer\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":56877,\"sections\":[{\"id\":\"grammar\",\"chars\":25639},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5654},{\"id\":\"persona\",\"chars\":4922}],\"over\":false},\"usage\":{\"inputTokens\":23173,\"outputTokens\":929,\"cacheReadInputTokens\":0,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"path\":\"/board\",\"value\":[{\"rank\":\"Q\",\"suit\":\"spades\"},{\"rank\":\"10\",\"suit\":\"hearts\"},{\"rank\":\"4\",\"suit\":\"spades\"}]}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Omaha · Flop\",\"status\":\"Your turn\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Bankroll\",\"value\":{\"path\":\"/bankroll\"}},{\"label\":\"Pot\",\"value\":{\"path\":\"/pot\"}}]},{\"id\":\"bl\",\"component\":\"Text\",\"text\":\"Board: flop\",\"variant\":\"label\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"You check, and the dealer checks behind. Flop: Q♠ 10♥ 4♠. You hold A♠ K♠ 9♥ 8♥, so you have a straight draw needing a Jack. Your move.\",\"target\":{\"surfaceId\":\"table-1\"}}}\n\nYou check, and the dealer checks behind. The flop is Q♠ 10♥ 4♠. You hold A♠ K♠ 9♥ 8♥, which gives you a straight draw that needs a Jack. Your move.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Flop is down: Q♠ 10♥ 4♠. Your action.",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "path": "/board",
+                      "value": [
+                        {
+                          "rank": "Q",
+                          "suit": "spades"
+                        },
+                        {
+                          "rank": "10",
+                          "suit": "hearts"
+                        },
+                        {
+                          "rank": "4",
+                          "suit": "spades"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Omaha · Flop",
+                          "status": "Your turn",
+                          "statusIntent": "info",
+                          "stats": [
+                            {
+                              "label": "Bankroll",
+                              "value": {
+                                "path": "/bankroll"
+                              }
+                            },
+                            {
+                              "label": "Pot",
+                              "value": {
+                                "path": "/pot"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "id": "bl",
+                          "component": "Text",
+                          "text": "Board: flop",
+                          "variant": "label"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-15.jsonl:106",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          231
+        ]
+      },
+      "domHosts": 1,
+      "proseText": "You Let's play Omaha. omaha Omaha it is. Each player gets four hole cards. You must use exactly two of them plus exactly three board cards. The game is pot-limit. We each ante 20, and you're starting from 1,000 chips. You Check. You check, and the dealer checks behind. The flop is Q♠ 10♥ 4♠. You hold A♠ K♠ 9♥ 8♥, which gives you a straight draw that needs a Jack. Your move.",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "turn-2.png"
+    },
+    {
+      "index": 2,
+      "step": {
+        "say": "Check."
+      },
+      "request": {
+        "model": "claude-sonnet-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--croupier",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to update the table-1 sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face with the turn card via\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" render_surface, ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eping the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" opt\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ional target\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" me\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ta-line. Dr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"awing J♦ act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ually completes a broadway stra\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ight for the player given\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" their A K 9 8 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"hand\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" against the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Q 10 4 J\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" board —\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it's a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"it convenient,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" but c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ards are dealt arbit\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"rarily so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'll just go with it hon\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"estly.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll keep the pot\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" at 40,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" have the dealer check behind\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" on the turn, and move\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to the player's next action,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" upd\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ating the board data and H\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"UD labels accordingly\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" while keeping the same bet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"40 action structure.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"path\\\":\\\"/board\\\",\\\"value\\\":[{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"10\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"4\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"J\\\",\\\"suit\\\":\\\"diamonds\\\"}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Omaha · Turn\\\",\\\"status\\\":\\\"Your turn\\\",\\\"statusIntent\\\":\\\"info\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Bankroll\\\",\\\"value\\\":{\\\"path\\\":\\\"/bankroll\\\"}},{\\\"label\\\":\\\"Pot\\\",\\\"value\\\":{\\\"path\\\":\\\"/pot\\\"}}]},{\\\"id\\\":\\\"bl\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Board: flop and turn\\\",\\\"variant\\\":\\\"label\\\"}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Turn is the J♦. You've made a broadway straight. Your move.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":4,\"query\":{\"intent\":\"Check.\",\"k\":3},\"exemplarIds\":[\"booking-reservation\",\"ops-report\",\"agent-roster-drawer\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":56877,\"sections\":[{\"id\":\"grammar\",\"chars\":25639},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5654},{\"id\":\"persona\",\"chars\":4922}],\"over\":false},\"usage\":{\"inputTokens\":23512,\"outputTokens\":862,\"cacheReadInputTokens\":0,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"path\":\"/board\",\"value\":[{\"rank\":\"Q\",\"suit\":\"spades\"},{\"rank\":\"10\",\"suit\":\"hearts\"},{\"rank\":\"4\",\"suit\":\"spades\"},{\"rank\":\"J\",\"suit\":\"diamonds\"}]}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Omaha · Turn\",\"status\":\"Your turn\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Bankroll\",\"value\":{\"path\":\"/bankroll\"}},{\"label\":\"Pot\",\"value\":{\"path\":\"/pot\"}}]},{\"id\":\"bl\",\"component\":\"Text\",\"text\":\"Board: flop and turn\",\"variant\":\"label\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"You check and the dealer checks behind. The turn is the J♦, so the board reads Q♠ 10♥ 4♠ J♦. A♠ K♠ from your hand plus Q-J-10 on the board makes an ace-high straight, the nuts on this board. Your move.\",\"target\":{\"surfaceId\":\"table-1\"}}}",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Turn is the J♦. You've made a broadway straight. Your move.",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "path": "/board",
+                      "value": [
+                        {
+                          "rank": "Q",
+                          "suit": "spades"
+                        },
+                        {
+                          "rank": "10",
+                          "suit": "hearts"
+                        },
+                        {
+                          "rank": "4",
+                          "suit": "spades"
+                        },
+                        {
+                          "rank": "J",
+                          "suit": "diamonds"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Omaha · Turn",
+                          "status": "Your turn",
+                          "statusIntent": "info",
+                          "stats": [
+                            {
+                              "label": "Bankroll",
+                              "value": {
+                                "path": "/bankroll"
+                              }
+                            },
+                            {
+                              "label": "Pot",
+                              "value": {
+                                "path": "/pot"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "id": "bl",
+                          "component": "Text",
+                          "text": "Board: flop and turn",
+                          "variant": "label"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-15.jsonl:107",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          529
+        ]
+      },
+      "domHosts": 1,
+      "proseText": "You Let's play Omaha. omaha Omaha it is. Each player gets four hole cards. You must use exactly two of them plus exactly three board cards. The game is pot-limit. We each ante 20, and you're starting from 1,000 chips. You Check. You check, and the dealer checks behind. The flop is Q♠ 10♥ 4♠. You hold A♠ K♠ 9♥ 8♥, which gives you a straight draw that needs a Jack. Your move. You Check. Turn is the J♦. You've made a broadway straight. Your move.",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "turn-3.png"
+    },
+    {
+      "index": 3,
+      "step": {
+        "say": "Bet 50."
+      },
+      "request": {
+        "model": "claude-sonnet-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--croupier",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"The b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"et of 50 excee\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ds the pot-limit c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ap,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since the pot is only 40\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" so the maximum legal b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"et is 40. I should let\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" them know the max all\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"owed is 40 r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ather than sil\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ently accepting the illegal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bet.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Pot-limit ca\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ps a bet at the pot\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\", and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the pot is 40. A\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 50 bet isn't\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" allowed. Use **\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Bet 40** on the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" table for the maximum. You\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" can also\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Check or Fold.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Pot-limit caps a bet at the pot, and the pot is 40. A 50 bet isn't allowed. Use **Bet 40** on the table for the maximum. You can also Check or Fold.\",\"trace\":{\"turnIndex\":6,\"query\":{\"intent\":\"Bet 50.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":51978,\"sections\":[{\"id\":\"grammar\",\"chars\":25639},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":755},{\"id\":\"persona\",\"chars\":4922}],\"over\":false},\"usage\":{\"inputTokens\":21608,\"outputTokens\":395,\"cacheReadInputTokens\":0,\"cacheCreationInputTokens\":0}}}}"
+      ],
+      "rounds": [
+        {
+          "text": "Pot-limit caps a bet at the pot, and the pot is 40. A 50 bet isn't allowed. Use **Bet 40** on the table for the maximum. You can also Check or Fold.",
+          "tools": []
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-15.jsonl:108",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          193
+        ]
+      },
+      "domHosts": 1,
+      "proseText": "You Let's play Omaha. omaha Omaha it is. Each player gets four hole cards. You must use exactly two of them plus exactly three board cards. The game is pot-limit. We each ante 20, and you're starting from 1,000 chips. You Check. You check, and the dealer checks behind. The flop is Q♠ 10♥ 4♠. You hold A♠ K♠ 9♥ 8♥, which gives you a straight draw that needs a Jack. Your move. You Check. Turn is the J♦. You've made a broadway straight. Your move. You Bet 50. Pot-limit caps a bet at the pot, and the pot is 40. A 50 bet isn't allowed. Use Bet 40 on the table for the maximum. You can also Check or Fold.",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "turn-4.png"
+    },
+    {
+      "index": 4,
+      "step": {
+        "say": "Check."
+      },
+      "request": {
+        "model": "claude-sonnet-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--croupier",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm dealing the river\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" card now and updating the table\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" then chec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"king the player's hand against\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the board —\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" no\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ticing A\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"♠ K♠ 9\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"♥ 8♥\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" paired with Q♠\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 10♥ 4\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"♠ J♦ act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ually complet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"es a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Broadway straight, so I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" need to set up the player's river\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" decision acc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ordingly.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"You check and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the dealer checks behind\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\". The river is the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 7♣.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Your A\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"♠ K♠ with\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Q♠ J♦\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 10♥ still\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" makes the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" bro\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"adway straight.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" The pot is still 40,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" so the most\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" you can b\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"et is 40. Your move\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"path\\\":\\\"/board\\\",\\\"value\\\":[{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"10\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"4\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"J\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"clubs\\\"}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Omaha · River\\\",\\\"status\\\":\\\"Your turn\\\",\\\"statusIntent\\\":\\\"info\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Bankroll\\\",\\\"value\\\":{\\\"path\\\":\\\"/bankroll\\\"}},{\\\"label\\\":\\\"Pot\\\",\\\"value\\\":{\\\"path\\\":\\\"/pot\\\"}}]},{\\\"id\\\":\\\"bl\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Board: flop, turn and river\\\",\\\"variant\\\":\\\"label\\\"}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You check and the dealer checks behind. The river is the 7♣. Your A♠ K♠ with Q♠ J♦ 10♥ still makes the broadway straight. The pot is still 40, so the most you can bet is 40. Your move.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":8,\"query\":{\"intent\":\"Check.\",\"k\":3},\"exemplarIds\":[\"booking-reservation\",\"ops-report\",\"agent-roster-drawer\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":56877,\"sections\":[{\"id\":\"grammar\",\"chars\":25639},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5654},{\"id\":\"persona\",\"chars\":4922}],\"over\":false},\"usage\":{\"inputTokens\":23896,\"outputTokens\":825,\"cacheReadInputTokens\":0,\"cacheCreationInputTokens\":0}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"path\":\"/board\",\"value\":[{\"rank\":\"Q\",\"suit\":\"spades\"},{\"rank\":\"10\",\"suit\":\"hearts\"},{\"rank\":\"4\",\"suit\":\"spades\"},{\"rank\":\"J\",\"suit\":\"diamonds\"},{\"rank\":\"7\",\"suit\":\"clubs\"}]}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Omaha · River\",\"status\":\"Your turn\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Bankroll\",\"value\":{\"path\":\"/bankroll\"}},{\"label\":\"Pot\",\"value\":{\"path\":\"/pot\"}}]},{\"id\":\"bl\",\"component\":\"Text\",\"text\":\"Board: flop, turn and river\",\"variant\":\"label\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "You check and the dealer checks behind. The river is the 7♣. Your A♠ K♠ with Q♠ J♦ 10♥ still makes the broadway straight. The pot is still 40, so the most you can bet is 40. Your move.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "River is the 7♣. Your move: Bet 40, Check or Fold.",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "path": "/board",
+                      "value": [
+                        {
+                          "rank": "Q",
+                          "suit": "spades"
+                        },
+                        {
+                          "rank": "10",
+                          "suit": "hearts"
+                        },
+                        {
+                          "rank": "4",
+                          "suit": "spades"
+                        },
+                        {
+                          "rank": "J",
+                          "suit": "diamonds"
+                        },
+                        {
+                          "rank": "7",
+                          "suit": "clubs"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Omaha · River",
+                          "status": "Your turn",
+                          "statusIntent": "info",
+                          "stats": [
+                            {
+                              "label": "Bankroll",
+                              "value": {
+                                "path": "/bankroll"
+                              }
+                            },
+                            {
+                              "label": "Pot",
+                              "value": {
+                                "path": "/pot"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "id": "bl",
+                          "component": "Text",
+                          "text": "Board: flop, turn and river",
+                          "variant": "label"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-15.jsonl:109",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          255
+        ]
+      },
+      "domHosts": 1,
+      "proseText": "You Let's play Omaha. omaha Omaha it is. Each player gets four hole cards. You must use exactly two of them plus exactly three board cards. The game is pot-limit. We each ante 20, and you're starting from 1,000 chips. You Check. You check, and the dealer checks behind. The flop is Q♠ 10♥ 4♠. You hold A♠ K♠ 9♥ 8♥, which gives you a straight draw that needs a Jack. Your move. You Check. Turn is the J♦. You've made a broadway straight. Your move. You Bet 50. Pot-limit caps a bet at the pot, and the pot is 40. A 50 bet isn't allowed. Use Bet 40 on the table for the maximum. You can also Check or Fold. You Check. You check and the dealer checks behind. The river is the 7♣. Your A♠ K♠ with Q♠ J♦ 10♥ still makes the broadway straight. The pot is still 40, so the most you can bet is 40. Your move.",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "turn-5.png"
+    },
+    {
+      "index": 5,
+      "step": {
+        "click": "Deal again"
+      },
+      "lines": [],
+      "roundsSource": "none",
+      "clickMissing": {
+        "label": "Deal again",
+        "available": [
+          "Bet 40",
+          "Check",
+          "Fold"
+        ]
+      },
+      "proseText": "You Let's play Omaha. omaha Omaha it is. Each player gets four hole cards. You must use exactly two of them plus exactly three board cards. The game is pot-limit. We each ante 20, and you're starting from 1,000 chips. You Check. You check, and the dealer checks behind. The flop is Q♠ 10♥ 4♠. You hold A♠ K♠ 9♥ 8♥, which gives you a straight draw that needs a Jack. Your move. You Check. Turn is the J♦. You've made a broadway straight. Your move. You Bet 50. Pot-limit caps a bet at the pot, and the pot is 40. A 50 bet isn't allowed. Use Bet 40 on the table for the maximum. You can also Check or Fold. You Check. You check and the dealer checks behind. The river is the 7♣. Your A♠ K♠ with Q♠ J♦ 10♥ still makes the broadway straight. The pot is still 40, so the most you can bet is 40. Your move.",
+      "screenshot": "turn-6.png"
+    }
+  ],
+  "checks": [
+    {
+      "check": "model-pick",
+      "turn": 0,
+      "status": "pass",
+      "detail": "claude-sonnet-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 0,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 0,
+      "status": "pass",
+      "detail": "217 chars of prose, clean"
+    },
+    {
+      "check": "reply-text",
+      "turn": 0,
+      "status": "pass",
+      "detail": "378 chars of reply beside 3 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 0,
+      "status": "pass",
+      "detail": "rounds created [table-1], open [table-1] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "render-lint",
+      "turn": 0,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 0,
+      "status": "pass",
+      "detail": "481 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 1,
+      "status": "pass",
+      "detail": "claude-sonnet-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 1,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 1,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 1,
+      "status": "pass",
+      "detail": "376 chars of prose, clean"
+    },
+    {
+      "check": "reply-text",
+      "turn": 1,
+      "status": "pass",
+      "detail": "294 chars of reply beside 2 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 1,
+      "status": "pass",
+      "detail": "rounds created [], open [table-1] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 1,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "render-lint",
+      "turn": 1,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 1,
+      "status": "pass",
+      "detail": "231 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 2,
+      "status": "pass",
+      "detail": "claude-sonnet-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 2,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 2,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 2,
+      "status": "pass",
+      "detail": "447 chars of prose, clean"
+    },
+    {
+      "check": "reply-text",
+      "turn": 2,
+      "status": "pass",
+      "detail": "59 chars of reply beside 2 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 2,
+      "status": "pass",
+      "detail": "rounds created [], open [table-1] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 2,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "render-lint",
+      "turn": 2,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 2,
+      "status": "pass",
+      "detail": "529 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 3,
+      "status": "pass",
+      "detail": "claude-sonnet-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 3,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 3,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 3,
+      "status": "pass",
+      "detail": "604 chars of prose, clean"
+    },
+    {
+      "check": "reply-text",
+      "turn": 3,
+      "status": "skip",
+      "detail": "no A2UI lines shipped (a text turn)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 3,
+      "status": "pass",
+      "detail": "rounds created [], open [table-1] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 3,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "render-lint",
+      "turn": 3,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 3,
+      "status": "pass",
+      "detail": "193 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 4,
+      "status": "pass",
+      "detail": "claude-sonnet-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 4,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 4,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 4,
+      "status": "pass",
+      "detail": "800 chars of prose, clean"
+    },
+    {
+      "check": "reply-text",
+      "turn": 4,
+      "status": "pass",
+      "detail": "368 chars of reply beside 2 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 4,
+      "status": "pass",
+      "detail": "rounds created [], open [table-1] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 4,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "render-lint",
+      "turn": 4,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 4,
+      "status": "pass",
+      "detail": "255 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 5,
+      "status": "skip",
+      "detail": "no request body observed"
+    },
+    {
+      "check": "click-target",
+      "turn": 5,
+      "status": "fail",
+      "detail": "no surface button reading \"Deal again\" (buttons: Bet 40, Check, Fold)"
+    },
+    {
+      "check": "no-halt",
+      "turn": 5,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 5,
+      "status": "pass",
+      "detail": "800 chars of prose, clean"
+    },
+    {
+      "check": "reply-text",
+      "turn": 5,
+      "status": "skip",
+      "detail": "no A2UI lines shipped (a text turn)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 5,
+      "status": "skip",
+      "detail": "no round data (roundsSource none)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 5,
+      "status": "skip",
+      "detail": "nothing was clicked (see click-target)"
+    },
+    {
+      "check": "render-lint",
+      "turn": 5,
+      "status": "skip",
+      "detail": "no DOM (offline replay)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 5,
+      "status": "skip",
+      "detail": "effort unknown"
+    },
+    {
+      "check": "expect-component",
+      "status": "pass",
+      "detail": "found PlayingCard"
+    }
+  ],
+  "verdict": "fail"
+}
