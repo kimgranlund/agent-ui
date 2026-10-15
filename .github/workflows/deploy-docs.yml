@@ -1,12 +1,11 @@
-# deploy-docs.yml — auto-deploys the docs site + live-agent Worker (`agent-ui-docs`, ui.nonoun.io) on
-# every push to main (GH #177, Kim's option-1 ruling: a GitHub Action over Cloudflare Workers Builds or
-# staying manual). Before this, the deploy was `npm run deploy:docs` run by hand, and the public site
-# repeatedly drifted days stale behind main (GH #72's record comment documents a measured instance).
+# deploy-docs.yml — manual deploy of the docs site + live-agent Worker (`agent-ui-docs`, ui.nonoun.io)
+# from the Actions tab (workflow_dispatch only, T-0255, Kim 2026-10-15: GitHub runs only ci.yml
+# automatically). The push-to-main trigger of GH #177 is retired; the normal path is Kim's own
+# `npm run deploy:docs`, and this workflow stays as the remote fallback (e.g. after rotating the token).
 #
 # Deliberately THIN — checkout, install, build, `wrangler deploy` — no check/test gate here: every merge
 # to main already ran the full standing gates per the repo's own merge discipline (CLAUDE.md), and a
-# broken build fails this workflow at the build step anyway. Duplicating the ~10-minute browser gate on
-# every deploy would only slow the site's freshness, not add safety.
+# broken build fails this workflow at the build step anyway.
 #
 # Secrets/vars (GH #177): `CLOUDFLARE_API_TOKEN` (repo secret, "Edit Cloudflare Workers" template scoped
 # to the nonoun.io zone) + `CLOUDFLARE_ACCOUNT_ID` (repo variable, not sensitive). The wrangler-action
@@ -15,16 +14,12 @@
 name: Deploy docs site
 
 on:
-  push:
-    branches:
-      - main
   # Manual redeploy (Actions tab) — e.g. after rotating the token, or to re-push unchanged content.
   workflow_dispatch:
 
-# Overlapping main pushes: the NEWEST commit is the only one worth deploying — cancel a stale in-flight
-# deploy rather than queueing it (unlike publish.yml's queue-don't-cancel: a Workers deploy is one atomic
-# version swap, so cancelling mid-run never leaves a half-deployed site the way a half-published 8-package
-# release would).
+# Overlapping runs: the NEWEST dispatch is the only one worth deploying — cancel a stale in-flight
+# deploy rather than queueing it (a Workers deploy is one atomic version swap, so cancelling mid-run
+# never leaves a half-deployed site).
 concurrency:
   group: deploy-docs
   cancel-in-progress: true

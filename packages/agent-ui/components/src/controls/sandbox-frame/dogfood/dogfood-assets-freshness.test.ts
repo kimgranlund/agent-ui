@@ -21,8 +21,8 @@
 // derived-artifact class as the theme-provider LLD-C11 fixture: a real-build-vs-committed byte check that
 // drifts on ANY component CSS/JS change, not just this asset pair's own inputs. The freshness assertion
 // below WARNS instead of failing on a PR-triggered CI run (`GITHUB_EVENT_NAME === 'pull_request'`);
-// `.github/workflows/theme-provider-fixture-regen.yml` re-runs `node scripts/build-dogfood-assets.mjs` on
-// every push to `main` alongside the theme-provider fixture and opens the same bot PR on drift.
+// the merge queue re-runs `npm run regen:dogfood-assets` beside `npm run regen:theme-provider-fixture`
+// before every merge (T-0255 retired the regen workflow).
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { buildDogfoodAssets, OUT_MODULE, ROOT } from '../../../../../../../scripts/build-dogfood-assets.mjs'

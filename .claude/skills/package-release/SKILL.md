@@ -3,8 +3,8 @@ name: package-release
 description: >-
   THIS repo's npm release/versioning law for the 8 @agent-ui/* packages (published as @agent-ui-
   kit/*): lockstep versioning, the patch-only 0.0.1-0.0.99 phase, the judgment-gated 0.#.0 bump,
-  and the cut-a-release procedure (tag vX.Y.Z, push — the tag triggers publish.yml, no manual npm
-  publish). Use for "release a package update", "cut a release", "bump the package version",
+  and the cut-a-release procedure (tag vX.Y.Z, then `npm run publish:packages` run locally; no GitHub
+  publish workflow since T-0255). Use for "release a package update", "cut a release", "bump the package version",
   "publish a new agent-ui version", "what version should this be", or before pushing any vX.Y.Z
   tag. NOT for the publish pipeline itself (already-built infra, edit directly) or general third-
   party dependency management.
@@ -15,7 +15,7 @@ user-invocable: true
 # agent-ui package release — versioning law & the release procedure
 
 Ratified 2026-07-19, the same session the publish pipeline itself shipped
-(`scripts/publish/publish-packages.mjs` · `tsconfig.build.json` · `.github/workflows/publish.yml` ·
+(`scripts/publish/publish-packages.mjs` · `tsconfig.build.json` ·
 commit `fd0b0b7`). This file is the versioning LAW; the pipeline files are the mechanism — cite them,
 never restate their internals here.
 
@@ -50,21 +50,19 @@ never restate their internals here.
 
 1. **Decide the version** per the law above — ask "is this routine, or significant enough to earn a
    minor bump?" before picking the number.
-2. **Confirm the standing gate is green on `main`** (`npm run check && npm test`) — the workflow
-   re-gates this itself before publishing, but don't push a tag expecting it to fail.
-3. **Tag and push**: `git tag vX.Y.Z && git push origin vX.Y.Z`. Pushing the tag IS what triggers the
-   real, non-dry-run publish (`.github/workflows/publish.yml`'s `push: tags: v*` trigger) — there is no
-   separate manual `npm publish` step. The workflow gates, resolves the version from the tag name, and
-   runs `scripts/publish/publish-packages.mjs`, which builds, transforms, and publishes all 8 packages
-   in lockstep at that version.
-4. **Dry-run first when unsure** — either the workflow's own `workflow_dispatch` (Actions tab, defaults
-   to dry-run) or locally: `node scripts/publish/publish-packages.mjs <version> --dry-run`.
+2. **Confirm the standing gate is green on `main`** (`npm run check && npm test`) — nothing re-gates
+   it for you now, so run it before publishing.
+3. **Tag, then publish locally**: `git tag vX.Y.Z`, then `npm run publish:packages -- <version>`
+   (`scripts/publish/publish-packages.mjs`, which builds, transforms, and publishes all 8 packages in
+   lockstep at that version). Publishing is Kim's own local command; no GitHub workflow publishes
+   (T-0255).
+4. **Dry-run first when unsure**: `npm run publish:packages -- <version> --dry-run`.
 5. **A failed run mid-fleet is resumable, not stranded.** If a publish dies partway through the 8, just
-   re-run at the SAME version (`workflow_dispatch` with `dry_run: false`, or the local command again) —
+   re-run the same command at the SAME version;
    `publish-packages.mjs` skips any package already live at that version instead of erroring, so it
    picks up exactly where it left off rather than E403-failing on package 1.
 
-**Done when** all 8 packages report live at the chosen version (workflow run green, or each
+**Done when** all 8 packages report live at the chosen version (each
 `npm view @agent-ui-kit/<pkg>@<version>` resolves) — a partial fleet is not done, re-run step 5.
 
 ## Facts worth knowing (don't re-derive these)
@@ -75,8 +73,8 @@ family: `references/release-facts.md`.
 
 ## NOT for
 
-- Building or modifying the publish pipeline itself — `scripts/publish/publish-packages.mjs`,
-  `tsconfig.build.json`, `.github/workflows/publish.yml` are already-built infra; edit them directly,
+- Building or modifying the publish pipeline itself — `scripts/publish/publish-packages.mjs`
+  and `tsconfig.build.json` are already-built infra; edit them directly,
   no routing skill needed for that.
 - General third-party dependency management (bumping `@codemirror/*`, security patches, etc.) —
   unrelated to this package's OWN release version.

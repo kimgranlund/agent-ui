@@ -21,8 +21,8 @@
 // site CSS edit reflows its bytes too, it drifted on PR CI three times in one weekend (#1596 ->
 // #1590/#1597 -> #1598) purely from that class of edit. This is fleet-rules §4's "reproducible from
 // source" derived-artifact class, not "bytes ARE the contract"; regen belongs on `main`, not as a
-// PR-blocking gate. `.github/workflows/theme-provider-fixture-regen.yml` re-runs the real build on every
-// push to `main` and opens ONE bot PR per drift (no-op when bytes already match); this test's freshness
+// PR-blocking gate. The merge queue runs `npm run regen:theme-provider-fixture` before every merge
+// (T-0255 retired the regen workflow); this test's freshness
 // check WARNS (never reds) on a `pull_request` CI run: `GITHUB_EVENT_NAME` is GitHub Actions' own signal
 // for that, unset everywhere else (a local `npm test`, a push-to-main run) so the byte check still holds
 // there. Regenerate by hand: `npm run regen:theme-provider-fixture` (site/lib/build-css.ts's

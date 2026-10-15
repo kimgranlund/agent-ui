@@ -2,7 +2,7 @@
 id: T-0191
 title: "claude-review still fails in 0.5s with a working API key (not the credential)"
 type: bug             # feature | bug | chore | spike | idea
-status: blocked      # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done      # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P3         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -34,3 +34,9 @@ router: .sdlc/AGENTS.md  # how to claim and close this ticket
 
 ## Deferred
 2026-10-14: root cause found on PR #1982 with show_full_output: the API key account returns 400 billing_error "Credit balance is too low". Waits on Kim topping up the account credit; then remove show_full_output and confirm on the next PR.
+
+## Outcome
+
+2026-10-15 · lane: full L1 · verdict: closed by reason (moot: T-0255 deleted the claude-review workflow; GitHub runs only ci.yml) · verifier: none · base: none
+- Changed: see commits
+- Commits: none
