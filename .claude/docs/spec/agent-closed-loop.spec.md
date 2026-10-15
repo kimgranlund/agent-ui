@@ -42,7 +42,7 @@ The code table is the owner: `CHECK_NAMES` and `runChecks` in `scripts/e2e-admin
 | `no-halt` | fail | an error meta-line, a `halt` or `error` trace outcome, or a non-2xx answer | shipped, T-0174 |
 | `no-json-as-prose` | fail | the visible chat prose carries A2UI JSON | shipped, T-0174 |
 | `no-surface-loss` | fail | a surface some round created never shipped, or fewer hosts mounted than shipped | shipped, T-0174 |
-| `expect-component` | fail | an expected component type never shipped | shipped, T-0174 |
+| `expect-component` | fail | an expected component type never shipped, or a step's own expected type is on no surface its turn updated (`--expect-turn`, T-0222) | shipped, T-0174 |
 | `render-lint` | fail | a `scripts/dogfood-rules.json` rule the probe runs finds a surface element | shipped, T-0174 (three rules; the rest listed as not run) |
 | `reasoning` | warn | effort above low but no thinking text in the trace | shipped, T-0174; flips to fail only in T-0172's change |
 | `data-model` | fail | a JSON-pointer assertion on the surface data model does not hold | planned, T-0176 |
