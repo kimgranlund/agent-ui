@@ -658,3 +658,42 @@ describe('T-0172: structured render_surface, prose routing, surface loss', () =>
     expect(contentOf(lines)).toEqual([GOOD_GREET])
   })
 })
+
+// T-0229: Haiku 5.5's text shape (trace 2026-10-15.jsonl:42): the prose, then a meta-line, then wire lines. The
+// meta-line is peeled wherever it sits, and an A2UI line that does not parse goes to the repair round, never the reply.
+describe('T-0229: the text shape with a trailing meta-line', () => {
+  const PROSE = 'You check, and the dealer checks behind you. Stand pat to keep all five.'
+  const META = '{"a2uiMeta":{"note":"You check, the dealer checks.","target":{"surfaceId":"main"}}}'
+  const BROKEN = '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[{"id":"x","component":"Text","children":["again"]},"again":null}}'
+
+  it('prose, a meta-line, then wire lines ships the prose as the reply and applies the meta-line target', async () => {
+    const { provider, calls } = scripted([{ text: [`${PROSE}\n\n`, `${META}\n`, `${VALID}\n`] }])
+    const lines = await run(NEUTRAL, provider)
+    expect(calls()).toBe(1)
+    expect(contentOf(lines)).toEqual(VALID.split('\n'))
+    const meta = finalMeta(lines)
+    expect(meta.note).toBe(PROSE)
+    expect(meta.target).toEqual({ surfaceId: 'main' })
+    expect(deltasOf(lines).join('')).toBe(`${PROSE}\n\n`)
+  })
+
+  it('prose then a meta-line with no wire line keeps its declarations and shows only the prose', async () => {
+    const { provider } = scripted([{ text: `${PROSE}\n\n{"a2uiMeta":{"note":"No secret.","flowEnd":true}}` }])
+    const lines = await run(NEUTRAL, provider)
+    expect(contentOf(lines)).toEqual([])
+    const meta = finalMeta(lines)
+    expect(meta.note).toBe(PROSE)
+    expect(meta.flowEnd).toBe(true)
+    expect(deltasOf(lines).join('')).not.toContain('a2uiMeta')
+  })
+
+  it('an A2UI line that does not parse goes to the repair round and never reaches the reply', async () => {
+    const { provider, reqs } = scripted([{ text: `Sure.\n${VALID}\n${BROKEN}\n` }, { text: `Sure.\n${VALID}\n` }])
+    const lines = await run(NEUTRAL, provider)
+    expect(reqs()).toHaveLength(2)
+    expect(lastUserMessage(reqs()[1]!)).toContain('Call render_surface again')
+    expect(contentOf(lines)).toEqual(VALID.split('\n'))
+    expect(finalMeta(lines).note).toBe('Sure.')
+    expect(deltasOf(lines).join('')).not.toContain('"version"')
+  })
+})
