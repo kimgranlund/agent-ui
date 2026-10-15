@@ -27,3 +27,11 @@ Never execute bundled code. Never read or print key values; traces are already r
 - A side-by-side of the bundle report versus the T-0239 adapter (events, sources, routing fields) decides: retire `scripts/agent-traces-to-fog.py` and its `check:scripts` selftest and CLAUDE.md line, or keep it with a stated reason.
 - The parity report gets one superseded line at the top.
 - `npm run check` exit 0.
+
+## Acceptance criteria
+- `python3 ~/.claude/skills/context-fog-of-war/scripts/engineer.py ingest .sdlc/evals/rounds/2026-10-15-r2-presets --mapping .sdlc/evals/fog-manifest.json --out /tmp/t0248-v-r2` exits 0, and `python3 ~/.claude/skills/context-fog-of-war/scripts/fog.py validate /tmp/t0248-v-r2/session.json` exits 0 (281 events). Run without `--repo`, so the sources are the chunk ids only.
+- The same two commands on `.sdlc/evals/rounds/2026-10-14-r1-croupier` (129 events) and `.sdlc/evals/rounds/2026-10-15-t0208-probe` (14 events) exit 0 with the manifest unchanged.
+- `grep -q 'Report: .a7f791520f89dbbb61819b92.' .sdlc/evals/rounds/2026-10-15-r2-presets/README.md` exits 0, and `python3 ~/.claude/skills/context-fog-of-war/scripts/library.py list` names that id.
+- `npx vitest run scripts/e2e-admin/probe/run-capped.test.mjs` exits 0 (the `--describe` fog record case).
+- `head -1 .sdlc/evals/context-fog-of-war-claude-parity.md` starts with `Superseded`.
+- `npm run check` exits 0.
