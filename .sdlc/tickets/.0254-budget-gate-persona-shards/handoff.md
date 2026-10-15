@@ -2,7 +2,7 @@
 id: T-0254
 title: "Prompt budget gate measures the persona example shards too"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0240]          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -19,3 +19,9 @@ T-0240 verifier note (`tools/agent/prompt-budget-matrix.ts`): the budget reads o
 ## Done when
 - The budget matrix includes each persona shard's records for that persona's turns; a test plants an oversized persona record and the gate goes red.
 - `npm run check` exit 0.
+
+## Outcome
+
+2026-10-15 · lane: full L1 · verdict: closed by reason (Merged in #2020: budget gate measures persona shards; verifier L1 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

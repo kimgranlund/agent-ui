@@ -2,7 +2,7 @@
 id: T-0252
 title: "Spec and LLD path scrub, app-shell superseded markers, skills and agents scrub, old tickets archived"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0249]          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -34,3 +34,9 @@ Do not flip `proposed` statuses on shipped specs (doc-standards section 2). Keep
 - `npx vitest run site/lib/docs-grammar.test.ts site/lib/adr.test.ts site/lib/sitemap.test.ts` exits 0.
 - `npm run check` exits 0.
 - `test ! -e scripts/catalog-attr-diff.mjs` exits 0; `scripts/generate-sitemap.d.mts` stays (it is the type surface `site/lib/sitemap.test.ts` imports).
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged in #2026: path scrub, superseded markers, skills and agents fixed, old records archived; verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

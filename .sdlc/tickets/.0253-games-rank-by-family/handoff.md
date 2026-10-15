@@ -2,7 +2,7 @@
 id: T-0253
 title: "Within the games domain, retrieval ranks a preset's own composite family first"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0240]          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -25,3 +25,9 @@ Found by the T-0240 L3 verifier (`retrieve-presets.test.ts:35`): croupier "Deal 
 - With `retrieve.ts` reverted to the T-0238 rule, the croupier and quizmaster pins and both T-0253 family cases fail.
 - The family rule applies to the games domain only: the concierge pin (`frontier-service-gateway` second) is unchanged.
 - `npm run check` exit 0.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged: games examples rank by the persona's own composite family; verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

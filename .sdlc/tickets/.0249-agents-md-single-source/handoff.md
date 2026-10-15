@@ -2,7 +2,7 @@
 id: T-0249
 title: "AGENTS.md is the single cross-harness source; CLAUDE.md is @AGENTS.md only"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0242]          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -29,3 +29,9 @@ Audit findings: CLAUDE.md carries ~140 lines Codex never sees (Commands 12-56, L
 - `AGENTS.md` names `.sdlc/tickets/` as the work-item home and states the local gate once (`npm run check` plus touched folders' tests; CI runs the full suite).
 - Live section pointers to the old CLAUDE.md sections (skills, doctrine manifest, layering test comments, getting-started page) name AGENTS.md.
 - `python3 <sdlc-lite>/scripts/tickets.py check` and `npm run check` exit 0.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged in #2022: AGENTS.md single source, CLAUDE.md imports it; verifier L2 pass on try 2) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

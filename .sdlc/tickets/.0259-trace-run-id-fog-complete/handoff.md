@@ -2,13 +2,11 @@
 id: T-0259
 title: "Trace lines carry the probe run id; the fog mapping records turn completion"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
 created: 2026-10-15
-branch: chore/trace-run-id-fog-complete
-worktree: .claude/worktrees/wave-ri
 router: .sdlc/tickets/AGENTS.md  # how to claim and close this ticket
 ---
 
@@ -28,3 +26,9 @@ The run id travels as a request field or header from `chat:probe` / `run-capped.
 
 ## Conductor note (2026-10-15, Kim approved)
 Criterion 1 needs a live run. Kim approved ONE live Haiku probe (about $0.01) to prove it: `.env` is symlinked into this tree (never read or print it). Run one `npm run chat:probe -- --agent concierge --model claude-haiku-5-5 --say "hi"` (it starts the dev server itself if needed, else run `npm run dev` in the background first), then show that the new `.agent-traces` line for that turn has `runId` equal to the run's `report.json` `runId`. No other live calls.
+
+## Outcome
+
+2026-10-15 · lane: full L1 · verdict: closed by reason (Merged in #2027: trace runId, retrieval/framing/tool events, fog manifest v2; verifier L2 pass with one live probe) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

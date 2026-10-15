@@ -2,13 +2,11 @@
 id: T-0256
 title: "chat:probe and live rounds write screenshots to a cache folder, not .sdlc"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
 created: 2026-10-15
-branch: chore/probe-screenshots-cache
-worktree: .claude/worktrees/wave-pc
 router: .sdlc/tickets/AGENTS.md  # how to claim and close this ticket
 ---
 
@@ -29,3 +27,9 @@ Today `run-capped.ts` and the probe write turn PNGs into `.sdlc/evals/rounds/<ro
 - A probe or run-capped selftest run writes its screenshots under the cache root and none under the repo (`git status --porcelain --ignored | grep -c '\.png'` is 0 after the run, for paths the run wrote).
 - `report.json` carries the cache paths; `--describe` READMEs mention the cache location.
 - scripts/e2e-admin tests, the chat-probe selftest and `npm run check` exit 0.
+
+## Outcome
+
+2026-10-15 · lane: full L1 · verdict: closed by reason (Merged in #2023: screenshots go to the evidence cache; verifier L1 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

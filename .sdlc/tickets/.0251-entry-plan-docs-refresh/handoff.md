@@ -2,7 +2,7 @@
 id: T-0251
 title: "README, CONTRIBUTING, CHANGELOG pointer, package READMEs, plan, goals, roadmap, process refreshed"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0249]          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -34,3 +34,9 @@ Source: the 2026-10-15 repo scrub audits (https://claude.ai/artifact/WKiuHupQFWh
 - `docs/AGENTS.md` has one line outside the managed block saying `.claude/docs/` keeps its own scheme.
 - plan.md says ten packages (tree includes code, data, devtools), the ADR-0245 sizing law and a non-planning status; goals.md carries a 2026-10-15 state line and a DoD without the `[size]/[scale]/[density]` axes; roadmap.md §2 is dated 2026-10-15 and names the closed loop; process.md names the sdlc-lite lanes and a live-round rule.
 - Every npm run command named in the touched docs exists in package.json; doc_lint on each touched doc and `npm run check` exit 0; no added line carries an em dash.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged: entry and plan docs refreshed; verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none
