@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "notes": "context-fog-of-war bundle mapping for a live round folder (.sdlc/evals/rounds/<date>-<slug>/), T-0248. One dev proxy trace line (traces/<day>.jsonl, T-0151) is one model_request. conversationId is the line's catalogId: a trace line carries no probe-run identity, so turns partition by catalog (persona catalogs agent-ui--<persona>; admiral and lexicographer share the base catalog agent-ui on rounds 1 to 3). requestId is the line's `at` ISO time, unique per line in every committed round; it identifies the turn, it is not a causal join. includedChunkIds are trace.exemplarIds, the corpus exemplars framed into the system prompt; `complete` is not mapped because no field states that list is the full submitted context, so the omission detectors abstain. Not mappable in this vocabulary (kept as hashed artifacts): runs/*/report.json and fixture.json (they join to a trace line by `<day>.jsonl:<line>`, which no canonical event type can target), the routing block of T-0239 and later lines (sections, mini-skills and references are object lists or need a load state), retries and failure codes (no canonical event), and usage.",
+  "rules": [
+    {
+      "filePattern": "traces/*.jsonl",
+      "recordPath": "",
+      "eventType": "model_request",
+      "fields": {
+        "conversationId": "/catalogId",
+        "requestId": "/at",
+        "timestamp": "/at",
+        "includedChunkIds": "/trace/exemplarIds"
+      }
+    }
+  ]
+}

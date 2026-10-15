@@ -1,0 +1,14 @@
+{
+  "round": "2026-10-14-r1-croupier",
+  "ticket": "T-0248",
+  "reportId": "020966220aa2e449fdde440e",
+  "mapping": ".sdlc/evals/fog-manifest.json",
+  "mappingHash": "c2396ca6924269db821c94fbbb10d441bdee96a55d964454e328d528a0eb7d1f",
+  "bundleFingerprint": "3f9c34fe73769e6574b04e6a0390aa8578de8b86b29d07dbd4f80444bcdab3be",
+  "engineeringRun": "run-3023dd0148d81489f1f851ae",
+  "events": 129,
+  "sources": 37,
+  "findings": 0,
+  "ingest": "python3 ~/.claude/skills/context-fog-of-war/scripts/engineer.py ingest .sdlc/evals/rounds/2026-10-14-r1-croupier --mapping .sdlc/evals/fog-manifest.json --out <dir>",
+  "publish": "python3 ~/.claude/skills/context-fog-of-war/scripts/library.py publish <dir>/session.json"
+}

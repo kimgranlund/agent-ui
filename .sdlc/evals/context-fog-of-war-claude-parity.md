@@ -1,3 +1,5 @@
+Superseded 2026-10-15 (T-0248): the skill now reads Claude Code natively (its `references/claude.md`) and round folders ingest as session bundles (`references/bundles.md`) with `.sdlc/evals/fog-manifest.json`; kept as history.
+
 # context-fog-of-war: what Claude Code compatibility and parity need
 
 For: the context-fog-of-war author (Codex host).
