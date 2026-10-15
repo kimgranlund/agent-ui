@@ -779,6 +779,28 @@ describe('croupier action check: a game opens in betting unless the user names a
   })
 })
 
+// T-0214 (the recorded Haiku 5.5 five-card draw, 2026-10-15.jsonl:48): "Bet 50." was answered with the meta-line
+// targeting table-1 and a showdown narrated in prose ("bankroll is now 1,050"), and no update to table-1.
+describe('croupier action check: a typed move at an open table updates it (T-0214)', () => {
+  const card = { id: 'root', component: 'Card', children: ['title'] }
+  const update = (sid: string): A2uiOutput => [{ version: 'v1.0', updateComponents: { surfaceId: sid, components: [card, { id: 'title', component: 'Text', text: 'Showdown' }] } }] as A2uiOutput
+  const typed = (surfaces: A2uiOutput, intent: string, target?: string) =>
+    croupierActionApplied.check({ surfaces: semanticSurfaceViews({ turns: [] }, surfaces), intent, ...(target !== undefined ? { target } : {}) })
+
+  it('the recorded prose-only answer to "Bet 50." targeting table-1 is ACTION_NOT_APPLIED', () => {
+    const findings = typed([], 'Bet 50.', 'table-1')
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['ACTION_NOT_APPLIED', 'table-1:bet']])
+    expect(findings[0]!.message).toMatch(/updateDataModel for table-1/)
+    expect(typed(update('table-2'), 'Hit me.', 'table-1').map((f) => f.code)).toEqual(['ACTION_NOT_APPLIED']) // another surface is not the table
+  })
+
+  it('an update to the targeted table, a turn with no move word, or no target passes', () => {
+    expect(typed(update('table-1'), 'Bet 50.', 'table-1')).toEqual([])
+    expect(typed([], 'What beats a flush?', 'table-1')).toEqual([])
+    expect(typed([], 'Bet 50.')).toEqual([])
+  })
+})
+
 // T-0218 (the recorded Omaha turns, 2026-10-15.jsonl:105 and :37 to :41): Sonnet 5.5 dealt the dealer four identical
 // face-down 2 of clubs, Haiku 5.5 four aces of spades it swapped mid-hand. A poker deal is one deck: every card is
 // distinct, and a face-down card is a committed card that turns up as itself.

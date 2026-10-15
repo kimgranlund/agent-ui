@@ -1460,6 +1460,10 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     }
     lastCaptureRound = captured !== undefined || routed !== undefined
     degrade = lastCaptureRound && note !== undefined && note.trim() !== '' ? { note, plan, personaPatch, flowEnd, team, target } : undefined
+    // T-0214: on a say turn, the open surface this round declares it changes (the meta-line or the capture's own
+    // target), so the checks can judge a typed move answered in prose alone.
+    const declaredTarget = target?.surfaceId ?? capture?.target
+    const roundTarget = turnIntent !== undefined && declaredTarget !== undefined && sessionKnownSurfaceIds(input.session).has(declaredTarget) ? declaredTarget : undefined
     // genui-surface SPEC-R1 — peeled SECOND, still BEFORE heal/validate: a genui line (valid or not) never
     // reaches the shared A2UI healer/validator, which doesn't know this kind exists. Recomputed FRESH every
     // round (never carried over): a round's genui candidate belongs to THAT round's own raw output, never
@@ -1527,10 +1531,11 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       }
       // T-0172: an action turn answered with no payload is still judged (`surfaces` empty), so a check can catch
       // a click narrated in prose that never reached the surface. A finding spends a repair round while one is
-      // left (worded for render_surface when the tool is offered); on the last round it ships tallied.
+      // left (worded for render_surface when the tool is offered); on the last round it ships tallied. T-0214: a say
+      // turn that targets an open surface is judged the same way, so a typed move narrated in prose is repaired.
       const actionSemanticTally: string[] = []
-      if (turnAction !== undefined && deps.semanticChecks !== undefined && deps.semanticChecks.length > 0 && genuiLine === undefined) {
-        const semantic = runSemanticChecks(deps.semanticChecks, { surfaces: [], action: turnAction })
+      if ((turnAction !== undefined || roundTarget !== undefined) && deps.semanticChecks !== undefined && deps.semanticChecks.length > 0 && genuiLine === undefined) {
+        const semantic = runSemanticChecks(deps.semanticChecks, turnAction !== undefined ? { surfaces: [], action: turnAction } : { surfaces: [], intent: turnIntent!, target: roundTarget! })
         if (semantic.findings.length > 0 && round < opts.maxRounds - 1) {
           failures = semantic.findings.map((f) => ({ code: f.code, path: f.path, detail: f.message }))
           lastCaptureRound = offeredTools !== undefined
@@ -1604,7 +1609,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       // payload ships with a tally instead (see the header). Skipped entirely when no check is declared.
       const semanticTally: string[] = []
       if (deps.semanticChecks !== undefined && deps.semanticChecks.length > 0) {
-        const semantic = runSemanticChecks(deps.semanticChecks, { surfaces: semanticSurfaceViews(input.session, assembled.output), ...(turnAction !== undefined ? { action: turnAction } : {}), ...(turnIntent !== undefined ? { intent: turnIntent } : {}) })
+        const semantic = runSemanticChecks(deps.semanticChecks, { surfaces: semanticSurfaceViews(input.session, assembled.output), ...(turnAction !== undefined ? { action: turnAction } : {}), ...(turnIntent !== undefined ? { intent: turnIntent } : {}), ...(roundTarget !== undefined ? { target: roundTarget } : {}) })
         if (semantic.findings.length > 0 && round < opts.maxRounds - 1) {
           failures = semantic.findings.map((f) => ({ code: f.code, path: f.path, detail: f.message }))
           continue

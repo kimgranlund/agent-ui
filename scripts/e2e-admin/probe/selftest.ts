@@ -116,6 +116,11 @@ export async function runProbeSelftest(): Promise<number> {
   expectThat(caseVerdict(prose, ['action-updates-surface']) === undefined, `checks: a click answered with prose alone fails action-updates-surface (${caseVerdict(prose, ['action-updates-surface'])})`)
   const NEXT_ROUND = ['{"version":"v1.0","createSurface":{"surfaceId":"table-2","catalogId":"agent-ui"}}', '{"version":"v1.0","updateComponents":{"surfaceId":"table-2","components":[{"id":"root","component":"Text","text":"Round 2"}]}}']
   expectThat(statusOf(runChecks([record(), click(NEXT_ROUND)], opts), 'action-updates-surface') === 'skip,pass', 'checks: a click that opens the next surface passes action-updates-surface')
+  // T-0214: a say turn whose meta-line targets an open surface is judged like a click on it.
+  const typed = (lines: string[]): TurnRecord =>
+    record({ index: 1, step: { say: 'Bet 50.' }, lines: ['{"a2uiMeta":{"note":"You win.","target":{"surfaceId":"canvas"}}}', ...lines], rounds: [{ text: lines.join('\n'), tools: [] }] })
+  expectThat(statusOf(runChecks([record(), typed([])], opts), 'action-updates-surface') === 'skip,fail', 'checks: a targeted say turn answered with prose alone fails action-updates-surface')
+  expectThat(statusOf(runChecks([record(), typed([UPDATE_LINE])], opts), 'action-updates-surface') === 'skip,pass', 'checks: a targeted say turn that updates its surface passes action-updates-surface')
   const seeded: Array<[string, TurnRecord, string, typeof opts?]> = [
     ['halt', record({ lines: ['{"a2uiMeta":{"error":"produce: no valid surface"}}'], trace: { id: 'd:1', outcome: 'halt', retries: [], thinkingChars: [1] } }), 'no-halt', { ...opts, expectComponents: [] }],
     ['json prose', record({ proseText: 'Here: {"version":"v1.0","createSurface":{"surfaceId":"t"}}' }), 'no-json-as-prose'],

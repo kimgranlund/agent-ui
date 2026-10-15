@@ -700,13 +700,37 @@ function openingFindings(surfaces: readonly SurfaceView[], intent: string): Sema
   return findings
 }
 
+/** T-0214: the table move a player types ("Bet 50.", "Hit me", "Discard two and draw"), as a lower-case word. */
+const TYPED_MOVE = /\b(deal|bet|raise|call|check|fold|hit|stand|double|split|surrender|twist|stick|buy|draw|discard)\b/i
+
+/** T-0214 (the recorded Haiku 5.5 five-card draw, 2026-10-15.jsonl:48): "Bet 50." was answered with a meta-line
+ *  targeting table-1 and the showdown in prose, and table-1 kept its Check and Bet. A say turn that names a table
+ *  move and declares an open table its target must update that table, or open a new one (the next round). */
+function typedMoveFindings(surfaces: readonly SurfaceView[], intent: string, target: string): SemanticFinding[] {
+  const word = TYPED_MOVE.exec(intent)?.[1]?.toLowerCase()
+  if (word === undefined || surfaces.some((v) => v.surfaceId === target || (v.priorDataModel === undefined && [...v.components.values()].some((c) => c.component === 'CardTable')))) return []
+  return [
+    {
+      code: 'ACTION_NOT_APPLIED',
+      path: `${target}:${word}`,
+      message:
+        `The player typed "${intent.trim()}" at ${target}, and this turn sends it no update, so the table still shows the old state. ` +
+        `Call render_surface with an updateDataModel for ${target}: the new cards, totals, phase, result and bankroll, and the moves the player has now, not only prose.`,
+    },
+  ]
+}
+
 /** T-0172: a table action moves the table, and a deal takes the bet out of the bankroll; T-0211: Deal again opens
- *  the next round in betting; T-0232: a say turn's first table opens in betting too. */
+ *  the next round in betting; T-0232: a say turn's first table opens in betting too; T-0214: a typed move at an
+ *  open table updates it. */
 export const croupierActionApplied: SemanticCheck = {
   id: 'croupier-action-applied',
   requires: ['CardTable'],
-  check: (input) =>
-    input.action !== undefined ? actionApplied(input.surfaces, input.action) : input.intent !== undefined ? openingFindings(input.surfaces, input.intent) : [],
+  check: (input) => {
+    if (input.action !== undefined) return actionApplied(input.surfaces, input.action)
+    if (input.intent === undefined) return []
+    return [...openingFindings(input.surfaces, input.intent), ...(input.target !== undefined ? typedMoveFindings(input.surfaces, input.intent, input.target) : [])]
+  },
 }
 
 const POKER_GAMES = /\b(poker|stud|hold ?['’]?em|holdem|omaha|razz|five[- ]card draw|draw poker)\b/i

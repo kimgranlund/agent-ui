@@ -196,6 +196,8 @@ export function metaOf(lines: readonly string[]): {
   failureCodes: string[]
   prose: string[]
   reasoningChars: number
+  /** T-0214: the open surface the turn's meta-line declares it changes (`target`, ADR-0206). */
+  target?: string
 } {
   const out: ReturnType<typeof metaOf> = { failureCodes: [], prose: [], reasoningChars: 0 }
   let delta = ''
@@ -205,6 +207,7 @@ export function metaOf(lines: readonly string[]): {
     if (typeof meta.error === 'string') out.error = meta.error
     if (typeof meta.note === 'string') out.prose.push(meta.note)
     if (typeof meta.textDelta === 'string') delta += meta.textDelta
+    if (isObject(meta.target) && typeof meta.target.surfaceId === 'string') out.target = meta.target.surfaceId
     const trace = meta.trace
     if (isObject(trace)) {
       if (typeof trace.rounds === 'number') out.rounds = trace.rounds
@@ -428,9 +431,11 @@ export function runChecks(turns: readonly TurnRecord[], opts: CheckOptions): Che
     }
     // action-updates-surface (T-0172): a turn that answers a click updates the surface it came from, or hands the
     // flow on to a surface it creates (a Deal again that opens the next round's table). A click answered by
-    // prose alone (the Haiku 5.5 deal of 2026-10-14 narrated the cards and sent no update) fails.
-    const clicked = 'click' in t.step ? t.request?.actionSurface : undefined
-    if (!('click' in t.step)) out.push({ check: 'action-updates-surface', turn: t.index, status: 'skip', detail: 'not a click turn' })
+    // prose alone (the Haiku 5.5 deal of 2026-10-14 narrated the cards and sent no update) fails. T-0214: a say turn
+    // whose meta-line targets an open surface is judged the same way ("Bet 50." settled in prose, 2026-10-15.jsonl:48).
+    const sayTarget = 'say' in t.step ? meta.target : undefined
+    const clicked = 'click' in t.step ? t.request?.actionSurface : sayTarget
+    if (!('click' in t.step) && sayTarget === undefined) out.push({ check: 'action-updates-surface', turn: t.index, status: 'skip', detail: 'not a click turn or a targeted say turn' })
     else if (t.clickMissing !== undefined) out.push({ check: 'action-updates-surface', turn: t.index, status: 'skip', detail: 'nothing was clicked (see click-target)' })
     else if (clicked === undefined) out.push({ check: 'action-updates-surface', turn: t.index, status: 'skip', detail: 'the clicked surface id was not observed' })
     else if (halted !== undefined) out.push({ check: 'action-updates-surface', turn: t.index, status: 'skip', detail: 'the turn halted (see no-halt)' })
@@ -442,7 +447,7 @@ export function runChecks(turns: readonly TurnRecord[], opts: CheckOptions): Che
           ? { check: 'action-updates-surface', turn: t.index, status: 'pass', detail: `${clicked} updated` }
           : created.length > 0
             ? { check: 'action-updates-surface', turn: t.index, status: 'pass', detail: `${clicked} left as history; the flow moved to ${created.join(', ')}` }
-            : { check: 'action-updates-surface', turn: t.index, status: 'fail', detail: `the click on ${clicked} was answered with no update to it and no new surface` },
+            : { check: 'action-updates-surface', turn: t.index, status: 'fail', detail: `the ${sayTarget !== undefined ? 'say turn targeting' : 'click on'} ${clicked} was answered with no update to it and no new surface` },
       )
     }
     // expect-component, per turn (T-0222): a step that names its component (`--expect-turn`) updates a surface

@@ -82,6 +82,9 @@ export interface SemanticCheckInput {
   /** T-0232: the user's own words on a say turn (an intent turn), so a check can tell what the user asked for (a
    *  typed stake) from what the model chose. Absent on a client turn. */
   readonly intent?: string
+  /** T-0214: the surface a say turn's meta-line declares it is about to change (`target`, ADR-0206), when the
+   *  session holds it, so a check can see a typed move answered with no update to that surface. */
+  readonly target?: string
 }
 
 /** The `SemanticAction` of a client message (`{action:{name, surfaceId, context?, dataModel?}}`), or undefined.
