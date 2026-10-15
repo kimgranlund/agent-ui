@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:117a24784753 -->
+<!-- sdlc-lite:managed:start v1 sha256:d2f28357f67b -->
 # Work records
 
 This folder holds SDLC Lite tickets, task records, `roadmap.md`, `notes.md`, and `config`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -9,8 +9,7 @@ This folder holds SDLC Lite tickets, task records, `roadmap.md`, `notes.md`, and
 
 ## Stages
 
-- proposed: 11
-  - T-0186 ui-drill-panel fits the 400px column on the drill demo (drill-panel-narrow-fit)
+- proposed: 10
   - T-0187 split-pane demo stacks or scrolls at 400px instead of overflowing the column (split-pane-narrow-fit)
   - T-0188 line-chart projected dash: user-unit dash or a ruled screen-px exemption (line-chart-projected-dash)
   - T-0189 playing-card corner index: a type floor or a ruled pictorial exemption (playing-card-type-floor)
@@ -21,7 +20,7 @@ This folder holds SDLC Lite tickets, task records, `roadmap.md`, `notes.md`, and
   - T-0197 BookingForm field kinds (dateRange, radio, time, stepper) and sharing it with the Maitre d' (bookingform-kinds)
   - T-0198 Step flow pattern: step n of m, Back and Next, shared /draft data (step-flow)
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (itinerary-compare)
-- ready: 28
+- ready: 26
   - T-0160 Agent content as files: extract preset and pack seeds to .md manifests with a generated, drift-gated registry (agent-content-files)
   - T-0161 Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind (agent-content-overlays)
   - T-0162 Settings pane forms generated from each content kind's schema, with provenance, diff and reset (agent-content-schema-forms)
@@ -35,27 +34,25 @@ This folder holds SDLC Lite tickets, task records, `roadmap.md`, `notes.md`, and
   - T-0203 Composer model controls: thinking off and show reasoning in the effort menu, web search and fetch toggles, server tools in requests, mid-conversation effort header (composer-model-controls)
   - T-0205 Context archaeology: how the a2ui producer builds context and routes (context-archaeology)
   - T-0209 One source per concept: layer membership, calibration bullets, persona list; mini-skill ranking stability test (context-single-source)
-  - T-0210 Every catalog id reader handles the multi-domain grammar (<base>--<d1>+<d2>) (catalog-id-readers)
-  - T-0214 Haiku 5.5 plays Croupier moves in prose without updating the table (croupier-haiku-state-in-prose)
-  - T-0224 Dev proxy and Worker silently drop a persona over 16,384 characters (persona-silent-drop)
-  - T-0226 validate.ts keeps a child that the same payload drops when it resends a seeded container (validate-dropped-child-same-payload)
-  - T-0227 agent-admin-click-turn GH #63 browser test needs a new poisoned producer (T-0172 made its poison legal) (gh63-poison-producer)
-  - T-0228 Browser-test __screenshots__ folders break selection.test and the merge queue (stray-screenshots-dirs)
-  - T-0231 The Concierge cannot see the hours, policies and booking flow its own resources and playbooks hold (preset-knowledge-index-only)
-  - T-0232 Croupier opens a blackjack-family game already dealt at a default stake, with no bet strip (croupier-opening-skips-bet)
-  - T-0233 A playing-phase CardTable with no move Buttons passes the Croupier checks (croupier-playing-table-no-moves)
-  - T-0234 Agents narrate surface ids and earlier-turn corrections in ordinary turns (narrated-surface-mechanics)
-  - T-0235 chat:probe live prose checks read the whole chat, so one leak fails every later turn (probe-live-prose-cumulative)
-  - T-0236 chat:probe --from-trace labels a base-catalog preset's trace as croupier (probe-from-trace-agent-default)
-  - T-0240 Domain exemplars: CardTable, BookingForm and BoardGrid examples the producer can retrieve, plus a preset-to-domain mapping (domain-exemplars)
+  - T-0214 Haiku 5.5 plays Croupier moves in prose without updating the table (croupier-haiku-state-in-prose), branch fix/lane-h-agent-behavior
+  - T-0231 The Concierge cannot see the hours, policies and booking flow its own resources and playbooks hold (preset-knowledge-index-only), branch fix/lane-h-agent-behavior
+  - T-0232 Croupier opens a blackjack-family game already dealt at a default stake, with no bet strip (croupier-opening-skips-bet), branch fix/lane-h-agent-behavior
+  - T-0233 A playing-phase CardTable with no move Buttons passes the Croupier checks (croupier-playing-table-no-moves), branch fix/lane-h-agent-behavior
+  - T-0234 Agents narrate surface ids and earlier-turn corrections in ordinary turns (narrated-surface-mechanics), branch fix/lane-h-agent-behavior
+  - T-0240 Domain exemplars: CardTable, BookingForm and BoardGrid examples the producer can retrieve, plus a preset-to-domain mapping (domain-exemplars), branch feat/domain-exemplars-plumbing
   - T-0242 Move the ticket store to the sdlc-lite topics layout (.sdlc/tickets/, notes/, work/), committed (sdlc-topics-layout)
-  - T-0243 Upsert docs, specs, skills and the closed-loop testing spec for T-0208 to T-0242 (upsert-closed-loop-docs-2)
+  - T-0246 Docs-page persona exemplar fixtures carry the same game and booking defects as the seeds (persona-exemplar-fixture-defects)
+  - T-0247 validate-payload --catalog cannot load persona catalog ids (<base>--<persona>) (validate-payload-persona-ids)
+  - T-0249 AGENTS.md is the single cross-harness source; CLAUDE.md is @AGENTS.md only (agents-md-single-source)
+  - T-0250 Repo cleanup: reap merged worktrees, prune merged branches, delete ignored build dirs (repo-cleanup-oct)
+  - T-0251 README, CONTRIBUTING, CHANGELOG pointer, package READMEs, plan, goals, roadmap, process refreshed (entry-plan-docs-refresh)
+  - T-0252 Spec and LLD path scrub, app-shell superseded markers, skills and agents scrub, old tickets archived (specs-skills-scrub)
 - claimed: 0
 - paused: 0
 - blocked: 1
   - T-0191 claude-review still fails in 0.5s with a working API key (not the credential) (claude-review-still-failing)
-- done: 200
-- dropped: 3
+- done: 211
+- dropped: 4
 
 ## Procedures
 

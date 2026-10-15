@@ -2,7 +2,7 @@
 id: T-0224
 title: "Dev proxy and Worker silently drop a persona over 16,384 characters"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -19,3 +19,9 @@ Found in T-0207 (lane 4): `packages/agent-ui/a2ui/tools/agent/dev-proxy-plugin.t
 ## Done when
 - A test per path sends a 16,385-character persona and gets the loud failure, not a turn without the persona.
 - `npm run check` plus the touched tests exit 0.
+
+## Outcome
+
+2026-10-15 · lane: full L1 · verdict: closed by reason (Merged in #2006 (lane D)) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

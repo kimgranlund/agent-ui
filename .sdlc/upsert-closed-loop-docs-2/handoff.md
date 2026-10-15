@@ -2,7 +2,7 @@
 id: T-0243
 title: "Upsert docs, specs, skills and the closed-loop testing spec for T-0208 to T-0242"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: [T-0208, T-0239, T-0241]          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -46,3 +46,8 @@ After T-0208, T-0239 and T-0241 merge, every record they and the work since T-02
 - Also land `.sdlc/evals/context-fog-of-war-claude-parity.md` (the report for the context-fog-of-war author) and list it in `.sdlc/evals/README.md` if the index has a non-round section; do not reword it beyond fixing stale paths.
 - Also land the new ticket folder `.sdlc/drill-400px-overflow-flake/` (T-0244) as is.
 - T-0239 and T-0241 merged (#2004, #2003, #2005): cite `scripts/agent-traces-to-fog.py`, the `routing` trace block and `.sdlc/evals/rounds/<date>-<slug>/` as the round home.
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged in #2007: closed-loop spec v0.2, catalog and content specs, five skills, e2e README; parity report and T-0244 ticket landed) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

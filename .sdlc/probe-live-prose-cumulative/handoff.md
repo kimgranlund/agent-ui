@@ -2,13 +2,11 @@
 id: T-0235
 title: "chat:probe live prose checks read the whole chat, so one leak fails every later turn"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P3         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
 created: 2026-10-15
-branch: fix/lane-g-probe
-worktree: .claude/worktrees/wave-lg
 router: .sdlc/AGENTS.md  # how to claim and close this ticket
 ---
 
@@ -34,10 +32,8 @@ The failing test lands before or with the fix, never after. No em dashes.
 - (red) `node scripts/chat-probe.mjs selftest` exits 0: a live record whose earlier turn leaked fails the prose checks only on that turn; a later new leak still fails.
 - `npm run check` exits 0.
 
-## Lane bundle
-This solo lane delivers these tickets in order, one commit each, then one batched verifier checks all of them:
-- .sdlc/probe-live-prose-cumulative/handoff.md
-- .sdlc/probe-from-trace-agent-default/handoff.md
+## Outcome
 
-## Lane verify scope
-One batched verifier checks both tickets in ## Lane bundle against their own handoff criteria, from the lane base: .sdlc/probe-live-prose-cumulative and .sdlc/probe-from-trace-agent-default. One verdict per ticket, then one overall verdict.
+2026-10-15 · lane: full L1 · verdict: closed by reason (Merged in #2009 (lane G)) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

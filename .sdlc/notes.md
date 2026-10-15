@@ -80,3 +80,5 @@
 - 2026-10-15 (Kim): every live test round keeps all traces, payloads and ledgers for later analysis. Per round folder: traces/ (the round's .agent-traces lines), runs/ (report.json, fixture.json, turn screenshots), and a spend ledger (runner log plus per-run cost). Worktrees get reaped, so the round folder in the main checkout is the durable home. Rounds 1 (T-0184), 2 (T-0225) and the T-0208 probe were backfilled the same day. Automation: T-0241.
 
 - 2026-10-15 (Kim): test rounds live in .sdlc/evals/rounds/<date>-<slug>/ with a generated .sdlc/evals/README.md index (T-0241); the ticket store moves to the sdlc-lite topics layout (.sdlc/tickets/, notes/, work/) after the running lanes land, committed (T-0242).
+
+- 2026-10-15 (Kim, /ask round): work items live in .sdlc/tickets/ (topics layout, T-0242); CHANGELOG.md becomes a pointer to merged PRs and releases; npm publish scope is @agent-ui-kit/* (renamed at publish time); all of .sdlc is tracked in git. Scrub tickets filed: T-0249 to T-0252.

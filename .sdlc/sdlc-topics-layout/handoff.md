@@ -24,3 +24,6 @@ Every ticket, open and closed, lives under `.sdlc/tickets/<slug>/`, in git, usin
 - `tickets.py --root .sdlc check` exits 0 with the topics layout; no ticket folder left directly under `.sdlc/`.
 - `git grep` finds no live reference to a moved `.sdlc/<slug>/` path outside dated records.
 - The next `tickets.py new` writes to `.sdlc/tickets/`.
+
+## Conductor note (2026-10-15, Kim)
+Work items live in `.sdlc/tickets/` for now. Follow the sdlc-lite migration (`ticket` skill, topics layout): `ticket_root: tickets` and `layout: topics` in `.sdlc/config`, `migrate-layout --dry-run` then `--rewrite-refs`, `tickets.py roadmap` to write the generated router blocks in `.sdlc/AGENTS.md` and `.sdlc/tickets/AGENTS.md`, then `onboard.py setup` for the root block. `.sdlc` is fully tracked in git since 2026-10-15.
