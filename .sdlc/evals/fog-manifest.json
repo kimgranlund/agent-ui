@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "notes": "context-fog-of-war bundle mapping for a live round folder (.sdlc/evals/rounds/<date>-<slug>/), T-0248, revised T-0259. One dev proxy trace line (traces/<day>.jsonl, T-0151) is one model_request. conversationId is the line's runId: the id a probe sent as the x-a2ui-run-id header (run-id.ts), so a round imports as one conversation per probe run. A line with no runId (a turn from the dev UI, or any round archived before T-0259, which use fog-manifest-v1.json) is excluded with a missing-conversation-id warning, never grouped by guess. requestId is the line's `at` ISO time, unique per line in every committed round; it identifies the turn, it is not a causal join. includedChunkIds are trace.exemplarIds, the corpus exemplars framed into the system prompt. complete is trace.exemplarsComplete, written true on every line whose turn reached a final meta-line: produce() frames every retrieved exemplar into the system prompt (fewShot maps the whole list, no budget trim), so exemplarIds is the full exemplar list that turn submitted. It states completeness for the exemplar namespace only; the other context sources (mini-skills, references, sections) are not chunk ids and stay unmapped. No retrieval or tool_result event is recorded in a trace line, so retrieved-not-submitted and tool-result-not-propagated have no linked pair to assess: they report no eligible candidates, which is absent telemetry, not evidence of a healthy run. Not mappable in this vocabulary (kept as hashed artifacts): runs/*/report.json and fixture.json (they join to a trace line by `<day>.jsonl:<line>`, which no canonical event type can target), the routing block of T-0239 and later lines (sections, mini-skills and references are object lists or need a load state), retries and failure codes (no canonical event), and usage.",
+  "notes": "context-fog-of-war bundle mapping for a live round folder (.sdlc/evals/rounds/<date>-<slug>/), T-0248, revised T-0259. One dev proxy trace line (traces/<day>.jsonl, T-0151) is one model_request, plus (when it carries `events`) one retrieval event and one tool_result event per non-terminal tool result. conversationId is the line's runId: the id a probe sent as the x-a2ui-run-id header (run-id.ts), so a round imports as one conversation per probe run. A line with no runId (a turn from the dev UI, or any round archived before T-0259, which use fog-manifest-v1.json) is excluded with a missing-conversation-id warning, never grouped by guess. requestId is the line's `at` ISO time, unique per line in every committed round; it identifies the turn, it is not a causal join, and the retrieval and tool_result events target it explicitly (targetRequestId). The `events` block is written at two independent points. retrieval.chunkIds are the exemplar ids deps.retrieve returned (produce.ts); includedChunkIds are framedExemplarIds, the ids the prompt composer emitted a block for (system-prompt.ts fewShot), so an exemplar retrieved but not framed is a retrieved-not-submitted finding. retrieval.success is false when retrieval returned nothing, so an empty shard is excluded, not counted as a checked pair. tool_result events are the results the provider adapter had in hand (anthropic.ts tool loop, non-terminal calls only: render_surface is terminal and has no continuation by design); toolResultIds are the ids it placed in the next upstream request, so a result never submitted is a tool-result-not-propagated finding. A turn with no integration tool has no tool_result event, so that detector has no eligible pair on it. complete is events.complete, written true only when the turn reached its final meta-line, so a turn that threw or halted midway declares no completeness and its pairs report a gap, never a finding. Referenced resources fetched versus listed are already in routing.references (load full or index-only, ids and kinds); they stay unmapped because the proxy sees them only as the user message text, one side of any pair. Not mappable in this vocabulary (kept as hashed artifacts): runs/*/report.json and fixture.json (they join to a trace line by `<day>.jsonl:<line>`, which no canonical event type can target), the routing block of T-0239 and later lines (sections and mini-skills are object lists), retries and failure codes (no canonical event), and usage.",
   "rules": [
     {
       "filePattern": "traces/*.jsonl",
@@ -10,8 +10,32 @@
         "conversationId": "/runId",
         "requestId": "/at",
         "timestamp": "/at",
-        "includedChunkIds": "/trace/exemplarIds",
-        "complete": "/trace/exemplarsComplete"
+        "includedChunkIds": "/events/framedExemplarIds",
+        "toolResultIds": "/events/submittedToolResultIds",
+        "complete": "/events/complete"
+      }
+    },
+    {
+      "filePattern": "traces/*.jsonl",
+      "recordPath": "",
+      "eventType": "retrieval",
+      "fields": {
+        "conversationId": "/runId",
+        "targetRequestId": "/at",
+        "timestamp": "/at",
+        "success": "/events/retrieval/success",
+        "chunkIds": "/events/retrieval/chunkIds"
+      }
+    },
+    {
+      "filePattern": "traces/*.jsonl",
+      "recordPath": "/events/toolResults",
+      "eventType": "tool_result",
+      "fields": {
+        "conversationId": "/runId",
+        "targetRequestId": "/requestId",
+        "success": "/success",
+        "resultId": "/resultId"
       }
     }
   ]

@@ -111,6 +111,9 @@ describe('anthropicProvider — the GH #49 tool-use loop (mocked fetch)', () => 
     expect(toolResult.content).toEqual([{ type: 'tool_result', tool_use_id: 'toolu_x', content: 'Bergen: 12°C, rain.' }])
     // (4) the 'tool' event carried the registry name
     expect(events.some((e) => e.kind === 'tool' && e.text === 'weather')).toBe(true)
+    // (5) T-0259: the result is reported when in hand, then again when placed in the next request, by call id
+    const results = events.filter((e) => e.kind === 'tool_result' || e.kind === 'tool_submitted').map((e) => [e.kind, e.id, e.ok])
+    expect(results).toEqual([['tool_result', 'toolu_x', true], ['tool_submitted', 'toolu_x', undefined]])
   })
 
   it('a REJECTED executeTool becomes an is_error tool_result — the turn continues, never throws', async () => {
@@ -126,6 +129,7 @@ describe('anthropicProvider — the GH #49 tool-use loop (mocked fetch)', () => 
     )
     const provider = anthropicProvider({ apiKey: 'test-key' })
     const fragments: string[] = []
+    const failedEvents: ProviderEvent[] = []
     for await (const frag of provider.stream({
       model: 'claude-sonnet-5-5',
       system: 'sys',
@@ -134,10 +138,12 @@ describe('anthropicProvider — the GH #49 tool-use loop (mocked fetch)', () => 
       executeTool: async () => {
         throw new Error('upstream 503')
       },
+      onEvent: (ev) => failedEvents.push(ev),
     })) {
       fragments.push(frag)
     }
     expect(fragments.join('')).toBe('{"final":true}')
+    expect(failedEvents.filter((e) => e.kind === 'tool_result').map((e) => [e.id, e.ok])).toEqual([['toolu_x', false]])
     const toolResult = (bodies[1]!.messages as Array<{ content: unknown }>).at(-1)!
     expect(toolResult.content).toEqual([
       { type: 'tool_result', tool_use_id: 'toolu_x', content: 'tool failed: upstream 503', is_error: true },

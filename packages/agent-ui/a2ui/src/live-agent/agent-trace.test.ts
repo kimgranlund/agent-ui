@@ -472,14 +472,19 @@ describe('the trace line carries the probe run id (T-0259)', () => {
     }
   })
 
-  it('a turn that reached its final meta-line states its exemplar list is complete; a rejected turn does not', async () => {
+  it('a turn that reached its final meta-line records retrieved and framed exemplar ids and is complete; a rejected turn has no events', async () => {
     quick()
     await post('/produce', body(), { [RUN_ID_HEADER]: 'r-1' })
-    expect(writtenLines().at(-1)?.trace).toMatchObject({ exemplarsComplete: true })
+    // The real retrieval over the shipped shard: what it returned is what the composer framed, from two code points.
+    const events = writtenLines().at(-1)!.events!
+    expect(events).toMatchObject({ complete: true, toolResults: [], submittedToolResultIds: [] })
+    expect(events.framedExemplarIds.length).toBeGreaterThan(0)
+    expect(events.retrieval).toEqual({ success: true, chunkIds: events.framedExemplarIds })
     const rejected = new TurnTraceCollector({ route: 'produce', provider: 'anthropic', model: 'm', user: 'u', runId: 'r-2' })
     rejected.reject(400, 'bad pair')
     expect(rejected.finish()).toMatchObject({ outcome: 'rejected', runId: 'r-2' })
     expect(rejected.finish().trace).toBeUndefined()
+    expect(rejected.finish().events).toBeUndefined()
   })
 
   it('the id grammar: readRunId accepts a header list, newRunId stays inside the grammar', () => {

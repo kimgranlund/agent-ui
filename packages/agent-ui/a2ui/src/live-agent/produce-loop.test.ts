@@ -964,6 +964,25 @@ describe('produce() meta-line + TurnTrace (ADR-0088 §1/§2/§4)', () => {
     for (const l of a2uiLines) expect(readMetaLine(l)).toBeUndefined()
   })
 
+  it('onContext reports the retrieved ids and the ids the composer framed, once, and changes no output (T-0259)', async () => {
+    const run = async (onContext?: (c: { retrievedIds: readonly string[]; framedIds: readonly string[] }) => void): Promise<string[]> => {
+      const { provider } = stubProvider(['{"a2uiMeta":{"note":"hi"}}\n' + VALID])
+      const deps: ProduceDeps = { provider, retrieve: () => [mkExemplar('ex-1'), mkExemplar('ex-2')], catalog: defaultCatalog }
+      const lines: string[] = []
+      for await (const line of produce(intent, deps, { maxRounds: 3, model: 'claude-sonnet-5-5', ...(onContext !== undefined ? { onContext } : {}) })) lines.push(line)
+      return lines
+    }
+    const seen: Array<{ retrievedIds: readonly string[]; framedIds: readonly string[] }> = []
+    const withHook = await run((c) => seen.push(c))
+    expect(seen).toEqual([{ retrievedIds: ['ex-1', 'ex-2'], framedIds: ['ex-1', 'ex-2'] }])
+    expect(withHook).toEqual(await run())
+    // The A2UI half off frames no exemplar even though retrieval returned two: the two lists differ, which is what the fog detector reads.
+    const off: Array<{ retrievedIds: readonly string[]; framedIds: readonly string[] }> = []
+    const { provider } = stubProvider(['{"a2uiMeta":{"note":"hi"}}'])
+    for await (const _ of produce(intent, { provider, retrieve: () => [mkExemplar('ex-1')], catalog: defaultCatalog }, { maxRounds: 1, a2uiEnabled: false, onContext: (c) => off.push(c) })) void _
+    expect(off).toEqual([{ retrievedIds: ['ex-1'], framedIds: [] }])
+  })
+
   it('a note-only stub (no A2UI at all) returns cleanly WITHOUT ProduceHalt (Acceptance)', async () => {
     const { provider, calls } = stubProvider(['{"a2uiMeta":{"note":"nothing to change"}}'])
     const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }

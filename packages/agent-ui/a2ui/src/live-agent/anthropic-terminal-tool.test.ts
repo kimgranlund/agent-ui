@@ -152,6 +152,7 @@ describe('terminal round', () => {
         ),
     ])
     const executed: Array<{ name: string; input: Record<string, unknown> }> = []
+    const seen: string[] = []
     const provider = anthropicProvider({ apiKey: 'test-key' })
     for await (const frag of provider.stream({
       model: 'claude-sonnet-5-5',
@@ -164,9 +165,13 @@ describe('terminal round', () => {
         return 'received'
       },
       terminalTools: ['render_surface'],
+      onEvent: (ev) => seen.push(ev.kind),
     })) {
       log.push(`frag:${frag}`)
     }
+    // T-0259: a terminal result has no continuation, so it is never reported as a result the model should receive.
+    expect(seen).not.toContain('tool_result')
+    expect(seen).not.toContain('tool_submitted')
 
     // Live: both fragments are yielded before the tool_use chunks arrive, and the executor runs last.
     expect(log).toEqual(['frag:Here is ', 'frag:your card.', 'chunk2', 'chunk3', 'exec'])
