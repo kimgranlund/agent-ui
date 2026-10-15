@@ -32,3 +32,11 @@ The failing test lands before or with the fix, never after. No em dashes.
 - (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/agent/surface-seeds.test.ts` exits 0: the seed and the semantic views drop the children a resent container no longer lists, the server fails the relisting update as `acts->bBet` and `acts->bCheck`, and the real renderer reports the same two violations (and none for the redelivered update).
 - (red) `npx vitest run scripts/e2e-admin/probe/replays/croupier-draw-id-graph.test.mjs` exits 0: turn 3 repairs on the server (trace rounds 2, IDGRAPH) and every probe check is green but T-0217's `no-internal-leak` on the recorded heal's "Fixed." (a pinned known fail).
 - `npm run check` exits 0.
+
+## Lane verify scope (conductor)
+One batched verifier for this lane (Kim's ruling: one verifier per bundle). Verify this handoff AND each of these, criterion by criterion, in the same tree; give one verdict per ticket under Criteria and one overall Verdict:
+- .sdlc/admin-error-turn-per-violation/handoff.md
+- .sdlc/producer-reply-meta-line-prose/handoff.md
+- .sdlc/chat-repair-leaks-to-prose/handoff.md
+- .sdlc/inner-radius-quizmaster-stylist/handoff.md
+- T-0223 screenshots: /private/tmp/claude-501/-Users-kimgranlund-Projects-nonoun-agent-ui/a8ce3b21-c0a4-4e5f-b099-1796666e5f7f/scratchpad/t0223/
