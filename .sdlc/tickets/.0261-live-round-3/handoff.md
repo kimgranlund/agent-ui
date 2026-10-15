@@ -2,7 +2,7 @@
 id: T-0261
 title: "Live round 3: routing pressure pack, round 2 regressions, long flows ( cap)"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0260]          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -38,3 +38,9 @@ Screenshots go to the evidence cache (T-0256), never the repo. No prompt or code
 - The round folder holds traces, ledger.jsonl, round.json, runs/ (reports and fixtures), README and report.md; spend is at or under $20.
 - The fog report is published and its id recorded.
 - Every real failure has a proposed ticket; `tickets.py check` and `npm run check` exit 0.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Round 3 done: 44 runs, $14.38; report, fog report c8da0f95748fb8e6be9038ea, tickets T-0262 to T-0273; verifier L2 pass) · verifier: none · base: 041a20c3b6bb
+- Changed: see commits
+- Commits: 2f2cfd7 T-0261: round 3 tickets ready; T-0266 ruling (Kim); e890ce9 T-0261: live round 3 archive, report, fog record, 12 proposed tickets and 4 pinned replays; f0c9103 T-0261: seven-card-stud on all models and blackjack-rounds on Opus back in the regressions (44 runs); 5f43b6b T-0261: Lexicographer regression oracle on the first guess (the opening ranks no word board keyless); 79ff3d5 T-0261: round 3 generator (routing pack, round 2 regressions, long flows) and live-commands.sh; 04ebaff T-0261: file live round 3 ticket; T-0260 ticket archived
