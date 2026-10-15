@@ -112,7 +112,7 @@ export const MINI_SKILLS: MiniSkill[] = loadMiniSkills()
  *
  * Degrades to `[]` — mirroring `retrieve.ts`'s zero-vocabulary rule and `fewShot`'s empty return
  * (`system-prompt.ts:93`) — when `intent` shares no idiom vocabulary with any IN-SCOPE registry entry, OR
- * `cap` or the in-scope registry's length is `<= 0`. Unlike `retrieve()`, a genuinely UNRELATED
+ * `cap` or the in-scope registry's length is `<= 0`. As in `retrieve()`'s fallback tier (T-0238), a genuinely UNRELATED
  * (zero-score) entry is never used to pad the result out to `cap` — the `floor: 0` passed to
  * `topKByCosine` (a per-turn prompt injection should never carry a module that scored no relevance at all).
  */

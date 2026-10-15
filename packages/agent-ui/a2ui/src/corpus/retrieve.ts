@@ -26,9 +26,17 @@
 // ONE implementation of the math; `selectMiniSkills` is the other caller). Also the pure `base-id.ts`:
 // ADR-0243 cl.3 matches the catalog scope on the BASE segment of `query.catalogId`, so a derived
 // `<base>--<persona>` turn retrieves its base's exemplars.
+//
+// T-0238: the domain rule, mirroring `selectMiniSkills`. A record's domains are those of the domain-layer types it
+// uses (`catalog/layers.ts`, pure data over the import-free id grammar). On a turn that selects domains, a record
+// of another domain never surfaces and the turn's own domain composites rank first; the rest of `k` comes from the
+// remaining records with a positive score only, so zero-score records no longer pad the few-shot block (round 2:
+// a Croupier "Deal again" turn got agent-roster-drawer and booking-reservation that way). A base turn selects no
+// domain and keeps every record.
 
 import type { CorpusRecord, ModelVisibleFacet } from './record.ts'
 import { baseCatalogId } from './base-id.ts'
+import { CATALOG_LAYER_MAP, selectedDomains } from '../catalog/layers.ts'
 import { topKByCosine } from './text-similarity.ts'
 
 export interface RetrieveQuery {
@@ -49,10 +57,24 @@ function documentText(rec: CorpusRecord): string {
   return `${rec.promptText} ${components.join(' ')}`
 }
 
+/** T-0238: the domains of the domain-layer types a record uses (`[]` for a core-only record). */
+function recordDomains(rec: CorpusRecord): string[] {
+  const out = new Set<string>()
+  for (const t of rec.meta.componentsUsed ?? []) {
+    const row = Object.hasOwn(CATALOG_LAYER_MAP, t) ? CATALOG_LAYER_MAP[t]! : undefined
+    if (row?.layer === 'domain' && row.domain !== undefined) out.add(row.domain)
+  }
+  return [...out]
+}
+
 /**
  * TF-IDF cosine top-k retrieval (SPEC-R11) over `promptText` + `meta.componentsUsed`, scoped to
  * `query.catalogId`/`query.protocolVersion` and restricted to non-quarantined records of one
  * model-visible facet (`query.facet`, default `exemplar`).
+ *
+ * T-0238: on a turn whose catalog selects domains (`selectedDomains`), a record using another domain's type is out
+ * of scope, the turn's own domain records rank first (all of them, best match first), and the remaining slots take
+ * only records that score above zero. Fewer than `k` results is the honest answer when nothing else matches.
  *
  * Never throws. Resolves to `[]` for: an empty `records` input, an empty scope after filtering
  * (SPEC-R11 AC2), `query.k <= 0`, or a query whose tokens share zero vocabulary with the scope — a
@@ -77,7 +99,16 @@ export function retrieve(records: readonly CorpusRecord[], query: RetrieveQuery)
   )
   if (scope.length === 0) return []
 
-  return topKByCosine(scope, documentText, query.intent, query.k, (a, b) =>
-    a.name < b.name ? -1 : a.name > b.name ? 1 : 0,
-  )
+  const byName = (a: CorpusRecord, b: CorpusRecord): number => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)
+  const selected = selectedDomains(query.catalogId)
+  const own: CorpusRecord[] = []
+  const rest: CorpusRecord[] = []
+  for (const r of scope) {
+    const domains = recordDomains(r)
+    if (selected.length > 0 && domains.some((d) => !selected.includes(d))) continue
+    ;(domains.length > 0 && selected.length > 0 ? own : rest).push(r)
+  }
+  const ranked = topKByCosine(own, documentText, query.intent, own.length, byName)
+  const first = [...ranked, ...own.filter((r) => !ranked.includes(r)).sort(byName)].slice(0, query.k)
+  return [...first, ...topKByCosine(rest, documentText, query.intent, query.k - first.length, byName, 0)]
 }
