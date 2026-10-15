@@ -38,6 +38,10 @@ export interface RetrieveQuery {
   protocolVersion: string
   /** The model-visible facet to draw from (ADR-0231 cl.4). Omitted means `exemplar`, the pre-ADR scope. */
   facet?: ModelVisibleFacet
+  /** T-0202 (catalog architecture CA-R4): the effective catalog's component types. When given, a record whose
+   *  `meta.componentsUsed` names a type outside it is never retrieved, so an exemplar never teaches a type the
+   *  turn cannot emit (a base turn after a type moved to a domain). Omitted: no type filter. */
+  componentTypes?: readonly string[]
 }
 
 function documentText(rec: CorpusRecord): string {
@@ -62,12 +66,14 @@ export function retrieve(records: readonly CorpusRecord[], query: RetrieveQuery)
 
   const facet: ModelVisibleFacet = query.facet ?? 'exemplar'
   const base = baseCatalogId(query.catalogId) // ADR-0243 cl.3: a derived `<base>--<persona>` query draws from the base shard
+  const emittable = query.componentTypes === undefined ? undefined : new Set(query.componentTypes)
   const scope = records.filter(
     (r) =>
       r.meta.catalogId === base &&
       r.meta.protocolVersion === query.protocolVersion &&
       r.meta.facet === facet &&
-      r.meta.status !== 'quarantined',
+      r.meta.status !== 'quarantined' &&
+      (emittable === undefined || (r.meta.componentsUsed ?? []).every((t) => emittable.has(t))),
   )
   if (scope.length === 0) return []
 

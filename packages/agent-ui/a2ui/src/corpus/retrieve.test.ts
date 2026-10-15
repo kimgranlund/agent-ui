@@ -3,6 +3,8 @@ import { retrieve } from './retrieve.ts'
 import type { RetrieveQuery } from './retrieve.ts'
 import type { CorpusRecord } from './record.ts'
 
+declare const process: { cwd(): string }
+
 // — fixtures ——————————————————————————————————————————————————————————————
 
 function exemplar(opts: {
@@ -413,5 +415,41 @@ describe('retrieve: the ADR-0231 opt-in facet filter (default exemplar)', () => 
     const quarantined = ofFacet('repair', 'rp-q', 'a login form')
     const recs = [{ ...quarantined, meta: { ...quarantined.meta, status: 'quarantined' as const } }]
     expect(retrieve(recs, query({ intent: 'a login form', facet: 'repair' }))).toEqual([])
+  })
+})
+
+// T-0202 (catalog architecture CA-R4 AC2): an exemplar that uses a type outside the effective catalog never
+// teaches it. `componentTypes` is the effective catalog's types; omitted, no type filter applies.
+describe('retrieve: the effective-catalog type filter (T-0202)', () => {
+  const records = [
+    exemplar({ name: 'plain-board', promptText: 'show the game board', componentsUsed: ['Grid', 'Button'] }),
+    exemplar({ name: 'domain-board', promptText: 'show the game board', componentsUsed: ['BoardGrid', 'Button'] }),
+    exemplar({ name: 'unlisted', promptText: 'show the game board' }),
+  ]
+
+  it('keeps only records whose componentsUsed is a subset of the effective catalog', () => {
+    const names = retrieve(records, query({ intent: 'show the game board', componentTypes: ['Grid', 'Button'] })).map((r) => r.name)
+    expect(names.sort()).toEqual(['plain-board', 'unlisted'])
+  })
+
+  it('a turn whose catalog holds the domain type retrieves the domain exemplar too', () => {
+    const names = retrieve(records, query({ intent: 'show the game board', componentTypes: ['Grid', 'Button', 'BoardGrid'] })).map((r) => r.name)
+    expect(names.sort()).toEqual(['domain-board', 'plain-board', 'unlisted'])
+  })
+
+  it('omitted, no type filter applies (the pre-T-0202 scope)', () => {
+    expect(retrieve(records, query({ intent: 'show the game board' })).length).toBe(3)
+  })
+
+  it('every shipped agent-ui exemplar sits inside the default catalog today, so the filter moves no W0 byte', async () => {
+    const { readFileSync } = await import('node:fs')
+    const { defaultCatalog } = await import('../catalog/default/index.ts')
+    const shard = (readFileSync(`${process.cwd()}/packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl`, 'utf8') as string)
+      .split('\n')
+      .filter((l) => l.trim() !== '')
+      .map((l) => JSON.parse(l) as CorpusRecord)
+    expect(shard.length).toBeGreaterThan(0)
+    const outside = shard.filter((r) => (r.meta.componentsUsed ?? []).some((t) => !Object.hasOwn(defaultCatalog.components, t)))
+    expect(outside.map((r) => r.name)).toEqual([])
   })
 })
