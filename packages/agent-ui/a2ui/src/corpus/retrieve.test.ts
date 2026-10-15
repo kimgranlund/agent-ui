@@ -470,8 +470,16 @@ describe('retrieve: the selected-domain rule (T-0238)', () => {
   })
 
   it('the turn domain record ranks first even when another record matches better', () => {
-    const names = retrieve(records, query({ intent: 'a roster drawer of agents', catalogId: 'agent-ui--croupier' })).map((r) => r.name)
-    expect(names).toEqual(['board', 'unrelated'])
+    // T-0253: a croupier turn's own family is CardTable, so the record that leads uses it.
+    const table = exemplar({ name: 'table', promptText: 'deal the cards', componentsUsed: ['CardTable', 'Text'] })
+    const names = retrieve([table, ...records], query({ intent: 'a roster drawer of agents', catalogId: 'agent-ui--croupier' })).map((r) => r.name)
+    expect(names).toEqual(['table', 'unrelated'])
+  })
+
+  it('T-0253: another game composite never ranks first on a family turn, and competes on score only', () => {
+    const table = exemplar({ name: 'table', promptText: 'deal the cards', componentsUsed: ['CardTable', 'Text'] })
+    expect(retrieve([table, ...records], query({ intent: 'deal again', catalogId: 'agent-ui--croupier' })).map((r) => r.name)).toEqual(['table'])
+    expect(retrieve([table, ...records], query({ intent: 'show the game board', catalogId: 'agent-ui--croupier' })).map((r) => r.name)).toEqual(['table', 'board', 'plain'])
   })
 
   it('the fallback tier never pads with a zero-score record', () => {

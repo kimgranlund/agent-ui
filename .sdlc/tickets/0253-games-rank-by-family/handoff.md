@@ -19,3 +19,9 @@ Found by the T-0240 L3 verifier (`retrieve-presets.test.ts:35`): croupier "Deal 
 ## Done when
 - `retrieve-presets.test.ts` pins: croupier's top 3 holds no BoardGrid; lexicographer and admiral keep their own board first; quizmaster's top 3 is not two boards. The pins are red on the current rule.
 - `npm run check` exit 0.
+
+## Acceptance criteria
+- `npx vitest run packages/agent-ui/a2ui/src/corpus/retrieve-presets.test.ts packages/agent-ui/a2ui/src/corpus/retrieve.test.ts` exits 0; the T-0253 describe pins croupier's top 3 with a CardTable first and no BoardGrid, lexicographer and admiral with their own board first, and quizmaster with fewer than two BoardGrid records.
+- With `retrieve.ts` reverted to the T-0238 rule, the croupier and quizmaster pins and both T-0253 family cases fail.
+- The family rule applies to the games domain only: the concierge pin (`frontier-service-gateway` second) is unchanged.
+- `npm run check` exit 0.
