@@ -2,7 +2,7 @@
 id: T-0266
 title: "Concierge booking guidance conflicts: booking-flow teaches a read-back Card and a settled Badge, the catalog teaches BookingForm and BookingConfirmation"
 type: bug             # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -24,3 +24,6 @@ Across 83 Concierge turns on three models, BookingForm was drawn once and Bookin
 
 ## Context
 This is a guidance conflict, not a routing or model gap. Related: T-0197 (BookingForm field kinds), T-0262, and T-0231 (facts fixed; teaching is still index-only). Found by T-0261.
+
+## Ruling (Kim, 2026-10-15)
+When a booking ask already carries every detail, Concierge shows the BookingForm composite pre-filled for the guest to confirm, never a read-back Card. Change the booking-flow playbook to match the composite catalog, and have the composite-moment check enforce it.
