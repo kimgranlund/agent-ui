@@ -41,6 +41,17 @@ type Finding = { rule: string; detail: string }
 type Ctx = { width: number; column: Element }
 
 const raf = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
+/** Wait for every finite animation and CSS transition to finish. A control that slides in on mount (ui-drill-panel's
+ *  `@starting-style` translateX, T-0244) is measured mid-flight otherwise, and its box depends on host load. */
+const settled = async (): Promise<void> => {
+  await raf()
+  for (let pass = 0; pass < 5; pass++) {
+    const running = document.getAnimations().filter((a) => a.effect?.getComputedTiming().endTime !== Infinity)
+    if (running.length === 0) return
+    await Promise.all(running.map((a) => a.finished.catch(() => undefined)))
+    await raf()
+  }
+}
 const TOL = 0.5
 const STEPS = new Set(['sm', 'md', 'lg'])
 const TIERS = new Set(Object.keys(CFG.tiers))
@@ -612,7 +623,7 @@ async function sweep(subject: string, scope: () => Element, column: () => Elemen
     await page.viewport(width, 900)
     for (const s of SCHEMES) {
       scheme(s)
-      await raf()
+      await settled()
       for (const f of lint(scope(), { width, column: column() })) {
         const key = `${subject}#${f.rule}`
         if (!hits.has(key)) hits.set(key, `${key} at ${width}px ${s}: ${f.detail}`)

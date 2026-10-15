@@ -1,5 +1,4 @@
 {
-  "demo/drill-demo#column": "owner T-0186: its ui-drill-panel keeps a width past the 400px column (the shared .reflow-frame overflow was fixed by T-0142); T-0186 makes the panel fit",
   "demo/line-chart-demo#dash-scale": "owner T-0188: the projected line's 3px 2px dash is authored in screen px on purpose (--ui-line-chart-projected-dash), and non-scaling-stroke keeps it 3px at any box size (T-0141); not the gauge class of bug. T-0188 decides between this entry and a user-unit dash",
   "demo/playing-card-demo#type-floor": "owner T-0189: the playing card's corner index scales with the card face and reads 6.8px on the smallest specimen, under the 9px floor (ADR-0245 M5); T-0189 decides between a floor and a ruled pictorial exemption",
   "demo/split-pane-demo#column": "owner T-0187: the split-pane specimen keeps both panes' minimum widths and ends 63px past the 400px column; T-0187 stacks or scrolls it at narrow widths"
