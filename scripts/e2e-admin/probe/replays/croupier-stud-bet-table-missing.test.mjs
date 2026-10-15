@@ -8,8 +8,9 @@ import { offlineReplay } from '../trace.ts'
 
 // expectedFail: T-0184 finding (see .sdlc/croupier-closed-loop/report.md). The offline replay of this trace fails
 // no-surface-loss on turn 1; when the fix lands this goes red: flip it to `expect(report.failed).toEqual([])`.
+// T-0222: it fails for the live reason: BET_TABLE_MISSING sends round 1's ask-1 back and the repair ships ask-2.
 it('croupier-stud-bet-table-missing: the recorded turns replay with the known failing check', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./croupier-stud-bet-table-missing.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed.map((c) => [c.check, c.turn])).toEqual([['no-surface-loss', 0]])
+  expect(report.failed.map((c) => [c.check, c.turn, c.detail])).toEqual([['no-surface-loss', 0, 'created in a round but never shipped: ask-1']])
 })
