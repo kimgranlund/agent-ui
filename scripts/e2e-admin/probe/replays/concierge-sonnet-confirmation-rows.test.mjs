@@ -6,14 +6,18 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0262. Live round 3 (2026-10-15-r3-routing :205-:207, Sonnet 5.5). The confirm turn hand-builds a
-// settled Badge; BOOKING_CONFIRMATION_MISSING asks for "summary rows bound to the booking", the model binds `rows` to a
-// path, the catalog rejects it (CATALOG at root.rows: `rows` is a literal array of {label, path}), and the turn ships
-// uncorrected. The fix flips the pinned codes to a clean BookingConfirmation round.
-it('concierge-sonnet-confirmation-rows: the BookingConfirmation repair ends in CATALOG and ships uncorrected', async () => {
+// T-0262 (fixed). Live round 3 (2026-10-15-r3-routing :205-:207, Sonnet 5.5). The confirm turn hand-built a settled
+// Badge; BOOKING_CONFIRMATION_MISSING asked for "summary rows bound to the booking", the model bound `rows` to a path,
+// the catalog rejected it (CATALOG at root.rows), and the turn shipped uncorrected. The repair now asks for `data` bound
+// to the booking and `rows` as a literal {label, path} array, sent under the Card's id. Turn 2's second round is AUTHORED
+// to that instruction (the recorded one bound `rows`), so the replay shows the repaired turn: no CATALOG, no
+// SEMANTIC_UNCORRECTED.
+it('concierge-sonnet-confirmation-rows: the BookingConfirmation repair ships one literal-rows BookingConfirmation', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./concierge-sonnet-confirmation-rows.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
   expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual([])
   const trace = report.records[2].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
-  expect(trace.failureCodes).toEqual(['CATALOG', 'SEMANTIC_UNCORRECTED'])
+  expect(trace).toMatchObject({ rounds: 2, failureCodes: ['BOOKING_CONFIRMATION_MISSING'] })
+  const types = report.records[2].lines.flatMap((l) => JSON.parse(l).updateComponents?.components ?? []).map((c) => c.component)
+  expect(types).toEqual(['BookingConfirmation'])
 })

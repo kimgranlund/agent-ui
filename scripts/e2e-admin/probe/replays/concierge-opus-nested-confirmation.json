@@ -735,6 +735,81 @@
               }
             }
           ]
+        },
+        {
+          "text": "{\"a2uiMeta\":{\"flowEnd\":true,\"target\":{\"surfaceId\":\"ask-2\"}}}Your massage is booked: 60 minutes for Alex Moreau on Thursday 19 November 2026, from 16:00 to 17:00. The spa has the reservation.\n\nThanks for checking the details with me. I can also book a table at Vela or a boat tour. Is there anything else, or are you all set?",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Your 60-minute massage is booked for Thursday 19 November 2026 at 16:00.",
+                "target": "ask-2",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-2",
+                      "catalogId": "agent-ui--concierge",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "ask-2",
+                      "value": {
+                        "booking": {
+                          "service": "60-minute massage",
+                          "date": "2026-11-19",
+                          "time": "16:00",
+                          "guests": 1,
+                          "name": "Alex Moreau"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-2",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "BookingConfirmation",
+                          "title": "Spa booking confirmed",
+                          "data": {
+                            "path": "/booking"
+                          },
+                          "rows": [
+                            {
+                              "label": "Treatment",
+                              "path": "service"
+                            },
+                            {
+                              "label": "Date",
+                              "path": "date"
+                            },
+                            {
+                              "label": "Time",
+                              "path": "time"
+                            },
+                            {
+                              "label": "Guests",
+                              "path": "guests"
+                            },
+                            {
+                              "label": "Name",
+                              "path": "name"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
         }
       ],
       "input": {

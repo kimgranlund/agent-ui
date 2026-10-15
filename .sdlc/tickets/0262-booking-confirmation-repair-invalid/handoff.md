@@ -31,3 +31,9 @@ This solo lane delivers these tickets in order, one commit each:
 - .sdlc/tickets/0262-booking-confirmation-repair-invalid/handoff.md
 - .sdlc/tickets/0264-repair-round-drops-surface/handoff.md
 - .sdlc/tickets/0263-fleet-check-on-word-board/handoff.md
+
+## Acceptance criteria
+- `npx vitest run packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts` exits 0: the BookingConfirmation repair names `data` bound to the booking and `rows` as a literal `{label, path}` array (never a bound `rows`), the shape it asks for passes the concierge catalog, and a BookingConfirmation inside a Card yields `BOOKING_CONFIRMATION_WRAPPED`.
+- `npx vitest run scripts/e2e-admin/probe/replays/concierge-sonnet-confirmation-rows.test.mjs scripts/e2e-admin/probe/replays/concierge-opus-nested-confirmation.test.mjs` exits 0: with an authored repaired round each, the confirm turn ships one BookingConfirmation and no Card, with no CATALOG and no SEMANTIC_UNCORRECTED on the trace.
+- `npx vitest run packages/agent-ui/a2ui/src/catalog scripts/e2e-admin/probe` exits 0.
+- `npm run check` exits 0.
