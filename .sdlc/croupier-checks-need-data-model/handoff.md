@@ -34,3 +34,11 @@ The failing test lands before or with the fix, never after. No em dashes.
 - The recorded fixture still replays: `npx vitest run --project scripts scripts/e2e-admin/probe/replays/croupier-haiku-no-send-data-model.test.mjs` exits 0.
 - `npm run check` exits 0.
 - Repro note: the offline replay builds `ProduceDeps` with no `semanticChecks`, so the handoff's Repro span is green on the broken tree too; it stays as recorded evidence, and the red control is the produce-level test above.
+
+## Lane verify scope (conductor)
+One batched verifier for this lane (Kim's ruling: one verifier per bundle). Verify this handoff AND each of these, criterion by criterion, in the same tree; give one verdict per ticket under Criteria and one overall Verdict:
+- .sdlc/croupier-first-deal-debit/handoff.md
+- .sdlc/croupier-deal-again-skips-bet/handoff.md
+- .sdlc/croupier-bet-check-poker/handoff.md
+- .sdlc/croupier-poker-placeholder-hole-cards/handoff.md
+- .sdlc/croupier-rules-correctness-check/handoff.md
