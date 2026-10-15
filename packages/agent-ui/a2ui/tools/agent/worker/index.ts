@@ -307,7 +307,7 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
   // id, never a mixed catalog+prompt); reaches both the prompt and the validator through the ONE
   // existing `deps.catalog` seam (produce.ts) — no second threading path.
   // ADR-0238: the SELECTED catalog's persona semantic checks, through the SAME shared helper the dev
-  // proxy uses (`semanticChecksDeps` adds nothing when the persona declares none: byte-identical deps).
+  // proxy uses (`semanticChecksDeps` also adds T-0230's hidden-state checks on every catalog, silent without a game signature).
   const selectedCatalog = selectCatalog(catalogs, catalogId, catalog)
   const deps: ProduceDeps = { provider: dispatch.provider, retrieve: (q) => retrieve(shard, q), catalog: selectedCatalog, ...semanticChecksDeps(selectedCatalog) }
 

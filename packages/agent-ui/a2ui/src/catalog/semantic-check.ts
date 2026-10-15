@@ -57,6 +57,9 @@ export interface SurfaceView {
   readonly components: ReadonlyMap<string, A2uiComponent>
   /** The merged data model (`undefined` when no `updateDataModel` reached this surface). */
   readonly dataModel: unknown
+  /** T-0230: the data model the session's prior turns left, before this round (`undefined` when this round creates
+   *  the surface, or no earlier turn wrote it), so a check can see a committed value change. */
+  readonly priorDataModel?: unknown
 }
 
 /** T-0172: the user action a client turn answers: its name, the surface it came from, its resolved context, and
@@ -215,15 +218,18 @@ function replaySession(session: SemanticTurnLog): Map<string, MutableView> {
  */
 export function semanticSurfaceViews(session: SemanticTurnLog, output: A2uiOutput): SurfaceView[] {
   const views = replaySession(session)
+  const prior = new Map([...views].map(([sid, view]) => [sid, view.dataModel] as const))
+  const created = new Set<string>()
   const touched: string[] = []
   for (const msg of output) {
     const sid = apply(views, msg)
     if (sid !== undefined && !touched.includes(sid)) touched.push(sid)
+    if (sid !== undefined && 'createSurface' in msg) created.add(sid)
   }
   const out: SurfaceView[] = []
   for (const sid of touched) {
     const view = views.get(sid)
-    if (view !== undefined) out.push({ surfaceId: sid, components: view.components, dataModel: view.dataModel })
+    if (view !== undefined) out.push({ surfaceId: sid, components: view.components, dataModel: view.dataModel, priorDataModel: created.has(sid) ? undefined : prior.get(sid) })
   }
   return out
 }

@@ -7,7 +7,9 @@ import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
 // expectedFail: T-0229 (turns 3 and 4 are the text shape with a trailing meta-line). T-0230: no secret word is ever
-// committed, so the marks are made up and turn 3 admits it; no check reads that. The fixture's agent was hand-set to
+// committed, so the marks are made up and turn 3 admits it. The `word-secret` check now fails turns 0, 2 and 3
+// (WORD_SECRET_MISSING, `catalog/hidden-state-checks.test.ts`); the recorded rounds hold no repair, so each ships
+// uncorrected with the same lines and the probe checks below do not move. The fixture's agent was hand-set to
 // lexicographer: the trace has no agent label and `--from-trace` defaulted it to croupier (T-0236).
 it('lexicographer-haiku-no-secret: the recorded turns replay with the made-up marks and the trailing meta-lines', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./lexicographer-haiku-no-secret.json', import.meta.url), 'utf8'))
