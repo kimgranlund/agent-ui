@@ -8,6 +8,9 @@
 // (Twist, Fold, Surrender) cannot stop the run. A deal is random: a click whose button the hand took away (a
 // natural, a bust before Stand) fails `click-target` by name and ends that run, which the report classifies.
 //
+// T-0222: the opening step and every Deal again carry `--expect-turn` for the game's table component, so a deal
+// answered in prose fails that turn. Other moves carry none: a refused illegal move is answered in prose on purpose.
+//
 // Run `node --experimental-strip-types scripts/e2e-admin/probe/scenarios/croupier.ts` to print the script.
 
 import type { ProbeStep } from '../model.ts'
@@ -25,7 +28,7 @@ const click = (label: string): ProbeStep => ({ click: label })
 const DEAL_AGAIN = click('Deal again')
 const CHECK_OR_CALL = 'Check, or call if there is a bet.'
 
-export const CROUPIER_SCENARIOS: readonly CroupierScenario[] = [
+const SCENARIOS: readonly CroupierScenario[] = [
   {
     name: 'blackjack-rounds',
     game: 'blackjack',
@@ -78,6 +81,12 @@ export const CROUPIER_SCENARIOS: readonly CroupierScenario[] = [
   },
 ]
 
+/** Each scenario with its deals (the opening step and every Deal again) expecting the table component. */
+export const CROUPIER_SCENARIOS: readonly CroupierScenario[] = SCENARIOS.map((s) => ({
+  ...s,
+  steps: s.steps.map((step, i) => (i === 0 || step === DEAL_AGAIN ? { ...step, expect: s.expectComponents } : step)),
+}))
+
 /** The picker's Anthropic 5.5 models in spend order (Opus 5.5 is not in the picker, so it is not run). */
 export const CROUPIER_MODELS: ReadonlyArray<{ id: string; short: string }> = [
   { id: 'claude-haiku-5-5', short: 'haiku' },
@@ -93,7 +102,7 @@ export function probeArgv(scenario: CroupierScenario, model: { id: string; short
   return [
     '--agent', 'croupier',
     '--model', model.id,
-    ...scenario.steps.flatMap((s) => ('say' in s ? ['--say', s.say] : ['--click', s.click])),
+    ...scenario.steps.flatMap((s) => [...('say' in s ? ['--say', s.say] : ['--click', s.click]), ...(s.expect ?? []).flatMap((c) => ['--expect-turn', c])]),
     ...scenario.expectComponents.flatMap((c) => ['--expect-component', c]),
     '--out', `${RUNS_DIR}/${name}`,
     '--name', name,

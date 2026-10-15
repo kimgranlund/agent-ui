@@ -42,6 +42,14 @@ describe('croupier closed-loop scenarios', () => {
     for (const s of CROUPIER_SCENARIOS) expect(s.expectComponents).toEqual(BLACKJACK_FAMILY.includes(s.game) ? ['CardTable'] : ['PlayingCard'])
   })
 
+  it('the opening step and every Deal again expect the table component on their own turn (T-0222)', () => {
+    for (const s of CROUPIER_SCENARIOS) {
+      const deals = s.steps.filter((step, i) => i === 0 || ('click' in step && step.click === 'Deal again'))
+      for (const step of deals) expect(step.expect).toEqual(s.expectComponents)
+      for (const step of s.steps.filter((step) => !deals.includes(step))) expect(step.expect).toBeUndefined()
+    }
+  })
+
   it('every model is in the admin picker', () => {
     const schema = read('packages/agent-ui/app/src/controls/agent-admin/agent-admin-schema.ts')
     for (const m of CROUPIER_MODELS) expect(schema).toContain(`{ id: '${m.id}',`)
