@@ -172,6 +172,7 @@ import {
   kindEnabledKey,
   sanitizeCatalog,
   A2UI_LOCAL_PATTERNS_KEY,
+  A2UI_DOMAINS_KEY,
   resolveEffectiveCatalogId,
   BANKROLL_CAPABLE_KEY,
   BANKROLL_KEY,
@@ -3601,7 +3602,8 @@ export class UIAgentAdminElement extends UIElement {
       // (A2UI_LOCAL_PATTERNS_KEY), composed onto the base ONLY when its fragment actually targets that
       // base; a selection targeting some other base fails closed to the base alone (AC3), never a
       // hard error and never the wrong derived id.
-      catalogId: resolveEffectiveCatalogId(sanitizeCatalog(store?.get(A2UI_CATALOG_KEY)), store?.get(A2UI_LOCAL_PATTERNS_KEY)),
+      // T-0202: the domains selection (A2UI_DOMAINS_KEY), when set, composes the shipped domains instead.
+      catalogId: resolveEffectiveCatalogId(sanitizeCatalog(store?.get(A2UI_CATALOG_KEY)), store?.get(A2UI_LOCAL_PATTERNS_KEY), store?.get(A2UI_DOMAINS_KEY)),
       // GH #49 / ADR-0168 cl.2 — the ENABLED tool entries' IDS (never their labels: LLD-C7 decoupled the
       // two), master-gated on the tool kind's switch: the proxy intersects with its registry; a
       // non-registry id is inert. A FRESH store read (the live-apply law), shared with the prose arm.
