@@ -6,7 +6,21 @@
   "source": "hand-authored for the probe selftest (T-0174) (catalog agent-ui)",
   "steps": [
     {
-      "say": "show me a button"
+      "say": "show me a button",
+      "expectRouting": {
+        "exemplars": {
+          "include": [
+            "card-layouts"
+          ],
+          "exclude": [
+            "booking-reservation"
+          ]
+        },
+        "sections": [
+          "grammar",
+          "components"
+        ]
+      }
     }
   ],
   "turns": [
@@ -25,6 +39,18 @@
       "input": {
         "kind": "intent",
         "text": "show me a button"
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "card-layouts"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions"
+        ],
+        "references": []
       }
     }
   ],

@@ -6,7 +6,7 @@
 //
 // usage: node --experimental-strip-types scripts/e2e-admin/probe/run-capped.ts <live-commands.sh> --cap <usd>
 //          [--round <slug>] [--root <dir>] [--max <n>] [--dry-run]
-//        node --experimental-strip-types scripts/e2e-admin/probe/run-capped.ts --describe <round dir>
+//        node --experimental-strip-types scripts/e2e-admin/probe/run-capped.ts --describe <round dir | live-commands.sh>
 //        node --experimental-strip-types scripts/e2e-admin/probe/run-capped.ts --index [<evals dir>]
 //
 // `--round <slug>` writes the round to `.sdlc/evals/rounds/<YYYY-MM-DD>-<slug>/` (the date of the round start; a
@@ -22,10 +22,14 @@
 // (the manifest). Writing after every run is what survives a kill, since `spawnSync` blocks signal handlers. It also
 // writes `README.md`, the entry file that explains every file present; `--describe <round dir>` writes only that
 // README for an existing folder (a round backfilled by hand), inventorying what is actually there.
+//
+// T-0260: `--describe <live-commands.sh>` (and `--dry-run`) parse every probe command as the probe would, keyless,
+// and list each run's steps and oracles (`--expect-turn`, `--expect-routing`); a malformed command exits 2.
 
 import { spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
+import { parseProbeCli } from './cli.ts'
 
 export const PRICES_SOURCE = 'claude-api skill price table, 2026-10-06'
 /** USD per million tokens, input and output (claude-api skill price table, 2026-10-06). */
@@ -118,6 +122,54 @@ export function parseCommands(text: string): Array<{ cmd: string; out: string }>
     .map((l) => l.trim())
     .filter((l) => l !== '' && !l.startsWith('#') && l.includes('chat:probe'))
     .map((cmd) => ({ cmd, out: /--out (\S+)/.exec(cmd)?.[1] ?? '' }))
+}
+
+/** T-0260: split one generated command line into words, undoing `quote` (`scenarios/croupier.ts`): a bare word, or
+ *  a double-quoted one with `"`, `\\`, `$` and backtick escaped. */
+export function shellWords(cmd: string): string[] {
+  const words: string[] = []
+  let i = 0
+  while (i < cmd.length) {
+    if (cmd[i] === ' ') {
+      i += 1
+      continue
+    }
+    let word = ''
+    if (cmd[i] === '"') {
+      i += 1
+      while (i < cmd.length && cmd[i] !== '"') {
+        if (cmd[i] === '\\' && i + 1 < cmd.length) i += 1
+        word += cmd[i]
+        i += 1
+      }
+      if (cmd[i] !== '"') throw new Error(`unterminated quote in: ${cmd.slice(0, 80)}`)
+      i += 1
+    } else {
+      while (i < cmd.length && cmd[i] !== ' ') word += cmd[i++]
+    }
+    words.push(word)
+  }
+  return words
+}
+
+/** T-0260: each probe command of a `live-commands.sh` parsed as the probe parses it, one summary line per run. Throws
+ *  on the first command the probe would refuse, naming it. Keyless: nothing runs. */
+export function describeCommands(text: string): string[] {
+  return parseCommands(text).map(({ cmd, out }, n) => {
+    const words = shellWords(cmd)
+    const at = words.indexOf('--')
+    if (at === -1) throw new Error(`run ${n + 1} (${out}): no \`--\` before the probe arguments`)
+    let probe: ReturnType<typeof parseProbeCli>
+    try {
+      probe = parseProbeCli(words.slice(at + 1))
+    } catch (err) {
+      throw new Error(`run ${n + 1} (${out}): ${err instanceof Error ? err.message : String(err)}`)
+    }
+    if (probe.mode !== 'probe' || probe.replay !== undefined) throw new Error(`run ${n + 1} (${out}): not a live probe`)
+    const turns = probe.steps.filter((s) => s.expect !== undefined).length
+    const routed = probe.steps.filter((s) => s.expectRouting !== undefined).length
+    return `${probe.name ?? out}: ${probe.agent} on ${probe.model ?? 'the default model'}, ${probe.steps.length} steps, ${turns} --expect-turn, ${routed} --expect-routing`
+  })
 }
 
 export interface CappedOptions {
@@ -582,8 +634,18 @@ function reportVerdict(file: string): RunRecord['verdict'] {
 function main(argv: string[]): number {
   if (argv[0] === '--describe') {
     if (argv[1] === undefined || !existsSync(argv[1])) {
-      process.stderr.write('usage: run-capped.ts --describe <round dir>\n')
+      process.stderr.write('usage: run-capped.ts --describe <round dir | live-commands.sh>\n')
       return 2
+    }
+    if (statSync(argv[1]).isFile()) {
+      try {
+        const runs = describeCommands(readFileSync(argv[1], 'utf8'))
+        process.stdout.write(`${[...runs, `${runs.length} runs parse as live probes`].join('\n')}\n`)
+        return 0
+      } catch (err) {
+        process.stderr.write(`${err instanceof Error ? err.message : String(err)}\n`)
+        return 2
+      }
     }
     process.stdout.write(`${writeRoundReadme(argv[1])}\n`)
     return 0
@@ -605,6 +667,12 @@ function main(argv: string[]): number {
   const max = flag('--max') !== undefined ? Number(flag('--max')) : undefined
   const log = (line: string): void => void process.stdout.write(`${line}\n`)
   if (argv.includes('--dry-run')) {
+    try {
+      describeCommands(readFileSync(file, 'utf8'))
+    } catch (err) {
+      process.stderr.write(`${err instanceof Error ? err.message : String(err)}\n`)
+      return 2
+    }
     const since = new Date().toISOString()
     const result = runCapped({ commands, cap, spend: () => traceSpend(root, since), exec: () => 0, done: (out) => existsSync(join(root, out, 'report.json')), max, log })
     return result.capped ? 3 : 0

@@ -6,7 +6,7 @@ import { SHIPPED_DOMAIN_CATALOG_MANIFESTS } from '../../../packages/agent-ui/a2u
 import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from '../../../packages/agent-ui/a2ui/src/catalog/personas/manifests.ts'
 import { semanticChecksDeps } from '../../../packages/agent-ui/a2ui/tools/agent/chat-validation.ts'
 import { nodeCatalogResolver } from '../../../packages/agent-ui/a2ui/tools/testkit/load.node.ts'
-import { PERSONA_SEMANTIC_CHECKS, replaySemanticChecks } from './trace.ts'
+import { PERSONA_SEMANTIC_CHECKS, replaySemanticChecks, routingSeen } from './trace.ts'
 
 describe('offline replay semantic checks', () => {
   it('name exactly the shipped personas that declare checks', () => {
@@ -27,5 +27,25 @@ describe('offline replay semantic checks', () => {
     }
     expect(replaySemanticChecks(resolve('agent-ui--croupier')).length).toBeGreaterThan(0)
     expect(replaySemanticChecks(resolve('agent-ui')).length).toBeGreaterThan(0) // T-0208: the composite-moment checks
+  })
+})
+
+// T-0260: `routing-expect` reads the turn's trace line through this flattening.
+describe('routingSeen', () => {
+  const routing = {
+    catalog: { id: 'agent-ui--croupier', base: 'agent-ui', persona: 'croupier', domains: [] },
+    references: [{ kind: 'resource', name: 'blackjack', load: 'index-only', via: 'index' }],
+    sections: [{ id: 'grammar', chars: 10, cache: 'stable' }, { id: 'persona', chars: 5, cache: 'volatile' }],
+  }
+
+  it('reads persona and domains, framed exemplars, section ids and references', () => {
+    const line = { routing, trace: { exemplarIds: ['retrieved'] }, events: { framedExemplarIds: ['framed'] } }
+    expect(routingSeen(line)).toEqual({ domains: ['croupier'], exemplars: ['framed'], sections: ['grammar', 'persona'], references: [{ name: 'blackjack', load: 'index-only' }] })
+  })
+
+  it('falls back to the retrieved ids before T-0259 events, and to nothing without a routing block', () => {
+    const multi = { ...routing, catalog: { id: 'agent-ui--games+hospitality', base: 'agent-ui', domains: ['games', 'hospitality'] } }
+    expect(routingSeen({ routing: multi, trace: { exemplarIds: ['retrieved'] } })).toMatchObject({ domains: ['games', 'hospitality'], exemplars: ['retrieved'] })
+    expect(routingSeen({ trace: { exemplarIds: ['retrieved'] } })).toBeUndefined()
   })
 })

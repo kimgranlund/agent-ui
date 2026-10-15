@@ -1,14 +1,15 @@
 // scripts/e2e-admin/probe/selftest.ts: the chat probe's keyless selftests (T-0174).
 //
 // `selftest` (fast, no browser, rides `check:scripts`): argument parsing, the fixture parser, every named
-// check over canned turn records, the trace-id resolver, and the offline replay of the six fixtures
+// check over canned turn records, the trace-id resolver, and the offline replay of the seven fixtures
 // through the real `produce()`: green-button and recorded-haiku-hello (the live smoke's trace) are green, seeded-json-prose fails `no-json-as-prose` (and
 // `no-surface-loss`, since the surface the model wrote as prose never ships; its JSON is pretty-printed, the
 // shape the producer's prose routing leaves as text, T-0172), seeded-dropped-surface fails
 // exactly `no-surface-loss`, seeded-click-no-update exactly `action-updates-surface`, and seeded-no-reply
-// (a `render_surface` call with no text and no `reply`, T-0194) exactly `reply-text`.
+// (a `render_surface` call with no text and no `reply`, T-0194) exactly `reply-text`, and seeded-wrong-routing (the
+// green button turn with a booking exemplar framed against its `expectRouting`, T-0260) exactly `routing-expect`.
 //
-// `selftest --browser` (slow, local): the same six fixtures replayed in the real agent-admin page behind
+// `selftest --browser` (slow, local): the same seven fixtures replayed in the real agent-admin page behind
 // the e2e-admin intercept, with the same verdicts.
 
 import { readFileSync } from 'node:fs'
@@ -30,6 +31,7 @@ export const SELFTEST_CASES: ReadonlyArray<{ fixture: string; fails: readonly st
   { fixture: 'seeded-dropped-surface.json', fails: ['no-surface-loss'] },
   { fixture: 'seeded-click-no-update.json', fails: ['action-updates-surface'] },
   { fixture: 'seeded-no-reply.json', fails: ['reply-text'] },
+  { fixture: 'seeded-wrong-routing.json', fails: ['routing-expect'] },
 ]
 
 export function loadProbeFixture(file: string): ProbeFixture {
@@ -48,10 +50,13 @@ const BUTTON_LINES = [
   '{"version":"v1.0","updateComponents":{"surfaceId":"canvas","components":[{"id":"root","component":"Column","children":["b"]},{"id":"b","component":"Button","label":"Go"}]}}',
 ]
 
+const ROUTED = { domains: ['croupier'], exemplars: ['domain-croupier-card-table-round'], sections: ['grammar', 'persona'], references: [{ name: 'house-rules', load: 'full' }] }
+
 function record(over: Partial<TurnRecord> = {}): TurnRecord {
   return {
     index: 0,
-    step: { say: 'hi' },
+    step: { say: 'hi', expectRouting: { domains: ['croupier'], exemplars: { include: ['domain-croupier-card-table-round'], exclude: ['booking-reservation'] }, sections: ['persona'], references: [{ name: 'house-rules', load: 'full' }] } },
+    routing: ROUTED,
     request: { model: 'm', effort: 'medium' },
     lines: ['{"a2uiMeta":{"note":"Here."}}', ...BUTTON_LINES],
     rounds: [{ text: BUTTON_LINES.join('\n'), tools: [] }],
@@ -82,7 +87,9 @@ export async function runProbeSelftest(): Promise<number> {
   expectThat(traced.mode === 'from-trace' && traced.agent === 'lexicographer', 'cli: --from-trace takes --agent')
   const turnExpect = parseProbeCli(['--agent', 'croupier', '--say', 'deal', '--expect-turn', 'CardTable', '--click', 'Stand'])
   expectThat(turnExpect.mode === 'probe' && JSON.stringify(turnExpect.steps) === '[{"say":"deal","expect":["CardTable"]},{"click":"Stand"}]', 'cli: --expect-turn attaches to the step before it')
-  for (const bad of [['--say', 'hi'], ['--agent', 'x'], ['--agent', 'x', '--click', 'y'], ['--bogus', '1'], ['--from-trace', 'last', '--say', 'x'], ['--agent', 'x', '--expect-turn', 'T', '--say', 'hi']]) {
+  const routed = parseProbeCli(['--agent', 'croupier', '--say', 'deal', '--expect-routing', '{"domains":["croupier"],"exemplars":{"exclude":["booking-reservation"]}}', '--click', 'Stand'])
+  expectThat(routed.mode === 'probe' && JSON.stringify(routed.steps) === '[{"say":"deal","expectRouting":{"domains":["croupier"],"exemplars":{"exclude":["booking-reservation"]}}},{"click":"Stand"}]', 'cli: --expect-routing attaches to the step before it')
+  for (const bad of [['--agent', 'x', '--expect-routing', '{"domains":["a"]}', '--say', 'hi'], ['--agent', 'x', '--say', 'hi', '--expect-routing', '{domains'], ['--agent', 'x', '--say', 'hi', '--expect-routing', '{"domain":["a"]}'], ['--agent', 'x', '--say', 'hi', '--expect-routing', '{}'], ['--say', 'hi'], ['--agent', 'x'], ['--agent', 'x', '--click', 'y'], ['--bogus', '1'], ['--from-trace', 'last', '--say', 'x'], ['--agent', 'x', '--expect-turn', 'T', '--say', 'hi']]) {
     let threw = false
     try {
       parseProbeCli(bad)
@@ -134,6 +141,12 @@ export async function runProbeSelftest(): Promise<number> {
     ['tally shown', record({ proseText: 'Here. Emitted 2 A2UI message(s): createSurface, updateComponents.' }), 'reply-text'],
     ['correction note', record({ proseText: 'Corrected: the 250 bet is now taken out of your bankroll, which leaves 750.' }), 'no-internal-leak'],
     ['surface id', record({ proseText: 'Table-3 is open. Set your bet and deal.' }), 'no-internal-leak'],
+    // T-0260: each part of an `expectRouting` oracle bites on its own.
+    ['off-domain', record({ routing: { ...ROUTED, domains: ['concierge'] } }), 'routing-expect'],
+    ['exemplar missing', record({ routing: { ...ROUTED, exemplars: [] } }), 'routing-expect'],
+    ['exemplar excluded', record({ routing: { ...ROUTED, exemplars: [...ROUTED.exemplars, 'booking-reservation'] } }), 'routing-expect'],
+    ['section missing', record({ routing: { ...ROUTED, sections: ['grammar'] } }), 'routing-expect'],
+    ['reference index-only', record({ routing: { ...ROUTED, references: [{ name: 'house-rules', load: 'index-only' }] } }), 'routing-expect'],
   ]
   for (const [label, rec, check, o] of seeded) {
     const verdict = caseVerdict(runChecks([rec], o ?? opts), [check])
@@ -175,6 +188,7 @@ export async function runProbeSelftest(): Promise<number> {
   expectThat(pageParsed, 'desync: a fixture keeps its page steps')
   const quiet = runChecks([record({ trace: { id: 'd:1', outcome: 'ok', retries: [], thinkingChars: [0] } })], opts)
   expectThat(statusOf(quiet, 'reasoning') === 'warn' && caseVerdict(quiet, []) === undefined, 'checks: no thinking text is a warn, never a fail')
+  expectThat(statusOf(runChecks([record({ routing: undefined })], opts), 'routing-expect') === 'skip', 'checks: a turn with no recorded routing skips routing-expect (never a vacuous pass)')
   const roundless = runChecks([record({ rounds: undefined, roundsSource: 'none' })], opts)
   expectThat(statusOf(roundless, 'no-surface-loss') === 'skip', 'checks: no round data skips the loss check (never a vacuous pass)')
 
@@ -219,7 +233,7 @@ export async function runProbeSelftest(): Promise<number> {
   return failures.length === 0 ? 0 : 1
 }
 
-/** The browser leg: one vite, the six fixtures replayed in the real page. */
+/** The browser leg: one vite, the seven fixtures replayed in the real page. */
 export async function runBrowserSelftest(kit: DevServerKit, root: string, out: string): Promise<number> {
   const { runProbes, writeReport } = await import('./run.ts')
   const plans = SELFTEST_CASES.map((c) => {
