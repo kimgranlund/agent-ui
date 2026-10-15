@@ -406,7 +406,16 @@ function betControls(view: SurfaceView): SemanticFinding[] {
 }
 
 const BET_WORDS = /\b(bet|bets|stake|wager)\b/i
+const BLACKJACK_GAMES = /\b(blackjack|black jack|twenty[- ]one|spanish 21|pontoon|21)\b/i
+const OTHER_GAMES = /\b(poker|stud|hold ?'?em|holdem|omaha|razz|five[- ]card draw|draw poker|baccarat|roulette|craps)\b/i
 const textOf = (v: unknown): string => (typeof v === 'string' ? v : bindingPath(v) ?? '')
+
+/** T-0212: a surface whose words name a game other than blackjack and no blackjack-family game (the recorded
+ *  "Seven-card stud · Place your bet"). Only literal text, label, title and status props count. */
+function namesOtherGame(comps: readonly A2uiComponent[]): boolean {
+  const words = comps.flatMap((c) => ['text', 'label', 'title', 'status'].map((k) => c[k]).filter((v): v is string => typeof v === 'string')).join(' ')
+  return OTHER_GAMES.test(words) && !BLACKJACK_GAMES.test(words)
+}
 const actionName = (c: A2uiComponent): string => {
   const a = c['action'] as { action?: unknown; event?: { name?: unknown } } | undefined
   return typeof a?.action === 'string' ? a.action : typeof a?.event?.name === 'string' ? a.event.name : ''
@@ -416,11 +425,14 @@ const actionName = (c: A2uiComponent): string => {
  *  "Bet amount" Slider and a Deal Button) never reaches the table's bet strip, so the check above has nothing to
  *  judge. A surface with no CardTable that holds a bet input (a Slider or TextField whose label, name or bound
  *  path says bet, stake or wager) or a Deal Button, and no dealt card yet, is sent back to be one CardTable in its betting phase. A
- *  false positive costs one repair round and ships tallied at the bound (ADR-0238), never a halt. */
+ *  false positive costs one repair round and ships tallied at the bound (ADR-0238), never a halt. T-0212: a surface
+ *  that names another game (the recorded seven-card stud opening, sent back twice) keeps its Card; one that names
+ *  no game at all is still judged as blackjack. */
 function betStepWithoutTable(view: SurfaceView): SemanticFinding[] {
   const comps = [...view.components.values()]
   // A dealt hand (any PlayingCard) is past the bet step: an older table shape is judged by the hand check alone.
   if (comps.some((c) => c.component === 'CardTable' || c.component === 'PlayingCard')) return []
+  if (namesOtherGame(comps)) return []
   const strays = comps.filter((c) => {
     if (BET_INPUTS.has(c.component)) return [c['label'], c['name'], c['value']].some((v) => BET_WORDS.test(textOf(v).replace(/[/_-]/g, ' ')))
     if (c.component === 'Button') return /^deal\b/i.test(textOf(c['label'])) || /^(deal|place_?bet|bet)$/i.test(actionName(c))

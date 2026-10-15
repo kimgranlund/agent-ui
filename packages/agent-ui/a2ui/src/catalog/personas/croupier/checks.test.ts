@@ -539,6 +539,29 @@ describe('croupier bet controls: a bet step with no CardTable (T-0172 live probe
     expect(findings[0]!.message).toMatch(/bet_slider \(a Slider\), deal_btn \(a Button\)/)
   })
 
+  // T-0212 (the recorded Haiku 5.5 seven-card stud opening, 2026-10-15.jsonl:49): a poker bet step keeps its Card.
+  const betCard = (title: string): A2uiOutput => surface([
+    { id: 'root', component: 'Card', elevation: '1', children: ['hdr', 'content', 'foot'] },
+    { id: 'hdr', component: 'CardHeader', children: ['title'] },
+    { id: 'title', component: 'Text', text: title, variant: 'h4' },
+    { id: 'content', component: 'CardContent', children: ['bet_slider'] },
+    { id: 'bet_slider', component: 'Slider', value: 25, min: 5, max: 1000, step: 5, name: 'bet', label: 'Bet amount', layout: 'standard' },
+    { id: 'foot', component: 'CardFooter', children: ['btn_bet'] },
+    { id: 'btn_bet', component: 'Button', label: 'Deal', variant: 'solid', action: { action: 'place_bet' } },
+  ])
+
+  it('T-0212: a bet step that names a game other than blackjack keeps its Card (the recorded stud opening, hold\'em, Omaha, five-card draw)', () => {
+    for (const title of ['Seven-card stud · Place your bet', "Texas Hold'em: your buy-in", 'Omaha · Place your bet', 'Five-card draw: ante up', 'Poker night']) {
+      expect(run(betCard(title)), title).toEqual([])
+    }
+  })
+
+  it('T-0212: a blackjack-family bet step, or one that names no game, is still sent back to be a CardTable', () => {
+    for (const title of ['Blackjack · Place your bet', 'Spanish 21: place your bet', 'Pontoon', 'Place your bet']) {
+      expect(run(betCard(title)).map((f) => f.code), title).toEqual(['BET_TABLE_MISSING'])
+    }
+  })
+
   it('passes a surface with no bet control (a rules card), and the CardTable betting table', () => {
     expect(run(surface([{ id: 'root', component: 'Text', text: 'Blackjack pays 3:2.' }]))).toEqual([])
     expect(run(surface([{ id: 'root', component: 'CardTable', phase: 'betting', bet: { path: '/bet' }, betAction: 'deal' }]))).toEqual([])
