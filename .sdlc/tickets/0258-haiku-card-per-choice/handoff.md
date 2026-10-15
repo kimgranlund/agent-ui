@@ -20,3 +20,10 @@ T-0257 (2026-10-15): the recorded live Haiku "hello" reply put each starter choi
 - The original recording (from git history before T-0257) is restored as a negative probe fixture that fails `lone-button-frame`, and the selftest expects that failure.
 - A producer semantic check (or the composite-moment table) flags a Card whose only content is one Button, repeated as siblings, and the repair round turns it into a Row of Buttons; a keyless replay shows the repaired turn.
 - scripts/e2e-admin tests, the chat-probe selftest (with `--browser`) and `npm run check` exit 0.
+
+## Acceptance criteria
+- `npm run chat:probe -- selftest` exits 0, and its offline leg asserts `recorded-haiku-hello-cards` (the pre-T-0257 recording verbatim) trips FRAMED_CHOICE and `recorded-haiku-hello` ships the Row of Buttons from its second round with no Card.
+- `npm run chat:probe -- selftest --browser` exits 0, with `recorded-haiku-hello-cards` failing exactly `render-lint` (`lone-button-frame`).
+- `npx vitest run packages/agent-ui/a2ui/src/catalog/framed-choice-check.test.ts packages/agent-ui/a2ui/src/live-agent/chat-validation.test.ts packages/agent-ui/a2ui/src/examples/domain-seeds.test.ts` exits 0.
+- `npx vitest run --project scripts scripts/e2e-admin` exits 0.
+- `npm run check` exits 0.
