@@ -117,6 +117,7 @@ export async function runProbeSelftest(): Promise<number> {
   const seeded: Array<[string, TurnRecord, string, typeof opts?]> = [
     ['halt', record({ lines: ['{"a2uiMeta":{"error":"produce: no valid surface"}}'], trace: { id: 'd:1', outcome: 'halt', retries: [], thinkingChars: [1] } }), 'no-halt', { ...opts, expectComponents: [] }],
     ['json prose', record({ proseText: 'Here: {"version":"v1.0","createSurface":{"surfaceId":"t"}}' }), 'no-json-as-prose'],
+    ['meta-line prose', record({ proseText: '{"a2uiMeta":{"note":"Seven-card stud it is.","ask":{"surfaceId":"ask-2"}}}' }), 'no-json-as-prose'],
     ['dropped', record({ rounds: [{ text: `${BUTTON_LINES.join('\n')}\n{"version":"v1.0","createSurface":{"surfaceId":"ask-1"`, tools: [] }] }), 'no-surface-loss'],
     ['unmounted', record({ domHosts: 0 }), 'no-surface-loss'],
     ['missing type', record(), 'expect-component', { ...opts, expectComponents: ['CardTable'] }],

@@ -247,6 +247,7 @@ const A2UI_IN_PROSE: readonly RegExp[] = [
   /"(?:createSurface|updateComponents|updateDataModel|deleteSurface|surfaceUpdate|beginRendering|dataModelUpdate)"\s*:/,
   /\{\s*"version"\s*:\s*"v\d/,
   /"component"\s*:\s*"[A-Z][A-Za-z]+"\s*,/,
+  /\{\s*"a2uiMeta"\s*:/, // T-0213: a meta-line shown as the reply
 ]
 
 /** The first A2UI-shaped fragment in a prose text, or undefined. */
