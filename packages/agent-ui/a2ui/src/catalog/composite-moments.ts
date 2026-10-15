@@ -33,6 +33,8 @@ export interface CompositeMoment {
   readonly wordTypes?: readonly string[]
   /** At least `min` components of `types`. */
   readonly inputs?: { readonly types: readonly string[]; readonly min: number }
+  /** Or, with none of `inputs.types` present, a read-back: a component of `types` beside a Button whose label matches `cue`. */
+  readonly readBack?: { readonly types: readonly string[]; readonly cue: RegExp }
   /** Types the surface must not hold. */
   readonly noInputs?: readonly string[]
   /** An input of `types` whose label, name or bound path matches `cue`, while the surface words match `words`. */
@@ -47,9 +49,13 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
   {
     composite: 'BookingForm',
     moment: 'collect booking details',
-    repair: 'with its fields list (date, time, choice and party size) and one submit action, and drop the hand-built inputs.',
+    repair:
+      'with its fields list (date, time, choice and party size), its value bound to the details the guest already gave so they ' +
+      'arrive pre-filled, and one submit action, and drop the hand-built inputs or read-back.',
     lacks: ['BookingConfirmation'],
     inputs: { types: BOOKING_INPUTS, min: 2 },
+    // T-0266: a fully specified ask read back as a DescriptionList with a confirm Button is still this moment.
+    readBack: { types: ['DescriptionList'], cue: /\bconfirm\b/i },
     words: /\b(book|booking|reserve|reservation|guest|guests|party)\b/i,
   },
   {
@@ -130,7 +136,12 @@ function strays(m: CompositeMoment, view: SurfaceView): A2uiComponent[] {
   if (m.words !== undefined && !m.words.test(surfaceWords)) return []
   if (m.inputs !== undefined) {
     const inputs = comps.filter((c) => m.inputs!.types.includes(c.component))
-    return inputs.length >= m.inputs.min ? inputs : []
+    if (inputs.length >= m.inputs.min) return inputs
+    if (m.readBack === undefined || inputs.length > 0) return []
+    const { types: rowTypes, cue } = m.readBack
+    const rows = comps.filter((c) => rowTypes.includes(c.component))
+    const confirms = comps.filter((c) => c.component === 'Button' && typeof c['label'] === 'string' && cue.test(c['label']))
+    return rows.length > 0 && confirms.length > 0 ? [...rows, ...confirms] : []
   }
   return m.words === undefined ? [] : worded.filter((c) => m.words!.test(wordsOf(c)))
 }

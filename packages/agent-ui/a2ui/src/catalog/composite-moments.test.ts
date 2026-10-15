@@ -99,6 +99,56 @@ describe('composite moment checks (T-0208)', () => {
     ).toEqual(['BOARD_GRID_MISSING'])
   })
 
+  // T-0266: the recorded Sonnet read-back (long-concierge-booking, turn 1, ask-2) answers a fully specified spa
+  // booking with a DescriptionList and a confirm Button; Kim's ruling makes that a pre-filled BookingForm.
+  const READ_BACK: A2uiComponent[] = [
+    { id: 'root', component: 'Column', gap: 'md', children: ['card'] },
+    { id: 'card', component: 'Card', elevation: '1', children: ['hd', 'ct', 'ft'] },
+    { id: 'hd', component: 'CardHeader', children: ['hdt'] },
+    { id: 'hdt', component: 'Text', text: 'Spa booking summary', variant: 'h4' },
+    { id: 'ct', component: 'CardContent', children: ['receipt'] },
+    {
+      id: 'receipt',
+      component: 'DescriptionList',
+      rows: [
+        { label: 'Treatment', value: 'Massage, 60 minutes' },
+        { label: 'Date', value: 'Thursday 19 November 2026' },
+        { label: 'Time', value: '15:00' },
+        { label: 'Guests', value: '1' },
+        { label: 'Name', value: 'Alex Moreau' },
+      ],
+    },
+    { id: 'ft', component: 'CardFooter', children: ['confirm'] },
+    { id: 'confirm', component: 'Button', label: 'Confirm booking', variant: 'solid', action: { action: 'confirm_booking' } },
+  ]
+
+  it('the recorded booking read-back yields BOOKING_FORM_MISSING alone, naming the list and the confirm Button', () => {
+    expect(codes(READ_BACK)).toEqual(['BOOKING_FORM_MISSING'])
+    const [f] = runSemanticChecks(compositeMomentChecks, { surfaces: [view(READ_BACK, 'ask-2')] }).findings
+    expect(f!.path).toBe('ask-2:receipt')
+    expect(f!.message).toContain('confirm (a Button)')
+    expect(f!.message).toContain('pre-filled')
+  })
+
+  it('negative control: a booking-worded DescriptionList with no confirm Button yields none', () => {
+    const info = READ_BACK.map((c) => (c.id === 'confirm' ? { ...c, label: 'Book a treatment' } : c))
+    expect(codes(info)).toEqual([])
+    expect(codes(READ_BACK.filter((c) => c.id !== 'confirm'))).toEqual([])
+  })
+
+  it('negative control: a confirm Button and a DescriptionList beside one booking input yield none', () => {
+    expect(codes([...READ_BACK, { id: 'note', component: 'TextField', label: 'Notes for the spa' }])).toEqual([])
+  })
+
+  it('negative control: a pre-filled BookingForm with a confirm child yields none', () => {
+    expect(
+      codes([
+        { id: 'root', component: 'BookingForm', title: 'Spa booking', fields: [{ kind: 'text', path: 'name', label: 'Name' }], value: { path: '/draft' }, child: 'go' },
+        { id: 'go', component: 'Button', label: 'Confirm booking', action: { action: 'confirm_booking', submit: true } },
+      ]),
+    ).toEqual([])
+  })
+
   it('negative control: a croupier CardTable betting surface yields none', () => {
     expect(
       codes([

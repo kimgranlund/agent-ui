@@ -1010,7 +1010,7 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
   it('a persisted OLD-version store is dropped and the new seed applies; same-version edits survive', async () => {
     const { presetStore, AGENT_PRESETS, resetPreset } = await import('./agent-admin-presets.ts')
     const concierge = AGENT_PRESETS.find((p) => p.id === 'concierge')!
-    expect(concierge.seedVersion, 'the upgrade declares its bump').toBe(10) // T-0231: the House facts prompt section
+    expect(concierge.seedVersion, 'the upgrade declares its bump').toBe(11) // T-0266: the pre-filled BookingForm confirm in booking-flow and the House facts
 
     // Simulate a PRE-upgrade browser: old persisted content, NO seedVersion marker (=1 implicitly).
     resetPreset(concierge) // clean slate for the probe (drops cache + keys)
@@ -1028,10 +1028,19 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
     // session must never carry BOTH the structural type and the stale hand-authored duplicate.
     expect(skills.some((s) => s.id === 'hotel-booking-form'), 'the retired duplicate never re-seeds').toBe(false)
     // GH #1171 — the rewritten booking-flow ARC playbook re-seeds alongside table-reservation.
-    const workflows = migrated.get('entries:workflow') as Array<{ id: string }>
+    const workflows = migrated.get('entries:workflow') as Array<{ id: string; description: string; content: string }>
     expect(workflows.some((w) => w.id === 'booking-flow'), 'the room-booking arc playbook seeds').toBe(true)
     expect(workflows.some((w) => w.id === 'table-reservation'), 'table-reservation still seeds').toBe(true)
-    expect(localStorage.getItem('agent-admin-app.concierge.seedVersion')).toBe('10')
+    // T-0266 (Kim's ruling): the playbook and the House facts confirm with a pre-filled BookingForm and settle
+    // with a BookingConfirmation; neither teaches a read-back or a settled Badge any more.
+    const flow = workflows.find((w) => w.id === 'booking-flow')!
+    expect(flow.description).toMatch(/pre-filled BookingForm/)
+    expect(flow.content).toMatch(/every detail[\s\S]*BookingForm, pre-filled/)
+    expect(flow.content).toMatch(/ONE BookingConfirmation/)
+    expect(flow.content).not.toMatch(/settled-status Badge|reading back/)
+    expect(concierge.houseFacts).toMatch(/booking form pre-filled/)
+    expect(concierge.houseFacts).not.toMatch(/read them back/)
+    expect(localStorage.getItem('agent-admin-app.concierge.seedVersion')).toBe('11')
 
     // Same-version edits SURVIVE a rebuild (persisted-wins is untouched at the current version).
     migrated.set('entries:skill', [...skills.map((s) => s), { id: 'my-edit', kind: 'skill', label: 'my-edit', description: '', content: 'mine', order: 99, enabled: true, builtin: false }])
