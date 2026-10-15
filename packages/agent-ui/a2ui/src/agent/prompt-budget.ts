@@ -16,7 +16,7 @@ import { isDerivedCatalogId } from '../catalog/catalog-id.ts'
  *  below, enforced by the budget leg of `live-agent/prompt-budget.test.ts`.
  *  MEASURED 2026-10-05: 126 563 chars (the `agent-ui` catalog, mode default); budget 140 000. Matrix:
  *  max over modes default, specific and blue-sky; the 3 judged exemplars of `corpus/exemplar/v1_0/agent-ui.jsonl` with the largest
- *  single-record prompt; the `DEFAULT_MINI_SKILL_CAP` (3) largest mini-skill bodies scoped to the base
+ *  single-record prompt (T-0254: a derived catalog also draws on its own `<catalogId>.jsonl` persona shard); the `DEFAULT_MINI_SKILL_CAP` (3) largest mini-skill bodies scoped to the base
  *  catalog; genui `{enabled: true, dogfood: true}` with a 16,384-char `sourceBody`; a 16,384-char
  *  `personaSystem`; `authoringSurface`, `builderMission` and `a2uiEnabled` all true.
  *  RE-MEASURED 2026-10-12 (T-0089, ADR-0244): the worst case is 140 735 chars (`agent-ui`, mode default), against

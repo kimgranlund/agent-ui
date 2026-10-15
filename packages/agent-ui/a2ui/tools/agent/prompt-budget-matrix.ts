@@ -2,7 +2,9 @@
 // `prompt-budget.test.ts` (the persona at the proxies' 16 KB runaway cap) and the site leg
 // `site/pages/agent-admin-prompt-budget.test.ts` (T-0207: each shipped preset's real composed persona). Test
 // support only, so it lives under tools/ (src/ bars a non-test module from importing src/agent/ or the corpus);
-// the exemplar shard comes in as raw text (a Vite `?raw` import), so the site type gate needs no node types.
+// the exemplar shards come in as raw text (a Vite `?raw` import and glob), so the site type gate needs no node types.
+// T-0254: a persona's turn retrieves from the base shard PLUS its own `<catalogId>.jsonl` shard (`retrieve()`'s scope
+// rule), so the worst-case exemplars for a derived catalog are drawn from both and a large persona seed reds the gate.
 
 import exemplarShard from '../../corpus/exemplar/v1_0/agent-ui.jsonl?raw'
 import { buildSystemPrompt } from '../../src/agent/system-prompt.ts'
@@ -25,16 +27,30 @@ export const MODES: readonly GenUiMode[] = ['default', 'specific', 'blue-sky']
 export const SOURCE_BODY_CAP = 16_384
 export const PERSONA_SYSTEM_CAP = 16_384
 
-const allExemplars: Exemplar[] = exemplarShard
-  .split('\n')
-  .filter((l) => l.trim().length > 0)
-  .map((l) => JSON.parse(l) as Exemplar)
-/** The k=3 records with the largest single-record prompt (the worst-case retrieval). */
-const worstExemplars: Exemplar[] = [...allExemplars]
-  .map((ex) => ({ ex, len: buildSystemPrompt(defaultCatalog, [ex]).length }))
-  .sort((a, b) => b.len - a.len)
-  .slice(0, 3)
-  .map((e) => e.ex)
+const parseShard = (text: string): Exemplar[] =>
+  text
+    .split('\n')
+    .filter((l) => l.trim().length > 0)
+    .map((l) => JSON.parse(l) as Exemplar)
+const allExemplars: Exemplar[] = parseShard(exemplarShard)
+/** Every persona shard (`<base>--<persona>.jsonl`) by catalog id, globbed so a new shard joins the matrix unedited. */
+const PERSONA_SHARDS: Readonly<Record<string, Exemplar[]>> = Object.fromEntries(
+  Object.entries(
+    import.meta.glob('../../corpus/exemplar/v1_0/*--*.jsonl', { query: '?raw', import: 'default', eager: true }) as Record<
+      string,
+      string
+    >,
+  ).map(([path, text]) => [path.slice(path.lastIndexOf('/') + 1, -'.jsonl'.length), parseShard(text)]),
+)
+/** The k=3 records with the largest single-record prompt (the worst-case retrieval): the base shard, plus the
+ *  catalog's own persona shard when it has one (`personaShards` overrides the shipped set, for the negative control). */
+export function worstExemplarsFor(catalogId: string, personaShards: Readonly<Record<string, Exemplar[]>> = PERSONA_SHARDS): Exemplar[] {
+  return [...allExemplars, ...(personaShards[catalogId] ?? [])]
+    .map((ex) => ({ ex, len: buildSystemPrompt(defaultCatalog, [ex]).length }))
+    .sort((a, b) => b.len - a.len)
+    .slice(0, 3)
+    .map((e) => e.ex)
+}
 
 /** The `DEFAULT_MINI_SKILL_CAP` largest mini-skill bodies scoped to `baseCatalogId`. */
 const worstMiniSkills = (baseCatalogId: string) =>
@@ -43,10 +59,16 @@ const worstMiniSkills = (baseCatalogId: string) =>
     .slice(0, DEFAULT_MINI_SKILL_CAP)
 
 /** The worst-case argument tuple for one catalog, mode and persona text. */
-export function worstArgs(catalog: Catalog, baseCatalogId: string, mode: GenUiMode, personaSystem: string): BudgetArgs {
+export function worstArgs(
+  catalog: Catalog,
+  baseCatalogId: string,
+  mode: GenUiMode,
+  personaSystem: string,
+  exemplars: Exemplar[] = worstExemplarsFor(catalog.catalogId),
+): BudgetArgs {
   return [
     catalog,
-    worstExemplars,
+    exemplars,
     mode,
     worstMiniSkills(baseCatalogId),
     personaSystem,
