@@ -34,3 +34,6 @@ Parallel lanes: T-0208 (feat/composite-moment-checks: catalog/composite-moments.
 - `npm run check` exits 0; `npx vitest run packages/agent-ui/a2ui/src/corpus packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent` exits 0 (no prompt-equivalence recapture needed).
 - No `produce.ts` edit; no shard, record schema, or persona-seed change.
 - Held: Done-when 3 (new CardTable, BookingForm, BoardGrid corpus exemplars) is not delivered: persona-fragment types cannot enter the agent-ui shard (admission validates against the base catalog, persona seeds are page fixtures only), and a BoardGrid admission needs an a2ui-review-agent verdict.
+
+## Plan review
+- conductor: Done-when 3 (new CardTable, BookingForm and BoardGrid exemplars) moved to T-0240 (domain-exemplars); this ticket closes on the retrieval rule and the ranking-pin test. Verify criteria 1, 2 and 4 only.
