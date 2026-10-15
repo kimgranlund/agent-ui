@@ -7,6 +7,7 @@ import {
   classifyResponse,
   detectUserOverride,
   isLegacyShape,
+  openSurfacesNote,
   renderSurfaceJsonl,
   renderSurfaceReply,
   renderSurfaceTool,
@@ -23,7 +24,7 @@ describe('response-type vocabulary', () => {
 })
 
 describe('renderSurfaceTool', () => {
-  const tool = renderSurfaceTool(['main', 'quiz-7'])
+  const tool = renderSurfaceTool()
   it('has the settled name and schema', () => {
     expect(tool.name).toBe('render_surface')
     expect(tool.input_schema).toEqual({
@@ -46,9 +47,10 @@ describe('renderSurfaceTool', () => {
     expect(renderSurfaceJsonl({ messages: [create], jsonl: 'ignored' })).toBe(JSON.stringify(create))
     expect(renderSurfaceJsonl({})).toBe('')
   })
-  it('names every open surface, gates on a structure, and prefers an update', () => {
-    expect(tool.description).toContain('main')
-    expect(tool.description).toContain('quiz-7')
+  it('T-0206: the note names every open surface; the stable description gates on a structure and prefers an update', () => {
+    expect(openSurfacesNote(['main', 'quiz-7'])).toBe('[Open surfaces: main, quiz-7.]')
+    expect(openSurfacesNote([])).toBe('')
+    expect(renderSurfaceTool()).toEqual(tool)
     expect(tool.description).toMatch(/scan, compare, fill in or act on/)
     expect(tool.description).toMatch(/update/)
   })

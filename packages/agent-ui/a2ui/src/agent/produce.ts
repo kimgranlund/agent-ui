@@ -105,7 +105,7 @@ import { frameClientMessage } from './session.ts'
 import { sessionSurfaceSeeds } from './surface-seeds.ts'
 import { withTurnDeadline } from './deadlines.ts'
 import { readMetaLine } from './meta-line.ts'
-import type { AskDeclaration, PersonaPatch, PlanDeclaration, TargetDeclaration, TeamDeclaration, TokenUsage, TurnProgress, TurnTrace } from './meta-line.ts'
+import type { AskDeclaration, PersonaPatch, PlanDeclaration, PromptSectionId, TargetDeclaration, TeamDeclaration, TokenUsage, TurnProgress, TurnTrace } from './meta-line.ts'
 import type { GenUiMode } from './gen-ui-mode.ts'
 import type { ModelSettings } from './model-capabilities.ts'
 import { MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, selectMiniSkills } from './mini-skills.ts'
@@ -114,11 +114,13 @@ import { isGenuiCandidate, readGenuiLine, utf8ByteLength, GENUI_MAX_HTML_BYTES }
 import type { GenuiSurfaceConfig } from './genui-surface-config.ts'
 import { runSemanticChecks, semanticActionOf, semanticSurfaceViews } from '../catalog/semantic-check.ts'
 import type { SemanticCheck } from '../catalog/semantic-check.ts'
-import { RENDER_SURFACE_TOOL_NAME, detectUserOverride, isLegacyShape, renderSurfaceJsonl, renderSurfaceReply, renderSurfaceTool } from './response-type.ts'
+import { RENDER_SURFACE_TOOL_NAME, detectUserOverride, isLegacyShape, openSurfacesNote, renderSurfaceJsonl, renderSurfaceReply, renderSurfaceTool } from './response-type.ts'
 import type { ResponsePreference } from './response-type.ts'
 
 const PROTOCOL_VERSION = 'v1.0'
 const DEFAULT_MODEL = 'claude-sonnet-5-5' // the registry's defaultModel (providers.json)
+/** T-0206: the system-prompt sections that open the prompt and stay byte-stable across one agent's turns. */
+const STABLE_SECTIONS: ReadonlySet<PromptSectionId> = new Set(['grammar', 'components', 'functions'])
 
 /** The loop's injected surfaces (SPEC §5). `provider` is the model seam (stub|real); `retrieve` runs
  * over the JUDGED shard; `catalog` is the sole component authority. */
@@ -638,8 +640,11 @@ function messagesFor(
   catalog: Catalog,
   lastOutput: A2uiOutput | undefined,
   toolRound = false,
+  surfacesNote = '',
 ): Turn[] {
-  const turns: Turn[] = [...input.session.turns, { role: 'user', content: userContent(input) }]
+  // T-0206: a turn offering `render_surface` names the open surfaces here, after the cached prefix.
+  const content = surfacesNote !== '' ? `${userContent(input)}\n\n${surfacesNote}` : userContent(input)
+  const turns: Turn[] = [...input.session.turns, { role: 'user', content }]
   if (failures && failures.length > 0 && lastRaw !== undefined) {
     turns.push({ role: 'assistant', content: lastRaw })
     if (failures.every((f) => f.code === 'SURFACE_REQUESTED')) {
@@ -1112,6 +1117,9 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   const exemplars = deps.retrieve(query) // SPEC-R7 — top-k over the judged shard
   const miniSkills = selectMiniSkills(query.intent, MINI_SKILLS, opts.miniSkillCap ?? DEFAULT_MINI_SKILL_CAP, deps.catalog.catalogId) // ADR-0091 §2 — once per turn, beside retrieve(); ADR-0135 cl.7 — cap now tunable, absent ⇒ default; SPEC-R6 — catalogId-scoped, the SAME value line :762's queryOf already threads into retrieve's own query
   const { text: system, sections } = buildSystemPromptSections(deps.catalog, exemplars, opts.mode, miniSkills, opts.personaSystem, opts.genuiSurface, opts.a2uiEnabled, opts.authoringSurface, opts.builderMission, opts.prefers) // SPEC-R6: catalog-derived; ADR-0090 mode + ADR-0091 mini-skills + ADR-0138 persona + genui-surface SPEC-R10 + GH #418 a2uiEnabled + SPEC-R30 authoring gate + SPEC-R31 builder-mission gate + RTS-R7 persona hint
+  // T-0206: the stable prefix (grammar, components, functions) the provider caches; the volatile few-shot
+  // and mini-skills follow it, and the persona stays last (ADR-0138).
+  const systemCacheBoundary = sections.filter((s) => STABLE_SECTIONS.has(s.id)).reduce((n, s) => n + s.chars, 0)
   const model = opts.model ?? input.model ?? DEFAULT_MODEL // opts.model = the proxy's allowlist-validated model (SPEC-R12); it WINS over a client-supplied input.model
   // ADR-0088 §2 — data ALREADY flowing above, captured once for the eventual TurnTrace (no new collection).
   // NOTE: this is a `session.turns` MESSAGE index (the alternating Messages-API array, user+assistant per
@@ -1179,8 +1187,9 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   const integrationTools = opts.executeTool !== undefined ? (opts.tools ?? []) : []
   const offeredTools =
     opts.a2uiEnabled !== false && override !== 'text'
-      ? [...integrationTools, renderSurfaceTool([...sessionKnownSurfaceIds(input.session)])]
+      ? [...integrationTools, renderSurfaceTool()]
       : undefined
+  const surfacesNote = offeredTools !== undefined ? openSurfacesNote([...sessionKnownSurfaceIds(input.session)]) : ''
   const surfaceOverride = offeredTools !== undefined && override === 'surface'
   // RTS-R5: reply text streams as `textDelta` lines only when no integration tool is live (the adapter then
   // yields text as it arrives); first round only, since a repair round re-sends a reply already streamed.
@@ -1275,7 +1284,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     const providerStream = deps.provider.stream({
       model: roundModel,
       system,
-      messages: messagesFor(input, failures, lastRaw, deps.catalog, lastOutput, lastCaptureRound),
+      ...(systemCacheBoundary > 0 ? { systemCacheBoundary } : {}),
+      messages: messagesFor(input, failures, lastRaw, deps.catalog, lastOutput, lastCaptureRound, surfacesNote),
       effort: roundEffort,
       ...(opts.modelSettings !== undefined ? { modelSettings: opts.modelSettings } : {}),
       onEvent,
