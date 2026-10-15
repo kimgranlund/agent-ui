@@ -1,0 +1,69 @@
+// layers.ts: the catalog layer map (T-0202, catalog architecture SPEC CA-R1). Every emittable type of the default
+// catalog and of every shipped fragment belongs to exactly one layer, decided by the CA-R1 test run top to bottom:
+//   1. domain: its props or meaning carry one field's vocabulary, so an agent outside that field never picks it;
+//   2. agentic: it stands for a moment between agent and user and no prop names a field;
+//   3. core: everything else, every form control and every chart included.
+// Each row also names the catalog that declares the type today (`home`). A domain-layer row homed in `default` is a
+// type the SPEC moves out in W2 (§5.3); the row and the move change together. `layers.test.ts` holds the map equal
+// to the catalogs: a type with no row, a row whose home does not declare its type, or a layer its home cannot hold
+// reds the gate. Content is SPEC §5's classification (AC2). Pure data, no import.
+
+/** The three layers (CA-R1). The agentic layer lives inside the `agent-ui` base (D1). */
+export type CatalogLayer = 'core' | 'agentic' | 'domain'
+
+/** One type's layer, its domain when the layer is `domain`, and the catalog folder that declares it today. */
+export interface LayerRow {
+  readonly layer: CatalogLayer
+  /** The domain id (CA-R8) for a `domain` row; absent for core and agentic. */
+  readonly domain?: string
+  /** `default`, `domains/<domain>` or `personas/<persona>`: the folder whose `catalog.json` declares the type. */
+  readonly home: string
+}
+
+const core = (home = 'default'): LayerRow => ({ layer: 'core', home })
+const agentic: LayerRow = { layer: 'agentic', home: 'default' }
+const domain = (id: string, home: string): LayerRow => ({ layer: 'domain', domain: id, home })
+
+const CORE_TYPES = [
+  // primitives and display
+  'Text', 'Icon', 'Image', 'Video', 'AudioPlayer', 'Avatar', 'Badge', 'Code', 'Attachment', 'Swatch',
+  // layout and containers
+  'Row', 'Column', 'Grid', 'List', 'Split', 'SplitPane', 'Card', 'CardHeader', 'CardContent', 'CardFooter', 'Tabs', 'Tab',
+  'TabPanel', 'Disclosure', 'Swiper', 'SwiperItem', 'Drill', 'DrillPanel', 'Timeline', 'TimelineItem', 'DescriptionList',
+  'Toolbar', 'Breadcrumb', 'Pagination',
+  // overlays and feedback
+  'Modal', 'Drawer', 'Popover', 'Tooltip', 'Menu', 'MenuItem', 'Toast', 'FormPopover',
+  // form controls
+  'Button', 'TextField', 'Textarea', 'Field', 'FormProvider', 'Checkbox', 'Switch', 'Toggle', 'Select', 'Option',
+  'RadioGroup', 'Radio', 'ChoiceGroup', 'ChoiceCard', 'SegmentedControl', 'Segment', 'Slider', 'SliderMulti', 'Rating',
+  'Calendar', 'ComboBox', 'MultiSelect', 'FileDrop', 'ColorPicker',
+  // data viz
+  'Sparkline', 'BarChart', 'LineChart', 'PieChart', 'ColumnChart', 'Gauge', 'Table', 'Stat', 'Progress',
+] as const
+
+/** Type name to its layer row: SPEC §5.1 to §5.4. */
+export const CATALOG_LAYER_MAP: Readonly<Record<string, LayerRow>> = Object.freeze({
+  ...Object.fromEntries(CORE_TYPES.map((t) => [t, core()])),
+  // §5.2 agentic
+  SourceList: agentic,
+  Suggestions: agentic,
+  ResultCard: agentic,
+  // §5.3 domain types still homed in the default catalog (W2 moves each to its domain)
+  BoardGrid: domain('games', 'default'),
+  GameHud: domain('games', 'default'),
+  ProductCard: domain('commerce', 'default'),
+  ServiceCard: domain('hospitality', 'default'),
+  Ramp: domain('design', 'default'),
+  Ladder: domain('design', 'default'),
+  // §5.4 persona fragment types (W1 merges each fragment into its domain)
+  BookingForm: domain('hospitality', 'personas/concierge'),
+  BookingConfirmation: domain('hospitality', 'personas/concierge'),
+  PlayingCard: domain('games', 'personas/croupier'),
+  CardTable: domain('games', 'personas/croupier'),
+  QuestionCard: domain('games', 'personas/quizmaster'),
+  ContrastPair: domain('design', 'personas/stylist'),
+})
+
+/** Fragments outside the map: `fixture-demo` is the composition mechanism's test fixture, never a shipped pattern
+ *  (persona SPEC-N6), so its type belongs to no layer. */
+export const LAYER_MAP_EXEMPT_HOMES: readonly string[] = ['personas/fixture-demo']
