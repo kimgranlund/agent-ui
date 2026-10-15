@@ -7,7 +7,7 @@ import { describe, it, expect, afterEach } from 'vitest'
 import { cpSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
-import { CATALOG_FILES, CATALOG_IDS, createCatalogResolver, isCatalogId, loadCatalogById } from './catalog-files.ts'
+import { BASE_CATALOG_IDS, CATALOG_FILES, CATALOG_IDS, createCatalogResolver, isCatalogId, loadCatalogById } from './catalog-files.ts'
 
 declare const process: { cwd(): string }
 
@@ -15,8 +15,9 @@ const REAL_ROOT = process.cwd()
 
 describe('catalog-files: the registry resolves each registered id to ITS OWN catalog', () => {
   it('registers exactly the seed catalog ids, in order', () => {
-    expect(CATALOG_IDS).toEqual(['agent-ui', 'a2ui-basic'])
+    expect(CATALOG_IDS).toEqual(['agent-ui', 'a2ui-basic', 'agent-ui--croupier', 'agent-ui--concierge'])
     expect(Object.keys(CATALOG_FILES)).toEqual([...CATALOG_IDS])
+    expect(BASE_CATALOG_IDS).toEqual(['agent-ui', 'a2ui-basic'])
   })
 
   it.each([...CATALOG_IDS])('%s loads from the real tree and declares the id it is registered under', (id) => {
@@ -34,9 +35,22 @@ describe('catalog-files: the registry resolves each registered id to ITS OWN cat
     expect(basic.components['Card']).toBeDefined()
   })
 
+  it('a persona shard id composes its fragment over its base: the persona composite is present, the base keeps its rows (T-0240)', () => {
+    const base = loadCatalogById(REAL_ROOT, 'agent-ui')
+    const croupier = loadCatalogById(REAL_ROOT, 'agent-ui--croupier')
+    const concierge = loadCatalogById(REAL_ROOT, 'agent-ui--concierge')
+    expect(base.components['CardTable']).toBeUndefined()
+    expect(croupier.components['CardTable']).toBeDefined()
+    expect(croupier.components['BookingForm']).toBeUndefined()
+    expect(concierge.components['BookingForm']).toBeDefined()
+    expect(croupier.components['Button']).toEqual(base.components['Button'])
+  })
+
   it('isCatalogId is an own-key test: registered ids pass; unknown ids and Object.prototype names do not', () => {
     expect(isCatalogId('agent-ui')).toBe(true)
     expect(isCatalogId('a2ui-basic')).toBe(true)
+    expect(isCatalogId('agent-ui--croupier')).toBe(true)
+    expect(isCatalogId('agent-ui--stylist')).toBe(false)
     expect(isCatalogId('bogus')).toBe(false)
     expect(isCatalogId('toString')).toBe(false)
     expect(isCatalogId('')).toBe(false)

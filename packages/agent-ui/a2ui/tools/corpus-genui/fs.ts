@@ -13,6 +13,7 @@ import type { GenuiVerdictsFile, GenuiArchivedVerdict, GenuiArchivedVerdictsSour
 import type { CorpusRecord } from '../../src/corpus/record.ts'
 import { loadCatalog } from '../../src/catalog/catalog.ts'
 import type { Catalog } from '../../src/catalog/catalog.ts'
+import { loadAgentUiExemplarShards } from '../corpus/exemplar-shards.ts'
 
 export const CORPUS_GENUI_DATA_DIR = 'packages/agent-ui/a2ui/corpus-genui'
 export const RECORDS_DIR = `${CORPUS_GENUI_DATA_DIR}/records/v1`
@@ -23,11 +24,6 @@ export const PROMPTS_PATH = `${CORPUS_GENUI_DATA_DIR}/prompts.json`
 export const INDEX_PATH = `${CORPUS_GENUI_DATA_DIR}/index.json`
 export const README_PATH = `${CORPUS_GENUI_DATA_DIR}/README.md`
 export const RUBRIC_PATH = '.claude/docs/rubrics/genui-pack-idiom.md'
-/** The judged A2UI shard the `generate` leg's retrieval reads — the SAME file the dev proxy reads
- *  (`tools/agent/dev-proxy-plugin.ts`'s `SHARD_PATH`), read directly via `readFileSync` (the LLD §1
- *  import list names `src/corpus/retrieve.ts` but not `tools/corpus/fs-store.ts` — this mirrors the
- *  proxy's own direct-read shape rather than routing through the A2UI corpus's Node shell). */
-export const A2UI_SHARD_PATH = 'packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl'
 
 // ── prompts.json ─────────────────────────────────────────────────────────────────────────────────────────
 
@@ -217,16 +213,10 @@ export function loadFixtures(repoRoot: string): { file: string; text: string }[]
 
 // ── the judged A2UI shard (generate leg's retrieval input) ─────────────────────────────────────────────
 
+/** T-0240: the base shard plus every persona shard (`loadAgentUiExemplarShards`), the family the dev proxy reads.
+ *  No shard yet degrades to zero exemplars, never a hard failure. */
 export function loadA2uiShard(repoRoot: string): CorpusRecord[] {
-  try {
-    const text = readFileSync(join(repoRoot, A2UI_SHARD_PATH), 'utf8') as string
-    return text
-      .split('\n')
-      .filter((l) => l.trim().length > 0)
-      .map((l) => JSON.parse(l) as CorpusRecord)
-  } catch {
-    return [] // no shard yet — retrieval degrades to zero exemplars, never a hard failure
-  }
+  return loadAgentUiExemplarShards(repoRoot)
 }
 
 // ── the default catalog (generate leg's `deps.catalog`) ────────────────────────────────────────────────

@@ -53,6 +53,10 @@ import catalogRaw from '../../../src/catalog/default/catalog.json'
 // renderer-inbound only, never server-selected — cl.13's closing note).
 import basicCatalogRaw from '../../../src/catalog/a2ui-basic/catalog.json'
 import corpusShardRaw from '../../../corpus/exemplar/v1_0/agent-ui.jsonl'
+// T-0240: the persona shards, the rest of the agent-ui family the dev proxy reads through `loadAgentUiExemplarShards`
+// (a Worker cannot read a directory; `tools/corpus/exemplar-shards.test.ts` holds this list equal to the files).
+import conciergeShardRaw from '../../../corpus/exemplar/v1_0/agent-ui--concierge.jsonl'
+import croupierShardRaw from '../../../corpus/exemplar/v1_0/agent-ui--croupier.jsonl'
 
 interface Env {
   ASSETS: { fetch(request: Request): Promise<Response> }
@@ -83,8 +87,8 @@ const basicCatalog: Catalog = loadCatalog(basicCatalogRaw)
 // `agent-ui--croupier`) resolves to its REAL composed catalog instead of silently degrading to the
 // default via `selectCatalog`'s fail-closed fallback.
 const catalogs = buildCatalogMap(catalog, basicCatalog)
-const shard: CorpusRecord[] = corpusShardRaw
-  .split('\n')
+const shard: CorpusRecord[] = [corpusShardRaw, conciergeShardRaw, croupierShardRaw]
+  .flatMap((raw) => raw.split('\n'))
   .filter((l) => l.trim().length > 0)
   .map((l) => JSON.parse(l) as CorpusRecord)
 

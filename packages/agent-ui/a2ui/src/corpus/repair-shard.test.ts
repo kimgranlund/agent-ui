@@ -19,10 +19,9 @@ import { existsSync, readFileSync } from 'node:fs'
 import { validateA2ui } from './validate.ts'
 import { checkTier1 } from './admit.ts'
 import type { CorpusRecord } from './record.ts'
-import { defaultCatalog } from '../catalog/default/index.ts'
-import { a2uiBasicCatalog } from '../catalog/a2ui-basic/index.ts'
 import type { Catalog } from '../catalog/catalog.ts'
 import type { SeedCatalogId } from '../examples/types.ts'
+import { SEED_CATALOGS } from './seed-catalogs.fixture.ts'
 import { allRepairSeeds } from '../examples/index.ts'
 
 declare const process: { cwd(): string }
@@ -40,7 +39,7 @@ function shardRecords(): CorpusRecord[] {
 const RECORDS = shardRecords()
 
 // The `corpus-data.test.ts` resolver: each record is checked against ITS OWN catalog, never a hardcoded one.
-const CATALOGS: Readonly<Record<SeedCatalogId, Catalog>> = { 'agent-ui': defaultCatalog, 'a2ui-basic': a2uiBasicCatalog }
+const CATALOGS: Readonly<Record<SeedCatalogId, Catalog>> = SEED_CATALOGS
 function catalogFor(catalogId: string): Catalog {
   if (!Object.hasOwn(CATALOGS, catalogId)) {
     throw new Error(`unregistered catalogId "${catalogId}" (registered: ${Object.keys(CATALOGS).join(', ')})`)

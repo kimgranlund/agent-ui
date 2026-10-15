@@ -484,3 +484,34 @@ describe('retrieve: the selected-domain rule (T-0238)', () => {
     expect(names.sort()).toEqual(['board', 'plain', 'service'])
   })
 })
+
+// T-0240: the persona-shard scope rule. A record stamped `<base>--<persona>` is retrieved on that persona's turns
+// only; a base record serves its base and every catalog derived from it.
+describe('retrieve: the persona-shard scope rule (T-0240)', () => {
+  const records = [
+    exemplar({ name: 'base-table', promptText: 'deal a hand of cards at the table' }),
+    exemplar({ name: 'croupier-table', promptText: 'deal a hand of cards at the table', catalogId: 'agent-ui--croupier' }),
+    exemplar({ name: 'concierge-booking', promptText: 'deal a hand of cards at the table', catalogId: 'agent-ui--concierge' }),
+    exemplar({ name: 'basic-croupier', promptText: 'deal a hand of cards at the table', catalogId: 'a2ui-basic--croupier' }),
+  ]
+
+  it('a persona turn retrieves its base records and its own persona shard', () => {
+    const names = retrieve(records, query({ intent: 'deal a hand of cards', catalogId: 'agent-ui--croupier' })).map((r) => r.name)
+    expect(names.sort()).toEqual(['base-table', 'croupier-table'])
+  })
+
+  it('another persona turn never sees that shard', () => {
+    const names = retrieve(records, query({ intent: 'deal a hand of cards', catalogId: 'agent-ui--concierge' })).map((r) => r.name)
+    expect(names.sort()).toEqual(['base-table', 'concierge-booking'])
+  })
+
+  it('a base turn sees no persona shard', () => {
+    const names = retrieve(records, query({ intent: 'deal a hand of cards' })).map((r) => r.name)
+    expect(names).toEqual(['base-table'])
+  })
+
+  it('a persona record on another base stays out of scope', () => {
+    const names = retrieve(records, query({ intent: 'deal a hand of cards', catalogId: 'a2ui-basic--croupier' })).map((r) => r.name)
+    expect(names).toEqual(['basic-croupier'])
+  })
+})

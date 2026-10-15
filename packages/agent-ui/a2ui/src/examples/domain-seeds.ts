@@ -10,15 +10,16 @@
 //   status on one GameHud rather than a caption Text;
 // - the sea marks hits ● and misses ✕ against fleets committed at `/secret/fleet` and `/secret/playerFleet`.
 //
-// No shelf reads this module yet: admitting the seeds into per-persona shards is T-0240's plumbing.
+// T-0240 shelves them as corpus candidates: the two base seeds on `allSeeds`, the two persona seeds on
+// `allPersonaCorpusSeeds`, admitted against the composed `<base>--<persona>` catalog into that persona's shard.
 // `domain-seeds.test.ts` holds each to its catalog and to the semantic checks its preset runs live.
 
-import type { ExampleSeed, PersonaExampleSeed } from './types.ts'
+import type { ExampleSeed, PersonaShardCatalogId, SeedCatalogId } from './types.ts'
 
 const ROUND_SID = 'blackjack-round'
 
 /** The Croupier mid-round: a 50 bet placed from a 1,000 stack, the hole card face down, the player on 17. */
-export const domainCroupierRoundSeed: PersonaExampleSeed = {
+export const domainCroupierRoundSeed: ExampleSeed<'agent-ui--croupier'> = {
   name: 'domain-croupier-card-table-round',
   description:
     'The croupier persona over the agent-ui base: one CardTable in its playing phase, every figure bound to the ' +
@@ -86,7 +87,7 @@ export const domainCroupierRoundSeed: PersonaExampleSeed = {
 const BOOKING_SID = 'stay-booking'
 
 /** The Concierge's request turn: the guest's choices start empty and travel back on submit. */
-export const domainConciergeBookingSeed: PersonaExampleSeed = {
+export const domainConciergeBookingSeed: ExampleSeed<'agent-ui--concierge'> = {
   name: 'domain-concierge-booking-request',
   description:
     'The concierge persona over the agent-ui base: one BookingForm titled "Book your stay" as the surface root, ' +
@@ -354,8 +355,14 @@ export const domainAdmiralBattleshipSeed: ExampleSeed = {
   ],
 }
 
+/** The two domain seeds over the base catalog, the `allSeeds` family. */
+export const domainBaseSeeds: readonly ExampleSeed[] = [domainLexicographerWordSeed, domainAdmiralBattleshipSeed]
+
+/** The two domain seeds over a persona catalog, the `allPersonaCorpusSeeds` family. */
+export const domainPersonaSeeds: readonly ExampleSeed<PersonaShardCatalogId>[] = [domainCroupierRoundSeed, domainConciergeBookingSeed]
+
 /** The four domain seeds, in review order. */
-export const domainSeeds: readonly (ExampleSeed | PersonaExampleSeed)[] = [
+export const domainSeeds: readonly ExampleSeed<SeedCatalogId>[] = [
   domainCroupierRoundSeed,
   domainConciergeBookingSeed,
   domainLexicographerWordSeed,

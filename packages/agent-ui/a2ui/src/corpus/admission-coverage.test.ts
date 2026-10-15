@@ -25,7 +25,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
-import { allSeeds, allBasicSeeds, allMultiTurnSeeds, allRepairSeeds } from '../examples/index.ts'
+import { allSeeds, allBasicSeeds, allMultiTurnSeeds, allRepairSeeds, allPersonaCorpusSeeds } from '../examples/index.ts'
 import { plantedBasicSeed } from '../catalog/a2ui-basic/planted.ts'
 import type { CorpusRecord } from './record.ts'
 import { DISPOSITION_ALLOWLIST } from './disposition-allowlist.ts'
@@ -161,7 +161,8 @@ function unjudgedAdmissions(
  *  under the corpus data dir by `name`, so a Basic record in `a2ui-basic.jsonl` is found with no further
  *  wiring; the Basic shelf only has to be IN this name set for an un-admitted Basic seed to be reported.
  *  The ADR-0231 facet shelves (`allMultiTurnSeeds`, GH #1741; `allRepairSeeds`, GH #1742) join the same
- *  name set: their records live under `corpus/<facet>/v1_0/`, which `admittedRecords()` already walks. */
+ *  name set: their records live under `corpus/<facet>/v1_0/`, which `admittedRecords()` already walks. So does
+ *  the T-0240 persona corpus shelf (`allPersonaCorpusSeeds`), whose records land in `<base>--<persona>.jsonl`. */
 function coverageSeedNames(
   agentUi: readonly { name: string }[],
   basic: readonly { name: string }[],
@@ -171,7 +172,7 @@ function coverageSeedNames(
 }
 
 describe('corpus admission coverage — the TKT-0022 trip-wire (every seed admitted or dispositioned)', () => {
-  const SEED_NAMES = coverageSeedNames(allSeeds, allBasicSeeds, allMultiTurnSeeds, allRepairSeeds)
+  const SEED_NAMES = coverageSeedNames(allSeeds, allBasicSeeds, allMultiTurnSeeds, allRepairSeeds, allPersonaCorpusSeeds)
   const ADMITTED = admittedRecords()
   const ARCHIVE = verdictArchive()
 
@@ -179,8 +180,8 @@ describe('corpus admission coverage — the TKT-0022 trip-wire (every seed admit
     expect(SEED_NAMES.length).toBeGreaterThan(0)
   })
 
-  it('the judged name set spans every shelf (derived count, never a literal: agent-ui, Basic, multi-turn and repair seeds)', () => {
-    expect(SEED_NAMES).toHaveLength(allSeeds.length + allBasicSeeds.length + allMultiTurnSeeds.length + allRepairSeeds.length)
+  it('the judged name set spans every shelf (derived count, never a literal: agent-ui, Basic, multi-turn, repair and persona corpus seeds)', () => {
+    expect(SEED_NAMES).toHaveLength(allSeeds.length + allBasicSeeds.length + allMultiTurnSeeds.length + allRepairSeeds.length + allPersonaCorpusSeeds.length)
   })
 
   it('found at least one admitted corpus record (anti-vacuous — an empty/missing shard cannot pass silently)', () => {

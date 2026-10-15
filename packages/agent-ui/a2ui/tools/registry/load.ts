@@ -16,7 +16,7 @@
 import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { parseDescriptor, scalarSeq, splitFrontmatter } from '@agent-ui/components/descriptor'
-import { CATALOG_FILES, loadCatalogById } from '../catalog-files.ts'
+import { BASE_CATALOG_IDS, CATALOG_FILES, loadCatalogById } from '../catalog-files.ts'
 import { loadCatalogFragment } from '../../src/catalog/compose.ts'
 import { EXCLUSION_ALLOWLIST } from '../../src/catalog/default/exclusions.ts'
 import { FEED_EXCLUDED, FEED_SURFACE_TYPES } from '../../src/agent/feed-catalog.ts'
@@ -117,7 +117,7 @@ function loadCorpusShards(root: string): CorpusShardSource[] {
 
 /** Every build-tier and runtime-tier source, read from `root` (the repo root, which is also `process.cwd()`). */
 export function loadRegistrySources(root: string): RegistrySources {
-  const catalogs: CatalogSource[] = (Object.keys(CATALOG_FILES) as (keyof typeof CATALOG_FILES)[]).map((id) => {
+  const catalogs: CatalogSource[] = BASE_CATALOG_IDS.map((id) => { // the bases only; persona ids compose below
     const catalog = loadCatalogById(root, id)
     return { catalogId: catalog.catalogId, components: catalog.components, functions: catalog.functions, path: CATALOG_FILES[id] }
   })

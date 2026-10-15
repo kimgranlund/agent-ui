@@ -88,7 +88,7 @@ export { feedbackFormSeed, elevationScaleSeed, triviaRoundResumeSeed, corpusGrow
 // GH #1568 (svg-charts wave 4, closing design tracker GH #1561) — `columnChartRevenueSeed` ·
 // `gaugeSystemLoadSeed` · `lineChartAxesWeeklySalesSeed` close the ColumnChart/Gauge coverage gaps and
 // exercise LineChart's new `axes` opt-in state (distinct from Frontier 11's default-state seed).
-export { tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed, productCardRoomsSeed, boardGridGuessesSeed, gameHudQuestSeed, resultCardWinSeed, catalogFrontierSeeds } from './catalog-frontier.ts'
+export { tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed, productCardRoomsSeed, gameHudQuestSeed, resultCardWinSeed, catalogFrontierSeeds } from './catalog-frontier.ts'
 export { structuredContainerSeed, structuredContainerSeeds } from './structured-container.ts'
 // GH #972 — the high-frequency-patterns family: the 2026-08-15 gap-map sweep's 5 missing high-frequency
 // chat-feed patterns (comparison table, receipt card, empty/error card, notification stack, media grid).
@@ -184,6 +184,7 @@ import { crudEntryListSeeds } from './crud-entry-list.ts'
 import { planAndExecuteSeeds } from './plan-and-execute.ts'
 import { commerceHospitalitySeeds } from './commerce-hospitality.ts'
 import { surfaceLifecycleSeeds } from './surface-lifecycle.ts'
+import { domainBaseSeeds } from './domain-seeds.ts'
 
 /** Every seed on the shelf — the standing gate's (`examples.test.ts`) iteration surface. Composed from
  *  each module's own family array, so the total is always derived, never a separately-maintained count. */
@@ -204,6 +205,7 @@ export const allSeeds: readonly ExampleSeed[] = [
   ...planAndExecuteSeeds,
   ...commerceHospitalitySeeds,
   ...surfaceLifecycleSeeds,
+  ...domainBaseSeeds,
 ]
 
 /** Every seed rendered against the upstream A2UI Basic catalog (`a2ui-basic`), the second shelf beside
@@ -226,6 +228,19 @@ import { personaExemplarSeeds } from './persona-exemplars.ts'
 /** Every seed rendered against a derived persona catalog, the third shelf beside `allSeeds` and
  *  `allBasicSeeds`. Composed from per-module family arrays, never a hand-counted literal. */
 export const allPersonaSeeds: readonly PersonaExampleSeed[] = [...personaExemplarSeeds]
+
+// T-0240: the persona CORPUS shelf. Unlike `allPersonaSeeds` (page and gate fixtures), these are admission
+// candidates: each is admitted against its composed `<base>--<persona>` catalog (`tools/catalog-files.ts`) into
+// `corpus/exemplar/v1_0/<base>--<persona>.jsonl`, so a persona composite (CardTable, BookingForm) can be retrieved
+// on that persona's turns. Registered in `tools/corpus/import-seeds.ts`'s `PERSONA_SEEDS_BY_MODULE`.
+export { domainLexicographerWordSeed, domainAdmiralBattleshipSeed, domainCroupierRoundSeed, domainConciergeBookingSeed } from './domain-seeds.ts'
+
+import type { PersonaShardCatalogId } from './types.ts'
+import { domainPersonaSeeds } from './domain-seeds.ts'
+
+/** Every corpus seed rendered against a persona shard catalog (`PersonaShardCatalogId`), composed from per-module
+ *  family arrays. */
+export const allPersonaCorpusSeeds: readonly ExampleSeed<PersonaShardCatalogId>[] = [...domainPersonaSeeds]
 
 /** The seeds that render against `catalogId`: `allSeeds` for `agent-ui`, `allBasicSeeds` for `a2ui-basic`, and
  *  for any other id the persona seeds pinned to it (`[]` for an unknown id). The every-catalog coverage gate and

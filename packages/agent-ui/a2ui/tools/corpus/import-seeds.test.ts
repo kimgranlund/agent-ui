@@ -29,7 +29,7 @@ import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync, existsSync
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { parseArgs, dispositionGuard, dispositionAllowlistSnippet, shelfDrift, depsForSeed, seedToCandidate } from './import-seeds.ts'
-import { createCatalogResolver } from '../catalog-files.ts'
+import { CATALOG_FILES, createCatalogResolver } from '../catalog-files.ts'
 import type { SeedRejection } from '../../src/corpus/import-report.ts'
 import type { ArchivedVerdict } from '../../src/corpus/verdict-archive.ts'
 import { allSeeds, allBasicSeeds, basicExemplarSeeds } from '../../src/examples/index.ts'
@@ -42,7 +42,7 @@ import { plantedBasicSeed, stampCatalogId } from '../../src/catalog/a2ui-basic/p
 import { candidateForSeed, multiTurnSeedToCandidate, repairSeedToCandidate } from './import-seeds.ts'
 import type { AdmitDeps } from '../../src/corpus/admit.ts'
 import type { MultiTurnSeed, RepairSeed } from '../../src/examples/types.ts'
-import { allMultiTurnSeeds, allRepairSeeds } from '../../src/examples/index.ts'
+import { allMultiTurnSeeds, allRepairSeeds, allPersonaCorpusSeeds } from '../../src/examples/index.ts'
 import {
   multiTurnRecord,
   repairRecord,
@@ -599,9 +599,11 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
   const MULTI_TURN_SHARD = 'packages/agent-ui/a2ui/corpus/multi-turn/v1_0/agent-ui.jsonl'
   // GH #1742: the repair shelf joins the same baseline.
   const REPAIR_SHARD = 'packages/agent-ui/a2ui/corpus/repair/v1_0/agent-ui.jsonl'
-  /** Every seed a run walks: the agent-ui shelf, the Basic shelf, then the ADR-0231 facet shelves
-   *  (main()'s own order). */
-  const SHELF: ReadonlyArray<{ name: string }> = [...allSeeds, ...allBasicSeeds, ...allMultiTurnSeeds, ...allRepairSeeds]
+  /** T-0240: the persona corpus shards, one per persona shard catalog id. */
+  const PERSONA_SHARDS = allPersonaCorpusSeeds.map((s) => `packages/agent-ui/a2ui/corpus/exemplar/v1_0/${s.catalogId}.jsonl`)
+  /** Every seed a run walks: the agent-ui shelf, the Basic shelf, the persona corpus shelf, then the ADR-0231
+   *  facet shelves (main()'s own order). */
+  const SHELF: ReadonlyArray<{ name: string }> = [...allSeeds, ...allBasicSeeds, ...allPersonaCorpusSeeds, ...allMultiTurnSeeds, ...allRepairSeeds]
   const ARCHIVE_DIR = 'packages/agent-ui/a2ui/corpus/verdicts'
 
   let sandbox: string
@@ -611,12 +613,12 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
    *  the corpus is empty (so every seed is a fresh candidate the judge must rule on). */
   const makeSandbox = (opts: { withShard: boolean }): void => {
     sandbox = mkdtempSync(join(tmpdir(), 'a2ui-import-seeds-'))
-    for (const rel of [RUBRIC, CATALOG, BASIC_CATALOG]) {
+    for (const rel of new Set([RUBRIC, CATALOG, BASIC_CATALOG, ...Object.values(CATALOG_FILES)])) {
       mkdirSync(join(sandbox, rel.slice(0, rel.lastIndexOf('/'))), { recursive: true })
       cpSync(join(REAL_ROOT, rel), join(sandbox, rel))
     }
     if (opts.withShard) {
-      for (const rel of [SHARD, BASIC_SHARD, MULTI_TURN_SHARD, REPAIR_SHARD]) {
+      for (const rel of new Set([SHARD, BASIC_SHARD, ...PERSONA_SHARDS, MULTI_TURN_SHARD, REPAIR_SHARD])) {
         mkdirSync(join(sandbox, rel.slice(0, rel.lastIndexOf('/'))), { recursive: true })
         cpSync(join(REAL_ROOT, rel), join(sandbox, rel))
       }
@@ -811,14 +813,17 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     'frontier-column-chart-revenue': { passed: false, qualityScore: 2 },
     'frontier-gauge-system-load': { passed: false, qualityScore: 2 },
     'frontier-line-chart-axes-weekly-sales': { passed: false, qualityScore: 2 },
-    // ADR-0243/T-0072 - the ProductCard, BoardGrid and GameHud coverage-gap seeds (catalog-frontier.ts); refused
-    // here for the same zero-admission reason as every row above; their real disposition is
-    // DISPOSITION_ALLOWLIST's pending "NO VERDICT SOUGHT YET" entries (a later judged wave runs the real pipeline).
+    // ADR-0243/T-0072 - the ProductCard and GameHud coverage-gap seeds (catalog-frontier.ts); refused here for
+    // the same zero-admission reason as every row above (both judged and admitted by T-0240).
     'frontier-product-card-rooms': { passed: false, qualityScore: 2 },
-    'frontier-board-grid-guesses': { passed: false, qualityScore: 2 },
     'frontier-game-hud-quest': { passed: false, qualityScore: 2 },
     // ADR-0244/T-0089 - the ResultCard coverage-gap seed, refused here for the same zero-admission reason.
     'frontier-result-card-win': { passed: false, qualityScore: 2 },
+    // T-0245/T-0240 - the four domain seeds (domain-seeds.ts), refused here for the same zero-admission reason.
+    'domain-lexicographer-word-board': { passed: false, qualityScore: 2 },
+    'domain-admiral-battleship-board': { passed: false, qualityScore: 2 },
+    'domain-croupier-card-table-round': { passed: false, qualityScore: 2 },
+    'domain-concierge-booking-request': { passed: false, qualityScore: 2 },
   }
 
   it('clause 1 — a judged run that reaches saveStore archives its verdicts file BYTE-IDENTICALLY at <date>--<slug>.json, and a second identical run is a no-op', () => {

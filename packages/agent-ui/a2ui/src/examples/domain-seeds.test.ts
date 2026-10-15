@@ -6,8 +6,8 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import '@agent-ui/components/all' // ADR-0233: the catalog factories import no control; the test defines the fleet
-import { domainSeeds } from './domain-seeds.ts'
-import { allSeeds, allBasicSeeds, allPersonaSeeds, allMultiTurnSeeds, allRepairSeeds } from './index.ts'
+import { domainSeeds, domainAdmiralBattleshipSeed } from './domain-seeds.ts'
+import { allSeeds, allBasicSeeds, allPersonaSeeds, allPersonaCorpusSeeds, allMultiTurnSeeds, allRepairSeeds } from './index.ts'
 import { validateA2ui } from '../renderer/validate.ts'
 import { createRenderer } from '../renderer/renderer.ts'
 import type { A2uiClientMessage } from '../renderer/renderer.ts'
@@ -51,10 +51,34 @@ function liveChecks(catalogId: string, catalog: Catalog) {
 const isError = (m: A2uiClientMessage): m is Extract<A2uiClientMessage, { error: unknown }> => 'error' in m
 
 describe('the T-0245 domain seeds', () => {
-  it('are four, each named once across every shelf', () => {
+  it('are four, each shelved exactly once (T-0240: the base two on allSeeds, the persona two on allPersonaCorpusSeeds)', () => {
     expect(domainSeeds).toHaveLength(4)
-    const names = [...allSeeds, ...allBasicSeeds, ...allPersonaSeeds, ...allMultiTurnSeeds, ...allRepairSeeds, ...domainSeeds].map((s) => s.name)
+    const names = [...allSeeds, ...allBasicSeeds, ...allPersonaSeeds, ...allPersonaCorpusSeeds, ...allMultiTurnSeeds, ...allRepairSeeds].map((s) => s.name)
     expect(names.filter((n, i) => names.indexOf(n) !== i)).toEqual([])
+    for (const seed of domainSeeds) expect(names.filter((n) => n === seed.name), seed.name).toHaveLength(1)
+  })
+
+  // T-0240: two properties the T-0245 verifier found no test covered.
+  it('each sends its data model with every action (`createSurface.sendDataModel: true`), so the user state reaches the agent', () => {
+    for (const seed of domainSeeds) {
+      const creates = seed.messages.flatMap((m) => ('createSurface' in m ? [m.createSurface] : []))
+      expect(creates, seed.name).toHaveLength(1)
+      expect(creates[0]!.sendDataModel, seed.name).toBe(true)
+    }
+  })
+
+  it('the battleship boards mark a miss with a cross and a hit with a filled dot, judged against the committed fleets', () => {
+    type Cell = { row: number; col: number; mark: string }
+    type Model = { secret: { fleet: Cell[]; playerFleet: Cell[] }; sea: { cells: Cell[] }; home: { cells: Cell[] } }
+    const model = domainAdmiralBattleshipSeed.messages.flatMap((m) => ('updateDataModel' in m ? [m.updateDataModel.value as Model] : []))[0]!
+    const holds = (fleet: Cell[], c: Cell): boolean => fleet.some((s) => s.row === c.row && s.col === c.col)
+    const shots = [
+      ...model.sea.cells.map((c) => ({ c, hit: holds(model.secret.fleet, c) })),
+      ...model.home.cells.filter((c) => c.mark !== '■').map((c) => ({ c, hit: holds(model.secret.playerFleet, c) })),
+    ]
+    expect(shots.filter((s) => !s.hit).length, 'anti-vacuous: some shot missed').toBeGreaterThan(0)
+    expect(shots.filter((s) => s.hit).length, 'anti-vacuous: some shot hit').toBeGreaterThan(0)
+    for (const { c, hit } of shots) expect(c.mark, `${c.row},${c.col}`).toBe(hit ? '●' : '✕')
   })
 
   for (const seed of domainSeeds) {

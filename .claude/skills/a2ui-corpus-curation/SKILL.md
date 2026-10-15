@@ -46,13 +46,16 @@ contract:
    `packages/agent-ui/a2ui/src/examples/types.ts`) is package SOURCE and a pre-aligned authored admission
    candidate. Add the module, export it from `src/examples/index.ts` (named export + `allSeeds` for an
    agent-ui seed, or `allBasicSeeds` for an `a2ui-basic` seed: two separate shelves, GH #1737, so a Basic
-   seed is a compile error on `allSeeds`; persona seeds live on `allPersonaSeeds`, a page and gate shelf
-   that never enters the corpus, so `SeedCatalogId` stays two ids. A persona-fragment composite such as
-   CardTable or BookingForm therefore cannot enter the `agent-ui` shard today, since admission validates against
-   the base catalog; the domain exemplars of T-0240 wait on a per-domain shard or admission against the
-   composed catalog), and register it in the import script's drift-guarded
-   `SEEDS_BY_MODULE` (agent-ui) or `BASIC_SEEDS_BY_MODULE` (Basic) (`tools/corpus/import-seeds.ts`, a
-   half-wired seed HALTS at the drift guard). One seed is ONE surface: a scenario with two surfaces is two
+   seed is a compile error on `allSeeds`; persona fixture seeds live on `allPersonaSeeds`, a page and gate
+   shelf that never enters the corpus. A persona-fragment composite such as CardTable or BookingForm is a
+   corpus seed on `allPersonaCorpusSeeds` instead (T-0240): its `catalogId` is a `PersonaShardCatalogId`
+   (`<base>--<persona>`, listed one by one in `src/examples/types.ts`), it is admitted against the composed
+   persona catalog (`tools/catalog-files.ts`) and lands in `<base>--<persona>.jsonl`; a new persona shard
+   adds its id to that union and its fragment path to `CATALOG_FILES`), and register it in the import
+   script's drift-guarded `SEEDS_BY_MODULE` (agent-ui), `BASIC_SEEDS_BY_MODULE` (Basic) or
+   `PERSONA_SEEDS_BY_MODULE` (persona shard) (`tools/corpus/import-seeds.ts`, a half-wired seed HALTS at
+   the drift guard). A `--verdicts` run needs a verdict for EVERY not-yet-admitted shelf seed, not just
+   the new ones, so a seed left pending on the shelf blocks the next judged wave until it is judged. One seed is ONE surface: a scenario with two surfaces is two
    seeds, since a corpus record is single-surface (`ADR-0064`; a two-surface draft reds `npm test` via
    `record.ts#checkSingleSurface`, first hit in GH #1374). One surface AT A TIME is legal: deleting and
    re-creating that same `surfaceId` inside one seed is a lifecycle record, not a second surface (the
@@ -85,7 +88,7 @@ contract:
    rubric's `version:` marker (`ADR-0068` cl.1). The adapter (`src/corpus/judge.ts`, `createVerdictJudge`)
    is deterministic plumbing — judgment is authored in the critic seat, never inside `admit()`
    (judge-wiring LLD §7; `process.md` rule 1 + SPEC-R8). A sub-agent cannot spawn that critic, so a lane
-   that adds a record (a BoardGrid exemplar, T-0240) stops at this step and the conductor dispatches the review.
+   that adds a record stops at this step and the conductor dispatches the review (T-0240's wave did).
 5. **Back-score the phase-1 records** — `tools/corpus/rescore.ts` (`ADR-0068` cl.4) applies verdicts only
    to records with absent `qualityScore`: at/above bar → `meta.qualityScore`; below bar →
    `status:"quarantined"` (one-way under rescore). It is all-or-nothing (the whole file validates and every

@@ -68,6 +68,7 @@ import type { ProvidersConfig } from './providers-config.ts'
 import { providerFor, validateProviderKeyCached } from './providers/index.ts'
 import { ANTHROPIC_WORKSPACE_ENV } from '../../src/agent/providers/anthropic.ts'
 import { retrieve } from '../../src/corpus/retrieve.ts'
+import { loadAgentUiExemplarShards } from '../corpus/exemplar-shards.ts'
 import type { CorpusRecord } from '../../src/corpus/record.ts'
 import { loadCatalog } from '../../src/catalog/catalog.ts'
 import type { TurnInput, Effort } from '../../src/agent/agent-transport.ts'
@@ -116,7 +117,6 @@ const CATALOG_PATH = `${ROOT}/packages/agent-ui/a2ui/src/catalog/default/catalog
 // default so a request's `catalogId` can select either. Keyed by SHORT id only (the canonical-URI alias
 // is renderer-inbound only, never server-selected — cl.13's closing note).
 const BASIC_CATALOG_PATH = `${ROOT}/packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json`
-const SHARD_PATH = `${ROOT}/packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl`
 // SPEC-R27 / LLD §3.1 — the committed MCP-server allowlist, sibling to providers.json above.
 const MCP_CONFIG_PATH = `${ROOT}/packages/agent-ui/a2ui/tools/agent/mcp-servers.json`
 
@@ -257,10 +257,7 @@ export function a2uiDevProxyPlugin(opts?: {
       // `agent-ui--croupier`) resolves to its REAL composed catalog instead of silently degrading to
       // the default via `selectCatalog`'s fail-closed fallback.
       const catalogs = buildCatalogMap(catalog, basicCatalog)
-      const shard: CorpusRecord[] = (readFileSync(SHARD_PATH, 'utf8') as string)
-        .split('\n')
-        .filter((l) => l.trim().length > 0)
-        .map((l) => JSON.parse(l) as CorpusRecord)
+      const shard: CorpusRecord[] = loadAgentUiExemplarShards(ROOT) // T-0240: the base shard plus every persona shard
 
       // providers.json is the switcher-synced, user-editable registry (env-var NAMES + model ids, NO
       // secrets). Re-read + validate it PER REQUEST so an edit (e.g. a new model row) takes effect WITHOUT
