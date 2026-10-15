@@ -24,8 +24,9 @@
 // T-0172): one `lg` button per amount of the fixed set Kim ruled, 25 / 50 / 75 / 100 / 250 (no wire prop, so a
 // model cannot supply its own amounts), an amount above the bankroll disabled. A press places that bet and starts the hand in one step: it writes the bet (a bubbling `change` the
 // input binding reads through `a2uiCardTableBet`), then fires the host's own `action` event with
-// `{action: betAction, context: {bet}}`, which the renderer forwards as the A2UI action (`betAction` is the
-// catalog's `actionEvent: 'action'` prop, the BoardGrid precedent). The table owns the whole bet phase, so a
+// `{action: betAction, context: {bet, bankrollAfterBet}}`, which the renderer forwards as the A2UI action (`betAction` is the
+// catalog's `actionEvent: 'action'` prop, the BoardGrid precedent). The table owns the debit (T-0216):
+// `bankrollAfterBet` is the bankroll less the bet (absent while the bankroll is unknown), the figure the deal writes. The table owns the whole bet phase, so a
 // producer adds no Slider, field or Deal Button for it (the `croupier-bet-controls` check). Leaving `betting`
 // hides the strip. `settled` shows the `result` line above the readout.
 //
@@ -349,7 +350,8 @@ export const cardTableFactory: WidgetFactory = {
       parts.bet = amount
       renderReadout(parts)
       el.dispatchEvent(new Event('change', { bubbles: true }))
-      if (parts.betAction !== '') el.dispatchEvent(new CustomEvent('action', { detail: { action: parts.betAction, context: { bet: amount } } }))
+      const context = parts.bankroll === undefined ? { bet: amount } : { bet: amount, bankrollAfterBet: parts.bankroll - amount }
+      if (parts.betAction !== '') el.dispatchEvent(new CustomEvent('action', { detail: { action: parts.betAction, context } }))
     }
     renderBets(parts)
     // The live bet for `installInputBinding` (LLD-C8), read on the root's bubbling `change`.

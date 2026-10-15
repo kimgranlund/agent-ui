@@ -192,3 +192,40 @@ describe('produce() + croupier action check: a table action answered by prose al
     expect(s.calls()).toBe(1)
   })
 })
+
+// T-0215 (the recorded Haiku 5.5 trace, 2026-10-15.jsonl:5 and 6): table-1 was created with no `sendDataModel`, so
+// the press carried no `dataModel`. The checks then judge from the surface's data model replayed off the session.
+describe('produce() + croupier action check: a table created without sendDataModel is still judged (T-0215)', () => {
+  const TABLE = '{"id":"root","component":"CardTable","title":"Blackjack","phase":{"path":"/phase"},"bet":{"path":"/bet"},"bankroll":{"path":"/bankroll"},"dealerHand":{"path":"/dealerHand"},"playerHand":{"path":"/playerHand"},"betAction":"deal"}'
+  const TABLE_TURN =
+    '{"version":"v1.0","createSurface":{"surfaceId":"table-1","catalogId":"agent-ui--croupier"}}\n' +
+    '{"version":"v1.0","updateDataModel":{"surfaceId":"table-1","value":{"bankroll":1000,"bet":0,"phase":"betting","dealerHand":[],"playerHand":[]}}}\n' +
+    `{"version":"v1.0","updateComponents":{"surfaceId":"table-1","components":[${TABLE}]}}`
+  const pressOn = (turns: Session['turns'], name: string, context: Record<string, unknown>): TurnInput => ({
+    kind: 'client',
+    session: { turns },
+    message: { version: 'v1.0', action: { surfaceId: 'table-1', actionId: 'a1', name, sourceComponentId: 'root', timestamp: '0', context } },
+  })
+  const deal = pressOn([{ role: 'user', content: 'Blackjack, please.' }, { role: 'assistant', content: TABLE_TURN }], 'deal', { bet: 250 })
+  const write = (value: Record<string, unknown>) => `{"a2uiMeta":{"note":"Dealt."}}\n${JSON.stringify({ version: 'v1.0', updateDataModel: { surfaceId: 'table-1', value } })}`
+  const C = (rank: string, faceDown = false) => ({ rank, suit: 'clubs', ...(faceDown ? { faceDown } : {}) })
+  const dealt = (bankroll: number) => write({ bankroll, bet: 250, phase: 'playing', dealerHand: [C('9'), C('K', true)], playerHand: [C('10'), C('7')] })
+
+  it('the recorded deal (1,000 left on the bankroll after a 250 bet) spends a repair round naming 750', async () => {
+    const s = scripted([dealt(1000), dealt(750)])
+    const lines = await collect(produce(deal, deps(s.provider, croupierSemanticChecks), { maxRounds: 3 }))
+    expect(s.calls()).toBe(2)
+    expect(s.reqs[1]!.messages.at(-1)!.content).toContain('write 750')
+    expect(traceOf(lines).failureCodes).toEqual(['BANKROLL_MISMATCH'])
+  })
+
+  it('a stand that settles a 20 over 19 win from 750 must read 1,250, not 1,000', async () => {
+    const turns: Session['turns'] = [...deal.session.turns, { role: 'user', content: '{}' }, { role: 'assistant', content: dealt(750).split('\n')[1]! }]
+    const settled = (bankroll: number) => write({ bankroll, bet: 250, phase: 'settled', dealerHand: [C('9'), C('K')], playerHand: [C('10'), C('K')] })
+    const s = scripted([settled(1000), settled(1250)])
+    const lines = await collect(produce(pressOn(turns, 'stand', {}), deps(s.provider, croupierSemanticChecks), { maxRounds: 3 }))
+    expect(s.calls()).toBe(2)
+    expect(s.reqs[1]!.messages.at(-1)!.content).toContain('Write 1250')
+    expect(traceOf(lines).failureCodes).toEqual(['BANKROLL_MISMATCH'])
+  })
+})

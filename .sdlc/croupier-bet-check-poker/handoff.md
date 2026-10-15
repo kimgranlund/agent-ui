@@ -2,7 +2,7 @@
 id: T-0212
 title: "Croupier BET_TABLE_MISSING fires on poker bet steps and costs repair rounds"
 type: bug             # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -27,3 +27,9 @@ Round 1 (ask-1) and round 2 were sent back with BET_TABLE_MISSING; the model gav
 
 ## Constraints
 The failing test lands before or with the fix, never after. No em dashes.
+
+## Acceptance criteria
+- (red) BET_TABLE_MISSING skips a bet step whose surface names a game other than blackjack (the recorded seven-card stud opening, hold'em, Omaha, five-card draw, poker), and still fires on a blackjack-family bet step or one that names no game: `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.test.ts -t T-0212` exits 0.
+- The touched folders stay green: `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog packages/agent-ui/a2ui/src/live-agent/produce-semantic-checks.test.ts` exits 0.
+- The recorded fixture still replays: `npx vitest run --project scripts scripts/e2e-admin/probe/replays/croupier-stud-bet-table-missing.test.mjs` exits 0 (its expected `no-surface-loss` fail is the probe replaying the recorded repair rounds; the offline replay runs no semantic checks, so it does not flip with this fix).
+- `npm run check` exits 0.

@@ -4,7 +4,7 @@
 // other id none.
 
 import { describe, it, expect } from 'vitest'
-import { readPointer, runSemanticChecks, semanticSurfaceViews } from './semantic-check.ts'
+import { readPointer, runSemanticChecks, semanticActionOf, semanticSurfaceViews } from './semantic-check.ts'
 import type { SemanticCheck } from './semantic-check.ts'
 import type { Session } from '../agent/agent-transport.ts'
 import type { A2uiOutput } from '../protocol.ts'
@@ -84,6 +84,26 @@ describe('runSemanticChecks: findings collected, a throwing check fail-open', ()
   }
   it('collects every finding and names the check that threw', () => {
     expect(runSemanticChecks([throws, finds], { surfaces: [] })).toEqual({ findings: [{ code: 'X', path: 's:a', message: 'm' }], errored: ['throws'] })
+  })
+})
+
+describe('semanticActionOf: the click-time data model (T-0215)', () => {
+  const table: A2uiOutput = [
+    { version: 'v1.0', createSurface: { surfaceId: 't', catalogId: 'agent-ui' } },
+    { version: 'v1.0', updateDataModel: { surfaceId: 't', value: { bankroll: 1000, phase: 'betting' } } },
+    { version: 'v1.0', updateDataModel: { surfaceId: 't', path: '/bet', value: 0 } },
+  ]
+  const session: Session = { turns: [{ role: 'user', content: 'deal' }, assistant(table)] }
+  const press = (extra: Record<string, unknown> = {}) => ({ version: 'v1.0', action: { name: 'deal', surfaceId: 't', context: { bet: 250 }, ...extra } })
+
+  it('a press with no dataModel (no sendDataModel) reads the surface replayed off the session', () => {
+    expect(semanticActionOf(press(), session)).toEqual({ name: 'deal', surfaceId: 't', context: { bet: 250 }, dataModel: { bankroll: 1000, phase: 'betting', bet: 0 } })
+  })
+
+  it('the client-sent dataModel wins; no session or an unknown surface leaves it undefined', () => {
+    expect(semanticActionOf(press({ dataModel: { bankroll: 5 } }), session)?.dataModel).toEqual({ bankroll: 5 })
+    expect(semanticActionOf(press())?.dataModel).toBeUndefined()
+    expect(semanticActionOf({ action: { name: 'deal', surfaceId: 'gone' } }, session)?.dataModel).toBeUndefined()
   })
 })
 

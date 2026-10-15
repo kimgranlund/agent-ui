@@ -406,7 +406,20 @@ function betControls(view: SurfaceView): SemanticFinding[] {
 }
 
 const BET_WORDS = /\b(bet|bets|stake|wager)\b/i
+const BLACKJACK_GAMES = /\b(blackjack|black jack|twenty[- ]one|spanish 21|pontoon|21)\b/i
+const OTHER_GAMES = /\b(poker|stud|hold ?['’]?em|holdem|omaha|razz|five[- ]card draw|draw poker|baccarat|roulette|craps)\b/i
 const textOf = (v: unknown): string => (typeof v === 'string' ? v : bindingPath(v) ?? '')
+
+/** A surface's literal words: its text, label, title and status props. */
+const literalWords = (comps: Iterable<A2uiComponent>): string =>
+  [...comps].flatMap((c) => ['text', 'label', 'title', 'status'].map((k) => c[k]).filter((v): v is string => typeof v === 'string')).join(' ')
+
+/** T-0212: a surface whose words name a game other than blackjack and no blackjack-family game (the recorded
+ *  "Seven-card stud · Place your bet"). */
+function namesOtherGame(comps: readonly A2uiComponent[]): boolean {
+  const words = literalWords(comps)
+  return OTHER_GAMES.test(words) && !BLACKJACK_GAMES.test(words)
+}
 const actionName = (c: A2uiComponent): string => {
   const a = c['action'] as { action?: unknown; event?: { name?: unknown } } | undefined
   return typeof a?.action === 'string' ? a.action : typeof a?.event?.name === 'string' ? a.event.name : ''
@@ -416,11 +429,14 @@ const actionName = (c: A2uiComponent): string => {
  *  "Bet amount" Slider and a Deal Button) never reaches the table's bet strip, so the check above has nothing to
  *  judge. A surface with no CardTable that holds a bet input (a Slider or TextField whose label, name or bound
  *  path says bet, stake or wager) or a Deal Button, and no dealt card yet, is sent back to be one CardTable in its betting phase. A
- *  false positive costs one repair round and ships tallied at the bound (ADR-0238), never a halt. */
+ *  false positive costs one repair round and ships tallied at the bound (ADR-0238), never a halt. T-0212: a surface
+ *  that names another game (the recorded seven-card stud opening, sent back twice) keeps its Card; one that names
+ *  no game at all is still judged as blackjack. */
 function betStepWithoutTable(view: SurfaceView): SemanticFinding[] {
   const comps = [...view.components.values()]
   // A dealt hand (any PlayingCard) is past the bet step: an older table shape is judged by the hand check alone.
   if (comps.some((c) => c.component === 'CardTable' || c.component === 'PlayingCard')) return []
+  if (namesOtherGame(comps)) return []
   const strays = comps.filter((c) => {
     if (BET_INPUTS.has(c.component)) return [c['label'], c['name'], c['value']].some((v) => BET_WORDS.test(textOf(v).replace(/[/_-]/g, ' ')))
     if (c.component === 'Button') return /^deal\b/i.test(textOf(c['label'])) || /^(deal|place_?bet|bet)$/i.test(actionName(c))
@@ -448,12 +464,69 @@ export const croupierBetControls: SemanticCheck = {
 
 const DEAL_ACTION = /^(deal|place_?bet|bet|deal_blackjack)$/i
 const MOVE_ACTION = /^(hit|stand|double|double_?down)$/i
+const NEW_ROUND_ACTION = /^(deal_?again|new_?round|next_?round)$/i
 const finiteNumber = (v: unknown): number | undefined => (typeof v === 'number' && Number.isFinite(v) ? v : undefined)
+
+/** A CardTable hand prop's list: a literal list, or the list an absolute `{path}` reads (`undefined` otherwise). */
+function handList(table: A2uiComponent, p: Participant, dataModel: unknown): unknown[] | undefined {
+  const v = table[`${p}Hand`]
+  const list = Array.isArray(v) ? v : bindingPath(v)?.startsWith('/') === true ? readPointer(dataModel, bindingPath(v)!) : undefined
+  return Array.isArray(list) ? list : undefined
+}
+
+/** T-0211 (Kim's ruling, T-0172): Deal again opens the next round in the betting phase, so the player picks the
+ *  stake on the table's own strip. Every CardTable the answer touches must be in betting with empty hands, on the
+ *  bankroll the round settled at (the click-time data model). The recorded Haiku 5.5 answer opened table-2 dealt,
+ *  at the old 100 stake. A fresh surface or the clicked one reset in place both pass; an answer with no CardTable
+ *  (a poker hand on a Card) is never judged, and an answer with no surface at all is ACTION_NOT_APPLIED. */
+function newRoundFindings(surfaces: readonly SurfaceView[], action: SemanticAction): SemanticFinding[] {
+  const touched = surfaces.flatMap((view) => [...view.components.values()].filter((c) => c.component === 'CardTable').map((table) => ({ view, table })))
+  // A table on a new surface is the next round, and the clicked one beside it is history (a closing touch).
+  const fresh = touched.filter(({ view }) => view.surfaceId !== action.surfaceId)
+  const tables = fresh.length > 0 ? fresh : touched
+  // A new round on a surface with no CardTable is another game's (a poker hand on a Card): not judged here.
+  if (surfaces.length > 0 && tables.length === 0) return []
+  if (tables.length === 0)
+    return [
+      {
+        code: 'ACTION_NOT_APPLIED',
+        path: `${action.surfaceId}:${action.name}`,
+        message:
+          `The player pressed ${action.name} to start the next round, and this turn opens no table. ` +
+          `Create the next round's surface: one CardTable in phase "betting" with empty /dealerHand and /playerHand, the settled bankroll and "betAction":"deal".`,
+      },
+    ]
+  const settledBankroll = finiteNumber((action.dataModel as Record<string, unknown> | undefined)?.['bankroll'])
+  const findings: SemanticFinding[] = []
+  for (const { view, table } of tables) {
+    const dealt = PARTICIPANTS.filter((p) => (handList(table, p, view.dataModel)?.length ?? 0) > 0)
+    const phase = phaseOf(table, view.dataModel)
+    if (phase !== 'betting' || dealt.length > 0)
+      findings.push({
+        code: 'NEW_ROUND_NOT_BETTING',
+        path: `${view.surfaceId}:${table.id}`,
+        message:
+          `The player pressed ${action.name} for a new round, but ${view.surfaceId}'s ${table.id} opens ${phase === 'betting' ? 'in betting' : `in phase "${phase}"`}` +
+          `${dealt.length > 0 ? ` with cards already in ${dealt.map((p) => `/${p}Hand`).join(' and ')}` : ''}. ` +
+          `A new round starts in phase "betting" with empty /dealerHand and /playerHand and "betAction":"deal": the player picks the stake on the table's bet strip, never the old bet.`,
+      })
+    const path = bindingPath(table['bankroll'])
+    const opened = path === undefined ? finiteNumber(table['bankroll']) : finiteNumber(readPointer(view.dataModel, path))
+    if (settledBankroll !== undefined && opened !== undefined && opened !== settledBankroll)
+      findings.push({
+        code: 'BANKROLL_MISMATCH',
+        path: `${view.surfaceId}:${path ?? table.id}`,
+        message: `The round settled with a bankroll of ${settledBankroll}, and the next table opens on ${opened}. Carry the settled bankroll over: write ${settledBankroll}.`,
+      })
+  }
+  return findings
+}
 
 /** T-0172 (the live probe on f6f94f7f): a table action must move the table, and a deal must take the bet out of
  *  the bankroll. Haiku 5.5 answered a 50 press with prose ("dealt you 9 and 7 for 16") and no update, so the
  *  table stayed in betting; Sonnet 5.5 dealt and wrote a bankroll of 500 from 1,000 after a 50 bet. */
 function actionApplied(surfaces: readonly SurfaceView[], action: SemanticAction): SemanticFinding[] {
+  if (action.context['newRound'] === true || NEW_ROUND_ACTION.test(action.name)) return newRoundFindings(surfaces, action)
   const deal = DEAL_ACTION.test(action.name)
   if (!deal && !MOVE_ACTION.test(action.name)) return []
   const view = surfaces.find((v) => v.surfaceId === action.surfaceId)
@@ -481,7 +554,9 @@ function actionApplied(surfaces: readonly SurfaceView[], action: SemanticAction)
         message: `The player bet with ${action.name}, but ${table.id} is still in the betting phase. Write the dealt hands and phase "playing" to ${view.surfaceId}'s data model.`,
       })
     const bet = finiteNumber(action.context['bet'])
-    const before = finiteNumber((action.dataModel as Record<string, unknown> | undefined)?.['bankroll'])
+    // T-0216: the table owns the debit; its press sends the bankroll less the bet, the figure the deal writes.
+    const owned = finiteNumber(action.context['bankrollAfterBet'])
+    const before = bet !== undefined && owned !== undefined ? owned + bet : finiteNumber((action.dataModel as Record<string, unknown> | undefined)?.['bankroll'])
     const path = bindingPath(table['bankroll'])
     const after = path === undefined ? finiteNumber(table['bankroll']) : finiteNumber(readPointer(view.dataModel, path))
     // A round that settles on this action is judged by the payout, never by the plain deal arithmetic.
@@ -537,12 +612,13 @@ function settleFinding(view: SurfaceView, table: A2uiComponent, action: Semantic
   if (phaseOf(table, view.dataModel) !== 'settled') return undefined
   const clickTime = action.dataModel as Record<string, unknown> | undefined
   if (clickTime?.['phase'] === 'settled') return undefined // already settled before this action
-  const before = finiteNumber(clickTime?.['bankroll'])
+  const bet = deal ? finiteNumber(action.context['bet']) : finiteNumber(clickTime?.['bet'])
+  const owned = deal ? finiteNumber(action.context['bankrollAfterBet']) : undefined // T-0216: the table's own debit
+  const before = bet !== undefined && owned !== undefined ? owned + bet : finiteNumber(clickTime?.['bankroll'])
   const bankrollPath = bindingPath(table['bankroll'])
   const after = bankrollPath === undefined ? finiteNumber(table['bankroll']) : finiteNumber(readPointer(view.dataModel, bankrollPath))
   const player = cardsAt(view.dataModel, bindingPath(table['playerHand']))
   const dealer = cardsAt(view.dataModel, bindingPath(table['dealerHand']))
-  const bet = deal ? finiteNumber(action.context['bet']) : finiteNumber(clickTime?.['bet'])
   if (before === undefined || after === undefined || player === undefined || dealer === undefined || bet === undefined || bet <= 0) return undefined
   const doubled = /^double/i.test(action.name)
   const stake = doubled ? bet * 2 : bet
@@ -559,11 +635,166 @@ function settleFinding(view: SurfaceView, table: A2uiComponent, action: Semantic
   }
 }
 
-/** T-0172: a table action moves the table, and a deal takes the bet out of the bankroll. */
+/** T-0172: a table action moves the table, and a deal takes the bet out of the bankroll; T-0211: Deal again opens
+ *  the next round in betting. */
 export const croupierActionApplied: SemanticCheck = {
   id: 'croupier-action-applied',
   requires: ['CardTable'],
   check: (input) => (input.action === undefined ? [] : actionApplied(input.surfaces, input.action)),
 }
 
-export const croupierSemanticChecks: readonly SemanticCheck[] = [croupierHandConsistency, croupierBetControls, croupierActionApplied]
+const POKER_GAMES = /\b(poker|stud|hold ?['’]?em|holdem|omaha|razz|five[- ]card draw|draw poker)\b/i
+const DRAW_GAMES = /\b(five[- ]card draw|draw poker|triple draw|badugi)\b/i
+
+interface DeckCard {
+  /** The card's pointer in the data model, e.g. `/dealerHand/2`. */
+  path: string
+  rank: string
+  suit: string
+  faceDown: boolean
+}
+
+const cardName = (c: { rank: string; suit: string }): string => `${c.rank} of ${c.suit}`
+
+/** Every card the data model lists: each item of an array whose items all carry a string rank and suit. */
+function deckCards(node: unknown, pointer: string, out: DeckCard[], depth = 0): DeckCard[] {
+  if (depth > 6) return out
+  if (Array.isArray(node)) {
+    if (node.length > 0 && node.every((c) => isRecord(c) && typeof c['rank'] === 'string' && typeof c['suit'] === 'string'))
+      node.forEach((c: Record<string, unknown>, i) => out.push({ path: `${pointer}/${i}`, rank: c['rank'] as string, suit: c['suit'] as string, faceDown: c['faceDown'] === true }))
+    return out
+  }
+  if (isRecord(node)) for (const [k, v] of Object.entries(node)) deckCards(v, `${pointer}/${k}`, out, depth + 1)
+  return out
+}
+
+/** CARD_DUPLICATE: a poker deal is one deck, so a rank and suit appear once (Sonnet 5.5 Omaha dealt four face-down
+ *  2 of clubs as placeholders). Judged only on a surface that names a poker game; a blackjack shoe holds several decks. */
+function duplicateCards(view: SurfaceView): SemanticFinding[] {
+  if (!POKER_GAMES.test(literalWords(view.components.values()))) return []
+  const seen = new Map<string, DeckCard[]>()
+  for (const c of deckCards(view.dataModel, '', [])) {
+    const key = cardName(c)
+    seen.set(key, [...(seen.get(key) ?? []), c])
+  }
+  return [...seen.entries()]
+    .filter(([, cards]) => cards.length > 1)
+    .map(([name, cards]) => ({
+      code: 'CARD_DUPLICATE',
+      path: `${view.surfaceId}:${cards[0]!.path.replace(/\/\d+$/, '')}`,
+      message:
+        `${view.surfaceId} deals the ${name} ${cards.length} times (${cards.map((c) => c.path).join(', ')}), but a poker deal is one deck. ` +
+        `Deal real, distinct cards, the face-down ones too: a face-down card is the committed card the showdown turns up, never a placeholder.`,
+    }))
+}
+
+/** HOLE_CARD_CHANGED: on an action turn, a card that was face down on the clicked surface (the click-time data model)
+ *  keeps its rank and suit, face down or turned up (Haiku 5.5 Omaha swapped its hole cards mid-hand and settled on
+ *  the swap). A draw game's redraw and a new round replace cards, so neither is judged. */
+function changedHoleCards(view: SurfaceView, action: SemanticAction): SemanticFinding[] {
+  if (view.surfaceId !== action.surfaceId || action.context['newRound'] === true || NEW_ROUND_ACTION.test(action.name)) return []
+  if (DRAW_GAMES.test(literalWords(view.components.values()))) return []
+  const findings: SemanticFinding[] = []
+  for (const before of deckCards(action.dataModel, '', [])) {
+    if (!before.faceDown) continue
+    const now = readPointer(view.dataModel, before.path)
+    if (!isRecord(now) || typeof now['rank'] !== 'string' || typeof now['suit'] !== 'string') continue
+    const after = { rank: now['rank'], suit: now['suit'] }
+    if (after.rank === before.rank && after.suit === before.suit) continue
+    findings.push({
+      code: 'HOLE_CARD_CHANGED',
+      path: `${view.surfaceId}:${before.path}`,
+      message:
+        `The card at ${before.path} was dealt face down as the ${cardName(before)} and now reads the ${cardName(after)}. ` +
+        `A face-down card is committed at the deal: keep it as the ${cardName(before)}, and turn it up as that same card at the showdown.`,
+    })
+  }
+  return findings
+}
+
+/** T-0218: the cards on the table are one committed deck. */
+export const croupierDeck: SemanticCheck = {
+  id: 'croupier-deck',
+  requires: ['PlayingCard'],
+  check: (input) =>
+    input.surfaces.flatMap((view) => [...duplicateCards(view), ...(input.action === undefined ? [] : changedHoleCards(view, input.action))]),
+}
+
+const LOSER = String.raw`(?:your|my|the dealer['’]s|the player['’]s|dealer['’]s|player['’]s|the dealer|the player|dealer|player)?\s*(?:soft|hard)?\s*(\d+)`
+const WINNER = String.raw`(\d+)(?:\s*\([^)]*\))?`
+/** A result line's comparisons: "18 beats your soft 20", "wins with 19 (10, 5, 4) over the dealer's 18", "16 loses to 18". */
+const CLAIMS: readonly { re: RegExp; winnerFirst: boolean }[] = [
+  { re: new RegExp(String.raw`${WINNER}\s+beats\s+${LOSER}`, 'gi'), winnerFirst: true },
+  { re: new RegExp(String.raw`wins with\s+${WINNER}\s+over\s+${LOSER}`, 'gi'), winnerFirst: true },
+  { re: new RegExp(String.raw`${WINNER}\s+loses to\s+${LOSER}`, 'gi'), winnerFirst: false },
+]
+
+/** RESULT_CONTRADICTS_CARDS: a CardTable's `result` or `status` line may not claim a lower total beats a higher one or
+ *  a bust (over 21) wins, and a surrender ends the hand with no comparison at all (Haiku 5.5 Spanish 21: "You
+ *  surrender. Dealer 18 beats your soft 20."). */
+function resultClaims(view: SurfaceView): SemanticFinding[] {
+  const findings: SemanticFinding[] = []
+  for (const table of view.components.values()) {
+    if (table.component !== 'CardTable') continue
+    for (const prop of ['result', 'status'] as const) {
+      const text = resolveProp(table[prop], view.dataModel, undefined)
+      if (typeof text !== 'string') continue
+      const faults: string[] = []
+      let compared = false
+      for (const { re, winnerFirst } of CLAIMS) {
+        for (const m of text.matchAll(re)) {
+          compared = true
+          const [a, b] = [Number(m[1]), Number(m[2])]
+          const [winner, loser] = winnerFirst ? [a, b] : [b, a]
+          if (winner > 21) faults.push(`a bust (${winner}) never wins`)
+          else if (loser <= 21 && winner <= loser) faults.push(`${winner} does not beat ${loser}`)
+        }
+      }
+      if (compared && /\bsurrender/i.test(text)) faults.push('a surrender ends the hand with no comparison of totals')
+      if (faults.length === 0) continue
+      findings.push({
+        code: 'RESULT_CONTRADICTS_CARDS',
+        path: `${view.surfaceId}:${table.id}.${prop}`,
+        message:
+          `${table.id}'s ${prop} reads "${text}", but ${faults.join(', and ')}. ` +
+          `State the result the cards give: the higher total at 21 or under wins, a bust loses, and a surrender reads "You surrender: half your bet back" with the new bankroll.`,
+      })
+    }
+  }
+  return findings
+}
+
+const BUY_ACTION = /^buy(_?card)?$/i
+
+/** BUY_CARD_FACE_UP: in Pontoon a bought card is dealt face down (a twist is face up), so a buy press on the clicked
+ *  table appends only face-down player cards (Sonnet 5.5 bought a card face up). */
+function boughtFaceUp(view: SurfaceView, action: SemanticAction): SemanticFinding[] {
+  if (view.surfaceId !== action.surfaceId || !BUY_ACTION.test(action.name)) return []
+  if (!/\bpontoon\b/i.test(literalWords(view.components.values()))) return []
+  const findings: SemanticFinding[] = []
+  for (const table of view.components.values()) {
+    if (table.component !== 'CardTable') continue
+    const before = handList(table, 'player', action.dataModel)?.length
+    const now = handList(table, 'player', view.dataModel)
+    if (before === undefined || now === undefined) continue
+    const where = bindingPath(table['playerHand'])
+    now.forEach((card, i) => {
+      if (i < before || (isRecord(card) && card['faceDown'] === true)) return
+      findings.push({
+        code: 'BUY_CARD_FACE_UP',
+        path: `${view.surfaceId}:${where === undefined ? table.id : `${where}/${i}`}`,
+        message: `The player bought a card, and ${where ?? table.id} deals it face up. In Pontoon a bought card is dealt face down ("faceDown":true); only a twist is dealt face up.`,
+      })
+    })
+  }
+  return findings
+}
+
+/** T-0219: what the Croupier states agrees with the cards and the game's rules. */
+export const croupierRules: SemanticCheck = {
+  id: 'croupier-rules',
+  requires: ['CardTable'],
+  check: (input) => input.surfaces.flatMap((view) => [...resultClaims(view), ...(input.action === undefined ? [] : boughtFaceUp(view, input.action))]),
+}
+
+export const croupierSemanticChecks: readonly SemanticCheck[] = [croupierHandConsistency, croupierBetControls, croupierActionApplied, croupierDeck, croupierRules]
