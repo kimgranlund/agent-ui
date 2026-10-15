@@ -63,15 +63,15 @@ const session: Session = {
   ],
 }
 
-/** The id-graph errors the real renderer sends for `payload` mounted on the DEAL and DRAW state. */
-function rendererIdGraphErrors(payload: A2uiOutput): string[] {
+/** The id-graph errors the real renderer sends for `payload` mounted on the `prior` turns (DEAL and DRAW). */
+function rendererIdGraphErrors(payload: A2uiOutput, prior: readonly A2uiOutput[] = [DEAL, DRAW]): string[] {
   const sent: A2uiClientMessage[] = []
   const r = createRenderer()
   r.onClientMessage((m) => void sent.push(m))
   const mount = document.createElement('div')
   document.body.appendChild(mount)
   r.mount(mount)
-  for (const turn of [DEAL, DRAW, payload]) {
+  for (const turn of [...prior, payload]) {
     for (const msg of turn) r.ingest(JSON.stringify(msg))
     r.finalize('s')
   }
@@ -80,8 +80,8 @@ function rendererIdGraphErrors(payload: A2uiOutput): string[] {
   return sent.flatMap((m) => ('error' in m && m.error.message.startsWith('id-graph violation') ? [m.error.message] : [])).sort()
 }
 
-const serverIdGraphPaths = (payload: A2uiOutput): string[] =>
-  validateA2ui(payload, defaultCatalog, sessionSurfaceSeeds(session), { atFinalize: true })
+const serverIdGraphPaths = (payload: A2uiOutput, seedFrom: Session = session): string[] =>
+  validateA2ui(payload, defaultCatalog, sessionSurfaceSeeds(seedFrom), { atFinalize: true })
     .failures.filter((f) => f.code === 'IDGRAPH')
     .map((f) => f.path)
     .sort()
@@ -109,5 +109,29 @@ describe('T-0220: the server judges the graph the renderer holds after a resend 
     const [view] = semanticSurfaceViews(session, FINAL_BET_DANGLING)
     // DRAW disposed Check and Bet; this round's resend disposes Draw in turn.
     expect([...view!.components.keys()].sort()).toEqual(['acts', 'bFold', 'hud', 'root'])
+  })
+})
+
+// T-0226: the same disposal inside ONE payload. The payload resends the seeded row without Check and Bet,
+// then a later batch lists them again without redelivering them: the renderer disposed them at the resend.
+const DRAW_THEN_RELIST: A2uiOutput = [...DRAW, ...FINAL_BET_DANGLING]
+const DRAW_THEN_REDELIVER: A2uiOutput = [...DRAW, ...FINAL_BET_REDELIVERED]
+const dealOnly: Session = { turns: session.turns.slice(0, 2) }
+
+describe('T-0226: one payload that resends a container without a child drops that child, as the renderer does', () => {
+  it('seeded: a later batch relisting the dropped children fails on the server, as the renderer rejects it', () => {
+    expect(serverIdGraphPaths(DRAW_THEN_RELIST, dealOnly)).toEqual(['acts->bBet', 'acts->bCheck'])
+    expect(rendererIdGraphErrors(DRAW_THEN_RELIST, [DEAL])).toEqual(['id-graph violation: acts->bBet (at acts->bBet)', 'id-graph violation: acts->bCheck (at acts->bCheck)'])
+  })
+
+  it('unseeded: the payload that creates the surface and then drops the children fails the same way', () => {
+    const payload = [...DEAL, ...DRAW_THEN_RELIST]
+    expect(serverIdGraphPaths(payload, { turns: [] })).toEqual(['acts->bBet', 'acts->bCheck'])
+    expect(rendererIdGraphErrors(payload, [])).toEqual(['id-graph violation: acts->bBet (at acts->bBet)', 'id-graph violation: acts->bCheck (at acts->bCheck)'])
+  })
+
+  it('redelivering the dropped children in the later batch passes on both sides', () => {
+    expect(serverIdGraphPaths(DRAW_THEN_REDELIVER, dealOnly)).toEqual([])
+    expect(rendererIdGraphErrors(DRAW_THEN_REDELIVER, [DEAL])).toEqual([])
   })
 })

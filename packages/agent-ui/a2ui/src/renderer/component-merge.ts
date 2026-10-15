@@ -1,7 +1,7 @@
 // component-merge.ts: one `updateComponents` batch applied to a surface's component records the way the
 // renderer applies it (T-0220), DOM-free, for the server-side replays that must hold the renderer's graph:
-// the cross-turn validation seed (`agent/surface-seeds.ts`) and the semantic surface views
-// (`catalog/semantic-check.ts`).
+// the cross-turn validation seed (`agent/surface-seeds.ts`), the semantic surface views
+// (`catalog/semantic-check.ts`) and the validator's per-payload id graph (`validate.ts`, T-0226).
 //
 // The renderer (`tree.ts` `apply`) first upserts every delivered record by id, then reconciles each id that
 // was already mounted: a child its new list no longer names is disposed with its whole subtree, and the
