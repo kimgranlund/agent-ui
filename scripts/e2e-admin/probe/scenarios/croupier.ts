@@ -113,7 +113,7 @@ export const CROUPIER_MODELS: ReadonlyArray<{ id: string; short: string }> = [
 export const T0184_MODELS = CROUPIER_MODELS.slice(0, 2)
 
 export const SAMPLES = 2
-export const RUNS_DIR = '.sdlc/croupier-closed-loop/runs'
+export const RUNS_DIR = '.sdlc/evals/rounds/2026-10-14-r1-croupier/runs'
 
 /** The probe argv for one scenario x model x sample (default effort: no `--effort`). */
 export function probeArgv(scenario: CroupierScenario, model: { id: string; short: string }, sample: number): string[] {

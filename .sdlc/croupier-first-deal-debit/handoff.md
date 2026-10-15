@@ -23,7 +23,7 @@ The deal turn ships bankroll = bankroll before minus the bet on its first round.
 BANKROLL_MISMATCH on the first bet in every Sonnet 5.5 blackjack-family run (blackjack-moves :65, blackjack-rounds :55, spanish-21 :75, pontoon :85) and twice in spanish-21-haiku-1 (:16, :19); later deals in the same run were right. Each costs a full extra model round on the turn players notice most.
 
 ## Context
-Guess: the seed v12 rule ("the deal takes the bet out of /bankroll") sits in round-loop prose with no worked example, and the model learns it only from the repair message. Proposed: one worked deal example in the CardTable teaching, or the table owning the debit. Measure with the T-0184 scenarios (`scripts/e2e-admin/probe/scenarios/croupier.ts`). Found by T-0184 (`.sdlc/croupier-closed-loop/report.md`); run folders and screenshots under `.sdlc/croupier-closed-loop/runs/` in the T-0184 lane commit; the trace file is git-ignored in the wave-cl worktree.
+Guess: the seed v12 rule ("the deal takes the bet out of /bankroll") sits in round-loop prose with no worked example, and the model learns it only from the repair message. Proposed: one worked deal example in the CardTable teaching, or the table owning the debit. Measure with the T-0184 scenarios (`scripts/e2e-admin/probe/scenarios/croupier.ts`). Found by T-0184 (`.sdlc/evals/rounds/2026-10-14-r1-croupier/report.md`); run folders and screenshots under `.sdlc/evals/rounds/2026-10-14-r1-croupier/runs/` in the T-0184 lane commit; the trace file is git-ignored in the wave-cl worktree.
 
 ## Constraints
 The failing test lands before or with the fix, never after. No em dashes.

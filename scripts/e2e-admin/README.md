@@ -49,7 +49,7 @@ A replay pinned to today's failures carries an `// expectedFail: T-NNNN` comment
 
 ## Live rounds
 
-A live round runs many probes in one go to find bugs, not to gate. Round 1 was T-0184 (the Croupier); round 2 was T-0225 (`.sdlc/live-round-2/report.md`).
+A live round runs many probes in one go to find bugs, not to gate. Round 1 was T-0184 (the Croupier); round 2 was T-0225 (`.sdlc/evals/rounds/2026-10-15-r2-presets/report.md`).
 
 1. Scenarios are data in `probe/scenarios/*.ts` (one file per preset, `--expect-turn` per step). `node --experimental-strip-types scripts/e2e-admin/probe/scenarios/round.ts` prints the round's `live-commands.sh` (Haiku first, then Sonnet, then Opus, so a stop at the cap leaves the cheap cells filled); `round.test.mjs` pins the file to the generator.
 2. `node --experimental-strip-types scripts/e2e-admin/probe/run-capped.ts <live-commands.sh> --cap <usd>` runs it one probe at a time, skips a run whose `report.json` exists, and stops once the spend estimated from `.agent-traces/` reaches the cap. `--dry-run` lists the runs.

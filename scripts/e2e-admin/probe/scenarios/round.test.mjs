@@ -1,6 +1,6 @@
 // T-0225: live round 2's scenarios are well-formed before any credit is spent. Keyless: every Concierge,
 // Lexicographer and Admiral run parses as a live probe with its own steps and per-turn expectations, every
-// expected type is in the catalog, every model is in the admin picker, and `.sdlc/live-round-2/live-commands.sh`
+// expected type is in the catalog, every model is in the admin picker, and `.sdlc/evals/rounds/2026-10-15-r2-presets/live-commands.sh`
 // is exactly the generated script, in spend order (Haiku, Sonnet, Opus).
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
@@ -75,7 +75,7 @@ describe('live round 2 scenarios', () => {
     const names = runs.map(({ argv }) => argv[argv.indexOf('--name') + 1])
     const outs = runs.map(({ argv }) => argv[argv.indexOf('--out') + 1])
     expect(new Set(names).size).toBe(runs.length)
-    for (const { agent, scenario, model, argv } of runs) expect(argv[argv.indexOf('--out') + 1]).toBe(`.sdlc/live-round-2/runs/${agent}-${scenario.name}-${model.short}-1`)
+    for (const { agent, scenario, model, argv } of runs) expect(argv[argv.indexOf('--out') + 1]).toBe(`.sdlc/evals/rounds/2026-10-15-r2-presets/runs/${agent}-${scenario.name}-${model.short}-1`)
     expect(new Set(outs).size).toBe(runs.length)
   })
 
@@ -95,7 +95,7 @@ describe('live round 2 scenarios', () => {
     for (const p of ROUND_PRESETS) expect(presets).toMatch(new RegExp(`^ {4}id: '${p.agent}',`, 'm'))
   })
 
-  it('.sdlc/live-round-2/live-commands.sh is the generated script', () => {
-    expect(read('.sdlc/live-round-2/live-commands.sh')).toBe(roundCommandsScript())
+  it('.sdlc/evals/rounds/2026-10-15-r2-presets/live-commands.sh is the generated script', () => {
+    expect(read('.sdlc/evals/rounds/2026-10-15-r2-presets/live-commands.sh')).toBe(roundCommandsScript())
   })
 })

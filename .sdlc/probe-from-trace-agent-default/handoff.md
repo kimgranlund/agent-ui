@@ -23,7 +23,7 @@ router: .sdlc/AGENTS.md  # how to claim and close this ticket
 `"agent": "croupier"`. `scripts/e2e-admin/probe/trace.ts:168` sets `first.line.agent ?? 'croupier'`, and the dev proxy logs no `agent` for a preset on the base catalog (`agentLabel` in `packages/agent-ui/a2ui/tools/agent/trace-log.ts` derives it from a persona catalog id). Every Lexicographer and Admiral trace of live round 2 converts as croupier; `scripts/e2e-admin/probe/replays/lexicographer-haiku-no-secret.json` was hand-corrected.
 
 ## Context
-Options: the admin sends its preset id as the request body's `agent` (then `agentLabel` already logs it), or `--from-trace` takes `--agent`. Found by T-0225 (`.sdlc/live-round-2/report.md`).
+Options: the admin sends its preset id as the request body's `agent` (then `agentLabel` already logs it), or `--from-trace` takes `--agent`. Found by T-0225 (`.sdlc/evals/rounds/2026-10-15-r2-presets/report.md`).
 
 ## Constraints
 The failing test lands before or with the fix, never after. No em dashes.
