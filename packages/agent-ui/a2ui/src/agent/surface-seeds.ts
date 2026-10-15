@@ -2,9 +2,11 @@
 // a browser-safe caller can import it without produce.ts's import closure (system-prompt.ts reads prompt
 // files relative to process.cwd() at module load). The A2UI test kit's judge (tools/testkit/judge.ts) is
 // the second caller. Never re-exported from `src/agent/index.ts`: this is not part of the `./agent`
-// package surface. Type-only imports, so the NODE-FENCE and SDK-FREE legs of gates.test.ts still hold.
+// package surface. Type-only imports plus the pure `applyComponentBatch`, so the NODE-FENCE and SDK-FREE
+// legs of gates.test.ts still hold.
 
 import type { A2uiComponent } from '../protocol.ts'
+import { applyComponentBatch } from '../renderer/component-merge.ts'
 import type { SurfaceSeed } from '../renderer/validate.ts'
 import type { Session } from './agent-transport.ts'
 
@@ -18,7 +20,8 @@ import type { Session } from './agent-transport.ts'
  * loop, measured). Seeded, the validator judges the MERGED graph the renderer will actually hold:
  * update-only follow-ups validate; a root-resend fails HERE (`sid:root`) as a pre-wire self-correct
  * round. A prior `deleteSurface` drops that surface's seed (a later re-create starts fresh), and so does a
- * prior `createSurface` (see below).
+ * prior `createSurface` (see below). T-0220: each `updateComponents` applies through `applyComponentBatch`,
+ * so a child a resent container dropped leaves the seed as it leaves the renderer.
  *
  * GH #307 review F2: a prior-turn `createSurface` RESETS that surfaceId's seed, exactly as `deleteSurface`
  * does. The renderer's re-create is a teardown-and-rebuild, not a merge (`renderer.ts` drops the prior
@@ -59,11 +62,10 @@ export function sessionSurfaceSeeds(session: Session): Map<string, SurfaceSeed> 
           seed = { components: [], byId: new Map(), rootDelivered: false }
           seeds.set(body.surfaceId, seed)
         }
-        for (const comp of body.components) {
-          if (typeof comp?.id !== 'string') continue
-          seed.byId.set(comp.id, comp) // upsert: a later resend REPLACES (the renderer's merge)
-          if (comp.id === 'root') seed.rootDelivered = true
-        }
+        // The renderer's merge: a later resend REPLACES, and a resent container's dropped children leave
+        // with their subtrees (T-0220).
+        applyComponentBatch(seed.byId, body.components)
+        if (body.components.some((comp) => comp?.id === 'root')) seed.rootDelivered = true
       } catch {
         // not JSON (shouldn't happen for a stored assistant turn): skip rather than throw
       }

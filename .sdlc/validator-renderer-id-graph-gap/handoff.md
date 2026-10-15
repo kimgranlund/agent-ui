@@ -27,3 +27,8 @@ Guess: the server validator checks the turn's components against the turn's own 
 
 ## Constraints
 The failing test lands before or with the fix, never after. No em dashes.
+
+## Acceptance criteria
+- (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/agent/surface-seeds.test.ts` exits 0: the seed and the semantic views drop the children a resent container no longer lists, the server fails the relisting update as `acts->bBet` and `acts->bCheck`, and the real renderer reports the same two violations (and none for the redelivered update).
+- (red) `npx vitest run scripts/e2e-admin/probe/replays/croupier-draw-id-graph.test.mjs` exits 0: turn 3 repairs on the server (trace rounds 2, IDGRAPH) and every probe check is green.
+- `npm run check` exits 0.

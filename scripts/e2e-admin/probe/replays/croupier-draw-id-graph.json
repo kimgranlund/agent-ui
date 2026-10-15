@@ -5,7 +5,7 @@
   "agent": "croupier",
   "model": "claude-sonnet-5-5",
   "effort": "medium",
-  "source": "2026-10-15.jsonl:110,2026-10-15.jsonl:111,2026-10-15.jsonl:112,2026-10-15.jsonl:113,2026-10-15.jsonl:114 (catalog agent-ui--croupier)",
+  "source": "2026-10-15.jsonl:110,2026-10-15.jsonl:111,2026-10-15.jsonl:112 (catalog agent-ui--croupier); T-0220: the :113 heal round is turn 3's second round, :113 and :114 dropped",
   "steps": [
     {
       "say": "Let's play five-card draw."
@@ -15,12 +15,6 @@
     },
     {
       "say": "Discard my two lowest cards and draw."
-    },
-    {
-      "click": "unknown action"
-    },
-    {
-      "click": "unknown action"
     }
   ],
   "turns": [
@@ -583,20 +577,7 @@
               }
             }
           ]
-        }
-      ],
-      "input": {
-        "kind": "intent",
-        "text": "Discard my two lowest cards and draw."
-      }
-    },
-    {
-      "lines": [
-        "{\"a2uiMeta\":{\"note\":\"Fixed. The final-bet buttons are back on the table: Check, Bet 20 or Fold. You hold two pair, kings and sevens.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":6,\"query\":{\"intent\":\"The previous surface was rejected (VALIDATION_FAILED on surface table-1): id-graph violation: acts->bBet (at acts->bBet). Emit a corrected, valid A2UI surface.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":48024,\"sections\":[{\"id\":\"grammar\",\"chars\":25639},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1723}],\"over\":false}}}}",
-        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"path\":\"/playerHand\",\"value\":[{\"rank\":\"K\",\"suit\":\"spades\",\"faceDown\":false},{\"rank\":\"K\",\"suit\":\"diamonds\",\"faceDown\":false},{\"rank\":\"7\",\"suit\":\"clubs\",\"faceDown\":false},{\"rank\":\"Q\",\"suit\":\"hearts\",\"faceDown\":false},{\"rank\":\"7\",\"suit\":\"diamonds\",\"faceDown\":false}]}}",
-        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"phase\",\"component\":\"Badge\",\"label\":\"Final bet\",\"intent\":\"info\",\"slot\":\"trailing\"},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Round 1\",\"status\":\"Drew 2, dealer drew 2\",\"statusIntent\":\"neutral\",\"stats\":[{\"label\":\"Pot\",\"value\":\"20\"},{\"label\":\"Phase\",\"value\":\"Bet 2 of 2\"}]},{\"id\":\"dealerLbl\",\"component\":\"Text\",\"text\":\"Dealer — drew 2, 5 cards face down\",\"variant\":\"label\"},{\"id\":\"playerLbl\",\"component\":\"Text\",\"text\":\"You — two pair, kings and sevens\",\"variant\":\"label\"},{\"id\":\"col\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"bank\",\"dealerLbl\",\"dealerRow\",\"playerLbl\",\"playerRow\"]},{\"id\":\"ft\",\"component\":\"CardFooter\",\"children\":[\"acts\"]},{\"id\":\"acts\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"bCheck\",\"bBet\",\"bFold\"]},{\"id\":\"bCheck\",\"component\":\"Button\",\"label\":\"Check\",\"variant\":\"soft\",\"action\":{\"action\":\"check\"}},{\"id\":\"bBet\",\"component\":\"Button\",\"label\":\"Bet 20\",\"variant\":\"solid\",\"action\":{\"action\":\"bet\",\"context\":{\"amount\":20}}},{\"id\":\"bFold\",\"component\":\"Button\",\"label\":\"Fold\",\"variant\":\"ghost\",\"action\":{\"action\":\"fold\"}}]}}"
-      ],
-      "rounds": [
+        },
         {
           "text": "{\"a2uiMeta\":{\"note\":\"Fixed. The final-bet buttons are back on the table: Check, Bet 20 or Fold. You hold two pair, kings and sevens.\",\"target\":{\"surfaceId\":\"table-1\"}}}",
           "tools": [
@@ -752,191 +733,8 @@
         }
       ],
       "input": {
-        "kind": "client",
-        "message": {
-          "version": "v1.0",
-          "error": {
-            "code": "VALIDATION_FAILED",
-            "surfaceId": "table-1",
-            "message": "id-graph violation: acts->bBet (at acts->bBet)"
-          }
-        }
-      }
-    },
-    {
-      "lines": [
-        "{\"a2uiMeta\":{\"textDelta\":\"Fixed. The final-bet buttons are back. You hold two pair, kings and sevens. Your move: Check, Bet 20 or Fold.\"}}",
-        "{\"a2uiMeta\":{\"note\":\"Fixed. The final-bet buttons are back. You hold two pair, kings and sevens. Your move: Check, Bet 20 or Fold.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":8,\"query\":{\"intent\":\"The previous surface was rejected (VALIDATION_FAILED on surface table-1): id-graph violation: acts->bCheck (at acts->bCheck). Emit a corrected, valid A2UI surface.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":48024,\"sections\":[{\"id\":\"grammar\",\"chars\":25639},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1723}],\"over\":false}}}}",
-        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"path\":\"/playerHand\",\"value\":[{\"rank\":\"K\",\"suit\":\"spades\",\"faceDown\":false},{\"rank\":\"K\",\"suit\":\"diamonds\",\"faceDown\":false},{\"rank\":\"7\",\"suit\":\"clubs\",\"faceDown\":false},{\"rank\":\"Q\",\"suit\":\"hearts\",\"faceDown\":false},{\"rank\":\"7\",\"suit\":\"diamonds\",\"faceDown\":false}]}}",
-        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"path\":\"/discard\",\"value\":[]}}",
-        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"phase\",\"component\":\"Badge\",\"label\":\"Final bet\",\"intent\":\"info\",\"slot\":\"trailing\"},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Round 1\",\"status\":\"Drew 2, dealer drew 2\",\"statusIntent\":\"neutral\",\"stats\":[{\"label\":\"Pot\",\"value\":\"20\"},{\"label\":\"Phase\",\"value\":\"Bet 2 of 2\"}]},{\"id\":\"dealerLbl\",\"component\":\"Text\",\"text\":\"Dealer — drew 2, 5 cards face down\",\"variant\":\"label\"},{\"id\":\"playerLbl\",\"component\":\"Text\",\"text\":\"You — two pair, kings and sevens\",\"variant\":\"label\"},{\"id\":\"col\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"bank\",\"dealerLbl\",\"dealerRow\",\"playerLbl\",\"playerRow\"]},{\"id\":\"acts\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"bCheck\",\"bBet\",\"bFold\"]},{\"id\":\"bCheck\",\"component\":\"Button\",\"label\":\"Check\",\"variant\":\"soft\",\"action\":{\"action\":\"check\"}},{\"id\":\"bBet\",\"component\":\"Button\",\"label\":\"Bet 20\",\"variant\":\"solid\",\"action\":{\"action\":\"bet\",\"context\":{\"amount\":20}}},{\"id\":\"bFold\",\"component\":\"Button\",\"label\":\"Fold\",\"variant\":\"ghost\",\"action\":{\"action\":\"fold\"}}]}}"
-      ],
-      "rounds": [
-        {
-          "text": "{\"a2uiMeta\":{\"note\":\"Fixing the table: the final-bet buttons were missing. Check, Bet 20 or Fold?\",\"target\":{\"surfaceId\":\"table-1\"}}}\nFixed. The final-bet buttons are back. You hold two pair, kings and sevens. Your move: Check, Bet 20 or Fold.",
-          "tools": [
-            {
-              "name": "render_surface",
-              "input": {
-                "reply": "Final bet is open: Check, Bet 20 or Fold.",
-                "target": "table-1",
-                "messages": [
-                  {
-                    "version": "v1.0",
-                    "updateDataModel": {
-                      "surfaceId": "table-1",
-                      "path": "/playerHand",
-                      "value": [
-                        {
-                          "rank": "K",
-                          "suit": "spades",
-                          "faceDown": false
-                        },
-                        {
-                          "rank": "K",
-                          "suit": "diamonds",
-                          "faceDown": false
-                        },
-                        {
-                          "rank": "7",
-                          "suit": "clubs",
-                          "faceDown": false
-                        },
-                        {
-                          "rank": "Q",
-                          "suit": "hearts",
-                          "faceDown": false
-                        },
-                        {
-                          "rank": "7",
-                          "suit": "diamonds",
-                          "faceDown": false
-                        }
-                      ]
-                    }
-                  },
-                  {
-                    "version": "v1.0",
-                    "updateDataModel": {
-                      "surfaceId": "table-1",
-                      "path": "/discard",
-                      "value": []
-                    }
-                  },
-                  {
-                    "version": "v1.0",
-                    "updateComponents": {
-                      "surfaceId": "table-1",
-                      "components": [
-                        {
-                          "id": "phase",
-                          "component": "Badge",
-                          "label": "Final bet",
-                          "intent": "info",
-                          "slot": "trailing"
-                        },
-                        {
-                          "id": "hud",
-                          "component": "GameHud",
-                          "title": "Round 1",
-                          "status": "Drew 2, dealer drew 2",
-                          "statusIntent": "neutral",
-                          "stats": [
-                            {
-                              "label": "Pot",
-                              "value": "20"
-                            },
-                            {
-                              "label": "Phase",
-                              "value": "Bet 2 of 2"
-                            }
-                          ]
-                        },
-                        {
-                          "id": "dealerLbl",
-                          "component": "Text",
-                          "text": "Dealer — drew 2, 5 cards face down",
-                          "variant": "label"
-                        },
-                        {
-                          "id": "playerLbl",
-                          "component": "Text",
-                          "text": "You — two pair, kings and sevens",
-                          "variant": "label"
-                        },
-                        {
-                          "id": "col",
-                          "component": "Column",
-                          "gap": "md",
-                          "children": [
-                            "hud",
-                            "bank",
-                            "dealerLbl",
-                            "dealerRow",
-                            "playerLbl",
-                            "playerRow"
-                          ]
-                        },
-                        {
-                          "id": "acts",
-                          "component": "Row",
-                          "gap": "sm",
-                          "wrap": true,
-                          "children": [
-                            "bCheck",
-                            "bBet",
-                            "bFold"
-                          ]
-                        },
-                        {
-                          "id": "bCheck",
-                          "component": "Button",
-                          "label": "Check",
-                          "variant": "soft",
-                          "action": {
-                            "action": "check"
-                          }
-                        },
-                        {
-                          "id": "bBet",
-                          "component": "Button",
-                          "label": "Bet 20",
-                          "variant": "solid",
-                          "action": {
-                            "action": "bet",
-                            "context": {
-                              "amount": 20
-                            }
-                          }
-                        },
-                        {
-                          "id": "bFold",
-                          "component": "Button",
-                          "label": "Fold",
-                          "variant": "ghost",
-                          "action": {
-                            "action": "fold"
-                          }
-                        }
-                      ]
-                    }
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      ],
-      "input": {
-        "kind": "client",
-        "message": {
-          "version": "v1.0",
-          "error": {
-            "code": "VALIDATION_FAILED",
-            "surfaceId": "table-1",
-            "message": "id-graph violation: acts->bCheck (at acts->bCheck)"
-          }
-        }
+        "kind": "intent",
+        "text": "Discard my two lowest cards and draw."
       }
     }
   ]
