@@ -1,0 +1,2129 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "regress-lexicographer-invalid-then-replay-sonnet-1",
+  "agent": "lexicographer",
+  "model": "claude-sonnet-5-5",
+  "source": "probe live run 2026-10-15T21:50:04.698Z, traces 2026-10-15.jsonl:257,2026-10-15.jsonl:258,2026-10-15.jsonl:259,2026-10-15.jsonl:260,2026-10-15.jsonl:261,2026-10-15.jsonl:262",
+  "steps": [
+    {
+      "say": "New word game, please.",
+      "expect": [
+        "BoardGrid"
+      ]
+    },
+    {
+      "say": "My guess: cat.",
+      "expectRouting": {
+        "exemplars": {
+          "include": [
+            "domain-lexicographer-word-board"
+          ]
+        }
+      }
+    },
+    {
+      "say": "My guess: ghost.",
+      "expect": [
+        "BoardGrid"
+      ]
+    },
+    {
+      "say": "My guess: brine.",
+      "expect": [
+        "BoardGrid"
+      ]
+    },
+    {
+      "say": "I give up.",
+      "expect": [
+        "ResultCard"
+      ]
+    },
+    {
+      "say": "Play again.",
+      "expect": [
+        "BoardGrid"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting up a Wordle-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"style game as \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"The Lexicographer\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" — picking a secret five-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"letter word st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ored in the data model, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" building a persistent game surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with a six\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-guess grid, a five\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-letter input field with valid\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ation, and a submit button to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" check\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" guesses.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll pick \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"plumb\\\" as the secret\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" word and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" track used letters separ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ately. For\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" subm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ission, I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" wi\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ring a FormProvider with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a TextField b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ound to the draft guess,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" validated by\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" regex requ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"iring ex\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"actly five lowercase let\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ters, and a Button that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" submits that value\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the guess action\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". I'll keep the U\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I cop\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"y care\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ful not to le\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ak the answ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"er.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"I've\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" picked a five\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"-letter word. You have\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" six guesses. Type ex\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"actly five lowercase let\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ters and submit. Each let\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ter is marked in\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" text as corre\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ct (\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"right sp\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ot), misplaced (in\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the word\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\", w\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"rong spot) or absent\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"codes\":[\"PARSE\"],\"detail\":\"Round 1 failed:\\n  PARSE: the payload did not parse as JSON lines\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need to build\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" game surface it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"self, picking a secret word\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and stor\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing it priv\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ately. I'll design this\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as a pers\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"istent surface called\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"wordgame-1\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" without\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a meta-line since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it's a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" game, not a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" question, en\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"abling the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" data model with a secret field\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Now I'm la\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ying out the component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" t\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ree: a header\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" card show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing \\\"Word game\\\" with a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" remaining-gu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"esses badge, then\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a templ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ated list\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" of guess rows where\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" each row ren\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ders let\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ter tiles col\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ored by match\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" status, fal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ling back to an empty-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"state message when there are no gues\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ses yet. I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" also\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" adding a used-letters display\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a text field b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ound to the current\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" guess with a five\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-letter reg\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ex check, and a submit button\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" wired to p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ass the guess value\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" action\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" context.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Settling on \\\"gloom\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since double letters are fine for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the secret word,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and I need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to build the messages array to track\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" gu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ess\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" feedback.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"catalogId\\\":\\\"agent-ui\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"value\\\":{\\\"secret\\\":{\\\"word\\\":\\\"gloom\\\"},\\\"guesses\\\":[],\\\"guess\\\":\\\"\\\",\\\"usedLetters\\\":\\\"none yet\\\",\\\"guessesLeft\\\":\\\"6 left\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"form\\\"]},{\\\"id\\\":\\\"form\\\",\\\"component\\\":\\\"FormProvider\\\",\\\"children\\\":[\\\"card\\\"]},{\\\"id\\\":\\\"card\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"hd\\\",\\\"ct\\\",\\\"ft\\\"]},{\\\"id\\\":\\\"hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"title\\\",\\\"left\\\"]},{\\\"id\\\":\\\"title\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Word game\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"left\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":{\\\"path\\\":\\\"/guessesLeft\\\"},\\\"intent\\\":\\\"info\\\"},{\\\"id\\\":\\\"ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"hint\\\",\\\"grid\\\",\\\"used_label\\\",\\\"used\\\",\\\"field_guess\\\"]},{\\\"id\\\":\\\"hint\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Marks: correct = right spot, misplaced = in the word but elsewhere, absent = not in the word.\\\",\\\"variant\\\":\\\"caption\\\"},{\\\"id\\\":\\\"grid\\\",\\\"component\\\":\\\"List\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":{\\\"path\\\":\\\"/guesses\\\",\\\"componentId\\\":\\\"guess_row\\\"}},{\\\"id\\\":\\\"guess_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":{\\\"path\\\":\\\"letters\\\",\\\"componentId\\\":\\\"tile\\\"}},{\\\"id\\\":\\\"tile\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"xs\\\",\\\"align\\\":\\\"center\\\",\\\"children\\\":[\\\"tile_letter\\\",\\\"tile_mark\\\"]},{\\\"id\\\":\\\"tile_letter\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":{\\\"path\\\":\\\"letter\\\"},\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"tile_mark\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":{\\\"path\\\":\\\"mark\\\"},\\\"variant\\\":\\\"caption\\\"},{\\\"id\\\":\\\"used_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Letters used\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"used\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":{\\\"path\\\":\\\"/usedLetters\\\"},\\\"variant\\\":\\\"body\\\"},{\\\"id\\\":\\\"field_guess\\\",\\\"component\\\":\\\"Field\\\",\\\"label\\\":\\\"Your guess\\\",\\\"description\\\":\\\"Exactly five lowercase letters\\\",\\\"child\\\":\\\"in_guess\\\"},{\\\"id\\\":\\\"in_guess\\\",\\\"component\\\":\\\"TextField\\\",\\\"name\\\":\\\"guess\\\",\\\"type\\\":\\\"text\\\",\\\"placeholder\\\":\\\"five letters\\\",\\\"required\\\":true,\\\"value\\\":{\\\"path\\\":\\\"/guess\\\"},\\\"checks\\\":[{\\\"call\\\":\\\"regex\\\",\\\"args\\\":{\\\"value\\\":{\\\"path\\\":\\\"/guess\\\"},\\\"pattern\\\":\\\"^[a-z]{5}$\\\"},\\\"message\\\":\\\"Enter exactly five lowercase letters\\\"}]},{\\\"id\\\":\\\"ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"btn_submit\\\"]},{\\\"id\\\":\\\"btn_submit\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Submit guess\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"submit_guess\\\",\\\"submit\\\":true,\\\"context\\\":{\\\"guess\\\":{\\\"path\\\":\\\"/guess\\\"}}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":3,\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"catalogId\\\":\\\"agent-ui\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"value\\\":{\\\"secret\\\":{\\\"word\\\":\\\"gloom\\\"},\\\"guesses\\\":[],\\\"guess\\\":\\\"\\\",\\\"usedLetters\\\":\\\"none yet\\\",\\\"guessesLeft\\\":\\\"6 left\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"form\\\"]},{\\\"id\\\":\\\"form\\\",\\\"component\\\":\\\"FormProvider\\\",\\\"children\\\":[\\\"card\\\"]},{\\\"id\\\":\\\"card\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"hd\\\",\\\"ct\\\",\\\"ft\\\"]},{\\\"id\\\":\\\"hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"title\\\",\\\"left\\\"]},{\\\"id\\\":\\\"title\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Word game\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"left\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":{\\\"path\\\":\\\"/guessesLeft\\\"},\\\"intent\\\":\\\"info\\\"},{\\\"id\\\":\\\"ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"hint\\\",\\\"grid\\\",\\\"used_label\\\",\\\"used\\\",\\\"field_guess\\\"]},{\\\"id\\\":\\\"hint\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Marks: correct = right spot, misplaced = in the word but elsewhere, absent = not in the word.\\\",\\\"variant\\\":\\\"caption\\\"},{\\\"id\\\":\\\"grid\\\",\\\"component\\\":\\\"List\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":{\\\"path\\\":\\\"/guesses\\\",\\\"componentId\\\":\\\"guess_row\\\"}},{\\\"id\\\":\\\"guess_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":{\\\"path\\\":\\\"letters\\\",\\\"componentId\\\":\\\"tile\\\"}},{\\\"id\\\":\\\"tile\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"xs\\\",\\\"align\\\":\\\"center\\\",\\\"children\\\":[\\\"tile_letter\\\",\\\"tile_mark\\\"]},{\\\"id\\\":\\\"tile_letter\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":{\\\"path\\\":\\\"letter\\\"},\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"tile_mark\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":{\\\"path\\\":\\\"mark\\\"},\\\"variant\\\":\\\"caption\\\"},{\\\"id\\\":\\\"used_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Letters used\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"used\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":{\\\"path\\\":\\\"/usedLetters\\\"},\\\"variant\\\":\\\"body\\\"},{\\\"id\\\":\\\"field_guess\\\",\\\"component\\\":\\\"Field\\\",\\\"label\\\":\\\"Your guess\\\",\\\"description\\\":\\\"Exactly five lowercase letters\\\",\\\"child\\\":\\\"in_guess\\\"},{\\\"id\\\":\\\"in_guess\\\",\\\"component\\\":\\\"TextField\\\",\\\"name\\\":\\\"guess\\\",\\\"type\\\":\\\"text\\\",\\\"placeholder\\\":\\\"five letters\\\",\\\"required\\\":true,\\\"value\\\":{\\\"path\\\":\\\"/guess\\\"},\\\"checks\\\":[{\\\"call\\\":\\\"regex\\\",\\\"args\\\":{\\\"value\\\":{\\\"path\\\":\\\"/guess\\\"},\\\"pattern\\\":\\\"^[a-z]{5}$\\\"},\\\"message\\\":\\\"Enter exactly five lowercase letters\\\"}]},{\\\"id\\\":\\\"ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"btn_submit\\\"]},{\\\"id\\\":\\\"btn_submit\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Submit guess\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"submit_guess\\\",\\\"submit\\\":true,\\\"context\\\":{\\\"guess\\\":{\\\"path\\\":\\\"/guess\\\"}}}}]}}\",\"codes\":[\"CATALOG\"],\"detail\":\"Round 2 failed:\\n  CATALOG: at tile.align\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need to call\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the render_surface tool proper\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ly this time inst\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ead of writing prose J\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"SONL, fixing the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" inv\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"alid \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"center\\\" column\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" alignment to \\\"start\\\". I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll keep the secret word\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" skip any meta-comm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"entary since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" this is just a game surface,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" writing the reply text direct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ly without a correction note.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"catalogId\\\":\\\"agent-ui\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"value\\\":{\\\"secret\\\":{\\\"word\\\":\\\"gloom\\\"},\\\"guesses\\\":[],\\\"guess\\\":\\\"\\\",\\\"usedLetters\\\":\\\"none yet\\\",\\\"guessesLeft\\\":\\\"6 left\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"form\\\"]},{\\\"id\\\":\\\"form\\\",\\\"component\\\":\\\"FormProvider\\\",\\\"children\\\":[\\\"card\\\"]},{\\\"id\\\":\\\"card\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"hd\\\",\\\"ct\\\",\\\"ft\\\"]},{\\\"id\\\":\\\"hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"title\\\",\\\"left\\\"]},{\\\"id\\\":\\\"title\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Word game\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"left\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":{\\\"path\\\":\\\"/guessesLeft\\\"},\\\"intent\\\":\\\"info\\\"},{\\\"id\\\":\\\"ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"hint\\\",\\\"grid\\\",\\\"used_label\\\",\\\"used\\\",\\\"field_guess\\\"]},{\\\"id\\\":\\\"hint\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Marks: correct = right spot, misplaced = in the word but elsewhere, absent = not in the word.\\\",\\\"variant\\\":\\\"caption\\\"},{\\\"id\\\":\\\"grid\\\",\\\"component\\\":\\\"List\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":{\\\"path\\\":\\\"/guesses\\\",\\\"componentId\\\":\\\"guess_row\\\"}},{\\\"id\\\":\\\"guess_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":{\\\"path\\\":\\\"letters\\\",\\\"componentId\\\":\\\"tile\\\"}},{\\\"id\\\":\\\"tile\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"xs\\\",\\\"align\\\":\\\"start\\\",\\\"children\\\":[\\\"tile_letter\\\",\\\"tile_mark\\\"]},{\\\"id\\\":\\\"tile_letter\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":{\\\"path\\\":\\\"letter\\\"},\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"tile_mark\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":{\\\"path\\\":\\\"mark\\\"},\\\"variant\\\":\\\"caption\\\"},{\\\"id\\\":\\\"used_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Letters used\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"used\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":{\\\"path\\\":\\\"/usedLetters\\\"},\\\"variant\\\":\\\"body\\\"},{\\\"id\\\":\\\"field_guess\\\",\\\"component\\\":\\\"Field\\\",\\\"label\\\":\\\"Your guess\\\",\\\"description\\\":\\\"Exactly five lowercase letters\\\",\\\"child\\\":\\\"in_guess\\\"},{\\\"id\\\":\\\"in_guess\\\",\\\"component\\\":\\\"TextField\\\",\\\"name\\\":\\\"guess\\\",\\\"type\\\":\\\"text\\\",\\\"placeholder\\\":\\\"five letters\\\",\\\"required\\\":true,\\\"value\\\":{\\\"path\\\":\\\"/guess\\\"},\\\"checks\\\":[{\\\"call\\\":\\\"regex\\\",\\\"args\\\":{\\\"value\\\":{\\\"path\\\":\\\"/guess\\\"},\\\"pattern\\\":\\\"^[a-z]{5}$\\\"},\\\"message\\\":\\\"Enter exactly five lowercase letters\\\"}]},{\\\"id\\\":\\\"ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"btn_submit\\\"]},{\\\"id\\\":\\\"btn_submit\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Submit guess\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"submit_guess\\\",\\\"submit\\\":true,\\\"context\\\":{\\\"guess\\\":{\\\"path\\\":\\\"/guess\\\"}}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"I've picked a five-letter word, and you have six guesses. Type exactly five lowercase letters and submit. Each letter is marked in text as correct (right spot), misplaced (in the word, wrong spot) or absent.\",\"target\":{\"surfaceId\":\"wordgame-1\"},\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"New word game, please.\",\"k\":3},\"exemplarIds\":[\"notification-status-stack\",\"crud-entry-list-drawer\"],\"rounds\":3,\"healed\":0,\"failureCodes\":[\"CATALOG\",\"SEMANTIC_UNCORRECTED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":54004,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":4717},{\"id\":\"mini-skills\",\"chars\":1938},{\"id\":\"persona\",\"chars\":2044}],\"over\":false},\"usage\":{\"inputTokens\":11745,\"outputTokens\":5744,\"cacheReadInputTokens\":51372,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"product-presentation\",\"card-game-sheet\",\"card-layout\"],\"cacheBoundary\":45305}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"wordgame-1\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"wordgame-1\",\"value\":{\"secret\":{\"word\":\"gloom\"},\"guesses\":[],\"guess\":\"\",\"usedLetters\":\"none yet\",\"guessesLeft\":\"6 left\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"wordgame-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"form\"]},{\"id\":\"form\",\"component\":\"FormProvider\",\"children\":[\"card\"]},{\"id\":\"card\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"hd\",\"ct\",\"ft\"]},{\"id\":\"hd\",\"component\":\"CardHeader\",\"children\":[\"title\",\"left\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Word game\",\"variant\":\"h4\"},{\"id\":\"left\",\"component\":\"Badge\",\"label\":{\"path\":\"/guessesLeft\"},\"intent\":\"info\"},{\"id\":\"ct\",\"component\":\"CardContent\",\"children\":[\"hint\",\"grid\",\"used_label\",\"used\",\"field_guess\"]},{\"id\":\"hint\",\"component\":\"Text\",\"text\":\"Marks: correct = right spot, misplaced = in the word but elsewhere, absent = not in the word.\",\"variant\":\"caption\"},{\"id\":\"grid\",\"component\":\"List\",\"gap\":\"sm\",\"children\":{\"path\":\"/guesses\",\"componentId\":\"guess_row\"}},{\"id\":\"guess_row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"letters\",\"componentId\":\"tile\"}},{\"id\":\"tile\",\"component\":\"Column\",\"gap\":\"xs\",\"align\":\"start\",\"children\":[\"tile_letter\",\"tile_mark\"]},{\"id\":\"tile_letter\",\"component\":\"Text\",\"text\":{\"path\":\"letter\"},\"variant\":\"h4\"},{\"id\":\"tile_mark\",\"component\":\"Text\",\"text\":{\"path\":\"mark\"},\"variant\":\"caption\"},{\"id\":\"used_label\",\"component\":\"Text\",\"text\":\"Letters used\",\"variant\":\"label\"},{\"id\":\"used\",\"component\":\"Text\",\"text\":{\"path\":\"/usedLetters\"},\"variant\":\"body\"},{\"id\":\"field_guess\",\"component\":\"Field\",\"label\":\"Your guess\",\"description\":\"Exactly five lowercase letters\",\"child\":\"in_guess\"},{\"id\":\"in_guess\",\"component\":\"TextField\",\"name\":\"guess\",\"type\":\"text\",\"placeholder\":\"five letters\",\"required\":true,\"value\":{\"path\":\"/guess\"},\"checks\":[{\"call\":\"regex\",\"args\":{\"value\":{\"path\":\"/guess\"},\"pattern\":\"^[a-z]{5}$\"},\"message\":\"Enter exactly five lowercase letters\"}]},{\"id\":\"ft\",\"component\":\"CardFooter\",\"children\":[\"btn_submit\"]},{\"id\":\"btn_submit\",\"component\":\"Button\",\"label\":\"Submit guess\",\"variant\":\"solid\",\"action\":{\"action\":\"submit_guess\",\"submit\":true,\"context\":{\"guess\":{\"path\":\"/guess\"}}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "I've picked a five-letter word. You have six guesses. Type exactly five lowercase letters and submit. Each letter is marked in text as correct (right spot), misplaced (in the word, wrong spot) or absent.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Game on. Make your first guess.",
+                "messages": "[{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"wordgame-1\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}},{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"wordgame-1\",\"value\":{\"secret\":{\"word\":\"plumb\"},\"draft\":{\"guess\":\"\"},\"status\":\"Guess 0 of 6\",\"used\":\"none yet\",\"rows\":[{\"cells\":[{\"l\":\"·\",\"s\":\"open\"},{\"l\":\"·\",\"s\":\"open\"},{\"l\":\"·\",\"s\":\"open\"},{\"l\":\"·\",\"s\":\"open\"},{\"l\":\"·\",\"s\":\"open\"}]},{\"cells\":[{\"l\":\"·\",\"s\":\"open\"},{\"l\":\"·\",\"s\":\"open\"},{\"l\":\"·\",\"s\":\"open\"},{\"l\":\"·\",\"s\":\"open\"},{\"l\":\"·\",\"s\":\"open\"}]},{\"cells\":[{\"l\":\"·\",\"s\":\"open\"},{\"l\":\"·\",\"s\":\"open\"},{\"l\":\"·\",\"s\":\"open\"},{\"l\":\"·\",\"s\":\"open\"},{\"l\":\"·\",\"s\":\"open\"}]},{\"cells\":[{\"l\":\"·\",\"s\":\"open\"},{\"l\":\"·\",\"s\":\"open\"},{\"l\":\"·\",\"s\":\"open\"},{\"l\":\"·\",\"s\":\"open\"},{\"l\":\"·\",\"s\":\"open\"}]},{\"cells\":[{\"l\":\"·\",\"s\":\"open\"},{\"l\":\"·\",\"s\":\"open\"},{\"l\":\"·\",\"s\":\"open\"},{\"l\":\"·\",\"s\":\"open\"},{\"l\":\"·\",\"s\":\"open\"}]},{\"cells\":[{\"l\":\"·\",\"s\":\"open\"},{\"l\":\"·\",\"s\":\"open\"},{\"l\":\"·\",\"s\":\"open\"},{\"l\":\"·\",\"s\":\"open\"},{\"l\":\"·\",\"s\":\"open\"}]}]}}},{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"wordgame-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"card\"]},{\"id\":\"card\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"hd\",\"ct\",\"ft\"]},{\"id\":\"hd\",\"component\":\"CardHeader\",\"children\":[\"title\",\"status\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Word grid\",\"variant\":\"h4\"},{\"id\":\"status\",\"component\":\"Badge\",\"label\":{\"path\":\"/status\"},\"intent\":\"info\"},{\"id\":\"ct\",\"component\":\"CardContent\",\"children\":[\"grid\",\"used_row\",\"form\"]},{\"id\":\"grid\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":{\"path\":\"/rows\",\"componentId\":\"grow\"}},{\"id\":\"grow\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":{\"path\":\"cells\",\"componentId\":\"tile\"}},{\"id\":\"tile\",\"component\":\"Column\",\"gap\":\"none\",\"align\":\"center\",\"children\":[\"tile_l\",\"tile_s\"]},{\"id\":\"tile_l\",\"component\":\"Text\",\"text\":{\"path\":\"l\"},\"variant\":\"h4\"},{\"id\":\"tile_s\",\"component\":\"Text\",\"text\":{\"path\":\"s\"},\"variant\":\"caption\"},{\"id\":\"used_row\",\"component\":\"Row\",\"gap\":\"sm\",\"align\":\"center\",\"children\":[\"used_k\",\"used_v\"]},{\"id\":\"used_k\",\"component\":\"Text\",\"text\":\"Letters used:\",\"variant\":\"label\"},{\"id\":\"used_v\",\"component\":\"Text\",\"text\":{\"path\":\"/used\"},\"variant\":\"body\"},{\"id\":\"form\",\"component\":\"FormProvider\",\"children\":[\"f_guess\"]},{\"id\":\"f_guess\",\"component\":\"Field\",\"label\":\"Your guess\",\"description\":\"Exactly five lowercase letters\",\"child\":\"in_guess\"},{\"id\":\"in_guess\",\"component\":\"TextField\",\"name\":\"guess\",\"type\":\"text\",\"placeholder\":\"five letters\",\"required\":true,\"value\":{\"path\":\"/draft/guess\"},\"checks\":[{\"call\":\"regex\",\"args\":{\"value\":{\"path\":\"/draft/guess\"},\"pattern\":\"^[a-z]{5}$\"},\"message\":\"Enter exactly five lowercase letters\"}]},{\"id\":\"ft\",\"component\":\"CardFooter\",\"children\":[\"submit\"]},{\"id\":\"submit\",\"component\":\"Button\",\"label\":\"Submit guess\",\"variant\":\"solid\",\"action\":{\"action\":\"submit_guess\",\"submit\":true}}]}]"
+              }
+            }
+          ]
+        },
+        {
+          "text": "I've picked a five-letter word, and you have six guesses. Type exactly five lowercase letters and submit. Each letter is marked in text as correct (right spot), misplaced (in the word, wrong spot) or absent.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Your board is ready: six guesses, five lowercase letters each. Make your first guess.",
+                "target": "wordgame-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "wordgame-1",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "wordgame-1",
+                      "value": {
+                        "secret": {
+                          "word": "gloom"
+                        },
+                        "guesses": [],
+                        "guess": "",
+                        "usedLetters": "none yet",
+                        "guessesLeft": "6 left"
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "wordgame-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "form"
+                          ]
+                        },
+                        {
+                          "id": "form",
+                          "component": "FormProvider",
+                          "children": [
+                            "card"
+                          ]
+                        },
+                        {
+                          "id": "card",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "hd",
+                            "ct",
+                            "ft"
+                          ]
+                        },
+                        {
+                          "id": "hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "title",
+                            "left"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Word game",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "left",
+                          "component": "Badge",
+                          "label": {
+                            "path": "/guessesLeft"
+                          },
+                          "intent": "info"
+                        },
+                        {
+                          "id": "ct",
+                          "component": "CardContent",
+                          "children": [
+                            "hint",
+                            "grid",
+                            "used_label",
+                            "used",
+                            "field_guess"
+                          ]
+                        },
+                        {
+                          "id": "hint",
+                          "component": "Text",
+                          "text": "Marks: correct = right spot, misplaced = in the word but elsewhere, absent = not in the word.",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "grid",
+                          "component": "List",
+                          "gap": "sm",
+                          "children": {
+                            "path": "/guesses",
+                            "componentId": "guess_row"
+                          }
+                        },
+                        {
+                          "id": "guess_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "letters",
+                            "componentId": "tile"
+                          }
+                        },
+                        {
+                          "id": "tile",
+                          "component": "Column",
+                          "gap": "xs",
+                          "align": "center",
+                          "children": [
+                            "tile_letter",
+                            "tile_mark"
+                          ]
+                        },
+                        {
+                          "id": "tile_letter",
+                          "component": "Text",
+                          "text": {
+                            "path": "letter"
+                          },
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "tile_mark",
+                          "component": "Text",
+                          "text": {
+                            "path": "mark"
+                          },
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "used_label",
+                          "component": "Text",
+                          "text": "Letters used",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "used",
+                          "component": "Text",
+                          "text": {
+                            "path": "/usedLetters"
+                          },
+                          "variant": "body"
+                        },
+                        {
+                          "id": "field_guess",
+                          "component": "Field",
+                          "label": "Your guess",
+                          "description": "Exactly five lowercase letters",
+                          "child": "in_guess"
+                        },
+                        {
+                          "id": "in_guess",
+                          "component": "TextField",
+                          "name": "guess",
+                          "type": "text",
+                          "placeholder": "five letters",
+                          "required": true,
+                          "value": {
+                            "path": "/guess"
+                          },
+                          "checks": [
+                            {
+                              "call": "regex",
+                              "args": {
+                                "value": {
+                                  "path": "/guess"
+                                },
+                                "pattern": "^[a-z]{5}$"
+                              },
+                              "message": "Enter exactly five lowercase letters"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "btn_submit"
+                          ]
+                        },
+                        {
+                          "id": "btn_submit",
+                          "component": "Button",
+                          "label": "Submit guess",
+                          "variant": "solid",
+                          "action": {
+                            "action": "submit_guess",
+                            "submit": true,
+                            "context": {
+                              "guess": {
+                                "path": "/guess"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "I've picked a five-letter word, and you have six guesses. Type exactly five lowercase letters and submit. Each letter is marked in text as correct (right spot), misplaced (in the word, wrong spot) or absent.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "I've picked a five-letter word, and you have six guesses. Type exactly five lowercase letters and submit.",
+                "target": "wordgame-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "wordgame-1",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "wordgame-1",
+                      "value": {
+                        "secret": {
+                          "word": "gloom"
+                        },
+                        "guesses": [],
+                        "guess": "",
+                        "usedLetters": "none yet",
+                        "guessesLeft": "6 left"
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "wordgame-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "form"
+                          ]
+                        },
+                        {
+                          "id": "form",
+                          "component": "FormProvider",
+                          "children": [
+                            "card"
+                          ]
+                        },
+                        {
+                          "id": "card",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "hd",
+                            "ct",
+                            "ft"
+                          ]
+                        },
+                        {
+                          "id": "hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "title",
+                            "left"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Word game",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "left",
+                          "component": "Badge",
+                          "label": {
+                            "path": "/guessesLeft"
+                          },
+                          "intent": "info"
+                        },
+                        {
+                          "id": "ct",
+                          "component": "CardContent",
+                          "children": [
+                            "hint",
+                            "grid",
+                            "used_label",
+                            "used",
+                            "field_guess"
+                          ]
+                        },
+                        {
+                          "id": "hint",
+                          "component": "Text",
+                          "text": "Marks: correct = right spot, misplaced = in the word but elsewhere, absent = not in the word.",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "grid",
+                          "component": "List",
+                          "gap": "sm",
+                          "children": {
+                            "path": "/guesses",
+                            "componentId": "guess_row"
+                          }
+                        },
+                        {
+                          "id": "guess_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "letters",
+                            "componentId": "tile"
+                          }
+                        },
+                        {
+                          "id": "tile",
+                          "component": "Column",
+                          "gap": "xs",
+                          "align": "start",
+                          "children": [
+                            "tile_letter",
+                            "tile_mark"
+                          ]
+                        },
+                        {
+                          "id": "tile_letter",
+                          "component": "Text",
+                          "text": {
+                            "path": "letter"
+                          },
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "tile_mark",
+                          "component": "Text",
+                          "text": {
+                            "path": "mark"
+                          },
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "used_label",
+                          "component": "Text",
+                          "text": "Letters used",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "used",
+                          "component": "Text",
+                          "text": {
+                            "path": "/usedLetters"
+                          },
+                          "variant": "body"
+                        },
+                        {
+                          "id": "field_guess",
+                          "component": "Field",
+                          "label": "Your guess",
+                          "description": "Exactly five lowercase letters",
+                          "child": "in_guess"
+                        },
+                        {
+                          "id": "in_guess",
+                          "component": "TextField",
+                          "name": "guess",
+                          "type": "text",
+                          "placeholder": "five letters",
+                          "required": true,
+                          "value": {
+                            "path": "/guess"
+                          },
+                          "checks": [
+                            {
+                              "call": "regex",
+                              "args": {
+                                "value": {
+                                  "path": "/guess"
+                                },
+                                "pattern": "^[a-z]{5}$"
+                              },
+                              "message": "Enter exactly five lowercase letters"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "btn_submit"
+                          ]
+                        },
+                        {
+                          "id": "btn_submit",
+                          "component": "Button",
+                          "label": "Submit guess",
+                          "variant": "solid",
+                          "action": {
+                            "action": "submit_guess",
+                            "submit": true,
+                            "context": {
+                              "guess": {
+                                "path": "/guess"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "notification-status-stack",
+          "crud-entry-list-drawer"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "word-tiles",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Cat\\\" is only three letters\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", not the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" required five, so it sh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ouldn't count as a val\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"id guess. I'll just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" reply with a pl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ain note explaining that, without\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" revealing the secret or need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing any special\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" UI.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"\\\"\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"cat\\\" is only\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" three letters,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" so\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" it\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" doesn't count as\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" a guess,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and you\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" still have all\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" six. Type a\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" five-letter word in l\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"owercase in the input on\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the gr\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"id and submit it.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"\\\"cat\\\" is only three letters, so it doesn't count as a guess, and you still have all six. Type a five-letter word in lowercase in the input on the grid and submit it.\",\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"My guess: cat.\",\"k\":3},\"exemplarIds\":[\"domain-lexicographer-word-board\",\"wallet-summary-card\",\"frontier-button-icon-actions\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":53295,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5946},{\"id\":\"persona\",\"chars\":2044}],\"over\":false},\"usage\":{\"inputTokens\":4473,\"outputTokens\":166,\"cacheReadInputTokens\":17124,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":45305}}}"
+      ],
+      "rounds": [
+        {
+          "text": "\"cat\" is only three letters, so it doesn't count as a guess, and you still have all six. Type a five-letter word in lowercase in the input on the grid and submit it.",
+          "tools": []
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "domain-lexicographer-word-board",
+          "wallet-summary-card",
+          "frontier-button-icon-actions"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "word-tiles",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Comparing \\\"ghost\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\\" against the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" secret \\\"gloom\\\":\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" g is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" correct in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" position, o is correct in position\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", but h,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" s, and t are abs\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ent. That\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" leaves five\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" let\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ters used and five\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" guesses remaining,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and now\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I need to update the game\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" state\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for wordgame-1 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"acc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ordingly.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll update the guesses\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" array with each letter and its\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" mark, reset the current\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" guess field, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" refresh us\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"edLetters and guesses\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Left, leaving the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" secret untouched. I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll keep the m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ark lab\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"els simple,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" like \\\"correct\\\" and \\\"abs\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ent,\\\" and render the surface with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" appropriate message.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Guess 1,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ghost:\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"\\n- g\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\": correct (right spot)\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"\\n- h: absent\\n-\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" o: correct (right spot\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\")\\n- s: absent\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"\\n- t: absent\\n\\nYou have\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 5 guesses left.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"path\\\":\\\"/guesses\\\",\\\"value\\\":[{\\\"letters\\\":[{\\\"letter\\\":\\\"g\\\",\\\"mark\\\":\\\"correct\\\"},{\\\"letter\\\":\\\"h\\\",\\\"mark\\\":\\\"absent\\\"},{\\\"letter\\\":\\\"o\\\",\\\"mark\\\":\\\"correct\\\"},{\\\"letter\\\":\\\"s\\\",\\\"mark\\\":\\\"absent\\\"},{\\\"letter\\\":\\\"t\\\",\\\"mark\\\":\\\"absent\\\"}]}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"path\\\":\\\"/usedLetters\\\",\\\"value\\\":\\\"g, h, o, s, t\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"path\\\":\\\"/guessesLeft\\\",\\\"value\\\":\\\"5 left\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"path\\\":\\\"/guess\\\",\\\"value\\\":\\\"\\\"}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"path\\\":\\\"/guesses\\\",\\\"value\\\":[{\\\"letters\\\":[{\\\"letter\\\":\\\"g\\\",\\\"mark\\\":\\\"correct\\\"},{\\\"letter\\\":\\\"h\\\",\\\"mark\\\":\\\"absent\\\"},{\\\"letter\\\":\\\"o\\\",\\\"mark\\\":\\\"correct\\\"},{\\\"letter\\\":\\\"s\\\",\\\"mark\\\":\\\"absent\\\"},{\\\"letter\\\":\\\"t\\\",\\\"mark\\\":\\\"absent\\\"}]}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"path\\\":\\\"/usedLetters\\\",\\\"value\\\":\\\"g, h, o, s, t\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"path\\\":\\\"/guessesLeft\\\",\\\"value\\\":\\\"5 left\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"path\\\":\\\"/guess\\\",\\\"value\\\":\\\"\\\"}}\",\"codes\":[\"BOARD_GRID_MISSING\"],\"detail\":\"Round 1 failed:\\n  BOARD_GRID_MISSING: at wordgame-1:in_guess (wordgame-1 hand-builds a board of cells to target or mark with in_guess (a TextField). Make it ONE BoardGrid with rows, cols and cells bound to the data model and one actionName, and drop the hand-built grid or guess field.)\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since the user never act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ually saw the rejected sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face, I need to recreate\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ully rather than pat\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ch it—res\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ending the create\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Surface call with the board gr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"id,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" data model, and components. For\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"oring the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" guess \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ghost\\\" against the secret \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"gloom\\\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'm comparing letter\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" by letter: g\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" is correct, h is absent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" checking the o\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" position\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" three against g\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"loom's own\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" letters.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" switching to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a single BoardGrid\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" inst\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ead of a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hand-built grid, ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eping the guess T\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"extField as in the re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ference example, and lab\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eling cells with read\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"able text marks alongside color\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" intents so the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" fe\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"edback isn't color-only\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". I'll add a text leg\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"end summarizing which\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" letters are\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" correct,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" misplaced, or absent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", store the secret and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" gu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ess history in the data model, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" leave remaining rows bl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ank for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" future guesses,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" then write the reply describ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing the \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ghost marking and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" remaining guesses without\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" rev\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealing the target.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":3,\"codes\":[\"PARSE\"],\"detail\":\"Round 2 failed:\\n  PARSE: the payload did not parse as JSON lines\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need to update the surface for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" wordgame-1:\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" com\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"paring gu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ess \\\"ghost\\\" against sec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ret \\\"gloom\\\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the g mat\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ches position\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 0 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and o\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" matches position 2, while h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", s, t are absent.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'll update the guesses\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" list, used letters, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" remaining guess\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" count while keeping the secret\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" word intact in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the data model.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"path\\\":\\\"/guesses\\\",\\\"value\\\":[{\\\"letters\\\":[{\\\"letter\\\":\\\"g\\\",\\\"mark\\\":\\\"correct\\\"},{\\\"letter\\\":\\\"h\\\",\\\"mark\\\":\\\"absent\\\"},{\\\"letter\\\":\\\"o\\\",\\\"mark\\\":\\\"correct\\\"},{\\\"letter\\\":\\\"s\\\",\\\"mark\\\":\\\"absent\\\"},{\\\"letter\\\":\\\"t\\\",\\\"mark\\\":\\\"absent\\\"}]}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"path\\\":\\\"/usedLetters\\\",\\\"value\\\":\\\"g, h, o, s, t\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"path\\\":\\\"/guessesLeft\\\",\\\"value\\\":\\\"5 left\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"path\\\":\\\"/guess\\\",\\\"value\\\":\\\"\\\"}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Guess 1, ghost: g and o are in the right spot. h, s and t aren't in the word. You have 5 guesses left.\",\"target\":{\"surfaceId\":\"wordgame-1\"},\"trace\":{\"turnIndex\":4,\"query\":{\"intent\":\"My guess: ghost.\",\"k\":3},\"exemplarIds\":[\"domain-lexicographer-word-board\",\"wallet-summary-card\",\"frontier-button-icon-actions\"],\"rounds\":3,\"healed\":0,\"failureCodes\":[\"PARSE\",\"SEMANTIC_UNCORRECTED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":53295,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5946},{\"id\":\"persona\",\"chars\":2044}],\"over\":false},\"usage\":{\"inputTokens\":14450,\"outputTokens\":3749,\"cacheReadInputTokens\":51372,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":45305}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"wordgame-1\",\"path\":\"/guesses\",\"value\":[{\"letters\":[{\"letter\":\"g\",\"mark\":\"correct\"},{\"letter\":\"h\",\"mark\":\"absent\"},{\"letter\":\"o\",\"mark\":\"correct\"},{\"letter\":\"s\",\"mark\":\"absent\"},{\"letter\":\"t\",\"mark\":\"absent\"}]}]}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"wordgame-1\",\"path\":\"/usedLetters\",\"value\":\"g, h, o, s, t\"}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"wordgame-1\",\"path\":\"/guessesLeft\",\"value\":\"5 left\"}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"wordgame-1\",\"path\":\"/guess\",\"value\":\"\"}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"ghost: g and o are in the right spot; h, s and t are absent. You have 5 guesses left.\",\"target\":{\"surfaceId\":\"wordgame-1\"}}}\n\nGuess 1, ghost:\n- g: correct (right spot)\n- h: absent\n- o: correct (right spot)\n- s: absent\n- t: absent\n\nYou have 5 guesses left.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Guess 1 is marked on the grid. You have 5 guesses left.",
+                "target": "wordgame-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "wordgame-1",
+                      "path": "/guesses",
+                      "value": [
+                        {
+                          "letters": [
+                            {
+                              "letter": "g",
+                              "mark": "correct"
+                            },
+                            {
+                              "letter": "h",
+                              "mark": "absent"
+                            },
+                            {
+                              "letter": "o",
+                              "mark": "correct"
+                            },
+                            {
+                              "letter": "s",
+                              "mark": "absent"
+                            },
+                            {
+                              "letter": "t",
+                              "mark": "absent"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "wordgame-1",
+                      "path": "/usedLetters",
+                      "value": "g, h, o, s, t"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "wordgame-1",
+                      "path": "/guessesLeft",
+                      "value": "5 left"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "wordgame-1",
+                      "path": "/guess",
+                      "value": ""
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "Guess 1, ghost: g and o are in the right spot. h, s and t aren't in the word. You have 5 guesses left.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Guess 1, ghost: g and o are in the right spot. h, s and t aren't in the word. You have 5 guesses left.",
+                "target": "wordgame-1",
+                "messages": "[{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"wordgame-1\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}},{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"wordgame-1\",\"value\":{\"secret\":{\"word\":\"gloom\"},\"board\":{\"cells\":[{\"row\":0,\"col\":0,\"mark\":\"g\",\"intent\":\"success\"},{\"row\":0,\"col\":1,\"mark\":\"h\",\"intent\":\"neutral\"},{\"row\":0,\"col\":2,\"mark\":\"o\",\"intent\":\"success\"},{\"row\":0,\"col\":3,\"mark\":\"s\",\"intent\":\"neutral\"},{\"row\":0,\"col\":4,\"mark\":\"t\",\"intent\":\"neutral\"}]},\"history\":\"Guess 1, ghost: g correct (right spot), h absent, o correct (right spot), s absent, t absent\",\"guess\":\"\",\"usedLetters\":\"g, h, o, s, t\",\"guessesLeft\":\"5 left\"}},{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"wordgame-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"form\"]},{\"id\":\"form\",\"component\":\"FormProvider\",\"children\":[\"card\"]},{\"id\":\"card\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"hd\",\"ct\",\"ft\"]},{\"id\":\"hd\",\"component\":\"CardHeader\",\"children\":[\"title\",\"left\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Word game\",\"variant\":\"h4\"},{\"id\":\"left\",\"component\":\"Badge\",\"label\":{\"path\":\"/guessesLeft\"},\"intent\":\"info\"},{\"id\":\"ct\",\"component\":\"CardContent\",\"children\":[\"hint\",\"board\",\"history\",\"used_label\",\"used\",\"field_guess\"]},{\"id\":\"hint\",\"component\":\"Text\",\"text\":\"Marks: correct = right spot (green), misplaced = in the word but elsewhere (amber), absent = not in the word (grey).\",\"variant\":\"caption\"},{\"id\":\"board\",\"component\":\"BoardGrid\",\"rows\":6,\"cols\":5,\"cells\":{\"path\":\"/board/cells\"},\"label\":\"Word guesses\",\"actionName\":\"board_cell\"},{\"id\":\"history\",\"component\":\"Text\",\"text\":{\"path\":\"/history\"},\"variant\":\"body\"},{\"id\":\"used_label\",\"component\":\"Text\",\"text\":\"Letters used\",\"variant\":\"label\"},{\"id\":\"used\",\"component\":\"Text\",\"text\":{\"path\":\"/usedLetters\"},\"variant\":\"body\"},{\"id\":\"field_guess\",\"component\":\"Field\",\"label\":\"Your guess\",\"description\":\"Exactly five lowercase letters\",\"child\":\"in_guess\"},{\"id\":\"in_guess\",\"component\":\"TextField\",\"name\":\"guess\",\"type\":\"text\",\"placeholder\":\"five letters\",\"required\":true,\"value\":{\"path\":\"/guess\"},\"checks\":[{\"call\":\"regex\",\"args\":{\"value\":{\"path\":\"/guess\"},\"pattern\":\"^[a-z]{5}$\"},\"message\":\"Enter exactly five lowercase letters\"}]},{\"id\":\"ft\",\"component\":\"CardFooter\",\"children\":[\"btn_submit\"]},{\"id\":\"btn_submit\",\"component\":\"Button\",\"label\":\"Submit guess\",\"variant\":\"solid\",\"action\":{\"action\":\"submit_guess\",\"submit\":true,\"context\":{\"guess\":{\"path\":\"/guess\"}}}}]}}]"
+              }
+            }
+          ]
+        },
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Guess 1, ghost: g and o are in the right spot. h, s and t aren't in the word. You have 5 guesses left.\",\"target\":{\"surfaceId\":\"wordgame-1\"}}}\nGuess 1, ghost: g and o are in the right spot. h, s and t aren't in the word. You have 5 guesses left.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Guess 1, ghost: g and o are in the right spot. h, s and t aren't in the word. You have 5 guesses left.",
+                "target": "wordgame-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "wordgame-1",
+                      "path": "/guesses",
+                      "value": [
+                        {
+                          "letters": [
+                            {
+                              "letter": "g",
+                              "mark": "correct"
+                            },
+                            {
+                              "letter": "h",
+                              "mark": "absent"
+                            },
+                            {
+                              "letter": "o",
+                              "mark": "correct"
+                            },
+                            {
+                              "letter": "s",
+                              "mark": "absent"
+                            },
+                            {
+                              "letter": "t",
+                              "mark": "absent"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "wordgame-1",
+                      "path": "/usedLetters",
+                      "value": "g, h, o, s, t"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "wordgame-1",
+                      "path": "/guessesLeft",
+                      "value": "5 left"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "wordgame-1",
+                      "path": "/guess",
+                      "value": ""
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "domain-lexicographer-word-board",
+          "wallet-summary-card",
+          "frontier-button-icon-actions"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "word-tiles",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Chec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"king g\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"loom against\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ghost conf\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"irms g corre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ct and o in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" position 3, with h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", s, t absent.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Brine gives n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"othing new\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" — b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", r, i, n, e\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" are\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" all absent too\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", so I've now\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ruled out \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ten letters with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" four guesses remaining and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" need to update my tracking.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll update the data model with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" both\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" guesses pre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"served in the array, ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eping gu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ess 1's data intact al\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ongside the new br\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ine result, and include the target me\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ta-line in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the response\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Guess 2\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\", brine: none of these\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" letters are\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" in the word, so all\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" five are absent. You have \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"4 guesses left.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"path\\\":\\\"/guesses\\\",\\\"value\\\":[{\\\"letters\\\":[{\\\"letter\\\":\\\"g\\\",\\\"mark\\\":\\\"correct\\\"},{\\\"letter\\\":\\\"h\\\",\\\"mark\\\":\\\"absent\\\"},{\\\"letter\\\":\\\"o\\\",\\\"mark\\\":\\\"correct\\\"},{\\\"letter\\\":\\\"s\\\",\\\"mark\\\":\\\"absent\\\"},{\\\"letter\\\":\\\"t\\\",\\\"mark\\\":\\\"absent\\\"}]},{\\\"letters\\\":[{\\\"letter\\\":\\\"b\\\",\\\"mark\\\":\\\"absent\\\"},{\\\"letter\\\":\\\"r\\\",\\\"mark\\\":\\\"absent\\\"},{\\\"letter\\\":\\\"i\\\",\\\"mark\\\":\\\"absent\\\"},{\\\"letter\\\":\\\"n\\\",\\\"mark\\\":\\\"absent\\\"},{\\\"letter\\\":\\\"e\\\",\\\"mark\\\":\\\"absent\\\"}]}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"path\\\":\\\"/usedLetters\\\",\\\"value\\\":\\\"g, h, o, s, t, b, r, i, n, e\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"path\\\":\\\"/guessesLeft\\\",\\\"value\\\":\\\"4 left\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"path\\\":\\\"/guess\\\",\\\"value\\\":\\\"\\\"}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"path\\\":\\\"/guesses\\\",\\\"value\\\":[{\\\"letters\\\":[{\\\"letter\\\":\\\"g\\\",\\\"mark\\\":\\\"correct\\\"},{\\\"letter\\\":\\\"h\\\",\\\"mark\\\":\\\"absent\\\"},{\\\"letter\\\":\\\"o\\\",\\\"mark\\\":\\\"correct\\\"},{\\\"letter\\\":\\\"s\\\",\\\"mark\\\":\\\"absent\\\"},{\\\"letter\\\":\\\"t\\\",\\\"mark\\\":\\\"absent\\\"}]},{\\\"letters\\\":[{\\\"letter\\\":\\\"b\\\",\\\"mark\\\":\\\"absent\\\"},{\\\"letter\\\":\\\"r\\\",\\\"mark\\\":\\\"absent\\\"},{\\\"letter\\\":\\\"i\\\",\\\"mark\\\":\\\"absent\\\"},{\\\"letter\\\":\\\"n\\\",\\\"mark\\\":\\\"absent\\\"},{\\\"letter\\\":\\\"e\\\",\\\"mark\\\":\\\"absent\\\"}]}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"path\\\":\\\"/usedLetters\\\",\\\"value\\\":\\\"g, h, o, s, t, b, r, i, n, e\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"path\\\":\\\"/guessesLeft\\\",\\\"value\\\":\\\"4 left\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"path\\\":\\\"/guess\\\",\\\"value\\\":\\\"\\\"}}\",\"codes\":[\"BOARD_GRID_MISSING\"],\"detail\":\"Round 1 failed:\\n  BOARD_GRID_MISSING: at wordgame-1:in_guess (wordgame-1 hand-builds a board of cells to target or mark with in_guess (a TextField). Make it ONE BoardGrid with rows, cols and cells bound to the data model and one actionName, and drop the hand-built grid or guess field.)\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need to verify the board\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" state\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" against the secret word\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"gloom\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" before pres\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"enting the corrected gr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"id. Checking \\\"gh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ost\\\": g is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" correct in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" position \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"0, o matches position 2\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", while\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" h, s, t are absent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". For \\\"brine\\\": all let\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ters—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"b, r, i, n,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" e—are absent from \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"gloom\\\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since the surface was rej\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ected and never\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" se\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"en by the user, I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" rebuild it from\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" scratch with a Board\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Grid b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ound to the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" board cells, using\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" intent values\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" corre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ct/w\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"rong-spot/absent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" status,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"us a used\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-letters legend and the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" guess input field as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" in the working\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" example,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" then create the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" surface fresh with the same\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" id.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the secret word to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"gloom,\\\" populate c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ells for the two\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" guess\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ed rows with their\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" mark and intent,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" build used\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-letter badges summ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"arizing each let\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ter's status.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll also add a guesses\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-left badge b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ound to that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" data path and pick a single act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ionName for the board\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" cells and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the submit button.\\n\\nFor\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the reply, I'll describ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"e the game state after\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" second guess of\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"brine\\\" rather than refer\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"encing the ear\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"lier rejected surface.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":3,\"codes\":[\"PARSE\"],\"detail\":\"Round 2 failed:\\n  PARSE: the payload did not parse as JSON lines\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm verifying my\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" gu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"es\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ses against the secret word\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"gloom\\\": for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"ghost\\\" the g and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" o are correct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ly placed while\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" h, s, t are\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" absent,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and for \\\"brine\\\" every\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" letter is absent. That chec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ks out corre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ctly.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Now I need to call render_\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"surface targ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eting wordgame-1\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", updating the gu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"esses array with both words\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and t\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"racking used letters (\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"g, h, o, s,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" t, b, r, i,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" n, e)\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with 4 guesses rem\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aining,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" including\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the meta-line first before\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" writing the prose response and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" invoking the tool.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"path\\\":\\\"/guesses\\\",\\\"value\\\":[{\\\"letters\\\":[{\\\"letter\\\":\\\"g\\\",\\\"mark\\\":\\\"correct\\\"},{\\\"letter\\\":\\\"h\\\",\\\"mark\\\":\\\"absent\\\"},{\\\"letter\\\":\\\"o\\\",\\\"mark\\\":\\\"correct\\\"},{\\\"letter\\\":\\\"s\\\",\\\"mark\\\":\\\"absent\\\"},{\\\"letter\\\":\\\"t\\\",\\\"mark\\\":\\\"absent\\\"}]},{\\\"letters\\\":[{\\\"letter\\\":\\\"b\\\",\\\"mark\\\":\\\"absent\\\"},{\\\"letter\\\":\\\"r\\\",\\\"mark\\\":\\\"absent\\\"},{\\\"letter\\\":\\\"i\\\",\\\"mark\\\":\\\"absent\\\"},{\\\"letter\\\":\\\"n\\\",\\\"mark\\\":\\\"absent\\\"},{\\\"letter\\\":\\\"e\\\",\\\"mark\\\":\\\"absent\\\"}]}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"path\\\":\\\"/usedLetters\\\",\\\"value\\\":\\\"g, h, o, s, t, b, r, i, n, e\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"path\\\":\\\"/guessesLeft\\\",\\\"value\\\":\\\"4 left\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"path\\\":\\\"/guess\\\",\\\"value\\\":\\\"\\\"}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Guess 2, brine: none of its letters are in the word. Guess 1, ghost, still stands: g and o are in the right spot, and h, s and t are absent. You have 4 guesses left.\",\"target\":{\"surfaceId\":\"wordgame-1\"},\"trace\":{\"turnIndex\":6,\"query\":{\"intent\":\"My guess: brine.\",\"k\":3},\"exemplarIds\":[\"domain-lexicographer-word-board\",\"wallet-summary-card\",\"frontier-button-icon-actions\"],\"rounds\":3,\"healed\":0,\"failureCodes\":[\"PARSE\",\"SEMANTIC_UNCORRECTED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":53295,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5946},{\"id\":\"persona\",\"chars\":2044}],\"over\":false},\"usage\":{\"inputTokens\":15552,\"outputTokens\":4223,\"cacheReadInputTokens\":51372,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":45305}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"wordgame-1\",\"path\":\"/guesses\",\"value\":[{\"letters\":[{\"letter\":\"g\",\"mark\":\"correct\"},{\"letter\":\"h\",\"mark\":\"absent\"},{\"letter\":\"o\",\"mark\":\"correct\"},{\"letter\":\"s\",\"mark\":\"absent\"},{\"letter\":\"t\",\"mark\":\"absent\"}]},{\"letters\":[{\"letter\":\"b\",\"mark\":\"absent\"},{\"letter\":\"r\",\"mark\":\"absent\"},{\"letter\":\"i\",\"mark\":\"absent\"},{\"letter\":\"n\",\"mark\":\"absent\"},{\"letter\":\"e\",\"mark\":\"absent\"}]}]}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"wordgame-1\",\"path\":\"/usedLetters\",\"value\":\"g, h, o, s, t, b, r, i, n, e\"}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"wordgame-1\",\"path\":\"/guessesLeft\",\"value\":\"4 left\"}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"wordgame-1\",\"path\":\"/guess\",\"value\":\"\"}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"wordgame-1\"}}}\nGuess 2, brine: none of these letters are in the word, so all five are absent. You have 4 guesses left.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Guess 2, brine: all five letters are absent. 4 guesses left.",
+                "target": "wordgame-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "wordgame-1",
+                      "path": "/guesses",
+                      "value": [
+                        {
+                          "letters": [
+                            {
+                              "letter": "g",
+                              "mark": "correct"
+                            },
+                            {
+                              "letter": "h",
+                              "mark": "absent"
+                            },
+                            {
+                              "letter": "o",
+                              "mark": "correct"
+                            },
+                            {
+                              "letter": "s",
+                              "mark": "absent"
+                            },
+                            {
+                              "letter": "t",
+                              "mark": "absent"
+                            }
+                          ]
+                        },
+                        {
+                          "letters": [
+                            {
+                              "letter": "b",
+                              "mark": "absent"
+                            },
+                            {
+                              "letter": "r",
+                              "mark": "absent"
+                            },
+                            {
+                              "letter": "i",
+                              "mark": "absent"
+                            },
+                            {
+                              "letter": "n",
+                              "mark": "absent"
+                            },
+                            {
+                              "letter": "e",
+                              "mark": "absent"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "wordgame-1",
+                      "path": "/usedLetters",
+                      "value": "g, h, o, s, t, b, r, i, n, e"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "wordgame-1",
+                      "path": "/guessesLeft",
+                      "value": "4 left"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "wordgame-1",
+                      "path": "/guess",
+                      "value": ""
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "Your game is set up. Guess 1, ghost: g and o are in the right spot, and h, s and t are absent. Guess 2, brine: all five letters are absent. You have 4 guesses left.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Guess 1, ghost: g and o are in the right spot, and h, s and t are absent. Guess 2, brine: all five letters are absent. You have 4 guesses left.",
+                "target": "wordgame-1",
+                "messages": "[{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"wordgame-1\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}},{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"wordgame-1\",\"value\":{\"secret\":{\"word\":\"gloom\"},\"board\":{\"cells\":[{\"row\":0,\"col\":0,\"mark\":\"G\",\"intent\":\"success\"},{\"row\":0,\"col\":1,\"mark\":\"H\",\"intent\":\"neutral\"},{\"row\":0,\"col\":2,\"mark\":\"O\",\"intent\":\"success\"},{\"row\":0,\"col\":3,\"mark\":\"S\",\"intent\":\"neutral\"},{\"row\":0,\"col\":4,\"mark\":\"T\",\"intent\":\"neutral\"},{\"row\":1,\"col\":0,\"mark\":\"B\",\"intent\":\"neutral\"},{\"row\":1,\"col\":1,\"mark\":\"R\",\"intent\":\"neutral\"},{\"row\":1,\"col\":2,\"mark\":\"I\",\"intent\":\"neutral\"},{\"row\":1,\"col\":3,\"mark\":\"N\",\"intent\":\"neutral\"},{\"row\":1,\"col\":4,\"mark\":\"E\",\"intent\":\"neutral\"}]},\"used\":[{\"intent\":\"success\",\"label\":\"g right spot\"},{\"intent\":\"success\",\"label\":\"o right spot\"},{\"intent\":\"neutral\",\"label\":\"h absent\"},{\"intent\":\"neutral\",\"label\":\"s absent\"},{\"intent\":\"neutral\",\"label\":\"t absent\"},{\"intent\":\"neutral\",\"label\":\"b absent\"},{\"intent\":\"neutral\",\"label\":\"r absent\"},{\"intent\":\"neutral\",\"label\":\"i absent\"},{\"intent\":\"neutral\",\"label\":\"n absent\"},{\"intent\":\"neutral\",\"label\":\"e absent\"}],\"guess\":\"\",\"guessesLeft\":\"4 left\"}},{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"wordgame-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"form\"]},{\"id\":\"form\",\"component\":\"FormProvider\",\"children\":[\"card\"]},{\"id\":\"card\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"hd\",\"ct\",\"ft\"]},{\"id\":\"hd\",\"component\":\"CardHeader\",\"children\":[\"title\",\"left\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Word game\",\"variant\":\"h4\"},{\"id\":\"left\",\"component\":\"Badge\",\"label\":{\"path\":\"/guessesLeft\"},\"intent\":\"info\"},{\"id\":\"ct\",\"component\":\"CardContent\",\"children\":[\"hint\",\"board\",\"used_label\",\"used\",\"field_guess\"]},{\"id\":\"hint\",\"component\":\"Text\",\"text\":\"Marks: success = right letter, right spot; warning = right letter, wrong spot; neutral = absent. See the used-letters list for each letter's state in words.\",\"variant\":\"caption\"},{\"id\":\"board\",\"component\":\"BoardGrid\",\"rows\":6,\"cols\":5,\"cells\":{\"path\":\"/board/cells\"},\"label\":\"Word guesses\",\"actionName\":\"select_cell\"},{\"id\":\"used_label\",\"component\":\"Text\",\"text\":\"Letters used\",\"variant\":\"label\"},{\"id\":\"used\",\"component\":\"List\",\"gap\":\"xs\",\"wrap\":true,\"children\":{\"path\":\"/used\",\"componentId\":\"used_badge\"}},{\"id\":\"used_badge\",\"component\":\"Badge\",\"intent\":{\"path\":\"intent\"},\"label\":{\"path\":\"label\"}},{\"id\":\"field_guess\",\"component\":\"Field\",\"label\":\"Your guess\",\"description\":\"Exactly five lowercase letters\",\"child\":\"in_guess\"},{\"id\":\"in_guess\",\"component\":\"TextField\",\"name\":\"guess\",\"type\":\"text\",\"placeholder\":\"five letters\",\"required\":true,\"value\":{\"path\":\"/guess\"},\"checks\":[{\"call\":\"regex\",\"args\":{\"value\":{\"path\":\"/guess\"},\"pattern\":\"^[a-z]{5}$\"},\"message\":\"Enter exactly five lowercase letters\"}]},{\"id\":\"ft\",\"component\":\"CardFooter\",\"children\":[\"btn_submit\"]},{\"id\":\"btn_submit\",\"component\":\"Button\",\"label\":\"Submit guess\",\"variant\":\"solid\",\"action\":{\"action\":\"submit_guess\",\"submit\":true,\"context\":{\"guess\":{\"path\":\"/guess\"}}}}]}}]"
+              }
+            }
+          ]
+        },
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"wordgame-1\"}}}\nGuess 2, brine: none of its letters are in the word. Guess 1, ghost, still stands: g and o are in the right spot, and h, s and t are absent. You have 4 guesses left.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Guess 2, brine: none of its letters are in the word. You have 4 guesses left.",
+                "target": "wordgame-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "wordgame-1",
+                      "path": "/guesses",
+                      "value": [
+                        {
+                          "letters": [
+                            {
+                              "letter": "g",
+                              "mark": "correct"
+                            },
+                            {
+                              "letter": "h",
+                              "mark": "absent"
+                            },
+                            {
+                              "letter": "o",
+                              "mark": "correct"
+                            },
+                            {
+                              "letter": "s",
+                              "mark": "absent"
+                            },
+                            {
+                              "letter": "t",
+                              "mark": "absent"
+                            }
+                          ]
+                        },
+                        {
+                          "letters": [
+                            {
+                              "letter": "b",
+                              "mark": "absent"
+                            },
+                            {
+                              "letter": "r",
+                              "mark": "absent"
+                            },
+                            {
+                              "letter": "i",
+                              "mark": "absent"
+                            },
+                            {
+                              "letter": "n",
+                              "mark": "absent"
+                            },
+                            {
+                              "letter": "e",
+                              "mark": "absent"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "wordgame-1",
+                      "path": "/usedLetters",
+                      "value": "g, h, o, s, t, b, r, i, n, e"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "wordgame-1",
+                      "path": "/guessesLeft",
+                      "value": "4 left"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "wordgame-1",
+                      "path": "/guess",
+                      "value": ""
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "domain-lexicographer-word-board",
+          "wallet-summary-card",
+          "frontier-button-icon-actions"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "word-tiles",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since the user is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" giving up, I should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" reveal the sec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ret word \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"gloom\\\" both\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" in chat and on the surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" updating it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to remove the input\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" field\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and submit button since this isn\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'t a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" multi-step ask flow\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" requ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"iring flowEnd.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Updating the card's children to sw\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ap out the guess field\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" reveal message, ad\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"justing the badge label to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" something\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" like \\\"Gave up,\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and double\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-checking the word mat\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ches the guesses so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" far (gloom l\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ines up f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ine with pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ior let\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ters\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"). I'll lead with the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" target meta-line,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" then write the reveal as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a simple he\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ading plus ca\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ption before\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" prose response\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"The word was **\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"gloom**. Your\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" ghost gu\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ess had g and o right\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\", and brine \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ruled out five\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" letters,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" so you\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" were close\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\". I\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'ve clos\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ed the gu\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ess input\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" on the gr\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"id and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" put\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the word there too\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"path\\\":\\\"/guessesLeft\\\",\\\"value\\\":\\\"Gave up\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"card\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"hd\\\",\\\"ct\\\"]},{\\\"id\\\":\\\"ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"hint\\\",\\\"grid\\\",\\\"used_label\\\",\\\"used\\\",\\\"reveal_label\\\",\\\"reveal\\\"]},{\\\"id\\\":\\\"reveal_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"The word was\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"reveal\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"gloom\\\",\\\"variant\\\":\\\"h3\\\"}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"The word was **gloom**. Your ghost guess had g and o right, and brine ruled out five letters, so you were close. I've closed the guess input on the grid and put the word there too.\",\"target\":{\"surfaceId\":\"wordgame-1\"},\"trace\":{\"turnIndex\":8,\"query\":{\"intent\":\"I give up.\",\"k\":3},\"exemplarIds\":[\"frontier-suggestions-chips\",\"support-ticket-close-then-new\",\"card-layouts\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":55956,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":7545},{\"id\":\"mini-skills\",\"chars\":1062},{\"id\":\"persona\",\"chars\":2044}],\"over\":false},\"usage\":{\"inputTokens\":6406,\"outputTokens\":867,\"cacheReadInputTokens\":17124,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"login-form\",\"form-rhythm\"],\"cacheBoundary\":45305}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"wordgame-1\",\"path\":\"/guessesLeft\",\"value\":\"Gave up\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"wordgame-1\",\"components\":[{\"id\":\"card\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"hd\",\"ct\"]},{\"id\":\"ct\",\"component\":\"CardContent\",\"children\":[\"hint\",\"grid\",\"used_label\",\"used\",\"reveal_label\",\"reveal\"]},{\"id\":\"reveal_label\",\"component\":\"Text\",\"text\":\"The word was\",\"variant\":\"label\"},{\"id\":\"reveal\",\"component\":\"Text\",\"text\":\"gloom\",\"variant\":\"h3\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"wordgame-1\"}}}\nThe word was **gloom**. Your ghost guess had g and o right, and brine ruled out five letters, so you were close. I've closed the guess input on the grid and put the word there too.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "The word was gloom. I've closed the input and shown the answer on the grid.",
+                "target": "wordgame-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "wordgame-1",
+                      "path": "/guessesLeft",
+                      "value": "Gave up"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "wordgame-1",
+                      "components": [
+                        {
+                          "id": "card",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "hd",
+                            "ct"
+                          ]
+                        },
+                        {
+                          "id": "ct",
+                          "component": "CardContent",
+                          "children": [
+                            "hint",
+                            "grid",
+                            "used_label",
+                            "used",
+                            "reveal_label",
+                            "reveal"
+                          ]
+                        },
+                        {
+                          "id": "reveal_label",
+                          "component": "Text",
+                          "text": "The word was",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "reveal",
+                          "component": "Text",
+                          "text": "gloom",
+                          "variant": "h3"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "frontier-suggestions-chips",
+          "support-ticket-close-then-new",
+          "card-layouts"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "word-tiles",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since the user wants to play\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" again, I'll reuse\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the same surface and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" just reset its state\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with a f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"resh secret word,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" restoring the form and footer\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a new round. I'm sett\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ling on \\\"pilot\\\" as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the new word\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eping it distinct from the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" previous one\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to name the target surface on\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" meta-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"line since this is an update, then\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" resend the card and content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" components rest\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ored to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" their original gu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ess\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing layout (d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ropping the reveal el\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ements), and replace the data\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" model entirely with the new word\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" state. I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll keep my reply text\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" free\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" of any\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hints about the sec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ret word.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"New game. I\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'ve picked a fresh five\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"-letter word,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and you have six guesses.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Type exactly five low\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ercase letters and submit.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"value\\\":{\\\"secret\\\":{\\\"word\\\":\\\"pilot\\\"},\\\"guesses\\\":[],\\\"guess\\\":\\\"\\\",\\\"usedLetters\\\":\\\"none yet\\\",\\\"guessesLeft\\\":\\\"6 left\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"card\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"hd\\\",\\\"ct\\\",\\\"ft\\\"]},{\\\"id\\\":\\\"ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"hint\\\",\\\"grid\\\",\\\"used_label\\\",\\\"used\\\",\\\"field_guess\\\"]}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"value\\\":{\\\"secret\\\":{\\\"word\\\":\\\"pilot\\\"},\\\"guesses\\\":[],\\\"guess\\\":\\\"\\\",\\\"usedLetters\\\":\\\"none yet\\\",\\\"guessesLeft\\\":\\\"6 left\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"card\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"hd\\\",\\\"ct\\\",\\\"ft\\\"]},{\\\"id\\\":\\\"ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"hint\\\",\\\"grid\\\",\\\"used_label\\\",\\\"used\\\",\\\"field_guess\\\"]}]}}\",\"codes\":[\"IDGRAPH\"],\"detail\":\"Round 1 failed:\\n  IDGRAPH: component \\\"card\\\" references \\\"ft\\\", which no component in the payload or the session defines (dangling id)\\n  IDGRAPH: component \\\"ct\\\" references \\\"field_guess\\\", which no component in the payload or the session defines (dangling id)\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"It loo\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ks like some\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" surface components like\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ft and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" field_guess got dropped\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" when the previous update replaced\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" card and ct,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" so I need to resend the compl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ete tree to rest\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ore those p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ieces safely.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"value\\\":{\\\"secret\\\":{\\\"word\\\":\\\"pilot\\\"},\\\"guesses\\\":[],\\\"guess\\\":\\\"\\\",\\\"usedLetters\\\":\\\"none yet\\\",\\\"guessesLeft\\\":\\\"6 left\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"card\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"hd\\\",\\\"ct\\\",\\\"ft\\\"]},{\\\"id\\\":\\\"ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"hint\\\",\\\"grid\\\",\\\"used_label\\\",\\\"used\\\",\\\"field_guess\\\"]},{\\\"id\\\":\\\"field_guess\\\",\\\"component\\\":\\\"Field\\\",\\\"label\\\":\\\"Your guess\\\",\\\"description\\\":\\\"Exactly five lowercase letters\\\",\\\"child\\\":\\\"in_guess\\\"},{\\\"id\\\":\\\"in_guess\\\",\\\"component\\\":\\\"TextField\\\",\\\"name\\\":\\\"guess\\\",\\\"type\\\":\\\"text\\\",\\\"placeholder\\\":\\\"five letters\\\",\\\"required\\\":true,\\\"value\\\":{\\\"path\\\":\\\"/guess\\\"},\\\"checks\\\":[{\\\"call\\\":\\\"regex\\\",\\\"args\\\":{\\\"value\\\":{\\\"path\\\":\\\"/guess\\\"},\\\"pattern\\\":\\\"^[a-z]{5}$\\\"},\\\"message\\\":\\\"Enter exactly five lowercase letters\\\"}]},{\\\"id\\\":\\\"ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"btn_submit\\\"]},{\\\"id\\\":\\\"btn_submit\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Submit guess\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"submit_guess\\\",\\\"submit\\\":true,\\\"context\\\":{\\\"guess\\\":{\\\"path\\\":\\\"/guess\\\"}}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":3,\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"value\\\":{\\\"secret\\\":{\\\"word\\\":\\\"pilot\\\"},\\\"guesses\\\":[],\\\"guess\\\":\\\"\\\",\\\"usedLetters\\\":\\\"none yet\\\",\\\"guessesLeft\\\":\\\"6 left\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"card\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"hd\\\",\\\"ct\\\",\\\"ft\\\"]},{\\\"id\\\":\\\"ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"hint\\\",\\\"grid\\\",\\\"used_label\\\",\\\"used\\\",\\\"field_guess\\\"]},{\\\"id\\\":\\\"field_guess\\\",\\\"component\\\":\\\"Field\\\",\\\"label\\\":\\\"Your guess\\\",\\\"description\\\":\\\"Exactly five lowercase letters\\\",\\\"child\\\":\\\"in_guess\\\"},{\\\"id\\\":\\\"in_guess\\\",\\\"component\\\":\\\"TextField\\\",\\\"name\\\":\\\"guess\\\",\\\"type\\\":\\\"text\\\",\\\"placeholder\\\":\\\"five letters\\\",\\\"required\\\":true,\\\"value\\\":{\\\"path\\\":\\\"/guess\\\"},\\\"checks\\\":[{\\\"call\\\":\\\"regex\\\",\\\"args\\\":{\\\"value\\\":{\\\"path\\\":\\\"/guess\\\"},\\\"pattern\\\":\\\"^[a-z]{5}$\\\"},\\\"message\\\":\\\"Enter exactly five lowercase letters\\\"}]},{\\\"id\\\":\\\"ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"btn_submit\\\"]},{\\\"id\\\":\\\"btn_submit\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Submit guess\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"submit_guess\\\",\\\"submit\\\":true,\\\"context\\\":{\\\"guess\\\":{\\\"path\\\":\\\"/guess\\\"}}}}]}}\",\"codes\":[\"BOARD_GRID_MISSING\"],\"detail\":\"Round 2 failed:\\n  BOARD_GRID_MISSING: at wordgame-1:in_guess (wordgame-1 hand-builds a board of cells to target or mark with in_guess (a TextField). Make it ONE BoardGrid with rows, cols and cells bound to the data model and one actionName, and drop the hand-built grid or guess field.)\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need to fix the render_\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"surface call per the validator's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" feedback: cons\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"olidate into\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a single BoardGrid\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bound to rows,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" cols, and cells from\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the data model, with one\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ionName, remov\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing the separ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ate hand-built grid or\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" guess field.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Since the persona wants both\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a word grid and a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" five-letter input, I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" need to decide wh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ether to f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"old the guess input\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" into the BoardGrid\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" itself or dr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"op one\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" of the two el\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ements to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" satisfy the single\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-gr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"id requirement.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll go with 30 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"empty strings for cells init\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ially, using\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" actionName \\\"cell_p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ick\\\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to send the complete cor\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"rected messages with the sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face update\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", ad\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding /cells to the data model\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and removing the orphaned\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hint-grid components since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the BoardGrid repl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aces them, keeping the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" meta-line with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" target intact and writing a pl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ain prose reply without any corre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ction note.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"value\\\":{\\\"secret\\\":{\\\"word\\\":\\\"pilot\\\"},\\\"guesses\\\":[],\\\"cells\\\":[\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\"],\\\"guess\\\":\\\"\\\",\\\"usedLetters\\\":\\\"none yet\\\",\\\"guessesLeft\\\":\\\"6 left\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"wordgame-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"card\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"hd\\\",\\\"ct\\\",\\\"ft\\\"]},{\\\"id\\\":\\\"ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"hint\\\",\\\"grid\\\",\\\"used_label\\\",\\\"used\\\",\\\"field_guess\\\"]},{\\\"id\\\":\\\"grid\\\",\\\"component\\\":\\\"BoardGrid\\\",\\\"label\\\":\\\"Guess grid\\\",\\\"rows\\\":6,\\\"cols\\\":5,\\\"cells\\\":{\\\"path\\\":\\\"/cells\\\"},\\\"actionName\\\":\\\"select_cell\\\"},{\\\"id\\\":\\\"field_guess\\\",\\\"component\\\":\\\"Field\\\",\\\"label\\\":\\\"Your guess\\\",\\\"description\\\":\\\"Exactly five lowercase letters\\\",\\\"child\\\":\\\"in_guess\\\"},{\\\"id\\\":\\\"in_guess\\\",\\\"component\\\":\\\"TextField\\\",\\\"name\\\":\\\"guess\\\",\\\"type\\\":\\\"text\\\",\\\"placeholder\\\":\\\"five letters\\\",\\\"required\\\":true,\\\"value\\\":{\\\"path\\\":\\\"/guess\\\"},\\\"checks\\\":[{\\\"call\\\":\\\"regex\\\",\\\"args\\\":{\\\"value\\\":{\\\"path\\\":\\\"/guess\\\"},\\\"pattern\\\":\\\"^[a-z]{5}$\\\"},\\\"message\\\":\\\"Enter exactly five lowercase letters\\\"}]},{\\\"id\\\":\\\"ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"btn_submit\\\"]},{\\\"id\\\":\\\"btn_submit\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Submit guess\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"submit_guess\\\",\\\"submit\\\":true,\\\"context\\\":{\\\"guess\\\":{\\\"path\\\":\\\"/guess\\\"}}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"New game. I've picked a fresh five-letter word, and you have six guesses. Type exactly five lowercase letters and submit.\",\"target\":{\"surfaceId\":\"wordgame-1\"},\"trace\":{\"turnIndex\":10,\"query\":{\"intent\":\"Play again.\",\"k\":3},\"exemplarIds\":[],\"rounds\":3,\"healed\":0,\"failureCodes\":[\"BOARD_GRID_MISSING\",\"SEMANTIC_UNCORRECTED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":47349,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"persona\",\"chars\":2044}],\"over\":false},\"usage\":{\"inputTokens\":10363,\"outputTokens\":3724,\"cacheReadInputTokens\":51372,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":45305}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"wordgame-1\",\"value\":{\"secret\":{\"word\":\"pilot\"},\"guesses\":[],\"cells\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"guess\":\"\",\"usedLetters\":\"none yet\",\"guessesLeft\":\"6 left\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"wordgame-1\",\"components\":[{\"id\":\"card\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"hd\",\"ct\",\"ft\"]},{\"id\":\"ct\",\"component\":\"CardContent\",\"children\":[\"hint\",\"grid\",\"used_label\",\"used\",\"field_guess\"]},{\"id\":\"grid\",\"component\":\"BoardGrid\",\"label\":\"Guess grid\",\"rows\":6,\"cols\":5,\"cells\":{\"path\":\"/cells\"},\"actionName\":\"select_cell\"},{\"id\":\"field_guess\",\"component\":\"Field\",\"label\":\"Your guess\",\"description\":\"Exactly five lowercase letters\",\"child\":\"in_guess\"},{\"id\":\"in_guess\",\"component\":\"TextField\",\"name\":\"guess\",\"type\":\"text\",\"placeholder\":\"five letters\",\"required\":true,\"value\":{\"path\":\"/guess\"},\"checks\":[{\"call\":\"regex\",\"args\":{\"value\":{\"path\":\"/guess\"},\"pattern\":\"^[a-z]{5}$\"},\"message\":\"Enter exactly five lowercase letters\"}]},{\"id\":\"ft\",\"component\":\"CardFooter\",\"children\":[\"btn_submit\"]},{\"id\":\"btn_submit\",\"component\":\"Button\",\"label\":\"Submit guess\",\"variant\":\"solid\",\"action\":{\"action\":\"submit_guess\",\"submit\":true,\"context\":{\"guess\":{\"path\":\"/guess\"}}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"New game. I've picked a fresh five-letter word and you have six guesses. Type exactly five lowercase letters and submit.\",\"target\":{\"surfaceId\":\"wordgame-1\"}}}\n\nNew game. I've picked a fresh five-letter word, and you have six guesses. Type exactly five lowercase letters and submit.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "New game on the same grid: six guesses, a fresh word.",
+                "target": "wordgame-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "wordgame-1",
+                      "value": {
+                        "secret": {
+                          "word": "pilot"
+                        },
+                        "guesses": [],
+                        "guess": "",
+                        "usedLetters": "none yet",
+                        "guessesLeft": "6 left"
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "wordgame-1",
+                      "components": [
+                        {
+                          "id": "card",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "hd",
+                            "ct",
+                            "ft"
+                          ]
+                        },
+                        {
+                          "id": "ct",
+                          "component": "CardContent",
+                          "children": [
+                            "hint",
+                            "grid",
+                            "used_label",
+                            "used",
+                            "field_guess"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"New game. I've picked a fresh five-letter word, and you have six guesses. Type exactly five lowercase letters and submit.\",\"target\":{\"surfaceId\":\"wordgame-1\"}}}\n\nNew game. I've picked a fresh five-letter word, and you have six guesses. Type exactly five lowercase letters and submit.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "New game. I've picked a fresh five-letter word, and you have six guesses. Type exactly five lowercase letters and submit.",
+                "target": "wordgame-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "wordgame-1",
+                      "value": {
+                        "secret": {
+                          "word": "pilot"
+                        },
+                        "guesses": [],
+                        "guess": "",
+                        "usedLetters": "none yet",
+                        "guessesLeft": "6 left"
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "wordgame-1",
+                      "components": [
+                        {
+                          "id": "card",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "hd",
+                            "ct",
+                            "ft"
+                          ]
+                        },
+                        {
+                          "id": "ct",
+                          "component": "CardContent",
+                          "children": [
+                            "hint",
+                            "grid",
+                            "used_label",
+                            "used",
+                            "field_guess"
+                          ]
+                        },
+                        {
+                          "id": "field_guess",
+                          "component": "Field",
+                          "label": "Your guess",
+                          "description": "Exactly five lowercase letters",
+                          "child": "in_guess"
+                        },
+                        {
+                          "id": "in_guess",
+                          "component": "TextField",
+                          "name": "guess",
+                          "type": "text",
+                          "placeholder": "five letters",
+                          "required": true,
+                          "value": {
+                            "path": "/guess"
+                          },
+                          "checks": [
+                            {
+                              "call": "regex",
+                              "args": {
+                                "value": {
+                                  "path": "/guess"
+                                },
+                                "pattern": "^[a-z]{5}$"
+                              },
+                              "message": "Enter exactly five lowercase letters"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "btn_submit"
+                          ]
+                        },
+                        {
+                          "id": "btn_submit",
+                          "component": "Button",
+                          "label": "Submit guess",
+                          "variant": "solid",
+                          "action": {
+                            "action": "submit_guess",
+                            "submit": true,
+                            "context": {
+                              "guess": {
+                                "path": "/guess"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"New game. I've picked a fresh five-letter word, and you have six guesses. Type exactly five lowercase letters and submit.\",\"target\":{\"surfaceId\":\"wordgame-1\"}}}\n\nNew game. I've picked a fresh five-letter word, and you have six guesses. Type exactly five lowercase letters and submit.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "target": "wordgame-1",
+                "reply": "New game. I've picked a fresh five-letter word, and you have six guesses. Type exactly five lowercase letters and submit.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "wordgame-1",
+                      "value": {
+                        "secret": {
+                          "word": "pilot"
+                        },
+                        "guesses": [],
+                        "cells": [
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          ""
+                        ],
+                        "guess": "",
+                        "usedLetters": "none yet",
+                        "guessesLeft": "6 left"
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "wordgame-1",
+                      "components": [
+                        {
+                          "id": "card",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "hd",
+                            "ct",
+                            "ft"
+                          ]
+                        },
+                        {
+                          "id": "ct",
+                          "component": "CardContent",
+                          "children": [
+                            "hint",
+                            "grid",
+                            "used_label",
+                            "used",
+                            "field_guess"
+                          ]
+                        },
+                        {
+                          "id": "grid",
+                          "component": "BoardGrid",
+                          "label": "Guess grid",
+                          "rows": 6,
+                          "cols": 5,
+                          "cells": {
+                            "path": "/cells"
+                          },
+                          "actionName": "select_cell"
+                        },
+                        {
+                          "id": "field_guess",
+                          "component": "Field",
+                          "label": "Your guess",
+                          "description": "Exactly five lowercase letters",
+                          "child": "in_guess"
+                        },
+                        {
+                          "id": "in_guess",
+                          "component": "TextField",
+                          "name": "guess",
+                          "type": "text",
+                          "placeholder": "five letters",
+                          "required": true,
+                          "value": {
+                            "path": "/guess"
+                          },
+                          "checks": [
+                            {
+                              "call": "regex",
+                              "args": {
+                                "value": {
+                                  "path": "/guess"
+                                },
+                                "pattern": "^[a-z]{5}$"
+                              },
+                              "message": "Enter exactly five lowercase letters"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "btn_submit"
+                          ]
+                        },
+                        {
+                          "id": "btn_submit",
+                          "component": "Button",
+                          "label": "Submit guess",
+                          "variant": "solid",
+                          "action": {
+                            "action": "submit_guess",
+                            "submit": true,
+                            "context": {
+                              "guess": {
+                                "path": "/guess"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "word-tiles",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}
