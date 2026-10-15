@@ -1,0 +1,655 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "croupier-spanish-surrender-narration",
+  "agent": "croupier",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "2026-10-15.jsonl:15,2026-10-15.jsonl:16,2026-10-15.jsonl:17,2026-10-15.jsonl:18,2026-10-15.jsonl:19,2026-10-15.jsonl:20 (catalog agent-ui--croupier)",
+  "steps": [
+    {
+      "say": "Let's play Spanish 21."
+    },
+    {
+      "click": "deal"
+    },
+    {
+      "click": "stand"
+    },
+    {
+      "click": "Deal again"
+    },
+    {
+      "click": "deal"
+    },
+    {
+      "say": "Late surrender."
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"Spanish 21 it is. The deck has no 10-spots, so faces stay but every ten is gone. A player 21 always beats the dealer's 21, and player blackjack beats dealer blackjack. Bonus payouts apply to five-plus-card 21s and to 6-7-8 or 7-7-7. Double-after-split and late surrender are allowed. You start with 1,000 chips. Place your bet and deal when you're ready.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Spanish 21 it is. The deck has no 10-spots, so faces stay but every ten is gone. A player 21 always beats the dealer's 21, and player blackjack beats dealer blackjack. Bonus payouts apply to five-plus-card 21s and to 6-7-8 or 7-7-7. Double-after-split and late surrender are allowed. You start with 1,000 chips. Place your bet and deal when you're ready.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"## Referenced for this message\\n### spanish-21 (resource)\\nspanish 21, no-tens deck, bonus 21s, late surrender\\n\\nBlackjack on a 48-card Spanish deck — every 10-spot removed, faces stay. A player 21 ALWAYS wins, and player blackjack beats dealer blackjack. Bonus payouts for a five-plus-card 21 and for 6-7-8 or 7-7-7; double-after-split and late surrender allowed. Deal and settle as blackjack otherwise.\\n\\nLet's play Spanish 21.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":48322,\"sections\":[{\"id\":\"grammar\",\"chars\":25639},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":2021}],\"over\":false}}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-1\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":1000,\"bet\":25,\"phase\":\"betting\",\"dealerHand\":[],\"playerHand\":[],\"dealerTotal\":\"\",\"playerTotal\":\"\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21\",\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":\"betting\",\"betAction\":\"deal\",\"status\":\"Place your bet to deal\",\"statusIntent\":\"neutral\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"children\":[]}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Spanish 21 it is. The deck has no 10-spots, so faces stay but every ten is gone. A player 21 always beats the dealer's 21, and player blackjack beats dealer blackjack. Bonus payouts apply to five-plus-card 21s and to 6-7-8 or 7-7-7. Double-after-split and late surrender are allowed. You start with 1,000 chips. Place your bet and deal when you're ready.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Spanish 21 it is. Your bankroll is 1,000 chips. Set your bet and deal when ready.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-1",
+                      "catalogId": "agent-ui--croupier",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "bankroll": 1000,
+                        "bet": 25,
+                        "phase": "betting",
+                        "dealerHand": [],
+                        "playerHand": [],
+                        "dealerTotal": "",
+                        "playerTotal": ""
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Spanish 21",
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "phase": "betting",
+                          "betAction": "deal",
+                          "status": "Place your bet to deal",
+                          "statusIntent": "neutral",
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "children": []
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "## Referenced for this message\n### spanish-21 (resource)\nspanish 21, no-tens deck, bonus 21s, late surrender\n\nBlackjack on a 48-card Spanish deck — every 10-spot removed, faces stay. A player 21 ALWAYS wins, and player blackjack beats dealer blackjack. Bonus payouts for a five-plus-card 21 and for 6-7-8 or 7-7-7; double-after-split and late surrender allowed. Deal and settle as blackjack otherwise.\n\nLet's play Spanish 21."
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"note\":\"Bet of 100 is down. Dealer shows a 7. You have Q and 5, for 15. Hit, Stand, or Double?\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"The user triggered the \\\"deal\\\" action (from component root). Action context: {\\\"bet\\\":100}. Current surface data model: {\\\"bankroll\\\":1000,\\\"bet\\\":100,\\\"phase\\\":\\\"betting\\\",\\\"dealerHand\\\":[],\\\"playerHand\\\":[],\\\"dealerTotal\\\":\\\"\\\",\\\"playerTotal\\\":\\\"\\\"}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":48416,\"sections\":[{\"id\":\"grammar\",\"chars\":25639},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":2115}],\"over\":false}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":1000,\"bet\":100,\"phase\":\"playing\",\"dealerHand\":[{\"rank\":\"7\",\"suit\":\"clubs\"},{\"rank\":\"K\",\"suit\":\"hearts\",\"faceDown\":true}],\"playerHand\":[{\"rank\":\"Q\",\"suit\":\"spades\"},{\"rank\":\"5\",\"suit\":\"diamonds\"}],\"dealerTotal\":\"7 showing\",\"playerTotal\":\"15\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21\",\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":\"playing\",\"status\":\"Your move: hit, stand, or double\",\"statusIntent\":\"info\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"children\":[\"actions\"]},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"justify\":\"end\",\"children\":[\"btn_hit\",\"btn_stand\",\"btn_double\"]},{\"id\":\"btn_hit\",\"component\":\"Button\",\"label\":\"Hit\",\"variant\":\"solid\",\"action\":{\"action\":\"hit\"}},{\"id\":\"btn_stand\",\"component\":\"Button\",\"label\":\"Stand\",\"variant\":\"ghost\",\"action\":{\"action\":\"stand\"}},{\"id\":\"btn_double\",\"component\":\"Button\",\"label\":\"Double\",\"variant\":\"soft\",\"action\":{\"action\":\"double\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Bet of 100 is down. Dealer shows a 7. You have Q and 5, for 15. Hit, Stand, or Double?\",\"target\":{\"surfaceId\":\"table-1\"}}}\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":1000,\"bet\":100,\"phase\":\"playing\",\"dealerHand\":[{\"rank\":\"7\",\"suit\":\"clubs\"},{\"rank\":\"K\",\"suit\":\"hearts\",\"faceDown\":true}],\"playerHand\":[{\"rank\":\"Q\",\"suit\":\"spades\"},{\"rank\":\"5\",\"suit\":\"diamonds\"}],\"dealerTotal\":\"7 showing\",\"playerTotal\":\"15\"}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21\",\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":\"playing\",\"status\":\"Your move: hit, stand, or double\",\"statusIntent\":\"info\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"children\":[\"actions\"]},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"justify\":\"end\",\"children\":[\"btn_hit\",\"btn_stand\",\"btn_double\"]},{\"id\":\"btn_hit\",\"component\":\"Button\",\"label\":\"Hit\",\"variant\":\"solid\",\"action\":{\"action\":\"hit\"}},{\"id\":\"btn_stand\",\"component\":\"Button\",\"label\":\"Stand\",\"variant\":\"ghost\",\"action\":{\"action\":\"stand\"}},{\"id\":\"btn_double\",\"component\":\"Button\",\"label\":\"Double\",\"variant\":\"soft\",\"action\":{\"action\":\"double\"}}]}}",
+          "tools": []
+        },
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Bet of 100 is down and your bankroll stands at 900. Dealer shows a 7. You have Q and 5, for 15. Hit, Stand, or Double?\",\"target\":{\"surfaceId\":\"table-1\"}}}",
+          "tools": []
+        },
+        {
+          "text": "Bet of 100 is down, so your bankroll stands at 900. The dealer shows a 7 with a face-down card. You have Q and 5, for 15. Hit, Stand, or Double?",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Bet of 100 is down and your bankroll stands at 900. The dealer shows a 7 with a face-down card. You have Q and 5, for 15. Hit, Stand, or Double?",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "bankroll": 900,
+                        "bet": 100,
+                        "phase": "playing",
+                        "status": "Your move: Hit, Stand or Double",
+                        "dealerHand": [
+                          {
+                            "rank": "7",
+                            "suit": "hearts"
+                          },
+                          {
+                            "rank": "K",
+                            "suit": "spades",
+                            "faceDown": true
+                          }
+                        ],
+                        "playerHand": [
+                          {
+                            "rank": "Q",
+                            "suit": "diamonds"
+                          },
+                          {
+                            "rank": "5",
+                            "suit": "clubs"
+                          }
+                        ],
+                        "dealerTotal": "7 showing",
+                        "playerTotal": "15"
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Spanish 21",
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "betAction": "deal",
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": "neutral",
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "children": [
+                            "act_hit",
+                            "act_stand",
+                            "act_double"
+                          ]
+                        },
+                        {
+                          "id": "act_hit",
+                          "component": "Button",
+                          "label": "Hit",
+                          "variant": "solid",
+                          "action": {
+                            "action": "hit"
+                          }
+                        },
+                        {
+                          "id": "act_stand",
+                          "component": "Button",
+                          "label": "Stand",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "stand"
+                          }
+                        },
+                        {
+                          "id": "act_double",
+                          "component": "Button",
+                          "label": "Double",
+                          "variant": "soft",
+                          "action": {
+                            "action": "double"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "client",
+        "message": {
+          "version": "v1.0",
+          "action": {
+            "surfaceId": "table-1",
+            "actionId": "a2ui-action-1",
+            "name": "deal",
+            "sourceComponentId": "root",
+            "timestamp": "2026-10-15T00:27:15.077Z",
+            "context": {
+              "bet": 100
+            },
+            "dataModel": {
+              "bankroll": 1000,
+              "bet": 100,
+              "phase": "betting",
+              "dealerHand": [],
+              "playerHand": [],
+              "dealerTotal": "",
+              "playerTotal": ""
+            }
+          }
+        }
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"Standing on 15. The dealer turns over the king: 7 + K = 17, which beats your 15. You lose the 100 bet, and your bankroll stays at 900.\\n\\n\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Standing on 15. The dealer turns over the king: 7 + K = 17, which beats your 15. You lose the 100 bet, and your bankroll stays at 900.\",\"trace\":{\"turnIndex\":4,\"query\":{\"intent\":\"The user triggered the \\\"stand\\\" action (from component act_stand). Current surface data model: {\\\"bankroll\\\":900,\\\"bet\\\":100,\\\"phase\\\":\\\"playing\\\",\\\"status\\\":\\\"Your move: Hit, Stand or Double\\\",\\\"dealerHand\\\":[{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"5\\\",\\\"suit\\\":\\\"clubs\\\"}],\\\"dealerTotal\\\":\\\"7 showing\\\",\\\"playerTotal\\\":\\\"15\\\"}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[\"TEXT_JSONL_ROUTED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":48513,\"sections\":[{\"id\":\"grammar\",\"chars\":25639},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":2212}],\"over\":false}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":900,\"bet\":0,\"phase\":\"settled\",\"status\":\"Dealer 17 beats your 15. You lose 100.\",\"dealerHand\":[{\"rank\":\"7\",\"suit\":\"hearts\"},{\"rank\":\"K\",\"suit\":\"spades\"}],\"playerHand\":[{\"rank\":\"Q\",\"suit\":\"diamonds\"},{\"rank\":\"5\",\"suit\":\"clubs\"}],\"dealerTotal\":\"17\",\"playerTotal\":\"15\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21\",\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":\"settled\",\"betAction\":\"deal\",\"status\":{\"path\":\"/status\"},\"statusIntent\":\"danger\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"children\":[\"act_again\"]},{\"id\":\"act_again\",\"component\":\"Button\",\"label\":\"Deal again\",\"variant\":\"solid\",\"action\":{\"action\":\"deal\",\"context\":{\"newRound\":true}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Standing on 15. The dealer turns over the king: 7 + K = 17, which beats your 15. You lose the 100 bet, and your bankroll stays at 900.\n\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":900,\"bet\":0,\"phase\":\"settled\",\"status\":\"Dealer 17 beats your 15. You lose 100.\",\"dealerHand\":[{\"rank\":\"7\",\"suit\":\"hearts\"},{\"rank\":\"K\",\"suit\":\"spades\"}],\"playerHand\":[{\"rank\":\"Q\",\"suit\":\"diamonds\"},{\"rank\":\"5\",\"suit\":\"clubs\"}],\"dealerTotal\":\"17\",\"playerTotal\":\"15\"}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21\",\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":\"settled\",\"betAction\":\"deal\",\"status\":{\"path\":\"/status\"},\"statusIntent\":\"danger\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"children\":[\"act_again\"]},{\"id\":\"act_again\",\"component\":\"Button\",\"label\":\"Deal again\",\"variant\":\"solid\",\"action\":{\"action\":\"deal\",\"context\":{\"newRound\":true}}}]}}",
+          "tools": []
+        }
+      ],
+      "input": {
+        "kind": "client",
+        "message": {
+          "version": "v1.0",
+          "action": {
+            "surfaceId": "table-1",
+            "actionId": "a2ui-action-2",
+            "name": "stand",
+            "sourceComponentId": "act_stand",
+            "timestamp": "2026-10-15T00:27:40.641Z",
+            "context": {},
+            "dataModel": {
+              "bankroll": 900,
+              "bet": 100,
+              "phase": "playing",
+              "status": "Your move: Hit, Stand or Double",
+              "dealerHand": [
+                {
+                  "rank": "7",
+                  "suit": "hearts"
+                },
+                {
+                  "rank": "K",
+                  "suit": "spades",
+                  "faceDown": true
+                }
+              ],
+              "playerHand": [
+                {
+                  "rank": "Q",
+                  "suit": "diamonds"
+                },
+                {
+                  "rank": "5",
+                  "suit": "clubs"
+                }
+              ],
+              "dealerTotal": "7 showing",
+              "playerTotal": "15"
+            }
+          }
+        }
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"New round. Your bankroll is 900. The bet is set to 100 from last round, so change it if you like, then deal.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"New round at 900 chips. The bet is set to 100. Change it if you like, then deal.\",\"trace\":{\"turnIndex\":6,\"query\":{\"intent\":\"The user triggered the \\\"deal\\\" action (from component act_again). Action context: {\\\"newRound\\\":true}. Current surface data model: {\\\"bankroll\\\":900,\\\"bet\\\":0,\\\"phase\\\":\\\"settled\\\",\\\"status\\\":\\\"Dealer 17 beats your 15. You lose 100.\\\",\\\"dealerHand\\\":[{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"spades\\\"}],\\\"playerHand\\\":[{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"5\\\",\\\"suit\\\":\\\"clubs\\\"}],\\\"dealerTotal\\\":\\\"17\\\",\\\"playerTotal\\\":\\\"15\\\"}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"PARSE\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":48652,\"sections\":[{\"id\":\"grammar\",\"chars\":25639},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":2351}],\"over\":false}}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-2\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-2\",\"value\":{\"bankroll\":900,\"bet\":100,\"phase\":\"betting\",\"dealerHand\":[],\"playerHand\":[],\"dealerTotal\":\"\",\"playerTotal\":\"\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21\",\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":{\"path\":\"/phase\"},\"betAction\":\"deal\",\"status\":\"Place your bet to deal\",\"statusIntent\":\"neutral\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"children\":[]}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "New round. Your bankroll is 900. The bet is set to 100 from last round, so change it if you like, then deal.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "New round. Your bankroll is 900. The bet is set to 100 from last round; change it if you like, then deal.",
+                "messages": "[{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-2\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}},{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-2\",\"value\":{\"bankroll\":900,\"bet\":100,\"phase\":\"betting\",\"dealerHand\":[],\"playerHand\":[],\"dealerTotal\":\"\",\"playerTotal\":\"\"}}},{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21\",\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":\"betting\",\"betAction\":\"deal\",\"status\":\"Place your bet to deal\",\"statusIntent\":\"neutral\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"children\":[]}}]}}]"
+              }
+            }
+          ]
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "New round at 900 chips. The bet is set to 100. Change it if you like, then deal.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-2",
+                      "catalogId": "agent-ui--croupier",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-2",
+                      "value": {
+                        "bankroll": 900,
+                        "bet": 100,
+                        "phase": "betting",
+                        "dealerHand": [],
+                        "playerHand": [],
+                        "dealerTotal": "",
+                        "playerTotal": ""
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-2",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Spanish 21",
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "betAction": "deal",
+                          "status": "Place your bet to deal",
+                          "statusIntent": "neutral",
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "children": []
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "client",
+        "message": {
+          "version": "v1.0",
+          "action": {
+            "surfaceId": "table-1",
+            "actionId": "a2ui-action-3",
+            "name": "deal",
+            "sourceComponentId": "act_again",
+            "timestamp": "2026-10-15T00:27:47.655Z",
+            "context": {
+              "newRound": true
+            },
+            "dataModel": {
+              "bankroll": 900,
+              "bet": 0,
+              "phase": "settled",
+              "status": "Dealer 17 beats your 15. You lose 100.",
+              "dealerHand": [
+                {
+                  "rank": "7",
+                  "suit": "hearts"
+                },
+                {
+                  "rank": "K",
+                  "suit": "spades"
+                }
+              ],
+              "playerHand": [
+                {
+                  "rank": "Q",
+                  "suit": "diamonds"
+                },
+                {
+                  "rank": "5",
+                  "suit": "clubs"
+                }
+              ],
+              "dealerTotal": "17",
+              "playerTotal": "15"
+            }
+          }
+        }
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"Bet of 100 is down, bankroll 900. The dealer shows an 8. You have A and 9, a soft 20. Hit, Stand or Double?\\n\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Bet of 100 is down, bankroll 900. The dealer shows an 8. You have A and 9, a soft 20. Hit, Stand or Double?\",\"target\":{\"surfaceId\":\"table-2\"},\"trace\":{\"turnIndex\":8,\"query\":{\"intent\":\"The user triggered the \\\"deal\\\" action (from component root). Action context: {\\\"bet\\\":100}. Current surface data model: {\\\"bankroll\\\":900,\\\"bet\\\":100,\\\"phase\\\":\\\"betting\\\",\\\"dealerHand\\\":[],\\\"playerHand\\\":[],\\\"dealerTotal\\\":\\\"\\\",\\\"playerTotal\\\":\\\"\\\"}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[\"TEXT_JSONL_ROUTED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":48416,\"sections\":[{\"id\":\"grammar\",\"chars\":25639},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":2115}],\"over\":false}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-2\",\"value\":{\"bankroll\":900,\"bet\":100,\"phase\":\"playing\",\"status\":\"Your move: Hit, Stand or Double\",\"dealerHand\":[{\"rank\":\"8\",\"suit\":\"spades\"},{\"rank\":\"Q\",\"suit\":\"hearts\",\"faceDown\":true}],\"playerHand\":[{\"rank\":\"A\",\"suit\":\"hearts\"},{\"rank\":\"9\",\"suit\":\"clubs\"}],\"dealerTotal\":\"8 showing\",\"playerTotal\":\"Soft 20\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21\",\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":{\"path\":\"/phase\"},\"betAction\":\"deal\",\"status\":{\"path\":\"/status\"},\"statusIntent\":\"neutral\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"children\":[\"act_hit\",\"act_stand\",\"act_double\"]},{\"id\":\"act_hit\",\"component\":\"Button\",\"label\":\"Hit\",\"variant\":\"solid\",\"action\":{\"action\":\"hit\"}},{\"id\":\"act_stand\",\"component\":\"Button\",\"label\":\"Stand\",\"variant\":\"ghost\",\"action\":{\"action\":\"stand\"}},{\"id\":\"act_double\",\"component\":\"Button\",\"label\":\"Double\",\"variant\":\"soft\",\"action\":{\"action\":\"double\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"table-2\"}}}\nBet of 100 is down, bankroll 900. The dealer shows an 8. You have A and 9, a soft 20. Hit, Stand or Double?\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-2\",\"value\":{\"bankroll\":900,\"bet\":100,\"phase\":\"playing\",\"status\":\"Your move: Hit, Stand or Double\",\"dealerHand\":[{\"rank\":\"8\",\"suit\":\"spades\"},{\"rank\":\"Q\",\"suit\":\"hearts\",\"faceDown\":true}],\"playerHand\":[{\"rank\":\"A\",\"suit\":\"hearts\"},{\"rank\":\"9\",\"suit\":\"clubs\"}],\"dealerTotal\":\"8 showing\",\"playerTotal\":\"Soft 20\"}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21\",\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":{\"path\":\"/phase\"},\"betAction\":\"deal\",\"status\":{\"path\":\"/status\"},\"statusIntent\":\"neutral\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"children\":[\"act_hit\",\"act_stand\",\"act_double\"]},{\"id\":\"act_hit\",\"component\":\"Button\",\"label\":\"Hit\",\"variant\":\"solid\",\"action\":{\"action\":\"hit\"}},{\"id\":\"act_stand\",\"component\":\"Button\",\"label\":\"Stand\",\"variant\":\"ghost\",\"action\":{\"action\":\"stand\"}},{\"id\":\"act_double\",\"component\":\"Button\",\"label\":\"Double\",\"variant\":\"soft\",\"action\":{\"action\":\"double\"}}]}}",
+          "tools": []
+        },
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"table-2\"}}}\nCorrected: the 100 bet comes out of your bankroll, leaving 800. The dealer shows an 8. You have a soft 20 (A and 9). Hit, Stand or Double?",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "target": "table-2",
+                "reply": "Corrected: the 100 bet comes out of your bankroll, leaving 800. The dealer shows an 8. You have a soft 20 (A and 9). Hit, Stand or Double?",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-2",
+                      "value": {
+                        "bankroll": 800,
+                        "bet": 100,
+                        "phase": "playing",
+                        "status": "Your move: Hit, Stand or Double",
+                        "dealerHand": [
+                          {
+                            "rank": "8",
+                            "suit": "spades"
+                          },
+                          {
+                            "rank": "Q",
+                            "suit": "hearts",
+                            "faceDown": true
+                          }
+                        ],
+                        "playerHand": [
+                          {
+                            "rank": "A",
+                            "suit": "hearts"
+                          },
+                          {
+                            "rank": "9",
+                            "suit": "clubs"
+                          }
+                        ],
+                        "dealerTotal": "8 showing",
+                        "playerTotal": "Soft 20"
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-2",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Spanish 21",
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "betAction": "deal",
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": "neutral",
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "children": [
+                            "act_hit",
+                            "act_stand",
+                            "act_double"
+                          ]
+                        },
+                        {
+                          "id": "act_hit",
+                          "component": "Button",
+                          "label": "Hit",
+                          "variant": "solid",
+                          "action": {
+                            "action": "hit"
+                          }
+                        },
+                        {
+                          "id": "act_stand",
+                          "component": "Button",
+                          "label": "Stand",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "stand"
+                          }
+                        },
+                        {
+                          "id": "act_double",
+                          "component": "Button",
+                          "label": "Double",
+                          "variant": "soft",
+                          "action": {
+                            "action": "double"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "client",
+        "message": {
+          "version": "v1.0",
+          "action": {
+            "surfaceId": "table-2",
+            "actionId": "a2ui-action-1",
+            "name": "deal",
+            "sourceComponentId": "root",
+            "timestamp": "2026-10-15T00:27:59.139Z",
+            "context": {
+              "bet": 100
+            },
+            "dataModel": {
+              "bankroll": 900,
+              "bet": 100,
+              "phase": "betting",
+              "dealerHand": [],
+              "playerHand": [],
+              "dealerTotal": "",
+              "playerTotal": ""
+            }
+          }
+        }
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"You surrender and recover half the bet. The dealer's hole card is revealed: 8 + Q = 18, which beats your soft 20. You lose 50 chips, and your bankroll goes to 850.\\n\\n\"}}",
+        "{\"a2uiMeta\":{\"note\":\"You surrender and recover half the bet. The dealer's hole card is revealed: 8 + Q = 18, which beats your soft 20. You lose 50 chips, and your bankroll goes to 850.\",\"trace\":{\"turnIndex\":10,\"query\":{\"intent\":\"Late surrender.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[\"TEXT_JSONL_ROUTED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":46301,\"sections\":[{\"id\":\"grammar\",\"chars\":25639},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145}],\"over\":false}}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-2\",\"value\":{\"bankroll\":850,\"bet\":0,\"phase\":\"settled\",\"status\":\"You surrender. Dealer 18 beats your soft 20. You lose 50.\",\"dealerHand\":[{\"rank\":\"8\",\"suit\":\"spades\"},{\"rank\":\"Q\",\"suit\":\"hearts\"}],\"playerHand\":[{\"rank\":\"A\",\"suit\":\"hearts\"},{\"rank\":\"9\",\"suit\":\"clubs\"}],\"dealerTotal\":\"18\",\"playerTotal\":\"Soft 20\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21\",\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":\"settled\",\"betAction\":\"deal\",\"status\":{\"path\":\"/status\"},\"statusIntent\":\"danger\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"children\":[\"act_again\"]},{\"id\":\"act_again\",\"component\":\"Button\",\"label\":\"Deal again\",\"variant\":\"solid\",\"action\":{\"action\":\"deal\",\"context\":{\"newRound\":true}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "You surrender and recover half the bet. The dealer's hole card is revealed: 8 + Q = 18, which beats your soft 20. You lose 50 chips, and your bankroll goes to 850.\n\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-2\",\"value\":{\"bankroll\":850,\"bet\":0,\"phase\":\"settled\",\"status\":\"You surrender. Dealer 18 beats your soft 20. You lose 50.\",\"dealerHand\":[{\"rank\":\"8\",\"suit\":\"spades\"},{\"rank\":\"Q\",\"suit\":\"hearts\"}],\"playerHand\":[{\"rank\":\"A\",\"suit\":\"hearts\"},{\"rank\":\"9\",\"suit\":\"clubs\"}],\"dealerTotal\":\"18\",\"playerTotal\":\"Soft 20\"}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21\",\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":\"settled\",\"betAction\":\"deal\",\"status\":{\"path\":\"/status\"},\"statusIntent\":\"danger\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"children\":[\"act_again\"]},{\"id\":\"act_again\",\"component\":\"Button\",\"label\":\"Deal again\",\"variant\":\"solid\",\"action\":{\"action\":\"deal\",\"context\":{\"newRound\":true}}}]}}",
+          "tools": []
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "Late surrender."
+      }
+    }
+  ]
+}

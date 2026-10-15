@@ -1,0 +1,340 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "croupier-draw-haiku-prose-state",
+  "agent": "croupier",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "2026-10-15.jsonl:45,2026-10-15.jsonl:46,2026-10-15.jsonl:47,2026-10-15.jsonl:48 (catalog agent-ui--croupier)",
+  "steps": [
+    {
+      "say": "Let's play five-card draw."
+    },
+    {
+      "say": "Check."
+    },
+    {
+      "say": "Discard my two lowest cards and draw."
+    },
+    {
+      "say": "Bet 50."
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"Five-card draw it is. Each of us gets five cards face down, then a betting round. Next, each player may discard up to three cards (four if keeping an ace) and draw replacements, followed by a final betting round and showdown. Standard rankings apply, and tied hands split the pot. Your bankroll is 1,000. You hold a pair of nines.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Five-card draw it is. Each of us gets five cards face down, then a betting round. Next, each player may discard up to three cards (four if keeping an ace) and draw replacements, followed by a final betting round and showdown. Standard rankings apply, and tied hands split the pot. Your bankroll is 1,000. You hold a pair of nines.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"## Referenced for this message\\n### five-card-draw (resource)\\nfive-card draw, discard and draw, classic poker\\n\\nClassic draw poker: five cards each, face-down, then a betting round; each side may discard up to three cards (four when keeping an Ace) and draw replacements; one final betting round, then showdown. Standard rankings; tied hands split the pot.\\n\\nLet's play five-card draw.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":48322,\"sections\":[{\"id\":\"grammar\",\"chars\":25639},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":2021}],\"over\":false}}}}"
+      ],
+      "rounds": [
+        {
+          "text": "Five-card draw it is. Each of us gets five cards face down, then a betting round. Next, each player may discard up to three cards (four if keeping an ace) and draw replacements, followed by a final betting round and showdown. Standard rankings apply, and tied hands split the pot. Your bankroll is 1,000. You hold a pair of nines.",
+          "tools": []
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "## Referenced for this message\n### five-card-draw (resource)\nfive-card draw, discard and draw, classic poker\n\nClassic draw poker: five cards each, face-down, then a betting round; each side may discard up to three cards (four when keeping an Ace) and draw replacements; one final betting round, then showdown. Standard rankings; tied hands split the pot.\n\nLet's play five-card draw."
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"You check, and I check behind you. Your pair of nines is on the table. Mark up to three cards to discard, then draw replacements or stand pat.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"You check, and I check behind you. Your pair of nines is on the table. Mark up to three cards to discard, then draw replacements or stand pat.\",\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Check.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":46301,\"sections\":[{\"id\":\"grammar\",\"chars\":25639},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145}],\"over\":false}}}}"
+      ],
+      "rounds": [
+        {
+          "text": "You check, and I check behind you. Your pair of nines is on the table. Mark up to three cards to discard, then draw replacements or stand pat.",
+          "tools": []
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "Check."
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"note\":\"You discard the 2♣ and 4♣ and draw the K♠ and 3♦. You still hold a pair of nines, and I stand pat. Final betting round: Check or Bet.\",\"trace\":{\"turnIndex\":4,\"query\":{\"intent\":\"Discard my two lowest cards and draw.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":47528,\"sections\":[{\"id\":\"grammar\",\"chars\":25639},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1227}],\"over\":false}}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-1\",\"catalogId\":\"agent-ui--croupier\"}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":1000,\"statusLine\":\"Your pair of nines. Dealer stood pat. Final betting round: your action.\",\"dealerHand\":[{\"rank\":\"K\",\"suit\":\"hearts\",\"faceDown\":true},{\"rank\":\"10\",\"suit\":\"clubs\",\"faceDown\":true},{\"rank\":\"6\",\"suit\":\"diamonds\",\"faceDown\":true},{\"rank\":\"6\",\"suit\":\"spades\",\"faceDown\":true},{\"rank\":\"2\",\"suit\":\"hearts\",\"faceDown\":true}],\"playerHand\":[{\"rank\":\"9\",\"suit\":\"spades\",\"faceDown\":false},{\"rank\":\"9\",\"suit\":\"diamonds\",\"faceDown\":false},{\"rank\":\"7\",\"suit\":\"hearts\",\"faceDown\":false},{\"rank\":\"K\",\"suit\":\"spades\",\"faceDown\":false},{\"rank\":\"3\",\"suit\":\"diamonds\",\"faceDown\":false}]}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"header\",\"content\",\"footer\"]},{\"id\":\"header\",\"component\":\"CardHeader\",\"children\":[\"title\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Five-card draw\",\"variant\":\"h4\"},{\"id\":\"content\",\"component\":\"CardContent\",\"children\":[\"dealer_lbl\",\"dealer_row\",\"player_lbl\",\"player_row\",\"bank\",\"status\"]},{\"id\":\"dealer_lbl\",\"component\":\"Text\",\"text\":\"Dealer\",\"variant\":\"label\"},{\"id\":\"dealer_row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/dealerHand\",\"componentId\":\"dcard\"}},{\"id\":\"dcard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":{\"path\":\"faceDown\"},\"size\":\"md\"},{\"id\":\"player_lbl\",\"component\":\"Text\",\"text\":\"You\",\"variant\":\"label\"},{\"id\":\"player_row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/playerHand\",\"componentId\":\"pcard\"}},{\"id\":\"pcard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":{\"path\":\"faceDown\"},\"size\":\"md\"},{\"id\":\"bank\",\"component\":\"Text\",\"text\":\"Bankroll: 1,000\",\"variant\":\"body\",\"emphasis\":true},{\"id\":\"status\",\"component\":\"Text\",\"text\":{\"path\":\"/statusLine\"},\"variant\":\"body\"},{\"id\":\"footer\",\"component\":\"CardFooter\",\"children\":[\"actions\"]},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"children\":[\"btn_check\",\"btn_bet\"]},{\"id\":\"btn_check\",\"component\":\"Button\",\"label\":\"Check\",\"variant\":\"solid\",\"action\":{\"action\":\"round_action\",\"context\":{\"action\":\"check\"}}},{\"id\":\"btn_bet\",\"component\":\"Button\",\"label\":\"Bet\",\"variant\":\"ghost\",\"action\":{\"action\":\"round_action\",\"context\":{\"action\":\"bet\"}}}]}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[]}}"
+      ],
+      "rounds": [
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "You discard the 2♣ and 4♣ and draw the K♠ and 3♦. You still hold a pair of nines, and I stand pat. Final betting round: Check or Bet.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-1",
+                      "catalogId": "agent-ui--croupier"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "bankroll": 1000,
+                        "statusLine": "Your pair of nines. Dealer stood pat. Final betting round: your action.",
+                        "dealerHand": [
+                          {
+                            "rank": "K",
+                            "suit": "hearts",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "10",
+                            "suit": "clubs",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "6",
+                            "suit": "diamonds",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "6",
+                            "suit": "spades",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "2",
+                            "suit": "hearts",
+                            "faceDown": true
+                          }
+                        ],
+                        "playerHand": [
+                          {
+                            "rank": "9",
+                            "suit": "spades",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "9",
+                            "suit": "diamonds",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "7",
+                            "suit": "hearts",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "K",
+                            "suit": "spades",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "3",
+                            "suit": "diamonds",
+                            "faceDown": false
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "header",
+                            "content",
+                            "footer"
+                          ]
+                        },
+                        {
+                          "id": "header",
+                          "component": "CardHeader",
+                          "children": [
+                            "title"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Five-card draw",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "content",
+                          "component": "CardContent",
+                          "children": [
+                            "dealer_lbl",
+                            "dealer_row",
+                            "player_lbl",
+                            "player_row",
+                            "bank",
+                            "status"
+                          ]
+                        },
+                        {
+                          "id": "dealer_lbl",
+                          "component": "Text",
+                          "text": "Dealer",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "dealer_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/dealerHand",
+                            "componentId": "dcard"
+                          }
+                        },
+                        {
+                          "id": "dcard",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "faceDown": {
+                            "path": "faceDown"
+                          },
+                          "size": "md"
+                        },
+                        {
+                          "id": "player_lbl",
+                          "component": "Text",
+                          "text": "You",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "player_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/playerHand",
+                            "componentId": "pcard"
+                          }
+                        },
+                        {
+                          "id": "pcard",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "faceDown": {
+                            "path": "faceDown"
+                          },
+                          "size": "md"
+                        },
+                        {
+                          "id": "bank",
+                          "component": "Text",
+                          "text": "Bankroll: 1,000",
+                          "variant": "body",
+                          "emphasis": true
+                        },
+                        {
+                          "id": "status",
+                          "component": "Text",
+                          "text": {
+                            "path": "/statusLine"
+                          },
+                          "variant": "body"
+                        },
+                        {
+                          "id": "footer",
+                          "component": "CardFooter",
+                          "children": [
+                            "actions"
+                          ]
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "md",
+                          "children": [
+                            "btn_check",
+                            "btn_bet"
+                          ]
+                        },
+                        {
+                          "id": "btn_check",
+                          "component": "Button",
+                          "label": "Check",
+                          "variant": "solid",
+                          "action": {
+                            "action": "round_action",
+                            "context": {
+                              "action": "check"
+                            }
+                          }
+                        },
+                        {
+                          "id": "btn_bet",
+                          "component": "Button",
+                          "label": "Bet",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "round_action",
+                            "context": {
+                              "action": "bet"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": []
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "Discard my two lowest cards and draw."
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"note\":\"You bet 50 and I called. At showdown your pair of nines beat my pair of sixes, so you take the 100-chip pot. You're up 50, and your bankroll is now 1,050. Deal again when you're ready.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":6,\"query\":{\"intent\":\"Bet 50.\",\"k\":3},\"exemplarIds\":[],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"SCHEMA\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":47056,\"sections\":[{\"id\":\"grammar\",\"chars\":25639},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":755}],\"over\":false}}}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"table-1\"}}}You bet 50 and I call. At showdown, your pair of nines beats my pair of sixes, so you win the 100-chip pot and take 50 chips. Your bankroll is now 1,050.",
+          "tools": []
+        },
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"You bet 50 and I called. At showdown your pair of nines beat my pair of sixes, so you take the 100-chip pot. You're up 50, and your bankroll is now 1,050. Deal again when you're ready.\",\"target\":{\"surfaceId\":\"table-1\"}}}",
+          "tools": []
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "Bet 50."
+      }
+    }
+  ]
+}

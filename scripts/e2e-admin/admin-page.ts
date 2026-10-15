@@ -299,17 +299,20 @@ export class AdminPage {
     )
   }
 
-  /** Wait for a surface button reading `label` in the pane, then click it (the real A2UI action path). */
+  /** Wait for a visible surface button reading `label` in the pane, then click the last one (the real A2UI
+   *  action path). T-0184: the last visible match is the newest surface's; a finished round's table stays in
+   *  the log as history with its hidden bet strip and its own "Deal again", so the first match is stale. */
   async clickSurfaceButton(label: string, pane: ConversationPane = 'chat'): Promise<void> {
     const selector = `${paneSelector(pane)} ${ADMIN_SELECTORS.surfaceButton}`
-    await pollUntil(
-      () => this.surfaceButtonLabels(pane),
-      (labels) => labels.includes(label),
-      `a surface button reading "${label}" in the ${pane} pane`,
-    )
+    const visibleMatches = (): Promise<number> =>
+      this.page.evaluate(
+        ({ s, l }) => [...document.querySelectorAll<HTMLElement>(s)].filter((b) => b.textContent?.trim() === l && b.checkVisibility()).length,
+        { s: selector, l: label },
+      )
+    await pollUntil(visibleMatches, (n) => n > 0, `a visible surface button reading "${label}" in the ${pane} pane`)
     await this.page.evaluate(
       ({ s, l }) => {
-        const button = [...document.querySelectorAll<HTMLElement>(s)].find((b) => b.textContent?.trim() === l)
+        const button = [...document.querySelectorAll<HTMLElement>(s)].filter((b) => b.textContent?.trim() === l && b.checkVisibility()).at(-1)
         button?.click()
       },
       { s: selector, l: label },

@@ -1,0 +1,314 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "croupier-omaha-placeholder-hole",
+  "agent": "croupier",
+  "model": "claude-sonnet-5-5",
+  "effort": "medium",
+  "source": "2026-10-15.jsonl:105 (catalog agent-ui--croupier)",
+  "steps": [
+    {
+      "say": "Let's play Omaha."
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"Omaha it is. Each player gets four hole cards. You must use exactly two of them plus exactly three board cards. The game is pot-limit. We each ante 20, and you're starting from 1,000 chips.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Omaha it is. Each player gets four hole cards. You must use exactly two of them plus exactly three board cards. The game is pot-limit. We each ante 20, and you're starting from 1,000 chips.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"## Referenced for this message\\n### omaha (resource)\\nomaha hold'em, four hole cards, exactly two plus three, pot limit\\n\\nHold'em variant: FOUR hole cards each, same streets and betting rounds. A hand must use exactly two hole cards plus exactly three board cards — no more, no fewer. Traditionally pot-limit; otherwise settle as hold'em.\\n\\nLet's play Omaha.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":48166,\"sections\":[{\"id\":\"grammar\",\"chars\":25639},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1865}],\"over\":false}}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-1\",\"catalogId\":\"agent-ui--croupier\"}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":980,\"pot\":40,\"dealerHand\":[{\"rank\":\"2\",\"suit\":\"clubs\",\"faceDown\":true},{\"rank\":\"2\",\"suit\":\"clubs\",\"faceDown\":true},{\"rank\":\"2\",\"suit\":\"clubs\",\"faceDown\":true},{\"rank\":\"2\",\"suit\":\"clubs\",\"faceDown\":true}],\"playerHand\":[{\"rank\":\"A\",\"suit\":\"spades\",\"faceDown\":false},{\"rank\":\"K\",\"suit\":\"spades\",\"faceDown\":false},{\"rank\":\"9\",\"suit\":\"hearts\",\"faceDown\":false},{\"rank\":\"8\",\"suit\":\"hearts\",\"faceDown\":false}],\"board\":[]}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"table\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Omaha · Pre-flop\",\"status\":\"Your turn\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Bankroll\",\"value\":{\"path\":\"/bankroll\"}},{\"label\":\"Pot\",\"value\":{\"path\":\"/pot\"}}]},{\"id\":\"table\",\"component\":\"Card\",\"children\":[\"content\",\"footer\"]},{\"id\":\"content\",\"component\":\"CardContent\",\"children\":[\"col\"]},{\"id\":\"col\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"dl\",\"drow\",\"bl\",\"brow\",\"pl\",\"prow\"]},{\"id\":\"dl\",\"component\":\"Text\",\"text\":\"Dealer (4 hole cards)\",\"variant\":\"label\"},{\"id\":\"drow\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/dealerHand\",\"componentId\":\"dcard\"}},{\"id\":\"dcard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":{\"path\":\"faceDown\"},\"size\":\"md\"},{\"id\":\"bl\",\"component\":\"Text\",\"text\":\"Board: flop comes after betting\",\"variant\":\"label\"},{\"id\":\"brow\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/board\",\"componentId\":\"bcard\"}},{\"id\":\"bcard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"size\":\"md\"},{\"id\":\"pl\",\"component\":\"Text\",\"text\":\"You (use exactly 2 of 4)\",\"variant\":\"label\"},{\"id\":\"prow\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/playerHand\",\"componentId\":\"pcard\"}},{\"id\":\"pcard\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":{\"path\":\"faceDown\"},\"size\":\"md\"},{\"id\":\"footer\",\"component\":\"CardFooter\",\"children\":[\"actions\"]},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"md\",\"children\":[\"bet\",\"check\",\"fold\"]},{\"id\":\"bet\",\"component\":\"Button\",\"label\":\"Bet 40\",\"variant\":\"solid\",\"action\":{\"action\":\"omaha_action\",\"context\":{\"move\":\"bet\",\"amount\":40}}},{\"id\":\"check\",\"component\":\"Button\",\"label\":\"Check\",\"variant\":\"soft\",\"action\":{\"action\":\"omaha_action\",\"context\":{\"move\":\"check\"}}},{\"id\":\"fold\",\"component\":\"Button\",\"label\":\"Fold\",\"variant\":\"ghost\",\"action\":{\"action\":\"omaha_action\",\"context\":{\"move\":\"fold\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Omaha it is. Each player gets four hole cards. You must use exactly two of them plus exactly three board cards. The game is pot-limit. We each ante 20, and you're starting from 1,000 chips.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Cards are out. Your move: check, bet (up to the 40 pot), or fold.",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-1",
+                      "catalogId": "agent-ui--croupier"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "bankroll": 980,
+                        "pot": 40,
+                        "dealerHand": [
+                          {
+                            "rank": "2",
+                            "suit": "clubs",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "2",
+                            "suit": "clubs",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "2",
+                            "suit": "clubs",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "2",
+                            "suit": "clubs",
+                            "faceDown": true
+                          }
+                        ],
+                        "playerHand": [
+                          {
+                            "rank": "A",
+                            "suit": "spades",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "K",
+                            "suit": "spades",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "9",
+                            "suit": "hearts",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "8",
+                            "suit": "hearts",
+                            "faceDown": false
+                          }
+                        ],
+                        "board": []
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "table"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Omaha · Pre-flop",
+                          "status": "Your turn",
+                          "statusIntent": "info",
+                          "stats": [
+                            {
+                              "label": "Bankroll",
+                              "value": {
+                                "path": "/bankroll"
+                              }
+                            },
+                            {
+                              "label": "Pot",
+                              "value": {
+                                "path": "/pot"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "id": "table",
+                          "component": "Card",
+                          "children": [
+                            "content",
+                            "footer"
+                          ]
+                        },
+                        {
+                          "id": "content",
+                          "component": "CardContent",
+                          "children": [
+                            "col"
+                          ]
+                        },
+                        {
+                          "id": "col",
+                          "component": "Column",
+                          "gap": "sm",
+                          "children": [
+                            "dl",
+                            "drow",
+                            "bl",
+                            "brow",
+                            "pl",
+                            "prow"
+                          ]
+                        },
+                        {
+                          "id": "dl",
+                          "component": "Text",
+                          "text": "Dealer (4 hole cards)",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "drow",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/dealerHand",
+                            "componentId": "dcard"
+                          }
+                        },
+                        {
+                          "id": "dcard",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "faceDown": {
+                            "path": "faceDown"
+                          },
+                          "size": "md"
+                        },
+                        {
+                          "id": "bl",
+                          "component": "Text",
+                          "text": "Board: flop comes after betting",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "brow",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/board",
+                            "componentId": "bcard"
+                          }
+                        },
+                        {
+                          "id": "bcard",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "size": "md"
+                        },
+                        {
+                          "id": "pl",
+                          "component": "Text",
+                          "text": "You (use exactly 2 of 4)",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "prow",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/playerHand",
+                            "componentId": "pcard"
+                          }
+                        },
+                        {
+                          "id": "pcard",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "faceDown": {
+                            "path": "faceDown"
+                          },
+                          "size": "md"
+                        },
+                        {
+                          "id": "footer",
+                          "component": "CardFooter",
+                          "children": [
+                            "actions"
+                          ]
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "md",
+                          "children": [
+                            "bet",
+                            "check",
+                            "fold"
+                          ]
+                        },
+                        {
+                          "id": "bet",
+                          "component": "Button",
+                          "label": "Bet 40",
+                          "variant": "solid",
+                          "action": {
+                            "action": "omaha_action",
+                            "context": {
+                              "move": "bet",
+                              "amount": 40
+                            }
+                          }
+                        },
+                        {
+                          "id": "check",
+                          "component": "Button",
+                          "label": "Check",
+                          "variant": "soft",
+                          "action": {
+                            "action": "omaha_action",
+                            "context": {
+                              "move": "check"
+                            }
+                          }
+                        },
+                        {
+                          "id": "fold",
+                          "component": "Button",
+                          "label": "Fold",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "omaha_action",
+                            "context": {
+                              "move": "fold"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "## Referenced for this message\n### omaha (resource)\nomaha hold'em, four hole cards, exactly two plus three, pot limit\n\nHold'em variant: FOUR hole cards each, same streets and betting rounds. A hand must use exactly two hole cards plus exactly three board cards — no more, no fewer. Traditionally pot-limit; otherwise settle as hold'em.\n\nLet's play Omaha."
+      }
+    }
+  ]
+}
