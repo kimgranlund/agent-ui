@@ -9,7 +9,9 @@
 // `RegistrySources['guidance']`, so a browser host can compose the registry's runtime tier with no `./agent`.
 
 import { describe, it, expect } from 'vitest'
-import { readFileSync, readdirSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { composeSelectionGuidance, selectionGuidanceForId } from '../agent/selection-guidance.ts'
 import type { SelectionGuidance } from '../agent/selection-guidance.ts'
 import { derivedCatalogIdsFor } from '../catalog/compose.ts'
@@ -41,6 +43,13 @@ const EDGE_IDS = [
   'a2ui-basic--games',
 ]
 
+/** The persona folders that carry a selection sidecar. A folder with no `selection.json` is not a catalog: a failed
+ *  browser test's `__screenshots__` folder lands beside its test under `personas/` and must not read as a persona
+ *  (T-0228). */
+function personaSidecarIds(personasDir: string): string[] {
+  return (readdirSync(personasDir) as string[]).filter((n) => existsSync(join(personasDir, n, 'selection.json'))).sort()
+}
+
 /** The ids whose projection differs from `reference`'s guidance: the parity predicate the real leg and the controls share. */
 function divergentIds(projection: SelectionProjection, ids: readonly string[]): string[] {
   return ids.filter((id) => JSON.stringify(selectionProjectionFor(id, projection)) !== JSON.stringify(selectionGuidanceForId(id)))
@@ -58,11 +67,26 @@ describe('selection projection: the committed module is a real, complete copy of
 
   it('every sidecar on disk has a projection scope, and no scope lacks a sidecar', () => {
     const catalogDir = `${A2UI_DIR}/src/catalog`
-    const personaIds = (readdirSync(`${catalogDir}/personas`) as string[]).filter((n) => !n.includes('.')).sort()
+    const personaIds = personaSidecarIds(`${catalogDir}/personas`)
     const baseDirs = ['default', 'a2ui-basic']
     const pins = baseDirs.map((d) => (JSON.parse(readFileSync(`${catalogDir}/${d}/selection.json`, 'utf8') as string) as { catalogId: string }).catalogId)
     expect(Object.keys(SELECTION_PROJECTION.base).sort()).toEqual([...pins].sort())
     expect(Object.keys(SELECTION_PROJECTION.persona).sort()).toEqual(personaIds)
+  })
+
+  it('a stray `__screenshots__` folder under personas/ is not read as a persona (T-0228)', () => {
+    const personasDir = mkdtempSync(join(tmpdir(), 'selection-personas-'))
+    try {
+      for (const id of Object.keys(SELECTION_PROJECTION.persona)) {
+        mkdirSync(join(personasDir, id))
+        writeFileSync(join(personasDir, id, 'selection.json'), '{}')
+      }
+      mkdirSync(join(personasDir, '__screenshots__', 'box-region.browser.test.ts'), { recursive: true })
+      writeFileSync(join(personasDir, 'box-region.ts'), '')
+      expect(personaSidecarIds(personasDir)).toEqual(Object.keys(SELECTION_PROJECTION.persona).sort())
+    } finally {
+      rmSync(personasDir, { recursive: true, force: true })
+    }
   })
 })
 

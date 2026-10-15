@@ -86,8 +86,10 @@ Subagents inherit the repo CLAUDE.md, so briefs copy the *directive*, not the la
   Prevention: the host never cd's into a seat worktree; reads go through absolute paths.
 - **Merge-queue traps (2026-10-15).** A failed browser test leaves a `__screenshots__` folder beside
   it, and under `catalog/personas/` the sidecar scan in `a2ui/src/registry/selection.test.ts` reads it as
-  a persona and reds an unrelated gate (hit on PRs 1991 and 1997; fix in flight, T-0228): delete stray
-  `__screenshots__` folders before the affected-test run. A stale-base lane can also collide with
+  a persona and reds an unrelated gate (hit on PRs 1991 and 1997). T-0228 made that scan read only folders
+  with a `selection.json` and `.gitignore` drops `**/__screenshots__/`, but other scans may still trip: the
+  merge queue runs `find packages site -name __screenshots__ -type d -prune -exec rm -rf {} +` before the
+  affected-test run. A stale-base lane can also collide with
   replays pinned on main (`scripts/e2e-admin/probe/replays/`): after the rebase, re-run them and
   re-pin what the lane's fix flipped (`scripts/e2e-admin/README.md`, Fixtures and regressions).
 - **Concurrency ceiling (Kim ruling 2026-08-20).** At most **3 gate-running lanes** concurrent
