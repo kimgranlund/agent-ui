@@ -5,8 +5,9 @@
 // - A. The T-0260 routing pressure pack (`routing.ts`), 12 runs, as generated there.
 // - B. Round 2 regressions: round 2 scenarios that failed (`.sdlc/evals/rounds/2026-10-15-r2-presets/report.md`),
 //   rerun on a model they failed on plus Haiku, with round 2's scenario fixes. Each names the tickets it re-checks.
-//   The opening step (and a Concierge booking ask, and its unnamed late check-out question) carries an
-//   `--expect-routing` oracle for the preset's own exemplar (T-0238, T-0240, T-0253) or the knowledge base (T-0231).
+//   The opening step (the first guess for the Lexicographer; a Concierge booking ask and its unnamed late check-out
+//   question) carries an `--expect-routing` oracle for the preset's own exemplar (T-0238, T-0240, T-0253) or the
+//   knowledge base (T-0231).
 //   Left out: seven-card-stud and blackjack-rounds on Opus (round 2 scenario defects, fixed), concierge
 //   dinner-at-vela and lexicographer six-guesses (the Concierge booking and the word board are covered by A, C and
 //   the other Lexicographer runs), admiral concede (row-sweep and opening-salvo hold the Admiral's tickets).
@@ -66,13 +67,14 @@ export const ROUND2_TICKETS = ['T-0214', 'T-0229', 'T-0230', 'T-0231', 'T-0232',
 
 /** The routing oracle a regression step carries, by preset: the opening turn retrieves the preset's own composite
  *  (a card table turn ranks no board, T-0253), a Concierge booking ask its booking exemplar, and an unnamed late
- *  check-out question loads the knowledge base in full (T-0231). */
+ *  check-out question loads the knowledge base in full (T-0231). The Lexicographer's sits on its first guess: keyless
+ *  `retrieve` at k 3 ranks no word board for "Start a new word game." (a phase 2 finding, not a live one). */
 function regressionRouting(agent: string, step: ProbeStep, index: number): RoutingExpect | undefined {
   const text = 'say' in step ? step.say : ''
   if (agent === 'croupier' && index === 0) return { domains: ['croupier'], exemplars: { include: [CARD_TABLE], exclude: [WORD_BOARD, BATTLESHIP_BOARD] } }
   if (agent === 'concierge' && /^Book /.test(text)) return { domains: ['concierge'], exemplars: { include: [BOOKING_REQUEST] } }
   if (agent === 'concierge' && /late check-out/.test(text)) return { domains: ['concierge'], references: KB_FULL }
-  if (agent === 'lexicographer' && index === 0) return { exemplars: { include: [WORD_BOARD] } }
+  if (agent === 'lexicographer' && index === 1) return { exemplars: { include: [WORD_BOARD] } }
   if (agent === 'admiral' && index === 0) return { exemplars: { include: [BATTLESHIP_BOARD] } }
   return undefined
 }

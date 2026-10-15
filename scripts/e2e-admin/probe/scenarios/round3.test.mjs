@@ -54,7 +54,9 @@ describe('live round 3', () => {
   it('every regression opens with its own exemplar oracle; the Concierge asks carry theirs', () => {
     for (const r of REGRESSIONS) {
       const steps = regressionScenario(r).steps
-      if (r.agent !== 'concierge') expect(steps[0].expectRouting?.exemplars?.include).toHaveLength(1)
+      const at = r.agent === 'lexicographer' ? 1 : 0
+      if (r.agent !== 'concierge') expect(steps[at].expectRouting?.exemplars?.include).toHaveLength(1)
+      if (r.agent === 'lexicographer') expect(steps[at].say).toMatch(/^My guess: /)
     }
     const croupier = regressionScenario(REGRESSIONS[0]).steps[0].expectRouting
     expect(croupier.exemplars).toEqual({ include: ['domain-croupier-card-table-round'], exclude: ['domain-lexicographer-word-board', 'domain-admiral-battleship-board'] })
