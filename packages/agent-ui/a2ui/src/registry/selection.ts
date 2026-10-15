@@ -9,7 +9,7 @@
 // `selectionGuidanceForId`, held equal by `selection.test.ts`.
 
 import type { GuidanceEntry, GuidanceMap, SelectionProjection } from './types.ts'
-import { parseDomainCatalogId } from '../catalog/catalog-id.ts'
+import { parseDomainCatalogId, splitCatalogId } from '../catalog/catalog-id.ts'
 import { SELECTION_PROJECTION } from './selection-projection.gen.ts'
 
 const EMPTY: GuidanceMap = {}
@@ -22,10 +22,8 @@ const EMPTY: GuidanceMap = {}
  * another (the negative controls do).
  */
 export function selectionProjectionFor(catalogId: string, projection: SelectionProjection = SELECTION_PROJECTION): GuidanceMap {
-  const sep = catalogId.indexOf('--')
-  if (sep === -1) return Object.hasOwn(projection.base, catalogId) ? projection.base[catalogId]! : EMPTY
-  const baseId = catalogId.slice(0, sep)
-  const personaId = catalogId.slice(sep + 2)
+  const { base: baseId, tail: personaId } = splitCatalogId(catalogId)
+  if (personaId === undefined) return Object.hasOwn(projection.base, catalogId) ? projection.base[catalogId]! : EMPTY
   if (!Object.hasOwn(projection.base, baseId)) return EMPTY
   const base = projection.base[baseId]!
   if (Object.hasOwn(projection.persona, personaId)) return { ...base, ...projection.persona[personaId]! }

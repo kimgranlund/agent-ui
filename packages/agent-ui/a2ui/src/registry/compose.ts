@@ -15,6 +15,7 @@ import type {
   RegistrySources,
 } from './types.ts'
 import { CONSUMERS } from './types.ts'
+import { splitCatalogId } from '../catalog/catalog-id.ts'
 
 // ── the tag rule ────────────────────────────────────────────────────────────────────────────────────────
 // A type of the `agent-ui` default catalog renders the control whose tag is `ui-` plus the type's kebab-case,
@@ -49,9 +50,6 @@ export function typeForTag(tag: string): string | null {
 
 /** The one catalog whose type names derive from the fleet's tags (every other base is upstream vocabulary). */
 export const FLEET_CATALOG_ID = 'agent-ui'
-
-/** The separator `compose.ts` (catalog) builds derived ids with: `<base>--<persona>`, split on the FIRST one. */
-const DERIVED_SEPARATOR = '--'
 
 // ── helpers ─────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -278,9 +276,8 @@ const EMPTY_VIEW = (catalogId: string): CapabilityView => ({
  * base's (ADR-0243 cl.3 amending ADR-0172 SPEC-R6, the same first-`--` split the runtime filters make).
  */
 export function registryViewFor(registry: CapabilityRegistry, catalogId: string): CapabilityView {
-  const sep = catalogId.indexOf(DERIVED_SEPARATOR)
-  const baseId = sep === -1 ? catalogId : catalogId.slice(0, sep)
-  const personaHalf = sep === -1 ? null : catalogId.slice(sep + DERIVED_SEPARATOR.length)
+  const { base: baseId, tail } = splitCatalogId(catalogId) // T-0210: the shared id grammar
+  const personaHalf = tail ?? null
 
   if (!registry.base.some((r) => r.kind === 'catalog' && r.name === baseId)) return EMPTY_VIEW(catalogId)
 

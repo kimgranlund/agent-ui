@@ -20,6 +20,7 @@ import { composePersonaCatalogDocs } from '../catalog/compose.ts'
 import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from '../catalog/personas/manifests.ts'
 import type { Catalog } from '../catalog/catalog.ts'
 import type { A2uiServerMessage } from '../protocol.ts'
+import { isDerivedCatalogId, splitCatalogId } from '../catalog/catalog-id.ts'
 
 type Exemptions = Readonly<Record<string, Readonly<Record<string, string>>>>
 type SeedsFor = (catalogId: string) => readonly { messages: readonly A2uiServerMessage[] }[]
@@ -40,9 +41,9 @@ function catalogDocuments(): Map<string, Catalog> {
 function ownTypes(id: string, docs: ReadonlyMap<string, Catalog>): string[] {
   const doc = docs.get(id)
   if (doc === undefined) return []
-  const cut = id.indexOf('--')
-  if (cut === -1) return Object.keys(doc.components)
-  const base = docs.get(id.slice(0, cut))
+  const split = splitCatalogId(id)
+  if (split.tail === undefined) return Object.keys(doc.components)
+  const base = docs.get(split.base)
   return Object.keys(doc.components).filter((type) => base === undefined || !Object.hasOwn(base.components, type))
 }
 
@@ -93,8 +94,8 @@ describe('the every-catalog coverage gate (T-0064)', () => {
   it('every shipped catalog id the renderer records has a catalog document', () => {
     const ids = catalogIds()
     const docs = catalogDocuments()
-    const bases = ids.filter((id) => !id.includes('--'))
-    const derived = ids.filter((id) => id.includes('--'))
+    const bases = ids.filter((id) => !isDerivedCatalogId(id))
+    const derived = ids.filter(isDerivedCatalogId)
     expect(bases.length, `anti-vacuous: at least two bases, got ${bases.join(', ')}`).toBeGreaterThanOrEqual(2)
     expect(derived.length, 'anti-vacuous: at least one derived id').toBeGreaterThanOrEqual(1)
     expect(ids.filter((id) => !docs.has(id)), 'record ids with no catalog document').toEqual([])

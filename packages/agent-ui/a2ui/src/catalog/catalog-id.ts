@@ -5,6 +5,22 @@
 // `<d1>+<d2>`, the domains sorted and unique. `domainCatalogId` writes that tail and `parseDomainCatalogId` reads
 // it back; a reversed or repeated spelling is refused, never normalized, so one domain set has exactly one id.
 
+/** The separator between a derived id's base and its tail (`agent-ui--croupier`, `agent-ui--design+games`). */
+export const CATALOG_ID_SEPARATOR = '--'
+
+/** Any catalog id as its base and its raw tail, split at the FIRST `--`: the tail is one persona id or a domain list
+ *  `<d1>+<d2>`, `undefined` for a base id. T-0210: the one split every catalog id reader uses, so a multi-domain id
+ *  never meets an ad hoc `split('--')` that drops its second domain. */
+export function splitCatalogId(catalogId: string): { base: string; tail: string | undefined } {
+  const sep = catalogId.indexOf(CATALOG_ID_SEPARATOR)
+  return sep === -1 ? { base: catalogId, tail: undefined } : { base: catalogId.slice(0, sep), tail: catalogId.slice(sep + 2) }
+}
+
+/** True for a derived id (`<base>--<persona>` or `<base>--<d1>+<d2>`), false for a base id. */
+export function isDerivedCatalogId(catalogId: string): boolean {
+  return splitCatalogId(catalogId).tail !== undefined
+}
+
 /** The joiner between domain ids in a derived id's tail (`agent-ui--design+games`). */
 export const DOMAIN_JOINER = '+'
 
@@ -12,7 +28,7 @@ export const DOMAIN_JOINER = '+'
  *  No domains is the base id itself. */
 export function domainCatalogId(base: string, domains: readonly string[]): string {
   const sorted = [...new Set(domains)].sort()
-  return sorted.length === 0 ? base : `${base}--${sorted.join(DOMAIN_JOINER)}`
+  return sorted.length === 0 ? base : `${base}${CATALOG_ID_SEPARATOR}${sorted.join(DOMAIN_JOINER)}`
 }
 
 /**
@@ -23,16 +39,15 @@ export function domainCatalogId(base: string, domains: readonly string[]): strin
  * single-segment tail parses too, so a persona id reads as a one-element list; callers look personas up first.
  */
 export function parseDomainCatalogId(catalogId: string): { base: string; domains: readonly string[] } | undefined {
-  const sep = catalogId.indexOf('--')
-  if (sep === -1) return undefined
-  const tail = catalogId.slice(sep + 2)
+  const { base, tail } = splitCatalogId(catalogId)
+  if (tail === undefined) return undefined
   const domains = tail.split(DOMAIN_JOINER)
   for (let i = 0; i < domains.length; i++) {
     const d = domains[i]!
-    if (d.length === 0 || d.includes('--')) return undefined
+    if (d.length === 0 || d.includes(CATALOG_ID_SEPARATOR)) return undefined
     if (i > 0 && !(domains[i - 1]! < d)) return undefined
   }
-  return { base: catalogId.slice(0, sep), domains }
+  return { base, domains }
 }
 
 /** The domains an effective catalog id holds: the parsed tail's segments, or `[]` for a base id or a

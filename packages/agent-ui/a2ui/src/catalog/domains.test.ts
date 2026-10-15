@@ -4,7 +4,7 @@
 // real domain (W1) lands under the same gates.
 
 import { describe, it, expect } from 'vitest'
-import { domainCatalogId, parseDomainCatalogId, catalogIdDomains } from './catalog-id.ts'
+import { domainCatalogId, parseDomainCatalogId, catalogIdDomains, splitCatalogId } from './catalog-id.ts'
 import {
   composeDomainCatalog,
   composeDomainCatalogDocs,
@@ -188,7 +188,7 @@ describe('the shipped domain lists (CA-R7)', () => {
     expect(DOMAINS.map(([id]) => id).sort()).toEqual(ids(SHIPPED_DOMAIN_CATALOGS))
     for (const [id, targets] of DOMAINS) {
       const pkg = SHIPPED_DOMAIN_CATALOGS.find((d) => d.domainId === id)!
-      expect([...targets].sort(), id).toEqual(domainCatalogIdsFor([pkg]).map((x) => x.split('--')[0]).sort())
+      expect([...targets].sort(), id).toEqual(domainCatalogIdsFor([pkg]).map((x) => splitCatalogId(x).base).sort())
     }
   })
 

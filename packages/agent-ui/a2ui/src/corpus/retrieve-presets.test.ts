@@ -9,6 +9,7 @@ import { readFileSync } from 'node:fs'
 import { retrieve } from './retrieve.ts'
 import type { CorpusRecord } from './record.ts'
 import { CATALOG_LAYER_MAP } from '../catalog/layers.ts'
+import { splitCatalogId } from '../catalog/catalog-id.ts'
 
 declare const process: { cwd(): string }
 
@@ -19,8 +20,8 @@ const shard = readFileSync(`${process.cwd()}/packages/agent-ui/a2ui/corpus/exemp
 
 /** The effective catalog's types: the default catalog's rows plus the persona fragment's. */
 function typesOf(catalogId: string): string[] {
-  const sep = catalogId.indexOf('--')
-  const home = sep === -1 ? undefined : `personas/${catalogId.slice(sep + 2)}`
+  const { tail } = splitCatalogId(catalogId)
+  const home = tail === undefined ? undefined : `personas/${tail}`
   return Object.entries(CATALOG_LAYER_MAP).filter(([, r]) => r.home === 'default' || r.home === home).map(([t]) => t)
 }
 

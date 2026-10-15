@@ -25,6 +25,7 @@ import { appendFileSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { readMetaLine } from '../../src/agent/meta-line.ts'
 import { heal } from '../../src/corpus/heal.ts'
+import { splitCatalogId } from '../../src/catalog/catalog-id.ts'
 import { renderSurfaceJsonl } from '../../src/agent/response-type.ts'
 import { parseDomainCatalogId } from '../../src/catalog/catalog-id.ts'
 import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from '../../src/catalog/personas/manifests.ts'
@@ -255,7 +256,7 @@ export function devFailureReason(err: unknown, secrets: readonly string[] = []):
  *  segment of a derived catalog id (`agent-ui--croupier` is `croupier`), else absent. */
 export function agentLabel(bodyAgent: unknown, catalogId: unknown): string | undefined {
   if (typeof bodyAgent === 'string' && bodyAgent.trim() !== '') return bodyAgent.trim().slice(0, 80)
-  if (typeof catalogId === 'string' && catalogId.includes('--')) return catalogId.slice(catalogId.indexOf('--') + 2)
+  if (typeof catalogId === 'string') return splitCatalogId(catalogId).tail
   return undefined
 }
 

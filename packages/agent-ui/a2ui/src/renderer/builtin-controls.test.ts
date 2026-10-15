@@ -25,6 +25,7 @@ import { SHIPPED_PERSONA_CATALOGS } from '../catalog/personas/index.ts'
 import { croupierPersona } from '../catalog/personas/croupier/index.ts'
 import { isControlTag } from './widget.ts'
 import type { VariantDispatch, WidgetFactory } from '../catalog/types.ts'
+import { isDerivedCatalogId } from '../catalog/catalog-id.ts'
 
 declare const process: { cwd(): string }
 
@@ -54,13 +55,13 @@ describe('a fresh renderer registers the built-in catalogs with a control loader
     const byId = new Map<string, ControlLoader | undefined>()
     for (const [record] of registerLazy.mock.calls) byId.set(record.id, (await record.load()).controls)
 
-    const builtins = [...byId.keys()].filter((id) => !id.includes('--'))
+    const builtins = [...byId.keys()].filter((id) => !isDerivedCatalogId(id))
     expect(builtins).toContain('agent-ui')
     expect(builtins).toContain('a2ui-basic')
     expect(builtins.length).toBe(3) // the default, a2ui-basic and its canonical-URI alias
     for (const id of builtins) expect(byId.get(id), id).toBe(builtinControls)
 
-    const derived = [...byId.keys()].filter((id) => id.includes('--'))
+    const derived = [...byId.keys()].filter(isDerivedCatalogId)
     expect(derived).toContain('agent-ui--croupier')
     expect(derived).toContain('a2ui-basic--croupier')
     for (const id of derived) {

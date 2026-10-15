@@ -13,6 +13,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import type { Catalog } from '../../src/catalog/catalog.ts'
 import { composeCatalog, loadCatalogFragment } from '../../src/catalog/compose.ts'
+import { splitCatalogId } from '../../src/catalog/catalog-id.ts'
 import { isCatalogId, loadCatalogById } from '../catalog-files.ts'
 import { verifyPins } from '../agent-eval/pins.ts'
 import type { KitFile } from './load.vite.ts'
@@ -68,10 +69,9 @@ export function nodeCatalogResolver(cwd: string): (catalogId: string) => Catalog
     let catalog: Catalog | undefined
     if (isCatalogId(id)) catalog = loadCatalogById(cwd, id)
     else {
-      const sep = id.indexOf('--')
-      if (sep > 0) {
-        const base = resolve(id.slice(0, sep))
-        const persona = id.slice(sep + 2)
+      const { base: baseId, tail: persona } = splitCatalogId(id)
+      if (baseId !== '' && persona !== undefined) {
+        const base = resolve(baseId)
         const file = join(cwd, PERSONAS_REL, persona, 'catalog.json')
         if (base !== undefined && existsSync(file)) {
           catalog = composeCatalog(base, loadCatalogFragment(JSON.parse(readFileSync(file, 'utf8'))), persona)
