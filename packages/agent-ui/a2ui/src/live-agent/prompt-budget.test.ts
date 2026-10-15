@@ -16,7 +16,7 @@ import {
 } from '../agent/prompt-budget.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import { a2uiBasicCatalog } from '../catalog/a2ui-basic/index.ts'
-import { DERIVED_CATALOGS, MODES, PERSONA_SYSTEM_CAP, worstArgs } from '../../tools/agent/prompt-budget-matrix.ts'
+import { DERIVED_CATALOGS, MODES, PERSONA_SYSTEM_CAP, worstArgs, worstExemplarsFor } from '../../tools/agent/prompt-budget-matrix.ts'
 import type { BudgetArgs as Args } from '../../tools/agent/prompt-budget-matrix.ts'
 
 const SECTION_ORDER: readonly PromptSectionId[] = [
@@ -124,6 +124,21 @@ describe('prompt budget leg over the worst-case matrix (ADR-0234)', () => {
       expect(report.limit).toBe(PROMPT_CHAR_BUDGET_DERIVED)
       expect(report.over, `${label}: ${report.total} > ${report.limit}`).toBe(false)
     }
+  })
+
+  it('T-0254: a derived catalog\'s worst case draws on its persona shard; an oversized persona record reds the gate', () => {
+    const { catalog, baseId } = DERIVED_CATALOGS[0]!
+    const base = worstExemplarsFor(baseId)[0]!
+    const planted = { ...base, promptText: 'x'.repeat(30_000) }
+    const budget = promptBudgetFor(catalog.catalogId)
+    const over = (shards: Record<string, (typeof planted)[]>) => {
+      const args = worstArgs(catalog, baseId, 'default', CAP_PERSONA, worstExemplarsFor(catalog.catalogId, shards))
+      return assessPromptBudget(buildSystemPromptSections(...args).sections, budget)
+    }
+    expect(over({}).over).toBe(false)
+    expect(over({ [catalog.catalogId]: [planted] }).over).toBe(true)
+    // another persona's shard never reaches this catalog's turn
+    expect(over({ 'agent-ui--nobody': [planted] }).over).toBe(false)
   })
 
   it('negative control: the same worst-case prompt at limit 1 reports over: true', () => {
