@@ -27,3 +27,7 @@ Guess: the admin's renderer error hook fires per violation. Owner: `packages/age
 
 ## Constraints
 The failing test lands before or with the fix, never after. No em dashes.
+
+## Acceptance criteria
+- (red) `npx vitest run --project packages packages/agent-ui/app/src/controls/agent-admin/agent-admin-error-turn.test.ts` exits 0: an update with two dangling children drives one client error turn whose message names both ids.
+- `npm run check` exits 0.

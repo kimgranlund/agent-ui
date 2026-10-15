@@ -27,3 +27,9 @@ Guess: `produce()` uses `reply` verbatim as the note (T-0194). Fix both sides: r
 
 ## Constraints
 The failing test lands before or with the fix, never after. No em dashes.
+
+## Acceptance criteria
+- (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/produce-response-type.test.ts` exits 0: a meta-line written as the `render_surface` reply ships as its note and ask, never as JSON.
+- (red) `node scripts/chat-probe.mjs selftest` exits 0: a `{"a2uiMeta"` shape in chat prose fails `no-json-as-prose`.
+- `npx vitest run scripts/e2e-admin/probe/replays/croupier-stud-bet-table-missing.test.mjs` exits 0.
+- `npm run check` exits 0.

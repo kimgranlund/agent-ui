@@ -8,11 +8,13 @@ import { offlineReplay } from '../trace.ts'
 
 // T-0194: these rounds were recorded before `render_surface` required its `reply` line and carry no text, so
 // turn 1 fails `reply-text` (the defect T-0194 fixes, kept as recorded). T-0222: the replay now runs the
-// Croupier's semantic checks, as the dev proxy does, and the deal turn halts again: the recorded repair round
-// keeps the turn-1 table's bet_slider, which BET_CONTROL_DUPLICATE (added after this recording) sends back,
-// and the last recorded round fails PARSE.
-it('croupier-deal-halt: the recorded turns replay with every probe check green but reply-text and the deal halt', async () => {
+// Croupier's semantic checks, as the dev proxy does. T-0220: the deal turn no longer halts. Its first recorded
+// round resends the CardTable with children [hit_btn, stand_btn, double_btn], so the renderer disposes the turn-1
+// bet_slider and deal_btn; the semantic view now drops them too, BET_CONTROL_DUPLICATE (which read the ghost
+// bet_slider on /bet) no longer fires, and that first round ships. It carries no reply text either, so turn 1
+// fails `reply-text` as turn 0 does (the recorded pre-T-0194 defect).
+it('croupier-deal-halt: the recorded turns replay with every probe check green but reply-text', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./croupier-deal-halt.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual(['reply-text:0', 'no-halt:1'])
+  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual(['reply-text:0', 'reply-text:1'])
 })

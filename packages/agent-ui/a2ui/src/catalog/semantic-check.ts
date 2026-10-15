@@ -11,9 +11,10 @@
 // Contract:
 // - A check is pure and synchronous. It reads a `SurfaceView` per surface this round's payload touches:
 //   the component graph and the data model MERGED over the session's prior assistant turns, the same
-//   replay the renderer performs (create resets, delete drops, components upsert by id, data model writes
-//   at a pointer). A check never sees a surface this round did not touch: a finished round left as
-//   history is never re-judged, because the model cannot repair it.
+//   replay the renderer performs (create resets, delete drops, components upsert by id and a resent
+//   container's dropped children leave with their subtrees, data model writes at a pointer). A check
+//   never sees a surface this round did not touch: a finished round left as history is never re-judged,
+//   because the model cannot repair it.
 // - Findings are `{code, path, message}`. `code` is upper snake case and rides `TurnTrace.failureCodes`
 //   (it never joins the protocol's closed `ErrorCode` union, the FEED_SCOPE precedent). `message` is one
 //   model-facing sentence naming the contradiction and the repair; it reaches the model only through the
@@ -31,6 +32,7 @@
 // import from here.
 
 import type { A2uiComponent, A2uiOutput } from '../protocol.ts'
+import { applyComponentBatch } from '../renderer/component-merge.ts'
 
 /** The slice of the producer's `Session` the replay reads (structural, so this catalog-side module never
  *  imports `src/agent/`: ADR-0137's composition-containment gate, `agent/gates.test.ts`). */
@@ -171,7 +173,7 @@ function apply(views: Map<string, MutableView>, msg: unknown): string | undefine
   if (isRecord(comps) && typeof comps['surfaceId'] === 'string' && Array.isArray(comps['components'])) {
     const sid = comps['surfaceId']
     const view = views.get(sid) ?? { components: new Map<string, A2uiComponent>(), dataModel: undefined }
-    for (const c of comps['components']) if (isRecord(c) && typeof c['id'] === 'string') view.components.set(c['id'], c as A2uiComponent)
+    applyComponentBatch(view.components, comps['components']) // upsert, and a resent container's dropped children leave (T-0220)
     views.set(sid, view)
     return sid
   }

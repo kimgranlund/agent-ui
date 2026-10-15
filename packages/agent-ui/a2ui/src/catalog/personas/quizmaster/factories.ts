@@ -123,7 +123,7 @@ function mintOption(): RadioLike {
   s.paddingInline = 'calc(var(--md-sys-space-md) - 4px) var(--md-sys-space-md)'
   s.borderWidth = '1px'
   s.borderStyle = 'solid'
-  s.borderRadius = 'calc(var(--md-sys-shape-corner-base, 12px) - 2px)'
+  s.borderRadius = BOX.childRadius
   s.lineHeight = '1.35'
 
   const key = span('key')
@@ -278,7 +278,7 @@ export const questionCardFactory: WidgetFactory = {
     const x = explanationEl.style
     x.display = 'none'
     x.padding = 'var(--md-sys-space-sm) var(--md-sys-space-md)'
-    x.borderRadius = 'calc(var(--md-sys-shape-corner-base, 12px) - 2px)'
+    x.borderRadius = BOX.childRadius
     x.background = 'var(--md-sys-color-neutral-container-low)'
     const explanationTextEl = text('p', 'body', 'md')
     explanationEl.appendChild(explanationTextEl)

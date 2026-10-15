@@ -117,6 +117,14 @@ describe('render_surface tool round', () => {
     expect((await run(NEUTRAL, bare.provider)).map(metaOf).some((m) => m?.note !== undefined)).toBe(false)
   })
 
+  it('T-0213: a meta-line written as the tool `reply` is read as one (note and ask), never shipped as JSON prose', async () => {
+    const reply = '{"a2uiMeta":{"note":"Seven-card stud it is. Set your stake below.","ask":{"surfaceId":"ask-1"}}}'
+    const { provider } = scripted([{ text: '', call: [{ name: 'render_surface', input: { reply, jsonl: ASK_VALID } }] }])
+    const meta = finalMeta(await run(NEUTRAL, provider))
+    expect(meta.note).toBe('Seven-card stud it is. Set your stake below.')
+    expect(meta.ask).toEqual({ surfaceId: 'ask-1' })
+  })
+
   it('RTS-R1 AC2: the executor is reached exactly once, answers received, and nothing is fed back within the turn', async () => {
     const { provider, calls, results } = scripted([{ text: 'Here is your card.', call: [surface(VALID)] }])
     await run(NEUTRAL, provider)
@@ -406,6 +414,8 @@ describe('degrade at the bound', () => {
     const feedback = lastUserMessage(req)
     expect(feedback).toMatch(/CATALOG/)
     expect(feedback).toContain('Call render_surface again with the COMPLETE corrected `messages`; keep your reply text addressed to the user.')
+    // T-0217: the user never saw the rejected round, so the repaired reply carries no correction note or id.
+    expect(feedback).toContain('The user never saw the rejected surface: write the reply as your first, with no correction note and no surface id.')
     expect(feedback).not.toContain('Re-emit the COMPLETE corrected A2UI JSONL')
     const attempt = req.messages.at(-2)!
     expect(attempt.role).toBe('assistant')

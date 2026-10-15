@@ -395,6 +395,9 @@ const CAPABILITY_KINDS: ReadonlyArray<{ kind: string; label: string; addLabel: s
  *  user action) or a typed intent. See the onClientMessage wiring for the full root-cause note. */
 const ERROR_TURN_BUDGET = 3
 
+/** A renderer `error` client message, read structurally (the wire `A2uiWireError` envelope, T-0221). */
+type ClientErrorMessage = { version?: unknown; error: { code?: unknown; surfaceId?: unknown; message?: unknown } }
+
 // GH #418 — the two visible-refusal notices for "A2UI is off but something A2UI-shaped still reached this
 // client" (a lingering surface's action click, or a model that emitted A2UI JSONL anyway despite the
 // composed prompt no longer teaching it). Chosen client-plane policy: NEVER render/act on A2UI content
@@ -921,6 +924,9 @@ export class UIAgentAdminElement extends UIElement {
   // GH #63 — the client-turn error-loop budget state (see the onClientMessage wiring + ERROR_TURN_BUDGET).
   #consecutiveErrorTurns = 0
   #errorLoopHalted = false
+  // T-0221: the error turn still waiting for its deferred macrotask, so the errors one rejection sends
+  // together (one per violation, all from the same finalize) join it instead of each spawning a turn.
+  #pendingErrorTurn: { origin: 'chat' | 'copilot'; message: ClientErrorMessage } | undefined
   /** GH #354 — a monotonic conversation generation, bumped by `#resetConversationState()` (a persona
    *  switch). A surface turn captures it before the lazy dogfood-asset await and abandons itself if the
    *  thread was reset while the chunk was in flight, so no frame is ever mounted into a torn-down bubble
@@ -2567,6 +2573,7 @@ export class UIAgentAdminElement extends UIElement {
     const isError = typeof message === 'object' && message !== null && 'error' in message
     if (isError) {
       if (this.#errorLoopHalted) return // already halted + reported; drop until a user action re-arms
+      if (this.#joinPendingErrorTurn(origin, message)) return // T-0221: same rejection, same turn
       this.#consecutiveErrorTurns += 1
       if (this.#consecutiveErrorTurns > ERROR_TURN_BUDGET) {
         this.#errorLoopHalted = true
@@ -2581,7 +2588,28 @@ export class UIAgentAdminElement extends UIElement {
     // pane flip inside this macrotask window re-routed the turn to whatever place the user had walked to
     // (LLD §8's named inherited hazard); origin-anchoring closes it as a side effect of the triple's own
     // requirement.
+    if (isError) {
+      const pending = { origin, message: message as ClientErrorMessage }
+      this.#pendingErrorTurn = pending
+      setTimeout(() => {
+        if (this.#pendingErrorTurn === pending) this.#pendingErrorTurn = undefined
+        this.#runSurfaceTurn({ kind: 'client', message: pending.message }, origin)
+      }, 0)
+      return
+    }
     setTimeout(() => this.#runSurfaceTurn({ kind: 'client', message }, origin), 0)
+  }
+
+  /** T-0221: fold a renderer error into the error turn still waiting to run, when it is the same rejection
+   *  (same origin, same code and surface): its message joins the pending one, so the model gets one turn
+   *  naming every violation. False when nothing is pending or the error belongs to another rejection. */
+  #joinPendingErrorTurn(origin: 'chat' | 'copilot', message: unknown): boolean {
+    const pending = this.#pendingErrorTurn
+    const error = (message as ClientErrorMessage).error
+    if (pending === undefined || pending.origin !== origin || typeof error !== 'object' || error === null) return false
+    if (error.code !== pending.message.error.code || error.surfaceId !== pending.message.error.surfaceId) return false
+    pending.message = { ...pending.message, error: { ...pending.message.error, message: `${String(pending.message.error.message)}; ${String(error.message)}` } }
+    return true
   }
 
   /**

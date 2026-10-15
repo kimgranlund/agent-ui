@@ -6,8 +6,11 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-it('croupier-spanish-surrender-narration: the recorded turns replay with every probe check green', async () => {
+// expectedFail: T-0217. Since T-0222 the replay runs the Croupier checks, so BANKROLL_MISMATCH sends the second deal
+// (turn 4) back and the recorded repair round ships; its reply opens "Corrected:" (recorded before T-0217's repair
+// sentence), which `no-internal-leak` now names. When a live recapture drops the correction note, flip to `toEqual([])`.
+it('croupier-spanish-surrender-narration: the recorded turns replay with every probe check green but the recorded correction note', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./croupier-spanish-surrender-narration.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed).toEqual([])
+  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual(['no-internal-leak:4'])
 })

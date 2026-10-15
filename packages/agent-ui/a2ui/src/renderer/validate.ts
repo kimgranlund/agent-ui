@@ -102,7 +102,8 @@ const RESERVED = new Set(['id', 'component', 'child', 'children'])
  * changes the component TYPE still fails; a same-type resend replaces, as the renderer now does.
  */
 export interface SurfaceSeed {
-  /** Prior-turn component records, replay-merged (later resends already collapsed by upsert). */
+  /** Prior-turn component records, replay-merged the renderer's way (`applyComponentBatch`: later resends
+   *  collapsed by upsert, children a resent container dropped already gone, T-0220). */
   components: readonly A2uiComponent[]
   /** Whether `root` was already delivered for this surface in a prior turn. */
   rootDelivered: boolean

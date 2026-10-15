@@ -626,8 +626,12 @@ const TOOL_PARSE_HINT =
   'and never JSONL text.'
 
 /** RTS-R8: the repair tail for a round whose payload came from `render_surface`, in place of the legacy
- *  "Re-emit the COMPLETE corrected A2UI JSONL" sentence (which legacy rounds keep, byte for byte). */
-const TOOL_REPAIR_SENTENCE = 'Call render_surface again with the COMPLETE corrected `messages`; keep your reply text addressed to the user.'
+ *  "Re-emit the COMPLETE corrected A2UI JSONL" sentence (which legacy rounds keep, byte for byte). T-0217:
+ *  the repaired round's reply replaces the rejected one's, so it must not open "Corrected:" or name an id.
+ *  A repair-turn sentence, never the cached system or tool prefix (T-0206). */
+const TOOL_REPAIR_SENTENCE =
+  'Call render_surface again with the COMPLETE corrected `messages`; keep your reply text addressed to the user. ' +
+  'The user never saw the rejected surface: write the reply as your first, with no correction note and no surface id.'
 
 /** RTS-R6: the one-sentence correction for a surface-override turn whose round returned no payload. */
 const SURFACE_REQUESTED_FEEDBACK =
@@ -1361,7 +1365,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     lastRaw = raw
 
     const peeled = peelMetaLine(raw) // ADR-0088 §1 / ADR-0097 §1 / ADR-0174 cl.2 / ADR-0178 cl.1 / ADR-0198 cl.1 / GH #1196 / ADR-0206: peeled BEFORE heal/validate
-    const { ask, plan, personaPatch, flowEnd, team, target } = peeled
+    let { ask, plan, personaPatch, flowEnd, team, target } = peeled
     let { note, rest: afterMeta } = peeled
     // RTS-R3/R4: classify the round. A legacy-shape text channel keeps today's body exactly; otherwise the
     // text after the meta-line is the reply and the payload is the captured `render_surface` input, or none.
@@ -1392,6 +1396,18 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         // T-0194: the tool's required `reply` line is the reply when the text channel is empty (Sonnet 5.5
         // called the tool with no text); text that already streamed wins.
         if (reply.trim() === '') reply = captured.reply
+        // T-0213: a model that wrote its meta-line as the `reply` (Haiku 5.5, trace 2026-10-15.jsonl:49) gets
+        // it read as one: its note is the reply and its declarations stand in for the empty text channel's.
+        if (reply === captured.reply && readMetaLine(reply.split('\n')[0]!.trim()) !== undefined) {
+          const fromReply = peelMetaLine(reply)
+          reply = [fromReply.note ?? '', fromReply.rest].filter((s) => s.trim() !== '').join('\n')
+          ask ??= fromReply.ask
+          plan ??= fromReply.plan
+          personaPatch ??= fromReply.personaPatch
+          flowEnd ??= fromReply.flowEnd
+          team ??= fromReply.team
+          target ??= fromReply.target
+        }
         // The repair round shows the model its own attempt: the reply text, then the payload it sent.
         lastRaw = [raw.trim() || captured.reply, captured.jsonl.trim()].filter((s) => s !== '').join('\n')
       }
