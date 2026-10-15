@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:03d25c43d21b -->
+<!-- sdlc-lite:managed:start v1 sha256:b6a838995dda -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -9,7 +9,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
 
 ## Stages
 
-- proposed: 10
+- proposed: 22
   - T-0187 split-pane demo stacks or scrolls at 400px instead of overflowing the column (0187-split-pane-narrow-fit)
   - T-0188 line-chart projected dash: user-unit dash or a ruled screen-px exemption (0188-line-chart-projected-dash)
   - T-0189 playing-card corner index: a type floor or a ruled pictorial exemption (0189-playing-card-type-floor)
@@ -20,6 +20,18 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0197 BookingForm field kinds (dateRange, radio, time, stepper) and sharing it with the Maitre d' (0197-bookingform-kinds)
   - T-0198 Step flow pattern: step n of m, Back and Next, shared /draft data (0198-step-flow)
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (0199-itinerary-compare)
+  - T-0262 BookingConfirmation repair asks for bound rows the schema rejects and keeps the hand-built Card around it (0262-booking-confirmation-repair-invalid)
+  - T-0263 FLEET_SECRET_MISSING fires on the Lexicographer's word board and has Haiku write a fleet into a word game (0263-fleet-check-on-word-board)
+  - T-0264 A repair round can ship less than the turn needs: an ACTION_NOT_APPLIED retry ends with no surface, and surfaces made in an earlier round are lost (0264-repair-round-drops-surface)
+  - T-0265 Haiku answers in prose with no surface on game openings, Admiral shots and Concierge turns, and no check sends these back (0265-haiku-no-surface-turns)
+  - T-0266 Concierge booking guidance conflicts: booking-flow teaches a read-back Card and a settled Badge, the catalog teaches BookingForm and BookingConfirmation (0266-concierge-booking-guidance-conflict)
+  - T-0267 The Concierge has no spa treatment list, so a spa services question gets prose and no ServiceCard on every model (0267-concierge-no-spa-menu)
+  - T-0268 The Lexicographer's opening turn retrieves no word board and draws none, and give-up turns miss ResultCard (0268-lexicographer-opening-no-board)
+  - T-0269 BoardGrid's intent corner glyph renders at 8px and fails render-lint type-floor on Lexicographer and Admiral boards (0269-board-grid-intent-glyph-type-floor)
+  - T-0270 Routing pack doc-only oracle expects property-knowledge-base loaded full, but T-0231 serves those facts in the persona section (0270-routing-pack-doc-only-oracle)
+  - T-0271 click-target reports a listed button as missing when the click lands but starts no turn (0271-probe-click-target-misleading)
+  - T-0272 seven-card-stud scenario moves do not fit the fixed-limit house rules, so the hand is still on seventh street at Deal again (0272-stud-scenario-fixed-limit)
+  - T-0273 On a Croupier 'Hit' turn the Battleship board ranks second among the exemplars (0273-croupier-hit-ranks-battleship)
 - ready: 17
   - T-0160 Agent content as files: extract preset and pack seeds to .md manifests with a generated, drift-gated registry (0160-agent-content-files)
   - T-0161 Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind (0161-agent-content-overlays)

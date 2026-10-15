@@ -1,0 +1,14 @@
+{
+  "round": "2026-10-15-r3-routing",
+  "ticket": "T-0261",
+  "reportId": "c8da0f95748fb8e6be9038ea",
+  "mapping": ".sdlc/evals/fog-manifest.json",
+  "mappingHash": "8255a4d8d99d5c802205393662f9d4cc07d59738d6f05ce7fda6e6e3efff7eb8",
+  "bundleFingerprint": "5153db4d44065024881eaf1d980bb08ccebb13e956d0c59aac147ad7faa4d51a",
+  "engineeringRun": "run-e74d67d6187174d7fd86cd25",
+  "events": 587,
+  "sources": 301,
+  "findings": 0,
+  "ingest": "python3 ~/.claude/skills/context-fog-of-war/scripts/engineer.py ingest .sdlc/evals/rounds/2026-10-15-r3-routing --mapping .sdlc/evals/fog-manifest.json --out <dir>",
+  "publish": "python3 ~/.claude/skills/context-fog-of-war/scripts/library.py publish <dir>/session.json"
+}
