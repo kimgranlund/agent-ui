@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:fea51f390d75 -->
+<!-- sdlc-lite:managed:start v1 sha256:117a24784753 -->
 # Work records
 
 This folder holds SDLC Lite tickets, task records, `roadmap.md`, `notes.md`, and `config`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -21,7 +21,7 @@ This folder holds SDLC Lite tickets, task records, `roadmap.md`, `notes.md`, and
   - T-0197 BookingForm field kinds (dateRange, radio, time, stepper) and sharing it with the Maitre d' (bookingform-kinds)
   - T-0198 Step flow pattern: step n of m, Back and Next, shared /draft data (step-flow)
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (itinerary-compare)
-- ready: 29
+- ready: 28
   - T-0160 Agent content as files: extract preset and pack seeds to .md manifests with a generated, drift-gated registry (agent-content-files)
   - T-0161 Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind (agent-content-overlays)
   - T-0162 Settings pane forms generated from each content kind's schema, with provenance, diff and reset (agent-content-schema-forms)
@@ -47,7 +47,6 @@ This folder holds SDLC Lite tickets, task records, `roadmap.md`, `notes.md`, and
   - T-0234 Agents narrate surface ids and earlier-turn corrections in ordinary turns (narrated-surface-mechanics)
   - T-0235 chat:probe live prose checks read the whole chat, so one leak fails every later turn (probe-live-prose-cumulative)
   - T-0236 chat:probe --from-trace labels a base-catalog preset's trace as croupier (probe-from-trace-agent-default)
-  - T-0239 Agent traces record per-turn routing (sections, mini-skills, referenced content) and context-fog-of-war can read them (agent-trace-routing-fields)
   - T-0240 Domain exemplars: CardTable, BookingForm and BoardGrid examples the producer can retrieve, plus a preset-to-domain mapping (domain-exemplars)
   - T-0242 Move the ticket store to the sdlc-lite topics layout (.sdlc/tickets/, notes/, work/), committed (sdlc-topics-layout)
   - T-0243 Upsert docs, specs, skills and the closed-loop testing spec for T-0208 to T-0242 (upsert-closed-loop-docs-2)
@@ -55,7 +54,7 @@ This folder holds SDLC Lite tickets, task records, `roadmap.md`, `notes.md`, and
 - paused: 0
 - blocked: 1
   - T-0191 claude-review still fails in 0.5s with a working API key (not the credential) (claude-review-still-failing)
-- done: 199
+- done: 200
 - dropped: 3
 
 ## Procedures

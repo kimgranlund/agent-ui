@@ -2,7 +2,7 @@
 id: T-0239
 title: "Agent traces record per-turn routing (sections, mini-skills, referenced content) and context-fog-of-war can read them"
 type: feature        # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -32,3 +32,9 @@ Round 2 analysis (2026-10-15): the traces hold exemplarIds and promptChars only,
 - The skill validates it: `python3 /Users/kimgranlund/.claude/skills/context-fog-of-war/scripts/fog.py validate /tmp/t0239-fog/session.json`
 - The skill renders it: `python3 /Users/kimgranlund/.claude/skills/context-fog-of-war/scripts/fog.py render --data /tmp/t0239-fog/session.json --out /tmp/t0239-fog/report.html`
 - The standing gate: `npm run check`
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged in #2004: routing block in producer traces; agent-traces-to-fog.py adapter with keyless selftest) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

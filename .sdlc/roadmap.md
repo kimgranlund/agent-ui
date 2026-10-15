@@ -243,7 +243,7 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0236 | [probe-from-trace-agent-default](probe-from-trace-agent-default/handoff.md) | chat:probe --from-trace labels a base-catalog preset's trace as croupier | bug | L1 | P3 | none | 🔵 ready |
 | T-0237 | [upsert-round2-learnings](upsert-round2-learnings/handoff.md) | Upsert docs and skills with the closed-loop and live round 1 and 2 learnings | chore | L2 | P1 | none | 🟢 done |
 | T-0238 | [exemplar-routing-off-domain](exemplar-routing-off-domain/handoff.md) | Few-shot exemplar retrieval ignores catalog and domain: card games get booking and roster exemplars | bug | L2 | P1 | none | 🟢 done |
-| T-0239 | [agent-trace-routing-fields](agent-trace-routing-fields/handoff.md) | Agent traces record per-turn routing (sections, mini-skills, referenced content) and context-fog-of-war can read them | feature | L2 | P2 | none | 🔵 ready |
+| T-0239 | [agent-trace-routing-fields](agent-trace-routing-fields/handoff.md) | Agent traces record per-turn routing (sections, mini-skills, referenced content) and context-fog-of-war can read them | feature | L2 | P2 | none | 🟢 done |
 | T-0240 | [domain-exemplars](domain-exemplars/handoff.md) | Domain exemplars: CardTable, BookingForm and BoardGrid examples the producer can retrieve, plus a preset-to-domain mapping | feature | L2 | P2 | none | 🔵 ready |
 | T-0241 | [round-archive](round-archive/handoff.md) | Live rounds archive their traces, payloads and spend ledger automatically | feature | L2 | P1 | none | 🟢 done |
 | T-0242 | [sdlc-topics-layout](sdlc-topics-layout/handoff.md) | Move the ticket store to the sdlc-lite topics layout (.sdlc/tickets/, notes/, work/), committed | chore | L2 | P2 | T-0208, T-0241, T-0239 | 🔵 ready |
