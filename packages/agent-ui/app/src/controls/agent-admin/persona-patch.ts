@@ -249,9 +249,9 @@ export const PATCHABLE_VALUE_SHAPES: Readonly<Record<string, string>> = {
   model: `a model id, one of: ${'{roster}'}`, // filled at compose time from the live roster
   [MODEL_SETTING_KEYS.effort]: `the default effort, one of: ${EFFORT_LEVELS.map((e) => e.id).join(', ')}`,
   [MODEL_SETTING_KEYS.thinking]: 'adaptive, disabled or between_tools (only where the model allows it)',
-  [MODEL_SETTING_KEYS.showReasoning]: 'true or false — stream a summary of the model’s thinking',
+  [MODEL_SETTING_KEYS.showReasoning]: 'true or false: stream a summary of the model’s thinking',
   [MODEL_SETTING_KEYS.maxTokens]: 'a whole number of output tokens, 0 for the effort-based default',
-  [MODEL_SETTING_KEYS.cacheTtl]: 'off, 5m or 1h — how long the system prompt stays cached',
+  [MODEL_SETTING_KEYS.cacheTtl]: 'off, 5m or 1h: how long the system prompt stays cached',
   [MODELS_INCLUDED_KEY]: 'an object of modelId → boolean (which models the picker offers)',
   [AGENT_ENABLED_KEY]: 'true or false — whether the agent is active at all',
   ...Object.fromEntries(
