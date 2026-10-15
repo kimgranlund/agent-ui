@@ -29,10 +29,10 @@ Backfilled by hand on 2026-10-15 (before T-0241): there is no `round.json` or `l
 
 - `report.json`: `verdict`, `checks[]` (`check`, `turn`, `status`, `detail`), `turns[]` (request, rounds, trace, prose, lint, screenshot), `agent`, `model`, `at`. Read: `jq -c '.checks[] | select(.status=="fail")' runs/<name>/report.json`.
 - `fixture.json`: the recorded model answers of the run. Replay it keylessly: `npm run chat:probe -- --replay 2026-10-15-t0208-probe/runs/<name>/fixture.json`.
-- `turn-<n>.png`: the Test Chat screenshot after turn n; git-ignored (`runs/*/*.png`), so present only on the disk that ran the round.
+- `turn-<n>.png`: the Test Chat screenshot after turn n. Not in this folder or in git (T-0256): it is in the local evidence cache, `$AGENT_UI_EVIDENCE_DIR (default `~/Library/Caches/agent-ui/evidence` on macOS, `${XDG_CACHE_HOME:-~/.cache}/agent-ui/evidence` elsewhere)/<round>/<run>/turn-<n>.png`, so present only on the machine that ran the round and possibly gone. Each `report.json` turn names its screenshot by absolute path.
 
 | Run | Agent | Model | Verdict | Files |
 | --- | --- | --- | --- | --- |
-| `runs/admiral-concede-haiku-1/` | admiral | claude-haiku-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` `turn-4.png` |
-| `runs/concierge-spa-booking-haiku-1/` | concierge | claude-haiku-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` `turn-4.png` |
-| `runs/lexicographer-six-guesses-haiku-1/` | lexicographer | claude-haiku-5-5 | fail | `fixture.json` `report.json` `turn-1.png` `turn-2.png` `turn-3.png` `turn-4.png` `turn-5.png` `turn-6.png` |
+| `runs/admiral-concede-haiku-1/` | admiral | claude-haiku-5-5 | fail | `fixture.json` `report.json` |
+| `runs/concierge-spa-booking-haiku-1/` | concierge | claude-haiku-5-5 | fail | `fixture.json` `report.json` |
+| `runs/lexicographer-six-guesses-haiku-1/` | lexicographer | claude-haiku-5-5 | fail | `fixture.json` `report.json` |

@@ -316,6 +316,7 @@ export interface TurnRecord {
   clickMissing?: { label: string; available: string[] }
   lint?: Array<{ rule: string; detail: string }>
   lintNotRun?: string[]
+  /** T-0256: absolute path in the local evidence cache (`evidence.ts`); local only, may be gone. */
   screenshot?: string
 }
 

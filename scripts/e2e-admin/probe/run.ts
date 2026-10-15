@@ -17,6 +17,7 @@ import { classifyRequest, installIntercept, parseBody } from '../intercept.ts'
 import type { RecordRouteLike } from '../record.ts'
 import { bootVite, launchChromium, newFlowContext, stopVite, type DevServerKit, type ViteHandle } from '../runner.ts'
 import { scrubJson, type AdminScenario } from '../scenario.ts'
+import { evidenceDir } from './evidence.ts'
 import { formatTable, ownExchange, pageStep, runChecks, type CheckResult, type ProbeFixture, type ProbeRound, type ProbeStep, type TurnRecord } from './model.ts'
 import { readTraceEntries, toProbeRounds, traceRef, TRACE_DIR, type TraceEntry } from './trace.ts'
 
@@ -263,6 +264,9 @@ export async function probeOnce(shared: SharedRun, plan: ProbePlan, root: string
   const edge: LiveEdge = { exchanges: [], seq: 0, inFlight: 0 }
   const traceDir = path.join(root, TRACE_DIR)
   mkdirSync(plan.out, { recursive: true })
+  // T-0256: screenshots go to the evidence cache, never the repo; `turns[].screenshot` is the absolute path.
+  const shotDir = evidenceDir(plan.out)
+  mkdirSync(shotDir, { recursive: true })
   const turns: TurnRecord[] = []
   try {
     let wire: ReturnType<typeof installIntercept> | undefined
@@ -306,9 +310,9 @@ export async function probeOnce(shared: SharedRun, plan: ProbePlan, root: string
         // record the turn, keep the screenshot, stop playing, and still write the report.
         if (!('click' in step)) throw err
         const available = await admin.surfaceButtonLabels('chat').catch(() => [] as string[])
-        const shot = path.join(plan.out, `turn-${turns.length + 1}.png`)
+        const shot = path.join(shotDir, `turn-${turns.length + 1}.png`)
         await page.screenshot({ path: shot, fullPage: true })
-        turns.push({ index: turns.length, step, lines: [], roundsSource: 'none', clickMissing: { label: step.click, available }, proseText: await proseText(page), proseScope: 'log', screenshot: path.basename(shot) })
+        turns.push({ index: turns.length, step, lines: [], roundsSource: 'none', clickMissing: { label: step.click, available }, proseText: await proseText(page), proseScope: 'log', screenshot: shot })
         break
       }
       await page.waitForTimeout(600) // the surface settles a frame after the turn count moves
@@ -343,7 +347,7 @@ export async function probeOnce(shared: SharedRun, plan: ProbePlan, root: string
           continue
         }
         const lint = await renderLint(page)
-        const shot = path.join(plan.out, `turn-${turns.length + 1}.png`)
+        const shot = path.join(shotDir, `turn-${turns.length + 1}.png`)
         await page.screenshot({ path: shot, fullPage: true })
         turns.push({
           ...row,
@@ -353,7 +357,7 @@ export async function probeOnce(shared: SharedRun, plan: ProbePlan, root: string
           proseScope: 'log',
           lint: lint.findings,
           lintNotRun: lint.notRun,
-          screenshot: path.basename(shot),
+          screenshot: shot,
         })
       }
     }
