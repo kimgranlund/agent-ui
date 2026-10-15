@@ -25,3 +25,8 @@ The opening draws no BoardGrid on either model. BOARD_GRID_MISSING fired 7 times
 
 ## Context
 `packages/agent-ui/a2ui/src/corpus/retrieve-presets.test.ts` pins only "My guess is CRANE". The Lexicographer has no domain (T-0240), so retrieval matches on vocabulary alone. Found by T-0261 (phase 1 keyless check, then live).
+
+## Lane bundle
+This solo lane delivers these tickets in order, one commit each:
+- .sdlc/tickets/0268-lexicographer-opening-no-board/handoff.md
+- .sdlc/tickets/0273-croupier-hit-ranks-battleship/handoff.md
