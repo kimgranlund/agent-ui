@@ -24,3 +24,8 @@ Round 2 evidence: T-0225 report; trace exemplar counts in T-0238.
 - The retrieve-presets pin test (from T-0238) shows a domain-composite exemplar in the top 3 for croupier, concierge, lexicographer and admiral.
 - Corpus admission law holds (review verdict recorded per new record).
 - npm run check plus corpus and agent tests exit 0.
+
+## Lane bundle
+This solo lane delivers these tickets in order, one commit each, then one batched verifier checks all of them:
+- .sdlc/domain-exemplars/handoff.md
+- .sdlc/catalog-id-readers/handoff.md
