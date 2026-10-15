@@ -31,6 +31,9 @@ By design (ADR-0190 rev.2, GH #891 and #1030, `packages/agent-ui/app/src/control
 ## Constraints
 The prompt budget (`src/agent/prompt-budget.ts`) is never raised just to get green. No em dashes.
 
+## Decision
+Option taken: a `prompt-section` (the ruled escape hatch). `AgentPreset.houseFacts` seeds a "House facts" section after Surface style; the Concierge's carries the pool, gym and spa hours, check-in and check-out, cancellation, tour days, and one booking line (take the booking, read it back, confirm; a confirmed booking is held). The resources and the `booking-flow` playbook stay index-only: the playbook's full arc is not made ambient here (no per-entry "always loaded" availability), so the Haiku booking replay is judged by T-0214's checks, not by this ticket.
+
 ## Acceptance criteria
 - A decision line in this ticket naming the option taken.
 - A unit test on the composed concierge prompt shows the pool, gym and spa hours present without a tag.

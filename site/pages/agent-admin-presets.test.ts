@@ -8,7 +8,7 @@
 // worth of real authored prose must come back clean with every modality switched off. A lint that fires on
 // correct text teaches an admin to ignore it, and then the real conflict lands unread.
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { DEFAULT_PROMPT_SECTIONS, ENTRY_KINDS } from '@agent-ui/app/agent-admin-entries'
+import { DEFAULT_PROMPT_SECTIONS, ENTRY_KINDS, composeLiveSystemPrompt } from '@agent-ui/app/agent-admin-entries'
 import { entriesStoreKey, type Entry } from '@agent-ui/app/entry-data'
 import { lintSectionContent } from '@agent-ui/app/agent-admin-prompt-lint'
 import {
@@ -58,6 +58,13 @@ describe('the shipped personas name no modality (GH #412’s rewrite, gated by G
   it('every persona’s Foundation rewrite is modality-neutral too', () => {
     for (const preset of AGENT_PRESETS) {
       expect(lintSectionContent(preset.foundation, ALL_OFF), `${preset.id} foundation`).toBeUndefined()
+    }
+  })
+
+  it('every persona’s house facts are modality-neutral too (T-0231)', () => {
+    for (const preset of AGENT_PRESETS) {
+      if (preset.houseFacts === undefined) continue
+      expect(lintSectionContent(preset.houseFacts, ALL_OFF), `${preset.id} houseFacts`).toBeUndefined()
     }
   })
 
@@ -369,5 +376,18 @@ describe('preset and library prose against the live catalogs (T-0159)', () => {
     expect(unbackedClaims('ONE BookingForm', DEFAULT_TYPES)).toEqual(['type BookingForm'])
     // And the real shapes pass, so the controls above fail for the planted claim alone.
     expect(unbackedClaims('one GameHud, a caption Text (caption), a Text (variant h2)', ALL_TYPES)).toEqual([])
+  })
+})
+
+describe('T-0231: the facts a preset must always know reach its prompt without a tag', () => {
+  it('the composed concierge prompt carries the pool, gym and spa hours with no entry named or tagged', () => {
+    const concierge = AGENT_PRESETS.find((p) => p.id === 'concierge')!
+    const seed = presetSeed(concierge)
+    const entries = (kind: string): Entry[] => seed[entriesStoreKey(kind)] as Entry[]
+    const groups = [ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool].map((kind) => ({ kind, heading: kind, entries: entries(kind), enabled: true }))
+    const prompt = composeLiveSystemPrompt(entries(ENTRY_KINDS.promptSection), groups)
+    // The resources stay index lines: their own text is not what puts the hours here.
+    expect(prompt).toContain('- property-knowledge-base')
+    for (const fact of ['Pool and gym: 06:00 to 22:00', 'Spa: 09:00 to 20:00', 'Check-out 11:00', 'Tuesday, Thursday and Saturday']) expect(prompt).toContain(fact)
   })
 })
