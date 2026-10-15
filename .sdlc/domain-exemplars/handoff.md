@@ -3,9 +3,9 @@ id: T-0240
 title: "Domain exemplars: CardTable, BookingForm and BoardGrid examples the producer can retrieve, plus a preset-to-domain mapping"
 type: feature        # feature | bug | chore | spike | idea
 status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
-size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
+size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
-depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
+depends: [T-0245]          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
 created: 2026-10-15
 router: .sdlc/AGENTS.md  # how to claim and close this ticket
 ---
@@ -25,7 +25,5 @@ Round 2 evidence: T-0225 report; trace exemplar counts in T-0238.
 - Corpus admission law holds (review verdict recorded per new record).
 - npm run check plus corpus and agent tests exit 0.
 
-## Lane bundle
-This solo lane delivers these tickets in order, one commit each, then one batched verifier checks all of them:
-- .sdlc/domain-exemplars/handoff.md
-- .sdlc/catalog-id-readers/handoff.md
+## Conductor note (2026-10-15, Kim: split)
+Blocked in lane E: all three candidate seeds failed review at 2. Seeds move to T-0245. T-0240 is resized to L3 and covers only the per-persona corpus shard plumbing (widen `SeedCatalogId`, `catalog-files.ts` loads `<base>--<persona>`, an `import-seeds` persona shelf, register persona catalogs in the corpus-data test, the 4 shard loaders, the `retrieve.ts` scope rule, drop the allowlist entry, re-pin 15 presets), then admits the T-0245 seeds. The lane's simulation: with the scope rule and the seeds, croupier, concierge and lexicographer each get a composite in their top 3.
