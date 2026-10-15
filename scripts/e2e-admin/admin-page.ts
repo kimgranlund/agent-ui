@@ -275,10 +275,11 @@ export class AdminPage {
     }, prefix)
   }
 
-  /** The labels of every `ui-button` rendered inside a pane's A2UI surface hosts, in document order. */
+  /** The labels of every visible `ui-button` inside a pane's A2UI surface hosts, in document order. T-0222: a
+   *  finished round's table stays in the log with its bet strip hidden; those buttons are not choices. */
   surfaceButtonLabels(pane: ConversationPane = 'chat'): Promise<string[]> {
     return this.page.evaluate(
-      (selector) => [...document.querySelectorAll(selector)].map((b) => b.textContent?.trim() ?? ''),
+      (selector) => [...document.querySelectorAll<HTMLElement>(selector)].filter((b) => b.checkVisibility()).map((b) => b.textContent?.trim() ?? ''),
       `${paneSelector(pane)} ${ADMIN_SELECTORS.surfaceButton}`,
     )
   }
@@ -304,12 +305,7 @@ export class AdminPage {
    *  the log as history with its hidden bet strip and its own "Deal again", so the first match is stale. */
   async clickSurfaceButton(label: string, pane: ConversationPane = 'chat'): Promise<void> {
     const selector = `${paneSelector(pane)} ${ADMIN_SELECTORS.surfaceButton}`
-    const visibleMatches = (): Promise<number> =>
-      this.page.evaluate(
-        ({ s, l }) => [...document.querySelectorAll<HTMLElement>(s)].filter((b) => b.textContent?.trim() === l && b.checkVisibility()).length,
-        { s: selector, l: label },
-      )
-    await pollUntil(visibleMatches, (n) => n > 0, `a visible surface button reading "${label}" in the ${pane} pane`)
+    await pollUntil(() => this.surfaceButtonLabels(pane), (labels) => labels.includes(label), `a visible surface button reading "${label}" in the ${pane} pane`)
     await this.page.evaluate(
       ({ s, l }) => {
         const button = [...document.querySelectorAll<HTMLElement>(s)].filter((b) => b.textContent?.trim() === l && b.checkVisibility()).at(-1)
