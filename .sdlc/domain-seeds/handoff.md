@@ -7,6 +7,8 @@ size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
 created: 2026-10-15
+branch: feat/domain-seeds
+worktree: .claude/worktrees/wave-ds
 router: .sdlc/AGENTS.md  # how to claim and close this ticket
 ---
 
