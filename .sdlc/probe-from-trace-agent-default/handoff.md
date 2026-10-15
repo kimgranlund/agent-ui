@@ -2,13 +2,11 @@
 id: T-0236
 title: "chat:probe --from-trace labels a base-catalog preset's trace as croupier"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P3         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
 created: 2026-10-15
-branch: fix/lane-g-probe
-worktree: .claude/worktrees/wave-lg
 router: .sdlc/AGENTS.md  # how to claim and close this ticket
 ---
 
@@ -33,3 +31,9 @@ The failing test lands before or with the fix, never after. No em dashes.
 ## Acceptance criteria
 - (red) A `--from-trace` test: a trace line with no `agent` and catalog `agent-ui` never yields agent croupier.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-15 · lane: full L1 · verdict: closed by reason (Merged in #2009 (lane G)) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

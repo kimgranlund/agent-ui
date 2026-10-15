@@ -2,13 +2,11 @@
 id: T-0244
 title: "widget/Drill overflows the 400px column by a varying amount (419 to 442px), red on main since T-0237"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
 created: 2026-10-15
-branch: fix/drill-400px-overflow
-worktree: .claude/worktrees/wave-dr
 router: .sdlc/AGENTS.md  # how to claim and close this ticket
 ---
 
@@ -33,3 +31,9 @@ The failing test lands before or with the fix, never after. Fix the cause (deter
 ## Done when
 - The Drill test passes 5 runs in a row in isolation and once under `gate_lock` with another gate running.
 - `npm run check` exit 0.
+
+## Outcome
+
+2026-10-15 · lane: full L1 · verdict: closed by reason (Merged in #2010: dogfood render lint waits for animations to settle; stale T-0186 allowlist line removed) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

@@ -2,7 +2,7 @@
 id: T-0226
 title: "validate.ts keeps a child that the same payload drops when it resends a seeded container"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -19,3 +19,9 @@ Found by lane 2 (T-0220, fix/producer-renderer-leaks): the cross-turn seed and s
 ## Done when
 - A test with one payload that seeds a container then resends it without a child fails before and passes after, with a real-renderer agreement check.
 - npm run check plus the touched a2ui tests exit 0.
+
+## Outcome
+
+2026-10-15 · lane: full L1 · verdict: closed by reason (Merged in #2006 (lane D)) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

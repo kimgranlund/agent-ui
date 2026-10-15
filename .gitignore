@@ -55,3 +55,11 @@ site/.fixture-scratch/
 # sdlc evidence images and run locks stay local (screenshots are never committed)
 .sdlc/**/*.png
 .sdlc/**/*.lock
+
+# .sdlc: tracked, except per-run state and screenshots (Kim 2026-10-15; sdlc-lite policy:
+# committed run markers and attempt files are read as live runs in every lane)
+.sdlc/runtime/
+.sdlc/**/*.running
+.sdlc/**/*.lock
+.sdlc/**/.owner.json
+.sdlc/**/*.png

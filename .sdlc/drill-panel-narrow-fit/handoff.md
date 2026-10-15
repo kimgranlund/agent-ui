@@ -2,7 +2,7 @@
 id: T-0186
 title: "ui-drill-panel fits the 400px column on the drill demo"
 type: chore           # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: dropped      # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -23,3 +23,6 @@ Filed by T-0170 (lint allowlist owners, 2026-10-14), which repointed the allowli
 
 ## Constraints
 Never add an allowlist entry without an owner (T-0170 format check). No em dashes.
+
+## Dropped (2026-10-15, Kim)
+Nothing live backs it: the `demo/drill-demo#column` overflow was measured mid slide-in, the same artifact T-0244 fixed. The 400px lint now measures settled layout, so a real narrow-fit bug would show again.
