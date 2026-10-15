@@ -46,3 +46,6 @@ This solo lane delivers these tickets in order, one commit each, then one batche
 - .sdlc/croupier-playing-table-no-moves/handoff.md
 - .sdlc/croupier-haiku-state-in-prose/handoff.md
 - .sdlc/narrated-surface-mechanics/handoff.md
+
+## Lane verify scope
+One batched verifier checks all five tickets in ## Lane bundle against their own handoff criteria, from the lane base: .sdlc/preset-knowledge-index-only, .sdlc/croupier-opening-skips-bet, .sdlc/croupier-playing-table-no-moves, .sdlc/croupier-haiku-state-in-prose, .sdlc/narrated-surface-mechanics. One verdict per ticket, then one overall verdict.
