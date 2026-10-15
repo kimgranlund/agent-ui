@@ -28,7 +28,7 @@ Round 2 analysis (2026-10-15): the traces hold exemplarIds and promptChars only,
 ## Acceptance criteria
 - The croupier and concierge routing tests pass: `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/agent-trace.test.ts packages/agent-ui/a2ui/src/live-agent/produce-loop.test.ts packages/agent-ui/a2ui/src/live-agent/a2ui-surface-toggle.test.ts`
 - The adapter selftest passes: `python3 scripts/agent-traces-to-fog.py selftest`
-- The round 2 trace hydrates: `python3 scripts/agent-traces-to-fog.py /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-r2/.agent-traces/2026-10-15.jsonl --out /tmp/t0239-fog/session.json` (the round 2 file is git-ignored and lives in the wave-r2 worktree)
+- The round 2 trace hydrates: `python3 scripts/agent-traces-to-fog.py /Users/kimgranlund/Projects/nonoun/agent-ui/.sdlc/live-round-2/traces/2026-10-15.jsonl --out /tmp/t0239-fog/session.json` (the main checkout's round 2 copy; after T-0241 merges the same file is `.sdlc/evals/rounds/2026-10-15-r2-presets/traces/2026-10-15.jsonl`, and either path is accepted)
 - The skill validates it: `python3 /Users/kimgranlund/.claude/skills/context-fog-of-war/scripts/fog.py validate /tmp/t0239-fog/session.json`
 - The skill renders it: `python3 /Users/kimgranlund/.claude/skills/context-fog-of-war/scripts/fog.py render --data /tmp/t0239-fog/session.json --out /tmp/t0239-fog/report.html`
 - The standing gate: `npm run check`

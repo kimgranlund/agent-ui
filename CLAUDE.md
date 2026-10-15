@@ -36,6 +36,10 @@ Process `.claude/docs/process.md` · Standards `.claude/docs/references/` · `si
 - `npm run traces`: the last live agent turns from the dev proxy's git-ignored trace log
   (`.agent-traces/YYYY-MM-DD.jsonl`, one redacted line per turn, on under `npm run dev`,
   `A2UI_AGENT_TRACES=0` turns it off); `-- --full 1` prints the newest turn in full (T-0151).
+- `python3 scripts/agent-traces-to-fog.py <trace.jsonl> --out <session.json>`: converts one `.agent-traces` day file
+  into a context-fog-of-war v2 session (each turn an event, its prompt sections, exemplars, mini-skills and referenced
+  entries as sources, index-only or full); `fog.py validate` and `library.py publish` belong to that skill (T-0239).
+  Its keyless `selftest` rides `check:scripts`.
 - `npm run e2e:devtools`: the `@agent-ui/devtools` keyless browser smoke (`scripts/e2e-devtools.mjs`);
   local only, no CI job.
 - `npm run test:a2ui-kit`: the keyless A2UI test kit (T-0011): scenarios, scripted transport, provider, MCP
