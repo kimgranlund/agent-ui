@@ -1010,7 +1010,7 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
   it('a persisted OLD-version store is dropped and the new seed applies; same-version edits survive', async () => {
     const { presetStore, AGENT_PRESETS, resetPreset } = await import('./agent-admin-presets.ts')
     const concierge = AGENT_PRESETS.find((p) => p.id === 'concierge')!
-    expect(concierge.seedVersion, 'the upgrade declares its bump').toBe(11) // T-0266: the pre-filled BookingForm confirm in booking-flow and the House facts
+    expect(concierge.seedVersion, 'the upgrade declares its bump').toBe(12) // T-0267: the spa treatment list in the House facts
 
     // Simulate a PRE-upgrade browser: old persisted content, NO seedVersion marker (=1 implicitly).
     resetPreset(concierge) // clean slate for the probe (drops cache + keys)
@@ -1040,7 +1040,9 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
     expect(flow.content).not.toMatch(/settled-status Badge|reading back/)
     expect(concierge.houseFacts).toMatch(/booking form pre-filled/)
     expect(concierge.houseFacts).not.toMatch(/read them back/)
-    expect(localStorage.getItem('agent-admin-app.concierge.seedVersion')).toBe('11')
+    // T-0267: the spa treatment list rides the House facts, so a spa services ask has treatments to list.
+    expect(concierge.houseFacts).toMatch(/Spa treatments: Swedish massage, 60 min, €120;[^.]*Hydrating facial/)
+    expect(localStorage.getItem('agent-admin-app.concierge.seedVersion')).toBe('12')
 
     // Same-version edits SURVIVE a rebuild (persisted-wins is untouched at the current version).
     migrated.set('entries:skill', [...skills.map((s) => s), { id: 'my-edit', kind: 'skill', label: 'my-edit', description: '', content: 'mine', order: 99, enabled: true, builtin: false }])
