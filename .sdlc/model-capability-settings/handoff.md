@@ -44,4 +44,5 @@ verifier: L3
 - Preset validation, temperature gone from presets and the Agent schema page: `npx vitest run --project site site/pages/agent-admin-app.test.ts site/pages/agent-admin-presets.test.ts site/pages/agent-admin-persona-file.test.ts site/pages/agent-schema.test.ts site/lib/team-agent-card.test.ts` exits 0.
 - Model section generated from the table (Thinking offers "Off" on Haiku 5.5 only, "Show reasoning" on every 5.5 model), stored temperature ignored: `npx vitest run --project packages packages/agent-ui/app/src/controls/agent-admin` exits 0.
 - `npm run e2e:admin` exits 0.
-- Live probes per model (Haiku, Sonnet, Opus 5.5) with reasoning shown, the composer split (3b: "Thinking off" in the effort menu, the show-reasoning toggle, web search and fetch toggles, the mid-conversation `output_config` beta) and the Model section screenshot are open and owned by the conductor.
+- Opus 5.5 is in the agent-admin picker roster, included and not the default, and the preset check bites on a seeded bad config: both covered by the agent-admin and site spans above.
+- Moved to a follow-up ticket by the conductor (2026-10-14): the composer split (3b), server tools in requests, the mid-conversation `output_config` beta header and the Model section screenshot. Live probes are the conductor's.

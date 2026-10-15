@@ -61,10 +61,12 @@ export interface SupportedModel {
  *  openai/gemini are `implemented: false` there, so a live turn on them degrades visibly until their
  *  adapters land; the grid ships them switched OFF). T-0030 (Kim, 2026-10-07): Haiku 5.5 joins as the
  *  default and Haiku 4.5 stays included and selectable, listed after Sonnet so the first non-default row
- *  is still the Sonnet tier. */
+ *  is still the Sonnet tier. T-0185 (2026-10-14): Opus 5.5 returns, included, never the default. */
 export const SUPPORTED_MODELS: readonly SupportedModel[] = [
   { id: 'claude-haiku-5-5', label: 'Haiku 5.5', provider: 'Anthropic', includedByDefault: true },
   { id: 'claude-sonnet-5-5', label: 'Sonnet 5.5', provider: 'Anthropic', includedByDefault: true },
+  // T-0185: Opus 5.5 joins the roster, included, never the default; its capability row is in model-capabilities.ts.
+  { id: 'claude-opus-5-5', label: 'Opus 5.5', provider: 'Anthropic', includedByDefault: true },
   { id: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5', provider: 'Anthropic', includedByDefault: true },
   { id: 'gpt-4.1-mini', label: 'GPT-4.1 mini', provider: 'OpenAI', includedByDefault: false },
   { id: 'gpt-4.1', label: 'GPT-4.1', provider: 'OpenAI', includedByDefault: false },

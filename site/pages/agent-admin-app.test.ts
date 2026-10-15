@@ -70,19 +70,32 @@ describe('AGENT_PRESETS — data integrity (TKT-0074)', () => {
     }
   })
 
-  it("T-0185: every preset's model settings validate against its model's capability row", () => {
-    let withSettings = 0
-    for (const p of AGENT_PRESETS) {
-      const { effort, thinking, showReasoning, maxTokens, cacheTtl } = p.config
-      const row = capabilitiesFor(p.config.model)
-      expect(row, p.id).toBeDefined()
-      if (effort !== undefined) expect(row!.efforts, `${p.id}: effort ${effort}`).toContain(effort)
-      if (showReasoning !== undefined) expect(row!.displays.length, `${p.id}: show reasoning`).toBeGreaterThan(0)
-      const settings = { ...(thinking !== undefined ? { thinking } : {}), ...(maxTokens ? { maxTokens } : {}), ...(cacheTtl !== undefined && cacheTtl !== 'off' ? { cacheTtl } : {}) }
-      expect(validateModelSettings(p.config.model, settings, effort ?? row!.defaultEffort ?? undefined), p.id).toEqual([])
-      if (effort !== undefined || thinking !== undefined || showReasoning !== undefined || maxTokens !== undefined || cacheTtl !== undefined) withSettings++
-    }
-    expect(withSettings).toBeGreaterThan(0) // at least one preset exercises the check
+  /** T-0185: every way a preset config can disagree with its model's capability row, as plain-words issues. */
+  const presetSettingsIssues = (config: (typeof AGENT_PRESETS)[number]['config']): string[] => {
+    const row = capabilitiesFor(config.model)
+    if (!row) return [`${config.model} has no capability row`]
+    const { effort, thinking, showReasoning, maxTokens, cacheTtl } = config
+    const issues: string[] = []
+    if (effort !== undefined && !row.efforts.includes(effort)) issues.push(`effort ${effort}`)
+    if (showReasoning !== undefined && row.displays.length === 0) issues.push('show reasoning')
+    const settings = { ...(thinking !== undefined ? { thinking } : {}), ...(maxTokens ? { maxTokens } : {}), ...(cacheTtl !== undefined && cacheTtl !== 'off' ? { cacheTtl } : {}) }
+    // The effort is judged once above; the settings are checked at it when legal, else at the row default.
+    const at = effort !== undefined && row.efforts.includes(effort) ? effort : (row.defaultEffort ?? undefined)
+    for (const issue of validateModelSettings(config.model, settings, at)) issues.push(issue.message)
+    return issues
+  }
+
+  it("T-0185: every preset's settings validate against its model's capability row", () => {
+    for (const p of AGENT_PRESETS) expect(presetSettingsIssues(p.config), p.id).toEqual([])
+  })
+
+  it('T-0185 negative control: a seeded bad preset config is caught on every axis (the check bites)', () => {
+    const base = { name: 'Bad', toolsEnabled: false }
+    expect(presetSettingsIssues({ ...base, model: 'claude-haiku-5-5', effort: 'xhigh', thinking: 'disabled' })).toHaveLength(1) // thinking off at xhigh
+    expect(presetSettingsIssues({ ...base, model: 'claude-opus-5-5', thinking: 'disabled' })).toHaveLength(1) // adaptive always on
+    expect(presetSettingsIssues({ ...base, model: 'claude-sonnet-5-5', maxTokens: 500_000 })).toHaveLength(1) // over the ceiling
+    expect(presetSettingsIssues({ ...base, model: 'claude-haiku-4-5-20251001', effort: 'low', showReasoning: true })).toHaveLength(2) // no dial, no display
+    expect(presetSettingsIssues({ ...base, model: 'gpt-4.1' })).toHaveLength(1) // no row
   })
 
   it('the roster COLLECTIVELY covers the config axes: both included models, tools both states', () => {

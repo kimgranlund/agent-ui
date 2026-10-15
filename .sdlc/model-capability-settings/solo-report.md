@@ -10,11 +10,13 @@ Checks:
 - `npm run e2e:admin` exit 0 (25 passed)
 - a2ui live-agent folder exit 0; baseline recapture left the golden file unchanged.
 
+Round 2 (conductor fixes): Opus 5.5 added to `SUPPORTED_MODELS` ("Opus 5.5", included, not the default; the Model grid test now counts 8 rows); the Quizmaster `effort: 'low'` override removed; the preset test checks every preset against its model row through one helper, plus a seeded bad-config negative control (thinking off at xhigh on Haiku 5.5, thinking off on Opus 5.5, max tokens over the ceiling, effort and show reasoning on Haiku 4.5, a model with no row).
+
 Live probes (no key in lane; conductor runs under `npm run dev`, ANTHROPIC_WORKSPACE_ID path untouched):
-`curl -N localhost:5173/__a2ui/agent/chat -H 'content-type: application/json' -d '{"system":"Be brief.","model":"<M>","messages":[{"role":"user","content":"Why is the sky blue? Think first."}],"effort":"medium","modelSettings":{"display":"summarized"}}'` with M = claude-haiku-5-5, claude-sonnet-5-5, claude-opus-5-5. Opus 5.5 is in providers.json but not in SUPPORTED_MODELS (rev.4 roster ruling), so its probe is proxy-only.
+`curl -N localhost:5173/__a2ui/agent/chat -H 'content-type: application/json' -d '{"system":"Be brief.","model":"<M>","messages":[{"role":"user","content":"Why is the sky blue? Think first."}],"effort":"medium","modelSettings":{"display":"summarized"}}'` with M = claude-haiku-5-5, claude-sonnet-5-5, claude-opus-5-5. Opus 5.5 is now in both providers.json and the picker roster.
 
 Open:
-- blocked: plan defect: scope. 3b composer split ("Thinking off" in the effort menu, show-reasoning toggle, web search and fetch toggles), server tools in the request body (table lists them, nothing sends them), the mid-conversation `output_config` beta header, and the Model section screenshot are not built.
+- Moved to the conductor's follow-up ticket: 3b composer split, server tools in the request body, the mid-conversation `output_config` beta header, the Model section screenshot.
 - Opus 4.8 and Fable 5 rows are filled from pre-table behavior, not docs.
 - `meta-line.test.ts` and `produce-loop.test.ts` still use `temperature` as an opaque patch value (harmless).
 - Behavior change: an explicit `low` effort on Sonnet now sends `output_config.effort: low` (before: nothing).
