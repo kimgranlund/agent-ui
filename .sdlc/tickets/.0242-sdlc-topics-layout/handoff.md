@@ -2,7 +2,7 @@
 id: T-0242
 title: "Move the ticket store to the sdlc-lite topics layout (.sdlc/tickets/, notes/, work/), committed"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0208, T-0241, T-0239]          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -41,3 +41,14 @@ Order: `tickets.py number --dry-run` then `number`, `archive` (closed tickets in
 
 ## Verify base
 Diff base: main at b9523d03 (`git diff b9523d03..HEAD`), the commit before both T-0242 commits; the base sha printed in the dispatch is the T-0242 commit itself.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Done in chore/topics-layout: 255 tickets under .sdlc/tickets, 224 archived, notes and work moved; verifier L2 pass) · verifier: verifier-L2 (sonnet) · base: a857774dfee5
+- Changed: see commits
+- Commits: 8e0c448 T-0242: verify base note
+- Check: 1 tickets.py check exits 0 with topics config: pass
+- Check: 2 no ticket folder directly under .sdlc/: pass
+- Check: 3 no live moved-path reference outside tickets/ and work/: pass
+- Check: 4 next ticket lands in tickets/: pass
+- Check: 5 npm run check: pass
