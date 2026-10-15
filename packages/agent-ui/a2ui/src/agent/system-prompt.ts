@@ -56,6 +56,7 @@ import { FEED_SURFACE_TYPES } from './feed-catalog.ts'
 import type { GenuiSurfaceConfig } from './genui-surface-config.ts'
 import { dogfoodInventory } from './dogfood-inventory.ts'
 import { selectionGuidanceFor, renderSelectionClause } from './selection-guidance.ts'
+import { isUnselectedDomainType, selectedDomains } from '../catalog/layers.ts'
 import type { PromptSection, PromptSectionId } from './meta-line.ts'
 import type { ResponsePreference } from './response-type.ts'
 import { readAsset } from './asset-source.ts'
@@ -184,14 +185,20 @@ function grammarFor(mode: GenUiMode | undefined): string {
 // ADR-0232 (accepted): the selection clause rides AFTER the closing `)` on the same line, so
 // `prompt-drift.test.ts`'s `^- (.+?) \(` id regex still reads the row; a type with no sidecar entry (or a
 // catalog with no sidecar) gets no clause and its line stays byte-identical.
+// T-0207 (CA-R4): guidance for a domain type the catalog does not select (`isUnselectedDomainType`) leaves the line,
+// clause and edges both; the row itself stays. Inert until a type is homed outside `default` without its domain.
 function catalogInventory(catalog: Catalog): string {
   const guidance = selectionGuidanceFor(catalog)
+  const selected = selectedDomains(catalog.catalogId)
+  const hidden = (type: string): boolean => isUnselectedDomainType(type, selected)
   const lines: string[] = []
   for (const id of Object.keys(catalog.components)) {
     const def = catalog.components[id]!
     const props = Object.keys(def.properties).map((p) => `${p}: ${describePropType(def.properties[p]!)}`)
     const child = def.children ? ` · children model: ${def.children}` : ''
-    const clause = Object.hasOwn(guidance, id) ? renderSelectionClause(guidance[id], catalog) : ''
+    const entry = Object.hasOwn(guidance, id) && !hidden(id) ? guidance[id]! : undefined
+    const kept = entry !== undefined && entry.notFor.some((e) => hidden(e.type)) ? { ...entry, notFor: entry.notFor.filter((e) => !hidden(e.type)) } : entry
+    const clause = renderSelectionClause(kept, catalog)
     lines.push(`- ${id} (props: ${props.length > 0 ? props.join(', ') : 'none'}${child})${clause}`)
   }
   return lines.join('\n')

@@ -109,8 +109,8 @@ describe('selectMiniSkills — TF-IDF top-cap selection over the registry (ADR-0
     expect(result.map((m) => m.id)).toContain('settings-screen')
   })
 
-  it('a terse card-game intent selects the TKT-0077 trio together (the shared `deal` trigger core)', () => {
-    const ids = selectMiniSkills('deal me in', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui').map((m) => m.id)
+  it('a terse card-game intent selects the TKT-0077 trio together on a games catalog (the shared `deal` trigger core)', () => {
+    const ids = selectMiniSkills('deal me in', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui--croupier').map((m) => m.id)
     expect(ids.sort()).toEqual(['card-layout', 'game-hud', 'game-table-chrome'])
   })
 
@@ -157,18 +157,18 @@ describe('selectMiniSkills — SPEC-R6 catalogId scoping', () => {
     expect(selectMiniSkills('deal me in', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'a2ui-basic--croupier')).toEqual([])
   })
 
-  it('ADR-0243 cl.3: a derived `<base>--<persona>` id selects the BASE mini-skills, identical to the base id', () => {
+  it('ADR-0243 cl.3: a derived `<base>--<persona>` id selects the BASE mini-skills, plus the modules of its fragment\'s domain (T-0207)', () => {
     const base = selectMiniSkills('deal me in', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui').map((m) => m.id)
     expect(base.length).toBeGreaterThan(0)
-    expect(selectMiniSkills('deal me in', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui--croupier').map((m) => m.id)).toEqual(base)
     expect(selectMiniSkills('deal me in', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui--fixture-demo').map((m) => m.id)).toEqual(base)
+    expect(base).not.toContain('game-table-chrome')
+    expect(selectMiniSkills('deal me in', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui--croupier').map((m) => m.id)).toContain('game-table-chrome')
   })
 
-  it('AC3 — an agent-ui turn is byte-identical to today (all ten modules eligible, ranked the same way)', () => {
+  it('T-0207: a plain agent-ui turn is never taught CardTable (game-table-chrome is scoped to the games domain)', () => {
     const filtered = selectMiniSkills('deal me in', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui').map((m) => m.id)
-    // Every shipped module is already catalogId:'agent-ui' (AC1), so filtering has zero effect on the
-    // scoring input — the SAME selection the un-scoped call produced before this clause existed.
-    expect(filtered.sort()).toEqual(['card-layout', 'game-hud', 'game-table-chrome'])
+    expect(filtered).toContain('card-layout')
+    expect(filtered).not.toContain('game-table-chrome')
   })
 
   it('the filter is a hard pre-rank scope, not a scoring signal — a mismatched entry never pads the result', () => {
@@ -288,7 +288,7 @@ describe('structured-container — the SPEC-R8 taught tier (a2ui-container-vocab
   })
 
   it('the trio (card-layout, game-hud, game-table-chrome) still selects together on a terse "deal" intent — structured-container never leaks in', () => {
-    const ids = selectMiniSkills('deal me in', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui').map((m) => m.id)
+    const ids = selectMiniSkills('deal me in', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui--croupier').map((m) => m.id)
     expect(ids.sort()).toEqual(['card-layout', 'game-hud', 'game-table-chrome'])
   })
 
@@ -352,7 +352,7 @@ describe('greeting-card — the GH #1201 persona-conditional greet-bookend modul
   })
 
   it('the "deal me in" trio selection is untouched — greeting-card never leaks into it', () => {
-    const ids = selectMiniSkills('deal me in', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui').map((m) => m.id)
+    const ids = selectMiniSkills('deal me in', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui--croupier').map((m) => m.id)
     expect(ids.sort()).toEqual(['card-layout', 'game-hud', 'game-table-chrome'])
   })
 
@@ -637,7 +637,7 @@ describe('card-layout + game-table-chrome: the data-driven hand and computed tot
 
   it('both modules stay within the per-module token budget and still fire together on a blackjack deal', () => {
     for (const id of ['card-layout', 'game-table-chrome']) expect(estimateTokens(body(id)), id).toBeLessThanOrEqual(PER_MODULE_TOKEN_BUDGET)
-    const ids = selectMiniSkills('Deal a round of Blackjack.', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui').map((m) => m.id)
+    const ids = selectMiniSkills('Deal a round of Blackjack.', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui--croupier').map((m) => m.id)
     expect(ids).toEqual(expect.arrayContaining(['card-layout', 'game-table-chrome']))
   })
 })
@@ -689,8 +689,8 @@ describe('card-layout + game-table-chrome: the CardTable teaching (ADR-0243, T-0
 })
 
 // T-0202 (catalog architecture CA-R4): a module that names a domain type declares the domain in its frontmatter and
-// is selected only when the effective catalog holds it. No shipped module declares one in W0 (the retag of
-// game-table-chrome and its siblings lands with their domain in W1), so the scope is proven on a seeded module.
+// is selected only when the effective catalog holds it (T-0207: a persona catalog holds its fragment's domain). The
+// scope is proven on a seeded module; game-table-chrome is the one shipped module retagged (T-0207).
 describe('mini-skill domain scope (T-0202, CA-R4 AC2)', () => {
   const seeded: MiniSkill = { id: 'board-moment', triggers: 'board game grid cells move', body: 'Use BoardGrid.', catalogId: 'agent-ui', domain: 'games' }
   const plain: MiniSkill = { id: 'plain-grid', triggers: 'board game grid cells move', body: 'Use Grid.', catalogId: 'agent-ui' }
@@ -698,8 +698,9 @@ describe('mini-skill domain scope (T-0202, CA-R4 AC2)', () => {
 
   it('a plain base turn never selects the domain-scoped module', () => {
     expect(pick('agent-ui')).toEqual(['plain-grid'])
-    expect(pick('agent-ui--croupier')).toEqual(['plain-grid'])
+    expect(pick('agent-ui--stylist'), 'the stylist fragment selects design, not games').toEqual(['plain-grid'])
     expect(pick('agent-ui--design')).toEqual(['plain-grid'])
+    expect(pick('agent-ui--croupier').sort(), 'T-0207: the croupier fragment selects games').toEqual(['board-moment', 'plain-grid'])
   })
 
   it('a turn whose effective catalog holds the domain selects it, alone or among others', () => {
@@ -708,7 +709,7 @@ describe('mini-skill domain scope (T-0202, CA-R4 AC2)', () => {
     expect(pick('agent-ui--games+design'), 'a non-canonical id holds no domain').toEqual(['plain-grid'])
   })
 
-  it('W0 retags no shipped module, so no shipped selection moves', () => {
-    expect(MINI_SKILLS.filter((m) => m.domain !== undefined).map((m) => m.id)).toEqual([])
+  it('T-0207 retags game-table-chrome alone (it names CardTable), so only games turns select it', () => {
+    expect(MINI_SKILLS.filter((m) => m.domain !== undefined).map((m) => [m.id, m.domain])).toEqual([['game-table-chrome', 'games']])
   })
 })

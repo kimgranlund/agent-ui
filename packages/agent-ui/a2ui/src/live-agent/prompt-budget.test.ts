@@ -6,7 +6,6 @@
 // Deterministic, no model.
 
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'node:fs'
 import { buildSystemPrompt, buildSystemPromptSections } from '../agent/system-prompt.ts'
 import type { PromptSection, PromptSectionId } from '../agent/meta-line.ts'
 import {
@@ -15,17 +14,10 @@ import {
   PROMPT_CHAR_BUDGET_BASE,
   PROMPT_CHAR_BUDGET_DERIVED,
 } from '../agent/prompt-budget.ts'
-import { MINI_SKILLS, DEFAULT_MINI_SKILL_CAP } from '../agent/mini-skills.ts'
-import type { GenUiMode } from '../agent/gen-ui-mode.ts'
-import type { Catalog } from '../catalog/catalog.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import { a2uiBasicCatalog } from '../catalog/a2ui-basic/index.ts'
-import { composeCatalog } from '../catalog/compose.ts'
-import { SHIPPED_PERSONA_CATALOGS } from '../catalog/personas/index.ts'
-
-// Typed off the builder's own parameter, never `CorpusRecord` by name: `src/corpus/*` is import-barred
-// outside itself (ADR-0062), the `produce-loop.test.ts` precedent.
-type Exemplar = Parameters<typeof buildSystemPrompt>[1][number]
+import { DERIVED_CATALOGS, MODES, PERSONA_SYSTEM_CAP, worstArgs } from '../../tools/agent/prompt-budget-matrix.ts'
+import type { BudgetArgs as Args } from '../../tools/agent/prompt-budget-matrix.ts'
 
 const SECTION_ORDER: readonly PromptSectionId[] = [
   'grammar',
@@ -39,57 +31,13 @@ const SECTION_ORDER: readonly PromptSectionId[] = [
   'response-preference',
   'persona',
 ]
-const MODES: readonly GenUiMode[] = ['default', 'specific', 'blue-sky']
-/** The runaway-guard caps the two proxies apply (`tools/agent/chat-validation.ts`, `dev-proxy-plugin.ts`). */
-const SOURCE_BODY_CAP = 16_384
-const PERSONA_SYSTEM_CAP = 16_384
-
-const exemplarFile = `${process.cwd()}/packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl`
-const allExemplars: Exemplar[] = readFileSync(exemplarFile, 'utf8')
-  .split('\n')
-  .filter((l) => l.trim().length > 0)
-  .map((l) => JSON.parse(l) as Exemplar)
-/** The k=3 records with the largest single-record prompt (the worst-case retrieval). */
-const worstExemplars: Exemplar[] = [...allExemplars]
-  .map((ex) => ({ ex, len: buildSystemPrompt(defaultCatalog, [ex]).length }))
-  .sort((a, b) => b.len - a.len)
-  .slice(0, 3)
-  .map((e) => e.ex)
-
-/** The `DEFAULT_MINI_SKILL_CAP` largest mini-skill bodies scoped to `baseCatalogId`. */
-const worstMiniSkills = (baseCatalogId: string) =>
-  MINI_SKILLS.filter((m) => m.catalogId === baseCatalogId)
-    .sort((a, b) => b.body.length - a.body.length)
-    .slice(0, DEFAULT_MINI_SKILL_CAP)
-
-type Args = Parameters<typeof buildSystemPrompt>
-
-/** The worst-case argument tuple for one catalog and mode. */
-function worstArgs(catalog: Catalog, baseCatalogId: string, mode: GenUiMode): Args {
-  return [
-    catalog,
-    worstExemplars,
-    mode,
-    worstMiniSkills(baseCatalogId),
-    'p'.repeat(PERSONA_SYSTEM_CAP),
-    { enabled: true, dogfood: true, sourceBody: 's'.repeat(SOURCE_BODY_CAP) },
-    true,
-    true,
-    true,
-    'surface',
-  ]
-}
-
-const BASES: Record<string, Catalog> = { 'agent-ui': defaultCatalog, 'a2ui-basic': a2uiBasicCatalog }
+const CAP_PERSONA = 'p'.repeat(PERSONA_SYSTEM_CAP)
 
 const baseMatrix: { label: string; args: Args }[] = [defaultCatalog, a2uiBasicCatalog].flatMap((c) =>
-  MODES.map((mode) => ({ label: `${c.catalogId} ${mode}`, args: worstArgs(c, c.catalogId, mode) })),
+  MODES.map((mode) => ({ label: `${c.catalogId} ${mode}`, args: worstArgs(c, c.catalogId, mode, CAP_PERSONA) })),
 )
-const derivedMatrix: { label: string; args: Args }[] = SHIPPED_PERSONA_CATALOGS.flatMap((p) =>
-  (p.targetCatalogs !== undefined && p.targetCatalogs.length > 0 ? p.targetCatalogs : ['agent-ui']).flatMap((baseId) => {
-    const derived = composeCatalog(BASES[baseId]!, p.fragment, p.personaId)
-    return MODES.map((mode) => ({ label: `${derived.catalogId} ${mode}`, args: worstArgs(derived, baseId, mode) }))
-  }),
+const derivedMatrix: { label: string; args: Args }[] = DERIVED_CATALOGS.flatMap(({ catalog, baseId }) =>
+  MODES.map((mode) => ({ label: `${catalog.catalogId} ${mode}`, args: worstArgs(catalog, baseId, mode, CAP_PERSONA) })),
 )
 
 /** The pinned baseline shapes (`prompt-equivalence.baseline.json`) plus single-gate variations. */

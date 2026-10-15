@@ -21,7 +21,11 @@ import type { PromptBudgetReport, PromptSection } from './meta-line.ts'
  *  RE-MEASURED 2026-10-12 (T-0089, ADR-0244): the worst case is 140 735 chars (`agent-ui`, mode default), against
  *  139 883 before the `ResultCard` default row: +852 chars, the row and its clause on the catalog inventory line
  *  plus the ui-result-card dogfood row (+463), each with the reciprocal `GameHud` and `Toast` edges. The first raise
- *  of BASE: budget 141 100 (measured rounded up to the next 100, plus 300, the formula the sidecar budgets use). */
+ *  of BASE: budget 141 100 (measured rounded up to the next 100, plus 300, the formula the sidecar budgets use).
+ *  T-0207: the 16 KB persona above is the proxies' runaway cap, not a real preset. The site leg
+ *  `site/pages/agent-admin-prompt-budget.test.ts` composes each shipped preset's real persona on its own catalog
+ *  under the same matrix: MEASURED 2026-10-14, largest persona 4 516 chars (croupier), worst 130 097 chars
+ *  (`agent-ui--croupier`, DERIVED headroom 11 903), worst base preset 126 792 (travel, BASE headroom 14 308). */
 export const PROMPT_CHAR_BUDGET_BASE = 141_100
 
 /** The budget for a DERIVED `<base>--<persona>` catalog (`compose.ts` `derivedCatalogId`): the same matrix
