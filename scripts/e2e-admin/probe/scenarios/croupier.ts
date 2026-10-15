@@ -87,11 +87,15 @@ export const CROUPIER_SCENARIOS: readonly CroupierScenario[] = SCENARIOS.map((s)
   steps: s.steps.map((step, i) => (i === 0 || step === DEAL_AGAIN ? { ...step, expect: s.expectComponents } : step)),
 }))
 
-/** The picker's Anthropic 5.5 models in spend order (Opus 5.5 is not in the picker, so it is not run). */
+/** The picker's Anthropic 5.5 models in spend order (Opus 5.5 joined the picker in T-0185; live round 2, T-0225). */
 export const CROUPIER_MODELS: ReadonlyArray<{ id: string; short: string }> = [
   { id: 'claude-haiku-5-5', short: 'haiku' },
   { id: 'claude-sonnet-5-5', short: 'sonnet' },
+  { id: 'claude-opus-5-5', short: 'opus' },
 ]
+
+/** The T-0184 run's models: its `live-commands.sh` is a finished run record, so its script keeps these two. */
+export const T0184_MODELS = CROUPIER_MODELS.slice(0, 2)
 
 export const SAMPLES = 2
 export const RUNS_DIR = '.sdlc/croupier-closed-loop/runs'
@@ -109,7 +113,7 @@ export function probeArgv(scenario: CroupierScenario, model: { id: string; short
   ]
 }
 
-const quote = (arg: string): string => (/^[A-Za-z0-9_./:-]+$/.test(arg) ? arg : `"${arg.replace(/(["\\$`])/g, '\\$1')}"`)
+export const quote = (arg: string): string => (/^[A-Za-z0-9_./:-]+$/.test(arg) ? arg : `"${arg.replace(/(["\\$`])/g, '\\$1')}"`)
 
 /** `live-commands.sh`: every model's runs in order, sample 1 of every scenario before sample 2. */
 export function liveCommandsScript(): string {
@@ -122,7 +126,7 @@ export function liveCommandsScript(): string {
     '# sample 2, so a stop at the cap still leaves every game x model cell with one run where it can.',
     '# A probe exits 1 when a check fails; the script goes on to the next run.',
   ]
-  for (const model of CROUPIER_MODELS) {
+  for (const model of T0184_MODELS) {
     for (let sample = 1; sample <= SAMPLES; sample += 1) {
       lines.push('', `# ${model.id}, sample ${sample}`)
       for (const scenario of CROUPIER_SCENARIOS) lines.push(['npm', 'run', 'chat:probe', '--', ...probeArgv(scenario, model, sample)].map(quote).join(' '))
