@@ -555,7 +555,8 @@ describe('croupier action check: a table action moves the table and a deal takes
     { version: 'v1.0', updateComponents: { surfaceId: 'table-1', components: [table] } },
     { version: 'v1.0', updateDataModel: { surfaceId: 'table-1', value: { bankroll, bet: 50, phase, dealerHand: [{ rank: '10', suit: 'spades' }, { rank: '6', suit: 'clubs', faceDown: true }], playerHand: [{ rank: '9', suit: 'hearts' }, { rank: '7', suit: 'clubs' }] } } },
   ] as A2uiOutput
-  const run = (output: A2uiOutput, a: typeof action = action) => croupierActionApplied.check({ surfaces: semanticSurfaceViews({ turns: [] }, output), action: a })
+  const run = (output: A2uiOutput, a: { name: string; surfaceId: string; context: Record<string, unknown>; dataModel: unknown } = action) =>
+    croupierActionApplied.check({ surfaces: semanticSurfaceViews({ turns: [] }, output), action: a })
 
   it('a deal answered with no update to the table is ACTION_NOT_APPLIED (the Haiku prose-only turn)', () => {
     const findings = croupierActionApplied.check({ surfaces: [], action })
@@ -572,6 +573,14 @@ describe('croupier action check: a table action moves the table and a deal takes
     expect(findings.map((f) => [f.code, f.path])).toEqual([['BANKROLL_MISMATCH', 'table-1:/bankroll']])
     expect(findings[0]!.message).toMatch(/write 950/)
     expect(run(dealt(950))).toEqual([])
+  })
+
+  it('T-0216: the table owns the debit, so a deal is held to the context\'s bankrollAfterBet, with or without a click-time data model', () => {
+    const owned = { ...action, context: { bet: 50, bankrollAfterBet: 950 } }
+    expect(run(dealt(1000), owned).map((f) => f.code)).toEqual(['BANKROLL_MISMATCH'])
+    expect(run(dealt(1000), owned)[0]!.message).toMatch(/write 950/)
+    expect(run(dealt(1000), { ...owned, dataModel: undefined }).map((f) => f.code)).toEqual(['BANKROLL_MISMATCH'])
+    expect(run(dealt(950), { ...owned, dataModel: undefined })).toEqual([])
   })
 
   it('a move other than a table action, or Deal again on a new table, passes', () => {

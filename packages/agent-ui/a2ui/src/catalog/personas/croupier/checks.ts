@@ -481,7 +481,9 @@ function actionApplied(surfaces: readonly SurfaceView[], action: SemanticAction)
         message: `The player bet with ${action.name}, but ${table.id} is still in the betting phase. Write the dealt hands and phase "playing" to ${view.surfaceId}'s data model.`,
       })
     const bet = finiteNumber(action.context['bet'])
-    const before = finiteNumber((action.dataModel as Record<string, unknown> | undefined)?.['bankroll'])
+    // T-0216: the table owns the debit; its press sends the bankroll less the bet, the figure the deal writes.
+    const owned = finiteNumber(action.context['bankrollAfterBet'])
+    const before = bet !== undefined && owned !== undefined ? owned + bet : finiteNumber((action.dataModel as Record<string, unknown> | undefined)?.['bankroll'])
     const path = bindingPath(table['bankroll'])
     const after = path === undefined ? finiteNumber(table['bankroll']) : finiteNumber(readPointer(view.dataModel, path))
     // A round that settles on this action is judged by the payout, never by the plain deal arithmetic.
@@ -537,12 +539,13 @@ function settleFinding(view: SurfaceView, table: A2uiComponent, action: Semantic
   if (phaseOf(table, view.dataModel) !== 'settled') return undefined
   const clickTime = action.dataModel as Record<string, unknown> | undefined
   if (clickTime?.['phase'] === 'settled') return undefined // already settled before this action
-  const before = finiteNumber(clickTime?.['bankroll'])
+  const bet = deal ? finiteNumber(action.context['bet']) : finiteNumber(clickTime?.['bet'])
+  const owned = deal ? finiteNumber(action.context['bankrollAfterBet']) : undefined // T-0216: the table's own debit
+  const before = bet !== undefined && owned !== undefined ? owned + bet : finiteNumber(clickTime?.['bankroll'])
   const bankrollPath = bindingPath(table['bankroll'])
   const after = bankrollPath === undefined ? finiteNumber(table['bankroll']) : finiteNumber(readPointer(view.dataModel, bankrollPath))
   const player = cardsAt(view.dataModel, bindingPath(table['playerHand']))
   const dealer = cardsAt(view.dataModel, bindingPath(table['dealerHand']))
-  const bet = deal ? finiteNumber(action.context['bet']) : finiteNumber(clickTime?.['bet'])
   if (before === undefined || after === undefined || player === undefined || dealer === undefined || bet === undefined || bet <= 0) return undefined
   const doubled = /^double/i.test(action.name)
   const stake = doubled ? bet * 2 : bet

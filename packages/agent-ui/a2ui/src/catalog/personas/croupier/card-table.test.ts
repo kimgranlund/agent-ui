@@ -250,12 +250,12 @@ describe('CardTable: the hand lifecycle (ADR-0243 Amendment 3)', () => {
     cleanup()
   })
 
-  it('betting: one press places that bet, writes it to the data model and sends deal with it in the context', async () => {
+  it('betting: one press places that bet, writes it to the data model and sends deal with it and the debited bankroll in the context (T-0216)', async () => {
     const { table, errors, actions, cleanup } = await render(personaCroupierCardTableBettingSeed.messages)
     await press(betOption(table, 75))
     expect(errors()).toEqual([])
     expect(readout(table)).toBe('Bankroll 1,000 · Bet 75')
-    expect(actions()).toEqual([{ name: 'deal', context: { bet: 75 } }])
+    expect(actions()).toEqual([{ name: 'deal', context: { bet: 75, bankrollAfterBet: 925 } }])
     cleanup()
   })
 
@@ -314,7 +314,7 @@ describe('CardTable: the hand lifecycle (ADR-0243 Amendment 3)', () => {
     expect(errors()).toEqual([])
     expect(deal(table)).toBeNull()
     await press(betOption(table, 50))
-    expect(actions()).toEqual([{ name: 'deal', context: { bet: 50 } }])
+    expect(actions()).toEqual([{ name: 'deal', context: { bet: 50, bankrollAfterBet: 950 } }])
     cleanup()
   })
 
