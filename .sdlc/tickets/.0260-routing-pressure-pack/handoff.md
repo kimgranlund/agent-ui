@@ -2,13 +2,11 @@
 id: T-0260
 title: "Scenarios declare expected routing; keyless routing-expect probe check; six routing pressure scenarios"
 type: feature        # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0259]          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
 created: 2026-10-15
-branch: feat/routing-pressure-pack
-worktree: .claude/worktrees/wave-rp
 router: .sdlc/tickets/AGENTS.md  # how to claim and close this ticket
 ---
 
@@ -43,3 +41,9 @@ The fog `tool-result-not-propagated` detector only has eligible pairs on turns t
 - `node --experimental-strip-types scripts/e2e-admin/probe/run-capped.ts --describe scripts/e2e-admin/probe/scenarios/routing-pack.sh` exits 0 (12 runs parse as live probes, keyless).
 - `node --experimental-strip-types scripts/e2e-admin/probe/run-capped.ts scripts/e2e-admin/probe/scenarios/routing-pack.sh --cap 5 --dry-run` exits 0.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged: routing-expect check and the six-scenario routing pressure pack; verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

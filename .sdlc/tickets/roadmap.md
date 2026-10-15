@@ -264,4 +264,5 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0257 | [.0257-probe-lone-button-frame](.0257-probe-lone-button-frame/handoff.md) | chat:probe browser selftest fails lone-button-frame on recorded-haiku-hello | bug | L1 | P2 | none | 🟢 done |
 | T-0258 | [0258-haiku-card-per-choice](0258-haiku-card-per-choice/handoff.md) | Haiku frames each starter choice in its own Card; nothing repairs or tests it | bug | L2 | P2 | T-0257 | 🔵 ready |
 | T-0259 | [.0259-trace-run-id-fog-complete](.0259-trace-run-id-fog-complete/handoff.md) | Trace lines carry the probe run id; the fog mapping records turn completion | chore | L1 | P2 | none | 🟢 done |
-| T-0260 | [0260-routing-pressure-pack](0260-routing-pressure-pack/handoff.md) | Scenarios declare expected routing; keyless routing-expect probe check; six routing pressure scenarios | feature | L2 | P2 | T-0259 | 🔵 ready (branch feat/routing-pressure-pack) |
+| T-0260 | [.0260-routing-pressure-pack](.0260-routing-pressure-pack/handoff.md) | Scenarios declare expected routing; keyless routing-expect probe check; six routing pressure scenarios | feature | L2 | P2 | T-0259 | 🟢 done |
+| T-0261 | [0261-live-round-3](0261-live-round-3/handoff.md) | Live round 3: routing pressure pack, round 2 regressions, long flows ( cap) | chore | L2 | P2 | T-0260 | 🔵 ready |
