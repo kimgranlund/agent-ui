@@ -17,7 +17,8 @@ import { loadCatalogBody, CatalogLoadError } from './loader.ts'
 import { Registry } from './registry.ts'
 import { A2UI_BASIC_CANONICAL_URI } from './a2ui-basic/index.ts'
 import { SHIPPED_PERSONA_CATALOGS } from './personas/index.ts'
-import { CatalogComposeError, composePersonaEntry, derivedCatalogIdsFor } from './compose.ts'
+import { CatalogComposeError, composePersonaEntry, derivedCatalogIdsFor, domainCatalogIdsFor } from './compose.ts'
+import { SHIPPED_DOMAIN_CATALOGS } from './domains/index.ts'
 import { defaultCatalog } from './default/index.ts'
 import { defaultFactories } from './default/factories.ts'
 import { factoriesOf } from './variant.ts'
@@ -49,10 +50,10 @@ function manifestProblems(record: LazyCatalogRecord, body: CatalogBody): string[
 }
 
 describe('built-in catalog records: the bijection with the shipped bodies (ADR-0241 cl.9)', () => {
-  it('record ids equal the shipped catalog folders, the canonical alias and every persona pairing', () => {
+  it('record ids equal the shipped catalog folders, the canonical alias, every persona pairing and every domain pairing', () => {
     const shipped = shippedCatalogIds()
     expect(shipped, 'anti-vacuous: both base folders are found').toEqual(expect.arrayContaining(['agent-ui', 'a2ui-basic']))
-    const expected = [...shipped, A2UI_BASIC_CANONICAL_URI, ...derivedCatalogIdsFor(SHIPPED_PERSONA_CATALOGS)]
+    const expected = [...shipped, A2UI_BASIC_CANONICAL_URI, ...derivedCatalogIdsFor(SHIPPED_PERSONA_CATALOGS), ...domainCatalogIdsFor(SHIPPED_DOMAIN_CATALOGS)]
     const ids = BUILTIN_CATALOG_RECORDS.map((r) => r.id)
     expect(new Set(ids).size, 'no duplicate record').toBe(ids.length)
     expect([...ids].sort()).toEqual([...expected].sort())

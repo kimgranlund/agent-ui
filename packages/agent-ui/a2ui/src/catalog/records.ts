@@ -1,7 +1,9 @@
 // records.ts: the built-in lazy catalog records (ADR-0241 cl.1-2 and its Amendment, Option C). The renderer
 // registers no catalog eagerly and records these by id: the default `agent-ui` catalog, a2ui-basic under its short id
 // and its canonical-URI alias (ADR-0169 cl.13), and every shipped persona over each base it targets
-// (`<base>--<persona>`, ADR-0172 cl.2).
+// (`<base>--<persona>`, ADR-0172 cl.2). T-0202 (catalog architecture CA-R2, D2): every shipped domain over each
+// base it targets (`<base>--<domain>`) is recorded the same way, and a multi-domain id (`<base>--<d1>+<d2>`) is
+// known by parsing it (`catalogRecordFor`), never from a record per combination.
 // A record is the eager manifest (the id, a copy of the body's normalized `catalog.functions`, the tags of its
 // submit-gate factories) plus `load`, a dynamic import of the body. An explicit list in the manner of
 // `personas/index.ts`, with no generator: `records.test.ts` is the bijection gate that holds it equal to the
@@ -13,6 +15,7 @@
 // shares one fetch.
 
 import type { FunctionDef, JsonSchema } from './catalog.ts'
+import { domainCatalogId, parseDomainCatalogId } from './catalog-id.ts'
 import type { CatalogEntry, LazyCatalogRecord } from './types.ts'
 
 /** The upstream canonical URI a2ui-basic is also recorded under (`A2UI_BASIC_CANONICAL_URI`, held equal by the test). */
@@ -89,10 +92,58 @@ function derivedRecord(baseId: keyof typeof BASES, personaId: string, submitGate
   }
 }
 
+/** Each shipped domain (`domains/index.ts`): its id, the bases it targets, its own submit-gate factory tags. Empty
+ *  until W1 lands the first domain. */
+export type DomainRecordRow = readonly [string, readonly (keyof typeof BASES)[], readonly string[]]
+export const DOMAINS: readonly DomainRecordRow[] = []
+
+/** A domain-set record: the base's functions (a shipped domain declares none), the union of every gate list. The
+ *  body composes the domains in id order (`domains/body.ts`). */
+function domainRecord(baseId: keyof typeof BASES, rows: readonly DomainRecordRow[]): LazyCatalogRecord {
+  const base = BASES[baseId]
+  const ids = rows.map(([id]) => id)
+  return {
+    id: domainCatalogId(baseId, ids),
+    functions: base.functions,
+    submitGate: [...new Set([...base.submitGate, ...rows.flatMap(([, , gate]) => gate)])],
+    load: () => Promise.all([base.entry(), import('./domains/body.ts')]).then(([entry, m]) => m.shippedDomainEntry(ids, entry)),
+  }
+}
+
+/**
+ * A resolver over `domains` for ids no built-in record names: a canonical `<base>--<d1>+<d2>` id over a known base
+ * whose every domain is in `domains` and targets that base resolves to one record, memoized per id (`loader.ts`
+ * memoizes a body by record identity). A reversed or repeated spelling, an unknown domain or a persona id resolve
+ * to `undefined`.
+ */
+export function domainRecordResolver(domains: readonly DomainRecordRow[]): (id: string) => LazyCatalogRecord | undefined {
+  const memo = new Map<string, LazyCatalogRecord>()
+  return (id) => {
+    const known = memo.get(id)
+    if (known !== undefined) return known
+    const parsed = parseDomainCatalogId(id)
+    if (parsed === undefined || !Object.hasOwn(BASES, parsed.base)) return undefined
+    const baseId = parsed.base as keyof typeof BASES
+    const rows: DomainRecordRow[] = []
+    for (const d of parsed.domains) {
+      const row = domains.find(([id]) => id === d)
+      if (row === undefined || !row[1].includes(baseId)) return undefined
+      rows.push(row)
+    }
+    const record = domainRecord(baseId, rows)
+    memo.set(id, record)
+    return record
+  }
+}
+
+/** The renderer's resolver over the shipped domains (`Registry` consults it for an id it has no record of). */
+export const catalogRecordFor: (id: string) => LazyCatalogRecord | undefined = domainRecordResolver(DOMAINS)
+
 /** Every built-in catalog the renderer records rather than registers (ADR-0241 cl.2 and its Amendment). */
 export const BUILTIN_CATALOG_RECORDS: readonly LazyCatalogRecord[] = [
   { id: 'agent-ui', functions: DEFAULT_FUNCTIONS, submitGate: ['ui-form-provider'], load: loadDefault },
   { id: 'a2ui-basic', functions: A2UI_BASIC_FUNCTIONS, submitGate: [], load: loadA2uiBasic(false) },
   { id: A2UI_BASIC_CANONICAL_ID, functions: A2UI_BASIC_FUNCTIONS, submitGate: [], load: loadA2uiBasic(true) },
   ...PERSONAS.flatMap(([personaId, targets, submitGate]) => targets.map((baseId) => derivedRecord(baseId, personaId, submitGate))),
+  ...DOMAINS.flatMap(([domainId, targets]) => targets.map((baseId) => catalogRecordFor(domainCatalogId(baseId, [domainId]))!)),
 ]

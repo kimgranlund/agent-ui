@@ -55,7 +55,7 @@ import { HOSPITALITY_SKILLS, HOSPITALITY_PLAYBOOKS, INTEGRATION_TOOLS, GAMES_SKI
 // seeds: through `presetSeed`'s returned record, keyed by the schema's own storage key.
 // GH #525 — the persistent-bankroll capability opt-in seeds the SAME way (design call 2, 2026-08-07: a
 // games-category capability, presets opt in).
-import { A2UI_LOCAL_PATTERNS_KEY, BANKROLL_CAPABLE_KEY } from '@agent-ui/app/agent-admin-schema'
+import { A2UI_DOMAINS_KEY, A2UI_LOCAL_PATTERNS_KEY, BANKROLL_CAPABLE_KEY } from '@agent-ui/app/agent-admin-schema'
 // ADR-0178 cl.3/cl.4 (GH #633) — the Builder persona's own gate seeds + the CANONICAL key vocabulary its
 // generated prompt section is composed from (never a hand-listed copy — see `vocabularySection`).
 import { SURFACE_A2UI_KEY, SURFACE_AUTHORING_KEY, modelRoster } from '@agent-ui/app/agent-admin-schema'
@@ -101,6 +101,10 @@ export interface AgentPreset {
    *  `site/lib/agent-manifest/agent-manifest.test.ts` validates this value against the shipped persona
    *  folders and the agent's manifest, so a typo reds that gate instead of reading as "none". */
   localPatterns?: string
+  /** T-0202 (catalog architecture CA-R3): the shipped domains this persona composes onto its base, seeded as its
+   *  `A2UI_DOMAINS_KEY` selection (the canonical `+`-joined tail). Absent or empty: the base alone, the same
+   *  fail-closed default `localPatterns` has. Replaces `localPatterns` in W1; no preset sets it before then. */
+  domains?: readonly string[]
   /** GH #525 (design call 2, 2026-08-07) — opts this persona into the persistent-bankroll capability:
    *  its games keep a running score at the FIXED data-model path `/bankroll`, so the app may mirror that
    *  pointer into the persona store after every surface turn and state the stored figure back at turn
@@ -778,6 +782,8 @@ export function presetSeed(preset: AgentPreset): Record<string, unknown> {
     // GH #497 — absent ⇒ key omitted entirely (not seeded `undefined`), matching every other
     // never-seeded persona-scoped key's byte-identical "absent" shape.
     ...(preset.localPatterns === undefined ? {} : { [A2UI_LOCAL_PATTERNS_KEY]: preset.localPatterns }),
+    // T-0202: the same "absent means key omitted" shape; the stored value is the canonical sorted tail.
+    ...(preset.domains === undefined || preset.domains.length === 0 ? {} : { [A2UI_DOMAINS_KEY]: [...new Set(preset.domains)].sort().join('+') }),
     // GH #525 — the SAME "absent ⇒ key omitted entirely" shape: only a preset that opts in seeds the
     // capability flag at all; every other persona's store never carries `BANKROLL_CAPABLE_KEY`, so
     // `isBankrollCapable`'s fail-closed read answers "not capable" exactly as if this key never existed.

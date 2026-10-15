@@ -687,3 +687,28 @@ describe('card-layout + game-table-chrome: the CardTable teaching (ADR-0243, T-0
     expect(ids).toEqual(expect.arrayContaining(['card-layout', 'game-table-chrome']))
   })
 })
+
+// T-0202 (catalog architecture CA-R4): a module that names a domain type declares the domain in its frontmatter and
+// is selected only when the effective catalog holds it. No shipped module declares one in W0 (the retag of
+// game-table-chrome and its siblings lands with their domain in W1), so the scope is proven on a seeded module.
+describe('mini-skill domain scope (T-0202, CA-R4 AC2)', () => {
+  const seeded: MiniSkill = { id: 'board-moment', triggers: 'board game grid cells move', body: 'Use BoardGrid.', catalogId: 'agent-ui', domain: 'games' }
+  const plain: MiniSkill = { id: 'plain-grid', triggers: 'board game grid cells move', body: 'Use Grid.', catalogId: 'agent-ui' }
+  const pick = (catalogId: string): string[] => selectMiniSkills('show the board game grid', [seeded, plain], 3, catalogId).map((m) => m.id)
+
+  it('a plain base turn never selects the domain-scoped module', () => {
+    expect(pick('agent-ui')).toEqual(['plain-grid'])
+    expect(pick('agent-ui--croupier')).toEqual(['plain-grid'])
+    expect(pick('agent-ui--design')).toEqual(['plain-grid'])
+  })
+
+  it('a turn whose effective catalog holds the domain selects it, alone or among others', () => {
+    expect(pick('agent-ui--games').sort()).toEqual(['board-moment', 'plain-grid'])
+    expect(pick('agent-ui--design+games').sort()).toEqual(['board-moment', 'plain-grid'])
+    expect(pick('agent-ui--games+design'), 'a non-canonical id holds no domain').toEqual(['plain-grid'])
+  })
+
+  it('W0 retags no shipped module, so no shipped selection moves', () => {
+    expect(MINI_SKILLS.filter((m) => m.domain !== undefined).map((m) => m.id)).toEqual([])
+  })
+})

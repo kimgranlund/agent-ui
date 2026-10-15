@@ -23,7 +23,14 @@ import type { ActivityStep, ActivityFooter } from '../conversation/activity-step
 import type { TurnProgress } from '@agent-ui/a2ui/agent/meta-line' // ADR-0146 F1 — the live-turn progress vocabulary (type-only, from the PURE meta-line module, never the ./agent barrel); a cross-package specifier stays extensionless (the repo's own local-.ts-only convention) — a2ui/package.json exports this as its own subpath
 // M-D (SPEC-R3/R5) — the persona catalog compose-time overlay's static id-recognition inputs (the root
 // `@agent-ui/a2ui` barrel, catalog/index.ts's own re-export of `catalog/compose.ts` + `catalog/personas/index.ts`).
-import { derivedCatalogId, derivedCatalogIdsFor, SHIPPED_PERSONA_CATALOGS } from '@agent-ui/a2ui'
+import {
+  derivedCatalogId,
+  derivedCatalogIdsFor,
+  domainCatalogId,
+  resolveDomainCatalogId,
+  SHIPPED_DOMAIN_CATALOGS,
+  SHIPPED_PERSONA_CATALOGS,
+} from '@agent-ui/a2ui'
 // ADR-0135 Piece A / Fork 2: the fail-closed guards + seed helper hoisted to `@agent-ui/shared` so app
 // and a2ui share ONE implementation. Re-exported here so `agent-admin.ts` keeps its current
 // `'./agent-admin-schema.ts'` import path unchanged.
@@ -386,6 +393,9 @@ export function sanitizeCatalog(value: unknown): string {
   if (typeof value !== 'string') return DEFAULT_A2UI_CATALOG_ID
   if (A2UI_CATALOG_OPTIONS.some((option) => option.id === value)) return value
   if (DERIVED_A2UI_CATALOG_IDS.has(value)) return value
+  // T-0202 (CA-R2): a domain id is recognized by parsing it against the shipped domains, never from an
+  // enumerated set of combinations; a reversed spelling is not canonical and falls to the default.
+  if (resolveDomainCatalogId(value, SHIPPED_DOMAIN_CATALOGS) !== undefined) return value
   return DEFAULT_A2UI_CATALOG_ID
 }
 
@@ -404,6 +414,38 @@ export function sanitizeLocalPatterns(value: unknown): string | undefined {
   return typeof value === 'string' && SHIPPED_PERSONA_CATALOGS.some((p) => p.personaId === value) ? value : undefined
 }
 
+// ── the persona's DOMAIN selection (T-0202, catalog architecture CA-R3) ─────────────────────────────────
+// The successor of the local-pattern-set key: which shipped domains (`catalog/domains/<domain>/`) compose onto
+// the base, persisted as the canonical joined string, the domain tail of the derived id (`design+games`). W0
+// ships the key, its sanitizer and the alias table; presets switch to it in W1 and no preset writes it before.
+
+/** The persisted domains selection key: the canonical `+`-joined, sorted list of shipped domain ids, or unset. */
+export const A2UI_DOMAINS_KEY = 'a2uiDomains'
+
+const DOMAIN_SELECTION_JOINER = '+'
+
+/** The slice of a shipped domain package the sanitizers read (a test passes seeded domains). */
+type ShippedDomain = { readonly domainId: string; readonly targetCatalogs?: readonly string[] }
+
+/** D6: the one-wave alias table (W1 to W4) from a retired persona-fragment id to the domain it merges into, read
+ *  by `sanitizeDomains`, so a stored or exported `croupier` reads as `games`. */
+export const DOMAIN_ALIASES: Readonly<Record<string, string>> = Object.freeze({
+  croupier: 'games',
+  quizmaster: 'games',
+  concierge: 'hospitality',
+  stylist: 'design',
+})
+
+/** Fail-closed domains read: a string of `+`-joined ids, each read through `DOMAIN_ALIASES`, deduplicated and
+ *  sorted into the canonical tail. Any id that is not a shipped domain after aliasing drops the whole selection
+ *  to none (`undefined`), never to a wrong or partial domain set. */
+export function sanitizeDomains(value: unknown, shipped: readonly ShippedDomain[] = SHIPPED_DOMAIN_CATALOGS): string | undefined {
+  if (typeof value !== 'string' || value.length === 0) return undefined
+  const ids = value.split(DOMAIN_SELECTION_JOINER).map((id) => (Object.hasOwn(DOMAIN_ALIASES, id) ? DOMAIN_ALIASES[id]! : id))
+  if (!ids.every((id) => shipped.some((d) => d.domainId === id))) return undefined
+  return [...new Set(ids)].sort().join(DOMAIN_SELECTION_JOINER)
+}
+
 /**
  * SPEC-R5 AC3 — the effective catalogId a persona's turn actually resolves to: the selected local
  * set's DERIVED catalog for `baseId`, when a selection exists AND its fragment actually targets
@@ -413,7 +455,19 @@ export function sanitizeLocalPatterns(value: unknown): string | undefined {
  * unknown-id case already has (ADR-0169 cl.3), never a hard error and never the WRONG derived id when
  * the selection's own base doesn't match the persona's CURRENT `A2UI_CATALOG_KEY` base.
  */
-export function resolveEffectiveCatalogId(baseId: string, localPatternsSelection: unknown): string {
+export function resolveEffectiveCatalogId(
+  baseId: string,
+  localPatternsSelection: unknown,
+  domainsSelection?: unknown,
+  shippedDomains: readonly ShippedDomain[] = SHIPPED_DOMAIN_CATALOGS,
+): string {
+  // T-0202 (CA-R3): a domains selection, when present and every domain targets `baseId`, is the effective id; a
+  // domain that does not target the base degrades to the base alone (persona SPEC-R5 AC3, reused).
+  const domains = sanitizeDomains(domainsSelection, shippedDomains)
+  if (domains !== undefined) {
+    const candidate = domainCatalogId(baseId, domains.split(DOMAIN_SELECTION_JOINER))
+    return resolveDomainCatalogId(candidate, shippedDomains) !== undefined ? candidate : baseId
+  }
   const personaId = sanitizeLocalPatterns(localPatternsSelection)
   if (personaId === undefined) return baseId
   const candidate = derivedCatalogId(baseId, personaId)

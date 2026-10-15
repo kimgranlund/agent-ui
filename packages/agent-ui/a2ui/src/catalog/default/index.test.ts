@@ -4,6 +4,7 @@ import { whenFlushed } from '@agent-ui/components'
 import { defaultCatalog } from './index.ts'
 import { defaultFactories } from './factories.ts'
 import { EXCLUSION_ALLOWLIST } from './exclusions.ts'
+import { SHIPPED_DOMAIN_CATALOGS } from '../domains/index.ts'
 import { typeForTag } from '../../registry/compose.ts'
 import { validateCatalogConformance } from '../conformance.ts'
 import { validateA2ui } from '../../renderer/validate.ts'
@@ -156,10 +157,15 @@ function allowlistResidue(catalogKeys: ReadonlySet<string>, allowlist: ReadonlyM
   return [...allowlist.keys()].filter((type) => catalogKeys.has(type))
 }
 
+// T-0202 (catalog architecture D3, Kim 2026-10-14): the coverage law is widened to "the default catalog OR a shipped
+// domain fragment". A control whose type moved to a domain (W2) is covered by that domain's catalog row and factory,
+// never by an allowlist entry. The covered sets below are the union.
+const domainKeys = (pick: (d: (typeof SHIPPED_DOMAIN_CATALOGS)[number]) => Record<string, unknown>): string[] => SHIPPED_DOMAIN_CATALOGS.flatMap((d) => Object.keys(pick(d)))
+
 describe('default catalog — the fleet-derived coverage gate (SPEC-N2, ADR-0087 Wave 0)', () => {
   const FLEET_TYPES = fleetPrimaryTypes()
-  const CATALOG_KEYS = new Set(Object.keys(defaultCatalog.components))
-  const FACTORY_KEYS = new Set(Object.keys(defaultFactories))
+  const CATALOG_KEYS = new Set([...Object.keys(defaultCatalog.components), ...domainKeys((d) => d.fragment.components)])
+  const FACTORY_KEYS = new Set([...Object.keys(defaultFactories), ...domainKeys((d) => d.factories)])
 
   it('derived the fleet primary-type set (anti-vacuous — a broken scan cannot pass silently)', () => {
     expect(FLEET_TYPES.length).toBeGreaterThan(0)
@@ -200,6 +206,15 @@ describe('default catalog — the fleet-derived coverage gate (SPEC-N2, ADR-0087
     expect(typesMissingCatalog(['Button'], CATALOG_KEYS, new Map())).toEqual([])
     // A synthetic uncatalogued, unallowlisted type mixed into a real fleet-derived run ⇒ caught.
     expect(typesMissingCatalog([...FLEET_TYPES, 'ZzFake'], CATALOG_KEYS, EXCLUSION_ALLOWLIST)).toEqual(['ZzFake'])
+  })
+
+  it('NEGATIVE (T-0202, D3): a fleet type declared only by a domain fragment is covered; dropped from both, it is missing', () => {
+    // A seeded W2 move: BoardGrid leaves the default catalog for a `games` domain fragment.
+    const withoutBoard = new Set([...CATALOG_KEYS].filter((t) => t !== 'BoardGrid'))
+    expect(FLEET_TYPES).toContain('BoardGrid')
+    expect(typesMissingCatalog(FLEET_TYPES, withoutBoard, EXCLUSION_ALLOWLIST)).toEqual(['BoardGrid'])
+    const seededDomain = new Set(['BoardGrid'])
+    expect(typesMissingCatalog(FLEET_TYPES, new Set([...withoutBoard, ...seededDomain]), EXCLUSION_ALLOWLIST)).toEqual([])
   })
 })
 

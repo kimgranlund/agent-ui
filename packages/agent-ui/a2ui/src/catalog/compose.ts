@@ -32,6 +32,7 @@ import type { ControlLoader, ControlRecord } from '@agent-ui/components/loader'
 import { validateComponent, validateFunctions, CatalogError, CatalogLoadCode } from './catalog.ts'
 import type { Catalog, ComponentDef, FunctionDef } from './catalog.ts'
 import { validName } from './naming.ts'
+import { domainCatalogId, parseDomainCatalogId } from './catalog-id.ts'
 import type { CatalogEntry, CatalogRegistry, VariantDispatch, WidgetFactory } from './types.ts'
 import type { SemanticCheck } from './semantic-check.ts'
 
@@ -328,6 +329,184 @@ export function semanticChecksForCatalog(catalogId: string, personas: readonly P
     if (targetsFor(persona).some((baseId) => derivedCatalogId(baseId, persona.personaId) === catalogId)) return persona.semanticChecks
   }
   return []
+}
+
+// ── domain catalogs (T-0202, catalog architecture SPEC CA-R2, D2) ─────────────────────────────────────────
+// A domain is a shared fragment of one field's types (`catalog/domains/<domain>/`, the persona fragment's shape).
+// One turn may compose several: the derived id is `<base>--<d1>+<d2>` (`corpus/base-id.ts` `domainCatalogId`),
+// the domains sorted and composed in that order, each step reject-loud against the base AND every domain composed
+// before it, so two domains that share a type name never compose together. Domains are disjoint, so the order
+// changes only the wire id, never the result.
+
+/** One shipped domain's server-safe manifest (the `PersonaCatalogManifest` shape, keyed by `domainId`). */
+export interface DomainCatalogManifest {
+  /** Stable lowercase domain id (CA-R8): `games`, `hospitality`, `commerce`, `design`, `knowledge`. */
+  domainId: string
+  fragment: CatalogFragment
+  /** The base(s) this domain composes onto. Absent or empty: `agent-ui` alone. */
+  targetCatalogs?: readonly string[]
+  /** This domain's semantic checks (D4): run on every turn whose effective catalog holds the domain, each gated
+   *  on its own `requires` types (`gateChecksOnCatalog`). */
+  semanticChecks?: readonly SemanticCheck[]
+}
+
+/** One shipped domain's browser package: the manifest's fragment plus its factories and optional controls. */
+export interface DomainCatalogPackage {
+  domainId: string
+  fragment: CatalogFragment
+  factories: Record<string, WidgetFactory>
+  functions?: Record<string, (args: Record<string, unknown>) => unknown>
+  targetCatalogs?: readonly string[]
+  controls?: readonly ControlRecord[]
+}
+
+/** The `targetCatalogs` default and legality rules, shared with the persona shapes. */
+const domainTargets = (d: { domainId: string; targetCatalogs?: readonly string[] }): readonly string[] =>
+  targetsFor({ personaId: d.domainId, targetCatalogs: d.targetCatalogs })
+
+/** `domains` sorted by id; a repeated id is refused (one domain composes once). */
+function sortedDomains<D extends { domainId: string }>(domains: readonly D[]): D[] {
+  const sorted = [...domains].sort((a, b) => (a.domainId < b.domainId ? -1 : a.domainId > b.domainId ? 1 : 0))
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i]!.domainId === sorted[i - 1]!.domainId) {
+      throw new CatalogComposeError(CatalogComposeErrorCode.COLLISION, `CATALOG_COMPOSE_COLLISION: domain "${sorted[i]!.domainId}" is composed twice`)
+    }
+  }
+  return sorted
+}
+
+/**
+ * Compose `domains` onto `base` (CA-R2): one derived `Catalog` under `<base>--<d1>+<d2>`. Each domain merges in
+ * id order and throws `COLLISION` on a component or function name the base or an earlier domain already holds,
+ * naming the colliding type and its owner. No domains is a content-equal copy of `base` under its own id.
+ */
+export function composeDomainCatalog(base: Catalog, domains: readonly { domainId: string; fragment: CatalogFragment }[]): Catalog {
+  const ordered = sortedDomains(domains)
+  const components: Record<string, ComponentDef> = { ...base.components }
+  const functions: Record<string, FunctionDef> = { ...base.functions }
+  const componentOwner = new Map<string, string>(Object.keys(base.components).map((n) => [n, `base catalog "${base.catalogId}"`]))
+  const functionOwner = new Map<string, string>(Object.keys(base.functions).map((n) => [n, `base catalog "${base.catalogId}"`]))
+  for (const { domainId, fragment } of ordered) {
+    for (const [name, def] of Object.entries(fragment.components)) {
+      const owner = componentOwner.get(name)
+      if (owner !== undefined) {
+        throw new CatalogComposeError(CatalogComposeErrorCode.COLLISION, `CATALOG_COMPOSE_COLLISION: domain "${domainId}" component "${name}" collides with ${owner}`)
+      }
+      componentOwner.set(name, `domain "${domainId}"`)
+      components[name] = def
+    }
+    for (const [name, def] of Object.entries(fragment.functions)) {
+      const owner = functionOwner.get(name)
+      if (owner !== undefined) {
+        throw new CatalogComposeError(CatalogComposeErrorCode.COLLISION, `CATALOG_COMPOSE_COLLISION: domain "${domainId}" function "${name}" collides with ${owner}`)
+      }
+      functionOwner.set(name, `domain "${domainId}"`)
+      functions[name] = def
+    }
+  }
+  return {
+    catalogId: domainCatalogId(base.catalogId, ordered.map((d) => d.domainId)),
+    protocolVersion: base.protocolVersion,
+    components,
+    functions,
+  }
+}
+
+/** `domains` composed over the base entry, without registering: the derived document, the base factories with
+ *  each domain's on top, the merged function tables and the control loaders chained in domain order. Every domain
+ *  must target the base (`UNKNOWN_TARGET` otherwise). */
+export function composeDomainEntry(base: CatalogEntry, domains: readonly DomainCatalogPackage[]): CatalogEntry {
+  const ordered = sortedDomains(domains)
+  for (const d of ordered) assertDomainTargets(d, base.catalog.catalogId)
+  const catalog = composeDomainCatalog(base.catalog, ordered)
+  let factories: Record<string, WidgetFactory | VariantDispatch> = { ...base.factories }
+  let functions = base.functions
+  let controls = base.controls
+  for (const d of ordered) {
+    factories = { ...factories, ...d.factories }
+    if (d.functions !== undefined) functions = { ...functions, ...d.functions }
+    controls = composeControlLoaders(controls, d.controls)
+  }
+  const entry: CatalogEntry = functions !== undefined ? { catalog, factories, functions } : { catalog, factories }
+  if (controls !== undefined) entry.controls = controls
+  return entry
+}
+
+function assertDomainTargets(d: { domainId: string; targetCatalogs?: readonly string[] }, baseId: string): void {
+  for (const t of domainTargets(d)) assertLegalTarget(t, d.domainId)
+  if (!domainTargets(d).includes(baseId)) {
+    throw new CatalogComposeError(CatalogComposeErrorCode.UNKNOWN_TARGET, `CATALOG_COMPOSE_UNKNOWN_TARGET: domain "${d.domainId}" does not target base catalog "${baseId}"`)
+  }
+}
+
+/**
+ * The shipped domains an effective id names, when it is a canonical domain id over `baseIds` whose every domain
+ * is in `domains` and targets that base: `{ base, domains }` in id order. `undefined` otherwise (a base id, a
+ * persona id, an unknown or untargeted domain, a reversed or repeated spelling). The one parse every id reader
+ * (records, sanitizer, guidance, checks) shares.
+ */
+export function resolveDomainCatalogId<D extends { domainId: string; targetCatalogs?: readonly string[] }>(
+  catalogId: string,
+  domains: readonly D[],
+): { base: string; domains: readonly D[] } | undefined {
+  const parsed = parseDomainCatalogId(catalogId)
+  if (parsed === undefined || !LEGAL_TARGET_CATALOGS.has(parsed.base)) return undefined
+  const out: D[] = []
+  for (const id of parsed.domains) {
+    const d = domains.find((x) => x.domainId === id)
+    if (d === undefined || !domainTargets(d).includes(parsed.base)) return undefined
+    out.push(d)
+  }
+  return { base: parsed.base, domains: out }
+}
+
+/** Every single-domain derived id (`<base>--<domain>`) the shipped `domains` produce, one per targeted base. */
+export function domainCatalogIdsFor(domains: readonly { domainId: string; targetCatalogs?: readonly string[] }[]): readonly string[] {
+  const out: string[] = []
+  for (const d of domains) {
+    for (const baseId of domainTargets(d)) {
+      assertLegalTarget(baseId, d.domainId)
+      out.push(domainCatalogId(baseId, [d.domainId]))
+    }
+  }
+  return out
+}
+
+/**
+ * The server-host derive step for domains: every non-empty set of `domains` that all target a base, composed
+ * onto that base, keyed by its canonical id. Bounded by 2^n per base, so it stays an enumerated map the hosts'
+ * `selectCatalog` reads unchanged; the renderer parses instead (`records.ts`). Reject-loud like the persona step.
+ */
+export function composeDomainCatalogDocs(bases: ReadonlyMap<string, Catalog>, domains: readonly DomainCatalogManifest[]): Map<string, Catalog> {
+  const out = new Map<string, Catalog>()
+  for (const baseId of LEGAL_TARGET_CATALOGS) {
+    const base = bases.get(baseId)
+    const eligible = sortedDomains(domains).filter((d) => domainTargets(d).includes(baseId))
+    for (const d of eligible) for (const t of domainTargets(d)) assertLegalTarget(t, d.domainId)
+    if (base === undefined) {
+      if (eligible.length > 0) {
+        throw new CatalogComposeError(CatalogComposeErrorCode.UNKNOWN_TARGET, `CATALOG_COMPOSE_UNKNOWN_TARGET: domain "${eligible[0]!.domainId}" targets unregistered base catalog "${baseId}"`)
+      }
+      continue
+    }
+    for (let mask = 1; mask < 1 << eligible.length; mask++) {
+      const set = eligible.filter((_, i) => (mask & (1 << i)) !== 0)
+      const derived = composeDomainCatalog(base, set)
+      out.set(derived.catalogId, derived)
+    }
+  }
+  return out
+}
+
+/**
+ * D4: the semantic checks of every shipped domain the effective id holds, in domain order. A base id, a persona
+ * id or an unknown domain resolves to none. Callers gate the result on the effective catalog's types
+ * (`gateChecksOnCatalog`), so a check never demands a type the turn cannot emit.
+ */
+export function domainSemanticChecksForCatalog(catalogId: string, domains: readonly DomainCatalogManifest[]): readonly SemanticCheck[] {
+  const resolved = resolveDomainCatalogId(catalogId, domains)
+  if (resolved === undefined) return []
+  return resolved.domains.flatMap((d) => d.semanticChecks ?? [])
 }
 
 /**

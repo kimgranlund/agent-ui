@@ -45,6 +45,7 @@
 
 import { topKByCosine } from '../corpus/text-similarity.ts'
 import { baseCatalogId } from '../corpus/base-id.ts'
+import { catalogIdDomains } from '../catalog/catalog-id.ts'
 import { parseFrontmatter } from './prompts/frontmatter.ts'
 import { listAssets, readAsset } from './asset-source.ts'
 
@@ -62,6 +63,10 @@ export interface MiniSkill {
    *  `corpus/retrieve.ts`'s own `meta.catalogId` filter — closing the pre-existing gap ADR-0172 cl.3 named:
    *  a mini-skill selected on a non-`agent-ui` turn used to inject wrong-dialect teaching with no guard. */
   catalogId: string
+  /** T-0202 (catalog architecture CA-R4): the domain whose types `body` names (`domain:` frontmatter). The module
+   *  is selected only on a turn whose effective catalog holds that domain (`catalogIdDomains`), so a plain base
+   *  turn is never taught a domain type it cannot emit. Absent: any turn on the base. */
+  domain?: string
 }
 
 /** ADR-0091 §3: the indicative per-module token budget (~200 tokens), enforced by `mini-skills.test.ts`
@@ -88,7 +93,7 @@ function loadMiniSkills(): MiniSkill[] {
     const { data, body } = parseFrontmatter(readAsset('agent/prompts/mini-skills/' + name))
     if (!data.id || !data.triggers) throw new Error(`mini-skills: ${name} is missing id/triggers frontmatter`)
     if (!data.catalogId) throw new Error(`mini-skills: ${name} is missing catalogId frontmatter (SPEC-R6)`)
-    return { id: data.id, triggers: data.triggers, body, catalogId: data.catalogId }
+    return { id: data.id, triggers: data.triggers, body, catalogId: data.catalogId, ...(data.domain ? { domain: data.domain } : {}) }
   })
 }
 
@@ -113,6 +118,7 @@ export const MINI_SKILLS: MiniSkill[] = loadMiniSkills()
  */
 export function selectMiniSkills(intent: string, registry: readonly MiniSkill[], cap: number, catalogId: string): MiniSkill[] {
   const base = baseCatalogId(catalogId)
-  const inScope = registry.filter((m) => m.catalogId === base)
+  const domains = catalogIdDomains(catalogId)
+  const inScope = registry.filter((m) => m.catalogId === base && (m.domain === undefined || domains.includes(m.domain)))
   return topKByCosine(inScope, (m) => m.triggers, intent, cap, (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0), 0)
 }

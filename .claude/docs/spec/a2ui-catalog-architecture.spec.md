@@ -233,6 +233,7 @@ Gate set referenced below, by name:
 
 ### W0: mechanism and decisions (no type moves)
 
+- Built by T-0202: the layer map is `src/catalog/layers.ts` (gate `layers.test.ts`); the id grammar is `src/catalog/catalog-id.ts`; the domain lists are `src/catalog/domains/` (empty until W1); the domains preset key is `A2UI_DOMAINS_KEY` with `sanitizeDomains` and `DOMAIN_ALIASES` (`agent-admin-schema.ts`). Presets keep `localPatterns` until W1, and no preset writes the new key before then.
 - Do: Kim rules D1 to D8. Build the layer map and its gate (CA-R1), the `domains/` folder convention, the multi-domain id per D2 at the CA-R2 call sites, the domains preset key and sanitizer with the alias table (CA-R3), the guidance edge rules (CA-R4), mini-skill domain scope and exemplar filtering (CA-R4), semantic-check self-gating (CA-R7), and the append-only base edges (CA-R9). No catalog content changes.
 - Gates: G-records, G-registry, G-selection, G-assets, G-presets; G-baseline shows no byte move.
 - Rollback: revert; no persisted value is written yet.

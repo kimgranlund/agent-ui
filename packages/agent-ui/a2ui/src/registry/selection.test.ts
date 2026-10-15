@@ -10,7 +10,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync } from 'node:fs'
-import { selectionGuidanceForId } from '../agent/selection-guidance.ts'
+import { composeSelectionGuidance, selectionGuidanceForId } from '../agent/selection-guidance.ts'
 import type { SelectionGuidance } from '../agent/selection-guidance.ts'
 import { derivedCatalogIdsFor } from '../catalog/compose.ts'
 import { SHIPPED_PERSONA_CATALOGS } from '../catalog/personas/index.ts'
@@ -28,7 +28,18 @@ const SOURCES = loadRegistrySources(ROOT)
 const SHIPPED_IDS = ['agent-ui', 'a2ui-basic', ...derivedCatalogIdsFor(SHIPPED_PERSONA_CATALOGS)]
 // Ids the resolver rules name that no catalog registers: an unknown persona half, an unknown base half, an
 // empty persona half, a bare unknown id, and the inbound-only canonical-URI alias.
-const EDGE_IDS = ['agent-ui--ghost', 'ghost--croupier', 'ghost', 'agent-ui--', 'https://a2ui.org/specification/v0_9/basic_catalog.json']
+// T-0202: domain ids too, canonical and reversed (no domain ships in W0, so each is the base).
+const EDGE_IDS = [
+  'agent-ui--ghost',
+  'ghost--croupier',
+  'ghost',
+  'agent-ui--',
+  'https://a2ui.org/specification/v0_9/basic_catalog.json',
+  'agent-ui--games',
+  'agent-ui--design+games',
+  'agent-ui--games+design',
+  'a2ui-basic--games',
+]
 
 /** The ids whose projection differs from `reference`'s guidance: the parity predicate the real leg and the controls share. */
 function divergentIds(projection: SelectionProjection, ids: readonly string[]): string[] {
@@ -126,5 +137,30 @@ describe('selection projection: the pure subpath contract', () => {
   it('NEGATIVE: the import predicate bites a planted node:* and a planted ./agent import', () => {
     expect("import { readFileSync } from 'node:fs'").toMatch(/from\s+['"]node:/)
     expect("import type { SelectionGuidance } from '../agent/selection-guidance.ts'").toMatch(/from\s+['"][^'"]*\/agent\//)
+  })
+})
+
+describe('selection projection: domain composition matches the Node composer (T-0202, CA-R4)', () => {
+  const games = {
+    types: { Dice: { intents: ['roll for a random number'], notFor: [{ type: 'Card', why: 'a static container, not a draw' }] } },
+    append: { Card: [{ type: 'Dice', why: 'a random draw shown as it lands' }] },
+  }
+  const design = { types: { Palette: { intents: ['show a color set'], notFor: [] } }, append: {} }
+  const planted: SelectionProjection = { ...SELECTION_PROJECTION, domain: { games, design } }
+
+  it('a canonical domain id is the base plus each domain, with the appended base edges, as composeSelectionGuidance builds it', () => {
+    const base = SELECTION_PROJECTION.base['agent-ui']!
+    const expected = composeSelectionGuidance(base, [
+      ['design', design],
+      ['games', games],
+    ])
+    expect(JSON.stringify(selectionProjectionFor('agent-ui--design+games', planted))).toBe(JSON.stringify(expected))
+    expect(selectionProjectionFor('agent-ui--design+games', planted).Card!.notFor.at(-1)!.type).toBe('Dice')
+  })
+
+  it('a reversed spelling or an unknown domain is the base alone', () => {
+    const base = selectionProjectionFor('agent-ui', planted)
+    expect(selectionProjectionFor('agent-ui--games+design', planted)).toEqual(base)
+    expect(selectionProjectionFor('agent-ui--games+ghost', planted)).toEqual(base)
   })
 })

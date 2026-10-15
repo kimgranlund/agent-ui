@@ -37,11 +37,21 @@ export {
   semanticChecksForCatalog,
   CatalogComposeError,
   CatalogComposeErrorCode,
+  // T-0202 (catalog architecture CA-R2): domain catalogs and the multi-domain id `<base>--<d1>+<d2>`.
+  composeDomainCatalog,
+  composeDomainEntry,
+  composeDomainCatalogDocs,
+  domainCatalogIdsFor,
+  domainSemanticChecksForCatalog,
+  resolveDomainCatalogId,
 } from './compose.ts'
-export type { CatalogFragment, PersonaCatalogPackage, PersonaCatalogManifest } from './compose.ts'
+export type { CatalogFragment, PersonaCatalogPackage, PersonaCatalogManifest, DomainCatalogPackage, DomainCatalogManifest } from './compose.ts'
+export { domainCatalogId, parseDomainCatalogId, catalogIdDomains } from './catalog-id.ts'
+export { gateChecksOnCatalog } from './semantic-check.ts'
 // ADR-0238: the contract a persona's `PersonaCatalogManifest.semanticChecks` is written against.
 export type { SemanticCheck, SemanticCheckInput, SemanticFinding, SurfaceView } from './semantic-check.ts'
 export { SHIPPED_PERSONA_CATALOGS } from './personas/index.ts'
+export { SHIPPED_DOMAIN_CATALOGS } from './domains/index.ts'
 // GH #516 — the Node/Workers-safe manifest twin (`compose.ts`'s `PersonaCatalogManifest` header): this
 // line ALONE does not make the whole `catalog/index.ts` barrel server-safe (the `SHIPPED_PERSONA_CATALOGS`
 // export above still pulls in `personas/index.ts`'s DOM-bearing factories), so `dev-proxy-plugin.ts`/

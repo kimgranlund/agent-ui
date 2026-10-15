@@ -88,7 +88,16 @@ export function semanticActionOf(message: unknown): SemanticAction | undefined {
 export interface SemanticCheck {
   /** Stable kebab id, reported in `SemanticCheckResult.errored` when the check throws. */
   readonly id: string
+  /** T-0202 (catalog architecture D4): the component types the check reads. The check runs only on a turn whose
+   *  effective catalog declares every one (`gateChecksOnCatalog`), so a check attached to a domain never demands
+   *  a type the turn cannot emit. Absent: the check runs on every turn it is resolved for. */
+  readonly requires?: readonly string[]
   check(input: SemanticCheckInput): readonly SemanticFinding[]
+}
+
+/** T-0202 (D4): the checks of `checks` whose `requires` types `catalog` all declares, in order. */
+export function gateChecksOnCatalog(checks: readonly SemanticCheck[], catalog: { readonly components: Readonly<Record<string, unknown>> }): readonly SemanticCheck[] {
+  return checks.filter((c) => (c.requires ?? []).every((t) => Object.hasOwn(catalog.components, t)))
 }
 
 export interface SemanticCheckResult {
