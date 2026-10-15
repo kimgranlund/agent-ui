@@ -30,3 +30,11 @@ The opening draws no BoardGrid on either model. BOARD_GRID_MISSING fired 7 times
 This solo lane delivers these tickets in order, one commit each:
 - .sdlc/tickets/0268-lexicographer-opening-no-board/handoff.md
 - .sdlc/tickets/0273-croupier-hit-ranks-battleship/handoff.md
+
+## Acceptance criteria
+verifier: L3
+- `npx vitest run packages/agent-ui/a2ui/src/corpus/retrieve-presets.test.ts` exits 0, with the T-0253 block holding `domain-lexicographer-word-board` in the top 3 for "Start a new word game." and "New word game, please." on `agent-ui`, and every other preset pin unchanged.
+- `node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus/import-seeds.ts --dry-run` exits 0 with 0 admitted (the prompt-only edit keeps the record's canonical hash, so the seed and the shard agree).
+- `npx vitest run packages/agent-ui/a2ui/src/corpus packages/agent-ui/a2ui/src/examples packages/agent-ui/a2ui/tools/corpus` exits 0.
+- `npm run check` exits 0.
+- Open, not met by this change: the give-up turn drawing ResultCard. The only ResultCard exemplar is a blackjack win and "I give up" shares no vocabulary with any game record; it needs a Lexicographer game-over seed through a judged admission (follow-up ticket).

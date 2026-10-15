@@ -6,6 +6,7 @@
 // re-pin, read against the turn it names. T-0240 re-pinned after admitting the domain seeds (a croupier, concierge,
 // lexicographer and admiral turn now each rank its own composite first) and three frontier seeds. T-0253 re-pinned
 // croupier and quizmaster after the games family rule: another game's board no longer ranks on a card table's turn.
+// T-0268 adds the Lexicographer's opening turns, which reach the word board through its prompt's "word game".
 import { describe, it, expect } from 'vitest'
 import { readdirSync, readFileSync } from 'node:fs'
 import { retrieve } from './retrieve.ts'
@@ -75,6 +76,12 @@ describe('retrieve: a games preset ranks its own composite family first (T-0253)
     ['admiral', 'Fire at B3', 'domain-admiral-battleship-board'],
   ])('%s keeps its own board first', (_preset, turn, board) => {
     expect(top3('agent-ui', turn)[0]!.name).toBe(board)
+  })
+
+  // T-0268: the Lexicographer has no domain, so its opening turn finds the word board on vocabulary alone; the
+  // record's prompt names the word game so a start-of-game turn shares a term with it.
+  it.each(['Start a new word game.', 'New word game, please.'])('lexicographer opening "%s" holds the word board in the top 3', (turn) => {
+    expect(top3('agent-ui', turn).map((r) => r.name)).toContain('domain-lexicographer-word-board')
   })
 
   it('quizmaster: the top 3 is not two boards', () => {
