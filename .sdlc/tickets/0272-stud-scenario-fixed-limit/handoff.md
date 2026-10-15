@@ -24,3 +24,6 @@ Opus deals fixed-limit stud with no bring-in. It refuses "Bring it in" (:270) an
 
 ## Context
 `scripts/e2e-admin/probe/scenarios/croupier.ts` (`ROUND_STEPS['seven-card-stud']`). Guess: make each street a "Check, or call" step and add one more. This is a scenario defect, not a model failure. Found by T-0261.
+
+## Acceptance criteria
+- `npx vitest run scripts/e2e-admin/probe/scenarios/round.test.mjs scripts/e2e-admin/probe/scenarios/round3.test.mjs` exits 0; the stud case pins every round 1 step between the deal and Deal again to "Check, or call if there is a bet." with Deal again at step index 7.
