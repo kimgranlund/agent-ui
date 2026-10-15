@@ -33,10 +33,10 @@ export function termCounts(tokens: string[]): Map<string, number> {
  * record `name`, or ascending mini-skill `id`).
  *
  * `floor` (default `-Infinity`, i.e. no filtering — `retrieve.ts`'s original, unchanged behavior) drops
- * any item scoring at or below it BEFORE the top-k slice. `retrieve()` omits it (padding to `k` with a
- * weak-but-nonzero exemplar is acceptable few-shot conditioning); `selectMiniSkills` (ADR-0091 §2) passes
- * `0` — a per-turn prompt injection should never pad with a genuinely unrelated (zero-score) module just
- * to fill `cap`.
+ * any item scoring at or below it BEFORE the top-k slice. `selectMiniSkills` (ADR-0091 §2) passes `0`: a
+ * per-turn prompt injection should never pad with a genuinely unrelated (zero-score) module just to fill
+ * `cap`; `retrieve()` passes `0` for its fallback tier too (T-0238), and omits it only to rank a turn's own
+ * domain records, all of which it keeps.
  */
 export function topKByCosine<T>(
   items: readonly T[],

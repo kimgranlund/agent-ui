@@ -453,3 +453,34 @@ describe('retrieve: the effective-catalog type filter (T-0202)', () => {
     expect(outside.map((r) => r.name)).toEqual([])
   })
 })
+
+// T-0238: exemplars follow the turn's selected domains, as mini-skills do. `agent-ui--croupier` selects `games`,
+// `agent-ui--concierge` selects `hospitality`, a base id selects none.
+describe('retrieve: the selected-domain rule (T-0238)', () => {
+  const records = [
+    exemplar({ name: 'board', promptText: 'show the game board', componentsUsed: ['BoardGrid', 'Text'] }),
+    exemplar({ name: 'service', promptText: 'show the game board of services', componentsUsed: ['ServiceCard', 'Text'] }),
+    exemplar({ name: 'plain', promptText: 'show the game board', componentsUsed: ['Grid', 'Text'] }),
+    exemplar({ name: 'unrelated', promptText: 'a roster drawer of agents', componentsUsed: ['Drawer', 'List'] }),
+  ]
+
+  it('a domain turn never retrieves another domain composite, and ranks its own first', () => {
+    const names = retrieve(records, query({ intent: 'show the game board', catalogId: 'agent-ui--croupier' })).map((r) => r.name)
+    expect(names).toEqual(['board', 'plain'])
+  })
+
+  it('the turn domain record ranks first even when another record matches better', () => {
+    const names = retrieve(records, query({ intent: 'a roster drawer of agents', catalogId: 'agent-ui--croupier' })).map((r) => r.name)
+    expect(names).toEqual(['board', 'unrelated'])
+  })
+
+  it('the fallback tier never pads with a zero-score record', () => {
+    const names = retrieve(records, query({ intent: 'roster', catalogId: 'agent-ui--concierge' })).map((r) => r.name)
+    expect(names).toEqual(['service', 'unrelated'])
+  })
+
+  it('a base turn selects no domain and keeps every record', () => {
+    const names = retrieve(records, query({ intent: 'show the game board' })).map((r) => r.name)
+    expect(names.sort()).toEqual(['board', 'plain', 'service'])
+  })
+})
