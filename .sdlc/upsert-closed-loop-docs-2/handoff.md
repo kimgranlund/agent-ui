@@ -31,3 +31,8 @@ After T-0208, T-0239 and T-0241 merge, every record they and the work since T-02
 - doc_lint plus `npm run check` exit 0; the sitemap carve-out runs if an ADR title, L1 descriptor or changelog is touched.
 - `git grep` finds no stale path to `.sdlc/croupier-closed-loop/runs`, `.sdlc/live-round-2/runs` or `live-probe.md` in live docs.
 - No em dashes added; ADRs untouched.
+
+## Conductor additions (2026-10-15)
+- Also land `.sdlc/evals/context-fog-of-war-claude-parity.md` (the report for the context-fog-of-war author) and list it in `.sdlc/evals/README.md` if the index has a non-round section; do not reword it beyond fixing stale paths.
+- Also land the new ticket folder `.sdlc/drill-400px-overflow-flake/` (T-0244) as is.
+- T-0239 and T-0241 merged (#2004, #2003, #2005): cite `scripts/agent-traces-to-fog.py`, the `routing` trace block and `.sdlc/evals/rounds/<date>-<slug>/` as the round home.
