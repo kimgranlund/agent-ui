@@ -6,6 +6,12 @@
 // with the recorded :113 heal as its second round, and the two client-error turns are gone.
 // expectedFail: that recorded heal opens "Fixed." (T-0217's no-internal-leak), a known fail until a live
 // recapture after T-0217's repair sentence; when it goes, flip to `expect(report.failed).toEqual([])`.
+// T-0222: the replay now runs the Croupier checks, and the recorded dealer hand is five face-down A of spades, a real
+// CARD_DUPLICATE no recorded round repairs. So every turn spends three rounds and ships tallied SEMANTIC_UNCORRECTED,
+// and on turn 3 the trace's codes are the last fed-back ones (CARD_DUPLICATE), not round 1's IDGRAPH. The pre-T-0220
+// seed reaches the same shipped lines (round 1 fails CARD_DUPLICATE instead), so this replay no longer isolates T-0220;
+// packages/agent-ui/a2ui/src/agent/surface-seeds.test.ts holds that proof. What it pins: turn 3 ships the heal, which
+// redelivers bCheck and bBet.
 import { readFileSync } from 'node:fs'
 import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
@@ -16,6 +22,8 @@ it('croupier-draw-id-graph: the recorded turns replay with the known failing che
   const report = await offlineReplay(fixture, process.cwd())
   expect(report.failed.map((c) => [c.check, c.turn])).toEqual([['no-internal-leak', 2]])
   const trace = report.records[2].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
-  expect(trace.rounds).toBe(2)
-  expect(trace.failureCodes).toContain('IDGRAPH')
+  expect(trace.rounds).toBe(3)
+  expect(trace.failureCodes).toEqual(['CARD_DUPLICATE', 'SEMANTIC_UNCORRECTED'])
+  const shipped = report.records[2].lines.flatMap((l) => JSON.parse(l).updateComponents?.components ?? []).map((c) => c.id)
+  expect(shipped).toEqual(expect.arrayContaining(['acts', 'bCheck', 'bBet', 'bFold']))
 })

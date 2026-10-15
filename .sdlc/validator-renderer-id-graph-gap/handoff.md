@@ -30,7 +30,7 @@ The failing test lands before or with the fix, never after. No em dashes.
 
 ## Acceptance criteria
 - (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/agent/surface-seeds.test.ts` exits 0: the seed and the semantic views drop the children a resent container no longer lists, the server fails the relisting update as `acts->bBet` and `acts->bCheck`, and the real renderer reports the same two violations (and none for the redelivered update).
-- (red) `npx vitest run scripts/e2e-admin/probe/replays/croupier-draw-id-graph.test.mjs` exits 0: turn 3 repairs on the server (trace rounds 2, IDGRAPH) and every probe check is green but T-0217's `no-internal-leak` on the recorded heal's "Fixed." (a pinned known fail).
+- (red) `npx vitest run scripts/e2e-admin/probe/replays/croupier-draw-id-graph.test.mjs` exits 0: turn 3 ships the recorded heal that redelivers bCheck and bBet, and every probe check is green but T-0217's `no-internal-leak` on the recorded heal's "Fixed." (a pinned known fail). Since T-0222 the replay's CARD_DUPLICATE rounds mask round 1's IDGRAPH, so the first criterion carries the T-0220 proof.
 - `npm run check` exits 0.
 
 ## Lane verify scope (conductor)
