@@ -10,6 +10,11 @@ Backfilled by hand on 2026-10-15 (before T-0241): there is no `round.json` or `l
 - Scenarios: blackjack-moves, blackjack-rounds, five-card-draw, omaha, pontoon, seven-card-stud, spanish-21, texas-holdem
 - Report times: 2026-10-15T00:25:54.299Z to 2026-10-15T02:13:45.809Z
 
+## Context fog-of-war
+
+- Report: `020966220aa2e449fdde440e` in the context-fog-of-war user library (`library.py list`); 129 events, 37 sources, 0 findings.
+- Ingested as a session bundle with `.sdlc/evals/fog-manifest.json` (mapping hash `c2396ca69242`); the record is `.sdlc/evals/fog/2026-10-14-r1-croupier.json` (T-0248).
+
 ## Files
 
 - `README.md`: This entry file. Written by `run-capped.ts` (with the archive, or `--describe <round dir>` for a folder backfilled by hand); regenerate it rather than editing it.

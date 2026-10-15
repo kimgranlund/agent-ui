@@ -222,6 +222,21 @@ describe('run-capped', () => {
       expect(readme).not.toMatch(/`round\.json`:|`ledger\.jsonl`:|`live-commands\.sh`:|`report\.md`:/)
       expect(describeRound(dir)).toBe(readme)
     })
+
+    // T-0248: a round ingested into context-fog-of-war shows its report id from `evals/fog/<round>.json`.
+    it('--describe shows the fog report id when evals/fog holds a record for the round', () => {
+      const evals = join(mkdtempSync(join(tmpdir(), 'run-capped-fog-')), 'evals')
+      const dir = join(evals, 'rounds', '2026-10-15-r2-presets')
+      mkdirSync(join(dir, 'traces'), { recursive: true })
+      writeFileSync(join(dir, 'traces', '2026-10-15.jsonl'), '{}\n')
+      expect(describeRound(dir)).not.toContain('## Context fog-of-war')
+      mkdirSync(join(evals, 'fog'))
+      writeFileSync(join(evals, 'fog', '2026-10-15-r2-presets.json'), JSON.stringify({ reportId: 'a7f791520f89dbbb61819b92', mapping: '.sdlc/evals/fog-manifest.json', mappingHash: 'c2396ca6924269db', events: 281, sources: 84, findings: 0, ticket: 'T-0248' }))
+      const readme = describeRound(dir)
+      expect(readme).toContain('Report: `a7f791520f89dbbb61819b92`')
+      expect(readme).toContain('281 events, 84 sources, 0 findings')
+      expect(claimed(readme)).toEqual(['README.md', 'traces/2026-10-15.jsonl'])
+    })
   })
 
   // T-0241 scope addition 2: one home for every round, `.sdlc/evals/rounds/<date>-<slug>/`, and its index.

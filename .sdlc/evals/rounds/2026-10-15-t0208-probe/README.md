@@ -10,6 +10,11 @@ Backfilled by hand on 2026-10-15 (before T-0241): there is no `round.json` or `l
 - Scenarios: admiral-concede, concierge-spa-booking, lexicographer-six-guesses
 - Report times: 2026-10-15T13:50:57.067Z to 2026-10-15T13:53:50.028Z
 
+## Context fog-of-war
+
+- Report: `1a866967ce85b090959d5165` in the context-fog-of-war user library (`library.py list`); 14 events, 29 sources, 0 findings.
+- Ingested as a session bundle with `.sdlc/evals/fog-manifest.json` (mapping hash `c2396ca69242`); the record is `.sdlc/evals/fog/2026-10-15-t0208-probe.json` (T-0248).
+
 ## Files
 
 - `README.md`: This entry file. Written by `run-capped.ts` (with the archive, or `--describe <round dir>` for a folder backfilled by hand); regenerate it rather than editing it.

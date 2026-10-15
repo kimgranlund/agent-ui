@@ -1,0 +1,14 @@
+{
+  "round": "2026-10-15-r2-presets",
+  "ticket": "T-0248",
+  "reportId": "a7f791520f89dbbb61819b92",
+  "mapping": ".sdlc/evals/fog-manifest.json",
+  "mappingHash": "c2396ca6924269db821c94fbbb10d441bdee96a55d964454e328d528a0eb7d1f",
+  "bundleFingerprint": "62f9aed49f65e290a36d3a3791fb32016ad516631498505d4635662a660bad15",
+  "engineeringRun": "run-0698254e7ad2e51c5d6b05c2",
+  "events": 281,
+  "sources": 84,
+  "findings": 0,
+  "ingest": "python3 ~/.claude/skills/context-fog-of-war/scripts/engineer.py ingest .sdlc/evals/rounds/2026-10-15-r2-presets --mapping .sdlc/evals/fog-manifest.json --out <dir>",
+  "publish": "python3 ~/.claude/skills/context-fog-of-war/scripts/library.py publish <dir>/session.json"
+}
