@@ -2,6 +2,10 @@
 
 A swappable icon-pack adapter for the agent-ui family: a tiny pure core plus an opt-in Phosphor pack. Zero dependencies; packs self-register on import.
 
+> Published on npm as `@agent-ui-kit/icons`; inside this repository the workspace package is `@agent-ui/icons`,
+> renamed at publish time. The latest release is 0.1.0 (tag `v0.1.0`); the source on `main` is unreleased
+> work past it.
+
 ## Install
 
 ```sh

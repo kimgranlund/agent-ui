@@ -2,6 +2,10 @@
 
 The agent-ui component framework: a fine-grained signals kernel, 50+ accessible light-DOM `ui-*` custom elements (form controls, containers, overlays, data-viz), and a token-driven styling system. Zero runtime dependencies.
 
+> Published on npm as `@agent-ui-kit/components`; inside this repository the workspace package is `@agent-ui/components`,
+> renamed at publish time. The latest release is 0.1.0 (tag `v0.1.0`); the source on `main` is unreleased
+> work past it.
+
 ## Install
 
 ```sh

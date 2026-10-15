@@ -5,11 +5,13 @@
 > both: this file is prose + priority, not a checklist of what already shipped — it says what's
 > current and what's next, and is **revised in place** at each synthesis pass rather than appended
 > to forever (the one exception: closed items move to a dated line under §4, never silently
-> deleted). Work-item tracking — the churn of individual bugs/features, their status, comments —
-> lives in GitHub Issues ([ADR-0145](adr/0145-ticket-tier-github-issues-backend.md)) or, on other
-> projects, Linear — **never here**. An issue may cite a section of this doc the same way it cites
-> an ADR/SPEC/LLD id; this doc never enumerates issues by number, because that list goes stale the
-> moment an issue closes and this doc isn't the place re-reading it. Last synthesis pass: 2026-08-23 (a stale-premise repair: the "GenUI production polish" arc picked 2026-08-22 turned out to already have two of its three milestones closed before the pick, and both declined alternate candidates plus a chunk of unrelated §3/§4 material turned out to be shipped-but-uncited too, once every issue number was actually checked with `gh issue view` instead of trusted from an earlier pass; see the process note this pass added at the relevant §4 lines).
+> deleted). Work-item tracking (the churn of individual bugs and features, their status, their findings)
+> lives in SDLC Lite tickets under `.sdlc/tickets/` (Kim, 2026-10-15; the generated list is
+> `.sdlc/tickets/roadmap.md`), and before that in GitHub Issues ([ADR-0145](adr/0145-ticket-tier-github-issues-backend.md)):
+> **never here**. A ticket may cite a section of this doc; this doc names an arc and at most the ticket
+> that ruled it, never a list of open tickets, because that list goes stale the moment one closes.
+> Last synthesis pass: 2026-10-15 (T-0251: §2 gained the closed-loop and foundations state, §1 the
+> ticket and changelog moves; the 2026-08-23 pass text below the new §2 lead stays as it was written).
 
 ## 1 · Why a fourth doc
 
@@ -20,9 +22,9 @@ kind of drift `process.md` exists to prevent:
 |---|---|---|---|
 | [`plan.md`](./plan.md) | What is this, architecturally, and why these choices? | Prose, mostly closed/historical | Rare — only when a foundational decision moves |
 | [`goals.md`](./goals.md) | What did each milestone require, and is it done? | Dated milestones, DoD checklists | Per milestone close (append-only in spirit) |
-| `CHANGELOG.md` | What shipped, and when? | Dated, one entry per ticket/wave | Per ship |
+| `CHANGELOG.md` | What shipped, and when? | A pointer to merged pull requests and release tags (old text archived) | Rarely |
 | **`roadmap.md`** (this file) | What's true *right now*, and what's next — and why? | Now/Next/Later, revised in place | Per synthesis pass (milestone boundary or ratification batch) — **not** per commit |
-| GitHub Issues (or Linear) | What's the status of *this one* bug/feature? | Individual records | Continuous |
+| SDLC Lite tickets (`.sdlc/tickets/`) | What's the status of *this one* bug/feature? | One folder per ticket, `handoff.md` front matter | Continuous |
 
 The split that matters: **issues own the churn, this doc owns the narrative.** An issue tracker
 fragments into hundreds of atomic, mostly-closed records — nothing in it coalesces into "where is
@@ -31,14 +33,39 @@ problem — invisible to anyone (or any agent) reading the repo directly, and it
 tool swap. So the narrative stays a versioned file, diffable and git-blamable next to the code it
 describes, and issues/PRs *cite into it* rather than replace it.
 
-**The ledger gap — ruled, no longer open.** `goals.md` stopped at the icon adapter (2026-07-04)
-and `CHANGELOG.md` at 2026-07-13; the weeks of shipped work after those dates were never
-backfilled. Kim ruled on 2026-07-23: **historical-only** — both stay pure historical ledgers,
-append-only going forward, **never backfilled**, and this roadmap's §2 is the one source of
-"current state." The gap is therefore the ruled shape of the doc set, not a defect awaiting a
-decision (dated line in §4).
+**The ledger gap: ruled, no longer open.** `goals.md` stopped at the icon adapter (2026-07-04)
+and the old changelog at 2026-07-13; the weeks of shipped work after those dates were never
+backfilled. Kim ruled on 2026-07-23: **historical-only**, both stay pure historical ledgers,
+**never backfilled**, and this roadmap's §2 is the one source of "current state" (dated line in §4).
+On 2026-10-15 Kim took the last step: the root `CHANGELOG.md` became a pointer to merged pull
+requests and release tags, and its old text moved, unedited, to the archive at
+`archive/changelog-to-2026-10-15.md`.
 
-## 2 · Now — current state (as of 2026-08-23)
+## 2 · Now: current state (as of 2026-10-15)
+
+> **Lead (2026-10-15).** Since the 2026-08-23 pass the center of gravity moved from building
+> surfaces to proving the agent that drives them.
+>
+> - **The agent closed loop.** A real agent turn is driven, checked, recorded and turned into a keyless
+>   regression: `npm run chat:probe` drives the real Test Chat live or from a replay fixture with named
+>   checks (T-0174); `npm run traces` reads the dev proxy's per-turn trace log, and `--from-trace last`
+>   turns a live failure into a replay test; live rounds of many probes run under a spend cap and archive
+>   to `.sdlc/evals/rounds/` (T-0225, T-0241). The contract is
+>   [`spec/agent-closed-loop.spec.md`](./spec/agent-closed-loop.spec.md) (T-0181); the eval framework
+>   it plans (scenario format, report page, judged checks, a live matrix with baselines) is the next arc.
+> - **Derived foundations (ADR-0245).** Every size derives from one integer per element over tier,
+>   scale, size and density; the hand-tabled ramp and `[scale]` / `[density]` are retired, and the
+>   foundations census gate keeps them out. Controls fill their container by default (ADR-0223).
+> - **Ten packages.** `@agent-ui/devtools` (ADR-0200) joined `data` (ADR-0192) as an unpublished
+>   workspace package; the eight published ones are at `v0.1.0` as `@agent-ui-kit/*`, and `main` is
+>   unreleased work past it.
+> - **Process.** ADRs are frozen (T-0164): a decision lives in its ticket and the owning reference doc
+>   or skill. Work items moved from GitHub Issues to SDLC Lite tickets in `.sdlc/tickets/`, run in
+>   `solo`, `fix` or `chain` lanes with one independent verifier; `AGENTS.md` is the single
+>   cross-harness entry file (T-0249). See [`process.md`](./process.md).
+>
+> Open work: the generated `.sdlc/tickets/roadmap.md`. The bullets below are the 2026-08-23 pass,
+> unedited; where they disagree with this lead, the lead wins.
 
 > **The M-D → M-E → M-F arc is CLOSED.** M-D (per-persona A2UI catalogs, ADR-0172, GH
 > #421/#472/#480) shipped and all three tracking issues are closed on GitHub. M-E (upstream-drift
@@ -179,6 +206,11 @@ decision (dated line in §4).
   calendar baselines pinned to a never-today month).
 
 ## 3 · Next — concrete, near-term
+
+> **Lead (2026-10-15).** Next is the agent eval framework the closed-loop SPEC plans (scenario
+> format and signal store, report page, judged checks, live matrix with baselines), then agent content
+> as files (seeds as manifests, user overlays, schema-generated settings, one agent compiler). Order and
+> status live in the generated `.sdlc/tickets/roadmap.md`. The bullets below are the 2026-08-23 pass.
 
 - **The 2026-07-28 intake ruled the next arc.** A six-system inventory wave (agent-admin · a2ui ·
   GenUI · components · shells · SaaS patterns) fed a dependency-spine synthesis and three

@@ -1,12 +1,12 @@
 # agent-ui — foundation plan
 
-> Status: planning. Companion: [`goals.md`](./goals.md) (the milestone/DoD breakdown).
+> Status: built; the architecture of record, revised 2026-10-15 (T-0251). Companion: [`goals.md`](./goals.md) (the milestone/DoD ledger).
 > Reference standards (canonical, distilled): [`references/geometry.md`](./references/geometry.md) ·
 > [`references/tokens.md`](./references/tokens.md). Provenance (rce ledgers + token values):
 > `references/{dimensional-standard,geometry-sizing-spec}.md`. Token values: `@agent-ui/shared/src/tokens/tokens.css`.
-> Coordination: the A2UI layer that consumes this foundation is specced under [`specs/`](./spec/)
-> (PRD→SPEC→LLD) and built by the planning/execution team in [`../.claude/agents/`](../agents/);
-> ratified design changes are logged as ADRs in [`adr/`](./adr/).
+> Coordination: the A2UI layer that consumes this foundation is specced under [`spec/`](./spec/)
+> (PRD→SPEC→LLD). Work runs as SDLC Lite tickets in `.sdlc/tickets/` (lanes and gates: root `AGENTS.md`);
+> [`adr/`](./adr/) is frozen history (T-0164): existing ADRs stay citable, a new decision lives in its ticket.
 
 ## 1. What this is
 
@@ -31,8 +31,8 @@ Four pillars, adopted deliberately:
 `ui-select` / `ui-listbox` and the `ui-field` wrapper. Layout/display primitives come after the
 control family is proven end-to-end. *(Realized: the FACE control family shipped G0–G9 + the Control
 Suite tracks; layout/display primitives followed as the G9 container family, then the
-report/content/feed/chart component families and the `@agent-ui/router` package — see `goals.md` and
-root `CHANGELOG.md`.)*
+report/content/feed/chart component families, the `router`, `code`, `data` and `devtools` packages and
+the derived foundations of ADR-0245 (§8): see `goals.md` and the roadmap.)*
 
 ## 2. Why these choices
 
@@ -51,10 +51,12 @@ root `CHANGELOG.md`.)*
 ## 3. Architecture & directory layout
 
 The kernel is small (rce's is ~2.3k lines across 8 modules). agent-ui is an **npm-workspaces monorepo**,
-now **seven packages**: the framework (`components`), `shared` for cross-cutting tokens/styles/utils,
-`a2ui` (the A2UI layer, team-led; docs on the unified `.claude/docs/{spec,lld,prd}/` map), `a2a` (the A2A/Agent2Agent protocol layer
+now **ten packages**: the framework (`components`), `shared` for tokens, utility types and the
+`StorageAdapter` seam, `a2ui` (the A2UI layer; docs on the unified `.claude/docs/{spec,lld,prd}/` map), `a2a` (the A2A/Agent2Agent protocol layer
 + the tic-tac-toe arena + its concepts corpus), `icons` (the swappable icon-pack adapter), `app`
-(app-surface compositions — the `ui-super-shell` archetype family, ADR-0151) and `router` (the SPA router, ADR-0115).
+(app-surface compositions: the `ui-super-shell` archetype family, ADR-0151), `router` (the SPA router, ADR-0115),
+`code` (the code and prose family, ADR-0119), `data` (the headless data layer, ADR-0192) and `devtools`
+(the chat and A2UI dev and debug harness, ADR-0200).
 
 ```
 packages/agent-ui/
@@ -80,7 +82,7 @@ packages/agent-ui/
       index.ts          # the package barrel (@agent-ui/components)
   shared/                      # @agent-ui/shared — tokens, styles, utility types
     src/
-      tokens/  raw-color-tokens.css  semantic-color-tokens.css  runtime-tokens.css  tokens.css (barrel)
+      tokens/  tokens.css (barrel)  dimensions.css  foundations.gen.css  foundations-bridge.gen.css  scale.mjs  themes/
       index.ts
   a2ui/                        # @agent-ui/a2ui — A2UI layer, team-led (.claude/docs/{spec,lld,prd}/); depends on @agent-ui/components
   a2a/                         # @agent-ui/a2a — A2A protocol layer (wire types + validation, spec v0.3.0),
@@ -89,12 +91,17 @@ packages/agent-ui/
   app/                         # @agent-ui/app — app-surface compositions (ui-super-shell + presets, ADR-0151);
                                 #   depends on components + a2ui + shared
   router/                      # @agent-ui/router — SPA router (ADR-0115); depends on components
+  code/                        # @agent-ui/code: code + prose (ADR-0119); ./editor carries CodeMirror 6 (ADR-0139)
+  data/                        # @agent-ui/data: headless data layer (ADR-0192); depends on components
+  devtools/                    # @agent-ui/devtools: dev/debug harness (ADR-0200); depends on a2ui + a2a
 .claude/docs/  plan.md  goals.md  process.md  references/  adr/  specs/  prd/  spec/  lld/  rubrics/    # agent-scoped project docs
 ```
 
 Layering is strict and inward-only: `reactive` imports nothing; `dom` imports `reactive`; `controls`
-import `dom` + `traits` + their own CSS; cross-package, only `components` → `@agent-ui/shared`; nothing
-imports upward. The import-layering trip-wire (`packages/agent-ui/components/src/layering.test.ts`) enforces it.
+import `dom` + `traits` + their own CSS; nothing imports upward. Cross-package, the DAG is
+`shared` ← `components` ← `a2ui` ← {`app`, `devtools`}, with `router`, `code` and `data` as siblings off
+`components`, `a2a` ← `devtools`, and `components` → `icons` (the full rule set: root `AGENTS.md`). Each
+package's own `src/layering.test.ts` trip-wire enforces it.
 
 ## 4. The reactivity kernel (port + re-type)
 
@@ -268,18 +275,20 @@ layer from the consumption layer in one file. The package exposes `components` /
 `foundation-styles` barrels, consumed by a host page that links the styles (tokens first) and self-defining
 modules.
 
-**Dimensional standard** (the *law* is `references/geometry-sizing-spec.md` v4 + the resolved
-`references/geometry.md`; `references/dimensional-standard.md` is the SUPERSEDED wiring-history note):
-vertical size is `block-size: var(--ui-{cmp}-height)`, **never** block-padding (`padding-block: 0`);
-inline-padding follows the **v4 slot model** (`h/2` slotless / `½(h − icon)` slotted, density on the gap —
-**not** the old `2px + height × 0.375 × density`); `--ui-scale` (numeric, on `*`, ADR-0007) × `size` →
-`{height, font, indicator}`; density multiplies inline spacing only. Controls are the **Control class** (full height); checkbox/
-switch are the **Indicator class** (the box rides the widget ramp `--ui-compact-{size}`, ADR-0041 — `--ui-ind` never shipped). Affordance glyphs (the select
-caret, field steppers, clear ×) follow the geometry law in `references/geometry-sizing-spec.md`:
-a `--ui-glyph-{size}` ramp token and the `(height − glyph) / 2` centering law, with asymmetric padding
-where an affordance sits inside the box. The nonoun *studio-54* token set
-(`references/.../studio-54-the-dancefloor`) is the seed palette; tokens must be **loaded first** or
-every `var(--ui-height-*)` falls to its literal floor.
+**Dimensional standard: the derived foundations (ADR-0245, shipped at the cut, #1932).** The law is
+[`references/geometry.md`](./references/geometry.md); derivation and history are
+`references/geometry-sizing-spec.md`. Every size derives from one integer `n` per element,
+`n = n0 + a·s + k·z + g·s·z`, over three inheriting axes: the region's `data-tier`
+(`widget` / `product` / `content` / `brand`), its `data-scale` (`sm` / `md` / `lg`) and the control's
+reflected `size` prop. `data-density` moves container spacing only. The root is `product` at `md`, so
+controls take the library ramp **24 / 32 / 40 px** for `sm` / `md` / `lg`; an A2UI surface sits at
+`data-tier="widget" data-scale="md"` (20 / 24 / 28). The numbers come from `@agent-ui/shared`'s
+`scale.mjs` through the generated `foundations.gen.css` (`node scripts/generate-foundations.mjs`,
+drift-gated), never from a hand-tabled stylesheet. Controls fill their container by default; the
+reflected `inline` boolean hugs (ADR-0223). The old hand-tabled ramp, `--ui-scale`, the `[scale]` and
+`[density]` attributes and ui-icon's `glyph` prop are retired, and the foundations census gate
+(`node scripts/foundations-census.mjs --gate`, in `check:scripts`) fails on any new use. Tokens must be
+**loaded first** or every derived size falls to its literal floor.
 
 ## 9. Naming & TypeScript conventions
 
@@ -379,6 +388,9 @@ G9  Container/layout family              (row/column/list/grid/card/tabs/modal +
 G1–G4 are the prerequisite kernel slice; G5 is the proving vertical (one control taken fully to the
 quality bar, including the global token wiring) before G6–G7 fan out.
 
+The G-sequence is closed. Later arcs are not phased here: `roadmap.md` holds the current state and
+what is next, and the work items are SDLC Lite tickets (`.sdlc/tickets/roadmap.md`, generated).
+
 ## 12. Open decisions & risks
 
 > **Dispositioned at G8** (2026-07-05, the release-readiness pass — decomp `g8-gallery-release-readiness`):
@@ -395,6 +407,9 @@ quality bar, including the global token wiring) before G6–G7 fan out.
   consumer or publish target exists yet. The G8 per-control `exports` (ADR-0080) are authored emit-ready
   on the TS source; at first publish the targets flip to `dist/` + `.d.ts` via a `tsconfig.build.json` —
   mechanical, no API redesign. Revisit trigger: the first out-of-repo consumer, or a publish decision.
+  **SINCE:** the publish decision came. `npm run publish:packages` builds through `tsconfig.build.json` and
+  releases eight packages in lockstep as `@agent-ui-kit/*` (tags `v0.0.2` to `v0.1.0`); `data` and
+  `devtools` are not in that set yet.
 - **Password exception**: **RESOLVED — the strict zero-native line HELD.** `ui-text-field type=password`
   shipped on the contenteditable surface with masking (ADR-0044); the rce allow-listed
   `<input type=password>` exception was never needed. Accepted residual (documented in ADR-0044):

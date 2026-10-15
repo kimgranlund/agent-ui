@@ -1,5 +1,12 @@
 # agent-ui — goals
 
+> **State (2026-10-15).** This file is a closed, append-only ledger (Kim, 2026-07-23): every milestone
+> below is done or recorded as it stood, and nothing is backfilled. What is true now and what is next is
+> [`roadmap.md`](./roadmap.md) §2; work items are SDLC Lite tickets (`.sdlc/tickets/roadmap.md`, generated).
+> Sizing boxes that name `[size]` / `[scale]` / `[density]`, `--ui-scale` or the hand-tabled ramp are
+> history: ADR-0245's derived foundations (`references/geometry.md`) retired those axes for `data-tier`,
+> `data-scale`, the `size` prop and `data-density`, and the foundations census gate fails on any new use.
+
 > Companion to [`plan.md`](./plan.md). Milestones are sequential: each `Gn` depends on the prior.
 > A milestone is **done** only when every box in its Definition of Done is checked.
 > First component family = FACE form controls (button → text-field/checkbox/switch → listbox/select/field).
@@ -27,10 +34,13 @@
 
 ## Standing definition of done (applies to every milestone)
 
-- [ ] `npm run check` (tsc) and `npm test` (Vitest) are green. (`vite build` is LIVE — the docs site is the
-      app entry since the ADR-0077 wave; the G8 gallery joined it. plan §12 "App build/dev entry".)
+- [ ] `npm run check` and the tests of the touched folders are green locally; CI's full `npm test` is green
+      on the pull request (Kim, 2026-10-12: the full suite is the CI gate, not a per-edit step).
+      (`vite build` is live; the docs site is the app entry. plan §12 "App build/dev entry".)
 - [ ] No unused locals/parameters; type-only imports use `import type`; local imports keep `.ts`.
-- [ ] New behaviour is covered by probes; the whole suite stays green (monotonic — nothing regresses).
+- [ ] New behaviour is covered by probes; the whole suite stays green on CI (monotonic: nothing regresses).
+- [ ] Sizes come from the derived foundations (ADR-0245): no hand-tabled ramp read, no px geometry literal,
+      no `[scale]` / `[density]` use (`node scripts/foundations-census.mjs --gate`, in `npm run check`).
 - [ ] Public surface changes are reflected in the relevant `{name}.md` frontmatter (ADR-0004) and in `plan.md` if a decision moved.
 
 Not a DoD item: `npm run e2e:admin` is a local agent-admin check, not in CI.

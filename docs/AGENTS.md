@@ -44,3 +44,5 @@ The first line that matches wins.
 ## Contents
 
 <!-- sdlc-lite:managed:end -->
+
+`.claude/docs/` keeps its own scheme (plan, goals, roadmap, process, `references/`, `adr/`, `prd/`, `spec/`, `lld/`, `archive/`); the homes above do not apply there. Its grammar is the `doc-standards` skill.

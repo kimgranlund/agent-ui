@@ -1,54 +1,43 @@
 # Contributing
 
-## The standing gate
+Read [AGENTS.md](AGENTS.md) first: it is the single source for conventions, gates, generated files and
+where each kind of truth lives. This file covers only how a change moves from idea to `main`.
 
-`npm run check && npm test` must be green before any change is considered done — no exceptions,
-no "I'll fix the type error later." `check` is `tsc` (packages) → `check:site` → `check:tools`, all
-`noEmit`; `test` is the full Vitest (jsdom) suite. UI or interaction changes additionally need a
-real-engine pass (`npm run test:browser`) and, where the change is visual, a look in an actual
-browser — type-checking and jsdom prove correctness, not that the feature looks right.
+## 1. A ticket first
 
-See [CLAUDE.md](CLAUDE.md) for the fleet conventions (naming, layering, prop/token shape) a change
-needs to follow, and the commands above in full.
+Work items are SDLC Lite tickets in [`.sdlc/tickets/`](.sdlc/tickets/), one folder per ticket with a
+`handoff.md` (goal, context, done-when). The generated [`.sdlc/tickets/roadmap.md`](.sdlc/tickets/roadmap.md)
+lists them in dependency order; how to claim and close one is in [`.sdlc/AGENTS.md`](.sdlc/AGENTS.md).
+`.claude/docs/tickets/` is a frozen archive.
 
-## How a change gets made here
+## 2. Pick the lane
 
-This repo runs an explicit plan → build → review loop, recorded as it happens rather than after the
-fact, under [`.claude/docs/`](.claude/docs/):
+`steps.py lane <ticket dir>` (in the sdlc-lite plugin's `scripts/` folder) picks how a ticket runs:
 
-- **Tickets** capture intent before work starts — what's being asked for, the acceptance criteria,
-  and (once work lands) a dated Findings entry recording what actually shipped and why. A bug,
-  feature, or any non-trivial change gets one. As of 2026-07-18 (ADR-0145) this means a **GitHub
-  Issue** (`gh issue create`, or the `.github/ISSUE_TEMPLATE/{feature,bug}.yml` forms) — `kind` is
-  the `bug`/`enhancement` label, `size` is `size:small`/`size:big`, `status` rides the Issue's own
-  open/closed state plus close reason (`completed`/`not planned`) and a `doing` label for
-  in-progress work, and Findings is the dated comment stream. `.claude/docs/tickets/` is a frozen
-  historical archive (98 files through TKT-0096) — read for context, never a target for new ones.
-- **ADRs** (`.claude/docs/adr/`) record a ratified decision — a naming rule, an architectural fork,
-  an accepted tradeoff. An ADR starts `proposed`; only a human ratifies the flip to `accepted` (a
-  standing hook blocks any agent-authored self-flip). The directory IS the index — the numbered
-  filenames carry order + title, each file's own header carries status; there is no index file and
-  never may be. The status lifecycle + the amendment-vs-supersession test live in
-  `.claude/skills/agent-ui-doc-standards/SKILL.md` §1/§1b.
-- **PRD/SPEC/LLD** (`.claude/docs/{prd,spec,lld}/`) — the fuller design-document set for work that
-  spans multiple components or needs a frozen contract before a build starts.
+- `solo`: the default for small and medium tickets; one agent reads, changes, runs the checks and reports.
+- `fix`: the fast lane for a one-line or one-file change, only when asked or when the lane script prints it.
+- `chain`: plan, build and verify in steps, for a large, merge or cross-cutting ticket.
 
-The full doc grammar — when each document type is warranted, its required shape, and the status
-lifecycle each carries — lives in the `agent-ui-doc-standards` skill
-(`.claude/skills/agent-ui-doc-standards/`). Read it before authoring a new ticket, ADR, or spec
-rather than guessing the shape from a nearby example — the shape is enforced by standing lint gates
-(`site/lib/docs-grammar.test.ts`), and an unlintable doc isn't a captured one.
+When the lane calls for a verifier, one independent verifier runs per ticket, on a different model
+family than the builder, and a pass is final.
 
-## Component work specifically
+## 3. Gate by exit code
 
-Adding or changing a `ui-*` control follows its own intake procedure —
-`.claude/skills/agent-ui-component-design/` — before any code is written: classify the control's
-base class/size-class/catalog posture, resolve its prop/event/token surface, and get an independent
-doc review before the design freezes. `.claude/docs/plan.md` and `.claude/docs/goals.md` frame the
-overall build plan and current milestone.
+Locally: `npm run check` plus the tests of the folders you touched. CI runs the full `npm test` on the
+pull request. A docs-only diff gates on `doc_lint` plus `npm run check`. Style or UI work also needs a
+screenshot of the real widget beside its approved mockup. Details: [AGENTS.md](AGENTS.md), Gates.
 
-## Coherence, not just correctness
+## 4. Land through the merge queue
 
-`.claude/docs/process.md` is the fuller rationale — the drift/bloat failure modes this whole
-ticket → ADR → gate loop exists to prevent, and why documentation here is treated as a living
-record rather than a one-time artifact. Worth reading once before your first non-trivial change.
+Changes merge through one serial path: rebase on fresh `origin/main`, regenerate every generated file
+with its script, run the affected tests, wait for CI to settle, then merge the pull request titled
+`T-NNNN: <title>`. Never squash a branch onto a stale base.
+
+## Where decisions and designs go
+
+- A decision lives in the ticket that makes it and, as a standing rule, in the owning reference doc
+  (`.claude/docs/references/`) or skill. `.claude/docs/adr/` is frozen history: cite it, never add to it.
+- PRD, SPEC and LLD files under `.claude/docs/{prd,spec,lld}/` hold designs that span components or need
+  a contract before a build. Their grammar and status rules are in the `doc-standards` skill.
+- A new or changed `ui-*` control starts with the `component-design` skill before any code.
+- Before adding or moving a document, read [docs/AGENTS.md](docs/AGENTS.md).
