@@ -43,3 +43,4 @@ This verifier checks FOUR tickets, each against the acceptance criteria in its o
 3. .sdlc/croupier-haiku-state-in-prose/handoff.md (T-0214)
 4. .sdlc/narrated-surface-mechanics/handoff.md (T-0234)
 T-0231 in the same lane already passed its own verifier.
+Diff base for all four: the lane base 6fabea0d (git diff 6fabea0d..HEAD); the base sha printed in the dispatch is a later bookkeeping commit.
