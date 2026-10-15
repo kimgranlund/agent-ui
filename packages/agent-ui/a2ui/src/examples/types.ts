@@ -21,15 +21,24 @@
 // which keeps the three `site/` consumers of `allSeeds` (gallery, catalog tiers, authoring counts)
 // agent-ui-only by construction. Each seed's `catalogId` is the key everything downstream resolves its
 // catalog from: the import script hands `admit()` the catalog matching it, and the corpus shard it lands
-// in is `corpus/exemplar/v1_0/<catalogId>.jsonl`.
+// in is `corpus/exemplar/v1_0/<catalogId>.jsonl`. T-0240 adds a third corpus shelf, `allPersonaCorpusSeeds`,
+// for seeds over a composed persona catalog (`PersonaShardCatalogId`).
 
 import type { A2uiActionMessage, A2uiServerMessage, Failure } from '../protocol.ts'
 
-/** The catalog ids a seed may render against: the fleet's own default catalog and the upstream Basic
- *  catalog. Widening this union is a deliberate act: every `Record<SeedCatalogId, ...>` registry (the
- *  Node-side catalog file map, the corpus-data gate's catalog registry) fails to compile until it covers
- *  the new id. */
-export type SeedCatalogId = 'agent-ui' | 'a2ui-basic'
+/** The two base catalogs: the fleet's own default catalog and the upstream Basic catalog. */
+export type BaseCatalogId = 'agent-ui' | 'a2ui-basic'
+
+/** The derived persona catalogs that own a corpus shard (T-0240): a seed whose composite lives in a persona
+ *  fragment (CardTable, BookingForm) is admitted against the composed `<base>--<persona>` catalog and lands in
+ *  `corpus/exemplar/v1_0/<base>--<persona>.jsonl`. Listed one by one, never a template, so each stays a
+ *  deliberate registration. */
+export type PersonaShardCatalogId = 'agent-ui--croupier' | 'agent-ui--concierge'
+
+/** The catalog ids a corpus seed may render against: the two bases and the persona shards. Widening this union
+ *  is a deliberate act: every `Record<SeedCatalogId, ...>` registry (the Node-side catalog file map, the
+ *  corpus-data gate's catalog registry) fails to compile until it covers the new id. */
+export type SeedCatalogId = BaseCatalogId | PersonaShardCatalogId
 
 /** One authored example payload — a page's demo, the examples gate's fixture, and (later) a corpus seed. */
 export interface ExampleSeed<C extends SeedCatalogId = 'agent-ui'> {
@@ -44,7 +53,8 @@ export interface ExampleSeed<C extends SeedCatalogId = 'agent-ui'> {
   /** Pinned protocol version (SPEC-R13) — every seed targets the current default. */
   protocolVersion: 'v1.0'
   /** The catalog id this seed renders against: `'agent-ui'` (the default catalog, SPEC-R3) on the
-   *  `allSeeds` shelf, `'a2ui-basic'` on the `allBasicSeeds` shelf. */
+   *  `allSeeds` shelf, `'a2ui-basic'` on the `allBasicSeeds` shelf, a persona shard id on the
+   *  `allPersonaCorpusSeeds` shelf. */
   catalogId: C
   /** The ordered A2UI server-message stream (the future `CorpusRecord.a2uiOutput`) — fed line-by-line via `ingest`. */
   messages: readonly A2uiServerMessage[]
@@ -52,11 +62,12 @@ export interface ExampleSeed<C extends SeedCatalogId = 'agent-ui'> {
 
 /** A seed rendered against a derived persona catalog, `<base>--<persona>` (`derivedCatalogId`, ADR-0172
  *  cl.2). Persona seeds are page and gate fixtures (the every-catalog coverage gate, the catalog preview
- *  page), never corpus candidates, so `SeedCatalogId` stays the two bases and no corpus shelf, shard or
- *  import-seeds table reads them. They live on their own `allPersonaSeeds` shelf. */
+ *  page), never corpus candidates: no corpus shelf, shard or import-seeds table reads them. They live on
+ *  their own `allPersonaSeeds` shelf. A persona CORPUS seed is an `ExampleSeed<PersonaShardCatalogId>` on
+ *  `allPersonaCorpusSeeds` instead (T-0240). */
 export interface PersonaExampleSeed extends Omit<ExampleSeed<SeedCatalogId>, 'catalogId'> {
   /** The derived catalog id this seed renders against, for example `agent-ui--concierge`. */
-  catalogId: `${SeedCatalogId}--${string}`
+  catalogId: `${BaseCatalogId}--${string}`
 }
 
 // ADR-0231 cl.5: the two seed kinds beside `ExampleSeed`, one per new corpus facet. Same pre-alignment

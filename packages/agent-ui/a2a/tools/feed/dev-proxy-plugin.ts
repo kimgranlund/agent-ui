@@ -33,6 +33,7 @@ import { produce } from '../../../a2ui/src/agent/produce.ts'
 import type { ProduceDeps } from '../../../a2ui/src/agent/produce.ts'
 import { readMetaLine } from '../../../a2ui/src/agent/meta-line.ts'
 import { retrieve } from '../../../a2ui/src/corpus/retrieve.ts'
+import { loadAgentUiExemplarShards } from '../../../a2ui/tools/corpus/exemplar-shards.ts'
 import type { CorpusRecord } from '../../../a2ui/src/corpus/record.ts'
 import { loadCatalog } from '../../../a2ui/src/catalog/catalog.ts'
 import type { A2uiServerMessage } from '../../../a2ui/src/protocol.ts'
@@ -47,7 +48,6 @@ const ROOT = process.cwd()
 // forked (LLD §0/§8's ratified `tools/feed/* -> a2ui tools` dev-graph edge, the arena proxy's own precedent).
 const CONFIG_PATH = `${ROOT}/packages/agent-ui/a2ui/tools/agent/providers.json`
 const CATALOG_PATH = `${ROOT}/packages/agent-ui/a2ui/src/catalog/default/catalog.json`
-const SHARD_PATH = `${ROOT}/packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl`
 
 const MOUNT = '/__a2a/feed'
 const MAX_BODY = 1 << 20 // 1 MiB — mirrors the a2ui proxy: a growing conversational log + artifacts is not tiny
@@ -98,10 +98,7 @@ export function a2aFeedDevProxyPlugin(opts: FeedDevProxyPluginOptions = {}): Plu
     },
     configureServer(server) {
       const catalog = loadCatalog(JSON.parse(readFileSync(CATALOG_PATH, 'utf8')))
-      const shard: CorpusRecord[] = readFileSync(SHARD_PATH, 'utf8')
-        .split('\n')
-        .filter((l) => l.trim().length > 0)
-        .map((l) => JSON.parse(l) as CorpusRecord)
+      const shard: CorpusRecord[] = loadAgentUiExemplarShards(ROOT) // T-0240: the base shard plus every persona shard
 
       const loadConfig = (): ProvidersConfig => {
         const cfg = JSON.parse(readFileSync(CONFIG_PATH, 'utf8')) as ProvidersConfig

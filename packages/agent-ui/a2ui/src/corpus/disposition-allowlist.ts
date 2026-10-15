@@ -30,6 +30,7 @@
 // back — `product-options-quantity` · `listing-photo-grid`, category 1's NO-VERDICT-SOUGHT-YET shape —
 // the healthy steady state still holds: refusals leave the shelf, admissions delete their entries, and
 // only a smoke seed that seeks no verdict or a kept-pending-repair refusal ever puts (or keeps) an entry.
+// T-0240 (2026-10-15) drained the last pending entries, so the map holds zero live entries again.
 // The map stays wired into both consumers regardless — the next entry needs a home, not a revival PR.
 //
 // Pure, zero-dep, platform-neutral (SPEC-N5/ADR-0062) so both readers share the one map: the standing
@@ -233,27 +234,8 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // buttons moved into a CardFooter, matching `wallet-summary-card`'s precedent). Re-judged PASS
   // qualityScore 4/5 (archived 2026-08-24--button-icon-verdict.json) and admitted — entry DRAINED.
 
-  // T-0072 (2026-10-12), ADR-0243 R1: `frontier-product-card-rooms`, `frontier-board-grid-guesses` and
-  // `frontier-game-hud-quest`: the same pending-state shape (NO VERDICT SOUGHT YET, not a refusal). Added to
-  // `catalog-frontier.ts` with the `ProductCard`/`BoardGrid`/`GameHud` default-catalog rows to close their GH #729
-  // coverage gaps; corpus admission is a SEPARATE, later judged wave (ADR-0068's never-self-judged discipline).
-  // Run the judged pipeline (`import-seeds.ts` with a real VerdictsFile) and DELETE these entries when it lands.
-  ['frontier-product-card-rooms',
-    'T-0072 - NO VERDICT SOUGHT YET, not a refusal. Closes the GH #729 catalog-coverage gap for the new ' +
-    '`ProductCard` type; corpus admission is a separate, later judged import wave (ADR-0068\'s never-' +
-    'self-judged discipline - this authoring session assigns no rubric score to its own seed).'],
-  ['frontier-board-grid-guesses',
-    'T-0072 - NO VERDICT SOUGHT YET, not a refusal. Closes the GH #729 catalog-coverage gap for the new ' +
-    '`BoardGrid` type; corpus admission is a separate, later judged import wave (ADR-0068\'s never-' +
-    'self-judged discipline - this authoring session assigns no rubric score to its own seed).'],
-  ['frontier-game-hud-quest',
-    'T-0072 - NO VERDICT SOUGHT YET, not a refusal. Closes the GH #729 catalog-coverage gap for the new ' +
-    '`GameHud` type; corpus admission is a separate, later judged import wave (ADR-0068\'s never-' +
-    'self-judged discipline - this authoring session assigns no rubric score to its own seed).'],
-  // T-0089 (2026-10-12), ADR-0244: `frontier-result-card-win`, the same pending-state shape for the new
-  // `ResultCard` default row. DELETE it when the judged pipeline lands.
-  ['frontier-result-card-win',
-    'T-0089 - NO VERDICT SOUGHT YET, not a refusal. Closes the GH #729 catalog-coverage gap for the new ' +
-    '`ResultCard` type; corpus admission is a separate, later judged import wave (ADR-0068\'s never-' +
-    'self-judged discipline - this authoring session assigns no rubric score to its own seed).'],
+  // T-0072 (2026-10-12), ADR-0243 R1, and T-0089 (ADR-0244): `frontier-product-card-rooms`, `frontier-game-hud-quest`
+  // and `frontier-result-card-win` judged PASS 4/5 and admitted by T-0240 (archived
+  // 2026-10-15t16-24-49z--t0240-domain-exemplars.json); entries DRAINED. `frontier-board-grid-guesses` judged 2/5
+  // (D1, D2) in the same wave and DROPPED from the shelf (the ADR-0165 drop path); the archive holds the refusal.
 ])

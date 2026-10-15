@@ -33,6 +33,11 @@
 // remaining records with a positive score only, so zero-score records no longer pad the few-shot block (round 2:
 // a Croupier "Deal again" turn got agent-roster-drawer and booking-reservation that way). A base turn selects no
 // domain and keeps every record.
+//
+// T-0240: the scope rule. A record stamped with a derived `<base>--<persona>` id (a persona shard, so it uses that
+// persona's fragment types) is in scope only on a turn whose catalog id IS that id; a record stamped with a base id
+// stays in scope for its base and every catalog derived from it. A croupier turn draws on the base and croupier
+// shards, a concierge turn never sees a croupier record, and a base turn sees neither.
 
 import type { CorpusRecord, ModelVisibleFacet } from './record.ts'
 import { baseCatalogId } from './base-id.ts'
@@ -70,7 +75,8 @@ function recordDomains(rec: CorpusRecord): string[] {
 /**
  * TF-IDF cosine top-k retrieval (SPEC-R11) over `promptText` + `meta.componentsUsed`, scoped to
  * `query.catalogId`/`query.protocolVersion` and restricted to non-quarantined records of one
- * model-visible facet (`query.facet`, default `exemplar`).
+ * model-visible facet (`query.facet`, default `exemplar`). The catalog scope is the base of
+ * `query.catalogId` plus, for a derived id, the records stamped with exactly that id (T-0240).
  *
  * T-0238: on a turn whose catalog selects domains (`selectedDomains`), a record using another domain's type is out
  * of scope, the turn's own domain records rank first (all of them, best match first), and the remaining slots take
@@ -91,7 +97,7 @@ export function retrieve(records: readonly CorpusRecord[], query: RetrieveQuery)
   const emittable = query.componentTypes === undefined ? undefined : new Set(query.componentTypes)
   const scope = records.filter(
     (r) =>
-      r.meta.catalogId === base &&
+      (r.meta.catalogId === base || r.meta.catalogId === query.catalogId) && // T-0240: a persona shard only on its own turn
       r.meta.protocolVersion === query.protocolVersion &&
       r.meta.facet === facet &&
       r.meta.status !== 'quarantined' &&

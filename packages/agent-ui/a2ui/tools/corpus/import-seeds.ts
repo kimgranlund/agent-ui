@@ -96,6 +96,10 @@
 // the catalog matching the candidate's `meta.catalogId` (`admit.ts` AdmitDeps.catalog). The resolver is
 // LAZY, so a run whose shelves hold no Basic seed never reads `a2ui-basic/catalog.json`. A Basic seed
 // lands in `corpus/exemplar/v1_0/a2ui-basic.jsonl` (store `computeShardPath`, no change needed here).
+//
+// T-0240: a third exemplar shelf, `allPersonaCorpusSeeds`, for seeds whose composite lives in a persona fragment
+// (CardTable, BookingForm). Each is admitted against its composed `<base>--<persona>` catalog (the same lazy
+// resolver composes it) and lands in `corpus/exemplar/v1_0/<base>--<persona>.jsonl`.
 
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -112,7 +116,7 @@ import type { SeedRejection } from '../../src/corpus/import-report.ts'
 import { DISPOSITION_ALLOWLIST } from '../../src/corpus/disposition-allowlist.ts'
 import type { ArchivedVerdict } from '../../src/corpus/verdict-archive.ts'
 import type { Catalog } from '../../src/catalog/catalog.ts'
-import type { ExampleSeed, MultiTurnSeed, RepairSeed, SeedCatalogId } from '../../src/examples/types.ts'
+import type { ExampleSeed, MultiTurnSeed, PersonaShardCatalogId, RepairSeed, SeedCatalogId } from '../../src/examples/types.ts'
 import { canvasButtonSeed } from '../../src/examples/canvas-button.ts'
 import { listDisplaySeed, listPeopleSeed, listFormSeed, listNestedSeed } from '../../src/examples/dynamic-lists.ts'
 import { generativeFormSeed } from '../../src/examples/generative-form.ts'
@@ -137,7 +141,7 @@ import {
 } from '../../src/examples/catalog-coverage.ts'
 import { kpiPanelLifecycleSeed } from '../../src/examples/message-lifecycle.ts'
 import { feedbackFormSeed, elevationScaleSeed, triviaRoundResumeSeed } from '../../src/examples/corpus-growth.ts'
-import { tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed, productCardRoomsSeed, boardGridGuessesSeed, gameHudQuestSeed, resultCardWinSeed } from '../../src/examples/catalog-frontier.ts'
+import { tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed, productCardRoomsSeed, gameHudQuestSeed, resultCardWinSeed } from '../../src/examples/catalog-frontier.ts'
 import { structuredContainerSeed } from '../../src/examples/structured-container.ts'
 import {
   supportTicketCloseThenNewSeed,
@@ -178,9 +182,10 @@ import {
   basicNotificationSettingsSeed,
   basicAppointmentBookingSeed,
 } from '../../src/examples/basic-exemplars.ts'
+import { domainLexicographerWordSeed, domainAdmiralBattleshipSeed, domainCroupierRoundSeed, domainConciergeBookingSeed } from '../../src/examples/domain-seeds.ts'
 import { multiTurnSeeds } from '../../src/examples/multi-turn-seeds.ts'
 import { repairSeeds } from '../../src/examples/repair-seeds.ts'
-import { allSeeds, allBasicSeeds, allMultiTurnSeeds, allRepairSeeds } from '../../src/examples/index.ts'
+import { allSeeds, allBasicSeeds, allMultiTurnSeeds, allRepairSeeds, allPersonaCorpusSeeds } from '../../src/examples/index.ts'
 import { createCatalogResolver } from '../catalog-files.ts'
 
 declare const process: { cwd(): string; argv: string[]; exit(code?: number): never }
@@ -211,7 +216,7 @@ function readRubricVersion(repoRoot: string): string {
 const HELP_TEXT = `import-seeds — the ADR-0055 seed-import script (corpus LLD-C14)
 
 Maps every seed on the example shelves (src/examples/: allSeeds for agent-ui, allBasicSeeds for
-a2ui-basic) onto a candidate CorpusRecord and runs it through admit(), the corpus's single write
+a2ui-basic, allPersonaCorpusSeeds for a <base>--<persona> shard) onto a candidate CorpusRecord and runs it through admit(), the corpus's single write
 path. Each seed is admitted against the catalog matching its own catalogId. The ADR-0231 corpus-seed
 shelves (allMultiTurnSeeds, allRepairSeeds) map onto their facet's record branch the same way.
 
@@ -346,10 +351,9 @@ const SEEDS_BY_MODULE: ReadonlyArray<SeedGroup<'agent-ui'>> = [
       columnChartRevenueSeed, // ADR-0229 cl.1/cl.2, GH #1568 — the ColumnChart coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
       gaugeSystemLoadSeed, // ADR-0229 cl.4, GH #1568 — the Gauge coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
       lineChartAxesWeeklySalesSeed, // ADR-0229 cl.3, GH #1568 — the LineChart axes-state coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
-      productCardRoomsSeed, // ADR-0243/T-0072 - the ProductCard coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
-      boardGridGuessesSeed, // ADR-0243/T-0072 - the BoardGrid coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
-      gameHudQuestSeed, // ADR-0243/T-0072 - the GameHud coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
-      resultCardWinSeed, // ADR-0244/T-0089 - the ResultCard coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
+      productCardRoomsSeed, // ADR-0243/T-0072 - the ProductCard coverage-gap seed; judged and admitted (T-0240)
+      gameHudQuestSeed, // ADR-0243/T-0072 - the GameHud coverage-gap seed; judged and admitted (T-0240)
+      resultCardWinSeed, // ADR-0244/T-0089 - the ResultCard coverage-gap seed; judged and admitted (T-0240)
     ],
   },
   { module: 'structured-container.ts', seeds: [structuredContainerSeed] }, // GH #808 S5 — SPEC-R9's exemplar
@@ -387,6 +391,10 @@ const SEEDS_BY_MODULE: ReadonlyArray<SeedGroup<'agent-ui'>> = [
     module: 'surface-lifecycle.ts', // GH #1731: one surface at a time, delete-then-recreate and superseding (ADR-0064 amendment)
     seeds: [supportTicketCloseThenNewSeed, contactImportProgressToSummarySeed, inviteDeclineThenFocusBlockSeed],
   },
+  {
+    module: 'domain-seeds.ts', // T-0245/T-0240: the BoardGrid domain composites (word board, battleship)
+    seeds: [domainLexicographerWordSeed, domainAdmiralBattleshipSeed],
+  },
 ]
 
 /** The Basic shelf's hand-transcribed per-file grouping (GH #1737), the `SEEDS_BY_MODULE` twin for
@@ -395,6 +403,15 @@ const BASIC_SEEDS_BY_MODULE: ReadonlyArray<SeedGroup<'a2ui-basic'>> = [
   {
     module: 'basic-exemplars.ts', // GH #1732: the first a2ui-basic exemplars
     seeds: [basicContactFormSeed, basicProductListSeed, basicNotificationSettingsSeed, basicAppointmentBookingSeed],
+  },
+]
+
+/** The persona corpus shelf's per-file grouping (T-0240), the `SEEDS_BY_MODULE` twin for `allPersonaCorpusSeeds`:
+ * each seed renders against a persona shard catalog (`<base>--<persona>`). */
+const PERSONA_SEEDS_BY_MODULE: ReadonlyArray<SeedGroup<PersonaShardCatalogId>> = [
+  {
+    module: 'domain-seeds.ts', // T-0245/T-0240: the CardTable round and the BookingForm request
+    seeds: [domainCroupierRoundSeed, domainConciergeBookingSeed],
   },
 ]
 
@@ -426,6 +443,7 @@ function checkGrouping(): void {
   const drift = [
     shelfDrift('SEEDS_BY_MODULE', SEEDS_BY_MODULE, 'allSeeds', allSeeds),
     shelfDrift('BASIC_SEEDS_BY_MODULE', BASIC_SEEDS_BY_MODULE, 'allBasicSeeds', allBasicSeeds),
+    shelfDrift('PERSONA_SEEDS_BY_MODULE', PERSONA_SEEDS_BY_MODULE, 'allPersonaCorpusSeeds', allPersonaCorpusSeeds),
     shelfDrift('MULTI_TURN_SEEDS_BY_MODULE', MULTI_TURN_SEEDS_BY_MODULE, 'allMultiTurnSeeds', allMultiTurnSeeds),
     shelfDrift('REPAIR_SEEDS_BY_MODULE', REPAIR_SEEDS_BY_MODULE, 'allRepairSeeds', allRepairSeeds),
   ]
@@ -762,6 +780,7 @@ async function main(): Promise<void> {
   const groups: ReadonlyArray<{ module: string; seeds: readonly ImportableSeed[] }> = [
     ...SEEDS_BY_MODULE,
     ...BASIC_SEEDS_BY_MODULE,
+    ...PERSONA_SEEDS_BY_MODULE,
     ...MULTI_TURN_SEEDS_BY_MODULE,
     ...REPAIR_SEEDS_BY_MODULE,
   ]

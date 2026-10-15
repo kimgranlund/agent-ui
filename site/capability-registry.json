@@ -1991,7 +1991,41 @@
       ],
       "name": "exemplar/agent-ui",
       "scope": "agent-ui",
-      "records": 77
+      "records": 82
+    },
+    {
+      "id": "corpus-shard:exemplar/agent-ui--concierge",
+      "kind": "corpus-shard",
+      "source": {
+        "path": "packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui--concierge.jsonl"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "corpus"
+      ],
+      "name": "exemplar/agent-ui--concierge",
+      "scope": "agent-ui--concierge",
+      "records": 1
+    },
+    {
+      "id": "corpus-shard:exemplar/agent-ui--croupier",
+      "kind": "corpus-shard",
+      "source": {
+        "path": "packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui--croupier.jsonl"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "corpus"
+      ],
+      "name": "exemplar/agent-ui--croupier",
+      "scope": "agent-ui--croupier",
+      "records": 1
     },
     {
       "id": "corpus-shard:multi-turn/agent-ui",

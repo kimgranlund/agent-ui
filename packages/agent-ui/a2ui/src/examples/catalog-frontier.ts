@@ -56,8 +56,9 @@
 // Frontier 28-30 (ADR-0243, T-0072 R1 of the preset-widgets campaign): `ProductCard` (28), `BoardGrid` (29)
 // and `GameHud` (30) close their own GH #729 coverage gaps the moment their default-catalog rows exist
 // (drains the three TEMPORARY `EXCLUSION_ALLOWLIST` seeds). Real board-shape content (a hotel room offer
-// grid, a word-guess board, a dungeon status strip), never lorem. Corpus admission is a SEPARATE, later
-// judged wave (disposition-allowlist.ts carries the pending entries).
+// grid, a word-guess board, a dungeon status strip), never lorem. T-0240 judged the three: 28 and 30 were
+// admitted, 29 (`frontier-board-grid-guesses`) was refused at 2 (archived verdict) and left the shelf, replaced as
+// the BoardGrid seed by `domain-seeds.ts`'s word board and battleship sea.
 
 import type { ExampleSeed } from './types.ts'
 
@@ -1528,74 +1529,6 @@ export const productCardRoomsSeed: ExampleSeed = {
   ],
 }
 
-const BOARD_GRID_GUESSES_ID = 'frontier-board-grid-guesses'
-/** Frontier 29 (ADR-0243, T-0072): `BoardGrid`, a read-only word-guess board. One node holds all 20 cells (a
- *  5-column board, 4 rows) with a bound `cells` array of marked positions, so a new guess patches the board in
- *  place instead of re-minting a Grid of Badge tiles. Each mark carries an intent (success right spot, warning
- *  wrong spot, neutral absent) and the control adds a corner glyph, so the result never rides colour alone.
- *  A second board is the approved mockup's battle board (ADR-0243 Amendment 2, T-0083): a 6 by 6 sea whose
- *  shots read hit (a filled dot, danger), miss (a ring, neutral) and sunk (a boxed square, success), the
- *  danger-high and success-high inks Kim asked for, again with the corner glyph beside the colour.
- *  Read-only here: neither board sets `actionName`, so no cell fires (the row exposes `actionName` since T-0081,
- *  ADR-0243 Amendment 4, for a clickable board). Corpus admission is a SEPARATE judged wave (disposition-allowlist.ts). */
-export const boardGridGuessesSeed: ExampleSeed = {
-  name: 'frontier-board-grid-guesses',
-  description: 'Two read-only game boards: a five-letter word guess BoardGrid with a bound `cells` array of marked letters (intent showing right spot, wrong spot and absent), and a 6 by 6 battle BoardGrid whose bound shots read hit, miss and sunk.',
-  promptText: 'Show my two game boards: the five-letter word game where I guessed CRANE and SLATE, and the battleship sea after my shots.',
-  surfaceId: BOARD_GRID_GUESSES_ID,
-  protocolVersion: 'v1.0',
-  catalogId: 'agent-ui',
-  messages: [
-    { version: 'v1.0', createSurface: { surfaceId: BOARD_GRID_GUESSES_ID, catalogId: 'agent-ui', sendDataModel: true } },
-    {
-      version: 'v1.0',
-      updateDataModel: {
-        surfaceId: BOARD_GRID_GUESSES_ID,
-        value: {
-          guesses: {
-            cells: [
-              { row: 0, col: 0, mark: 'C', intent: 'neutral' },
-              { row: 0, col: 1, mark: 'R', intent: 'warning' },
-              { row: 0, col: 2, mark: 'A', intent: 'success' },
-              { row: 0, col: 3, mark: 'N', intent: 'neutral' },
-              { row: 0, col: 4, mark: 'E', intent: 'warning' },
-              { row: 1, col: 0, mark: 'S', intent: 'neutral' },
-              { row: 1, col: 1, mark: 'L', intent: 'neutral' },
-              { row: 1, col: 2, mark: 'A', intent: 'success' },
-              { row: 1, col: 3, mark: 'T', intent: 'success' },
-              { row: 1, col: 4, mark: 'E', intent: 'success' },
-            ],
-          },
-          battle: {
-            cells: [
-              { row: 0, col: 1, mark: '\u25A3', intent: 'success' },
-              { row: 0, col: 2, mark: '\u25A3', intent: 'success' },
-              { row: 0, col: 3, mark: '\u25A3', intent: 'success' },
-              { row: 1, col: 1, mark: '\u25CB', intent: 'neutral' },
-              { row: 2, col: 4, mark: '\u25CF', intent: 'danger' },
-              { row: 3, col: 2, mark: '\u25CB', intent: 'neutral' },
-              { row: 4, col: 4, mark: '\u25CB', intent: 'neutral' },
-            ],
-          },
-        },
-      },
-    },
-    {
-      version: 'v1.0',
-      updateComponents: {
-        surfaceId: BOARD_GRID_GUESSES_ID,
-        components: [
-          { id: 'root', component: 'Column', gap: 'sm', children: ['status', 'board', 'battleStatus', 'battle'] },
-          { id: 'status', component: 'Text', variant: 'caption', text: 'Guess 2 of 4: _ _ A T E' },
-          { id: 'board', component: 'BoardGrid', rows: 4, cols: 5, label: 'Word guesses', cells: { path: '/guesses/cells' } },
-          { id: 'battleStatus', component: 'Text', variant: 'caption', text: 'Enemy waters: one ship sunk, one hit, three misses' },
-          { id: 'battle', component: 'BoardGrid', rows: 6, cols: 6, label: 'Enemy waters', cells: { path: '/battle/cells' } },
-        ],
-      },
-    },
-  ],
-}
-
 const GAME_HUD_QUEST_ID = 'frontier-game-hud-quest'
 /** Frontier 30 (ADR-0243, T-0072): `GameHud`, a quest status strip. One node carries the title, a status badge
  *  with intent, three stat tiles (HP with a signed negative delta, gold with a positive one, keys) and a
@@ -1694,4 +1627,4 @@ export const resultCardWinSeed: ExampleSeed = {
   ],
 }
 
-export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed, productCardRoomsSeed, boardGridGuessesSeed, gameHudQuestSeed, resultCardWinSeed]
+export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed, productCardRoomsSeed, gameHudQuestSeed, resultCardWinSeed]

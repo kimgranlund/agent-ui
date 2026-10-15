@@ -93,7 +93,9 @@ than you meant to, and an armed run on an UNCHANGED tree is a byte-identical no-
   retrieval also follows the turn's selected domains (T-0238, `src/corpus/retrieve.ts`): own-domain records
   rank first, another domain's composite is never returned, and `src/corpus/retrieve-presets.test.ts` pins
   each shipped preset's top 3, so a corpus or retrieval change that moves a preset's exemplars re-pins
-  there on purpose. A domain with no exemplar of its own composite gets none (T-0240 adds them); the
+  there on purpose. T-0240 admitted the domain exemplars (a CardTable round and a BookingForm in their
+  persona shards `agent-ui--croupier.jsonl` / `agent-ui--concierge.jsonl`, retrieved only on that persona's
+  turn, plus a word board and a battleship sea in the base shard); the
   `a2ui-basic` base has its own `basic-dialect` module (T-0077), so a Basic turn never gets an `agent-ui` module. A new mini-skill's
   `catalogId` must name a registered catalog id, which `src/registry/registry-wiring.test.ts` gates.
 
