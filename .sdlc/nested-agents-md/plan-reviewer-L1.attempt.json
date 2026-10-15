@@ -1,0 +1,21 @@
+{
+  "attempt_id": "f26336888e9a4f39bb0c5f8063fa29de",
+  "name": "plan-reviewer-L1",
+  "role": "plan-reviewer",
+  "level": "L1",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "opus",
+  "effort": "high",
+  "routing_reason": "plan-reviewer L1: a rerun planner result counts as a replan, which is always reviewed",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T05:47:20.998867+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/nested-agents-md",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/nested-agents-md/.sdlc/nested-agents-md/handoff.md",
+  "owner_pid": 81181,
+  "handoff_sha256": "5a70cda01ab5e95d74b6bb009a5ab377f3c001446eedcc705af500cb5c452406",
+  "process_pid": 81865,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T05:48:18.681002+00:00"
+}

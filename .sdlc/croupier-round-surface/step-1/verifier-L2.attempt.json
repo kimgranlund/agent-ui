@@ -1,0 +1,21 @@
+{
+  "attempt_id": "2de608cdbc4e4edaba0c68c58002153a",
+  "name": "verifier-L2",
+  "role": "verifier",
+  "level": "L2",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "sonnet",
+  "effort": "high",
+  "routing_reason": "verifier L2: independent check of a fork-built change that alters a shipped routing rule",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T02:28:16.649269+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.sdlc/croupier-round-surface/step-1/handoff.md",
+  "owner_pid": 62123,
+  "handoff_sha256": "75cc12ff5afe98712660a50110c2c7c8c53026ad088f2d496f64fec2f484ae1e",
+  "process_pid": 62222,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T02:29:40.375900+00:00"
+}

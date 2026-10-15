@@ -1,0 +1,21 @@
+{
+  "attempt_id": "ddfb1b5eada74a55ad425300a9329bad",
+  "name": "plan-reviewer-L1",
+  "role": "plan-reviewer",
+  "level": "L1",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "fable",
+  "effort": "high",
+  "routing_reason": "plan-reviewer L1: planner L3 plan with a step at builder L4, new byte-pinned asset class",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T04:10:23.864193+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.sdlc/catalog-notfor-intents/handoff.md",
+  "owner_pid": 77668,
+  "handoff_sha256": "b4530d0db79ab944fffcf9d7b35ec6235a045304f771ceeab4b8c0a026f33bb0",
+  "process_pid": 77707,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T04:25:46.280059+00:00"
+}

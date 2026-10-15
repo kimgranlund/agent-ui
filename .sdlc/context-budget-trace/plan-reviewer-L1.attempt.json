@@ -1,0 +1,21 @@
+{
+  "attempt_id": "cbe89ee9d74c49279311bb73e259b040",
+  "name": "plan-reviewer-L1",
+  "role": "plan-reviewer",
+  "level": "L1",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "fable",
+  "effort": "high",
+  "routing_reason": "plan-reviewer L1: planner L3 plan for a size L ticket that changes the provider seam and adds an ADR",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T16:39:09.276844+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-budget",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-budget/.sdlc/context-budget-trace/handoff.md",
+  "owner_pid": 22693,
+  "handoff_sha256": "23c6137f0ee67ac1c089d0bc5175d2fa6b194244c8e59919a0778553d0fc050b",
+  "process_pid": 22761,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T16:46:15.092274+00:00"
+}

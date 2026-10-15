@@ -1,0 +1,21 @@
+{
+  "attempt_id": "dd3d7a991bd84840bc972e6d8f0a9aa2",
+  "name": "filer-L1",
+  "role": "filer",
+  "level": "L1",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "sonnet",
+  "effort": "medium",
+  "routing_reason": "filer L1 after all steps passed",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T17:47:37.216279+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-budget",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-budget/.sdlc/context-budget-trace/handoff.md",
+  "owner_pid": 91455,
+  "handoff_sha256": "dcd08df72da10bb82f7c78ddcf3daca9f7a8aff606f2fc2e8946d483b9e63053",
+  "process_pid": 91483,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T17:48:14.027096+00:00"
+}

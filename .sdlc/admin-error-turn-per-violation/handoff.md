@@ -2,7 +2,7 @@
 id: T-0221
 title: "Agent admin fires one error turn per renderer violation, in parallel"
 type: bug             # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -31,3 +31,9 @@ The failing test lands before or with the fix, never after. No em dashes.
 ## Acceptance criteria
 - (red) `npx vitest run --project packages packages/agent-ui/app/src/controls/agent-admin/agent-admin-error-turn.test.ts` exits 0: an update with two dangling children drives one client error turn whose message names both ids.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-14 · lane: full L1 · verdict: closed by reason (Merged in #1997; batched lane verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

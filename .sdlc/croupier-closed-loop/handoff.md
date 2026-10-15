@@ -2,7 +2,7 @@
 id: T-0184
 title: "Croupier closed-loop runs: every game, a few rounds, each model; find and file open bugs"
 type: spike           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: [T-0172, T-0175]  # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -47,3 +47,9 @@ Phase 2 (after the 16 live runs, 2026-10-15):
 
 ## Plan review
 - swap applied by conductor: criterion #5 pinned plugin 0.22.7; swapped to 0.23.0 per verifier-L2 For the next attempt (steps.py swap refuses a solo dir without a solo result file). Verifier evidence: 0.23.0 check rc=0, ok: 223 tickets.
+
+## Outcome
+
+2026-10-14 · lane: full L2 · verdict: closed by reason (Merged in #1992; verifier L2 pass after a plugin-version criterion swap) · verifier: none · base: none
+- Changed: 16 live Croupier runs, report, bug tickets T-0211 to T-0222, 8 keyless replays, poker scenarios fixed
+- Commits: none

@@ -1,0 +1,21 @@
+{
+  "attempt_id": "288a31c639bb4063b8d9b51f14dc7b43",
+  "name": "builder-L3",
+  "role": "builder",
+  "level": "L3",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "opus",
+  "effort": "high",
+  "routing_reason": "builder L3 per plan step 1: ~20 live files, judgment on replacement seats",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T05:52:30.826157+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/stale-plugin-refs",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/stale-plugin-refs/.sdlc/stale-plugin-refs/step-1/handoff.md",
+  "owner_pid": 41269,
+  "handoff_sha256": "993a9b43071f47a192ad954d1d9f44288bb13923c24da5c0dce3613dcc4ea0fd",
+  "process_pid": 41453,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T06:00:43.407132+00:00"
+}

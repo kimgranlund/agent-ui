@@ -1,0 +1,21 @@
+tree f5b38eea
+E0 baseline marginal 67203 B gz (foundation 7655, solo 74858)
+P0 default removed, nothing added back (ceiling, not buildable)                marginal  57686  delta   -9517
+PC default behind a record + manifest + lazy body (the real change shape)      marginal  57710  delta   -9493
+PCW PC plus warm-memo sync registration (loader.ts + registry.ts, ~10 lines)   marginal  57751  delta   -9452
+baseline eager catalog modules: catalog/naming.ts, catalog/catalog.ts, catalog/variant.ts, catalog/functions.ts, catalog/conformance.ts, catalog/loader.ts, catalog/registry.ts, catalog/default/catalog.json, catalog/default/index.ts, catalog/controls.ts, catalog/records.ts, catalog/default/factories.ts
+PC       eager catalog modules: catalog/naming.ts, catalog/catalog.ts, catalog/variant.ts, catalog/functions.ts, catalog/conformance.ts, catalog/loader.ts, catalog/registry.ts, catalog/records.ts
+baseline lazy chunks that hold catalog modules (standalone gz):
+  body-CLVslylH.js                   gz   170  imports [personas-CTOAvEOn.js]  holds 1: catalog/personas/body.ts
+  body-DDdmbi0L.js                   gz  4528  imports [catalog-DLDppw9O.js factories-DM56qi-o.js]  holds 4: catalog/a2ui-basic/catalog.json, catalog/a2ui-basic/index.ts, catalog/a2ui-basic/factories.ts, catalog/a2ui-basic/functions.ts
+  personas-CTOAvEOn.js               gz  2780  imports [loader-C2V1NxrJ.js catalog-DLDppw9O.js]  holds 14: catalog/compose.ts, catalog/personas/fixture-demo/catalog.json, catalog/personas/fixture-demo/manifest.ts, catalog/personas/fixture-demo/factories.ts, catalog/personas/fixture-demo/index.ts, catalog/personas/concierge/catalog.json, ...
+  sum of standalone gz of those chunks: 7478
+PC lazy chunks that hold catalog modules (standalone gz):
+  basic-body-BZnWdBUb.js             gz  4553  imports [catalog-DLDppw9O.js controls-Df-pr9go.js]  holds 4: catalog/a2ui-basic/catalog.json, catalog/a2ui-basic/index.ts, catalog/a2ui-basic/factories.ts, catalog/a2ui-basic/functions.ts
+  body-CLVslylH.js                   gz   170  imports [personas-CTOAvEOn.js]  holds 1: catalog/personas/body.ts
+  controls-Df-pr9go.js               gz  2648  imports [loader-C2V1NxrJ.js]  holds 2: catalog/default/factories.ts, catalog/controls.ts
+  default-body-DZB5wR_-.js           gz  3452  imports [catalog-DLDppw9O.js controls-Df-pr9go.js]  holds 2: catalog/default/catalog.json, catalog/default/index.ts
+  personas-CTOAvEOn.js               gz  2780  imports [loader-C2V1NxrJ.js catalog-DLDppw9O.js]  holds 14: catalog/compose.ts, catalog/personas/fixture-demo/catalog.json, catalog/personas/fixture-demo/manifest.ts, catalog/personas/fixture-demo/factories.ts, catalog/personas/fixture-demo/index.ts, catalog/personas/concierge/catalog.json, ...
+  sum of standalone gz of those chunks: 13603
+baseline  agent-admin chunk gz 33645, holds default-catalog/control-registry modules itself: false
+PC        agent-admin chunk gz 33648, holds default-catalog/control-registry modules itself: false

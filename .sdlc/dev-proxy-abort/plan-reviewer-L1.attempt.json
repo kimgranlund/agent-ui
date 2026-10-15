@@ -1,0 +1,21 @@
+{
+  "attempt_id": "526d77cb208e481891e81d2096672154",
+  "name": "plan-reviewer-L1",
+  "role": "plan-reviewer",
+  "level": "L1",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "fable",
+  "effort": "high",
+  "routing_reason": "plan-reviewer L1: a replan is always reviewed",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T06:11:06.539044+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/gap-dev-proxy-abort",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/gap-dev-proxy-abort/.sdlc/dev-proxy-abort/handoff.md",
+  "owner_pid": 76702,
+  "handoff_sha256": "09c22169922fecbbcd2ca50610832a404837031b7e3b88e344dc12a4994c8c6a",
+  "process_pid": 76746,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T06:21:54.566026+00:00"
+}

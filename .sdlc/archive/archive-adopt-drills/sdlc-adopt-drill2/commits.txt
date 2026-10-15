@@ -1,0 +1,4 @@
+8546bc77 2026-09-20 a1: survey complete, drill report with findings
+f0fd18e8 2026-09-20 launch: seats up
+17ca3ccf 2026-09-20 preflight: record before launch
+039a8965 2026-09-20 gitignore: sdlc runtime and local settings

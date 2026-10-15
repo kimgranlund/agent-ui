@@ -2,7 +2,7 @@
 id: T-0081
 title: "A2UI renderer forwards a control's own action event so BoardGrid cells can fire on the wire"
 type: feature        # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -29,3 +29,7 @@ The default catalog stays valid for existing surfaces. No em dashes.
 - The catalog mark, row and corpus grounding hold: `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog packages/agent-ui/a2ui/src/corpus` exit 0.
 - Prompt baseline, budgets and registry are regenerated and green: `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent` exit 0.
 - `npm run check` exit 0.
+
+## Closed
+
+2026-10-13: merged as #1935

@@ -2,7 +2,7 @@
 id: T-0238
 title: "Few-shot exemplar retrieval ignores catalog and domain: card games get booking and roster exemplars"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -37,3 +37,9 @@ Parallel lanes: T-0208 (feat/composite-moment-checks: catalog/composite-moments.
 
 ## Plan review
 - conductor: Done-when 3 (new CardTable, BookingForm and BoardGrid exemplars) moved to T-0240 (domain-exemplars); this ticket closes on the retrieval rule and the ranking-pin test. Verify criteria 1, 2 and 4 only.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged in #2001; verifier L2 pass; new exemplars moved to T-0240) · verifier: none · base: none
+- Changed: Exemplar retrieval follows the turn's selected domains; per-preset ranking pins
+- Commits: none

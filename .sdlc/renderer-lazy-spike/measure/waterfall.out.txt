@@ -1,0 +1,16 @@
+
+baseline (renderer eager)
+  hop 0 (eager entry graph, already loaded with the page)
+  renderer.ts lives in: conversation-BKq0mxJ-.js (31520 B gz; static deps: element-CI3cKmbf.js 4797, form-DzK6irO7.js 962, container-C8jw68GH.js 304, view-transition-DqAJY-Ll.js 281, split-ChzhH_e8.js 2762, scroll-fade-C8OHLDnd.js 591, button-DR1qZ9J-.js 732, icon-BotFw0YD.js 362, tabs-XkX1WvoI.js 2518, overlay-oD7SiDT1.js 2446, menu-Bp9YDMOl.js 1606, split-pane-9cQ6rYjD.js 290, select-BEsrAOEb.js 2326, field-SvSiz3ta.js 929, form-provider-CF6xhRal.js 897, text-field-C9QDjpGh.js 6143, switch-DzGqNd2m.js 350, slider-DzNZzBhZ.js 685, catalog-DLDppw9O.js 1598, status-stream-Cuv7kcVz.js 3774, sandbox-frame-ClzuGEGE.js 2759)
+  default catalog body lives in: body-DohBVzvL.js (3454 B gz; static deps: catalog-DLDppw9O.js 1598, controls-C5bMnAZd.js 2648)
+  built-in control registry lives in: controls-C5bMnAZd.js (2648 B gz; static deps: loader-x0oZMqTB.js 3186)
+  renderer chunk dynamic imports: body-BVYS5u7o.js, body-DohBVzvL.js, body-CE3P2l43.js
+  eager closure 78379 B gz (sum of standalone chunk gz, includes the components foundation); first default surface fetches 9288 B gz more in 1 dynamic hop(s) before the per-control chunks; whole first-surface set 87667 B gz in 43 chunks
+
+Dd (renderer lazy behind the facade)
+  hop 0 (eager entry graph, already loaded with the page)
+  renderer.ts lives in: renderer-CDRj36P-.js (12011 B gz; static deps: graph-e7B-pive.js 1099, catalog-DLDppw9O.js 1598)
+  default catalog body lives in: body-COXq3fvu.js (3452 B gz; static deps: catalog-DLDppw9O.js 1598, controls-CygSpSpk.js 2649)
+  built-in control registry lives in: controls-CygSpSpk.js (2649 B gz; static deps: loader-D0kXKbyJ.js 3180)
+  renderer chunk dynamic imports: body-Cc8vHDQt.js, body-COXq3fvu.js, body-D-JgrhuB.js
+  eager closure 65694 B gz (sum of standalone chunk gz, includes the components foundation); first default surface fetches 22890 B gz more in 2 dynamic hop(s) before the per-control chunks; whole first-surface set 88584 B gz in 45 chunks

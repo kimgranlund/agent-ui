@@ -1,0 +1,32 @@
+{
+  "attempt_id": "4371ade8837940b3bc6a633b81221162",
+  "name": "plan-reviewer-L1",
+  "agent_name": "0060-plan-reviewer-L1",
+  "role": "plan-reviewer",
+  "level": "L1",
+  "backend": "claude",
+  "transport": "subagent",
+  "model": "fable",
+  "effort": "high",
+  "routing_reason": "restart after crash: plan-reviewer orphaned, draft stub only",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-09T16:54:40.344523+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-rts",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-rts/.sdlc/response-type-selection/handoff.md",
+  "parent_pid": 3025,
+  "parent_pid_source": "claude",
+  "handoff_sha256": "e9c7e5b54b5d19ad081cace20f05737bd455b60964d08850c3bc9b47d13f8db6",
+  "worktrees_before": [
+    "/Users/kimgranlund/Projects/nonoun/agent-ui",
+    "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-rts"
+  ],
+  "branches_before": [
+    "feat/response-type-selection",
+    "main"
+  ],
+  "exit_code": 0,
+  "finished_at": "2026-10-09T17:05:59.585960+00:00",
+  "result_sha256": "6973680abcfb28d2df4b5ca41caf1ccb5830365762d437c589f0d350c240cf02",
+  "agent_id": "a0060-plan-reviewer-L1-67f31bfef5ca7c56"
+}

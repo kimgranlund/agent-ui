@@ -1,0 +1,471 @@
+{
+  "domain": "technical-architecture",
+  "plan": true,
+  "nodes": [
+    {
+      "id": "sys",
+      "label": "producer toolkit asset embed (GH #1808)",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "gen",
+      "label": "generator: scripts/generate-agent-assets.mjs",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "gen-discover",
+      "label": "discoverAgentAssets(): walk prompts/**, catalog/**/selection.json, controls/*/ (descriptors + .define scan); exported for #1807",
+      "leaf": true,
+      "accept": "`node --input-type=module -e \"import('./scripts/generate-agent-assets.mjs').then(m=>{const d=m.discoverAgentAssets(); if(!d.text.some(a=>a.path==='agent/prompts/grammar.md')||!d.text.some(a=>a.path==='catalog/personas/fixture-demo/selection.json')||d.fleet.length<80) process.exit(1)})\"` exits 0; no hand list of file names anywhere in the script (`grep -c \"'[a-z][a-z-]*\\.md'\" scripts/generate-agent-assets.mjs` prints 0)"
+    },
+    {
+      "id": "gen-emit",
+      "label": "generateAgentAssetsModules(discovered): pure emitter, JSON.stringify per asset, sorted keys, GENERATED header",
+      "leaf": true,
+      "accept": "`npx vitest run scripts/generate-agent-assets.test.mjs` exits 0: emitter output for a fixture with backticks, `${` and CRLF round-trips byte-exact through `import()`; two runs over the same input are byte-identical"
+    },
+    {
+      "id": "gen-cli",
+      "label": "CLI: write both .gen.ts files; `--check` exits 1 on drift without writing",
+      "leaf": true,
+      "accept": "`node scripts/generate-agent-assets.mjs && git diff --quiet -- packages/agent-ui/a2ui/src/agent/*.gen.ts && node scripts/generate-agent-assets.mjs --check` exits 0; appending a byte to `prompts/grammar.md` makes `--check` exit 1 and leaves the .gen.ts untouched"
+    },
+    {
+      "id": "embed",
+      "label": "embedded artifacts under a2ui/src/agent/",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "embed-text",
+      "label": "src/agent/assets.gen.ts: AGENT_ASSETS Record<string,string> keyed by src-relative POSIX path (prompts + selection sidecars)",
+      "leaf": true,
+      "accept": "`node --input-type=module -e \"import('./packages/agent-ui/a2ui/src/agent/assets.gen.ts').then(m=>{const k=Object.keys(m.AGENT_ASSETS); if(k.length<40||!k.includes('agent/prompts/mini-skills/form-rhythm.md')||!k.every(x=>!x.startsWith('/')&&!x.includes('packages/'))) process.exit(1)})\"` exits 0; file header names the CLI and says never hand-edit"
+    },
+    {
+      "id": "embed-fleet",
+      "label": "src/agent/dogfood-fleet.gen.ts: DOGFOOD_FLEET derived rows {tag, summary, attrs, siblings} from the components descriptors",
+      "leaf": true,
+      "accept": "`node --input-type=module -e \"import('./packages/agent-ui/a2ui/src/agent/dogfood-fleet.gen.ts').then(m=>{const r=m.DOGFOOD_FLEET; if(r.length<80||!r.some(x=>x.tag==='ui-card'&&x.siblings.includes('ui-card-header'))) process.exit(1)})\"` exits 0; `wc -c` of the file is under 120000"
+    },
+    {
+      "id": "embed-source",
+      "label": "src/agent/asset-source.ts: readAsset(key) and listAssets(dirKey) over AGENT_ASSETS, fail-loud on unknown key",
+      "leaf": true,
+      "accept": "`npx vitest run packages/agent-ui/a2ui/src/agent/asset-source.test.ts` exits 0 with: known key returns the string, unknown key throws naming `generate-agent-assets.mjs`, `listAssets('agent/prompts/mini-skills')` equals the sorted on-disk `.md` names and lists direct children only"
+    },
+    {
+      "id": "loaders",
+      "label": "the five loader modules, rewired off node:fs",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "loaders-prompts",
+      "label": "system-prompt.ts, mini-skills.ts, prompts/genui-packs.ts read through asset-source (same .trim(), same sort)",
+      "leaf": true,
+      "accept": "`grep -L \"node:fs\" packages/agent-ui/a2ui/src/agent/system-prompt.ts packages/agent-ui/a2ui/src/agent/mini-skills.ts packages/agent-ui/a2ui/src/agent/prompts/genui-packs.ts | wc -l` prints 3 and `npx vitest run packages/agent-ui/a2ui/src/live-agent/prompt-equivalence.test.ts packages/agent-ui/a2ui/src/live-agent/prompt-drift.test.ts` exits 0 with `prompt-equivalence.baseline.json` unchanged (`git diff --quiet -- packages/agent-ui/a2ui/src/live-agent/prompt-equivalence.baseline.json`)"
+    },
+    {
+      "id": "loaders-selection",
+      "label": "selection-guidance.ts: sidecars via readAsset; PERSONA_IDS derived from embedded `catalog/personas/*/selection.json` keys",
+      "leaf": true,
+      "accept": "`grep -c \"PERSONA_IDS = \\[\" packages/agent-ui/a2ui/src/agent/selection-guidance.ts` prints 0, `grep -c node:fs` prints 0, and `npx vitest run packages/agent-ui/a2ui/src/catalog/selection-guidance.test.ts packages/agent-ui/a2ui/src/agent/selection-guidance.unit.test.ts` exits 0 (the manifests-equality leg still bites: deleting a persona sidecar reds it)"
+    },
+    {
+      "id": "dogfood-parsers",
+      "label": "src/agent/dogfood-descriptor.ts: the pure descriptor parsers (splitFrontmatter, readTag, readAttributes, firstSentence, renderAttrs) lifted out of dogfood-inventory.ts, no fs",
+      "leaf": true,
+      "accept": "`grep -c node: packages/agent-ui/a2ui/src/agent/dogfood-descriptor.ts` prints 0 and `npx vitest run packages/agent-ui/a2ui/src/live-agent/dogfood-inventory-parity.test.ts` exits 0 importing the parsers from the new module"
+    },
+    {
+      "id": "loaders-dogfood",
+      "label": "dogfood-inventory.ts renders from DOGFOOD_FLEET; parsers (splitFrontmatter, readTag, readAttributes, firstSentence, renderAttrs) stay exported and pure; walk moves to the generator",
+      "leaf": true,
+      "accept": "`grep -c node:fs packages/agent-ui/a2ui/src/agent/dogfood-inventory.ts` prints 0 and `npx vitest run packages/agent-ui/a2ui/src/live-agent/prompt-drift.test.ts packages/agent-ui/a2ui/src/live-agent/dogfood-inventory-parity.test.ts` exits 0 (tags-in-prose equals dogfoodInventoryTags(), budget 19600 holds)"
+    },
+    {
+      "id": "gates",
+      "label": "gates",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "gates-fresh",
+      "label": "src/agent/agent-assets-freshness.test.ts: regenerate in memory via the CLI's exported write-free function (process.cwd()-rooted, the build-dogfood-assets.mjs convention, since import.meta.url is not a file: URL under the jsdom packages project), byte-compare both .gen.ts",
+      "leaf": true,
+      "accept": "`npx vitest run packages/agent-ui/a2ui/src/agent/agent-assets-freshness.test.ts` exits 0 on a clean tree; exits 1 after `printf x >> packages/agent-ui/a2ui/src/agent/prompts/honesty-floor.md` and, separately, after changing the first sentence of `packages/agent-ui/components/src/controls/button/button.md`'s body (both reverted after); `grep -q 'generate-agent-assets.mjs --check' package.json`"
+    },
+    {
+      "id": "gates-fence",
+      "label": "gates.test.ts NODE-FENCE: NODE_ALLOWED empty, zero node:* in src/agent",
+      "leaf": true,
+      "accept": "`grep -rl \"from 'node:\" packages/agent-ui/a2ui/src/agent --include='*.ts' | grep -v test.ts | wc -l` prints 0 and `npx vitest run packages/agent-ui/a2ui/src/agent/gates.test.ts` exits 0; adding `import { readFileSync } from 'node:fs'` to system-prompt.ts reds it"
+    },
+    {
+      "id": "gates-smoke",
+      "label": "plain-Node proof of the published ./agent: scripts/publish/agent-subpath-smoke.test.mjs packs a2ui (+ its deps) via publish-packages.mjs's pack path, npm-installs the tarballs into a scratch dir outside the workspace (the GH #283 recipe, publish-packages.mjs:38-41), then `node -e import('@agent-ui-kit/a2ui/agent')` and one buildSystemPrompt call; verify-consumer-install.mjs gains the same import for the post-publish path",
+      "leaf": true,
+      "accept": "`npx vitest run scripts/publish/agent-subpath-smoke.test.mjs` exits 0 with no bundler involved (the scratch consumer has no vite in its package.json) and prints a non-empty prompt; `grep -q \"a2ui/agent\" scripts/verify-consumer-install.mjs`"
+    },
+    {
+      "id": "worker",
+      "label": "Worker shim retirement",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "worker-retire",
+      "label": "delete fs-shim.ts, fs-shim-content.ts, fs-shim.test.ts, process-shim.ts; drop `alias` and the `*.md` Text glob from wrangler.jsonc (keep `*.jsonl`); drop `*.md` from module-types.d.ts; drop the process-shim import from worker/index.ts",
+      "leaf": true,
+      "accept": "`test ! -e packages/agent-ui/a2ui/tools/agent/worker/fs-shim.ts && test ! -e packages/agent-ui/a2ui/tools/agent/worker/process-shim.ts && ! grep -q '\"alias\"' wrangler.jsonc && grep -q 'jsonl' wrangler.jsonc && npm run build >/dev/null && npx wrangler deploy --dry-run --outdir dist-worker-check` exits 0, and `npx vitest run --project tools` exits 0"
+    },
+    {
+      "id": "publish",
+      "label": "publish: ./agent ships",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "publish-exports",
+      "label": "publish-packages.mjs: EXCLUDE_EXPORTS_FROM_PUBLISH loses the a2ui ./agent entry; header rewritten",
+      "leaf": true,
+      "accept": "`npx vitest run scripts/publish/publish-packages.test.mjs` exits 0 and includes a case that calls the (newly exported) `transformPackageJson` on `packages/agent-ui/a2ui/package.json` and asserts `exports['./agent']` equals `{types: './dist/agent/index.d.ts', default: './dist/agent/index.js'}`, plus a negative control asserting a key listed in `EXCLUDE_EXPORTS_FROM_PUBLISH` (fixture) is dropped"
+    },
+    {
+      "id": "records",
+      "label": "records",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "records-adr",
+      "label": "new proposed ADR (next free number after ADR-0233 lands): build-time asset embed; supersedes ADR-0137 cl.4 in part; appended amendment note on ADR-0232 Worker registration; SPEC a2ui-live-agent N1 and LLD-C4 module tree",
+      "leaf": true,
+      "accept": "`python3 scripts/adr_ratify_test.py` exits 0; the new ADR file is `proposed`, cites ADR-0137 cl.4 and ADR-0232; `grep -q 'Amendment' .claude/docs/adr/0232-catalog-selection-guidance-sidecar.md`; `grep -q 'assets.gen.ts' .claude/docs/lld/a2ui-live-agent.lld.md`; no U+2014 outside the H1"
+    },
+    {
+      "id": "records-scrub",
+      "label": "scrub: a2ui-prompt-authoring SKILL.md fs-shim step, root AGENTS.md Never hand-edit, a2ui/AGENTS.md, CLAUDE.md:48, a2ui/README.md:22, tsconfig.build.json types comment, dev-proxy-plugin.ts:9 header, publish header, component-build skill (regenerate after a descriptor edit)",
+      "leaf": true,
+      "accept": "`grep -rn 'fs-shim' .claude/skills .claude/docs/references CLAUDE.md AGENTS.md packages/agent-ui/a2ui/AGENTS.md packages/agent-ui/a2ui/README.md tsconfig.build.json | wc -l` prints 0; `grep -q 'assets.gen.ts' AGENTS.md`; `grep -q 'generate-agent-assets' .claude/skills/a2ui-prompt-authoring/SKILL.md .claude/skills/component-build/SKILL.md`; `npm run check` exits 0"
+    }
+  ],
+  "actions": [
+    {
+      "id": "a1",
+      "label": "discover every prompt .md by walking prompts/** (never a hand list)"
+    },
+    {
+      "id": "a2",
+      "label": "discover every selection.json sidecar under catalog/**, persona fragments included"
+    },
+    {
+      "id": "a3",
+      "label": "discover the components fleet: each controls/*/ descriptor plus its .define() tags"
+    },
+    {
+      "id": "a4",
+      "label": "emit text assets byte-exact (JSON.stringify, no normalization) in deterministic order"
+    },
+    {
+      "id": "a5",
+      "label": "emit derived dogfood rows (tag, summary, attrs, siblings) small enough to commit"
+    },
+    {
+      "id": "a6",
+      "label": "regenerate on demand and detect drift with an exit code"
+    },
+    {
+      "id": "a7",
+      "label": "read one embedded asset by key, failing loud on an unknown key"
+    },
+    {
+      "id": "a8",
+      "label": "list embedded entries directly under a directory key"
+    },
+    {
+      "id": "a9",
+      "label": "compose the system prompt without node:fs, byte-identical to the golden baseline"
+    },
+    {
+      "id": "a10",
+      "label": "load the mini-skill registry without node:fs"
+    },
+    {
+      "id": "a11",
+      "label": "load the genui pattern packs without node:fs"
+    },
+    {
+      "id": "a12",
+      "label": "resolve selection guidance for base and derived catalogs from embedded sidecars, persona ids derived not listed"
+    },
+    {
+      "id": "a13",
+      "label": "render the dogfood inventory from the embedded fleet rows with the tag-set gate holding"
+    },
+    {
+      "id": "a14",
+      "label": "red npm test when a prompt, sidecar or descriptor changed without regeneration"
+    },
+    {
+      "id": "a15",
+      "label": "forbid node:* anywhere in the exported ./agent graph"
+    },
+    {
+      "id": "a16",
+      "label": "bundle and run the Worker with no node:fs alias and no process shim"
+    },
+    {
+      "id": "a17",
+      "label": "keep the Worker's corpus .jsonl Text import working"
+    },
+    {
+      "id": "a18",
+      "label": "ship ./agent in the published a2ui package"
+    },
+    {
+      "id": "a19",
+      "label": "prove a plain-Node consumer can import ./agent and build a prompt"
+    },
+    {
+      "id": "a20",
+      "label": "record the decision and supersede ADR-0137 cl.4's two-module node:fs admission"
+    },
+    {
+      "id": "a21",
+      "label": "repair every record the change makes stale in the same change"
+    },
+    {
+      "id": "a22",
+      "label": "expose discovery as one function #1807's registry can reuse"
+    },
+    {
+      "id": "a23",
+      "label": "serve dogfood turns from the Worker (today they throw: no bundled directory listing)"
+    },
+    {
+      "id": "a24",
+      "label": "keep the dogfood parser parity test meaningful (pure parsers still exported)"
+    },
+    {
+      "id": "a25",
+      "label": "prove the generated modules are plain-Node importable in the build pipeline"
+    }
+  ],
+  "hosts": [
+    {
+      "action": "a1",
+      "node": "gen-discover"
+    },
+    {
+      "action": "a2",
+      "node": "gen-discover"
+    },
+    {
+      "action": "a3",
+      "node": "gen-discover"
+    },
+    {
+      "action": "a22",
+      "node": "gen-discover"
+    },
+    {
+      "action": "a4",
+      "node": "gen-emit"
+    },
+    {
+      "action": "a5",
+      "node": "gen-emit"
+    },
+    {
+      "action": "a6",
+      "node": "gen-cli"
+    },
+    {
+      "action": "a25",
+      "node": "embed-text"
+    },
+    {
+      "action": "a5",
+      "node": "embed-fleet"
+    },
+    {
+      "action": "a7",
+      "node": "embed-source"
+    },
+    {
+      "action": "a8",
+      "node": "embed-source"
+    },
+    {
+      "action": "a9",
+      "node": "loaders-prompts"
+    },
+    {
+      "action": "a10",
+      "node": "loaders-prompts"
+    },
+    {
+      "action": "a11",
+      "node": "loaders-prompts"
+    },
+    {
+      "action": "a12",
+      "node": "loaders-selection"
+    },
+    {
+      "action": "a13",
+      "node": "loaders-dogfood"
+    },
+    {
+      "action": "a14",
+      "node": "gates-fresh"
+    },
+    {
+      "action": "a15",
+      "node": "gates-fence"
+    },
+    {
+      "action": "a19",
+      "node": "gates-smoke"
+    },
+    {
+      "action": "a16",
+      "node": "worker-retire"
+    },
+    {
+      "action": "a17",
+      "node": "worker-retire"
+    },
+    {
+      "action": "a23",
+      "node": "worker-retire"
+    },
+    {
+      "action": "a18",
+      "node": "publish-exports"
+    },
+    {
+      "action": "a20",
+      "node": "records-adr"
+    },
+    {
+      "action": "a21",
+      "node": "records-scrub"
+    },
+    {
+      "action": "a24",
+      "node": "dogfood-parsers"
+    }
+  ],
+  "edges": [
+    {
+      "from": "gen-discover",
+      "to": "gen-emit",
+      "why": "the emitter takes the discovered set as input"
+    },
+    {
+      "from": "gen-emit",
+      "to": "gen-cli",
+      "why": "the CLI writes what the emitter returns"
+    },
+    {
+      "from": "gen-cli",
+      "to": "embed-text",
+      "why": "the committed file is the CLI's first output"
+    },
+    {
+      "from": "gen-cli",
+      "to": "embed-fleet",
+      "why": "the committed file is the CLI's second output"
+    },
+    {
+      "from": "embed-text",
+      "to": "embed-source",
+      "why": "asset-source reads AGENT_ASSETS"
+    },
+    {
+      "from": "embed-source",
+      "to": "loaders-prompts",
+      "why": "the loaders call readAsset/listAssets"
+    },
+    {
+      "from": "embed-source",
+      "to": "loaders-selection",
+      "why": "the loader calls readAsset and derives persona ids from the key set"
+    },
+    {
+      "from": "embed-fleet",
+      "to": "loaders-dogfood",
+      "why": "dogfood-inventory renders DOGFOOD_FLEET"
+    },
+    {
+      "from": "loaders-prompts",
+      "to": "worker-retire",
+      "why": "the shim can only go once no aliased module imports node:fs"
+    },
+    {
+      "from": "loaders-selection",
+      "to": "worker-retire",
+      "why": "same"
+    },
+    {
+      "from": "loaders-dogfood",
+      "to": "worker-retire",
+      "why": "same"
+    },
+    {
+      "from": "loaders-prompts",
+      "to": "gates-fence",
+      "why": "the fence tightens to zero only after the loaders drop node:fs"
+    },
+    {
+      "from": "loaders-selection",
+      "to": "gates-fence",
+      "why": "same"
+    },
+    {
+      "from": "loaders-dogfood",
+      "to": "gates-fence",
+      "why": "same"
+    },
+    {
+      "from": "gen-cli",
+      "to": "gates-fresh",
+      "why": "the freshness test imports the CLI's exported generation function"
+    },
+    {
+      "from": "loaders-dogfood",
+      "to": "publish-exports",
+      "why": "./agent ships only once no module in its graph reads the repo filesystem"
+    },
+    {
+      "from": "publish-exports",
+      "to": "gates-smoke",
+      "why": "the smoke imports the published subpath"
+    },
+    {
+      "from": "worker-retire",
+      "to": "records-scrub",
+      "why": "the scrub removes references to files that no longer exist"
+    },
+    {
+      "from": "publish-exports",
+      "to": "records-scrub",
+      "why": "README and CLAUDE.md describe the published surface"
+    },
+    {
+      "from": "dogfood-parsers",
+      "to": "gen-discover",
+      "why": "the generator's fleet walk parses descriptors with these"
+    },
+    {
+      "from": "dogfood-parsers",
+      "to": "loaders-dogfood",
+      "why": "dogfood-inventory keeps rendering through them"
+    }
+  ]
+}

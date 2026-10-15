@@ -1,0 +1,411 @@
+{
+  "domain": "technical-architecture",
+  "plan": true,
+  "actions": [
+    {
+      "id": "a1",
+      "label": "enumerate every shipped capability of each kind from its owning source, never a hand list"
+    },
+    {
+      "id": "a2",
+      "label": "join a catalog type to the control tag it renders and prove the join against the renderer's own binding"
+    },
+    {
+      "id": "a3",
+      "label": "resolve a catalog id (base or derived base--persona) to one composed capability view"
+    },
+    {
+      "id": "a4",
+      "label": "derive each capability's status from the fact that decides it, with the recorded reason"
+    },
+    {
+      "id": "a5",
+      "label": "record which surfaces consume each capability (prompt, renderer, site, corpus, shim, eval)"
+    },
+    {
+      "id": "a6",
+      "label": "rank a view's capabilities by a user's intent"
+    },
+    {
+      "id": "a7",
+      "label": "let a derived catalog retrieve its base's exemplars and mini-skills (ruled filter, Kim fork)"
+    },
+    {
+      "id": "a8",
+      "label": "publish one queryable artifact of the whole index with deterministic bytes"
+    },
+    {
+      "id": "a9",
+      "label": "keep the artifact honest: regenerate-and-compare, failure names the regen command"
+    },
+    {
+      "id": "a10",
+      "label": "fail loudly when a preset's local pattern selection names no shipped fragment"
+    },
+    {
+      "id": "a11",
+      "label": "fail loudly when a mini-skill or corpus record names a catalog id nobody registers"
+    },
+    {
+      "id": "a12",
+      "label": "read catalog exclusions from the one allowlist the coverage gate reads"
+    },
+    {
+      "id": "a13",
+      "label": "show humans the per-persona capability view with the site's tier"
+    },
+    {
+      "id": "a14",
+      "label": "give evals a per-persona case source: notFor edges and persona-only types"
+    },
+    {
+      "id": "a15",
+      "label": "add zero eager bytes to the app and components browser bundles"
+    },
+    {
+      "id": "a16",
+      "label": "load in plain Node and in vitest; the Worker needs only runtime-tier sources"
+    },
+    {
+      "id": "a17",
+      "label": "record the decision as a proposed ADR and repair every record it makes stale"
+    },
+    {
+      "id": "a18",
+      "label": "index persona rows from T-0012's manifest, duplicating no field"
+    },
+    {
+      "id": "a19",
+      "label": "list every file the prompt pipeline reads so the embed can discover instead of hand-list"
+    },
+    {
+      "id": "a20",
+      "label": "ship a negative control with every new gate"
+    },
+    {
+      "id": "a21",
+      "label": "expose the pure model on a subpath that app, site and tools may import"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "sys",
+      "label": "capability registry across a2ui, site, scripts and records",
+      "leaf": false,
+      "justify": null,
+      "accept": null
+    },
+    {
+      "id": "a2ui",
+      "label": "a2ui package",
+      "leaf": false,
+      "justify": "grouping",
+      "accept": null
+    },
+    {
+      "id": "reg-types",
+      "label": "src/registry/types.ts: row model (kinds, status vocabulary with reason, consumer vocabulary, RegistrySources with runtime-tier and build-tier halves)",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npm run check` exits 0; `CapabilityKind`, `CapabilityStatus`, `Consumer`, `CapabilityRow`, `RegistrySources` are exported; `src/registry/*.ts` imports no `node:*` and has no VALUE import from `src/agent/` (type-only imports of `SelectionGuidance`/`SelectionEntry` erase under verbatimModuleSyntax); a2ui `layering.test.ts` green"
+    },
+    {
+      "id": "reg-compose",
+      "label": "src/registry/compose.ts: composeRegistry(sources), registryViewFor(registry, catalogId), retrievalScopeFor(catalogId), the base--persona split implemented once, and the pure tag rule tagForType/typeForTag (pascal + the ui-audio rename + the Option/MenuItem nulls) that T-0008 later imports",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npm test -- packages/agent-ui/a2ui/src/registry` exits 0: a view for `agent-ui--croupier` holds every default type plus PlayingCard with base and persona guidance; `agent-ui--nobody` equals the base view; a runtime-tier-only source set (no controls, no assets) composes without throwing; a persona-only-types list is exposed on the view"
+    },
+    {
+      "id": "reg-select",
+      "label": "src/registry/select.ts: selectCapabilities(intent, view, cap) over corpus/text-similarity",
+      "leaf": true,
+      "justify": null,
+      "accept": "unit test: the intent 'show one playing card' ranks PlayingCard first in the croupier view and never returns a type outside the view; a planted type whose intents share no token scores zero and is never padded in; cap honoured"
+    },
+    {
+      "id": "reg-exclusions",
+      "label": "src/catalog/default/exclusions.ts: EXCLUSION_ALLOWLIST moved out of index.test.ts, imported by that test and by the loader",
+      "leaf": true,
+      "justify": null,
+      "accept": "`default/index.test.ts` still passes non-vacuously (residue test unchanged); `grep -c 'new Map' index.test.ts` for the allowlist is 0; the module imports nothing"
+    },
+    {
+      "id": "reg-load",
+      "label": "tools/registry/load.ts: RegistrySources from disk (descriptors via the one parser, @agent-ui/components/registry, catalog.json x5, selection.json x5, mini-skills, genui packs, prompt assets, corpus shards, T-0012 persona manifests, exclusions)",
+      "leaf": true,
+      "justify": null,
+      "accept": "`node --experimental-strip-types packages/agent-ui/a2ui/tools/registry/generate.ts --dry` exits 0 under plain Node (no DOM, no vite); the loader imports no persona `index.ts`/`factories.ts`/`manifest.ts`; `tools/registry/*.test.ts` added to the tools vitest project include list (vitest.config.ts ~108); counts asserted anti-vacuously (controls > 70, default types == 80, sidecars == 5, mini-skills == 20)"
+    },
+    {
+      "id": "reg-generate",
+      "label": "tools/registry/generate.ts: the CLI writing the committed projection (base + persona fragments, no timestamps)",
+      "leaf": true,
+      "justify": null,
+      "accept": "two consecutive runs produce no diff; `npm run generate:registry` is the one command the drift gate's failure message names"
+    },
+    {
+      "id": "reg-wiring",
+      "label": "src/registry/registry-wiring.test.ts (jsdom; the layering glob skips *.test.ts so disk reads are lawful here): tag parity of the pure rule vs WidgetFactory.tag and VariantDispatch over base and persona factories; fleet join to the components registry; preset localPatterns resolve to a shipped fragment; every mini-skill and shard catalogId is registered; exclusion single-source",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npm test -- registry-wiring` exits 0; each leg has a negative control (a planted type with a wrong tag, a planted preset naming `nobody`, a planted mini-skill with catalogId `ghost`) that reds it"
+    },
+    {
+      "id": "reg-scope",
+      "label": "src/agent: retrievalScopeFor wired into selectMiniSkills and the corpus retrieve query (SPEC-R6 persona-catalog-composition amendment, built only on Kim's ruling)",
+      "leaf": true,
+      "justify": null,
+      "accept": "with the ruling: `produce()` on `agent-ui--croupier` composes a non-empty few-shot and mini-skills block (unit test with the real shard); the default-catalog prompt stays byte-identical (`prompt-equivalence.test.ts` green, no recapture); without the ruling: step skipped and the fork recorded"
+    },
+    {
+      "id": "reg-export",
+      "label": "a2ui package.json: `./registry` subpath; root barrel untouched; scripts `generate:registry`",
+      "leaf": true,
+      "justify": null,
+      "accept": "`gates.test.ts` IDENTITY leg green (root barrel exposes no registry symbol); `npm run size` exits with the same code and the same app/components rows as before the change"
+    },
+    {
+      "id": "site",
+      "label": "docs site",
+      "leaf": false,
+      "justify": "grouping",
+      "accept": null
+    },
+    {
+      "id": "site-json",
+      "label": "site/capability-registry.json + site/public/capability-registry.json (generated, committed, the sitemap two-copy precedent)",
+      "leaf": true,
+      "justify": null,
+      "accept": "both copies byte-identical; `jq '.base.types | length'` on the public copy prints 94 (80 default + 14 basic); no `generatedAt` or timestamp key"
+    },
+    {
+      "id": "site-drift",
+      "label": "site/lib/capability-registry.test.ts: regenerate in-memory through the same loader and compare bytes; negative control",
+      "leaf": true,
+      "justify": null,
+      "accept": "test green on a clean tree; editing one descriptor `description:` without regenerating reds it with a message naming `npm run generate:registry`; a planted stale copy reds it"
+    },
+    {
+      "id": "site-page",
+      "label": "site/pages/registry.ts (+ html, css, site-manifest row, sitemap regeneration): per-persona capability view, joined with TIER_OF and NESTED_ONLY in the page",
+      "leaf": true,
+      "justify": null,
+      "accept": "`site/lib/sitemap.test.ts` green after regeneration; browser shard: selecting The Croupier lists PlayingCard with its tag, tier and `use:` clause; selecting The Quant lists no persona-only type"
+    },
+    {
+      "id": "records",
+      "label": "records",
+      "leaf": false,
+      "justify": "grouping",
+      "accept": null
+    },
+    {
+      "id": "adr",
+      "label": "ADR (proposed, number taken from the directory at build time): the registry indexes and never generates; home a2ui; runtime composition; one committed projection; scope ruling on skills/agents/ADR index",
+      "leaf": true,
+      "justify": null,
+      "accept": "status `proposed`, Ratified-by empty; `python3 scripts/adr_ratify_test.py` and doc_lint green; names ADR-0071, 0087, 0172 SPEC-R6, 0173 cl.5, 0232, 0233 as related"
+    },
+    {
+      "id": "doc-repairs",
+      "label": "agent-model.md glossary (capability registry), a2ui/AGENTS.md, skills a2ui-multi-catalog and a2ui-prompt-authoring, T-0005 handoff pointer, asset-embed seam note",
+      "leaf": true,
+      "justify": null,
+      "accept": "`grep -rn 'capability registry' .claude/docs/references/agent-model.md packages/agent-ui/a2ui/AGENTS.md .claude/skills/a2ui-multi-catalog/SKILL.md` each >= 1 hit; doc_lint green"
+    }
+  ],
+  "hosts": [
+    {
+      "action": "a1",
+      "node": "reg-load"
+    },
+    {
+      "action": "a2",
+      "node": "reg-load"
+    },
+    {
+      "action": "a2",
+      "node": "reg-wiring"
+    },
+    {
+      "action": "a3",
+      "node": "reg-compose"
+    },
+    {
+      "action": "a4",
+      "node": "reg-compose"
+    },
+    {
+      "action": "a4",
+      "node": "reg-types"
+    },
+    {
+      "action": "a5",
+      "node": "reg-compose"
+    },
+    {
+      "action": "a5",
+      "node": "reg-types"
+    },
+    {
+      "action": "a6",
+      "node": "reg-select"
+    },
+    {
+      "action": "a7",
+      "node": "reg-scope"
+    },
+    {
+      "action": "a7",
+      "node": "reg-compose"
+    },
+    {
+      "action": "a8",
+      "node": "reg-generate"
+    },
+    {
+      "action": "a8",
+      "node": "site-json"
+    },
+    {
+      "action": "a9",
+      "node": "site-drift"
+    },
+    {
+      "action": "a10",
+      "node": "reg-wiring"
+    },
+    {
+      "action": "a11",
+      "node": "reg-wiring"
+    },
+    {
+      "action": "a12",
+      "node": "reg-exclusions"
+    },
+    {
+      "action": "a12",
+      "node": "reg-wiring"
+    },
+    {
+      "action": "a13",
+      "node": "site-page"
+    },
+    {
+      "action": "a14",
+      "node": "reg-compose"
+    },
+    {
+      "action": "a15",
+      "node": "reg-export"
+    },
+    {
+      "action": "a16",
+      "node": "reg-load"
+    },
+    {
+      "action": "a16",
+      "node": "reg-types"
+    },
+    {
+      "action": "a17",
+      "node": "adr"
+    },
+    {
+      "action": "a17",
+      "node": "doc-repairs"
+    },
+    {
+      "action": "a18",
+      "node": "reg-load"
+    },
+    {
+      "action": "a19",
+      "node": "reg-load"
+    },
+    {
+      "action": "a19",
+      "node": "doc-repairs"
+    },
+    {
+      "action": "a20",
+      "node": "reg-wiring"
+    },
+    {
+      "action": "a20",
+      "node": "site-drift"
+    },
+    {
+      "action": "a21",
+      "node": "reg-export"
+    }
+  ],
+  "edges": [
+    {
+      "from": "reg-types",
+      "to": "reg-compose",
+      "why": "compose builds the rows types declares"
+    },
+    {
+      "from": "reg-compose",
+      "to": "reg-select",
+      "why": "select ranks a view compose produces"
+    },
+    {
+      "from": "reg-exclusions",
+      "to": "reg-load",
+      "why": "the loader imports the extracted allowlist"
+    },
+    {
+      "from": "reg-compose",
+      "to": "reg-load",
+      "why": "the loader returns RegistrySources compose consumes"
+    },
+    {
+      "from": "reg-load",
+      "to": "reg-generate",
+      "why": "the CLI runs the loader"
+    },
+    {
+      "from": "reg-generate",
+      "to": "site-json",
+      "why": "the projection is the CLI's output"
+    },
+    {
+      "from": "site-json",
+      "to": "site-drift",
+      "why": "the gate compares against the committed file"
+    },
+    {
+      "from": "site-json",
+      "to": "site-page",
+      "why": "the page imports the src-tree copy"
+    },
+    {
+      "from": "reg-compose",
+      "to": "reg-wiring",
+      "why": "the wiring legs iterate composed rows"
+    },
+    {
+      "from": "reg-compose",
+      "to": "reg-scope",
+      "why": "retrievalScopeFor lives in compose"
+    },
+    {
+      "from": "reg-types",
+      "to": "reg-export",
+      "why": "the subpath exports the model"
+    },
+    {
+      "from": "adr",
+      "to": "doc-repairs",
+      "why": "repairs cite the ADR number"
+    },
+    {
+      "from": "adr",
+      "to": "reg-types",
+      "why": "the ADR fixes the row model and scope before code"
+    }
+  ]
+}

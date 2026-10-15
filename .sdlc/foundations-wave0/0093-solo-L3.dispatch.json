@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L3",
+  "name": "0093-solo-L3",
+  "description": "T-0093 solo L3 Foundations Wave",
+  "model": "opus",
+  "effort": "xhigh",
+  "prompt": "T-0093 Foundations Wave 0: generator | solo L3\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-w0/.sdlc/foundations-wave0/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-w0/.sdlc/foundations-wave0\nImplement per .sdlc/foundations-wave0/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L3",
+  "tier": "L3",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-w0/.sdlc/foundations-wave0/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-w0/.sdlc/foundations-wave0",
+  "attempt_id": "4e59c8121fd54f55a6b23485dbcff880",
+  "base_sha": "a8ca9142e4a686aa4ce5825aa25e98538de70b7a",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.6/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-w0/.sdlc/foundations-wave0/handoff.md"
+}

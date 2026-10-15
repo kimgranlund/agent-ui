@@ -2,7 +2,7 @@
 id: T-0207
 title: "Prompt budget enforced against real preset prose; non-selected domain guidance leaves the always-on inventory"
 type: feature        # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -36,3 +36,9 @@ Evidence: T-0205 map `.sdlc/runtime/tasks/context-archaeology/archaeologist-L1.m
 
 ## Constraints
 No em dashes. Never hand-edit generated files; rerun their scripts. Live spend only through `chat:probe` under the stated cap.
+
+## Outcome
+
+2026-10-14 · lane: solo L2 · verdict: closed by reason (Merged in #1993; batched verifier L2 pass) · verifier: none · base: none
+- Changed: Budget test on real presets; domain-guidance filter (inert until W2); game-table-chrome scoped to games
+- Commits: none

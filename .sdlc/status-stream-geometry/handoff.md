@@ -2,7 +2,7 @@
 id: T-0173
 title: "ui-status-stream and its parts derive alignment, gaps and rail from n (one geometry grid)"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -37,3 +37,7 @@ Kim 2026-10-14: "the ui-status-stream and its constituent parts don't seem to fo
 - `npx vitest run --config vitest.browser.config.ts --project site site/pages/dogfood-render.browser.test.ts` exits 0.
 - `npx vitest run packages/agent-ui/components/src/controls/status-stream packages/agent-ui/components/src/controls/timeline packages/agent-ui/components/src/controls/timeline-item packages/agent-ui/components/src/controls/family-coherence.test.ts packages/agent-ui/app/src/controls/conversation` exits 0.
 - Before and after screenshots exist in `.sdlc/status-stream-geometry/` (`before-*.png`, `after-*.png`).
+
+## Closed
+
+2026-10-14: merged (queue)

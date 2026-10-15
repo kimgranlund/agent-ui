@@ -2,7 +2,7 @@
 id: T-0164
 title: "Retire the ADR system: decisions live in tickets and reference docs; repair every record that routes to ADRs"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -41,3 +41,7 @@ Kim 2026-10-14: "we should stop using ADR system". New decisions are recorded in
 4. Every remaining hit of `rg -n "write an ADR|new ADR|amend(ment)? .*ADR|ratif" CLAUDE.md AGENTS.md docs .claude/docs/process.md .claude/skills .claude/agents` is a citation of a past decision, an eval prompt, the fleet-review deviations-ledger name, or a frozen-history note; none tells an agent to write, amend or flip an ADR.
 5. `docs/layout.md`, `CLAUDE.md`, `AGENTS.md`, `.claude/docs/process.md` and `doc-standards` route a new decision to its ticket and the owning reference doc or skill.
 6. Each of ADR-0040, 0067, 0072, 0170 (unflipped amendments) and 0046 Am7, 0059, 0105 Am2, 0219, 0228 cl.6 (stale clauses) has a disposition in `adr-log-mechanics.md` §1a, and each stale clause's current value matches the shipped CSS it names (`board-grid.css`, `product-card.css`, `switch.css`, `calendar.css`, `_chart/chart-axis.css`).
+
+## Closed
+
+2026-10-14: merged as PR #1968

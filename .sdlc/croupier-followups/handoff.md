@@ -2,7 +2,7 @@
 id: T-0194
 title: "A surface turn must carry a human reply line (Sonnet 5.5 greeting ships only 'Emitted N A2UI message(s)')"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: [T-0172]    # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -30,3 +30,7 @@ verifier: L3
 - `npm run chat:probe -- selftest` exits 0: `reply-text` is in `CHECK_NAMES`, the canned green records exercise it, and `seeded-no-reply.json` fails exactly `reply-text` offline.
 - `npx vitest run --project scripts scripts/e2e-admin/probe` exits 0.
 - Live (conductor, key needed): `npm run chat:probe -- --agent croupier --say hello` on Haiku 5.5 and Sonnet 5.5 passes `reply-text`.
+
+## Closed
+
+2026-10-14: merged as PR #1987

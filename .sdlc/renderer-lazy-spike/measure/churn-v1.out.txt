@@ -1,0 +1,3 @@
+V1 facade only (no ambient warm), no test edits: test files run 101, failing 1; tests 2145, passed 2138, failed 1
+  FAIL packages/agent-ui/app/src/controls/conversation/conversation.test.ts  1/146
+       AssertionError: expected '' to contain 'ready'

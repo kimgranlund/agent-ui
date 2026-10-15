@@ -1,0 +1,27 @@
+K6 bound 46430 (42,209 * 1.1). Default catalog agent-ui: text 43749 + tool 643 = 44392; sections grammar=25575 components=18029 functions=145
+derived agent-ui--fixture-demo: text 44012 + tool 643 = 44655 (delta vs default 263); grammar=25575 components=18292 functions=145
+derived agent-ui--concierge: text 44289 + tool 643 = 44932 (delta vs default 540); grammar=25575 components=18569 functions=145
+derived agent-ui--croupier: text 44092 + tool 643 = 44735 (delta vs default 343); grammar=25575 components=18372 functions=145
+derived-id teaching line alone (empty fragment agent-ui--probe): +143
+
+Per-widget row cost on the DEFAULT catalog (inventory line + proposed selection clause), chars:
+  ProductCard        row  248 + clause 139 =  387
+  MediaGallery       row  110 + clause  98 =  208
+  GameHud            row  132 + clause 114 =  246
+  BoardGrid          row   97 + clause 105 =  202
+  Itinerary          row   49 + clause  80 =  129
+  AvailabilityPicker row   87 + clause 118 =  205
+  QuestionCard       row  144 + clause  91 =  235
+  CharacterSheet     row   99 + clause  93 =  192
+  CardTable          row  240 + clause 112 =  352
+  SwatchPalette      row   54 + clause  95 =  149
+  ExhibitCard        row  106 + clause  83 =  189
+  CommitmentLedger   row  150 + clause  89 =  239
+
+All 12 on the default catalog: +2733 -> K6 47125 (bound 46430)
+Tier 1 (4) on default: +1043 -> K6 45435
+Tier 1+2 (8) on default: +1804 -> K6 46196
+Tier 3 (4) as persona rows: +929 spread over their presets
+
+One shared fragment agent-ui--widgets with all 12 rows (no clauses): K6 46055 (delta 1663, of which 143 is the derived-id line)
+agent-ui--croupier + CardTable row: K6 44975 (delta vs today's croupier 240)

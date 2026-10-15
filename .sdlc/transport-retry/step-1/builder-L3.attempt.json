@@ -1,0 +1,21 @@
+{
+  "attempt_id": "3d8f0f1138e04818a94738b34a1d525c",
+  "name": "builder-L3",
+  "role": "builder",
+  "level": "L3",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "opus",
+  "effort": "high",
+  "routing_reason": "builder L3 per the reviewed replan, step 1: retry helper with abort-safe backoff and fake-timer tests",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T07:23:53.307977+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/gap-retry",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/gap-retry/.sdlc/transport-retry/step-1/handoff.md",
+  "owner_pid": 35452,
+  "handoff_sha256": "583735982d4349668eb4404f496e26cd7d3024361a76a0a9a9742eb3a4b1e115",
+  "process_pid": 35478,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T07:27:49.911401+00:00"
+}

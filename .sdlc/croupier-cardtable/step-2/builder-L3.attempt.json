@@ -1,0 +1,40 @@
+{
+  "attempt_id": "a18e556dc307445d840cf4b0dec58438",
+  "name": "builder-L3",
+  "agent_name": "0073-s2-builder-L3",
+  "role": "builder",
+  "level": "L3",
+  "backend": "claude",
+  "transport": "subagent",
+  "model": "opus",
+  "effort": "high",
+  "routing_reason": "T-0073 step 2 teaching and preset, L3 per plan",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-12T19:15:35.154862+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-p1",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-p1/.sdlc/croupier-cardtable/step-2/handoff.md",
+  "parent_pid": 3025,
+  "parent_pid_source": "claude",
+  "handoff_sha256": "0a1c291ad6ba65cd1870d5bf509301d968038dbc8bd8befcf06c988f39c422db",
+  "worktrees_before": [
+    "/Users/kimgranlund/Projects/nonoun/agent-ui",
+    "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-p1",
+    "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-p2",
+    "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-r1",
+    "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-r1/.worktrees/tmp/0072-verifier-L2/base",
+    "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-r1/.worktrees/tmp/0072-verifier-L2/head",
+    "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-s1"
+  ],
+  "branches_before": [
+    "feat/croupier-cardtable",
+    "feat/default-widget-rows",
+    "feat/quizmaster-questioncard",
+    "feat/shopkeeper-preset",
+    "main"
+  ],
+  "exit_code": 0,
+  "finished_at": "2026-10-12T19:28:44.316170+00:00",
+  "result_sha256": "427bc4ef382c1947aa0e8eeb9330f28f1e98ecc0f40faaca2fcd5aa0fe9cef6b",
+  "agent_id": "a0073-s2-builder-L3-aded9d3153c0e09e"
+}

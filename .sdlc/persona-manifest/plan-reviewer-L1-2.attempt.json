@@ -1,0 +1,21 @@
+{
+  "attempt_id": "e982e57332644f92bb908c0888e7d515",
+  "name": "plan-reviewer-L1-2",
+  "role": "plan-reviewer",
+  "level": "L1",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "fable",
+  "effort": "high",
+  "routing_reason": "plan-reviewer L1: replan is always reviewed (persona-manifest)",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T23:03:07.580097+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.sdlc/persona-manifest/handoff.md",
+  "owner_pid": 23921,
+  "handoff_sha256": "5b4e5e53d2c4da1c2e36fd1c752686f3c8e32a5a510fb95c6c1efe23eec12911",
+  "process_pid": 23967,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T23:11:35.095537+00:00"
+}

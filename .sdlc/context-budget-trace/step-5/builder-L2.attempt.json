@@ -1,0 +1,21 @@
+{
+  "attempt_id": "cbed9258e5e3461482ecd551e2f3ddcf",
+  "name": "builder-L2",
+  "role": "builder",
+  "level": "L2",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "opus",
+  "effort": "low",
+  "routing_reason": "builder L2 loose-ends step 5 (filer fix-now items)",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T17:48:36.100750+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-budget",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-budget/.sdlc/context-budget-trace/step-5/handoff.md",
+  "owner_pid": 94838,
+  "handoff_sha256": "4b314dd2fba79afc90d4b0d0fd22f2e75e9cea22e926930877eb5795fbbbbc0f",
+  "process_pid": 94878,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T17:49:55.140964+00:00"
+}

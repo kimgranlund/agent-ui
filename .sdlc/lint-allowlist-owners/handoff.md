@@ -2,7 +2,7 @@
 id: T-0170
 title: "Every lint allowlist entry has an owner ticket or a specimen marker; migrate or exempt the 50 compose day-one entries"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0152]    # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -34,3 +34,7 @@ verifier: L3
 - `npx vitest run --config vitest.browser.config.ts --project site site/pages/dogfood-render.browser.test.ts` exits 0 in chromium and webkit, including the `nested-card marker without a reason` and `nested-card marker for another rule` plants and the owner-check test.
 - Every reason in scripts/dogfood-render-allowlist.json and scripts/dogfood-compose-allowlist.json, and every `exempt` reason in scripts/dogfood-rules.json, names a T-NNNN, an ADR-NNNN or a ruling; no reason says "day one" plus a lane.
 - site/pages/card-demo.ts's inner card carries `data-dogfood-ok="nested-card"` and a non-empty `data-dogfood-reason`, and `demo/card-demo#nested-card` is gone from the render allowlist.
+
+## Closed
+
+2026-10-14: merged as PR #1982

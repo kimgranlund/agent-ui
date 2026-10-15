@@ -2,7 +2,7 @@
 id: T-0222
 title: "chat:probe step desync on page-fired turns, hidden button labels, run-level expect-component"
 type: bug             # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -41,3 +41,9 @@ Run from the lane worktree root (.claude/worktrees/T-0222-solo-chat-probe-captur
 ## Plan review
 - scope widened: conductor keeps .sdlc/evals/rounds/2026-10-14-r1-croupier/live-commands.sh (regenerated; croupier.test.mjs requires it to equal liveCommandsScript()) and packages/agent-ui/a2ui/tools/testkit/producer-leg.ts (optional semanticChecks for offline replay). Both serve the goal.
 - verifier: also run `npm run e2e:admin` (test-chat flows now see visible buttons only) in this tree (wave-pb now holds the T-0222 commits).
+
+## Outcome
+
+2026-10-14 · lane: solo L1 · verdict: closed by reason (Merged in #1995; verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

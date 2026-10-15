@@ -1,0 +1,21 @@
+{
+  "attempt_id": "6efa2d3452c14fe7a3719627c9769358",
+  "name": "plan-reviewer-L1",
+  "role": "plan-reviewer",
+  "level": "L1",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "fable",
+  "effort": "high",
+  "routing_reason": "plan-reviewer L1: planner L3 plan, design-only lane, batched review",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T21:56:17.220192+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.sdlc/admin-headless-flows/handoff.md",
+  "owner_pid": 42646,
+  "handoff_sha256": "55d30e83f5a0c5e0967df1773c2e6b4a4b8d32375a6a125cd721e66532e91c98",
+  "process_pid": 42822,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T22:05:48.979182+00:00"
+}

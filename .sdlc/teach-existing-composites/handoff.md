@@ -2,7 +2,7 @@
 id: T-0200
 title: "Teach existing composites where missing: ResultCard end states, GameHud, ServiceCard, Suggestions"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -35,3 +35,7 @@ Composites that already exist get taught where presets still hand-build the mome
 - `npx vitest run --project site --project packages site/pages/agent-admin-app.test.ts packages/agent-ui/app/src/controls/agent-admin` exits 0.
 - CORE `round-loop` in site/pages/agent-admin-libraries.ts allows a Toast only for a transient round result and names ONE ResultCard as the game end state; `word-tiles` and `board-grid` name ONE GameHud; `facility-info-card` teaches ServiceCard; `trip-plan` templates its 2-3 legs as ProductCard tiles in one Grid from a `{path:"/legs",componentId}` template; `intake-confirm` teaches Suggestions for follow-up prompts.
 - seedVersion bumped for every preset seeding an edited entry (concierge 9, travel 5, lexicographer 3, alchemist 3, dungeon-master 3, admiral 4), each manifest matching.
+
+## Closed
+
+2026-10-14: merged as PR #1986

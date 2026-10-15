@@ -2,7 +2,7 @@
 id: T-0213
 title: "A meta-line written into render_surface reply shows as raw JSON in the chat"
 type: bug             # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -33,3 +33,9 @@ The failing test lands before or with the fix, never after. No em dashes.
 - (red) `node scripts/chat-probe.mjs selftest` exits 0: a `{"a2uiMeta"` shape in chat prose fails `no-json-as-prose`.
 - `npx vitest run scripts/e2e-admin/probe/replays/croupier-stud-bet-table-missing.test.mjs` exits 0.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-14 · lane: full L1 · verdict: closed by reason (Merged in #1997; batched lane verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

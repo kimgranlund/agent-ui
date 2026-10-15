@@ -1,0 +1,21 @@
+{
+  "attempt_id": "c6e09baf19b74b0994fd5b725349031c",
+  "name": "builder-L3",
+  "role": "builder",
+  "level": "L3",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "opus",
+  "effort": "high",
+  "routing_reason": "builder L3: four provider tests with mutation controls in a throwaway worktree plus an LLD and ADR scrub, per the fix lane",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T16:29:56.999768+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-retrytests",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-retrytests/.sdlc/retry-tests-and-docs/step-1/handoff.md",
+  "owner_pid": 65070,
+  "handoff_sha256": "b23591ac6412272fed3e84afd6bafecd0004a9e66057f6cb303832eee025dba0",
+  "process_pid": 65119,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T16:37:52.475740+00:00"
+}

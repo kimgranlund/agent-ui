@@ -1,0 +1,21 @@
+{
+  "attempt_id": "a28a81e0410b4a60ba0053c6e76f6287",
+  "name": "planner-L3",
+  "role": "planner",
+  "level": "L3",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "opus",
+  "effort": "xhigh",
+  "routing_reason": "planner L3: asset-embed wave-1 plan after architect and Kim ruling (long-run goal)",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T20:46:32.547333+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.sdlc/asset-embed/handoff.md",
+  "owner_pid": 42785,
+  "handoff_sha256": "52b07fdab7d75193b3195e748dcec82767b9eecb8c8318612a844911978d2e08",
+  "process_pid": 42876,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T21:38:50.470879+00:00"
+}

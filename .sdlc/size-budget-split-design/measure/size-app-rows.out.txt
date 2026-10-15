@@ -1,0 +1,3 @@
+# verbatim lines from `npm run size` on this tree (2026-10-07), em dashes normalized to hyphens
+5:@agent-ui/components . (reactive+dom barrel): 7655 B gz (21611 B min) - within budget (7680 B gz)
+431:@agent-ui/app . (super-shell + master-detail + settings + surface-host + conversation + nav-rail): marginal 71231 B gz - within budget (72027 B gz)   solo 78886 B gz (296577 B min, informational - includes the 7655 B gz components foundation)

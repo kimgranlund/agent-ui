@@ -1,0 +1,10 @@
+<!-- role=plan-reviewer level=L1 model=fable effort=high -->
+## Verdict
+replan
+
+## Findings
+- step 1: acceptance criteria: criteria 2 (red on base) and 3 (mutant negative control) cannot run under a role: both pass the worktree path to `git worktree add --detach` as the indirect variable `"$w"`, and the sdlc-lite `block-stray-worktree.sh` hook denies any add whose path it cannot resolve before it runs, so the verifier fails both criteria and the builder blocks on Do item 7 ("Run T, the two worktree probes"). Evidence: fed planner-L3.md:128 and :129 (the text inside the final backticks) to `hooks/block-stray-worktree.sh` as a PreToolUse payload with `SDLC_ROLE=verifier` and `SDLC_ROLE=builder`; all four runs exited 2 with `Blocked for sdlc role '<role>': the path $w cannot be resolved before it runs`. Control: the same hook with `git worktree add --detach "$SDLC_TMP_WORKTREES/abort-base" "$SDLC_BASE_SHA"` exited 0, and the variant `w="$SDLC_TMP_WORKTREES/abort-base"; git worktree add --detach "$w" "$SDLC_BASE_SHA"` exited 2. The hook's resolver (`unresolved(p)` at hooks/block-stray-worktree.sh, the `VAR` regex expands only a literal `$SDLC_TMP_WORKTREES`/`${SDLC_TMP_WORKTREES}`) is the mechanism.
+- step 1: acceptance criteria: everything else in criteria 2 and 3 is sound once the add word is fixed. Evidence: a probe test written to the plan's Do item 4 (same stub, fakes, names, assertions) ran in a throwaway worktree at base 38ed6721 with `-t "disconnect mid-turn"`: `Tests  2 failed | 2 skipped (4)`, failure `expected undefined to be an instance of AbortSignal` (an assertion, not a load error); with the current plugin copied in and the `perl` mutation applied, `-t "negative control"`: `Tests  2 failed | 2 skipped (4)`, `expected true to be false`; on the current tree: `Tests  4 passed (4)`. The `/chat` `res.ended` assertion bites: with signal threaded but no try/catch, it failed with `expected [ '{"error":"proxy error"}' ] to deeply equal []`. `npm run check` exited 0 with the nested worktree still under `$SDLC_TMP_WORKTREES`, so the leftover-worktree risk does not trip guard 11.
+
+## Missing decisions
+None

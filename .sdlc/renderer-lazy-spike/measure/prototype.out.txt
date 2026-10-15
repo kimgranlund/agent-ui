@@ -1,0 +1,67 @@
+tree 39921d40
+E0 baseline marginal 57878 B gz (foundation 7655, solo 65533, lazy 527017)
+S0 surface-host loses the renderer, nothing added back (ceiling, not buildable)        marginal  44680  delta  -13198  lazy 516864
+Da facade, import('@agent-ui/a2ui') (whole barrel namespace)                           marginal  45269  delta  -12609  lazy 543818
+Dc facade, import('renderer/index.ts') (stand-in for a narrow subpath export)          marginal  45270  delta  -12608  lazy 541783
+Db a2ui-owned facade exported through the barrel, import(renderer.ts)                  marginal  45267  delta  -12611  lazy 540999
+Dd app-owned facade, import(renderer.ts) (a narrow subpath export that exposes createRenderer only) marginal  45268  delta  -12610  lazy 541016
+Dx = Db plus ambient warm (renderer.ts calls provideRenderer when it evaluates)        marginal  45293  delta  -12585  lazy 541037
+Dy = Db plus function-level warm (createRenderer() calls provideRenderer; the recommended shape) marginal  45292  delta  -12586  lazy 541037
+
+baseline eager a2ui modules (rendered bytes by folder): renderer/tree.ts:27703 renderer/renderer.ts:21084 renderer/validate.ts:13819 catalog/catalog.ts:8253 renderer/widget.ts:7308 catalog/conformance.ts:5578 renderer/fn-expr.ts:5565 catalog/registry.ts:4957 renderer/binding.ts:4547 catalog/functions.ts:4500 catalog/records.ts:4141 renderer/functions.ts:3981 renderer/action.ts:3573 renderer/wire-tolerances.ts:3403 renderer/checks.ts:3106 renderer/list.ts:2878 renderer/interpolate.ts:2793 renderer/input.ts:2758 renderer/call-function.ts:2585 renderer/surface.ts:2087 renderer/parser.ts:1973 catalog/variant.ts:1809 protocol.ts:1592 renderer/dispatch.ts:1532 catalog/loader.ts:1346 catalog/naming.ts:335
+S0  eager a2ui modules: (none)
+DA  eager a2ui modules: (none)
+DC  eager a2ui modules: (none)
+DD  eager a2ui modules: (none)
+DB  eager a2ui modules: (none)
+DX  eager a2ui modules: (none)
+DY  eager a2ui modules: (none)
+
+baseline: lazy chunks that hold a2ui modules (standalone gz)
+  body-BVYS5u7o.js                 4555 B gz  4 modules  [catalog/a2ui-basic]
+  body-CE3P2l43.js                  169 B gz  1 modules  [catalog/personas]
+  body-DohBVzvL.js                 3454 B gz  2 modules  [catalog/default]
+  controls-C5bMnAZd.js             2648 B gz  2 modules  [catalog/default catalog/controls.ts]
+  personas-DQ-mn-f3.js             2780 B gz  14 modules  [catalog/compose.ts catalog/personas]
+  total outside the agent-admin arm: 13606 B gz
+
+Dc: lazy chunks that hold a2ui modules (standalone gz)
+  body-COXq3fvu.js                 3452 B gz  2 modules  [catalog/default]
+  body-Cc8vHDQt.js                 4552 B gz  4 modules  [catalog/a2ui-basic]
+  body-D-JgrhuB.js                  171 B gz  1 modules  [catalog/personas]
+  catalog-DLDppw9O.js              1598 B gz  2 modules  [catalog/naming.ts catalog/catalog.ts]
+  controls-CygSpSpk.js             2649 B gz  2 modules  [catalog/default catalog/controls.ts]
+  personas-COOOPy3T.js             2785 B gz  14 modules  [catalog/compose.ts catalog/personas]
+  renderer-DCDSBG2U.js            12782 B gz  24 modules  [protocol.ts/ renderer/dispatch.ts renderer/parser.ts renderer/surface.ts renderer/binding.ts renderer/list.ts renderer/tree.ts catalog/variant.ts renderer/input.ts ...]
+  total outside the agent-admin arm: 27989 B gz
+
+Da: lazy chunks that hold a2ui modules (standalone gz)
+  body-TqQsSZWG.js                  172 B gz  1 modules  [catalog/personas]
+  controls-UPmgz5Pf.js              181 B gz  1 modules  [catalog/controls.ts]
+  loader-BHeGoJaI.js               4681 B gz  2 modules  [catalog/naming.ts catalog/catalog.ts]
+  src-DefUslJs.js                 26901 B gz  49 modules  [catalog/a2ui-basic catalog/default catalog/compose.ts catalog/personas catalog/semantic-check.ts protocol.ts/ catalog/conformance.ts catalog/loader.ts catalog/variant.ts ...]
+  total outside the agent-admin arm: 31935 B gz
+
+Dd: lazy chunks that hold a2ui modules (standalone gz)
+  body-COXq3fvu.js                 3452 B gz  2 modules  [catalog/default]
+  body-Cc8vHDQt.js                 4552 B gz  4 modules  [catalog/a2ui-basic]
+  body-D-JgrhuB.js                  171 B gz  1 modules  [catalog/personas]
+  catalog-DLDppw9O.js              1598 B gz  2 modules  [catalog/naming.ts catalog/catalog.ts]
+  controls-CygSpSpk.js             2649 B gz  2 modules  [catalog/default catalog/controls.ts]
+  personas-COOOPy3T.js             2785 B gz  14 modules  [catalog/compose.ts catalog/personas]
+  renderer-CDRj36P-.js            12011 B gz  24 modules  [protocol.ts/ renderer/dispatch.ts renderer/parser.ts renderer/surface.ts renderer/binding.ts renderer/list.ts renderer/tree.ts catalog/variant.ts renderer/input.ts ...]
+  total outside the agent-admin arm: 27218 B gz
+
+Db: lazy chunks that hold a2ui modules (standalone gz)
+  body-6LuuZzZY.js                  169 B gz  1 modules  [catalog/personas]
+  body-COXq3fvu.js                 3452 B gz  2 modules  [catalog/default]
+  body-Cc8vHDQt.js                 4552 B gz  4 modules  [catalog/a2ui-basic]
+  catalog-DLDppw9O.js              1598 B gz  2 modules  [catalog/naming.ts catalog/catalog.ts]
+  controls-CygSpSpk.js             2649 B gz  2 modules  [catalog/default catalog/controls.ts]
+  personas-Dhsv_F6s.js             2781 B gz  14 modules  [catalog/compose.ts catalog/personas]
+  renderer-Ce7lsvoE.js            12012 B gz  24 modules  [protocol.ts/ renderer/dispatch.ts renderer/parser.ts renderer/surface.ts renderer/binding.ts renderer/list.ts renderer/tree.ts catalog/variant.ts renderer/input.ts ...]
+  total outside the agent-admin arm: 27213 B gz
+
+lazy a2ui bytes outside the admin arm: Dd 27218 (+13612); baseline 13606, Dc 27989 (+14383), Da 31935 (+18329), Db 27213 (+13607)
+eager saved: Dc 12608, Da 12609, Db 12611, ceiling 13198
+net over the wire for a host that renders one default surface: Dc 1775 B gz, Da 5720 B gz

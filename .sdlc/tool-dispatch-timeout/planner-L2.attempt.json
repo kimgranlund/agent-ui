@@ -1,0 +1,21 @@
+{
+  "attempt_id": "6fd42a88a12143b89148cdf521446dfd",
+  "name": "planner-L2",
+  "role": "planner",
+  "level": "L2",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "opus",
+  "effort": "medium",
+  "routing_reason": "planner L2: runtime timeout semantics with fake-timer tests and a red-then-green proof",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T06:49:17.583546+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/gap-tool-timeout",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/gap-tool-timeout/.sdlc/tool-dispatch-timeout/handoff.md",
+  "owner_pid": 52393,
+  "handoff_sha256": "7790603564a6a494b7c1d727308868a085d73a2123e489770a740d2e71416c80",
+  "process_pid": 52434,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T06:54:17.901525+00:00"
+}

@@ -1,0 +1,4 @@
+# npm run size on main@f5b38eea (exit 0): the app rows, verbatim except that the script's em dashes are written as hyphens
+@agent-ui/app . (super-shell + master-detail + settings + surface-host + conversation + nav-rail): marginal 67203 B gz - within budget (69250 B gz)   solo 74858 B gz (275039 B min, informational - includes the 7655 B gz components foundation)
+@agent-ui/app: lazy catalog bodies (ADR-0241: a2ui-basic under both ids, the shipped persona packages and the compose step, fetched by catalog id on first use; a chunk shared with the agent-admin arm counts here too): 6986 B gz (informational, non-gating)
+exit 0

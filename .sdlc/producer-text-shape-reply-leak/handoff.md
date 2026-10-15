@@ -2,7 +2,7 @@
 id: T-0229
 title: "Haiku's text-shape turn shows a trailing meta-line and an unparsed wire line as chat prose"
 type: bug             # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -33,3 +33,9 @@ The failing test lands before or with the fix, never after. No em dashes.
 - (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/produce-response-type.test.ts -t T-0229` exits 0: prose, then a meta-line, then wire lines ships the prose as the reply and applies the meta-line's target; an unparseable A2UI line never reaches the reply.
 - `npx vitest run scripts/e2e-admin/probe/replays/croupier-draw-haiku-meta-tail.test.mjs` exits 0 with its expectation flipped to `toEqual([])`.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-15 · lane: solo L1 · verdict: closed by reason (Merged in #2000; batched lane verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

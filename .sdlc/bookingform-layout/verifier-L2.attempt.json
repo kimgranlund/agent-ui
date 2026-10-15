@@ -1,0 +1,38 @@
+{
+  "attempt_id": "d88f9afb5d094738adce711982ef0a02",
+  "name": "verifier-L2",
+  "agent_name": "0085-verifier-L2",
+  "role": "verifier",
+  "level": "L2",
+  "backend": "claude",
+  "transport": "subagent",
+  "model": "sonnet",
+  "effort": "high",
+  "routing_reason": "independent verify of T-0085",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-13T00:16:26.478141+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-bl",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-bl/.sdlc/bookingform-layout/handoff.md",
+  "parent_pid": 3025,
+  "parent_pid_source": "claude",
+  "handoff_sha256": "d4124e8dd5a71af44daeb3c7b8ad58bba929565d5f64eab33be1e6b919e7c701",
+  "worktrees_before": [
+    "/Users/kimgranlund/Projects/nonoun/agent-ui",
+    "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-bl",
+    "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-gu",
+    "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-tr",
+    "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-wp"
+  ],
+  "branches_before": [
+    "chore/tier-rename-compound",
+    "docs/widget-patterns-next",
+    "fix/bookingform-layout",
+    "fix/widgets-container-gutters",
+    "main"
+  ],
+  "exit_code": 0,
+  "finished_at": "2026-10-13T00:20:43.020082+00:00",
+  "result_sha256": "b9237f8ff9e7848cbd593649ae8ba461f8f8c6403377caaaf16b76a2ca43d2bc",
+  "agent_id": "a0085-verifier-L2-c95d05ba9d10f3ee"
+}

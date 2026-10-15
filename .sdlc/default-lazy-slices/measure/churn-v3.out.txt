@@ -1,0 +1,7 @@
+# V3: the flip + warm-memo, no global setup file, and the PRESCRIBED edit applied to the 15 mechanical files (measure/scratch-warm-edit.mjs: an import plus a top-level await of createRenderer().preload('agent-ui') after the last import, so it also covers a renderer built at module or describe scope)
+
+V3 flip + warm-memo + per-file top-level warm-up: test files run 72, failing 2; tests 2183, passed 2176, failed 2
+  FAIL a2ui/src/catalog/records.test.ts  1/15
+       AssertionError: expected [ 'a2ui-basic', …(8) ] to deeply equal [ 'a2ui-basic', …(7) ]
+  FAIL a2ui/src/renderer/builtin-controls.test.ts  1/12
+       AssertionError: expected [] to deeply equal [ [ 'agent-ui', { …(2) } ] ]

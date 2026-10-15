@@ -51,3 +51,7 @@ packages/agent-ui/a2ui/corpus-genui/runs/
 # committed. Keys are redacted before a line is written, but the log still holds user and model text.
 /.agent-traces/
 site/.fixture-scratch/
+
+# sdlc evidence images and run locks stay local (screenshots are never committed)
+.sdlc/**/*.png
+.sdlc/**/*.lock

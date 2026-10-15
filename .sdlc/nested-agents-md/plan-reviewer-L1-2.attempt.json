@@ -1,0 +1,21 @@
+{
+  "attempt_id": "4b8ae7d66ea649a7946d4cc253e899db",
+  "name": "plan-reviewer-L1-2",
+  "role": "plan-reviewer",
+  "level": "L1",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "fable",
+  "effort": "high",
+  "routing_reason": "plan-reviewer L1: replanned plan at planner L3 must be reviewed",
+  "reason_source": "caller",
+  "status": "interrupted",
+  "started_at": "2026-10-05T06:02:03.174819+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/nested-agents-md",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/nested-agents-md/.sdlc/nested-agents-md/handoff.md",
+  "owner_pid": 89858,
+  "handoff_sha256": "38acb949dfaf7ac49db99f658721bd1e4f4d550d6576f202b97c6c3532745d5e",
+  "process_pid": 89911,
+  "exit_code": 143,
+  "finished_at": "2026-10-05T06:02:11.655115+00:00"
+}

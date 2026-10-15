@@ -2,7 +2,7 @@
 id: T-0220
 title: "Server validation passes an update the renderer rejects as an id-graph violation"
 type: bug             # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -40,3 +40,9 @@ One batched verifier for this lane (Kim's ruling: one verifier per bundle). Veri
 - .sdlc/chat-repair-leaks-to-prose/handoff.md
 - .sdlc/inner-radius-quizmaster-stylist/handoff.md
 - T-0223 screenshots: /private/tmp/claude-501/-Users-kimgranlund-Projects-nonoun-agent-ui/a8ce3b21-c0a4-4e5f-b099-1796666e5f7f/scratchpad/t0223/
+
+## Outcome
+
+2026-10-14 · lane: full L1 · verdict: closed by reason (Merged in #1997; batched lane verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

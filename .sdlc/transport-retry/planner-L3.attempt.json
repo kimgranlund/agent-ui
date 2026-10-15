@@ -1,0 +1,21 @@
+{
+  "attempt_id": "7efd0c9058684332b555dc4bdbbc737a",
+  "name": "planner-L3",
+  "role": "planner",
+  "level": "L3",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "opus",
+  "effort": "xhigh",
+  "routing_reason": "planner L3: steps.py split plan defect (a fixed test-count criterion), one replan",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T07:06:59.023256+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/gap-retry",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/gap-retry/.sdlc/transport-retry/handoff.md",
+  "owner_pid": 67786,
+  "handoff_sha256": "c6169301a301ebe31a54caf8f3a6442131a3480ebb264c5cf83130878e948e46",
+  "process_pid": 67823,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T07:17:18.537280+00:00"
+}

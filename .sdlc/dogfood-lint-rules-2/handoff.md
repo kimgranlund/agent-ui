@@ -2,7 +2,7 @@
 id: T-0144
 title: "Dogfood lint: promote the measurable review findings to rules, with a colour-contrast helper"
 type: feature        # feature | bug | chore | spike | idea
-status: ready
+status: done
 size: L3
 priority: P1
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -25,3 +25,7 @@ Note: the rule lists are in the main checkout's notes file, /Users/kimgranlund/P
 - `npx vitest run --project site` exits 0 (includes site/lib/dogfood-contrast.test.ts).
 - `npx vitest run --config vitest.browser.config.ts --project site site/pages/dogfood-render.browser.test.ts` exits 0: every render rule has a plant that reports and a clean twin that passes, every rule measured an element in the full sweep, no unlisted finding, no stale allowlist entry.
 - `npm run test:browser:site` exits 0.
+
+## Closed
+
+2026-10-13: merged as #1959

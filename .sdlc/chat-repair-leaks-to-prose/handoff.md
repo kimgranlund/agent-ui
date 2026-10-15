@@ -2,7 +2,7 @@
 id: T-0217
 title: "Repair corrections and surface ids leak into the Croupier's chat reply"
 type: bug             # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P3         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -33,3 +33,9 @@ The failing test lands before or with the fix, never after. No em dashes.
 - (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/produce-response-type.test.ts` exits 0: the render_surface repair feedback tells the model the user never saw the rejected surface, so the reply carries no correction note and no surface id.
 - `npx vitest run scripts/e2e-admin/probe/replays` exits 0.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-14 · lane: full L1 · verdict: closed by reason (Merged in #1997; batched lane verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

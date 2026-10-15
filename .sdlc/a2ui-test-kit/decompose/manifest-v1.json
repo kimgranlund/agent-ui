@@ -1,0 +1,919 @@
+{
+  "domain": "technical-architecture",
+  "plan": true,
+  "note": "K = packages/agent-ui/a2ui/tools/testkit (library, data, CLI, and the Node-only tests kit.test.ts and load.test.ts, which run in the node-environment `tools` vitest project through ONE explicit include line). L = packages/agent-ui/a2ui/src/testkit (vitest legs only; jsdom legs match the existing `packages` glob, browser legs match the existing `packages-rest` glob). Rule: files under L import only the DOM-safe modules of K plus load.vite.ts, never load.node.ts, kit.ts or pins. Build base: origin/main with PR #1824 (no barrels) merged.",
+  "nodes": [
+    {
+      "id": "kit",
+      "label": "A2UI test kit",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "g_core",
+      "label": "pure scenario core (no DOM, no node:, no JSON imports)",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "n_format",
+      "label": "K/scenario.ts: scenario format v1, strict parser, wire-line normalization, RecordedTranscript adapter",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npx vitest run --project packages packages/agent-ui/a2ui/src/testkit/scenario.test.ts` exits 0; the file asserts an unknown field raises ScenarioError naming its JSON path, an object line normalizes to one JSON string, and toRecordedTranscript(scenario) replays byte-identical lines through createRecordedTransport"
+    },
+    {
+      "id": "n_findings",
+      "label": "K/findings.ts: closed LAYERS tuple, KitFinding {layer, code, path}, ScenarioResult",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npm run check:tools` exits 0 and `npx vitest run --project packages packages/agent-ui/a2ui/src/testkit/findings.test.ts` exits 0, asserting LAYERS equals exactly validator, heal, renderer, catalog, producer, integration, interop"
+    },
+    {
+      "id": "n_judge",
+      "label": "K/judge.ts: pure legs (heal outcome, verdict set-compare with atFinalize and session seeds, validate-then-stream line order, target arm truthfulness)",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npx vitest run --project packages packages/agent-ui/a2ui/src/testkit/judge.test.ts` exits 0; negative controls in the file: a content line placed before a meta-line yields ORDER_CONTENT_BEFORE_META, a meta-line target.surfaceId that no content line of the turn mutates yields TARGET_NOT_MUTATED, a verdict with one extra (code, path) pair yields VERDICT_MISMATCH, an unhealable fence yields HEAL_UNPARSEABLE"
+    },
+    {
+      "id": "n_conformance",
+      "label": "K/from-conformance.ts: adapter from conformance/fixtures.jsonl rows to scenarios",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npx vitest run --project packages packages/agent-ui/a2ui/src/testkit/from-conformance.test.ts` exits 0, asserting all rows of conformance/fixtures.jsonl (count read from manifest.json fixtureCount) run green through judge.ts and one row with a flipped expectedVerdict.valid runs red"
+    },
+    {
+      "id": "g_doubles",
+      "label": "scripted doubles on the real seams",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "n_transport",
+      "label": "K/scripted-transport.ts: AgentTransport over scenario turns with input matching and a turn log",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npx vitest run --project packages packages/agent-ui/a2ui/src/testkit/scripted-transport.test.ts` exits 0; asserts in-order replay, a non-matching input yields one a2uiMeta.error line plus SCRIPT_UNMATCHED in the log, exhaustion yields SCRIPT_EXHAUSTED, and the module's import closure contains no produce.ts (raw-source scan)"
+    },
+    {
+      "id": "n_provider",
+      "label": "K/scripted-provider.ts: AgentProvider over scripted rounds, including a tool-call step that invokes req.executeTool",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npx vitest run --project packages packages/agent-ui/a2ui/src/testkit/scripted-provider.test.ts` exits 0; asserts round n yields rounds[min(n, len-1)], a tool step calls executeTool once with the scripted input and appends its result text, and a rejected tool becomes text, never a throw"
+    },
+    {
+      "id": "n_producer",
+      "label": "K/producer-leg.ts: run scripted rounds through the real produce(), observe rounds, failureCodes, halt and line order; produce-backed turn for the transport",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npx vitest run --project packages packages/agent-ui/a2ui/src/testkit/producer-leg.test.ts` exits 0; asserts invalid-then-valid rounds give outcome eventual with rounds 2, never-valid rounds give PRODUCE_HALT carrying the validator codes, and every yielded content line follows every meta-line"
+    },
+    {
+      "id": "n_mcp",
+      "label": "K/scripted-mcp.ts: scripted Streamable-HTTP JSON-RPC server as (Request) => Response plus a fetchImpl adapter",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npx vitest run --project packages packages/agent-ui/a2ui/src/testkit/scripted-mcp.test.ts` exits 0; the real createMcpClient with the kit fetchImpl completes initialize, listTools (two pages) and callTool in both JSON and SSE framing, and a hang step with timeoutMs 1 rejects with McpClientError code timeout"
+    },
+    {
+      "id": "n_tools",
+      "label": "K/scripted-tools.ts: IntegrationManifest list with scripted executors and a call log",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npx vitest run --project packages packages/agent-ui/a2ui/src/testkit/scripted-tools.test.ts` exits 0; the real buildToolDispatch over the scripted manifests validates input, records one call per execute, and an invalid input never reaches the executor"
+    },
+    {
+      "id": "g_mount",
+      "label": "mounted-renderer fixture",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "n_mount",
+      "label": "K/mount.ts: deterministic renderer mount (fixed id and clock), ingest plus finalize plus settle, client-message capture, dispose; the one module that knows how controls get defined (built-in loader by default, URL-mode loader behind an option)",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npx vitest run --project packages packages/agent-ui/a2ui/src/testkit/mount.test.ts` exits 0; asserts a Button surface settles to a defined ui-button with no a2ui-placeholder, dispose leaves document.body empty, and no file under K or L other than mount.ts imports @agent-ui/components (raw-source scan)"
+    },
+    {
+      "id": "n_loop",
+      "label": "K/interaction.ts: loop driver (transport turn, order check, ingest, expectations for tree, bindings, client messages and data model, acts, session reducer)",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npx vitest run --project packages packages/agent-ui/a2ui/src/testkit/interaction.test.ts` exits 0; asserts click yields one action message, nextTurn frames it, the scripted reply's updateDataModel changes the bound text, a binding to an unset path yields BINDING_UNRESOLVED, and an action with wantResponse false runs no turn"
+    },
+    {
+      "id": "g_catalog",
+      "label": "catalog-driven generation",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "n_catalogs",
+      "label": "K/catalogs.ts: enumerate every catalog (two bases plus every shipped persona on every targeted base) from the catalog modules",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npx vitest run --project packages packages/agent-ui/a2ui/src/testkit/catalogs.test.ts` exits 0; asserts the id set equals bases plus derivedCatalogId for every SHIPPED_PERSONA_CATALOG_MANIFESTS target, and every catalog.json found under src/catalog by glob belongs to an enumerated catalog"
+    },
+    {
+      "id": "n_minimal",
+      "label": "K/minimal-node.ts: derive the minimal valid message pair for a type from PropDef.required and the validator's containment map",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npx vitest run --project packages packages/agent-ui/a2ui/src/testkit/minimal-node.test.ts` exits 0; asserts Image gets alt, CardHeader is wrapped in a Card root, and a planted type with a required prop of an unsupported schema type raises MINIMAL_UNDERIVABLE"
+    },
+    {
+      "id": "n_catalog_gates",
+      "label": "K/catalog-gates.ts: the selection.json predicates lifted out of selection-guidance.test.ts, which then imports them",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npx vitest run --project packages packages/agent-ui/a2ui/src/catalog/selection-guidance.test.ts` exits 0 with its negative controls unchanged in count, and `grep -c \"from '../../tools/testkit/catalog-gates.ts'\" packages/agent-ui/a2ui/src/catalog/selection-guidance.test.ts` prints 1"
+    },
+    {
+      "id": "g_defects",
+      "label": "seeded defects and mutation",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "n_seeded_data",
+      "label": "K/__seeded__/<layer>/: one or more defect fixtures per layer, each with expectRed {layer, code}, plus pins.json per directory",
+      "leaf": true,
+      "justify": null,
+      "accept": "`node --experimental-strip-types packages/agent-ui/a2ui/tools/testkit/kit.ts selftest` exits 0 and exits 1 after appending one byte to any file under K/__seeded__ (pin mismatch names the file)"
+    },
+    {
+      "id": "n_seeded_run",
+      "label": "K/seeded.ts: run an already-loaded list of seeded fixtures and compare each first finding to expectRed (discovery lives in the loaders)",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npx vitest run --project packages packages/agent-ui/a2ui/src/testkit/seeded-run.test.ts` exits 0; asserts a fixture that runs green yields SEEDED_NOT_RED, a fixture red with another code yields SEEDED_WRONG_CODE, and a LAYERS member with no directory yields SEEDED_LAYER_UNCOVERED"
+    },
+    {
+      "id": "n_mutate",
+      "label": "K/mutate.ts: seeded PRNG plus a closed operator list, each operator tagged form (heal repairs it) or semantic (validator must reject with a named code)",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npx vitest run --project packages packages/agent-ui/a2ui/src/testkit/mutate.test.ts` exits 0; asserts the same seed yields byte-identical mutants on two runs and every operator is tagged form or semantic"
+    },
+    {
+      "id": "g_legs",
+      "label": "kit legs (vitest files under L)",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "n_leg_scenarios",
+      "label": "L/scenarios.test.ts: every green scenario passes the pure legs and the jsdom mount legs",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npx vitest run --project packages packages/agent-ui/a2ui/src/testkit/scenarios.test.ts` exits 0 and reports one test per file under K/scenarios (a zero-scenario glob fails the file)"
+    },
+    {
+      "id": "n_leg_matrix",
+      "label": "L/matrix.test.ts: every type of every catalog validates at finalize and mounts in jsdom with no placeholder and no error message",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npx vitest run --project packages packages/agent-ui/a2ui/src/testkit/matrix.test.ts` exits 0; cell count equals the sum of Object.keys(catalog.components).length over K/catalogs.ts; negative control: a type planted into a catalog copy with no factory tag defined reds the same mount predicate"
+    },
+    {
+      "id": "n_leg_matrix_browser",
+      "label": "L/matrix.browser.test.ts: the two base catalogs' cells upgrade in a real engine through mount.ts's URL-mode loader option",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npx vitest run --config vitest.browser.config.ts --project packages-rest packages/agent-ui/a2ui/src/testkit/matrix.browser.test.ts` exits 0 and its first assertion proves a fleet tag was undefined before the first mount"
+    },
+    {
+      "id": "n_leg_integration",
+      "label": "L/integration.test.ts: discovery, tool dispatch and the dev-proxy boot gate against the scripted MCP server and scripted tools",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npx vitest run --project packages packages/agent-ui/a2ui/src/testkit/integration.test.ts` exits 0; asserts discoverMcpIntegrations registers the scripted tools through an injected sink, a produce turn whose scripted round calls a tool records the call, and the REGISTRY module array is unchanged afterwards"
+    },
+    {
+      "id": "n_leg_seeded",
+      "label": "L/seeded.test.ts: all seven layers' seeded fixtures red with exactly their pinned code",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npx vitest run --project packages packages/agent-ui/a2ui/src/testkit/seeded.test.ts` exits 0 with at least one test per LAYERS member, and exits 1 when any fixture's expectRed.code is edited"
+    },
+    {
+      "id": "n_leg_fuzz",
+      "label": "L/fuzz.test.ts: fixed seed list over the green scenarios; validator and renderer never throw, form mutants heal back, semantic mutants are rejected",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npx vitest run --project packages packages/agent-ui/a2ui/src/testkit/fuzz.test.ts` exits 0 and a failing case prints the seed and operator that reproduce it"
+    },
+    {
+      "id": "n_leg_browser",
+      "label": "L/interaction.browser.test.ts: the click, action, scripted response, updateDataModel, re-render scenarios in Chromium and WebKit",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npx vitest run --config vitest.browser.config.ts --project packages-rest packages/agent-ui/a2ui/src/testkit/interaction.browser.test.ts` exits 0; `grep -c \"name: '\" vitest.browser.config.ts` still prints 5; `grep -c 'max-old-space-size\\|NODE_OPTIONS' package.json` is unchanged from origin/main"
+    },
+    {
+      "id": "n_leg_offline",
+      "label": "K/offline.ts plus L/offline-wiring.test.ts: fetch tripwire (every URL in jsdom and Node, off-origin URLs in a browser page), key scrub, and the structural gate that every kit leg arms it",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npx vitest run --project packages packages/agent-ui/a2ui/src/testkit/offline-wiring.test.ts` exits 0; asserts a fetch call after armOffline throws KIT_NETWORK, every test file under L and K calls armOffline, and no file under K or L names anthropicProvider or an _API_KEY identifier or imports src/agent/index.ts or @agent-ui/a2ui/agent (raw-source scan with a planted-violation negative control)"
+    },
+    {
+      "id": "g_data",
+      "label": "scenario data",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "n_scenarios",
+      "label": "K/scenarios/*.scenario.json: the green set (validator and heal cases, a repair turn, the click loop, a wantResponse pair, a persona-catalog surface, an a2ui-basic surface)",
+      "leaf": true,
+      "justify": null,
+      "accept": "`node --experimental-strip-types packages/agent-ui/a2ui/tools/testkit/kit.ts list` exits 0 and prints at least one scenario for each of: lines turn, rounds turn, act, wantResponse false, derived persona catalogId, a2ui-basic catalogId"
+    },
+    {
+      "id": "g_entry",
+      "label": "entry points and integration",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "n_seams",
+      "label": "serial prep: validate.ts exports its containment map, produce.ts exports sessionSurfaceSeeds, and vitest.config.ts gains the one `tools` project include line for K/*.test.ts",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npm run check` exits 0, `npx vitest run --project packages packages/agent-ui/a2ui/src/renderer/validate.test.ts packages/agent-ui/a2ui/src/live-agent/produce-loop.test.ts packages/agent-ui/a2ui/src/live-agent/prompt-equivalence.test.ts` exits 0, `grep -c \"packages/agent-ui/a2ui/tools/testkit/\\*.test.ts\" vitest.config.ts` prints 1, and `git diff --stat origin/main -- packages/agent-ui/a2ui/src/live-agent/prompt-equivalence.baseline.json vitest.browser.config.ts` is empty"
+    },
+    {
+      "id": "n_load_vite",
+      "label": "K/load.vite.ts: import.meta.glob loaders for scenarios and seeded fixtures (jsdom and browser)",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npx vitest run --project tools packages/agent-ui/a2ui/tools/testkit/load.test.ts` exits 0, asserting the vite loader and the Node loader return the same scenario and seeded-fixture names and bytes"
+    },
+    {
+      "id": "n_load_node",
+      "label": "K/load.node.ts: fs loaders for scenarios, seeded directories (with verifyPins from tools/agent-eval/pins.ts) and every catalog id (personas composed from catalog.json files)",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npx vitest run --project tools packages/agent-ui/a2ui/tools/testkit/load.test.ts` exits 0, asserting each Node-resolved catalog deep-equals the module catalog from K/catalogs.ts for every enumerated id"
+    },
+    {
+      "id": "n_cli",
+      "label": "K/kit.ts: guarded CLI entry with selftest (pins, parse, layer coverage, DOM-free seeded reds, own negative control), run <file>, list; exit 0, 1, 2",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npx vitest run --project tools packages/agent-ui/a2ui/tools/testkit/kit.test.ts` exits 0; the file drives runCli against a temporary fixture tree: selftest returns 0 on a complete tree, 1 on a one-byte pin mismatch, 1 when its own negative control is disabled; run returns 1 on a seeded validator fixture and prints its layer and code; run on a missing path returns 2"
+    },
+    {
+      "id": "n_package",
+      "label": "package.json (serial integration): test:a2ui-kit, test:a2ui-kit:browser, and the selftest appended to check:scripts",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npm run test:a2ui-kit` exits 0 with ANTHROPIC_API_KEY unset, `npm run check` exits 0, and `git diff origin/main -- package.json` touches only the scripts block (no dependency key)"
+    },
+    {
+      "id": "n_readme",
+      "label": "K/README.md: the one canonical description of the format, legs, codes and commands",
+      "leaf": true,
+      "justify": null,
+      "accept": "`grep -c 'agent-ui-a2ui-scenario' packages/agent-ui/a2ui/tools/testkit/README.md` prints at least 1 and `grep -c $'\\u2014' packages/agent-ui/a2ui/tools/testkit/README.md` prints 0"
+    },
+    {
+      "id": "n_scrub",
+      "label": "scrub and upsert list: entry files, a2ui package entry files, the named skills, agents, rubrics, specs, LLDs and references point at the kit",
+      "leaf": true,
+      "justify": null,
+      "accept": "`npm run check` exits 0, doc_lint exits 0 on every touched .claude/docs file, and `grep -l 'test:a2ui-kit' <each file on the handoff scrub list>` lists every file"
+    }
+  ],
+  "actions": [
+    {
+      "id": "a_describe",
+      "label": "describe a multi-turn A2UI exchange as data: scripted replies, client acts, expectations"
+    },
+    {
+      "id": "a_reject",
+      "label": "reject a malformed scenario and name the bad field"
+    },
+    {
+      "id": "a_align",
+      "label": "carry turn lines in the shape the recorded transcript, T-0005 and T-0010 fixtures already use"
+    },
+    {
+      "id": "a_replay",
+      "label": "replay scripted wire lines for a turn, chosen by the incoming turn input"
+    },
+    {
+      "id": "a_produce",
+      "label": "drive the real producer loop from scripted model rounds with no key"
+    },
+    {
+      "id": "a_toolcall",
+      "label": "let a scripted model round call a tool"
+    },
+    {
+      "id": "a_verdict",
+      "label": "judge a payload's validator verdict against an expected (code, path) set, streaming and finalize"
+    },
+    {
+      "id": "a_heal",
+      "label": "judge the heal outcome of raw text"
+    },
+    {
+      "id": "a_order",
+      "label": "assert the validate-then-stream order of a turn's lines"
+    },
+    {
+      "id": "a_conformance",
+      "label": "run the existing conformance fixtures through the same judge"
+    },
+    {
+      "id": "a_mount",
+      "label": "mount a stream in a real renderer deterministically and wait until it settles"
+    },
+    {
+      "id": "a_capture",
+      "label": "capture the client messages the renderer emits"
+    },
+    {
+      "id": "a_control_seam",
+      "label": "keep how controls get defined behind one module"
+    },
+    {
+      "id": "a_tree",
+      "label": "assert the rendered surface tree"
+    },
+    {
+      "id": "a_binding",
+      "label": "detect a binding that resolves to nothing"
+    },
+    {
+      "id": "a_datamodel",
+      "label": "assert a data-model snapshot"
+    },
+    {
+      "id": "a_act",
+      "label": "perform a user act on a rendered node"
+    },
+    {
+      "id": "a_loop",
+      "label": "close the loop: act, client message, next turn input, scripted reply, re-render"
+    },
+    {
+      "id": "a_wantresponse",
+      "label": "prove wantResponse routing and response correlation behave as specified"
+    },
+    {
+      "id": "a_enumerate",
+      "label": "enumerate every type of every catalog with no hand list"
+    },
+    {
+      "id": "a_minimal",
+      "label": "derive a minimal valid node for a type from catalog metadata"
+    },
+    {
+      "id": "a_matrix",
+      "label": "prove every type validates and mounts; a new type that cannot reds the gate"
+    },
+    {
+      "id": "a_real_engine",
+      "label": "prove controls upgrade through the loader in a real engine"
+    },
+    {
+      "id": "a_catalog_pred",
+      "label": "evaluate catalog agreement predicates on planted input"
+    },
+    {
+      "id": "a_mcp",
+      "label": "answer MCP protocol requests from a script, including errors and a hang"
+    },
+    {
+      "id": "a_tools",
+      "label": "offer scripted tools to the real dispatch and record calls"
+    },
+    {
+      "id": "a_boot",
+      "label": "exercise discovery and boot flows against the scripted server"
+    },
+    {
+      "id": "a_seed_store",
+      "label": "store a seeded defect per layer with its expected red code"
+    },
+    {
+      "id": "a_seed_prove",
+      "label": "prove each seeded defect reds with exactly its pinned code"
+    },
+    {
+      "id": "a_pin",
+      "label": "protect seeded fixtures from silent edits"
+    },
+    {
+      "id": "a_interop",
+      "label": "reject a wrong-dialect payload under the a2ui-basic catalog"
+    },
+    {
+      "id": "a_mutate",
+      "label": "mutate valid payloads deterministically from a seed and classify the outcome"
+    },
+    {
+      "id": "a_fuzz",
+      "label": "prove validator, heal and renderer hold their contracts under mutation"
+    },
+    {
+      "id": "a_offline",
+      "label": "fail any kit run that touches the network or a key"
+    },
+    {
+      "id": "a_report",
+      "label": "report a failure with a layer and a code"
+    },
+    {
+      "id": "a_command",
+      "label": "run the whole kit with one command that exits nonzero on any red"
+    },
+    {
+      "id": "a_adhoc",
+      "label": "run one scenario ad hoc from the command line"
+    },
+    {
+      "id": "a_gate_hook",
+      "label": "keep a keyless selftest in the standing check gate"
+    },
+    {
+      "id": "a_both_envs",
+      "label": "load the same scenario files in jsdom, Chromium and plain Node"
+    },
+    {
+      "id": "a_browser_budget",
+      "label": "run the interaction legs in the existing browser shard with no new project or heap bump"
+    },
+    {
+      "id": "a_green_set",
+      "label": "ship a green scenario set covering each turn kind and catalog family"
+    },
+    {
+      "id": "a_parity",
+      "label": "use the producer's own cross-turn seeds and the validator's own containment rule, never a copy"
+    },
+    {
+      "id": "a_format_doc",
+      "label": "document the format and codes in one place"
+    },
+    {
+      "id": "a_scrub",
+      "label": "repair every record the kit makes stale"
+    }
+  ],
+  "hosts": [
+    {
+      "action": "a_describe",
+      "node": "n_format"
+    },
+    {
+      "action": "a_reject",
+      "node": "n_format"
+    },
+    {
+      "action": "a_align",
+      "node": "n_format"
+    },
+    {
+      "action": "a_replay",
+      "node": "n_transport"
+    },
+    {
+      "action": "a_produce",
+      "node": "n_provider"
+    },
+    {
+      "action": "a_produce",
+      "node": "n_producer"
+    },
+    {
+      "action": "a_toolcall",
+      "node": "n_provider"
+    },
+    {
+      "action": "a_verdict",
+      "node": "n_judge"
+    },
+    {
+      "action": "a_heal",
+      "node": "n_judge"
+    },
+    {
+      "action": "a_order",
+      "node": "n_judge"
+    },
+    {
+      "action": "a_conformance",
+      "node": "n_conformance"
+    },
+    {
+      "action": "a_mount",
+      "node": "n_mount"
+    },
+    {
+      "action": "a_capture",
+      "node": "n_mount"
+    },
+    {
+      "action": "a_control_seam",
+      "node": "n_mount"
+    },
+    {
+      "action": "a_tree",
+      "node": "n_loop"
+    },
+    {
+      "action": "a_binding",
+      "node": "n_loop"
+    },
+    {
+      "action": "a_datamodel",
+      "node": "n_loop"
+    },
+    {
+      "action": "a_act",
+      "node": "n_loop"
+    },
+    {
+      "action": "a_loop",
+      "node": "n_loop"
+    },
+    {
+      "action": "a_loop",
+      "node": "n_leg_browser"
+    },
+    {
+      "action": "a_wantresponse",
+      "node": "n_leg_scenarios"
+    },
+    {
+      "action": "a_enumerate",
+      "node": "n_catalogs"
+    },
+    {
+      "action": "a_minimal",
+      "node": "n_minimal"
+    },
+    {
+      "action": "a_matrix",
+      "node": "n_leg_matrix"
+    },
+    {
+      "action": "a_real_engine",
+      "node": "n_leg_matrix_browser"
+    },
+    {
+      "action": "a_catalog_pred",
+      "node": "n_catalog_gates"
+    },
+    {
+      "action": "a_mcp",
+      "node": "n_mcp"
+    },
+    {
+      "action": "a_tools",
+      "node": "n_tools"
+    },
+    {
+      "action": "a_boot",
+      "node": "n_leg_integration"
+    },
+    {
+      "action": "a_seed_store",
+      "node": "n_seeded_data"
+    },
+    {
+      "action": "a_seed_prove",
+      "node": "n_seeded_run"
+    },
+    {
+      "action": "a_seed_prove",
+      "node": "n_leg_seeded"
+    },
+    {
+      "action": "a_pin",
+      "node": "n_seeded_data"
+    },
+    {
+      "action": "a_pin",
+      "node": "n_cli"
+    },
+    {
+      "action": "a_interop",
+      "node": "n_seeded_data"
+    },
+    {
+      "action": "a_mutate",
+      "node": "n_mutate"
+    },
+    {
+      "action": "a_fuzz",
+      "node": "n_leg_fuzz"
+    },
+    {
+      "action": "a_offline",
+      "node": "n_leg_offline"
+    },
+    {
+      "action": "a_report",
+      "node": "n_findings"
+    },
+    {
+      "action": "a_command",
+      "node": "n_package"
+    },
+    {
+      "action": "a_adhoc",
+      "node": "n_cli"
+    },
+    {
+      "action": "a_adhoc",
+      "node": "n_load_node"
+    },
+    {
+      "action": "a_gate_hook",
+      "node": "n_package"
+    },
+    {
+      "action": "a_both_envs",
+      "node": "n_load_vite"
+    },
+    {
+      "action": "a_both_envs",
+      "node": "n_load_node"
+    },
+    {
+      "action": "a_browser_budget",
+      "node": "n_leg_browser"
+    },
+    {
+      "action": "a_green_set",
+      "node": "n_scenarios"
+    },
+    {
+      "action": "a_parity",
+      "node": "n_seams"
+    },
+    {
+      "action": "a_format_doc",
+      "node": "n_readme"
+    },
+    {
+      "action": "a_scrub",
+      "node": "n_scrub"
+    }
+  ],
+  "edges": [
+    {
+      "from": "n_format",
+      "to": "n_judge",
+      "why": "the judge reads the turn and expectation types the format pins"
+    },
+    {
+      "from": "n_findings",
+      "to": "n_judge",
+      "why": "every leg returns KitFinding values"
+    },
+    {
+      "from": "n_seams",
+      "to": "n_judge",
+      "why": "cross-turn verdicts need the exported sessionSurfaceSeeds"
+    },
+    {
+      "from": "n_judge",
+      "to": "n_conformance",
+      "why": "the adapter's proof runs fixtures through the judge"
+    },
+    {
+      "from": "n_format",
+      "to": "n_transport",
+      "why": "the transport replays the format's turns and match vocabulary"
+    },
+    {
+      "from": "n_format",
+      "to": "n_provider",
+      "why": "the provider consumes the format's rounds arm"
+    },
+    {
+      "from": "n_provider",
+      "to": "n_producer",
+      "why": "the producer leg feeds the scripted provider to produce()"
+    },
+    {
+      "from": "n_judge",
+      "to": "n_producer",
+      "why": "the producer leg reuses the line-order predicate"
+    },
+    {
+      "from": "n_tools",
+      "to": "n_leg_integration",
+      "why": "the integration leg dispatches the scripted tools"
+    },
+    {
+      "from": "n_mcp",
+      "to": "n_leg_integration",
+      "why": "the integration leg discovers against the scripted server"
+    },
+    {
+      "from": "n_producer",
+      "to": "n_leg_integration",
+      "why": "a scripted round calls a tool through produce()"
+    },
+    {
+      "from": "n_mount",
+      "to": "n_loop",
+      "why": "the loop drives the mount fixture"
+    },
+    {
+      "from": "n_transport",
+      "to": "n_loop",
+      "why": "the loop pulls each turn from the scripted transport"
+    },
+    {
+      "from": "n_judge",
+      "to": "n_loop",
+      "why": "the loop checks order and verdict before ingest"
+    },
+    {
+      "from": "n_seams",
+      "to": "n_minimal",
+      "why": "wrapping reads the validator's exported containment map"
+    },
+    {
+      "from": "n_catalogs",
+      "to": "n_leg_matrix",
+      "why": "the matrix iterates the enumerated catalogs"
+    },
+    {
+      "from": "n_minimal",
+      "to": "n_leg_matrix",
+      "why": "each cell is a derived minimal node"
+    },
+    {
+      "from": "n_mount",
+      "to": "n_leg_matrix",
+      "why": "each cell mounts through the fixture"
+    },
+    {
+      "from": "n_leg_matrix",
+      "to": "n_leg_matrix_browser",
+      "why": "the browser slice reuses the proven cell builder"
+    },
+    {
+      "from": "n_catalogs",
+      "to": "n_load_node",
+      "why": "the Node resolver is proven equal to the module enumeration"
+    },
+    {
+      "from": "n_format",
+      "to": "n_load_vite",
+      "why": "loaders return parsed scenarios"
+    },
+    {
+      "from": "n_format",
+      "to": "n_load_node",
+      "why": "loaders return parsed scenarios"
+    },
+    {
+      "from": "n_load_vite",
+      "to": "n_leg_scenarios",
+      "why": "the leg globs scenarios through the vite loader"
+    },
+    {
+      "from": "n_loop",
+      "to": "n_leg_scenarios",
+      "why": "mounted scenarios run through the loop driver"
+    },
+    {
+      "from": "n_producer",
+      "to": "n_leg_scenarios",
+      "why": "rounds turns run through the producer leg"
+    },
+    {
+      "from": "n_scenarios",
+      "to": "n_leg_scenarios",
+      "why": "the leg needs the green set to exist"
+    },
+    {
+      "from": "n_loop",
+      "to": "n_leg_browser",
+      "why": "the browser leg is the loop driver in a real engine"
+    },
+    {
+      "from": "n_load_vite",
+      "to": "n_leg_browser",
+      "why": "a browser page cannot read fs"
+    },
+    {
+      "from": "n_scenarios",
+      "to": "n_leg_browser",
+      "why": "the browser leg runs the interaction scenarios"
+    },
+    {
+      "from": "n_loop",
+      "to": "n_seeded_run",
+      "why": "the renderer-layer fixture runs through the loop"
+    },
+    {
+      "from": "n_producer",
+      "to": "n_seeded_run",
+      "why": "the producer-layer fixture runs through produce()"
+    },
+    {
+      "from": "n_mcp",
+      "to": "n_seeded_run",
+      "why": "the integration-layer fixture is a scripted hang"
+    },
+    {
+      "from": "n_catalog_gates",
+      "to": "n_seeded_run",
+      "why": "the catalog-layer fixture is judged by the lifted predicate"
+    },
+    {
+      "from": "n_seeded_run",
+      "to": "n_seeded_data",
+      "why": "each expectRed code is recorded from a real run of the fixture"
+    },
+    {
+      "from": "n_seeded_data",
+      "to": "n_leg_seeded",
+      "why": "the leg runs the committed fixtures"
+    },
+    {
+      "from": "n_mutate",
+      "to": "n_leg_fuzz",
+      "why": "the leg applies the mutator"
+    },
+    {
+      "from": "n_scenarios",
+      "to": "n_leg_fuzz",
+      "why": "mutants start from the green set"
+    },
+    {
+      "from": "n_load_node",
+      "to": "n_cli",
+      "why": "the CLI reads scenarios and catalogs from disk"
+    },
+    {
+      "from": "n_seeded_run",
+      "to": "n_cli",
+      "why": "selftest runs the DOM-free seeded fixtures"
+    },
+    {
+      "from": "n_cli",
+      "to": "n_seeded_data",
+      "why": "the data's accept predicate is the CLI selftest"
+    },
+    {
+      "from": "n_cli",
+      "to": "n_scenarios",
+      "why": "the data's accept predicate is the CLI list mode"
+    },
+    {
+      "from": "n_cli",
+      "to": "n_package",
+      "why": "check:scripts calls the CLI selftest"
+    },
+    {
+      "from": "n_leg_offline",
+      "to": "n_package",
+      "why": "the kit command is only keyless once every leg arms the tripwire"
+    },
+    {
+      "from": "n_leg_seeded",
+      "to": "n_package",
+      "why": "the kit command must already red on a seeded defect"
+    },
+    {
+      "from": "n_package",
+      "to": "n_readme",
+      "why": "the README names the final commands"
+    },
+    {
+      "from": "n_readme",
+      "to": "n_scrub",
+      "why": "scrubbed records point at the README, never restate it"
+    },
+    {
+      "from": "n_seams",
+      "to": "n_cli",
+      "why": "kit.test.ts only runs once the tools project include line exists"
+    },
+    {
+      "from": "n_seams",
+      "to": "n_load_node",
+      "why": "load.test.ts only runs once the tools project include line exists"
+    },
+    {
+      "from": "n_load_vite",
+      "to": "n_leg_seeded",
+      "why": "the leg receives its fixture list from the vite loader"
+    }
+  ]
+}

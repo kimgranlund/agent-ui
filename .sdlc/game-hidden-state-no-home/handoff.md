@@ -2,7 +2,7 @@
 id: T-0230
 title: "Lexicographer and Admiral commit no secret word or fleet, so marks and hits are made up"
 type: bug             # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -39,3 +39,9 @@ Hidden game state lives in the game surface's own data model under the reserved 
 
 ## Lane verify scope (conductor)
 One batched verifier for this lane. Verify this handoff AND .sdlc/producer-text-shape-reply-leak/handoff.md, criterion by criterion, in the same tree; one verdict per ticket under Criteria and one overall Verdict.
+
+## Outcome
+
+2026-10-15 · lane: solo L2 · verdict: closed by reason (Merged in #2000; batched lane verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

@@ -1,0 +1,37 @@
+// Probe (kept as .txt so no project's include glob picks it up). Copy to packages/agent-ui/app/src/controls/surface-host/probe-cold.test.ts in the
+// scratch clone and run: npx vitest run --disableConsoleIntercept <that file>. Shows the cold first host and the warm later ones under the facade.
+import { describe, it, expect } from 'vitest'
+import { createRenderer as warm } from '@agent-ui/a2ui'
+import './surface-host.ts'
+import type { UISurfaceHostElement } from './surface-host.ts'
+
+await warm().preload('agent-ui') // the T-0042 catalog warm-up the existing suites use; it does not touch the renderer facade unless function-level warm is applied
+const line = (o: unknown) => JSON.stringify(o)
+const lines = [
+  line({ version: 'v1.0', createSurface: { surfaceId: 's', catalogId: 'agent-ui' } }),
+  line({ version: 'v1.0', updateComponents: { surfaceId: 's', components: [{ id: 'root', component: 'Text', text: 'hello' }] } }),
+]
+const mk = () => {
+  const el = document.createElement('ui-surface-host') as UISurfaceHostElement
+  document.body.append(el)
+  return el
+}
+describe('cold facade probe', () => {
+  it('first host is cold, the later ones are warm', async () => {
+    const a = mk()
+    for (const l of lines) a.ingest(l)
+    a.finalize()
+    console.log(`PROBE first host: sync text="${a.textContent}" emptyFinalSync=${'emptyFinal' in a.dataset}`)
+    let ticks = 0
+    while (!a.textContent?.includes('hello') && ticks < 50) {
+      await new Promise((r) => setTimeout(r, 0))
+      ticks++
+    }
+    console.log(`PROBE first host: painted after ${ticks} setTimeout(0) ticks, painted=${a.textContent?.includes('hello')} emptyFinalAfter=${'emptyFinal' in a.dataset}`)
+    const b = mk()
+    for (const l of lines) b.ingest(l)
+    b.finalize()
+    console.log(`PROBE later host: sync painted=${b.textContent?.includes('hello')} emptyFinal=${'emptyFinal' in b.dataset}`)
+    expect(true).toBe(true)
+  })
+})

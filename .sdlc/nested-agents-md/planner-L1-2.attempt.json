@@ -1,0 +1,21 @@
+{
+  "attempt_id": "19ca6132c9a54130bf0b717d4d105ccc",
+  "name": "planner-L1-2",
+  "role": "planner",
+  "level": "L1",
+  "backend": "claude",
+  "transport": "exec",
+  "model": "sonnet",
+  "effort": "medium",
+  "routing_reason": "planner L1 rerun: the only unresolved assumption was an untimed npm run check; the measured 28s is now in the brief",
+  "reason_source": "caller",
+  "status": "completed",
+  "started_at": "2026-10-05T05:46:30.572974+00:00",
+  "project": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/nested-agents-md",
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/nested-agents-md/.sdlc/nested-agents-md/handoff.md",
+  "owner_pid": 70407,
+  "handoff_sha256": "5a70cda01ab5e95d74b6bb009a5ab377f3c001446eedcc705af500cb5c452406",
+  "process_pid": 70559,
+  "exit_code": 0,
+  "finished_at": "2026-10-05T05:47:14.375383+00:00"
+}

@@ -2,7 +2,7 @@
 id: T-0171
 title: "Correctness: renderer bindProp untracked, ui-column align leak, conversation rail 2px test red on main"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -34,3 +34,7 @@ Three live correctness bugs fixed at their root, each with a test that was red f
 
 ## Constraints
 - No literal px geometry. No em dashes.
+
+## Closed
+
+2026-10-14: merged as PR #1972

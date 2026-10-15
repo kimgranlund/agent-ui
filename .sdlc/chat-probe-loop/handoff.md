@@ -2,7 +2,7 @@
 id: T-0174
 title: "chat:probe: drive the real agent-admin chat headless (live or replay), assert on it, and turn any trace into a keyless replay test"
 type: feature         # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -40,3 +40,7 @@ verifier: L3
 - `python3 -c "import json,sys; sys.exit(json.load(open('.sdlc/chat-probe-loop/smoke/report.json'))['verdict'] != 'pass')"` exits 0 (the live Haiku 5.5 "hello" smoke on concierge; `turn-1.png` and `fixture.json` beside it).
 - `npm run e2e:admin` exits 0.
 - `grep -n "chat:probe" CLAUDE.md scripts/e2e-admin/README.md` exits 0 (the docs).
+
+## Closed
+
+2026-10-14: merged (queue)

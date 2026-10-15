@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L3",
+  "name": "0083-solo-L3",
+  "description": "T-0083 solo L3 Widget style",
+  "model": "opus",
+  "effort": "xhigh",
+  "prompt": "T-0083 Widget style gaps vs the approved | solo L3\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-wm/.sdlc/widgets-match-mockups/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-wm/.sdlc/widgets-match-mockups\nImplement per .sdlc/widgets-match-mockups/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L3",
+  "tier": "L3",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-wm/.sdlc/widgets-match-mockups/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-wm/.sdlc/widgets-match-mockups",
+  "attempt_id": "43b69ddda88b42e0bd4296c7e92d78e3",
+  "base_sha": "30b5b5f73d5ccd40c0739876511ef41a32590308",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.4/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-wm/.sdlc/widgets-match-mockups/handoff.md"
+}
