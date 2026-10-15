@@ -54,3 +54,5 @@ Kim chose `.sdlc/evals/rounds/` (an allowed top-level `.sdlc` dir per `.sdlc/AGE
 - `npx vitest run --project scripts scripts/e2e-admin/probe/run-capped.test.mjs` exits 0: the `evals home` case asserts `--round <slug>` writes under `.sdlc/evals/rounds/<date>-<slug>/`, reuses that folder on a restart, and regenerates the `.sdlc/evals/README.md` row.
 - `git grep -n -E "\.sdlc/(croupier-closed-loop|live-round-2)/(runs|report\.md|live-commands\.sh)" -- ':!.sdlc/round-archive/handoff.md' ':!*.dispatch.json'` exits 1 (no stale path to the old run folders).
 - `.sdlc/evals/README.md` lists the committed rounds (2026-10-14-r1-croupier, 2026-10-15-r2-presets); T-0208's round joins when that ticket lands on main.
+
+- conductor: the branch was rebased; diff scope against `7558540a34a99c4cacf36088512258509539e65f` (merge-base with origin/main), not the prompt's base sha, which is the branch tip.
