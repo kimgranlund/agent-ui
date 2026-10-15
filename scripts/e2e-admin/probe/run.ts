@@ -174,13 +174,16 @@ function proseText(page: Page): Promise<string> {
 
 const LINT_RUN = ['nested-card', 'type-floor', 'column'] as const
 
+/** The glyph-box rule's selector with ui-glyph's svg widened to the element, so type-floor skips the same parts the render lint does. */
+const GLYPH_BOX_SELECTOR = (RULES.render as Array<{ id: string; selector: string }>).find((r) => r.id === 'glyph-box')!.selector.replace(/ svg\b/, '')
+
 /** The cheap dogfood render rules (`scripts/dogfood-rules.json`) over the chat pane's surface hosts: a card
  *  directly inside a card, text below the type floor, and a box past its surface host's right edge (the
  *  column rule, unless an overflow-x frame holds it). The register and geometry rules need the full
  *  render-lint harness and are reported as not run. */
 async function renderLint(page: Page): Promise<{ findings: Array<{ rule: string; detail: string }>; notRun: string[] }> {
   const findings = await page.evaluate(
-    ({ pane, floor }) => {
+    ({ pane, floor, glyphBox }) => {
       const out: Array<{ rule: string; detail: string }> = []
       const name = (el: Element): string => `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''}${el.getAttribute('data-part') ? `[${el.getAttribute('data-part')}]` : ''}`
       for (const host of document.querySelectorAll(`${pane} ui-surface-host`)) {
@@ -194,7 +197,8 @@ async function renderLint(page: Page): Promise<{ findings: Array<{ rule: string;
         const edge = host.getBoundingClientRect().right
         for (const el of host.querySelectorAll('*')) {
           const own = [...el.childNodes].some((n) => n.nodeType === 3 && (n.textContent ?? '').trim() !== '')
-          const glyph = el.closest('ui-glyph') !== null || (el.getAttribute('data-part') ?? '').includes('glyph')
+          // a glyph is not text (ADR-0245 Amendment 6): the glyph-box rule's parts (the board-grid intent mark among them) are skipped here, as the render lint does
+          const glyph = el.closest(glyphBox) !== null || (el.getAttribute('data-part') ?? '').includes('glyph')
           if (own && !glyph && (el as HTMLElement).getClientRects().length > 0) {
             const size = parseFloat(getComputedStyle(el).fontSize)
             if (size < floor) out.push({ rule: 'type-floor', detail: `${name(el)} at ${size}px` })
@@ -211,7 +215,7 @@ async function renderLint(page: Page): Promise<{ findings: Array<{ rule: string;
       }
       return out
     },
-    { pane: ADMIN_SELECTORS.chatPane, floor: CFG.floor as number },
+    { pane: ADMIN_SELECTORS.chatPane, floor: CFG.floor as number, glyphBox: GLYPH_BOX_SELECTOR },
   )
   const notRun = (RULES.render as Array<{ id: string }>).map((r) => r.id).filter((id) => !(LINT_RUN as readonly string[]).includes(id))
   // One finding per rule and element is enough for a report.

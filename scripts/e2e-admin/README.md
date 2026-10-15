@@ -40,7 +40,7 @@ Each turn records the request the page sent (model, effort, catalog), the wire l
 | `action-updates-surface` | a click turn neither updates the clicked surface nor hands the flow to a surface it creates (T-0172) |
 | `expect-component` | a `--expect-component` type never shipped (one run row), or a step's `--expect-turn` type is on no surface its turn updated (one row per turn) |
 | `routing-expect` | a step's `--expect-routing` misses the turn's trace `routing` block (the line with this run's id; a replay reads the fixture turn's `routing`): a domain not routed, an exemplar not framed or framed against `exclude`, a section not composed, a reference absent or not at its `load`; a live turn with no trace line for its run id fails (`no trace line for runId <id>`); a replay whose fixture turn has no `routing` skips (T-0260) |
-| `render-lint` | the `nested-card`, `type-floor` or `column` rule of `scripts/dogfood-rules.json` finds a surface element; the other rules need the full render-lint harness and are listed as not run |
+| `render-lint` | the `nested-card`, `type-floor` or `column` rule of `scripts/dogfood-rules.json` finds a surface element (type-floor skips the `glyph-box` rule's parts, T-0269); the other rules need the full render-lint harness and are listed as not run |
 | `reasoning` | warn only, never fails a run: effort above low but no thinking text in the trace |
 
 ### Fixtures and regressions
