@@ -249,7 +249,7 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0243 | [upsert-closed-loop-docs-2](upsert-closed-loop-docs-2/handoff.md) | Upsert docs, specs, skills and the closed-loop testing spec for T-0208 to T-0242 | chore | L2 | P1 | T-0208, T-0239, T-0241 | 🟢 done |
 | T-0244 | [drill-400px-overflow-flake](drill-400px-overflow-flake/handoff.md) | widget/Drill overflows the 400px column by a varying amount (419 to 442px), red on main since T-0237 | bug | L1 | P1 | none | 🟢 done |
 | T-0245 | [domain-seeds](domain-seeds/handoff.md) | Domain seeds for CardTable, BookingForm and BoardGrid (battleship, word) that pass corpus review | feature | L2 | P2 | none | 🟢 done |
-| T-0240 | [domain-exemplars](domain-exemplars/handoff.md) | Domain exemplars: CardTable, BookingForm and BoardGrid examples the producer can retrieve, plus a preset-to-domain mapping | feature | L3 | P2 | T-0245 | 🔵 ready (branch feat/domain-exemplars-plumbing) |
+| T-0240 | [domain-exemplars](domain-exemplars/handoff.md) | Domain exemplars: CardTable, BookingForm and BoardGrid examples the producer can retrieve, plus a preset-to-domain mapping | feature | L3 | P2 | T-0245 | 🟢 done |
 | T-0246 | [persona-exemplar-fixture-defects](persona-exemplar-fixture-defects/handoff.md) | Docs-page persona exemplar fixtures carry the same game and booking defects as the seeds | bug | L1 | P2 | T-0245 | 🔵 ready |
 | T-0247 | [validate-payload-persona-ids](validate-payload-persona-ids/handoff.md) | validate-payload --catalog cannot load persona catalog ids (<base>--<persona>) | bug | L1 | P2 | none | 🔵 ready |
 | T-0248 | [fog-bundle-rounds](fog-bundle-rounds/handoff.md) | Round folders ingest into context-fog-of-war as session bundles; mapping manifest committed; T-0239 adapter retired or kept with reason | chore | L2 | P2 | none | 🟢 done |
@@ -257,3 +257,5 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0250 | [repo-cleanup-oct](repo-cleanup-oct/handoff.md) | Repo cleanup: reap merged worktrees, prune merged branches, delete ignored build dirs | chore | L1 | P2 | none | 🟢 done |
 | T-0251 | [entry-plan-docs-refresh](entry-plan-docs-refresh/handoff.md) | README, CONTRIBUTING, CHANGELOG pointer, package READMEs, plan, goals, roadmap, process refreshed | chore | L2 | P2 | T-0249 | 🔵 ready |
 | T-0252 | [specs-skills-scrub](specs-skills-scrub/handoff.md) | Spec and LLD path scrub, app-shell superseded markers, skills and agents scrub, old tickets archived | chore | L2 | P2 | T-0249 | 🔵 ready |
+| T-0253 | [games-rank-by-family](games-rank-by-family/handoff.md) | Within the games domain, retrieval ranks a preset's own composite family first | bug | L2 | P2 | T-0240 | 🔵 ready |
+| T-0254 | [budget-gate-persona-shards](budget-gate-persona-shards/handoff.md) | Prompt budget gate measures the persona example shards too | chore | L1 | P2 | T-0240 | 🔵 ready |
