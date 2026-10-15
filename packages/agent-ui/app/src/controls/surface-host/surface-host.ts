@@ -314,12 +314,24 @@ export class UISurfaceHostElement extends UIElement {
    *  cleared otherwise — so a surface whose root changes shape across updateComponents re-evaluates on
    *  every line. surface-host.css suppresses the host's own card bg/border/padding under
    *  `[bare][data-root-card]` while KEEPING the border-radius, so the ADR-0199 working glow's
-   *  --ui-surface-host-working-radius still coincides with the visible (payload-owned) card edge. */
+   *  --ui-surface-host-working-radius still coincides with the visible (payload-owned) card edge.
+   *
+   *  T-0204: the renderer stamps the canvas register (`data-tier`/`data-scale`, ADR-0245 Amendment 2) on the
+   *  root, so the root card's corner is the widget rung while this host sits on the page's. Under a card root
+   *  the surface part mirrors the root's register, so the radius surface-host.css reads there (and the clip
+   *  and the glow that ride it) resolves to the card's own corner, live; a non-card root clears the mirror. */
   #applyRootStretch(): void {
     const root = this.#surface?.firstElementChild ?? null
-    if (root !== null && root.tagName.toLowerCase() === 'ui-card') this.dataset.rootCard = ''
+    const card = root !== null && root.tagName.toLowerCase() === 'ui-card' ? root : null
+    if (card !== null) this.dataset.rootCard = ''
     else delete this.dataset.rootCard
-    if (this.#surface) applyRootStretch(this.#surface)
+    if (this.#surface === undefined) return
+    for (const attr of ['data-tier', 'data-scale']) {
+      const value = card?.getAttribute(attr) ?? null
+      if (value !== null) this.#surface.setAttribute(attr, value)
+      else this.#surface.removeAttribute(attr)
+    }
+    applyRootStretch(this.#surface)
   }
 
   /** End of a batch: forwards to the `RendererHost`, then stretches the root to fill the artboard
