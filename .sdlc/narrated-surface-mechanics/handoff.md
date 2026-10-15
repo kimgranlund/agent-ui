@@ -2,13 +2,11 @@
 id: T-0234
 title: "Agents narrate surface ids and earlier-turn corrections in ordinary turns"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
 created: 2026-10-15
-branch: fix/lane-h-agent-behavior
-worktree: .claude/worktrees/wave-lh
 router: .sdlc/AGENTS.md  # how to claim and close this ticket
 ---
 
@@ -35,3 +33,9 @@ Prompt edits follow the `a2ui-prompt-authoring` recapture flow. No em dashes.
 - (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/produce-narration.test.ts` exits 0, a producer test: a reply that names a surface id of the session, or opens a correction of an earlier turn, gets a finding and one repair round.
 - `npx vitest run scripts/e2e-admin/probe/replays/croupier-omaha-opus-narration.test.mjs` exits 0 with its expectation updated to the repaired turn.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged in #2013 (lane H)) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

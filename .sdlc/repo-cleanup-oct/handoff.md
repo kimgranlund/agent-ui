@@ -2,7 +2,7 @@
 id: T-0250
 title: "Repo cleanup: reap merged worktrees, prune merged branches, delete ignored build dirs"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -24,3 +24,12 @@ Use the gated `npm run ops:reap-worktrees`, `ops:reap-branches` scripts (dry run
 - The dry-run lists are saved beside this handoff; every removed worktree and branch maps to a merged PR.
 - No `.sdlc` record from a dirty worktree is lost (copied first, listed in the report).
 - `git worktree list` shows only live lanes; `npm run check` exit 0.
+
+## Outcome
+
+2026-10-15 · lane: full L1 · verdict: closed by reason (Done locally (no tracked change): 20 merged worktrees and 44 local branches reaped, 2 remote branches deleted, ~50 MB build dirs removed; verifier L1 pass) · verifier: verifier-L1 (opus) · base: 563b00cc25ea
+- Changed: see commits
+- Commits: none
+- Check: 1 Dry-run lists saved beside the handoff; every removed worktree and branch maps to a merged PR: pass
+- Check: 2 No `.sdlc` record from a dirty worktree lost, copied first and listed: pass
+- Check: 3 `git worktree list` shows only live lanes; `npm run check` exit 0: pass

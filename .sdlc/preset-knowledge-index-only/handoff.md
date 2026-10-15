@@ -2,13 +2,11 @@
 id: T-0231
 title: "The Concierge cannot see the hours, policies and booking flow its own resources and playbooks hold"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
 created: 2026-10-15
-branch: fix/lane-h-agent-behavior
-worktree: .claude/worktrees/wave-lh
 router: .sdlc/AGENTS.md  # how to claim and close this ticket
 ---
 
@@ -49,3 +47,9 @@ This solo lane delivers these tickets in order, one commit each, then one batche
 
 ## Lane verify scope
 One batched verifier checks all five tickets in ## Lane bundle against their own handoff criteria, from the lane base: .sdlc/preset-knowledge-index-only, .sdlc/croupier-opening-skips-bet, .sdlc/croupier-playing-table-no-moves, .sdlc/croupier-haiku-state-in-prose, .sdlc/narrated-surface-mechanics. One verdict per ticket, then one overall verdict.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged in #2013 (lane H)) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

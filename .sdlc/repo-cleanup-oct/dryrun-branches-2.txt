@@ -1,0 +1,56 @@
+# reap-branches — dry-run (repo: /Users/kimgranlund/Projects/nonoun/agent-ui)
+  chore/anthropic-workspace-id     da660c8d  REAP      PR #1983 MERGED at this tip
+  chore/catalog-architecture       5f0b15d0  REAP      PR #1988 MERGED at this tip
+  chore/catalog-w0                 bafbca67  REAP      PR #1989 MERGED at this tip
+  chore/chat-probe-loop            f0329546  REAP      PR #1973 MERGED at this tip
+  chore/claude-review-fix          5eb9ed00  REAP      PR #1979 MERGED at this tip
+  chore/claude-review-fix-2        7de4a425  REAP      PR #1981 MERGED at this tip
+  chore/correctness-producer       a9d93bc2  REAP      PR #1984 MERGED at this tip
+  chore/correctness-renderer       d6e86831  REAP      PR #1972 MERGED at this tip
+  chore/croupier-closed-loop       b12d6aae  REAP      PR #1992 MERGED at this tip
+  chore/lint-allowlist-owners      c4bfe4e0  REAP      PR #1982 MERGED at this tip
+  chore/lint-root-derived          f1d03360  REAP      PR #1970 MERGED at this tip
+  chore/live-round-2               df949f08  REAP      PR #1996 MERGED at this tip
+  chore/live-round-2-run           4a855432  REAP      PR #1998 MERGED at this tip
+  chore/model-capability-settings  b953f6d2  REAP      PR #1990 MERGED at this tip
+  chore/preset-producer-drift      38f031eb  REAP      PR #1971 MERGED at this tip
+  chore/repin-md-a01               5f7d230b  PROPOSED  not merged: no matching PR; git cherry origin/main: 8 pending commit(s)
+  chore/repin-md-a02-a04           f411f813  PROPOSED  not merged: no matching PR; git cherry origin/main: 10 pending commit(s)
+  chore/repin-md-a05-a10           79543fa6  PROPOSED  not merged: no matching PR; git cherry origin/main: 10 pending commit(s)
+  chore/repin-md-app-unlaned       4982d96c  PROPOSED  not merged: no matching PR; git cherry origin/main: 7 pending commit(s)
+  chore/repin-md-last-reds         6bf9b65a  PROPOSED  not merged: no matching PR; git cherry origin/main: 20 pending commit(s)
+  chore/reply-text                 08b2323f  REAP      PR #1987 MERGED at this tip
+  chore/retire-adr-system          2dc66c67  REAP      PR #1968 MERGED at this tip
+  chore/review-yaml-fix            0acd18f7  REAP      PR #1985 MERGED at this tip
+  chore/rootmd-drill-demo          b30c6442  PROPOSED  not merged: no matching PR; git cherry origin/main: 21 pending commit(s)
+  chore/rootmd-eval-catalog        cc7b2561  PROPOSED  not merged: no matching PR; git cherry origin/main: 22 pending commit(s)
+  chore/sdlc-store-sync            5be67a87  REAP      PR #2005 MERGED at this tip
+  chore/sonnet-5-5                 f30052d8  REAP      PR #1975 MERGED at this tip
+  chore/spec-a2ui-upserts          40631d40  REAP      PR #1980 MERGED at this tip
+  chore/spec-agent-content         8c84e6c9  REAP      PR #1978 MERGED at this tip
+  chore/spec-closed-loop           1392ee6e  REAP      PR #1977 MERGED at this tip
+  chore/status-stream-geometry     56559203  REAP      PR #1974 MERGED at this tip
+  chore/teach-existing-composites  4364a67f  REAP      PR #1986 MERGED at this tip
+  chore/textfield-date-iso         1e5237d8  REAP      PR #1976 MERGED at this tip
+  chore/track-sdlc                 c918bd8f  REAP      PR #2014 MERGED at this tip
+  chore/upsert-round2-learnings    83538c00  REAP      PR #1999 MERGED at this tip
+  ci/review-oauth                  849c2aeb  REAP      PR #1964 MERGED at this tip
+  feat/agent-trace-capture         f88e8794  REAP      PR #1967 MERGED at this tip
+  feat/agent-trace-routing-fields  bef6d232  REAP      PR #2004 MERGED at this tip
+  feat/composite-moment-checks     4043a579  REAP      PR #2002 MERGED at this tip
+  feat/domain-exemplars-plumbing   900d8a5e  KEPT      checked out in /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-dx
+  feat/prompt-cache-budget         618d309f  REAP      PR #1993 MERGED at this tip
+  feat/root-product-md             834960c0  REAP      PR #1969 MERGED at this tip
+  feat/round-archive               b8394a36  REAP      PR #2003 MERGED at this tip
+  fix/cardtable-nested-cards       9c2b22dd  REAP      PR #1991 MERGED at this tip
+  fix/chat-probe-capture-defects   dbf000b7  REAP      PR #1995 MERGED at this tip
+  fix/croupier-rules-money         bf7bfc0c  REAP      PR #1994 MERGED at this tip
+  fix/dogfood3-data-nav            34dbf5fd  REAP      PR #1966 MERGED at this tip
+  fix/dogfood3-demos               3d7b0c61  REAP      PR #1962 MERGED at this tip
+  fix/dogfood3-entry               3b41e4a5  REAP      PR #1965 MERGED at this tip
+  fix/dogfood3-widgets             07079ecc  REAP      PR #1963 MERGED at this tip
+  fix/exemplar-routing-off-domain  49490acd  REAP      PR #2001 MERGED at this tip
+  fix/hidden-state-text-shape      858b73cf  REAP      PR #2000 MERGED at this tip
+  fix/producer-renderer-leaks      de55d5a4  REAP      PR #1997 MERGED at this tip
+  (45 REAP row(s) — re-run with --execute to delete)
+reap-branches · ok · 0 fail / 7 warn

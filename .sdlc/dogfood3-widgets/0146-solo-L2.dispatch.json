@@ -1,0 +1,18 @@
+{
+  "subagent_type": "sdlc-lite:solo-L2",
+  "name": "0146-solo-L2",
+  "description": "T-0146 solo L2 Dogfood round",
+  "model": "opus",
+  "effort": "medium",
+  "prompt": "T-0146 Dogfood round 3: ProductCard | solo L2\nHandoff: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-w3/.sdlc/dogfood3-widgets/handoff.md\nArtifacts dir: /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-w3/.sdlc/dogfood3-widgets\nImplement per .sdlc/dogfood3-widgets/handoff.md. Worktree exists; commit locally, no push.\n",
+  "run_in_background": true,
+  "role": "solo",
+  "level": "L2",
+  "tier": "L2",
+  "prune": false,
+  "handoff": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-w3/.sdlc/dogfood3-widgets/handoff.md",
+  "artifacts_dir": "/Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-w3/.sdlc/dogfood3-widgets",
+  "attempt_id": "e041bd6a5f0a4291a310654f3fa5547b",
+  "base_sha": "4b2e5f9229f6cf4147b67edf89d41fc203d036db",
+  "verifier": "python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.22.7/scripts/dispatch.py prepare verifier L2 /Users/kimgranlund/Projects/nonoun/agent-ui/.claude/worktrees/wave-w3/.sdlc/dogfood3-widgets/handoff.md"
+}

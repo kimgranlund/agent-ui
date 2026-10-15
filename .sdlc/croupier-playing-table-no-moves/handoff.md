@@ -2,13 +2,11 @@
 id: T-0233
 title: "A playing-phase CardTable with no move Buttons passes the Croupier checks"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
 created: 2026-10-15
-branch: fix/lane-h-agent-behavior
-worktree: .claude/worktrees/wave-lh
 router: .sdlc/AGENTS.md  # how to claim and close this ticket
 ---
 
@@ -34,3 +32,9 @@ The failing test lands before or with the fix, never after. No em dashes.
 ## Acceptance criteria
 - (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.test.ts` exits 0: a playing-phase CardTable with no move Button gets the finding; a settled or natural table does not.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-15 · lane: full L1 · verdict: closed by reason (Merged in #2013 (lane H)) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

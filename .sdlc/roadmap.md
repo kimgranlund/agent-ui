@@ -218,7 +218,7 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0211 | [croupier-deal-again-skips-bet](croupier-deal-again-skips-bet/handoff.md) | Croupier Deal again deals at the old bet instead of opening the bet strip | bug | L1 | P1 | none | 🟢 done |
 | T-0212 | [croupier-bet-check-poker](croupier-bet-check-poker/handoff.md) | Croupier BET_TABLE_MISSING fires on poker bet steps and costs repair rounds | bug | L1 | P2 | none | 🟢 done |
 | T-0213 | [producer-reply-meta-line-prose](producer-reply-meta-line-prose/handoff.md) | A meta-line written into render_surface reply shows as raw JSON in the chat | bug | L1 | P1 | none | 🟢 done |
-| T-0214 | [croupier-haiku-state-in-prose](croupier-haiku-state-in-prose/handoff.md) | Haiku 5.5 plays Croupier moves in prose without updating the table | bug | L1 | P1 | none | 🔵 ready (branch fix/lane-h-agent-behavior) |
+| T-0214 | [croupier-haiku-state-in-prose](croupier-haiku-state-in-prose/handoff.md) | Haiku 5.5 plays Croupier moves in prose without updating the table | bug | L1 | P1 | none | 🟢 done |
 | T-0215 | [croupier-checks-need-data-model](croupier-checks-need-data-model/handoff.md) | Croupier bankroll checks go blind when the table has no sendDataModel | bug | L1 | P1 | none | 🟢 done |
 | T-0216 | [croupier-first-deal-debit](croupier-first-deal-debit/handoff.md) | Croupier first deal never takes the bet out of the bankroll and needs a repair round | bug | L1 | P2 | none | 🟢 done |
 | T-0217 | [chat-repair-leaks-to-prose](chat-repair-leaks-to-prose/handoff.md) | Repair corrections and surface ids leak into the Croupier's chat reply | bug | L1 | P3 | none | 🟢 done |
@@ -235,10 +235,10 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0228 | [stray-screenshots-dirs](stray-screenshots-dirs/handoff.md) | Browser-test __screenshots__ folders break selection.test and the merge queue | chore | L2 | P2 | none | 🟢 done |
 | T-0229 | [producer-text-shape-reply-leak](producer-text-shape-reply-leak/handoff.md) | Haiku's text-shape turn shows a trailing meta-line and an unparsed wire line as chat prose | bug | L1 | P1 | none | 🟢 done |
 | T-0230 | [game-hidden-state-no-home](game-hidden-state-no-home/handoff.md) | Lexicographer and Admiral commit no secret word or fleet, so marks and hits are made up | bug | L2 | P1 | none | 🟢 done |
-| T-0231 | [preset-knowledge-index-only](preset-knowledge-index-only/handoff.md) | The Concierge cannot see the hours, policies and booking flow its own resources and playbooks hold | bug | L2 | P2 | none | 🔵 ready (branch fix/lane-h-agent-behavior) |
-| T-0232 | [croupier-opening-skips-bet](croupier-opening-skips-bet/handoff.md) | Croupier opens a blackjack-family game already dealt at a default stake, with no bet strip | bug | L1 | P2 | none | 🔵 ready (branch fix/lane-h-agent-behavior) |
-| T-0233 | [croupier-playing-table-no-moves](croupier-playing-table-no-moves/handoff.md) | A playing-phase CardTable with no move Buttons passes the Croupier checks | bug | L1 | P2 | none | 🔵 ready (branch fix/lane-h-agent-behavior) |
-| T-0234 | [narrated-surface-mechanics](narrated-surface-mechanics/handoff.md) | Agents narrate surface ids and earlier-turn corrections in ordinary turns | bug | L2 | P2 | none | 🔵 ready (branch fix/lane-h-agent-behavior) |
+| T-0231 | [preset-knowledge-index-only](preset-knowledge-index-only/handoff.md) | The Concierge cannot see the hours, policies and booking flow its own resources and playbooks hold | bug | L2 | P2 | none | 🟢 done |
+| T-0232 | [croupier-opening-skips-bet](croupier-opening-skips-bet/handoff.md) | Croupier opens a blackjack-family game already dealt at a default stake, with no bet strip | bug | L1 | P2 | none | 🟢 done |
+| T-0233 | [croupier-playing-table-no-moves](croupier-playing-table-no-moves/handoff.md) | A playing-phase CardTable with no move Buttons passes the Croupier checks | bug | L1 | P2 | none | 🟢 done |
+| T-0234 | [narrated-surface-mechanics](narrated-surface-mechanics/handoff.md) | Agents narrate surface ids and earlier-turn corrections in ordinary turns | bug | L2 | P2 | none | 🟢 done |
 | T-0235 | [probe-live-prose-cumulative](probe-live-prose-cumulative/handoff.md) | chat:probe live prose checks read the whole chat, so one leak fails every later turn | bug | L1 | P3 | none | 🟢 done |
 | T-0236 | [probe-from-trace-agent-default](probe-from-trace-agent-default/handoff.md) | chat:probe --from-trace labels a base-catalog preset's trace as croupier | bug | L1 | P3 | none | 🟢 done |
 | T-0237 | [upsert-round2-learnings](upsert-round2-learnings/handoff.md) | Upsert docs and skills with the closed-loop and live round 1 and 2 learnings | chore | L2 | P1 | none | 🟢 done |
@@ -254,6 +254,6 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0247 | [validate-payload-persona-ids](validate-payload-persona-ids/handoff.md) | validate-payload --catalog cannot load persona catalog ids (<base>--<persona>) | bug | L1 | P2 | none | 🔵 ready |
 | T-0248 | [fog-bundle-rounds](fog-bundle-rounds/handoff.md) | Round folders ingest into context-fog-of-war as session bundles; mapping manifest committed; T-0239 adapter retired or kept with reason | chore | L2 | P2 | none | 🟢 done |
 | T-0249 | [agents-md-single-source](agents-md-single-source/handoff.md) | AGENTS.md is the single cross-harness source; CLAUDE.md is @AGENTS.md only | chore | L2 | P2 | T-0242 | 🔵 ready |
-| T-0250 | [repo-cleanup-oct](repo-cleanup-oct/handoff.md) | Repo cleanup: reap merged worktrees, prune merged branches, delete ignored build dirs | chore | L1 | P2 | none | 🔵 ready |
+| T-0250 | [repo-cleanup-oct](repo-cleanup-oct/handoff.md) | Repo cleanup: reap merged worktrees, prune merged branches, delete ignored build dirs | chore | L1 | P2 | none | 🟢 done |
 | T-0251 | [entry-plan-docs-refresh](entry-plan-docs-refresh/handoff.md) | README, CONTRIBUTING, CHANGELOG pointer, package READMEs, plan, goals, roadmap, process refreshed | chore | L2 | P2 | T-0249 | 🔵 ready |
 | T-0252 | [specs-skills-scrub](specs-skills-scrub/handoff.md) | Spec and LLD path scrub, app-shell superseded markers, skills and agents scrub, old tickets archived | chore | L2 | P2 | T-0249 | 🔵 ready |

@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:d2f28357f67b -->
+<!-- sdlc-lite:managed:start v1 sha256:427346ffe5a0 -->
 # Work records
 
 This folder holds SDLC Lite tickets, task records, `roadmap.md`, `notes.md`, and `config`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -20,7 +20,7 @@ This folder holds SDLC Lite tickets, task records, `roadmap.md`, `notes.md`, and
   - T-0197 BookingForm field kinds (dateRange, radio, time, stepper) and sharing it with the Maitre d' (bookingform-kinds)
   - T-0198 Step flow pattern: step n of m, Back and Next, shared /draft data (step-flow)
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (itinerary-compare)
-- ready: 26
+- ready: 20
   - T-0160 Agent content as files: extract preset and pack seeds to .md manifests with a generated, drift-gated registry (agent-content-files)
   - T-0161 Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind (agent-content-overlays)
   - T-0162 Settings pane forms generated from each content kind's schema, with provenance, diff and reset (agent-content-schema-forms)
@@ -34,24 +34,18 @@ This folder holds SDLC Lite tickets, task records, `roadmap.md`, `notes.md`, and
   - T-0203 Composer model controls: thinking off and show reasoning in the effort menu, web search and fetch toggles, server tools in requests, mid-conversation effort header (composer-model-controls)
   - T-0205 Context archaeology: how the a2ui producer builds context and routes (context-archaeology)
   - T-0209 One source per concept: layer membership, calibration bullets, persona list; mini-skill ranking stability test (context-single-source)
-  - T-0214 Haiku 5.5 plays Croupier moves in prose without updating the table (croupier-haiku-state-in-prose), branch fix/lane-h-agent-behavior
-  - T-0231 The Concierge cannot see the hours, policies and booking flow its own resources and playbooks hold (preset-knowledge-index-only), branch fix/lane-h-agent-behavior
-  - T-0232 Croupier opens a blackjack-family game already dealt at a default stake, with no bet strip (croupier-opening-skips-bet), branch fix/lane-h-agent-behavior
-  - T-0233 A playing-phase CardTable with no move Buttons passes the Croupier checks (croupier-playing-table-no-moves), branch fix/lane-h-agent-behavior
-  - T-0234 Agents narrate surface ids and earlier-turn corrections in ordinary turns (narrated-surface-mechanics), branch fix/lane-h-agent-behavior
   - T-0240 Domain exemplars: CardTable, BookingForm and BoardGrid examples the producer can retrieve, plus a preset-to-domain mapping (domain-exemplars), branch feat/domain-exemplars-plumbing
   - T-0242 Move the ticket store to the sdlc-lite topics layout (.sdlc/tickets/, notes/, work/), committed (sdlc-topics-layout)
   - T-0246 Docs-page persona exemplar fixtures carry the same game and booking defects as the seeds (persona-exemplar-fixture-defects)
   - T-0247 validate-payload --catalog cannot load persona catalog ids (<base>--<persona>) (validate-payload-persona-ids)
   - T-0249 AGENTS.md is the single cross-harness source; CLAUDE.md is @AGENTS.md only (agents-md-single-source)
-  - T-0250 Repo cleanup: reap merged worktrees, prune merged branches, delete ignored build dirs (repo-cleanup-oct)
   - T-0251 README, CONTRIBUTING, CHANGELOG pointer, package READMEs, plan, goals, roadmap, process refreshed (entry-plan-docs-refresh)
   - T-0252 Spec and LLD path scrub, app-shell superseded markers, skills and agents scrub, old tickets archived (specs-skills-scrub)
 - claimed: 0
 - paused: 0
 - blocked: 1
   - T-0191 claude-review still fails in 0.5s with a working API key (not the credential) (claude-review-still-failing)
-- done: 211
+- done: 217
 - dropped: 4
 
 ## Procedures
