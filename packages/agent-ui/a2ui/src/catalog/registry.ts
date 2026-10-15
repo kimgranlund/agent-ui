@@ -135,7 +135,8 @@ export class Registry implements CatalogRegistry {
     }
   }
 
-  /** A registered id or a recorded (not yet loaded) one. `get` answers only for a loaded catalog. */
+  /** A registered id, a recorded (not yet loaded) one, or one the record resolver answers (recorded on first
+   *  sight, T-0202). `get` answers only for a loaded catalog. */
   knows(id: string): boolean {
     if (this.#catalogs.has(id) || this.#records.has(id)) return true
     this.#recordFor(id) // a resolved record may adopt a warm body at once, landing in `#catalogs`

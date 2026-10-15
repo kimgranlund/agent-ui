@@ -153,8 +153,9 @@ function loadEdges(typeName: string, rawNotFor: unknown[]): readonly SelectionEd
 
 /**
  * Validate one `selection.json` document and return its `types` map. The root carries exactly one pin
- * key (`catalogId` for a base catalog, `personaId` for a persona fragment, a non-empty string) plus a
- * `types` object. Shape defects throw `MALFORMED`; count and length breaches throw `CAP`. The pin's VALUE
+ * key (`catalogId` for a base catalog, `personaId` for a persona fragment, `domainId` for a domain, a
+ * non-empty string) plus a `types` object; a domain sidecar may also carry `appendNotFor` (T-0202,
+ * `loadAppendedEdges` reads it). Shape defects throw `MALFORMED`; count and length breaches throw `CAP`. The pin's VALUE
  * is checked by the module-load reader below, not here.
  */
 export function loadSelectionGuidance(doc: unknown): SelectionGuidance {

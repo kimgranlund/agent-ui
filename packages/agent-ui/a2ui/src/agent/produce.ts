@@ -1105,7 +1105,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
 
 async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOptions): AsyncIterable<string> {
   const k = opts.k ?? 3
-  const query = queryOf(input, k, deps.catalog) // ADR-0169 cl.4 — catalog-aware, not the old pinned literal
+  const query = queryOf(input, k, deps.catalog) // ADR-0169 cl.4: catalog-aware, not the old pinned literal
   const exemplars = deps.retrieve(query) // SPEC-R7 — top-k over the judged shard
   const miniSkills = selectMiniSkills(query.intent, MINI_SKILLS, opts.miniSkillCap ?? DEFAULT_MINI_SKILL_CAP, deps.catalog.catalogId) // ADR-0091 §2 — once per turn, beside retrieve(); ADR-0135 cl.7 — cap now tunable, absent ⇒ default; SPEC-R6 — catalogId-scoped, the SAME value line :762's queryOf already threads into retrieve's own query
   const { text: system, sections } = buildSystemPromptSections(deps.catalog, exemplars, opts.mode, miniSkills, opts.personaSystem, opts.genuiSurface, opts.a2uiEnabled, opts.authoringSurface, opts.builderMission, opts.prefers) // SPEC-R6: catalog-derived; ADR-0090 mode + ADR-0091 mini-skills + ADR-0138 persona + genui-surface SPEC-R10 + GH #418 a2uiEnabled + SPEC-R30 authoring gate + SPEC-R31 builder-mission gate + RTS-R7 persona hint
