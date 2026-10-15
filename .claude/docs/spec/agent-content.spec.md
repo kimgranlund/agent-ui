@@ -237,3 +237,10 @@ ticket against this SPEC runs that ticket's named tests and checks each cited `f
    DAG; site-internal content stays site-internal.
 2. The frontmatter grammar choice, subset or JSON (T-0160, ACS-R3).
 3. Whether `compile` returns a promise or digests in a separate step (T-0163, ACS-R12).
+4. Known gap, context loading (T-0231): skills, playbooks (workflows) and resources reach the prompt as index lines
+   only (ADR-0190), so a preset's own hours, policies or booking flow never load unless the user names the item,
+   which attaches it. Live round 2 (T-0225): the Concierge said it lacked hours its `property-knowledge-base`
+   holds, and Haiku never followed `booking-flow`. Until T-0231 rules, probe scenarios name the item.
+5. Known gap, hidden state (T-0230): a persona's skill content has no home for state the user must trust (a secret
+   word, a fleet) other than the surface data model; the rule is in the `a2ui-payload-authoring` skill, Common
+   traps.

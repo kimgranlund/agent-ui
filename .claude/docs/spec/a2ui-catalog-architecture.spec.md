@@ -115,7 +115,7 @@ Reading: the split does not shrink today's prompt much (about 1.5k chars per tur
 
 ### CA-R9: steering is a mechanism, not prose (planned, W0 to W3)
 
-Evidence that teaching alone does not steer: after T-0200 taught the existing composites in the preset skills, live Haiku 5.5 probes still hand-built the moment. The Concierge answered "What facilities do you have?" with Card and DescriptionList, not ServiceCard, and the Lexicographer answered "Let's play" with Card and TextField, not BoardGrid or GameHud. The Croupier did the same until a semantic check forced CardTable (`BET_TABLE_MISSING`, T-0172, `personas/croupier/checks.ts`). A composite counts as adopted only when a check or a probe shows it on the wire.
+Evidence that teaching alone does not steer: after T-0200 taught the existing composites in the preset skills, live Haiku 5.5 probes still hand-built the moment. The Concierge answered "What facilities do you have?" with Card and DescriptionList, not ServiceCard, and the Lexicographer answered "Let's play" with Card and TextField, not BoardGrid or GameHud. The Croupier did the same until a semantic check forced CardTable (`BET_TABLE_MISSING`, T-0172, `personas/croupier/checks.ts`). Live round 2 (T-0225, per-turn `--expect-turn` on Haiku and Sonnet 5.5) confirmed it: the Concierge drew its composite on 1 of 24 turns (one ServiceCard, Sonnet) and the Lexicographer on 0 of 28, while the Croupier, held by its semantic checks, drew CardTable on every model. A composite counts as adopted only when a check or a probe shows it on the wire.
 
 Three levers, weakest first:
 

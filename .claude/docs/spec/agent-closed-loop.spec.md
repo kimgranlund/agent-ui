@@ -56,7 +56,7 @@ Status law: `fail` makes the run exit 1; `warn` is reported and never fails a ru
 
 ### CL-R3: trace to replay (shipped, T-0174)
 
-`npm run chat:probe -- --from-trace <last | last:k | day.jsonl:line>` converts produce traces from `.agent-traces/` into `probe/replays/<name>.json` plus `<name>.test.mjs` (`scripts/e2e-admin/probe/trace.ts`). Rules: lines are never hand-built; each recorded round runs through the real `produce()` with the testkit's scripted provider, threading the session, so self-correct and halts are today's code. The first converted turn must be an intent. The generated test re-derives the lines the same way and asserts every DOM-free check green; it runs in `npm test` (`scripts` project). A test generated from a failing live trace is red until its fix lands and is committed with that fix, or with `expectedFail` (CL-R5) once T-0176 lands.
+`npm run chat:probe -- --from-trace <last | last:k | day.jsonl:line>` converts produce traces from `.agent-traces/` into `probe/replays/<name>.json` plus `<name>.test.mjs` (`scripts/e2e-admin/probe/trace.ts`). Rules: lines are never hand-built; each recorded round runs through the real `produce()` with the testkit's scripted provider, threading the session, so self-correct and halts are today's code. The first converted turn must be an intent. The generated test re-derives the lines the same way and asserts every DOM-free check green; it runs in `npm test` (`scripts` project). A test generated from a failing live trace is red until its fix lands and is committed with that fix, or with `expectedFail` (CL-R5) once T-0176 lands. Until then a replay may be pinned to its failing checks with an `// expectedFail: T-NNNN` comment; the fix's change flips the pin to green (#1995, #1997; the re-pin rule is in `scripts/e2e-admin/README.md`, Fixtures and regressions).
 
 - AC1: `npx vitest run --project scripts scripts/e2e-admin/probe/replays/` exits 0 (shipped).
 
@@ -104,7 +104,7 @@ A scenario known red until a ticket lands names it: `expectedFail: "T-0172"`. A 
 
 ### CL-R7: the live cap and the key boundary (planned cap, T-0176 and T-0179; boundary shipped)
 
-- Cap: every live run has a spend ceiling, default `$5` per run (Kim, 2026-10-14), set by `--max-usd`. The runner estimates first, accrues `costUsd` from each turn's billed token usage, and hard-stops before the next call that the remaining budget cannot cover; it reports coverage (cells run of cells planned). Judge calls (CL-R8) count against the same cap. Precondition: a price table per model id, which no module carries today (`trace-log.ts` records `usage` tokens only); T-0176 adds it as data beside the trace reader.
+- Cap: every live run has a spend ceiling, default `$5` per run (Kim, 2026-10-14), set by `--max-usd`. The runner estimates first, accrues `costUsd` from each turn's billed token usage, and hard-stops before the next call that the remaining budget cannot cover; it reports coverage (cells run of cells planned). Judge calls (CL-R8) count against the same cap. Precondition: a price table per model id. Shipped in part (T-0225): `PRICES` in `scripts/e2e-admin/probe/run-capped.ts`, per model family from the claude-api skill's table, prices a live round from the traces' `usage` tokens and stops it at `--cap` (how to run one: `scripts/e2e-admin/README.md`, Live rounds); T-0176 moves it beside the trace reader for the per-run cap.
 - Key boundary: keys live only in the dev proxy at `/__a2ui/agent` (ADR-0073 cl.5); the probe, the runner, the judge client and every row and report read none and print none. Nothing in `@agent-ui/devtools` imports `produce()`, a provider or a key. Shipped for the probe (T-0174: the probe never reads a key; trace lines go through `redactSecrets`).
 
 - AC1: a keyless test of the cap stops a fixture run at the ceiling and reports partial coverage (T-0179).
@@ -138,3 +138,11 @@ Calibration: each rubric ships a seeded known-good and known-bad transcript set;
 ## 4. Acceptance summary
 
 Keyless: CL-R2 AC1 and CL-R3 AC1 run today. CL-R1, R4, R5, R6, R7 AC1 land with T-0176 and T-0179 under `npm test` or `check:scripts`. Live and manual: CL-R7's cap on a real run, CL-R8's judge selftest and T-0179's baseline run, each reporting its cost.
+
+## 5. Model notes (seen live)
+
+Observations from live rounds 1 and 2 (T-0184, T-0225), not requirements; a scenario or check that depends on one cites it.
+
+- Haiku 5.5 skipped `render_surface` on about a quarter of its turns (28 of 103 in round 2) and wrote the text shape (prose, a meta-line, wire lines) or stated a move in prose with no surface update (T-0229, T-0214).
+- Sonnet 5.5 and Opus 5.5 played the Croupier's games cleanly (5 of 8 each passed; the rest were scenario defects, one Opus narration and T-0232) and drew the table on every deal; Sonnet may open blackjack-family games already dealt, with no bet strip (T-0232).
+- Every model narrated surface mechanics or confessed earlier turns in prose at least once (T-0234).

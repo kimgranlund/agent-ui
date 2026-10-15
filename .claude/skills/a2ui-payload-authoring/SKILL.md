@@ -164,6 +164,11 @@ Draft → validate → fix → re-check → finalize only when clean:
 - **Positional lists.** A `{path, componentId}` template is index-based; v1.0 has no per-item key (ADR-0024).
 - **ISO-canonical values.** `type:"date"`/`type:"time"` fields carry ISO strings in the model
   (see `examples/patterns.ts`'s date/time fields); currency/unit/percent carry the typed number.
+- **State the user must trust lives in the data model.** A secret word, a fleet, a bankroll, hole cards:
+  commit it to the surface data model at the moment it is decided, where a semantic check reads it, never
+  in model memory or prose. Live, a word game with no committed secret fitted its reveal to the marks and a
+  fleet changed size mid-game (T-0230); the Croupier's money and card checks work only because the stake and
+  hands sit in the data model (T-0215, T-0218).
 - **No danger tone.** A destructive button is carried by its action name + wording, not a red variant.
 
 ## Report — the hand-back
