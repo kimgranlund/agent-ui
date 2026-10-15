@@ -22,7 +22,7 @@ import { gateChecksOnCatalog, type SemanticCheck } from '../../../packages/agent
 import { runProducerTurn } from '../../../packages/agent-ui/a2ui/tools/testkit/producer-leg.ts'
 import { nodeCatalogResolver } from '../../../packages/agent-ui/a2ui/tools/testkit/load.node.ts'
 import type { ScriptedToolRound } from '../../../packages/agent-ui/a2ui/tools/testkit/scenario.ts'
-import { SetupError } from '../runner.ts'
+import { SetupError } from '../setup-error.ts'
 import {
   metaOf,
   runChecks,
