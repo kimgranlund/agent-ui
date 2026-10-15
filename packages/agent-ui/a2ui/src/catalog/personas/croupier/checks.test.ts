@@ -630,3 +630,46 @@ describe('croupier action check: settlement pays out from the click-time bankrol
   })
 })
 
+
+// T-0211 (the recorded Haiku 5.5 trace, 2026-10-15.jsonl:4): Deal again ({action: deal, context: {newRound: true}})
+// was answered with table-2 already dealt at the old 100 stake. Kim's ruling (T-0172): the next round opens in the
+// betting phase, so the player picks a stake on the table's own strip.
+describe('croupier action check: Deal again opens the next round in betting (T-0211)', () => {
+  const table = { id: 'root', component: 'CardTable', title: 'Blackjack', phase: { path: '/phase' }, bet: { path: '/bet' }, bankroll: { path: '/bankroll' }, dealerHand: { path: '/dealerHand' }, playerHand: { path: '/playerHand' }, betAction: 'deal' }
+  const C = (rank: string, faceDown = false) => ({ rank, suit: 'clubs', ...(faceDown ? { faceDown } : {}) })
+  const settled = { bankroll: 900, bet: 0, phase: 'settled', dealerHand: [C('K'), C('9')], playerHand: [C('9'), C('7')] }
+  const again = { name: 'deal', surfaceId: 'table-1', context: { newRound: true }, dataModel: settled }
+  const next = (sid: string, value: Record<string, unknown>): A2uiOutput => [
+    { version: 'v1.0', createSurface: { surfaceId: sid, catalogId: 'agent-ui--croupier' } },
+    { version: 'v1.0', updateComponents: { surfaceId: sid, components: [table] } },
+    { version: 'v1.0', updateDataModel: { surfaceId: sid, value } },
+  ] as A2uiOutput
+  const run = (output: A2uiOutput, a: { name: string; surfaceId: string; context: Record<string, unknown>; dataModel: unknown } = again) =>
+    croupierActionApplied.check({ surfaces: semanticSurfaceViews({ turns: [] }, output), action: a })
+  const betting = { bankroll: 900, bet: 0, phase: 'betting', dealerHand: [], playerHand: [] }
+
+  it('the recorded answer (table-2 dealt, phase playing, at the old 100 bet) is NEW_ROUND_NOT_BETTING naming the strip', () => {
+    const findings = run(next('table-2', { bankroll: 900, bet: 100, phase: 'playing', dealerHand: [C('7'), C('5', true)], playerHand: [C('K'), C('8')] }))
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['NEW_ROUND_NOT_BETTING', 'table-2:root']])
+    expect(findings[0]!.message).toMatch(/phase "betting"/)
+    expect(findings[0]!.message).toMatch(/bet strip/)
+  })
+
+  it('a betting table with empty hands and the settled bankroll passes, as a fresh surface or the same one reset', () => {
+    expect(run(next('table-2', betting))).toEqual([])
+    expect(run(next('table-1', betting))).toEqual([])
+    expect(run(next('table-2', betting), { ...again, name: 'dealAgain', context: {} })).toEqual([])
+    expect(run([...next('table-1', settled), ...next('table-2', betting)])).toEqual([]) // the old table touched as history
+  })
+
+  it('a betting table that keeps the old cards, or opens on a bankroll other than the settled one, is sent back', () => {
+    expect(run(next('table-2', { ...betting, playerHand: [C('K'), C('8')] })).map((f) => f.code)).toEqual(['NEW_ROUND_NOT_BETTING'])
+    const drift = run(next('table-2', { ...betting, bankroll: 1000 }))
+    expect(drift.map((f) => f.code)).toEqual(['BANKROLL_MISMATCH'])
+    expect(drift[0]!.message).toMatch(/900/)
+  })
+
+  it('Deal again answered with no table at all is ACTION_NOT_APPLIED', () => {
+    expect(croupierActionApplied.check({ surfaces: [], action: again }).map((f) => f.code)).toEqual(['ACTION_NOT_APPLIED'])
+  })
+})

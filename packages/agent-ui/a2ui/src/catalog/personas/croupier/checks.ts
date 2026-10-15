@@ -448,12 +448,66 @@ export const croupierBetControls: SemanticCheck = {
 
 const DEAL_ACTION = /^(deal|place_?bet|bet|deal_blackjack)$/i
 const MOVE_ACTION = /^(hit|stand|double|double_?down)$/i
+const NEW_ROUND_ACTION = /^(deal_?again|new_?round|next_?round)$/i
 const finiteNumber = (v: unknown): number | undefined => (typeof v === 'number' && Number.isFinite(v) ? v : undefined)
+
+/** A CardTable hand prop's list: a literal list, or the list an absolute `{path}` reads (`undefined` otherwise). */
+function handList(table: A2uiComponent, p: Participant, dataModel: unknown): unknown[] | undefined {
+  const v = table[`${p}Hand`]
+  const list = Array.isArray(v) ? v : bindingPath(v)?.startsWith('/') === true ? readPointer(dataModel, bindingPath(v)!) : undefined
+  return Array.isArray(list) ? list : undefined
+}
+
+/** T-0211 (Kim's ruling, T-0172): Deal again opens the next round in the betting phase, so the player picks the
+ *  stake on the table's own strip. Every CardTable the answer touches must be in betting with empty hands, on the
+ *  bankroll the round settled at (the click-time data model). The recorded Haiku 5.5 answer opened table-2 dealt,
+ *  at the old 100 stake. A fresh surface or the clicked one reset in place both pass. */
+function newRoundFindings(surfaces: readonly SurfaceView[], action: SemanticAction): SemanticFinding[] {
+  const touched = surfaces.flatMap((view) => [...view.components.values()].filter((c) => c.component === 'CardTable').map((table) => ({ view, table })))
+  // A table on a new surface is the next round, and the clicked one beside it is history (a closing touch).
+  const fresh = touched.filter(({ view }) => view.surfaceId !== action.surfaceId)
+  const tables = fresh.length > 0 ? fresh : touched
+  if (tables.length === 0)
+    return [
+      {
+        code: 'ACTION_NOT_APPLIED',
+        path: `${action.surfaceId}:${action.name}`,
+        message:
+          `The player pressed ${action.name} to start the next round, and this turn opens no table. ` +
+          `Create the next round's surface: one CardTable in phase "betting" with empty /dealerHand and /playerHand, the settled bankroll and "betAction":"deal".`,
+      },
+    ]
+  const settledBankroll = finiteNumber((action.dataModel as Record<string, unknown> | undefined)?.['bankroll'])
+  const findings: SemanticFinding[] = []
+  for (const { view, table } of tables) {
+    const dealt = PARTICIPANTS.filter((p) => (handList(table, p, view.dataModel)?.length ?? 0) > 0)
+    const phase = phaseOf(table, view.dataModel)
+    if (phase !== 'betting' || dealt.length > 0)
+      findings.push({
+        code: 'NEW_ROUND_NOT_BETTING',
+        path: `${view.surfaceId}:${table.id}`,
+        message:
+          `The player pressed ${action.name} for a new round, but ${view.surfaceId}'s ${table.id} opens ${phase === 'betting' ? 'in betting' : `in phase "${phase}"`}` +
+          `${dealt.length > 0 ? ` with cards already in ${dealt.map((p) => `/${p}Hand`).join(' and ')}` : ''}. ` +
+          `A new round starts in phase "betting" with empty /dealerHand and /playerHand and "betAction":"deal": the player picks the stake on the table's bet strip, never the old bet.`,
+      })
+    const path = bindingPath(table['bankroll'])
+    const opened = path === undefined ? finiteNumber(table['bankroll']) : finiteNumber(readPointer(view.dataModel, path))
+    if (settledBankroll !== undefined && opened !== undefined && opened !== settledBankroll)
+      findings.push({
+        code: 'BANKROLL_MISMATCH',
+        path: `${view.surfaceId}:${path ?? table.id}`,
+        message: `The round settled with a bankroll of ${settledBankroll}, and the next table opens on ${opened}. Carry the settled bankroll over: write ${settledBankroll}.`,
+      })
+  }
+  return findings
+}
 
 /** T-0172 (the live probe on f6f94f7f): a table action must move the table, and a deal must take the bet out of
  *  the bankroll. Haiku 5.5 answered a 50 press with prose ("dealt you 9 and 7 for 16") and no update, so the
  *  table stayed in betting; Sonnet 5.5 dealt and wrote a bankroll of 500 from 1,000 after a 50 bet. */
 function actionApplied(surfaces: readonly SurfaceView[], action: SemanticAction): SemanticFinding[] {
+  if (action.context['newRound'] === true || NEW_ROUND_ACTION.test(action.name)) return newRoundFindings(surfaces, action)
   const deal = DEAL_ACTION.test(action.name)
   if (!deal && !MOVE_ACTION.test(action.name)) return []
   const view = surfaces.find((v) => v.surfaceId === action.surfaceId)
@@ -562,7 +616,8 @@ function settleFinding(view: SurfaceView, table: A2uiComponent, action: Semantic
   }
 }
 
-/** T-0172: a table action moves the table, and a deal takes the bet out of the bankroll. */
+/** T-0172: a table action moves the table, and a deal takes the bet out of the bankroll; T-0211: Deal again opens
+ *  the next round in betting. */
 export const croupierActionApplied: SemanticCheck = {
   id: 'croupier-action-applied',
   requires: ['CardTable'],
