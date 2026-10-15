@@ -477,12 +477,15 @@ function handList(table: A2uiComponent, p: Participant, dataModel: unknown): unk
 /** T-0211 (Kim's ruling, T-0172): Deal again opens the next round in the betting phase, so the player picks the
  *  stake on the table's own strip. Every CardTable the answer touches must be in betting with empty hands, on the
  *  bankroll the round settled at (the click-time data model). The recorded Haiku 5.5 answer opened table-2 dealt,
- *  at the old 100 stake. A fresh surface or the clicked one reset in place both pass. */
+ *  at the old 100 stake. A fresh surface or the clicked one reset in place both pass; an answer with no CardTable
+ *  (a poker hand on a Card) is never judged, and an answer with no surface at all is ACTION_NOT_APPLIED. */
 function newRoundFindings(surfaces: readonly SurfaceView[], action: SemanticAction): SemanticFinding[] {
   const touched = surfaces.flatMap((view) => [...view.components.values()].filter((c) => c.component === 'CardTable').map((table) => ({ view, table })))
   // A table on a new surface is the next round, and the clicked one beside it is history (a closing touch).
   const fresh = touched.filter(({ view }) => view.surfaceId !== action.surfaceId)
   const tables = fresh.length > 0 ? fresh : touched
+  // A new round on a surface with no CardTable is another game's (a poker hand on a Card): not judged here.
+  if (surfaces.length > 0 && tables.length === 0) return []
   if (tables.length === 0)
     return [
       {

@@ -695,6 +695,20 @@ describe('croupier action check: Deal again opens the next round in betting (T-0
   it('Deal again answered with no table at all is ACTION_NOT_APPLIED', () => {
     expect(croupierActionApplied.check({ surfaces: [], action: again }).map((f) => f.code)).toEqual(['ACTION_NOT_APPLIED'])
   })
+
+  it('a poker Deal again answered by a new Card surface (no CardTable) passes', () => {
+    const omaha = [
+      { version: 'v1.0', createSurface: { surfaceId: 'table-2', catalogId: 'agent-ui--croupier' } },
+      { version: 'v1.0', updateDataModel: { surfaceId: 'table-2', value: { dealerHand: [C('Q', true), C('7', true)], playerHand: [C('A'), C('K')] } } },
+      { version: 'v1.0', updateComponents: { surfaceId: 'table-2', components: [
+        { id: 'root', component: 'Card', children: ['title', 'drow'] },
+        { id: 'title', component: 'Text', text: 'Omaha · Hand 2' },
+        { id: 'drow', component: 'Row', children: { path: '/dealerHand', componentId: 'dcard' } },
+        { id: 'dcard', component: 'PlayingCard', rank: { path: 'rank' }, suit: { path: 'suit' }, faceDown: { path: 'faceDown' } },
+      ] } },
+    ] as A2uiOutput
+    expect(run(omaha)).toEqual([])
+  })
 })
 
 // T-0218 (the recorded Omaha turns, 2026-10-15.jsonl:105 and :37 to :41): Sonnet 5.5 dealt the dealer four identical
