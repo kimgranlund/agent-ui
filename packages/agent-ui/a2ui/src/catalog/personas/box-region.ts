@@ -13,6 +13,9 @@ export const BOX = {
   padBlock: 'var(--ui-box-pad-block, 0.375rem)', // 6px, a region's block padding
   padInline: 'var(--ui-box-pad-inline, 0.75rem)', // 12px, a region's inline padding
   gap: 'var(--ui-box-gap, 0.5rem)', // 8px, the gap between a region's children
+  /** A filled or outlined box inside the card: the inner radius the card publishes to its children
+   *  (`--ui-card-child-radius`, card.css), so its corner nests inside the card's (T-0204, T-0223). */
+  childRadius: 'var(--ui-card-child-radius, var(--md-sys-widget-radius))',
 } as const
 
 /** Pad a region-less `ui-card` like one region inside a stock card, and hand its child rhythm to `gap`. */

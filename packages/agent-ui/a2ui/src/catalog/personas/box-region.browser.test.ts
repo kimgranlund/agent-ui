@@ -73,6 +73,30 @@ describe('the persona composites on the ADR-0046 box model (Amendment 7)', () =>
     }
   })
 
+  it('T-0223: QuestionCard option rows and explanation, and the ContrastPair sample, take the card child radius', async () => {
+    for (const [seed, selectors] of [
+      ['persona-quizmaster-question', ['ui-radio', '[data-part="explanation"]']],
+      ['persona-stylist-contrast', ['[data-part="sample"]']],
+    ] as const) {
+      const card = await renderSeed(seed)
+      const outer = Number.parseFloat(getComputedStyle(card).borderTopLeftRadius)
+      // The radius the card publishes to its children, resolved by the engine on a probe child.
+      const probe = document.createElement('div')
+      probe.style.borderRadius = 'var(--ui-card-child-radius)'
+      card.append(probe)
+      const child = Number.parseFloat(getComputedStyle(probe).borderTopLeftRadius)
+      probe.remove()
+      expect(child, `${seed}: the card publishes a child radius below its own`).toBeLessThan(outer)
+      for (const selector of selectors) {
+        const el = card.querySelector(selector)
+        expect(el, `${seed}: ${selector}`).not.toBeNull()
+        const inner = Number.parseFloat(getComputedStyle(el!).borderTopLeftRadius)
+        expect(inner, `${seed}: ${selector} nests inside the card corner`).toBeLessThan(outer)
+        expect(inner, `${seed}: ${selector} takes the card child radius`).toBe(child)
+      }
+    }
+  })
+
   it('T-0142: CardTable action Buttons wrap as one group: at every width they share one top edge', async () => {
     for (const width of [480, 440, 400, 360, 320]) {
       const card = await renderSeed('persona-croupier-card-table', width)
