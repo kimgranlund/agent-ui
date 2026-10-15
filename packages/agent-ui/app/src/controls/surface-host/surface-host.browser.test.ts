@@ -15,6 +15,7 @@ import { createRenderer as warm } from '@agent-ui/a2ui'
 // ADR-0241 Amendment 1: the default catalog is a lazy record, so warm it at the top level, ahead of any renderer this
 // file builds (a renderer built before the body lands stays on the asynchronous path, so a beforeAll would be too late).
 await warm().preload('agent-ui')
+await warm().preload('agent-ui--croupier') // T-0204: the CardTable root case below
 
 const mounted: HTMLElement[] = []
 afterEach(() => {
@@ -341,6 +342,34 @@ describe('ui-surface-host [bare] — the chat mount: no artboard chrome, STRUCTU
     expect(alphaOf(rootStyle.backgroundColor), 'the payload Card lost its own chrome — nothing is painting a container now').toBeGreaterThan(0)
   })
 
+  // T-0204: Kim's live CardTable showed two corners a few px apart. The renderer puts the root card on the
+  // canvas register (widget, 18px corner) while the host and a chat's repoint sit on the page's (22px), so the
+  // surface clipped and the working glow breathed at a radius the card does not have. A CardTable root (a
+  // region-less ui-card) under a chat-style repoint, working: the surface and its glow take the card's corner.
+  it('T-0204: a card root under a page-register repoint: the surface and the working glow share the card corner', async () => {
+    const { host } = mountBareHost()
+    host.style.setProperty('--ui-surface-host-working-radius', '22px') // conversation.css's bubble-radius repoint
+    const table = [
+      line({ version: 'v1.0', createSurface: { surfaceId: 'ct1', catalogId: 'agent-ui--croupier' } }),
+      line({ version: 'v1.0', updateComponents: { surfaceId: 'ct1', components: [
+        { id: 'root', component: 'CardTable', title: 'Blackjack', phase: 'playing', dealerHand: [{ rank: '9', suit: 'diamonds' }], playerHand: [{ rank: 'K', suit: 'spades' }], children: ['hit'] },
+        { id: 'hit', component: 'Button', label: 'Hit', action: { action: 'hit' } },
+      ] } }),
+    ]
+    for (const l of table) host.ingest(l)
+    host.finalize()
+    host.working = true
+    await new Promise((resolve) => requestAnimationFrame(resolve))
+    expect(host.hasAttribute('data-root-card')).toBe(true)
+    const surface = host.querySelector('[data-part="surface"]') as HTMLElement
+    const card = surface.firstElementChild as HTMLElement
+    expect(card.tagName.toLowerCase()).toBe('ui-card')
+    const cardRadius = getComputedStyle(card).borderTopLeftRadius
+    expect(Number.parseFloat(cardRadius)).toBeGreaterThan(0)
+    expect(getComputedStyle(surface).borderTopLeftRadius, 'the surface clips at a corner the card does not have (T-0204)').toBe(cardRadius)
+    expect(getComputedStyle(surface, '::before').borderTopLeftRadius, 'the working glow breathes at a corner the card does not have (T-0204)').toBe(cardRadius)
+  })
+
   it('GH #1163 — a root that changes shape across updates re-evaluates: Card → Column (via re-createSurface, the renderer\'s root-replacement path) restores the #1150/#1161 structural chrome', () => {
     const { host } = mountBareHost()
     for (const l of CARD_ROOT_PAYLOAD) host.ingest(l)
@@ -362,6 +391,7 @@ describe('ui-surface-host [bare] — the chat mount: no artboard chrome, STRUCTU
     host.finalize()
     expect(host.hasAttribute('data-root-card')).toBe(false)
     const surface = host.querySelector('[data-part="surface"]') as HTMLElement
+    expect(surface.hasAttribute('data-tier'), 'the card root\'s register mirror outlived the card (T-0204)').toBe(false)
     const surfaceStyle = getComputedStyle(surface)
     expect(Number.parseFloat(surfaceStyle.paddingTop), 'the structural chrome did not come back for a bare root').toBeGreaterThan(0)
     expect(Number.parseFloat(surfaceStyle.borderTopWidth), 'the structural chrome did not come back for a bare root').toBeGreaterThan(0)

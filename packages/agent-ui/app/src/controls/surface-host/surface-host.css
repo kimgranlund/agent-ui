@@ -226,11 +226,16 @@
      same --md-sys-shape-corner-base rung, so the breathing outline still coincides with the visible
      (now payload-owned) card edge. Bare non-Card roots are untouched — the 1150/1161 chrome above
      applies exactly as shipped. Specificity: the extra [data-root-card] attribute (0,4,0) beats the
-     base [bare] rule above (0,3,0) without !important — the data-empty-final brace's pattern. */
+     base [bare] rule above (0,3,0) without !important — the data-empty-final brace's pattern.
+     T-0204: the root card sits on the canvas register (widget, ADR-0245 Amendment 2) and a chat repoints the
+     working radius to its bubble's page-register value, so the surface clipped and glowed at 22px around an
+     18px card: two corners a few px apart. The surface mirrors the root's data-tier/data-scale (surface-host.ts),
+     so the card rung read HERE is the card's own corner, declared on the part to beat the inherited repoint. */
   :scope[bare][data-root-card] [data-part='surface'] {
     padding: 0;
     background: none;
     border: none;
+    --ui-surface-host-working-radius: var(--md-sys-card-radius);
   }
 
   /* GH 1164 — :state(superseded): the settled-history dim. A LATER turn shifted the conversation's

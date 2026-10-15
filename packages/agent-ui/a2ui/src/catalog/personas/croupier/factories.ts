@@ -124,6 +124,10 @@ function row(part: string): HTMLElement {
   return el
 }
 
+/** A filled box inside the card (a felt, the result line): the inner radius the card publishes to its children
+ *  (`--ui-card-child-radius`, card.css), the widget rung, so its corner nests inside the card's. */
+const CHILD_RADIUS = 'var(--ui-card-child-radius, var(--md-sys-widget-radius))'
+
 /** One participant's zone: a label row (name, total) above the felt that holds the cards. */
 function zone(participant: Participant, name: string): { el: HTMLElement; parts: ZoneParts } {
   const el = document.createElement('div')
@@ -143,7 +147,7 @@ function zone(participant: Participant, name: string): { el: HTMLElement; parts:
   f.background = 'var(--md-sys-color-success-container-low)'
   f.padding = 'var(--md-sys-space-md)'
   f.gap = 'var(--md-sys-space-sm)'
-  f.borderRadius = 'var(--md-sys-shape-corner-base, 12px)'
+  f.borderRadius = CHILD_RADIUS // concentric inside the card, never its own outer rung (T-0204)
   f.display = 'flex'
   f.flexWrap = 'wrap'
   f.alignItems = 'center'
@@ -299,7 +303,7 @@ export const cardTableFactory: WidgetFactory = {
     const r = resultEl.style
     r.boxSizing = 'border-box' // padded inside its 100% flex basis, never past the card's ink edge
     r.padding = 'var(--md-sys-space-sm) var(--md-sys-space-md)'
-    r.borderRadius = 'calc(var(--md-sys-shape-corner-base, 12px) - 2px)'
+    r.borderRadius = CHILD_RADIUS
     const resultText = text('title', 'sm')
     ;(resultText as unknown as { emphasis: boolean }).emphasis = true
     resultEl.appendChild(resultText)

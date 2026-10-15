@@ -62,6 +62,17 @@ describe('the persona composites on the ADR-0046 box model (Amendment 7)', () =>
     expect(getComputedStyle(part(card, 'zone')).marginBlockStart).toBe('0px') // the card's loose-child margin is gone
   })
 
+  it('T-0204: the felts and the result line nest inside the card corner, never repeat it', async () => {
+    const card = await renderSeed('persona-croupier-card-table')
+    const outer = Number.parseFloat(getComputedStyle(card).borderTopLeftRadius)
+    expect(outer).toBeGreaterThan(0)
+    for (const el of [...card.querySelectorAll('[data-part="felt"]'), part(card, 'result')]) {
+      const inner = Number.parseFloat(getComputedStyle(el).borderTopLeftRadius)
+      expect(inner, `${el.getAttribute('data-part')} repeats the card corner`).toBeGreaterThan(0)
+      expect(inner, `${el.getAttribute('data-part')} repeats the card corner`).toBeLessThan(outer)
+    }
+  })
+
   it('T-0142: CardTable action Buttons wrap as one group: at every width they share one top edge', async () => {
     for (const width of [480, 440, 400, 360, 320]) {
       const card = await renderSeed('persona-croupier-card-table', width)
