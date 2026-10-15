@@ -26,3 +26,11 @@ This solo lane delivers these tickets in order, one commit each, then one batche
 - .sdlc/validate-dropped-child-same-payload/handoff.md
 - .sdlc/gh63-poison-producer/handoff.md
 - .sdlc/persona-silent-drop/handoff.md
+
+## Acceptance criteria
+Lane base 73b567b2. One verifier checks all four tickets.
+- T-0228: `npx vitest run packages/agent-ui/a2ui/src/registry/selection.test.ts` exits 0; its `__screenshots__` case failed with the old `!n.includes('.')` filter. `.gitignore` keeps `**/__screenshots__/`; seat-map's merge-queue trap names the removal command.
+- T-0226: `npx vitest run packages/agent-ui/a2ui/src/agent/surface-seeds.test.ts` exits 0; its two T-0226 dangling cases (seeded and unseeded, each with a real-renderer agreement) fail with `validate.ts` at 73b567b2.
+- T-0227: `npx vitest run --config vitest.browser.config.ts --project packages packages/agent-ui/app/src/controls/agent-admin/agent-admin-click-turn.browser.test.ts` exits 0; the GH #63 case fails when the `ERROR_TURN_BUDGET` halt in `agent-admin.ts` is disabled.
+- T-0224: `npx vitest run packages/agent-ui/a2ui/src/live-agent/persona-cap.test.ts site/lib/admin-live-runner.test.ts` exits 0; the dev proxy, Worker and runner cases fail with the three source files at 73b567b2.
+- `npm run check` exits 0.
