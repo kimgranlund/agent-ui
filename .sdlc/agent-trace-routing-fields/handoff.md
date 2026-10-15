@@ -24,3 +24,11 @@ Round 2 analysis (2026-10-15): the traces hold exemplarIds and promptChars only,
 - A trace test asserts the new fields for a croupier turn and a concierge turn.
 - The adapter hydrates one round 2 trace file; fog.py validate exits 0; the published report shows per-turn sources.
 - npm run check plus touched tests exit 0.
+
+## Acceptance criteria
+- The croupier and concierge routing tests pass: `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/agent-trace.test.ts packages/agent-ui/a2ui/src/live-agent/produce-loop.test.ts packages/agent-ui/a2ui/src/live-agent/a2ui-surface-toggle.test.ts`
+- The adapter selftest passes: `python3 scripts/agent-traces-to-fog.py selftest`
+- The round 2 trace hydrates: `python3 scripts/agent-traces-to-fog.py ../wave-r2/.agent-traces/2026-10-15.jsonl --out /tmp/t0239-fog/session.json`
+- The skill validates it: `python3 /Users/kimgranlund/.claude/skills/context-fog-of-war/scripts/fog.py validate /tmp/t0239-fog/session.json`
+- The skill renders it: `python3 /Users/kimgranlund/.claude/skills/context-fog-of-war/scripts/fog.py render --data /tmp/t0239-fog/session.json --out /tmp/t0239-fog/report.html`
+- The standing gate: `npm run check`
