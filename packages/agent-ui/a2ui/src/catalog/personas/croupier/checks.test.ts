@@ -711,6 +711,40 @@ describe('croupier action check: Deal again opens the next round in betting (T-0
   })
 })
 
+// T-0232 (the recorded Sonnet 5.5 trace, 2026-10-15.jsonl:104): "Let's play blackjack." opened table-1 already dealt at
+// a 50 stake the model picked. A say turn's first table opens in betting, unless the user's words name the stake.
+describe('croupier action check: a game opens in betting unless the user names a stake (T-0232)', () => {
+  const table = { id: 'root', component: 'CardTable', title: 'Blackjack', phase: { path: '/phase' }, bet: { path: '/bet' }, bankroll: { path: '/bankroll' }, dealerHand: { path: '/dealerHand' }, playerHand: { path: '/playerHand' }, betAction: 'deal' }
+  const C = (rank: string, faceDown = false) => ({ rank, suit: 'clubs', ...(faceDown ? { faceDown } : {}) })
+  const open = (value: Record<string, unknown>, sid = 'table-1'): A2uiOutput => [
+    { version: 'v1.0', createSurface: { surfaceId: sid, catalogId: 'agent-ui--croupier' } },
+    { version: 'v1.0', updateComponents: { surfaceId: sid, components: [table] } },
+    { version: 'v1.0', updateDataModel: { surfaceId: sid, value } },
+  ] as A2uiOutput
+  const dealt = { bankroll: 950, bet: 50, phase: 'playing', dealerHand: [C('10'), C('6', true)], playerHand: [C('9'), C('5')] }
+  const betting = { bankroll: 1000, bet: 0, phase: 'betting', dealerHand: [], playerHand: [] }
+  const say = (output: A2uiOutput, intent: string, session: Session = { turns: [] }) => croupierActionApplied.check({ surfaces: semanticSurfaceViews(session, output), intent })
+
+  it('the recorded opening (dealt at a stake the user never named) is NEW_ROUND_NOT_BETTING', () => {
+    const findings = say(open(dealt), "Let's play blackjack.")
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['NEW_ROUND_NOT_BETTING', 'table-1:root']])
+    expect(findings[0]!.message).toMatch(/phase "betting"/)
+    expect(say(open(dealt), "Let's play pontoon, or 21.").map((f) => f.code)).toEqual(['NEW_ROUND_NOT_BETTING']) // a game name is no stake
+  })
+
+  it('a typed stake deals legally, and a betting opening passes', () => {
+    expect(say(open(dealt), 'Deal me in for 50.')).toEqual([])
+    expect(say(open(betting), "Let's play blackjack.")).toEqual([])
+  })
+
+  it('a table the session already holds, or a turn with no user words, is not an opening', () => {
+    const session: Session = { turns: [{ role: 'user', content: 'Deal me in for 50.' }, { role: 'assistant', content: open(dealt).map((m) => JSON.stringify(m)).join('\n') }] }
+    const update = [{ version: 'v1.0', updateDataModel: { surfaceId: 'table-1', value: { ...dealt, playerHand: [C('9'), C('5'), C('2')] } } }] as A2uiOutput
+    expect(say(update, 'Hit me.', session)).toEqual([])
+    expect(croupierActionApplied.check({ surfaces: semanticSurfaceViews({ turns: [] }, open(dealt)) })).toEqual([])
+  })
+})
+
 // T-0218 (the recorded Omaha turns, 2026-10-15.jsonl:105 and :37 to :41): Sonnet 5.5 dealt the dealer four identical
 // face-down 2 of clubs, Haiku 5.5 four aces of spades it swapped mid-hand. A poker deal is one deck: every card is
 // distinct, and a face-down card is a committed card that turns up as itself.

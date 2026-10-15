@@ -79,6 +79,9 @@ export interface SemanticAction {
 export interface SemanticCheckInput {
   readonly surfaces: readonly SurfaceView[]
   readonly action?: SemanticAction
+  /** T-0232: the user's own words on a say turn (an intent turn), so a check can tell what the user asked for (a
+   *  typed stake) from what the model chose. Absent on a client turn. */
+  readonly intent?: string
 }
 
 /** The `SemanticAction` of a client message (`{action:{name, surfaceId, context?, dataModel?}}`), or undefined.

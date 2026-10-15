@@ -635,12 +635,42 @@ function settleFinding(view: SurfaceView, table: A2uiComponent, action: Semantic
   }
 }
 
+/** T-0232 (the recorded Sonnet 5.5 opening, 2026-10-15.jsonl:104): "Let's play blackjack." opened table-1 dealt at
+ *  a 50 stake the model picked, with no bet strip. On a say turn, a CardTable on a surface no earlier turn wrote is
+ *  the game's first table, and it opens in betting with empty hands unless the user's own words name a stake ("Deal
+ *  me in for 100"; a game name such as "21" is not one). A surface that names another game keeps its own opening. */
+function openingFindings(surfaces: readonly SurfaceView[], intent: string): SemanticFinding[] {
+  if (/\d/.test(intent.replace(new RegExp(BLACKJACK_GAMES.source, 'gi'), ' '))) return []
+  const findings: SemanticFinding[] = []
+  for (const view of surfaces) {
+    if (view.priorDataModel !== undefined) continue // the session already holds this table: not an opening
+    const comps = [...view.components.values()]
+    if (namesOtherGame(comps)) continue
+    for (const table of comps) {
+      if (table.component !== 'CardTable') continue
+      const dealt = PARTICIPANTS.filter((p) => (handList(table, p, view.dataModel)?.length ?? 0) > 0)
+      const phase = phaseOf(table, view.dataModel)
+      if (phase === 'betting' && dealt.length === 0) continue
+      findings.push({
+        code: 'NEW_ROUND_NOT_BETTING',
+        path: `${view.surfaceId}:${table.id}`,
+        message:
+          `The player asked for a game and named no stake, but ${view.surfaceId}'s ${table.id} opens in phase "${phase}"` +
+          `${dealt.length > 0 ? ` with cards already in ${dealt.map((p) => `/${p}Hand`).join(' and ')}` : ''}. ` +
+          `A game opens in phase "betting" with empty /dealerHand and /playerHand and "betAction":"deal": the player picks the first stake on the table's bet strip, never one you choose.`,
+      })
+    }
+  }
+  return findings
+}
+
 /** T-0172: a table action moves the table, and a deal takes the bet out of the bankroll; T-0211: Deal again opens
- *  the next round in betting. */
+ *  the next round in betting; T-0232: a say turn's first table opens in betting too. */
 export const croupierActionApplied: SemanticCheck = {
   id: 'croupier-action-applied',
   requires: ['CardTable'],
-  check: (input) => (input.action === undefined ? [] : actionApplied(input.surfaces, input.action)),
+  check: (input) =>
+    input.action !== undefined ? actionApplied(input.surfaces, input.action) : input.intent !== undefined ? openingFindings(input.surfaces, input.intent) : [],
 }
 
 const POKER_GAMES = /\b(poker|stud|hold ?['’]?em|holdem|omaha|razz|five[- ]card draw|draw poker)\b/i

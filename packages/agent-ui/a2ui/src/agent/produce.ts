@@ -1122,6 +1122,15 @@ function keepSurfacesHint(failed: A2uiOutput | undefined, session: Session, fail
 /** The bounded turn: `produceTurn`'s whole loop under one absolute deadline (T-0023, `withTurnDeadline`). The
  * composed signal replaces `opts.signal` for the loop, so the provider fetch, its body read and every
  * in-flight tool call (`executeTool`'s third argument) stop together when the limit is reached. */
+
+/** T-0232: the user's typed words of an intent turn. An attached entry rides the text framed ahead of them under
+ *  `## Referenced for this message` (`@agent-ui/app` entries.ts `resolveTurnReferences`, typed text last), and its
+ *  rules prose is not what the user said. */
+function typedWords(text: string): string {
+  if (!text.startsWith('## Referenced for this message\n')) return text
+  return text.slice(text.lastIndexOf('\n\n') + 2)
+}
+
 export async function* produce(input: TurnInput, deps: ProduceDeps, opts: ProduceOptions): AsyncIterable<string> {
   yield* withTurnDeadline((signal) => produceTurn(input, deps, { ...opts, signal }), opts.signal, opts.turnDeadlineMs)
 }
@@ -1218,6 +1227,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   // T-0172: the action a client turn answers, read by the semantic checks (a no-payload round is judged too).
   // T-0215: a press with no client `dataModel` reads the surface's data model replayed off the session.
   const turnAction = input.kind === 'client' ? semanticActionOf(input.message, input.session) : undefined
+  // T-0232: a say turn's own words, so a check can tell a stake the user typed from one the model picked.
+  const turnIntent = input.kind === 'intent' ? typedWords(input.text) : undefined
   // T-0172: every surface a failed round of this turn created that no failure named; a later round that
   // passes without one has dropped it (SURFACE_DROPPED), never a success.
   const keptSurfaces = new Set<string>()
@@ -1593,7 +1604,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       // payload ships with a tally instead (see the header). Skipped entirely when no check is declared.
       const semanticTally: string[] = []
       if (deps.semanticChecks !== undefined && deps.semanticChecks.length > 0) {
-        const semantic = runSemanticChecks(deps.semanticChecks, { surfaces: semanticSurfaceViews(input.session, assembled.output), ...(turnAction !== undefined ? { action: turnAction } : {}) })
+        const semantic = runSemanticChecks(deps.semanticChecks, { surfaces: semanticSurfaceViews(input.session, assembled.output), ...(turnAction !== undefined ? { action: turnAction } : {}), ...(turnIntent !== undefined ? { intent: turnIntent } : {}) })
         if (semantic.findings.length > 0 && round < opts.maxRounds - 1) {
           failures = semantic.findings.map((f) => ({ code: f.code, path: f.path, detail: f.message }))
           continue

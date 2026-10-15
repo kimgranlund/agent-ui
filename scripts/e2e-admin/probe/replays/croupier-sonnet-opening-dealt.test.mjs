@@ -6,10 +6,12 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// Pins the trace only: T-0232. Sonnet 5.5 opens blackjack dealt at a default 50 stake with no bet strip, and no check
-// judges a say turn's first table. T-0232's check turns this replay red.
-it('croupier-sonnet-opening-dealt: the recorded turns replay with every probe check green', async () => {
+// T-0232: Sonnet 5.5 opened blackjack dealt at a default 50 stake with no bet strip. The opening check sends it back with
+// NEW_ROUND_NOT_BETTING; the fixture records one round, so the replay repeats it and the turn ships tallied.
+it('croupier-sonnet-opening-dealt: the dealt opening gets NEW_ROUND_NOT_BETTING', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./croupier-sonnet-opening-dealt.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
   expect(report.failed).toEqual([])
+  const trace = report.records[0].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
+  expect(trace.failureCodes).toEqual(['NEW_ROUND_NOT_BETTING', 'SEMANTIC_UNCORRECTED'])
 })
