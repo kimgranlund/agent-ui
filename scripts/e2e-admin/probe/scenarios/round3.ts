@@ -8,9 +8,9 @@
 //   The opening step (the first guess for the Lexicographer; a Concierge booking ask and its unnamed late check-out
 //   question) carries an `--expect-routing` oracle for the preset's own exemplar (T-0238, T-0240, T-0253) or the
 //   knowledge base (T-0231).
-//   Left out: seven-card-stud and blackjack-rounds on Opus (round 2 scenario defects, fixed), concierge
-//   dinner-at-vela and lexicographer six-guesses (the Concierge booking and the word board are covered by A, C and
-//   the other Lexicographer runs), admiral concede (row-sweep and opening-salvo hold the Admiral's tickets).
+//   Left out: concierge dinner-at-vela and lexicographer six-guesses (the Concierge booking and the word board are
+//   covered by A, C and the other Lexicographer runs), admiral concede (row-sweep and opening-salvo hold the
+//   Admiral's tickets).
 // - C. Long flows on Haiku, Sonnet and Opus: a full blackjack hand (deal, bet, hit, stand, deal again, bet) and a
 //   Concierge booking through a change to its confirmation.
 //
@@ -47,13 +47,15 @@ export interface Regression {
 }
 
 export const REGRESSIONS: readonly Regression[] = [
-  { agent: 'croupier', scenario: 'blackjack-rounds', models: ['haiku', 'sonnet'], covers: ['T-0229', 'T-0233', 'T-0232', 'T-0253'] },
+  // blackjack-rounds on Opus and seven-card-stud failed on round 2 scenario defects; these reruns show the fixes hold.
+  { agent: 'croupier', scenario: 'blackjack-rounds', models: ['haiku', 'sonnet', 'opus'], covers: ['T-0229', 'T-0233', 'T-0232', 'T-0253'] },
   { agent: 'croupier', scenario: 'blackjack-moves', models: ['haiku'], covers: ['T-0229', 'T-0238'] },
   { agent: 'croupier', scenario: 'spanish-21', models: ['haiku'], covers: ['T-0214'] },
   { agent: 'croupier', scenario: 'pontoon', models: ['haiku', 'sonnet'], covers: ['T-0232'] },
   { agent: 'croupier', scenario: 'texas-holdem', models: ['haiku'], covers: ['T-0214', 'T-0240'] },
   { agent: 'croupier', scenario: 'omaha', models: ['haiku', 'opus'], covers: ['T-0214', 'T-0234'] },
   { agent: 'croupier', scenario: 'five-card-draw', models: ['haiku'], covers: ['T-0229', 'T-0234'] },
+  { agent: 'croupier', scenario: 'seven-card-stud', models: ['haiku', 'sonnet', 'opus'], covers: ['T-0214', 'T-0229'] },
   { agent: 'concierge', scenario: 'spa-booking', models: ['haiku', 'sonnet'], covers: ['T-0231', 'T-0214', 'T-0240'] },
   { agent: 'concierge', scenario: 'facilities-then-tour', models: ['haiku', 'sonnet'], covers: ['T-0231'] },
   { agent: 'lexicographer', scenario: 'give-up', models: ['haiku', 'sonnet'], covers: ['T-0230', 'T-0236', 'T-0240'] },

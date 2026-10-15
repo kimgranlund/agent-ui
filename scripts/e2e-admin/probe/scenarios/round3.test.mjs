@@ -19,9 +19,9 @@ const r2Verdict = (name) => {
 describe('live round 3', () => {
   const runs = round3Runs()
 
-  it('12 routing pack runs, 22 regressions, 6 long flows', () => {
+  it('12 routing pack runs, 26 regressions, 6 long flows', () => {
     expect(runs.filter((r) => r.part === 'routing')).toHaveLength(12)
-    expect(runs.filter((r) => r.part === 'regress')).toHaveLength(22)
+    expect(runs.filter((r) => r.part === 'regress')).toHaveLength(26)
     expect(runs.filter((r) => r.part === 'long')).toHaveLength(6)
   })
 
@@ -84,7 +84,7 @@ describe('live round 3', () => {
     const text = read(ROUND3_FILE)
     expect(text).toBe(round3CommandsScript())
     const described = describeCommands(text)
-    expect(described).toHaveLength(40)
+    expect(described).toHaveLength(44)
     expect(described.at(-1)).toBe('long-concierge-booking-opus-1: concierge on claude-opus-5-5, 5 steps, 4 --expect-turn, 1 --expect-routing')
   })
 
