@@ -9,6 +9,7 @@
 // Node-only `SELECTION_GUIDANCE_CHAR_BUDGET` (`selection-guidance.ts`).
 
 import type { PromptBudgetReport, PromptSection } from './meta-line.ts'
+import { isDerivedCatalogId } from '../catalog/catalog-id.ts'
 
 /** The whole-system-prompt character budget for a BASE catalog (`agent-ui`, `a2ui-basic`). Value =
  *  `Math.ceil(measured * 1.1 / 1000) * 1000`, the measured value being the worst case of the matrix
@@ -49,7 +50,7 @@ export const PROMPT_CHAR_BUDGET_DERIVED = 142_000
 
 /** The declared budget for `catalogId`: DERIVED for a `<base>--<persona>` id, else BASE. */
 export function promptBudgetFor(catalogId: string): number {
-  return catalogId.includes('--') ? PROMPT_CHAR_BUDGET_DERIVED : PROMPT_CHAR_BUDGET_BASE
+  return isDerivedCatalogId(catalogId) ? PROMPT_CHAR_BUDGET_DERIVED : PROMPT_CHAR_BUDGET_BASE
 }
 
 /** Assess composed sections against `limit`. Never mutates `sections`; the report carries fresh copies. */

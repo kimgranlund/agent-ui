@@ -4,6 +4,7 @@
 // non-default option is previewed by the first example seed that renders it (`seedsForCatalog`, the same function
 // the every-catalog coverage gate reads), or names its documented exemption.
 import { FLEET_CATALOG_ID } from '@agent-ui/a2ui/registry'
+import { isDerivedCatalogId } from '@agent-ui/a2ui'
 import { CATALOG_COVERAGE_EXEMPT, seedsForCatalog } from '@agent-ui/a2ui/examples'
 import { REGISTRY, catalogIds, pageModel } from './capability-registry.ts'
 import { typesInSeed } from './a2ui-catalog-tiers.ts'
@@ -21,7 +22,7 @@ export function catalogFromSearch(search: string): string {
  *  fragment's own types (the base types stay browsable under the base option). */
 export function typesFor(catalogId: string): readonly string[] {
   const model = pageModel(REGISTRY, catalogId)
-  if (catalogId.includes('--')) return model.personaOnlyTypes
+  if (isDerivedCatalogId(catalogId)) return model.personaOnlyTypes
   return model.lines.map((line) => line.name).sort((a, b) => a.localeCompare(b))
 }
 

@@ -3,7 +3,7 @@
 // previews has an example seed or a documented exemption: the page-side mirror of the every-catalog coverage
 // gate (`packages/agent-ui/a2ui/src/examples/every-catalog-coverage.test.ts`).
 import { describe, it, expect } from 'vitest'
-import { createRenderer, A2UI_BASIC_CANONICAL_URI } from '@agent-ui/a2ui'
+import { createRenderer, A2UI_BASIC_CANONICAL_URI, isDerivedCatalogId } from '@agent-ui/a2ui'
 import { REGISTRY, catalogIds } from './capability-registry.ts'
 import { CATALOG_OPTIONS, catalogFromSearch, exampleSeedFor, exemptionFor, typesFor } from './a2ui-catalog-selector.ts'
 
@@ -28,7 +28,7 @@ describe('a2ui-catalog-selector', () => {
 
   it('every type of every non-default option has an example seed or a documented exemption', () => {
     const others = CATALOG_OPTIONS.filter((id) => id !== 'agent-ui')
-    expect(others.some((id) => id.includes('--')), 'anti-vacuous: at least one derived option').toBe(true)
+    expect(others.some(isDerivedCatalogId), 'anti-vacuous: at least one derived option').toBe(true)
     const missing: string[] = []
     for (const id of others) {
       const types = typesFor(id)

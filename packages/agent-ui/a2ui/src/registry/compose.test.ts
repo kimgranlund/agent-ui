@@ -158,6 +158,14 @@ describe('registryViewFor', () => {
     expect(base.types.length).toBeGreaterThan(0) // anti-vacuous: empty is not the default
   })
 
+  it('T-0210: a two-domain id reads its base, never a persona, and is the base view', () => {
+    const two = registryViewFor(reg, 'agent-ui--design+games')
+    expect(two.baseId).toBe('agent-ui')
+    expect(two.personaId).toBeNull()
+    expect(names(two.types)).toEqual(names(registryViewFor(reg, 'agent-ui').types))
+    expect(two.types.length).toBeGreaterThan(0)
+  })
+
   it('the persona applies only to a base it targets (the unregistered pair falls back to the base view)', () => {
     expect(registryViewFor(reg, 'agent-ui--solo').personaId).toBe('solo')
     const basic = registryViewFor(reg, 'a2ui-basic--solo')

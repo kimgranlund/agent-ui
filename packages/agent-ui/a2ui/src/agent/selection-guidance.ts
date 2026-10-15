@@ -23,7 +23,7 @@
 
 import type { Catalog } from '../catalog/catalog.ts'
 import { listAssets, readAsset } from './asset-source.ts'
-import { parseDomainCatalogId } from '../catalog/catalog-id.ts'
+import { parseDomainCatalogId, splitCatalogId } from '../catalog/catalog-id.ts'
 
 /** One `notFor` edge: a confusable sibling type and the axis that separates it from this type. */
 export interface SelectionEdge {
@@ -290,10 +290,8 @@ const EMPTY: SelectionGuidance = Object.freeze({})
  * consumer with no `Catalog` object (`dogfood-inventory.ts`).
  */
 export function selectionGuidanceForId(id: string): SelectionGuidance {
-  const sep = id.indexOf('--')
-  if (sep === -1) return Object.hasOwn(BASE_GUIDANCE, id) ? BASE_GUIDANCE[id]! : EMPTY
-  const baseId = id.slice(0, sep)
-  const personaId = id.slice(sep + 2)
+  const { base: baseId, tail: personaId } = splitCatalogId(id)
+  if (personaId === undefined) return Object.hasOwn(BASE_GUIDANCE, id) ? BASE_GUIDANCE[id]! : EMPTY
   if (!Object.hasOwn(BASE_GUIDANCE, baseId)) return EMPTY
   const base = BASE_GUIDANCE[baseId]!
   if (Object.hasOwn(PERSONA_GUIDANCE, personaId)) return Object.freeze({ ...base, ...PERSONA_GUIDANCE[personaId]! })

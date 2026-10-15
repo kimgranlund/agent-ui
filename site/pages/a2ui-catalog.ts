@@ -21,7 +21,7 @@ import type { UITabsElement } from '@agent-ui/components/controls/tabs'
 import { TIERS, TIER_LABEL, browsableNames, tierOf, seedsUsingType, seedGalleryHref } from '../lib/a2ui-catalog-tiers.ts'
 import type { Tier } from '../lib/a2ui-catalog-tiers.ts'
 import type { UISelectElement } from '@agent-ui/components/controls/select'
-import { createRenderer } from '@agent-ui/a2ui'
+import { createRenderer, splitCatalogId } from '@agent-ui/a2ui'
 import { FLEET_CATALOG_ID } from '@agent-ui/a2ui/registry'
 import { CATALOG_OPTIONS, catalogFromSearch, exampleSeedFor, exemptionFor, typesFor } from '../lib/a2ui-catalog-selector.ts'
 import { createCanvasSurface, applyRootStretch } from '../lib/canvas-surface.ts'
@@ -223,14 +223,13 @@ async function renderSeedCard(section: HTMLElement, seed: NonNullable<ReturnType
 /** Fill one alternate view: a lead line, then one card per type the catalog previews. */
 async function fillAltView(view: HTMLElement, catalogId: string): Promise<void> {
   const lead = document.createElement('p')
-  const cut = catalogId.indexOf('--')
+  const { base, tail } = splitCatalogId(catalogId)
   const types = typesFor(catalogId)
-  if (cut === -1) {
+  if (tail === undefined) {
     lead.textContent = `Every type the ${catalogId} catalog declares (${types.length}), each rendered from the first example seed that uses it.`
   } else {
-    const base = catalogId.slice(0, cut)
     lead.textContent =
-      `The ${catalogId.slice(cut + 2)} persona on the ${base} base: the ${types.length} types its fragment adds, each ` +
+      `The ${tail} persona on the ${base} base: the ${types.length} types its fragment adds, each ` +
       `rendered from the first example seed that uses it. The ${base} types are under the ${base} option.`
   }
   view.append(lead)

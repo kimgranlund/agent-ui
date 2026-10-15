@@ -46,7 +46,7 @@ export {
   resolveDomainCatalogId,
 } from './compose.ts'
 export type { CatalogFragment, PersonaCatalogPackage, PersonaCatalogManifest, DomainCatalogPackage, DomainCatalogManifest } from './compose.ts'
-export { domainCatalogId, parseDomainCatalogId, catalogIdDomains } from './catalog-id.ts'
+export { domainCatalogId, parseDomainCatalogId, catalogIdDomains, splitCatalogId, isDerivedCatalogId } from './catalog-id.ts'
 export { gateChecksOnCatalog } from './semantic-check.ts'
 // ADR-0238: the contract a persona's `PersonaCatalogManifest.semanticChecks` is written against.
 export type { SemanticCheck, SemanticCheckInput, SemanticFinding, SurfaceView } from './semantic-check.ts'

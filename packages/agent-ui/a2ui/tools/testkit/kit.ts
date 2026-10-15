@@ -27,6 +27,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { isAbsolute, join, relative, sep } from 'node:path'
 import { armOffline } from './offline.ts'
+import { isDerivedCatalogId } from '../../src/catalog/catalog-id.ts'
 import { LAYERS, formatFinding } from './findings.ts'
 import type { KitFinding, Layer } from './findings.ts'
 import { ScenarioError, needsDom, parseScenario } from './scenario.ts'
@@ -76,8 +77,8 @@ function* objectsIn(v: unknown): Generator<Record<string, unknown>> {
 /**
  * A scenario's `list` tags, derived from content: the respond arms it uses (`lines`, `rounds`, `error`),
  * `act`, `no-response` (it has an act, and some object inside one of its `lines` carries
- * `"wantResponse": false`: a content scan, not an act-to-component mapping), `persona` (catalogId contains
- * `--`) and `a2ui-basic` (catalogId starts with `a2ui-basic`).
+ * `"wantResponse": false`: a content scan, not an act-to-component mapping), `persona` (a derived catalog
+ * id, `isDerivedCatalogId`) and `a2ui-basic` (catalogId starts with `a2ui-basic`).
  */
 export function scenarioTags(s: A2uiScenario): string[] {
   const tags = new Set<string>()
@@ -98,7 +99,7 @@ export function scenarioTags(s: A2uiScenario): string[] {
     if (t.act !== undefined) tags.add('act')
   }
   if (tags.has('act') && lineObjects.some((o) => o.wantResponse === false)) tags.add('no-response')
-  if (s.catalogId.includes('--')) tags.add('persona')
+  if (isDerivedCatalogId(s.catalogId)) tags.add('persona')
   if (s.catalogId.startsWith('a2ui-basic')) tags.add('a2ui-basic')
   return [...tags]
 }

@@ -9,7 +9,7 @@
 // reds the gate. Content is SPEC §5's classification (AC2). Pure data plus the selected-domain read (T-0207), whose
 // one import is the import-free id grammar.
 
-import { catalogIdDomains } from './catalog-id.ts'
+import { catalogIdDomains, splitCatalogId } from './catalog-id.ts'
 
 /** The three layers (CA-R1). The agentic layer lives inside the `agent-ui` base (D1). */
 export type CatalogLayer = 'core' | 'agentic' | 'domain'
@@ -74,9 +74,9 @@ export const LAYER_MAP_EXEMPT_HOMES: readonly string[] = ['personas/fixture-demo
 /** T-0207 (CA-R4): the domains an effective catalog id selects: its `+` tail (`catalogIdDomains`), plus the domain of
  *  every row a `<base>--<persona>` fragment homes (`agent-ui--croupier` selects `games`). A base id selects none. */
 export function selectedDomains(catalogId: string): readonly string[] {
-  const sep = catalogId.indexOf('--')
-  if (sep === -1) return []
-  const home = `personas/${catalogId.slice(sep + 2)}`
+  const { tail } = splitCatalogId(catalogId)
+  if (tail === undefined) return []
+  const home = `personas/${tail}`
   const fromPersona = Object.values(CATALOG_LAYER_MAP).flatMap((r) => (r.home === home && r.domain !== undefined ? [r.domain] : []))
   return [...new Set([...catalogIdDomains(catalogId), ...fromPersona])]
 }

@@ -21,6 +21,7 @@ import { a2uiBasicCatalog } from '../catalog/a2ui-basic/index.ts'
 import { composePersonaCatalogDocs } from '../catalog/compose.ts'
 import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from '../catalog/personas/manifests.ts'
 import type { Catalog } from '../catalog/catalog.ts'
+import { isDerivedCatalogId } from '../catalog/catalog-id.ts'
 
 // T-0041 (ADR-0241): warm the default catalog body once, at top level, as `examples.test.ts` does.
 await createRenderer().preload('agent-ui')
@@ -45,7 +46,7 @@ afterAll(() => {
 const isError = (m: A2uiClientMessage): m is Extract<A2uiClientMessage, { error: unknown }> => 'error' in m
 
 /** Every derived `<base>--<persona>` id the renderer records. */
-const DERIVED_IDS: readonly string[] = BUILTIN_CATALOG_RECORDS.map((r) => r.id).filter((id) => id.includes('--'))
+const DERIVED_IDS: readonly string[] = BUILTIN_CATALOG_RECORDS.map((r) => r.id).filter(isDerivedCatalogId)
 
 /** Each derived id's composed catalog document, over the two real bases. */
 const DERIVED_DOCS: ReadonlyMap<string, Catalog> = composePersonaCatalogDocs(
