@@ -52,7 +52,7 @@ content.append(
   el('p', {}, [
     document.createTextNode(
       'agent-ui is an npm-workspaces monorepo; every package lives under packages/agent-ui/*. The map below ' +
-        'follows the repo’s own CLAUDE.md “Layout” section — the canonical description, cited rather than ' +
+        'follows the repo’s own AGENTS.md “Packages” section — the canonical description, cited rather than ' +
         're-derived (a package’s purpose has no single machine-readable source to parse).',
     ),
   ]),

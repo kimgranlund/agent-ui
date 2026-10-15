@@ -21,7 +21,7 @@ entirely from the fleet — read them before scaffolding a new host.
 
 ## Procedure
 
-1. **Respect the package DAG** (`CLAUDE.md` Layout §Conventions is the OWNING map — read it
+1. **Respect the package DAG** (`AGENTS.md` §Packages is the OWNING map — read it
    there, never from a copy here): `shared` ← `components` ← `a2ui` ← `app`, with `router`
    AND `code` as sibling branches off `components` (ADR-0119) — neither imports `a2ui`;
    `a2ui` imports neither; `app` may import `code` (the editor surface, ADR-0139) but never

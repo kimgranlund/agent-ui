@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 
 // Trip-wire (D2 ruling, GH #761): @agent-ui/shared is the DAG's BOTTOM (`shared ← components ← …`,
-// CLAUDE.md §Conventions) — every non-test module under shared/src/** imports ONLY local `./`/`../`
+// AGENTS.md §Packages) — every non-test module under shared/src/** imports ONLY local `./`/`../`
 // paths. Any bare-specifier import (another @agent-ui package, a node builtin, a dependency) is an
 // upward or outward edge the layer must never grow. Same no-execution raw-text idiom as the other
 // per-package layering gates (router/icons/components/app/code) — this file closed the gap where

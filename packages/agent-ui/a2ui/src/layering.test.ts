@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 
 // Trip-wire (D2 ruling, GH #761): @agent-ui/a2ui sits at `shared ← components ← a2ui ← app` with
-// `router` AND `code` as CATALOG-INVISIBLE siblings (CLAUDE.md §Conventions, ADR-0115/ADR-0119) —
+// `router` AND `code` as CATALOG-INVISIBLE siblings (AGENTS.md §Packages, ADR-0115/ADR-0119) —
 // every non-test module under a2ui/src/** imports ONLY {@agent-ui/components, @agent-ui/shared}
 // (root or subpath) or a local `./`/`../` path. The structural fences this makes un-regressable:
 // a2ui never imports `router` or `code` (catalog invisibility), never `app` (upward), never `a2a`
@@ -35,7 +35,7 @@ const specifiersOf = (src: string): string[] => {
 }
 
 // src/agent/** is the NODE-FIRST producer toolkit (ADR-0137 — "portable core in src/agent/"; the
-// root `.` barrel carries zero producer bytes, CLAUDE.md §Layout): node builtins are lawful THERE
+// root `.` barrel carries zero producer bytes, AGENTS.md §Packages): node builtins are lawful THERE
 // and nowhere else in this package (the renderer/validator/catalog stay browser-clean).
 const isAllowedA2uiSpecifier = (path: string, spec: string): boolean =>
   spec.startsWith('.') ||

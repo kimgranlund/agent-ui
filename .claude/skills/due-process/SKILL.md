@@ -53,7 +53,7 @@ none were earned and why, when the change is process/skill-shaped rather than co
 Sliced builds under the existing dated-Findings write-back contract
 (`teamwork:dispatch-ticket`'s contract when that's the caller; this repo's own build discipline
 otherwise). Gates run FOREGROUND, judged by exit codes only — never piped through `grep`/`head`
-(`CLAUDE.md` "Always"; a piped grep-count masked a red gate and an OOM'd browser run,
+(`AGENTS.md` "Gates"; a piped grep-count masked a red gate and an OOM'd browser run,
 2026-07-19). This is where `.claude/docs/process.md`'s trip-wires and standing gates apply.
 
 **Exit artifact:** one dated `## Findings` entry per significant slice (a slice built, a gate
