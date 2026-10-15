@@ -255,6 +255,10 @@ export interface ProduceOptions {
    *  about to run); a returned `effort` or `model` replaces that round's request field only, and the trace's
    *  `model` records the model of the shipped round. Absent ⇒ byte-identical. */
   onRepairRound?: (ctx: { round: number; failures: readonly { code: string; path: string }[] }) => { effort?: Effort; model?: string } | undefined
+  /** T-0259: called once per turn after the system prompt is built, with the exemplar ids retrieval returned and
+   *  the ids the prompt composer actually framed (`buildSystemPromptSections`). Observation only: it changes
+   *  nothing, and the dev trace log is its one reader. Absent ⇒ byte-identical. */
+  onContext?: (ctx: { retrievedIds: readonly string[]; framedIds: readonly string[] }) => void
 }
 
 /** The bounded raw-reasoning excerpt cap (ADR-0146 F3, `progressDetail:'full'`) — a `thinking` delta can be
@@ -1166,7 +1170,9 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   const query = queryOf(input, k, deps.catalog) // ADR-0169 cl.4: catalog-aware, not the old pinned literal
   const exemplars = deps.retrieve(query) // SPEC-R7 — top-k over the judged shard
   const miniSkills = selectMiniSkills(query.intent, MINI_SKILLS, opts.miniSkillCap ?? DEFAULT_MINI_SKILL_CAP, deps.catalog.catalogId) // ADR-0091 §2 — once per turn, beside retrieve(); ADR-0135 cl.7 — cap now tunable, absent ⇒ default; SPEC-R6 — catalogId-scoped, the SAME value line :762's queryOf already threads into retrieve's own query
-  const { text: system, sections } = buildSystemPromptSections(deps.catalog, exemplars, opts.mode, miniSkills, opts.personaSystem, opts.genuiSurface, opts.a2uiEnabled, opts.authoringSurface, opts.builderMission, opts.prefers) // SPEC-R6: catalog-derived; ADR-0090 mode + ADR-0091 mini-skills + ADR-0138 persona + genui-surface SPEC-R10 + GH #418 a2uiEnabled + SPEC-R30 authoring gate + SPEC-R31 builder-mission gate + RTS-R7 persona hint
+  const { text: system, sections, framedExemplarIds } = buildSystemPromptSections(deps.catalog, exemplars, opts.mode, miniSkills, opts.personaSystem, opts.genuiSurface, opts.a2uiEnabled, opts.authoringSurface, opts.builderMission, opts.prefers) // SPEC-R6: catalog-derived; ADR-0090 mode + ADR-0091 mini-skills + ADR-0138 persona + genui-surface SPEC-R10 + GH #418 a2uiEnabled + SPEC-R30 authoring gate + SPEC-R31 builder-mission gate + RTS-R7 persona hint
+  // T-0259: what retrieval returned against what the composer framed into the prompt, ids only; observation, the trace log's.
+  opts.onContext?.({ retrievedIds: exemplars.map((e) => e.name), framedIds: framedExemplarIds })
   // T-0206: the stable prefix (grammar, components, functions) the provider caches; the volatile few-shot
   // and mini-skills follow it, and the persona stays last (ADR-0138).
   const systemCacheBoundary = sections.filter((s) => STABLE_SECTIONS.has(s.id)).reduce((n, s) => n + s.chars, 0)

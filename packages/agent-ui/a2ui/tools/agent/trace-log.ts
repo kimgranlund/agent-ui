@@ -7,6 +7,12 @@
 // mini-skills, each system-prompt section with its size and cache side, and every capability entry the
 // context named with its load mode (an index line, or the full text framed into a user message).
 //
+// `runId` (T-0259) is the probe run's id from the `x-a2ui-run-id` header (`run-id.ts`), absent for a turn from
+// the dev UI; the fog-of-war round manifest keys one conversation per run on it.
+//
+// `events` (T-0259) records retrieval, framing and tool-result ids at independent code points, ids only, so the
+// fog-of-war detectors can compare what was retrieved with what reached the model (see `TraceEvents`).
+//
 // Dev only. The dev proxy is `apply: 'serve'`, so `vite build` never runs it, and the Cloudflare Worker
 // never imports this module (it is Node-only: `node:fs`). Keys are never written: the line is serialized
 // through `redactSecrets`, which replaces every configured provider key by value and then key-shaped
@@ -160,6 +166,24 @@ export interface TraceRouting {
   cacheBoundary?: number
 }
 
+/** T-0259: the context events of a produce turn, ids only (never content), for the fog-of-war round manifest.
+ *  Retrieval and framing are recorded at two points: `retrieval.chunkIds` are the exemplars `deps.retrieve`
+ *  returned (`produce()`), `framedExemplarIds` the ones the prompt composer emitted a block for
+ *  (`buildSystemPromptSections`). Tool results are recorded when the adapter has a result in hand
+ *  (`toolResults`) and again when it places it in the next upstream request (`submittedToolResultIds`).
+ *  Each `toolResults` entry repeats the run id and the line's request id because the manifest reads an array
+ *  entry on its own. */
+export interface TraceEvents {
+  /** `success` is false when retrieval returned nothing, so an empty shard is not counted as a checked pair. */
+  retrieval: { success: boolean; chunkIds: string[] }
+  framedExemplarIds: string[]
+  toolResults: Array<{ runId?: string; requestId: string; resultId: string; success: boolean }>
+  submittedToolResultIds: string[]
+  /** True when the turn reached its final meta-line: both id lists are then the whole turn's, not a cut-off
+   *  prefix. Absent on a turn that threw or halted before it. */
+  complete?: true
+}
+
 /** One line of `.agent-traces/YYYY-MM-DD.jsonl`. */
 export interface AgentTraceLine {
   v: typeof TRACE_LINE_VERSION
@@ -179,8 +203,12 @@ export interface AgentTraceLine {
   rounds: TraceRound[]
   surface: TraceSurface
   usage?: TokenUsage
+  /** T-0259: the probe run this turn belongs to (`x-a2ui-run-id`, `run-id.ts`); absent outside probe runs. */
+  runId?: string
   trace?: Pick<TurnTrace, 'rounds' | 'healed' | 'failureCodes' | 'exemplarIds'> & { promptChars?: number; promptOver?: boolean }
   routing?: TraceRouting
+  /** T-0259: retrieval, framing and tool-result ids; absent on a `/chat` turn and on a turn rejected before retrieval. */
+  events?: TraceEvents
   reply?: string
   warnings: string[]
   error?: TraceError
@@ -421,6 +449,8 @@ export interface TurnTraceStart {
   effort?: string
   mode?: string
   catalogId?: string
+  /** T-0259: the probe run id from the request header, already validated by `readRunId`. */
+  runId?: string
 }
 
 /**
@@ -445,6 +475,9 @@ export class TurnTraceCollector {
   #outcome: TraceOutcome | undefined
   #wireError: string | undefined
   #routing: Pick<TraceRouting, 'catalog' | 'references'> | undefined
+  #context: { retrievedIds: string[]; framedIds: string[] } | undefined
+  #toolResults = new Map<string, boolean>()
+  #submitted = new Set<string>()
 
   constructor(start: TurnTraceStart, now: () => number = Date.now) {
     this.#start = start
@@ -467,6 +500,8 @@ export class TurnTraceCollector {
     const started = this.#now()
     const onEvent = (ev: ProviderEvent): void => {
       if (ev.kind === 'usage' && ev.usage !== undefined) round.usage = addUsage(round.usage, ev.usage)
+      if (ev.kind === 'tool_result' && ev.id !== undefined) this.#toolResults.set(ev.id, ev.ok === true)
+      if (ev.kind === 'tool_submitted' && ev.id !== undefined) this.#submitted.add(ev.id)
       if (ev.kind === 'thinking') {
         round.thinking ??= { deltas: 0, chars: 0 }
         round.thinking.deltas += 1
@@ -499,6 +534,11 @@ export class TurnTraceCollector {
       round.ms = this.#now() - started
       round.text = cap(round.text)
     }
+  }
+
+  /** `ProduceOptions.onContext`: the exemplar ids retrieval returned and the ids the composer framed. */
+  readonly onContext = (ctx: { retrievedIds: readonly string[]; framedIds: readonly string[] }): void => {
+    this.#context = { retrievedIds: [...ctx.retrievedIds], framedIds: [...ctx.framedIds] }
   }
 
   /** `ProduceOptions.onRepairRound`: records the failures that caused the retry and changes nothing.
@@ -657,6 +697,7 @@ export class TurnTraceCollector {
       ...(s.effort !== undefined ? { effort: s.effort } : {}),
       ...(s.mode !== undefined ? { mode: s.mode } : {}),
       ...(s.catalogId !== undefined ? { catalogId: s.catalogId } : {}),
+      ...(s.runId !== undefined ? { runId: s.runId } : {}),
       user: cap(s.user),
       outcome,
       steps: this.#steps,
@@ -676,9 +717,22 @@ export class TurnTraceCollector {
           }
         : {}),
       ...(routing !== undefined ? { routing } : {}),
+      ...(this.#context !== undefined ? { events: this.#eventsFor(t !== undefined) } : {}),
       ...(reply !== undefined ? { reply: cap(reply) } : {}),
       warnings,
       ...(error !== undefined ? { error } : {}),
+    }
+  }
+
+  #eventsFor(complete: boolean): TraceEvents {
+    const ctx = this.#context!
+    const run = this.#start.runId
+    return {
+      retrieval: { success: ctx.retrievedIds.length > 0, chunkIds: ctx.retrievedIds },
+      framedExemplarIds: ctx.framedIds,
+      toolResults: [...this.#toolResults].map(([resultId, success]) => ({ ...(run !== undefined ? { runId: run } : {}), requestId: this.#at, resultId, success })),
+      submittedToolResultIds: [...this.#submitted],
+      ...(complete ? { complete: true as const } : {}),
     }
   }
 

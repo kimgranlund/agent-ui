@@ -41,8 +41,10 @@
   referenced entries as sources, index-only or full); `fog.py validate` and `library.py publish` belong to that
   skill (T-0239). Its keyless `selftest` rides `check:scripts`. A whole round folder ingests through the skill's
   own bundle path instead (`engineer.py ingest <round> --mapping .sdlc/evals/fog-manifest.json`, records in
-  `.sdlc/evals/fog/`, T-0248); that path maps only turns and exemplar ids, so the adapter stays for sections,
-  references and failure codes.
+  `.sdlc/evals/fog/`, T-0248); that path maps turns, the `events` block (exemplar ids retrieved against framed, tool results against
+  submitted, turn completeness) and one conversation per probe run (the `x-a2ui-run-id` header a probe sends,
+  written as `runId` on its trace lines, T-0259), so the fog detectors `retrieved-not-submitted` and
+  `tool-result-not-propagated` assess real pairs; the adapter stays for sections, references and failure codes.
 - `npm run e2e:devtools`: the `@agent-ui/devtools` keyless browser smoke (`scripts/e2e-devtools.mjs`); local
   only, no CI job.
 - `npm run test:a2ui-kit`: the keyless A2UI test kit (T-0011): scenarios, scripted transport, provider, MCP server

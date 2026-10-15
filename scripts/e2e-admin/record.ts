@@ -41,7 +41,8 @@ export interface ResponseLike {
 }
 
 export interface RecordRouteLike extends RouteLike {
-  fetch(options?: { timeout?: number }): Promise<ResponseLike>
+  /** `headers` replaces the request's headers (Playwright), so a caller adding one passes the original set plus it. */
+  fetch(options?: { timeout?: number; headers?: Record<string, string> }): Promise<ResponseLike>
 }
 
 export interface RecordableContext {

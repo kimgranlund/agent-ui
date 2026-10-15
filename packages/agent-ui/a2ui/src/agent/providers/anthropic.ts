@@ -913,6 +913,7 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string; wor
           }),
         )
 
+        for (const { call, isError } of results) req.onEvent?.({ kind: 'tool_result', id: call.id, text: call.name, ok: !isError }) // T-0259: observation only
         const assistantBlocks = assistantTurnBlocks(collector)
         extra.push({ role: 'assistant', content: assistantBlocks })
         extra.push({
@@ -924,6 +925,7 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string; wor
             ...(isError ? { is_error: true } : {}),
           })),
         })
+        for (const { call } of results) req.onEvent?.({ kind: 'tool_submitted', id: call.id }) // T-0259: the results now ride the next request
       }
     },
   }

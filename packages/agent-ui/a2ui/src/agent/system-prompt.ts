@@ -220,13 +220,18 @@ function functionsInventory(catalog: Catalog): string {
   return ids.map((fn) => `- ${fn} (${catalog.functions[fn]!.callableFrom})`).join('\n')
 }
 
-function fewShot(exemplars: readonly CorpusRecord[]): string {
-  if (exemplars.length === 0) return ''
+/** The few-shot segment, plus (T-0259) the `name` of every exemplar whose block it emitted: the composer's own
+ *  record of what it framed, read by the trace log against what `produce()` retrieved. */
+function fewShot(exemplars: readonly CorpusRecord[]): { text: string; framedIds: string[] } {
+  if (exemplars.length === 0) return { text: '', framedIds: [] }
   const blocks = exemplars.map((ex) => {
     const jsonl = (ex.a2uiOutput ?? []).map((m) => JSON.stringify(m)).join('\n')
-    return `PROMPT: ${ex.promptText}\nA2UI:\n${jsonl}`
+    return { id: ex.name, block: `PROMPT: ${ex.promptText}\nA2UI:\n${jsonl}` }
   })
-  return `\n\n## Examples (retrieved — imitate their shape, not their content)\n\n${blocks.join('\n\n---\n\n')}`
+  return {
+    text: `\n\n## Examples (retrieved — imitate their shape, not their content)\n\n${blocks.map((b) => b.block).join('\n\n---\n\n')}`,
+    framedIds: blocks.map((b) => b.id),
+  }
 }
 
 // ---- ADR-0091 §3: the `miniSkills` composed segment — a structural twin of `fewShot` above. Returns
@@ -465,9 +470,10 @@ export function buildSystemPromptSections(
   authoringSurface?: boolean,
   builderMission?: boolean,
   prefers?: ResponsePreference,
-): { text: string; sections: PromptSection[] } {
+): { text: string; sections: PromptSection[]; framedExemplarIds: string[] } {
   const a2uiOn = a2uiEnabled !== false // absent ⇒ on — the zero-regression default (Decision precedent)
   const parts: [PromptSectionId, string][] = []
+  let framedExemplarIds: string[] = [] // T-0259: stays empty when the A2UI half is off, which frames no exemplar
   if (a2uiOn) {
     parts.push(['grammar', grammarFor(mode)])
     parts.push([
@@ -477,7 +483,9 @@ export function buildSystemPromptSections(
         catalogInventory(catalog),
     ])
     parts.push(['functions', `\n\n## Available functions\n\n` + functionsInventory(catalog)])
-    parts.push(['few-shot', fewShot(exemplars)])
+    const shot = fewShot(exemplars)
+    framedExemplarIds = shot.framedIds
+    parts.push(['few-shot', shot.text])
     parts.push(['mini-skills', miniSkillsBlock(miniSkillsFor(mode, miniSkills ?? []))])
   }
   parts.push(['genui', genuiBlock(genui, a2uiOn)])
@@ -487,7 +495,7 @@ export function buildSystemPromptSections(
   parts.push(['persona', personaBlock(personaSystem)])
   const sections: PromptSection[] = []
   for (const [id, body] of parts) if (body.length > 0) sections.push({ id, chars: body.length })
-  return { text: parts.map(([, body]) => body).join(''), sections }
+  return { text: parts.map(([, body]) => body).join(''), sections, framedExemplarIds }
 }
 
 /** ADR-0138 cl.1 — the optional trailing persona section. Appended AFTER every catalog/exemplar/mode/

@@ -101,13 +101,19 @@ export type Effort = 'low' | 'medium' | 'high' | 'xhigh'
  * (raw reasoning), forwarded onto the wire only under an explicit `progressDetail:'full'` opt-in (F3).
  */
 export interface ProviderEvent {
-  kind: 'message_start' | 'block_start' | 'thinking' | 'block_stop' | 'done' | 'tool' | 'usage'
+  kind: 'message_start' | 'block_start' | 'thinking' | 'block_stop' | 'done' | 'tool' | 'usage' | 'tool_result' | 'tool_submitted'
   /** `thinking`: a reasoning-delta excerpt. `tool`: the tool NAME being executed (a factual process
    *  claim from the closed registry, GH #49 — never model-composed prose). */
   text?: string
   /** `usage` (ADR-0234, proposed): the token counts of ONE upstream request. An adapter emits one per
    *  request it makes (so a tool loop reports once per round trip); `produce()` sums them over the turn. */
   usage?: TokenUsage
+  /** T-0259, `tool_result` and `tool_submitted`: the provider's id of the tool call (opaque, never content). */
+  id?: string
+  /** T-0259, `tool_result`: whether the executor answered without error. `tool_result` fires when a non-terminal
+   *  call's result is in hand (`text` is the tool name); `tool_submitted` fires when that result is placed in the
+   *  next upstream request. The dev trace log records both ids so a result that never reached the model shows. */
+  ok?: boolean
 }
 
 // ── Tool use (GH #49) — the integration seam ────────────────────────────────────────────────────────────

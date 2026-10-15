@@ -13,7 +13,7 @@ Backfilled by hand on 2026-10-15 (before T-0241): there is no `round.json` or `l
 ## Context fog-of-war
 
 - Report: `020966220aa2e449fdde440e` in the context-fog-of-war user library (`library.py list`); 129 events, 37 sources, 0 findings.
-- Ingested as a session bundle with `.sdlc/evals/fog-manifest.json` (mapping hash `c2396ca69242`); the record is `.sdlc/evals/fog/2026-10-14-r1-croupier.json` (T-0248).
+- Ingested as a session bundle with `.sdlc/evals/fog-manifest-v1.json` (mapping hash `c2396ca69242`); the record is `.sdlc/evals/fog/2026-10-14-r1-croupier.json` (T-0248).
 
 ## Files
 

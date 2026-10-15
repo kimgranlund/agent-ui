@@ -130,6 +130,37 @@ describe('run-capped', () => {
       expect(existsSync(join(round, '.gitignore'))).toBe(false)
     })
 
+    // T-0259: a live probe's report carries the runId it sent as x-a2ui-run-id and the proxy wrote on its trace
+    // lines; the ledger keeps it and matches the run's trace range on it, so a stray line inside the window
+    // (another session's turn, or the next run's early turn) is not counted into the run.
+    it('matches a run to its trace lines by runId, not by the time window, when the report has one', () => {
+      const { root, now, round } = setup()
+      const traces = join(root, '.agent-traces')
+      const tagged = (at, model, runId) => JSON.stringify({ at, model, runId, usage: { inputTokens: 100_000, outputTokens: 100_000 } })
+      const exec = (cmd) => {
+        const name = /--name (\S+)/.exec(cmd)[1]
+        const model = /--model (\S+)/.exec(cmd)[1]
+        const runId = `${name}-cafe0001`
+        appendFileSync(join(traces, '2026-10-14.jsonl'), tagged(now(), model, runId) + '\n')
+        // A line from another session lands inside this run's window.
+        appendFileSync(join(traces, '2026-10-14.jsonl'), tagged(now(), model, 'someone-else-0001') + '\n')
+        appendFileSync(join(traces, '2026-10-14.jsonl'), tagged(now(), model, runId) + '\n')
+        const out = join(root, /--out (\S+)/.exec(cmd)[1])
+        mkdirSync(out, { recursive: true })
+        writeFileSync(join(out, 'report.json'), JSON.stringify({ verdict: 'pass', runId }))
+        return 0
+      }
+      runRound({ root, liveCommands: 'live.sh', commands: parseCommands(ROUND), cap: 100, since: SINCE, exec, commit: 'abc123', now })
+      const ledger = read(join(round, 'ledger.jsonl'))
+      expect(ledger.map((r) => r.runId)).toEqual(['croupier-deal-haiku-1-cafe0001', 'croupier-deal-sonnet-1-cafe0001', 'admiral-salvo-sonnet-1-cafe0001'])
+      // Each run owns lines 1 and 3 of its own triple; the foreign middle line is in neither range.
+      expect(ledger.map((r) => r.traces)).toEqual([0, 3, 6].map((o) => [{ file: 'traces/2026-10-14.jsonl', from: o + 1, to: o + 1 }, { file: 'traces/2026-10-14.jsonl', from: o + 3, to: o + 3 }]))
+      expect(ledger.map((r) => r.tokens.input)).toEqual([200_000, 200_000, 200_000])
+      // The kept trace lines themselves carry the id the ledger and the report name.
+      const kept = read(join(round, 'traces', '2026-10-14.jsonl'))
+      expect(kept.filter((d) => d.runId === ledger[0].runId)).toHaveLength(2)
+    })
+
     it('still writes the archive when the cap stops the round, and keeps earlier rows on a restart', () => {
       const { root, now, exec, round } = setup()
       const commands = parseCommands(ROUND)
