@@ -13,6 +13,9 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { AgentTraceLine } from '../../../packages/agent-ui/a2ui/tools/agent/trace-log.ts'
 import type { TurnInput, Turn } from '../../../packages/agent-ui/a2ui/src/agent/agent-transport.ts'
+import type { Catalog } from '../../../packages/agent-ui/a2ui/src/catalog/catalog.ts'
+import { croupierSemanticChecks } from '../../../packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.ts'
+import { gateChecksOnCatalog, type SemanticCheck } from '../../../packages/agent-ui/a2ui/src/catalog/semantic-check.ts'
 import { runProducerTurn } from '../../../packages/agent-ui/a2ui/tools/testkit/producer-leg.ts'
 import { nodeCatalogResolver } from '../../../packages/agent-ui/a2ui/tools/testkit/load.node.ts'
 import type { ScriptedToolRound } from '../../../packages/agent-ui/a2ui/tools/testkit/scenario.ts'
@@ -101,25 +104,40 @@ function scriptedRound(round: ProbeRound): string | ScriptedToolRound {
   return { tool: 'render_surface', input: capture.input as Record<string, unknown>, then: round.text }
 }
 
+/** T-0222: the persona semantic checks the dev proxy passes `produce()` (`semanticChecksDeps`), by persona id.
+ *  Plain Node cannot import the persona manifests (their catalog JSON imports), so this names each persona's
+ *  checks module; `trace.test.mjs` pins it to `SHIPPED_PERSONA_CATALOG_MANIFESTS`. */
+export const PERSONA_SEMANTIC_CHECKS: Readonly<Record<string, readonly SemanticCheck[]>> = { croupier: croupierSemanticChecks }
+
+/** The semantic checks a live turn on this catalog ran: its persona's (`<base>--<persona>`), gated on the
+ *  types the catalog declares, as `semanticChecksDeps` does. */
+export function replaySemanticChecks(catalog: Catalog): readonly SemanticCheck[] {
+  const persona = catalog.catalogId.split('--')[1] ?? ''
+  return gateChecksOnCatalog(PERSONA_SEMANTIC_CHECKS[persona] ?? [], catalog)
+}
+
 export interface ReplayContext {
   catalogId: string
   resolveCatalog: ReturnType<typeof nodeCatalogResolver>
 }
 
 /** Run each turn's rounds through the real `produce()` in order, threading a session the way the page
- *  does (the user turn, then the assistant's shipped lines), and return each turn's wire lines. */
+ *  does (the user turn, then the assistant's shipped lines), and return each turn's wire lines. T-0222: with
+ *  the persona's semantic checks, as the dev proxy runs it, so a live retry (ACTION_NOT_APPLIED,
+ *  BET_TABLE_MISSING) retries offline too. */
 export async function deriveLines(
   turns: ReadonlyArray<{ rounds: ProbeRound[]; input: { kind: 'intent'; text: string } | { kind: 'client'; message: unknown } }>,
   ctx: ReplayContext,
 ): Promise<string[][]> {
   const catalog = ctx.resolveCatalog(ctx.catalogId)
   if (catalog === undefined) throw new Error(`no catalog ${ctx.catalogId} under the repo`)
+  const semanticChecks = replaySemanticChecks(catalog)
   const session: Turn[] = []
   const out: string[][] = []
   for (const turn of turns) {
     const input = { ...turn.input, session: { turns: [...session] } } as TurnInput
     const rounds = turn.rounds.length > 0 ? turn.rounds.map(scriptedRound) : ['']
-    const result = await runProducerTurn(input, rounds, catalog)
+    const result = await runProducerTurn(input, rounds, catalog, semanticChecks.length > 0 ? { semanticChecks } : {})
     out.push(result.lines)
     session.push({ role: 'user', content: turn.input.kind === 'intent' ? turn.input.text : JSON.stringify(turn.input.message) })
     session.push({ role: 'assistant', content: result.lines.filter((l) => !l.includes('"a2uiMeta"')).join('\n') })
@@ -164,9 +182,12 @@ export async function fixtureFromTrace(entries: readonly TraceEntry[], name: str
     }
   })
   const lines = await deriveLines(plan, { catalogId, resolveCatalog: nodeCatalogResolver(cwd) })
-  const steps: ProbeStep[] = entries.map((e, i) =>
-    e.line.user.startsWith('{') ? { click: clickLabel(e.line.user, lines.slice(0, i).flat()) } : { say: typedText(e.line.user) },
-  )
+  // T-0222: a client turn that carries an error, not an action, is page-fired (a renderer rejection's error turn).
+  const steps: ProbeStep[] = entries.map((e, i) => {
+    if (!e.line.user.startsWith('{')) return { say: typedText(e.line.user) }
+    const error = (plan[i]!.input as { message?: { error?: { code?: unknown } } }).message?.error
+    return error !== undefined ? { page: typeof error.code === 'string' ? error.code : 'error' } : { click: clickLabel(e.line.user, lines.slice(0, i).flat()) }
+  })
   const turns: ProbeTurn[] = entries.map((_entry, i) => ({ lines: lines[i]!, rounds: plan[i]!.rounds, input: plan[i]!.input }))
   return {
     kind: 'agent-ui-chat-probe',
@@ -212,7 +233,9 @@ export async function offlineReplay(fixture: ProbeFixture, cwd: string): Promise
       const fallback =
         step !== undefined && 'say' in step
           ? { kind: 'intent' as const, text: step.say }
-          : { kind: 'client' as const, message: { version: 'v1.0', action: { name: step?.click ?? 'click' } } }
+          : step !== undefined && 'page' in step
+            ? { kind: 'client' as const, message: { version: 'v1.0', error: { code: step.page } } }
+            : { kind: 'client' as const, message: { version: 'v1.0', action: { name: step !== undefined && 'click' in step ? step.click : 'click' } } }
       return { rounds: t.rounds!, input: t.input ?? fallback }
     })
     lines = await deriveLines(plan, { catalogId, resolveCatalog: nodeCatalogResolver(cwd) })

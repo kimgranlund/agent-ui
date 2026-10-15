@@ -28,3 +28,16 @@ Files: `scripts/e2e-admin/probe/run.ts` (step loop), `scripts/e2e-admin/admin-pa
 
 ## Constraints
 The failing test lands before or with the fix, never after. No em dashes.
+
+## Lane brief (conductor, 2026-10-14)
+Lane 3 of Kim's plan: make chat:probe report only real failures before Kim's next $20+ live round. Fix: per-step records stay aligned when the page fires its own error turns; the available-button list excludes hidden buttons; expect-component scopes per turn where the scenario means it; offline replay matches live on retry turns. Evidence: the T-0184 report on main (.sdlc/croupier-closed-loop/report.md) and the five-card-draw-sonnet run. Keep the probe selftest in check:scripts green and add one keyless regression per defect. No live spend. Gate: npm run check plus scripts/e2e-admin tests. Work and commit in the worktree the prompt names; no push.
+
+## Acceptance criteria
+Run from the lane worktree root (.claude/worktrees/T-0222-solo-chat-probe-capture-defects).
+- Desync, per-turn expect-component and the CLI: `node scripts/chat-probe.mjs selftest` exits 0 (its canned cases pin the step's own exchange among page-fired error turns, the `{"page": ...}` row, and a turn-expected component answered in prose failing exactly expect-component).
+- Hidden buttons and offline replay: `npx vitest run scripts/e2e-admin` exits 0 (`admin-page.test.mjs` lists only visible buttons; `croupier-deal-again-old-bet` replays green as live did; `croupier-stud-bet-table-missing` loses ask-1 as live did; `trace.test.mjs` pins the replay's semantic checks to the shipped personas; the Croupier deals carry `--expect-turn`).
+- Gate: `npm run check` exits 0.
+
+## Plan review
+- scope widened: conductor keeps .sdlc/croupier-closed-loop/live-commands.sh (regenerated; croupier.test.mjs requires it to equal liveCommandsScript()) and packages/agent-ui/a2ui/tools/testkit/producer-leg.ts (optional semanticChecks for offline replay). Both serve the goal.
+- verifier: also run `npm run e2e:admin` (test-chat flows now see visible buttons only) in this tree (wave-pb now holds the T-0222 commits).

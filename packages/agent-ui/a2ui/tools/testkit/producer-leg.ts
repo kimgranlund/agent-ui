@@ -43,12 +43,13 @@ export async function runProducerTurn(
   input: TurnInput,
   rounds: readonly (string | ScriptedToolRound)[],
   catalog: Catalog,
-  opts: { tools?: readonly ScriptedToolSpec[]; maxRounds?: number } = {},
+  opts: { tools?: readonly ScriptedToolSpec[]; maxRounds?: number; semanticChecks?: ProduceDeps['semanticChecks'] } = {},
 ): Promise<ProducerTurnResult> {
   const provider = scriptedProvider(rounds)
   const scripted = scriptedTools(opts.tools ?? [])
   const dispatch = opts.tools !== undefined && opts.tools.length > 0 ? buildToolDispatch(scripted.manifests, {}) : {}
-  const deps: ProduceDeps = { provider: provider as AgentProvider, retrieve: () => [], catalog }
+  // T-0222: a replay of a live turn passes the persona's semantic checks, as the dev proxy does (`semanticChecksDeps`).
+  const deps: ProduceDeps = { provider: provider as AgentProvider, retrieve: () => [], catalog, ...(opts.semanticChecks !== undefined ? { semanticChecks: opts.semanticChecks } : {}) }
   const produceOpts: ProduceOptions = { maxRounds: opts.maxRounds ?? DEFAULT_MAX_ROUNDS, ...dispatch }
   const lines: string[] = []
   try {

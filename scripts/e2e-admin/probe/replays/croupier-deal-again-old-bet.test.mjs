@@ -6,10 +6,12 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0184 finding (see .sdlc/croupier-closed-loop/report.md). The offline replay of this trace fails
-// action-updates-surface on turn 2; when the fix lands this goes red: flip it to `expect(report.failed).toEqual([])`.
-it('croupier-deal-again-old-bet: the recorded turns replay with the known failing check', async () => {
+// T-0222: the live run passed every check here. The offline replay once failed action-updates-surface on turn 2
+// because it ran produce() without the persona's semantic checks, so round 1's ACTION_NOT_APPLIED retry never
+// fired; with the checks it retries as live did and the click updates table-1.
+it('croupier-deal-again-old-bet: the recorded turns replay with every probe check green, as live', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./croupier-deal-again-old-bet.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed.map((c) => [c.check, c.turn])).toEqual([['action-updates-surface', 1]])
+  expect(report.failed).toEqual([])
+  expect(report.records[1].lines.some((l) => l.includes('"updateDataModel":{"surfaceId":"table-1"'))).toBe(true)
 })

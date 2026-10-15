@@ -12,7 +12,10 @@ import { renderSurfaceJsonl } from '../../../packages/agent-ui/a2ui/src/agent/re
 
 // ── the probe fixture (`agent-ui-chat-probe` v1) ──────────────────────────────────────────────────────
 
-export type ProbeStep = { say: string } | { click: string }
+/** `expect` (T-0222, `--expect-turn`): component types this step's turn must leave on a surface it updates.
+ *  `page` (T-0222): a turn the page fired itself (an error turn after a renderer rejection), recorded as its own
+ *  row; a replay never plays it, the page fires it again. */
+export type ProbeStep = ({ say: string } | { click: string } | { page: string }) & { expect?: string[] }
 
 /** One provider call as the trace log records it: the raw text and the tool calls (`render_surface`
  *  carries the payload on a capture round). */
@@ -77,9 +80,13 @@ export function parseProbeFixture(text: string): ProbeFixture {
   }
   if (!Array.isArray(raw.steps) || raw.steps.length === 0) throw new FixtureError('steps must be a non-empty array')
   const steps = raw.steps.map((s, i): ProbeStep => {
-    if (isObject(s) && typeof s.say === 'string' && Object.keys(s).length === 1) return { say: s.say }
-    if (isObject(s) && typeof s.click === 'string' && Object.keys(s).length === 1) return { click: s.click }
-    throw new FixtureError(`steps[${i}] must be {"say": string} or {"click": string}`)
+    const bad = (): FixtureError => new FixtureError(`steps[${i}] must be {"say": string}, {"click": string} or {"page": string}, with an optional "expect" string array`)
+    if (!isObject(s) || Object.keys(s).some((k) => !['say', 'click', 'page', 'expect'].includes(k))) throw bad()
+    const expect = s.expect !== undefined ? { expect: strings(s.expect, `steps[${i}].expect`) } : {}
+    const kinds = (['say', 'click', 'page'] as const).filter((k) => s[k] !== undefined)
+    if (kinds.length !== 1 || typeof s[kinds[0]!] !== 'string') throw bad()
+    const kind = kinds[0]!
+    return kind === 'say' ? { say: s.say as string, ...expect } : kind === 'click' ? { click: s.click as string, ...expect } : { page: s.page as string, ...expect }
   })
   if (!Array.isArray(raw.turns)) throw new FixtureError('turns must be an array')
   const turns = raw.turns.map((t, i): ProbeTurn => {
@@ -266,7 +273,7 @@ export interface TurnRecord {
   index: number
   step: ProbeStep
   /** What the page sent (the model pick lands here). `personaSystem` and `messages` are never kept. */
-  request?: { model?: string; effort?: string; agent?: string; catalogId?: string; inputKind?: string; actionSurface?: string }
+  request?: { model?: string; effort?: string; agent?: string; catalogId?: string; inputKind?: string; actionSurface?: string; inputError?: string }
   httpStatus?: number
   lines: string[]
   rounds?: ProbeRound[]
@@ -282,6 +289,18 @@ export interface TurnRecord {
   lintNotRun?: string[]
   screenshot?: string
 }
+
+/** T-0222: the index of the exchange that answers `step` among the produce requests seen since it was played:
+ *  the first intent for a say, the first action (a client message with no error) for a click; -1 while none has
+ *  landed. Every other exchange is page-fired (the admin's error turn after a renderer rejection). */
+export function ownExchange(step: ProbeStep, seen: ReadonlyArray<{ inputKind?: string; inputError?: string }>): number {
+  if ('say' in step) return seen.findIndex((s) => s.inputKind === 'intent')
+  if ('click' in step) return seen.findIndex((s) => s.inputKind === 'client' && s.inputError === undefined)
+  return -1
+}
+
+/** The step a page-fired exchange is recorded under: its error code, else its input kind. */
+export const pageStep = (seen: { inputKind?: string; inputError?: string }): ProbeStep => ({ page: seen.inputError ?? seen.inputKind ?? 'unknown' })
 
 export type CheckStatus = 'pass' | 'fail' | 'warn' | 'skip'
 
@@ -302,11 +321,27 @@ export interface CheckOptions {
 /** The named checks, in report order. */
 export const CHECK_NAMES = ['model-pick', 'click-target', 'no-halt', 'no-json-as-prose', 'reply-text', 'no-surface-loss', 'action-updates-surface', 'expect-component', 'render-lint', 'reasoning'] as const
 
-/** Run every named check over the turn records. Per-turn checks report one row per turn; the run-level
- *  ones (expect-component) one row. */
+/** Apply these lines to `held`, each open surface's component types (a deleted surface drops out). */
+export function holdTypes(held: Map<string, Set<string>>, lines: readonly string[]): void {
+  for (const line of lines) {
+    for (const msg of messagesOf(line)) {
+      const deleted = surfaceOf(msg, 'deleteSurface')
+      if (deleted !== undefined) held.delete(deleted)
+      const body = msg.updateComponents
+      if (!isObject(body) || typeof body.surfaceId !== 'string' || !Array.isArray(body.components)) continue
+      const types = held.get(body.surfaceId) ?? new Set<string>()
+      for (const c of body.components) if (isObject(c) && typeof c.component === 'string') types.add(c.component)
+      held.set(body.surfaceId, types)
+    }
+  }
+}
+
+/** Run every named check over the turn records. Per-turn checks report one row per turn; expect-component
+ *  reports one row per turn (judged only on a step with its own `expect`, T-0222) and one run-level row. */
 export function runChecks(turns: readonly TurnRecord[], opts: CheckOptions): CheckResult[] {
   const out: CheckResult[] = []
   const shippedSoFar: string[] = []
+  const held = new Map<string, Set<string>>()
   for (const t of turns) {
     const meta = metaOf(t.lines)
     // model-pick: the page sent the model and effort the probe asked for.
@@ -380,8 +415,23 @@ export function runChecks(turns: readonly TurnRecord[], opts: CheckOptions): Che
             : { check: 'action-updates-surface', turn: t.index, status: 'fail', detail: `the click on ${clicked} was answered with no update to it and no new surface` },
       )
     }
+    // expect-component, per turn (T-0222): a step that names its component (`--expect-turn`) updates a surface
+    // holding it. Hold'em Haiku dealt its opening hand in prose and passed the run-level row on a later turn.
+    // A step without one is not judged: a refused illegal move is answered in prose on purpose.
+    holdTypes(held, t.lines)
+    const want = t.step.expect ?? []
+    const holding = touchedSurfaces(t.lines).filter((s) => want.some((c) => held.get(s)?.has(c)))
+    if (want.length === 0) out.push({ check: 'expect-component', turn: t.index, status: 'skip', detail: 'no --expect-turn on this step' })
+    else if (t.clickMissing !== undefined) out.push({ check: 'expect-component', turn: t.index, status: 'skip', detail: 'nothing was clicked (see click-target)' })
+    else if (halted !== undefined) out.push({ check: 'expect-component', turn: t.index, status: 'skip', detail: 'the turn halted (see no-halt)' })
+    else
+      out.push(
+        holding.length > 0
+          ? { check: 'expect-component', turn: t.index, status: 'pass', detail: `${holding.join(', ')} holds ${want.join(' or ')}` }
+          : { check: 'expect-component', turn: t.index, status: 'fail', detail: `no surface this turn updated holds ${want.join(' or ')} (touched ${touchedSurfaces(t.lines).join(', ') || 'none'})` },
+      )
     // render-lint: the dogfood render rules over the turn's surfaces.
-    if (t.lint === undefined) out.push({ check: 'render-lint', turn: t.index, status: 'skip', detail: 'no DOM (offline replay)' })
+    if (t.lint === undefined) out.push({ check: 'render-lint', turn: t.index, status: 'skip', detail: 'page' in t.step ? 'a page-fired row (the step row lints the page)' : 'no DOM (offline replay)' })
     else {
       const notRun = t.lintNotRun?.length ? ` (not run: ${t.lintNotRun.join(', ')})` : ''
       out.push({
@@ -414,7 +464,7 @@ export function runChecks(turns: readonly TurnRecord[], opts: CheckOptions): Che
 export function formatTable(turns: readonly TurnRecord[], checks: readonly CheckResult[]): string {
   const rows = turns.map((t) => {
     const meta = metaOf(t.lines)
-    const step = 'say' in t.step ? `say "${t.step.say.slice(0, 30)}"` : `click "${t.step.click}"`
+    const step = 'say' in t.step ? `say "${t.step.say.slice(0, 30)}"` : 'click' in t.step ? `click "${t.step.click}"` : `page ${t.step.page}`
     const retries = t.trace ? t.trace.retries.map((r) => r.codes.join('+')).join(' ') || '0' : meta.failureCodes.join('+') || '0'
     return [String(t.index + 1), step, t.trace?.outcome ?? (meta.error ? 'error' : 'ok'), retries, shippedSurfaces(t.lines).join(',') || '-', shippedTypes(t.lines).slice(0, 6).join(',') || '-', t.trace?.id ?? '-']
   })

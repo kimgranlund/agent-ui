@@ -21,14 +21,15 @@ export type ProbeCommand =
 
 export const PROBE_USAGE = [
   'usage: npm run chat:probe -- --agent <preset id> [--model <id>] [--effort <level>] --say "<text>" [--click <label>] [--say ...]',
-  '                            [--expect-component <Type>]... [--out <dir>] [--name <name>]     (live: spends API credit)',
+  '                            [--expect-turn <Type>]... [--expect-component <Type>]... [--out <dir>] [--name <name>]     (live: spends API credit)',
+  '       (--expect-turn: the step before it must update a surface holding <Type>; --expect-component: any turn ships <Type>)',
   '       npm run chat:probe -- --replay <fixture.json> [--expect-component <Type>]... [--out <dir>]   (keyless)',
   '       npm run chat:probe -- --from-trace <last | last:<k> | <day>.jsonl:<line>[,...]> [--out <dir>] [--name <name>]',
   '       npm run chat:probe -- selftest [--browser]',
 ].join('\n')
 
-const VALUE_FLAGS = ['--agent', '--model', '--effort', '--say', '--click', '--expect-component', '--replay', '--out', '--name', '--from-trace'] as const
-const REPEATABLE = ['--say', '--click', '--expect-component']
+const VALUE_FLAGS = ['--agent', '--model', '--effort', '--say', '--click', '--expect-turn', '--expect-component', '--replay', '--out', '--name', '--from-trace'] as const
+const REPEATABLE = ['--say', '--click', '--expect-turn', '--expect-component']
 
 export function parseProbeCli(argv: readonly string[]): ProbeCommand {
   if (argv[0] === 'selftest') {
@@ -46,7 +47,11 @@ export function parseProbeCli(argv: readonly string[]): ProbeCommand {
     if (value === undefined || value === '') throw new SetupError(`${flag} needs a value`)
     if (flag === '--say') steps.push({ say: value })
     else if (flag === '--click') steps.push({ click: value })
-    else if (flag === '--expect-component') expectComponents.push(value)
+    else if (flag === '--expect-turn') {
+      const step = steps.at(-1)
+      if (step === undefined) throw new SetupError('--expect-turn follows the --say or --click it applies to')
+      step.expect = [...(step.expect ?? []), value]
+    } else if (flag === '--expect-component') expectComponents.push(value)
     else {
       if (single.has(flag) && !REPEATABLE.includes(flag)) throw new SetupError(`${flag} given twice`)
       single.set(flag, value)

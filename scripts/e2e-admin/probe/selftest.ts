@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url'
 import type { AgentTraceLine } from '../../../packages/agent-ui/a2ui/tools/agent/trace-log.ts'
 import { SetupError, type DevServerKit } from '../runner.ts'
 import { parseProbeCli } from './cli.ts'
-import { CHECK_NAMES, FixtureError, parseProbeFixture, runChecks, type CheckResult, type ProbeFixture, type TurnRecord } from './model.ts'
+import { CHECK_NAMES, FixtureError, ownExchange, pageStep, parseProbeFixture, runChecks, type CheckResult, type ProbeFixture, type TurnRecord } from './model.ts'
 import { offlineReplay, resolveTraceSpec, typedText, type TraceEntry } from './trace.ts'
 
 export const PROBE_FIXTURES_DIR = fileURLToPath(new URL('./fixtures/', import.meta.url))
@@ -78,7 +78,9 @@ export async function runProbeSelftest(): Promise<number> {
   const live = parseProbeCli(['--agent', 'croupier', '--model', 'claude-haiku-5-5', '--say', 'hi', '--click', 'Deal', '--say', 'again'])
   expectThat(live.mode === 'probe' && live.steps.length === 3 && 'click' in live.steps[1]!, 'cli: steps keep their order')
   expectThat(parseProbeCli(['--from-trace', 'last:2']).mode === 'from-trace', 'cli: --from-trace')
-  for (const bad of [['--say', 'hi'], ['--agent', 'x'], ['--agent', 'x', '--click', 'y'], ['--bogus', '1'], ['--from-trace', 'last', '--say', 'x']]) {
+  const turnExpect = parseProbeCli(['--agent', 'croupier', '--say', 'deal', '--expect-turn', 'CardTable', '--click', 'Stand'])
+  expectThat(turnExpect.mode === 'probe' && JSON.stringify(turnExpect.steps) === '[{"say":"deal","expect":["CardTable"]},{"click":"Stand"}]', 'cli: --expect-turn attaches to the step before it')
+  for (const bad of [['--say', 'hi'], ['--agent', 'x'], ['--agent', 'x', '--click', 'y'], ['--bogus', '1'], ['--from-trace', 'last', '--say', 'x'], ['--agent', 'x', '--expect-turn', 'T', '--say', 'hi']]) {
     let threw = false
     try {
       parseProbeCli(bad)
@@ -127,6 +129,32 @@ export async function runProbeSelftest(): Promise<number> {
     const verdict = caseVerdict(runChecks([rec], o ?? opts), [check])
     expectThat(verdict === undefined, `checks: the ${label} record fails exactly ${check} (${verdict})`)
   }
+  // T-0222: a step that names its own expected component (`--expect-turn`) fails when its turn leaves no surface
+  // holding it: hold'em Haiku dealt its opening hand in prose and passed, since a later turn shipped PlayingCard.
+  // A step without one (a refused illegal move, answered in prose on purpose) is never judged per turn.
+  const deal = (step: TurnRecord['step'], lines: string[]): TurnRecord => record({ index: 1, step, lines: ['{"a2uiMeta":{"note":"Dealt."}}', ...lines], rounds: [{ text: lines.join('\n') || 'Dealt.', tools: [] }], proseText: 'Dealt.' })
+  const proseDeal = runChecks([record(), deal({ say: 'Deal.', expect: ['Button'] }, [])], { ...opts, expectComponents: [] })
+  expectThat(caseVerdict(proseDeal, ['expect-component']) === undefined, `checks: a turn-expected component answered in prose fails exactly expect-component (${caseVerdict(proseDeal, ['expect-component'])})`)
+  expectThat(proseDeal.some((c) => c.check === 'expect-component' && c.turn === 1 && c.status === 'fail'), 'checks: the expect-component fail names the turn')
+  expectThat(caseVerdict(runChecks([record(), deal({ say: 'Deal.' }, [])], opts), []) === undefined, 'checks: a prose turn with no turn expectation passes expect-component')
+  expectThat(statusOf(runChecks([record(), deal({ say: 'Deal.', expect: ['Button'] }, [UPDATE_LINE])], opts), 'expect-component') === 'skip,pass,pass', 'checks: a turn that updates a surface holding its expected component passes')
+  // T-0222: a step's own exchange among the page's. Five-card draw on Sonnet: the Discard turn's renderer rejection
+  // fired two error turns (:113, :114) before Bet 50's answer (:115), and the record took :114 as Bet 50's.
+  const window = [{ inputKind: 'client', inputError: 'VALIDATION_FAILED' }, { inputKind: 'client', inputError: 'VALIDATION_FAILED' }, { inputKind: 'intent' }]
+  expectThat(ownExchange({ say: 'Bet 50.' }, window) === 2, 'desync: a say step owns the intent, never a page-fired error turn')
+  expectThat(ownExchange({ click: 'Deal again' }, [...window.slice(0, 2), { inputKind: 'client' }]) === 2, 'desync: a click step owns the action, never a page-fired error turn')
+  expectThat(ownExchange({ click: 'Deal again' }, window) === -1, 'desync: a click with no action in the window owns nothing yet')
+  expectThat(JSON.stringify(pageStep(window[0]!)) === '{"page":"VALIDATION_FAILED"}', 'desync: a page-fired turn is its own row, a page step')
+  const pageRow = record({ index: 1, step: { page: 'VALIDATION_FAILED' }, request: { model: 'm', effort: 'medium', inputKind: 'client', inputError: 'VALIDATION_FAILED' }, lines: ['{"a2uiMeta":{"note":"Fixed."}}', UPDATE_LINE] })
+  const pageChecks = runChecks([record(), pageRow], opts)
+  expectThat(caseVerdict(pageChecks, []) === undefined && ['click-target', 'action-updates-surface'].every((n) => statusOf(pageChecks, n) === 'skip,skip'), `desync: a page row is judged like a turn, never as a click (${caseVerdict(pageChecks, [])})`)
+  let pageParsed = false
+  try {
+    pageParsed = 'page' in parseProbeFixture('{"kind":"agent-ui-chat-probe","version":1,"name":"x","agent":"a","steps":[{"say":"hi"},{"page":"VALIDATION_FAILED"}],"turns":[]}').steps[1]!
+  } catch {
+    pageParsed = false
+  }
+  expectThat(pageParsed, 'desync: a fixture keeps its page steps')
   const quiet = runChecks([record({ trace: { id: 'd:1', outcome: 'ok', retries: [], thinkingChars: [0] } })], opts)
   expectThat(statusOf(quiet, 'reasoning') === 'warn' && caseVerdict(quiet, []) === undefined, 'checks: no thinking text is a warn, never a fail')
   const roundless = runChecks([record({ rounds: undefined, roundsSource: 'none' })], opts)

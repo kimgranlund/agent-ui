@@ -122,7 +122,7 @@ Two failures seen in live traces on 2026-10-14 (`npm run traces`, T-0151) drove 
 
 A2UI v1.0 `updateComponents` adds or updates components by id and sets no send-once rule for `root`, so the rule that landed is the upsert: a later turn's `root` of the SAME component type replaces the surface's root (`validate.ts` counts the seeded root as presence; `tree.ts` reconciles it onto the same element; runtime SPEC-R3 AC2 REV). A `root` of another type, or two `root`s in one payload, still fails `IDGRAPH <surfaceId>:root`, and the `duplicateRoot` hint names that repair: re-create the surface with the same id and the complete tree.
 
-- AC1: the recorded Croupier deal turn and Concierge booking turn replay keyless through the real `produce()` (`scripts/e2e-admin/probe/replays/croupier-deal-halt` and `concierge-booking-surface-loss`), red before the change and green after.
+- AC1: the recorded Croupier deal turn and Concierge booking turn replay keyless through the real `produce()` (`scripts/e2e-admin/probe/replays/croupier-deal-halt` and `concierge-booking-surface-loss`), red before the change and green after. T-0222: the replay now runs the Croupier's semantic checks as the dev proxy does, and the recorded deal rounds halt again (BET_CONTROL_DUPLICATE on the recorded repair round, then PARSE), so `croupier-deal-halt` pins that halt; RTS-P1 itself stays covered by `live-agent/produce-loop.test.ts`.
 - AC2: the producer reference doc states the rule, and the `duplicateRoot` hint agrees with it (`produce-loop.test.ts`).
 
 ### RTS-P2: a retry never silently loses a surface
