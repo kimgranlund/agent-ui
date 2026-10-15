@@ -71,7 +71,8 @@ the store again" (ADR-0136).
 `pattern-source`, `catalog` (ADR-0170). Each kind is one ordered array under the store key
 `entries:<kind>`. A disabled entry is skipped, never removed (ADR-0132 Fork 4). A skill, workflow
 or resource reaches the prompt as an index line only (ADR-0190); its full content loads when the user
-names it. That leaves a preset's own facts unread (T-0231, a known gap: agent-content SPEC §8).
+names it. That leaves a preset's own facts unread (T-0231, a known gap: agent-content SPEC §8); a
+trace line's `routing.references[]` shows each entry's load, `index-only` or `full`, per turn (T-0239).
 
 **Composition.** `composeSystemPrompt(sections, team?)` (`entries.ts`) projects the enabled,
 in-context entries into one markdown prompt of `## {heading}` blocks; `composeLiveSystemPrompt`
@@ -167,9 +168,9 @@ header pointing here.
   runner (T-0176, planned; CL-R1). It tests an agent; a kit scenario tests the A2UI layer and an admin
   flow tests the agent-admin app. Both eval and kit files end `*.scenario.json`; the `kind` tells them
   apart.
-- **check**: one named verdict over one probe or eval turn (`model-pick`, `no-halt`, `no-json-as-prose`,
-  `no-internal-leak`, `no-surface-loss`, `expect-component`, `render-lint`, `reasoning`; `CHECK_NAMES` in
-  `probe/model.ts`), status `pass`, `fail`, `warn` or `skip` (CL-R2). Not a **semantic check** (a
+- **check**: one named verdict over one probe or eval turn (`model-pick`, `click-target`, `no-halt`,
+  `no-json-as-prose`, `no-internal-leak`, `reply-text`, `no-surface-loss`, `action-updates-surface`,
+  `expect-component`, `render-lint`, `reasoning`; `CHECK_NAMES` in `probe/model.ts`), status `pass`, `fail`, `warn` or `skip` (CL-R2). Not a **semantic check** (a
   persona's in-loop domain check that feeds a self-correct round), not the A2UI protocol's `checks`, and
   not a kit finding code.
 - **signal row**: one line of `.agent-evals/runs.jsonl` per eval scenario run per sample: the checks,
@@ -219,6 +220,11 @@ header pointing here.
   with the session; a finding (`{code, path, message}`) is fed back as a self-correct round, and at the round
   bound the valid payload ships tallied `SEMANTIC_UNCORRECTED` (ADR-0238). The first one is the
   Croupier's hand check (a stated total must match the cards shown, and a natural blackjack leaves no Hit, Stand or Double).
+  Two families now run beside the persona checks on any catalog that can use them: the composite moment checks,
+  generated from one table (`catalog/composite-moments.ts`, `<COMPOSITE>_MISSING`, T-0208), and the hidden-state
+  checks (`catalog/hidden-state-checks.ts`, T-0230), which judge each word mark or shot against the answer the
+  game committed under the reserved data-model key `/secret` (client-visible, bound to no component, the
+  T-0218 hole-card precedent). Families and codes: agent-closed-loop CL-R2.
   It is the steering mechanism: a rule taught only in prose does not move composite choice live, a check does
   ([spec/a2ui-catalog-architecture.spec.md](../spec/a2ui-catalog-architecture.spec.md) CA-R9, T-0225). Not the A2UI protocol's `checks`
   (input validation on a component) and not a model-graded round.

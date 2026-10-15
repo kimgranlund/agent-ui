@@ -47,7 +47,10 @@ contract:
    candidate. Add the module, export it from `src/examples/index.ts` (named export + `allSeeds` for an
    agent-ui seed, or `allBasicSeeds` for an `a2ui-basic` seed: two separate shelves, GH #1737, so a Basic
    seed is a compile error on `allSeeds`; persona seeds live on `allPersonaSeeds`, a page and gate shelf
-   that never enters the corpus, so `SeedCatalogId` stays two ids), and register it in the import script's drift-guarded
+   that never enters the corpus, so `SeedCatalogId` stays two ids. A persona-fragment composite such as
+   CardTable or BookingForm therefore cannot enter the `agent-ui` shard today, since admission validates against
+   the base catalog; the domain exemplars of T-0240 wait on a per-domain shard or admission against the
+   composed catalog), and register it in the import script's drift-guarded
    `SEEDS_BY_MODULE` (agent-ui) or `BASIC_SEEDS_BY_MODULE` (Basic) (`tools/corpus/import-seeds.ts`, a
    half-wired seed HALTS at the drift guard). One seed is ONE surface: a scenario with two surfaces is two
    seeds, since a corpus record is single-surface (`ADR-0064`; a two-surface draft reds `npm test` via
@@ -81,7 +84,8 @@ contract:
    `.claude/docs/rubrics/a2ui-corpus.md` and emits ONE verdicts file whose `rubricVersion` equals the
    rubric's `version:` marker (`ADR-0068` cl.1). The adapter (`src/corpus/judge.ts`, `createVerdictJudge`)
    is deterministic plumbing — judgment is authored in the critic seat, never inside `admit()`
-   (judge-wiring LLD §7; `process.md` rule 1 + SPEC-R8).
+   (judge-wiring LLD §7; `process.md` rule 1 + SPEC-R8). A sub-agent cannot spawn that critic, so a lane
+   that adds a record (a BoardGrid exemplar, T-0240) stops at this step and the conductor dispatches the review.
 5. **Back-score the phase-1 records** — `tools/corpus/rescore.ts` (`ADR-0068` cl.4) applies verdicts only
    to records with absent `qualityScore`: at/above bar → `meta.qualityScore`; below bar →
    `status:"quarantined"` (one-way under rescore). It is all-or-nothing (the whole file validates and every

@@ -166,7 +166,10 @@ Draft → validate → fix → re-check → finalize only when clean:
   (see `examples/patterns.ts`'s date/time fields); currency/unit/percent carry the typed number.
 - **State the user must trust lives in the data model.** A secret word, a fleet, a bankroll, hole cards:
   commit it to the surface data model at the moment it is decided, where a semantic check reads it, never
-  in model memory or prose. Live, a word game with no committed secret fitted its reveal to the marks and a
+  in model memory or prose. A hidden answer goes under the reserved key `/secret`, bound to no component and
+  committed on the opening turn: `/secret/word` for the word game, `/secret/fleet` and `/secret/playerFleet`
+  (`{row, col}` lists in the board's coordinates) for Battleship; `catalog/hidden-state-checks.ts` judges every
+  mark and shot against it on any catalog (T-0230 Decision). Live, a word game with no committed secret fitted its reveal to the marks and a
   fleet changed size mid-game (T-0230); the Croupier's money and card checks work only because the stake and
   hands sit in the data model (T-0215, T-0218).
 - **No danger tone.** A destructive button is carried by its action name + wording, not a red variant.
