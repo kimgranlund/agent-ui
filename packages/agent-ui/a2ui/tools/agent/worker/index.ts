@@ -170,6 +170,7 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
   // `integrations` (optional + fail-closed downstream, never part of the 400 contract), and narrowing to
   // that predicate type drops the key. Same line, same reason, as dev-proxy-plugin.ts's `/chat` twin.
   const chatIntegrations = body.integrations
+  const chatModelSettings = body.modelSettings
   if (!isChatBody(body)) return json(400, { error: 'bad-request' })
   const { system, model, messages, effort } = body
 
@@ -201,7 +202,7 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
   // produce() uses), composed over `request.signal`, which still propagates unchanged.
   try {
     for await (const fragment of withTurnDeadline(
-      (signal) => dispatch.provider.stream({ model, system, messages, effort: effort as Effort | undefined, ...(body.modelSettings !== undefined ? { modelSettings: normalizeModelSettings(model, body.modelSettings, effort as Effort | undefined) } : {}), signal, ...toolOpts }),
+      (signal) => dispatch.provider.stream({ model, system, messages, effort: effort as Effort | undefined, ...(chatModelSettings !== undefined ? { modelSettings: normalizeModelSettings(model, chatModelSettings, effort as Effort | undefined) } : {}), signal, ...toolOpts }),
       request.signal,
       TURN_DEADLINE_MS,
     )) {

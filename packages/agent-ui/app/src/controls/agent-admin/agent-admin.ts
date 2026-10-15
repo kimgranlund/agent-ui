@@ -167,6 +167,10 @@ import {
   PREFERS_OPTIONS,
   sanitizePrefers,
   defaultAgentConfigSchema,
+  agentConfigSchema,
+  resolveAgentEffort,
+  resolveModelSettings,
+  MODEL_SETTING_KEYS,
   isEnabledFlag,
   isBubblesChromeEnabled,
   kindEnabledKey,
@@ -185,7 +189,6 @@ import {
   sanitizeAuthoringModel,
   type SupportedModel,
   runStubAgentTurn,
-  sanitizeNumber,
   ADMIN_HELP,
   helpKeyForKind,
   TURN_LOG_CAP,
@@ -889,6 +892,24 @@ export class UIAgentAdminElement extends UIElement {
   // the settings pane either. Written into `#conversation.effort` imperatively whenever it changes — see
   // `#syncConversationConfig`.
   #effort: EffortLevel = 'medium'
+  /** T-0185: true while `schema` is this element's own generated default (never an author-set schema), so a
+   *  model change may regenerate its Model section. */
+  #schemaGenerated = false
+
+  /** T-0185: regenerate the default schema for the store's current model (an author-set schema is kept). */
+  #syncModelSchema(): void {
+    if (!this.#schemaGenerated) return
+    const next = agentConfigSchema(this.#modelFor(this.store))
+    if (JSON.stringify(next) !== JSON.stringify(this.schema)) this.schema = next
+  }
+
+  /** T-0185: the composer's effort starts from the agent's default effort for its model. */
+  #syncEffortFromAgent(): void {
+    const effort = resolveAgentEffort(this.store, this.#modelFor(this.store))
+    if (effort === undefined) return
+    this.#effort = effort
+    if (this.#conversation) this.#conversation.effort = effort
+  }
   // GH #145 — the store-swap effect's own "was this a real reassignment or a bare reconnect" memory
   // (the #modelGridUnsub precedent, generalized): a REAL reassignment (a persona switch — a different
   // store object) must start a fresh conversation; a bare reconnect with the SAME store (a layout
@@ -918,6 +939,7 @@ export class UIAgentAdminElement extends UIElement {
     // (the CRITICAL component-reviewer fix) covers the whole persisted shape, not just the flat half.
     if (this.schema === undefined) {
       this.schema = defaultAgentConfigSchema
+      this.#schemaGenerated = true
     }
     if (this.store === undefined) {
       this.store = createMemoryStore({
@@ -938,7 +960,12 @@ export class UIAgentAdminElement extends UIElement {
       this.#modelGridUnsub?.()
       this.#modelGridUnsub = this.store?.subscribe?.((key) => {
         if (key === 'model' || key === MODELS_INCLUDED_KEY) this.#renderModelGrid()
+        // T-0185: the Model section follows the model's capability row; the composer follows the default effort.
+        if (key === 'model') this.#syncModelSchema()
+        if (key === MODEL_SETTING_KEYS.effort || key === 'model') this.#syncEffortFromAgent()
       })
+      this.#syncModelSchema()
+      this.#syncEffortFromAgent()
     }
 
     // schema/store → the composed ui-settings pane + every entry-list section's render + subscription.
@@ -3386,7 +3413,6 @@ export class UIAgentAdminElement extends UIElement {
     // cross-pollinate.
     const { store, conversation, history } = this.#contextFor(origin)
     if (!conversation) return
-    const schema = this.schema ?? defaultAgentConfigSchema
     // Vision rev.5 — the Agent master switch ("active/available or not", Kim's ruling): the composer is
     // already busy-disabled via `conversation.disabled`, so this is the belt (a programmatic submit).
     if (!isEnabledFlag(store?.get(AGENT_ENABLED_KEY))) return
@@ -3422,7 +3448,6 @@ export class UIAgentAdminElement extends UIElement {
       // GH #880 — the DRIVING context's read: an authoring turn whose Builder store names no model runs on
       // Sonnet 5.5, the same value its picker was already showing (one read law, no picker/wire drift).
       model: this.#modelFor(store),
-      temperature: sanitizeNumber(schema, 'temperature', store?.get('temperature'), 0.5),
       toolsEnabled: isEnabledFlag(store?.get(kindEnabledKey(ENTRY_KINDS.tool))),
       systemPrompt,
       skills: ambientLabels(ENTRY_KINDS.skill),
@@ -3473,6 +3498,8 @@ export class UIAgentAdminElement extends UIElement {
       system: this.#personaSystemFor(store, sections),
       model: config.model,
       effort: this.#effort,
+      // T-0185: the agent's model settings, checked against the model's capability row.
+      modelSettings: resolveModelSettings(store, config.model, this.#effort),
       // ADR-0168 cl.5 / GH #402 — the prose arm forwards enablement too (it was the one live arm the
       // tool toggle never reached: a silent no-op). LLD-C7: the wire carries entry IDS, not labels —
       // `#turnIntegrations` is the SAME master-gated fresh read the surface arm uses, so the two arms can
@@ -3594,6 +3621,8 @@ export class UIAgentAdminElement extends UIElement {
       // The composer's Effort picker selection (see AdminSurfaceTurnRequest.effort) — the same dial the
       // plain-chat arm (`#handleSubmit`'s `AdminTurnRequest`) already threads.
       effort: this.#effort,
+      // T-0185: the agent's model settings, the prose arm's read.
+      modelSettings: resolveModelSettings(store, this.#modelFor(store), this.#effort),
       // RTS-R7: the persona's response type hint, a FRESH sanitized read (the live-apply law). Always the
       // sanitized value here; the runner drops the key on `auto`.
       prefers: sanitizePrefers(store?.get(PREFERS_KEY)),
@@ -4208,7 +4237,6 @@ export class UIAgentAdminElement extends UIElement {
     const host = this.#contextSystemHost
     if (!host) return
     const store = this.store
-    const schema = this.schema ?? defaultAgentConfigSchema
     const openStates = new Map<string, boolean>()
     for (const el of host.querySelectorAll<HTMLElement & { open: boolean }>('[data-part="context-item"]')) {
       openStates.set(el.getAttribute('data-item') ?? '', el.open)
@@ -4222,8 +4250,8 @@ export class UIAgentAdminElement extends UIElement {
         {
           name: typeof store?.get('name') === 'string' ? (store.get('name') as string) : 'Untitled agent',
           model: this.#modelFor(store), // the DRAFT's store ⇒ `DEFAULT_MODEL_ID` (GH #880 leaves this read unchanged)
-          temperature: sanitizeNumber(schema, 'temperature', store?.get('temperature'), 0.5),
           effort: this.#effort,
+          modelSettings: resolveModelSettings(store, this.#modelFor(store), this.#effort),
           active: isEnabledFlag(store?.get(AGENT_ENABLED_KEY)),
           surface: {
             markdown: isEnabledFlag(store?.get(SURFACE_MARKDOWN_KEY)),

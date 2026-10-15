@@ -1,5 +1,5 @@
 // agent-admin-schema.ts — the "Agent" section's flat config data (TKT-0039/ADR-0131, now one section
-// among several under ADR-0132) — name/model/temperature/toolsEnabled, rendered by the composed
+// among several under ADR-0132) — name plus the T-0185 Model section, rendered by the composed
 // `ui-settings` instance exactly as before. Types + pure data, plus the stub turn loop's OWN fail-closed
 // read guards (sanitizeNumber/sanitizeSelect) — narrower than `ui-settings`' own commit-time validation
 // (SPEC-R11/generate.ts, which this file does NOT reimplement): those guard values `ui-settings` itself
@@ -11,7 +11,10 @@
 // `SYSTEM_PROMPT_KEY`/`DEFAULT_SYSTEM_PROMPT` pair this file used to export is gone, replaced by
 // `entries.ts`'s `DEFAULT_PROMPT_SECTIONS`/`composeSystemPrompt`/`DEFAULT_SYSTEM_PROMPT_FALLBACK`.
 
-import type { SettingsSchema } from '../settings/schema.ts'
+import type { SettingsSchema, SettingsSection, SettingsField } from '../settings/schema.ts'
+// T-0185: the pure per-model capability table (no producer bytes cross; the `./agent/meta-line` posture).
+import { capabilitiesFor, normalizeModelSettings, DEFAULT_DISPLAY } from '@agent-ui/a2ui/agent/model-capabilities'
+import type { ModelSettings, ThinkingMode } from '@agent-ui/a2ui/agent/model-capabilities'
 import type { EffortLevel } from '../conversation/composer-options.ts'
 import type { PersonaPatch } from '@agent-ui/a2ui/agent/meta-line' // ADR-0178 cl.2 / SPEC-R29 — the declared-patch shape, type-only from the SAME pure meta-line module `TurnProgress` rides (SPEC-N1-safe: no producer bytes cross)
 import type { PlanDeclaration } from '@agent-ui/a2ui/agent/meta-line' // ADR-0182 cl.4 / SPEC-R20 — the ALREADY-SHIPPED plan-step shape, the SAME type-only import as PersonaPatch above
@@ -154,13 +157,86 @@ function modelLabel(id: string): string {
   return SUPPORTED_MODELS.find((m) => m.id === id)?.label ?? id
 }
 
+/** T-0185: the Model section's store keys. `effort` is the agent's default effort (the composer starts
+ *  from it and may override per turn); the rest live only in agent settings. */
+export const MODEL_SETTING_KEYS = {
+  effort: 'effort',
+  thinking: 'thinking',
+  showReasoning: 'showReasoning',
+  maxTokens: 'maxTokens',
+  cacheTtl: 'cacheTtl',
+} as const
+
+const EFFORT_LABELS: Record<EffortLevel, string> = { low: 'Low', medium: 'Medium', high: 'High', xhigh: 'Extra high' }
+const THINKING_LABELS: Record<ThinkingMode, string> = { adaptive: 'Adaptive', disabled: 'Off', between_tools: 'Between tools' }
+/** `off` is the cache TTL select's "no cache_control" value. */
+const CACHE_OFF = 'off'
+
+/** T-0185: the Model section, generated from `model`'s capability row: a field appears only when the model
+ *  accepts that setting, and a select offers only the values the row lists. A model with no row (an OpenAI
+ *  or Gemini roster id) gets no section. Temperature is gone: the 5.5 models accept only 1.0. */
+export function modelSettingsSection(model: string): SettingsSection | undefined {
+  const row = capabilitiesFor(model)
+  if (!row) return undefined
+  const fields: SettingsField[] = []
+  if (row.efforts.length > 0) {
+    fields.push({
+      key: MODEL_SETTING_KEYS.effort,
+      type: 'select',
+      label: 'Effort',
+      description: 'How much the model thinks and writes per turn. The chat composer starts here and can change it per turn.',
+      default: row.defaultEffort ?? row.efforts[0]!,
+      options: row.efforts.map((e) => ({ value: e, label: EFFORT_LABELS[e] })),
+    })
+  }
+  const modes = Object.keys(row.thinking) as ThinkingMode[]
+  if (modes.length > 1) {
+    fields.push({
+      key: MODEL_SETTING_KEYS.thinking,
+      type: 'select',
+      label: 'Thinking',
+      description: `Adaptive lets the model decide. ${modes.includes('disabled') ? 'Off turns thinking off (effort high or below). ' : ''}${modes.includes('between_tools') ? 'Between tools skips up-front thinking (effort high or below). ' : ''}`.trim(),
+      default: 'adaptive',
+      options: modes.map((m) => ({ value: m, label: THINKING_LABELS[m] })),
+    })
+  }
+  if (row.displays.length > 0) {
+    fields.push({
+      key: MODEL_SETTING_KEYS.showReasoning,
+      type: 'boolean',
+      label: 'Show reasoning',
+      description: 'Stream a summary of the model\'s thinking into the chat. Off returns thinking empty; billing is the same.',
+      default: DEFAULT_DISPLAY === 'summarized',
+    })
+  }
+  fields.push({
+    key: MODEL_SETTING_KEYS.maxTokens,
+    type: 'number',
+    label: 'Max tokens',
+    description: `The output ceiling per call, thinking included. 0 uses the effort-based default. Up to ${row.maxOutputTokens}.`,
+    default: 0,
+    validation: { min: 0, max: row.maxOutputTokens, step: 1 },
+  })
+  if (row.cacheTtls.length > 0) {
+    fields.push({
+      key: MODEL_SETTING_KEYS.cacheTtl,
+      type: 'select',
+      label: 'Prompt cache',
+      description: 'Cache the system prompt between turns for this long.',
+      default: CACHE_OFF,
+      options: [{ value: CACHE_OFF, label: 'Off' }, ...row.cacheTtls.map((t) => ({ value: t, label: t === '5m' ? '5 minutes' : '1 hour' }))],
+    })
+  }
+  return { id: 'model', label: 'Model', description: 'The settings this agent\'s model accepts; each one reaches the API.', fields }
+}
+
 /** Build the agent-config `SettingsSchema` (ADR-0131 cl.1 — no external runtime dependency). The MODEL
- *  moved OUT of this schema (Kim, 2026-07-19 rev.2): the admin's own Model GRID (provider-grouped rows,
- *  include switch + default checkbox) owns model management, writing the same `model`/`modelsIncluded`
- *  store keys; this schema keeps name/temperature/tools (GH #137, 2026-07-20: the "Additional models"
- *  free-text add-field this schema used to also carry is REMOVED — Kim's option A). Rendered by the
- *  composed `ui-settings` pane exactly as any other settings schema (SPEC-R10/R11/R12). */
-export function agentConfigSchema(): SettingsSchema {
+ *  itself lives in the admin's own Model GRID (Kim, 2026-07-19 rev.2), writing the `model`/`modelsIncluded`
+ *  store keys; this schema keeps the name plus the T-0185 Model section generated for `model` (the
+ *  temperature slider is removed: no live request ever sent it). Rendered by the composed `ui-settings`
+ *  pane exactly as any other settings schema (SPEC-R10/R11/R12). */
+export function agentConfigSchema(model: string = DEFAULT_MODEL_ID): SettingsSchema {
+  const modelSection = modelSettingsSection(model)
   return {
   version: 1,
   sections: [
@@ -177,18 +253,39 @@ export function agentConfigSchema(): SettingsSchema {
           default: 'Untitled agent',
           validation: { required: true },
         },
-        {
-          key: 'temperature',
-          type: 'slider',
-          label: 'Temperature',
-          description: 'How much the stub reply varies its framing (0 = terse, 1 = expansive).',
-          default: 0.5,
-          validation: { min: 0, max: 1, step: 0.1 },
-        },
       ],
     },
+    ...(modelSection ? [modelSection] : []),
   ],
   }
+}
+
+/** T-0185: the agent's default effort for `model`, read from the store: a level the model's row lists, else
+ *  the row's own default; `undefined` for a model with no dial. A stored temperature is never read. */
+export function resolveAgentEffort(store: { get(key: string): unknown } | undefined, model: string): EffortLevel | undefined {
+  const row = capabilitiesFor(model)
+  if (!row || row.efforts.length === 0) return undefined
+  const stored = store?.get(MODEL_SETTING_KEYS.effort)
+  return typeof stored === 'string' && (row.efforts as readonly string[]).includes(stored) ? (stored as EffortLevel) : (row.defaultEffort ?? undefined)
+}
+
+/** T-0185: the agent's model settings for `model` and this turn's `effort`, read from the store and passed
+ *  through the capability check, so a stored value the model rejects (thinking off on Opus 5.5) is dropped
+ *  and never sent. `showReasoning` maps to display; max tokens 0 and cache `off` mean "unset". */
+export function resolveModelSettings(store: { get(key: string): unknown } | undefined, model: string, effort?: EffortLevel): ModelSettings {
+  const maxTokens = store?.get(MODEL_SETTING_KEYS.maxTokens)
+  const cacheTtl = store?.get(MODEL_SETTING_KEYS.cacheTtl)
+  const showReasoning = store?.get(MODEL_SETTING_KEYS.showReasoning)
+  const raw = {
+    thinking: store?.get(MODEL_SETTING_KEYS.thinking),
+    ...(typeof showReasoning === 'boolean' ? { display: showReasoning ? 'summarized' : 'omitted' } : {}),
+    ...(typeof maxTokens === 'number' && maxTokens > 0 ? { maxTokens } : {}),
+    ...(cacheTtl !== CACHE_OFF ? { cacheTtl } : {}),
+  }
+  const settings = normalizeModelSettings(model, raw, effort)
+  // Adaptive is the request builder's own default; sending it explicitly would only add a thinking field.
+  if (settings.thinking === 'adaptive') delete settings.thinking
+  return settings
 }
 
 /** The shared, read-only default schema — the model select is GONE from it (the grid took over), so
@@ -845,7 +942,6 @@ export function sanitizeBankroll(value: unknown): number | undefined {
 export interface AgentConfigSnapshot {
   name: string
   model: string
-  temperature: number
   toolsEnabled: boolean
   systemPrompt: string
   skills: readonly string[]
@@ -888,6 +984,8 @@ export interface AdminTurnRequest {
    *  shown/committed). A runner that ignores it (or the value maps to no real dial) degrades the DIAL,
    *  never the request. */
   effort?: EffortLevel
+  /** T-0185: the agent's model settings (`resolveModelSettings`), already checked against the model's row. */
+  modelSettings?: ModelSettings
   /** RTS-R7: the persona's response type hint (`PREFERS_KEY`, sanitized). Carried for parity with the
    *  surface arm's `AdminSurfaceTurnRequest.prefers`; the `/chat` route takes no such field, so the prose
    *  runner does not forward it. */
@@ -996,6 +1094,8 @@ export interface AdminSurfaceTurnRequest {
    *  shown/committed. A runner that ignores it (or the value maps to no real dial) degrades the DIAL,
    *  never the request. */
   effort?: EffortLevel
+  /** T-0185: the agent's model settings, the `AdminTurnRequest.modelSettings` read. */
+  modelSettings?: ModelSettings
   /** RTS-R7: the persona's response type hint, a FRESH sanitized read of `PREFERS_KEY` every turn. The
    *  runner sends it as the produce request's `prefers` field and omits the key on `'auto'` (the `effort`
    *  absent-key precedent). Advisory only: it never changes the tool offer. */
@@ -1076,7 +1176,7 @@ export function runStubAgentTurn(userText: string, config: AgentConfigSnapshot):
   const promptPreview = config.systemPrompt.length > 60 ? `${config.systemPrompt.slice(0, 60)}…` : config.systemPrompt
   const toolsNote = config.toolsEnabled ? ' Tools are enabled.' : ''
   return (
-    `[stub preview — no live model call] ${config.name} (${modelLabel(config.model)}, temp ${config.temperature.toFixed(1)}): ` +
+    `[stub preview — no live model call] ${config.name} (${modelLabel(config.model)}): ` +
     `instructed as "${promptPreview}".${toolsNote} ` +
     `Skills: ${labelList(config.skills)}. Workflows: ${labelList(config.workflows)}. ` +
     `Resources: ${labelList(config.resources)}. Tools: ${labelList(config.tools)}. You said: ${userText}`

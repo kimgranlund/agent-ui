@@ -93,7 +93,7 @@ const SOURCE_PRESET = AGENT_PRESETS.find((p) => p.id === 'concierge')!
 function authoredStore(): SettingsStore {
   const store = createMemoryStore({ initial: presetSeed(SOURCE_PRESET) })
   store.set('name', 'Meridian Night Concierge')
-  store.set('temperature', 0.2)
+  store.set('effort', 'high')
   store.set(SURFACE_GENUI_KEY, true) // an opt-in Surface Option (its default is OFF)
   store.set(kindEnabledKey(ENTRY_KINDS.workflow), false) // a whole kind gated off at the master switch
 
@@ -212,7 +212,7 @@ describe('the persona file — export → import round trip (GH #406, M-B DoD bo
     expect(parsed.file.state).toEqual(state)
     // every key present is a KNOWN persona-state key, and the authored ones are all there
     for (const key of Object.keys(parsed.file.state)) expect(PERSONA_STATE_KEYS).toContain(key)
-    for (const key of ['name', 'temperature', SURFACE_GENUI_KEY, kindEnabledKey(ENTRY_KINDS.workflow), entriesStoreKey(ENTRY_KINDS.promptSection), entriesStoreKey(ENTRY_KINDS.skill)]) {
+    for (const key of ['name', 'effort', SURFACE_GENUI_KEY, kindEnabledKey(ENTRY_KINDS.workflow), entriesStoreKey(ENTRY_KINDS.promptSection), entriesStoreKey(ENTRY_KINDS.skill)]) {
       expect(Object.keys(parsed.file.state), `${key} must round-trip`).toContain(key)
     }
     // an UNSET key stays unset (an `undefined` written into the file would import as a real value)

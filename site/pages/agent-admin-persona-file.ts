@@ -5,7 +5,7 @@
 // deterministically testable (agent-admin-persona-file.test.ts) without a page.
 //
 // WHAT A PERSONA IS, on the wire: exactly the persona-scoped STORE state the live turn reads — the agent
-// config (name/model/temperature), every master switch, the Surface Options, and all six entry lists
+// config (name/model and the Model section settings), every master switch, the Surface Options, and all six entry lists
 // (prompt sections — Foundation + Surface style + whatever the admin authored — plus the four capability
 // kinds and the pattern-source pick). That set IS what `composeLiveSystemPrompt` consumes at turn time
 // (agent-admin.ts's `#capabilityGroups`), so a byte-identical state means a byte-identical composed

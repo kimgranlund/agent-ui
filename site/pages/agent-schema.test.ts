@@ -76,11 +76,10 @@ export interface AgentConfigSnapshot {
 `
 
 describe('agent-schema — the field-name scan itself is non-vacuous (positive + negative controls)', () => {
-  it('extracts all nine real AgentConfigSnapshot fields from the real source, in declaration order', () => {
+  it('extracts all eight real AgentConfigSnapshot fields from the real source, in declaration order', () => {
     expect(interfaceFieldNames(realSource, 'AgentConfigSnapshot')).toEqual([
       'name',
       'model',
-      'temperature',
       'toolsEnabled',
       'systemPrompt',
       'skills',
@@ -203,7 +202,6 @@ describe('agent-schema.html — §3 the shown stub output is the real runStubAge
     const sample: AgentConfigSnapshot = {
       name: 'Ada',
       model: DEFAULT_MODEL_ID,
-      temperature: 0.7,
       toolsEnabled: true,
       systemPrompt: 'You are a careful, concise research assistant.',
       skills: ['Summarizing'],
@@ -218,7 +216,6 @@ describe('agent-schema.html — §3 the shown stub output is the real runStubAge
     const diverged: AgentConfigSnapshot = {
       name: 'Someone Else',
       model: DEFAULT_MODEL_ID,
-      temperature: 0.1,
       toolsEnabled: false,
       systemPrompt: 'x',
       skills: [],

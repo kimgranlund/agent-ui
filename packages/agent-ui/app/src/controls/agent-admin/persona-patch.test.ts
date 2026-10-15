@@ -68,7 +68,11 @@ describe('the canonical key set (LLD-C1) — one enumeration, two consumers', ()
       const probe: Record<string, unknown> = {
         name: 'Probe',
         model: DEFAULT_MODEL_ID,
-        temperature: 0.4,
+        effort: 'low',
+        thinking: 'disabled',
+        showReasoning: false,
+        maxTokens: 4096,
+        cacheTtl: '5m',
         [MODELS_INCLUDED_KEY]: { [DEFAULT_MODEL_ID]: true },
         [A2UI_CATALOG_KEY]: 'agent-ui',
         [A2UI_LOCAL_PATTERNS_KEY]: undefined, // no selection is the only universally-valid value here
@@ -164,14 +168,16 @@ describe('filter 2 — per-key admission is a FIXPOINT over the shipped sanitize
     expect(store.get('model')).toBe('claude-sonnet-5-5') // untouched — NOT rewritten to DEFAULT_MODEL_ID
   })
 
-  it('temperature: an in-range number admits; out-of-range and non-numbers drop', () => {
+  it('T-0185: effort admits a dial level; a retired temperature key drops, the store never gains it', () => {
     const store = freshStore()
-    expect(applyPersonaPatch(store, { values: { temperature: 0.3 } }, deps).applied).toEqual(['temperature'])
-    expect(store.get('temperature')).toBe(0.3)
-    for (const bad of [1.5, -1, '0.4', Number.NaN, null]) {
-      expect(applyPersonaPatch(store, { values: { temperature: bad } }, deps).dropped).toEqual(['temperature'])
+    expect(applyPersonaPatch(store, { values: { effort: 'high' } }, deps).applied).toEqual(['effort'])
+    expect(store.get('effort')).toBe('high')
+    for (const bad of ['max', 'adaptive', 3, null]) {
+      expect(applyPersonaPatch(store, { values: { effort: bad } }, deps).dropped).toEqual(['effort'])
     }
-    expect(store.get('temperature')).toBe(0.3)
+    expect(store.get('effort')).toBe('high')
+    expect(applyPersonaPatch(store, { values: { temperature: 0.3 } }, deps).applied).toEqual([])
+    expect(store.get('temperature')).toBeUndefined()
   })
 
   it('every switch key admits a LITERAL boolean only — a truthy string/number never turns a capability on', () => {
@@ -262,10 +268,10 @@ describe('filter 3 — entries go through the pane’s OWN validateNewEntry add 
 describe('the merge law + the report (SPEC-R29 / ADR-0178 cl.2)', () => {
   it('values are whole-value last-writer-wins per key; absent keys stay untouched', () => {
     const store = freshStore()
-    applyPersonaPatch(store, { values: { name: 'First', temperature: 0.2 } }, deps)
+    applyPersonaPatch(store, { values: { name: 'First', effort: 'low' } }, deps)
     applyPersonaPatch(store, { values: { name: 'Second' } }, deps)
     expect(store.get('name')).toBe('Second')
-    expect(store.get('temperature')).toBe(0.2) // the absent key was not reset
+    expect(store.get('effort')).toBe('low') // the absent key was not reset
   })
 
   it('reports exactly what happened — applied, added, dropped — with no error thrown for any of it', () => {
