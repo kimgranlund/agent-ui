@@ -184,7 +184,7 @@ export const domainLexicographerWordSeed: ExampleSeed = {
     'List of used-letter Badges, and a FormProvider holding one TextField gated by a ^[a-z]{5}$ regex check and ' +
     'a Guess submit Button whose context carries the guess. The answer is committed once at /secret/word, bound ' +
     'to nothing on screen, so every row is graded against one fixed word.',
-  promptText: 'My guesses so far are CRANE and TEARS. Mark them and let me enter my next guess.',
+  promptText: 'My word game guesses so far: CRANE and TEARS. Mark them and let me enter my next guess.',
   surfaceId: WORD_SID,
   protocolVersion: 'v1.0',
   catalogId: 'agent-ui',
