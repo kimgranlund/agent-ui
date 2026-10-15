@@ -38,3 +38,6 @@ The failing test lands before or with the fix, never after. No em dashes.
 This solo lane delivers these tickets in order, one commit each, then one batched verifier checks all of them:
 - .sdlc/probe-live-prose-cumulative/handoff.md
 - .sdlc/probe-from-trace-agent-default/handoff.md
+
+## Lane verify scope
+One batched verifier checks both tickets in ## Lane bundle against their own handoff criteria, from the lane base: .sdlc/probe-live-prose-cumulative and .sdlc/probe-from-trace-agent-default. One verdict per ticket, then one overall verdict.
