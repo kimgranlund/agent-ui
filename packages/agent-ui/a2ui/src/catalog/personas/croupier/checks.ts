@@ -407,13 +407,17 @@ function betControls(view: SurfaceView): SemanticFinding[] {
 
 const BET_WORDS = /\b(bet|bets|stake|wager)\b/i
 const BLACKJACK_GAMES = /\b(blackjack|black jack|twenty[- ]one|spanish 21|pontoon|21)\b/i
-const OTHER_GAMES = /\b(poker|stud|hold ?'?em|holdem|omaha|razz|five[- ]card draw|draw poker|baccarat|roulette|craps)\b/i
+const OTHER_GAMES = /\b(poker|stud|hold ?['’]?em|holdem|omaha|razz|five[- ]card draw|draw poker|baccarat|roulette|craps)\b/i
 const textOf = (v: unknown): string => (typeof v === 'string' ? v : bindingPath(v) ?? '')
 
+/** A surface's literal words: its text, label, title and status props. */
+const literalWords = (comps: Iterable<A2uiComponent>): string =>
+  [...comps].flatMap((c) => ['text', 'label', 'title', 'status'].map((k) => c[k]).filter((v): v is string => typeof v === 'string')).join(' ')
+
 /** T-0212: a surface whose words name a game other than blackjack and no blackjack-family game (the recorded
- *  "Seven-card stud · Place your bet"). Only literal text, label, title and status props count. */
+ *  "Seven-card stud · Place your bet"). */
 function namesOtherGame(comps: readonly A2uiComponent[]): boolean {
-  const words = comps.flatMap((c) => ['text', 'label', 'title', 'status'].map((k) => c[k]).filter((v): v is string => typeof v === 'string')).join(' ')
+  const words = literalWords(comps)
   return OTHER_GAMES.test(words) && !BLACKJACK_GAMES.test(words)
 }
 const actionName = (c: A2uiComponent): string => {
@@ -636,4 +640,81 @@ export const croupierActionApplied: SemanticCheck = {
   check: (input) => (input.action === undefined ? [] : actionApplied(input.surfaces, input.action)),
 }
 
-export const croupierSemanticChecks: readonly SemanticCheck[] = [croupierHandConsistency, croupierBetControls, croupierActionApplied]
+const POKER_GAMES = /\b(poker|stud|hold ?['’]?em|holdem|omaha|razz|five[- ]card draw|draw poker)\b/i
+const DRAW_GAMES = /\b(five[- ]card draw|draw poker|triple draw|badugi)\b/i
+
+interface DeckCard {
+  /** The card's pointer in the data model, e.g. `/dealerHand/2`. */
+  path: string
+  rank: string
+  suit: string
+  faceDown: boolean
+}
+
+const cardName = (c: { rank: string; suit: string }): string => `${c.rank} of ${c.suit}`
+
+/** Every card the data model lists: each item of an array whose items all carry a string rank and suit. */
+function deckCards(node: unknown, pointer: string, out: DeckCard[], depth = 0): DeckCard[] {
+  if (depth > 6) return out
+  if (Array.isArray(node)) {
+    if (node.length > 0 && node.every((c) => isRecord(c) && typeof c['rank'] === 'string' && typeof c['suit'] === 'string'))
+      node.forEach((c: Record<string, unknown>, i) => out.push({ path: `${pointer}/${i}`, rank: c['rank'] as string, suit: c['suit'] as string, faceDown: c['faceDown'] === true }))
+    return out
+  }
+  if (isRecord(node)) for (const [k, v] of Object.entries(node)) deckCards(v, `${pointer}/${k}`, out, depth + 1)
+  return out
+}
+
+/** CARD_DUPLICATE: a poker deal is one deck, so a rank and suit appear once (Sonnet 5.5 Omaha dealt four face-down
+ *  2 of clubs as placeholders). Judged only on a surface that names a poker game; a blackjack shoe holds several decks. */
+function duplicateCards(view: SurfaceView): SemanticFinding[] {
+  if (!POKER_GAMES.test(literalWords(view.components.values()))) return []
+  const seen = new Map<string, DeckCard[]>()
+  for (const c of deckCards(view.dataModel, '', [])) {
+    const key = cardName(c)
+    seen.set(key, [...(seen.get(key) ?? []), c])
+  }
+  return [...seen.entries()]
+    .filter(([, cards]) => cards.length > 1)
+    .map(([name, cards]) => ({
+      code: 'CARD_DUPLICATE',
+      path: `${view.surfaceId}:${cards[0]!.path.replace(/\/\d+$/, '')}`,
+      message:
+        `${view.surfaceId} deals the ${name} ${cards.length} times (${cards.map((c) => c.path).join(', ')}), but a poker deal is one deck. ` +
+        `Deal real, distinct cards, the face-down ones too: a face-down card is the committed card the showdown turns up, never a placeholder.`,
+    }))
+}
+
+/** HOLE_CARD_CHANGED: on an action turn, a card that was face down on the clicked surface (the click-time data model)
+ *  keeps its rank and suit, face down or turned up (Haiku 5.5 Omaha swapped its hole cards mid-hand and settled on
+ *  the swap). A draw game's redraw and a new round replace cards, so neither is judged. */
+function changedHoleCards(view: SurfaceView, action: SemanticAction): SemanticFinding[] {
+  if (view.surfaceId !== action.surfaceId || action.context['newRound'] === true || NEW_ROUND_ACTION.test(action.name)) return []
+  if (DRAW_GAMES.test(literalWords(view.components.values()))) return []
+  const findings: SemanticFinding[] = []
+  for (const before of deckCards(action.dataModel, '', [])) {
+    if (!before.faceDown) continue
+    const now = readPointer(view.dataModel, before.path)
+    if (!isRecord(now) || typeof now['rank'] !== 'string' || typeof now['suit'] !== 'string') continue
+    const after = { rank: now['rank'], suit: now['suit'] }
+    if (after.rank === before.rank && after.suit === before.suit) continue
+    findings.push({
+      code: 'HOLE_CARD_CHANGED',
+      path: `${view.surfaceId}:${before.path}`,
+      message:
+        `The card at ${before.path} was dealt face down as the ${cardName(before)} and now reads the ${cardName(after)}. ` +
+        `A face-down card is committed at the deal: keep it as the ${cardName(before)}, and turn it up as that same card at the showdown.`,
+    })
+  }
+  return findings
+}
+
+/** T-0218: the cards on the table are one committed deck. */
+export const croupierDeck: SemanticCheck = {
+  id: 'croupier-deck',
+  requires: ['PlayingCard'],
+  check: (input) =>
+    input.surfaces.flatMap((view) => [...duplicateCards(view), ...(input.action === undefined ? [] : changedHoleCards(view, input.action))]),
+}
+
+export const croupierSemanticChecks: readonly SemanticCheck[] = [croupierHandConsistency, croupierBetControls, croupierActionApplied, croupierDeck]

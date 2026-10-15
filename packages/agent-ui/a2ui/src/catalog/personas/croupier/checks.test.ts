@@ -464,9 +464,9 @@ describe('croupier hand check: what it never judges', () => {
 })
 
 describe('croupier manifest declares the check (ADR-0238 wiring)', () => {
-  it('croupierManifest.semanticChecks is the hand check, the bet-controls check and the action check (T-0172)', () => {
+  it('croupierManifest.semanticChecks is the hand, bet-controls and action checks (T-0172) and the deck check (T-0218)', () => {
     expect(croupierManifest.semanticChecks).toBe(croupierSemanticChecks)
-    expect(croupierSemanticChecks.map((c) => c.id)).toEqual(['croupier-hand-consistency', 'croupier-bet-controls', 'croupier-action-applied'])
+    expect(croupierSemanticChecks.map((c) => c.id)).toEqual(['croupier-hand-consistency', 'croupier-bet-controls', 'croupier-action-applied', 'croupier-deck'])
   })
 })
 
@@ -694,5 +694,66 @@ describe('croupier action check: Deal again opens the next round in betting (T-0
 
   it('Deal again answered with no table at all is ACTION_NOT_APPLIED', () => {
     expect(croupierActionApplied.check({ surfaces: [], action: again }).map((f) => f.code)).toEqual(['ACTION_NOT_APPLIED'])
+  })
+})
+
+// T-0218 (the recorded Omaha turns, 2026-10-15.jsonl:105 and :37 to :41): Sonnet 5.5 dealt the dealer four identical
+// face-down 2 of clubs, Haiku 5.5 four aces of spades it swapped mid-hand. A poker deal is one deck: every card is
+// distinct, and a face-down card is a committed card that turns up as itself.
+describe('croupier deck check: a poker deal is one committed deck (T-0218)', () => {
+  const DECK_CODES = ['CARD_DUPLICATE', 'HOLE_CARD_CHANGED']
+  const C = (rank: string, suit: string, faceDown = false) => ({ rank, suit, faceDown })
+  const omaha = (sid: string, value: Record<string, unknown>, title = 'Omaha · Pre-flop'): A2uiOutput => [
+    { version: 'v1.0', createSurface: { surfaceId: sid, catalogId: 'agent-ui--croupier' } },
+    { version: 'v1.0', updateDataModel: { surfaceId: sid, value } },
+    { version: 'v1.0', updateComponents: { surfaceId: sid, components: [
+      { id: 'root', component: 'Column', children: ['hud', 'drow', 'prow'] },
+      { id: 'hud', component: 'GameHud', title, status: 'Your turn' },
+      { id: 'drow', component: 'Row', children: { path: '/dealerHand', componentId: 'dcard' } },
+      { id: 'dcard', component: 'PlayingCard', rank: { path: 'rank' }, suit: { path: 'suit' }, faceDown: { path: 'faceDown' } },
+      { id: 'prow', component: 'Row', children: { path: '/playerHand', componentId: 'pcard' } },
+      { id: 'pcard', component: 'PlayingCard', rank: { path: 'rank' }, suit: { path: 'suit' }, faceDown: { path: 'faceDown' } },
+    ] } },
+  ] as A2uiOutput
+  const deck = (output: A2uiOutput, action?: { name: string; surfaceId: string; context: Record<string, unknown>; dataModel: unknown }) =>
+    croupierSemanticChecks
+      .flatMap((c) => c.check({ surfaces: semanticSurfaceViews({ turns: [] }, output), ...(action !== undefined ? { action } : {}) }))
+      .filter((f) => DECK_CODES.includes(f.code))
+  const player = [C('A', 'spades'), C('K', 'spades'), C('9', 'hearts'), C('8', 'hearts')]
+  const hole = [C('Q', 'diamonds', true), C('7', 'clubs', true), C('7', 'hearts', true), C('2', 'spades', true)]
+
+  it('the recorded Sonnet deal (four face-down 2 of clubs) is CARD_DUPLICATE naming the placeholder', () => {
+    const f = deck(omaha('table-1', { dealerHand: [0, 1, 2, 3].map(() => C('2', 'clubs', true)), playerHand: player }))
+    expect(f.map((x) => [x.code, x.path])).toEqual([['CARD_DUPLICATE', 'table-1:/dealerHand']])
+    expect(f[0]!.message).toMatch(/2 of clubs/)
+    expect(f[0]!.message).toMatch(/real/)
+  })
+
+  it('a duplicate across hands is caught too (the Haiku aces of spades), and a distinct deal passes', () => {
+    expect(deck(omaha('table-1', { dealerHand: [C('A', 'spades', true), C('3', 'clubs', true)], playerHand: player })).map((x) => x.code)).toEqual(['CARD_DUPLICATE'])
+    expect(deck(omaha('table-1', { dealerHand: hole, playerHand: player }))).toEqual([])
+  })
+
+  it('a hole card that turns up as another card, or is swapped while face down, is HOLE_CARD_CHANGED', () => {
+    const before = { dealerHand: hole, playerHand: player }
+    const action = { name: 'omaha_action', surfaceId: 'table-1', context: { move: 'call' }, dataModel: before }
+    const revealed = hole.map((c) => ({ ...c, faceDown: false }))
+    expect(deck(omaha('table-1', { dealerHand: revealed, playerHand: player }), action)).toEqual([])
+    const swapped = [{ ...revealed[0]!, rank: 'A' }, ...revealed.slice(1)]
+    const f = deck(omaha('table-1', { dealerHand: swapped, playerHand: player }), action)
+    expect(f.map((x) => [x.code, x.path])).toEqual([['HOLE_CARD_CHANGED', 'table-1:/dealerHand/0']])
+    expect(f[0]!.message).toMatch(/Q of diamonds/)
+    const hidden = [{ ...hole[0]!, rank: 'A' }, ...hole.slice(1)]
+    expect(deck(omaha('table-1', { dealerHand: hidden, playerHand: player }), action).map((x) => x.code)).toEqual(['HOLE_CARD_CHANGED'])
+  })
+
+  it('never judged: a blackjack table (a shoe of decks), a draw game\'s redraw, a new round, another surface', () => {
+    expect(deck(omaha('table-1', { dealerHand: [C('K', 'clubs'), C('K', 'clubs')], playerHand: [] }, 'Blackjack'))).toEqual([])
+    const before = { dealerHand: hole, playerHand: player }
+    const redraw = [C('J', 'clubs', true), ...hole.slice(1)]
+    const action = { name: 'draw', surfaceId: 'table-1', context: {}, dataModel: before }
+    expect(deck(omaha('table-1', { dealerHand: redraw, playerHand: player }, 'Five-card draw'), action)).toEqual([])
+    expect(deck(omaha('table-1', { dealerHand: redraw, playerHand: player }), { ...action, context: { newRound: true } })).toEqual([])
+    expect(deck(omaha('table-2', { dealerHand: redraw, playerHand: player }), action)).toEqual([])
   })
 })
