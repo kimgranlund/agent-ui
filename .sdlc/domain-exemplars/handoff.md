@@ -29,3 +29,6 @@ Round 2 evidence: T-0225 report; trace exemplar counts in T-0238.
 
 ## Conductor note (2026-10-15, Kim: split)
 Blocked in lane E: all three candidate seeds failed review at 2. Seeds move to T-0245. T-0240 is resized to L3 and covers only the per-persona corpus shard plumbing (widen `SeedCatalogId`, `catalog-files.ts` loads `<base>--<persona>`, an `import-seeds` persona shelf, register persona catalogs in the corpus-data test, the 4 shard loaders, the `retrieve.ts` scope rule, drop the allowlist entry, re-pin 15 presets), then admits the T-0245 seeds. The lane's simulation: with the scope rule and the seeds, croupier, concierge and lexicographer each get a composite in their top 3.
+
+## Conductor note (2026-10-15, after T-0245 #2011)
+The four seeds are in `packages/agent-ui/a2ui/src/examples/domain-seeds.ts` (review verdicts in `.sdlc/domain-seeds/review-verdicts.json`, all 4). Admit them: add `domain-seeds.ts` to the importer's `SEEDS_BY_MODULE`. The T-0245 verifier found two properties no test covers: a seed that sends its data model with each action (`sendDataModel`), and the miss glyph (a cross, not a circle). Add tests for both while touching this path, with each test red when the property is removed.
