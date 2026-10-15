@@ -220,7 +220,7 @@ elements BEFORE the v1 commit — non-optional (the ui-slider DOT lesson).
 ## 11. LLD-C10 — barrel/subpaths + doc page (→ SPEC-R1, R8)
 
 `src/index.ts`: `createRouter`, `connectUrl`, types — **not** the elements (tree-shake contract; header
-comment names the regression). `site/router-doc.html` + `site/router-doc.ts`: a live memory-mode demo
+comment names the regression). `site/router-doc.html` + `site/pages/router-doc.ts`: a live memory-mode demo
 (3 routes, links, outlet, back/forward buttons reading the same router), a reflection opt-in snippet,
 the hash-vs-history guidance, the memory-only href degradation note. Site nav/toc rows added; the site
 stays MPA (SPEC-R8).
@@ -248,7 +248,7 @@ stays MPA (SPEC-R8).
 
 | Risk / fork overturned | Blast radius (surgical repair) |
 |---|---|
-| **F1 package home** (→ inside components) | LLD-C1/C2 die; C3–C8 relocate under `components/src/router/`; ADR-0040 barrel budget re-opens; SPEC-R1 rewrites — the ONE fork that reshapes the family; argued hardest in ADR-0115 |
+| **F1 package home** (→ inside components) | LLD-C1/C2 die; C3–C8 relocate under `packages/agent-ui/router/src/`; ADR-0040 barrel budget re-opens; SPEC-R1 rewrites — the ONE fork that reshapes the family; argued hardest in ADR-0115 |
 | **F2 default mode** (→ history default) | One default constant + SPEC-R4 AC ordering + doc-page guidance; small |
 | **F3 outlet seam** (→ declarative `<ui-route>`) | LLD-C7 re-specs; SPEC-R5 rewrites; matcher/history/reflection untouched |
 | **F4 link wiring** (→ provider element) | LLD-C8's default-static paragraph swaps for an ADR-0050-clone provider component (new LLD-C); SPEC-R6 wiring sentence changes |

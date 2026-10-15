@@ -1,0 +1,20 @@
+# Backticked paths path_check.py accepts though they resolve nowhere in this repo.
+# One path per line, then a comment with the reason.
+schema/manager.py              # upstream google/A2UI repo, cited for its schema manager
+schema/catalog.py              # upstream google/A2UI repo, catalog loader
+test_data/example1.json        # upstream google/A2UI repo, test data
+test_data/load_examples/basic/example1.json  # upstream google/A2UI repo, test data
+eval/a2ui_eval/scorers.py      # upstream google/A2UI eval harness
+eval/a2ui_eval/dataset.py      # upstream google/A2UI eval harness
+eval/datasets/dataset_schema.json  # upstream google/A2UI eval harness
+specification/v1_0/docs/a2ui_protocol.md  # upstream google/A2UI spec
+specification/2026-01-26/apps.mdx  # upstream MCP Apps extension spec
+packages/core/src/events.ts    # upstream MCP Apps SDK source
+skill-author/scripts/routing_eval.py  # user-level skill-author plugin
+make-rubric/scripts/           # user-level make-rubric plugin
+.agent-evals/runs.jsonl        # eval signal store written at run time (T-0176)
+captures/                      # debug-bundle slot named by the agent-model spec, filled at run time
+eval/                          # per-run output folder of a catalog example or corpus eval
+eval/summary.md                # per-run output of the catalog example eval
+all.css                        # `./all.css`, the components package exports key, served from all.gen.css
+corpus-genui/runs/             # per-run reports folder, git-ignored per the genui-b3 LLD file tree

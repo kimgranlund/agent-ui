@@ -1,6 +1,7 @@
 # LLD — Shell responsive system (GH #170)
 
 > Status: proposed · v0.1 · 2026-07-20 · Layer: LLD (implementation plan)
+> Superseded in part: `ui-app-shell` was removed on 2026-07-25 (GH #249, ADR-0156); its replacement is `ui-super-shell` (`packages/agent-ui/app/src/controls/super-shell/`, contract [`shell-archetypes-m5.spec.md`](../spec/shell-archetypes-m5.spec.md)). Text naming `ui-app-shell` below is history; the rest stands.
 > Implements: [`../spec/shell-archetypes-m5.spec.md`](../spec/shell-archetypes-m5.spec.md) §9
 > (SPEC-R8/R9/R10, AC13–AC18). Refines
 > [ADR-0155](../adr/0155-shell-responsive-band-ladder-toggle-law-scrollbar-seam.md) (proposed —

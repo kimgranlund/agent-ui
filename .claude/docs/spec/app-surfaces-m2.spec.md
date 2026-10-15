@@ -49,7 +49,7 @@
 
 Define the two agent-native app-tier primitives that close PRD-G3 and PRD-G4: **`ui-surface-host`** — a single mount/stream seam wrapping `@agent-ui/a2ui`'s `RendererHost`, so agent-emitted A2UI content appears in a running app with zero app-written renderer wiring — and **`ui-conversation`** — a thread + composer + per-turn narration primitive presenting a multi-turn agent conversation with zero app-written chat chrome. Both compose the M1 shell's region model; `ui-conversation` composes `ui-surface-host` internally (§3.3). Neither primitive calls a model, owns a transport, or holds provider config (§3.4) — that stays app-owned, per PRD §3's non-goal ("a backend / agent runtime / transport implementation").
 
-M2 pays down the two site embryos this SPEC generalizes: `site/lib/canvas-surface.ts` + the ad hoc `createRenderer()`/`host.mount()` wiring in `a2ui-live.ts` (→ `ui-surface-host`), and `site/lib/surface-registry.ts` + `site/lib/ask-registry.ts` + `a2ui-chat.ts`'s hand-built thread/narration/routing (→ `ui-conversation`). Both site pages are re-hosted as the acceptance proof (§3.5).
+M2 pays down the two site embryos this SPEC generalizes: `site/lib/canvas-surface.ts` (retired, now `@agent-ui/app/artboard`) + the ad hoc `createRenderer()`/`host.mount()` wiring in `a2ui-live.ts` (→ `ui-surface-host`), and `site/lib/surface-registry.ts` (retired in M2 Phase 2) + `site/lib/ask-registry.ts` + `a2ui-chat.ts`'s hand-built thread/narration/routing (→ `ui-conversation`). Both site pages are re-hosted as the acceptance proof (§3.5).
 
 ## 2. Definitions
 
@@ -57,7 +57,7 @@ M2 pays down the two site embryos this SPEC generalizes: `site/lib/canvas-surfac
 - **`ui-surface-host`** — a structural (non-form-associated) `UIElement` owning ONE `RendererHost` lifecycle: mount, line-by-line `ingest`, `finalize`, `dispose`, and the outbound client-message callback. It owns *only* the mount + stream (§3.2) — never the produce loop that calls a model.
 - **`ui-conversation`** — a structural `UIElement` presenting a scrolling thread of turns (user / agent / system), a composer, and, per agent turn, a narration strip + zero-or-more inline `ui-surface-host` instances for the surfaces that turn's lines target. Driven imperatively by an **agent turn handle** (§3.4) the consuming app's own transport loop feeds line-by-line.
 - **Agent turn handle (`AgentTurnHandle`)** — the imperative per-turn object `ui-conversation.beginAgentTurn()` returns; the app's turn loop calls its methods as its own transport yields lines. Not a DOM type; a plain object contract (§4).
-- **Transport / produce loop** — the model-calling machinery (`packages/agent-ui/a2ui/tools/agent/produce.ts`, `agent-transport.ts`) that turns a user intent into a stream of validated A2UI JSONL lines. Node/site-scoped, never a package export of `@agent-ui/a2ui` (SPEC-N1 of `a2ui-runtime.spec.md`'s sibling harness posture) — **out of scope for both M2 primitives** (§3.4).
+- **Transport / produce loop** — the model-calling machinery (`packages/agent-ui/a2ui/src/agent/produce.ts`, `agent-transport.ts`) that turns a user intent into a stream of validated A2UI JSONL lines. Node/site-scoped, never a package export of `@agent-ui/a2ui` (SPEC-N1 of `a2ui-runtime.spec.md`'s sibling harness posture) — **out of scope for both M2 primitives** (§3.4).
 
 ---
 

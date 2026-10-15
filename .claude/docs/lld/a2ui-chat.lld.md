@@ -30,7 +30,7 @@ plan (§8).
 | LLD-C5 | Wire disclosure per bubble | `site/pages/a2ui-chat.ts` (the `a2a-artifact-feed.ts` `disclosure()` idiom, copied as page-chrome — not promoted to a shared lib export; a second copy is the deliberate cost, §6) | SPEC-R7 |
 | LLD-C6 | Live overlay wiring | `site/pages/a2ui-chat.ts` (the `wireLiveOverlay()` pattern, copied from `a2ui-live.ts`, mirroring `a2a-artifact-feed.ts`'s own second copy) | SPEC-R8 |
 | LLD-C7 | Nav + MPA entry | `site/main.ts` (one new nav row, the `a2ui-live` row's neighbor) | — |
-| LLD-C8 | Test plan | `site/lib/surface-registry.test.ts` + `site/pages/a2ui-chat.test.ts` (jsdom) + `site/pages/a2ui-chat.browser.test.ts` (Chromium+WebKit) | SPEC-R1…R8 |
+| LLD-C8 | Test plan | `site/lib/surface-registry.test.ts` (retired with the registry, M2 Phase 2) + `site/pages/a2ui-chat.test.ts` (jsdom) + `site/pages/a2ui-chat.browser.test.ts` (Chromium+WebKit) | SPEC-R1…R8 |
 
 ## 3 · Interfaces (frozen)
 

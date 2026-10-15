@@ -1,7 +1,7 @@
 # PRD — A2UI Expert System
 
 > Status: proposed · v0.3 · 2026-08-19 · Owner: agent-ui *(v0.2, 2026-08-18: §8 added — the widget-vocabulary-parity product intent relocated from [IDR-0004](../idr/0004-widget-vocabulary-parity-composition-first.md) at Kim's 2026-08-18 doc-tier ruling; additive — §1–§7 untouched) (v0.3, 2026-08-19: §8.1 added — the rich-option-selection intent, GH #1368/ADR-0220; additive — §1–§8 body untouched) (2026-08-23: §8.1's ADR-0220 citations corrected proposed → accepted — record hygiene per the product seat's dated review, `rulings.md` 2026-08-23 entry; no PRD decision changed)*
-> Document family: this PRD is upstream of the SPECs in [`specs/`](../spec/) and the LLDs in [`llds/`](../lld/). The family lives on the unified map (`../spec/`·`../lld/`); decisions index: the ADR log itself, [`../adr/`](../adr/) (the numbered files ARE the index — no index file, `doc-standards` §1b); the original charter is [archived](../archive/a2ui-expert-system/README.md) (frozen 2026-07-08).
+> Document family: this PRD is upstream of the SPECs in [`../spec/`](../spec/) and the LLDs in [`../lld/`](../lld/). The family lives on the unified map (`../spec/`·`../lld/`); decisions index: the ADR log itself, [`../adr/`](../adr/) (the numbered files ARE the index — no index file, `doc-standards` §1b); the original charter is [archived](../archive/a2ui-expert-system/README.md) (frozen 2026-07-08).
 > Altitude: this document owns **why + what-should-exist**. Behavior contracts live in the SPECs; implementation in the LLDs. Lower documents reference these goal IDs; they do not restate them.
 
 ## 1. Problem
@@ -109,11 +109,11 @@ Each is owned by a downstream document. **All five are now resolved by their own
 
 | ID | Decision | Resolution | Owner |
 |---|---|---|---|
-| **PRD-D1** | Primary corpus-consumption mode | **Layered**: static few-shot via catalog `examples` (baseline) · MCP retrieval (scale) · fine-tune (export) | `specs/a2ui-training-corpus.spec.md` (R10–R12) |
-| **PRD-D2** | First-class transport | **raw JSONL/stdio default**; AG-UI + A2A as adapters | `specs/a2ui-streaming-pipeline.spec.md` (R3) |
-| **PRD-D3** | Default catalog vs A2UI "Basic" | **First-party catalog reflecting `@agent-ui/components` directly** (not a Basic-adapter); names aligned with Basic where they correspond | `specs/a2ui-catalog.spec.md` (R8) |
-| **PRD-D4** | Corpus storage substrate | **Flat JSONL in-repo**, sharded by facet+version (revisit > 10⁵ records) | `llds/a2ui-corpus-store.lld.md` (C1) |
-| **PRD-D5** | MCP delivery default | **CLI-based** MCP server (self-hosted HTTP optional) | `llds/a2ui-streaming-pipeline.lld.md` (C6) |
+| **PRD-D1** | Primary corpus-consumption mode | **Layered**: static few-shot via catalog `examples` (baseline) · MCP retrieval (scale) · fine-tune (export) | `../spec/a2ui-training-corpus.spec.md` (R10–R12) |
+| **PRD-D2** | First-class transport | **raw JSONL/stdio default**; AG-UI + A2A as adapters | `../spec/a2ui-streaming-pipeline.spec.md` (R3) |
+| **PRD-D3** | Default catalog vs A2UI "Basic" | **First-party catalog reflecting `@agent-ui/components` directly** (not a Basic-adapter); names aligned with Basic where they correspond | `../spec/a2ui-catalog.spec.md` (R8) |
+| **PRD-D4** | Corpus storage substrate | **Flat JSONL in-repo**, sharded by facet+version (revisit > 10⁵ records) | `../lld/a2ui-corpus-store.lld.md` (C1) |
+| **PRD-D5** | MCP delivery default | **CLI-based** MCP server (self-hosted HTTP optional) | `../lld/a2ui-streaming-pipeline.lld.md` (C6) |
 
 ## 6. Milestones (for metric timeframes)
 
@@ -128,13 +128,13 @@ Sequencing rationale only; the SPECs own the behavior and the LLDs own the build
 
 This PRD is refined by the following SPECs (what must be built / how it behaves) and LLDs (how it is built). Status lives in each doc's own header (the tree wins — `doc-standards` §2); decisions in [`../adr/`](../adr/) (the numbered files ARE the index — no index file, `doc-standards` §1b); the original charter table is [archived](../archive/a2ui-expert-system/README.md) (frozen 2026-07-08).
 
-- `specs/a2ui-runtime.spec.md` — protocol-conformance behavior + the zero-dep renderer contract *(PRD-G1)*
-- `specs/a2ui-catalog.spec.md` — catalog model: default catalog + the two-tier extensibility surface *(PRD-G1, PRD-G2, PRD-D3)*
-- `specs/a2ui-streaming-pipeline.spec.md` — streaming systems/pipelines/workflows, JSONL, MCP transport *(PRD-G1, PRD-G7, PRD-D2)*
-- `specs/a2ui-expert-harness.spec.md` — authoring agents + domain skills + rubrics + deterministic gates *(PRD-G3, PRD-G4)*
-- `specs/a2ui-training-corpus.spec.md` — **flagship**: corpus format, sourcing, gating, consumption, maintenance, eval *(PRD-G5, PRD-D1)*
+- `../spec/a2ui-runtime.spec.md` — protocol-conformance behavior + the zero-dep renderer contract *(PRD-G1)*
+- `../spec/a2ui-catalog.spec.md` — catalog model: default catalog + the two-tier extensibility surface *(PRD-G1, PRD-G2, PRD-D3)*
+- `../spec/a2ui-streaming-pipeline.spec.md` — streaming systems/pipelines/workflows, JSONL, MCP transport *(PRD-G1, PRD-G7, PRD-D2)*
+- `../spec/a2ui-expert-harness.spec.md` — authoring agents + domain skills + rubrics + deterministic gates *(PRD-G3, PRD-G4)*
+- `../spec/a2ui-training-corpus.spec.md` — **flagship**: corpus format, sourcing, gating, consumption, maintenance, eval *(PRD-G5, PRD-D1)*
 
-Each SPEC spawns one or more LLDs in `llds/` (renderer, default-catalog mapping, catalog schema/validators, stream codec, MCP server, corpus store, harness wiring).
+Each SPEC spawns one or more LLDs in `../lld/` (renderer, default-catalog mapping, catalog schema/validators, stream codec, MCP server, corpus store, harness wiring).
 
 ## 8. Widget-vocabulary parity, composition-first (v0.2, 2026-08-18 — relocated from IDR-0004)
 

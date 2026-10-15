@@ -216,7 +216,7 @@
 > ADR-0146's closed progress vocabulary grows by exactly ONE stage, `tool` — a factual process claim carrying
 > the registry tool NAME, never model-composed prose (the F2 honesty law's sanctioned growth; under the queue
 > design tool stages drain just before the final round's text — a recorded latency limit). EXECUTION stays in
-> the dev proxy's node process (`tools/agent/integrations.ts` — the v0.5 shell law: registry/key/proxy shapes
+> the dev proxy's node process (`a2ui/tools/agent/integrations/index.ts` — the v0.5 shell law: registry/key/proxy shapes
 > never enter `src/agent/`); the browser forwards only ENABLED tool-entry LABELS (master-gated on
 > `toolsEnabled`), the proxy intersects with its keyless registry (weather/wikipedia-search/currency, v1) and
 > ignores the rest. Hotel booking/PMS integrations remain GH #49's named direction, out of this contract.
@@ -256,7 +256,7 @@
 > ADR-0090 ★ calibration ids from the block ONLY in `'blue-sky'` mode (they are already inlined in
 > `NEGOTIATE_BLUE_SKY` there); also tightens SPEC-R13 AC2 to the real no-embedded-JSONL rule
 > (`mini-skills.test.ts:40`) and drops the load-bearing-free "THIRD segment" ordinal.
-> Refines: [`../a2ui-expert-system.prd.md`](../prd/a2ui-expert-system.prd.md) — primarily **PRD-G1** (default-catalog generation works end-to-end) and **PRD-G7** (transport interop); supports **PRD-G6** (coherence). Honors Constraints **C1** (conform to A2UI v1.0) and **C2** (zero runtime deps).
+> Refines: [`../prd/a2ui-expert-system.prd.md`](../prd/a2ui-expert-system.prd.md) — primarily **PRD-G1** (default-catalog generation works end-to-end) and **PRD-G7** (transport interop); supports **PRD-G6** (coherence). Honors Constraints **C1** (conform to A2UI v1.0) and **C2** (zero runtime deps).
 > Realizes by ID (not by duplication): [`./a2ui-streaming-pipeline.spec.md`](./a2ui-streaming-pipeline.spec.md) **SPEC-R2** (the generation pipeline — its first PROGRAMMATIC realization) + **SPEC-R8/N1** (progressive delivery) · [`./a2ui-expert-harness.spec.md`](./a2ui-expert-harness.spec.md) **SPEC-R6** (the bounded compose→validate→self-correct loop — the loop CONTRACT stays harness §6; this SPEC realizes it in running code minus the authoring-time critic round).
 > Refined by: [`../lld/a2ui-live-agent.lld.md`](../lld/a2ui-live-agent.lld.md).
 > Decisions: **ADR-0069** (demo shape + security posture — the `AgentTransport` seam, layered backbone+overlay, the `VITE_` build-key-safety invariant) · **ADR-0070** (runtime loop scope) · **ADR-0071** (derived, drift-gated system prompt) · **ADR-0072** (multi-turn session model) · **ADR-0073** (the model-provider seam) · **ADR-0088** (the live conversational channel — a `note` meta-line riding beside the A2UI stream, the browser-held `TurnTrace`, and `wantResponse`-routed click→turn; extends ADR-0070/0072/0011, `AgentTransport.turn`'s signature UNCHANGED) · **ADR-0089** (teaches the agent to ASK — two hand-authored GRAMMAR-half behaviors riding ADR-0088's note-only turn: clarify-when-underdetermined + catalog-boundary negotiated approximation; extends ADR-0088/0071, NO new wire/transport/protocol surface) · **ADR-0090** (a per-turn `GenUiMode` — `default`/`specific`/`blue-sky` — that SCALES ADR-0089's clarify/negotiate grammar directive↔exploratory behind a mode-INVARIANT honesty floor, threaded via `ProduceOptions.mode` through the proxy + a dev-only switcher selector; and Structural named as the already-shipped recorded transport, a doc + a second worked example, NOT a `GenUiMode` member; extends ADR-0089/0088, NO new wire/transport/protocol surface) · **ADR-0091** (the mini-skill registry — a small, hand-curated `MiniSkill[]` registry of catalog-composition idioms selected once per turn, beside `retrieve()`, by a cheap TF-IDF/cosine intent-match (`selectMiniSkills`, reusing the SAME tokenizer/cosine primitives `retrieve()` uses, extracted to a shared `text-similarity.ts`) and composed into `buildSystemPrompt` as a `fewShot`-structural-twin segment that degrades to `''` on no match, capped at a per-turn module count under a per-module token budget so the prompt grows by at most `cap × budget` regardless of registry size; extends ADR-0090's deferred-corpus follow-up, NO new wire/transport/protocol surface; an independent post-ship review caught, and the build fixed, a real double-injection defect — the registry's three ADR-0090-seeded calibration ids are now single-sourced by the registry and filtered out of a `'blue-sky'`-mode selection, ADR-0091 §4) · **ADR-0097** (feed-embedded interactive asks — the ADR-0089 ASK gains a structured, feed-embedded surface form: an additive `ask` routing field on the ADR-0088 meta envelope whose payload rides the SAME validated stream; a page-level per-message `pending → frozen(answered|bypassed)` lifecycle over per-ask `createRenderer()` hosts; a gate-encoded feed sub-catalog partition — `FEED_SURFACE_TYPES`(23)/`FEED_EXCLUDED`(11) — reapplying the ADR-0087 lesson to a policy SUBSET view over the one catalog; ask mechanics + mode-scaled archetype vocabulary in the derived prompt; every failure path degrades to the ADR-0088 prose note, NEVER a protocol break; extends ADR-0088/0089/0090, NO renderer/package/transport-signature change). ADR-0069–0088 accepted (ADR-0088 ratified 2026-07-07); ADR-0089/ADR-0090/ADR-0091/ADR-0097 built + independently reviewed 2026-07-07 (ratification markers pending; ADR-0091's review additionally caught + the build fixed the §4 double-injection defect).
@@ -337,7 +337,7 @@ isolated behind one interface (ADR-0069).
   (`tools/agent/structural-transcript.ts`), never a new mechanism.
 - **Live overlay** — the opt-in dev-server proxy transport: a real model call, key-held server-side.
 - **Gen-UI `mode`** (ADR-0090 §1/§4) — a per-turn `GenUiMode` (`'default' | 'specific' | 'blue-sky'`,
-  `tools/agent/gen-ui-mode.ts`) that SCALES the ADR-0089 clarify/negotiate GRAMMAR-half behaviors between a
+  `a2ui/src/agent/gen-ui-mode.ts`) that SCALES the ADR-0089 clarify/negotiate GRAMMAR-half behaviors between a
   directive `'specific'` disposition and an exploratory `'blue-sky'` disposition, threaded from the proxy
   request body through `ProduceOptions.mode` into `buildSystemPrompt`. An absent `mode`, and `'default'`,
   reproduce the pre-ADR-0090 ADR-0089 grammar byte-for-byte (zero regression). The mode-invariant honesty
@@ -346,7 +346,7 @@ isolated behind one interface (ADR-0069).
   Orthogonal to Structural (above): `mode` conditions the LIVE path's prompt; Structural means "don't run
   the live path at all."
 - **Mini-skill** (ADR-0091 §1/§2/§3) — a named, self-contained, prompt-injectable idiom-instruction
-  module (`{id, triggers, body}`, `tools/agent/mini-skills.ts`) scoped to ONE UI composition idiom (a
+  module (`{id, triggers, body}`, `a2ui/src/agent/mini-skills.ts`) scoped to ONE UI composition idiom (a
   settings screen, a dashboard, a card-game sheet, …) — the catalog-specific "anatomy → mapping → wall"
   knowledge a general model cannot have about this catalog. A static, hand-curated `MINI_SKILLS` registry
   (5 entries — ADR-0090's five calibration examples at general maturity) is selected once per turn by
@@ -369,7 +369,7 @@ isolated behind one interface (ADR-0069).
 - **Feed-embedded ask** (ADR-0097 §1/§2) — a small, single-purpose A2UI surface rendered inline in its own
   chat message, so an ADR-0089 clarify/negotiate ASK becomes clickable structured UI instead of a typed
   reply. Declared by an additive `ask: {surfaceId}` field on the SAME leading meta-line as `note`
-  (`AskDeclaration`, `tools/agent/meta-line.ts`); the ask's UI is ORDINARY A2UI (`createSurface`/
+  (`AskDeclaration`, `a2ui/src/agent/meta-line.ts`); the ask's UI is ORDINARY A2UI (`createSurface`/
   `updateComponents`/`updateDataModel`) targeting that fresh surface id on the SAME validated stream — no
   protocol extension. One page-level `createRenderer()` host renders it into that turn's own message
   bubble; its lifecycle is `pending → frozen(answered|bypassed)` (freeze when the dispatched turn COMPLETES

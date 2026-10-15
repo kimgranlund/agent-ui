@@ -204,7 +204,7 @@ text has verified empirically that `a2ui-basic`'s own dialect (its narrower `Cho
 **The rule, found and cited (not guessed):** `packages/agent-ui/a2ui/src/live-agent/prompt-equivalence.baseline.json`
 is the golden reference ADR-0135 cl.15 pins; `prompt-equivalence.test.ts`'s own header: *"regenerate it ONLY
 when a prompt's TEXT is deliberately changed (edit the `.md`, then re-capture), never to make a red gate
-pass."* The `a2ui-prompt-author` skill (`.claude/skills/a2ui-prompt-author/SKILL.md`) is the sanctioned
+pass."* The `a2ui-prompt-authoring` skill (`.claude/skills/a2ui-prompt-authoring/SKILL.md`) is the sanctioned
 editing discipline for anything under `packages/agent-ui/a2ui/src/agent/prompts/` — this baseline covers
 `MINI_SKILLS` (every `prompts/mini-skills/*.md` file's id/triggers/body) byte-for-byte.
 

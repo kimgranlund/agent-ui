@@ -148,7 +148,7 @@ entry is the ONLY catalog-side change required.
 references in ten files. Every one is enumerated below with its fix, a build that skips any of the
 CSS/test rows breaks `npm test`/`npm run test:browser` outright or silently regresses a shipped bugfix.
 
-**5.1 Deletion.** `site/lib/theme-provider.ts` is deleted outright (no alias, ADR-0117 cl.1).
+**5.1 Deletion.** `packages/agent-ui/components/src/controls/theme-provider/theme-provider.ts` is deleted outright (no alias, ADR-0117 cl.1).
 
 **5.2 Import + construction repoints (functional code).**
 - `site/pages/theming.ts`, drops `import '../lib/theme-provider.ts'` (line 11) for the shipped import;
@@ -193,7 +193,7 @@ CSS/test rows breaks `npm test`/`npm run test:browser` outright or silently regr
 - **`site/gallery.test.ts:217`**, the same `querySelector('theme-provider')` fix, same failure mode if missed.
 
 **5.4 Prose-only repoints (drift, not breakage, repaired in the same change per keep-context-live).**
-- `site/theming.html:9` (HTML comment) · `site/theming.css:29` (comment referencing `theme-provider.ts`,
+- `site/theming.html:9` (HTML comment) · `site/pages/theming.css` (comment referencing `theme-provider.ts`,
   now-deleted) · `site/lib/light-dark-minify.test.ts:6` (its comment cites `<theme-provider scheme>` and the
   now-deleted file path by name, the comment is corrected; the test's OWN mechanism and assertions are
   untouched, since it proves a general build-pipeline property, not anything specific to this component) ·

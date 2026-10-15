@@ -1,6 +1,7 @@
 # LLD — Agent-App Surfaces M4 (panes + settings)
 
 > Status: **proposed · v0.1 · 2026-07-10 · pending doc-review** · Layer: LLD (implementation plan)
+> Superseded in part: `ui-app-shell` was removed on 2026-07-25 (GH #249, ADR-0156); its replacement is `ui-super-shell` (`packages/agent-ui/app/src/controls/super-shell/`, contract [`shell-archetypes-m5.spec.md`](../spec/shell-archetypes-m5.spec.md)). Text naming `ui-app-shell` below is history; the rest stands.
 > Implements: [`../spec/app-surfaces-m4.spec.md`](../spec/app-surfaces-m4.spec.md) (`SPEC-R1…R14`). Realizes the ratified [`../adr/0120-app-surfaces-m4-panes-settings.md`](../adr/0120-app-surfaces-m4-panes-settings.md).
 > Decomposition: [`../decompositions/app-surfaces-m4.decomp.json`](../decompositions/app-surfaces-m4.decomp.json) (coverage-clean; nodes ≈ the components below). Build-order edges are the decomposition's.
 > Precedents: `traits/value-drag.ts` + `controls/slider-multi/slider-multi.ts` (the multi-handle pointer gesture + nearer-handle gate + per-handle ARIA + keyboard-step-with-clamp — the shape `ui-split`'s separators generalize) · `traits/roving-focus.ts` (keyboard-nav prior art) · `controls/row|column|grid` (the layout-family box model + `tier: layout` geometry) · `controls/form-provider` + `controls/field` + `dom/form.ts` (the form spine SPEC-R11 generates onto; ADR-0050/0051) · `controls/app-shell` (the M1 shell M4 composes; the `collapse` prop + the isolated `:host` mirror keep-in-sync obligation, LLD-C5).

@@ -8,7 +8,7 @@
 
 - **T1 — Site tests get a real test project.** Today `component-preview.browser.test.ts`, `site-adr-index.test.ts`, `site-preview-catalog.test.ts` live under `packages/…/src/` because vitest's `include` is packages-only ([[site-tests-excluded-from-vitest]]). Give `site/` its own vitest project (jsdom + browser); MOVE those 3 tests into `site/` and fix their imports.
 - **T2 — ADR status becomes machine-readable.** The ADR-index badge derives status from an ALL-CAPS `SUPERSEDED` text heuristic (ADR-0077 follow-up). Normalize every ADR `Status` cell to a single canonical keyword; drop the heuristic; add a lint gate.
-- **T3 — Consolidate the canvas.** `site/lib/canvas-surface.css` is a proven COPY of `a2ui-live`'s artboard. Point `a2ui-live` at the shared module; **preserve `canvas-surface`'s public API**; re-verify a2ui-live gates.
+- **T3 — Consolidate the canvas.** `site/lib/canvas-surface.css` (since retired: the shared artboard core moved to `@agent-ui/app/artboard`, ADR-0129 Am.2, PR #1656) was a proven COPY of `a2ui-live`'s artboard. Point `a2ui-live` at the shared module; **preserve `canvas-surface`'s public API**; re-verify a2ui-live gates.
 - **T4 — Off the deprecated vitest browser API.** Every `*.browser.test.ts` imports the deprecated `@vitest/browser/context`; migrate the repo to `vitest/browser`.
 
 ## Dependencies & phasing (avoid the concurrent-edit tangle)

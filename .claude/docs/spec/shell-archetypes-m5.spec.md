@@ -1,6 +1,7 @@
 # SPEC — Shell archetypes M5: `ui-super-shell` (the two-level recursive shell grammar)
 
 > Status: accepted · v0.9 · 2026-10-13 · Layer: app chrome (`@agent-ui/app`)
+> Superseded in part: `ui-app-shell` was removed on 2026-07-25 (GH #249, ADR-0156); its replacement is `ui-super-shell`, the shell this SPEC specifies (`packages/agent-ui/app/src/controls/super-shell/`). Text naming `ui-app-shell` below is history; the rest stands.
 > v0.9 (2026-10-13): T-0121, under [ADR-0245](../adr/0245-foundations-derive-from-one-n.md) clause 6:
 > the fixed 18px module is retired and every frame dimension reads a derived level token. R1c, R8's
 > fit arithmetic, R11a, R11b, R11d (C) and AC19 each carry a REV note; the older text stays as the record.

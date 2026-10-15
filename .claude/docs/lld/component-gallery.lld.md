@@ -47,7 +47,7 @@ budget obligation) — but its **class extends the public `UIElement`**, so the 
 | LLD-C1 | member derivation (`galleryMembers()`) | `site/lib/component-gallery.ts` | G8-DoD-1 "every control" |
 | LLD-C2 | `node()` element directive | `site/lib/component-gallery.ts` | ADR-0023 directive trio |
 | LLD-C3 | `ComponentGallery` element (filter · grid · readout) | `site/lib/component-gallery.ts` + `.css` | G8-DoD-1 dogfood clause |
-| LLD-C4 | `<theme-provider>` (scheme · scale · density + reserved `theme` seam) | `site/lib/theme-provider.ts` (site-local; composed by LLD-C3) | G8-DoD-1 "one provider"; ADR-0079 cl. 3 |
+| LLD-C4 | `<theme-provider>` (scheme · scale · density + reserved `theme` seam) | `packages/agent-ui/components/src/controls/theme-provider/theme-provider.ts` (site-local; composed by LLD-C3) | G8-DoD-1 "one provider"; ADR-0079 cl. 3 |
 | LLD-C5 | gallery page + nav | `site/pages/gallery.ts` · `site/gallery.html` · `_page.ts` NAV | site TOC/coverage gates |
 | LLD-C6 | gates (jsdom + browser incl. forced-colors) | `site/gallery.test.ts` · `site/gallery.browser.test.ts` | G8-DoD-1 forced-colors; decomp n1b |
 

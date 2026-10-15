@@ -1,6 +1,7 @@
 # SPEC — the unified nav-rail family (`ui-nav-rail`)
 
 > Status: shipped · v1.1 · 2026-07-30 · Layer: SPEC (execution contract)
+> Superseded in part: `ui-app-shell` was removed on 2026-07-25 (GH #249, ADR-0156); its replacement is `ui-super-shell` (`packages/agent-ui/app/src/controls/super-shell/`, contract [`shell-archetypes-m5.spec.md`](./shell-archetypes-m5.spec.md)). Text naming `ui-app-shell` below is history; the rest stands.
 > Traces: TKT-0030 (nav-pattern reconcile — the design ruling) · TKT-0029 (site-nav v2 — SUBSUMED, its
 > requirements are this SPEC's mode-1 consumer acceptance) · [`../adr/0130-nav-rail-family-unification.md`](../adr/0130-nav-rail-family-unification.md) (accepted 2026-07-12 — the seven ratifying clauses this SPEC realizes).
 > Refined by: [`../lld/nav-rail-family.lld.md`](../lld/nav-rail-family.lld.md) (implementation). Decomposition:

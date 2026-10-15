@@ -27,7 +27,7 @@ demo plays, and (e) the test plan proving SPEC-R1…R5.
 
 | ID | Component | File | Traces |
 |---|---|---|---|
-| LLD-C1 | GRAMMAR insertion — four-type choice bullets + `deleteSurface` wire shape, appended inside the existing "Output rules for the A2UI JSONL" section (the `OUTPUT_MARKER`-onward zone) | `packages/agent-ui/a2ui/tools/agent/system-prompt.ts` | SPEC-R1, R2 (ADR-0126 F2) |
+| LLD-C1 | GRAMMAR insertion — four-type choice bullets + `deleteSurface` wire shape, appended inside the existing "Output rules for the A2UI JSONL" section (the `OUTPUT_MARKER`-onward zone) | `packages/agent-ui/a2ui/src/agent/system-prompt.ts` | SPEC-R1, R2 (ADR-0126 F2) |
 | LLD-C2 | `prompt-drift`/`system-prompt-grammar` test additions asserting the new bullets + `deleteSurface` mention survive in every mode | `packages/agent-ui/a2ui/src/live-agent/system-prompt-grammar.test.ts` | SPEC-R1 |
 | LLD-C3 | `a2ui-payload-authoring` mental-model widened from three kinds to four (`deleteSurface` added) + one new Common-trap entry (whole-record upsert) | `.claude/skills/a2ui-payload-authoring/SKILL.md` | SPEC-R2, R3 |
 | LLD-C4 | Corpus exemplar record — the worked four-type, one-surface arc | `packages/agent-ui/a2ui/src/examples/` (new seed) + corpus import | SPEC-R4 |

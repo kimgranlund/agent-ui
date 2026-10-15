@@ -1,6 +1,7 @@
 # LLD — Agent-App Shell (M1)
 
 > Status: accepted · v1.0 · 2026-07-06 · Layer: LLD (implementation plan)
+> Superseded: `ui-app-shell` was removed on 2026-07-25 (GH #249, ADR-0156); its replacement is `ui-super-shell` (`packages/agent-ui/app/src/controls/super-shell/`, contract [`shell-archetypes-m5.spec.md`](../spec/shell-archetypes-m5.spec.md)). This document is kept as the record of the M1 design.
 > Implements: [`../spec/agent-app-shell.spec.md`](../spec/agent-app-shell.spec.md) (`SPEC-R1…R8`). Refines PRD-D1/D3/D4/D5 (ratified).
 > Decomposition: [`../decompositions/m1-app-shell.decomp.json`](../decompositions/m1-app-shell.decomp.json) (coverage-clean; nodes n1a…n4b ≈ the components below). Build-order edges are the decomposition's.
 > Altitude: owns **how M1 is built** — file map, concrete interfaces, per-component failure/edge handling, and the build sequence. Behavior is the SPEC's; this doc never re-derives it. **Open forks that need Kim/an ADR are called out in §7 — this LLD recommends but does not self-ratify them.**
@@ -51,7 +52,7 @@ No orphan components (each traces to a SPEC-R); no SPEC-R without a component.
 
 **Failure/edge handling.**
 - *Negative control (required)* — plant, on a UNIQUE token (e.g. a fresh `import { badge } from '@agent-ui/app'` inside `a2ui/src`), an upward/self import; grep-confirm it applied; the test MUST go red. Remove after proving it bites.
-- *Dynamic-`import()` blind spot* — the static `from ['"]`-regex approach is blind to `import()` (the same pre-existing gap as `components/layering.test.ts`). No dynamic imports exist under `app/src` today; document the blind spot in the test header, do not pretend coverage.
+- *Dynamic-`import()` blind spot* — the static `from ['"]`-regex approach is blind to `import()` (the same pre-existing gap as `components/src/layering.test.ts`). No dynamic imports exist under `app/src` today; document the blind spot in the test header, do not pretend coverage.
 - *Empty package* — at the moment C2 lands (before C3), the scan sees only the barrel; the gate is still valid and re-runs as the element lands.
 
 **Checkpoint:** `npm test` includes `app/src/layering.test.ts` green; the NC bit and was reverted.

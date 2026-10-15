@@ -1,6 +1,7 @@
 # SPEC — Agent-App Shell (M1)
 
 > Status: accepted · v1.0 · 2026-07-06 · Layer: SPEC (execution contract)
+> Superseded: `ui-app-shell` was removed on 2026-07-25 (GH #249, ADR-0156); its replacement is `ui-super-shell` (`packages/agent-ui/app/src/controls/super-shell/`, contract [`shell-archetypes-m5.spec.md`](./shell-archetypes-m5.spec.md)). This document is kept as the record of the M1 design.
 > Refines: [`../prd/agent-app-surfaces.prd.md`](../prd/agent-app-surfaces.prd.md) — **PRD-G2** (assemble the layout without bespoke CSS), **PRD-G6** (fleet DoD + layering), **PRD-G1** (down-payment via the re-host); realizes the ratified **PRD-D1** (app-shell anchor), **PRD-D3** (`@agent-ui/app` apex package + opt-in isolation), **PRD-D4/D5**.
 > Refined by: `../lld/agent-app-shell.lld.md` (implementation). Decomposition: [`../decompositions/m1-app-shell.decomp.json`](../decompositions/m1-app-shell.decomp.json) (coverage-clean).
 > Altitude: owns the **M1 behavior contract** — the package boundary, the `ui-app-shell` region/docking/responsiveness/isolation behavior, and the fleet-DoD gates. Internal build order + file map are the LLD's. This SPEC scopes **M1 only**; the conversation surface (PRD-G4), the canvas/surface-host (PRD-G3), and the tool-call surface (PRD-G5) are later milestones and out of this SPEC.

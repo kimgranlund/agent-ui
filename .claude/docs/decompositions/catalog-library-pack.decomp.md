@@ -19,7 +19,7 @@ byte-untouched, a non-goal fence, not a part.
    the pure read-time projection `readCatalogEntries(store)`: ensure the Default builtin roster row
    (no migration write), then DERIVE every entry's `enabled` from the one persisted key
    (ADR-0170 cl.1/cl.2/cl.4).
-2. **Presentation vocabulary** (`agent-admin/entry-list.ts`) — `EntryListOptions` gains optional,
+2. **Presentation vocabulary** (`entry-list/entry-list.ts`) — `EntryListOptions` gains optional,
    default-true `customAdd` + `contentField`; suppressed ⇒ no authoring form / no per-entry content
    editor; `mountEntryList`'s signature unchanged (ADR-0170 cl.8, amending ADR-0164 cl.3 additively).
 3. **Section wiring + single-select semantics** (`agent-admin.ts`) — the "Catalogs"

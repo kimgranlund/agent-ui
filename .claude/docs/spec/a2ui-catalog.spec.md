@@ -1,7 +1,7 @@
 # SPEC — A2UI Catalog (default catalog + two-tier extensibility)
 
 > Status: proposed · v0.6 · 2026-10-08 (v0.5 2026-10-05, v0.4 2026-10-05, v0.3 2026-08-07, v0.2 2026-08-07, v0.1 2026-06-26; v0.6 repairs the §3 first-tier paragraph for the lazy built-in records, ADR-0241 and its Amendment 1, no requirement moved; v0.5 adds §5.1's optional `WidgetFactory.uses` and the registry's optional `controls` loader, ADR-0233; v0.4 adds the §5.2 intro's `selection.json` machine-twin note, ADR-0232, accepted, no row or requirement moved) · Layer: SPEC (execution contract)
-> Refines: [`../a2ui-expert-system.prd.md`](../prd/a2ui-expert-system.prd.md) — primarily **PRD-G1, PRD-G2**; closes **PRD-D3**; supports PRD-G4, PRD-G6. Target protocol: **A2UI v1.0** (Constraint C1).
+> Refines: [`../prd/a2ui-expert-system.prd.md`](../prd/a2ui-expert-system.prd.md) — primarily **PRD-G1, PRD-G2**; closes **PRD-D3**; supports PRD-G4, PRD-G6. Target protocol: **A2UI v1.0** (Constraint C1).
 > Refined by: [`../lld/a2ui-catalog.lld.md`](../lld/a2ui-catalog.lld.md). Consumed by the renderer ([`./a2ui-runtime.spec.md`](./a2ui-runtime.spec.md) SPEC-R9) for widget resolution.
 > Altitude: owns the **catalog contract + default-catalog coverage**. Renderer mechanics are the runtime SPEC's; storage/wiring is the LLD's.
 > Requirement IDs file-scoped (`SPEC-R1…`); cross-document references qualify by doc name.

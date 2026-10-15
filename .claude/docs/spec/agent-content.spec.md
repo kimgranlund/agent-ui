@@ -74,7 +74,7 @@ build dependency (no YAML library). T-0160 picks either a small declared subset 
 or JSON frontmatter; whichever it picks, the validator refuses any file outside the chosen grammar with a named
 reason, never a best-effort parse. Planned: T-0160.
 
-**ACS-R4 (registry, digests, drift gate).** `scripts/generate-agent-content.mjs` reads the content root and emits
+**ACS-R4 (registry, digests, drift gate).** `scripts/generate-agent-assets.mjs` reads the content root and emits
 `registry.gen.ts`: one row per item with `id`, `kind`, `version`, `digest`, `path`, the parsed frontmatter and the
 body. The item digest is a sha256 over the item's canonical form (LF line endings, frontmatter as canonical JSON
 with sorted keys, then the body), the same canonicalization family `site/lib/agent-manifest/agent-manifest.ts`
