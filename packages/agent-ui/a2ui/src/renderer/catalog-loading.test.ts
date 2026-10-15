@@ -47,7 +47,7 @@ const probes = vi.hoisted(() => {
   return { slots, PING_CLIENT_ONLY, records: [...names.map((n) => record(`probe-${n}`)), record('probe-fn', PING_CLIENT_ONLY)] }
 })
 
-vi.mock('../catalog/records.ts', () => ({ BUILTIN_CATALOG_RECORDS: probes.records }))
+vi.mock('../catalog/records.ts', () => ({ BUILTIN_CATALOG_RECORDS: probes.records, catalogRecordFor: () => undefined }))
 
 const line = (message: A2uiServerMessage): string => JSON.stringify(message)
 const isError = (m: A2uiClientMessage): m is A2uiErrorMessage => 'error' in m
