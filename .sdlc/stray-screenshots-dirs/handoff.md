@@ -19,3 +19,10 @@ Hit three times on 2026-10-15 (PRs 1991, 1997 and a lane run): vitest browser wr
 ## Done when
 - A test plants a `__screenshots__` folder under catalog/personas and selection.test.ts still passes; it failed before.
 - `npm run check` plus the touched tests exit 0.
+
+## Lane bundle
+This solo lane delivers these tickets in order, one commit each, then one batched verifier checks all of them:
+- .sdlc/stray-screenshots-dirs/handoff.md
+- .sdlc/validate-dropped-child-same-payload/handoff.md
+- .sdlc/gh63-poison-producer/handoff.md
+- .sdlc/persona-silent-drop/handoff.md
