@@ -18,6 +18,7 @@ import { selectCatalog, buildCatalogMap, semanticChecksDeps, validateResponsePre
 import { croupierSemanticChecks } from '../../src/catalog/personas/croupier/checks.ts'
 import { HIDDEN_STATE_CHECKS } from '../../src/catalog/hidden-state-checks.ts'
 import { gateChecksOnCatalog } from '../../src/catalog/semantic-check.ts'
+import { compositeMomentChecks } from '../../src/catalog/composite-moments.ts'
 import { loadCatalog } from '../../src/catalog/catalog.ts'
 import type { Catalog } from '../../src/catalog/catalog.ts'
 import catalogRaw from '../../src/catalog/default/catalog.json'
@@ -130,19 +131,26 @@ describe('semanticChecksDeps (ADR-0238; GH #1795): the selected catalog decides 
   const basicCatalog = loadCatalog(basicCatalogRaw)
   const catalogs = buildCatalogMap(catalog, basicCatalog)
 
-  // T-0230: the hidden game state checks ride every catalog, each kept only where its `requires` types exist.
-  const hidden = (c: Catalog) => gateChecksOnCatalog(HIDDEN_STATE_CHECKS, c)
+  // T-0230: the hidden game state checks ride every catalog, then (T-0208) the composite-moment checks, each kept
+  // only where its `requires` types exist.
+  const ids = (deps: ReturnType<typeof semanticChecksDeps>): string[] => (deps.semanticChecks ?? []).map((c) => c.id)
+  const hidden = (c: Catalog): string[] => gateChecksOnCatalog(HIDDEN_STATE_CHECKS, c).map((x) => x.id)
+  const GAMES = ['composite-moment-board-grid', 'composite-moment-game-hud', 'composite-moment-result-card']
+  const BOOKING = ['composite-moment-booking-form', 'composite-moment-booking-confirmation']
+  const CROUPIER = croupierSemanticChecks.map((c) => c.id)
 
-  it('a derived croupier catalog yields its checks; a base or check-less persona catalog yields only the hidden-state checks', () => {
-    expect(semanticChecksDeps(catalogs.get('agent-ui--croupier')!)).toEqual({ semanticChecks: [...croupierSemanticChecks, ...hidden(catalogs.get('agent-ui--croupier')!)] })
-    expect(semanticChecksDeps(catalogs.get('a2ui-basic--croupier')!)).toEqual({ semanticChecks: [...croupierSemanticChecks, ...hidden(catalogs.get('a2ui-basic--croupier')!)] })
-    expect(semanticChecksDeps(catalog)).toEqual({ semanticChecks: HIDDEN_STATE_CHECKS })
-    expect(semanticChecksDeps(catalogs.get('agent-ui--concierge')!)).toEqual({ semanticChecks: HIDDEN_STATE_CHECKS })
+  it('a derived croupier catalog yields its checks, then the hidden-state and composite checks the catalog holds', () => {
+    expect(ids(semanticChecksDeps(catalogs.get('agent-ui--croupier')!))).toEqual([...CROUPIER, ...hidden(catalogs.get('agent-ui--croupier')!), ...GAMES])
+    expect(ids(semanticChecksDeps(catalogs.get('a2ui-basic--croupier')!))).toEqual([...CROUPIER, ...hidden(catalogs.get('a2ui-basic--croupier')!)])
+    expect(ids(semanticChecksDeps(catalog))).toEqual([...HIDDEN_STATE_CHECKS.map((c) => c.id), ...GAMES])
+    expect(ids(semanticChecksDeps(catalogs.get('agent-ui--concierge')!))).toEqual([...HIDDEN_STATE_CHECKS.map((c) => c.id), ...BOOKING, ...GAMES])
+    expect(ids(semanticChecksDeps(basicCatalog))).toEqual(hidden(basicCatalog))
+    expect(semanticChecksDeps(catalog).semanticChecks!.slice(HIDDEN_STATE_CHECKS.length).every((c) => compositeMomentChecks.includes(c))).toBe(true)
   })
 
   it('follows selectCatalog, never the raw id: an unknown id falls back to the default catalog and its checks', () => {
-    expect(semanticChecksDeps(selectCatalog(catalogs, 'agent-ui--croupier', catalog)).semanticChecks?.slice(0, croupierSemanticChecks.length)).toEqual(croupierSemanticChecks)
-    expect(semanticChecksDeps(selectCatalog(catalogs, 'agent-ui--croupier-typo', catalog))).toEqual({ semanticChecks: HIDDEN_STATE_CHECKS })
+    expect(ids(semanticChecksDeps(selectCatalog(catalogs, 'agent-ui--croupier', catalog))).slice(0, CROUPIER.length)).toEqual(CROUPIER)
+    expect(ids(semanticChecksDeps(selectCatalog(catalogs, 'agent-ui--croupier-typo', catalog)))).toEqual([...HIDDEN_STATE_CHECKS.map((c) => c.id), ...GAMES])
   })
 
   it('both HTTP hosts spread it from the SELECTED catalog into produce() deps (source-text, the buildCatalogMap idiom)', () => {

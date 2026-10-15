@@ -21,8 +21,9 @@
 //   self-correct feedback turn, never the wire. No new wire format.
 // - Fail-open: a check that throws contributes no findings and is reported by id in `errored`, so a buggy
 //   check can never stall a turn. `produce()` tallies that on the trace.
-// - Default off: no `semanticChecks` (or an empty list) means `produce()` never builds a view or calls
-//   this module, so a persona that declares none streams byte-identically.
+// - Off when none apply: no `semanticChecks` (or an empty list) means `produce()` never builds a view or calls
+//   this module. T-0208's composite-moment checks (`composite-moments.ts`) ride every catalog that holds their
+//   composite, so only a catalog none survives the gate for (`a2ui-basic`) streams byte-identically.
 //
 // DOM-less and node-free on purpose: a persona manifest that declares checks is imported by both server
 // hosts (`dev-proxy-plugin.ts`, `worker/index.ts`), so nothing here may touch `@agent-ui/components` or

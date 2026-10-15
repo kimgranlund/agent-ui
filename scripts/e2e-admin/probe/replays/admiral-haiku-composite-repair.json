@@ -1,0 +1,300 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "admiral-haiku-composite-repair",
+  "agent": "croupier",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "2026-10-15.jsonl:11 (catalog agent-ui)",
+  "steps": [
+    {
+      "say": "New game of Battleship."
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"Battle stations. My fleet is placed on a 6×6 grid and locked. I won't reveal its positions until the game ends. Fire on the waters below by clicking a cell. I'll answer each shot honestly and return fire on your board.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Opening move is set: fleet placed, waters open. Fire on any cell and I'll answer in kind.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"New game of Battleship.\",\"k\":3},\"exemplarIds\":[],\"rounds\":3,\"healed\":0,\"failureCodes\":[\"GAME_HUD_MISSING\",\"TEXT_JSONL_ROUTED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":47243,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1938}],\"over\":false}}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"battleship-waters\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"battleship-waters\",\"value\":{\"cells\":[{\"row\":0,\"col\":0,\"mark\":\"\"},{\"row\":0,\"col\":1,\"mark\":\"\"},{\"row\":0,\"col\":2,\"mark\":\"\"},{\"row\":0,\"col\":3,\"mark\":\"\"},{\"row\":0,\"col\":4,\"mark\":\"\"},{\"row\":0,\"col\":5,\"mark\":\"\"},{\"row\":1,\"col\":0,\"mark\":\"\"},{\"row\":1,\"col\":1,\"mark\":\"\"},{\"row\":1,\"col\":2,\"mark\":\"\"},{\"row\":1,\"col\":3,\"mark\":\"\"},{\"row\":1,\"col\":4,\"mark\":\"\"},{\"row\":1,\"col\":5,\"mark\":\"\"},{\"row\":2,\"col\":0,\"mark\":\"\"},{\"row\":2,\"col\":1,\"mark\":\"\"},{\"row\":2,\"col\":2,\"mark\":\"\"},{\"row\":2,\"col\":3,\"mark\":\"\"},{\"row\":2,\"col\":4,\"mark\":\"\"},{\"row\":2,\"col\":5,\"mark\":\"\"},{\"row\":3,\"col\":0,\"mark\":\"\"},{\"row\":3,\"col\":1,\"mark\":\"\"},{\"row\":3,\"col\":2,\"mark\":\"\"},{\"row\":3,\"col\":3,\"mark\":\"\"},{\"row\":3,\"col\":4,\"mark\":\"\"},{\"row\":3,\"col\":5,\"mark\":\"\"},{\"row\":4,\"col\":0,\"mark\":\"\"},{\"row\":4,\"col\":1,\"mark\":\"\"},{\"row\":4,\"col\":2,\"mark\":\"\"},{\"row\":4,\"col\":3,\"mark\":\"\"},{\"row\":4,\"col\":4,\"mark\":\"\"},{\"row\":4,\"col\":5,\"mark\":\"\"},{\"row\":5,\"col\":0,\"mark\":\"\"},{\"row\":5,\"col\":1,\"mark\":\"\"},{\"row\":5,\"col\":2,\"mark\":\"\"},{\"row\":5,\"col\":3,\"mark\":\"\"},{\"row\":5,\"col\":4,\"mark\":\"\"},{\"row\":5,\"col\":5,\"mark\":\"\"}],\"shots\":[],\"ships\":3,\"shotsFired\":0}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"battleship-waters\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hdr\",\"play\"]},{\"id\":\"hdr\",\"component\":\"Text\",\"text\":\"Enemy waters (6×6)\",\"variant\":\"h4\"},{\"id\":\"play\",\"component\":\"Row\",\"gap\":\"md\",\"align\":\"start\",\"children\":[\"hud\",\"board\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Battleship\",\"status\":\"Admiral's fleet afloat\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Ships afloat\",\"value\":\"3\"},{\"label\":\"Shots fired\",\"value\":\"0\"}]},{\"id\":\"board\",\"component\":\"BoardGrid\",\"rows\":6,\"cols\":6,\"cells\":{\"path\":\"/cells\"},\"label\":\"Enemy waters\",\"actionName\":\"fire\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Battle stations. My fleet is placed on a 6×6 grid and locked. I won't reveal its positions until the game ends. Fire on the waters below by clicking a cell. I'll answer each shot honestly and return fire on your board.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Your waters are below. Click a cell to fire your opening shot.",
+                "messages": "[{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"battle-1\",\"catalogId\":\"agent-ui\"}},{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"battle-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"title\",\"board\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Enemy waters: fire on a cell\",\"variant\":\"h4\"},{\"id\":\"board\",\"component\":\"BoardGrid\",\"rows\":6,\"cols\":6,\"label\":\"Enemy waters\",\"actionName\":\"fire\",\"cells\":[{\"row\":1,\"col\":1,\"mark\":\"\"},{\"row\":1,\"col\":2,\"mark\":\"\"},{\"row\":1,\"col\":3,\"mark\":\"\"},{\"row\":1,\"col\":4,\"mark\":\"\"},{\"row\":1,\"col\":5,\"mark\":\"\"},{\"row\":1,\"col\":6,\"mark\":\"\"},{\"row\":2,\"col\":1,\"mark\":\"\"},{\"row\":2,\"col\":2,\"mark\":\"\"},{\"row\":2,\"col\":3,\"mark\":\"\"},{\"row\":2,\"col\":4,\"mark\":\"\"},{\"row\":2,\"col\":5,\"mark\":\"\"},{\"row\":2,\"col\":6,\"mark\":\"\"},{\"row\":3,\"col\":1,\"mark\":\"\"},{\"row\":3,\"col\":2,\"mark\":\"\"},{\"row\":3,\"col\":3,\"mark\":\"\"},{\"row\":3,\"col\":4,\"mark\":\"\"},{\"row\":3,\"col\":5,\"mark\":\"\"},{\"row\":3,\"col\":6,\"mark\":\"\"},{\"row\":4,\"col\":1,\"mark\":\"\"},{\"row\":4,\"col\":2,\"mark\":\"\"},{\"row\":4,\"col\":3,\"mark\":\"\"},{\"row\":4,\"col\":4,\"mark\":\"\"},{\"row\":4,\"col\":5,\"mark\":\"\"},{\"row\":4,\"col\":6,\"mark\":\"\"},{\"row\":5,\"col\":1,\"mark\":\"\"},{\"row\":5,\"col\":2,\"mark\":\"\"},{\"row\":5,\"col\":3,\"mark\":\"\"},{\"row\":5,\"col\":4,\"mark\":\"\"},{\"row\":5,\"col\":5,\"mark\":\"\"},{\"row\":5,\"col\":6,\"mark\":\"\"},{\"row\":6,\"col\":1,\"mark\":\"\"},{\"row\":6,\"col\":2,\"mark\":\"\"},{\"row\":6,\"col\":3,\"mark\":\"\"},{\"row\":6,\"col\":4,\"mark\":\"\"},{\"row\":6,\"col\":5,\"mark\":\"\"},{\"row\":6,\"col\":6,\"mark\":\"\"}]}}]"
+              }
+            }
+          ]
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Battle stations. My fleet is placed and locked on the 6×6 grid below. I won't reveal it until the game ends. Click a cell to fire, one shot per cell.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "battleship-waters",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "battleship-waters",
+                      "value": {
+                        "cells": [
+                          {
+                            "row": 0,
+                            "col": 0,
+                            "mark": ""
+                          },
+                          {
+                            "row": 0,
+                            "col": 1,
+                            "mark": ""
+                          },
+                          {
+                            "row": 0,
+                            "col": 2,
+                            "mark": ""
+                          },
+                          {
+                            "row": 0,
+                            "col": 3,
+                            "mark": ""
+                          },
+                          {
+                            "row": 0,
+                            "col": 4,
+                            "mark": ""
+                          },
+                          {
+                            "row": 0,
+                            "col": 5,
+                            "mark": ""
+                          },
+                          {
+                            "row": 1,
+                            "col": 0,
+                            "mark": ""
+                          },
+                          {
+                            "row": 1,
+                            "col": 1,
+                            "mark": ""
+                          },
+                          {
+                            "row": 1,
+                            "col": 2,
+                            "mark": ""
+                          },
+                          {
+                            "row": 1,
+                            "col": 3,
+                            "mark": ""
+                          },
+                          {
+                            "row": 1,
+                            "col": 4,
+                            "mark": ""
+                          },
+                          {
+                            "row": 1,
+                            "col": 5,
+                            "mark": ""
+                          },
+                          {
+                            "row": 2,
+                            "col": 0,
+                            "mark": ""
+                          },
+                          {
+                            "row": 2,
+                            "col": 1,
+                            "mark": ""
+                          },
+                          {
+                            "row": 2,
+                            "col": 2,
+                            "mark": ""
+                          },
+                          {
+                            "row": 2,
+                            "col": 3,
+                            "mark": ""
+                          },
+                          {
+                            "row": 2,
+                            "col": 4,
+                            "mark": ""
+                          },
+                          {
+                            "row": 2,
+                            "col": 5,
+                            "mark": ""
+                          },
+                          {
+                            "row": 3,
+                            "col": 0,
+                            "mark": ""
+                          },
+                          {
+                            "row": 3,
+                            "col": 1,
+                            "mark": ""
+                          },
+                          {
+                            "row": 3,
+                            "col": 2,
+                            "mark": ""
+                          },
+                          {
+                            "row": 3,
+                            "col": 3,
+                            "mark": ""
+                          },
+                          {
+                            "row": 3,
+                            "col": 4,
+                            "mark": ""
+                          },
+                          {
+                            "row": 3,
+                            "col": 5,
+                            "mark": ""
+                          },
+                          {
+                            "row": 4,
+                            "col": 0,
+                            "mark": ""
+                          },
+                          {
+                            "row": 4,
+                            "col": 1,
+                            "mark": ""
+                          },
+                          {
+                            "row": 4,
+                            "col": 2,
+                            "mark": ""
+                          },
+                          {
+                            "row": 4,
+                            "col": 3,
+                            "mark": ""
+                          },
+                          {
+                            "row": 4,
+                            "col": 4,
+                            "mark": ""
+                          },
+                          {
+                            "row": 4,
+                            "col": 5,
+                            "mark": ""
+                          },
+                          {
+                            "row": 5,
+                            "col": 0,
+                            "mark": ""
+                          },
+                          {
+                            "row": 5,
+                            "col": 1,
+                            "mark": ""
+                          },
+                          {
+                            "row": 5,
+                            "col": 2,
+                            "mark": ""
+                          },
+                          {
+                            "row": 5,
+                            "col": 3,
+                            "mark": ""
+                          },
+                          {
+                            "row": 5,
+                            "col": 4,
+                            "mark": ""
+                          },
+                          {
+                            "row": 5,
+                            "col": 5,
+                            "mark": ""
+                          }
+                        ],
+                        "shots": []
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "battleship-waters",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hdr",
+                            "status",
+                            "board"
+                          ]
+                        },
+                        {
+                          "id": "hdr",
+                          "component": "Text",
+                          "text": "Enemy waters (6×6)",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "status",
+                          "component": "Badge",
+                          "label": "Admiral's fleet afloat: 3 ships",
+                          "intent": "info"
+                        },
+                        {
+                          "id": "board",
+                          "component": "BoardGrid",
+                          "rows": 6,
+                          "cols": 6,
+                          "cells": {
+                            "path": "/cells"
+                          },
+                          "label": "Enemy waters",
+                          "actionName": "fire"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "Opening move is set: fleet placed, waters open. Fire on any cell and I'll answer in kind.\n\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"battleship-waters\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"battleship-waters\",\"value\":{\"cells\":[{\"row\":0,\"col\":0,\"mark\":\"\"},{\"row\":0,\"col\":1,\"mark\":\"\"},{\"row\":0,\"col\":2,\"mark\":\"\"},{\"row\":0,\"col\":3,\"mark\":\"\"},{\"row\":0,\"col\":4,\"mark\":\"\"},{\"row\":0,\"col\":5,\"mark\":\"\"},{\"row\":1,\"col\":0,\"mark\":\"\"},{\"row\":1,\"col\":1,\"mark\":\"\"},{\"row\":1,\"col\":2,\"mark\":\"\"},{\"row\":1,\"col\":3,\"mark\":\"\"},{\"row\":1,\"col\":4,\"mark\":\"\"},{\"row\":1,\"col\":5,\"mark\":\"\"},{\"row\":2,\"col\":0,\"mark\":\"\"},{\"row\":2,\"col\":1,\"mark\":\"\"},{\"row\":2,\"col\":2,\"mark\":\"\"},{\"row\":2,\"col\":3,\"mark\":\"\"},{\"row\":2,\"col\":4,\"mark\":\"\"},{\"row\":2,\"col\":5,\"mark\":\"\"},{\"row\":3,\"col\":0,\"mark\":\"\"},{\"row\":3,\"col\":1,\"mark\":\"\"},{\"row\":3,\"col\":2,\"mark\":\"\"},{\"row\":3,\"col\":3,\"mark\":\"\"},{\"row\":3,\"col\":4,\"mark\":\"\"},{\"row\":3,\"col\":5,\"mark\":\"\"},{\"row\":4,\"col\":0,\"mark\":\"\"},{\"row\":4,\"col\":1,\"mark\":\"\"},{\"row\":4,\"col\":2,\"mark\":\"\"},{\"row\":4,\"col\":3,\"mark\":\"\"},{\"row\":4,\"col\":4,\"mark\":\"\"},{\"row\":4,\"col\":5,\"mark\":\"\"},{\"row\":5,\"col\":0,\"mark\":\"\"},{\"row\":5,\"col\":1,\"mark\":\"\"},{\"row\":5,\"col\":2,\"mark\":\"\"},{\"row\":5,\"col\":3,\"mark\":\"\"},{\"row\":5,\"col\":4,\"mark\":\"\"},{\"row\":5,\"col\":5,\"mark\":\"\"}],\"shots\":[],\"ships\":3,\"shotsFired\":0}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"battleship-waters\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hdr\",\"play\"]},{\"id\":\"hdr\",\"component\":\"Text\",\"text\":\"Enemy waters (6×6)\",\"variant\":\"h4\"},{\"id\":\"play\",\"component\":\"Row\",\"gap\":\"md\",\"align\":\"start\",\"children\":[\"hud\",\"board\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Battleship\",\"status\":\"Admiral's fleet afloat\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Ships afloat\",\"value\":\"3\"},{\"label\":\"Shots fired\",\"value\":\"0\"}]},{\"id\":\"board\",\"component\":\"BoardGrid\",\"rows\":6,\"cols\":6,\"cells\":{\"path\":\"/cells\"},\"label\":\"Enemy waters\",\"actionName\":\"fire\"}]}}",
+          "tools": []
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "New game of Battleship."
+      }
+    }
+  ]
+}

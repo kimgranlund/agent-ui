@@ -16,6 +16,7 @@ import type { TurnInput, Turn } from '../../../packages/agent-ui/a2ui/src/agent/
 import type { Catalog } from '../../../packages/agent-ui/a2ui/src/catalog/catalog.ts'
 import { croupierSemanticChecks } from '../../../packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.ts'
 import { HIDDEN_STATE_CHECKS } from '../../../packages/agent-ui/a2ui/src/catalog/hidden-state-checks.ts'
+import { compositeMomentChecks } from '../../../packages/agent-ui/a2ui/src/catalog/composite-moments.ts'
 import { gateChecksOnCatalog, type SemanticCheck } from '../../../packages/agent-ui/a2ui/src/catalog/semantic-check.ts'
 import { runProducerTurn } from '../../../packages/agent-ui/a2ui/tools/testkit/producer-leg.ts'
 import { nodeCatalogResolver } from '../../../packages/agent-ui/a2ui/tools/testkit/load.node.ts'
@@ -110,11 +111,11 @@ function scriptedRound(round: ProbeRound): string | ScriptedToolRound {
  *  checks module; `trace.test.mjs` pins it to `SHIPPED_PERSONA_CATALOG_MANIFESTS`. */
 export const PERSONA_SEMANTIC_CHECKS: Readonly<Record<string, readonly SemanticCheck[]>> = { croupier: croupierSemanticChecks }
 
-/** The semantic checks a live turn on this catalog ran: its persona's (`<base>--<persona>`) and (T-0230) the
- *  hidden game state checks every catalog runs, gated on the types the catalog declares, as `semanticChecksDeps` does. */
+/** The semantic checks a live turn on this catalog ran: its persona's (`<base>--<persona>`), (T-0230) the
+ *  hidden game state checks every catalog runs, then (T-0208) the composite-moment checks, gated on the types the catalog declares, as `semanticChecksDeps` does. */
 export function replaySemanticChecks(catalog: Catalog): readonly SemanticCheck[] {
   const persona = catalog.catalogId.split('--')[1] ?? ''
-  return gateChecksOnCatalog([...(PERSONA_SEMANTIC_CHECKS[persona] ?? []), ...HIDDEN_STATE_CHECKS], catalog)
+  return gateChecksOnCatalog([...(PERSONA_SEMANTIC_CHECKS[persona] ?? []), ...HIDDEN_STATE_CHECKS, ...compositeMomentChecks], catalog)
 }
 
 export interface ReplayContext {

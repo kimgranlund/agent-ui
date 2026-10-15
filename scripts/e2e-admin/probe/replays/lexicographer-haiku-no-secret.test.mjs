@@ -12,8 +12,12 @@ import { offlineReplay } from '../trace.ts'
 // `catalog/hidden-state-checks.test.ts`); the recorded rounds hold no repair, so each ships uncorrected with the same
 // lines. The fixture's agent was hand-set to lexicographer: the trace has no agent label and `--from-trace`
 // defaulted it to croupier (T-0236).
+// T-0208: turn 0's hand-built guess field (a TextField named guess, five letters) is a BoardGrid moment, so the
+// composite check flags it beside WORD_SECRET_MISSING; the scripted provider repeats the round and the turn ships tallied.
 it('lexicographer-haiku-no-secret: the recorded turns replay with the made-up marks and clean chat prose', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./lexicographer-haiku-no-secret.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
   expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual([])
+  const trace = report.records[0].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
+  expect(trace.failureCodes).toEqual(['WORD_SECRET_MISSING', 'BOARD_GRID_MISSING', 'SEMANTIC_UNCORRECTED'])
 })
