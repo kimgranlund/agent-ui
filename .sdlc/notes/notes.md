@@ -82,3 +82,5 @@
 - 2026-10-15 (Kim): test rounds live in .sdlc/evals/rounds/<date>-<slug>/ with a generated .sdlc/evals/README.md index (T-0241); the ticket store moves to the sdlc-lite topics layout (.sdlc/tickets/, notes/, work/) after the running lanes land, committed (T-0242).
 
 - 2026-10-15 (Kim, /ask round): work items live in .sdlc/tickets/ (topics layout, T-0242); CHANGELOG.md becomes a pointer to merged PRs and releases; npm publish scope is @agent-ui-kit/* (renamed at publish time); all of .sdlc is tracked in git. Scrub tickets filed: T-0249 to T-0252.
+
+- 2026-10-15 (Kim): the T-0242 migration path fixes inside frozen ADRs 0241, 0244 and 0245 stay (paths only, no decision text). Plugin follow-ups filed upstream by the sdlc-lite author: T-0576 (root AGENTS.md block reads the topics layout), T-0577 (--rewrite-refs skips Frozen paths).
