@@ -4,6 +4,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { parseProbeCli } from '../cli.ts'
+import { routingMisses } from '../model.ts'
 import { describeCommands } from '../run-capped.ts'
 import { ROUTING_MODELS, ROUTING_PACK_FILE, ROUTING_SCENARIOS, routingCommandsScript, routingRuns } from './routing.ts'
 
@@ -44,12 +45,28 @@ describe('routing pressure pack', () => {
     // The fog tool-result-not-propagated detector needs integration-tool turns (weather, currency).
     expect(long.some((s) => /weather/.test(s.say))).toBe(true)
     expect(long.some((s) => /euros/.test(s.say))).toBe(true)
-    expect(scenario('doc-only').steps[0]).toMatchObject({ say: "What's the late checkout fee?", expectRouting: { references: [{ name: 'property-knowledge-base', load: 'full' }] } })
+    expect(scenario('doc-only').steps[0]).toMatchObject({ say: "What's the late checkout fee?", expectRouting: { sections: ['persona'], references: [{ name: 'property-knowledge-base' }] } })
     expect(scenario('doc-only').steps[0].say).not.toContain('property-knowledge-base')
     expect(scenario('guidance-conflict').steps.find((s) => /hole card/.test(s.say ?? ''))?.expect).toEqual(['CardTable'])
     const two = scenario('two-surfaces').steps
     expect(two.at(-1).say).toBe('Make it bigger.')
     expect(two.slice(0, -1).every((s) => (s.expect ?? []).length > 0)).toBe(true)
+  })
+
+  it('doc-only expects the house facts in the persona section, not the knowledge base fetched full (T-0270)', () => {
+    // The routing round 3 recorded on routing-doc-only-haiku-1 t0 (a correct answer: late check-out to 14:00, no fee named).
+    const seen = {
+      domains: ['concierge'],
+      exemplars: ['domain-concierge-booking-request', 'frontier-service-gateway', 'travel-itinerary'],
+      sections: ['grammar', 'components', 'functions', 'few-shot', 'mini-skills', 'persona'],
+      references: [{ name: 'booking-flow', load: 'index-only' }, { name: 'property-knowledge-base', load: 'index-only' }],
+    }
+    for (const step of scenario('doc-only').steps) expect(routingMisses(step.expectRouting, seen)).toEqual([])
+    expect(routingMisses({ references: [{ name: 'property-knowledge-base', load: 'full' }] }, seen)).toEqual(['reference property-knowledge-base loaded index-only, not full'])
+    // The facts the turn answers from are the Concierge preset's house facts, which the persona section carries.
+    const presets = read('site/pages/agent-admin-presets.ts')
+    const concierge = presets.slice(presets.indexOf("    id: 'concierge',"))
+    expect(concierge.slice(concierge.indexOf('houseFacts:'), concierge.indexOf('resources:'))).toMatch(/late check-out to 14:00/)
   })
 
   it('every expected type is in the preset catalog', () => {

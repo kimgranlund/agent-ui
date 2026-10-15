@@ -25,6 +25,10 @@ All 4 `routing-expect` failures in the round are this oracle. Both models answer
 ## Context
 `scripts/e2e-admin/probe/scenarios/routing.ts` (`KB_FULL` on `doc-only`). T-0231 put the facts in the persona section rather than loading the resource. Guess: expect `sections: ['persona']`, or add a facts oracle to RoutingExpect. Found by T-0261.
 
+## Acceptance criteria
+- `npx vitest run scripts/e2e-admin/probe/scenarios/routing.test.mjs scripts/e2e-admin/probe/scenarios/round3.test.mjs` exits 0; its T-0270 case judges the doc-only oracle against the routing round 3 recorded and finds no miss.
+- `node --experimental-strip-types scripts/e2e-admin/probe/scenarios/routing.ts | diff - scripts/e2e-admin/probe/scenarios/routing-pack.sh` exits 0.
+
 ## Lane bundle
 This solo lane delivers these tickets in order, one commit each:
 - .sdlc/tickets/0270-routing-pack-doc-only-oracle/handoff.md
