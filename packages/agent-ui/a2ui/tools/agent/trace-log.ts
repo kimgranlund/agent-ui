@@ -2,7 +2,10 @@
 // (`dev-proxy-plugin.ts`, `/__a2ui/agent`) runs appends ONE JSON line to `.agent-traces/YYYY-MM-DD.jsonl`
 // at the repo root (git-ignored), so an agent can triage a turn from disk: the request, every trace step
 // the activity UI shows, each retry and the validator failures behind it, the raw model output per round,
-// the surface operations, token usage, duration and, on failure, the full upstream error.
+// the surface operations, token usage, duration and, on failure, the full upstream error. `routing`
+// (T-0239) records how the turn's context was routed: the persona and domains of the catalog, the selected
+// mini-skills, each system-prompt section with its size and cache side, and every capability entry the
+// context named with its load mode (an index line, or the full text framed into a user message).
 //
 // Dev only. The dev proxy is `apply: 'serve'`, so `vite build` never runs it, and the Cloudflare Worker
 // never imports this module (it is Node-only: `node:fs`). Keys are never written: the line is serialized
@@ -23,6 +26,8 @@ import { join } from 'node:path'
 import { readMetaLine } from '../../src/agent/meta-line.ts'
 import { heal } from '../../src/corpus/heal.ts'
 import { renderSurfaceJsonl } from '../../src/agent/response-type.ts'
+import { parseDomainCatalogId } from '../../src/catalog/catalog-id.ts'
+import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from '../../src/catalog/personas/manifests.ts'
 import type { TokenUsage, TurnProgress, TurnTrace } from '../../src/agent/meta-line.ts'
 import type { AgentProvider, ProviderEvent } from '../../src/agent/agent-transport.ts'
 
@@ -124,6 +129,35 @@ export interface TraceError {
   failures?: TraceFailure[]
 }
 
+/** T-0239: one skill, workflow (playbook), resource or other capability entry the turn's context named.
+ *  `index-only`: one index line in the persona section (`## Resources available to you`), no content.
+ *  `full`: the entry's whole text, framed under `## Referenced for this message` in this turn's user
+ *  message (`via: message`) or an earlier user turn the session replays (`via: history`). */
+export interface TraceReference {
+  kind: string
+  name: string
+  load: 'full' | 'index-only'
+  via: 'index' | 'message' | 'history'
+}
+
+/** T-0239: one composed system-prompt section; `stable` sections sit inside the cached prefix. */
+export interface TraceSection {
+  id: string
+  chars: number
+  cache: 'stable' | 'volatile'
+}
+
+/** T-0239: how the turn's context was routed. The catalog and references are known before the model call,
+ *  so they are recorded on every outcome; `miniSkills`, `sections` and `cacheBoundary` come from produce()'s
+ *  trace and are absent on a turn that threw before its final meta-line. */
+export interface TraceRouting {
+  catalog: { id: string; base: string; persona?: string; domains: string[] }
+  references: TraceReference[]
+  miniSkills?: string[]
+  sections?: TraceSection[]
+  cacheBoundary?: number
+}
+
 /** One line of `.agent-traces/YYYY-MM-DD.jsonl`. */
 export interface AgentTraceLine {
   v: typeof TRACE_LINE_VERSION
@@ -144,6 +178,7 @@ export interface AgentTraceLine {
   surface: TraceSurface
   usage?: TokenUsage
   trace?: Pick<TurnTrace, 'rounds' | 'healed' | 'failureCodes' | 'exemplarIds'> & { promptChars?: number; promptOver?: boolean }
+  routing?: TraceRouting
   reply?: string
   warnings: string[]
   error?: TraceError
@@ -221,6 +256,59 @@ export function agentLabel(bodyAgent: unknown, catalogId: unknown): string | und
   if (typeof bodyAgent === 'string' && bodyAgent.trim() !== '') return bodyAgent.trim().slice(0, 80)
   if (typeof catalogId === 'string' && catalogId.includes('--')) return catalogId.slice(catalogId.indexOf('--') + 2)
   return undefined
+}
+
+const PERSONA_IDS: ReadonlySet<string> = new Set(SHIPPED_PERSONA_CATALOG_MANIFESTS.map((m) => m.personaId))
+
+/** T-0239: the effective catalog id read as base, persona and domains (`agent-ui--croupier` is the
+ *  croupier persona on `agent-ui`; `agent-ui--games+hospitality` two domains). */
+export function catalogRouting(catalogId: string): TraceRouting['catalog'] {
+  const parsed = parseDomainCatalogId(catalogId)
+  if (parsed === undefined) return { id: catalogId, base: catalogId.split('--')[0]!, domains: [] }
+  const [only] = parsed.domains
+  if (parsed.domains.length === 1 && only !== undefined && PERSONA_IDS.has(only)) return { id: catalogId, base: parsed.base, persona: only, domains: [] }
+  return { id: catalogId, base: parsed.base, domains: [...parsed.domains] }
+}
+
+/** The agent-admin capability group headings (`agent-admin.ts` `liveHeading`) and the entry kind of each. */
+const INDEX_HEADING_KINDS: Record<string, string> = {
+  Skills: 'skill',
+  Workflows: 'workflow',
+  Resources: 'resource',
+  Tools: 'tool',
+  'Pattern sources': 'pattern-source',
+  Catalogs: 'catalog',
+}
+
+/** T-0239: the index lines a composed persona section carries (`entries.ts` `composeLiveSystemPrompt`):
+ *  `- label` or `- label <em dash> description` under a `## <Kind> available to you` heading. Names only. */
+export function indexedReferences(personaSystem: string): TraceReference[] {
+  const out: TraceReference[] = []
+  let kind: string | undefined
+  for (const line of personaSystem.split('\n')) {
+    const heading = /^## (.+) available to you$/.exec(line)
+    if (heading) {
+      kind = INDEX_HEADING_KINDS[heading[1]!] ?? heading[1]!.toLowerCase()
+      continue
+    }
+    if (kind === undefined) continue
+    const item = /^- (.+?)(?: \u2014 .*)?$/.exec(line)
+    if (item) out.push({ kind, name: item[1]!.trim(), load: 'index-only', via: 'index' })
+    else kind = undefined
+  }
+  return out
+}
+
+const FRAMED_HEADING = '## Referenced for this message\n'
+
+/** T-0239: the entries framed whole into one user message (`entries.ts` `resolveTurnReferences`):
+ *  each `### label (kind)` block heading under `## Referenced for this message`. Names only. */
+export function framedReferences(text: string, via: 'message' | 'history'): TraceReference[] {
+  const at = text.indexOf(FRAMED_HEADING)
+  if (at === -1) return []
+  const out: TraceReference[] = []
+  for (const m of text.slice(at).matchAll(/^### (.+) \((skill|workflow|resource)\)$/gm)) out.push({ kind: m[2]!, name: m[1]!.trim(), load: 'full', via })
+  return out
 }
 
 /** The plain-words reading of one failure. IDGRAPH paths are the validator's own shapes
@@ -354,6 +442,7 @@ export class TurnTraceCollector {
   #error: TraceError | undefined
   #outcome: TraceOutcome | undefined
   #wireError: string | undefined
+  #routing: Pick<TraceRouting, 'catalog' | 'references'> | undefined
 
   constructor(start: TurnTraceStart, now: () => number = Date.now) {
     this.#start = start
@@ -494,6 +583,20 @@ export class TurnTraceCollector {
     }
   }
 
+  /** T-0239: the host-known routing: the effective catalog, the persona section's index lines, and the
+   *  entries framed whole into this message or an earlier user turn. Only names and kinds are kept. */
+  noteRouting(catalogId: string, personaSystem: string | undefined, history: readonly unknown[] = []): void {
+    const references = [
+      ...indexedReferences(personaSystem ?? ''),
+      ...framedReferences(this.#start.user, 'message'),
+      ...history.flatMap((turn) => {
+        const t = turn as { role?: unknown; content?: unknown } | null
+        return t?.role === 'user' && typeof t.content === 'string' ? framedReferences(t.content, 'history') : []
+      }),
+    ]
+    this.#routing = { catalog: catalogRouting(catalogId), references }
+  }
+
   setReply(text: string): void {
     this.#reply = text
   }
@@ -540,6 +643,7 @@ export class TurnTraceCollector {
     if (t?.prompt?.over) warnings.push(`prompt over budget: ${t.prompt.total} > ${t.prompt.limit} chars`)
     if (t !== undefined && t.healed > 0) warnings.push(`healer corrected ${t.healed} line(s)`)
     for (const r of this.#rounds) if (r.error !== undefined && error === undefined) warnings.push(`round ${r.round}: ${r.error}`)
+    const routing = this.#routingFor(t)
     return {
       v: TRACE_LINE_VERSION,
       at: this.#at,
@@ -569,10 +673,29 @@ export class TurnTraceCollector {
             },
           }
         : {}),
+      ...(routing !== undefined ? { routing } : {}),
       ...(reply !== undefined ? { reply: cap(reply) } : {}),
       warnings,
       ...(error !== undefined ? { error } : {}),
     }
+  }
+
+  /** The host-known routing plus what produce()'s trace adds; a section is stable while its end stays
+   *  inside the cached prefix (the stable sections open the prompt, T-0206). */
+  #routingFor(t: TurnTrace | undefined): TraceRouting | undefined {
+    if (this.#routing === undefined) return undefined
+    const routing: TraceRouting = { ...this.#routing }
+    if (t?.miniSkillIds !== undefined) routing.miniSkills = [...t.miniSkillIds]
+    if (t?.prompt !== undefined) {
+      const boundary = t.cacheBoundary ?? 0
+      let end = 0
+      routing.sections = t.prompt.sections.map((s) => {
+        end += s.chars
+        return { id: s.id, chars: s.chars, cache: end <= boundary ? 'stable' : 'volatile' }
+      })
+    }
+    if (t?.cacheBoundary !== undefined) routing.cacheBoundary = t.cacheBoundary
+    return routing
   }
 }
 

@@ -940,12 +940,8 @@ describe('produce() meta-line + TurnTrace (ADR-0088 §1/§2/§4)', () => {
     expect(meta!.a2uiMeta.note).toBe('hi')
     // ADR-0234 (proposed): the prompt report is always attached; recomputed here from the same composition
     // inputs produce() used. No provider usage event arrived, so the trace carries no `usage` key at all.
-    const { sections } = buildSystemPromptSections(
-      defaultCatalog,
-      [exemplar],
-      undefined,
-      selectMiniSkills('a submit button', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui'),
-    )
+    const miniSkills = selectMiniSkills('a submit button', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    const { sections } = buildSystemPromptSections(defaultCatalog, [exemplar], undefined, miniSkills)
     expect(meta!.a2uiMeta.trace).toEqual({
       turnIndex: 0,
       query: { intent: 'a submit button', k: 3 },
@@ -955,6 +951,9 @@ describe('produce() meta-line + TurnTrace (ADR-0088 §1/§2/§4)', () => {
       failureCodes: [],
       model: 'claude-sonnet-5-5',
       prompt: assessPromptBudget(sections, promptBudgetFor('agent-ui')),
+      // T-0239: the routing the trace log records; the stable prefix is grammar, components and functions.
+      miniSkillIds: miniSkills.map((m) => m.id),
+      cacheBoundary: sections.filter((s) => ['grammar', 'components', 'functions'].includes(s.id)).reduce((n, s) => n + s.chars, 0),
     })
     expect(meta!.a2uiMeta.trace!.prompt!.over).toBe(false)
     expect(meta!.a2uiMeta.trace).not.toHaveProperty('usage')

@@ -1171,6 +1171,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     model: roundModel,
     prompt: promptReport,
     ...(usage !== undefined ? { usage: { ...usage } } : {}),
+    miniSkillIds: miniSkills.map((m) => m.id), // T-0239: per-turn routing, for the trace log
+    cacheBoundary: systemCacheBoundary,
   })
 
   const emitProgress = opts.progress === true // ADR-0146 F1 — opt-in; absent ⇒ byte-identical to before

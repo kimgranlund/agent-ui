@@ -524,6 +524,7 @@ export function a2uiDevProxyPlugin(opts?: {
               // ADR-0138 cl.3 — the optional persona section: string, length-capped (16 KB — a runaway
               // guard; the composed admin persona is ~1-2 KB), forwarded verbatim; anything else ⇒ absent.
               const persona = typeof personaSystem === 'string' && personaSystem.length <= 16_384 ? personaSystem : undefined
+              trace.noteRouting(selectedCatalog.catalogId, persona, input?.session?.turns ?? []) // T-0239: names and kinds only, never content
               // GH #49 — the browser forwards ENABLED tool-entry labels; only registry matches survive
               // (resolveIntegrations validates + intersects, malformed ⇒ empty). Execution stays HERE in
               // the proxy's node process (the ADR-0137 shell law; produce's ExecuteTool cannot cross HTTP).
