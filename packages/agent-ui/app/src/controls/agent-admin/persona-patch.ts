@@ -33,7 +33,7 @@
 // Fork 4 — `entry-list.ts` withholds the Remove affordance), never immutable: the content editor already
 // mounts for every prompt-section row, so a builtin's content is hand-editable today. The amendment
 // therefore admits a SECOND verb beside APPEND, for that class alone (`updateTargetIndex` below is the whole
-// fence), and pairs it with the concurrency mitigation `name`/`model`/`temperature` already rely on:
+// fence), and pairs it with the concurrency mitigation `name`/`model`/`effort` already rely on:
 // `draftStateBlock` carries the builtin sections' CURRENT content, so last-writer-wins over a hand-editable
 // field is something the model can actually read before it writes.
 
@@ -44,6 +44,7 @@ import {
   BANKROLL_CAPABLE_KEY,
   BANKROLL_KEY,
   MODELS_INCLUDED_KEY,
+  MODEL_SETTING_KEYS,
   SURFACE_A2UI_KEY,
   SURFACE_AUTHORING_KEY,
   SURFACE_GENUI_DOGFOOD_KEY,
@@ -57,7 +58,7 @@ import {
   sanitizeModel,
   type SupportedModel,
 } from './agent-admin-schema.ts'
-import { sanitizeNumber } from '@agent-ui/shared'
+import { EFFORT_LEVELS } from '../conversation/composer-options.ts'
 import type { SettingsSchema } from '../settings/schema.ts'
 import { ENTRY_KINDS } from './entries.ts'
 import { entriesStoreKey, readEntries, validateNewEntry, type Entry, type NewEntryInput } from '../entry-list/entry-data.ts'
@@ -81,7 +82,8 @@ export const PERSONA_STATE_KEYS: readonly string[] = [
     // the agent config (the settings pane's own fields + the Model grid's selection/inclusion record)
     'name',
     'model',
-    'temperature',
+    // T-0185: the Model section (the temperature key is retired; a stored temperature is ignored)
+    ...Object.values(MODEL_SETTING_KEYS),
     MODELS_INCLUDED_KEY,
     // the master switches — the Agent card's own, plus one per capability kind
     AGENT_ENABLED_KEY,
@@ -207,7 +209,12 @@ const ADMISSION: ReadonlyMap<string, Admit> = new Map<string, Admit>(Object.entr
   // empty name degrades to 'Untitled agent' at read time exactly as a hand-cleared field does.
   name: (value) => typeof value === 'string',
   model: (value, deps) => sanitizeModel(value, deps.models) === value,
-  temperature: (value, deps) => typeof value === 'number' && sanitizeNumber(deps.schema, 'temperature', value, Number.NaN) === value,
+  // T-0185: the Model section keys, admitted by value shape; the turn-time read checks them against the model.
+  [MODEL_SETTING_KEYS.effort]: (value) => typeof value === 'string' && EFFORT_LEVELS.some((e) => e.id === value),
+  [MODEL_SETTING_KEYS.thinking]: (value) => value === 'adaptive' || value === 'disabled' || value === 'between_tools',
+  [MODEL_SETTING_KEYS.showReasoning]: admitBoolean,
+  [MODEL_SETTING_KEYS.maxTokens]: (value) => typeof value === 'number' && Number.isInteger(value) && value >= 0,
+  [MODEL_SETTING_KEYS.cacheTtl]: (value) => value === 'off' || value === '5m' || value === '1h',
   // The Model grid's inclusion record — a plain object of booleans, the ONE shape `isModelIncluded` reads.
   [MODELS_INCLUDED_KEY]: (value) =>
     typeof value === 'object' &&
@@ -240,7 +247,11 @@ const ADMISSION: ReadonlyMap<string, Admit> = new Map<string, Admit>(Object.entr
 export const PATCHABLE_VALUE_SHAPES: Readonly<Record<string, string>> = {
   name: 'a string — the agent’s display name',
   model: `a model id, one of: ${'{roster}'}`, // filled at compose time from the live roster
-  temperature: 'a number from 0 to 1',
+  [MODEL_SETTING_KEYS.effort]: `the default effort, one of: ${EFFORT_LEVELS.map((e) => e.id).join(', ')}`,
+  [MODEL_SETTING_KEYS.thinking]: 'adaptive, disabled or between_tools (only where the model allows it)',
+  [MODEL_SETTING_KEYS.showReasoning]: 'true or false: stream a summary of the model’s thinking',
+  [MODEL_SETTING_KEYS.maxTokens]: 'a whole number of output tokens, 0 for the effort-based default',
+  [MODEL_SETTING_KEYS.cacheTtl]: 'off, 5m or 1h: how long the system prompt stays cached',
   [MODELS_INCLUDED_KEY]: 'an object of modelId → boolean (which models the picker offers)',
   [AGENT_ENABLED_KEY]: 'true or false — whether the agent is active at all',
   ...Object.fromEntries(

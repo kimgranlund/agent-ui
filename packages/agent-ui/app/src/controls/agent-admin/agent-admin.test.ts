@@ -4551,7 +4551,7 @@ describe('ui-agent-admin — the Model GRID (2026-07-19 rev.2)', () => {
       expect([p.localName, p.getAttribute('variant')]).toEqual(['ui-text', 'kicker'])
     }
     const rows = grid.querySelectorAll('[data-part="model-row"]')
-    expect(rows).toHaveLength(7) // rev.4: the Haiku/Sonnet tier pair per provider, opus/fable GONE; T-0030 adds Haiku 5.5 beside Haiku 4.5
+    expect(rows).toHaveLength(8) // rev.4: the Haiku/Sonnet tier pair per provider; T-0030 adds Haiku 5.5 beside Haiku 4.5; T-0185 adds Opus 5.5
     // ship state: only the Anthropic rows included; the OpenAI/Gemini options ship switched OFF
     const stateOf = (title: string): boolean => {
       const row = [...grid.querySelectorAll<HTMLElement>('[data-part="model-row"]')].find(
@@ -4560,6 +4560,7 @@ describe('ui-agent-admin — the Model GRID (2026-07-19 rev.2)', () => {
       return (row.querySelector('[data-part="model-include"]') as HTMLElement & { checked: boolean }).checked
     }
     expect(stateOf('claude-sonnet-5-5')).toBe(true)
+    expect(stateOf('claude-opus-5-5')).toBe(true) // T-0185: included, not the default
     expect(stateOf('claude-haiku-4-5-20251001')).toBe(true)
     expect(stateOf('gpt-4.1')).toBe(false)
     expect(stateOf('gemini-2.5-flash')).toBe(false)

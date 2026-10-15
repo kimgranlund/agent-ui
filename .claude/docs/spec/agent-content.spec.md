@@ -39,7 +39,7 @@ wiping, and every turn names the exact content versions it used.
 - **resolved view**: `resolve(seed, overlay)`, the only value any reader sees (ACS-R6).
 - **provenance**: where a resolved value came from, one of `seed · pack · imported · duplicate · builder · user`
   (ACS-R8).
-- **bundle**: everything one turn sends about the agent (system prompt, model, temperature, enabled capability
+- **bundle**: everything one turn sends about the agent (system prompt, model, model settings, enabled capability
   labels, integrations), as built by the compiler (ACS-R11).
 - **bundle digest**: the sha256 of the canonical bundle (ACS-R12).
 
@@ -56,7 +56,7 @@ SPEC; content kinds describe seeds, entries remain the store's runtime rows. Pla
 
 **ACS-R2 (file shapes).** One content item is one file (or one folder with one entry file) in the content root:
 1. persona: a markdown file whose frontmatter carries `id`, `version`, `label`, `category`, `model`,
-   `temperature`, `surfaces`, `catalog`, `fragments`, and the capability lists as refs (`skills`, `workflows`,
+   the model settings (`effort`, `thinking`, `showReasoning`, `maxTokens`, `cacheTtl`, T-0185), `surfaces`, `catalog`, `fragments`, and the capability lists as refs (`skills`, `workflows`,
    `resources`, `tools`); the body is the foundation prompt, with `surfaceStyle` and any other prompt section as
    named sections. A persona is a manifest of refs: it never copies a capability's text.
 2. skill, workflow, resource, tool: the Agent Skills format (`SKILL.md` with `name` and `description`) plus `id`,
@@ -189,14 +189,14 @@ or the meta-line arms.
 
 ## 5 · Examples
 
-**E1, ILLUSTRATIVE (ACS-R7).** The `concierge` seed is at version 7. A user sets its temperature from 0.5 to 0.3:
-the overlay records `{ op: set, path: temperature, base: 0.5, value: 0.3, source: user }` against
-`concierge@7`. Version 8 ships with a new `surfaceStyle` and temperature still 0.5: the merge takes the new
-`surfaceStyle` (case 1) and keeps 0.3 (case 2), with no conflict. Had version 8 set temperature to 0.7, the field
-would keep 0.3 and show `seedChanged` with 0.5, 0.7 and 0.3 (case 4).
+**E1, ILLUSTRATIVE (ACS-R7).** The `concierge` seed is at version 7. A user sets its effort from medium to low:
+the overlay records `{ op: set, path: effort, base: medium, value: low, source: user }` against
+`concierge@7`. Version 8 ships with a new `surfaceStyle` and effort still medium: the merge takes the new
+`surfaceStyle` (case 1) and keeps low (case 2), with no conflict. Had version 8 set effort to high, the field
+would keep low and show `seedChanged` with medium, high and low (case 4).
 
 **E2, ILLUSTRATIVE (ACS-R11, ACS-R13).** A Test Chat turn on that agent records in its trace line the bundle
-digest and a resolution naming `concierge@8` (source `seed`, with the user's temperature op under source `user`)
+digest and a resolution naming `concierge@8` (source `seed`, with the user's effort op under source `user`)
 and each skill ref with its version and digest. The same agent and overlay compiled by the CLI prints the same
 digest.
 

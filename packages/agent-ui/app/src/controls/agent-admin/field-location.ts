@@ -28,6 +28,7 @@
 import {
   AGENT_ENABLED_KEY,
   MODELS_INCLUDED_KEY,
+  MODEL_SETTING_KEYS,
   SURFACE_MARKDOWN_KEY,
   SURFACE_A2UI_KEY,
   SURFACE_GENUI_KEY,
@@ -81,7 +82,7 @@ function loc(section: FieldLocation['section'], item: string, itemLabel: string)
  *  `settingsItem(key, summary, …)` folds), pinned by field-location.test.ts's anchor-parity gate. */
 const LOCATIONS: ReadonlyMap<string, FieldLocation> = new Map<string, FieldLocation>([
   // the Agent tab — the agent card, the model grid, the bankroll row
-  ...(['name', 'temperature', AGENT_ENABLED_KEY] as const).map((k) => [k, loc('agent-content', 'agent', 'Agent')] as const),
+  ...(['name', AGENT_ENABLED_KEY, ...Object.values(MODEL_SETTING_KEYS)] as const).map((k) => [k, loc('agent-content', 'agent', 'Agent')] as const),
   ...(['model', MODELS_INCLUDED_KEY] as const).map((k) => [k, loc('agent-content', 'model', 'Model')] as const),
   ...([BANKROLL_CAPABLE_KEY, BANKROLL_KEY] as const).map((k) => [k, loc('agent-content', 'bankroll', 'Bankroll')] as const),
 

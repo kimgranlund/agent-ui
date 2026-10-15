@@ -60,7 +60,7 @@ export function createAdminAgentTurn(): AdminAgentTurn {
       // body byte-identical to the pre-amendment one (SPEC-R19's absent-field requirement) with no
       // conditional spread. The host route intersects the labels with its own registry; nothing here knows
       // which ones are real.
-      body: JSON.stringify({ system: req.system, model: req.model, messages, effort: req.effort, integrations: req.integrations }),
+      body: JSON.stringify({ system: req.system, model: req.model, messages, effort: req.effort, integrations: req.integrations, ...(req.modelSettings !== undefined && Object.keys(req.modelSettings).length > 0 ? { modelSettings: req.modelSettings } : {}) }),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     })
     if (!res.ok) {
@@ -228,6 +228,8 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
         // body carries no `effort` key at all (byte-identical to before this field existed); `produce()`'s
         // own `validateEffort` degrades an absent/malformed value to `undefined` either way.
         ...(req.effort !== undefined ? { effort: req.effort } : {}),
+        // T-0185: the agent's model settings; empty or absent leaves the body without the key.
+        ...(req.modelSettings !== undefined && Object.keys(req.modelSettings).length > 0 ? { modelSettings: req.modelSettings } : {}),
         // RTS-R7 AC2: the persona's response type hint, the `effort` absent-key precedent: `auto` (the
         // default) and absent both leave the body with no `prefers` key; the hosts validate the rest.
         ...(req.prefers !== undefined && req.prefers !== 'auto' ? { prefers: req.prefers } : {}),

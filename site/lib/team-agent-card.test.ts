@@ -13,7 +13,6 @@ import { teamMemberToAgentCard } from './team-agent-card.ts'
 const AGENT_CONFIG_SNAPSHOT_SAMPLE: AgentConfigSnapshot = {
   name: 'Ada',
   model: DEFAULT_MODEL_ID,
-  temperature: 0.7,
   toolsEnabled: true,
   systemPrompt: 'You are a careful, concise research assistant.',
   skills: ['Summarizing'],

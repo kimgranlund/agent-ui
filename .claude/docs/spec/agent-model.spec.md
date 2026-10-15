@@ -134,7 +134,7 @@ store cache; the active-id fallback is the page's. A preset delete touches nothi
 with optional `subscribe(listener)` and optional `save(values)`. The component depends only on this interface.
 Owner: app-surfaces-m4 LLD-C15 fork F7; `controls/settings/store.ts:SettingsStore`.
 
-**SPEC-R9 (the turn-time snapshot).** `AgentConfigSnapshot = { name, model, temperature, toolsEnabled, systemPrompt,
+**SPEC-R9 (the turn-time snapshot).** `AgentConfigSnapshot = { name, model, toolsEnabled, systemPrompt,
 skills, workflows, resources, tools }` is a fresh read of the store at turn time, never a cache: live-apply is "the
 next turn reads the store again". `systemPrompt` is the composed prompt (§3.5); the four label lists carry each
 kind's enabled entry labels. Owner: ADR-0132 cl.6, ADR-0136 cl.3; `controls/agent-admin/agent-admin-schema.ts:AgentConfigSnapshot`.
@@ -156,8 +156,10 @@ migration write:
 The pure guards `initialValuesFor`, `sanitizeNumber`, `sanitizeSelect` are the single implementation hoisted to
 `@agent-ui/shared` and re-exported here. Owner: ADR-0135 Piece A cl.3 and Fork 2; `agent-admin-schema.ts`.
 
-**SPEC-R11 (the config schema).** `agentConfigSchema()` carries one section, `agent`, with fields `name` (text,
-required, default `Untitled agent`) and `temperature` (slider 0..1 step 0.1, default 0.5). Model selection and the
+**SPEC-R11 (the config schema).** `agentConfigSchema()` carries a section `agent` with the field `name` (text,
+required, default `Untitled agent`) and, T-0185, a `model` section generated from the model's capability row
+(`model-capabilities.ts`): `effort`, `thinking`, `showReasoning`, `maxTokens` and `cacheTtl`, each shown only when the
+model accepts it. Temperature is retired (the 5.5 models accept only 1.0); a stored temperature is ignored. Model selection and the
 per-model inclusion record live on the Model grid under `model` and `modelsIncluded`, not in the schema; the
 `toolsEnabled` field left the schema when kind-level master switches arrived. The Agent help card's summary and facts
 are projected from this schema, never restated. Owner: ADR-0131 cl.1 as amended by Kim's 2026-07-19 rev.2/rev.5
@@ -453,7 +455,7 @@ contributes no line; if it were the only enabled skill, the group heading would 
 
 **E4, ILLUSTRATIVE (SPEC-R4 to R7).** A user opens the shipped `concierge` preset (seedVersion 7, persisted marker
 6): the state under `concierge.` is swept, the marker becomes 7, the store hydrates from the seed. They edit the
-temperature (a `concierge.temperature` write, `modifiedAt` bumps), export the persona file, import it (a new record
+effort (a `concierge.effort` write, `modifiedAt` bumps), export the persona file, import it (a new record
 `concierge-imported` with `imported: true` and `createdAt`), then delete the import: its namespace, library record,
 and order slot go; the preset is untouched.
 

@@ -4,10 +4,10 @@ This conversation's job is to author another agent's configuration by interviewi
 talking to. Whenever a turn establishes something concrete about the agent being authored, declare it as a
 persona patch on the SAME leading meta-line as your note, as "personaPatch":
 
-  {"a2uiMeta":{"note":"Got it — a support agent, warm tone.","personaPatch":{"values":{"name":"Support Buddy","temperature":0.4}}}}
+  {"a2uiMeta":{"note":"Got it — a support agent, warm tone.","personaPatch":{"values":{"name":"Support Buddy","effort":"low"}}}}
 
 A patch has two members, and you choose which one by what you are proposing:
-- "values" SETS configuration keys — a name, a model, a temperature, a switch that should be on or off:
+- "values" SETS configuration keys — a name, a model, an effort level, a switch that should be on or off:
   {"personaPatch":{"values":{"<config-key>":<value>, ...}}}
 - "entries" CONTRIBUTES to the agent's lists — an instruction, a capability, a knowledge item. Each list
   key is reserved wire vocabulary, exactly like a config key: copy it VERBATIM, character for character

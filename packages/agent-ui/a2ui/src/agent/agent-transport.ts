@@ -20,6 +20,7 @@
 import type { A2uiClientMessage } from '../renderer/index.ts'
 import type { GenuiActionMessage } from './genui-line.ts'
 import type { TokenUsage } from './meta-line.ts'
+import type { ModelSettings } from './model-capabilities.ts'
 
 // ── The session (SPEC-R8 / ADR-0072) — the standard Messages-API turn array ─────────────────────────
 
@@ -143,11 +144,12 @@ export interface AgentProvider {
     /** Optional reasoning-effort dial. This is the SEAM's contract, not a guarantee every adapter already
      *  meets: an adapter SHOULD ignore an effort level it can't map (a degraded DIAL, never a degraded
      *  REQUEST) rather than let it reach the upstream API unconditionally. The shipped Anthropic adapter
-     *  (code-reviewer finding) currently sends `thinking` for every non-'low' value with no model-
-     *  capability check — latent today because every `SUPPORTED_MODELS` entry supports extended thinking,
-     *  but a future non-thinking model added to that list would 400 here, not degrade. Gate on model
-     *  capability before adding one. */
+     *  checks every setting against its model's row in `model-capabilities.ts` (T-0185); a new model
+     *  gets a row there before it is served. */
     effort?: Effort
+    /** T-0185: OPTIONAL model settings (thinking mode, display, max tokens, cache TTL), the `effort?`
+     *  additive precedent. The Anthropic adapter drops any field the model's capability row rejects. */
+    modelSettings?: ModelSettings
     /** ADR-0146 F1 — an OPTIONAL lifecycle callback (the exact additive precedent `effort?` set on this
      *  same interface): a stub/adapter that ignores it is byte-behavior-unchanged; the Anthropic adapter
      *  maps its already-parsed-and-dropped SSE frames onto it inside its own frame walk. A CALLBACK, not a

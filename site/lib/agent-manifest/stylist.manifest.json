@@ -2,7 +2,7 @@
   "id": "stylist",
   "preset": "stylist",
   "seedVersion": 3,
-  "seedDigest": "sha256:d805bead42576fd4d0f094d757fcfcc169dca5aa273a8349b3a77ea511118dd4",
+  "seedDigest": "sha256:5be5c45f741dd489178106991cf29bd19acc06721e592b446c7f3d95954a4226",
   "fragment": {
     "personaId": "stylist",
     "types": [

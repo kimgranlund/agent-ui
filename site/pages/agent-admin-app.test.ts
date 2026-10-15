@@ -16,6 +16,7 @@ import { ENTRY_KINDS } from '@agent-ui/app/agent-admin-entries'
 import { entriesStoreKey } from '@agent-ui/app/entry-data'
 import type { Entry } from '@agent-ui/app/entry-data'
 import { AGENT_PRESETS, presetSeed } from './agent-admin-presets.ts'
+import { capabilitiesFor, validateModelSettings } from '@agent-ui/a2ui/agent/model-capabilities'
 
 declare const process: { cwd(): string }
 
@@ -61,27 +62,51 @@ describe('AGENT_PRESETS — data integrity (TKT-0074)', () => {
     }
   })
 
-  it('every config is in range: a SUPPORTED_MODELS id, temperature within [0,1] on the 0.1 grid, name non-empty', () => {
+  it('every config is in range: a SUPPORTED_MODELS id, name non-empty, no temperature', () => {
     for (const p of AGENT_PRESETS) {
       expect(SUPPORTED_MODEL_IDS.has(p.config.model), `${p.id}: ${p.config.model}`).toBe(true)
-      expect(p.config.temperature, p.id).toBeGreaterThanOrEqual(0)
-      expect(p.config.temperature, p.id).toBeLessThanOrEqual(1)
-      expect(Math.round(p.config.temperature * 10) / 10, `${p.id}: off the 0.1 step grid`).toBe(p.config.temperature)
       expect(p.config.name.trim().length, p.id).toBeGreaterThan(0)
+      expect('temperature' in p.config, p.id).toBe(false)
     }
   })
 
-  it('the roster COLLECTIVELY covers the config axes: both included models, tools both states, temp both halves', () => {
+  /** T-0185: every way a preset config can disagree with its model's capability row, as plain-words issues. */
+  const presetSettingsIssues = (config: (typeof AGENT_PRESETS)[number]['config']): string[] => {
+    const row = capabilitiesFor(config.model)
+    if (!row) return [`${config.model} has no capability row`]
+    const { effort, thinking, showReasoning, maxTokens, cacheTtl } = config
+    const issues: string[] = []
+    if (effort !== undefined && !row.efforts.includes(effort)) issues.push(`effort ${effort}`)
+    if (showReasoning !== undefined && row.displays.length === 0) issues.push('show reasoning')
+    const settings = { ...(thinking !== undefined ? { thinking } : {}), ...(maxTokens ? { maxTokens } : {}), ...(cacheTtl !== undefined && cacheTtl !== 'off' ? { cacheTtl } : {}) }
+    // The effort is judged once above; the settings are checked at it when legal, else at the row default.
+    const at = effort !== undefined && row.efforts.includes(effort) ? effort : (row.defaultEffort ?? undefined)
+    for (const issue of validateModelSettings(config.model, settings, at)) issues.push(issue.message)
+    return issues
+  }
+
+  it("T-0185: every preset's settings validate against its model's capability row", () => {
+    for (const p of AGENT_PRESETS) expect(presetSettingsIssues(p.config), p.id).toEqual([])
+  })
+
+  it('T-0185 negative control: a seeded bad preset config is caught on every axis (the check bites)', () => {
+    const base = { name: 'Bad', toolsEnabled: false }
+    expect(presetSettingsIssues({ ...base, model: 'claude-haiku-5-5', effort: 'xhigh', thinking: 'disabled' })).toHaveLength(1) // thinking off at xhigh
+    expect(presetSettingsIssues({ ...base, model: 'claude-opus-5-5', thinking: 'disabled' })).toHaveLength(1) // adaptive always on
+    expect(presetSettingsIssues({ ...base, model: 'claude-sonnet-5-5', maxTokens: 500_000 })).toHaveLength(1) // over the ceiling
+    expect(presetSettingsIssues({ ...base, model: 'claude-haiku-4-5-20251001', effort: 'low', showReasoning: true })).toHaveLength(2) // no dial, no display
+    expect(presetSettingsIssues({ ...base, model: 'gpt-4.1' })).toHaveLength(1) // no row
+  })
+
+  it('the roster COLLECTIVELY covers the config axes: both included models, tools both states', () => {
     expect(new Set(AGENT_PRESETS.map((p) => p.config.model)).size).toBe(2) // rev.4: haiku + sonnet only
     expect(new Set(AGENT_PRESETS.map((p) => p.config.toolsEnabled)).size).toBe(2)
-    expect(AGENT_PRESETS.some((p) => p.config.temperature <= 0.2)).toBe(true)
-    expect(AGENT_PRESETS.some((p) => p.config.temperature >= 0.8)).toBe(true)
   })
 
   it('every seed carries the four config keys + EVERY entry-list key (ENTRY_KINDS-derived — a new kind reddens this), sections ordered and Foundation rewritten', () => {
     for (const p of AGENT_PRESETS) {
       const seed = presetSeed(p)
-      for (const key of ['name', 'model', 'temperature', 'toolsEnabled', ...ALL_ENTRY_KEYS]) {
+      for (const key of ['name', 'model', 'toolsEnabled', ...ALL_ENTRY_KEYS]) {
         expect(key in seed, `${p.id} missing ${key}`).toBe(true)
       }
       const sections = seed[entriesStoreKey(ENTRY_KINDS.promptSection)] as Entry[]

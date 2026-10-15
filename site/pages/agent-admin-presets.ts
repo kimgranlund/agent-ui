@@ -60,6 +60,8 @@ import { A2UI_DOMAINS_KEY, A2UI_LOCAL_PATTERNS_KEY, BANKROLL_CAPABLE_KEY } from 
 // generated prompt section is composed from (never a hand-listed copy — see `vocabularySection`).
 import { SURFACE_A2UI_KEY, SURFACE_AUTHORING_KEY, modelRoster } from '@agent-ui/app/agent-admin-schema'
 import { PATCHABLE_VALUE_SHAPES, PERSONA_ENTRY_LIST_KEYS, PERSONA_VALUE_KEYS } from '@agent-ui/app/agent-admin-persona-patch'
+import type { EffortLevel } from '@agent-ui/app/composer-options'
+import type { CacheTtl, ThinkingMode } from '@agent-ui/a2ui/agent/model-capabilities'
 
 export interface AgentPreset {
   id: string
@@ -73,7 +75,19 @@ export interface AgentPreset {
    *  tokens — none of them a hotel or a game) sees generic packs only, never a stray Hospitality/Games
    *  one. This is a SURFACING scope only — packs stay shared/reusable on the data side regardless. */
   category?: PresetCategory
-  config: { name: string; model: string; temperature: number; toolsEnabled: boolean }
+  /** T-0185: the agent config. Model settings (`effort`, `thinking`, `showReasoning`, `maxTokens`,
+   *  `cacheTtl`) are optional and must validate against the model's capability row; there is no
+   *  temperature (the 5.5 models accept only 1.0, and no request ever sent it). */
+  config: {
+    name: string
+    model: string
+    toolsEnabled: boolean
+    effort?: EffortLevel
+    thinking?: ThinkingMode
+    showReasoning?: boolean
+    maxTokens?: number
+    cacheTtl?: 'off' | CacheTtl
+  }
   /** The persona's Foundation rewrite (the builtin keeps its id/label; only content changes). */
   foundation: string
   /** The custom "Surface style" section — when to show a surface vs prose, and WHAT belongs on it.
@@ -150,7 +164,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     seedVersion: 13, // T-0172 (Kim's ruling, 2026-10-14): a game pick is one row of plain buttons, never a framed box per choice, and with no bankroll on file the first round opens at 1,000 (a live Sonnet turn chose 500); migrates pre-v13 stores. 12: T-0172 live probe: round-loop says the deal takes the bet out of /bankroll, settlement pays it back with the winnings, and every move updates the table; migrates pre-v12 stores. 11: T-0172 (Kim's ruling): the betting phase is the CardTable's own strip of bet buttons (one press bets and deals, betAction deal), no Deal Button, Slider or field; surfaceStyle drops em dashes the model copied into status text; migrates pre-v11 stores. 10: T-0159: game-hud defers to the CardTable in blackjack; migrates pre-v10 stores. 9: T-0088 (ADR-0243 Amendment 3): each round runs the CardTable's phases (betting on the table's own chips and a Deal Button, playing, settled with the result line and Deal again), taught by the card-layout and game-table-chrome skills and round-loop; migrates pre-v9 stores. 8, T-0073 (ADR-0243): the blackjack table is one CardTable, taught by the card-layout and game-table-chrome skills; migrates pre-v8 stores. 7, T-0020: a natural blackjack ends the round on the deal (surfaceStyle, round-loop and the blackjack rules entry); no mini-skill carries it, so a pre-v7 store would never hear it; migrates pre-v7 stores. 6: one surface per round (Kim 2026-10-04), supersedes #525's one-persistent-surface surfaceStyle; #525's bankroll opt-in + cross-session resume carry over; migrates pre-v6 stores. T-0016 (GH #1795) edited the hand/total seed text WITHOUT a bump: existing stores get the data-driven hand teaching from the server-composed card-layout/game-table-chrome mini-skills and the ADR-0238 hand check, so no store needs dropping
     label: 'The Croupier',
     tagline: 'Card games — Blackjack, Poker, and their variants — one table per round, each a new step in the dialog',
-    config: { name: 'The Croupier', model: 'claude-sonnet-5-5', temperature: 0.6, toolsEnabled: true }, // rev.4: fable retired from the roster
+    config: { name: 'The Croupier', model: 'claude-sonnet-5-5', toolsEnabled: true }, // rev.4: fable retired from the roster
     localPatterns: 'croupier', // GH #497: PlayingCard closes the glyph-formatting idiom structurally; T-0073 (ADR-0243): the CardTable composite draws the whole blackjack table
     bankroll: true, // GH #525 — opts into the persistent cross-session bankroll capability, croupier enabled first
     foundation:
@@ -248,7 +262,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     id: 'quant', // GH #143 — no `category`: a metrics dashboard is neither hospitality nor a game; generic packs only
     label: 'The Quant',
     tagline: 'Report family — Stat/BarChart/Sparkline/Table dashboards off one bound data model',
-    config: { name: 'The Quant', model: 'claude-sonnet-5-5', temperature: 0.1, toolsEnabled: true }, // rev.4: opus retired from the roster
+    config: { name: 'The Quant', model: 'claude-sonnet-5-5', toolsEnabled: true }, // rev.4: opus retired from the roster
     foundation:
       'You are The Quant, a metrics analyst. Every question about numbers, trends, or comparisons is ' +
       'answered with a KPI dashboard first and one tight paragraph of reading after.',
@@ -289,7 +303,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     seedVersion: 9, // T-0200: facility-info-card is one ServiceCard per facility; migrates pre-v9 stores. 8: T-0159: gallery-swiper caption variant, the amenity-service-card ServiceCard skill; migrates pre-v8 stores. 7: GH #1203 — `booking-flow` names the Back affordance + settled receipt (ADR-0198 B1/B2); migrates pre-#1203 stores (6: GH #1171 arc rewrite; 5: GH #497 local pattern set)
     label: 'The Hotel Concierge',
     tagline: 'The full hospitality stack: booking forms + galleries + itineraries + live weather/FX integrations (GH #46/#49)',
-    config: { name: 'The Hotel Concierge', model: 'claude-sonnet-5-5', temperature: 0.4, toolsEnabled: true },
+    config: { name: 'The Hotel Concierge', model: 'claude-sonnet-5-5', toolsEnabled: true },
     // GH #497 — BookingForm/BookingConfirmation close the booking FORM idiom structurally: the concierge's
     // own seed drops the now-redundant HAND-AUTHORED 'hotel-booking-form' skill below (never edits the
     // shared library entries themselves — `restaurant` still picks 'hotel-booking-form' by hand, out of
@@ -362,7 +376,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     seedVersion: 3, // T-0159: hotel-booking-form uses a date TextField for a single date; migrates pre-v3 stores. 2: GH #148 — added a Resources entry (was empty); migrates pre-#148 stores
     label: 'The Maître d’',
     tagline: 'Table booking + menus + wine lists — the reservation conversation as forms and menu cards (GH #46)',
-    config: { name: 'The Maître d’', model: 'claude-sonnet-5-5', temperature: 0.5, toolsEnabled: false },
+    config: { name: 'The Maître d’', model: 'claude-sonnet-5-5', toolsEnabled: false },
     foundation:
       'You are the maître d’ of Vela, the Grand Meridian’s fine-dining restaurant (tasting menu + à la ' +
       'carte; 40 covers; two seatings, 18:00 and 20:30; the Quay Bar next door takes walk-ins). You book ' +
@@ -400,7 +414,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     seedVersion: 5, // T-0200: trip-plan templates its 2-3 leg ProductCards in one Grid; migrates pre-v5 stores. 4: T-0159: gallery-swiper caption Text uses the caption variant; migrates pre-v4 stores. 3: T-0089 (ADR-0244): the trip-plan close is ONE ResultCard (outcome done); migrates pre-v3 stores. 2: GH #148, added a Resources entry (was empty)
     label: 'The Travel Agent',
     tagline: 'Multi-leg trip planning — comparison cards, an accumulating itinerary, live weather/FX (GH #46/#49)',
-    config: { name: 'The Travel Agent', model: 'claude-sonnet-5-5', temperature: 0.6, toolsEnabled: true },
+    config: { name: 'The Travel Agent', model: 'claude-sonnet-5-5', toolsEnabled: true },
     foundation:
       'You are a full-service travel agent: flights, trains, boats, rental cars, buses, and ' +
       'accommodation. You plan multi-leg trips, compare options honestly (duration, price, comfort), and ' +
@@ -437,7 +451,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     id: 'curator', // GH #143 — no `category`: seeds its own hand-authored idioms (never the Hospitality pack), generic packs only
     label: 'The Curator',
     tagline: 'Feed family + Swiper/Tabs — ChildList depth, cards nested in a scroll-snap carousel',
-    config: { name: 'The Curator', model: 'claude-sonnet-5-5', temperature: 0.8, toolsEnabled: false },
+    config: { name: 'The Curator', model: 'claude-sonnet-5-5', toolsEnabled: false },
     foundation:
       'You are The Curator, a travel and gallery guide. You present destinations, exhibits, and ' +
       'itineraries as browsable collections, not lists of prose.',
@@ -477,7 +491,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     id: 'stylist', // GH #143 — no `category`: a design-token consultant is neither hospitality nor a game; generic packs only
     label: 'The Stylist',
     tagline: 'Token surfaces — Swatch/Ramp/Ladder render REAL color ramps (ADR-0118, fleet-unique)',
-    config: { name: 'The Stylist', model: 'claude-sonnet-5-5', temperature: 0.5, toolsEnabled: false }, // rev.4
+    config: { name: 'The Stylist', model: 'claude-sonnet-5-5', toolsEnabled: false }, // rev.4
     seedVersion: 3, // T-0159: palette-presentation teaches one Ladder for spacing and size tiers; migrates pre-v3 stores. 2: T-0090 (ADR-0244): each text-on-background pairing is one ContrastPair; migrates pre-v2 stores
     localPatterns: 'stylist', // ADR-0244: the ContrastPair fragment (agent-ui--stylist)
     foundation:
@@ -515,7 +529,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     id: 'shopkeeper', // T-0075 (ADR-0243 cl.5), no `category`: a storefront is neither hospitality nor a game; generic packs only. The ProductCard live consumer; config only, no fragment
     label: 'The Shopkeeper',
     tagline: 'Storefront browsing + a cart summary: product tiles with price, badge and a buy action (T-0075)',
-    config: { name: 'The Shopkeeper', model: 'claude-sonnet-5-5', temperature: 0.4, toolsEnabled: false },
+    config: { name: 'The Shopkeeper', model: 'claude-sonnet-5-5', toolsEnabled: false },
     foundation:
       'You are The Shopkeeper of Lantern & Loom, a small home-goods shop (lamps, textiles, ceramics). You ' +
       'help people browse, compare and choose, answer questions about materials and care, and keep a ' +
@@ -549,7 +563,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     category: 'games', // GH #143 — trivia is a game genre even though it predates the games-roster wave
     label: 'The Quizmaster',
     tagline: 'Modal open/close lifecycle + progressive multi-turn state on one long-lived surface',
-    config: { name: 'The Quizmaster', model: 'claude-haiku-5-5', temperature: 0.9, toolsEnabled: false },
+    config: { name: 'The Quizmaster', model: 'claude-haiku-5-5', toolsEnabled: false },
     seedVersion: 6, // T-0159: surfaceStyle says question card, not the type name; migrates pre-v6 stores. 5: T-0089 (ADR-0244): the grand-reveal Modal holds ONE ResultCard; migrates pre-v5 stores. 4: T-0082 (ADR-0243 Amendment 1): the QuestionCard answer, header and in-card Check answer Button; migrates pre-v4 stores. 3: T-0074 (ADR-0243): one QuestionCard per round. 2: T-0036 (2026-10-08): T-0030 moved this preset to claude-haiku-5-5 without a bump, so saved Quizmasters stayed on Haiku 4.5; migrates pre-v2 stores (Kim chose the bump, which drops user edits to this persona)
     localPatterns: 'quizmaster', // ADR-0243: the QuestionCard fragment (agent-ui--quizmaster)
     foundation:
@@ -595,7 +609,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     seedVersion: 2, // T-0089 (ADR-0244): the guess-hud End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores
     label: 'The Mentalist',
     tagline: 'Twenty Questions — the purest chat×surface mix: prose interrogation + a live HUD (Timeline · SegmentedControl · Modal)',
-    config: { name: 'The Mentalist', model: 'claude-sonnet-5-5', temperature: 0.7, toolsEnabled: false },
+    config: { name: 'The Mentalist', model: 'claude-sonnet-5-5', toolsEnabled: false },
     foundation:
       'You are The Mentalist, a sharp-witted Twenty Questions player. The user thinks of something; you ' +
       'interrogate your way to it in at most twenty yes/no-ish questions, thinking aloud just enough to ' +
@@ -617,7 +631,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     seedVersion: 2, // T-0089 (ADR-0244): the deal-sheet End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores
     label: 'The Negotiator',
     tagline: 'Market-stall haggling — two-way Slider offers, mood Stat deltas, a price-history Sparkline (the economy family as a game)',
-    config: { name: 'The Negotiator', model: 'claude-sonnet-5-5', temperature: 0.8, toolsEnabled: false }, // rev.4
+    config: { name: 'The Negotiator', model: 'claude-sonnet-5-5', toolsEnabled: false }, // rev.4
     foundation:
       'You are Selim, a charming, theatrical bazaar merchant. Everything is negotiable, nothing is ever ' +
       'quite final, and every offer deserves a story. You drive a hard bargain but respect a worthy ' +
@@ -638,7 +652,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     seedVersion: 3, // T-0200: word-tiles names one GameHud, round-loop ends the game on one ResultCard; migrates pre-v3 stores. 2: T-0089 (ADR-0244): the word-tiles End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores
     label: 'The Lexicographer',
     tagline: 'Wordle-style word forge — Badge tile grids via list templates + a regex-checked TextField (the checks machinery as a game)',
-    config: { name: 'The Lexicographer', model: 'claude-sonnet-5-5', temperature: 0.2, toolsEnabled: false },
+    config: { name: 'The Lexicographer', model: 'claude-sonnet-5-5', toolsEnabled: false },
     foundation:
       'You are The Lexicographer, a precise, dry-witted word-game host. You hold a secret five-letter ' +
       'word fixed for the whole game. After each guess you mark every letter EXACTLY: right letter in ' +
@@ -661,7 +675,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     seedVersion: 4, // T-0200: board-grid puts ships remaining and shots fired in one GameHud; migrates pre-v4 stores. 3: T-0128 (ADR-0243 Amendment 4): the board is one BoardGrid with actionName, a cell click an action with {row, col}, not a Grid of cell Buttons; migrates pre-v3 stores. 2, T-0089 (ADR-0244): the board-grid End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores
     label: 'The Admiral',
     tagline: 'Battleship — 6×6 BoardGrids whose cell click arrives as an action carrying {row, col} (the context-payload pattern’s first showcase)',
-    config: { name: 'The Admiral', model: 'claude-sonnet-5-5', temperature: 0.4, toolsEnabled: false },
+    config: { name: 'The Admiral', model: 'claude-sonnet-5-5', toolsEnabled: false },
     foundation:
       'You are The Admiral, a courteous but ruthless naval opponent. You place a small hidden fleet on a ' +
       '6×6 grid at game start and keep it FIXED — record it mentally and resolve every shot against that ' +
@@ -690,7 +704,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     seedVersion: 3, // T-0200: round-loop ends the game on one ResultCard, a Toast only for a transient round result; migrates pre-v3 stores. 2: T-0089 (ADR-0244): the color-duel End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores
     label: 'The Alchemist',
     tagline: 'Color Duel — Swatch targets, an oklch ColorPicker, Ramp reveals (the fleet-unique ADR-0118 token surfaces as game pieces)',
-    config: { name: 'The Alchemist', model: 'claude-sonnet-5-5', temperature: 0.6, toolsEnabled: false },
+    config: { name: 'The Alchemist', model: 'claude-sonnet-5-5', toolsEnabled: false },
     foundation:
       'You are The Alchemist, a color-obsessed mystic who duels in pigment. Each round you conjure a ' +
       'target color and the challenger answers with their own mix; you judge closeness in coarse honest ' +
@@ -712,7 +726,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     seedVersion: 3, // T-0200: round-loop ends the game on one ResultCard, a Toast only for a transient round result; migrates pre-v3 stores. 2: T-0089 (ADR-0244): the quest-log End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores
     label: 'The Dungeon Master',
     tagline: 'A pocket dungeon crawl — Timeline quest log + HP/Gold Stats + inventory List (the longest multi-turn state horizon)',
-    config: { name: 'The Dungeon Master', model: 'claude-sonnet-5-5', temperature: 0.9, toolsEnabled: false }, // rev.4
+    config: { name: 'The Dungeon Master', model: 'claude-sonnet-5-5', toolsEnabled: false }, // rev.4
     foundation:
       'You are the Dungeon Master of the Undervault, a pocket dungeon of five rooms. You narrate vividly ' +
       'but briefly (three sentences a scene), track HP, gold, and inventory scrupulously in the surface ' +
@@ -1011,7 +1025,7 @@ const BUILDER_PRESET: AgentPreset = {
   // A SONNET-class id (picked at build against the shipped roster, per LLD §15): interview quality is
   // the whole product here — a cheaper tier asks blunter questions and mis-reads what the user meant,
   // and the flow is a handful of turns per agent, so the cost difference is negligible.
-  config: { name: 'Builder', model: 'claude-sonnet-5-5', temperature: 0.5, toolsEnabled: false },
+  config: { name: 'Builder', model: 'claude-sonnet-5-5', toolsEnabled: false },
   foundation:
     'You are the Builder. You interview someone about an AI agent they want to create, and you fill in ' +
     'their draft agent as the conversation goes — they watch it take shape while you talk. ' +

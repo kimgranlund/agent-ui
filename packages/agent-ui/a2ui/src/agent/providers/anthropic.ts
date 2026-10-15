@@ -20,6 +20,8 @@
 // tool loop sends them back unmodified with the tool results; that replay is request-side only.
 
 import type { AgentProvider, Turn, Effort, ProviderEvent, ToolDef } from '../agent-transport.ts'
+import type { ModelSettings } from '../model-capabilities.ts'
+import { capabilitiesFor, normalizeModelSettings, DEFAULT_DISPLAY } from '../model-capabilities.ts'
 import type { TokenUsage } from '../meta-line.ts'
 import { AgentTimeoutError } from '../deadlines.ts'
 
@@ -393,20 +395,21 @@ const REPLY_HEADROOM = 2048
 
 /** A model that still takes the LEGACY extended-thinking shape (`{type:'enabled', budget_tokens}`).
  *  TKT-0075 (API truth, measured 2026-07-16): the Claude 5-family + Opus 4.7/4.8 REJECT budget_tokens
- *  with a 400 (`temperature`-style parameter removal); they take `thinking: {type:'adaptive'}` +
- *  `output_config: {effort}` instead. Haiku 4.5 is the one served model still on the legacy shape,
- *  and `output_config.effort` ERRORS there, so the two arms are mutually exclusive by API design.
- *  T-0030 (2026-10-07): the match is `haiku-4-5`, not bare `haiku`. Haiku 5.5 is adaptive-only (the
- *  model page and migration guide: `budget_tokens` returns a 400, effort `low` to `max`, default
- *  `medium`), so it takes the current-family arm below. */
-const takesLegacyThinkingBudget = (model: string): boolean => /haiku-4-5/.test(model)
+ *  with a 400; they take `thinking: {type:'adaptive'}` + `output_config: {effort}` instead. Haiku 4.5 is
+ *  the one served model still on the legacy shape, and `output_config.effort` ERRORS there, so the two arms
+ *  are mutually exclusive by API design. T-0185: read from the capability table (`legacyBudget`); the
+ *  `haiku-4-5` match stays as the fallback for an id with no row. */
+const takesLegacyThinkingBudget = (model: string): boolean => capabilitiesFor(model)?.legacyBudget ?? /haiku-4-5/.test(model)
 
-/** T-0172: models that return a 400 on a forced `tool_choice` (`tool` or `any`) whatever the thinking setting
- *  (Sonnet 5.5, Opus 5.5, Fable 5.1, Mythos 5.1). The surface override then rides `auto` plus its one
- *  SURFACE_REQUESTED correction round in `produce()`. */
-const rejectsForcedToolChoice = (model: string): boolean => /sonnet-5-5|opus-5-5|fable-5-1|mythos-5-1/.test(model)
+/** T-0172: models that return a 400 on a forced `tool_choice` (`tool` or `any`) whatever the thinking setting.
+ *  T-0185: the table's `forcedToolChoice`; the regex covers ids with no row (Fable 5.1, Mythos 5.1). */
+const rejectsForcedToolChoice = (model: string): boolean => {
+  const row = capabilitiesFor(model)
+  return row ? !row.forcedToolChoice : /sonnet-5-5|opus-5-5|fable-5-1|mythos-5-1/.test(model)
+}
 
-/** Haiku 5.5 (also the Bedrock id `anthropic.claude-haiku-5-5`): the one model whose default effort is `medium`. */
+/** Haiku 5.5 (also the Bedrock id `anthropic.claude-haiku-5-5`): the one model pinned to an explicit `low`
+ *  when no effort is sent (T-0032), with its own max_tokens tiers (T-0035). */
 const isHaiku55 = (model: string): boolean => /haiku-5-5/.test(model)
 
 /** T-0035: Haiku 5.5's tokenizer emits ~30% more tokens for the same text, so its max_tokens tiers
@@ -417,23 +420,31 @@ const HAIKU_55_MAX_TOKENS = { default: 5376, medium: 4096, high: 5376, xhigh: 81
 /** The Anthropic Messages-API request BODY, PURE (SPEC-R11 AC3, fixture-tested — the `parseAnthropicSSE`
  *  precedent, this file's OTHER extracted-for-testability seam): `effort` → thinking/effort params, with
  *  no network/key involved. The impure `stream()` below is the ONLY caller; kept exported so the mapping
- *  itself is directly testable without a live key. */
+ *  itself is directly testable without a live key.
+ *
+ *  T-0185: `modelSettings` (thinking mode, display, max tokens, cache TTL) is first passed through
+ *  `normalizeModelSettings`, so a field the model's capability row rejects (thinking off at xhigh on Haiku
+ *  5.5, `between_tools` on Opus 5.5, a max tokens over the ceiling) is dropped before the call, never sent.
+ *  No sampling param (temperature, top_p, top_k) is ever sent: the 5.5 rows accept none. */
 export function buildRequestBody(req: {
   model: string
   system: string
   messages: Turn[]
   effort?: Effort
+  /** T-0185: the agent's model settings, checked against the capability table here. */
+  modelSettings?: ModelSettings
   /** GH #49 — tool declarations (present ⇒ the body carries `tools`) and the tool-loop's follow-up
    *  messages (assistant tool_use + user tool_result rounds), appended AFTER the mapped turns. */
   tools?: readonly ToolDef[]
   extraMessages?: readonly AnthropicMessage[]
-  /** RTS-R2: force this tool. Sent as `tool_choice` only when the body carries tools and no `thinking`
-   *  field (the API rejects a forced tool choice with extended thinking), and never on a model that rejects a
-   *  forced choice outright (T-0172, `rejectsForcedToolChoice`); otherwise omitted. */
+  /** RTS-R2: force this tool. Sent as `tool_choice` only when the body carries tools and no thinking that
+   *  is on (the API rejects a forced tool choice with thinking; `{type:'disabled'}` is fine), and never on a
+   *  model that rejects a forced choice outright (T-0172, `rejectsForcedToolChoice`); otherwise omitted. */
   toolChoice?: { name: string }
 }): Record<string, unknown> {
   const body = buildArmBody(req)
-  if (req.toolChoice === undefined || body.tools === undefined || body.thinking !== undefined || rejectsForcedToolChoice(req.model)) return body
+  const thinking = body.thinking as { type?: string } | undefined
+  if (req.toolChoice === undefined || body.tools === undefined || (thinking !== undefined && thinking.type !== 'disabled') || rejectsForcedToolChoice(req.model)) return body
   return { ...body, tool_choice: { type: 'tool', name: req.toolChoice.name } }
 }
 
@@ -443,49 +454,64 @@ function buildArmBody(req: {
   system: string
   messages: Turn[]
   effort?: Effort
+  modelSettings?: ModelSettings
   tools?: readonly ToolDef[]
   extraMessages?: readonly AnthropicMessage[]
+  toolChoice?: { name: string }
 }): Record<string, unknown> {
+  const row = capabilitiesFor(req.model)
+  const settings = normalizeModelSettings(req.model, req.modelSettings, req.effort)
+  // T-0185: a cache TTL turns the system prompt into one cached text block.
+  const system = settings.cacheTtl !== undefined ? [{ type: 'text', text: req.system, cache_control: { type: 'ephemeral', ttl: settings.cacheTtl } }] : req.system
   const base = {
     model: req.model,
-    system: req.system,
+    system,
     messages: [...toAnthropicMessages(req.messages), ...(req.extraMessages ?? [])],
     stream: true,
     ...(req.tools && req.tools.length > 0 ? { tools: req.tools } : {}),
   }
-  // 'low' (or unset) ⇒ no thinking params. Other models keep the pre-Effort max_tokens; Haiku 5.5 gets its own
-  // scaled default (HAIKU_55_MAX_TOKENS.default, T-0035). Haiku 5.5 alone defaults to
-  // `medium` effort (other current models default to high, Haiku 4.5 has no dial), so only it gets
-  // `output_config: {effort: 'low'}` explicitly (T-0032), keeping the cheap no-thinking 4.5 behavior;
-  // a model may still think a little at low. We send no `thinking` field rather than
-  // `{type:'disabled'}`, which Fable 5 rejects.
+  /** The tier max_tokens unless the agent set one (already clamped to the row's ceiling by normalize). */
+  const maxTokens = (tier: number): number => settings.maxTokens ?? tier
+  // T-0185: the thinking field, sent when the effort is above low or a thinking setting was set explicitly.
+  // `adaptive` carries the display (default `summarized`, T-0172: the 5.x API default `omitted` streamed
+  // empty thinking text); `disabled` and `between_tools` carry none.
+  const thinkingField = (): Record<string, unknown> => {
+    const mode = settings.thinking ?? 'adaptive'
+    return mode === 'adaptive' ? { type: 'adaptive', display: settings.display ?? DEFAULT_DISPLAY } : { type: mode }
+  }
+  // A display alone never adds the field when a forced tool would ride the body: the low arm keeps the
+  // RTS-R2 forced tool (thinking on rules it out), so show reasoning yields to the surface override there.
+  const forcedTool = req.toolChoice !== undefined && (req.tools?.length ?? 0) > 0 && !rejectsForcedToolChoice(req.model)
+  const explicitThinking = settings.thinking !== undefined || (settings.display !== undefined && !forcedTool)
+  // 'low' (or unset) ⇒ no thinking field unless one was set. Haiku 5.5 gets its own scaled default
+  // (HAIKU_55_MAX_TOKENS.default, T-0035) and, unset, an explicit `low` (T-0032: its API default is
+  // `medium`). T-0185: an explicit effort on a model with a dial is always sent, so `low` reaches the API.
   if (req.effort === undefined || req.effort === 'low') {
-    return isHaiku55(req.model)
-      ? { ...base, max_tokens: HAIKU_55_MAX_TOKENS.default, output_config: { effort: 'low' } }
-      : { ...base, max_tokens: MAX_TOKENS }
+    const effort = req.effort ?? (isHaiku55(req.model) ? 'low' : undefined)
+    const sendEffort = effort !== undefined && (row ? row.efforts.includes(effort) : isHaiku55(req.model))
+    return {
+      ...base,
+      max_tokens: maxTokens(isHaiku55(req.model) ? HAIKU_55_MAX_TOKENS.default : MAX_TOKENS),
+      ...(explicitThinking && row !== undefined && !row.legacyBudget ? { thinking: thinkingField() } : {}),
+      ...(sendEffort ? { output_config: { effort } } : {}),
+    }
   }
   if (takesLegacyThinkingBudget(req.model)) {
     // Pre-4.6 arm (Haiku 4.5): the legacy budget shape, max_tokens strictly above the budget.
     const budget = THINKING_BUDGET[req.effort]
     return {
       ...base,
-      max_tokens: budget + REPLY_HEADROOM,
+      max_tokens: Math.max(maxTokens(budget + REPLY_HEADROOM), budget + 1),
       thinking: { type: 'enabled', budget_tokens: budget },
     }
   }
-  // Current-family arm (Fable 5 / Sonnet 5 / Opus 4.8+ / Haiku 5.5): adaptive thinking + the effort dial.
-  // budget_tokens returns a 400 here (TKT-0075's silent-empty bug); adaptive is legal on ALL of them
-  // (Fable 5: "omit or adaptive"). Effort vocabulary maps 1:1 (low/medium/high/xhigh are all real API
-  // values). max_tokens gets the same headroom bump the legacy arm used at the equivalent tier, so the
-  // reply room does not shrink with the migration; Haiku 5.5 instead takes its ~30% scaled
-  // HAIKU_55_MAX_TOKENS tier (T-0035).
-  // T-0172: `display: 'summarized'` on every adaptive model. Fable 5, Opus 4.7 and later, Sonnet 5 and 5.5 and
-  // Haiku 5.5 default to `'omitted'`, which streams thinking blocks with empty text, so the chat's
-  // "Reasoned" disclosure showed nothing. Display changes visibility only; thinking and billing are the same.
+  // Current-family arm (Fable 5 / Sonnet 5.5 / Opus 4.8+ / Haiku 5.5): the thinking field + the effort dial.
+  // budget_tokens returns a 400 here (TKT-0075); adaptive is legal on all of them. max_tokens keeps the
+  // legacy arm's headroom at the equivalent tier, Haiku 5.5 its ~30% scaled tier (T-0035).
   return {
     ...base,
-    max_tokens: isHaiku55(req.model) ? HAIKU_55_MAX_TOKENS[req.effort] : THINKING_BUDGET[req.effort] + REPLY_HEADROOM,
-    thinking: { type: 'adaptive', display: 'summarized' },
+    max_tokens: maxTokens(isHaiku55(req.model) ? HAIKU_55_MAX_TOKENS[req.effort] : THINKING_BUDGET[req.effort] + REPLY_HEADROOM),
+    thinking: thinkingField(),
     output_config: { effort: req.effort },
   }
 }

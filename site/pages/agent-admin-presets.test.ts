@@ -104,7 +104,7 @@ function keysUnder(id: string): string[] {
 
 /** A library persona, shaped exactly as an import/mint/duplicate persists one. */
 function customPersona(id: string, label: string): Persona {
-  return { id, label, tagline: `${label} tagline`, seed: { name: label, temperature: 0.3 }, imported: true }
+  return { id, label, tagline: `${label} tagline`, seed: { name: label, effort: 'low' }, imported: true }
 }
 
 function clearAll(): void {
@@ -276,11 +276,11 @@ describe('the Quizmaster seedVersion bump (T-0036): saved stores move to Haiku 5
     resetPersona(persona) // empties the cache so personaStore re-reads the keys below
     // Persisted at the CURRENT seedVersion with edits: nothing may migrate them away.
     localStorage.setItem(`${PREFIX}.quizmaster.seedVersion`, String(persona.seedVersion))
-    localStorage.setItem(`${PREFIX}.quizmaster.temperature`, JSON.stringify(0.1))
+    localStorage.setItem(`${PREFIX}.quizmaster.effort`, JSON.stringify('high'))
     localStorage.setItem(`${PREFIX}.quizmaster.model`, JSON.stringify('claude-sonnet-4-5'))
     expect(persona.seedVersion).toBe(6) // T-0159: surfaceStyle says question card
     const store = personaStore(persona)
-    expect(store.get('temperature')).toBe(0.1)
+    expect(store.get('effort')).toBe('high')
     expect(store.get('model')).toBe('claude-sonnet-4-5')
   })
 })

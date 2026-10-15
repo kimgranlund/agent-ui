@@ -114,7 +114,7 @@ const goToPane = (el: UIAgentAdminElement, pane: 'chat' | 'author' | 'settings')
   )
 }
 
-const PATCH = { values: { name: 'Concierge', temperature: 0.3 }, entries: { [entriesStoreKey(ENTRY_KINDS.skill)]: [{ label: 'Book a table' }] } }
+const PATCH = { values: { name: 'Concierge', effort: 'low' }, entries: { [entriesStoreKey(ENTRY_KINDS.skill)]: [{ label: 'Book a table' }] } }
 
 /** A persona store seeded the way the page seeds one — the real defaults, so pane reads are honest. */
 function personaStore(extra: Record<string, unknown> = {}): SettingsStore {
@@ -208,13 +208,13 @@ describe('the apply loop’s CONSUMPTION CONDITION — the fence AND the gate, b
     await submit(el, 'a hotel concierge please')
 
     expect(draft.get('name')).toBe('Concierge')
-    expect(draft.get('temperature')).toBe(0.3)
+    expect(draft.get('effort')).toBe('low')
     expect(readEntries(draft, ENTRY_KINDS.skill).map((e) => e.label)).toEqual(['Book a table'])
     // the interviewer's OWN store is never the target — only the draft is
     expect(builder.get('name')).toBe('Builder')
     // the report rides the turn log, never an error surface
     const response = turnLogOf(el).response as { patch?: { applied?: string[] } }
-    expect(response.patch?.applied).toEqual(['name', 'temperature'])
+    expect(response.patch?.applied).toEqual(['name', 'effort'])
   })
 
   it('POLARITY 1 — gate OFF INSIDE the authoring context: ignored, zero writes', async () => {

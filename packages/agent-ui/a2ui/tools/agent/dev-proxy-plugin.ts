@@ -62,6 +62,7 @@ import { produce } from '../../src/agent/produce.ts'
 import { withTurnDeadline, TURN_DEADLINE_MS } from '../../src/agent/deadlines.ts'
 import type { ProduceDeps } from '../../src/agent/produce.ts'
 import { formatErrorLine } from '../../src/agent/meta-line.ts'
+import { normalizeModelSettings } from '../../src/agent/model-capabilities.ts'
 import { resolvePair, validateProvidersConfig } from './providers-config.ts'
 import type { ProvidersConfig } from './providers-config.ts'
 import { providerFor, validateProviderKeyCached } from './providers/index.ts'
@@ -346,11 +347,13 @@ export function a2uiDevProxyPlugin(opts?: {
                 messages?: unknown
                 effort?: unknown
                 integrations?: unknown
+                modelSettings?: unknown
               }
               // ADR-0168 cl.5 (GH #402) — read BEFORE the guard: `isChatBody`'s predicate deliberately does
               // not mention `integrations` (the field is optional and fail-closed downstream, so it is no
               // part of the 400 contract), and narrowing to that predicate type drops the key.
               const chatIntegrations = body.integrations
+              const chatModelSettings = body.modelSettings
               if (!isChatBody(body)) {
                 sendJson(res, 400, { error: 'bad-request' }) // a malformed body is a deterministic failure — never let it fall through to provider.stream()
                 return
@@ -410,7 +413,7 @@ export function a2uiDevProxyPlugin(opts?: {
                 // `withTurnDeadline` produce() uses). A client disconnect still aborts `controller` and stays silent;
                 // the deadline aborts only the composed signal, so its `TurnDeadlineError` reaches the catch below.
                 for await (const fragment of withTurnDeadline(
-                  (signal) => chatProvider.stream({ model, system, messages, effort: effort as Effort | undefined, signal, ...toolOpts }),
+                  (signal) => chatProvider.stream({ model, system, messages, effort: effort as Effort | undefined, ...(chatModelSettings !== undefined ? { modelSettings: normalizeModelSettings(model, chatModelSettings, effort as Effort | undefined) } : {}), signal, ...toolOpts }),
                   controller.signal,
                   TURN_DEADLINE_MS,
                 )) {
@@ -441,7 +444,7 @@ export function a2uiDevProxyPlugin(opts?: {
 
             // POST — run one turn and stream validated A2UI JSONL back.
             if (req.method === 'POST') {
-              const { input, provider, model, mode, personaSystem, integrations, progressDetail, progressReasoning, genui, a2ui, authoring, builderMission, effort, responsePreference, prefers, catalogId, agent } = JSON.parse(await readBody(req)) as {
+              const { input, provider, model, mode, personaSystem, integrations, progressDetail, progressReasoning, genui, a2ui, authoring, builderMission, effort, modelSettings, responsePreference, prefers, catalogId, agent } = JSON.parse(await readBody(req)) as {
                 input: TurnInput
                 provider: string
                 model: string
@@ -457,6 +460,8 @@ export function a2uiDevProxyPlugin(opts?: {
                 authoring?: unknown
                 builderMission?: unknown
                 effort?: unknown
+                /** T-0185: the agent's model settings; fields the model's capability row rejects are dropped. */
+                modelSettings?: unknown
                 responsePreference?: unknown
                 prefers?: unknown
                 catalogId?: unknown
@@ -577,7 +582,7 @@ export function a2uiDevProxyPlugin(opts?: {
               const validatedResponsePreference = validateResponsePreference(responsePreference)
               const validatedPrefers = validateResponsePreference(prefers)
               try {
-                for await (const line of produce(input, deps, { maxRounds: 3, signal: controller.signal, model, mode: validateMode(mode), personaSystem: persona, progress: true, ...(detail !== undefined ? { progressDetail: detail } : {}), ...(reasoning ? { progressReasoning: true } : {}), ...(genuiSurface !== undefined ? { genuiSurface } : {}), ...(a2uiEnabled !== undefined ? { a2uiEnabled } : {}), ...(authoringSurface !== undefined ? { authoringSurface } : {}), ...(builderMissionGate !== undefined ? { builderMission: builderMissionGate } : {}), ...(validatedEffort !== undefined ? { effort: validatedEffort } : {}), ...(validatedResponsePreference !== undefined ? { responsePreference: validatedResponsePreference } : {}), ...(validatedPrefers !== undefined ? { prefers: validatedPrefers } : {}), onRepairRound: trace.onRepairRound, ...toolOpts })) {
+                for await (const line of produce(input, deps, { maxRounds: 3, signal: controller.signal, model, mode: validateMode(mode), personaSystem: persona, progress: true, ...(detail !== undefined ? { progressDetail: detail } : {}), ...(reasoning ? { progressReasoning: true } : {}), ...(genuiSurface !== undefined ? { genuiSurface } : {}), ...(a2uiEnabled !== undefined ? { a2uiEnabled } : {}), ...(authoringSurface !== undefined ? { authoringSurface } : {}), ...(builderMissionGate !== undefined ? { builderMission: builderMissionGate } : {}), ...(validatedEffort !== undefined ? { effort: validatedEffort } : {}), ...(modelSettings !== undefined ? { modelSettings: normalizeModelSettings(String(model), modelSettings, validatedEffort) } : {}), ...(validatedResponsePreference !== undefined ? { responsePreference: validatedResponsePreference } : {}), ...(validatedPrefers !== undefined ? { prefers: validatedPrefers } : {}), onRepairRound: trace.onRepairRound, ...toolOpts })) {
                   trace.observeLine(line)
                   // T-0151: in the dev build, a client that opted in to the raw-source attachment
                   // (`progressDetail:'source'`, the admin developer surface) also gets each failed round's
