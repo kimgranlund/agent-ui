@@ -259,4 +259,4 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0252 | [specs-skills-scrub](specs-skills-scrub/handoff.md) | Spec and LLD path scrub, app-shell superseded markers, skills and agents scrub, old tickets archived | chore | L2 | P2 | T-0249 | 🔵 ready |
 | T-0253 | [games-rank-by-family](games-rank-by-family/handoff.md) | Within the games domain, retrieval ranks a preset's own composite family first | bug | L2 | P2 | T-0240 | 🔵 ready |
 | T-0254 | [budget-gate-persona-shards](budget-gate-persona-shards/handoff.md) | Prompt budget gate measures the persona example shards too | chore | L1 | P2 | T-0240 | 🔵 ready |
-| T-0255 | [local-first-workflows](local-first-workflows/handoff.md) | GitHub workflows cut to the CI check; review, regen, deploy and publish run locally | chore | L1 | P2 | none | 🔵 ready |
+| T-0255 | [local-first-workflows](local-first-workflows/handoff.md) | GitHub workflows cut to the CI check; review, regen, deploy and publish run locally | chore | L1 | P2 | none | 🟢 done |

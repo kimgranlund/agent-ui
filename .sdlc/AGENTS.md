@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:941d5277cf24 -->
+<!-- sdlc-lite:managed:start v1 sha256:0e397feca594 -->
 # Work records
 
 This folder holds SDLC Lite tickets, task records, `roadmap.md`, `notes.md`, and `config`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -20,7 +20,7 @@ This folder holds SDLC Lite tickets, task records, `roadmap.md`, `notes.md`, and
   - T-0197 BookingForm field kinds (dateRange, radio, time, stepper) and sharing it with the Maitre d' (bookingform-kinds)
   - T-0198 Step flow pattern: step n of m, Back and Next, shared /draft data (step-flow)
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (itinerary-compare)
-- ready: 22
+- ready: 21
   - T-0160 Agent content as files: extract preset and pack seeds to .md manifests with a generated, drift-gated registry (agent-content-files)
   - T-0161 Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind (agent-content-overlays)
   - T-0162 Settings pane forms generated from each content kind's schema, with provenance, diff and reset (agent-content-schema-forms)
@@ -42,11 +42,10 @@ This folder holds SDLC Lite tickets, task records, `roadmap.md`, `notes.md`, and
   - T-0252 Spec and LLD path scrub, app-shell superseded markers, skills and agents scrub, old tickets archived (specs-skills-scrub)
   - T-0253 Within the games domain, retrieval ranks a preset's own composite family first (games-rank-by-family)
   - T-0254 Prompt budget gate measures the persona example shards too (budget-gate-persona-shards)
-  - T-0255 GitHub workflows cut to the CI check; review, regen, deploy and publish run locally (local-first-workflows)
 - claimed: 0
 - paused: 0
 - blocked: 0
-- done: 219
+- done: 220
 - dropped: 4
 
 ## Procedures

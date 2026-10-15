@@ -2,7 +2,7 @@
 id: T-0255
 title: "GitHub workflows cut to the CI check; review, regen, deploy and publish run locally"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -26,3 +26,9 @@ Kim 2026-10-15: remove as much GitHub workflow work as possible, manage it local
 - `ls .github/workflows` shows `ci.yml` and `deploy-docs.yml` only; `deploy-docs.yml` has no `push` trigger.
 - `git grep -nE 'claude-code-review|consumer-smoke|theme-provider-fixture-regen|publish\.yml'` finds no live instruction (history sections and closed tickets allowed).
 - `npm run check` exit 0.
+
+## Outcome
+
+2026-10-15 · lane: full L1 · verdict: closed by reason (Merged in #2018: only ci.yml and a manual deploy-docs remain; verifier L1 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none
