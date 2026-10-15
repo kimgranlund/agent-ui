@@ -23,7 +23,7 @@ Four distinct dealer cards, faceDown true, unchanged until the showdown.
 Sonnet 5.5 Omaha wrote the dealer hand as four identical 2 of clubs (omaha-sonnet-1 turn 1). Haiku 5.5 Omaha wrote four aces of spades, swapped them mid-hand and settled on the swapped cards, then told the player the result "isn't reliable" (omaha-haiku-1 turns 3 to 7, traces :37 to :41). No check fires.
 
 ## Context
-Guess: face-down cards read as decoration to the model, so it writes placeholders and invents the hand at showdown. Proposed check: within one deal every card is distinct (single deck games), and a face-down card's rank and suit never change before it is turned up. Found by T-0184 (`.sdlc/croupier-closed-loop/report.md`); run folders and screenshots under `.sdlc/croupier-closed-loop/runs/` in the T-0184 lane commit; the trace file is git-ignored in the wave-cl worktree.
+Guess: face-down cards read as decoration to the model, so it writes placeholders and invents the hand at showdown. Proposed check: within one deal every card is distinct (single deck games), and a face-down card's rank and suit never change before it is turned up. Found by T-0184 (`.sdlc/evals/rounds/2026-10-14-r1-croupier/report.md`); run folders and screenshots under `.sdlc/evals/rounds/2026-10-14-r1-croupier/runs/` in the T-0184 lane commit; the trace file is git-ignored in the wave-cl worktree.
 
 ## Constraints
 The failing test lands before or with the fix, never after. No em dashes.

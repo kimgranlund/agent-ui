@@ -31,7 +31,7 @@ describe('croupier closed-loop scenarios', () => {
   })
 
   it('live-commands.sh is the generated script', () => {
-    expect(read('.sdlc/croupier-closed-loop/live-commands.sh')).toBe(liveCommandsScript())
+    expect(read('.sdlc/evals/rounds/2026-10-14-r1-croupier/live-commands.sh')).toBe(liveCommandsScript())
   })
 
   it('every game in the game-rules pack has a scenario, and the blackjack family expects CardTable', () => {

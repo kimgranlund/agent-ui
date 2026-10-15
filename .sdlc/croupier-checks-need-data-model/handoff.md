@@ -23,7 +23,7 @@ A 250 deal from a 1,000 bankroll that writes 1,000 is sent back with BANKROLL_MI
 Haiku 5.5 created table-1 with no `sendDataModel`, so the deal action carried no `dataModel`; `before` was undefined and both checks skipped. The table showed 1,000 with 250 on the felt, no retry. Same in blackjack-rounds-haiku-1 (:2). Sonnet always set `sendDataModel` and was caught every time.
 
 ## Context
-`actionApplied` and `settleFinding` read the click-time bankroll from `action.dataModel` only. Guess: fall back to the server's merged view of that surface's data model before the turn, or require `sendDataModel` on a CardTable surface (a validator or semantic finding). Found by T-0184 (`.sdlc/croupier-closed-loop/report.md`); run folders and screenshots under `.sdlc/croupier-closed-loop/runs/` in the T-0184 lane commit; the trace file is git-ignored in the wave-cl worktree.
+`actionApplied` and `settleFinding` read the click-time bankroll from `action.dataModel` only. Guess: fall back to the server's merged view of that surface's data model before the turn, or require `sendDataModel` on a CardTable surface (a validator or semantic finding). Found by T-0184 (`.sdlc/evals/rounds/2026-10-14-r1-croupier/report.md`); run folders and screenshots under `.sdlc/evals/rounds/2026-10-14-r1-croupier/runs/` in the T-0184 lane commit; the trace file is git-ignored in the wave-cl worktree.
 
 ## Constraints
 The failing test lands before or with the fix, never after. No em dashes.

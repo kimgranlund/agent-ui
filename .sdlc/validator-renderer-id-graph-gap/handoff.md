@@ -23,7 +23,7 @@ Turn 3 (Discard and draw) is either repaired on the server or mounts cleanly.
 The renderer answered with two client errors, `VALIDATION_FAILED: id-graph violation: acts->bBet` and `acts->bCheck` (traces :113, :114), for an update the producer had shipped as valid. Again on table-3 (:121, :122). five-card-draw-sonnet-1.
 
 ## Context
-Guess: the server validator checks the turn's components against the turn's own payload, while the renderer checks children against the merged surface after the turn removed `bBet` and `bCheck` but left them in `acts`. Fix owner: the validator spine (`packages/agent-ui/a2ui/src/renderer/validate.ts`) or the semantic surface views. Found by T-0184 (`.sdlc/croupier-closed-loop/report.md`); run folders and screenshots under `.sdlc/croupier-closed-loop/runs/` in the T-0184 lane commit; the trace file is git-ignored in the wave-cl worktree.
+Guess: the server validator checks the turn's components against the turn's own payload, while the renderer checks children against the merged surface after the turn removed `bBet` and `bCheck` but left them in `acts`. Fix owner: the validator spine (`packages/agent-ui/a2ui/src/renderer/validate.ts`) or the semantic surface views. Found by T-0184 (`.sdlc/evals/rounds/2026-10-14-r1-croupier/report.md`); run folders and screenshots under `.sdlc/evals/rounds/2026-10-14-r1-croupier/runs/` in the T-0184 lane commit; the trace file is git-ignored in the wave-cl worktree.
 
 ## Constraints
 The failing test lands before or with the fix, never after. No em dashes.

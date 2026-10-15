@@ -1,5 +1,5 @@
 // scripts/e2e-admin/probe/scenarios/round.ts: live round 2 (T-0225). Every preset's scenarios x its models,
-// sample 1, as one `live-commands.sh` in `.sdlc/live-round-2/`: Croupier on Haiku, Sonnet and Opus 5.5, the
+// sample 1, as one `live-commands.sh` in `.sdlc/evals/rounds/2026-10-15-r2-presets/`: Croupier on Haiku, Sonnet and Opus 5.5, the
 // Concierge, Lexicographer and Admiral on Haiku and Sonnet 5.5. The file runs Haiku first, then Sonnet, then
 // Opus, so a stop at the spend cap (`../run-capped.ts`) leaves the cheap cells filled. `round.test.mjs` pins
 // the file to this generator.
@@ -42,7 +42,7 @@ export const ROUND_PRESETS: readonly RoundPreset[] = [
 /** Spend order: the round's script runs every Haiku cell, then Sonnet, then Opus. */
 export const MODEL_ORDER = ['haiku', 'sonnet', 'opus'] as const
 export const ROUND_SAMPLE = 1
-export const ROUND_RUNS_DIR = '.sdlc/live-round-2/runs'
+export const ROUND_RUNS_DIR = '.sdlc/evals/rounds/2026-10-15-r2-presets/runs'
 
 /** The probe argv for one preset x scenario x model; out dir `runs/<preset>-<scenario>-<model>-<sample>`. */
 export function roundArgv(agent: string, scenario: RoundScenario, model: RoundModel, sample = ROUND_SAMPLE): string[] {
@@ -64,7 +64,7 @@ export function roundRuns(): Array<{ agent: string; scenario: RoundScenario; mod
   )
 }
 
-/** `.sdlc/live-round-2/live-commands.sh`. */
+/** `.sdlc/evals/rounds/2026-10-15-r2-presets/live-commands.sh`. */
 export function roundCommandsScript(): string {
   const lines = [
     '#!/usr/bin/env bash',
@@ -72,7 +72,7 @@ export function roundCommandsScript(): string {
     '# `node --experimental-strip-types scripts/e2e-admin/probe/scenarios/round.ts`; do not hand-edit.',
     '# Spends API credit through the dev proxy (key in .env, never printed). Cap: $20 in total (Kim 2026-10-14).',
     '# Run it through the capped runner, which stops at the cap and skips a run whose report.json exists:',
-    '#   node --experimental-strip-types scripts/e2e-admin/probe/run-capped.ts .sdlc/live-round-2/live-commands.sh --cap 20',
+    '#   node --experimental-strip-types scripts/e2e-admin/probe/run-capped.ts .sdlc/evals/rounds/2026-10-15-r2-presets/live-commands.sh --cap 20',
     '# Haiku 5.5 first, then Sonnet 5.5, then Opus 5.5 (Croupier only); sample 1. A probe exits 1 when a check fails.',
   ]
   let current = ''

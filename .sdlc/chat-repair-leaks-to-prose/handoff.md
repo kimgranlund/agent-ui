@@ -14,7 +14,7 @@ router: .sdlc/AGENTS.md  # how to claim and close this ticket
 The player never sees a repair round or an internal id in the Croupier's reply.
 
 ## Repro
-1. Read turn 2 of `.sdlc/croupier-closed-loop/runs/blackjack-moves-sonnet-1/report.json`, or `npx vitest run scripts/e2e-admin/probe/replays/croupier-first-deal-debit.test.mjs`.
+1. Read turn 2 of `.sdlc/evals/rounds/2026-10-14-r1-croupier/runs/blackjack-moves-sonnet-1/report.json`, or `npx vitest run scripts/e2e-admin/probe/replays/croupier-first-deal-debit.test.mjs`.
 
 ## Expected
 "Bet of 250 is down, leaving 750."
@@ -23,7 +23,7 @@ The player never sees a repair round or an internal id in the Croupier's reply.
 After a repair round the reply opens "Corrected: the 250 bet is now taken out of your bankroll" (blackjack-moves-sonnet :65, blackjack-rounds-sonnet :55, spanish-21 haiku :19 and sonnet :75, pontoon-sonnet :85). Haiku also said "Table-3 is open" (blackjack-moves-haiku-1 turn 8, :12), naming the surface id.
 
 ## Context
-Guess: the repair message invites a correction note, and the reply of the repaired round replaces the first one. Proposed: the repair prompt says the player never saw the rejected round; a probe check for `Corrected:` and `table-\d` / `ask-\d` in chat prose. Found by T-0184 (`.sdlc/croupier-closed-loop/report.md`); run folders and screenshots under `.sdlc/croupier-closed-loop/runs/` in the T-0184 lane commit; the trace file is git-ignored in the wave-cl worktree.
+Guess: the repair message invites a correction note, and the reply of the repaired round replaces the first one. Proposed: the repair prompt says the player never saw the rejected round; a probe check for `Corrected:` and `table-\d` / `ask-\d` in chat prose. Found by T-0184 (`.sdlc/evals/rounds/2026-10-14-r1-croupier/report.md`); run folders and screenshots under `.sdlc/evals/rounds/2026-10-14-r1-croupier/runs/` in the T-0184 lane commit; the trace file is git-ignored in the wave-cl worktree.
 
 ## Constraints
 The failing test lands before or with the fix, never after. No em dashes.

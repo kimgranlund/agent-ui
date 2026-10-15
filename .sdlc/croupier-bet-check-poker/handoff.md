@@ -23,7 +23,7 @@ A seven-card stud opening with a stake Slider and a Deal Button ships on round 1
 Round 1 (ask-1) and round 2 were sent back with BET_TABLE_MISSING; the model gave up and re-issued the bet as ask-2. The probe failed `no-surface-loss` (ask-1 created, never shipped). Run seven-card-stud-haiku-1 turn 1.
 
 ## Context
-`betStepWithoutTable` in `packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.ts` judges any surface with a bet input or a Deal Button and no PlayingCard, whatever the game; its own message says "A game other than blackjack keeps its Card". Guess: it needs the game (the table title, the turn's game-rules resource, or the absence of blackjack words) before it fires. Two wasted repair rounds per poker opening. Found by T-0184 (`.sdlc/croupier-closed-loop/report.md`); run folders and screenshots under `.sdlc/croupier-closed-loop/runs/` in the T-0184 lane commit; the trace file is git-ignored in the wave-cl worktree.
+`betStepWithoutTable` in `packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.ts` judges any surface with a bet input or a Deal Button and no PlayingCard, whatever the game; its own message says "A game other than blackjack keeps its Card". Guess: it needs the game (the table title, the turn's game-rules resource, or the absence of blackjack words) before it fires. Two wasted repair rounds per poker opening. Found by T-0184 (`.sdlc/evals/rounds/2026-10-14-r1-croupier/report.md`); run folders and screenshots under `.sdlc/evals/rounds/2026-10-14-r1-croupier/runs/` in the T-0184 lane commit; the trace file is git-ignored in the wave-cl worktree.
 
 ## Constraints
 The failing test lands before or with the fix, never after. No em dashes.
