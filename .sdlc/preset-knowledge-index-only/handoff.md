@@ -7,6 +7,8 @@ size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
 created: 2026-10-15
+branch: fix/lane-h-agent-behavior
+worktree: .claude/worktrees/wave-lh
 router: .sdlc/AGENTS.md  # how to claim and close this ticket
 ---
 
@@ -33,3 +35,11 @@ The prompt budget (`src/agent/prompt-budget.ts`) is never raised just to get gre
 - A decision line in this ticket naming the option taken.
 - A unit test on the composed concierge prompt shows the pool, gym and spa hours present without a tag.
 - `npm run check` exits 0.
+
+## Lane bundle
+This solo lane delivers these tickets in order, one commit each, then one batched verifier checks all of them. Each fix is a check or data rule that bites (prose alone does not steer, T-0208), proven by a keyless replay or test that fails before it:
+- .sdlc/preset-knowledge-index-only/handoff.md
+- .sdlc/croupier-opening-skips-bet/handoff.md
+- .sdlc/croupier-playing-table-no-moves/handoff.md
+- .sdlc/croupier-haiku-state-in-prose/handoff.md
+- .sdlc/narrated-surface-mechanics/handoff.md
