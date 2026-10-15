@@ -27,3 +27,8 @@ This is a guidance conflict, not a routing or model gap. Related: T-0197 (Bookin
 
 ## Ruling (Kim, 2026-10-15)
 When a booking ask already carries every detail, Concierge shows the BookingForm composite pre-filled for the guest to confirm, never a read-back Card. Change the booking-flow playbook to match the composite catalog, and have the composite-moment check enforce it.
+
+## Lane bundle
+This solo lane delivers these tickets in order, one commit each:
+- .sdlc/tickets/0266-concierge-booking-guidance-conflict/handoff.md
+- .sdlc/tickets/0267-concierge-no-spa-menu/handoff.md
