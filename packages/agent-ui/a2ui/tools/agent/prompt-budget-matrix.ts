@@ -21,7 +21,7 @@ export type BudgetArgs = Parameters<typeof buildSystemPrompt>
 
 export const MODES: readonly GenUiMode[] = ['default', 'specific', 'blue-sky']
 /** The runaway-guard caps the two proxies apply (`tools/agent/chat-validation.ts`, `dev-proxy-plugin.ts`): a
- *  longer `personaSystem` is dropped, never truncated. */
+ *  longer `personaSystem` is a 400 (`validatePersonaSystem`, T-0224), never truncated. */
 export const SOURCE_BODY_CAP = 16_384
 export const PERSONA_SYSTEM_CAP = 16_384
 

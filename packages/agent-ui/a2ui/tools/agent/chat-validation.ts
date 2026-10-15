@@ -138,6 +138,17 @@ export function validateResponsePreference(v: unknown): ResponsePreference | und
   return typeof v === 'string' && (RESPONSE_PREFERENCES as readonly string[]).includes(v) ? (v as ResponsePreference) : undefined
 }
 
+/** ADR-0138 cl.3: the persona section's runaway cap, in characters (the composed admin persona is a few KB). */
+export const PERSONA_SYSTEM_MAX_CHARS = 16_384
+
+/** T-0224: the persona section the produce routes forward. A non-string is absent, as before; a string over
+ *  the cap is a loud 400 with a dev reason (it was dropped silently, so the turn ran without the persona). */
+export function validatePersonaSystem(v: unknown): { ok: true; persona: string | undefined } | { ok: false; error: string } {
+  if (typeof v !== 'string') return { ok: true, persona: undefined }
+  if (v.length > PERSONA_SYSTEM_MAX_CHARS) return { ok: false, error: `persona-too-long: ${v.length} characters, the limit is ${PERSONA_SYSTEM_MAX_CHARS}` }
+  return { ok: true, persona: v }
+}
+
 /** S1 (ADR-0169 cl.3) — fail-closed catalog selection, moved to `src/renderer/wire-tolerances.ts`
  *  (GH #484 move phase — the wire-tolerance registry). Re-exported here UNCHANGED so `dev-proxy-
  *  plugin.ts`/`worker/index.ts`'s existing `import { selectCatalog } from './chat-validation.ts'`

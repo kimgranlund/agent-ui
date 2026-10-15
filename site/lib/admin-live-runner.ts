@@ -264,7 +264,15 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
       signal: AbortSignal.timeout(TIMEOUT_MS),
     })
     if (!res.ok || res.body === null) {
-      throw new Error(`Live agent proxy error (${res.status} ${res.statusText}).`)
+      // T-0224: the proxy's own {error} reason (persona-too-long, no-key, a bad pair) reaches the chat.
+      let detail = `${res.status} ${res.statusText}`
+      try {
+        const body = (await res.json()) as { error?: unknown }
+        if (typeof body.error === 'string' && body.error.length > 0) detail = `${res.status} ${body.error}`
+      } catch {
+        /* non-JSON or absent body — keep the status line */
+      }
+      throw new Error(`Live agent proxy error (${detail}).`)
     }
     const turnLines: string[] = []
     let note: string | undefined

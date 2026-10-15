@@ -92,6 +92,7 @@ import {
   validateBuilderMission,
   validateEffort,
   validateResponsePreference,
+  validatePersonaSystem,
   isChatBody,
   resolveChatDispatch,
   selectCatalog,
@@ -501,6 +502,14 @@ export function a2uiDevProxyPlugin(opts?: {
                 rejectTurn(503, dispatch.reason)
                 return
               }
+              // ADR-0138 cl.3 — the optional persona section: a string up to the runaway cap, forwarded
+              // verbatim; anything else ⇒ absent. T-0224: an over-cap persona is a loud 400 with a trace line.
+              const personaCheck = validatePersonaSystem(personaSystem)
+              if (!personaCheck.ok) {
+                rejectTurn(400, personaCheck.error)
+                return
+              }
+              const persona = personaCheck.persona
               res.statusCode = 200
               res.setHeader('content-type', 'application/x-ndjson')
               // ADR-0169 cl.3 — select the request's catalog (fail-closed to the default on a non-string/
@@ -521,9 +530,6 @@ export function a2uiDevProxyPlugin(opts?: {
               // it overrides any client-supplied input.model, so a crafted body cannot escape the PAIR check (SPEC-R12).
               // `mode` is the membership-VALIDATED GenUiMode (ADR-0090 §4) — an unrecognized/absent value comes
               // back `undefined`, which `produce()`/`buildSystemPrompt` already treat as the default disposition.
-              // ADR-0138 cl.3 — the optional persona section: string, length-capped (16 KB — a runaway
-              // guard; the composed admin persona is ~1-2 KB), forwarded verbatim; anything else ⇒ absent.
-              const persona = typeof personaSystem === 'string' && personaSystem.length <= 16_384 ? personaSystem : undefined
               trace.noteRouting(selectedCatalog.catalogId, persona, input?.session?.turns ?? []) // T-0239: names and kinds only, never content
               // GH #49 — the browser forwards ENABLED tool-entry labels; only registry matches survive
               // (resolveIntegrations validates + intersects, malformed ⇒ empty). Execution stays HERE in

@@ -243,6 +243,18 @@ describe('createAdminSurfaceTurn', () => {
       })(),
     ).rejects.toThrow(/503/)
   })
+
+  it("a 4xx names the proxy's reason in the error the chat shows (T-0224)", async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ error: 'persona-too-long: 16385 characters, the limit is 16384' }), { status: 400 })))
+    const runner = createAdminSurfaceTurn()
+    await expect(
+      (async () => {
+        for await (const _event of runner(SURFACE_REQUEST)) {
+          /* drain */
+        }
+      })(),
+    ).rejects.toThrow('Live agent proxy error (400 persona-too-long: 16385 characters, the limit is 16384).')
+  })
 })
 
 // genui-surface.spec.md SPEC-R1/R10/R11 (B2) — the runner threads `req.genui` into the POST body and maps
