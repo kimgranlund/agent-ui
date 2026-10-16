@@ -114,6 +114,10 @@ export interface ProviderEvent {
    *  call's result is in hand (`text` is the tool name); `tool_submitted` fires when that result is placed in the
    *  next upstream request. The dev trace log records both ids so a result that never reached the model shows. */
   ok?: boolean
+  /** T-0311, `done`: why the upstream request stopped (`end_turn`, `tool_use`, `max_tokens`, ...), when the stream said. */
+  stopReason?: string
+  /** T-0311, `done`: the request's `max_tokens` cap. */
+  maxTokens?: number
 }
 
 // ── Tool use (GH #49) — the integration seam ────────────────────────────────────────────────────────────

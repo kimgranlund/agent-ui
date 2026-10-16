@@ -179,6 +179,33 @@ describe('anthropicProvider usage events (mocked fetch, ADR-0234)', () => {
   })
 })
 
+// T-0311 (P3, P7): each upstream request's `done` event carries the request's `max_tokens` and the stop reason the
+// stream reported, on the text-only path and in the tool loop, so the dev trace can record why a round stopped.
+describe('anthropicProvider done events carry stopReason and maxTokens (mocked fetch, T-0311)', () => {
+  const doneEvents = (events: ProviderEvent[]): ProviderEvent[] => events.filter((e) => e.kind === 'done')
+
+  it('the text-only path: one done event with the stop reason and the body max_tokens', async () => {
+    const atCap = messageStart({ input_tokens: 10, output_tokens: 1 }) + textDelta('cut') + messageDelta('max_tokens', { output_tokens: 3072 }) + STOP
+    const bodies: Array<Record<string, unknown>> = []
+    vi.stubGlobal('fetch', vi.fn(async (_url: string, init: { body: string }) => (bodies.push(JSON.parse(init.body) as Record<string, unknown>), sseResponse(atCap))))
+    const events: ProviderEvent[] = []
+    const provider = anthropicProvider({ apiKey: 'test-key' })
+    for await (const _ of provider.stream({ model: 'claude-sonnet-5-5', system: 's', messages: [{ role: 'user', content: 'hi' }], effort: 'high', onEvent: (e) => events.push(e) })) void _
+    expect(doneEvents(events)).toEqual([{ kind: 'done', stopReason: 'max_tokens', maxTokens: bodies[0]!['max_tokens'] }])
+    expect(typeof bodies[0]!['max_tokens']).toBe('number')
+  })
+
+  it('the tool loop: one done event per request, each with its own stop reason', async () => {
+    let call = 0
+    vi.stubGlobal('fetch', vi.fn(async () => sseResponse(++call === 1 ? TOOL_ROUND : FINAL_ROUND)))
+    const events: ProviderEvent[] = []
+    const provider = anthropicProvider({ apiKey: 'test-key' })
+    for await (const _ of provider.stream({ model: 'claude-sonnet-4-5', system: 's', messages: [{ role: 'user', content: 'weather?' }], tools: TOOLS, executeTool: async () => 'rain', onEvent: (e) => events.push(e) })) void _
+    expect(doneEvents(events).map((e) => e.stopReason)).toEqual(['tool_use', 'end_turn'])
+    expect(doneEvents(events).every((e) => e.maxTokens === 4096)).toBe(true)
+  })
+})
+
 const NOTE = '{"a2uiMeta":{"note":"here you go"}}\n'
 // An UNKNOWN component: CATALOG-invalid, so produce() self-corrects into a second request.
 const INVALID =

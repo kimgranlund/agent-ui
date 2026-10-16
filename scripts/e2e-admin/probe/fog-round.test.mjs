@@ -16,7 +16,7 @@ const FINAL = '{"a2uiMeta":{"note":"ok","trace":{"turnIndex":0,"query":{"intent"
 
 let clock = Date.parse('2026-10-15T12:00:00Z')
 /** One produce turn as the dev proxy writes it: context ids from produce(), tool events from the adapter. */
-async function turn({ runId = 'run-1', retrieved, framed, tool, finish = true }) {
+async function turn({ runId = 'run-1', retrieved, framed, tool, finish = true, stop }) {
   clock += 1000
   const t = new TurnTraceCollector({ route: 'produce', provider: 'anthropic', model: 'm', user: 'u', ...(runId ? { runId } : {}) }, () => clock)
   t.onContext({ retrievedIds: retrieved, framedIds: framed })
@@ -25,6 +25,10 @@ async function turn({ runId = 'run-1', retrieved, framed, tool, finish = true })
       if (tool) {
         req.onEvent?.({ kind: 'tool_result', id: tool.id, text: 'weather', ok: true })
         if (tool.submit) req.onEvent?.({ kind: 'tool_submitted', id: tool.id })
+      }
+      if (stop) {
+        req.onEvent?.({ kind: 'usage', usage: { inputTokens: 10, outputTokens: stop.outputTokens } })
+        req.onEvent?.({ kind: 'done', stopReason: stop.reason, maxTokens: stop.maxTokens })
       }
       yield 'x'
     },
@@ -47,6 +51,11 @@ function ingest(dir) {
 }
 
 describe('trace events (T-0259)', () => {
+  it('a round carries its request id, run id, max_tokens and stop reason (T-0311)', async () => {
+    const line = JSON.parse(await turn({ runId: 'r-3', retrieved: [], framed: [], stop: { reason: 'end_turn', maxTokens: 5376, outputTokens: 12 } }))
+    expect(line.rounds[0]).toMatchObject({ requestId: `${line.at}#1`, runId: 'r-3', stopReason: 'end_turn', maxTokens: 5376, usage: { outputTokens: 12 } })
+  })
+
   it('a turn records retrieved vs framed ids and each tool result with whether it was submitted', async () => {
     const line = JSON.parse(await turn({ runId: 'r-9', retrieved: ['e1', 'e2'], framed: ['e1'], tool: { id: 'toolu_1', submit: false } }))
     expect(line.events).toEqual({
@@ -96,6 +105,18 @@ describe.skipIf(!existsSync(SKILL))('fog detectors assess a round (T-0259)', () 
     expect(coverage(r.out, 'tool-result-not-propagated')).toEqual({ status: 'assessed-no-signal', pairs: 1, signals: 0 })
     // One conversation per run: the two turns carry two run ids.
     expect(new Set(r.session.bundle.records.map((x) => x.normalized.conversationId))).toEqual(new Set(['run-1', 'run-2']))
+  })
+
+  // T-0311: each trace round is one model_request (its own requestId, the line's runId), carrying the request's
+  // max_tokens, its output tokens and the stop reason, the fields the skill's stop-at-cap detector reads.
+  it('maps each round to a model_request with maxTokens, outputTokens and stopReason (T-0311)', async () => {
+    const dir = round([await turn({ retrieved: ['e1'], framed: ['e1'], stop: { reason: 'max_tokens', maxTokens: 4096, outputTokens: 4096 } })])
+    const r = ingest(dir)
+    expect(r.status).toBe(0)
+    const perRound = r.session.bundle.records.map((x) => x.normalized).filter((n) => n.eventType === 'model_request' && n.maxTokens !== undefined)
+    expect(perRound).toHaveLength(1)
+    expect(perRound[0]).toMatchObject({ conversationId: 'run-1', maxTokens: 4096, outputTokens: 4096, stopReason: 'max_tokens', attempt: 1 })
+    expect(perRound[0].requestId).toMatch(/#1$/)
   })
 
   it('a turn that never finished declares no completeness, an empty retrieval is excluded, a line with no runId is not grouped', async () => {

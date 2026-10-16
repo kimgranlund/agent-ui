@@ -99,6 +99,8 @@ function blockFor<T extends 'thinking' | 'text'>(
  *  `message_start` or `message_delta` frame carries a usage object. PURE state, fixture-testable. */
 export interface UsageCollector {
   usage: Partial<TokenUsage> | undefined
+  /** T-0311: the request's `message_delta.stop_reason`, kept for the `done` event `stream()` emits. */
+  stopReason?: string
 }
 
 export function newUsageCollector(): UsageCollector {
@@ -257,6 +259,7 @@ export function* parseAnthropicSSE(
       if (tools || usage) {
         const parsedDelta = safeJson(frame.data) as { delta?: { stop_reason?: unknown }; usage?: unknown } | null
         if (tools && typeof parsedDelta?.delta?.stop_reason === 'string') tools.stopReason = parsedDelta.delta.stop_reason
+        if (usage && typeof parsedDelta?.delta?.stop_reason === 'string') usage.stopReason = parsedDelta.delta.stop_reason // T-0311
         if (usage) mergeUsage(usage, parsedDelta?.usage)
       }
       continue
@@ -413,9 +416,10 @@ const rejectsForcedToolChoice = (model: string): boolean => {
 const isHaiku55 = (model: string): boolean => /haiku-5-5/.test(model)
 
 /** T-0035: Haiku 5.5's tokenizer emits ~30% more tokens for the same text, so its max_tokens tiers
- *  (default/medium/high/xhigh) are scaled ~30% over the 4096/3072/4096/6144 the other models keep.
- *  Each stays strictly above any thinking budget (adaptive here sends none). */
-const HAIKU_55_MAX_TOKENS = { default: 5376, medium: 4096, high: 5376, xhigh: 8192 } as const
+ *  (default/medium/high/xhigh) are scaled ~30% over the 4096/4096/4096/6144 the other models keep.
+ *  T-0311: medium is floored at the default (it was 4096 against 5376; adaptive thinking and the payload share the cap,
+ *  and live rounds stopped at it). */
+const HAIKU_55_MAX_TOKENS = { default: 5376, medium: 5376, high: 5376, xhigh: 8192 } as const
 
 /** The Anthropic Messages-API request BODY, PURE (SPEC-R11 AC3, fixture-tested — the `parseAnthropicSSE`
  *  precedent, this file's OTHER extracted-for-testability seam): `effort` → thinking/effort params, with
@@ -520,11 +524,12 @@ function buildArmBody(req: {
     }
   }
   // Current-family arm (Fable 5 / Sonnet 5.5 / Opus 4.8+ / Haiku 5.5): the thinking field + the effort dial.
-  // budget_tokens returns a 400 here (TKT-0075); adaptive is legal on all of them. max_tokens keeps the
-  // legacy arm's headroom at the equivalent tier, Haiku 5.5 its ~30% scaled tier (T-0035).
+  // budget_tokens returns a 400 here (TKT-0075); adaptive is legal on all of them. max_tokens is the legacy arm's tier
+  // floored at the unset cap (T-0311: these models send no budget, so adaptive thinking and the payload share the cap,
+  // and medium's 3072 capped below unset), Haiku 5.5 its ~30% scaled tier (T-0035).
   return {
     ...base,
-    max_tokens: maxTokens(isHaiku55(req.model) ? HAIKU_55_MAX_TOKENS[req.effort] : THINKING_BUDGET[req.effort] + REPLY_HEADROOM),
+    max_tokens: maxTokens(isHaiku55(req.model) ? HAIKU_55_MAX_TOKENS[req.effort] : Math.max(MAX_TOKENS, THINKING_BUDGET[req.effort] + REPLY_HEADROOM)),
     thinking: thinkingField(),
     output_config: { effort: req.effort },
   }
@@ -772,6 +777,18 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string; wor
     // resolution and the res.ok check, so a retried request never double-reports), shared by the main
     // parse loop and the trailing flush: each request, and so each tool-loop round, reports once.
     const usage = newUsageCollector()
+    // T-0311: the request's `done` event carries its stop reason and `max_tokens`, so the dev trace records why a round
+    // stopped and against which cap. The pure parser's events are unchanged; only this request-aware wrapper adds them.
+    const maxTokens = typeof body['max_tokens'] === 'number' ? body['max_tokens'] : undefined
+    const requestEvent =
+      onEvent === undefined
+        ? undefined
+        : (ev: ProviderEvent): void =>
+            onEvent(
+              ev.kind === 'done'
+                ? { ...ev, ...(usage.stopReason !== undefined ? { stopReason: usage.stopReason } : {}), ...(maxTokens !== undefined ? { maxTokens } : {}) }
+                : ev,
+            )
     const reader = res.body.getReader()
     const decoder = new TextDecoder()
     let buffer = ''
@@ -802,7 +819,7 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string; wor
         if (lastBoundary === -1) continue
         const complete = buffer.slice(0, lastBoundary)
         buffer = buffer.slice(lastBoundary + 2)
-        for (const fragment of parseAnthropicSSE(complete, onEvent, collector, usage)) {
+        for (const fragment of parseAnthropicSSE(complete, requestEvent, collector, usage)) {
           if (fragment.startsWith(ANTHROPIC_SSE_ERROR_PREFIX)) {
             throw new Error(`anthropicProvider: upstream error event — ${fragment.slice(ANTHROPIC_SSE_ERROR_PREFIX.length)}`)
           }
@@ -812,7 +829,7 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string; wor
 
       // Flush any trailing complete-but-unterminated buffer (a stream that ends without a final blank line).
       if (buffer.trim().length > 0) {
-        for (const fragment of parseAnthropicSSE(buffer, onEvent, collector, usage)) {
+        for (const fragment of parseAnthropicSSE(buffer, requestEvent, collector, usage)) {
           if (fragment.startsWith(ANTHROPIC_SSE_ERROR_PREFIX)) {
             throw new Error(`anthropicProvider: upstream error event — ${fragment.slice(ANTHROPIC_SSE_ERROR_PREFIX.length)}`)
           }

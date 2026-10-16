@@ -10,7 +10,7 @@ Mapping (the skill's references/hydration.md and session.schema.json, read and n
   - each trace line is one event (`message`), its evidence the raw line, in file order;
   - every part the turn's context loaded is a source with a `read` exposure and a `contextRecords` row
     `included`: the system-prompt sections (`routing.sections`, else the whole prompt from `promptChars` on a
-    line older than T-0239), the exemplars, the mini-skills, the persona catalog and each entry framed whole
+    line older than T-0239; a section's T-0311 `digest` names its text in the prompt store), the exemplars, the mini-skills, the persona catalog and each entry framed whole
     into a user message (`load: full`);
   - an entry the persona section carries only as an index line (`load: index-only`) is a `discovered`
     exposure and a `candidates` row `available`;
@@ -129,7 +129,9 @@ class Builder:
         if sections:
             for s in sections:
                 sid = self.source(f"section:{s['id']}", f"system-prompt/{s['id']}")
-                self.loaded(event, sid, f"routing.sections ({s['chars']} chars, {s['cache']})", dumps({'id': s['id'], 'chars': s['chars'], 'cache': s['cache']}), dumps(s['id']))
+                # T-0311: a digest names the section's text in the prompt store beside the trace file.
+                stored = f", text in prompts/{s['digest']}.txt" if s.get('digest') else ''
+                self.loaded(event, sid, f"routing.sections ({s['chars']} chars, {s['cache']}{stored})", dumps(s), dumps({'id': s['id'], 'chars': s['chars'], 'cache': s['cache']}), dumps(s['id']))
         elif 'promptChars' in trace:
             sid = self.source('section:system-prompt', 'system-prompt')
             self.loaded(event, sid, f"trace.promptChars ({trace['promptChars']} chars)", f'"promptChars":{trace["promptChars"]}')
@@ -296,6 +298,15 @@ def selftest() -> int:
             ev = data['events'][int(c['eventId'][1:])]
             check(c['evidence']['excerpt'] in ev['evidence']['text'], f'{coll} excerpt quotes its event')
     check(any('older than T-0239' in w for w in data['coverage']['warnings']), 'older line warned')
+    digested = dict(routed, routing=dict(routed['routing'], sections=[{'id': 'grammar', 'chars': 20, 'cache': 'stable', 'digest': '0123456789abcdef'}]))
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, 't.jsonl')
+        with open(path, 'w', encoding='utf-8') as fh:
+            fh.write(dumps(digested) + '\n')
+        dg = hydrate(path, REPO_ROOT)
+    grammar = [x for x in dg['events'][0]['exposures'] if x['sourceId'] == 'section:grammar']
+    check(len(grammar) == 1 and 'prompts/0123456789abcdef.txt' in grammar[0]['basis'], 'a section digest names its prompt-store file (T-0311)')
+    check(any(c['sourceId'] == 'section:grammar' and '"digest":"0123456789abcdef"' in c['evidence']['excerpt'] for c in dg['contextRecords']), 'the section record quotes its digest (T-0311)')
     for f in failures:
         print(f'FAIL {f}', file=sys.stderr)
     print('agent-traces-to-fog selftest: ' + ('FAIL' if failures else 'ALL PASS'), file=sys.stderr)

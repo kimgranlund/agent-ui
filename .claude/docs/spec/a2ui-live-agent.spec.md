@@ -1431,8 +1431,13 @@ rejected`, and on failure the upstream status and body. *(→ PRD-G1, PRD-G6; T-
   torn last line (a crash mid-append) is skipped by readers, never fatal.
 - **AC2** *(redaction)* A line is serialized through `redactSecrets`, which replaces every configured
   provider key by value and then key-shaped strings by pattern with `[redacted]`. The composed system prompt
-  is not recorded, and `dispatch` objects (which carry `apiKey`) never reach the collector. Raw text fields
+  is not on the line, and `dispatch` objects (which carry `apiKey`) never reach the collector. Raw text fields
   are capped (`TRACE_TEXT_CAP`). The log still holds user and model text, which is why it is git-ignored.
+  REV 2026-10-16, T-0311 (Kim's P7 ruling): the prompt text is kept beside the log in a content-addressed store,
+  `.agent-traces/prompts/<digest>.txt`, one file per distinct text, redacted the same way before it is digested
+  (no configured key value is stored); the line carries the digests (`routing.sections[].digest`,
+  `rounds[].userDigest`). Each round also records its request's `maxTokens` and `stopReason`, a `requestId`
+  (`<at>#<round>`) and the `runId`.
 - **AC3** *(dev-only fence)* The writer is Node-only (`node:fs`) and lives in `tools/agent/trace-log.ts`,
   imported by the dev proxy plugin alone. That plugin is `apply: 'serve'`, so `vite build` never runs it,
   and the Cloudflare Worker never imports the module. The log is on by default under `vite dev`;

@@ -236,7 +236,9 @@ export function a2uiDevProxyPlugin(opts?: {
   // T-0151: one trace line per turn, written at the turn's end whatever the outcome.
   // Every turn gets a collector (it also feeds the dev build's retry details); the flag gates only the file.
   const writeTrace = (trace: TurnTraceCollector): void => {
-    if (traceDir !== undefined) appendTraceLine(traceDir, trace.finish(), secretValues(env))
+    if (traceDir === undefined) return
+    const secrets = secretValues(env)
+    appendTraceLine(traceDir, trace.finish(secrets), secrets, trace.promptFiles())
   }
   // T-0151: the dev build names the real failure after the generic line ("upstream 401: invalid x-api-key"),
   // redacted. Production keeps the generic text: the Worker answers with `failureMessageFor` alone.

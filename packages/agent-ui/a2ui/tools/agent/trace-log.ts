@@ -16,8 +16,14 @@
 // Dev only. The dev proxy is `apply: 'serve'`, so `vite build` never runs it, and the Cloudflare Worker
 // never imports this module (it is Node-only: `node:fs`). Keys are never written: the line is serialized
 // through `redactSecrets`, which replaces every configured provider key by value and then key-shaped
-// strings by pattern. The system prompt is not recorded; `dispatch` objects (which carry `apiKey`) never
-// reach the collector.
+// strings by pattern. `dispatch` objects (which carry `apiKey`) never reach the collector.
+//
+// The prompt store (T-0311, Kim 2026-10-16, P7; it reverses the old "the system prompt is not recorded"): each
+// composed system-prompt section and each round's last message are stored once, redacted the same way, as
+// `prompts/<digest>.txt` beside the day files (git-ignored with them), and the line carries only the digests
+// (`routing.sections[].digest`, `rounds[].userDigest`). The digest is of the stored, redacted bytes. Each round also
+// records its request's `max_tokens` and the stop reason (T-0311, P3), with a per-round `requestId` and the `runId` so
+// the fog bundle mapping reads one model_request per round.
 //
 // The vocabulary is the devtools one where it fits (ADR-0200): meta-lines are read with the a2ui guard
 // `readMetaLine` (never a second parser), the outcome uses `TurnEndStatus`'s `ok | error | halt` plus the
@@ -27,7 +33,8 @@
 // Pure parts (the collector, redaction, the upstream-error reader) are separate from the one fs sink
 // (`appendTraceLine`) so the unit test needs no filesystem for the line shape.
 
-import { appendFileSync, mkdirSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { readMetaLine } from '../../src/agent/meta-line.ts'
 import { heal } from '../../src/corpus/heal.ts'
@@ -98,6 +105,10 @@ export interface TraceRetry {
 /** One provider call: the raw text the model streamed, the tool calls it made, and what it cost. */
 export interface TraceRound {
   round: number
+  /** T-0311: `<line at>#<round>`, unique per round, the fog bundle mapping's per-round model_request id. */
+  requestId: string
+  /** T-0311: the line's `runId`, repeated because the mapping reads a round on its own. */
+  runId?: string
   ms: number
   text: string
   tools: Array<{ name: string; input: unknown }>
@@ -113,6 +124,12 @@ export interface TraceRound {
   /** Thinking the provider streamed this round: how many deltas, and how many characters of text they
    *  carried. Deltas with zero characters mean the model thought but the API returned no thinking text. */
   thinking?: { deltas: number; chars: number }
+  /** T-0311: why the round's (last) upstream request stopped, from the adapter's `done` event. */
+  stopReason?: string
+  /** T-0311: the request's `max_tokens`, from the same event. */
+  maxTokens?: number
+  /** T-0311: the prompt-store digest of the round's last message (the user turn, or the repair it carried). */
+  userDigest?: string
 }
 
 export interface TraceSurface {
@@ -152,6 +169,8 @@ export interface TraceSection {
   id: string
   chars: number
   cache: 'stable' | 'volatile'
+  /** T-0311: the prompt-store digest of the section's redacted text (`prompts/<digest>.txt`). */
+  digest?: string
 }
 
 /** T-0239: how the turn's context was routed. The catalog and references are known before the model call,
@@ -212,6 +231,14 @@ export interface AgentTraceLine {
   reply?: string
   warnings: string[]
   error?: TraceError
+}
+
+/** T-0311: the prompt store's folder inside the trace dir. */
+export const PROMPT_STORE_DIR = 'prompts'
+
+/** T-0311: the content address of one stored prompt text (sha256, first 16 hex digits). */
+export function promptDigest(text: string): string {
+  return createHash('sha256').update(text).digest('hex').slice(0, 16)
 }
 
 /** Per-field cap for raw text (a round's output, the reply, the user message): generous, never unbounded. */
@@ -478,6 +505,9 @@ export class TurnTraceCollector {
   #context: { retrievedIds: string[]; framedIds: string[] } | undefined
   #toolResults = new Map<string, boolean>()
   #submitted = new Set<string>()
+  #system: string | undefined
+  #roundUser: Array<string | undefined> = []
+  #promptFiles = new Map<string, string>()
 
   constructor(start: TurnTraceStart, now: () => number = Date.now) {
     this.#start = start
@@ -495,11 +525,20 @@ export class TurnTraceCollector {
   }
 
   async *#teeStream(provider: AgentProvider, req: Parameters<AgentProvider['stream']>[0]): AsyncIterable<string> {
-    const round: TraceRound = { round: this.#rounds.length + 1, ms: 0, text: '', tools: [] }
+    const n = this.#rounds.length + 1
+    const runId = this.#start.runId
+    const round: TraceRound = { round: n, requestId: `${this.#at}#${n}`, ...(runId !== undefined ? { runId } : {}), ms: 0, text: '', tools: [] }
     this.#rounds.push(round)
+    this.#system ??= req.system
+    const last = req.messages.at(-1)?.content
+    this.#roundUser.push(last === undefined ? undefined : typeof last === 'string' ? last : JSON.stringify(last))
     const started = this.#now()
     const onEvent = (ev: ProviderEvent): void => {
       if (ev.kind === 'usage' && ev.usage !== undefined) round.usage = addUsage(round.usage, ev.usage)
+      if (ev.kind === 'done') {
+        if (ev.stopReason !== undefined) round.stopReason = ev.stopReason
+        if (ev.maxTokens !== undefined) round.maxTokens = ev.maxTokens
+      }
       if (ev.kind === 'tool_result' && ev.id !== undefined) this.#toolResults.set(ev.id, ev.ok === true)
       if (ev.kind === 'tool_submitted' && ev.id !== undefined) this.#submitted.add(ev.id)
       if (ev.kind === 'thinking') {
@@ -668,7 +707,9 @@ export class TurnTraceCollector {
     this.#outcome = 'aborted'
   }
 
-  finish(): AgentTraceLine {
+  /** The turn's line. `secrets` (T-0311) redacts the prompt-store texts before they are digested; `promptFiles()`
+   *  then holds them by digest for `appendTraceLine`. */
+  finish(secrets: readonly string[] = []): AgentTraceLine {
     const s = this.#start
     const usage = this.#usage ?? this.#rounds.reduce<TokenUsage | undefined>((acc, r) => (r.usage ? addUsage(acc, r.usage) : acc), undefined)
     const reply = this.#reply ?? (this.#replyDeltas !== '' ? this.#replyDeltas : undefined)
@@ -685,7 +726,8 @@ export class TurnTraceCollector {
     if (t?.prompt?.over) warnings.push(`prompt over budget: ${t.prompt.total} > ${t.prompt.limit} chars`)
     if (t !== undefined && t.healed > 0) warnings.push(`healer corrected ${t.healed} line(s)`)
     for (const r of this.#rounds) if (r.error !== undefined && error === undefined) warnings.push(`round ${r.round}: ${r.error}`)
-    const routing = this.#routingFor(t)
+    this.#promptFiles = new Map()
+    const routing = this.#routingFor(t, secrets)
     return {
       v: TRACE_LINE_VERSION,
       at: this.#at,
@@ -702,7 +744,7 @@ export class TurnTraceCollector {
       outcome,
       steps: this.#steps,
       retries: this.#retries,
-      rounds: this.#rounds,
+      rounds: this.#roundsWithDigests(secrets),
       surface: this.#surface,
       ...(usage !== undefined ? { usage } : {}),
       ...(t !== undefined
@@ -724,6 +766,25 @@ export class TurnTraceCollector {
     }
   }
 
+  /** T-0311: the prompt-store texts of the last `finish()`, by digest (redacted, so the digest is of the stored bytes). */
+  promptFiles(): ReadonlyMap<string, string> {
+    return this.#promptFiles
+  }
+
+  #store(text: string, secrets: readonly string[]): string {
+    const stored = redactSecrets(text, secrets)
+    const digest = promptDigest(stored)
+    this.#promptFiles.set(digest, stored)
+    return digest
+  }
+
+  #roundsWithDigests(secrets: readonly string[]): TraceRound[] {
+    return this.#rounds.map((r, i) => {
+      const user = this.#roundUser[i]
+      return user === undefined ? r : { ...r, userDigest: this.#store(user, secrets) }
+    })
+  }
+
   #eventsFor(complete: boolean): TraceEvents {
     const ctx = this.#context!
     const run = this.#start.runId
@@ -738,16 +799,20 @@ export class TurnTraceCollector {
 
   /** The host-known routing plus what produce()'s trace adds; a section is stable while its end stays
    *  inside the cached prefix (the stable sections open the prompt, T-0206). */
-  #routingFor(t: TurnTrace | undefined): TraceRouting | undefined {
+  #routingFor(t: TurnTrace | undefined, secrets: readonly string[]): TraceRouting | undefined {
     if (this.#routing === undefined) return undefined
     const routing: TraceRouting = { ...this.#routing }
     if (t?.miniSkillIds !== undefined) routing.miniSkills = [...t.miniSkillIds]
     if (t?.prompt !== undefined) {
       const boundary = t.cacheBoundary ?? 0
+      const system = this.#system
       let end = 0
       routing.sections = t.prompt.sections.map((s) => {
+        const start = end
         end += s.chars
-        return { id: s.id, chars: s.chars, cache: end <= boundary ? 'stable' : 'volatile' }
+        // T-0311: the section's own slice of the system prompt the provider received (sections are contiguous).
+        const digest = system !== undefined && end <= system.length ? this.#store(system.slice(start, end), secrets) : undefined
+        return { id: s.id, chars: s.chars, cache: end <= boundary ? 'stable' : 'volatile', ...(digest !== undefined ? { digest } : {}) }
       })
     }
     if (t?.cacheBoundary !== undefined) routing.cacheBoundary = t.cacheBoundary
@@ -765,10 +830,22 @@ export function traceFileFor(dir: string, line: AgentTraceLine): string {
   return join(dir, `${line.at.slice(0, 10)}.jsonl`)
 }
 
-/** Append one redacted line. Never throws: a full disk or a read-only tree must not fail a turn. */
-export function appendTraceLine(dir: string, line: AgentTraceLine, secrets: readonly string[] = []): void {
+/** Append one redacted line, and (T-0311) write each prompt-store text not stored yet as `prompts/<digest>.txt`.
+ *  Never throws: a full disk or a read-only tree must not fail a turn. */
+export function appendTraceLine(dir: string, line: AgentTraceLine, secrets: readonly string[] = [], prompts: ReadonlyMap<string, string> = new Map()): void {
   try {
     mkdirSync(dir, { recursive: true })
+    if (prompts.size > 0) {
+      const store = join(dir, PROMPT_STORE_DIR)
+      mkdirSync(store, { recursive: true })
+      for (const [digest, text] of prompts) {
+        try {
+          writeFileSync(join(store, `${digest}.txt`), redactSecrets(text, secrets), { flag: 'wx' }) // content-addressed: once
+        } catch (err) {
+          if ((err as { code?: unknown }).code !== 'EEXIST') throw err
+        }
+      }
+    }
     appendFileSync(traceFileFor(dir, line), serializeTraceLine(line, secrets) + '\n')
   } catch (err) {
     console.warn(`agent trace: could not write ${dir}:`, err instanceof Error ? err.message : err)
