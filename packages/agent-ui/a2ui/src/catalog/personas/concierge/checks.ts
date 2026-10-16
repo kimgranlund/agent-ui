@@ -22,6 +22,9 @@
 // the confirm repair asks for a BookingConfirmation reading back the form's values and never for a reference (the
 // catalog's BookingConfirmation has no such field, and Haiku refused to invent one).
 //
+// T-0322: a say turn that targets the open BookingForm and sends it no update is ACTION_NOT_APPLIED
+// (`conciergeEditApplied`).
+//
 // T-0313: the confirm, services and booking asks are read from the composite-moment rows (`askedCompositeMoment`), the
 // one matcher for each moment; only the facility ask stays here, since its answer is no composite.
 // DOM-less and node-free, like `semantic-check.ts`: both server hosts import the manifest that carries it.
@@ -156,5 +159,34 @@ export const conciergeListingSurfaceRequired: SemanticCheck = surfaceRequired(
   ['services', 'facility'],
 )
 
+/** T-0322 C2 (round 8 :166, Haiku 5.5): "Make it 16:00 instead, same day." declared spa-booking its target and sent it
+ *  no update, so the form kept 15:00. ACTION_NOT_APPLIED: a say turn whose meta-line targets an open BookingForm sends
+ *  that surface no update and opens no fresh BookingForm or BookingConfirmation. A booking or confirm ask is left to
+ *  the surface-required check (one finding per turn), a confirm the form cannot honor is held open (T-0278), and a
+ *  question may stay prose. */
+export const conciergeEditApplied: SemanticCheck = {
+  id: 'concierge-edit-applied',
+  requires: ['BookingForm'],
+  check(input): SemanticFinding[] {
+    const { surfaces, action, intent, target, open } = input
+    if (action !== undefined || intent === undefined || target === undefined || open === undefined || /\?\s*$/.test(intent.trim())) return []
+    if (askedMoment(intent) !== undefined || confirmHeldOpen(input)) return []
+    const form = [...bookingForms(open.filter((v) => v.surfaceId === target))][0]
+    if (form === undefined) return []
+    const answers = (v: SurfaceView): boolean =>
+      v.surfaceId === target || (v.priorDataModel === undefined && [...v.components.values()].some((c) => c.component === 'BookingForm' || c.component === 'BookingConfirmation'))
+    if (surfaces.some(answers)) return []
+    return [
+      {
+        code: 'ACTION_NOT_APPLIED',
+        path: `${target}:${String(form.node['id'])}`,
+        message:
+          `The guest asked "${intent.trim()}" of the open BookingForm on ${target}, and this turn sends it no update, so the form still shows the old details. ` +
+          `Call render_surface with an updateDataModel for ${target} that writes the changed values into the booking the form is bound to, and keep the reply to one short sentence.`,
+      },
+    ]
+  },
+}
+
 /** Every concierge semantic check, in the order `produce()` runs them. */
-export const conciergeSemanticChecks: readonly SemanticCheck[] = [conciergeSurfaceRequired, conciergeListingSurfaceRequired, conciergeBookingFieldPaths]
+export const conciergeSemanticChecks: readonly SemanticCheck[] = [conciergeSurfaceRequired, conciergeListingSurfaceRequired, conciergeBookingFieldPaths, conciergeEditApplied]

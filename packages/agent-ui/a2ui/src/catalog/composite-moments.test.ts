@@ -336,3 +336,56 @@ describe('the rows carry the ask cue of each Concierge composite moment (T-0313)
   })
 })
 
+
+// T-0322 D (live round 8 :90, Haiku 5.5, regress-concierge-facilities-then-tour turn 4): "What services could I add for
+// the rest of my stay?" shipped one Card holding a DescriptionList of priced treatments and passed, since the row's
+// priced-Table cue (T-0279) reads Tables only. Turn 0 of the same run, the facility hours, is the negative control.
+describe('a services ask answered with priced rows in another type (T-0322)', () => {
+  const SERVICES_ASK = 'What services could I add for the rest of my stay?'
+  const card = (title: string, rows: { label: string; value: string }[]): A2uiComponent[] => [
+    { id: 'root', component: 'Card', children: ['header', 'content'] },
+    { id: 'header', component: 'CardHeader', children: ['title'] },
+    { id: 'title', component: 'Text', text: title, variant: 'h4' },
+    { id: 'content', component: 'CardContent', children: ['list'] },
+    { id: 'list', component: 'DescriptionList', rows },
+  ]
+  const SPA_LIST = card('Spa treatments', [
+    { label: 'Swedish massage', value: '60 min, €120' },
+    { label: 'Deep-tissue massage', value: '60 min, €135' },
+    { label: 'Hot-stone massage', value: '90 min, €170' },
+    { label: 'Sea-salt and lemon body scrub', value: '45 min, €95' },
+    { label: 'Hydrating facial', value: '50 min, €110' },
+    { label: 'Couples massage', value: '60 min, €230 for two' },
+  ])
+  const HOURS_LIST = card('Pool, gym and spa hours', [
+    { label: 'Pool (25m, heated)', value: '06:00 to 22:00' },
+    { label: 'Gym', value: '06:00 to 22:00' },
+    { label: 'Spa', value: '09:00 to 20:00. Book treatments at least a day ahead in season.' },
+  ])
+  const run = (components: A2uiComponent[], intent?: string) =>
+    runSemanticChecks(compositeMomentChecks, { surfaces: [view(components, 'spa-treatments')], ...(intent !== undefined ? { intent } : {}) }).findings
+
+  it('the recorded priced DescriptionList on the services ask is PRODUCT_CARD_MISSING', () => {
+    const findings = run(SPA_LIST, SERVICES_ASK)
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['PRODUCT_CARD_MISSING', 'spa-treatments:list']])
+    expect(findings[0]!.message).toContain('list (a DescriptionList)')
+    expect(findings[0]!.message).toContain('Make it ONE ProductCard per item')
+  })
+
+  it('priced rows in a List fire on the services ask too', () => {
+    const list: A2uiComponent[] = [
+      { id: 'root', component: 'List', children: ['a', 'b'] },
+      { id: 'a', component: 'Text', text: 'Swedish massage, 60 min, €120' },
+      { id: 'b', component: 'Text', text: 'Hydrating facial, 50 min, €110' },
+    ]
+    expect(run(list, SERVICES_ASK).map((f) => [f.code, f.path])).toEqual([['PRODUCT_CARD_MISSING', 'spa-treatments:root']])
+  })
+
+  it('negative controls: the facility hours list, the priced list on another ask or with no ask, and a ProductCard Grid yield none', () => {
+    expect(run(HOURS_LIST, 'What are the opening hours of the pool, gym and spa? Check the property-knowledge-base.')).toEqual([])
+    expect(run(HOURS_LIST, SERVICES_ASK)).toEqual([])
+    expect(run(SPA_LIST, 'Is late check-out possible?')).toEqual([])
+    expect(run(SPA_LIST)).toEqual([])
+    expect(run([...SPA_LIST, ...COMPOSED['ProductCard']!.map((c) => ({ ...c, id: `p-${c.id}` }))], SERVICES_ASK)).toEqual([])
+  })
+})

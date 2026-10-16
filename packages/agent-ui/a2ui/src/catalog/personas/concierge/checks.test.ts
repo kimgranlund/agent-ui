@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest'
 import type { A2uiOutput } from '../../../protocol.ts'
 import { semanticSurfaceViews, sessionSurfaceViews } from '../../semantic-check.ts'
-import { blankRequiredField, conciergeBookingFieldPaths, conciergeListingSurfaceRequired, conciergeSemanticChecks, conciergeSurfaceRequired } from './checks.ts'
+import { blankRequiredField, conciergeBookingFieldPaths, conciergeEditApplied, conciergeListingSurfaceRequired, conciergeSemanticChecks, conciergeSurfaceRequired } from './checks.ts'
 import { conciergeManifest } from './manifest.ts'
 
 // The two surface-required checks as agent-ui--concierge runs them (T-0316: the services and facility asks ride their own).
@@ -18,7 +18,7 @@ const card: A2uiOutput = [
 describe('concierge-surface-required (T-0265)', () => {
   it('rides the concierge manifest, gated on the booking composites', () => {
     expect(conciergeManifest.semanticChecks).toBe(conciergeSemanticChecks)
-    expect(conciergeSemanticChecks.map((c) => c.id)).toEqual(['concierge-surface-required', 'concierge-listing-surface-required', 'concierge-booking-field-paths'])
+    expect(conciergeSemanticChecks.map((c) => c.id)).toEqual(['concierge-surface-required', 'concierge-listing-surface-required', 'concierge-booking-field-paths', 'concierge-edit-applied'])
     expect(conciergeSurfaceRequired.requires).toEqual(['BookingForm', 'BookingConfirmation'])
     expect(conciergeListingSurfaceRequired.requires).toEqual(['ProductCard', 'Grid', 'Card', 'DescriptionList'])
   })
@@ -191,5 +191,42 @@ describe('a BookingForm whose field paths miss its bound value (T-0293)', () => 
     expect(blankRequiredField(open)).toBeUndefined()
     expect(conciergeSurfaceRequired.holdsFlowOpen!(input)).toBe(false)
     expect(conciergeSurfaceRequired.check(input).map((f) => f.code)).toEqual(['SURFACE_MISSING'])
+  })
+})
+
+// T-0322 C2 (live round 8 :166, Haiku 5.5, long-concierge-booking): "Make it 16:00 instead, same day." was answered with
+// a meta-line targeting spa-booking and no update, so the form kept 15:00 and no check fired. The form is turn 0's, as recorded.
+const SPA_BOOKING: A2uiOutput = [
+  {"version": "v1.0", "createSurface": {"surfaceId": "spa-booking", "catalogId": "agent-ui--concierge", "sendDataModel": true}},
+  {"version": "v1.0", "updateDataModel": {"surfaceId": "spa-booking", "value": {"booking": {"treatment": "swedish-massage", "treatmentLabel": "Swedish massage, 60 min, €120", "date": "2026-11-19", "time": "15:00", "guests": 1, "guestName": "Alex Moreau"}}}},
+  {"version": "v1.0", "updateComponents": {"surfaceId": "spa-booking", "components": [{"id": "root", "component": "BookingForm", "title": "Spa booking", "fields": [{"kind": "dateSingle", "label": "Date", "path": "date", "required": true}, {"kind": "select", "label": "Treatment", "options": [{"label": "Swedish massage, 60 min, €120", "value": "swedish-massage"}, {"label": "Deep-tissue massage, 60 min, €135", "value": "deep-tissue-massage"}, {"label": "Hot-stone massage, 90 min, €170", "value": "hot-stone-massage"}, {"label": "Sea-salt and lemon body scrub, 45 min, €95", "value": "sea-salt-lemon-scrub"}, {"label": "Hydrating facial, 50 min, €110", "value": "hydrating-facial"}, {"label": "Couples massage, 60 min, €230 for two", "value": "couples-massage"}], "path": "treatment", "required": true}, {"kind": "select", "label": "Time", "options": [{"label": "15:00", "value": "15:00"}], "path": "time", "required": true}, {"kind": "text", "label": "Guest name", "path": "guestName", "required": true}], "value": {"path": "/booking"}}, {"id": "bookBtn", "component": "Button", "label": "Book now", "variant": "solid", "action": {"action": "confirm_booking", "context": {"booking": {"path": "/booking"}}, "submit": true}}]}},
+] as A2uiOutput
+const spaBooking = SPA_BOOKING.map((m) => JSON.stringify(m)).join('\n')
+
+describe('a say turn that targets an open BookingForm and sends it no update (T-0322)', () => {
+  const open = openAfter(spaBooking)
+  const edit = (intent: string, out: A2uiOutput = [], target: string | null = 'spa-booking') =>
+    conciergeEditApplied.check({ surfaces: semanticSurfaceViews({ turns: [{ role: 'assistant', content: spaBooking }] }, out), intent, open, ...(target !== null ? { target } : {}) })
+  const moved = [{ version: 'v1.0', updateDataModel: { surfaceId: 'spa-booking', path: '/booking/time', value: '16:00' } }] as A2uiOutput
+  const fresh = JSON.parse(JSON.stringify(SPA_BOOKING).replaceAll('spa-booking', 'spa-booking-2')) as A2uiOutput
+
+  it('rides the concierge manifest last, gated on the BookingForm', () => {
+    expect(conciergeSemanticChecks.at(-1)).toBe(conciergeEditApplied)
+    expect(conciergeEditApplied.requires).toEqual(['BookingForm'])
+  })
+
+  it('the recorded prose-only "Make it 16:00 instead, same day." is ACTION_NOT_APPLIED at spa-booking', () => {
+    const findings = edit('Make it 16:00 instead, same day.')
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['ACTION_NOT_APPLIED', 'spa-booking:root']])
+    expect(findings[0]!.message).toMatch(/updateDataModel for spa-booking/)
+  })
+
+  it('an update to the form, a fresh BookingForm, no target, a booking or confirm ask, or a question passes', () => {
+    expect(edit('Make it 16:00 instead, same day.', moved)).toEqual([])
+    expect(edit('Make it 16:00 instead, same day.', fresh)).toEqual([])
+    expect(edit('Make it 16:00 instead, same day.', [], null)).toEqual([])
+    expect(edit(CONFIRM_ASK)).toEqual([]) // the surface-required check owns a confirm
+    expect(edit('Book a deep-tissue massage instead.')).toEqual([]) // and a booking ask
+    expect(edit('Can I bring a friend?')).toEqual([])
   })
 })

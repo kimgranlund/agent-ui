@@ -17,7 +17,8 @@
 // T-0265 adds one more Battleship check that reads the say turn's words rather than a surface: a typed shot at the
 // targeted board answered in prose alone, or a game asked for with no board. T-0280 adds its word-game twin: a typed
 // guess or a give-up at the targeted board answered in prose alone, or a give-up with no ResultCard; T-0291 judges one
-// typed with no target against the open word game, and a Play again answered in prose. T-0284: a
+// typed with no target against the open word game, and a Play again answered in prose; T-0322, a word game asked for
+// with no board. T-0284: a
 // Battleship board opened with no GameHud. T-0296: a Battleship surrender answered with no ResultCard.
 // Both games ride base `agent-ui` and both draw a clickable BoardGrid, so each check also skips the other game's
 // surface (T-0263): a word cue (that TextField, or `/secret/word`) with no committed fleet is never judged for a fleet,
@@ -331,8 +332,11 @@ export const fleetShotAppliedCheck: SemanticCheck = {
 const TYPED_GUESS = /\bguess\b(?:\s+is)?\s*[:,-]?\s*["'“‘]?([a-z]{2,12})\b/i
 /** T-0280: the player gives the word game up ("I give up.", "What was the word?"). */
 const GIVE_UP = /\b(?:give up|gave up|i quit|i resign|what was the word|what's the word|tell me the word|reveal the word)\b/i
-/** T-0291: the player asks for a fresh game after one ended ("Play again.", "New game", "Another word"). */
-const PLAY_AGAIN = /\b(?:play again|new game|another (?:game|round|word|one)|rematch|start over|go again)\b/i
+/** T-0291: the player asks for a fresh game after one ended ("Play again.", "New game", "Another word"; T-0322: "New
+ *  word game"). */
+const PLAY_AGAIN = /\b(?:play again|new (?:word )?game|another (?:game|round|word|one)|rematch|start over|go again)\b/i
+/** T-0322: the player asks for a word game by name ("New word game, please.", "Let's play Wordle."). */
+const WORD_GAME = /\b(?:word game|word puzzle|wordle|guess the word|\d+-letter word)\b/i
 
 /**
  * T-0280 (the recorded Haiku 5.5 Lexicographer, round 4 :86-:89): "My guess: audio." and "I give up." were answered
@@ -344,6 +348,9 @@ const PLAY_AGAIN = /\b(?:play again|new game|another (?:game|round|word|one)|rem
  * and "Play again." answered in prose. A give-up or a replay ask typed with no target is judged against the last open
  * word-game surface (the T-0286 croupier precedent), and a replay ask that sends the game surface no update and opens
  * no new one is ACTION_NOT_APPLIED too.
+ * T-0322 (round 8 :101): "New word game, please." with no word game open was answered in prose with no surface.
+ * SURFACE_MISSING: a say turn that asks for a word game, not a question about one, with no game open, no target and
+ * no surface (the Battleship opening's twin).
  */
 export const wordMoveAppliedCheck: SemanticCheck = {
   id: 'word-move-applied',
@@ -351,7 +358,19 @@ export const wordMoveAppliedCheck: SemanticCheck = {
   check({ surfaces, action, intent, target, open }) {
     if (action !== undefined || intent === undefined) return []
     const game = target ?? (open ?? []).filter((v) => hasWordCue(v) && !hasFleetCue(v)).at(-1)?.surfaceId
-    if (game === undefined || isFleetGame(game, surfaces, open)) return []
+    if (game === undefined) {
+      if (surfaces.length > 0 || target !== undefined || !WORD_GAME.test(intent) || /\?\s*$/.test(intent.trim())) return []
+      return [
+        {
+          code: 'SURFACE_MISSING',
+          path: 'opening:word-game',
+          message:
+            'The word-game check found that the player asked for a word game and this turn opens no board, so the game exists only in prose. ' +
+            'Call render_surface with a createSurface for the word board (a BoardGrid of guesses, the guess field) and commit the secret word at /secret/word, not only prose.',
+        },
+      ]
+    }
+    if (isFleetGame(game, surfaces, open)) return []
     const touched = surfaces.some((v) => v.surfaceId === game || v.priorDataModel === undefined)
     if (GIVE_UP.test(intent)) {
       if (surfaces.some((v) => [...v.components.values()].some((c) => c.component === 'ResultCard'))) return []
