@@ -2,7 +2,7 @@
 id: T-0312
 title: "Persona text type names are a modality leak: lint them and reword the Croupier persona; pin tests per ruling (P6)"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -25,3 +25,9 @@ verifier: L3
 - The Croupier surfaceStyle is reworded with seedVersion 14, its manifest refreshed: `npx vitest run --project site site/lib/agent-manifest site/pages` exits 0.
 - `python3 /Users/kimgranlund/.claude/skills/context-fog-of-war/scripts/audit.py scan --root . --mapping .sdlc/evals/fog/contract-audit/mapping.json --out /private/tmp/claude-501/fog-contract-audit-t0312.json` exits 0 and reports no mapping issue: the committed mapping parses and declares the repair and tool surfaces (advisory, no gate).
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-16 · lane: full L2 · verdict: closed by reason (Merged in the guidance-rulings lane; verifier L3 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none
