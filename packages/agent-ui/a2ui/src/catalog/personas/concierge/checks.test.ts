@@ -4,10 +4,12 @@
 import { describe, expect, it } from 'vitest'
 import type { A2uiOutput } from '../../../protocol.ts'
 import { semanticSurfaceViews, sessionSurfaceViews } from '../../semantic-check.ts'
-import { blankRequiredField, conciergeBookingFieldPaths, conciergeSemanticChecks, conciergeSurfaceRequired } from './checks.ts'
+import { blankRequiredField, conciergeBookingFieldPaths, conciergeListingSurfaceRequired, conciergeSemanticChecks, conciergeSurfaceRequired } from './checks.ts'
 import { conciergeManifest } from './manifest.ts'
 
-const said = (intent: string, out: A2uiOutput = []) => conciergeSurfaceRequired.check({ surfaces: semanticSurfaceViews({ turns: [] }, out), intent })
+// The two surface-required checks as agent-ui--concierge runs them (T-0316: the services and facility asks ride their own).
+const said = (intent: string, out: A2uiOutput = []) =>
+  [conciergeSurfaceRequired, conciergeListingSurfaceRequired].flatMap((c) => c.check({ surfaces: semanticSurfaceViews({ turns: [] }, out), intent }))
 const card: A2uiOutput = [
   { version: 'v1.0', createSurface: { surfaceId: 'spa', catalogId: 'agent-ui--concierge' } },
   { version: 'v1.0', updateComponents: { surfaceId: 'spa', components: [{ id: 'root', component: 'Text', text: 'Spa' }] } },
@@ -16,8 +18,9 @@ const card: A2uiOutput = [
 describe('concierge-surface-required (T-0265)', () => {
   it('rides the concierge manifest, gated on the booking composites', () => {
     expect(conciergeManifest.semanticChecks).toBe(conciergeSemanticChecks)
-    expect(conciergeSemanticChecks.map((c) => c.id)).toEqual(['concierge-surface-required', 'concierge-booking-field-paths'])
+    expect(conciergeSemanticChecks.map((c) => c.id)).toEqual(['concierge-surface-required', 'concierge-listing-surface-required', 'concierge-booking-field-paths'])
     expect(conciergeSurfaceRequired.requires).toEqual(['BookingForm', 'BookingConfirmation'])
+    expect(conciergeListingSurfaceRequired.requires).toEqual(['ProductCard', 'Grid', 'Card', 'DescriptionList'])
   })
 
   it('the recorded services ask, booking and confirm turns with no surface are SURFACE_MISSING', () => {

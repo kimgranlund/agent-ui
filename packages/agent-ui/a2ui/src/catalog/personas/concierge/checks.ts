@@ -117,27 +117,44 @@ export const conciergeBookingFieldPaths: SemanticCheck = {
 const confirmHeldOpen = ({ intent, open }: SemanticCheckInput): boolean =>
   intent !== undefined && open !== undefined && askedMoment(intent)?.moment === 'confirm' && blankRequiredField(open) !== undefined
 
-/** T-0265: a services, booking or confirm ask answered with no surface is SURFACE_MISSING. */
+/** T-0265: an ask for one of `moments` answered with no surface is SURFACE_MISSING. The ask is read once
+ *  (`askedMoment`), so a turn whose words match two moments draws one finding from one check. */
+function surfaceRequired(id: string, requires: readonly string[], moments: readonly string[]): SemanticCheck {
+  return {
+    id,
+    requires,
+    check(input): SemanticFinding[] {
+      const { surfaces, action, intent } = input
+      if (action !== undefined || intent === undefined || surfaces.length > 0 || confirmHeldOpen(input)) return []
+      const asked = askedMoment(intent)
+      if (asked === undefined || !moments.includes(asked.moment)) return []
+      return [
+        {
+          code: 'SURFACE_MISSING',
+          path: `intent:${asked.moment}`,
+          message:
+            `The guest asked "${intent.trim()}" and this turn shows no surface, so the ${asked.moment} step exists only in prose. ` +
+            `Call render_surface with a createSurface holding ${asked.surface}, and keep the reply to one short sentence.`,
+        },
+      ]
+    },
+  }
+}
+
+/** T-0265: a booking or confirm ask answered with no surface is SURFACE_MISSING. */
 export const conciergeSurfaceRequired: SemanticCheck = {
-  id: 'concierge-surface-required',
-  requires: ['BookingForm', 'BookingConfirmation'],
-  check(input): SemanticFinding[] {
-    const { surfaces, action, intent } = input
-    if (action !== undefined || intent === undefined || surfaces.length > 0 || confirmHeldOpen(input)) return []
-    const asked = askedMoment(intent)
-    if (asked === undefined) return []
-    return [
-      {
-        code: 'SURFACE_MISSING',
-        path: `intent:${asked.moment}`,
-        message:
-          `The guest asked "${intent.trim()}" and this turn shows no surface, so the ${asked.moment} step exists only in prose. ` +
-          `Call render_surface with a createSurface holding ${asked.surface}, and keep the reply to one short sentence.`,
-      },
-    ]
-  },
+  ...surfaceRequired('concierge-surface-required', ['BookingForm', 'BookingConfirmation'], ['booking', 'confirm']),
   holdsFlowOpen: confirmHeldOpen,
 }
 
+/** T-0316 (D2): a services or facility ask answered with no surface is SURFACE_MISSING, on a catalog that holds the
+ *  ProductCard Grid and the Card with a DescriptionList those asks name; a2ui-basic--concierge holds neither, so it
+ *  never asks there for types it cannot emit (T-0202 D4). */
+export const conciergeListingSurfaceRequired: SemanticCheck = surfaceRequired(
+  'concierge-listing-surface-required',
+  ['ProductCard', 'Grid', 'Card', 'DescriptionList'],
+  ['services', 'facility'],
+)
+
 /** Every concierge semantic check, in the order `produce()` runs them. */
-export const conciergeSemanticChecks: readonly SemanticCheck[] = [conciergeSurfaceRequired, conciergeBookingFieldPaths]
+export const conciergeSemanticChecks: readonly SemanticCheck[] = [conciergeSurfaceRequired, conciergeListingSurfaceRequired, conciergeBookingFieldPaths]

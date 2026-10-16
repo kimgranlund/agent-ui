@@ -19,7 +19,8 @@ export const conciergeFragment: CatalogFragment = loadCatalogFragment(fragmentDo
 export const conciergeTargetCatalogs: readonly string[] = ['agent-ui', 'a2ui-basic']
 
 /** The server-side derive input `composePersonaCatalogDocs` (GH #516) consumes directly. `semanticChecks`
- *  (ADR-0238, T-0265): the surface-required check `produce()` runs on every `<base>--concierge` turn. */
+ *  (ADR-0238, T-0265, T-0316): the checks `produce()` runs on every `<base>--concierge` turn whose catalog holds the
+ *  types each reads. */
 export const conciergeManifest: PersonaCatalogManifest = {
   personaId: CONCIERGE_PERSONA_ID,
   fragment: conciergeFragment,

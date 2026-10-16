@@ -338,6 +338,11 @@ const CONTRACTS: Record<string, Contract> = {
   },
   'concierge-surface-required': {
     code: 'SURFACE_MISSING',
+    pass: { catalog: CONCIERGE, intent: 'Book a table for four on Friday at 8 pm.', output: bookingForm((k) => k) },
+    fail: { catalog: CONCIERGE, intent: 'Book a table for four on Friday at 8 pm.', output: [] },
+  },
+  'concierge-listing-surface-required': {
+    code: 'SURFACE_MISSING',
     pass: { catalog: CONCIERGE, intent: 'What spa services can I book?', output: services },
     fail: { catalog: CONCIERGE, intent: 'What spa services can I book?', output: [] },
   },
@@ -380,11 +385,7 @@ const CONTRACTS: Record<string, Contract> = {
  * Cross-fires on a pass fixture or a fail fixture that are known and filed, keyed `<fixture> <check>` where fixture is
  * `<check id>/<pass|fail>`. Shrink-only: an entry the run no longer sees reds the test.
  */
-const KNOWN_CROSS_FIRES: Record<string, string> = {
-  'composite-moment-board-grid/pass fleet-secret':
-    'Defect (T-0314 report, D1): fleet-secret reads every clickable BoardGrid with no word cue as a Battleship board, ' +
-    'so a tic-tac-toe board (or any "board with clickable cells") is sent back for a committed fleet.',
-}
+const KNOWN_CROSS_FIRES: Record<string, string> = {}
 
 // ── the cross-run ───────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -527,8 +528,8 @@ const PROBES: Record<string, readonly Fixture[]> = {
   'concierge-surface-required': [
     { catalog: CONCIERGE, intent: 'Book a 60-minute massage on Thursday at 15:00.', output: [] },
     { catalog: CONCIERGE, intent: 'Yes, confirm the table for four.', output: [] },
-    { catalog: CONCIERGE, intent: 'When do the pool and gym close?', output: [] },
   ],
+  'concierge-listing-surface-required': [{ catalog: CONCIERGE, intent: 'When do the pool and gym close?', output: [] }],
   'framed-choice': [
     {
       catalog: UI,
@@ -566,17 +567,7 @@ const REPAIRS: { id: string; finding: SemanticFinding; held: Set<string> }[] = O
 /**
  * Types a repair asks for on a catalog that lacks them, keyed `<check id> <code> <type>`: known and filed. Shrink-only.
  */
-const D2 =
-  'Defect (T-0314 report, D2): on a2ui-basic--concierge the services and facility asks are sent back for a ProductCard in a ' +
-  'Grid, or a DescriptionList, none of which that catalog holds, so the model cannot comply.'
-const D3 = 'Defect (T-0314 report, D3, low): the repair tells an a2ui-basic turn to drop a CardContent that catalog cannot hold.'
-const KNOWN_VOCABULARY_GAPS: Record<string, string> = {
-  'concierge-surface-required SURFACE_MISSING ProductCard': D2,
-  'concierge-surface-required SURFACE_MISSING Grid': D2,
-  'concierge-surface-required SURFACE_MISSING DescriptionList': D2,
-  'framed-choice FRAMED_CHOICE CardContent': D3,
-  'framed-choice LONE_BUTTON_FRAME CardContent': D3,
-}
+const KNOWN_VOCABULARY_GAPS: Record<string, string> = {}
 
 /** The props each composite row's repair and ask surface name, each a property of the composite (FR case 3). */
 const ROW_PROPS: Record<string, readonly string[]> = {

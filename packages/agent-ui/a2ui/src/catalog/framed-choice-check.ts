@@ -32,6 +32,16 @@ function loneButton(view: SurfaceView, c: A2uiComponent, depth: number): A2uiCom
   return (kid.component === 'CardContent' || kid.component === 'CardFooter') && depth < 2 ? loneButton(view, kid, depth + 1) : undefined
 }
 
+/** T-0316 (D3): the CardContent or CardFooter types between a Card and its lone Button, so the repair names only the
+ *  wrappers the surface holds (a2ui-basic has neither). */
+function wrappersOf(view: SurfaceView, cards: readonly A2uiComponent[]): string[] {
+  const types = new Set<string>()
+  for (const card of cards) {
+    for (let c = view.components.get(childIds(card)[0]!); c !== undefined && c.component !== 'Button'; c = view.components.get(childIds(c)[0]!)) types.add(c.component)
+  }
+  return [...types]
+}
+
 export const framedChoiceCheck: SemanticCheck = {
   id: 'framed-choice',
   requires: ['Card', 'Button'],
@@ -46,24 +56,26 @@ export const framedChoiceCheck: SemanticCheck = {
         if (framed.length < 2) continue
         for (const c of framed) grouped.add(c.id)
         const labels = framed.map((c) => loneButton(view, c, 0)!['label']).filter((l): l is string => typeof l === 'string')
+        const wrappers = wrappersOf(view, framed)
         findings.push({
           code: 'FRAMED_CHOICE',
           path: `${view.surfaceId}:${framed[0]!.id}`,
           message:
             `${view.surfaceId} frames each choice in its own Card (${framed.map((c) => c.id).join(', ')}), each holding one Button${labels.length ? ` (${labels.map((l) => `"${l}"`).join(', ')})` : ''}. ` +
-            `Put the Buttons directly in one Row (variant soft, wrap) under ${parent.id} and drop the Cards and their CardFooter or CardContent.`,
+            `Put the Buttons directly in one Row (variant soft, wrap) under ${parent.id} and drop the Cards${wrappers.length ? ` and their ${wrappers.join(' or ')}` : ''}.`,
         })
       }
       for (const card of view.components.values()) {
         const lone = card.component === 'Card' && !grouped.has(card.id) ? loneButton(view, card, 0) : undefined
         if (lone === undefined) continue
         const label = typeof lone['label'] === 'string' ? ` "${lone['label']}"` : ''
+        const wrappers = wrappersOf(view, [card])
         findings.push({
           code: 'LONE_BUTTON_FRAME',
           path: `${view.surfaceId}:${card.id}`,
           message:
             `${view.surfaceId} frames the one Button${label} (${lone.id}) alone in Card ${card.id}, a bordered box around a single action. ` +
-            `Put Button ${lone.id} directly in the surface's flow where ${card.id} sits (or in the Card above it that holds the content it acts on) and drop ${card.id} and its CardFooter or CardContent.`,
+            `Put Button ${lone.id} directly in the surface's flow where ${card.id} sits (or in the Card above it that holds the content it acts on) and drop ${card.id}${wrappers.length ? ` and its ${wrappers.join(' and ')}` : ''}.`,
         })
       }
     }
