@@ -12,7 +12,8 @@
 // check is silent unless a surface carries its game's signature:
 // - the word game: a TextField gated by a `^[a-z]{N}$` regex check (the `word-tiles` idiom) that names a guess, or
 //   sits beside a BoardGrid;
-// - Battleship: a BoardGrid with an `actionName` (the board the player fires on, the `board-grid` idiom).
+// - Battleship: a BoardGrid with an `actionName` (the board the player fires on, the `board-grid` idiom) that also
+//   reads as Battleship (a committed fleet, a Battleship cue word, or the player's own read-only board; T-0316).
 // T-0265 adds one more Battleship check that reads the say turn's words rather than a surface: a typed shot at the
 // targeted board answered in prose alone, or a game asked for with no board. T-0280 adds its word-game twin: a typed
 // guess or a give-up at the targeted board answered in prose alone, or a give-up with no ResultCard; T-0291 judges one
