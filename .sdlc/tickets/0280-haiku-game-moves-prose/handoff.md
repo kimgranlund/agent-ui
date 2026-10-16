@@ -28,3 +28,8 @@ T-0265 covered openings, Admiral shots and Concierge turns, and ACTION_NOT_APPLI
 ## Done when
 - A checks test: a guess or give-up say turn targeting the word board with no update is sent back; an updating guess passes.
 - The replay is recaptured; `npx vitest run scripts/e2e-admin/probe` and `npm run check` exit 0.
+
+## Lane bundle
+This solo lane delivers these tickets in order, one commit each (`T-NNNN: <title>`):
+- .sdlc/tickets/0280-haiku-game-moves-prose/handoff.md
+- .sdlc/tickets/0284-admiral-haiku-no-gamehud/handoff.md
