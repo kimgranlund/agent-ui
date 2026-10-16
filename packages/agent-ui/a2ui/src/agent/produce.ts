@@ -109,6 +109,7 @@ import { readMetaLine } from './meta-line.ts'
 import type { AskDeclaration, PersonaPatch, PlanDeclaration, PromptSectionId, TargetDeclaration, TeamDeclaration, TokenUsage, TurnProgress, TurnTrace } from './meta-line.ts'
 import type { GenUiMode } from './gen-ui-mode.ts'
 import type { ModelSettings } from './model-capabilities.ts'
+import { acceptsForcedToolWithThinkingOff } from './model-capabilities.ts'
 import { MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, selectMiniSkills } from './mini-skills.ts'
 import { FEED_SURFACE_TYPE_SET } from './feed-catalog.ts'
 import { isGenuiCandidate, readGenuiLine, utf8ByteLength, GENUI_MAX_HTML_BYTES } from './genui-line.ts'
@@ -1370,6 +1371,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   // meta-line and prose through every repair round, round 6 :2), so this repair round forces `render_surface`. The
   // adapter sends the choice only where the model takes one: never with thinking on (the API rejects it). T-0301: so
   // the forced round asks for thinking off; the adapter keeps it only where the model's capability row allows it.
+  // T-0310: round 1 of a Haiku click turn is forced too (set below, once the turn's action is read).
   let forceSurfaceRound = false
   let surfaceRequestedFedBack = false // RTS-R6: the ONE correction round a surface override with no payload gets
   let textJsonlIgnored = false // RTS-R3: sticky, a capture round's text channel carried wire or genui lines that were dropped
@@ -1379,6 +1381,11 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   // T-0172: the action a client turn answers, read by the semantic checks (a no-payload round is judged too).
   // T-0215: a press with no client `dataModel` reads the surface's data model replayed off the session.
   const turnAction = input.kind === 'client' ? semanticActionOf(input.message, input.session) : undefined
+  // T-0310 (Kim's R8 ruling, 2026-10-16, an experiment measured live): round 1 of a click turn is forced the T-0301 way
+  // when the row takes a forced tool with thinking off (Haiku 5.5 up to high; r7 had 12 Haiku round-1 rounds with no
+  // tool call). A typed turn, a Sonnet or Opus click, and a turn with live integration tools are left as they were.
+  if (turnAction !== undefined && offeredTools !== undefined && integrationTools.length === 0 && acceptsForcedToolWithThinkingOff(model, opts.effort))
+    forceSurfaceRound = true
   // T-0232: a say turn's own words, so a check can tell a stake the user typed from one the model picked.
   const turnIntent = input.kind === 'intent' ? typedWords(input.text) : undefined
   // T-0286: the surfaces the session holds before this say turn, so a check can find the table a move typed with

@@ -175,6 +175,15 @@ export function normalizeModelSettings(model: string, raw: unknown, effort?: Eff
   return Object.fromEntries(Object.entries(typed).filter(([k]) => !bad.has(k as keyof ModelSettings))) as ModelSettings
 }
 
+/** T-0310: whether `model` takes a forced tool choice with thinking off at `effort` (absent: the row's default), the
+ *  pair a forced `render_surface` round needs. True for Haiku 5.5 up to `high`; false for an unknown model. */
+export function acceptsForcedToolWithThinkingOff(model: string, effort: Effort | undefined): boolean {
+  const row = capabilitiesFor(model)
+  if (!row || !row.forcedToolChoice) return false
+  const at = effort ?? row.defaultEffort
+  return at !== null && (row.thinking.disabled ?? []).includes(at)
+}
+
 /** The effort levels at which `mode` is legal on `model` (the composer's "Thinking off" gate). */
 export function effortsAllowing(model: string, mode: ThinkingMode): readonly Effort[] {
   return capabilitiesFor(model)?.thinking[mode] ?? []
