@@ -13,8 +13,8 @@ Source of truth: `produce` in `packages/agent-ui/a2ui/src/agent/produce.ts` (wit
 2. `peelMetaLine`, then `peelGenuiLines` (peel before anything else sees the text).
 3. A note-only or genui-only turn (zero A2UI lines) is a clean success: nothing to validate. One
    exception: a closing-shaped turn (a note, no ask, no plan, no genui, no `flowEnd`) whose user
-   message is an explicit close gets ONE `FLOW_END_MISSING` correction round if a round remains,
-   else it ships unchanged and tallies `FLOW_END_UNCORRECTED`.
+   message is an explicit close ships with `flowEnd: true` set by `produce()`, tallied
+   `FLOW_END_INFERRED`, with no repair round (T-0309); a semantic or narration repair still runs first.
 4. `assembleFromRaw`: `stripOuterFence`, per-line `heal`. Any unparseable line fails the round as
    `PARSE`.
 5. `stampCreateSurfaceCatalogId`.
@@ -84,7 +84,7 @@ round would ship it (a feed-scoped ask dropped as `FEED_SCOPE_RESCOPED`, a findi
 the trace carrying the last round's codes plus `EARLIER_ROUND_SHIPPED`; it comes before the `SURFACE_DEGRADED`
 text. With no such round, exhaustion throws `ProduceHalt` carrying the last failures; a
 transport that already committed a 200 turns that into the terminal error line below.
-`FEED_SCOPE`, `NET_NOOP`, `FLOW_END_MISSING`, `SURFACE_DROPPED`, `SURFACE_NOT_CREATED`, the genui codes and a semantic check's own codes
+`FEED_SCOPE`, `NET_NOOP`, `FLOW_END_INFERRED`, `SURFACE_DROPPED`, `SURFACE_NOT_CREATED`, the genui codes and a semantic check's own codes
 (`HAND_TOTAL`, `HAND_COUNT`, `NATURAL_ACTIONS`, `SEMANTIC_UNCORRECTED`, `SEMANTIC_CHECK_ERROR`) are produce-layer-only and
 are not members of the protocol `ErrorCode` union.
 

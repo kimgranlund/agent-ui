@@ -8,7 +8,7 @@ import { offlineReplay } from '../trace.ts'
 
 // T-0265: Haiku 5.5 answers the spa services ask, the booking and its confirmation in prose with no surface. Each
 // turn now gets SURFACE_MISSING. The fixture records no repaired round, so each ships tallied here; the confirm turn
-// spends its first repair round on FLOW_END_MISSING, as recorded.
+// spends no FLOW_END_MISSING round (T-0309), and an uncorrected finding is never inferred closed.
 it('concierge-haiku-booking-prose: the services, booking and confirm turns answered in prose get SURFACE_MISSING', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./concierge-haiku-booking-prose.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())

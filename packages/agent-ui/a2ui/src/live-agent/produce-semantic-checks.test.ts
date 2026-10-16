@@ -280,7 +280,7 @@ describe('produce() + croupier opening check: a game asked for in prose alone is
 
 // T-0278 (round 4, 2026-10-15-r4-fixes :114-:115, Haiku 5.5): the confirm turn on a spa BookingForm whose treatment is
 // blank rightly asked for the treatment, and FLOW_END_MISSING then SURFACE_MISSING sent it back twice. The concierge
-// check now holds that turn open; a confirm on a complete form is still sent back.
+// check now holds that turn open; a confirm on a complete form is still sent back (T-0309: by SURFACE_MISSING alone).
 describe('produce() + concierge checks: a confirm the open booking cannot honor ships on round 1 (T-0278)', () => {
   const formTurn = (treatment: string) =>
     [
@@ -321,13 +321,18 @@ describe('produce() + concierge checks: a confirm the open booking cannot honor 
     expect(traceOf(lines.filter((l) => readMetaLine(l)?.a2uiMeta.textDelta === undefined))).toMatchObject({ rounds: 1, failureCodes: [] })
   })
 
-  it('a confirm on a complete form answered in prose still gets FLOW_END_MISSING, then SURFACE_MISSING', async () => {
+  // T-0309 (N1): the close is inferred, never a FLOW_END_MISSING round, and a shipping round with an uncorrected
+  // finding is not inferred closed.
+  it('a confirm on a complete form answered in prose gets SURFACE_MISSING repairs and no FLOW_END_MISSING round (T-0309)', async () => {
     const s = scripted([BOOKED])
     const lines = await collect(produce(confirm('swedish-60'), deps(s.provider, conciergeSemanticChecks), { maxRounds: 3 }))
     expect(s.calls()).toBe(3)
-    expect(s.reqs[1]!.messages.at(-1)!.content).toContain('FLOW_END_MISSING')
+    expect(s.reqs[1]!.messages.at(-1)!.content).toContain('SURFACE_MISSING')
     expect(s.reqs[2]!.messages.at(-1)!.content).toContain('SURFACE_MISSING')
-    expect(traceOf(lines.filter((l) => readMetaLine(l)?.a2uiMeta.textDelta === undefined)).failureCodes).toContain('SURFACE_MISSING')
+    for (const r of s.reqs) expect(r.messages.at(-1)!.content).not.toContain('FLOW_END_MISSING')
+    const shipped = lines.filter((l) => readMetaLine(l)?.a2uiMeta.textDelta === undefined)
+    expect(traceOf(shipped).failureCodes).toContain('SEMANTIC_UNCORRECTED')
+    expect(traceOf(shipped).failureCodes).not.toContain('FLOW_END_INFERRED')
   })
   // T-0289 (round 5, 2026-10-15-r5-fixes :87): Haiku refused the repair as a "fabricated system notice" and would not
   // invent the reference it asked for. The repair opens as a check result and asks for a read-back with no reference.

@@ -16,3 +16,13 @@ Kim 2026-10-16 (N1): when a turn declares no ask and no surface, the producer se
 ## Done when
 - A produce test: a closing turn with no ask and no surface ships in one round with flowEnd set and the tally; a turn with an ask still gets FLOW_END_MISSING where it applies; red at the base.
 - The live-agent tests and `npm run check` exit 0; RTS spec lines updated.
+
+verifier: L3
+
+## Acceptance criteria
+- (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/produce-loop.test.ts -t "GH #1168"` exits 0: a closing turn with no ask and no surface ships in one round with `flowEnd: true` and `failureCodes` `['FLOW_END_INFERRED']`, also at `maxRounds: 1`; a turn with an ask, a turn with A2UI content, and a lexicon miss get no inferred flowEnd.
+- (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/produce-semantic-checks.test.ts` exits 0: a confirm on a complete form answered in prose gets SURFACE_MISSING repairs, never a FLOW_END_MISSING round, and ships SEMANTIC_UNCORRECTED without FLOW_END_INFERRED.
+- (red) `grep -q FLOW_END_INFERRED .claude/docs/spec/response-type-selection.spec.md` exits 0 (the RTS spec names the inference).
+- `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent` exits 0.
+- `npx vitest run --project scripts scripts/e2e-admin/probe/replays` exits 0.
+- `npm run check` exits 0.
