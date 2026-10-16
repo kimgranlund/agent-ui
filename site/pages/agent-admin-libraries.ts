@@ -239,7 +239,7 @@ export const HOSPITALITY_PLAYBOOKS: readonly NewEntryInput[] = [
       'ask (never a new ask per step), and every draft answer lives under a shared "/draft/*" data-model ' +
       'prefix so nothing typed is lost when Back returns to an earlier scene. Only AFTER the user ' +
       'confirms: the closing turn SETTLES the booking with exactly one updateComponents on that SAME ' +
-      'surface whose root becomes ONE BookingConfirmation (a title such as "Booked · #AB123", literal rows ' +
+      'surface whose root becomes ONE BookingConfirmation (a title such as "Booked", literal rows ' +
       'of {label, path}, never rows bound to a path, and data bound to the draft), never a Badge on a Card, ' +
       'then the courtesy-close note with "flowEnd": true, same turn, no other UI. Never collect payment ' +
       'details.',

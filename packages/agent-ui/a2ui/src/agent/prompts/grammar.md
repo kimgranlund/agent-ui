@@ -91,7 +91,7 @@ turn that still asks anything; a mid-flow turn never carries it. Besides the ONE
 closing turn changes no other UI.
 The closing turn's ONE exception to "no UI change": when the flow-final confirm settled a receipt surface
 (the confirm-step summary above), the closing turn MAY carry exactly one updateComponents against that SAME
-confirmed receipt — strip its Back/Confirm buttons and add a settled-status Badge (e.g. "Booked · #AB123") —
+confirmed receipt — strip its Back/Confirm buttons and add a settled-status Badge —
 immediately before the courtesy-close note and "flowEnd":true, in the SAME turn. This is the only A2UI a
 closing turn ever emits: never a fresh surface, never any other card, and never on the escalation path (a
 pure safety-directive close has no receipt to settle). It fires at most once per flow; deleteSurface is
