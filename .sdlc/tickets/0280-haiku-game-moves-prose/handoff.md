@@ -33,3 +33,9 @@ T-0265 covered openings, Admiral shots and Concierge turns, and ACTION_NOT_APPLI
 This solo lane delivers these tickets in order, one commit each (`T-NNNN: <title>`):
 - .sdlc/tickets/0280-haiku-game-moves-prose/handoff.md
 - .sdlc/tickets/0284-admiral-haiku-no-gamehud/handoff.md
+
+## Acceptance criteria
+- `npx vitest run packages/agent-ui/a2ui/src/catalog/hidden-state-checks.test.ts` exits 0: the T-0280 word-move-applied block sends back a prose-only guess and give-up targeting word-forge (ACTION_NOT_APPLIED), a give-up with a hand-built Card (RESULT_CARD_MISSING), and passes an updating guess and a ResultCard give-up.
+- `npx vitest run scripts/e2e-admin/probe/replays/lexicographer-haiku-guess-prose.test.mjs` exits 0, pinned to ACTION_NOT_APPLIED on turns 1 and 3.
+- `npx vitest run scripts/e2e-admin/probe` exits 0.
+- `npm run check` exits 0.

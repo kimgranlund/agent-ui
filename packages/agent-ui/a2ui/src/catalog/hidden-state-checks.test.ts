@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import type { A2uiOutput, A2uiServerMessage } from '../protocol.ts'
-import { fleetSecretCheck, fleetShotAppliedCheck, gradeGuess, HIDDEN_STATE_CHECKS, wordSecretCheck } from './hidden-state-checks.ts'
+import { fleetSecretCheck, fleetShotAppliedCheck, gradeGuess, HIDDEN_STATE_CHECKS, wordMoveAppliedCheck, wordSecretCheck } from './hidden-state-checks.ts'
 import { semanticSurfaceViews } from './semantic-check.ts'
 import type { SemanticAction, SemanticTurnLog } from './semantic-check.ts'
 
@@ -188,7 +188,7 @@ describe('T-0265: fleet-shot-applied', () => {
   const marked: A2uiOutput = [data('enemy-waters', { cells: [shot(1, 0, '✕')] })]
 
   it('rides every catalog after the two secret checks', () => {
-    expect(HIDDEN_STATE_CHECKS.map((c) => c.id)).toEqual(['word-secret', 'fleet-secret', 'fleet-shot-applied'])
+    expect(HIDDEN_STATE_CHECKS.map((c) => c.id).slice(0, 3)).toEqual(['word-secret', 'fleet-secret', 'fleet-shot-applied'])
   })
 
   it('the recorded prose-only "Fire at A2." targeting enemy-waters is ACTION_NOT_APPLIED', () => {
@@ -211,5 +211,46 @@ describe('T-0265: fleet-shot-applied', () => {
     expect(said("Let's play Battleship.", waters('sea'))).toEqual([])
     expect(said('How do you play Battleship?')).toEqual([])
     expect(said('Fire at A2.')).toEqual([]) // no target: nothing open to judge
+  })
+})
+
+// T-0280 (the recorded Haiku 5.5 Lexicographer, round 4 :86-:89): "My guess: audio." and "I give up." were answered with
+// a meta-line targeting word-forge and the grades and answer in prose, so the board never moved and no ResultCard shipped.
+describe('T-0280: word-move-applied', () => {
+  const session: SemanticTurnLog = { turns: [assistant([...board('word-forge'), data('word-forge', { secret: { word: 'lodge' }, cells: [], draft: '' })])] }
+  const said = (intent: string, out: A2uiOutput = [], target?: string) =>
+    wordMoveAppliedCheck.check({ surfaces: semanticSurfaceViews(session, out), intent, ...(target !== undefined ? { target } : {}) })
+  const graded: A2uiOutput = [{ version: 'v1.0', updateDataModel: { surfaceId: 'word-forge', path: '/cells', value: row(0, 'audio', [N, N, S, N, W]) } } as A2uiServerMessage]
+  const result: A2uiOutput = [
+    { version: 'v1.0', updateComponents: { surfaceId: 'word-forge', components: [{ id: 'root', component: 'ResultCard', outcome: 'loss', title: 'The word was LODGE' }] } } as A2uiServerMessage,
+  ]
+
+  it('rides every catalog after the Battleship checks', () => {
+    expect(HIDDEN_STATE_CHECKS.map((c) => c.id)).toEqual(['word-secret', 'fleet-secret', 'fleet-shot-applied', 'word-move-applied'])
+  })
+
+  it('the recorded prose-only guesses and give-up targeting word-forge are ACTION_NOT_APPLIED', () => {
+    const guess = said('My guess: audio.', [], 'word-forge')
+    expect(guess.map((f) => [f.code, f.path])).toEqual([['ACTION_NOT_APPLIED', 'word-forge:audio']])
+    expect(guess[0]!.message).toMatch(/updateDataModel for word-forge/)
+    expect(said('My guess: stern.', [], 'word-forge').map((f) => f.path)).toEqual(['word-forge:stern'])
+    const giveUp = said('I give up. What was the word?', [], 'word-forge')
+    expect(giveUp.map((f) => [f.code, f.path])).toEqual([['ACTION_NOT_APPLIED', 'word-forge:give-up']])
+    expect(giveUp[0]!.message).toMatch(/ResultCard/)
+  })
+
+  it('a give-up that updates the board with a hand-built Card and no ResultCard is RESULT_CARD_MISSING', () => {
+    const card: A2uiOutput = [{ version: 'v1.0', updateComponents: { surfaceId: 'word-forge', components: [{ id: 'root', component: 'Card', children: [] }] } } as A2uiServerMessage]
+    expect(said('I give up.', card, 'word-forge').map((f) => [f.code, f.path])).toEqual([['RESULT_CARD_MISSING', 'word-forge:give-up']])
+  })
+
+  it('an updating guess, a ResultCard give-up, a new board, a turn with no guess, no target, or a click passes', () => {
+    expect(said('My guess: audio.', graded, 'word-forge')).toEqual([])
+    expect(said('I give up.', result, 'word-forge')).toEqual([])
+    expect(said('My guess: audio.', board('word-forge-2'), 'word-forge')).toEqual([])
+    expect(said('How many guesses do I have left?', [], 'word-forge')).toEqual([])
+    expect(said('Fire at A2.', [], 'word-forge')).toEqual([])
+    expect(said('My guess: audio.')).toEqual([])
+    expect(wordMoveAppliedCheck.check({ surfaces: [], action: fire(0, 1) })).toEqual([])
   })
 })
