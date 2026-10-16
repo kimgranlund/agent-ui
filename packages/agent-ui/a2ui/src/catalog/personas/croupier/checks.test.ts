@@ -206,6 +206,20 @@ describe('croupier hand check: a natural blackjack ends the round (T-0020, NATUR
     expect(f.message).toContain('leave only the Deal again Button')
   })
 
+  // T-0276: live round 4 (2026-10-15-r4-fixes :46, Haiku 5.5) sent a hold'em opening with hole cards A K back twice as
+  // a blackjack natural, and the third round settled it at 3:2. A natural is a blackjack-family rule only.
+  it("skips a hold'em, Omaha or stud opening holding A K, and still fails the blackjack natural", () => {
+    for (const game of ["Texas hold'em, heads-up", 'Omaha, round 1', 'Seven-card stud, round 1']) {
+      const opening = natural((_, get) => {
+        get('title')['text'] = game
+        get('playerTotal')['text'] = 'You: A K'
+        get('messageZone')['text'] = 'Pre-flop: check, bet or fold.'
+      })
+      expect(judge({ turns: [] }, opening).filter((f) => f.code === 'NATURAL_ACTIONS'), game).toEqual([])
+    }
+    expect(judge({ turns: [] }, NATURAL_TURN).map((f) => f.code)).toEqual(['NATURAL_ACTIONS'])
+  })
+
   it('passes the repair: hole card face up, result stated, Deal again only', () => {
     expect(judge({ turns: [] }, NATURAL_REPAIRED_TURN)).toEqual([])
   })

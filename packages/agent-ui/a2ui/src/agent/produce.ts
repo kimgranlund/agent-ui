@@ -112,7 +112,8 @@ import { MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, selectMiniSkills } from './mini-sk
 import { FEED_SURFACE_TYPE_SET } from './feed-catalog.ts'
 import { isGenuiCandidate, readGenuiLine, utf8ByteLength, GENUI_MAX_HTML_BYTES } from './genui-line.ts'
 import type { GenuiSurfaceConfig } from './genui-surface-config.ts'
-import { runSemanticChecks, semanticActionOf, semanticSurfaceViews, sessionSurfaceViews } from '../catalog/semantic-check.ts'
+import { flowHeldOpen, runSemanticChecks, semanticActionOf, semanticSurfaceViews, sessionSurfaceViews } from '../catalog/semantic-check.ts'
+import type { SemanticCheckInput } from '../catalog/semantic-check.ts'
 import type { SemanticCheck } from '../catalog/semantic-check.ts'
 import { RENDER_SURFACE_TOOL_NAME, detectUserOverride, isLegacyShape, openSurfacesNote, renderSurfaceJsonl, renderSurfaceReply, renderSurfaceTool } from './response-type.ts'
 import type { ResponsePreference } from './response-type.ts'
@@ -679,6 +680,7 @@ function messagesFor(
       (failures.some((f) => f.code === 'NET_NOOP') ? NET_NOOP_HINT : '') + // GH #1142 — the net-no-op correction round's guidance
       (failures.some((f) => f.code === 'FLOW_END_MISSING') ? FLOW_END_HINT : '') + // GH #1168 — the missing-flowEnd correction round's guidance
       (failures.some((f) => f.code === 'NARRATED_MECHANICS') ? NARRATION_HINT : '') + // T-0234: a narrated reply's guidance
+      (failures.some((f) => f.code === 'SURFACE_DROPPED') ? SURFACE_DROPPED_HINT : '') + // T-0281: resend a dropped surface
       (failures.some((f) => f.detail !== undefined) ? SEMANTIC_HINT : '') + // ADR-0238: a semantic-finding round's guidance
       keepSurfacesHint(lastOutput, input.session, failures) // T-0172: never lose a surface the failed round created
     turns.push({
@@ -1098,6 +1100,13 @@ const FLOW_END_HINT =
   'note, addressed to the user in persona — with "flowEnd": true added on that same line, and still ' +
   'NO A2UI lines after it.'
 
+/** T-0281: the self-correct sentence for a SURFACE_DROPPED round. The recorded Haiku 5.5 FEED_SCOPE retry dropped the
+ *  BookingForm the ask surface could not host and answered in prose, so the guest saw no form. */
+const SURFACE_DROPPED_HINT =
+  ' SURFACE_DROPPED means this answer leaves out a surface your earlier attempt this turn built, so the user would ' +
+  'never see it. Resend that surface with its components and data. If it was sent back as the ask surface ' +
+  '(FEED_SCOPE), keep it as an ordinary surface and leave "ask" out of your meta-line.'
+
 /** ADR-0238: the self-correct sentence for a round with semantic findings (the NET_NOOP_HINT
  *  shape: one appended sentence, no new round kind). The payload was structurally valid; what it states
  *  contradicts what it shows, and each finding's own detail names the contradiction and the repair. */
@@ -1136,6 +1145,12 @@ function newSurfaceIds(output: A2uiOutput, session: Session): Set<string> {
   const out = new Set<string>()
   for (const msg of output) if ('createSurface' in msg && !known.has(msg.createSurface.surfaceId)) out.add(msg.createSurface.surfaceId)
   return out
+}
+
+/** T-0281: the surfaces a round's payload creates that the session does not already hold and the round does not delete. */
+function builtSurfaceIds(output: A2uiOutput, session: Session): string[] {
+  const deleted = new Set(output.flatMap((msg) => ('deleteSurface' in msg ? [msg.deleteSurface.surfaceId] : [])))
+  return [...newSurfaceIds(output, session)].filter((sid) => !deleted.has(sid))
 }
 
 /** T-0172: the surfaces a failed round created that none of its failures names, so the repair has no
@@ -1293,11 +1308,15 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   // T-0172: every surface a failed round of this turn created that no failure named; a later round that
   // passes without one has dropped it (SURFACE_DROPPED), never a success.
   const keptSurfaces = new Set<string>()
+  // T-0281: every surface an earlier round of this turn built and kept to its end, failure-named or not; a later round
+  // that answers in prose alone has dropped them all (the FEED_SCOPE retry that lost ask-1), never a success.
+  const builtSurfaces = new Set<string>()
   // RTS-R8: the last capture round's reply and declarations, kept for the degrade at the bound.
   let degrade: Pick<ReturnType<typeof peelMetaLine>, 'plan' | 'personaPatch' | 'flowEnd' | 'team' | 'target'> & { note: string } | undefined
   for (let round = 0; round < opts.maxRounds; round++) {
     const failuresFedBack = failures // what THIS round's prompt carried back — the trace's failureCodes
     if (round > 0 && failures !== undefined && lastOutput !== undefined) for (const sid of surfacesToKeep(lastOutput, failures, input.session)) keptSurfaces.add(sid)
+    if (round > 0 && lastOutput !== undefined) for (const sid of builtSurfaceIds(lastOutput, input.session)) builtSurfaces.add(sid)
     // RTS-R9: the escalation seam, consulted at the top of every self-correct round. A returned field
     // replaces only this round's effort or model; absent ⇒ byte-identical.
     roundModel = model
@@ -1567,6 +1586,13 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         failures = [{ code: 'SURFACE_REQUESTED', path: '' }]
         continue
       }
+      // T-0281: a repair round with no payload after a round that built a surface has dropped it. One more round while
+      // one is left (the hint says to resend it), else a halt that says so, as a valid round that drops one (T-0172).
+      if (builtSurfaces.size > 0 && genuiLine === undefined) {
+        failures = [...builtSurfaces].map((sid) => ({ code: 'SURFACE_DROPPED', path: sid }))
+        if (round < opts.maxRounds - 1) continue
+        throw new ProduceHalt(failures)
+      }
       // GH #1168 — the missing-flowEnd correction round (the #1142 NET_NOOP precedent, on the ADR-0187
       // atFinalize correction seam's shape: one targeted round, then pass through unchanged). Trigger,
       // fully mechanical: this turn is CLOSING-SHAPED — a note with NO ask, NO plan, NO genui line, and
@@ -1575,7 +1601,16 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       // receives — see its doc for why the prior-turn-confirm-ask signal is unavailable here). Exactly
       // ONE round, and only when a round is left to spend; on refusal the turn ships UNCHANGED below
       // (never a synthesized field, never a halt) with FLOW_END_UNCORRECTED tallied on the trace.
+      // T-0278: a say turn judged with no payload sees the session's open surfaces, and a persona check may hold the
+      // flow open (a confirm while the open booking still has a blank required field), so no FLOW_END_MISSING round
+      // pushes a reply that rightly asks for the missing value into claiming a booking that was not made.
+      const sayInput: SemanticCheckInput | undefined =
+        turnAction === undefined && turnIntent !== undefined && deps.semanticChecks !== undefined && deps.semanticChecks.length > 0
+          ? { surfaces: [], intent: turnIntent, ...(roundTarget !== undefined ? { target: roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}) }
+          : undefined
+      const heldOpen = sayInput !== undefined && flowHeldOpen(deps.semanticChecks!, sayInput)
       if (
+        !heldOpen &&
         flowEnd === undefined &&
         note !== undefined &&
         ask === undefined &&
@@ -1598,7 +1633,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       if ((turnAction !== undefined || turnIntent !== undefined) && deps.semanticChecks !== undefined && deps.semanticChecks.length > 0 && genuiLine === undefined) {
         const semantic = runSemanticChecks(
           deps.semanticChecks,
-          turnAction !== undefined ? { surfaces: [], action: turnAction } : { surfaces: [], intent: turnIntent!, ...(roundTarget !== undefined ? { target: roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}) },
+          turnAction !== undefined ? { surfaces: [], action: turnAction } : sayInput!,
         )
         if (semantic.findings.length > 0 && round < opts.maxRounds - 1) {
           failures = semantic.findings.map((f) => ({ code: f.code, path: f.path, detail: f.message }))

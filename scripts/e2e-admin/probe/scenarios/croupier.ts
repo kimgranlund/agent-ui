@@ -27,6 +27,8 @@ const say = (text: string): ProbeStep => ({ say: text })
 const click = (label: string): ProbeStep => ({ click: label })
 const DEAL_AGAIN = click('Deal again')
 const CHECK_OR_CALL = 'Check, or call if there is a bet.'
+/** T-0283: a stud street that is harmless on a finished hand, so the step after the last street is still Deal again. */
+export const STUD_STREET = 'Check, or call if there is a bet. If the hand is already over, leave the table as it is.'
 
 const SCENARIOS: readonly CroupierScenario[] = [
   {
@@ -94,11 +96,13 @@ export const CROUPIER_SCENARIOS: readonly CroupierScenario[] = SCENARIOS.map(wit
  *  is a finished run record built from SCENARIOS as they were. A Hit can bust, so the Stand after it is a `--say` (Opus
  *  5.5 busted and found no Stand). Stud has five betting streets, so round 1 needs one more check before Deal again
  *  (all three models were still on seventh street). T-0272: a house that deals fixed-limit stud with no bring-in
- *  refuses "Bring it in" and "Bet 25" (live round 3, Opus and Haiku), so every round 1 street is a check or call: six
- *  of them for five streets, one spare. */
+ *  refuses "Bring it in" and "Bet 25" (live round 3, Opus and Haiku), so every round 1 street is a check or call. T-0283:
+ *  the spare sixth check reached a hand Opus had already settled (live round 4), which it read as "deal again" and
+ *  opened round 2 in prose, so Deal again found no button. Round 1 has one step per betting round, five, and each
+ *  leaves a finished hand on the table, so Deal again comes next however early the hand ends. */
 const ROUND_STEPS: Readonly<Record<string, ProbeStep[]>> = {
   'blackjack-rounds': [say("Let's play blackjack."), click('100'), click('Stand'), DEAL_AGAIN, click('50'), click('Hit'), say('Stand.'), DEAL_AGAIN, click('25'), click('Stand')],
-  'seven-card-stud': [say("Let's play seven-card stud."), ...Array.from({ length: 6 }, () => say(CHECK_OR_CALL)), DEAL_AGAIN, say('Fold.'), DEAL_AGAIN, say('Bet 50.')],
+  'seven-card-stud': [say("Let's play seven-card stud."), ...Array.from({ length: 5 }, () => say(STUD_STREET)), DEAL_AGAIN, say('Fold.'), DEAL_AGAIN, say('Bet 50.')],
 }
 
 /** The live-round scenarios: SCENARIOS with the round's fixes. */

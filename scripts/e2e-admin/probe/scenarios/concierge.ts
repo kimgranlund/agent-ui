@@ -22,7 +22,7 @@ export const CONCIERGE_SCENARIOS: readonly RoundScenario[] = [
     name: 'spa-booking',
     steps: [
       say('What spa services can I book during my stay?', 'ProductCard'),
-      say('Book a 60-minute massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau.', 'BookingForm'),
+      say('Book a 60-minute Swedish massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau.', 'BookingForm'),
       say('Those details are right, please confirm the booking.', 'BookingConfirmation'),
       say('Thanks. When do the pool and gym close? Check the property-knowledge-base.', 'ServiceCard'),
     ],

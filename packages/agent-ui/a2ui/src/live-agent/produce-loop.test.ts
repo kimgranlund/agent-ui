@@ -1522,6 +1522,33 @@ describe('produce() feed-embedded ask — the FEED_SCOPE self-correct gate (ADR-
     expect(round2.some((m) => m.role === 'user' && /Modal/.test(m.content))).toBe(true)
   })
 
+  // T-0281 (live round 4, 2026-10-15-r4-fixes :23-:24, Haiku 5.5): the FEED_SCOPE retry answered in prose only and
+  // passed, so the BookingForm round 1 built on ask-1 never shipped.
+  it('a FEED_SCOPE retry with no surface after a round 1 that built one is sent back as SURFACE_DROPPED, never passed', async () => {
+    const PROSE_ONLY = '{"a2uiMeta":{"note":"press Book table to confirm","ask":{"surfaceId":"ask-1"}}}'
+    const { provider, calls, reqs } = stubProvider([
+      '{"a2uiMeta":{"note":"pick one","ask":{"surfaceId":"ask-1"}}}\n' + ASK_OUT_OF_SCOPE,
+      PROSE_ONLY,
+      '{"a2uiMeta":{"note":"pick one"}}\n' + ASK_OUT_OF_SCOPE,
+    ])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
+    expect(calls()).toBe(3)
+    const round3 = reqs()[2]!.messages.at(-1)!.content
+    expect(round3).toContain('SURFACE_DROPPED at ask-1')
+    expect(round3).toContain('leave "ask" out of your meta-line')
+    expect(readMetaLine(lines[0]!)!.a2uiMeta.trace!.failureCodes).toEqual(['SURFACE_DROPPED'])
+    expect(lines.some((l) => l.includes('"createSurface":{"surfaceId":"ask-1"'))).toBe(true)
+
+    // At the round bound the prose-only retry halts naming the dropped surface instead of passing.
+    const bound = stubProvider(['{"a2uiMeta":{"note":"pick one","ask":{"surfaceId":"ask-1"}}}\n' + ASK_OUT_OF_SCOPE, PROSE_ONLY])
+    const halted = (async () => {
+      for await (const _ of produce(intent, { provider: bound.provider, retrieve: () => [], catalog: defaultCatalog }, { maxRounds: 2 })) void _
+    })()
+    await expect(halted).rejects.toMatchObject({ failures: [{ code: 'SURFACE_DROPPED', path: 'ask-1' }] })
+  })
+
   it('the shared validateA2ui call sites are unchanged — FEED_SCOPE runs strictly AFTER validation passes (SPEC-N3 parity)', async () => {
     // A payload the shared validator would ALREADY reject (an unknown component) must surface as the
     // ordinary CATALOG/SCHEMA failure, never as FEED_SCOPE — proving the gate never runs ahead of, or

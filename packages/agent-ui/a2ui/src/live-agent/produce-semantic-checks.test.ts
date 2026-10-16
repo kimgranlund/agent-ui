@@ -16,6 +16,7 @@ import { composeCatalog } from '../catalog/compose.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import { croupierFragment } from '../catalog/personas/croupier/manifest.ts'
 import { croupierSemanticChecks } from '../catalog/personas/croupier/checks.ts'
+import { conciergeSemanticChecks } from '../catalog/personas/concierge/checks.ts'
 import { CORRECTED_LINE, DEAL_TURN, EVIDENCE_LINE, toJsonl } from '../catalog/personas/croupier/hands.fixture.ts'
 
 const catalog = composeCatalog(defaultCatalog, croupierFragment, 'croupier')
@@ -264,5 +265,58 @@ describe('produce() + croupier opening check: a game asked for in prose alone is
     const off = scripted([PROSE])
     await collect(produce(opening, deps(off.provider), { maxRounds: 3 }))
     expect(off.calls()).toBe(1)
+  })
+})
+
+// T-0278 (round 4, 2026-10-15-r4-fixes :114-:115, Haiku 5.5): the confirm turn on a spa BookingForm whose treatment is
+// blank rightly asked for the treatment, and FLOW_END_MISSING then SURFACE_MISSING sent it back twice. The concierge
+// check now holds that turn open; a confirm on a complete form is still sent back.
+describe('produce() + concierge checks: a confirm the open booking cannot honor ships on round 1 (T-0278)', () => {
+  const formTurn = (treatment: string) =>
+    [
+      { version: 'v1.0', createSurface: { surfaceId: 'spa-booking', catalogId: 'agent-ui--concierge', sendDataModel: true } },
+      { version: 'v1.0', updateDataModel: { surfaceId: 'spa-booking', value: { booking: { treatment, date: '2026-11-19', guestName: 'Alex Moreau' } } } },
+      {
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'spa-booking',
+          components: [
+            {
+              id: 'root',
+              component: 'BookingForm',
+              value: { path: '/booking' },
+              fields: [
+                { kind: 'select', label: 'Treatment', path: 'treatment', required: true, options: [{ label: 'Swedish massage', value: 'swedish-60' }] },
+                { kind: 'text', label: 'Guest name', path: 'guestName', required: true },
+              ],
+            },
+          ],
+        },
+      },
+    ]
+      .map((m) => JSON.stringify(m))
+      .join('\n')
+  const confirm = (treatment: string): TurnInput => ({
+    kind: 'intent',
+    text: 'Those details are right, please confirm the booking.',
+    session: { turns: [{ role: 'user', content: 'Book a 60-minute massage.' }, { role: 'assistant', content: formTurn(treatment) }] },
+  })
+  const REFUSAL = '{"a2uiMeta":{"note":"I can\'t confirm the booking yet because no treatment is selected. Please choose one on the form."}}'
+  const BOOKED = '{"a2uiMeta":{"note":"Your Swedish massage is booked."}}'
+
+  it('a confirm while the treatment is blank, answered by asking for it, spends no FLOW_END_MISSING or SURFACE_MISSING round', async () => {
+    const s = scripted([REFUSAL])
+    const lines = await collect(produce(confirm(''), deps(s.provider, conciergeSemanticChecks), { maxRounds: 3 }))
+    expect(s.calls()).toBe(1)
+    expect(traceOf(lines.filter((l) => readMetaLine(l)?.a2uiMeta.textDelta === undefined))).toMatchObject({ rounds: 1, failureCodes: [] })
+  })
+
+  it('a confirm on a complete form answered in prose still gets FLOW_END_MISSING, then SURFACE_MISSING', async () => {
+    const s = scripted([BOOKED])
+    const lines = await collect(produce(confirm('swedish-60'), deps(s.provider, conciergeSemanticChecks), { maxRounds: 3 }))
+    expect(s.calls()).toBe(3)
+    expect(s.reqs[1]!.messages.at(-1)!.content).toContain('FLOW_END_MISSING')
+    expect(s.reqs[2]!.messages.at(-1)!.content).toContain('SURFACE_MISSING')
+    expect(traceOf(lines.filter((l) => readMetaLine(l)?.a2uiMeta.textDelta === undefined)).failureCodes).toContain('SURFACE_MISSING')
   })
 })

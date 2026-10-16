@@ -19,7 +19,8 @@
 //   is a natural, and a natural ends the round on the deal. The surface must then carry no Hit, Stand or
 //   Double Button (matched by label or id, any case) and no face-down dealer card (the hole card is
 //   revealed for settlement). One finding names both faults. A player hand the check cannot resolve is
-//   never a natural; a dealer hand it cannot resolve is never judged for a hole card.
+//   never a natural; a dealer hand it cannot resolve is never judged for a hole card. T-0276: a surface whose
+//   words name another game (hold'em, Omaha, stud) and no blackjack-family game is never judged for a natural.
 //
 // - HAND_BINDING (ADR-0243): a CardTable's `dealerHand`/`playerHand` must be a `{path}` binding to
 //   `/dealerHand` (resp. `/playerHand`), so a draw is a list append. A literal list or another pointer fails.
@@ -334,7 +335,8 @@ function checkSurface(view: SurfaceView): SemanticFinding[] {
     if (mine.length !== 1) continue
     const cards = mine[0]!.cards
     if (cards === undefined) continue
-    if (p === 'player') {
+    // T-0276: a natural is a blackjack-family rule; a hold'em, Omaha or stud table holding A K is a hand in progress.
+    if (p === 'player' && !namesOtherGame([...view.components.values()])) {
       const natural = naturalFinding(view, mine[0]!, containers.filter((c) => c.participant === 'dealer'))
       if (natural !== undefined) findings.push(natural)
     }
@@ -415,7 +417,7 @@ const literalWords = (comps: Iterable<A2uiComponent>): string =>
   [...comps].flatMap((c) => ['text', 'label', 'title', 'status'].map((k) => c[k]).filter((v): v is string => typeof v === 'string')).join(' ')
 
 /** T-0212: a surface whose words name a game other than blackjack and no blackjack-family game (the recorded
- *  "Seven-card stud · Place your bet"). */
+ *  "Seven-card stud · Place your bet"; T-0276: "Texas hold'em, heads-up", which NATURAL_ACTIONS skips). */
 function namesOtherGame(comps: readonly A2uiComponent[]): boolean {
   const words = literalWords(comps)
   return OTHER_GAMES.test(words) && !BLACKJACK_GAMES.test(words)

@@ -79,7 +79,7 @@ export const ROUTING_SCENARIOS: readonly RoutingScenario[] = [
     steps: [
       say('Hello, I just checked in.', concierge({ sections: CORE_SECTIONS })),
       say('What spa services can I book during my stay?', concierge({ exemplars: { exclude: GAME_BOARDS } }), 'ProductCard'),
-      say('Book a 60-minute massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau.', concierge({ exemplars: { include: ['domain-concierge-booking-request'] } }), 'BookingForm'),
+      say('Book a 60-minute Swedish massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau.', concierge({ exemplars: { include: ['domain-concierge-booking-request'] } }), 'BookingForm'),
       say('Those details are right, please confirm the booking.', concierge(), 'BookingConfirmation'),
       say("What's the weather in Lisbon tomorrow?", concierge()),
       say('How much is 200 euros in US dollars?', concierge()),

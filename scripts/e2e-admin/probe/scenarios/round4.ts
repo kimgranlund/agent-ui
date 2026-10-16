@@ -64,7 +64,7 @@ export const ROUND4_LONG_MODELS: readonly RoundModel[] = ROUND3_MODELS.filter((m
 const BOOKING_REQUEST = 'domain-concierge-booking-request'
 const WORD_BOARD = 'domain-lexicographer-word-board'
 const GAME_OVER = 'domain-lexicographer-game-over'
-const BOOK_ASK = 'Book a 60-minute massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau.'
+const BOOK_ASK = 'Book a 60-minute Swedish massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau.'
 
 const say = (text: string, routing?: RoutingExpect, ...expect: string[]): ProbeStep => ({ say: text, ...(expect.length ? { expect } : {}), ...(routing !== undefined ? { expectRouting: routing } : {}) })
 

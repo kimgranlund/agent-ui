@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest'
 import { parseProbeCli } from '../cli.ts'
 import { ADMIRAL_SCENARIOS } from './admiral.ts'
 import { CONCIERGE_SCENARIOS } from './concierge.ts'
-import { CROUPIER_MODELS, CROUPIER_ROUND_SCENARIOS } from './croupier.ts'
+import { CROUPIER_MODELS, CROUPIER_ROUND_SCENARIOS, STUD_STREET } from './croupier.ts'
 import { LEXICOGRAPHER_SCENARIOS } from './lexicographer.ts'
 import { MODEL_ORDER, ROUND_PRESETS, roundCommandsScript, roundRuns } from './round.ts'
 
@@ -64,9 +64,10 @@ describe('live round 2 scenarios', () => {
     const rounds = steps('blackjack-rounds')
     expect(rounds[rounds.findIndex((step) => step.click === 'Hit') + 1]).toEqual({ say: 'Stand.' })
     const stud = steps('seven-card-stud')
-    // T-0272: every round 1 street is a check or call, legal under fixed-limit house rules with no bring-in.
-    expect(stud.slice(1, stud.findIndex((step) => step.click === 'Deal again')).every((step) => step.say === 'Check, or call if there is a bet.')).toBe(true)
-    expect(stud.findIndex((step) => step.click === 'Deal again')).toBe(7)
+    // T-0272: every round 1 street is a check or call, legal under fixed-limit house rules with no bring-in. T-0283: one
+    // per betting round, each harmless on a finished hand.
+    expect(stud.slice(1, stud.findIndex((step) => step.click === 'Deal again')).every((step) => step.say === STUD_STREET)).toBe(true)
+    expect(stud.findIndex((step) => step.click === 'Deal again')).toBe(6)
     const says = CONCIERGE_SCENARIOS.flatMap((s) => s.steps.map((step) => step.say))
     for (const text of says.filter((t) => /^Book|table at/.test(t))) expect(text).toMatch(/\d{1,2} November 2026/)
     for (const text of says.filter((t) => /hours|close\?/.test(t))) expect(text).toContain('property-knowledge-base')

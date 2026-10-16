@@ -28,3 +28,6 @@ FLOW_END_MISSING then SURFACE_MISSING (`intent:confirm`, "Call render_surface wi
 ## Done when
 - A concierge checks test: a confirm say turn whose reply asks for a missing required field, or whose open BookingForm has a blank required field, raises neither SURFACE_MISSING nor FLOW_END_MISSING; a confirm turn on a complete form still does.
 - The replay is recaptured; `npx vitest run scripts/e2e-admin/probe` and `npm run check` exit 0.
+
+## Reverify note (conductor, 2026-10-16)
+After the rebase onto T-0286, T-0278's `openSurfaceViews` was folded into T-0286's `sessionSurfaceViews` (one `SemanticCheckInput.open` on every say turn). Reverify this ticket's criteria against the rebased tree (commit e0c59e8c and HEAD).

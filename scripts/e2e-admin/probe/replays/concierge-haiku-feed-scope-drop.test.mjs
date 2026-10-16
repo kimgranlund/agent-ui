@@ -6,13 +6,16 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0281. Live round 4 (2026-10-15-r4-fixes :23-:24, Haiku 5.5). The Vela table ask built a BookingForm
-// on ask-1 and also rewrote spa-booking, which FEED_SCOPE sent back; the repair round answered in prose only and
-// passed, so ask-1 never shipped and the turn shows no form. When a repair round may not drop the surface, recapture.
-it('concierge-haiku-feed-scope-drop: the FEED_SCOPE repair round drops the BookingForm', async () => {
+// T-0281 (fixed). Live round 4 (2026-10-15-r4-fixes :23-:24, Haiku 5.5). The Vela table ask built a BookingForm on
+// ask-1, which FEED_SCOPE sent back; the repair round answered in prose only and passed, so ask-1 never shipped and the
+// turn showed no form. That prose round now gets SURFACE_DROPPED, whose hint says to resend the surface with "ask" left
+// out of the meta-line. Turn 1's third round is AUTHORED to that instruction (the live turn had two): round 1's
+// BookingForm on ask-1 with no ask declaration. The replay shows the repaired turn shipping the form.
+it('concierge-haiku-feed-scope-drop: the prose-only FEED_SCOPE retry is sent back and the BookingForm ships', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./concierge-haiku-feed-scope-drop.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual(['no-surface-loss:1'])
-  const trace = report.records[1].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
-  expect(trace).toMatchObject({ rounds: 2, failureCodes: ['FEED_SCOPE'] })
+  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual([])
+  const lines = report.records[1].lines.map((l) => JSON.parse(l))
+  expect(lines.map((l) => l.a2uiMeta?.trace).find((t) => t !== undefined)).toMatchObject({ rounds: 3, failureCodes: ['SURFACE_DROPPED'] })
+  expect(lines.flatMap((l) => (l.updateComponents?.surfaceId === 'ask-1' ? l.updateComponents.components : [])).map((c) => c.component)).toContain('BookingForm')
 })
