@@ -82,8 +82,9 @@ function loc(section: FieldLocation['section'], item: string, itemLabel: string)
  *  `settingsItem(key, summary, …)` folds), pinned by field-location.test.ts's anchor-parity gate. */
 const LOCATIONS: ReadonlyMap<string, FieldLocation> = new Map<string, FieldLocation>([
   // the Agent tab — the agent card, the model grid, the bankroll row
-  ...(['name', AGENT_ENABLED_KEY, ...Object.values(MODEL_SETTING_KEYS)] as const).map((k) => [k, loc('agent-content', 'agent', 'Agent')] as const),
-  ...(['model', MODELS_INCLUDED_KEY] as const).map((k) => [k, loc('agent-content', 'model', 'Model')] as const),
+  ...(['name', AGENT_ENABLED_KEY] as const).map((k) => [k, loc('agent-content', 'agent', 'Agent')] as const),
+  // T-0306: the Model section's settings render in the Model fold, below the grid.
+  ...(['model', MODELS_INCLUDED_KEY, ...Object.values(MODEL_SETTING_KEYS)] as const).map((k) => [k, loc('agent-content', 'model', 'Model')] as const),
   ...([BANKROLL_CAPABLE_KEY, BANKROLL_KEY] as const).map((k) => [k, loc('agent-content', 'bankroll', 'Bankroll')] as const),
 
   // the Capabilities tab — Instructions (the prompt-section kind), then the four generic kinds

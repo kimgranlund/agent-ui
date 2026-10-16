@@ -1600,25 +1600,22 @@ describe('ui-agent-admin: the Agent settings card frames the section select and 
     expect(p.paddingInlineStart, 'the panel adds no inset of its own inside the card').toBe('0px')
   })
 
-  it('T-0306: the compact section select lines up with the Name field and sits one list gap above it', async () => {
+  it('T-0306: every settings section renders in the page by default: no section select, the Model fields sit in the Model fold', async () => {
+    // Kim's ruling (2026-10-16): "just show the options by default". The Model section (effort, max tokens,
+    // ...) was reachable only through the compact section select; now each section renders in its own fold.
     const { el } = mountAgentAdmin()
     await el.updateComplete
-    const settings = el.querySelector('ui-settings') as HTMLElement
-    await expect.poll(() => settings.hasAttribute('data-compact'), { timeout: 5000 }).toBe(true)
-    const select = settings.querySelector('[data-part="section-select"]') as HTMLElement
-    const trigger = select.querySelector('[data-part="trigger"]') as HTMLElement
-    const field = settings.querySelector('[data-part="panel"] ui-text-field') as HTMLElement
-    const panel = settings.querySelector('[data-part="panel"]') as HTMLElement
-    expect(getComputedStyle(select).display, 'the select stays: it is the only route to the Model section').not.toBe('none')
-    const t = trigger.getBoundingClientRect()
-    const f = field.getBoundingClientRect()
-    expect(t.width, 'anti-vacuous: the trigger renders').toBeGreaterThan(0)
-    expect(t.left, 'the select starts where the Name field starts').toBeCloseTo(f.left, 0)
-    expect(t.right, 'the select ends where the Name field ends').toBeCloseTo(f.right, 0)
-    const gap = panel.getBoundingClientRect().top - t.bottom
-    const listGap = parseFloat(getComputedStyle(el.querySelector('[data-part="model-grid"]') as HTMLElement).rowGap)
-    expect(listGap, 'anti-vacuous: the pane list gap resolves').toBeGreaterThan(0)
-    expect(gap, 'one list gap between the select and the field, never butting').toBeCloseTo(listGap, 0)
+    const agentSettings = el.querySelector('[data-item="agent"] ui-settings') as HTMLElement
+    // the narrow settings pane puts ui-settings in its compact band, where the old select showed
+    await expect.poll(() => agentSettings.hasAttribute('data-compact'), { timeout: 5000 }).toBe(true)
+    const selects = [...el.querySelectorAll('ui-settings [data-part="section-select"]')] as HTMLElement[]
+    for (const select of selects) expect(getComputedStyle(select).display, 'no section select renders').toBe('none')
+    const effort = el.querySelector('[data-item="model"] ui-settings [name="maxTokens"]') as HTMLElement
+    expect(effort, 'the Model section renders inside the Model fold').not.toBeNull()
+    expect(effort.getBoundingClientRect().height, 'and is visible without any navigation').toBeGreaterThan(0)
+    const name = el.querySelector('[data-item="agent"] ui-settings [name="name"]') as HTMLElement
+    expect(name.getBoundingClientRect().height, 'the Agent section still renders in the Agent fold').toBeGreaterThan(0)
+    expect(el.querySelector('[data-item="agent"] ui-settings [name="maxTokens"]'), 'the Model fields render once, not twice').toBeNull()
   })
 })
 
@@ -1747,8 +1744,12 @@ describe('ui-agent-admin — the Model fold body wins its OWN display:flex, so m
 
     const expectedGapPx = Number.parseFloat(getComputedStyle(body).rowGap)
     expect(expectedGapPx, 'a real, non-zero declared section gap to measure against').toBeGreaterThan(0)
-    const measuredGapPx = resetRow.getBoundingClientRect().top - grid.getBoundingClientRect().bottom
-    expect(measuredGapPx, 'the models card and the Reset Agent card no longer butt together').toBeCloseTo(expectedGapPx, 0)
+    // T-0306: the Model section's settings card sits between them, one body gap on each side.
+    const modelSettings = body.querySelector(':scope > ui-settings') as HTMLElement
+    expect(modelSettings.getBoundingClientRect().height, 'the Model settings card is a real, painted box').toBeGreaterThan(0)
+    expect(modelSettings.getBoundingClientRect().top - grid.getBoundingClientRect().bottom, 'the models card and the Model settings card no longer butt together').toBeCloseTo(expectedGapPx, 0)
+    const measuredGapPx = resetRow.getBoundingClientRect().top - modelSettings.getBoundingClientRect().bottom
+    expect(measuredGapPx, 'the Model settings card and the Reset Agent card no longer butt together').toBeCloseTo(expectedGapPx, 0)
   })
 
   // GH #709 — the SAME failure class this describe block's own GH #706 fix already named for settings-item

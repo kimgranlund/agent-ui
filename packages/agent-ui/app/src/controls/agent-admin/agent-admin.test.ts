@@ -1970,8 +1970,12 @@ describe('UIAgentAdminElement — composition (GH #52/ADR-0154: chat + {Settings
     const agentContent = el.querySelector('[data-role="agent-content"]') as HTMLElement
     const settingsEl = agentContent.querySelector('ui-settings') as UISettingsElement
     expect(settingsEl).toBeInstanceOf(UISettingsElement)
-    expect(settingsEl.schema).toBe(el.schema)
+    // T-0306: the schema splits across two single-section units, Agent in the Agent fold and Model in the Model fold.
+    const modelSettingsEl = agentContent.querySelector('[data-item="model"] ui-settings') as UISettingsElement
+    expect(settingsEl.schema?.sections).toEqual(el.schema?.sections.filter((s) => s.id !== 'model'))
+    expect(modelSettingsEl.schema?.sections).toEqual(el.schema?.sections.filter((s) => s.id === 'model'))
     expect(settingsEl.store).toBe(el.store)
+    expect(modelSettingsEl.store).toBe(el.store)
 
     const capabilitiesContent = el.querySelector('[data-role="capabilities-content"]') as HTMLElement
     const capabilitiesSections = [...capabilitiesContent.querySelectorAll('[data-part="entry-section"]')]

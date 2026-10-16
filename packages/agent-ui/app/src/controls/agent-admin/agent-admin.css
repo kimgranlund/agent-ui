@@ -681,10 +681,11 @@
      deliberately: the card language is THIS surface's own (--ui-agent-admin-* tokens); a generic
      ui-settings consumer stays chrome-free (settings.css never gains a card opinion). GH #191 follow-up:
      the padding is the entry card's own asymmetric card-pad, never a uniform inset.
-     T-0306 (Kim 2026-10-16): the card frames the WHOLE `ui-settings` unit, not its generated panel, so the
-     compact section select (the only route to the T-0185 Model section) is the card's header row, the
-     way the Model card frames its header row and rows: the select drops its own inset to line up with
-     the Name field and keeps one list gap below it. The `ui-settings` type selector on the panel rule
+     T-0306 (Kim 2026-10-16): the card frames the WHOLE `ui-settings` unit, not its generated panel. Each
+     unit holds one section (the Agent fold's, and the T-0185 Model section in the Model fold, Kim's "just
+     show the options by default"), so ui-settings' single-section posture shows no rail or section
+     select. A hidden unit (no Model section) authors its own display:none over settings.css's
+     `:scope { display: flex }`, which outranks the UA [hidden] rule. The `ui-settings` type selector on the panel rule
      lifts it to (0,1,1), beating settings.css's own `[data-part='panel']` (0,1,0) padding rule
      (scoped-cascade law: specificity wins BEFORE ui-settings' closer scope proximity is consulted). */
   ui-settings {
@@ -692,7 +693,9 @@
     border-radius: var(--ui-agent-admin-entry-radius);
     background: var(--ui-agent-admin-surface);
     padding: var(--ui-agent-admin-card-pad);
-    --ui-settings-select-pad: 0 0 var(--ui-agent-admin-list-gap);
+  }
+  ui-settings[hidden] {
+    display: none;
   }
   ui-settings [data-part='panel'] {
     padding: 0;
