@@ -68,9 +68,14 @@ T-0172 rules (2026-10-14 traces):
   gets the same code again, so a swap to a shape no row detects is repaired, or ships tallied `SEMANTIC_UNCORRECTED`.
 - A self-correct round never loses a surface: a session-new surface the failed round created that no
   failure names must come back. The repair message names it ("Keep `ask-1` ..."); a later valid round
-  without it spends a `SURFACE_DROPPED` round, and on the last round halts with `SURFACE_DROPPED`.
+  without it spends a `SURFACE_DROPPED` round, and on the last round halts with `SURFACE_DROPPED` unless an
+  earlier round can ship (below).
 
-`maxRounds` bounds the loop. Exhaustion throws `ProduceHalt` carrying the last failures; a
+`maxRounds` bounds the loop. T-0302: when the last round fails to parse, fails schema or drops a surface, the last
+earlier round whose payload validated and dropped nothing ships whole instead (its note, ask and lines), as a last
+round would ship it (a feed-scoped ask dropped as `FEED_SCOPE_RESCOPED`, a finding tallied `SEMANTIC_UNCORRECTED`),
+the trace carrying the last round's codes plus `EARLIER_ROUND_SHIPPED`; it comes before the `SURFACE_DEGRADED`
+text. With no such round, exhaustion throws `ProduceHalt` carrying the last failures; a
 transport that already committed a 200 turns that into the terminal error line below.
 `FEED_SCOPE`, `NET_NOOP`, `FLOW_END_MISSING`, `SURFACE_DROPPED`, the genui codes and a semantic check's own codes
 (`HAND_TOTAL`, `HAND_COUNT`, `NATURAL_ACTIONS`, `SEMANTIC_UNCORRECTED`, `SEMANTIC_CHECK_ERROR`) are produce-layer-only and

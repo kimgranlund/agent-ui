@@ -1541,12 +1541,16 @@ describe('produce() feed-embedded ask — the FEED_SCOPE self-correct gate (ADR-
     expect(readMetaLine(lines[0]!)!.a2uiMeta.trace!.failureCodes).toEqual(['SURFACE_DROPPED'])
     expect(lines.some((l) => l.includes('"createSurface":{"surfaceId":"ask-1"'))).toBe(true)
 
-    // At the round bound the prose-only retry halts naming the dropped surface instead of passing.
+    // At the round bound the prose-only retry never passes. T-0302: round 1, the last valid round, ships instead of a
+    // halt, as the last round would ship it: the feed-scoped ask dropped and the surface kept as an ordinary one.
     const bound = stubProvider(['{"a2uiMeta":{"note":"pick one","ask":{"surfaceId":"ask-1"}}}\n' + ASK_OUT_OF_SCOPE, PROSE_ONLY])
-    const halted = (async () => {
-      for await (const _ of produce(intent, { provider: bound.provider, retrieve: () => [], catalog: defaultCatalog }, { maxRounds: 2 })) void _
-    })()
-    await expect(halted).rejects.toMatchObject({ failures: [{ code: 'SURFACE_DROPPED', path: 'ask-1' }] })
+    const shipped: string[] = []
+    for await (const line of produce(intent, { provider: bound.provider, retrieve: () => [], catalog: defaultCatalog }, { maxRounds: 2 })) shipped.push(line)
+    const meta = readMetaLine(shipped[0]!)!.a2uiMeta
+    expect(meta.trace!.failureCodes).toEqual(['SURFACE_DROPPED', 'FEED_SCOPE_RESCOPED', 'EARLIER_ROUND_SHIPPED'])
+    expect(meta.note).toBe('pick one')
+    expect(meta.ask).toBeUndefined()
+    expect(shipped.some((l) => l.includes('"createSurface":{"surfaceId":"ask-1"'))).toBe(true)
   })
 
   // T-0290 (live round 5, 2026-10-15-r5-fixes :54-:55, Haiku 5.5): the BookingForm built as ask-1 was sent back through
