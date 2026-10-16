@@ -72,3 +72,22 @@ describe('the live-round seven-card stud steps fit its five betting rounds (T-02
     expect(STUD_STREET).toMatch(/If the hand is already over, leave the table as it is\./)
   })
 })
+
+// T-0325: live round 8 (regress-croupier-texas-holdem-opus-1, :411-:412). The dealer folded to "Bet 50." and the hand
+// ended; the scripted "Check, or call" then made Opus deal round 2, so the later Deal again found Check, Bet and Fold.
+describe('the live-round texas-holdem steps assume no showdown (T-0325)', () => {
+  const holdem = CROUPIER_ROUND_SCENARIOS.find((s) => s.name === 'texas-holdem').steps
+  const ENDS_HAND = /^(?:bet|raise|fold)\b/i
+
+  it('every step after a move that can end the hand is Deal again or a street harmless on a finished hand', () => {
+    const after = holdem.flatMap((step, i) => (typeof step.say === 'string' && ENDS_HAND.test(step.say) && i + 1 < holdem.length ? [holdem[i + 1]] : []))
+    expect(after.length).toBe(3) // anti-vacuity: Bet 50, Fold and Raise 100
+    for (const step of after) expect(step.click === 'Deal again' || step.say === STUD_STREET, JSON.stringify(step)).toBe(true)
+  })
+
+  it('round 1 still plays four betting rounds before Deal again, and the frozen T-0184 script keeps its steps', () => {
+    expect(holdem.findIndex((step) => step.click === 'Deal again')).toBe(5)
+    expect(holdem.slice(1, 5).map((step) => step.say)).toEqual(['Check, or call if there is a bet.', 'Bet 50.', STUD_STREET, STUD_STREET])
+    expect(CROUPIER_SCENARIOS.find((s) => s.name === 'texas-holdem').steps.map((step) => step.say ?? step.click)).toContain('Check, or call if there is a bet.')
+  })
+})

@@ -99,9 +99,12 @@ export const CROUPIER_SCENARIOS: readonly CroupierScenario[] = SCENARIOS.map(wit
  *  refuses "Bring it in" and "Bet 25" (live round 3, Opus and Haiku), so every round 1 street is a check or call. T-0283:
  *  the spare sixth check reached a hand Opus had already settled (live round 4), which it read as "deal again" and
  *  opened round 2 in prose, so Deal again found no button. Round 1 has one step per betting round, five, and each
- *  leaves a finished hand on the table, so Deal again comes next however early the hand ends. */
+ *  leaves a finished hand on the table, so Deal again comes next however early the hand ends. T-0325: in hold'em the
+ *  dealer folded to "Bet 50." (live round 8, Opus) and the next scripted check started round 2, so every step after a
+ *  bet or a raise is that harmless street too. */
 const ROUND_STEPS: Readonly<Record<string, ProbeStep[]>> = {
   'blackjack-rounds': [say("Let's play blackjack."), click('100'), click('Stand'), DEAL_AGAIN, click('50'), click('Hit'), say('Stand.'), DEAL_AGAIN, click('25'), click('Stand')],
+  'texas-holdem': [say("Let's play Texas hold'em."), say(CHECK_OR_CALL), say('Bet 50.'), say(STUD_STREET), say(STUD_STREET), DEAL_AGAIN, say('Fold.'), DEAL_AGAIN, say('Raise 100.'), say(STUD_STREET)],
   'seven-card-stud': [say("Let's play seven-card stud."), ...Array.from({ length: 5 }, () => say(STUD_STREET)), DEAL_AGAIN, say('Fold.'), DEAL_AGAIN, say('Bet 50.')],
 }
 
