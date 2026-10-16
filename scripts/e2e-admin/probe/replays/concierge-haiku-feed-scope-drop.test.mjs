@@ -8,11 +8,13 @@ import { offlineReplay } from '../trace.ts'
 
 // expectedFail: T-0281. Live round 4 (2026-10-15-r4-fixes :23-:24, Haiku 5.5). The Vela table ask built a BookingForm
 // on ask-1 and also rewrote spa-booking, which FEED_SCOPE sent back; the repair round answered in prose only and
-// passed, so ask-1 never shipped and the turn shows no form. When a repair round may not drop the surface, recapture.
+// passed, so ask-1 never shipped and the turn shows no form. T-0282: "I'd like a table" is now a booking ask, so the
+// prose-only repair round gets SURFACE_MISSING and a third round (the recorded round 2 again), which ships uncorrected
+// with ask-1 still lost. When a repair round may not drop the surface, recapture.
 it('concierge-haiku-feed-scope-drop: the FEED_SCOPE repair round drops the BookingForm', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./concierge-haiku-feed-scope-drop.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
   expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual(['no-surface-loss:1'])
   const trace = report.records[1].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
-  expect(trace).toMatchObject({ rounds: 2, failureCodes: ['FEED_SCOPE'] })
+  expect(trace).toMatchObject({ rounds: 3, failureCodes: ['SURFACE_MISSING', 'SEMANTIC_UNCORRECTED'] })
 })

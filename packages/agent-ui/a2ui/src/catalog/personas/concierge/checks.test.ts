@@ -91,3 +91,19 @@ describe('a confirm the open booking cannot honor (T-0278)', () => {
     expect(said(CONFIRM_ASK).map((f) => f.code)).toEqual(['SURFACE_MISSING'])
   })
 })
+
+// T-0282: round 4 (2026-10-15-r4-fixes :84, :12, :24, :14). The confirm and booking asks the round scenarios use, which
+// the T-0265 vocabulary missed: at :84 Haiku answered "Your half-day coastal boat tour is booked" with no surface.
+describe('the round scenarios\' confirm and booking asks (T-0282)', () => {
+  it('"Confirm it", "confirm the table" and "I\'d like a table" with no surface are SURFACE_MISSING', () => {
+    const paths = (intent: string) => said(intent).map((f) => [f.code, f.path])
+    expect(paths('Confirm it, the details are right.')).toEqual([['SURFACE_MISSING', 'intent:confirm']])
+    expect(paths('Yes, confirm the table for four.')).toEqual([['SURFACE_MISSING', 'intent:confirm']])
+    expect(paths("I'd like a table at Vela on Friday 20 November 2026 at 20:00 for two, name Alex Moreau.")).toEqual([['SURFACE_MISSING', 'intent:booking']])
+  })
+
+  it('a pool-hours question still passes in prose', () => {
+    expect(said('When do the pool and gym close?')).toEqual([])
+    expect(said('What time does the pool open tomorrow?')).toEqual([])
+  })
+})

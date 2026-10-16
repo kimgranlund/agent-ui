@@ -14,12 +14,13 @@
 import { readPointer } from '../../semantic-check.ts'
 import type { SemanticCheck, SemanticCheckInput, SemanticFinding, SurfaceView } from '../../semantic-check.ts'
 
-/** The guest confirms a booking already read back ("please confirm the booking"). */
-const CONFIRM = /\bconfirm\b[^.?!]*\b(booking|reservation|appointment|slot)\b/i
+/** The guest confirms a booking already read back ("please confirm the booking"; T-0282: "Confirm it, the details are
+ *  right.", "Yes, confirm the table for four."). */
+const CONFIRM = /\bconfirm\s+it\b|\bconfirm\b[^.?!]*\b(booking|reservation|appointment|slot|table|tour)\b/i
 /** The guest asks what can be booked ("What spa services can I book?"). */
 const SERVICES = /\b(services|treatments|amenities|facilities|menu)\b/i
-/** The guest asks to book ("Book a 60-minute massage on Thursday at 15:00"). */
-const BOOK = /\b(book|reserve|reservation)\b/i
+/** The guest asks to book ("Book a 60-minute massage on Thursday at 15:00"; T-0282: "I'd like a table at Vela"). */
+const BOOK = /\b(book|reserve|reservation)\b|\b(i'?d|i would|we'?d|we would) like (a|an) (table|room|treatment|massage|tour|appointment)\b/i
 
 /** The moment a say turn's words ask for, with the surface that answers it, or undefined. */
 function askedMoment(intent: string): { moment: string; surface: string } | undefined {
