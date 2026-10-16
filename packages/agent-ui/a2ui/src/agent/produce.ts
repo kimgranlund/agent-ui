@@ -1313,6 +1313,10 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   // yields text as it arrives); first round only, since a repair round re-sends a reply already streamed.
   const streamDeltas = integrationTools.length === 0
   let lastCaptureRound = false // RTS-R8: the previous round's payload came from `render_surface` (tool-aware repair wording)
+  // T-0298: the previous round answered with no payload and a semantic finding sent it back (Haiku wrote a target
+  // meta-line and prose through every repair round, round 6 :2), so this repair round forces `render_surface`. The
+  // adapter sends the choice only where the model takes one: never with thinking on (the API rejects it).
+  let forceSurfaceRound = false
   let surfaceRequestedFedBack = false // RTS-R6: the ONE correction round a surface override with no payload gets
   let textJsonlIgnored = false // RTS-R3: sticky, a capture round's text channel carried wire or genui lines that were dropped
   let textJsonlRouted = false // T-0172: sticky, a text round's prose carried A2UI lines that became the payload
@@ -1334,6 +1338,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   let degrade: Pick<ReturnType<typeof peelMetaLine>, 'plan' | 'personaPatch' | 'flowEnd' | 'team' | 'target'> & { note: string } | undefined
   for (let round = 0; round < opts.maxRounds; round++) {
     const failuresFedBack = failures // what THIS round's prompt carried back — the trace's failureCodes
+    const forceSurface = forceSurfaceRound
+    forceSurfaceRound = false
     if (round > 0 && failures !== undefined && lastOutput !== undefined) for (const sid of surfacesToKeep(lastOutput, failures, input.session)) keptSurfaces.add(sid)
     if (round > 0 && lastOutput !== undefined) for (const sid of builtSurfaceIds(lastOutput, input.session)) builtSurfaces.add(sid)
     // RTS-R9: the escalation seam, consulted at the top of every self-correct round. A returned field
@@ -1420,13 +1426,14 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       // round (intentional — GH #290's fix is scoped to PROGRESS delivery only), but its onEvent 'tool'
       // pushes now reach the client in real time via interleaveProgress below, not just at round-end.
       // RTS-R1/R2: a turn that offers `render_surface` adds it as a terminal tool behind the capture executor
-      // (forced on a surface override); any other turn relays the caller's pair unchanged.
+      // (forced on a surface override, and T-0298 on a repair round after a no-payload semantic finding); any other
+      // turn relays the caller's pair unchanged.
       ...(offeredTools !== undefined
         ? {
             tools: offeredTools,
             executeTool: captureTool,
             terminalTools: [RENDER_SURFACE_TOOL_NAME],
-            ...(surfaceOverride ? { toolChoice: { name: RENDER_SURFACE_TOOL_NAME } } : {}),
+            ...(surfaceOverride || forceSurface ? { toolChoice: { name: RENDER_SURFACE_TOOL_NAME } } : {}),
           }
         : { tools: opts.tools, executeTool: opts.executeTool }),
       signal: opts.signal,
@@ -1657,6 +1664,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         if (semantic.findings.length > 0 && round < opts.maxRounds - 1) {
           failures = semantic.findings.map((f) => ({ code: f.code, path: f.path, detail: f.message }))
           lastCaptureRound = offeredTools !== undefined
+          forceSurfaceRound = offeredTools !== undefined // T-0298
           continue
         }
         if (semantic.findings.length > 0) actionSemanticTally.push('SEMANTIC_UNCORRECTED')
