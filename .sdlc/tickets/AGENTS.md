@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:bfc790fc4f84 -->
+<!-- sdlc-lite:managed:start v1 sha256:a1f623f1d7a1 -->
 # Tickets
 
 One folder per ticket: `<slug>/` or `NNNN-<slug>/` while open, `.NNNN-<slug>/` once closed. Stage counts and the open tickets are in `../AGENTS.md`. `tickets.py roadmap` generates this block: do not edit inside it.
@@ -20,7 +20,7 @@ Ticket fields:
 status: proposed | ready | claimed | paused | blocked | done | dropped
 - `area:` is optional: the ticket's domain, one of the `areas:` names in `.sdlc/config`. It is never a lane or branch name.
 - `paused_reason:` is the one-line reason a `status: paused` ticket waits; `status: claimed` needs `claimed_by:`.
-- `branch:` and `worktree:` name the ticket's lane branch and its worktree (relative to the main checkout, under `.claude/worktrees/`); the lane opener writes both and its close removes both. `check` warns on a `worktree:` that is not a registered worktree on that branch.
+- `branch:` and `worktree:` name the ticket's lane branch and its worktree (relative to the main checkout, under the worktree root `../<repo>.worktrees/`, `wtroot.py root`); the lane opener writes both and its close removes both. `check` warns on a `worktree:` that is not a registered worktree on that branch.
 
 Claim a ticket:
 1. Open its `handoff.md`. A `claimed_by:` front matter line means another agent holds it: pick another ticket or ask the user.
@@ -30,7 +30,7 @@ Claim a ticket:
 
 Open a lane:
 1. Claim the ticket first: `<plugin-root>/scripts/lanes.py open` refuses an unclaimed local ticket.
-2. Run `python3 <plugin-root>/scripts/lanes.py open <name> --kind solo --ticket <id>`. It makes the worktree and branch under `.claude/worktrees/` and writes `branch: <lane branch>` and `worktree: <path>` after `claimed_by:`, so verified, unmerged work stays visible on the roadmap and in `lanes.py list --all`. A worktree made by hand: run `python3 <plugin-root>/scripts/tickets.py --root .sdlc branch <id> <branch> --worktree <path>`.
+2. Run `python3 <plugin-root>/scripts/lanes.py open <name> --kind solo --ticket <id>`. It makes the worktree and branch under the worktree root (`../<repo>.worktrees/`) and writes `branch: <lane branch>` and `worktree: <path>` after `claimed_by:`, so verified, unmerged work stays visible on the roadmap and in `lanes.py list --all`. A worktree made by hand: run `python3 <plugin-root>/scripts/tickets.py --root .sdlc branch <id> <branch> --worktree <path>`.
 3. `lanes.py close <name>` removes the `branch:` and `worktree:` lines once the lane closes.
 
 Close a ticket:

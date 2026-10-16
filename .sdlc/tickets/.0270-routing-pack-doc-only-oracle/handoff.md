@@ -2,7 +2,7 @@
 id: T-0270
 title: "Routing pack doc-only oracle expects property-knowledge-base loaded full, but T-0231 serves those facts in the persona section"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -32,5 +32,11 @@ All 4 `routing-expect` failures in the round are this oracle. Both models answer
 ## Lane bundle
 This solo lane delivers these tickets in order, one commit each:
 - .sdlc/tickets/0270-routing-pack-doc-only-oracle/handoff.md
-- .sdlc/tickets/0271-probe-click-target-misleading/handoff.md
-- .sdlc/tickets/0272-stud-scenario-fixed-limit/handoff.md
+- .sdlc/tickets/.0271-probe-click-target-misleading/handoff.md
+- .sdlc/tickets/.0272-stud-scenario-fixed-limit/handoff.md
+
+## Outcome
+
+2026-10-15 · lane: full L1 · verdict: closed by reason (Merged in the round 3 probe and scenario fixes PR; verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

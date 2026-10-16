@@ -2,7 +2,7 @@
 id: T-0267
 title: "The Concierge has no spa treatment list, so a spa services question gets prose and no ServiceCard on every model"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -28,3 +28,9 @@ All three models refuse to list treatments, and the services turn draws no Servi
 ## Acceptance criteria
 - `npx vitest run --project site site/pages/agent-admin-app.test.ts site/pages/agent-admin-presets.test.ts site/pages/agent-admin-ambient-budget.test.ts site/pages/agent-admin-prompt-budget.test.ts site/lib/agent-manifest` exits 0: the Concierge House facts carry the spa treatment list (name, duration and price per treatment), stay modality-neutral and within budget, seedVersion is 12, and the manifest digest is fresh.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-15 · lane: full L1 · verdict: closed by reason (Merged in the Concierge PR (pre-filled BookingForm, spa list); verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

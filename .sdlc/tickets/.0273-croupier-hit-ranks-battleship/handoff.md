@@ -2,7 +2,7 @@
 id: T-0273
 title: "On a Croupier 'Hit' turn the Battleship board ranks second among the exemplars"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -30,3 +30,9 @@ Read `.sdlc/evals/rounds/2026-10-15-r3-routing/traces/2026-10-15.jsonl` lines 42
 - `npx vitest run packages/agent-ui/a2ui/src/corpus/retrieve.test.ts` exits 0: on a family turn another game's composite never surfaces, even on a better match.
 - `npx vitest run packages/agent-ui/a2ui/src/corpus packages/agent-ui/a2ui/tools/corpus packages/agent-ui/a2ui/tools/agent` exits 0.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-15 · lane: full L1 · verdict: closed by reason (Merged in the round 3 retrieval PR; verifier pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

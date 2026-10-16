@@ -2,7 +2,7 @@
 id: T-0268
 title: "The Lexicographer's opening turn retrieves no word board and draws none, and give-up turns miss ResultCard"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -29,7 +29,7 @@ The opening draws no BoardGrid on either model. BOARD_GRID_MISSING fired 7 times
 ## Lane bundle
 This solo lane delivers these tickets in order, one commit each:
 - .sdlc/tickets/0268-lexicographer-opening-no-board/handoff.md
-- .sdlc/tickets/0273-croupier-hit-ranks-battleship/handoff.md
+- .sdlc/tickets/.0273-croupier-hit-ranks-battleship/handoff.md
 
 ## Acceptance criteria
 verifier: L3
@@ -40,3 +40,9 @@ verifier: L3
 
 ## Scope change (conductor, 2026-10-15)
 The verifier L3 failed only the give-up ResultCard bullet, which the solo had reported as unmet and as needing a judged corpus admission. That half moved to T-0274; this ticket is the opening-turn retrieval only.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged in the round 3 retrieval PR; verifier pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

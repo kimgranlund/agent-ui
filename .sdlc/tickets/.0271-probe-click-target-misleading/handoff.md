@@ -2,7 +2,7 @@
 id: T-0271
 title: "click-target reports a listed button as missing when the click lands but starts no turn"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -28,3 +28,9 @@ A detail that says the click landed (or hit a stale history button) and no produ
 ## Acceptance criteria
 - `node scripts/chat-probe.mjs selftest` exits 0; its T-0271 cases pin the click-target detail for a click that landed on an older surface and started no turn, and for one whose request went out and never settled.
 - `npx vitest run scripts/e2e-admin/admin-page.test.mjs` exits 0; `clickSurfaceButton` reports whether the clicked button sat in the newest surface host.
+
+## Outcome
+
+2026-10-15 · lane: full L1 · verdict: closed by reason (Merged in #2031 (round 3 probe and scenario fixes); verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

@@ -2,7 +2,7 @@
 id: T-0272
 title: "seven-card-stud scenario moves do not fit the fixed-limit house rules, so the hand is still on seventh street at Deal again"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -27,3 +27,9 @@ Opus deals fixed-limit stud with no bring-in. It refuses "Bring it in" (:270) an
 
 ## Acceptance criteria
 - `npx vitest run scripts/e2e-admin/probe/scenarios/round.test.mjs scripts/e2e-admin/probe/scenarios/round3.test.mjs` exits 0; the stud case pins every round 1 step between the deal and Deal again to "Check, or call if there is a bet." with Deal again at step index 7.
+
+## Outcome
+
+2026-10-15 · lane: full L1 · verdict: closed by reason (Merged in #2031 (round 3 probe and scenario fixes); verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none
