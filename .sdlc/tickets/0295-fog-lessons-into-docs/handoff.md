@@ -7,8 +7,6 @@ size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
 created: 2026-10-16
-branch: docs/fog-lessons-into-docs
-worktree: ../agent-ui.worktrees/wave-fl
 router: .sdlc/tickets/AGENTS.md  # how to claim and close this ticket
 ---
 
@@ -28,22 +26,6 @@ Audit 2026-10-16 (sources: `.sdlc/evals/rounds/2026-10-15-r{3-routing,4-fixes,5-
 
 ## Constraints
 Docs only, plus the skill. `grammar.md` and ADRs are untouched. No em dashes. Cite, never restate whole reports.
-
-## Acceptance criteria
-- `grep -q "one-line description" .claude/docs/references/agent-model.md` exits 0 (item 1, the index-only rule).
-- `grep -qi "known gap" .claude/docs/references/agent-model.md .claude/docs/spec/agent-content.spec.md` exits 1 (item 1, the T-0231 gap wording retired).
-- `grep -q "let the USER take the final action" .claude/skills/a2ui-prompt-authoring/SKILL.md` exits 0 (item 2).
-- `grep -q "fabricated system notice" .claude/docs/spec/response-type-selection.spec.md` exits 0 (item 3).
-- `grep -q "Concierge rulings" .claude/docs/spec/a2ui-catalog-architecture.spec.md` exits 0 (item 4).
-- `grep -q "conflicting guidance" .claude/docs/spec/agent-closed-loop.spec.md` exits 0 (item 5, CL-R12 triage order).
-- `grep -q "Why it failed and how to fix it" .claude/docs/spec/agent-closed-loop.spec.md` exits 0 (item 5, CL-R11 phase 2).
-- `grep -q "AUTHORED" .claude/docs/spec/agent-closed-loop.spec.md` exits 0 (item 5, CL-R3).
-- `grep -q "Rounds 3 to 5" .claude/docs/spec/agent-closed-loop.spec.md` exits 0 (item 5, model notes).
-- `grep -q "cause class" scripts/e2e-admin/README.md` exits 0 (item 6, step 6).
-- `grep -q "passes on any Card" scripts/e2e-admin/README.md` exits 0 (item 6, step 1).
-- `git diff --quiet fea771f1 -- packages/agent-ui/a2ui/src/agent/prompts/grammar.md .claude/docs/adr` exits 0 (grammar and ADRs untouched).
-- `npx vitest run site/lib/docs-grammar.test.ts` exits 0.
-- `npm run check` exits 0.
 
 ## Done when
 - Each of the six scope items is present at its named home (a grep per item, listed in the handoff's acceptance criteria).
