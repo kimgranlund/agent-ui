@@ -15,3 +15,9 @@ Round 8 cluster F, `.sdlc/evals/rounds/2026-10-16-r8-matrix/report.md` (`## Why 
 
 ## Done when
 - A Croupier check: a deal turn that settles without a two-card 21 fails with a named code and a repair asking for phase playing with Hit and Stand; the bankroll repair no longer endorses the false settle; a test from :9 red at the base; the T-0314 contract tests (fixtures for the new check), the catalog and live-agent suites and `npm run check` exit 0.
+
+## Acceptance criteria
+- A test from the recorded :9 round 1 (A and 9 settled on the 25 deal) is red at the base (`ff222f19`: BANKROLL_MISMATCH) and green after: the deal gets SETTLED_WITHOUT_NATURAL alone, with a repair asking for phase "playing" with Hit and Stand, and no "settles as a win" payout text; a real natural still settles and is priced: `npx vitest run packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.test.ts -t "T-0324"` exits 0 (exit 1 at the base).
+- The T-0314 contract tests, with a `croupier-action-applied` probe for the settled two-card 20: `npx vitest run packages/agent-ui/a2ui/src/live-agent/check-contracts.test.ts` exits 0.
+- The catalog, live-agent and probe suites: `npx vitest run packages/agent-ui/a2ui/src/catalog packages/agent-ui/a2ui/src/live-agent scripts/e2e-admin/probe` exits 0.
+- `npm run check` exits 0.

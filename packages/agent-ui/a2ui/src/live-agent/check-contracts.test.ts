@@ -549,6 +549,23 @@ const PROBES: Record<string, readonly Fixture[]> = {
     },
   ],
   'fleet-shot-applied': [{ catalog: UI, intent: "Let's play Battleship.", output: [] }],
+  // T-0324: a deal that settles a two-card 20 (round 8 :9).
+  'croupier-action-applied': [
+    {
+      catalog: CROUPIER,
+      session: tableSession,
+      action: deal,
+      output: [
+        data('table-1', {
+          bankroll: 950,
+          bet: 50,
+          phase: 'settled',
+          dealerHand: [{ rank: '7', suit: 'diamonds' }, { rank: 'K', suit: 'clubs', faceDown: true }],
+          playerHand: [{ rank: 'A', suit: 'hearts' }, { rank: '9', suit: 'spades' }],
+        }),
+      ],
+    },
+  ],
   'word-move-applied': [
     { catalog: UI, session: wordSession, intent: 'I give up.', target: 'word-1', output: [] },
     { catalog: UI, session: wordSession, intent: 'I give up.', target: 'word-1', output: [data('word-1', { ...WORD_OPEN, status: 'The word was SLAIN' })] },

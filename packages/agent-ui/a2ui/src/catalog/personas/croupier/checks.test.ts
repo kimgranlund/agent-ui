@@ -980,3 +980,40 @@ describe('croupier action check: a game asked for opens a surface (T-0265)', () 
     expect(said("Let's play another hand of blackjack.", [], 'table-1')).toEqual([])
   })
 })
+
+// T-0324 (live round 8 :9, Haiku 5.5, regress-croupier-blackjack-rounds turn 8): the 25 deal on table-3 dealt A and 9
+// against 7 and a hole K, wrote "Natural blackjack!" and phase settled with only Deal again. A two-card 20 is no
+// natural, so the round goes on; BANKROLL_MISMATCH's repair ("settles as a win (20 over 17)") then endorsed the settle.
+describe('croupier action check: a deal that settles needs a two-card 21 (T-0324)', () => {
+  const OPENED = [
+    {"version": "v1.0", "createSurface": {"surfaceId": "table-3", "catalogId": "agent-ui--croupier", "sendDataModel": true}},
+    {"version": "v1.0", "updateDataModel": {"surfaceId": "table-3", "value": {"bankroll": 950, "bet": 0, "dealerHand": [], "playerHand": [], "dealerTotal": "", "playerTotal": "", "status": "Place your bet", "result": ""}}},
+    {"version": "v1.0", "updateComponents": {"surfaceId": "table-3", "components": [{"id": "root", "component": "CardTable", "title": "Blackjack", "phase": "betting", "betAction": "deal", "bankroll": {"path": "/bankroll"}, "bet": {"path": "/bet"}, "dealerHand": {"path": "/dealerHand"}, "playerHand": {"path": "/playerHand"}, "dealerTotal": {"path": "/dealerTotal"}, "playerTotal": {"path": "/playerTotal"}, "status": {"path": "/status"}, "statusIntent": "info", "children": []}]}},
+  ] as A2uiOutput
+  const DEALT = [
+    {"version": "v1.0", "updateDataModel": {"surfaceId": "table-3", "value": {"bankroll": 925, "bet": 25, "dealerHand": [{"rank": "7", "suit": "diamonds"}, {"faceDown": true, "rank": "K", "suit": "clubs"}], "playerHand": [{"rank": "A", "suit": "hearts"}, {"rank": "9", "suit": "spades"}], "dealerTotal": "showing 7", "playerTotal": "Blackjack", "status": "Natural blackjack! Dealer checks for 21.", "result": ""}}},
+    {"version": "v1.0", "updateComponents": {"surfaceId": "table-3", "components": [{"id": "root", "component": "CardTable", "title": "Blackjack", "phase": "settled", "bankroll": {"path": "/bankroll"}, "bet": {"path": "/bet"}, "dealerHand": {"path": "/dealerHand"}, "playerHand": {"path": "/playerHand"}, "dealerTotal": {"path": "/dealerTotal"}, "playerTotal": {"path": "/playerTotal"}, "status": {"path": "/status"}, "statusIntent": "success", "result": {"path": "/result"}, "children": ["dealAgainBtn"]}, {"id": "dealAgainBtn", "component": "Button", "label": "Deal again", "variant": "solid", "action": {"action": "deal", "context": {"newRound": true}}}]}},
+  ] as A2uiOutput
+  const session = { turns: [{ role: 'user', content: 'Deal again' }, { role: 'assistant', content: toJsonl(OPENED) }] }
+  const action = { name: 'deal', surfaceId: 'table-3', context: { bet: 25, bankrollAfterBet: 925 }, dataModel: { bankroll: 950, bet: 25, dealerHand: [], playerHand: [], dealerTotal: '', playerTotal: '', status: 'Place your bet', result: '' } }
+  const run = (output: A2uiOutput) => croupierActionApplied.check({ surfaces: semanticSurfaceViews(session, output), action })
+  const withHands = (playerHand: unknown[], dealerHand: unknown[], bankroll: number): A2uiOutput =>
+    DEALT.map((m) => ('updateDataModel' in m ? { ...m, updateDataModel: { ...m.updateDataModel, value: { ...(m.updateDataModel.value as object), playerHand, dealerHand, bankroll } } } : m)) as A2uiOutput
+
+  it('the recorded A and 9 settled on the deal is SETTLED_WITHOUT_NATURAL alone, asking for phase playing with Hit and Stand', () => {
+    const findings = run(DEALT)
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['SETTLED_WITHOUT_NATURAL', 'table-3:root']])
+    expect(findings[0]!.message).toMatch(/A, 9 \(20\) is not a natural/)
+    expect(findings[0]!.message).toMatch(/phase "playing" with Hit and Stand/)
+    expect(findings[0]!.message).not.toMatch(/settles as a win/)
+  })
+
+  it('a real natural settled on the deal is still judged by its payout: either hand two-card 21 passes this check', () => {
+    const ace = { rank: 'A', suit: 'hearts' }
+    const king = { rank: 'K', suit: 'spades' }
+    const seven = { rank: '7', suit: 'diamonds' }
+    expect(run(withHands([ace, king], [seven, { rank: '9', suit: 'clubs' }], 987.5))).toEqual([])
+    expect(run(withHands([ace, king], [seven, { rank: '9', suit: 'clubs' }], 925)).map((f) => f.code)).toEqual(['BANKROLL_MISMATCH'])
+    expect(run(withHands([{ rank: '9', suit: 'spades' }, seven], [ace, king], 925))).toEqual([])
+  })
+})
