@@ -357,9 +357,9 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
       // fail() path a non-2xx response already uses. `request.signal.aborted` means the CLIENT is the one
       // that's gone (a disconnect, not a produce() failure) — nothing left to read it, stays silent.
       //
-      // The message shown is deliberately NOT the raw caught error in every case: a `ProduceHalt`'s own
-      // text names only closed failure CODES (safe, internal identifiers — SCHEMA/PARSE/FEED_SCOPE/…)
-      // plus model-authored A2UI id paths (GH #307), so it crosses verbatim, as does a timeout's own plain-words
+      // The message shown is deliberately NOT the raw caught error in every case: a `ProduceHalt` crosses
+      // as its `userMessage`, the closed failure CODES alone (SCHEMA, PARSE, FEED_SCOPE and the rest;
+      // T-0290, its `message` keeps the GH #307 id paths for logs), as does a timeout's own plain-words
       // `userMessage` (a stalled stream, the whole-turn deadline: T-0023, `failureMessageFor`); anything else (e.g.
       // `anthropicProvider`'s upstream-fault message, which
       // embeds up to 500 raw chars of the provider's own API response body) degrades to a generic,

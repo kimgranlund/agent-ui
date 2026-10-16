@@ -27,3 +27,9 @@ Fog report `4095416195875afe423e60ea`, decision d6, finding f6 (T-0287). `blankR
 
 ## Constraints
 The failing test lands before or with the fix.
+
+## Acceptance criteria
+verifier: L3
+- `npx vitest run scripts/e2e-admin/probe/replays/concierge-haiku-dotted-booking-paths.test.mjs` exits 0: turn 2 gets BOOKING_FIELD_PATH and ships the key-only form, and the confirm turn's prose booking is sent back as SURFACE_MISSING (the repaired rounds AUTHORED, as T-0281 did).
+- `npx vitest run packages/agent-ui/a2ui/src/catalog/personas/concierge packages/agent-ui/a2ui/src/live-agent` exits 0: the finding names each key-only path, key-only paths and a field the value never held raise none, and a mis-pathed form holds no confirm open.
+- `npm run check` exits 0.

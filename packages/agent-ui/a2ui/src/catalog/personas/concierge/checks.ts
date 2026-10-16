@@ -12,6 +12,15 @@
 // T-0278 (round 4, the Haiku spa confirm): a confirm while the open BookingForm still has a blank required field cannot
 // be confirmed, so the reply that asks for the missing value is right. Such a turn is held open: no SURFACE_MISSING
 // asking for a BookingConfirmation, and no FLOW_END_MISSING round (`holdsFlowOpen`).
+//
+// T-0293 (round 5, the Haiku boat tour): a BookingForm bound to /booking named its fields "booking.tour", "booking.date"
+// and so on. The factory prefills each field from value[field.path], so all four rendered blank, and the T-0278 hold
+// then read them as blank and let a prose "is booked" pass. A field path that misses the bound value while its last
+// segment is a key of it is BOOKING_FIELD_PATH, and such a field never holds a confirm open.
+//
+// T-0289 (round 5, the Haiku confirm refusal): a guest's chat confirm on a complete BookingForm IS the submission, so
+// the confirm repair asks for a BookingConfirmation reading back the form's values and never for a reference (the
+// catalog's BookingConfirmation has no such field, and Haiku refused to invent one).
 // DOM-less and node-free, like `semantic-check.ts`: both server hosts import the manifest that carries it.
 
 import { readPointer } from '../../semantic-check.ts'
@@ -35,7 +44,7 @@ const BOOK = /\b(book|reserve|reservation)\b|\b(i'?d|i would|we'?d|we would) lik
 
 /** The moment a say turn's words ask for, with the surface that answers it, or undefined. */
 function askedMoment(intent: string): { moment: string; surface: string } | undefined {
-  if (CONFIRM.test(intent)) return { moment: 'confirm', surface: 'a BookingConfirmation with the confirmed details and a reference' }
+  if (CONFIRM.test(intent)) return { moment: 'confirm', surface: 'a BookingConfirmation reading back the values on the open BookingForm (the guest\'s confirm in chat is their submission, so nothing waits on the form button; add no reference number)' }
   if (SERVICES.test(intent)) return { moment: 'services', surface: 'one ProductCard per service the guest can book, templated in a Grid, each with its price and book action' }
   if (BOOK.test(intent)) return { moment: 'booking', surface: 'a BookingForm with its value bound to the details the guest already gave, so they arrive pre-filled' }
   if (FACILITY.test(intent)) return { moment: 'facility', surface: 'one compact info card: ONE Card holding a DescriptionList, one row per facility with its hours and location' }
@@ -45,22 +54,66 @@ function askedMoment(intent: string): { moment: string; surface: string } | unde
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 const isBlank = (v: unknown): boolean => v === undefined || v === null || (typeof v === 'string' && v.trim() === '') || (Array.isArray(v) && v.length === 0)
 
-/** T-0278: the label (or path) of the first required BookingForm field an open surface leaves blank, or undefined. */
-export function blankRequiredField(open: readonly SurfaceView[]): string | undefined {
-  for (const view of open) {
+/** Every BookingForm on these surfaces, with the booking object its value resolves to. */
+function* bookingForms(views: readonly SurfaceView[]): Generator<{ view: SurfaceView; node: Record<string, unknown>; fields: unknown[]; booking: unknown }> {
+  for (const view of views) {
     for (const node of view.components.values()) {
       const n = node as Record<string, unknown>
       if (n['component'] !== 'BookingForm' || !Array.isArray(n['fields'])) continue
       const value = n['value']
       const booking = isRecord(value) && typeof value['path'] === 'string' ? readPointer(view.dataModel, value['path']) : value
-      for (const field of n['fields']) {
-        if (!isRecord(field) || field['required'] !== true || typeof field['path'] !== 'string') continue
-        const key = field['path'].replace(/^\//, '')
-        if (isBlank(readPointer(booking, `/${key}`))) return typeof field['label'] === 'string' ? field['label'] : key
-      }
+      yield { view, node: n, fields: n['fields'], booking }
+    }
+  }
+}
+
+/** T-0293: the key-only path a mis-pathed field meant ("booking.tour" on a value holding `tour` means "tour"), or
+ *  undefined when the path reads the bound value as it is, or its last segment is no key of it either. */
+function misPathedKey(booking: unknown, path: string): string | undefined {
+  const key = path.replace(/^\//, '')
+  if (!isRecord(booking) || Object.hasOwn(booking, key)) return undefined
+  const segments = key.split(/[./]/)
+  const last = segments.at(-1)!
+  return segments.length > 1 && Object.hasOwn(booking, last) ? last : undefined
+}
+
+/** T-0278: the label (or path) of the first required BookingForm field an open surface leaves blank, or undefined. A
+ *  mis-pathed field (T-0293) renders blank only because of its path; its value is there, so it holds nothing open. */
+export function blankRequiredField(open: readonly SurfaceView[]): string | undefined {
+  for (const { fields, booking } of bookingForms(open)) {
+    for (const field of fields) {
+      if (!isRecord(field) || field['required'] !== true || typeof field['path'] !== 'string') continue
+      const key = field['path'].replace(/^\//, '')
+      if (isBlank(readPointer(booking, `/${key}`)) && misPathedKey(booking, key) === undefined) return typeof field['label'] === 'string' ? field['label'] : key
     }
   }
   return undefined
+}
+
+/** T-0293: a BookingForm whose field paths miss its bound value renders those fields blank; name the key-only paths. */
+export const conciergeBookingFieldPaths: SemanticCheck = {
+  id: 'concierge-booking-field-paths',
+  requires: ['BookingForm'],
+  check({ surfaces }): SemanticFinding[] {
+    const findings: SemanticFinding[] = []
+    for (const { view, node, fields, booking } of bookingForms(surfaces)) {
+      const fixes = fields.flatMap((field) => {
+        if (!isRecord(field) || typeof field['path'] !== 'string') return []
+        const key = misPathedKey(booking, field['path'])
+        return key === undefined ? [] : [`"${field['path']}" to "${key}"`]
+      })
+      if (fixes.length === 0) continue
+      const bound = isRecord(node['value']) && typeof node['value']['path'] === 'string' ? node['value']['path'] : 'its value'
+      findings.push({
+        code: 'BOOKING_FIELD_PATH',
+        path: `${view.surfaceId}:${String(node['id'])}`,
+        message:
+          `${view.surfaceId}'s BookingForm binds its value to ${bound}, and each field path is read as a key of that object, ` +
+          `so ${fixes.length === 1 ? 'one field renders' : 'these fields render'} blank. Change ${fixes.join(', ')} and keep everything else.`,
+      })
+    }
+    return findings
+  },
 }
 
 /** T-0278: a confirm ask while the open booking still has a blank required field; the turn cannot confirm. */
@@ -90,4 +143,4 @@ export const conciergeSurfaceRequired: SemanticCheck = {
 }
 
 /** Every concierge semantic check, in the order `produce()` runs them. */
-export const conciergeSemanticChecks: readonly SemanticCheck[] = [conciergeSurfaceRequired]
+export const conciergeSemanticChecks: readonly SemanticCheck[] = [conciergeSurfaceRequired, conciergeBookingFieldPaths]

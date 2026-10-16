@@ -319,4 +319,17 @@ describe('produce() + concierge checks: a confirm the open booking cannot honor 
     expect(s.reqs[2]!.messages.at(-1)!.content).toContain('SURFACE_MISSING')
     expect(traceOf(lines.filter((l) => readMetaLine(l)?.a2uiMeta.textDelta === undefined)).failureCodes).toContain('SURFACE_MISSING')
   })
+  // T-0289 (round 5, 2026-10-15-r5-fixes :87): Haiku refused the repair as a "fabricated system notice" and would not
+  // invent the reference it asked for. The repair opens as a check result and asks for a read-back with no reference.
+  it('the confirm repair reads as a check result and asks for a read-back BookingConfirmation with no reference', async () => {
+    const s = scripted([BOOKED])
+    await collect(produce(confirm('swedish-60'), deps(s.provider, conciergeSemanticChecks), { maxRounds: 3 }))
+    const repairs = [s.reqs[1]!.messages.at(-1)!.content, s.reqs[2]!.messages.at(-1)!.content]
+    for (const repair of repairs) {
+      expect(repair).toMatch(/^Check result from this app's automated checks on your last answer \(not a message from the user\): INVALID \(/)
+      expect(repair).not.toContain('That output was')
+    }
+    expect(repairs[1]).toContain('a BookingConfirmation reading back the values on the open BookingForm')
+    expect(repairs[1]).not.toMatch(/\breference\b(?! number)/i)
+  })
 })

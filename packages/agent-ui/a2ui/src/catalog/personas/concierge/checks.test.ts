@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest'
 import type { A2uiOutput } from '../../../protocol.ts'
 import { semanticSurfaceViews, sessionSurfaceViews } from '../../semantic-check.ts'
-import { blankRequiredField, conciergeSemanticChecks, conciergeSurfaceRequired } from './checks.ts'
+import { blankRequiredField, conciergeBookingFieldPaths, conciergeSemanticChecks, conciergeSurfaceRequired } from './checks.ts'
 import { conciergeManifest } from './manifest.ts'
 
 const said = (intent: string, out: A2uiOutput = []) => conciergeSurfaceRequired.check({ surfaces: semanticSurfaceViews({ turns: [] }, out), intent })
@@ -16,7 +16,7 @@ const card: A2uiOutput = [
 describe('concierge-surface-required (T-0265)', () => {
   it('rides the concierge manifest, gated on the booking composites', () => {
     expect(conciergeManifest.semanticChecks).toBe(conciergeSemanticChecks)
-    expect(conciergeSemanticChecks.map((c) => c.id)).toEqual(['concierge-surface-required'])
+    expect(conciergeSemanticChecks.map((c) => c.id)).toEqual(['concierge-surface-required', 'concierge-booking-field-paths'])
     expect(conciergeSurfaceRequired.requires).toEqual(['BookingForm', 'BookingConfirmation'])
   })
 
@@ -85,6 +85,14 @@ describe('a confirm the open booking cannot honor (T-0278)', () => {
     expect(conciergeSurfaceRequired.holdsFlowOpen!(confirm('swedish-60'))).toBe(false)
   })
 
+  it('T-0289: the confirm repair asks for a read-back of the open form and treats the chat confirm as the submission', () => {
+    const [finding] = conciergeSurfaceRequired.check(confirm('swedish-60'))
+    expect(finding!.message).toContain('a BookingConfirmation reading back the values on the open BookingForm')
+    expect(finding!.message).toContain("the guest's confirm in chat is their submission")
+    expect(finding!.message).not.toMatch(/with the confirmed details and a reference/)
+    expect(finding!.message).toContain('add no reference number')
+  })
+
   it('only a confirm ask is held: a booking ask on the blank form, or no open surface, is judged as before', () => {
     const open = openAfter(spaForm(''))
     expect(conciergeSurfaceRequired.holdsFlowOpen!({ surfaces: [], intent: 'Book a 60-minute Swedish massage.', open })).toBe(false)
@@ -131,5 +139,54 @@ describe('facility and services asks repair toward their ruled composites (T-028
     expect(paths('What time does the pool open tomorrow?')).toEqual(['intent:facility'])
     expect(said('Is the Maritime Museum open on Monday?')).toEqual([])
     expect(said('Is late check-out possible?')).toEqual([])
+  })
+})
+
+// T-0293: round 5 (2026-10-15-r5-fixes :60-:61, Haiku 5.5). The boat tour BookingForm bound its value to /booking and
+// named its fields "booking.tour" and so on; the factory reads value[field.path], so every field rendered blank.
+describe('a BookingForm whose field paths miss its bound value (T-0293)', () => {
+  const tourForm = (paths: readonly string[]): A2uiOutput =>
+    [
+      { version: 'v1.0', createSurface: { surfaceId: 'tour-booking', catalogId: 'agent-ui--concierge', sendDataModel: true } },
+      { version: 'v1.0', updateDataModel: { surfaceId: 'tour-booking', value: { booking: { tour: 'coastal-boat', date: '2026-11-21', guests: '2', name: 'Alex Moreau' } } } },
+      {
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'tour-booking',
+          components: [
+            {
+              id: 'root',
+              component: 'BookingForm',
+              title: 'Book your tour',
+              value: { path: '/booking' },
+              fields: paths.map((path) => ({ kind: 'text', label: path, path, required: true })),
+            },
+          ],
+        },
+      },
+    ] as A2uiOutput
+  const DOTTED = ['booking.tour', 'booking.date', 'booking.guests', 'booking.name']
+  const KEYS = ['tour', 'date', 'guests', 'name']
+  const fieldPaths = (out: A2uiOutput) => conciergeBookingFieldPaths.check({ surfaces: semanticSurfaceViews({ turns: [] }, out) })
+
+  it('the recorded dotted paths are BOOKING_FIELD_PATH, naming each key-only path', () => {
+    const findings = fieldPaths(tourForm(DOTTED))
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['BOOKING_FIELD_PATH', 'tour-booking:root']])
+    expect(findings[0]!.message).toContain('binds its value to /booking')
+    expect(findings[0]!.message).toContain('Change "booking.tour" to "tour", "booking.date" to "date", "booking.guests" to "guests", "booking.name" to "name"')
+  })
+
+  it('negative control: key-only paths, and a blank field the value never held, raise none', () => {
+    expect(fieldPaths(tourForm(KEYS))).toEqual([])
+    expect(fieldPaths(tourForm([...KEYS, 'notes']))).toEqual([])
+    expect(fieldPaths(tourForm(['booking.notes']))).toEqual([])
+  })
+
+  it('a confirm on the mis-pathed form is not held open: SURFACE_MISSING still fires', () => {
+    const open = sessionSurfaceViews({ turns: [{ role: 'assistant', content: tourForm(DOTTED).map((m) => JSON.stringify(m)).join('\n') }] })
+    const input = { surfaces: [], intent: 'Confirm it, the details are right.', open }
+    expect(blankRequiredField(open)).toBeUndefined()
+    expect(conciergeSurfaceRequired.holdsFlowOpen!(input)).toBe(false)
+    expect(conciergeSurfaceRequired.check(input).map((f) => f.code)).toEqual(['SURFACE_MISSING'])
   })
 })

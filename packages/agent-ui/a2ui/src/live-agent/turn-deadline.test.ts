@@ -384,9 +384,10 @@ describe('failureMessageFor: what the host writes on the error line (T-0023)', (
     }
   })
 
-  it('keeps the existing mapping: a ProduceHalt crosses verbatim, anything else is the generic message', () => {
+  it('keeps the existing mapping: a ProduceHalt crosses as its codes with no surface id (T-0290), anything else is the generic message', () => {
     const halt = new ProduceHalt([{ code: 'SCHEMA', path: 'main:root' }])
-    expect(failureMessageFor(halt)).toBe(halt.message)
+    expect(failureMessageFor(halt)).toBe('produce: no valid surface within the round bound (SCHEMA)')
+    expect(failureMessageFor(halt)).not.toContain('main:root')
     expect(failureMessageFor(new Error('anthropicProvider: upstream error 500: {"secret":"x"}'))).toBe(GENERIC_FAILURE_MESSAGE)
     expect(failureMessageFor('not an error')).toBe(GENERIC_FAILURE_MESSAGE)
   })

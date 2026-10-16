@@ -448,17 +448,21 @@ interface RoundFailure {
  * `renderer/validate.ts:232-243`) or where. A live report naming only the code was undiagnosable
  * without re-instrumenting the loop (exactly what happened investigating #307 itself). Each failure
  * now renders as `CODE at path` (path omitted only when empty, e.g. a whole-payload PARSE failure),
- * matching the wording already used in the self-correct feedback (`messagesFor`, same file) — one
- * format, two audiences. `f.code` alone remains safe to surface to an end user (see `GENERIC_FAILURE_MESSAGE` and
+ * matching the wording already used in the self-correct feedback (`messagesFor`, same file). That
+ * `message` is for logs and traces; T-0290 gives the user `userMessage`, the codes alone. `f.code` alone remains safe to surface to an end user (see `GENERIC_FAILURE_MESSAGE` and
  * `failureMessageFor` in tools/agent/chat-validation.ts): `f.path` is likewise never raw upstream text,
  * only A2UI ids the model itself emitted. */
 export class ProduceHalt extends Error {
   readonly failures: RoundFailure[]
+  /** T-0290: the line a host shows the user, the failure CODES alone. A path names a model-authored surface id
+   *  ("SURFACE_DROPPED at ask-1" reached the guest's chat in round 5), so it stays on `message` for logs and traces. */
+  readonly userMessage: string
   constructor(failures: RoundFailure[]) {
     const rendered = failures.map((f) => `${f.code}${f.path ? ` at ${f.path}` : ''}`).join(', ') || 'unknown'
     super(`produce: no valid surface within the round bound (${rendered})`)
     this.name = 'ProduceHalt'
     this.failures = failures
+    this.userMessage = `produce: no valid surface within the round bound (${[...new Set(failures.map((f) => f.code))].join(', ') || 'unknown'})`
   }
 }
 
@@ -493,7 +497,7 @@ function stampCreateSurfaceCatalogId(output: A2uiOutput, catalogId: string): voi
  * Assemble the model messages for one generation round: the session history, the current user turn, and
  * — on a self-correct round — the prior INVALID attempt plus the validator's structured failures, so the
  * model sees exactly what it emitted and what was wrong (ADR-0070's "feed the failures back"). A
- * `'FEED_SCOPE'` round-failure (ADR-0097 §3) is fed back through the SAME "INVALID, re-emit" wording — a
+ * `'FEED_SCOPE'` round-failure (ADR-0097 §3) is fed back through the SAME check-result, re-emit wording (T-0289), plus its own hint (T-0290): a
  * feed ask hosting an out-of-scope type is exactly as re-emittable as a schema/catalog defect.
  *
  * GH #174: the feedback message ALSO pins the note's audience. The leading meta-line's `note` (ADR-0088
@@ -653,6 +657,12 @@ const TOOL_REPAIR_SENTENCE =
 const SURFACE_REQUESTED_FEEDBACK =
   'The user asked to see this as UI (SURFACE_REQUESTED): call render_surface with the A2UI `messages` for it, and keep your reply text addressed to the user.'
 
+/** T-0289: the opening of every repair turn. Round 5's Haiku read the old "That output was INVALID" user turn as a
+ *  fabricated system notice and refused it, so the repair names itself as what it is: the result of the app's own
+ *  automated checks on the last answer, not words from the user. */
+const repairOpening = (summary: string): string =>
+  `Check result from this app's automated checks on your last answer (not a message from the user): INVALID (${summary}).`
+
 function messagesFor(
   input: TurnInput,
   failures: RoundFailure[] | undefined,
@@ -681,13 +691,14 @@ function messagesFor(
       (failures.some((f) => f.code === 'FLOW_END_MISSING') ? FLOW_END_HINT : '') + // GH #1168 — the missing-flowEnd correction round's guidance
       (failures.some((f) => f.code === 'NARRATED_MECHANICS') ? NARRATION_HINT : '') + // T-0234: a narrated reply's guidance
       (failures.some((f) => f.code === 'SURFACE_DROPPED') ? SURFACE_DROPPED_HINT : '') + // T-0281: resend a dropped surface
+      (failures.some((f) => f.code === 'FEED_SCOPE') ? FEED_SCOPE_HINT : '') + // T-0290: keep the surface, drop the ask
       (failures.some((f) => f.detail !== undefined) ? SEMANTIC_HINT : '') + // ADR-0238: a semantic-finding round's guidance
       keepSurfacesHint(lastOutput, input.session, failures) // T-0172: never lose a surface the failed round created
     turns.push({
       role: 'user',
       content: toolRound
-        ? `That output was INVALID (${summary}).${hint} ${TOOL_REPAIR_SENTENCE}`
-        : `That output was INVALID (${summary}).${hint} Re-emit the COMPLETE corrected A2UI JSONL — nothing else. Your leading meta-line "note" must still address the USER in persona — never mention this correction, the re-emission, validation, or JSONL.`,
+        ? `${repairOpening(summary)}${hint} ${TOOL_REPAIR_SENTENCE}`
+        : `${repairOpening(summary)}${hint} Re-emit the COMPLETE corrected A2UI JSONL — nothing else. Your leading meta-line "note" must still address the USER in persona — never mention this correction, the re-emission, validation, or JSONL.`,
     })
   }
   return turns
@@ -1106,6 +1117,14 @@ const SURFACE_DROPPED_HINT =
   ' SURFACE_DROPPED means this answer leaves out a surface your earlier attempt this turn built, so the user would ' +
   'never see it. Resend that surface with its components and data. If it was sent back as the ask surface ' +
   '(FEED_SCOPE), keep it as an ordinary surface and leave "ask" out of your meta-line.'
+
+/** T-0290: the self-correct sentence for a FEED_SCOPE round. The recorded Haiku 5.5 booking turn built its BookingForm
+ *  as the ask surface; the generic re-emit wording sent it back with no way out, the next rounds dropped the form, and
+ *  the turn halted. The way out is the surface the ask cannot host, kept whole as an ordinary surface. */
+const FEED_SCOPE_HINT =
+  ' FEED_SCOPE means the surface your meta-line names as "ask" can hold only simple question parts, never the type ' +
+  'named. Resend that SAME surface with the same components and data as an ordinary surface: leave "ask" out of your ' +
+  'meta-line and keep every component, rather than dropping the surface or rebuilding it from simpler parts.'
 
 /** ADR-0238: the self-correct sentence for a round with semantic findings (the NET_NOOP_HINT
  *  shape: one appended sentence, no new round kind). The payload was structurally valid; what it states

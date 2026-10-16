@@ -234,8 +234,77 @@
           "tools": []
         },
         {
-          "text": "Your details are still waiting on the form above, and nothing has been reserved yet. Please press **Book now**. Once it's submitted, I'll show you the confirmation with its reference.",
-          "tools": []
+          "text": "{\"a2uiMeta\":{\"note\":\"Your 60-minute Swedish massage is booked for Alex Moreau on Thursday 19 November 2026 at 15:00. Anything else I can help with, or are we all set?\",\"flowEnd\":true}}\n\nYour 60-minute Swedish massage is booked for Alex Moreau on Thursday 19 November 2026 at 15:00. Anything else I can help with, or are we all set?",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Your 60-minute Swedish massage is booked for Alex Moreau on Thursday 19 November 2026 at 15:00.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "spa-confirmation",
+                      "catalogId": "agent-ui--concierge"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "spa-confirmation",
+                      "value": {
+                        "booking": {
+                          "treatment": "Swedish massage, 60 min, €120",
+                          "date": "2026-11-19",
+                          "time": "15:00",
+                          "guests": "1",
+                          "name": "Alex Moreau"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "spa-confirmation",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "BookingConfirmation",
+                          "title": "Spa booking confirmed",
+                          "data": {
+                            "path": "/booking"
+                          },
+                          "rows": [
+                            {
+                              "label": "Treatment",
+                              "path": "treatment"
+                            },
+                            {
+                              "label": "Date",
+                              "path": "date"
+                            },
+                            {
+                              "label": "Time",
+                              "path": "time"
+                            },
+                            {
+                              "label": "Guests",
+                              "path": "guests"
+                            },
+                            {
+                              "label": "Name",
+                              "path": "name"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
         }
       ],
       "input": {

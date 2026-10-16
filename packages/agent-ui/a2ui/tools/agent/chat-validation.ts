@@ -44,15 +44,15 @@ export const GENERIC_FAILURE_MESSAGE = "I couldn't put together a valid response
 /**
  * The text a host writes for a failed turn (GH #144, T-0023, T-0024): the terminal `error` meta-line on the
  * produce route, and the `error` field of the 500 JSON body on the prose `/chat` route.
- *   · `ProduceHalt`: safe verbatim, its message names only closed failure CODES (SCHEMA/PARSE/FEED_SCOPE/...)
- *     plus model-authored A2UI id paths (GH #307), never raw upstream text.
+ *   · `ProduceHalt`: its `userMessage`, which names only closed failure CODES (SCHEMA/PARSE/FEED_SCOPE/...), never raw
+ *     upstream text and, since T-0290, never the model-authored surface id paths `message` keeps for logs (GH #307).
  *   · `AgentTimeoutError` (a stalled stream, a first-byte timeout, the whole-turn deadline): its
  *     `userMessage` is plain words by construction and carries no upstream body, so it crosses verbatim and
  *     the user learns the model went quiet or the turn ran long, not that their wording was at fault.
  *   · anything else: the generic fallback above.
  */
 export function failureMessageFor(err: unknown): string {
-  if (err instanceof ProduceHalt) return err.message
+  if (err instanceof ProduceHalt) return err.userMessage
   if (err instanceof AgentTimeoutError) return err.userMessage
   return GENERIC_FAILURE_MESSAGE
 }

@@ -395,6 +395,123 @@
               }
             }
           ]
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here's your booking for the Half-day coastal boat tour on Saturday 21 November 2026 for two guests, under Alex Moreau. Please check the details and submit when you're ready.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "tour-booking",
+                      "catalogId": "agent-ui--concierge",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "tour-booking",
+                      "value": {
+                        "booking": {
+                          "tour": "coastal-boat",
+                          "date": "2026-11-21",
+                          "guests": "2",
+                          "name": "Alex Moreau"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "tour-booking",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "BookingForm",
+                          "title": "Book your tour",
+                          "fields": [
+                            {
+                              "kind": "select",
+                              "label": "Tour",
+                              "path": "tour",
+                              "required": true,
+                              "options": [
+                                {
+                                  "label": "Half-day coastal boat tour",
+                                  "value": "coastal-boat"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "dateSingle",
+                              "label": "Date",
+                              "path": "date",
+                              "required": true
+                            },
+                            {
+                              "kind": "select",
+                              "label": "Guests",
+                              "path": "guests",
+                              "required": true,
+                              "options": [
+                                {
+                                  "label": "1 guest",
+                                  "value": "1"
+                                },
+                                {
+                                  "label": "2 guests",
+                                  "value": "2"
+                                },
+                                {
+                                  "label": "3 guests",
+                                  "value": "3"
+                                },
+                                {
+                                  "label": "4 guests",
+                                  "value": "4"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "text",
+                              "label": "Name",
+                              "path": "name",
+                              "required": true
+                            }
+                          ],
+                          "value": {
+                            "path": "/booking"
+                          },
+                          "child": "bookBtn"
+                        },
+                        {
+                          "id": "bookBtn",
+                          "component": "Button",
+                          "label": "Submit booking",
+                          "variant": "solid",
+                          "action": {
+                            "action": "confirm_booking",
+                            "submit": true,
+                            "context": {
+                              "booking": {
+                                "path": "/booking"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
         }
       ],
       "input": {
@@ -481,6 +598,74 @@
         {
           "text": "{\"a2uiMeta\":{\"note\":\"Your half-day coastal boat tour is booked for Saturday 21 November 2026, for two guests, under the name Alex Moreau. The booking is held. Thank you for walking through it with me. Is there anything else I can help you with, or are we all set?\",\"flowEnd\":true}}",
           "tools": []
+        },
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Your half-day coastal boat tour is booked for Saturday 21 November 2026, for two guests, under Alex Moreau. Anything else I can help with, or are we all set?\",\"flowEnd\":true}}\n\nYour half-day coastal boat tour is booked for Saturday 21 November 2026, for two guests, under Alex Moreau. Anything else I can help with, or are we all set?",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Your half-day coastal boat tour is booked for Saturday 21 November 2026 for two guests.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "tour-confirmation",
+                      "catalogId": "agent-ui--concierge"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "tour-confirmation",
+                      "value": {
+                        "booking": {
+                          "tour": "Half-day coastal boat tour",
+                          "date": "2026-11-21",
+                          "guests": "2",
+                          "name": "Alex Moreau"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "tour-confirmation",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "BookingConfirmation",
+                          "title": "Boat tour booked",
+                          "data": {
+                            "path": "/booking"
+                          },
+                          "rows": [
+                            {
+                              "label": "Tour",
+                              "path": "tour"
+                            },
+                            {
+                              "label": "Date",
+                              "path": "date"
+                            },
+                            {
+                              "label": "Guests",
+                              "path": "guests"
+                            },
+                            {
+                              "label": "Name",
+                              "path": "name"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
         }
       ],
       "input": {

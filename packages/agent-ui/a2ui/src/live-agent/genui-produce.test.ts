@@ -104,7 +104,7 @@ describe('produce() genui peel — the ONE reserved-kind peel, before heal/valid
     const a2uiLines = lines.filter((l) => readMetaLine(l) === undefined)
     expect(validateA2ui(a2uiLines.map((l) => JSON.parse(l)), defaultCatalog).valid).toBe(true)
     // The round-2 REQUEST actually carries round 1's fed-back GENUI_ENVELOPE code in its correction
-    // prompt (messagesFor's "That output was INVALID (...)" wording) — the discriminating proof this
+    // prompt (messagesFor's "Check result ... INVALID (...)" wording) — the discriminating proof this
     // test's title promises, not merely "it shipped eventually".
     const round2Request = reqs()[1]!
     const correctionMessage = round2Request.messages[round2Request.messages.length - 1]!

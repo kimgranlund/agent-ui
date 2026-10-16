@@ -6,16 +6,18 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0290. Live round 5 (2026-10-15-r5-fixes :54-:55, Haiku 5.5). The spa booking ask builds its BookingForm
-// on the feed ask ask-1 (the grammar's "present the proposed outcome ... as an ORDINARY ask"); FEED_SCOPE sends it back,
-// round 2 answers with a meta-line only, round 3 gets SURFACE_DROPPED and the turn halts at the round bound with an error
-// line that names ask-1 to the guest. Pinned to today's behavior: when T-0290 lands, the BookingForm ships and no halt.
-it('concierge-haiku-feed-ask-halt: the FEED_SCOPE repair drops the BookingForm and the turn halts naming ask-1', async () => {
+// T-0290 (fixed). Live round 5 (2026-10-15-r5-fixes :54-:55, Haiku 5.5). The spa booking ask built its BookingForm on
+// the feed ask ask-1; FEED_SCOPE sent it back through the generic re-emit wording, round 2 answered with a meta-line only,
+// round 3 got SURFACE_DROPPED and the turn halted with an error line that named ask-1 to the guest. FEED_SCOPE now carries
+// its own hint (resend the same surface whole as an ordinary one, "ask" left out of the meta-line), and a halt shows the
+// user its codes alone. Turn 1's round 2 is AUTHORED to that hint (the live turn answered with a meta-line): round 1's
+// payload with "ask" left out. The replay proves the repair and the shipped form, not Haiku's live compliance.
+it('concierge-haiku-feed-ask-halt: the FEED_SCOPE repair keeps the BookingForm as an ordinary surface and it ships', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./concierge-haiku-feed-ask-halt.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  const traces = report.records.map((r) => r.lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined))
-  const types = (i) => report.records[i].lines.flatMap((l) => JSON.parse(l).updateComponents?.components ?? []).map((c) => c.component)
-  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual(['no-halt:1'])
-  expect(report.failed[0].detail).toContain('SURFACE_DROPPED at ask-1')
-  expect(types(1)).not.toContain('BookingForm')
+  const lines = report.records[1].lines.map((l) => JSON.parse(l))
+  expect(report.failed).toEqual([])
+  expect(lines.map((l) => l.a2uiMeta?.trace).find((t) => t !== undefined)).toMatchObject({ rounds: 2, failureCodes: ['FEED_SCOPE'] })
+  expect(lines.some((l) => l.a2uiMeta?.ask !== undefined || l.a2uiMeta?.error !== undefined)).toBe(false)
+  expect(lines.flatMap((l) => l.updateComponents?.components ?? []).filter((c) => c.component === 'BookingForm')).toHaveLength(1)
 })

@@ -27,3 +27,10 @@ Fog report `4095416195875afe423e60ea`, decision d2, finding f3 (T-0287). T-0281 
 
 ## Constraints
 The failing test lands before or with the fix.
+
+## Acceptance criteria
+verifier: L3
+- `npx vitest run scripts/e2e-admin/probe/replays/concierge-haiku-feed-ask-halt.test.mjs` exits 0: the booking turn ships one BookingForm with no ask, no halt and no failed probe check (round 2 AUTHORED to the FEED_SCOPE hint, as T-0281 did).
+- `npx vitest run packages/agent-ui/a2ui/src/live-agent/produce-loop.test.ts packages/agent-ui/a2ui/src/live-agent/turn-deadline.test.ts` exits 0: the FEED_SCOPE repair says to keep the surface whole as an ordinary one, and a halt's user line names its codes with no surface id.
+- `npx vitest run packages/agent-ui/a2ui/tools scripts/e2e-admin/probe site/lib/admin-live-runner.test.ts` exits 0.
+- `npm run check` exits 0.
