@@ -6,18 +6,19 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0291. Live round 5 (2026-10-15-r5-fixes :91-:95, Haiku 5.5). The opening board and both guesses update
-// word-forge (T-0280 holds), but "I give up." is answered in prose with a meta-line that declares no target (its reasoning:
-// "the flow rule wins: the closing turn stays prose-only"), and "Play again." frames no exemplar and ships no surface.
-// No check fires on either: the word-move check needs a target and does not cover a replay. Pinned to today's behavior.
-it('lexicographer-haiku-give-up-no-surface: the give-up and the replay ship no surface and no check fires', async () => {
+// T-0291. Live round 5 (2026-10-15-r5-fixes :91-:95, Haiku 5.5). The opening board and both guesses update word-forge
+// (T-0280 holds), but "I give up." is answered in prose with a meta-line that declares no target (its reasoning: "the
+// flow rule wins: the closing turn stays prose-only"), and "Play again." ships no surface. The word-move check now finds
+// the open word game for a give-up with no target and judges a replay ask, so both turns are sent back with
+// ACTION_NOT_APPLIED. The fixture records no repaired round, so both stay uncorrected and still ship no surface here.
+it('lexicographer-haiku-give-up-no-surface: the prose give-up and replay get ACTION_NOT_APPLIED', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./lexicographer-haiku-give-up-no-surface.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
   const traces = report.records.map((r) => r.lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined))
   const types = (i) => report.records[i].lines.flatMap((l) => JSON.parse(l).updateComponents?.components ?? []).map((c) => c.component)
   expect(report.failed).toEqual([])
   expect(types(0)).toContain('BoardGrid')
-  expect(traces.map((t) => t.failureCodes)).toEqual([[], [], [], [], []])
+  expect(traces.map((t) => t.failureCodes)).toEqual([[], [], [], ['ACTION_NOT_APPLIED', 'SEMANTIC_UNCORRECTED'], ['ACTION_NOT_APPLIED', 'SEMANTIC_UNCORRECTED']])
   expect(types(3)).toEqual([])
   expect(types(4)).toEqual([])
 })

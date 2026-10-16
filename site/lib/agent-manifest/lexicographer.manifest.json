@@ -1,8 +1,8 @@
 {
   "id": "lexicographer",
   "preset": "lexicographer",
-  "seedVersion": 4,
-  "seedDigest": "sha256:9d59fc95e6aee652196edb8f792012f92aa541bdbba6c853f63f9b29be5c2624",
+  "seedVersion": 5,
+  "seedDigest": "sha256:b499f4485ad8fc7d067163ddd8c7a0de0f983766062f0c8b77b39dc1aa1a835c",
   "fragment": null,
   "selection": null,
   "noFragment": {

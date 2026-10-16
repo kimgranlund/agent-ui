@@ -30,3 +30,10 @@ The failing test lands before or with the fix. Sonnet's passing give-up and repl
 
 ## Ruling (Kim, 2026-10-16)
 Fix it in the persona text and the repair messages (frame a repair as a check result, not a system notice), never in the byte-pinned shared grammar (`packages/agent-ui/a2ui/src/agent/prompts/grammar.md`), which stays unchanged for every persona.
+
+## Acceptance criteria
+- `npx vitest run scripts/e2e-admin/probe/replays/lexicographer-haiku-give-up-no-surface.test.mjs` exits 0 with turns 3 and 4 carrying ACTION_NOT_APPLIED.
+- `npx vitest run packages/agent-ui/a2ui/src/catalog/hidden-state-checks.test.ts` exits 0, including the T-0291 cases (a targetless give-up, a prose Play again, and the passing shapes).
+- `npx vitest run site/pages/agent-admin-presets.test.ts site/lib/agent-manifest` exits 0 (the Lexicographer foundation change, seed 5, manifest digest).
+- `npm run check` exits 0.
+- `git diff 91789663 -- packages/agent-ui/a2ui/src/agent/prompts/grammar.md` prints nothing.
