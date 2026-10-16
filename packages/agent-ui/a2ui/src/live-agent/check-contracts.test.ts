@@ -206,7 +206,7 @@ const CONTRACTS: Record<string, Contract> = {
       output: surface('booking-1', CONCIERGE, [
         { id: 'root', component: 'Card', children: ['t', 'date', 'party', 'go'] },
         { id: 't', component: 'Text', text: 'Reserve a table' },
-        { id: 'date', component: 'Calendar', label: 'Date' },
+        { id: 'date', component: 'Calendar', name: 'date' },
         { id: 'party', component: 'Slider', label: 'Guests' },
         { id: 'go', component: 'Button', label: 'Book', action: { event: { name: 'book' } } },
       ]),
