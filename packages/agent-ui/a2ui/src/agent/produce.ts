@@ -448,8 +448,8 @@ interface RoundFailure {
  * `renderer/validate.ts:232-243`) or where. A live report naming only the code was undiagnosable
  * without re-instrumenting the loop (exactly what happened investigating #307 itself). Each failure
  * now renders as `CODE at path` (path omitted only when empty, e.g. a whole-payload PARSE failure),
- * matching the wording already used in the self-correct feedback (`messagesFor`, same file) — one
- * format, two audiences. `f.code` alone remains safe to surface to an end user (see `GENERIC_FAILURE_MESSAGE` and
+ * matching the wording already used in the self-correct feedback (`messagesFor`, same file). That
+ * `message` is for logs and traces; T-0290 gives the user `userMessage`, the codes alone. `f.code` alone remains safe to surface to an end user (see `GENERIC_FAILURE_MESSAGE` and
  * `failureMessageFor` in tools/agent/chat-validation.ts): `f.path` is likewise never raw upstream text,
  * only A2UI ids the model itself emitted. */
 export class ProduceHalt extends Error {
