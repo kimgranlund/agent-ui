@@ -72,7 +72,7 @@ Round 1 of every Haiku click turn now calls render_surface, with no thinking blo
 | Round | Haiku click turns | Round 1 called render_surface | Round 1 with thinking | Round 1 failed a check |
 |---|---|---|---|---|
 | 6 | 31 | 9 | 31 | 14 |
-| 7 | 17 | 3 (12 no-tool round-1 calls on the Haiku click turns the ticket counted, 14 by this count) | 17 | 6 |
+| 7 | 17 | 3; 14 round 1s made no tool call (round 7's report counted 12 that wrote a target meta-line) | 17 | 6 |
 | 8 | 36 | 36 | 0 | 4 (:9, :23, :65, :159), all saved |
 
 The four failures are content checks on a tool call (BANKROLL_MISMATCH, NATURAL_ACTIONS with NEW_ROUND_NOT_BETTING, NEW_ROUND_NOT_BETTING, ACTION_NOT_APPLIED), not prose answers. One of them, :9, is where cluster F starts. Haiku say turns are unchanged: 81 of 145 round 1s make no tool call (round 6: 89 of 147).
