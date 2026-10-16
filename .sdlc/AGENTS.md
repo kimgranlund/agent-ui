@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:06add7d6bf3c -->
+<!-- sdlc-lite:managed:start v1 sha256:8db2162f8aab -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -21,7 +21,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0198 Step flow pattern: step n of m, Back and Next, shared /draft data (0198-step-flow)
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (0199-itinerary-compare)
   - T-0315 Admiral and Lexicographer share the agent-ui catalog: 'New game' ranks the word board first on the Admiral's opening (0315-shared-catalog-cross-game-retrieval)
-- ready: 15
+- ready: 21
   - T-0160 Agent content as files: extract preset and pack seeds to .md manifests with a generated, drift-gated registry (0160-agent-content-files)
   - T-0161 Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind (0161-agent-content-overlays)
   - T-0162 Settings pane forms generated from each content kind's schema, with provenance, diff and reset (0162-agent-content-schema-forms)
@@ -37,6 +37,12 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0209 One source per concept: layer membership, calibration bullets, persona list; mini-skill ranking stability test (0209-context-single-source)
   - T-0247 validate-payload --catalog cannot load persona catalog ids (<base>--<persona>) (0247-validate-payload-persona-ids)
   - T-0318 Replace two corpus records that teach what the rulings forbid (frontier-booking-receipt, frontier-greet-card) (0318-corpus-records-rulings)
+  - T-0320 Root-cause the render_surface messages strings that are one brace short (ours or the model's?) (0320-messages-brace-root-cause)
+  - T-0321 Force render_surface on a SURFACE_DROPPED repair round; the fallback never ships a round a check already failed (0321-force-surface-dropped-repair)
+  - T-0322 Check gaps: uncovered prose answers (word-game opening, Concierge form edit) and the ProductCard check missing a priced DescriptionList (0322-check-gaps-r8)
+  - T-0323 Poker phases: a post-deal betting round is phase playing; the BET_CONTROL_DUPLICATE repair must not strip the moves (0323-poker-phase-wording)
+  - T-0324 A blackjack deal that settles needs a two-card 21 (natural); otherwise phase playing with Hit and Stand (0324-croupier-natural-check)
+  - T-0325 The texas-holdem scenario assumes a showdown: no fixed click after a move that can end the hand (0325-holdem-scenario-fold)
 - claimed: 0
 - paused: 0
 - blocked: 0
