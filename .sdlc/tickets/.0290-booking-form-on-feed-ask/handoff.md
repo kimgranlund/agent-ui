@@ -2,7 +2,7 @@
 id: T-0290
 title: "A booking form built as a feed ask: FEED_SCOPE and BOOKING_FORM_MISSING push opposite ways and the SURFACE_DROPPED halt leaks the ask id"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -34,3 +34,9 @@ verifier: L3
 - `npx vitest run packages/agent-ui/a2ui/src/live-agent/produce-loop.test.ts packages/agent-ui/a2ui/src/live-agent/turn-deadline.test.ts` exits 0: the FEED_SCOPE repair says to keep the surface whole as an ordinary one, and a halt's user line names its codes with no surface id.
 - `npx vitest run packages/agent-ui/a2ui/tools scripts/e2e-admin/probe site/lib/admin-live-runner.test.ts` exits 0.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged in #2052 (round 5 Concierge fixes); verifier pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

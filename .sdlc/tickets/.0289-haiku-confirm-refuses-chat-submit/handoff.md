@@ -2,7 +2,7 @@
 id: T-0289
 title: "Haiku will not confirm a complete pre-filled booking from chat: grammar gives the final action to the user and the repair hint asks for a reference"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -34,9 +34,9 @@ Fix it in the persona text and the repair messages (frame a repair as a check re
 ## Lane bundle
 This solo lane delivers these tickets in order, one commit each (`T-NNNN: <title>`):
 - .sdlc/tickets/0289-haiku-confirm-refuses-chat-submit/handoff.md
-- .sdlc/tickets/0290-booking-form-on-feed-ask/handoff.md
-- .sdlc/tickets/0293-booking-form-dotted-paths/handoff.md
-- .sdlc/tickets/0292-services-oracle-servicecard/handoff.md
+- .sdlc/tickets/.0290-booking-form-on-feed-ask/handoff.md
+- .sdlc/tickets/.0293-booking-form-dotted-paths/handoff.md
+- .sdlc/tickets/.0292-services-oracle-servicecard/handoff.md
 
 ## Acceptance criteria
 verifier: L3
@@ -44,3 +44,13 @@ verifier: L3
 - `npx vitest run packages/agent-ui/a2ui/src/catalog/personas/concierge packages/agent-ui/a2ui/src/live-agent site/pages/agent-admin-presets.test.ts` exits 0: the confirm repair asks for a read-back with no reference, and every repair opens as a check result.
 - `git diff --quiet 4a05c787 -- packages/agent-ui/a2ui/src/agent/prompts/grammar.md` exits 0: the shared grammar is unchanged (Kim's ruling).
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged in #2052 (round 5 Concierge fixes); verifier pass) · verifier: verifier-L3 (fable) · base: 91789663375c
+- Changed: see commits
+- Commits: none
+- Check: 1 `npx vitest run scripts/e2e-admin/probe/replays/concierge-haiku-confirm-refusal.test.mjs` exits 0...: pass
+- Check: 2 `npx vitest run packages/agent-ui/a2ui/src/catalog/personas/concierge packages/agent-ui/a2ui/src/...: pass
+- Check: 3 `git diff --quiet 4a05c787 -- packages/agent-ui/a2ui/src/agent/prompts/grammar.md` exits 0 (share...: pass
+- Check: 4 `npm run check` exits 0: pass

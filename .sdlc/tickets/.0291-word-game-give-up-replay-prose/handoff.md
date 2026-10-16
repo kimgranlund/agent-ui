@@ -2,7 +2,7 @@
 id: T-0291
 title: "Haiku gives up and replays the word game in prose: the flowEnd rule says no A2UI, the check needs a target, and Play again frames no exemplar"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -37,3 +37,14 @@ Fix it in the persona text and the repair messages (frame a repair as a check re
 - `npx vitest run site/pages/agent-admin-presets.test.ts site/lib/agent-manifest` exits 0 (the Lexicographer foundation change, seed 5, manifest digest).
 - `npm run check` exits 0.
 - `git diff 91789663 -- packages/agent-ui/a2ui/src/agent/prompts/grammar.md` prints nothing.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged: give-up and Play again sent back when nothing updates; persona and repair text only; verifier L2 pass) · verifier: verifier-L2 (sonnet) · base: 91789663375c
+- Changed: see commits
+- Commits: d714ff2 T-0291: Haiku gives up and replays the word game in prose (#2051)
+- Check: 1 replay test exits 0 with turns 3 and 4 carrying ACTION_NOT_APPLIED: pass
+- Check: 2 hidden-state-checks.test.ts exits 0 incl. T-0291 cases: pass
+- Check: 3 `npx vitest run site/pages/agent-admin-presets.test.ts site/lib/agent-manifest` exits 0: pass
+- Check: 4 `npm run check` exits 0: pass
+- Check: 5 grammar.md unchanged: pass

@@ -2,7 +2,7 @@
 id: T-0293
 title: "A BookingForm with dotted field paths renders blank, and the T-0278 hold then lets a prose 'is booked' pass with no code"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -33,3 +33,9 @@ verifier: L3
 - `npx vitest run scripts/e2e-admin/probe/replays/concierge-haiku-dotted-booking-paths.test.mjs` exits 0: turn 2 gets BOOKING_FIELD_PATH and ships the key-only form, and the confirm turn's prose booking is sent back as SURFACE_MISSING (the repaired rounds AUTHORED, as T-0281 did).
 - `npx vitest run packages/agent-ui/a2ui/src/catalog/personas/concierge packages/agent-ui/a2ui/src/live-agent` exits 0: the finding names each key-only path, key-only paths and a field the value never held raise none, and a mis-pathed form holds no confirm open.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged in #2052 (round 5 Concierge fixes); verifier pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none
