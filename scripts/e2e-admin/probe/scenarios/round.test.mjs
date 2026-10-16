@@ -53,10 +53,19 @@ describe('live round 2 scenarios', () => {
     }
   })
 
-  it('the Concierge measures BookingForm, BookingConfirmation, DescriptionList, ProductCard and ServiceCard; the games measure BoardGrid and ResultCard', () => {
+  it('the Concierge measures BookingForm, BookingConfirmation, DescriptionList and ProductCard; the games measure BoardGrid and ResultCard', () => {
     const turnTypes = (scenarios) => new Set(scenarios.flatMap((s) => s.steps.flatMap((step) => step.expect ?? [])))
-    expect([...turnTypes(CONCIERGE_SCENARIOS)].sort()).toEqual(['BookingConfirmation', 'BookingForm', 'DescriptionList', 'ProductCard', 'ServiceCard'])
+    expect([...turnTypes(CONCIERGE_SCENARIOS)].sort()).toEqual(['BookingConfirmation', 'BookingForm', 'DescriptionList', 'ProductCard'])
     for (const scenarios of [LEXICOGRAPHER_SCENARIOS, ADMIRAL_SCENARIOS]) expect([...turnTypes(scenarios)].sort()).toEqual(['BoardGrid', 'ResultCard'])
+  })
+
+  // T-0292 (Kim's ruling): priced, bookable add-on services follow T-0279, one ProductCard each, never ServiceCard.
+  it('"What services could I add for the rest of my stay?" expects ProductCard, never ServiceCard', () => {
+    const flow = CONCIERGE_SCENARIOS.find((s) => s.name === 'facilities-then-tour')
+    const step = flow.steps.find((st) => st.say === 'What services could I add for the rest of my stay?')
+    expect(step.expect).toEqual(['ProductCard'])
+    expect(flow.expectComponents).toEqual(['DescriptionList', 'BookingForm', 'BookingConfirmation', 'ProductCard'])
+    expect(JSON.stringify(flow)).not.toContain('ServiceCard')
   })
 
   it('the round fixes its scenario defects: no click after a Hit, five stud streets, dated bookings, named knowledge', () => {

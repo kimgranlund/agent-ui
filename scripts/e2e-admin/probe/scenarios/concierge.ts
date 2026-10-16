@@ -48,9 +48,9 @@ export const CONCIERGE_SCENARIOS: readonly RoundScenario[] = [
       say('Is late check-out possible?'),
       say('Book the half-day coastal boat tour on Saturday 21 November 2026 for two guests, name Alex Moreau.', 'BookingForm'),
       say('Confirm it, the details are right.', 'BookingConfirmation'),
-      say('What services could I add for the rest of my stay?', 'ServiceCard'),
+      say('What services could I add for the rest of my stay?', 'ProductCard'),
     ],
-    expectComponents: ['DescriptionList', 'BookingForm', 'BookingConfirmation', 'ServiceCard'],
+    expectComponents: ['DescriptionList', 'BookingForm', 'BookingConfirmation', 'ProductCard'],
   },
 ]
 
