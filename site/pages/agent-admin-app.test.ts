@@ -1010,7 +1010,7 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
   it('a persisted OLD-version store is dropped and the new seed applies; same-version edits survive', async () => {
     const { presetStore, AGENT_PRESETS, resetPreset } = await import('./agent-admin-presets.ts')
     const concierge = AGENT_PRESETS.find((p) => p.id === 'concierge')!
-    expect(concierge.seedVersion, 'the upgrade declares its bump').toBe(13) // T-0279: amenity-service-card teaches a ProductCard per priced service
+    expect(concierge.seedVersion, 'the upgrade declares its bump').toBe(14) // T-0285: facility facts are ONE Card holding a DescriptionList
 
     // Simulate a PRE-upgrade browser: old persisted content, NO seedVersion marker (=1 implicitly).
     resetPreset(concierge) // clean slate for the probe (drops cache + keys)
@@ -1046,7 +1046,15 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
     const amenity = skills.find((s) => s.id === 'amenity-service-card') as { content: string } | undefined
     expect(amenity?.content).toMatch(/one ProductCard each, never a Table/)
     expect(amenity?.content).not.toMatch(/one ServiceCard each/)
-    expect(localStorage.getItem('agent-admin-app.concierge.seedVersion')).toBe('13')
+    // T-0285 (Kim's ruling): facility facts are a compact info card, ONE Card holding a DescriptionList, never a
+    // ServiceCard. The skill is index-only on a facility turn, so its description (the index line) carries the shape;
+    // the modality-neutral surfaceStyle names the compact info card without a type.
+    expect(concierge.surfaceStyle).toMatch(/Facts \(hours, directions, policies\) → a compact info card, one row per facility/)
+    const facility = skills.find((s) => s.id === 'facility-info-card') as { description: string; content: string } | undefined
+    expect(facility?.description).toMatch(/ONE Card holding a DescriptionList, never a ServiceCard/)
+    expect(facility?.content).toMatch(/ONE Card holding a DescriptionList/)
+    expect(facility?.content).not.toMatch(/ONE ServiceCard per facility/)
+    expect(localStorage.getItem('agent-admin-app.concierge.seedVersion')).toBe('14')
 
     // Same-version edits SURVIVE a rebuild (persisted-wins is untouched at the current version).
     migrated.set('entries:skill', [...skills.map((s) => s), { id: 'my-edit', kind: 'skill', label: 'my-edit', description: '', content: 'mine', order: 99, enabled: true, builtin: false }])
