@@ -2,7 +2,7 @@
 id: T-0275
 title: "Live round 4: rerun round 3's 31 failed runs plus Concierge and Lexicographer long flows ($15 cap)"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0258, T-0265, T-0274]          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -39,3 +39,14 @@ Phase 3 (the fog decision analysis, Kim 2026-10-16):
 - The round README is fresh: `node --experimental-strip-types scripts/e2e-admin/probe/run-capped.ts --describe .sdlc/evals/rounds/2026-10-15-r4-fixes && git diff --exit-code -- .sdlc/evals/rounds/2026-10-15-r4-fixes/README.md` exits 0.
 - The one cluster part no ticket covers is filed: `test -f .sdlc/tickets/0285-concierge-facility-hours-composite/handoff.md` exits 0.
 - `tickets.py check` and `npm run check` exit 0.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Round 4 done: 37 runs, $8.72; 10 of 31 round 3 fails recovered; fog decision analysis ffe6d0ef720852da99edbff0 (5 clusters); tickets T-0276 to T-0285; verifier L2 pass) · verifier: verifier-L2 (sonnet) · base: a35724188dc2
+- Changed: see commits
+- Commits: 5eb37ef T-0275: fog decision analysis per failure cluster; 08e9f95 T-0275: live round 4 archive, report, fog record, 9 proposed tickets and 4 pinned replays; 5a803d1 T-0275: live round 4 generator and live-commands.sh (phase 1)
+- Check: 1 Report section and cluster table (`grep -q '^## Why it failed and how to fix it' report.md`; `tes...: pass
+- Check: 2 Fog report published and valid: pass
+- Check: 3 Round README fresh: pass
+- Check: 4 T-0285 filed: pass
+- Check: 5 `tickets.py check` and `npm run check`: pass

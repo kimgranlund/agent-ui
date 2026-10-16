@@ -31,3 +31,6 @@ ServiceCard drew 0 of 13 services asks. Haiku draws a Table (or a Card with a De
 
 ## Ruling (Kim, 2026-10-16)
 ProductCard. A priced, bookable treatment is a product or offer by the catalog selection definition. The `amenity-service-card` skill changes to teach one ProductCard per bookable service (price, duration, a Book action), never a Table; add a composite-moment check for it. ServiceCard stays for a service or agent to open.
+
+## Scope note (conductor, 2026-10-16)
+Also update the round scenario oracles that still expect ServiceCard for a priced services list (six, per `.sdlc/evals/rounds/2026-10-15-r4-fixes/report.md` cluster A) to expect ProductCard, with the generators and their pinning tests.

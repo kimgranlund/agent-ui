@@ -86,3 +86,5 @@
 - 2026-10-15 (Kim): the T-0242 migration path fixes inside frozen ADRs 0241, 0244 and 0245 stay (paths only, no decision text). Plugin follow-ups filed upstream by the sdlc-lite author: T-0576 (root AGENTS.md block reads the topics layout), T-0577 (--rewrite-refs skips Frozen paths).
 
 - 2026-10-15 (Kim): booking asks with every detail show a pre-filled BookingForm, never a read-back Card (T-0266). Round 3 tickets T-0262 to T-0273 set ready.
+
+- 2026-10-16 (Kim): a bookable services list uses one ProductCard per priced service, never a Table (T-0279).
