@@ -31,3 +31,12 @@ Screenshots go to the evidence cache, never the repo. No prompt or code fixes in
 - The round folder holds traces, ledger, round.json, runs/, README and report.md with the why-and-fix table; spend at or under $15.
 - The hydrated fog report is published and its id recorded.
 - `tickets.py check` and `npm run check` exit 0.
+
+## Acceptance criteria
+verifier: L3
+- `npx vitest run scripts/e2e-admin/probe` exits 0: `round5.test.mjs` pins the round to the round 4 ledger fails, and the four new replays pin today's behavior.
+- `npm run check` exits 0.
+- `python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.24.0/scripts/tickets.py check` exits 0.
+- `python3 -c "import json; d=json.load(open('.sdlc/evals/rounds/2026-10-15-r5-fixes/round.json')); assert d['stop']=='done' and d['totals']['runs']==29 and d['totals']['costUsd']<=15"` exits 0.
+- `grep -q 4095416195875afe423e60ea .sdlc/evals/fog/2026-10-15-r5-fixes.json` and `grep -q 4095416195875afe423e60ea .sdlc/evals/rounds/2026-10-15-r5-fixes/README.md` exit 0.
+- `.sdlc/evals/rounds/2026-10-15-r5-fixes/report.md` holds `## Why it failed and how to fix it` with one row per cluster A to F, each naming a class, a fix file, a keyless test and a ticket.
