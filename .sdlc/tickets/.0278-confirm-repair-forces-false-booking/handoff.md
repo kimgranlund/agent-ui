@@ -2,7 +2,7 @@
 id: T-0278
 title: "SURFACE_MISSING and FLOW_END_MISSING on a confirm turn demand a BookingConfirmation the booking cannot have, and Haiku and Opus then claim it is booked"
 type: bug             # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -31,3 +31,9 @@ FLOW_END_MISSING then SURFACE_MISSING (`intent:confirm`, "Call render_surface wi
 
 ## Reverify note (conductor, 2026-10-16)
 After the rebase onto T-0286, T-0278's `openSurfaceViews` was folded into T-0286's `sessionSurfaceViews` (one `SemanticCheckInput.open` on every say turn). Reverify this ticket's criteria against the rebased tree (commit e0c59e8c and HEAD).
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged in #2044 (round 4 scenario and check defects); verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

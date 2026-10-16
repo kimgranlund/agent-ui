@@ -2,7 +2,7 @@
 id: T-0276
 title: "The blackjack NATURAL_ACTIONS check fires on a Texas hold'em opening and its repair settles the hand as a blackjack natural"
 type: bug             # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -28,3 +28,9 @@ NATURAL_ACTIONS fired twice ("The player's cards in playerRow (A, K) are a natur
 ## Done when
 - A Croupier checks test proves a hold'em, Omaha or stud opening with A K raises no NATURAL_ACTIONS, and a blackjack natural still does.
 - The replay is recaptured to its fixed shape; `npx vitest run scripts/e2e-admin/probe` and `npm run check` exit 0.
+
+## Outcome
+
+2026-10-15 · lane: full L1 · verdict: closed by reason (Merged in #2044 (round 4 scenario and check defects); verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

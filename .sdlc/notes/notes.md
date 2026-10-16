@@ -88,3 +88,4 @@
 - 2026-10-15 (Kim): booking asks with every detail show a pre-filled BookingForm, never a read-back Card (T-0266). Round 3 tickets T-0262 to T-0273 set ready.
 
 - 2026-10-16 (Kim): a bookable services list uses one ProductCard per priced service, never a Table (T-0279).
+- 2026-10-16 (Kim): a facility-hours answer is one compact info Card with a DescriptionList, not a ServiceCard per facility (T-0285).

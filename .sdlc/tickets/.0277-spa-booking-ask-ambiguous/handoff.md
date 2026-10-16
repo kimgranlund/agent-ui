@@ -2,7 +2,7 @@
 id: T-0277
 title: "Round scenarios ask for 'a 60-minute massage', which T-0267's spa list makes ambiguous, so every model rightly refuses to confirm"
 type: chore           # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -32,8 +32,16 @@ The ask lives in `scripts/e2e-admin/probe/scenarios/{routing,concierge,round3,ro
 ## Lane bundle
 This solo lane delivers these tickets in order, one commit each (`T-NNNN: <title>`):
 - .sdlc/tickets/0277-spa-booking-ask-ambiguous/handoff.md
-- .sdlc/tickets/0278-confirm-repair-forces-false-booking/handoff.md
-- .sdlc/tickets/0282-surface-missing-confirm-vocabulary/handoff.md
-- .sdlc/tickets/0283-stud-scenario-extra-check/handoff.md
-- .sdlc/tickets/0276-natural-check-on-holdem/handoff.md
-- .sdlc/tickets/0281-feed-scope-repair-drops-surface/handoff.md
+- .sdlc/tickets/.0278-confirm-repair-forces-false-booking/handoff.md
+- .sdlc/tickets/.0282-surface-missing-confirm-vocabulary/handoff.md
+- .sdlc/tickets/.0283-stud-scenario-extra-check/handoff.md
+- .sdlc/tickets/.0276-natural-check-on-holdem/handoff.md
+- .sdlc/tickets/.0281-feed-scope-repair-drops-surface/handoff.md
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged in #2044 (round 4 scenario and check defects); verifier L2 pass) · verifier: verifier-L2 (sonnet) · base: 3b0ab74745d7
+- Changed: see commits
+- Commits: none
+- Check: 1 Every spa booking ask in the scenario generators names "Swedish massage"; generated live-commands...: pass
+- Check: 2 `npx vitest run scripts/e2e-admin/probe/scenarios` and `npm run check` exit 0: pass

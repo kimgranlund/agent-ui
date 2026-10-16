@@ -2,7 +2,7 @@
 id: T-0281
 title: "A FEED_SCOPE repair round passes with prose only, so the round 1 BookingForm never ships"
 type: bug             # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -28,3 +28,9 @@ T-0264 fixed the same loss after an ACTION_NOT_APPLIED retry. FEED_SCOPE retries
 ## Done when
 - A produce test: a FEED_SCOPE retry with no surface after a round 1 that built one is not accepted as passed.
 - The replay is recaptured; `npx vitest run scripts/e2e-admin/probe` and `npm run check` exit 0.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged in #2044 (round 4 scenario and check defects); verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none
