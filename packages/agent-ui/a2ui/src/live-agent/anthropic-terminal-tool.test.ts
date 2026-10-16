@@ -6,6 +6,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { anthropicProvider, buildRequestBody } from '../agent/providers/anthropic.ts'
 import type { ToolDef } from '../agent/agent-transport.ts'
+import { renderSurfaceTool } from '../agent/response-type.ts'
 
 afterEach(() => vi.unstubAllGlobals())
 
@@ -276,5 +277,62 @@ describe('mixed round', () => {
     expect(executed).toEqual([{ name: 'render_surface', input: SURFACE_INPUT }])
     // Mixed rounds stay buffered: the text flows only after the terminal call ran.
     expect(log).toEqual(['exec', 'frag:Here it is.'])
+  })
+})
+
+// T-0320: round 7 and 8 sent `messages` as a JSON string one `}` short. Raw deltas are not recorded, so this replays the
+// recorded input (2026-10-16-r8-matrix :305, Sonnet 5.5) through the adapter's own path: input_json_delta fragments of 1
+// to 7 characters, cut into 13-byte network reads that split the 3-byte marks. It reaches the executor byte-identical,
+// so the missing brace is in what the model sent, not lost on the way.
+describe('T-0320: a recorded messages string passes through stream assembly unchanged', () => {
+  const RECORDED = {
+    reply: "A3 missed. D6 sank your patrol boat.",
+    target: 'enemy-waters',
+    messages: `[{"version":"v1.0","updateDataModel":{"surfaceId":"enemy-waters","path":"/sea/cells","value":[{"row":0,"col":0,"disabled":true,"intent":"danger","mark":"●"},{"row":1,"col":0,"disabled":true,"intent":"neutral","mark":"✕"},{"row":2,"col":0,"disabled":true,"intent":"neutral","mark":"✕"}]}},{"version":"v1.0","updateDataModel":{"surfaceId":"enemy-waters","path":"/hud","value":{"title":"Enemy waters","status":"Miss at A3","stats":[{"label":"Enemy ships left","value":"3 of 3"},{"label":"Your ships left","value":"2 of 3"},{"label":"Shots fired","value":3,"delta":1},{"label":"Hits","value":1,"intent":"success"}]}}},{"version":"v1.0","updateDataModel":{"surfaceId":"enemy-waters","path":"/home","value":{"cells":[{"row":2,"col":0,"intent":"info","mark":"■"},{"row":3,"col":0,"intent":"info","mark":"■"},{"row":4,"col":0,"intent":"info","mark":"■"},{"row":0,"col":4,"intent":"info","mark":"■"},{"row":0,"col":5,"intent":"info","mark":"■"},{"row":4,"col":3,"intent":"danger","mark":"●"},{"row":5,"col":3,"intent":"danger","mark":"●"},{"row":2,"col":2,"intent":"neutral","mark":"✕"}]}}]`,
+  }
+
+  it('fragments and byte chunks reassemble the recorded input exactly, still one } short', async () => {
+    const inputJson = JSON.stringify(RECORDED)
+    const deltas: string[] = []
+    for (let at = 0, n = 0; at < inputJson.length; n++) {
+      const size = (n % 7) + 1
+      deltas.push(inputJson.slice(at, at + size))
+      at += size
+    }
+    const sse = toolStart(0, 'toolu_m', 'render_surface') + deltas.map((d) => inputDelta(0, d)).join('') + blockStop(0) + end('tool_use')
+    const bytes = new TextEncoder().encode(sse)
+    const reads: Uint8Array[] = []
+    for (let at = 0; at < bytes.length; at += 13) reads.push(bytes.slice(at, at + 13))
+    expect(reads.some((r) => r[r.length - 1]! >= 0xe0)).toBe(true) // a read ends on the lead byte of a 3-byte mark
+    stubFetch([
+      () =>
+        new Response(
+          new ReadableStream<Uint8Array>({
+            start(controller) {
+              for (const r of reads) controller.enqueue(r)
+              controller.close()
+            },
+          }),
+          { status: 200 },
+        ),
+    ])
+    const executed: Array<Record<string, unknown>> = []
+    const provider = anthropicProvider({ apiKey: 'test-key' })
+    for await (const _ of provider.stream({
+      model: 'claude-sonnet-5-5',
+      system: 'sys',
+      messages: [{ role: 'user', content: 'Fire at A3.' }],
+      tools: [renderSurfaceTool()],
+      executeTool: async (_name, input) => {
+        executed.push(input)
+        return 'received'
+      },
+      terminalTools: ['render_surface'],
+    })) void _
+    expect(executed).toHaveLength(1)
+    expect(executed[0]!['messages']).toBe(RECORDED.messages)
+    expect(executed[0]).toEqual(RECORDED)
+    expect(() => JSON.parse(RECORDED.messages)).toThrow()
+    expect(JSON.parse(`${RECORDED.messages.slice(0, -1)}}]`)).toHaveLength(3) // the one brace the model left out
   })
 })

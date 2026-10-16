@@ -22,3 +22,19 @@ Round 8 cluster A, `.sdlc/evals/rounds/2026-10-16-r8-matrix/report.md` (`## Why 
 
 ## Done when
 - The verdict and its evidence are in the handoff; if ours, a test built from a recorded stream is red at the base and green after; the live-agent tests and `npm run check` exit 0.
+
+## Acceptance criteria
+- `npx vitest run packages/agent-ui/a2ui/src/live-agent/anthropic-terminal-tool.test.ts -t T-0320` exits 0: the recorded round 8 :305 `render_surface` input, re-streamed as `input_json_delta` fragments and cut into network chunks that split UTF-8 characters, reaches the executor byte-identical, its `messages` string still one `}` short.
+- `npx vitest run packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent` exits 0.
+- `npm run check` exits 0.
+- The `## Verdict` section below names the side (ours or the model's) with the evidence.
+
+## Verdict
+The model's. Our stream assembly and tool-input decode pass the string through unchanged; T-0304 (pinpoint note, no harness repair) stays the answer.
+
+Evidence:
+- Raw SSE deltas are not recorded anywhere (`git grep partial_json` finds only the adapter and tests). The trace records the `render_surface` input the executor received (`tools/agent/trace-log.ts:557`, wrapping `executeTool`), which is `JSON.parse` of the accumulated `inputJson` (`providers/anthropic.ts:862`), with `coerceObjectFields` touching only `type: object` fields (`messages` is an array field, so a string passes untouched). So the recorded string is exactly what `produce()` saw.
+- The path is a plain concatenation: `inputJson += delta.partial_json` per block index (`anthropic.ts:300`), on whole SSE frames only (`stream()` buffers to the last blank line, `TextDecoder` with `stream: true`). A lost or split delta would drop a token-sized run anywhere, and would break the outer tool-input JSON as readily as the inner string. Every one of the 26 broken string rounds in rounds 7 and 8 has a well-formed outer object (it reached the executor and was traced with `reply`, `target` and `messages`).
+- The same model sent byte-identical broken strings in separate API requests: r7 :16 rounds 2 and 3 (Haiku, 1046 chars, the same break at char 476) and r8 :252 rounds 1 and 2 (Sonnet, 1490 chars, break at 591). Our code cannot drop the same byte at the same place in two independent streams; a model repeating its own output can.
+- Where it breaks: 20 of the 26 rounds close a message one `}` short at a bracket run (`"}}` or `]}}` before `,{"version"`, or `}]}` before the final `]`), always where a message's nested objects close (15 `updateDataModel` messages, 5 `updateComponents` messages whose last component ends in an action `context` or a bound prop); r8 :178 (both rounds) lost the `{"id":` opener of `guessBtn`; r7 :20 and r8 :120, :172, :355 break at other bracket runs (one too many, or a `]` where `}` belongs). All sit at multi-brace token boundaries, the model's counting error, not a byte loss.
+- Reproduced through our path: the T-0320 test in `anthropic-terminal-tool.test.ts` re-streams the recorded r8 :305 input (Sonnet, `regress-admiral-row-sweep`) as fragments of 1 to 7 characters, cut into 13-byte network chunks that split the 3-byte `✕` and `■`, and the executor receives it byte-identical, still one `}` short at the end of message 3.
