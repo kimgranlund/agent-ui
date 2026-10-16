@@ -2,7 +2,7 @@
 id: T-0306
 title: "Agent-admin Settings pane: redundant section select, a lone-field card, and a filled overflow trigger"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -38,3 +38,17 @@ tests: packages/agent-ui/app/src/controls/agent-admin/agent-admin.browser.test.t
 - `npx vitest run --config vitest.browser.config.ts --project site site/pages/dogfood-render.browser.test.ts` exits 0.
 - `npm run check` exits 0.
 - Screenshots of the real Settings pane at 400 and 1000px, light and dark, before and after, sit beside Kim's screenshot in `/private/tmp/claude-501/scratch/t0306-shots/` (not the repo).
+
+## Outcome
+
+2026-10-16 · lane: full L2 · verdict: closed by reason (Merged; every section shown, ghost overflow; verifier L3 pass) · verifier: verifier-L3 (fable) · base: a1b9314153a0
+- Changed: see commits
+- Commits: none
+- Check: 1 (red) `npx vitest run --config vitest.browser.config.ts --project packages packages/agent-ui/app/...: pass
+- Check: 2 `npx vitest run --config vitest.browser.config.ts --project packages packages/agent-ui/components...: pass
+- Check: 3 `npx vitest run packages/agent-ui/components/src/controls/tabs/tabs-css.test.ts -t T-0306` exits 0: pass
+- Check: 4 `npx vitest run packages/agent-ui/app/src/controls/settings packages/agent-ui/app/src/controls/ag...: pass
+- Check: 5 `npx vitest run --config vitest.browser.config.ts --project packages packages/agent-ui/app/src/co...: pass
+- Check: 6 `npx vitest run --config vitest.browser.config.ts --project site site/pages/dogfood-render.browse...: pass
+- Check: 7 `npm run check` exits 0: pass
+- Check: 8 Screenshots at 400 and 1000px, light and dark, before and after, beside Kim's screenshot in `/pri...: pass

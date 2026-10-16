@@ -2,7 +2,7 @@
 id: T-0313
 title: "One matcher per composite moment for teaching and check; the structured-container trigger fix; the Play again vocabulary fix (P1, P5)"
 type: feature        # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -18,8 +18,8 @@ P1 as revised and P5's replacement (Kim 2026-10-16 debate): the composite-moment
 
 ## Lane bundle
 One solo lane (wave-gr), one commit per ticket, in order:
-1. T-0308: drop the reference-Badge example from the grammar and the library text (`.sdlc/tickets/0308-grammar-drop-reference-badge/`).
-2. T-0312: persona type-name lint, Croupier reword, pin tests per ruling, committed audit mapping (`.sdlc/tickets/0312-persona-type-name-lint/`).
+1. T-0308: drop the reference-Badge example from the grammar and the library text (`.sdlc/tickets/.0308-grammar-drop-reference-badge/`).
+2. T-0312: persona type-name lint, Croupier reword, pin tests per ruling, committed audit mapping (`.sdlc/tickets/.0312-persona-type-name-lint/`).
 3. T-0313: one matcher per composite moment, the structured-container trigger fix, the Play again vocabulary fix (this ticket).
 
 ## Acceptance criteria
@@ -33,3 +33,15 @@ verifier: L3
 
 ## Conductor ruling (2026-10-16)
 The "Play again." retrieval part is dropped from T-0313: its criterion already passes at the base (retrieval returns nothing for "Play again." on agent-ui), so no change can be shown, and the semantic checks already catch the case (round 6: 6 of 6 saved). The real defect the solo found, cross-game retrieval on the shared agent-ui catalog ("New game" ranks the word board first for the Admiral), is filed separately for the debate process. Judge T-0313 on its other two parts.
+
+## Outcome
+
+2026-10-16 · lane: full L2 · verdict: closed by reason (Merged in the guidance-rulings lane; verifier L3 pass) · verifier: verifier-L3 (fable) · base: 4c2e88ec35dd
+- Changed: see commits
+- Commits: none
+- Check: 1 (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog/composite-moments.tes...: pass
+- Check: 2 `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog` exits 0 with `personas/con...: pass
+- Check: 3 `npx vitest run --project scripts scripts/e2e-admin/probe` exits 0: pass
+- Check: 4 (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/mini-skills.test.t...: pass
+- Check: 5 `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/s...: pass
+- Check: 6 `npm run check` exits 0: pass
