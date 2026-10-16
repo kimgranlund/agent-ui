@@ -77,3 +77,6 @@ Evidence beyond the commands: 400px screenshots of the changed widgets (scratch,
 - `grep -rn "○" site/lib/component-preview.ts site/pages/board-grid-demo.ts site/pages/board-grid-doc.ts packages/agent-ui/components/src/controls/board-grid/board-grid.md` exits 1: no miss is drawn as a circle.
 - `grep -n "mark a hit ● and a miss ✕" site/pages/agent-admin-libraries.ts` exits 0.
 - `npm run check` exits 0.
+
+## Conductor note for the verifier (2026-10-16)
+Kim's debate rule applies to the two library wording changes (F7 board-grid glyph order, the table-reservation "confirmation restates"): besides the criteria, argue against each as an adversary (does it change what a model does on a turn in a way no ruling covers? cite the ruling it applies, T-0245 for the miss glyph) and state keep or revert.
