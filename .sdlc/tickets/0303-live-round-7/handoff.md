@@ -30,3 +30,11 @@ No prompt or code fixes in this ticket. Screenshots stay out of the repo.
 - The round folder holds traces, ledger, round.json, runs/, README and report.md with the per-ticket verdict table; spend at or under $6.
 - The fog report is published and its id recorded.
 - `tickets.py check` and `npm run check` exit 0.
+
+## Acceptance criteria
+- `test -f .sdlc/evals/rounds/2026-10-16-r7-fails/report.md -a -f .sdlc/evals/rounds/2026-10-16-r7-fails/README.md -a -f .sdlc/evals/rounds/2026-10-16-r7-fails/round.json -a -f .sdlc/evals/rounds/2026-10-16-r7-fails/ledger.jsonl -a -d .sdlc/evals/rounds/2026-10-16-r7-fails/traces -a -d .sdlc/evals/rounds/2026-10-16-r7-fails/runs` exits 0 (the round folder is complete).
+- `python3 -c "import json,sys; sys.exit(0 if json.load(open('.sdlc/evals/rounds/2026-10-16-r7-fails/round.json'))['totals']['costUsd'] <= 6 else 1)"` exits 0 (spend at or under $6).
+- `grep -q '^## Round 6 fixes, live' .sdlc/evals/rounds/2026-10-16-r7-fails/report.md` exits 0, and that table gives T-0296 to T-0302 each a verdict with trace cites.
+- `python3 -c "import json,sys; r=json.load(open('.sdlc/evals/fog/2026-10-16-r7-fails.json')); sys.exit(0 if len(r['reportId']) == 24 and r['round'] == '2026-10-16-r7-fails' else 1)"` exits 0, and `library.py list` holds that report id.
+- `npx vitest run scripts/e2e-admin/probe` exits 0 (round 7 generator pin and the two round 7 replays).
+- `npm run check` exits 0.
