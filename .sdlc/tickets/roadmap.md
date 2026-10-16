@@ -300,3 +300,8 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0293 | [.0293-booking-form-dotted-paths](.0293-booking-form-dotted-paths/handoff.md) | A BookingForm with dotted field paths renders blank, and the T-0278 hold then lets a prose 'is booked' pass with no code | bug | L2 | P2 | none | 🟢 done |
 | T-0294 | [.0294-live-round-6](.0294-live-round-6/handoff.md) | Live round 6: full matrix, every preset on Haiku, Sonnet and Opus ($20 cap) | chore | L2 | P2 | T-0289, T-0290, T-0292, T-0293 | 🟢 done |
 | T-0295 | [.0295-fog-lessons-into-docs](.0295-fog-lessons-into-docs/handoff.md) | Write the round 3 to 5 context-fog-of-war lessons into the standing specs, references and skills | chore | L2 | P2 | none | 🟢 done |
+| T-0296 | [0296-admiral-surrender-result-card](0296-admiral-surrender-result-card/handoff.md) | Admiral: a surrender ends with one ResultCard beside the revealed board | feature | L2 | P2 | none | 🔵 ready |
+| T-0297 | [0297-narrated-mechanics-case](0297-narrated-mechanics-case/handoff.md) | NARRATED_MECHANICS misses a capitalized surface id ('Table-3 is dealt.') | bug | L1 | P2 | none | 🔵 ready |
+| T-0298 | [0298-haiku-repair-forced-tool](0298-haiku-repair-forced-tool/handoff.md) | Haiku repair rounds never call render_surface: force the tool on a no-tool repair round | bug | L2 | P2 | none | 🔵 ready |
+| T-0299 | [0299-final-round-surface-drop](0299-final-round-surface-drop/handoff.md) | The last repair round drops or swaps the Concierge surface (FEED_SCOPE then SURFACE_DEGRADED) | bug | L3 | P2 | none | 🔵 ready |
+| T-0300 | [0300-lone-button-frame](0300-lone-button-frame/handoff.md) | A settled table frames Deal again alone in a Card: a LONE_BUTTON_FRAME check | bug | L2 | P2 | none | 🔵 ready |
