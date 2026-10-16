@@ -4,7 +4,8 @@
 // Accounting follows `tools/agent-eval/observe.ts`: `rounds` and `failureCodes` come from the meta-line
 // `TurnTrace` when one rides the turn (only when the final round carries a note); otherwise `rounds` is the
 // provider's call count and `failureCodes` is null (not observed), except on `ProduceHalt`, whose
-// `failures[].code` are the codes. A halted turn streams one terminal error line, as the dev proxy does.
+// `failures[].code` are the codes. A halted turn streams one terminal error line, as the dev proxy does (its
+// `userMessage`, codes with no surface id, T-0290).
 //
 // With `opts.tools`, `buildToolDispatch` over `scriptedTools(opts.tools).manifests` supplies the producer's
 // `tools` and `executeTool`; `toolCalls` are the calls that reached an executor (dispatch validates input
@@ -57,7 +58,7 @@ export async function runProducerTurn(
   } catch (err) {
     if (!(err instanceof ProduceHalt)) throw err
     const codes = err.failures.map((f) => f.code)
-    return { outcome: 'halt', rounds: provider.calls, failureCodes: codes, lines: [formatErrorLine(err.message)], toolCalls: scripted.calls }
+    return { outcome: 'halt', rounds: provider.calls, failureCodes: codes, lines: [formatErrorLine(err.userMessage)], toolCalls: scripted.calls }
   }
   let traceRounds: number | undefined
   let traceCodes: string[] | undefined

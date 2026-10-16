@@ -1549,6 +1549,29 @@ describe('produce() feed-embedded ask — the FEED_SCOPE self-correct gate (ADR-
     await expect(halted).rejects.toMatchObject({ failures: [{ code: 'SURFACE_DROPPED', path: 'ask-1' }] })
   })
 
+  // T-0290 (live round 5, 2026-10-15-r5-fixes :54-:55, Haiku 5.5): the BookingForm built as ask-1 was sent back through
+  // the generic wording, the next rounds dropped it, and the halt line named ask-1 to the guest.
+  it('the FEED_SCOPE repair says to keep the surface whole as an ordinary one; following it ships the surface', async () => {
+    const { provider, calls, reqs } = stubProvider([
+      '{"a2uiMeta":{"note":"pick one","ask":{"surfaceId":"ask-1"}}}\n' + ASK_OUT_OF_SCOPE,
+      '{"a2uiMeta":{"note":"pick one"}}\n' + ASK_OUT_OF_SCOPE,
+    ])
+    const lines: string[] = []
+    for await (const line of produce(intent, { provider, retrieve: () => [], catalog: defaultCatalog }, { maxRounds: 3 })) lines.push(line)
+    expect(calls()).toBe(2)
+    const repair = reqs()[1]!.messages.at(-1)!.content
+    expect(repair).toContain('FEED_SCOPE at ask-1:Modal')
+    expect(repair).toContain('Resend that SAME surface with the same components and data as an ordinary surface: leave "ask" out of your meta-line')
+    expect(readMetaLine(lines[0]!)!.a2uiMeta.ask).toBeUndefined()
+    expect(lines.some((l) => l.includes('"component":"Modal"'))).toBe(true)
+  })
+
+  it('a halt keeps the surface id on its message for logs, and its userMessage names the codes alone', () => {
+    const halt = new ProduceHalt([{ code: 'SURFACE_DROPPED', path: 'ask-1' }, { code: 'SURFACE_DROPPED', path: 'ask-2' }])
+    expect(halt.message).toBe('produce: no valid surface within the round bound (SURFACE_DROPPED at ask-1, SURFACE_DROPPED at ask-2)')
+    expect(halt.userMessage).toBe('produce: no valid surface within the round bound (SURFACE_DROPPED)')
+  })
+
   it('the shared validateA2ui call sites are unchanged — FEED_SCOPE runs strictly AFTER validation passes (SPEC-N3 parity)', async () => {
     // A payload the shared validator would ALREADY reject (an unknown component) must surface as the
     // ordinary CATALOG/SCHEMA failure, never as FEED_SCOPE — proving the gate never runs ahead of, or

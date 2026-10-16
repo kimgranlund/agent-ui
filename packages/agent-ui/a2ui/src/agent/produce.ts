@@ -454,11 +454,15 @@ interface RoundFailure {
  * only A2UI ids the model itself emitted. */
 export class ProduceHalt extends Error {
   readonly failures: RoundFailure[]
+  /** T-0290: the line a host shows the user, the failure CODES alone. A path names a model-authored surface id
+   *  ("SURFACE_DROPPED at ask-1" reached the guest's chat in round 5), so it stays on `message` for logs and traces. */
+  readonly userMessage: string
   constructor(failures: RoundFailure[]) {
     const rendered = failures.map((f) => `${f.code}${f.path ? ` at ${f.path}` : ''}`).join(', ') || 'unknown'
     super(`produce: no valid surface within the round bound (${rendered})`)
     this.name = 'ProduceHalt'
     this.failures = failures
+    this.userMessage = `produce: no valid surface within the round bound (${[...new Set(failures.map((f) => f.code))].join(', ') || 'unknown'})`
   }
 }
 
@@ -493,7 +497,7 @@ function stampCreateSurfaceCatalogId(output: A2uiOutput, catalogId: string): voi
  * Assemble the model messages for one generation round: the session history, the current user turn, and
  * — on a self-correct round — the prior INVALID attempt plus the validator's structured failures, so the
  * model sees exactly what it emitted and what was wrong (ADR-0070's "feed the failures back"). A
- * `'FEED_SCOPE'` round-failure (ADR-0097 §3) is fed back through the SAME check-result, re-emit wording (T-0289) — a
+ * `'FEED_SCOPE'` round-failure (ADR-0097 §3) is fed back through the SAME check-result, re-emit wording (T-0289), plus its own hint (T-0290) — a
  * feed ask hosting an out-of-scope type is exactly as re-emittable as a schema/catalog defect.
  *
  * GH #174: the feedback message ALSO pins the note's audience. The leading meta-line's `note` (ADR-0088
@@ -687,6 +691,7 @@ function messagesFor(
       (failures.some((f) => f.code === 'FLOW_END_MISSING') ? FLOW_END_HINT : '') + // GH #1168 — the missing-flowEnd correction round's guidance
       (failures.some((f) => f.code === 'NARRATED_MECHANICS') ? NARRATION_HINT : '') + // T-0234: a narrated reply's guidance
       (failures.some((f) => f.code === 'SURFACE_DROPPED') ? SURFACE_DROPPED_HINT : '') + // T-0281: resend a dropped surface
+      (failures.some((f) => f.code === 'FEED_SCOPE') ? FEED_SCOPE_HINT : '') + // T-0290: keep the surface, drop the ask
       (failures.some((f) => f.detail !== undefined) ? SEMANTIC_HINT : '') + // ADR-0238: a semantic-finding round's guidance
       keepSurfacesHint(lastOutput, input.session, failures) // T-0172: never lose a surface the failed round created
     turns.push({
@@ -1112,6 +1117,14 @@ const SURFACE_DROPPED_HINT =
   ' SURFACE_DROPPED means this answer leaves out a surface your earlier attempt this turn built, so the user would ' +
   'never see it. Resend that surface with its components and data. If it was sent back as the ask surface ' +
   '(FEED_SCOPE), keep it as an ordinary surface and leave "ask" out of your meta-line.'
+
+/** T-0290: the self-correct sentence for a FEED_SCOPE round. The recorded Haiku 5.5 booking turn built its BookingForm
+ *  as the ask surface; the generic re-emit wording sent it back with no way out, the next rounds dropped the form, and
+ *  the turn halted. The way out is the surface the ask cannot host, kept whole as an ordinary surface. */
+const FEED_SCOPE_HINT =
+  ' FEED_SCOPE means the surface your meta-line names as "ask" can hold only simple question parts, never the type ' +
+  'named. Resend that SAME surface with the same components and data as an ordinary surface: leave "ask" out of your ' +
+  'meta-line and keep every component, rather than dropping the surface or rebuilding it from simpler parts.'
 
 /** ADR-0238: the self-correct sentence for a round with semantic findings (the NET_NOOP_HINT
  *  shape: one appended sentence, no new round kind). The payload was structurally valid; what it states
