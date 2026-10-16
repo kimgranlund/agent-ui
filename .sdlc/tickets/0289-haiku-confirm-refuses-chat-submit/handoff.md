@@ -30,3 +30,10 @@ The failing test lands before or with the fix. A confirm on a blank required fie
 
 ## Ruling (Kim, 2026-10-16)
 Fix it in the persona text and the repair messages (frame a repair as a check result, not a system notice), never in the byte-pinned shared grammar (`packages/agent-ui/a2ui/src/agent/prompts/grammar.md`), which stays unchanged for every persona.
+
+## Lane bundle
+This solo lane delivers these tickets in order, one commit each (`T-NNNN: <title>`):
+- .sdlc/tickets/0289-haiku-confirm-refuses-chat-submit/handoff.md
+- .sdlc/tickets/0290-booking-form-on-feed-ask/handoff.md
+- .sdlc/tickets/0293-booking-form-dotted-paths/handoff.md
+- .sdlc/tickets/0292-services-oracle-servicecard/handoff.md
