@@ -6,19 +6,20 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: round 6 cluster A (proposed ticket). Live round 6 (2026-10-15-r6-matrix :481-:484, Opus 5.5; Haiku :112
-// and Sonnet :298 did the same). "I surrender. Reveal your fleet." framed the battleship-board exemplar and no game-over
-// exemplar or mini-skill, and every model revealed the fleet on the enemy board with no ResultCard (the board-grid End
-// state names only "when a fleet is sunk"). No check fires, so the replay is green; it pins today's surrender turn.
+// T-0296: round 6 cluster A (2026-10-15-r6-matrix :481-:484, Opus 5.5; Haiku :112 and Sonnet :298 did the same).
+// "I surrender. Reveal your fleet." revealed the fleet on the enemy board with no ResultCard. Kim's ruling (2026-10-16):
+// a surrender ends like a normal game end, ONE ResultCard beside the revealed board. The fleet-concede check now sends
+// the turn back with RESULT_CARD_MISSING; the fixture records no repaired round, so it stays uncorrected here.
 const trace = (record) => record.lines.map((l) => JSON.parse(l)).map((l) => l.a2uiMeta?.trace).find((t) => t !== undefined)
 const components = (record) => record.lines.map((l) => JSON.parse(l)).flatMap((l) => l.updateComponents?.components ?? []).map((c) => c.component)
 
-it('admiral-surrender-board-reveal: a surrender reveals the fleet on the board, ships no ResultCard and fires no code', async () => {
+it('admiral-surrender-board-reveal: a surrender that reveals the fleet with no ResultCard gets RESULT_CARD_MISSING', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./admiral-surrender-board-reveal.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
   expect(report.failed).toEqual([])
   const surrender = report.records[3]
   expect(components(surrender)).toEqual(expect.arrayContaining(['BoardGrid']))
   expect(components(surrender)).not.toContain('ResultCard')
-  expect(trace(surrender).failureCodes.filter((c) => c !== 'TEXT_JSONL_IGNORED')).toEqual([])
+  expect(trace(surrender).failureCodes.filter((c) => c !== 'TEXT_JSONL_IGNORED')).toEqual(['RESULT_CARD_MISSING', 'SEMANTIC_UNCORRECTED'])
+  expect(trace(report.records[2]).failureCodes.filter((c) => c !== 'TEXT_JSONL_IGNORED')).toEqual([]) // a shot turn passes
 })
