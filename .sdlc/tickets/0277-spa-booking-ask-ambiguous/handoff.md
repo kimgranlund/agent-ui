@@ -28,3 +28,12 @@ The ask lives in `scripts/e2e-admin/probe/scenarios/{routing,concierge,round3,ro
 ## Done when
 - Every spa booking ask in the scenario generators names "Swedish massage"; the generated `live-commands.sh` files and their pinning tests are regenerated where a generator owns one, and finished round records are left unchanged.
 - `npx vitest run scripts/e2e-admin/probe/scenarios` and `npm run check` exit 0.
+
+## Lane bundle
+This solo lane delivers these tickets in order, one commit each (`T-NNNN: <title>`):
+- .sdlc/tickets/0277-spa-booking-ask-ambiguous/handoff.md
+- .sdlc/tickets/0278-confirm-repair-forces-false-booking/handoff.md
+- .sdlc/tickets/0282-surface-missing-confirm-vocabulary/handoff.md
+- .sdlc/tickets/0283-stud-scenario-extra-check/handoff.md
+- .sdlc/tickets/0276-natural-check-on-holdem/handoff.md
+- .sdlc/tickets/0281-feed-scope-repair-drops-surface/handoff.md
