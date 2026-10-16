@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:71e5411adaf1 -->
+<!-- sdlc-lite:managed:start v1 sha256:102710409a0e -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -9,7 +9,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
 
 ## Stages
 
-- proposed: 17
+- proposed: 18
   - T-0187 split-pane demo stacks or scrolls at 400px instead of overflowing the column (0187-split-pane-narrow-fit)
   - T-0188 line-chart projected dash: user-unit dash or a ruled screen-px exemption (0188-line-chart-projected-dash)
   - T-0189 playing-card corner index: a type floor or a ruled pictorial exemption (0189-playing-card-type-floor)
@@ -27,6 +27,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0282 SURFACE_MISSING misses 'Confirm it' and 'I'd like a table', so Haiku books a tour in prose with no surface (0282-surface-missing-confirm-vocabulary)
   - T-0283 seven-card-stud scenario still has one check too many: Opus ends the hand on the fourth and opens round 2 with no table (0283-stud-scenario-extra-check)
   - T-0285 Concierge facility-hours turns never draw ServiceCard: facility-info-card is index-only and the loaded persona asks for a compact info surface (0285-concierge-facility-hours-composite)
+  - T-0288 Code still keyed to .claude/worktrees: lanes in ../agent-ui.worktrees run vitest uncapped; reap scripts miss them (0288-worktree-root-path-checks)
 - ready: 16
   - T-0160 Agent content as files: extract preset and pack seeds to .md manifests with a generated, drift-gated registry (0160-agent-content-files)
   - T-0161 Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind (0161-agent-content-overlays)
