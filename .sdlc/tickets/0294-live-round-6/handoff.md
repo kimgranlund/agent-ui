@@ -14,7 +14,7 @@ router: .sdlc/tickets/AGENTS.md  # how to claim and close this ticket
 A clean scorecard after five rounds of fixes: every shipped preset (Croupier, Concierge, Lexicographer, Admiral) on Haiku, Sonnet and Opus, across their round scenarios and long flows, with the routing pack.
 
 ## Approval
-Kim 2026-10-16: full matrix, spend cap $20 (the runner stops at $20 whatever is queued; order Haiku, then Sonnet, then Opus so the cap drops Opus first). Runs after the round 5 Concierge lane merges. Live calls use the main checkout's `.env` (never read or print it).
+Kim 2026-10-16: full matrix, spend cap $42 (Kim raised it from $20 on 2026-10-16 after the phase 1 estimate of about $41; the runner stops at $42 whatever is queued; order Haiku, then Sonnet, then Opus so the cap drops Opus first). Runs after the round 5 Concierge lane merges. Live calls use the main checkout's `.env` (never read or print it).
 
 ## Scope
 - A round 6 generator beside `round5.ts` (pinned by a test): every scenario from the current generators (`concierge.ts`, `croupier.ts`, the Lexicographer and Admiral scenarios, `routing.ts`, the long flows) on all three models, one run each.
@@ -27,6 +27,6 @@ Kim 2026-10-16: full matrix, spend cap $20 (the runner stops at $20 whatever is 
 Screenshots go to the evidence cache, never the repo. No prompt or code fixes in this ticket.
 
 ## Done when
-- The round folder holds traces, ledger, round.json, runs/, README and report.md with the matrix and the why-and-fix table; spend at or under $20.
+- The round folder holds traces, ledger, round.json, runs/, README and report.md with the matrix and the why-and-fix table; spend at or under $42.
 - The hydrated fog report is published and its id recorded.
 - `tickets.py check` and `npm run check` exit 0.
