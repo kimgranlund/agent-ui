@@ -23,7 +23,8 @@
 //   check can never stall a turn. `produce()` tallies that on the trace.
 // - Off when none apply: no `semanticChecks` (or an empty list) means `produce()` never builds a view or calls
 //   this module. T-0208's composite-moment checks (`composite-moments.ts`) ride every catalog that holds their
-//   composite, so only a catalog none survives the gate for (`a2ui-basic`) streams byte-identically.
+//   composite, and T-0258's framed-choice check (`framed-choice-check.ts`) every catalog with Card and Button,
+//   `a2ui-basic` included, so only a catalog none survives the gate for streams byte-identically.
 //
 // DOM-less and node-free on purpose: a persona manifest that declares checks is imported by both server
 // hosts (`dev-proxy-plugin.ts`, `worker/index.ts`), so nothing here may touch `@agent-ui/components` or

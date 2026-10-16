@@ -1,16 +1,20 @@
 // scripts/e2e-admin/probe/selftest.ts: the chat probe's keyless selftests (T-0174).
 //
 // `selftest` (fast, no browser, rides `check:scripts`): argument parsing, the fixture parser, every named
-// check over canned turn records, the trace-id resolver, and the offline replay of the seven fixtures
-// through the real `produce()`: green-button and recorded-haiku-hello (the live smoke's trace) are green, seeded-json-prose fails `no-json-as-prose` (and
+// check over canned turn records, the trace-id resolver, and the offline replay of the eight fixtures
+// through the real `produce()`: green-button and recorded-haiku-hello (the live smoke's trace, its Card-per-choice round
+// repaired to a Row of Buttons by the framed-choice check, T-0258) are green, seeded-json-prose fails `no-json-as-prose` (and
 // `no-surface-loss`, since the surface the model wrote as prose never ships; its JSON is pretty-printed, the
 // shape the producer's prose routing leaves as text, T-0172), seeded-dropped-surface fails
 // exactly `no-surface-loss`, seeded-click-no-update exactly `action-updates-surface`, and seeded-no-reply
 // (a `render_surface` call with no text and no `reply`, T-0194) exactly `reply-text`, and seeded-wrong-routing (the
 // green button turn with a booking exemplar framed against its `expectRouting`, T-0260) exactly `routing-expect`.
+// recorded-haiku-hello-cards (the live smoke verbatim, T-0258) is green offline, where render-lint has no DOM, but its
+// one round must trip the producer's FRAMED_CHOICE check.
 //
-// `selftest --browser` (slow, local): the same seven fixtures replayed in the real agent-admin page behind
-// the e2e-admin intercept, with the same verdicts.
+// `selftest --browser` (slow, local): the same eight fixtures replayed in the real agent-admin page behind
+// the e2e-admin intercept, with the same verdicts, except recorded-haiku-hello-cards fails exactly `render-lint`
+// (its `lone-button-frame` rule).
 
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
@@ -23,10 +27,12 @@ import { fixtureFromTrace, offlineReplay, resolveTraceSpec, typedText, type Trac
 
 export const PROBE_FIXTURES_DIR = fileURLToPath(new URL('./fixtures/', import.meta.url))
 
-/** Each selftest fixture and the exact set of checks it must fail (none for the green one). */
-export const SELFTEST_CASES: ReadonlyArray<{ fixture: string; fails: readonly string[] }> = [
+/** Each selftest fixture and the exact set of checks it must fail (none for the green one); `browserFails` overrides
+ *  `fails` in the browser, for a render-lint finding the offline replay cannot see. */
+export const SELFTEST_CASES: ReadonlyArray<{ fixture: string; fails: readonly string[]; browserFails?: readonly string[] }> = [
   { fixture: 'green-button.json', fails: [] },
   { fixture: 'recorded-haiku-hello.json', fails: [] },
+  { fixture: 'recorded-haiku-hello-cards.json', fails: [], browserFails: ['render-lint'] },
   { fixture: 'seeded-json-prose.json', fails: ['no-json-as-prose', 'no-surface-loss'] },
   { fixture: 'seeded-dropped-surface.json', fails: ['no-surface-loss'] },
   { fixture: 'seeded-click-no-update.json', fails: ['action-updates-surface'] },
@@ -246,13 +252,25 @@ export async function runProbeSelftest(): Promise<number> {
     const verdict = caseVerdict(report.checks, c.fails)
     expectThat(verdict === undefined, `offline ${c.fixture}: ${verdict}`)
   }
+  // T-0258: the live Haiku hello framed each starter choice in its own Card. Its one round trips FRAMED_CHOICE (the
+  // scripted model repeats it, so it ships tallied); the repaired fixture's second round ships the Row of Buttons.
+  const helloTrace = async (fixture: string): Promise<{ rounds: unknown; codes: string; cards: number }> => {
+    const report = await offlineReplay(loadProbeFixture(path.join(PROBE_FIXTURES_DIR, fixture)), process.cwd())
+    const lines = report.records[0]!.lines
+    const trace = lines.map((l) => (JSON.parse(l) as { a2uiMeta?: { trace?: { rounds?: unknown; failureCodes?: string[] } } }).a2uiMeta?.trace).find((t) => t !== undefined)
+    return { rounds: trace?.rounds, codes: (trace?.failureCodes ?? []).join(), cards: lines.join('\n').split('"component":"Card"').length - 1 }
+  }
+  const framed = await helloTrace('recorded-haiku-hello-cards.json')
+  expectThat(framed.codes.startsWith('FRAMED_CHOICE') && framed.cards === 3, `offline recorded-haiku-hello-cards: its Card per choice trips FRAMED_CHOICE (${JSON.stringify(framed)})`)
+  const repaired = await helloTrace('recorded-haiku-hello.json')
+  expectThat(repaired.rounds === 2 && repaired.codes === 'FRAMED_CHOICE' && repaired.cards === 0, `offline recorded-haiku-hello: the repair round ships a Row of Buttons, no Card (${JSON.stringify(repaired)})`)
 
   for (const f of failures) console.log(`FAIL ${f}`)
   console.log(`chat-probe selftest: ${failures.length === 0 ? 'ok' : `${failures.length} failed`}`)
   return failures.length === 0 ? 0 : 1
 }
 
-/** The browser leg: one vite, the seven fixtures replayed in the real page. */
+/** The browser leg: one vite, the eight fixtures replayed in the real page. */
 export async function runBrowserSelftest(kit: DevServerKit, root: string, out: string): Promise<number> {
   const { runProbes, writeReport } = await import('./run.ts')
   const plans = SELFTEST_CASES.map((c) => {
@@ -270,7 +288,8 @@ export async function runBrowserSelftest(kit: DevServerKit, root: string, out: s
   const misses: string[] = []
   const code = await runProbes(plans, kit, root, (report, plan) => {
     writeReport(report, plan.out)
-    const want = SELFTEST_CASES.find((c) => c.fixture === `${plan.name}.json`)?.fails ?? []
+    const own = SELFTEST_CASES.find((c) => c.fixture === `${plan.name}.json`)
+    const want = own?.browserFails ?? own?.fails ?? []
     const verdict = caseVerdict(report.checks, want)
     const skipped = report.checks.filter((c) => c.status === 'skip' && ['no-surface-loss', 'render-lint', 'no-json-as-prose'].includes(c.check))
     if (verdict !== undefined) misses.push(`${plan.name}: ${verdict}`)
