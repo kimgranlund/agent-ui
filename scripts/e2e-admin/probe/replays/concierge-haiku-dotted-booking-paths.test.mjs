@@ -6,19 +6,23 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0293. Live round 5 (2026-10-15-r5-fixes :58-:61, Haiku 5.5). The boat tour BookingForm binds its value
-// to /booking but names its fields "booking.tour", "booking.date" and so on, so every field renders blank (the factory
-// prefills from value[field.path]); no check catches it. "Confirm it, the details are right." then reads the blank fields,
-// the T-0278 hold keeps SURFACE_MISSING quiet, and the turn says the tour "is booked" in prose with no surface.
-it('concierge-haiku-dotted-booking-paths: the dotted-path form ships unchecked and the prose booking passes', async () => {
+// T-0293 (fixed). Live round 5 (2026-10-15-r5-fixes :58-:61, Haiku 5.5). The boat tour BookingForm bound its value to
+// /booking but named its fields "booking.tour", "booking.date" and so on, so every field rendered blank (the factory
+// prefills from value[field.path]) and no check caught it; "Confirm it, the details are right." then read the blank
+// fields, the T-0278 hold kept SURFACE_MISSING quiet, and the turn said the tour "is booked" in prose with no surface.
+// The concierge check now sends that form back as BOOKING_FIELD_PATH naming the key-only paths, and a mis-pathed field
+// never holds a confirm open. Turn 2's round 2 is AUTHORED to that finding (round 1's form with key-only paths), and
+// turn 3's round 2 to the SURFACE_MISSING repair (a BookingConfirmation); the live turns had one round each. The replay
+// proves the findings and the repaired shapes, not Haiku's live compliance.
+it('concierge-haiku-dotted-booking-paths: the dotted-path form is sent back and the prose booking no longer passes', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./concierge-haiku-dotted-booking-paths.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
   const traces = report.records.map((r) => r.lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined))
   const types = (i) => report.records[i].lines.flatMap((l) => JSON.parse(l).updateComponents?.components ?? []).map((c) => c.component)
   expect(report.failed).toEqual([])
+  expect(traces.map((t) => t.failureCodes)).toEqual([[], [], ['BOOKING_FIELD_PATH'], ['SURFACE_MISSING']])
   const form = report.records[2].lines.flatMap((l) => JSON.parse(l).updateComponents?.components ?? []).find((c) => c.component === 'BookingForm')
   expect(form.value).toEqual({ path: '/booking' })
-  expect(form.fields.map((f) => f.path)).toEqual(['booking.tour', 'booking.date', 'booking.guests', 'booking.name'])
-  expect(traces.map((t) => t.failureCodes)).toEqual([[], [], [], []])
-  expect(types(3)).toEqual([])
+  expect(form.fields.map((f) => f.path)).toEqual(['tour', 'date', 'guests', 'name'])
+  expect(types(3)).toEqual(['BookingConfirmation'])
 })
