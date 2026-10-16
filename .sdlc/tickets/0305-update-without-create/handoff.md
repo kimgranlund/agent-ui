@@ -22,3 +22,7 @@ Either the validator rejects an update to a surface never created in the convers
 ## Done when
 - A test: an update to an uncreated surface fails with the named code and the repair asks for createSurface; red at the base.
 - The cluster B replay is flipped; the live-agent, concierge and probe suites and `npm run check` exit 0.
+
+## Lane bundle
+- T-0304 render_surface messages sent as one JSON string (`.sdlc/tickets/0304-messages-as-json-string`)
+- T-0305 a repair round updates a surface it never created (`.sdlc/tickets/0305-update-without-create`)
