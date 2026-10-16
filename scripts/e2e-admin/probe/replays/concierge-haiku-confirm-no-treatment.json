@@ -1,0 +1,305 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "concierge-haiku-confirm-no-treatment",
+  "agent": "concierge",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "2026-10-16.jsonl:114,2026-10-16.jsonl:115 (catalog agent-ui--concierge)",
+  "steps": [
+    {
+      "say": "Book a 60-minute massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau."
+    },
+    {
+      "say": "Those details are right, please confirm the booking."
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"I've set up the spa booking for Thursday 19 November 2026 at 15:00 for one guest, Alex Moreau. The spa is open 09:00 to 20:00, so that time works. You haven't said which 60-minute massage you'd like, so please choose between the Swedish massage (€120) and the deep-tissue massage (€135) before you submit.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"I've set up the spa booking for Thursday 19 November 2026 at 15:00 for one guest, Alex Moreau. The spa is open 09:00 to 20:00, so that time works. You haven't said which 60-minute massage you'd like, so please choose between the Swedish massage (€120) and the deep-tissue massage (€135) before you submit.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Book a 60-minute massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":46090,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145}],\"over\":false},\"miniSkillIds\":[],\"cacheBoundary\":46090}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"spa-booking\",\"catalogId\":\"agent-ui--concierge\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"spa-booking\",\"value\":{\"booking\":{\"treatment\":\"\",\"date\":\"2026-11-19\",\"time\":\"15:00\",\"guestName\":\"Alex Moreau\",\"guests\":1}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"spa-booking\",\"components\":[{\"id\":\"root\",\"component\":\"BookingForm\",\"title\":\"Book your spa treatment\",\"value\":{\"path\":\"/booking\"},\"fields\":[{\"kind\":\"select\",\"label\":\"Treatment (60 min)\",\"path\":\"treatment\",\"required\":true,\"options\":[{\"label\":\"Swedish massage, 60 min, €120\",\"value\":\"swedish-60\"},{\"label\":\"Deep-tissue massage, 60 min, €135\",\"value\":\"deep-tissue-60\"}]},{\"kind\":\"dateSingle\",\"label\":\"Date\",\"path\":\"date\",\"required\":true},{\"kind\":\"select\",\"label\":\"Time\",\"path\":\"time\",\"required\":true,\"options\":[{\"label\":\"15:00\",\"value\":\"15:00\"}]},{\"kind\":\"text\",\"label\":\"Guest name\",\"path\":\"guestName\",\"required\":true}],\"children\":[\"bookBtn\"]},{\"id\":\"bookBtn\",\"component\":\"Button\",\"label\":\"Book treatment\",\"variant\":\"solid\",\"action\":{\"action\":\"confirm_booking\",\"submit\":true,\"context\":{\"booking\":{\"path\":\"/booking\"}}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "I've set up the spa booking for Thursday 19 November 2026 at 15:00 for one guest, Alex Moreau. The spa is open 09:00 to 20:00, so that time works. You haven't said which 60-minute massage you'd like, so please choose between the Swedish massage (€120) and the deep-tissue massage (€135) before you submit.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here's your spa booking. Choose a treatment, check the details, then submit.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "spa-booking",
+                      "catalogId": "agent-ui--concierge",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "spa-booking",
+                      "value": {
+                        "booking": {
+                          "treatment": "",
+                          "date": "2026-11-19",
+                          "time": "15:00",
+                          "guestName": "Alex Moreau",
+                          "guests": 1
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "spa-booking",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "BookingForm",
+                          "title": "Book your spa treatment",
+                          "value": {
+                            "path": "/booking"
+                          },
+                          "fields": [
+                            {
+                              "kind": "select",
+                              "label": "Treatment (60 min)",
+                              "path": "treatment",
+                              "required": true,
+                              "options": [
+                                {
+                                  "label": "Swedish massage, 60 min, €120",
+                                  "value": "swedish-60"
+                                },
+                                {
+                                  "label": "Deep-tissue massage, 60 min, €135",
+                                  "value": "deep-tissue-60"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "dateSingle",
+                              "label": "Date",
+                              "path": "date",
+                              "required": true
+                            },
+                            {
+                              "kind": "select",
+                              "label": "Time",
+                              "path": "time",
+                              "required": true,
+                              "options": [
+                                {
+                                  "label": "15:00",
+                                  "value": "15:00"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "text",
+                              "label": "Guest name",
+                              "path": "guestName",
+                              "required": true
+                            }
+                          ],
+                          "children": [
+                            "bookBtn"
+                          ]
+                        },
+                        {
+                          "id": "bookBtn",
+                          "component": "Button",
+                          "label": "Book treatment",
+                          "variant": "solid",
+                          "action": {
+                            "action": "confirm_booking",
+                            "submit": true,
+                            "context": {
+                              "booking": {
+                                "path": "/booking"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "Book a 60-minute massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau."
+      },
+      "routing": {
+        "domains": [
+          "concierge"
+        ],
+        "exemplars": [
+          "domain-concierge-booking-request",
+          "frontier-service-gateway",
+          "commerce-product-card"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "facility-info-card",
+            "load": "index-only"
+          },
+          {
+            "name": "amenity-service-card",
+            "load": "index-only"
+          },
+          {
+            "name": "booking-flow",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "index-only"
+          },
+          {
+            "name": "curated-local-guides",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Wikipedia search",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"I can't confirm the booking yet because no treatment is selected. The treatment field on the form is still blank, and I don't want to guess between the two 60-minute massages.\\n\\nPlease choose one on the form, either the Swedish massage (€120) or the deep-tissue massage (€135), then press \\\"Book treatment.\\\" Thursday 19 November 2026 at 15:00 for Alex Moreau is already filled in. Once you submit, I'll confirm the booking with you.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"I can't confirm the booking yet because no treatment is selected, so nothing is reserved. Please choose the Swedish massage (€120) or the deep-tissue massage (€135) on the form above and press \\\"Book treatment.\\\" I'll confirm it once it's submitted.\",\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Those details are right, please confirm the booking.\",\"k\":3},\"exemplarIds\":[],\"rounds\":3,\"healed\":0,\"failureCodes\":[\"SURFACE_MISSING\",\"SEMANTIC_UNCORRECTED\",\"FLOW_END_UNCORRECTED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":48290,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":2200}],\"over\":false},\"miniSkillIds\":[\"feature-collection\",\"structured-container\",\"greeting-card\"],\"cacheBoundary\":46090}}}"
+      ],
+      "rounds": [
+        {
+          "text": "I can't confirm the booking yet because no treatment is selected. The treatment field on the form is still blank, and I don't want to guess between the two 60-minute massages.\n\nPlease choose one on the form, either the Swedish massage (€120) or the deep-tissue massage (€135), then press \"Book treatment.\" Thursday 19 November 2026 at 15:00 for Alex Moreau is already filled in. Once you submit, I'll confirm the booking with you.",
+          "tools": []
+        },
+        {
+          "text": "Your spa booking isn't confirmed yet, so nothing is reserved. The treatment still needs choosing. Please pick either the Swedish massage (60 min, €120) or the deep-tissue massage (60 min, €135) on the form above, then press \"Book treatment.\" Thursday 19 November 2026 at 15:00 for Alex Moreau is already filled in. Once you submit, I'll read the details back to you and you can confirm.",
+          "tools": []
+        },
+        {
+          "text": "I can't confirm the booking yet because no treatment is selected, so nothing is reserved. Please choose the Swedish massage (€120) or the deep-tissue massage (€135) on the form above and press \"Book treatment.\" I'll confirm it once it's submitted.",
+          "tools": []
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "Those details are right, please confirm the booking."
+      },
+      "routing": {
+        "domains": [
+          "concierge"
+        ],
+        "exemplars": [
+          "frontier-service-gateway",
+          "domain-concierge-booking-request",
+          "frontier-booking-receipt"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "facility-info-card",
+            "load": "index-only"
+          },
+          {
+            "name": "amenity-service-card",
+            "load": "index-only"
+          },
+          {
+            "name": "booking-flow",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "index-only"
+          },
+          {
+            "name": "curated-local-guides",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Wikipedia search",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}
