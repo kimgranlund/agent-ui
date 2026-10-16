@@ -493,7 +493,7 @@ function stampCreateSurfaceCatalogId(output: A2uiOutput, catalogId: string): voi
  * Assemble the model messages for one generation round: the session history, the current user turn, and
  * — on a self-correct round — the prior INVALID attempt plus the validator's structured failures, so the
  * model sees exactly what it emitted and what was wrong (ADR-0070's "feed the failures back"). A
- * `'FEED_SCOPE'` round-failure (ADR-0097 §3) is fed back through the SAME "INVALID, re-emit" wording — a
+ * `'FEED_SCOPE'` round-failure (ADR-0097 §3) is fed back through the SAME check-result, re-emit wording (T-0289) — a
  * feed ask hosting an out-of-scope type is exactly as re-emittable as a schema/catalog defect.
  *
  * GH #174: the feedback message ALSO pins the note's audience. The leading meta-line's `note` (ADR-0088
@@ -653,6 +653,12 @@ const TOOL_REPAIR_SENTENCE =
 const SURFACE_REQUESTED_FEEDBACK =
   'The user asked to see this as UI (SURFACE_REQUESTED): call render_surface with the A2UI `messages` for it, and keep your reply text addressed to the user.'
 
+/** T-0289: the opening of every repair turn. Round 5's Haiku read the old "That output was INVALID" user turn as a
+ *  fabricated system notice and refused it, so the repair names itself as what it is: the result of the app's own
+ *  automated checks on the last answer, not words from the user. */
+const repairOpening = (summary: string): string =>
+  `Check result from this app's automated checks on your last answer (not a message from the user): INVALID (${summary}).`
+
 function messagesFor(
   input: TurnInput,
   failures: RoundFailure[] | undefined,
@@ -686,8 +692,8 @@ function messagesFor(
     turns.push({
       role: 'user',
       content: toolRound
-        ? `That output was INVALID (${summary}).${hint} ${TOOL_REPAIR_SENTENCE}`
-        : `That output was INVALID (${summary}).${hint} Re-emit the COMPLETE corrected A2UI JSONL — nothing else. Your leading meta-line "note" must still address the USER in persona — never mention this correction, the re-emission, validation, or JSONL.`,
+        ? `${repairOpening(summary)}${hint} ${TOOL_REPAIR_SENTENCE}`
+        : `${repairOpening(summary)}${hint} Re-emit the COMPLETE corrected A2UI JSONL — nothing else. Your leading meta-line "note" must still address the USER in persona — never mention this correction, the re-emission, validation, or JSONL.`,
     })
   }
   return turns

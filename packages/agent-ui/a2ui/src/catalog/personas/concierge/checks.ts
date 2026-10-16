@@ -12,6 +12,10 @@
 // T-0278 (round 4, the Haiku spa confirm): a confirm while the open BookingForm still has a blank required field cannot
 // be confirmed, so the reply that asks for the missing value is right. Such a turn is held open: no SURFACE_MISSING
 // asking for a BookingConfirmation, and no FLOW_END_MISSING round (`holdsFlowOpen`).
+//
+// T-0289 (round 5, the Haiku confirm refusal): a guest's chat confirm on a complete BookingForm IS the submission, so
+// the confirm repair asks for a BookingConfirmation reading back the form's values and never for a reference (the
+// catalog's BookingConfirmation has no such field, and Haiku refused to invent one).
 // DOM-less and node-free, like `semantic-check.ts`: both server hosts import the manifest that carries it.
 
 import { readPointer } from '../../semantic-check.ts'
@@ -35,7 +39,7 @@ const BOOK = /\b(book|reserve|reservation)\b|\b(i'?d|i would|we'?d|we would) lik
 
 /** The moment a say turn's words ask for, with the surface that answers it, or undefined. */
 function askedMoment(intent: string): { moment: string; surface: string } | undefined {
-  if (CONFIRM.test(intent)) return { moment: 'confirm', surface: 'a BookingConfirmation with the confirmed details and a reference' }
+  if (CONFIRM.test(intent)) return { moment: 'confirm', surface: 'a BookingConfirmation reading back the values on the open BookingForm (the guest\'s confirm in chat is their submission, so nothing waits on the form button; add no reference number)' }
   if (SERVICES.test(intent)) return { moment: 'services', surface: 'one ProductCard per service the guest can book, templated in a Grid, each with its price and book action' }
   if (BOOK.test(intent)) return { moment: 'booking', surface: 'a BookingForm with its value bound to the details the guest already gave, so they arrive pre-filled' }
   if (FACILITY.test(intent)) return { moment: 'facility', surface: 'one compact info card: ONE Card holding a DescriptionList, one row per facility with its hours and location' }

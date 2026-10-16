@@ -6,18 +6,21 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0289. Live round 5 (2026-10-15-r5-fixes :86-:87, Haiku 5.5). The booking ask draws a complete
-// pre-filled BookingForm; "Those details are right, please confirm the booking." is refused in prose ("press Book now")
-// on all three rounds, and the FLOW_END_MISSING and SURFACE_MISSING repairs ship uncorrected. Haiku's reasoning reads
-// the repair as a "fabricated system notice" and the BookingConfirmation reference as a fabrication. Pinned to today's
-// behavior: when T-0289 lands, the confirm turn ships one BookingConfirmation and this pin flips.
-it('concierge-haiku-confirm-refusal: the complete booking is refused in prose and both repairs ship uncorrected', async () => {
+// T-0289 (fixed). Live round 5 (2026-10-15-r5-fixes :86-:87, Haiku 5.5). The booking ask draws a complete pre-filled
+// BookingForm; "Those details are right, please confirm the booking." was refused in prose ("press Book now") on all
+// three rounds, and the FLOW_END_MISSING and SURFACE_MISSING repairs shipped uncorrected: Haiku read the repair as a
+// "fabricated system notice" and the BookingConfirmation reference as a fabrication. The Concierge house facts now say a
+// chat confirm on a complete form IS the submission, the SURFACE_MISSING confirm repair asks for a read-back with no
+// reference, and every repair opens as a check result, not a notice. Rounds 1 and 2 stay as recorded; round 3 is AUTHORED
+// to the SURFACE_MISSING instruction (the live turn refused it): a BookingConfirmation reading back the form. The replay
+// proves the repair reaches the model and the repaired round ships; Haiku's live compliance is the next round's to show.
+it('concierge-haiku-confirm-refusal: the chat confirm on a complete form ships one BookingConfirmation', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./concierge-haiku-confirm-refusal.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
   const traces = report.records.map((r) => r.lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined))
   const types = (i) => report.records[i].lines.flatMap((l) => JSON.parse(l).updateComponents?.components ?? []).map((c) => c.component)
   expect(report.failed).toEqual([])
   expect(types(0)).toContain('BookingForm')
-  expect(traces[1].failureCodes).toEqual(['SURFACE_MISSING', 'SEMANTIC_UNCORRECTED', 'FLOW_END_UNCORRECTED'])
-  expect(types(1)).not.toContain('BookingConfirmation')
+  expect(traces[1]).toMatchObject({ rounds: 3, failureCodes: ['SURFACE_MISSING'] })
+  expect(types(1).filter((t) => t === 'BookingConfirmation')).toHaveLength(1)
 })

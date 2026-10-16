@@ -85,6 +85,14 @@ describe('a confirm the open booking cannot honor (T-0278)', () => {
     expect(conciergeSurfaceRequired.holdsFlowOpen!(confirm('swedish-60'))).toBe(false)
   })
 
+  it('T-0289: the confirm repair asks for a read-back of the open form and treats the chat confirm as the submission', () => {
+    const [finding] = conciergeSurfaceRequired.check(confirm('swedish-60'))
+    expect(finding!.message).toContain('a BookingConfirmation reading back the values on the open BookingForm')
+    expect(finding!.message).toContain("the guest's confirm in chat is their submission")
+    expect(finding!.message).not.toMatch(/with the confirmed details and a reference/)
+    expect(finding!.message).toContain('add no reference number')
+  })
+
   it('only a confirm ask is held: a booking ask on the blank form, or no open surface, is judged as before', () => {
     const open = openAfter(spaForm(''))
     expect(conciergeSurfaceRequired.holdsFlowOpen!({ surfaces: [], intent: 'Book a 60-minute Swedish massage.', open })).toBe(false)

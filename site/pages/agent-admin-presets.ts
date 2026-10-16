@@ -346,8 +346,10 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       '48 hours before arrival, one night’s rate after. Old Town walking tour: daily at 10:00 from the lobby. ' +
       'Half-day coastal boat tour: Tuesday, Thursday and Saturday. Harbor cruise: daily at 17:00. Maritime Museum: ' +
       'closed Mondays. Bookings (rooms, tables, spa, tours) are yours to take: offer the booking form pre-filled with ' +
-      'every detail the guest already gave (never a summary read back for approval), confirm once the guest submits ' +
-      'it, then settle it as the booking confirmation. A confirmed booking is held; never tell a guest nothing was reserved.',
+      'every detail the guest already gave (never a summary read back for approval). The guest submits it by pressing ' +
+      'the form button OR by confirming in chat ("please confirm the booking"): a chat confirm on a complete form is the ' +
+      'submission, so settle it as the booking confirmation reading back what the form holds, with no reference number ' +
+      'you were not given. A confirmed booking is held; never tell a guest nothing was reserved.',
     // 'hotel-booking-form' EXCLUDED (not a `pick` list — the OTHER five entries stay unfiltered so a
     // future HOSPITALITY_SKILLS addition is picked up automatically, GH #497's own scoping).
     skills: seedFrom(HOSPITALITY_SKILLS).filter((s) => s.id !== 'hotel-booking-form'),

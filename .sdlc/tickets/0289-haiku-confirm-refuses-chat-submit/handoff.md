@@ -37,3 +37,10 @@ This solo lane delivers these tickets in order, one commit each (`T-NNNN: <title
 - .sdlc/tickets/0290-booking-form-on-feed-ask/handoff.md
 - .sdlc/tickets/0293-booking-form-dotted-paths/handoff.md
 - .sdlc/tickets/0292-services-oracle-servicecard/handoff.md
+
+## Acceptance criteria
+verifier: L3
+- `npx vitest run scripts/e2e-admin/probe/replays/concierge-haiku-confirm-refusal.test.mjs` exits 0: the confirm turn ships one BookingConfirmation with no failed probe check (round 3 AUTHORED to the SURFACE_MISSING repair, as T-0281 did).
+- `npx vitest run packages/agent-ui/a2ui/src/catalog/personas/concierge packages/agent-ui/a2ui/src/live-agent site/pages/agent-admin-presets.test.ts` exits 0: the confirm repair asks for a read-back with no reference, and every repair opens as a check result.
+- `git diff --quiet 4a05c787 -- packages/agent-ui/a2ui/src/agent/prompts/grammar.md` exits 0: the shared grammar is unchanged (Kim's ruling).
+- `npm run check` exits 0.
