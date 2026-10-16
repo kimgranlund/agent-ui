@@ -459,11 +459,11 @@ function betStepWithoutTable(view: SurfaceView): SemanticFinding[] {
  *  `MOVE_WORDS`, which names only what a natural forbids. */
 const PLAYER_MOVES: ReadonlySet<string> = new Set(['hit', 'stand', 'double', 'split', 'surrender', 'twist', 'stick', 'buy'])
 
-/** A Button offers a move when its id, label or action name carries a player move word. */
-function offersMove(comp: A2uiComponent, dataModel: unknown): boolean {
+/** A Button offers a move when its id, label or action name carries a player move word (T-0286: or one of `moves`). */
+function offersMove(comp: A2uiComponent, dataModel: unknown, moves: ReadonlySet<string> = PLAYER_MOVES): boolean {
   const label = resolveProp(comp['label'], dataModel, undefined)
   return [comp.id, typeof label === 'string' ? label : '', actionName(comp)].some((text) =>
-    text.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase().split(/[^a-z]+/).some((t) => PLAYER_MOVES.has(t)),
+    text.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase().split(/[^a-z]+/).some((t) => moves.has(t)),
   )
 }
 
@@ -705,17 +705,28 @@ const TYPED_MOVE = /\b(deal|bet|raise|call|check|fold|hit|stand|double|split|sur
 
 /** T-0214 (the recorded Haiku 5.5 five-card draw, 2026-10-15.jsonl:48): "Bet 50." was answered with a meta-line
  *  targeting table-1 and the showdown in prose, and table-1 kept its Check and Bet. A say turn that names a table
- *  move and declares an open table its target must update that table, or open a new one (the next round). */
-function typedMoveFindings(surfaces: readonly SurfaceView[], intent: string, target: string): SemanticFinding[] {
-  const word = TYPED_MOVE.exec(intent)?.[1]?.toLowerCase()
-  if (word === undefined || surfaces.some((v) => v.surfaceId === target || (v.priorDataModel === undefined && [...v.components.values()].some((c) => c.component === 'CardTable')))) return []
+ *  move and declares an open table its target must update that table, or open a new one (the next round).
+ *  T-0286 (the recorded Haiku 5.5 Omaha river, round 4 :55): "Check, or call if there is a bet." was answered with
+ *  the showdown in prose, no target and no surface. A say turn with no target that sends nothing, and is not a
+ *  question, is judged against the latest open table offering a move it names; a settled table offering only
+ *  Deal again is never one. */
+function typedMoveFindings(surfaces: readonly SurfaceView[], intent: string, target: string | undefined, open: readonly SurfaceView[]): SemanticFinding[] {
+  const words = [...intent.matchAll(new RegExp(TYPED_MOVE.source, 'gi'))].map((m) => m[1]!.toLowerCase())
+  if (words.length === 0) return []
+  let table = target
+  if (table === undefined) {
+    if (surfaces.length > 0 || /\?\s*$/.test(intent.trim())) return []
+    table = open.filter((v) => [...v.components.values()].some((c) => c.component === 'Button' && offersMove(c, v.dataModel, new Set(words)))).at(-1)?.surfaceId
+    if (table === undefined) return []
+  }
+  if (surfaces.some((v) => v.surfaceId === table || (v.priorDataModel === undefined && [...v.components.values()].some((c) => c.component === 'CardTable')))) return []
   return [
     {
       code: 'ACTION_NOT_APPLIED',
-      path: `${target}:${word}`,
+      path: `${table}:${words[0]}`,
       message:
-        `The player typed "${intent.trim()}" at ${target}, and this turn sends it no update, so the table still shows the old state. ` +
-        `Call render_surface with an updateDataModel for ${target}: the new cards, totals, phase, result and bankroll, and the moves the player has now, not only prose.`,
+        `The player typed "${intent.trim()}" at ${table}, and this turn sends it no update, so the table still shows the old state. ` +
+        `Call render_surface with an updateDataModel for ${table}: the new cards, totals, phase, result and bankroll, and the moves the player has now, not only prose.`,
     },
   ]
 }
@@ -743,7 +754,8 @@ function openingMissing(surfaces: readonly SurfaceView[], intent: string, target
 
 /** T-0172: a table action moves the table, and a deal takes the bet out of the bankroll; T-0211: Deal again opens
  *  the next round in betting; T-0232: a say turn's first table opens in betting too; T-0214: a typed move at an
- *  open table updates it; T-0265: a game asked for opens a surface. */
+ *  open table updates it, and T-0286 one typed with no target updates the open table offering it; T-0265: a game
+ *  asked for opens a surface. */
 export const croupierActionApplied: SemanticCheck = {
   id: 'croupier-action-applied',
   requires: ['CardTable'],
@@ -753,7 +765,7 @@ export const croupierActionApplied: SemanticCheck = {
     return [
       ...openingFindings(input.surfaces, input.intent),
       ...openingMissing(input.surfaces, input.intent, input.target),
-      ...(input.target !== undefined ? typedMoveFindings(input.surfaces, input.intent, input.target) : []),
+      ...typedMoveFindings(input.surfaces, input.intent, input.target, input.open ?? []),
     ]
   },
 }

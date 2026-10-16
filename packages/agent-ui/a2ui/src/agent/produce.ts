@@ -112,7 +112,7 @@ import { MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, selectMiniSkills } from './mini-sk
 import { FEED_SURFACE_TYPE_SET } from './feed-catalog.ts'
 import { isGenuiCandidate, readGenuiLine, utf8ByteLength, GENUI_MAX_HTML_BYTES } from './genui-line.ts'
 import type { GenuiSurfaceConfig } from './genui-surface-config.ts'
-import { runSemanticChecks, semanticActionOf, semanticSurfaceViews } from '../catalog/semantic-check.ts'
+import { runSemanticChecks, semanticActionOf, semanticSurfaceViews, sessionSurfaceViews } from '../catalog/semantic-check.ts'
 import type { SemanticCheck } from '../catalog/semantic-check.ts'
 import { RENDER_SURFACE_TOOL_NAME, detectUserOverride, isLegacyShape, openSurfacesNote, renderSurfaceJsonl, renderSurfaceReply, renderSurfaceTool } from './response-type.ts'
 import type { ResponsePreference } from './response-type.ts'
@@ -783,6 +783,19 @@ function assembleFromRaw(raw: string): { output: A2uiOutput; healedCount: number
   return { output, healedCount }
 }
 
+/** The surface id a `render_surface` call names as its `target`. T-0286 (the recorded Haiku 5.5 stud, round 4 :66-:67):
+ *  a target sent as the meta-line's own JSON, `{"surfaceId":"stud-1"}`, names `stud-1`. */
+function toolTargetOf(value: unknown): string | undefined {
+  if (typeof value !== 'string' || value === '') return undefined
+  if (!value.trimStart().startsWith('{')) return value
+  try {
+    const sid = (JSON.parse(value) as { surfaceId?: unknown } | null)?.surfaceId
+    return typeof sid === 'string' && sid !== '' ? sid : value
+  } catch {
+    return value
+  }
+}
+
 /**
  * Peel a single leading meta-line (ADR-0088 §1) off one round's raw model output, BEFORE heal/validate —
  * a note line would otherwise fail the healer and waste a self-correct round. The candidate is the first
@@ -1274,6 +1287,9 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   const turnAction = input.kind === 'client' ? semanticActionOf(input.message, input.session) : undefined
   // T-0232: a say turn's own words, so a check can tell a stake the user typed from one the model picked.
   const turnIntent = input.kind === 'intent' ? typedWords(input.text) : undefined
+  // T-0286: the surfaces the session holds before this say turn, so a check can find the table a move typed with
+  // no target was meant for.
+  const turnOpen = turnIntent !== undefined ? sessionSurfaceViews(input.session) : undefined
   // T-0172: every surface a failed round of this turn created that no failure named; a later round that
   // passes without one has dropped it (SURFACE_DROPPED), never a success.
   const keptSurfaces = new Set<string>()
@@ -1348,8 +1364,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     let capture = undefined as { jsonl: string; reply: string; target: string | undefined } | undefined
     const captureTool: ExecuteTool = async (name, toolInput, signal) => {
       if (name === RENDER_SURFACE_TOOL_NAME) {
-        const toolTarget = toolInput['target']
-        capture = { jsonl: renderSurfaceJsonl(toolInput), reply: renderSurfaceReply(toolInput), target: typeof toolTarget === 'string' && toolTarget !== '' ? toolTarget : undefined }
+        capture = { jsonl: renderSurfaceJsonl(toolInput), reply: renderSurfaceReply(toolInput), target: toolTargetOf(toolInput['target']) }
         return 'received'
       }
       if (opts.executeTool === undefined) throw new Error(`no executor for tool ${name}`)
@@ -1583,7 +1598,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       if ((turnAction !== undefined || turnIntent !== undefined) && deps.semanticChecks !== undefined && deps.semanticChecks.length > 0 && genuiLine === undefined) {
         const semantic = runSemanticChecks(
           deps.semanticChecks,
-          turnAction !== undefined ? { surfaces: [], action: turnAction } : { surfaces: [], intent: turnIntent!, ...(roundTarget !== undefined ? { target: roundTarget } : {}) },
+          turnAction !== undefined ? { surfaces: [], action: turnAction } : { surfaces: [], intent: turnIntent!, ...(roundTarget !== undefined ? { target: roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}) },
         )
         if (semantic.findings.length > 0 && round < opts.maxRounds - 1) {
           failures = semantic.findings.map((f) => ({ code: f.code, path: f.path, detail: f.message }))
@@ -1667,7 +1682,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       // payload ships with a tally instead (see the header). Skipped entirely when no check is declared.
       const semanticTally: string[] = []
       if (deps.semanticChecks !== undefined && deps.semanticChecks.length > 0) {
-        const semantic = runSemanticChecks(deps.semanticChecks, { surfaces: semanticSurfaceViews(input.session, assembled.output), ...(turnAction !== undefined ? { action: turnAction } : {}), ...(turnIntent !== undefined ? { intent: turnIntent } : {}), ...(roundTarget !== undefined ? { target: roundTarget } : {}) })
+        const semantic = runSemanticChecks(deps.semanticChecks, { surfaces: semanticSurfaceViews(input.session, assembled.output), ...(turnAction !== undefined ? { action: turnAction } : {}), ...(turnIntent !== undefined ? { intent: turnIntent } : {}), ...(roundTarget !== undefined ? { target: roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}) })
         if (semantic.findings.length > 0 && round < opts.maxRounds - 1) {
           failures = semantic.findings.map((f) => ({ code: f.code, path: f.path, detail: f.message }))
           continue

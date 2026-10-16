@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest'
 import { croupierActionApplied, croupierBetControls, croupierHandConsistency, croupierSemanticChecks } from './checks.ts'
 import { croupierManifest } from './manifest.ts'
 import { CORRECTED_LINE, DATA_DRIVEN_TURN, DEAL_TURN, EVIDENCE_LINE, NATURAL_REPAIRED_TURN, NATURAL_TURN, toJsonl } from './hands.fixture.ts'
-import { semanticSurfaceViews } from '../../semantic-check.ts'
+import { semanticSurfaceViews, sessionSurfaceViews } from '../../semantic-check.ts'
 import type { SemanticFinding } from '../../semantic-check.ts'
 import type { Session } from '../../../agent/agent-transport.ts'
 import type { A2uiOutput, A2uiServerMessage } from '../../../protocol.ts'
@@ -798,6 +798,36 @@ describe('croupier action check: a typed move at an open table updates it (T-021
     expect(typed(update('table-1'), 'Bet 50.', 'table-1')).toEqual([])
     expect(typed([], 'What beats a flush?', 'table-1')).toEqual([])
     expect(typed([], 'Bet 50.')).toEqual([])
+  })
+})
+
+// T-0286 (the recorded Haiku 5.5 Omaha river, round 4 :55): "Check, or call if there is a bet." was answered with the
+// showdown in prose, no target and no surface, while table-1 still offered Check and Bet.
+describe('croupier action check: a move typed with no target updates the open table offering it (T-0286)', () => {
+  const table = (sid: string, buttons: readonly [string, string][]): string =>
+    JSON.stringify({ version: 'v1.0', updateComponents: { surfaceId: sid, components: [
+      { id: 'root', component: 'Card', children: buttons.map(([id]) => id) },
+      ...buttons.map(([id, action]) => ({ id, component: 'Button', label: action.replace('_', ' '), action: { action } })),
+    ] } })
+  const session = (...lines: string[]) => sessionSurfaceViews({ turns: [{ role: 'assistant', content: lines.join('\n') }] })
+  const live = session(table('table-1', [['checkBtn', 'check'], ['betBtn', 'bet']]))
+  const typed = (intent: string, open: ReturnType<typeof session>, out: A2uiOutput = []) =>
+    croupierActionApplied.check({ surfaces: semanticSurfaceViews({ turns: [] }, out), intent, open })
+
+  it('the recorded prose-only river check with no target is ACTION_NOT_APPLIED on table-1', () => {
+    const findings = typed('Check, or call if there is a bet.', live)
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['ACTION_NOT_APPLIED', 'table-1:check']])
+    expect(findings[0]!.message).toMatch(/updateDataModel for table-1/)
+    const two = session(table('table-1', [['checkBtn', 'check']]), table('table-2', [['callBtn', 'call'], ['foldBtn', 'fold']]))
+    expect(typed('Check, or call if there is a bet.', two).map((f) => f.path)).toEqual(['table-2:check']) // the latest table offering it
+  })
+
+  it('a settled table offering only Deal again, a question, an answer that sends a surface, or no open table passes', () => {
+    expect(typed('Check, or call if there is a bet.', session(table('stud-1', [['dealAgainBtn', 'deal_again']])))).toEqual([])
+    expect(typed('Should I check?', live)).toEqual([])
+    const sent: A2uiOutput = [{ version: 'v1.0', updateDataModel: { surfaceId: 'table-1', path: '/status', value: 'River' } }] as A2uiOutput
+    expect(typed('Check, or call if there is a bet.', live, sent)).toEqual([])
+    expect(typed('Check, or call if there is a bet.', [])).toEqual([])
   })
 })
 
