@@ -1,0 +1,1541 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "long-croupier-blackjack-hand-haiku-1",
+  "agent": "croupier",
+  "model": "claude-haiku-5-5",
+  "source": "probe live run 2026-10-16T15:49:49.034Z, traces 2026-10-16.jsonl:977,2026-10-16.jsonl:978,2026-10-16.jsonl:979,2026-10-16.jsonl:980,2026-10-16.jsonl:981,2026-10-16.jsonl:982,2026-10-16.jsonl:983",
+  "steps": [
+    {
+      "say": "Let's play blackjack.",
+      "expect": [
+        "CardTable"
+      ],
+      "expectRouting": {
+        "domains": [
+          "croupier"
+        ],
+        "exemplars": {
+          "include": [
+            "domain-croupier-card-table-round"
+          ],
+          "exclude": [
+            "domain-lexicographer-word-board",
+            "domain-admiral-battleship-board"
+          ]
+        }
+      }
+    },
+    {
+      "click": "100",
+      "expect": [
+        "CardTable"
+      ]
+    },
+    {
+      "click": "Hit",
+      "expect": [
+        "CardTable"
+      ]
+    },
+    {
+      "say": "Stand."
+    },
+    {
+      "click": "Deal again",
+      "expect": [
+        "CardTable"
+      ]
+    },
+    {
+      "click": "50",
+      "expect": [
+        "CardTable"
+      ]
+    },
+    {
+      "say": "Stand."
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"No bankroll is on file\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" yet, so I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll start\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the round at 1,000 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"chips.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Since no bet was specified,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I should present\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting inter\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face rather than guessing an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" amount—lik\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ely a CardTable in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the betting phase with a de\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"al action, let\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting the user str\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ip in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" their w\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ager direct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ly instead of using\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a separ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ate input\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" field.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll le\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ave b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"et at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 0 to prompt the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" user, with no children since the str\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ip it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"self handles betting. I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting up the surface with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" id table-1, bin\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding bankroll,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bet, dealerHand\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", playerHand, phase\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and status via\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" path b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"indings, then\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" cr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"afting a short reply conf\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"irming blackjack is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" chosen,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" no\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting the 1,000 ch\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ip bankroll, and in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"viting them to set their bet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and deal.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Blackjack it\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" is. You're\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" starting with 1,000 \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"chips. Set your bet\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" on the table and deal when you\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'re ready.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"catalogId\\\":\\\"agent-ui--croupier\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"bankroll\\\":1000,\\\"bet\\\":0,\\\"dealerHand\\\":[],\\\"playerHand\\\":[],\\\"phase\\\":\\\"betting\\\",\\\"status\\\":\\\"Place your bet\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Blackjack\\\",\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":\\\"info\\\",\\\"betAction\\\":\\\"deal\\\"}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Blackjack it is. You're starting with 1,000 chips. Set your bet on the table and deal when you're ready.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"## Referenced for this message\\n### blackjack (resource)\\nblackjack, 21, hit, stand, double, split: the classic house game\\n\\nTwo cards each; dealer shows one, hole card face-down. Values: pips as printed, faces 10, Ace 1 or 11. A natural (Ace + ten-card on the deal) ends the round at once: reveal the hole card, settle it (3:2 unless the dealer also has 21, then a push), and offer no hit, stand or double. Otherwise the player acts first: hit, stand, double (one card, doubled stake), split pairs; over 21 busts immediately. Dealer then reveals and draws to 17, standing on all 17s. Blackjack (Ace + ten-card) pays 3:2, a win pays 1:1, equal totals push.\\n\\nLet's play blackjack.\",\"k\":3},\"exemplarIds\":[\"domain-croupier-card-table-round\",\"frontier-round-outcome\",\"frontier-result-card-win\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142000,\"total\":57012,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3515},{\"id\":\"mini-skills\",\"chars\":2351},{\"id\":\"persona\",\"chars\":4854}],\"over\":false},\"usage\":{\"inputTokens\":4487,\"outputTokens\":1332,\"cacheReadInputTokens\":0,\"cacheCreationInputTokens\":17522},\"miniSkillIds\":[\"card-layout\",\"game-table-chrome\",\"game-hud\"],\"cacheBoundary\":46292}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-1\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":1000,\"bet\":0,\"dealerHand\":[],\"playerHand\":[],\"phase\":\"betting\",\"status\":\"Place your bet\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Blackjack\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":{\"path\":\"/phase\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":\"info\",\"betAction\":\"deal\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Blackjack it is. You're starting with 1,000 chips. Set your bet on the table and deal when you're ready.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Blackjack it is. You're starting with 1,000 chips. Set your bet on the table and deal when you're ready.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-1",
+                      "catalogId": "agent-ui--croupier",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "bankroll": 1000,
+                        "bet": 0,
+                        "dealerHand": [],
+                        "playerHand": [],
+                        "phase": "betting",
+                        "status": "Place your bet"
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Blackjack",
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": "info",
+                          "betAction": "deal"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "croupier"
+        ],
+        "exemplars": [
+          "domain-croupier-card-table-round",
+          "frontier-round-outcome",
+          "frontier-result-card-win"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "card-layout",
+            "load": "index-only"
+          },
+          {
+            "name": "game-table-chrome",
+            "load": "index-only"
+          },
+          {
+            "name": "game-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "index-only"
+          },
+          {
+            "name": "pontoon",
+            "load": "index-only"
+          },
+          {
+            "name": "texas-holdem",
+            "load": "index-only"
+          },
+          {
+            "name": "omaha",
+            "load": "index-only"
+          },
+          {
+            "name": "five-card-draw",
+            "load": "index-only"
+          },
+          {
+            "name": "seven-card-stud",
+            "load": "index-only"
+          },
+          {
+            "name": "shuffle",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "full"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"With\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the bankroll now\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" at 900 after the b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"et, I need to deal an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" actual hand with real cards\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". I'll give\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the player a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 10 of\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hearts and 6 of\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" spades for 16, and start\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the dealer with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" an 8 show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing pl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"us a hid\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"den h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ole card,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keeping it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dist\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"inct from a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" generic example.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since the player's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" total requ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ires a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" decision, I need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to add Hit/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Stand/Double action bu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ttons as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" child\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" components under the CardTable root\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", al\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ongside the existing props\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", making\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sure the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" structure is val\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"id this\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" time.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll update the data model with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" full state\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" — bankroll \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"900, bet 100\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", ph\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ase \\\"playing\\\", status\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"Your move\\\", player total\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 16, dealer show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing 8 — and target the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" update\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the existing table-1 sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face since this\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" is still the same round,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" not a new\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" one.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"codes\":[\"ACTION_NOT_APPLIED\"],\"detail\":\"Round 1 failed:\\n  ACTION_NOT_APPLIED: at table-1:deal (The player pressed deal on table-1, and this turn sends it no update, so the table still shows the old state. Call render_surface with an updateDataModel for table-1: the new cards, totals, phase and bankroll, not only prose.)\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"bankroll\\\":900,\\\"bet\\\":100,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true}],\\\"dealerTotal\\\":\\\"showing 8\\\",\\\"playerHand\\\":[{\\\"rank\\\":\\\"10\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"6\\\",\\\"suit\\\":\\\"diamonds\\\"}],\\\"playerTotal\\\":16,\\\"phase\\\":\\\"playing\\\",\\\"status\\\":\\\"Your move\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Blackjack\\\",\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":\\\"info\\\",\\\"children\\\":[\\\"hitBtn\\\",\\\"standBtn\\\",\\\"doubleBtn\\\"]},{\\\"id\\\":\\\"hitBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Hit\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"hit\\\"}},{\\\"id\\\":\\\"standBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Stand\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"stand\\\"}},{\\\"id\\\":\\\"doubleBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Double\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"double\\\"}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Bet of 100 is down. You have 16 against the dealer's showing 8. Hit, stand or double?\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"The user triggered the \\\"deal\\\" action (from component root). Action context: {\\\"bet\\\":100,\\\"bankrollAfterBet\\\":900}. Current surface data model: {\\\"bankroll\\\":1000,\\\"bet\\\":100,\\\"dealerHand\\\":[],\\\"playerHand\\\":[],\\\"phase\\\":\\\"betting\\\",\\\"status\\\":\\\"Place your bet\\\"}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[\"domain-croupier-card-table-round\",\"frontier-round-outcome\",\"agent-roster-drawer\"],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"ACTION_NOT_APPLIED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142000,\"total\":57224,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3894},{\"id\":\"mini-skills\",\"chars\":2115},{\"id\":\"persona\",\"chars\":4923}],\"over\":false},\"usage\":{\"inputTokens\":10530,\"outputTokens\":2353,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":17521},\"miniSkillIds\":[\"game-hud\",\"table-toolbar-pagination\",\"comparison-table\"],\"cacheBoundary\":46292}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":900,\"bet\":100,\"dealerHand\":[{\"rank\":\"8\",\"suit\":\"clubs\"},{\"rank\":\"K\",\"suit\":\"spades\",\"faceDown\":true}],\"dealerTotal\":\"showing 8\",\"playerHand\":[{\"rank\":\"10\",\"suit\":\"hearts\"},{\"rank\":\"6\",\"suit\":\"diamonds\"}],\"playerTotal\":16,\"phase\":\"playing\",\"status\":\"Your move\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Blackjack\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerHand\":{\"path\":\"/playerHand\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":{\"path\":\"/phase\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":\"info\",\"children\":[\"hitBtn\",\"standBtn\",\"doubleBtn\"]},{\"id\":\"hitBtn\",\"component\":\"Button\",\"label\":\"Hit\",\"variant\":\"soft\",\"action\":{\"action\":\"hit\"}},{\"id\":\"standBtn\",\"component\":\"Button\",\"label\":\"Stand\",\"variant\":\"solid\",\"action\":{\"action\":\"stand\"}},{\"id\":\"doubleBtn\",\"component\":\"Button\",\"label\":\"Double\",\"variant\":\"soft\",\"action\":{\"action\":\"double\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Bet of 100 is down. You have 16 against the dealer's showing 8. Hit, stand or double?\",\"target\":{\"surfaceId\":\"table-1\"}}}",
+          "tools": []
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Bet of 100 is down. You have 16 against the dealer's showing 8. Hit, stand or double?",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "bankroll": 900,
+                        "bet": 100,
+                        "dealerHand": [
+                          {
+                            "rank": "8",
+                            "suit": "clubs"
+                          },
+                          {
+                            "rank": "K",
+                            "suit": "spades",
+                            "faceDown": true
+                          }
+                        ],
+                        "dealerTotal": "showing 8",
+                        "playerHand": [
+                          {
+                            "rank": "10",
+                            "suit": "hearts"
+                          },
+                          {
+                            "rank": "6",
+                            "suit": "diamonds"
+                          }
+                        ],
+                        "playerTotal": 16,
+                        "phase": "playing",
+                        "status": "Your move"
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Blackjack",
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": "info",
+                          "children": [
+                            "hitBtn",
+                            "standBtn",
+                            "doubleBtn"
+                          ]
+                        },
+                        {
+                          "id": "hitBtn",
+                          "component": "Button",
+                          "label": "Hit",
+                          "variant": "soft",
+                          "action": {
+                            "action": "hit"
+                          }
+                        },
+                        {
+                          "id": "standBtn",
+                          "component": "Button",
+                          "label": "Stand",
+                          "variant": "solid",
+                          "action": {
+                            "action": "stand"
+                          }
+                        },
+                        {
+                          "id": "doubleBtn",
+                          "component": "Button",
+                          "label": "Double",
+                          "variant": "soft",
+                          "action": {
+                            "action": "double"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "croupier"
+        ],
+        "exemplars": [
+          "domain-croupier-card-table-round",
+          "frontier-round-outcome",
+          "agent-roster-drawer"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "card-layout",
+            "load": "index-only"
+          },
+          {
+            "name": "game-table-chrome",
+            "load": "index-only"
+          },
+          {
+            "name": "game-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "index-only"
+          },
+          {
+            "name": "pontoon",
+            "load": "index-only"
+          },
+          {
+            "name": "texas-holdem",
+            "load": "index-only"
+          },
+          {
+            "name": "omaha",
+            "load": "index-only"
+          },
+          {
+            "name": "five-card-draw",
+            "load": "index-only"
+          },
+          {
+            "name": "seven-card-stud",
+            "load": "index-only"
+          },
+          {
+            "name": "shuffle",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "full"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll deal the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player a \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"3 of hearts, b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ringing their hand to 19\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and since they\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" already hit, double down\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" no longer be an option—just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"it or stand now\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"You drew a\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 3 of hearts,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" making 19. Hit again\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" or stand?\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Double is\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" no longer available after\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" a hit.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"codes\":[\"ACTION_NOT_APPLIED\"],\"detail\":\"Round 1 failed:\\n  ACTION_NOT_APPLIED: at table-1:hit (The player pressed hit on table-1, and this turn sends it no update, so the table still shows the old state. Call render_surface with an updateDataModel for table-1: the new cards, totals, phase and bankroll, not only prose.)\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"bankroll\\\":900,\\\"bet\\\":100,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true}],\\\"dealerTotal\\\":\\\"showing 8\\\",\\\"playerHand\\\":[{\\\"rank\\\":\\\"10\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"6\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"3\\\",\\\"suit\\\":\\\"hearts\\\"}],\\\"playerTotal\\\":19,\\\"phase\\\":\\\"playing\\\",\\\"status\\\":\\\"Your move\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Blackjack\\\",\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":\\\"info\\\",\\\"children\\\":[\\\"hitBtn\\\",\\\"standBtn\\\"]},{\\\"id\\\":\\\"hitBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Hit\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"hit\\\"}},{\\\"id\\\":\\\"standBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Stand\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"stand\\\"}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You drew a 3 of hearts, making 19. Hit again or stand? Double is no longer available after a hit.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":4,\"query\":{\"intent\":\"The user triggered the \\\"hit\\\" action (from component hitBtn). Current surface data model: {\\\"bankroll\\\":900,\\\"bet\\\":100,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true}],\\\"dealerTotal\\\":\\\"showing 8\\\",\\\"playerHand\\\":[{\\\"rank\\\":\\\"10\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"6\\\",\\\"suit\\\":\\\"diamonds\\\"}],\\\"playerTotal\\\":16,\\\"phase\\\":\\\"playing\\\",\\\"status\\\":\\\"Your move\\\"}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[\"domain-croupier-card-table-round\",\"structured-container-trip-summary\",\"frontier-review-split\"],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"ACTION_NOT_APPLIED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142000,\"total\":58411,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":4985},{\"id\":\"mini-skills\",\"chars\":2212},{\"id\":\"persona\",\"chars\":4922}],\"over\":false},\"usage\":{\"inputTokens\":13098,\"outputTokens\":1913,\"cacheReadInputTokens\":35043,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"card-layout\",\"game-hud\",\"table-toolbar-pagination\"],\"cacheBoundary\":46292}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":900,\"bet\":100,\"dealerHand\":[{\"rank\":\"8\",\"suit\":\"clubs\"},{\"rank\":\"K\",\"suit\":\"spades\",\"faceDown\":true}],\"dealerTotal\":\"showing 8\",\"playerHand\":[{\"rank\":\"10\",\"suit\":\"hearts\"},{\"rank\":\"6\",\"suit\":\"diamonds\"},{\"rank\":\"3\",\"suit\":\"hearts\"}],\"playerTotal\":19,\"phase\":\"playing\",\"status\":\"Your move\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Blackjack\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerHand\":{\"path\":\"/playerHand\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":{\"path\":\"/phase\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":\"info\",\"children\":[\"hitBtn\",\"standBtn\"]},{\"id\":\"hitBtn\",\"component\":\"Button\",\"label\":\"Hit\",\"variant\":\"soft\",\"action\":{\"action\":\"hit\"}},{\"id\":\"standBtn\",\"component\":\"Button\",\"label\":\"Stand\",\"variant\":\"solid\",\"action\":{\"action\":\"stand\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"You drew a 3 of hearts, making 19. Hit again or stand?\",\"target\":{\"surfaceId\":\"table-1\"}}}\n\nYou drew a 3 of hearts, making 19. Hit again or stand? Double is no longer available after a hit.",
+          "tools": []
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "You drew a 3 of hearts, making 19. Hit again or stand? Double is no longer available after a hit.",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "bankroll": 900,
+                        "bet": 100,
+                        "dealerHand": [
+                          {
+                            "rank": "8",
+                            "suit": "clubs"
+                          },
+                          {
+                            "rank": "K",
+                            "suit": "spades",
+                            "faceDown": true
+                          }
+                        ],
+                        "dealerTotal": "showing 8",
+                        "playerHand": [
+                          {
+                            "rank": "10",
+                            "suit": "hearts"
+                          },
+                          {
+                            "rank": "6",
+                            "suit": "diamonds"
+                          },
+                          {
+                            "rank": "3",
+                            "suit": "hearts"
+                          }
+                        ],
+                        "playerTotal": 19,
+                        "phase": "playing",
+                        "status": "Your move"
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Blackjack",
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": "info",
+                          "children": [
+                            "hitBtn",
+                            "standBtn"
+                          ]
+                        },
+                        {
+                          "id": "hitBtn",
+                          "component": "Button",
+                          "label": "Hit",
+                          "variant": "soft",
+                          "action": {
+                            "action": "hit"
+                          }
+                        },
+                        {
+                          "id": "standBtn",
+                          "component": "Button",
+                          "label": "Stand",
+                          "variant": "solid",
+                          "action": {
+                            "action": "stand"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "croupier"
+        ],
+        "exemplars": [
+          "domain-croupier-card-table-round",
+          "structured-container-trip-summary",
+          "frontier-review-split"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "card-layout",
+            "load": "index-only"
+          },
+          {
+            "name": "game-table-chrome",
+            "load": "index-only"
+          },
+          {
+            "name": "game-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "index-only"
+          },
+          {
+            "name": "pontoon",
+            "load": "index-only"
+          },
+          {
+            "name": "texas-holdem",
+            "load": "index-only"
+          },
+          {
+            "name": "omaha",
+            "load": "index-only"
+          },
+          {
+            "name": "five-card-draw",
+            "load": "index-only"
+          },
+          {
+            "name": "seven-card-stud",
+            "load": "index-only"
+          },
+          {
+            "name": "shuffle",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "full"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Dealer sh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ows 18 against the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player's 19, so the player\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" wins even\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" money. With\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 100 bet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ankroll go\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"es from 900 back up to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 1100 after\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the payout.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll settle table\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-1 in place since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" same round, rev\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealing the dealer's h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ole card and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" mar\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"king the result,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" then add\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a \\\"Deal again\\\" button\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" that starts a new round.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" updating root\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sw\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ap out\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Hit/Stand for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a dealAgain button,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" setting dealer total\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to 18 with the hole\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" card face up, player total 19\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and status \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Dealer stands on \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"18. You win 100 with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 19 over 18.\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with success\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" intent and phase \\\"settled\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For the reply I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll include a leading meta\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-line targ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eting the existing table-1\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" surface, then a short pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ose message\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". I'll update\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the full\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" data model with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bankroll 1100,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bet re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"set to 0, dealer\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hand rev\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealed, tot\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"als and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" phase set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to settled,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and the win\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" status message.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"You\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" stand on\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 19. The dealer tur\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ns over\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" king of\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" spades for 18 \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"and stands\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" You win 100\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" chips.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"\\n\\n\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"bankroll\\\":1100,\\\"bet\\\":0,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"spades\\\"}],\\\"dealerTotal\\\":18,\\\"playerHand\\\":[{\\\"rank\\\":\\\"10\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"6\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"3\\\",\\\"suit\\\":\\\"hearts\\\"}],\\\"playerTotal\\\":19,\\\"phase\\\":\\\"settled\\\",\\\"status\\\":\\\"You win 100. Your 19 beats the dealer's 18.\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Blackjack\\\",\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":\\\"success\\\",\\\"children\\\":[\\\"dealAgain\\\"]},{\\\"id\\\":\\\"dealAgain\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Deal again\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"deal_again\\\",\\\"context\\\":{\\\"newRound\\\":true}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You stand on 19. The dealer turns over the king of spades for 18 and stands. You win 100 chips.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":6,\"query\":{\"intent\":\"Stand.\",\"k\":3},\"exemplarIds\":[\"domain-croupier-card-table-round\",\"frontier-result-card-win\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[\"TEXT_JSONL_ROUTED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142000,\"total\":53531,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":2317},{\"id\":\"persona\",\"chars\":4922}],\"over\":false},\"usage\":{\"inputTokens\":4897,\"outputTokens\":1782,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":46292}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":1100,\"bet\":0,\"dealerHand\":[{\"rank\":\"8\",\"suit\":\"clubs\"},{\"rank\":\"K\",\"suit\":\"spades\"}],\"dealerTotal\":18,\"playerHand\":[{\"rank\":\"10\",\"suit\":\"hearts\"},{\"rank\":\"6\",\"suit\":\"diamonds\"},{\"rank\":\"3\",\"suit\":\"hearts\"}],\"playerTotal\":19,\"phase\":\"settled\",\"status\":\"You win 100. Your 19 beats the dealer's 18.\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Blackjack\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerHand\":{\"path\":\"/playerHand\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":{\"path\":\"/phase\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":\"success\",\"children\":[\"dealAgain\"]},{\"id\":\"dealAgain\",\"component\":\"Button\",\"label\":\"Deal again\",\"variant\":\"solid\",\"action\":{\"action\":\"deal_again\",\"context\":{\"newRound\":true}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"table-1\"}}}\nYou stand on 19. The dealer turns over the king of spades for 18 and stands. You win 100 chips.\n\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":1100,\"bet\":0,\"dealerHand\":[{\"rank\":\"8\",\"suit\":\"clubs\"},{\"rank\":\"K\",\"suit\":\"spades\"}],\"dealerTotal\":18,\"playerHand\":[{\"rank\":\"10\",\"suit\":\"hearts\"},{\"rank\":\"6\",\"suit\":\"diamonds\"},{\"rank\":\"3\",\"suit\":\"hearts\"}],\"playerTotal\":19,\"phase\":\"settled\",\"status\":\"You win 100. Your 19 beats the dealer's 18.\"}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Blackjack\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerHand\":{\"path\":\"/playerHand\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":{\"path\":\"/phase\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":\"success\",\"children\":[\"dealAgain\"]},{\"id\":\"dealAgain\",\"component\":\"Button\",\"label\":\"Deal again\",\"variant\":\"solid\",\"action\":{\"action\":\"deal_again\",\"context\":{\"newRound\":true}}}]}}",
+          "tools": []
+        }
+      ],
+      "routing": {
+        "domains": [
+          "croupier"
+        ],
+        "exemplars": [
+          "domain-croupier-card-table-round",
+          "frontier-result-card-win"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "card-layout",
+            "load": "index-only"
+          },
+          {
+            "name": "game-table-chrome",
+            "load": "index-only"
+          },
+          {
+            "name": "game-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "index-only"
+          },
+          {
+            "name": "pontoon",
+            "load": "index-only"
+          },
+          {
+            "name": "texas-holdem",
+            "load": "index-only"
+          },
+          {
+            "name": "omaha",
+            "load": "index-only"
+          },
+          {
+            "name": "five-card-draw",
+            "load": "index-only"
+          },
+          {
+            "name": "seven-card-stud",
+            "load": "index-only"
+          },
+          {
+            "name": "shuffle",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "full"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since the user hit De\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"al again, I need a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" fresh table id\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" (\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"table-2) for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" this new\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" round, leaving table-1\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as unt\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ouched history. I'll set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" up table-2 with bank\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"roll 1100, phase\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" betting, bet 0,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and betAction deal,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" making sure not to mod\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ify the previous table\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s surface.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll create the new\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" surface with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" catalogId \\\"agent-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ui--croup\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ier\\\", send\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the data model, and build the component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" tree: a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" root\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" CardTable with betAction\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"deal\\\", title \\\"Bl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ackjack\\\", and statusI\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ntent \\\"info\\\" -\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"- keeping it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" simple with no ask needed\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since the bet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting phase handles the str\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ip/deal fl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ow itself.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Round\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" sett\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"led and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" on the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" table. Dealing a\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" f\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"resh table\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" with\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" your\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" bankroll at 1,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"100.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Set your\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" bet and deal when\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ready.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"catalogId\\\":\\\"agent-ui--croupier\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"value\\\":{\\\"bankroll\\\":1100,\\\"bet\\\":0,\\\"dealerHand\\\":[],\\\"playerHand\\\":[],\\\"phase\\\":\\\"betting\\\",\\\"status\\\":\\\"Place your bet\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Blackjack\\\",\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":\\\"info\\\",\\\"betAction\\\":\\\"deal\\\"}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Round settled and on the table. Dealing a fresh table with your bankroll at 1,100. Set your bet and deal when ready.\",\"target\":{\"surfaceId\":\"table-2\"},\"trace\":{\"turnIndex\":8,\"query\":{\"intent\":\"The user triggered the \\\"deal_again\\\" action (from component dealAgain). Action context: {\\\"newRound\\\":true}. Current surface data model: {\\\"bankroll\\\":1100,\\\"bet\\\":0,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"spades\\\"}],\\\"dealerTotal\\\":18,\\\"playerHand\\\":[{\\\"rank\\\":\\\"10\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"6\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"3\\\",\\\"suit\\\":\\\"hearts\\\"}],\\\"playerTotal\\\":19,\\\"phase\\\":\\\"settled\\\",\\\"status\\\":\\\"You win 100. Your 19 beats the dealer's 18.\\\"}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[\"domain-croupier-card-table-round\",\"frontier-round-outcome\",\"frontier-result-card-win\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142000,\"total\":57081,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3515},{\"id\":\"mini-skills\",\"chars\":2351},{\"id\":\"persona\",\"chars\":4923}],\"over\":false},\"usage\":{\"inputTokens\":7077,\"outputTokens\":1087,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"card-layout\",\"game-hud\",\"game-table-chrome\"],\"cacheBoundary\":46292}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-2\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-2\",\"value\":{\"bankroll\":1100,\"bet\":0,\"dealerHand\":[],\"playerHand\":[],\"phase\":\"betting\",\"status\":\"Place your bet\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Blackjack\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":{\"path\":\"/phase\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":\"info\",\"betAction\":\"deal\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Round settled and on the table. Dealing a fresh table with your bankroll at 1,100. Set your bet and deal when ready.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Fresh table ready. Your bankroll is 1,100. Set your bet and deal when ready.",
+                "target": "{\"surfaceId\":\"table-2\"}",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-2",
+                      "catalogId": "agent-ui--croupier",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-2",
+                      "value": {
+                        "bankroll": 1100,
+                        "bet": 0,
+                        "dealerHand": [],
+                        "playerHand": [],
+                        "phase": "betting",
+                        "status": "Place your bet"
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-2",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Blackjack",
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": "info",
+                          "betAction": "deal"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "croupier"
+        ],
+        "exemplars": [
+          "domain-croupier-card-table-round",
+          "frontier-round-outcome",
+          "frontier-result-card-win"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "card-layout",
+            "load": "index-only"
+          },
+          {
+            "name": "game-table-chrome",
+            "load": "index-only"
+          },
+          {
+            "name": "game-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "index-only"
+          },
+          {
+            "name": "pontoon",
+            "load": "index-only"
+          },
+          {
+            "name": "texas-holdem",
+            "load": "index-only"
+          },
+          {
+            "name": "omaha",
+            "load": "index-only"
+          },
+          {
+            "name": "five-card-draw",
+            "load": "index-only"
+          },
+          {
+            "name": "seven-card-stud",
+            "load": "index-only"
+          },
+          {
+            "name": "shuffle",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "full"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"With b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ankroll updated to 1\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"050 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"after the b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"et, I need to deal a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" new hand on table-2,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" giving the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player two cards and the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dealer one up card\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"us a hid\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"den h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ole card\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" then\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" check for a natural. I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the player with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 7 of diamonds\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and 9 of clubs\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"16, and give\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the dealer a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 10 up.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Table-1 is the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" finished round and stays unt\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ouched since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" complet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ed surfaces aren't\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" edited again. For\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" table-2, I'll set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" status to \\\"Your move\\\" with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Hit/Stand/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Double buttons, bin\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dealer's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" showing total and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player's total of\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 16 to the appropri\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ate paths.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll dra\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ft the prose: b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"et 50 is plac\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ed, player has 16 against\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dealer's showing 10\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ompting h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"it/stand/double,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"air it with a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" data model update pl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"us a components update for table-2\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s root and its three\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" action\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" buttons since that surface was\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" created without them\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" init\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ially.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"codes\":[\"ACTION_NOT_APPLIED\"],\"detail\":\"Round 1 failed:\\n  ACTION_NOT_APPLIED: at table-2:deal (The player pressed deal on table-2, and this turn sends it no update, so the table still shows the old state. Call render_surface with an updateDataModel for table-2: the new cards, totals, phase and bankroll, not only prose.)\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"value\\\":{\\\"bankroll\\\":1050,\\\"bet\\\":50,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"10\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"spades\\\",\\\"faceDown\\\":true}],\\\"dealerTotal\\\":\\\"showing 10\\\",\\\"playerHand\\\":[{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"diamonds\\\"}],\\\"playerTotal\\\":16,\\\"phase\\\":\\\"playing\\\",\\\"status\\\":\\\"Your move\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Blackjack\\\",\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":\\\"info\\\",\\\"children\\\":[\\\"hitBtn\\\",\\\"standBtn\\\",\\\"doubleBtn\\\"]},{\\\"id\\\":\\\"hitBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Hit\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"hit\\\"}},{\\\"id\\\":\\\"standBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Stand\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"stand\\\"}},{\\\"id\\\":\\\"doubleBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Double\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"double\\\"}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Bet 50 is down. You have 16 against the dealer's showing 10. Hit, stand or double?\",\"target\":{\"surfaceId\":\"table-2\"},\"trace\":{\"turnIndex\":10,\"query\":{\"intent\":\"The user triggered the \\\"deal\\\" action (from component root). Action context: {\\\"bet\\\":50,\\\"bankrollAfterBet\\\":1050}. Current surface data model: {\\\"bankroll\\\":1100,\\\"bet\\\":50,\\\"dealerHand\\\":[],\\\"playerHand\\\":[],\\\"phase\\\":\\\"betting\\\",\\\"status\\\":\\\"Place your bet\\\"}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[\"domain-croupier-card-table-round\",\"frontier-round-outcome\",\"agent-roster-drawer\"],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"ACTION_NOT_APPLIED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142000,\"total\":57224,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3894},{\"id\":\"mini-skills\",\"chars\":2115},{\"id\":\"persona\",\"chars\":4923}],\"over\":false},\"usage\":{\"inputTokens\":15655,\"outputTokens\":2295,\"cacheReadInputTokens\":35043,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"game-hud\",\"table-toolbar-pagination\",\"comparison-table\"],\"cacheBoundary\":46292}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-2\",\"value\":{\"bankroll\":1050,\"bet\":50,\"dealerHand\":[{\"rank\":\"10\",\"suit\":\"clubs\"},{\"rank\":\"7\",\"suit\":\"spades\",\"faceDown\":true}],\"dealerTotal\":\"showing 10\",\"playerHand\":[{\"rank\":\"9\",\"suit\":\"hearts\"},{\"rank\":\"7\",\"suit\":\"diamonds\"}],\"playerTotal\":16,\"phase\":\"playing\",\"status\":\"Your move\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Blackjack\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerHand\":{\"path\":\"/playerHand\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":{\"path\":\"/phase\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":\"info\",\"children\":[\"hitBtn\",\"standBtn\",\"doubleBtn\"]},{\"id\":\"hitBtn\",\"component\":\"Button\",\"label\":\"Hit\",\"variant\":\"soft\",\"action\":{\"action\":\"hit\"}},{\"id\":\"standBtn\",\"component\":\"Button\",\"label\":\"Stand\",\"variant\":\"solid\",\"action\":{\"action\":\"stand\"}},{\"id\":\"doubleBtn\",\"component\":\"Button\",\"label\":\"Double\",\"variant\":\"soft\",\"action\":{\"action\":\"double\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Bet 50 is down. You have 16 against the dealer's showing 10. Hit, stand or double?\",\"target\":{\"surfaceId\":\"table-2\"}}}",
+          "tools": []
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Bet 50 is down. You have 16 against the dealer's showing 10. Hit, stand or double?",
+                "target": "table-2",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-2",
+                      "value": {
+                        "bankroll": 1050,
+                        "bet": 50,
+                        "dealerHand": [
+                          {
+                            "rank": "10",
+                            "suit": "clubs"
+                          },
+                          {
+                            "rank": "7",
+                            "suit": "spades",
+                            "faceDown": true
+                          }
+                        ],
+                        "dealerTotal": "showing 10",
+                        "playerHand": [
+                          {
+                            "rank": "9",
+                            "suit": "hearts"
+                          },
+                          {
+                            "rank": "7",
+                            "suit": "diamonds"
+                          }
+                        ],
+                        "playerTotal": 16,
+                        "phase": "playing",
+                        "status": "Your move"
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-2",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Blackjack",
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": "info",
+                          "children": [
+                            "hitBtn",
+                            "standBtn",
+                            "doubleBtn"
+                          ]
+                        },
+                        {
+                          "id": "hitBtn",
+                          "component": "Button",
+                          "label": "Hit",
+                          "variant": "soft",
+                          "action": {
+                            "action": "hit"
+                          }
+                        },
+                        {
+                          "id": "standBtn",
+                          "component": "Button",
+                          "label": "Stand",
+                          "variant": "solid",
+                          "action": {
+                            "action": "stand"
+                          }
+                        },
+                        {
+                          "id": "doubleBtn",
+                          "component": "Button",
+                          "label": "Double",
+                          "variant": "soft",
+                          "action": {
+                            "action": "double"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "croupier"
+        ],
+        "exemplars": [
+          "domain-croupier-card-table-round",
+          "frontier-round-outcome",
+          "agent-roster-drawer"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "card-layout",
+            "load": "index-only"
+          },
+          {
+            "name": "game-table-chrome",
+            "load": "index-only"
+          },
+          {
+            "name": "game-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "index-only"
+          },
+          {
+            "name": "pontoon",
+            "load": "index-only"
+          },
+          {
+            "name": "texas-holdem",
+            "load": "index-only"
+          },
+          {
+            "name": "omaha",
+            "load": "index-only"
+          },
+          {
+            "name": "five-card-draw",
+            "load": "index-only"
+          },
+          {
+            "name": "seven-card-stud",
+            "load": "index-only"
+          },
+          {
+            "name": "shuffle",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "full"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"On table 2, stand\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing on 16 against\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dealer's 17 means\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player loses that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and, so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the bankroll stays at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 1050 after\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" settling the bet. I also\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" notice table \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"1 still shows a le\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ftover \\\"Deal again\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" button from the finished round that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" needs cleaning up.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"The\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" dealer's\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" h\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ole card is the \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"7 of spades, making\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 17. That\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" beats your 16, so you\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" lose the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 50 \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"chip b\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"et.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Your bankroll st\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ays at 1,050.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"\\n\\n\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"value\\\":{\\\"bankroll\\\":1050,\\\"bet\\\":0,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"10\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"spades\\\"}],\\\"dealerTotal\\\":17,\\\"playerHand\\\":[{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"diamonds\\\"}],\\\"playerTotal\\\":16,\\\"phase\\\":\\\"settled\\\",\\\"status\\\":\\\"Dealer wins 17 to 16. You lose 50.\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Blackjack\\\",\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":\\\"danger\\\",\\\"children\\\":[\\\"dealAgain\\\"]},{\\\"id\\\":\\\"dealAgain\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Deal again\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"deal_again\\\",\\\"context\\\":{\\\"newRound\\\":true}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"The dealer's hole card is the 7 of spades, making 17. That beats your 16, so you lose the 50 chip bet. Your bankroll stays at 1,050.\",\"trace\":{\"turnIndex\":12,\"query\":{\"intent\":\"Stand.\",\"k\":3},\"exemplarIds\":[\"domain-croupier-card-table-round\",\"frontier-result-card-win\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[\"TEXT_JSONL_ROUTED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142000,\"total\":53532,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":2317},{\"id\":\"persona\",\"chars\":4923}],\"over\":false},\"usage\":{\"inputTokens\":6718,\"outputTokens\":1044,\"cacheReadInputTokens\":17522,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":46292}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-2\",\"value\":{\"bankroll\":1050,\"bet\":0,\"dealerHand\":[{\"rank\":\"10\",\"suit\":\"clubs\"},{\"rank\":\"7\",\"suit\":\"spades\"}],\"dealerTotal\":17,\"playerHand\":[{\"rank\":\"9\",\"suit\":\"hearts\"},{\"rank\":\"7\",\"suit\":\"diamonds\"}],\"playerTotal\":16,\"phase\":\"settled\",\"status\":\"Dealer wins 17 to 16. You lose 50.\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Blackjack\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerHand\":{\"path\":\"/playerHand\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":{\"path\":\"/phase\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":\"danger\",\"children\":[\"dealAgain\"]},{\"id\":\"dealAgain\",\"component\":\"Button\",\"label\":\"Deal again\",\"variant\":\"solid\",\"action\":{\"action\":\"deal_again\",\"context\":{\"newRound\":true}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "The dealer's hole card is the 7 of spades, making 17. That beats your 16, so you lose the 50 chip bet. Your bankroll stays at 1,050.\n\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-2\",\"value\":{\"bankroll\":1050,\"bet\":0,\"dealerHand\":[{\"rank\":\"10\",\"suit\":\"clubs\"},{\"rank\":\"7\",\"suit\":\"spades\"}],\"dealerTotal\":17,\"playerHand\":[{\"rank\":\"9\",\"suit\":\"hearts\"},{\"rank\":\"7\",\"suit\":\"diamonds\"}],\"playerTotal\":16,\"phase\":\"settled\",\"status\":\"Dealer wins 17 to 16. You lose 50.\"}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Blackjack\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerHand\":{\"path\":\"/playerHand\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":{\"path\":\"/phase\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":\"danger\",\"children\":[\"dealAgain\"]},{\"id\":\"dealAgain\",\"component\":\"Button\",\"label\":\"Deal again\",\"variant\":\"solid\",\"action\":{\"action\":\"deal_again\",\"context\":{\"newRound\":true}}}]}}",
+          "tools": []
+        }
+      ],
+      "routing": {
+        "domains": [
+          "croupier"
+        ],
+        "exemplars": [
+          "domain-croupier-card-table-round",
+          "frontier-result-card-win"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "card-layout",
+            "load": "index-only"
+          },
+          {
+            "name": "game-table-chrome",
+            "load": "index-only"
+          },
+          {
+            "name": "game-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "index-only"
+          },
+          {
+            "name": "pontoon",
+            "load": "index-only"
+          },
+          {
+            "name": "texas-holdem",
+            "load": "index-only"
+          },
+          {
+            "name": "omaha",
+            "load": "index-only"
+          },
+          {
+            "name": "five-card-draw",
+            "load": "index-only"
+          },
+          {
+            "name": "seven-card-stud",
+            "load": "index-only"
+          },
+          {
+            "name": "shuffle",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "full"
+          }
+        ]
+      }
+    }
+  ]
+}
