@@ -21,3 +21,10 @@ Split from T-0280 (2026-10-16): live round 4 cluster D (`.sdlc/evals/rounds/2026
 ## Done when
 - A keyless replay of the round 4 Haiku Omaha (and stud) prose turns fails with ACTION_NOT_APPLIED on those turns, and a turn that updates the table stays quiet.
 - The croupier checks tests and `npx vitest run scripts/e2e-admin/probe` exit 0; `npm run check` exits 0.
+
+## Acceptance criteria
+- `npx vitest run scripts/e2e-admin/probe/replays/croupier-omaha-haiku-street-prose.test.mjs` exits 0, pinned to ACTION_NOT_APPLIED on turn 4 only (turns 1 to 3 update table-1 and stay quiet).
+- `npx vitest run scripts/e2e-admin/probe/replays/croupier-stud-haiku-street-prose.test.mjs` exits 0: no probe check fails (turn 1's target reads as stud-1), and the settled-table checks (turns 5, 6) stay quiet.
+- `npx vitest run packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.test.ts` exits 0.
+- `npx vitest run scripts/e2e-admin/probe` exits 0.
+- `npm run check` exits 0.
