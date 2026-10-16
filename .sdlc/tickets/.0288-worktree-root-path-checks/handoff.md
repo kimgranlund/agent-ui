@@ -2,7 +2,7 @@
 id: T-0288
 title: "Code still keyed to .claude/worktrees: lanes in ../agent-ui.worktrees run vitest uncapped; reap scripts miss them"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -23,3 +23,12 @@ sdlc-lite 0.24.0 (merged in #2039) moved lanes out of the repo. `vitest.config.t
 
 ## Plan fix (conductor, 2026-10-16)
 Verifier try 2 failed only criterion 2 as a plan defect: `reap-scratch-clones` never scanned a lane root, so "the three reap scripts list lanes" was vacuous for it. Criterion 2 now names the two lane-keyed scripts and keeps all three selftests. No build change.
+
+## Outcome
+
+2026-10-15 · lane: full L1 · verdict: closed by reason (Merged: lanes in ../agent-ui.worktrees get the vitest worker cap; reap scripts see the new root; verifier L2 pass) · verifier: verifier-L2 (opus) · base: 8df00160afe6
+- Changed: see commits
+- Commits: d9a016e T-0288: lanes in ../agent-ui.worktrees get the vitest worker cap (#2048)
+- Check: 1 A cwd under `<repo>.worktrees/` (and still `.claude/worktrees/`) gets the 4-worker cap in both vi...: pass
+- Check: 2 `reap-worktrees` and `reap-branches` list lanes under the new root in dry-run mode; all three rea...: pass
+- Check: 3 `npm run check` exits 0: pass

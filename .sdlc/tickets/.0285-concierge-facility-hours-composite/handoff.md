@@ -2,7 +2,7 @@
 id: T-0285
 title: "Concierge facility-hours turns never draw ServiceCard: facility-info-card is index-only and the loaded persona asks for a compact info surface"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -45,3 +45,16 @@ verifier: L3
 - `npx vitest run scripts/e2e-admin/probe/scenarios` exits 0.
 - `npx vitest run scripts/e2e-admin/probe/replays/concierge-sonnet-facility-hours.test.mjs site/pages/agent-admin-app.test.ts site/pages/agent-admin-presets.test.ts site/lib/agent-manifest` exits 0.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged in #2049: facility hours are one compact info card (Kim's ruling); verifier L3 pass) · verifier: verifier-L3 (fable) · base: caef398a29af
+- Changed: see commits
+- Commits: f207db5 T-0285: facility hours are one compact info card (#2049)
+- Check: 1 The `facility-info-card` skill teaches ONE Card holding a DescriptionList, never a ServiceCard pe...: pass
+- Check: 2 Concierge `surfaceStyle` names "a compact info card, one row per facility with its hours and loca...: pass
+- Check: 3 Every facility-hours oracle expects `DescriptionList`, not `ServiceCard`; ServiceCard stays on "W...: pass
+- Check: 4 `concierge-sonnet-facility-hours.test.mjs` replays the Sonnet answer keyless, passes the Descript...: pass
+- Check: 5 `npx vitest run scripts/e2e-admin/probe/scenarios` exits 0: pass
+- Check: 6 `npx vitest run scripts/e2e-admin/probe/replays/concierge-sonnet-facility-hours.test.mjs site/pag...: pass
+- Check: 7 `npm run check` exits 0: pass
