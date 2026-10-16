@@ -37,3 +37,6 @@ verifier: L3
 - (red) `grep -q "REV 2026-10-16, T-0311" .claude/docs/spec/response-type-selection.spec.md` exits 0 (RTS-R9 and RTS-P3 repaired).
 - `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent` exits 0.
 - `npm run check` exits 0.
+
+## Conductor note for the verifier (2026-10-16)
+Security: the prompt store writes composed prompt text to disk. Confirm `.agent-traces/` is git-ignored, that no key, token or .env value can be written (the solo reports redaction covers env names containing KEY, TOKEN, SECRET or PASSWORD plus key patterns, not every .env value; judge whether a value from .env can reach a prompt at all, and say so), and that the store is dev-only (never in the Worker or a shipped package).
