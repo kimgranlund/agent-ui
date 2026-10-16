@@ -648,14 +648,64 @@ describe('T-0172: structured render_surface, prose routing, surface loss', () =>
     await expect(run(intentOf('book a table', greetSession), provider, { maxRounds: 2 })).rejects.toThrow(/SURFACE_DROPPED at ask-1/)
   })
 
-  it('a surface the failures name may be dropped by the repair (the abandoned-createSurface fix), with no SURFACE_DROPPED', async () => {
-    const { provider, calls } = scripted([
-      { text: 'Booking.', call: [surface(`${GOOD_GREET}\n${INVALID.replace(/main/g, 'ask-2')}`)] },
+  // T-0317 (Kim's L1 ruling, 2026-10-16): a surface that existed in the turn is kept or explicitly deleted, so the
+  // T-0172 allowance to drop a surface the failures name is gone (only a bare createSurface, never a surface, may go).
+  const ASK2_VALID = ASK_VALID.replace(/ask-1/g, 'ask-2')
+  const ASK2_INVALID = INVALID.replace(/main/g, 'ask-2')
+  const ASK2_DELETE = '{"version":"v1.0","deleteSurface":{"surfaceId":"ask-2"}}'
+  /** A root listing a child no component defines: IDGRAPH `root->gone`, a path naming no surface. */
+  const brokenAsk = (sid: string): string =>
+    `{"version":"v1.0","createSurface":{"surfaceId":"${sid}","catalogId":"agent-ui"}}\n` +
+    `{"version":"v1.0","updateComponents":{"surfaceId":"${sid}","components":[{"id":"root","component":"Column","children":["gone"]}]}}`
+
+  it('T-0317: a surface the failures name and a later round drops is sent back as SURFACE_DROPPED, and the next round ships both', async () => {
+    const { provider, reqs, calls } = scripted([
+      { text: 'Booking.', call: [surface(`${GOOD_GREET}\n${ASK2_INVALID}`)] },
       { text: 'Booking.', call: [surface(GOOD_GREET)] },
+      { text: 'Booking.', call: [surface(`${GOOD_GREET}\n${ASK2_VALID}`)] },
+    ])
+    const lines = await run(intentOf('book a table', greetSession), provider)
+    expect(calls()).toBe(3)
+    expect(lastUserMessage(reqs()[2]!)).toMatch(/SURFACE_DROPPED at ask-2/)
+    expect(contentOf(lines)).toEqual([GOOD_GREET, ...ASK2_VALID.split('\n')])
+  })
+
+  it('T-0317: a failure-named surface the repair explicitly deletes is kept by the invariant, so the round ships', async () => {
+    const { provider, calls } = scripted([
+      { text: 'Booking.', call: [surface(`${GOOD_GREET}\n${ASK2_INVALID}`)] },
+      { text: 'Booking.', call: [surface(`${GOOD_GREET}\n${ASK2_DELETE}`)] },
     ])
     const lines = await run(intentOf('book a table', greetSession), provider)
     expect(calls()).toBe(2)
-    expect(contentOf(lines)).toEqual([GOOD_GREET])
+    expect(contentOf(lines)).toEqual([GOOD_GREET, ASK2_DELETE])
+  })
+
+  it('T-0317: an id-graph path is pinned to the surface whose component lists the child, so the repair keeps the valid one', async () => {
+    const { provider, reqs, calls } = scripted([
+      { text: 'Booking.', call: [surface(`${brokenAsk('ask-1')}\n${ASK2_VALID}`)] },
+      { text: 'Booking.', call: [surface(ASK_VALID)] },
+      { text: 'Booking.', call: [surface(`${ASK_VALID}\n${ASK2_VALID}`)] },
+    ])
+    const lines = await run(intentOf('book a table'), provider)
+    expect(calls()).toBe(3)
+    expect(lastUserMessage(reqs()[1]!)).toMatch(/Keep `ask-2` exactly as you sent it/)
+    expect(lastUserMessage(reqs()[1]!)).not.toMatch(/Keep `ask-1`/)
+    expect(lastUserMessage(reqs()[2]!)).toMatch(/SURFACE_DROPPED at ask-2/)
+    expect(contentOf(lines)).toEqual([...ASK_VALID.split('\n'), ...ASK2_VALID.split('\n')])
+  })
+
+  it('T-0317: a round sent back only for SURFACE_DROPPED still has its own valid surface named in the keep hint', async () => {
+    const { provider, reqs, calls } = scripted([
+      { text: 'Booking.', call: [surface(`${ASK_VALID}\n${brokenAsk('ask-2')}`)] },
+      { text: 'Booking.', call: [surface(ASK2_VALID)] },
+      { text: 'Booking.', call: [surface(`${ASK_VALID}\n${ASK2_VALID}`)] },
+    ])
+    const lines = await run(intentOf('book a table'), provider)
+    expect(calls()).toBe(3)
+    expect(lastUserMessage(reqs()[1]!)).toMatch(/Keep `ask-1` exactly as you sent it/)
+    expect(lastUserMessage(reqs()[2]!)).toMatch(/SURFACE_DROPPED at ask-1/)
+    expect(lastUserMessage(reqs()[2]!)).toMatch(/Keep `ask-2` exactly as you sent it/)
+    expect(contentOf(lines)).toEqual([...ASK_VALID.split('\n'), ...ASK2_VALID.split('\n')])
   })
 })
 

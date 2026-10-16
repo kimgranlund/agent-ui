@@ -3,7 +3,7 @@
   "version": 1,
   "name": "seeded-dropped-surface",
   "agent": "quant",
-  "source": "hand-authored for the probe selftest (T-0174) (catalog agent-ui)",
+  "source": "hand-authored for the probe selftest (T-0174; T-0317: ask-1 is a bare createSurface, the one shape the producer may drop) (catalog agent-ui)",
   "steps": [
     {
       "say": "book a table"
@@ -18,7 +18,7 @@
       ],
       "rounds": [
         {
-          "text": "{\"a2uiMeta\":{\"note\":\"Booking.\",\"ask\":{\"surfaceId\":\"ask-1\"}}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"canvas\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"canvas\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"btn\"]},{\"id\":\"btn\",\"component\":\"Button\",\"variant\":\"solid\",\"label\":\"Click me\",\"action\":{\"action\":\"submit\"}}]}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"q\",\"ghost\"]},{\"id\":\"q\",\"component\":\"Text\",\"text\":\"How many?\"}]}}",
+          "text": "{\"a2uiMeta\":{\"note\":\"Booking.\",\"ask\":{\"surfaceId\":\"ask-1\"}}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"canvas\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"canvas\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"btn\"]},{\"id\":\"btn\",\"component\":\"Button\",\"variant\":\"solid\",\"label\":\"Click me\",\"action\":{\"action\":\"submit\"}}]}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui\"}}",
           "tools": []
         },
         {
