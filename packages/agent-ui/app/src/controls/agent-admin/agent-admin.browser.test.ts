@@ -1571,33 +1571,54 @@ describe('ui-agent-admin — entry libraries commit through the real menu (GH #4
   })
 })
 
-describe('ui-agent-admin — the Agent config panel is a CARD like the entry cards (design-mode ask, 2026-07-19)', () => {
-  it('the settings panel carries the entry-card chrome: real border, radius, surface, padding — matching an entry card computed-for-computed', async () => {
+describe('ui-agent-admin: the Agent settings card frames the section select and the Name field (T-0306)', () => {
+  // T-0306 (Kim 2026-10-16): the card moved from the generated panel to the whole `ui-settings` unit, so the
+  // compact section select is the card's header row (the Model card's own header-then-rows framing) instead
+  // of a stray pill inset above a lone-field card. The 2026-07-19 entry-card match carries over to the host.
+  it('T-0306: ui-settings carries the entry-card chrome computed-for-computed; the panel inside carries none', async () => {
     const { el } = mountAgentAdmin()
     await el.updateComplete
+    const card = el.querySelector('ui-settings') as HTMLElement
     const panel = el.querySelector('ui-settings [data-part="panel"]') as HTMLElement
     const entry = el.querySelector('[data-part="entry"]') as HTMLElement
     expect(panel).not.toBeNull()
     expect(entry, 'an entry card exists to match against (the prompt sections seed three)').not.toBeNull()
-    const p = getComputedStyle(panel)
+    const c = getComputedStyle(card)
     const e = getComputedStyle(entry)
-    // The FULL border shorthand resolution (GH #50 settings.css's `ui-settings [data-part='panel']`
-    // specificity-lift override, agent-admin.css: width/style/color each individually, not just width),
-    // so a future settings.css specificity bump that reverts only style or color still goes red.
-    expect(p.borderTopWidth, 'a real border').toBe(e.borderTopWidth)
-    expect(p.borderTopStyle, 'the same border style').toBe(e.borderTopStyle)
-    expect(p.borderTopStyle).not.toBe('none') // anti-vacuous: not none-matching-none
-    expect(p.borderTopColor, 'the same border role').toBe(e.borderTopColor)
-    expect(p.borderTopLeftRadius, 'the same card radius').toBe(e.borderTopLeftRadius)
-    expect(p.borderTopRightRadius, 'the radius is uniform, not just the top-left corner').toBe(e.borderTopRightRadius)
-    expect(p.backgroundColor, 'the same card surface').toBe(e.backgroundColor)
-    expect(p.backgroundColor).not.toBe('rgba(0, 0, 0, 0)') // anti-vacuous: not transparent-matching-transparent
-    // GH #191 follow-up (Kim's screenshot: the Agent card read with excess inset vs. its siblings) — the
-    // panel had been minted with a UNIFORM 0.75rem padding instead of the entry card's own asymmetric
-    // 0.5rem 0.75rem, a real 4px block-inset excess. Matching the padding, not just the chrome, is the
-    // actual regression this pane-rhythm fix protects.
-    expect(p.paddingBlockStart, 'block padding matches the entry-card norm, not a uniform 0.75rem').toBe(e.paddingBlockStart)
-    expect(p.paddingInlineStart, 'inline padding matches the entry-card norm').toBe(e.paddingInlineStart)
+    expect(c.borderTopWidth, 'a real border').toBe(e.borderTopWidth)
+    expect(c.borderTopStyle, 'the same border style').toBe(e.borderTopStyle)
+    expect(c.borderTopStyle).not.toBe('none') // anti-vacuous: not none-matching-none
+    expect(c.borderTopColor, 'the same border role').toBe(e.borderTopColor)
+    expect(c.borderTopLeftRadius, 'the same card radius').toBe(e.borderTopLeftRadius)
+    expect(c.borderTopRightRadius, 'the radius is uniform, not just the top-left corner').toBe(e.borderTopRightRadius)
+    expect(c.backgroundColor, 'the same card surface').toBe(e.backgroundColor)
+    expect(c.backgroundColor).not.toBe('rgba(0, 0, 0, 0)') // anti-vacuous: not transparent-matching-transparent
+    expect(c.paddingBlockStart, 'block padding matches the entry-card norm (GH #191)').toBe(e.paddingBlockStart)
+    expect(c.paddingInlineStart, 'inline padding matches the entry-card norm').toBe(e.paddingInlineStart)
+    const p = getComputedStyle(panel)
+    expect(p.borderTopStyle, 'no card nested inside the card').toBe('none')
+    expect(p.paddingInlineStart, 'the panel adds no inset of its own inside the card').toBe('0px')
+  })
+
+  it('T-0306: the compact section select lines up with the Name field and sits one list gap above it', async () => {
+    const { el } = mountAgentAdmin()
+    await el.updateComplete
+    const settings = el.querySelector('ui-settings') as HTMLElement
+    await expect.poll(() => settings.hasAttribute('data-compact'), { timeout: 5000 }).toBe(true)
+    const select = settings.querySelector('[data-part="section-select"]') as HTMLElement
+    const trigger = select.querySelector('[data-part="trigger"]') as HTMLElement
+    const field = settings.querySelector('[data-part="panel"] ui-text-field') as HTMLElement
+    const panel = settings.querySelector('[data-part="panel"]') as HTMLElement
+    expect(getComputedStyle(select).display, 'the select stays: it is the only route to the Model section').not.toBe('none')
+    const t = trigger.getBoundingClientRect()
+    const f = field.getBoundingClientRect()
+    expect(t.width, 'anti-vacuous: the trigger renders').toBeGreaterThan(0)
+    expect(t.left, 'the select starts where the Name field starts').toBeCloseTo(f.left, 0)
+    expect(t.right, 'the select ends where the Name field ends').toBeCloseTo(f.right, 0)
+    const gap = panel.getBoundingClientRect().top - t.bottom
+    const listGap = parseFloat(getComputedStyle(el.querySelector('[data-part="model-grid"]') as HTMLElement).rowGap)
+    expect(listGap, 'anti-vacuous: the pane list gap resolves').toBeGreaterThan(0)
+    expect(gap, 'one list gap between the select and the field, never butting').toBeCloseTo(listGap, 0)
   })
 })
 

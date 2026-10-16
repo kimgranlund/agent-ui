@@ -3,7 +3,7 @@
  *
  *   [1] TOKEN BLOCK — `:where(ui-agent-admin)` declares ONLY `--ui-agent-admin-*`: this element's own
  *       card-chrome ink/surface/border roles, shared across every card-shaped surface it composes
- *       (model-grid/surface-row/ui-settings-panel/context-json) — the ONE piece of this element's own
+ *       (model-grid/surface-row/ui-settings card/context-json), the ONE piece of this element's own
  *       visual surface; the composed `ui-super-shell`/`ui-settings`/`ui-conversation`/`ui-switch` children
  *       keep their OWN shipped CSS untouched (the `master-detail.css` precedent). ADR-0164 cl.4 — the
  *       generic entry-list primitive's OWN style block (heading/list/entry/toggle/add-form) EXTRACTED to
@@ -86,7 +86,7 @@
   --ui-agent-admin-section-gap: var(--md-sys-space-lg); /* the pane's top-level section gap (Settings/Context content) */
   /* ADR-0164 cl.4 — the five names below are ALSO ../entry-list/entry-list.css's own dimensional
      constants (entry cards share this element's OTHER card-chrome recipe, "matched computed-for-computed"
-     per the ui-settings-panel rule's own comment below). NOT a `var(--ui-entry-list-*)` cross-reference,
+     per the ui-settings card rule's own comment below). NOT a `var(--ui-entry-list-*)` cross-reference,
      deliberately: `--ui-entry-list-*` is declared on `:where([data-part='entry-section'])`, a DESCENDANT
      of `ui-agent-admin` that exists only once `mountEntryList` appends it — custom properties inherit
      strictly downward, so a declaration here at the ANCESTOR `ui-agent-admin` root can never resolve a
@@ -98,8 +98,8 @@
      cross-scope reference. */
   --ui-agent-admin-row-gap: var(--md-sys-space-sm); /* a tight gap between adjacent inline parts within ONE row (model-row/surface-row) */
   --ui-agent-admin-list-gap: var(--md-sys-space-sm); /* vertical rhythm between stacked rows in a list (model-grid/surface-options/context tree) */
-  --ui-agent-admin-card-pad: var(--md-sys-space-sm) var(--md-sys-space-md); /* the shared card chrome padding (model-grid/settings-panel/surface-row/context-json) */
-  --ui-agent-admin-entry-radius: var(--md-sys-shape-corner-base, 0.25rem); /* the shared card chrome corner radius (model-grid/settings-panel/surface-row/context-json) */
+  --ui-agent-admin-card-pad: var(--md-sys-space-sm) var(--md-sys-space-md); /* the shared card chrome padding (model-grid/ui-settings card/surface-row/context-json) */
+  --ui-agent-admin-entry-radius: var(--md-sys-shape-corner-base, 0.25rem); /* the shared card chrome corner radius (model-grid/ui-settings card/surface-row/context-json) */
   --ui-agent-admin-provider-gap: var(--md-sys-space-xs); /* the gap above each subsequent provider-group heading in the Model grid ([data-part='model-provider']) */
   --ui-agent-admin-spacer-min-size: var(--md-sys-space-sm); /* SPEC-R11c/AC19 — the shared flex-spacer floor (surface-spacer) */
   --ui-agent-admin-detail-indent: var(--md-sys-space-md); /* GH #541 — the nested detail zone's own indent under a surface row (surface-detail) */
@@ -677,22 +677,25 @@
 
   /* The Agent config panel reads as a CARD like the entry cards beside it (Kim, design-mode
      2026-07-19) — the exact [data-part='entry'] chrome recipe (border/radius/surface/padding), matched
-     computed-for-computed (the agent-admin.browser.test.ts "matching an entry card" gate). Scoped from
-     the ADMIN, deliberately: the card language is THIS surface's own (--ui-agent-admin-* tokens); a
-     generic ui-settings consumer stays chrome-free (settings.css never gains a card opinion). The
-     `ui-settings` type selector lifts specificity to (0,1,1), beating settings.css's own
-     `[data-part='panel']` (0,1,0) padding rule — scoped-cascade law: specificity wins BEFORE
-     ui-settings' closer scope proximity is consulted (the GH #50 settings.css note documents the same
-     contract inverted). GH #191 follow-up: padding had been minted as a UNIFORM 0.75rem instead of the
-     entry card's own asymmetric 0.5rem 0.75rem — a real, measured 4px excess block-inset (12px vs. the
-     fleet card norm's 8px) that read as "more padding" than every sibling card in this pane (model-grid/
-     surface-row/entry — and since GH #222 context-json — all share the identical 0.5rem 0.75rem).
-     Repointed to match. */
-  ui-settings [data-part='panel'] {
+     computed-for-computed (the agent-admin.browser.test.ts T-0306 card gate). Scoped from the ADMIN,
+     deliberately: the card language is THIS surface's own (--ui-agent-admin-* tokens); a generic
+     ui-settings consumer stays chrome-free (settings.css never gains a card opinion). GH #191 follow-up:
+     the padding is the entry card's own asymmetric card-pad, never a uniform inset.
+     T-0306 (Kim 2026-10-16): the card frames the WHOLE `ui-settings` unit, not its generated panel, so the
+     compact section select (the only route to the T-0185 Model section) is the card's header row, the
+     way the Model card frames its header row and rows: the select drops its own inset to line up with
+     the Name field and keeps one list gap below it. The `ui-settings` type selector on the panel rule
+     lifts it to (0,1,1), beating settings.css's own `[data-part='panel']` (0,1,0) padding rule
+     (scoped-cascade law: specificity wins BEFORE ui-settings' closer scope proximity is consulted). */
+  ui-settings {
     border: 1px solid var(--ui-agent-admin-border);
     border-radius: var(--ui-agent-admin-entry-radius);
     background: var(--ui-agent-admin-surface);
     padding: var(--ui-agent-admin-card-pad);
+    --ui-settings-select-pad: 0 0 var(--ui-agent-admin-list-gap);
+  }
+  ui-settings [data-part='panel'] {
+    padding: 0;
   }
 
   /* ADR-0164 cl.4 — the generic entry-list primitive's OWN style block (entry-section/entry-list/entry/

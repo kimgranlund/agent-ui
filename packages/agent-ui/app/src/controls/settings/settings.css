@@ -23,6 +23,9 @@
   /* TKT-0066 item 5 ruling: dimensional constants route through the own chain — the STYLES block below
      never reads --md-sys-space-* directly, it mints these role-named tokens here and consumes THOSE. */
   --ui-settings-panel-pad: var(--md-sys-space-lg); /* the panel host's own content inset */
+  /* the compact section select's inset: lines up with the panel content, the panel's own top inset is the gap
+     below it. A consumer that frames the whole element (agent-admin's settings card, T-0306) repoints it. */
+  --ui-settings-select-pad: var(--ui-settings-panel-pad) var(--ui-settings-panel-pad) 0;
   --ui-settings-notice-pad-inline: var(--md-sys-space-md);
   --ui-settings-notice-pad-block: var(--md-sys-space-sm);
 }
@@ -83,7 +86,7 @@
     display: block;
     box-sizing: border-box;
     inline-size: 100%;
-    padding: var(--ui-settings-panel-pad) var(--ui-settings-panel-pad) 0;
+    padding: var(--ui-settings-select-pad);
   }
 
   /* GH #962 — below the compact line, the rail (`ui-master-detail`'s list pane) steps aside for

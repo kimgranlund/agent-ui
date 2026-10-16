@@ -728,6 +728,27 @@ describe('ui-tabs — overflow="menu": the part exists, wraps a real trigger + p
   })
 })
 
+describe('ui-tabs: overflow="menu" trigger is ghost (T-0306, both engines)', () => {
+  it('T-0306: transparent at rest, the low container wash on hover, the same round square', async () => {
+    const { tabEls, menuEl, trigger } = mountBounded(360)
+    await nextFrames()
+    expect(menuEl.hidden, 'not everything fits: the trigger is visible').toBe(false)
+    await userEvent.hover(tabEls[0]) // an earlier test's pointer can still rest where this trigger now sits
+    expect(getComputedStyle(trigger).backgroundColor, 'idle: no fill').toBe('rgba(0, 0, 0, 0)')
+    const r = trigger.getBoundingClientRect()
+    expect(r.width, 'the square stays').toBe(r.height)
+    expect(parseFloat(getComputedStyle(trigger).borderTopLeftRadius), 'the pill radius h/2 stays').toBe(r.height / 2)
+    const probe = document.createElement('div')
+    probe.style.background = 'var(--md-sys-color-neutral-container-low)'
+    document.body.append(probe)
+    const wash = getComputedStyle(probe).backgroundColor
+    probe.remove()
+    expect(wash, 'anti-vacuous: the wash role resolves').not.toBe('rgba(0, 0, 0, 0)')
+    await userEvent.hover(trigger)
+    await expect.poll(() => getComputedStyle(trigger).backgroundColor).toBe(wash)
+  })
+})
+
 describe('ui-tabs — overflow="menu": fit arithmetic is PINNED against real measurements (both engines)', () => {
   it('[MUST-PROVE] Σ(visible widths)+gaps ≤ (available − reserve); adding the next tab overflows it — the fit is tight, not slack', async () => {
     const { tabs, tabEls, strip } = mountBounded(360)
