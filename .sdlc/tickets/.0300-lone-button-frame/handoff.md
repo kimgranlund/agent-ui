@@ -2,7 +2,7 @@
 id: T-0300
 title: "A settled table frames Deal again alone in a Card: a LONE_BUTTON_FRAME check"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -25,3 +25,9 @@ Round 6 cluster E (`.sdlc/evals/rounds/2026-10-15-r6-matrix/report.md`, P3): Son
 2. The check rides every catalog through the existing `framedChoiceCheck` registration (chat-validation, the probe replay host, the domain seeds), so no host list changes.
 3. `npx vitest run packages/agent-ui/a2ui/src/catalog packages/agent-ui/a2ui/src/examples packages/agent-ui/a2ui/src/live-agent scripts/e2e-admin/probe` exits 0.
 4. `npx vitest run --project site site/pages/agent-admin-presets.test.ts` and `npm run check` exit 0.
+
+## Outcome
+
+2026-10-16 · lane: full L2 · verdict: closed by reason (Merged in the round 6 game-table lane; verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none
