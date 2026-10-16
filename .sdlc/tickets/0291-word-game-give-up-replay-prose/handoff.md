@@ -2,7 +2,7 @@
 id: T-0291
 title: "Haiku gives up and replays the word game in prose: the flowEnd rule says no A2UI, the check needs a target, and Play again frames no exemplar"
 type: bug             # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -27,3 +27,6 @@ Fog report `4095416195875afe423e60ea`, decision d3, finding f4 (T-0287). `wordMo
 
 ## Constraints
 The failing test lands before or with the fix. Sonnet's passing give-up and replay (:144, :145) stay green.
+
+## Ruling (Kim, 2026-10-16)
+Fix it in the persona text and the repair messages (frame a repair as a check result, not a system notice), never in the byte-pinned shared grammar (`packages/agent-ui/a2ui/src/agent/prompts/grammar.md`), which stays unchanged for every persona.

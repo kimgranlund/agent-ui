@@ -2,7 +2,7 @@
 id: T-0289
 title: "Haiku will not confirm a complete pre-filled booking from chat: grammar gives the final action to the user and the repair hint asks for a reference"
 type: bug             # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -27,3 +27,6 @@ Fog report `4095416195875afe423e60ea`, decision d1, findings f1 and f2 (T-0287).
 
 ## Constraints
 The failing test lands before or with the fix. A confirm on a blank required field still asks for it (T-0278).
+
+## Ruling (Kim, 2026-10-16)
+Fix it in the persona text and the repair messages (frame a repair as a check result, not a system notice), never in the byte-pinned shared grammar (`packages/agent-ui/a2ui/src/agent/prompts/grammar.md`), which stays unchanged for every persona.

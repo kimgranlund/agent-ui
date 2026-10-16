@@ -2,7 +2,7 @@
 id: T-0292
 title: "The 'What services could I add' oracle still expects ServiceCard after T-0279 ruled a priced services list ProductCard"
 type: chore           # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -23,3 +23,6 @@ The "What services could I add for the rest of my stay?" oracle agrees with Kim'
 
 ## Constraints
 The frozen round folders keep their own commands and fixtures.
+
+## Ruling (Kim, 2026-10-16)
+ProductCard. Priced, bookable add-on services ("What services could I add for the rest of my stay?") follow the T-0279 ruling: one ProductCard each with its price and a Book action. Change the scenario oracle; no skill change.

@@ -89,3 +89,4 @@
 
 - 2026-10-16 (Kim): a bookable services list uses one ProductCard per priced service, never a Table (T-0279).
 - 2026-10-16 (Kim): a facility-hours answer is one compact info Card with a DescriptionList, not a ServiceCard per facility (T-0285).
+- 2026-10-16 (Kim): priced add-on services are one ProductCard each (T-0292); grammar-driven Haiku refusals are fixed in persona and repair text, never the shared grammar (T-0289, T-0291).
