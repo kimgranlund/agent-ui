@@ -1,0 +1,764 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "admiral-surrender-board-reveal",
+  "agent": "admiral",
+  "model": "claude-opus-5-5",
+  "effort": "medium",
+  "source": "2026-10-16.jsonl:871,2026-10-16.jsonl:872,2026-10-16.jsonl:873,2026-10-16.jsonl:874 (catalog agent-ui)",
+  "steps": [
+    {
+      "say": "New game of Battleship."
+    },
+    {
+      "say": "Fire at B2."
+    },
+    {
+      "say": "Fire at B3."
+    },
+    {
+      "say": "I surrender. Reveal your fleet."
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"note\":\"New game. My fleet is hidden on the board. Pick a cell to fire.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"New game of Battleship.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":47243,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1938}],\"over\":false},\"miniSkillIds\":[\"product-presentation\",\"card-game-sheet\",\"card-layout\"],\"cacheBoundary\":45305}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"enemy-waters\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"value\":{\"hud\":{\"title\":\"Enemy waters\",\"status\":\"Your shot\",\"stats\":[{\"label\":\"Enemy ships left\",\"value\":\"3 of 3\"},{\"label\":\"Your ships left\",\"value\":\"3 of 3\"},{\"label\":\"Shots fired\",\"value\":0},{\"label\":\"Hits\",\"value\":0}]},\"sea\":{\"cells\":[]},\"secret\":{\"fleet\":[{\"row\":2,\"col\":0},{\"row\":3,\"col\":0},{\"row\":4,\"col\":0},{\"row\":0,\"col\":3},{\"row\":0,\"col\":4},{\"row\":4,\"col\":3},{\"row\":4,\"col\":4}],\"playerFleet\":[{\"row\":1,\"col\":1},{\"row\":1,\"col\":2},{\"row\":1,\"col\":3},{\"row\":3,\"col\":5},{\"row\":4,\"col\":5},{\"row\":5,\"col\":1},{\"row\":5,\"col\":2}]}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"enemy-waters\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"game\"]},{\"id\":\"game\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"sea\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":{\"path\":\"/hud/title\"},\"status\":{\"path\":\"/hud/status\"},\"statusIntent\":\"info\",\"stats\":{\"path\":\"/hud/stats\"}},{\"id\":\"sea\",\"component\":\"BoardGrid\",\"rows\":6,\"cols\":6,\"label\":\"Enemy waters\",\"actionName\":\"cell\",\"cells\":{\"path\":\"/sea/cells\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "New game. My fleet is hidden on the board. Pick a cell to fire.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "enemy-waters",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "value": {
+                        "hud": {
+                          "title": "Enemy waters",
+                          "status": "Your shot",
+                          "stats": [
+                            {
+                              "label": "Enemy ships left",
+                              "value": "3 of 3"
+                            },
+                            {
+                              "label": "Your ships left",
+                              "value": "3 of 3"
+                            },
+                            {
+                              "label": "Shots fired",
+                              "value": 0
+                            },
+                            {
+                              "label": "Hits",
+                              "value": 0
+                            }
+                          ]
+                        },
+                        "sea": {
+                          "cells": []
+                        },
+                        "secret": {
+                          "fleet": [
+                            {
+                              "row": 2,
+                              "col": 0
+                            },
+                            {
+                              "row": 3,
+                              "col": 0
+                            },
+                            {
+                              "row": 4,
+                              "col": 0
+                            },
+                            {
+                              "row": 0,
+                              "col": 3
+                            },
+                            {
+                              "row": 0,
+                              "col": 4
+                            },
+                            {
+                              "row": 4,
+                              "col": 3
+                            },
+                            {
+                              "row": 4,
+                              "col": 4
+                            }
+                          ],
+                          "playerFleet": [
+                            {
+                              "row": 1,
+                              "col": 1
+                            },
+                            {
+                              "row": 1,
+                              "col": 2
+                            },
+                            {
+                              "row": 1,
+                              "col": 3
+                            },
+                            {
+                              "row": 3,
+                              "col": 5
+                            },
+                            {
+                              "row": 4,
+                              "col": 5
+                            },
+                            {
+                              "row": 5,
+                              "col": 1
+                            },
+                            {
+                              "row": 5,
+                              "col": 2
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "enemy-waters",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "children": [
+                            "game"
+                          ]
+                        },
+                        {
+                          "id": "game",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "sea"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": {
+                            "path": "/hud/title"
+                          },
+                          "status": {
+                            "path": "/hud/status"
+                          },
+                          "statusIntent": "info",
+                          "stats": {
+                            "path": "/hud/stats"
+                          }
+                        },
+                        {
+                          "id": "sea",
+                          "component": "BoardGrid",
+                          "rows": 6,
+                          "cols": 6,
+                          "label": "Enemy waters",
+                          "actionName": "cell",
+                          "cells": {
+                            "path": "/sea/cells"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "New game of Battleship."
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "domain-lexicographer-word-board",
+          "notification-status-stack",
+          "domain-admiral-battleship-board"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "board-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "battle-rounds",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"note\":\"I fired back at C4, and that's a miss too.\\n\\nYour fleet is now on its own board below the enemy grid:\\n- **Three-cell ship:** B2–B4\\n- **Two-cell ship:** D6–E6\\n- **Two-cell ship:** F2–F3\\n\\nYour shot.\",\"target\":{\"surfaceId\":\"enemy-waters\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Fire at B2.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[\"TEXT_JSONL_IGNORED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":45305,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145}],\"over\":false},\"miniSkillIds\":[],\"cacheBoundary\":45305}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"path\":\"/sea/cells\",\"value\":[{\"row\":1,\"col\":1,\"mark\":\"✕\",\"intent\":\"neutral\",\"disabled\":true}]}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"path\":\"/hud\",\"value\":{\"title\":\"Enemy waters\",\"status\":\"Miss at B2 · Your shot\",\"stats\":[{\"label\":\"Enemy ships left\",\"value\":\"3 of 3\"},{\"label\":\"Your ships left\",\"value\":\"3 of 3\"},{\"label\":\"Shots fired\",\"value\":1,\"delta\":1},{\"label\":\"Hits\",\"value\":0}]}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"path\":\"/home/cells\",\"value\":[{\"row\":1,\"col\":1,\"mark\":\"■\",\"intent\":\"info\"},{\"row\":1,\"col\":2,\"mark\":\"■\",\"intent\":\"info\"},{\"row\":1,\"col\":3,\"mark\":\"■\",\"intent\":\"info\"},{\"row\":3,\"col\":5,\"mark\":\"■\",\"intent\":\"info\"},{\"row\":4,\"col\":5,\"mark\":\"■\",\"intent\":\"info\"},{\"row\":5,\"col\":1,\"mark\":\"■\",\"intent\":\"info\"},{\"row\":5,\"col\":2,\"mark\":\"■\",\"intent\":\"info\"},{\"row\":2,\"col\":3,\"mark\":\"✕\",\"intent\":\"neutral\"}]}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"enemy-waters\",\"components\":[{\"id\":\"game\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"sea\",\"home\"]},{\"id\":\"home\",\"component\":\"BoardGrid\",\"rows\":6,\"cols\":6,\"label\":\"Your waters\",\"cells\":{\"path\":\"/home/cells\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"enemy-waters\"}}}B2 is a miss.\n\nI fired back at C4, and that's a miss too.\n\nYour fleet is now on its own board below the enemy grid:\n- **Three-cell ship:** B2–B4\n- **Two-cell ship:** D6–E6\n- **Two-cell ship:** F2–F3\n\nYour shot.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "B2 is a miss, and so is my return shot at C4. Your fleet is now shown below. Your shot.",
+                "target": "enemy-waters",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "path": "/sea/cells",
+                      "value": [
+                        {
+                          "row": 1,
+                          "col": 1,
+                          "mark": "✕",
+                          "intent": "neutral",
+                          "disabled": true
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "path": "/hud",
+                      "value": {
+                        "title": "Enemy waters",
+                        "status": "Miss at B2 · Your shot",
+                        "stats": [
+                          {
+                            "label": "Enemy ships left",
+                            "value": "3 of 3"
+                          },
+                          {
+                            "label": "Your ships left",
+                            "value": "3 of 3"
+                          },
+                          {
+                            "label": "Shots fired",
+                            "value": 1,
+                            "delta": 1
+                          },
+                          {
+                            "label": "Hits",
+                            "value": 0
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "path": "/home/cells",
+                      "value": [
+                        {
+                          "row": 1,
+                          "col": 1,
+                          "mark": "■",
+                          "intent": "info"
+                        },
+                        {
+                          "row": 1,
+                          "col": 2,
+                          "mark": "■",
+                          "intent": "info"
+                        },
+                        {
+                          "row": 1,
+                          "col": 3,
+                          "mark": "■",
+                          "intent": "info"
+                        },
+                        {
+                          "row": 3,
+                          "col": 5,
+                          "mark": "■",
+                          "intent": "info"
+                        },
+                        {
+                          "row": 4,
+                          "col": 5,
+                          "mark": "■",
+                          "intent": "info"
+                        },
+                        {
+                          "row": 5,
+                          "col": 1,
+                          "mark": "■",
+                          "intent": "info"
+                        },
+                        {
+                          "row": 5,
+                          "col": 2,
+                          "mark": "■",
+                          "intent": "info"
+                        },
+                        {
+                          "row": 2,
+                          "col": 3,
+                          "mark": "✕",
+                          "intent": "neutral"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "enemy-waters",
+                      "components": [
+                        {
+                          "id": "game",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "sea",
+                            "home"
+                          ]
+                        },
+                        {
+                          "id": "home",
+                          "component": "BoardGrid",
+                          "rows": 6,
+                          "cols": 6,
+                          "label": "Your waters",
+                          "cells": {
+                            "path": "/home/cells"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "Fire at B2."
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "domain-admiral-battleship-board",
+          "frontier-product-card-rooms",
+          "restaurant-menu"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "board-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "battle-rounds",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"note\":\"My return fire went to B4 and hit your three-cell ship. It's damaged but still afloat. You still have 3 ships, and so do I.\\n\\nYour shot.\",\"target\":{\"surfaceId\":\"enemy-waters\"},\"trace\":{\"turnIndex\":4,\"query\":{\"intent\":\"Fire at B3.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[\"TEXT_JSONL_IGNORED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":45305,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145}],\"over\":false},\"miniSkillIds\":[],\"cacheBoundary\":45305}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"path\":\"/sea/cells\",\"value\":[{\"row\":1,\"col\":1,\"mark\":\"✕\",\"intent\":\"neutral\",\"disabled\":true},{\"row\":1,\"col\":2,\"mark\":\"✕\",\"intent\":\"neutral\",\"disabled\":true}]}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"path\":\"/hud\",\"value\":{\"title\":\"Enemy waters\",\"status\":\"Miss at B3 · Your shot\",\"stats\":[{\"label\":\"Enemy ships left\",\"value\":\"3 of 3\"},{\"label\":\"Your ships left\",\"value\":\"3 of 3\"},{\"label\":\"Shots fired\",\"value\":2,\"delta\":1},{\"label\":\"Hits\",\"value\":0}]}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"path\":\"/home/cells\",\"value\":[{\"row\":1,\"col\":1,\"mark\":\"■\",\"intent\":\"info\"},{\"row\":1,\"col\":2,\"mark\":\"■\",\"intent\":\"info\"},{\"row\":1,\"col\":3,\"mark\":\"●\",\"intent\":\"danger\"},{\"row\":3,\"col\":5,\"mark\":\"■\",\"intent\":\"info\"},{\"row\":4,\"col\":5,\"mark\":\"■\",\"intent\":\"info\"},{\"row\":5,\"col\":1,\"mark\":\"■\",\"intent\":\"info\"},{\"row\":5,\"col\":2,\"mark\":\"■\",\"intent\":\"info\"},{\"row\":2,\"col\":3,\"mark\":\"✕\",\"intent\":\"neutral\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"enemy-waters\"}}}Your shot at B3 is a miss.\n\nMy return fire went to B4 and hit your three-cell ship. It's damaged but still afloat. You still have 3 ships, and so do I.\n\nYour shot.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "B3 missed. My shot at B4 hit your three-cell ship. Your turn.",
+                "target": "enemy-waters",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "path": "/sea/cells",
+                      "value": [
+                        {
+                          "row": 1,
+                          "col": 1,
+                          "mark": "✕",
+                          "intent": "neutral",
+                          "disabled": true
+                        },
+                        {
+                          "row": 1,
+                          "col": 2,
+                          "mark": "✕",
+                          "intent": "neutral",
+                          "disabled": true
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "path": "/hud",
+                      "value": {
+                        "title": "Enemy waters",
+                        "status": "Miss at B3 · Your shot",
+                        "stats": [
+                          {
+                            "label": "Enemy ships left",
+                            "value": "3 of 3"
+                          },
+                          {
+                            "label": "Your ships left",
+                            "value": "3 of 3"
+                          },
+                          {
+                            "label": "Shots fired",
+                            "value": 2,
+                            "delta": 1
+                          },
+                          {
+                            "label": "Hits",
+                            "value": 0
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "path": "/home/cells",
+                      "value": [
+                        {
+                          "row": 1,
+                          "col": 1,
+                          "mark": "■",
+                          "intent": "info"
+                        },
+                        {
+                          "row": 1,
+                          "col": 2,
+                          "mark": "■",
+                          "intent": "info"
+                        },
+                        {
+                          "row": 1,
+                          "col": 3,
+                          "mark": "●",
+                          "intent": "danger"
+                        },
+                        {
+                          "row": 3,
+                          "col": 5,
+                          "mark": "■",
+                          "intent": "info"
+                        },
+                        {
+                          "row": 4,
+                          "col": 5,
+                          "mark": "■",
+                          "intent": "info"
+                        },
+                        {
+                          "row": 5,
+                          "col": 1,
+                          "mark": "■",
+                          "intent": "info"
+                        },
+                        {
+                          "row": 5,
+                          "col": 2,
+                          "mark": "■",
+                          "intent": "info"
+                        },
+                        {
+                          "row": 2,
+                          "col": 3,
+                          "mark": "✕",
+                          "intent": "neutral"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "Fire at B3."
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "domain-admiral-battleship-board",
+          "frontier-product-card-rooms",
+          "restaurant-menu"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "board-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "battle-rounds",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"note\":\"- **Three-cell ship:** C1–E1\\n- **Two-cell ship:** A4–A5\\n- **Two-cell ship:** E4–E5\\n\\nNone of your shots hit. Both of them landed in row B, and I had no ships there. Want a rematch?\",\"target\":{\"surfaceId\":\"enemy-waters\"},\"trace\":{\"turnIndex\":6,\"query\":{\"intent\":\"I surrender. Reveal your fleet.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[\"TEXT_JSONL_IGNORED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":45305,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145}],\"over\":false},\"miniSkillIds\":[],\"cacheBoundary\":45305}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"path\":\"/sea/cells\",\"value\":[{\"row\":1,\"col\":1,\"mark\":\"✕\",\"intent\":\"neutral\",\"disabled\":true},{\"row\":1,\"col\":2,\"mark\":\"✕\",\"intent\":\"neutral\",\"disabled\":true},{\"row\":2,\"col\":0,\"mark\":\"■\",\"intent\":\"warning\",\"disabled\":true},{\"row\":3,\"col\":0,\"mark\":\"■\",\"intent\":\"warning\",\"disabled\":true},{\"row\":4,\"col\":0,\"mark\":\"■\",\"intent\":\"warning\",\"disabled\":true},{\"row\":0,\"col\":3,\"mark\":\"■\",\"intent\":\"warning\",\"disabled\":true},{\"row\":0,\"col\":4,\"mark\":\"■\",\"intent\":\"warning\",\"disabled\":true},{\"row\":4,\"col\":3,\"mark\":\"■\",\"intent\":\"warning\",\"disabled\":true},{\"row\":4,\"col\":4,\"mark\":\"■\",\"intent\":\"warning\",\"disabled\":true}]}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"path\":\"/hud\",\"value\":{\"title\":\"Enemy waters\",\"status\":\"Surrendered · Fleet revealed\",\"stats\":[{\"label\":\"Enemy ships left\",\"value\":\"3 of 3\"},{\"label\":\"Your ships left\",\"value\":\"3 of 3\"},{\"label\":\"Shots fired\",\"value\":2},{\"label\":\"Hits\",\"value\":0}]}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"enemy-waters\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":{\"path\":\"/hud/title\"},\"status\":{\"path\":\"/hud/status\"},\"statusIntent\":\"neutral\",\"stats\":{\"path\":\"/hud/stats\"}},{\"id\":\"sea\",\"component\":\"BoardGrid\",\"rows\":6,\"cols\":6,\"label\":\"Enemy waters (revealed)\",\"cells\":{\"path\":\"/sea/cells\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"enemy-waters\"}}}Surrender accepted. You fought well. Here's where my fleet was. I've revealed it on the enemy board and locked the grid:\n\n- **Three-cell ship:** C1–E1\n- **Two-cell ship:** A4–A5\n- **Two-cell ship:** E4–E5\n\nNone of your shots hit. Both of them landed in row B, and I had no ships there. Want a rematch?",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "target": "enemy-waters",
+                "reply": "You surrendered. My fleet is now shown on the enemy board.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "path": "/sea/cells",
+                      "value": [
+                        {
+                          "row": 1,
+                          "col": 1,
+                          "mark": "✕",
+                          "intent": "neutral",
+                          "disabled": true
+                        },
+                        {
+                          "row": 1,
+                          "col": 2,
+                          "mark": "✕",
+                          "intent": "neutral",
+                          "disabled": true
+                        },
+                        {
+                          "row": 2,
+                          "col": 0,
+                          "mark": "■",
+                          "intent": "warning",
+                          "disabled": true
+                        },
+                        {
+                          "row": 3,
+                          "col": 0,
+                          "mark": "■",
+                          "intent": "warning",
+                          "disabled": true
+                        },
+                        {
+                          "row": 4,
+                          "col": 0,
+                          "mark": "■",
+                          "intent": "warning",
+                          "disabled": true
+                        },
+                        {
+                          "row": 0,
+                          "col": 3,
+                          "mark": "■",
+                          "intent": "warning",
+                          "disabled": true
+                        },
+                        {
+                          "row": 0,
+                          "col": 4,
+                          "mark": "■",
+                          "intent": "warning",
+                          "disabled": true
+                        },
+                        {
+                          "row": 4,
+                          "col": 3,
+                          "mark": "■",
+                          "intent": "warning",
+                          "disabled": true
+                        },
+                        {
+                          "row": 4,
+                          "col": 4,
+                          "mark": "■",
+                          "intent": "warning",
+                          "disabled": true
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "path": "/hud",
+                      "value": {
+                        "title": "Enemy waters",
+                        "status": "Surrendered · Fleet revealed",
+                        "stats": [
+                          {
+                            "label": "Enemy ships left",
+                            "value": "3 of 3"
+                          },
+                          {
+                            "label": "Your ships left",
+                            "value": "3 of 3"
+                          },
+                          {
+                            "label": "Shots fired",
+                            "value": 2
+                          },
+                          {
+                            "label": "Hits",
+                            "value": 0
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "enemy-waters",
+                      "components": [
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": {
+                            "path": "/hud/title"
+                          },
+                          "status": {
+                            "path": "/hud/status"
+                          },
+                          "statusIntent": "neutral",
+                          "stats": {
+                            "path": "/hud/stats"
+                          }
+                        },
+                        {
+                          "id": "sea",
+                          "component": "BoardGrid",
+                          "rows": 6,
+                          "cols": 6,
+                          "label": "Enemy waters (revealed)",
+                          "cells": {
+                            "path": "/sea/cells"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "I surrender. Reveal your fleet."
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "domain-admiral-battleship-board",
+          "backable-wizard",
+          "frontier-breadcrumb-trail"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "board-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "battle-rounds",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}

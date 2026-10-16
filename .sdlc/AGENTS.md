@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:7a30ba31c9eb -->
+<!-- sdlc-lite:managed:start v1 sha256:e6e2ea8bb465 -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -20,7 +20,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0197 BookingForm field kinds (dateRange, radio, time, stepper) and sharing it with the Maitre d' (0197-bookingform-kinds)
   - T-0198 Step flow pattern: step n of m, Back and Next, shared /draft data (0198-step-flow)
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (0199-itinerary-compare)
-- ready: 20
+- ready: 15
   - T-0160 Agent content as files: extract preset and pack seeds to .md manifests with a generated, drift-gated registry (0160-agent-content-files)
   - T-0161 Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind (0161-agent-content-overlays)
   - T-0162 Settings pane forms generated from each content kind's schema, with provenance, diff and reset (0162-agent-content-schema-forms)
@@ -36,15 +36,10 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0209 One source per concept: layer membership, calibration bullets, persona list; mini-skill ranking stability test (0209-context-single-source)
   - T-0246 Docs-page persona exemplar fixtures carry the same game and booking defects as the seeds (0246-persona-exemplar-fixture-defects)
   - T-0247 validate-payload --catalog cannot load persona catalog ids (<base>--<persona>) (0247-validate-payload-persona-ids)
-  - T-0289 Haiku will not confirm a complete pre-filled booking from chat: grammar gives the final action to the user and the repair hint asks for a reference (0289-haiku-confirm-refuses-chat-submit)
-  - T-0290 A booking form built as a feed ask: FEED_SCOPE and BOOKING_FORM_MISSING push opposite ways and the SURFACE_DROPPED halt leaks the ask id (0290-booking-form-on-feed-ask)
-  - T-0291 Haiku gives up and replays the word game in prose: the flowEnd rule says no A2UI, the check needs a target, and Play again frames no exemplar (0291-word-game-give-up-replay-prose)
-  - T-0292 The 'What services could I add' oracle still expects ServiceCard after T-0279 ruled a priced services list ProductCard (0292-services-oracle-servicecard)
-  - T-0293 A BookingForm with dotted field paths renders blank, and the T-0278 hold then lets a prose 'is booked' pass with no code (0293-booking-form-dotted-paths)
 - claimed: 0
 - paused: 0
 - blocked: 0
-- done: 259
+- done: 266
 - dropped: 4
 
 ## Procedures

@@ -90,3 +90,6 @@
 - 2026-10-16 (Kim): a bookable services list uses one ProductCard per priced service, never a Table (T-0279).
 - 2026-10-16 (Kim): a facility-hours answer is one compact info Card with a DescriptionList, not a ServiceCard per facility (T-0285).
 - 2026-10-16 (Kim): priced add-on services are one ProductCard each (T-0292); grammar-driven Haiku refusals are fixed in persona and repair text, never the shared grammar (T-0289, T-0291).
+
+## 2026-10-16: Admiral surrender (T-0294 round 6, cluster A)
+- Kim: a battleship surrender ends like a normal game end: one ResultCard (the loss, shots, a Play again action) with the revealed board kept beside it. Teach it in the board-grid End state and add a check.
