@@ -20,3 +20,8 @@ Kim 2026-10-16 (P7 allowed, P3 as revised): the dev trace records what reached t
 
 ## Done when
 - Tests for each part, red at the base; the trace and live-agent tests and `npm run check` exit 0; the fog bundle mapping can read the new fields.
+
+## Lane bundle
+- T-0309: infer flowEnd when a turn declares no ask and no surface (N1). Handoff `.sdlc/tickets/0309-flowend-inference/handoff.md`.
+- T-0310: force render_surface with thinking off on round 1 of Haiku click turns (R8). Handoff `.sdlc/tickets/0310-haiku-round1-forced-tool/handoff.md`.
+- T-0311: dev-trace prompt store, stopReason and max_tokens per round, max_tokens tier floor (P3, P7). This handoff.
