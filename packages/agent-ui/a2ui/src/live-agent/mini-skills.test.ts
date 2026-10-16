@@ -263,6 +263,15 @@ describe('structured-container — the SPEC-R8 taught tier (a2ui-container-vocab
     expect(result.map((m) => m.id)).toContain('structured-container')
   })
 
+  // T-0313 (round 5 :106): its booking words framed this hand-built Card on the Haiku confirm turn, against the
+  // BookingConfirmation check; a booking confirm is the BookingConfirmation's moment, so the triggers carry no booking words.
+  it('T-0313: a booking confirm turn never selects it; a trip summary turn still does', () => {
+    for (const turn of ['Those details are right, please confirm the booking.', 'Yes, confirm the reservation.', 'Show me the booking confirmation.']) {
+      expect(selectMiniSkills(turn, MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui--concierge').map((m) => m.id), turn).not.toContain('structured-container')
+    }
+    expect(selectMiniSkills('a summary card for the trip', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui').map((m) => m.id)).toContain('structured-container')
+  })
+
   it('does NOT fire on a playing-card intent (card-layout\'s own vocabulary)', () => {
     const result = selectMiniSkills('deal me a card game hand', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
     expect(result.map((m) => m.id)).not.toContain('structured-container')

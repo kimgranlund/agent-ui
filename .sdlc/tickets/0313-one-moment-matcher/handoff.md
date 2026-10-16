@@ -21,3 +21,11 @@ One solo lane (wave-gr), one commit per ticket, in order:
 1. T-0308: drop the reference-Badge example from the grammar and the library text (`.sdlc/tickets/0308-grammar-drop-reference-badge/`).
 2. T-0312: persona type-name lint, Croupier reword, pin tests per ruling, committed audit mapping (`.sdlc/tickets/0312-persona-type-name-lint/`).
 3. T-0313: one matcher per composite moment, the structured-container trigger fix, the Play again vocabulary fix (this ticket).
+
+## Acceptance criteria
+- (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts -t "ask cue"` exits 0: the BookingConfirmation, ProductCard and BookingForm rows carry the Concierge ask cues (confirm, services, booking) in that precedence, each matching its round-scenario sentence. The facility ask stays local to `personas/concierge/checks.ts`: its answer (one Card holding a DescriptionList) is no composite, so no row owns it.
+- `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog` exits 0 with `personas/concierge/checks.test.ts` unchanged: every Concierge moment resolves with the same finding path and message as before.
+- `npx vitest run --project scripts scripts/e2e-admin/probe` exits 0 (the Concierge replays unchanged).
+- (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/mini-skills.test.ts -t "confirm turn"` exits 0: structured-container is not selected on a booking confirm turn; a trip summary turn still selects it.
+- `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent` exits 0 (agent-assets freshness; the prompt-equivalence baseline recaptured deliberately only if the trigger edit moves it).
+- `npm run check` exits 0.

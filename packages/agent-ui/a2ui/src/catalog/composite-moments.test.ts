@@ -312,3 +312,27 @@ describe('composite moment checks (T-0208)', () => {
     for (const [i, m] of COMPOSITE_MOMENTS.entries()) expect(compositeMomentChecks[i]!.requires).toEqual([m.composite, ...(m.requires ?? [])])
   })
 })
+
+// T-0313 (Kim 2026-10-16, P1 as revised): a composite moment has one matcher. The row that detects a hand-built surface
+// also carries the turn words that ask for it, which the Concierge SURFACE_MISSING check reads (it held its own regexes).
+describe('the rows carry the ask cue of each Concierge composite moment (T-0313)', () => {
+  const asked = () => COMPOSITE_MOMENTS.filter((m) => m.ask !== undefined).sort((a, b) => a.ask!.rank - b.ask!.rank)
+
+  it('the ask cue rows, in precedence order, are the confirm, the services list and the booking', () => {
+    expect(asked().map((m) => [m.ask!.moment, m.composite])).toEqual([
+      ['confirm', 'BookingConfirmation'],
+      ['services', 'ProductCard'],
+      ['booking', 'BookingForm'],
+    ])
+  })
+
+  it.each([
+    ['BookingConfirmation', 'Those details are right, please confirm the booking.'],
+    ['BookingConfirmation', 'Confirm it, the details are right.'],
+    ['ProductCard', 'What spa services can I book during my stay?'],
+    ['BookingForm', "I'd like a table at Vela on Friday 20 November 2026 at 20:00 for two, name Alex Moreau."],
+  ])('the %s ask cue matches "%s"', (composite, turn) => {
+    expect(asked().find((m) => m.ask!.cue.test(turn))?.composite).toBe(composite)
+  })
+})
+
