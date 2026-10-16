@@ -192,7 +192,7 @@ The arc's ordering, cheapest-correct-first:
    agent-closed-loop SPEC CL-R2.
 6. **Haiku reads shared-grammar lines literally.** In live round 5 it refused a complete booking because
    `grammar.md` says "let the USER take the final action" (cluster A, T-0289), and shipped no surface on a
-   word-game give-up because "flow-ending turns emit no UI" (cluster C, T-0291); Sonnet read the same lines
+   word-game give-up because, in its own words, "flow-ending turns emit no UI" (its reading of `grammar.md:92`, "no UI change"; cluster C, T-0291); Sonnet read the same lines
    as intended. Kim's ruling (2026-10-16): fix it in the persona text and the repair messages, never in the
    byte-pinned grammar, which stays the same for every persona. Persona text (`surfaceStyle`, `foundation`,
    `houseFacts`) may not name a compound catalog type: the modality lint in
