@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * scripts/reap-worktrees.mjs — gated reap of provably-finished lane worktrees (`.claude/worktrees/` and
+ * scripts/reap-worktrees.mjs: gated reap of provably-finished lane worktrees (`.claude/worktrees/` and
  * sdlc-lite 0.24's sibling `../<repo>.worktrees/`, T-0288).
  * Sibling of `scripts/reap-branches.mjs` (same propose-by-default / `--execute` shape, the same
  * exit contract, the same selftest discipline) — GH #1440, the load-108 incident (2026-08-19/20):
@@ -23,11 +23,11 @@
  *       lane-kill incident class this script must never repeat).
  *
  * Only entries physically under `<repo-root>/.claude/worktrees/` or `<repo-root>.worktrees/` (see
- * `lib/worktree-roots.mjs`) are ever candidates — the main checkout (and any worktree registered
+ * `lib/worktree-roots.mjs`) are ever candidates: the main checkout (and any worktree registered
  * elsewhere) is never touched, never even listed.
  *
  * Refuses to run (exit 2) when `.claude/worktrees/` exists without its
- * `.metadata_never_index` — that marker keeps Spotlight/Time Machine from re-indexing every live
+ * `.metadata_never_index`: that marker keeps Spotlight/Time Machine from re-indexing every live
  * lane tree across machines, and a reap cycle silently proceeding without it would defeat its
  * own purpose. The sibling root sits outside the repo (sdlc-lite creates no marker there), so it
  * is listed with a warning when its marker is absent, never refused.
