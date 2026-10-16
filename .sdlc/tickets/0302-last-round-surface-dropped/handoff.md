@@ -22,3 +22,7 @@ Round 6 cluster D (`.sdlc/evals/rounds/2026-10-15-r6-matrix/report.md`) :170, Ha
 ## Done when
 - A keyless replay or produce test built from :170 (BOOKING_FORM_MISSING, PARSE, then the drop) ships a surface with a tally code and no SURFACE_DROPPED halt; red at the base.
 - The live-agent, concierge and probe suites and `npm run check` exit 0.
+
+## Lane bundle
+- T-0301: A forced render_surface repair round turns thinking off so the forced tool reaches the model (`.sdlc/tickets/0301-forced-repair-thinking-off`)
+- T-0302: The last repair round halts with SURFACE_DROPPED and ships nothing (`.sdlc/tickets/0302-last-round-surface-dropped`)
