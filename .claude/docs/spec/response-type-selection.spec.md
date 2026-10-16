@@ -127,9 +127,10 @@ A2UI v1.0 `updateComponents` adds or updates components by id and sets no send-o
 
 ### RTS-P2: a retry never silently loses a surface
 
-At the top of each self-correct round, `produce()` takes the session-new surfaces the failed round created that no failure path names (`surfacesToKeep`), and the repair message asks to keep them by id. A later round that validates without one of them is not a success: it spends one `SURFACE_DROPPED` round naming the id, and on the last round halts with `SURFACE_DROPPED`. A surface a failure does name (an abandoned `createSurface`, a NET_NOOP) may be dropped by the repair.
+At the top of each self-correct round, `produce()` takes the session-new surfaces the failed round created that no failure path names (`surfacesToKeep`), and the repair message asks to keep them by id. A later round that validates without one of them is not a success: it spends one `SURFACE_DROPPED` round naming the id, and on the last round halts with `SURFACE_DROPPED`. A surface a failure does name (an abandoned `createSurface`, a NET_NOOP) may be dropped by the repair. T-0281: a repair round that answers in prose alone, with no payload, after an earlier round of the turn built a surface it kept to its end (failure-named or not, the FEED_SCOPE retry's `ask-1`), is not a success either: the same `SURFACE_DROPPED` round names those ids, its hint says to resend the surface (as an ordinary surface with no `ask` when FEED_SCOPE sent it back), and the last round halts.
 
 - AC3: a scripted turn whose round 1 creates `ask-1` beside a failing change to `greet-1`, and whose round 2 ships only `greet-1`, retries with `SURFACE_DROPPED at ask-1` or halts (`produce-response-type.test.ts`, the T-0172 block).
+- AC3a (T-0281): a FEED_SCOPE retry with no payload after a round 1 that built `ask-1` retries with `SURFACE_DROPPED at ask-1` or halts (`produce-loop.test.ts`, the FEED_SCOPE block).
 - AC4: a retry that keeps every such surface ships as before; the repair hint appears only when the failed payload touched two or more surfaces.
 
 ### RTS-P3: structured tool input; `strict` not used
