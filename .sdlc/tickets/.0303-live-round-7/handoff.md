@@ -2,7 +2,7 @@
 id: T-0303
 title: "Live round 7: rerun round 6's 11 fails plus Haiku long flows ($6 cap)"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0296, T-0297, T-0298, T-0299, T-0300, T-0301, T-0302]          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -38,3 +38,15 @@ No prompt or code fixes in this ticket. Screenshots stay out of the repo.
 - `python3 -c "import json,sys; r=json.load(open('.sdlc/evals/fog/2026-10-16-r7-fails.json')); sys.exit(0 if len(r['reportId']) == 24 and r['round'] == '2026-10-16-r7-fails' else 1)"` exits 0, and `library.py list` holds that report id.
 - `npx vitest run scripts/e2e-admin/probe` exits 0 (round 7 generator pin and the two round 7 replays).
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-16 · lane: full L2 · verdict: closed by reason (Round 7: 12 of 15 pass, $4.03 of $6; T-0296 and T-0298+T-0301 fixed live, T-0297/0299/0300/0302 not exercised; fog 1e10193208c4414271381d65; verifier L2 pass) · verifier: verifier-L2 (sonnet) · base: 710ca0f79edf
+- Changed: see commits
+- Commits: a01d1ff T-0303: acceptance criteria for the verifier; a078faa T-0303: live round 7 report, fog decision analysis and replays; 4ecdef5 T-0303: Live round 7: rerun round 6's 11 fails plus Haiku long flows ($6 cap)
+- Check: 1 round folder complete: pass
+- Check: 2 spend at or under $6: pass
+- Check: 3 `## Round 6 fixes, live` table, T-0296 to T-0302 each with verdict and trace cites: pass
+- Check: 4 fog report record: pass
+- Check: 5 `npx vitest run scripts/e2e-admin/probe`: pass
+- Check: 6 `npm run check`: pass

@@ -1,7 +1,7 @@
 ---
 id: W-fog-skill-contract-audit
 title: "context-fog-of-war: a static contract audit of a harness's guidance surfaces (catalogs, schemas, skills, prompts, checks, corpus)"
-status: ready
+status: done
 size: L3
 created: 2026-10-16
 ---
