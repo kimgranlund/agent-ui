@@ -90,6 +90,36 @@ No probe check counts BookingConfirmations, so these were counted by hand from t
 - **Guidance conflict:** T-0279 (ServiceCard or ProductCard for a priced services list). It needs a ruling.
 - **Existing:** T-0189 (PlayingCard type floor) still fails every Opus Omaha turn.
 
+## Why it failed and how to fix it
+Decision analysis with the context-fog-of-war skill, fog report `ffe6d0ef720852da99edbff0` (decisions d1 to d5, findings f1 to f6, every citation an exact excerpt of a trace line event). Each failed run is assigned to every cluster with a failing check in it: 18 runs fail on one cluster only, 8 on two or three (A with B on 6, A with C on 1, A, B and C on 1).
+
+What the traces rule out: retrieved and framed exemplars match on 217 of 217 lines, and all 10 tool results on the 9 integration lines were submitted to the next request, so no failure is an exemplar or tool result dropped on the way to the model. The exposure that differs between a passing and a failing turn is which guidance is loaded in full (mini-skills, persona, a reference loaded `full`) against what is only an index line (every skill and workflow is `index-only` on every turn this round).
+
+| Cluster | Runs (any / only) | Class | Evidence | Fix layer | File | Keyless test that proves it | Ticket |
+|---|---|---|---|---|---|---|---|
+| A. Services list and facility hours never draw the oracle's ServiceCard | 15 / 7 | (b) conflicting guidance, with (a) exposure: both ServiceCard skills are index-only | :6 Haiku Table and :129 Sonnet ProductCard grid have the same routing (`amenity-service-card` index-only, `product-presentation` in miniSkills, same 3 exemplars), fog g1a. :153 DescriptionList with `facility-info-card` index-only and the knowledge base `full`, g1c | Loaded guidance plus the scenario oracle. Editing the index-only skill alone cannot move a live turn | `mini-skills/product-presentation.md`, `catalog/composite-moments.ts`, `agent-admin-libraries.ts` skills, `agent-admin-presets.ts:332` surfaceStyle; oracles in `scenarios/{concierge,routing,round3,round4}.ts` | `composite-moments.test.ts` row that fails on a Table and passes on a ProductCard grid; `npx vitest run scripts/e2e-admin/probe/scenarios` pinning the retargeted oracles | T-0279 (services, ruled ProductCard; its Done when does not list the 6 oracles yet), T-0285 (facility hours, new) |
+| B. Confirm turn on an incomplete or unmatched booking | 9 / 2 | (d) scenario and check defects | :187 "Which 60-minute massage should I book?" after a blank-treatment form (explicit, g2a); :115 SURFACE_MISSING demands a BookingConfirmation over a refusal, 3 rounds, uncorrected (g2b); :84 "Confirm it" booked in prose, no code (g2c) | Scenario generator; concierge checks | `scenarios/*.ts` spa asks; `catalog/personas/concierge/checks.ts` | scenarios test (every spa ask names Swedish massage); concierge `checks.test.ts`: blank-field confirm raises no code, complete one does, three new phrases fire | T-0277, T-0278, T-0282 |
+| C. A repair round loses or corrupts the surface | 3 / 1 | (d) check defects | :46 NATURAL_ACTIONS twice on hold'em; round 2 refuses ("two cards don't end the hand"), round 3 settles it as blackjack, table-1 never ships (g3a). :24 FEED_SCOPE retry accepted with no surface, then :25 BOOKING_FORM_MISSING (g3b) | Check gate; retry acceptance in produce | `catalog/personas/croupier/checks.ts`; `agent/produce.ts` | croupier checks test (hold'em, Omaha, stud A K: no NATURAL_ACTIONS; blackjack natural: fires); produce test (FEED_SCOPE retry with no surface after a surface round 1 is not accepted); replays `croupier-haiku-holdem-natural`, `concierge-haiku-feed-scope-drop` | T-0276, T-0281 |
+| D. Haiku game moves in prose, no check sends them back | 6 / 6 | (c) model ignored clear, loaded guidance | :87 Haiku and :159 Sonnet "My guess: audio." frame the same word-board exemplar with the same references; Haiku sends a note and no update (g4a). :89 "The board now shows the result." with no surface, :161 Sonnet ships ResultCard (g4b). :101 opening with BoardGrid and no GameHud, battleship exemplar the only one framed | A check (more context will not help: the guidance is already framed) | a Lexicographer word-board check (none today); the Admiral GameHud check | checks test: a guess or give-up with no board update is sent back, an updating guess passes; a battleship opening without GameHud is sent back; replay `lexicographer-haiku-guess-prose` | T-0280, T-0284 |
+| E. Opus poker leftovers | 2 / 2 | (d) scenario defect and an existing lint | :210 Opus calls the house bet for the player on the fourth check; :211 "Round 1 is over, so I'm treating that as "deal again."" (g5a). Omaha render-lint is in `runs/*/report.json`, outside the fog bundle; the trace shows only that PlayingCard shipped (:196) | Scenario generator; the playing-card type floor | `scenarios/croupier.ts:101`; ui-playing-card | `croupier.test.mjs` pins the stud steps to the betting rounds | T-0283, T-0189 |
+
+Representative turns, exposure chain as recorded on the trace line (observed). Exemplars are `events.framedExemplarIds` (equal to `retrieval.chunkIds` on every line); references not listed are `index-only`.
+
+| Turn | Model | Framed exemplars | Mini-skills | Loaded `full` | Retry codes, rounds | Shipped |
+|---|---|---|---|---|---|---|
+| :6 services | Haiku | concierge-booking-request, service-gateway, backable-wizard | greeting-card, product-presentation | none | none, 1 | Table |
+| :129 services | Sonnet | same as :6 | same as :6 | none | none, 1 | Grid of ProductCard |
+| :153 facility hours | Sonnet | concierge-booking-request, service-gateway, booking-reservation | greeting-card, nested-record-editor, feature-collection | property-knowledge-base | none, 1 | Card with DescriptionList |
+| :115 spa confirm | Haiku | service-gateway, concierge-booking-request, booking-receipt | feature-collection, structured-container, greeting-card | none | FLOW_END_MISSING, SURFACE_MISSING, 3 | nothing (prose refusal) |
+| :84 tour confirm | Haiku | service-gateway, concierge-booking-request, confirmation-view | feature-collection, greeting-card | property-knowledge-base | none, 1 | nothing ("is booked" in prose) |
+| :46 hold'em opening | Haiku | croupier-card-table-round, round-outcome, wallet-summary-card | card-game-sheet, card-layout, login-form | texas-holdem | NATURAL_ACTIONS x2, 3 | table-1 built, never shipped |
+| :24 Vela table | Haiku | concierge-booking-request, service-gateway, result-card-win | master-detail-split, feature-collection, table-toolbar-pagination | none | FEED_SCOPE, 2 | nothing (ask-1 dropped) |
+| :87 / :159 guess | Haiku / Sonnet | lexicographer-word-board, media-tour, wallet-summary-card | none | none | none, 1 | Haiku nothing; Sonnet board update |
+| :89 / :161 give-up | Haiku / Sonnet | lexicographer-game-over, travel-itinerary, support-ticket-close-then-new | login-form, form-rhythm, greeting-card | none | none, 1 | Haiku nothing; Sonnet ResultCard |
+| :211 stud | Opus | croupier-card-table-round, booking-reservation, button-icon-actions | game-hud | seven-card-stud | none, 1 | nothing (round 2 opened in prose) |
+
+Observed against inferred: the routing, codes, rounds and shipped components above are recorded. Inferred, and marked so in the fog findings: that the persona's houseFacts rows pull the services list toward a Table and its `surfaceStyle` line toward a DescriptionList for hours (the trace records the persona section size, not its text; the text is unchanged since `5a803d13`), and that only a check, not more context, moves Haiku in cluster D (the guidance is already framed and Sonnet passes on it).
+
 ## Spend (ledger.jsonl, list prices, an overestimate)
 | Model | Runs | Passed | USD |
 |---|---|---|---|
@@ -101,9 +131,10 @@ No probe check counts BookingConfirmations, so these were counted by hand from t
 By part: the 31 reruns cost $8.00, against $9.07 for the same runs in round 3, and 10 of them pass. The 6 long flows cost $0.72, and 1 passes. Repair rounds cost $0.80 of the total.
 
 ## Context fog-of-war
-Ingested with `.sdlc/evals/fog-manifest.json` and published as report `862735193f488fbfb993b3b9` (444 events, 252 sources, 0 diagnostic findings; run `run-1a1c4bf71a57b5fa3c9fadd0`). The record is in `.sdlc/evals/fog/2026-10-15-r4-fixes.json`. Zero findings is not a clean bill of health:
+Ingested with `.sdlc/evals/fog-manifest.json` and first published as report `862735193f488fbfb993b3b9` (444 events, 252 sources, 0 diagnostic findings; run `run-1a1c4bf71a57b5fa3c9fadd0`). The decision analysis (5 decisions, 11 guidance edges, 6 reviewed findings, diagnostics rerun) is published as report `ffe6d0ef720852da99edbff0`, recorded in `.sdlc/evals/fog/2026-10-15-r4-fixes.json`. Zero diagnostic findings is not a clean bill of health:
 - `retrieved-not-submitted` (213 pairs), `tool-result-not-propagated` (10) and `truncation` (227) were assessed and gave no signal.
 - The other five detectors had no eligible trigger in a web-chat bundle.
+- The bundle does not map `runs/*/report.json` (probe checks, render-lint) or `retries`, so cluster E's lint and every check verdict are cited from the round folder, not the fog report.
 
 ## Tickets filed (proposed)
 - T-0276: NATURAL_ACTIONS on hold'em (P1)
@@ -115,6 +146,7 @@ Ingested with `.sdlc/evals/fog-manifest.json` and published as report `862735193
 - T-0282: SURFACE_MISSING confirm vocabulary (P2)
 - T-0283: stud scenario has an extra check (P2)
 - T-0284: Haiku Admiral opening with no GameHud (P3)
+- T-0285: facility hours never draw ServiceCard, filed by the decision analysis (P2)
 
 ## Replays (`scripts/e2e-admin/probe/replays/`, pinned to today's behavior, `// expectedFail: T-NNNN`)
 - `croupier-haiku-holdem-natural` (T-0276): NATURAL_ACTIONS twice on hold'em, and table-1 is lost (:46).

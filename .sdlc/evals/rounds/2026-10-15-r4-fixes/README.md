@@ -15,7 +15,7 @@ Archived by `scripts/e2e-admin/probe/run-capped.ts` (T-0241). Regenerated with t
 
 ## Context fog-of-war
 
-- Report: `862735193f488fbfb993b3b9` in the context-fog-of-war user library (`library.py list`); 444 events, 252 sources, 0 findings.
+- Report: `ffe6d0ef720852da99edbff0` in the context-fog-of-war user library (`library.py list`); 444 events, 252 sources, 6 findings.
 - Ingested as a session bundle with `.sdlc/evals/fog-manifest.json` (mapping hash `8255a4d8d99d`); the record is `.sdlc/evals/fog/2026-10-15-r4-fixes.json` (T-0275).
 
 ## Files

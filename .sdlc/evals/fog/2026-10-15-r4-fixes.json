@@ -1,14 +1,19 @@
 {
   "round": "2026-10-15-r4-fixes",
   "ticket": "T-0275",
-  "reportId": "862735193f488fbfb993b3b9",
+  "reportId": "ffe6d0ef720852da99edbff0",
+  "previousReportId": "862735193f488fbfb993b3b9",
   "mapping": ".sdlc/evals/fog-manifest.json",
   "mappingHash": "8255a4d8d99d5c802205393662f9d4cc07d59738d6f05ce7fda6e6e3efff7eb8",
   "bundleFingerprint": "cee59e07780d341cf4db42074c9f9316593e50611df38a6419ec23396dba5856",
   "engineeringRun": "run-1a1c4bf71a57b5fa3c9fadd0",
   "events": 444,
   "sources": 252,
-  "findings": 0,
+  "decisions": 5,
+  "findings": 6,
+  "diagnosticFindings": 0,
   "ingest": "python3 ~/.claude/skills/context-fog-of-war/scripts/engineer.py ingest .sdlc/evals/rounds/2026-10-15-r4-fixes --mapping .sdlc/evals/fog-manifest.json --out <dir>",
-  "publish": "python3 ~/.claude/skills/context-fog-of-war/scripts/library.py publish <dir>/session.json"
+  "publish": "python3 ~/.claude/skills/context-fog-of-war/scripts/library.py publish <dir>/session.json",
+  "analysis": "T-0275 decision analysis: 5 failure clusters hydrated as decisions d1 to d5 with 11 guidance edges and 6 reviewed findings (report.md, Why it failed and how to fix it).",
+  "hydrate": "decisions, guidanceEdges and findings added to the 862735193f48 session.json with exact excerpts and event ids, then diagnostics.py --data, fog.py validate and library.py publish"
 }

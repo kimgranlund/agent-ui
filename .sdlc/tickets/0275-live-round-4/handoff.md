@@ -31,3 +31,11 @@ Screenshots go to the evidence cache, never the repo. No prompt or code fixes in
 - The round folder holds traces, ledger, round.json, runs/, README and report.md; spend at or under $15.
 - The fog report is published and its id recorded.
 - Every real failure has a proposed ticket; `tickets.py check` and `npm run check` exit 0.
+
+## Acceptance criteria
+Phase 3 (the fog decision analysis, Kim 2026-10-16):
+- `grep -q '^## Why it failed and how to fix it' .sdlc/evals/rounds/2026-10-15-r4-fixes/report.md` exits 0, and the section's cluster table has five rows or fewer: `test "$(grep -c '^| [A-E]\. ' .sdlc/evals/rounds/2026-10-15-r4-fixes/report.md)" -le 5` exits 0.
+- The recorded fog report is published and valid: `python3 -c "import json,subprocess,sys,os; i=json.load(open('.sdlc/evals/fog/2026-10-15-r4-fixes.json'))['reportId']; r=json.loads(subprocess.check_output([sys.executable,os.path.expanduser('~/.claude/skills/context-fog-of-war/scripts/library.py'),'path']))['root']; sys.exit(subprocess.call([sys.executable,os.path.expanduser('~/.claude/skills/context-fog-of-war/scripts/fog.py'),'validate',os.path.join(r,'reports',i,'session.json')]))"` exits 0.
+- The round README is fresh: `node --experimental-strip-types scripts/e2e-admin/probe/run-capped.ts --describe .sdlc/evals/rounds/2026-10-15-r4-fixes && git diff --exit-code -- .sdlc/evals/rounds/2026-10-15-r4-fixes/README.md` exits 0.
+- The one cluster part no ticket covers is filed: `test -f .sdlc/tickets/0285-concierge-facility-hours-composite/handoff.md` exits 0.
+- `tickets.py check` and `npm run check` exit 0.

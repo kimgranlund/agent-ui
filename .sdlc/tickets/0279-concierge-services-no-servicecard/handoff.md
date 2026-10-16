@@ -2,7 +2,7 @@
 id: T-0279
 title: "A spa services list is a Table or a ProductCard grid on every model, never ServiceCard: the skill and the catalog selection disagree"
 type: bug             # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -28,3 +28,6 @@ ServiceCard drew 0 of 13 services asks. Haiku draws a Table (or a Card with a De
 ## Done when
 - Kim rules which composite a priced treatment list uses; the skill, the selection sidecar and a composite-moment row agree.
 - `npx vitest run packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts` and `npm run check` exit 0.
+
+## Ruling (Kim, 2026-10-16)
+ProductCard. A priced, bookable treatment is a product or offer by the catalog selection definition. The `amenity-service-card` skill changes to teach one ProductCard per bookable service (price, duration, a Book action), never a Table; add a composite-moment check for it. ServiceCard stays for a service or agent to open.
