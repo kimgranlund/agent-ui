@@ -54,6 +54,14 @@ describe('produce(): a reply that narrates the surfaces is sent back once (T-023
     expect(r.note).toMatch(/^I check behind/)
   })
 
+  it('a capitalized surface id at the start of a sentence is sent back too (T-0297, "Table-3 is dealt.")', async () => {
+    const r = await run([`${note('Table-3 is dealt. You have 10 and 5 for 15 against the dealer\'s 9.')}\n${UPDATE}`, `${CLEAN}\n${UPDATE}`])
+    expect(r.calls).toBe(2)
+    expect(r.reqs[1]).toContain('NARRATED_MECHANICS')
+    expect(r.codes).toEqual(['NARRATED_MECHANICS'])
+    expect(r.note).toMatch(/^I check behind/)
+  })
+
   it('a reply that opens a correction of an earlier turn is sent back, with a payload too', async () => {
     for (const said of ['I need to correct my last turn: I described the draw but never updated your cards.', 'I made a mistake last turn.', 'I win with a pair of queens, Q of hearts... correction: Q of diamonds.']) {
       const r = await run([`${note(said)}\n${UPDATE}`, `${CLEAN}\n${UPDATE}`])

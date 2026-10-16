@@ -22,3 +22,8 @@ Round 6 cluster C (`.sdlc/evals/rounds/2026-10-15-r6-matrix/report.md`): :2 ran 
 ## Done when
 - A produce test: a no-tool ACTION_NOT_APPLIED round builds a Haiku round 2 request with tool_choice render_surface, and a thinking-on request does not; red at the base.
 - The live-agent tests and `npm run check` exit 0.
+
+## Acceptance criteria
+- (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/produce-forced-surface.test.ts`
+- (guard) `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent`
+- (guard) `npm run check`
