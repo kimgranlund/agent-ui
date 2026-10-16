@@ -2,13 +2,11 @@
 id: T-0274
 title: "A Lexicographer game-over exemplar so a give-up turn retrieves and draws ResultCard"
 type: feature        # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
 created: 2026-10-15
-branch: feat/lexicographer-game-over
-worktree: .claude/worktrees/wave-go
 router: .sdlc/tickets/AGENTS.md  # how to claim and close this ticket
 ---
 
@@ -31,3 +29,9 @@ verifier: L3
 - `retrieve-presets.test.ts` pins `domain-lexicographer-game-over` first for "I give up." and "Show me the word." on `agent-ui`; the 15 earlier pins are unchanged.
 - `node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus/import-seeds.ts --dry-run` reports 0 admitted, and the shard line ships with its verdicts archive.
 - The corpus, examples and corpus-tools suites and `npm run check` exit 0.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged in #2038: Lexicographer game-over exemplar admitted (judged); verifier L3 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

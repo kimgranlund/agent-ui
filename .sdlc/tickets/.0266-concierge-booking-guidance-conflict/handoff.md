@@ -2,7 +2,7 @@
 id: T-0266
 title: "Concierge booking guidance conflicts: booking-flow teaches a read-back Card and a settled Badge, the catalog teaches BookingForm and BookingConfirmation"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -31,9 +31,15 @@ When a booking ask already carries every detail, Concierge shows the BookingForm
 ## Lane bundle
 This solo lane delivers these tickets in order, one commit each:
 - .sdlc/tickets/0266-concierge-booking-guidance-conflict/handoff.md
-- .sdlc/tickets/0267-concierge-no-spa-menu/handoff.md
+- .sdlc/tickets/.0267-concierge-no-spa-menu/handoff.md
 
 ## Acceptance criteria
 - `npx vitest run packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts` exits 0: the recorded Sonnet read-back (DescriptionList and a "Confirm booking" Button) yields BOOKING_FORM_MISSING alone with a pre-fill repair, and the info-card, one-input and pre-filled BookingForm controls stay quiet (the read-back case fails on the pre-change detector).
 - `npx vitest run --project site site/pages/agent-admin-app.test.ts site/pages/agent-admin-presets.test.ts site/pages/agent-admin-ambient-budget.test.ts site/lib/agent-manifest` exits 0: the seeded `booking-flow` and the Concierge House facts teach the pre-filled BookingForm confirm and the BookingConfirmation settle (no read-back, no settled Badge), seedVersion is 11, and the manifest digest is fresh.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged in the Concierge PR (pre-filled BookingForm, spa list); verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

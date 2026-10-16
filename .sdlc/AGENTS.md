@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:5e4dfc3bd925 -->
+<!-- sdlc-lite:managed:start v1 sha256:2fa786d9343d -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -20,7 +20,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0197 BookingForm field kinds (dateRange, radio, time, stepper) and sharing it with the Maitre d' (0197-bookingform-kinds)
   - T-0198 Step flow pattern: step n of m, Back and Next, shared /draft data (0198-step-flow)
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (0199-itinerary-compare)
-- ready: 28
+- ready: 16
   - T-0160 Agent content as files: extract preset and pack seeds to .md manifests with a generated, drift-gated registry (0160-agent-content-files)
   - T-0161 Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind (0161-agent-content-overlays)
   - T-0162 Settings pane forms generated from each content kind's schema, with provenance, diff and reset (0162-agent-content-schema-forms)
@@ -36,23 +36,11 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0209 One source per concept: layer membership, calibration bullets, persona list; mini-skill ranking stability test (0209-context-single-source)
   - T-0246 Docs-page persona exemplar fixtures carry the same game and booking defects as the seeds (0246-persona-exemplar-fixture-defects)
   - T-0247 validate-payload --catalog cannot load persona catalog ids (<base>--<persona>) (0247-validate-payload-persona-ids)
-  - T-0258 Haiku frames each starter choice in its own Card; nothing repairs or tests it (0258-haiku-card-per-choice)
-  - T-0262 BookingConfirmation repair asks for bound rows the schema rejects and keeps the hand-built Card around it (0262-booking-confirmation-repair-invalid)
-  - T-0263 FLEET_SECRET_MISSING fires on the Lexicographer's word board and has Haiku write a fleet into a word game (0263-fleet-check-on-word-board)
-  - T-0264 A repair round can ship less than the turn needs: an ACTION_NOT_APPLIED retry ends with no surface, and surfaces made in an earlier round are lost (0264-repair-round-drops-surface)
-  - T-0265 Haiku answers in prose with no surface on game openings, Admiral shots and Concierge turns, and no check sends these back (0265-haiku-no-surface-turns)
-  - T-0266 Concierge booking guidance conflicts: booking-flow teaches a read-back Card and a settled Badge, the catalog teaches BookingForm and BookingConfirmation (0266-concierge-booking-guidance-conflict)
-  - T-0267 The Concierge has no spa treatment list, so a spa services question gets prose and no ServiceCard on every model (0267-concierge-no-spa-menu)
-  - T-0268 The Lexicographer's opening turn retrieves no word board and draws none, and give-up turns miss ResultCard (0268-lexicographer-opening-no-board)
-  - T-0269 BoardGrid's intent corner glyph renders at 8px and fails render-lint type-floor on Lexicographer and Admiral boards (0269-board-grid-intent-glyph-type-floor)
-  - T-0270 Routing pack doc-only oracle expects property-knowledge-base loaded full, but T-0231 serves those facts in the persona section (0270-routing-pack-doc-only-oracle)
-  - T-0271 click-target reports a listed button as missing when the click lands but starts no turn (0271-probe-click-target-misleading)
-  - T-0272 seven-card-stud scenario moves do not fit the fixed-limit house rules, so the hand is still on seventh street at Deal again (0272-stud-scenario-fixed-limit)
-  - T-0273 On a Croupier 'Hit' turn the Battleship board ranks second among the exemplars (0273-croupier-hit-ranks-battleship)
+  - T-0275 Live round 4: rerun round 3's 31 failed runs plus Concierge and Lexicographer long flows ($15 cap) (0275-live-round-4)
 - claimed: 0
 - paused: 0
 - blocked: 0
-- done: 231
+- done: 245
 - dropped: 4
 
 ## Procedures
@@ -70,7 +58,7 @@ Ticket fields:
 status: proposed | ready | claimed | paused | blocked | done | dropped
 - `area:` is optional: the ticket's domain, one of the `areas:` names in `.sdlc/config`. It is never a lane or branch name.
 - `paused_reason:` is the one-line reason a `status: paused` ticket waits; `status: claimed` needs `claimed_by:`.
-- `branch:` and `worktree:` name the ticket's lane branch and its worktree (relative to the main checkout, under `.claude/worktrees/`); the lane opener writes both and its close removes both. `check` warns on a `worktree:` that is not a registered worktree on that branch.
+- `branch:` and `worktree:` name the ticket's lane branch and its worktree (relative to the main checkout, under the worktree root `../<repo>.worktrees/`, `wtroot.py root`); the lane opener writes both and its close removes both. `check` warns on a `worktree:` that is not a registered worktree on that branch.
 
 Claim a ticket:
 1. Open its `handoff.md`. A `claimed_by:` front matter line means another agent holds it: pick another ticket or ask the user.
@@ -80,7 +68,7 @@ Claim a ticket:
 
 Open a lane:
 1. Claim the ticket first: `<plugin-root>/scripts/lanes.py open` refuses an unclaimed local ticket.
-2. Run `python3 <plugin-root>/scripts/lanes.py open <name> --kind solo --ticket <id>`. It makes the worktree and branch under `.claude/worktrees/` and writes `branch: <lane branch>` and `worktree: <path>` after `claimed_by:`, so verified, unmerged work stays visible on the roadmap and in `lanes.py list --all`. A worktree made by hand: run `python3 <plugin-root>/scripts/tickets.py --root .sdlc branch <id> <branch> --worktree <path>`.
+2. Run `python3 <plugin-root>/scripts/lanes.py open <name> --kind solo --ticket <id>`. It makes the worktree and branch under the worktree root (`../<repo>.worktrees/`) and writes `branch: <lane branch>` and `worktree: <path>` after `claimed_by:`, so verified, unmerged work stays visible on the roadmap and in `lanes.py list --all`. A worktree made by hand: run `python3 <plugin-root>/scripts/tickets.py --root .sdlc branch <id> <branch> --worktree <path>`.
 3. `lanes.py close <name>` removes the `branch:` and `worktree:` lines once the lane closes.
 
 Close a ticket:

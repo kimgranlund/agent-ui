@@ -2,7 +2,7 @@
 id: T-0264
 title: "A repair round can ship less than the turn needs: an ACTION_NOT_APPLIED retry ends with no surface, and surfaces made in an earlier round are lost"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -32,3 +32,9 @@ Guess: the final round is judged only on its own findings, and a no-wire round h
 - `npm run chat:probe -- selftest` exits 0: a surface a rejected round created and the shipped round replaced passes `no-surface-loss`, and a turn that ships no surface after a round created one still fails it. The four round 3 `no-surface-loss` fails were three such replacements (a check false positive, no producer loss) and one SURFACE_DEGRADED turn that shipped nothing (`regress-lexicographer-invalid-then-replay-haiku-1` t5), which still fails.
 - `npx vitest run packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent scripts/e2e-admin/probe` exits 0.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged in the round 3 repair and check fixes PR; verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

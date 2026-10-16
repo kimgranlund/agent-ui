@@ -2,7 +2,7 @@
 id: T-0263
 title: "FLEET_SECRET_MISSING fires on the Lexicographer's word board and has Haiku write a fleet into a word game"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -31,3 +31,9 @@ Round 2 of :110 shows `FLEET_SECRET_MISSING: Surface "ask-1" is a Battleship boa
 - `npx vitest run scripts/e2e-admin/probe/replays/lexicographer-haiku-fleet-check.test.mjs` exits 0: the recorded rounds replay with no FLEET_SECRET_MISSING and no SEMANTIC_UNCORRECTED on turn 1, and every probe check is green.
 - `npx vitest run packages/agent-ui/a2ui/src/catalog scripts/e2e-admin/probe` exits 0.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged in the round 3 repair and check fixes PR; verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

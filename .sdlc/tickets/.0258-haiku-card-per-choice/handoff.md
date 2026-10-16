@@ -2,7 +2,7 @@
 id: T-0258
 title: "Haiku frames each starter choice in its own Card; nothing repairs or tests it"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0257]          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -27,3 +27,9 @@ T-0257 (2026-10-15): the recorded live Haiku "hello" reply put each starter choi
 - `npx vitest run packages/agent-ui/a2ui/src/catalog/framed-choice-check.test.ts packages/agent-ui/a2ui/src/live-agent/chat-validation.test.ts packages/agent-ui/a2ui/src/examples/domain-seeds.test.ts` exits 0.
 - `npx vitest run --project scripts scripts/e2e-admin` exits 0.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged in #2037: FRAMED_CHOICE producer check, negative fixture, repaired replay; verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

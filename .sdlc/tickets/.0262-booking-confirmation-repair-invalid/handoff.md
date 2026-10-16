@@ -2,7 +2,7 @@
 id: T-0262
 title: "BookingConfirmation repair asks for bound rows the schema rejects and keeps the hand-built Card around it"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -29,11 +29,17 @@ The repair text is in `packages/agent-ui/a2ui/src/catalog/composite-moments.ts:5
 ## Lane bundle
 This solo lane delivers these tickets in order, one commit each:
 - .sdlc/tickets/0262-booking-confirmation-repair-invalid/handoff.md
-- .sdlc/tickets/0264-repair-round-drops-surface/handoff.md
-- .sdlc/tickets/0263-fleet-check-on-word-board/handoff.md
+- .sdlc/tickets/.0264-repair-round-drops-surface/handoff.md
+- .sdlc/tickets/.0263-fleet-check-on-word-board/handoff.md
 
 ## Acceptance criteria
 - `npx vitest run packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts` exits 0: the BookingConfirmation repair names `data` bound to the booking and `rows` as a literal `{label, path}` array (never a bound `rows`), the shape it asks for passes the concierge catalog, and a BookingConfirmation inside a Card yields `BOOKING_CONFIRMATION_WRAPPED`.
 - `npx vitest run scripts/e2e-admin/probe/replays/concierge-sonnet-confirmation-rows.test.mjs scripts/e2e-admin/probe/replays/concierge-opus-nested-confirmation.test.mjs` exits 0: with an authored repaired round each, the confirm turn ships one BookingConfirmation and no Card, with no CATALOG and no SEMANTIC_UNCORRECTED on the trace.
 - `npx vitest run packages/agent-ui/a2ui/src/catalog scripts/e2e-admin/probe` exits 0.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged in the round 3 repair and check fixes PR; verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none
