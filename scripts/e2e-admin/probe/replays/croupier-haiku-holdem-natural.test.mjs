@@ -6,13 +6,15 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0276. Live round 4 (2026-10-15-r4-fixes :46, Haiku 5.5). The Texas hold'em opening dealt A K as hole
+// T-0276 (fixed). Live round 4 (2026-10-15-r4-fixes :46, Haiku 5.5). The Texas hold'em opening dealt A K as hole
 // cards; NATURAL_ACTIONS (a blackjack check) read them as a natural twice and the third round settled the hand as a
-// blackjack win at 3:2 on a new table, so table-1 never shipped. When the check skips non-blackjack games, recapture.
-it('croupier-haiku-holdem-natural: the hold-em opening is sent back as a blackjack natural', async () => {
+// blackjack win at 3:2, so table-1 never shipped. The check now skips a surface that names another game, so round 1's
+// hold'em table ships as it is; the recorded rounds 2 and 3 are left unread.
+it("croupier-haiku-holdem-natural: the hold'em opening with A K ships its table on round 1", async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./croupier-haiku-holdem-natural.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual(['no-surface-loss:0'])
-  const trace = report.records[0].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
-  expect(trace).toMatchObject({ rounds: 3, failureCodes: ['NATURAL_ACTIONS'] })
+  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual([])
+  const lines = report.records[0].lines.map((l) => JSON.parse(l))
+  expect(lines.map((l) => l.a2uiMeta?.trace).find((t) => t !== undefined)).toMatchObject({ rounds: 1, failureCodes: [] })
+  expect(lines.some((l) => l.createSurface?.surfaceId === 'table-1')).toBe(true)
 })
