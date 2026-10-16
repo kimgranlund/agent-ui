@@ -109,10 +109,20 @@ describe('produce() + croupier semantic checks: the GH #1795 evidence is repaire
 
   it('a structural failure still halts as before; a semantic finding is never what a ProduceHalt carries', async () => {
     const bad = '{"version":"v1.0","updateComponents":{"surfaceId":"table-3","components":[{"id":"x","component":"NotAComponent"}]}}'
-    const s = scripted([EVIDENCE, bad])
+    const s = scripted([bad, bad])
     const run = collect(produce(input, deps(s.provider, croupierSemanticChecks), { maxRounds: 2 }))
     await expect(run).rejects.toBeInstanceOf(ProduceHalt)
     await run.catch((e: ProduceHalt) => expect(e.failures.map((f) => f.code)).not.toContain('HAND_TOTAL'))
+  })
+
+  it('T-0302: a structural failure on the last round after a valid round with a finding ships that round, tallied', async () => {
+    const bad = '{"version":"v1.0","updateComponents":{"surfaceId":"table-3","components":[{"id":"x","component":"NotAComponent"}]}}'
+    const s = scripted([EVIDENCE, bad])
+    const lines = await collect(produce(input, deps(s.provider, croupierSemanticChecks), { maxRounds: 2 }))
+    const codes = traceOf(lines)!.failureCodes
+    expect(codes.slice(-2)).toEqual(['SEMANTIC_UNCORRECTED', 'EARLIER_ROUND_SHIPPED'])
+    expect(codes).not.toContain('HAND_TOTAL')
+    expect(lines.filter((l) => !l.includes('a2uiMeta')).length).toBeGreaterThan(0)
   })
 
   it('a throwing check is fail-open: the round ships and SEMANTIC_CHECK_ERROR is tallied', async () => {

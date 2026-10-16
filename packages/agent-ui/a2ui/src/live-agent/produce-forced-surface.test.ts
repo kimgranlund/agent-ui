@@ -2,7 +2,8 @@
 // press with a target meta-line and prose, no render_surface call, through every repair round. A repair round after a
 // no-payload round with a semantic finding (ACTION_NOT_APPLIED) now asks for render_surface by name. The seam carries
 // `toolChoice`; the Anthropic body maps it to `tool_choice` only with thinking off (the API rejects a forced choice
-// with extended thinking), so each request is built through the real `buildRequestBody`. Keyless, scripted provider.
+// with extended thinking), so T-0301 asks for thinking off on that round, which the capability row grants or drops.
+// Each request is built through the real `buildRequestBody`. Keyless, scripted provider.
 
 import { describe, it, expect } from 'vitest'
 import { produce } from '../agent/produce.ts'
@@ -57,8 +58,18 @@ describe('produce(): a repair round after a no-tool ACTION_NOT_APPLIED round for
     }
   })
 
-  it('Haiku with thinking on: round 2 is not forced (the API rejects tool_choice with extended thinking)', async () => {
+  it('T-0301 Haiku at effort medium (thinking on): round 1 keeps thinking, the forced round 2 turns it off and forces the tool', async () => {
     const b = await bodies([PROSE, DEAL], { effort: 'medium' })
+    expect(b).toHaveLength(2)
+    expect(b[0]!.thinking).toMatchObject({ type: 'adaptive' })
+    expect(b[0]!.tool_choice).toBeUndefined()
+    expect(b[1]!.thinking).toEqual({ type: 'disabled' })
+    expect(b[1]!.output_config).toEqual({ effort: 'medium' })
+    expect(b[1]!.tool_choice).toEqual(FORCED)
+  })
+
+  it('T-0301 a model whose row has no thinking off at this effort keeps thinking and is not forced', async () => {
+    const b = await bodies([PROSE, DEAL], { effort: 'xhigh' })
     expect(b).toHaveLength(2)
     expect(b[1]!.thinking).toMatchObject({ type: 'adaptive' })
     expect(b[1]!.tool_choice).toBeUndefined()

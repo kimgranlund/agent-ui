@@ -59,7 +59,8 @@ T-0172 rules (2026-10-14 traces):
   (`SemanticCheckInput.action`, the click's name, surface, context and click-time data model), so a click
   answered in prose alone spends a repair round (the Croupier's `ACTION_NOT_APPLIED`) and ships tallied at the
   bound. The repair round after such a no-payload finding passes `toolChoice` `render_surface` (T-0298); the
-  Anthropic adapter sends it only with thinking off and never on a model that rejects a forced choice. A say turn is judged the same way (`intent`, plus `target` when its meta-line names an open surface): a
+  Anthropic adapter sends it only with thinking off and never on a model that rejects a forced choice, so that
+  round also asks for thinking off, kept where the model's capability row allows it at the round's effort (T-0301). A say turn is judged the same way (`intent`, plus `target` when its meta-line names an open surface): a
   typed move or shot at that surface with no update is `ACTION_NOT_APPLIED`, and a game opening or a Concierge
   services, booking or confirm ask answered with no surface is `SURFACE_MISSING` (T-0265).
 - A missing-composite finding (`<COMPOSITE>_MISSING`, `catalog/composite-moments.ts`) stays binding for the rest
@@ -67,9 +68,14 @@ T-0172 rules (2026-10-14 traces):
   gets the same code again, so a swap to a shape no row detects is repaired, or ships tallied `SEMANTIC_UNCORRECTED`.
 - A self-correct round never loses a surface: a session-new surface the failed round created that no
   failure names must come back. The repair message names it ("Keep `ask-1` ..."); a later valid round
-  without it spends a `SURFACE_DROPPED` round, and on the last round halts with `SURFACE_DROPPED`.
+  without it spends a `SURFACE_DROPPED` round, and on the last round halts with `SURFACE_DROPPED` unless an
+  earlier round can ship (below).
 
-`maxRounds` bounds the loop. Exhaustion throws `ProduceHalt` carrying the last failures; a
+`maxRounds` bounds the loop. T-0302: when the last round fails to parse, fails schema or drops a surface, the last
+earlier round whose payload validated and dropped nothing ships whole instead (its note, ask and lines), as a last
+round would ship it (a feed-scoped ask dropped as `FEED_SCOPE_RESCOPED`, a finding tallied `SEMANTIC_UNCORRECTED`),
+the trace carrying the last round's codes plus `EARLIER_ROUND_SHIPPED`; it comes before the `SURFACE_DEGRADED`
+text. With no such round, exhaustion throws `ProduceHalt` carrying the last failures; a
 transport that already committed a 200 turns that into the terminal error line below.
 `FEED_SCOPE`, `NET_NOOP`, `FLOW_END_MISSING`, `SURFACE_DROPPED`, the genui codes and a semantic check's own codes
 (`HAND_TOTAL`, `HAND_COUNT`, `NATURAL_ACTIONS`, `SEMANTIC_UNCORRECTED`, `SEMANTIC_CHECK_ERROR`) are produce-layer-only and
