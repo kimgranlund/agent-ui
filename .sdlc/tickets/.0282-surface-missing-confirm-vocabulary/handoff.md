@@ -2,7 +2,7 @@
 id: T-0282
 title: "SURFACE_MISSING misses 'Confirm it' and 'I'd like a table', so Haiku books a tour in prose with no surface"
 type: bug             # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -28,3 +28,9 @@ A confirm or booking ask answered in prose with no surface is SURFACE_MISSING.
 ## Done when
 - `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog/personas/concierge/checks.test.ts` exits 0 with cases for the three phrases above, and a pool-hours question still passes.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-15 · lane: full L1 · verdict: closed by reason (Merged in #2044 (round 4 scenario and check defects); verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

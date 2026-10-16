@@ -32,3 +32,6 @@ The failing test lands before or with the fix, never after. Needs a ruling first
 - Kim rules the facility-hours composite; the persona `surfaceStyle`, the `facility-info-card` skill and the scenario oracles agree.
 - The ruled composite is taught in loaded context (a mini-skill or a composite-moment row), with a test that fails on the other composite.
 - `npx vitest run scripts/e2e-admin/probe/scenarios` and `npm run check` exit 0.
+
+## Ruling (Kim, 2026-10-16)
+A compact info card: one Card holding a DescriptionList (facility: hours, location), matching the always-loaded persona rule "Facts (hours, directions, policies) -> a compact info surface". Change the `facility-info-card` skill to teach that, and the facility oracles in `concierge.ts` and `routing.ts` to expect Card plus DescriptionList, not ServiceCard. ServiceCard stays for a service or agent to open.

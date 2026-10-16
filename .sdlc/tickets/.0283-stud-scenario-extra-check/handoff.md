@@ -2,7 +2,7 @@
 id: T-0283
 title: "seven-card-stud scenario still has one check too many: Opus ends the hand on the fourth and opens round 2 with no table"
 type: chore           # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -28,3 +28,9 @@ Opus ends the hand on the fourth "Check, or call": on seventh street the house b
 ## Done when
 - The scenario's step count fits the five betting rounds (or the steps stop depending on it), pinned in `croupier.test.mjs`.
 - `npx vitest run scripts/e2e-admin/probe/scenarios` and `npm run check` exit 0.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged in #2044 (round 4 scenario and check defects); verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

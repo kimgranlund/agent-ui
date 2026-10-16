@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:102710409a0e -->
+<!-- sdlc-lite:managed:start v1 sha256:8deee8649cbd -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -9,7 +9,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
 
 ## Stages
 
-- proposed: 18
+- proposed: 11
   - T-0187 split-pane demo stacks or scrolls at 400px instead of overflowing the column (0187-split-pane-narrow-fit)
   - T-0188 line-chart projected dash: user-unit dash or a ruled screen-px exemption (0188-line-chart-projected-dash)
   - T-0189 playing-card corner index: a type floor or a ruled pictorial exemption (0189-playing-card-type-floor)
@@ -20,15 +20,8 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0197 BookingForm field kinds (dateRange, radio, time, stepper) and sharing it with the Maitre d' (0197-bookingform-kinds)
   - T-0198 Step flow pattern: step n of m, Back and Next, shared /draft data (0198-step-flow)
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (0199-itinerary-compare)
-  - T-0276 The blackjack NATURAL_ACTIONS check fires on a Texas hold'em opening and its repair settles the hand as a blackjack natural (0276-natural-check-on-holdem)
-  - T-0277 Round scenarios ask for 'a 60-minute massage', which T-0267's spa list makes ambiguous, so every model rightly refuses to confirm (0277-spa-booking-ask-ambiguous)
-  - T-0278 SURFACE_MISSING and FLOW_END_MISSING on a confirm turn demand a BookingConfirmation the booking cannot have, and Haiku and Opus then claim it is booked (0278-confirm-repair-forces-false-booking)
-  - T-0281 A FEED_SCOPE repair round passes with prose only, so the round 1 BookingForm never ships (0281-feed-scope-repair-drops-surface)
-  - T-0282 SURFACE_MISSING misses 'Confirm it' and 'I'd like a table', so Haiku books a tour in prose with no surface (0282-surface-missing-confirm-vocabulary)
-  - T-0283 seven-card-stud scenario still has one check too many: Opus ends the hand on the fourth and opens round 2 with no table (0283-stud-scenario-extra-check)
   - T-0285 Concierge facility-hours turns never draw ServiceCard: facility-info-card is index-only and the loaded persona asks for a compact info surface (0285-concierge-facility-hours-composite)
-  - T-0288 Code still keyed to .claude/worktrees: lanes in ../agent-ui.worktrees run vitest uncapped; reap scripts miss them (0288-worktree-root-path-checks)
-- ready: 16
+- ready: 17
   - T-0160 Agent content as files: extract preset and pack seeds to .md manifests with a generated, drift-gated registry (0160-agent-content-files)
   - T-0161 Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind (0161-agent-content-overlays)
   - T-0162 Settings pane forms generated from each content kind's schema, with provenance, diff and reset (0162-agent-content-schema-forms)
@@ -45,10 +38,11 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0246 Docs-page persona exemplar fixtures carry the same game and booking defects as the seeds (0246-persona-exemplar-fixture-defects)
   - T-0247 validate-payload --catalog cannot load persona catalog ids (<base>--<persona>) (0247-validate-payload-persona-ids)
   - T-0287 Live round 5: rerun round 4's 26 failed runs plus Concierge and Lexicographer long flows ($15 cap) (0287-live-round-5)
+  - T-0288 Code still keyed to .claude/worktrees: lanes in ../agent-ui.worktrees run vitest uncapped; reap scripts miss them (0288-worktree-root-path-checks)
 - claimed: 0
 - paused: 0
 - blocked: 0
-- done: 250
+- done: 256
 - dropped: 4
 
 ## Procedures
