@@ -182,7 +182,7 @@ import {
   basicNotificationSettingsSeed,
   basicAppointmentBookingSeed,
 } from '../../src/examples/basic-exemplars.ts'
-import { domainLexicographerWordSeed, domainAdmiralBattleshipSeed, domainCroupierRoundSeed, domainConciergeBookingSeed } from '../../src/examples/domain-seeds.ts'
+import { domainLexicographerWordSeed, domainLexicographerGameOverSeed, domainAdmiralBattleshipSeed, domainCroupierRoundSeed, domainConciergeBookingSeed } from '../../src/examples/domain-seeds.ts'
 import { multiTurnSeeds } from '../../src/examples/multi-turn-seeds.ts'
 import { repairSeeds } from '../../src/examples/repair-seeds.ts'
 import { allSeeds, allBasicSeeds, allMultiTurnSeeds, allRepairSeeds, allPersonaCorpusSeeds } from '../../src/examples/index.ts'
@@ -392,8 +392,8 @@ const SEEDS_BY_MODULE: ReadonlyArray<SeedGroup<'agent-ui'>> = [
     seeds: [supportTicketCloseThenNewSeed, contactImportProgressToSummarySeed, inviteDeclineThenFocusBlockSeed],
   },
   {
-    module: 'domain-seeds.ts', // T-0245/T-0240: the BoardGrid domain composites (word board, battleship)
-    seeds: [domainLexicographerWordSeed, domainAdmiralBattleshipSeed],
+    module: 'domain-seeds.ts', // T-0245/T-0240: the BoardGrid domain composites (word board, battleship); T-0274 the word game over
+    seeds: [domainLexicographerWordSeed, domainLexicographerGameOverSeed, domainAdmiralBattleshipSeed],
   },
 ]
 

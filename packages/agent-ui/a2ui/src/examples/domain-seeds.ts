@@ -10,7 +10,10 @@
 //   status on one GameHud rather than a caption Text;
 // - the sea marks hits ● and misses ✕ against fleets committed at `/secret/fleet` and `/secret/playerFleet`.
 //
-// T-0240 shelves them as corpus candidates: the two base seeds on `allSeeds`, the two persona seeds on
+// T-0274 adds a fifth, the Lexicographer game-over turn (a give-up reveals the word on a ResultCard over the settled
+// board), because the only ResultCard exemplar on the shard was a blackjack win and a give-up turn retrieved none.
+//
+// T-0240 shelves them as corpus candidates: the base seeds on `allSeeds`, the two persona seeds on
 // `allPersonaCorpusSeeds`, admitted against the composed `<base>--<persona>` catalog into that persona's shard.
 // `domain-seeds.test.ts` holds each to its catalog and to the semantic checks its preset runs live.
 
@@ -254,6 +257,66 @@ export const domainLexicographerWordSeed: ExampleSeed = {
   ],
 }
 
+const OVER_SID = 'word-forge-over'
+
+/** The Lexicographer after the player gives up two guesses in: the word revealed on one ResultCard over the settled
+ *  board, the same rows still graded against the committed word, and one New game action (T-0274). */
+export const domainLexicographerGameOverSeed: ExampleSeed = {
+  name: 'domain-lexicographer-game-over',
+  description:
+    'A five-letter word game the player gave up on two guesses in, on one surface: a ResultCard with the lose ' +
+    'outcome, the title Word forge, a summary that reveals the word (HEART) and guesses-used and letters-placed ' +
+    'stat tiles bound to the data model, holding a New game Button whose action starts a fresh word. Below ' +
+    'it the 6 by 5 read-only BoardGrid stays settled, its bound cells still marking CRANE and TEARS letter by ' +
+    'letter against the answer committed at /secret/word (success right spot, warning wrong spot, neutral ' +
+    'absent), and no guess input remains.',
+  promptText: 'I give up. What was the word?',
+  surfaceId: OVER_SID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: OVER_SID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: OVER_SID,
+        value: {
+          secret: { word: 'heart' },
+          result: {
+            title: 'Word forge',
+            summary: 'You gave up after 2 of 6 guesses. The word was HEART.',
+            stats: [
+              { label: 'Guesses used', value: '2 of 6' },
+              { label: 'Letters placed', value: '3 of 5', intent: 'warning' },
+            ],
+          },
+          board: { cells: WORD_CELLS },
+        },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: OVER_SID,
+        components: [
+          { id: 'root', component: 'Column', gap: 'md', children: ['result', 'board'] },
+          {
+            id: 'result',
+            component: 'ResultCard',
+            outcome: 'lose',
+            title: { path: '/result/title' },
+            summary: { path: '/result/summary' },
+            stats: { path: '/result/stats' },
+            children: ['newGameBtn'],
+          },
+          { id: 'newGameBtn', component: 'Button', variant: 'solid', label: 'New game', action: { action: 'new_game', context: { newGame: true } } },
+          { id: 'board', component: 'BoardGrid', rows: 6, cols: 5, label: 'Word guesses', cells: { path: '/board/cells' } },
+        ],
+      },
+    },
+  ],
+}
+
 const SEA_SID = 'enemy-waters'
 
 /** Rows are lettered A to F from the top and columns numbered 1 to 6 from the left, so B3 is row 1, column 2. */
@@ -355,16 +418,17 @@ export const domainAdmiralBattleshipSeed: ExampleSeed = {
   ],
 }
 
-/** The two domain seeds over the base catalog, the `allSeeds` family. */
-export const domainBaseSeeds: readonly ExampleSeed[] = [domainLexicographerWordSeed, domainAdmiralBattleshipSeed]
+/** The three domain seeds over the base catalog, the `allSeeds` family. */
+export const domainBaseSeeds: readonly ExampleSeed[] = [domainLexicographerWordSeed, domainLexicographerGameOverSeed, domainAdmiralBattleshipSeed]
 
 /** The two domain seeds over a persona catalog, the `allPersonaCorpusSeeds` family. */
 export const domainPersonaSeeds: readonly ExampleSeed<PersonaShardCatalogId>[] = [domainCroupierRoundSeed, domainConciergeBookingSeed]
 
-/** The four domain seeds, in review order. */
+/** The five domain seeds, in review order. */
 export const domainSeeds: readonly ExampleSeed<SeedCatalogId>[] = [
   domainCroupierRoundSeed,
   domainConciergeBookingSeed,
   domainLexicographerWordSeed,
+  domainLexicographerGameOverSeed,
   domainAdmiralBattleshipSeed,
 ]
