@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import type { A2uiOutput, A2uiServerMessage } from '../protocol.ts'
-import { fleetSecretCheck, fleetShotAppliedCheck, gradeGuess, HIDDEN_STATE_CHECKS, wordMoveAppliedCheck, wordSecretCheck } from './hidden-state-checks.ts'
+import { fleetSecretCheck, fleetShotAppliedCheck, gradeGuess, HIDDEN_STATE_CHECKS, fleetHudCheck, wordMoveAppliedCheck, wordSecretCheck } from './hidden-state-checks.ts'
 import { semanticSurfaceViews } from './semantic-check.ts'
 import type { SemanticAction, SemanticTurnLog } from './semantic-check.ts'
 
@@ -226,7 +226,7 @@ describe('T-0280: word-move-applied', () => {
   ]
 
   it('rides every catalog after the Battleship checks', () => {
-    expect(HIDDEN_STATE_CHECKS.map((c) => c.id)).toEqual(['word-secret', 'fleet-secret', 'fleet-shot-applied', 'word-move-applied'])
+    expect(HIDDEN_STATE_CHECKS.map((c) => c.id).slice(0, 4)).toEqual(['word-secret', 'fleet-secret', 'fleet-shot-applied', 'word-move-applied'])
   })
 
   it('the recorded prose-only guesses and give-up targeting word-forge are ACTION_NOT_APPLIED', () => {
@@ -252,5 +252,35 @@ describe('T-0280: word-move-applied', () => {
     expect(said('Fire at A2.', [], 'word-forge')).toEqual([])
     expect(said('My guess: audio.')).toEqual([])
     expect(wordMoveAppliedCheck.check({ surfaces: [], action: fire(0, 1) })).toEqual([])
+  })
+})
+
+// T-0284 (the recorded Haiku 5.5 Admiral, round 4 regress-admiral-row-sweep-haiku-1 t0): "Battleship, please." opened a
+// Column with a Text title, the BoardGrid and a Text bound to /hud/status, and no GameHud; no check fired.
+describe('T-0284: fleet-hud', () => {
+  const fixture = JSON.parse(
+    readFileSync(join(import.meta.dirname, '../../../../../.sdlc/evals/rounds/2026-10-15-r4-fixes/runs/regress-admiral-row-sweep-haiku-1/fixture.json'), 'utf8'),
+  ) as { turns: { lines: string[] }[] }
+  const opening = wire(fixture.turns[0]!.lines)
+  const hud = { id: 'hud', component: 'GameHud', title: 'Enemy waters', status: { path: '/hud/status' } }
+  const withHud: A2uiOutput = opening.map((m) =>
+    'updateComponents' in m
+      ? ({ version: 'v1.0', updateComponents: { surfaceId: 'battleship-1', components: [{ id: 'root', component: 'Column', children: ['hud', 'sea'] }, hud, ...m.updateComponents.components.filter((c) => c.id === 'sea')] } } as A2uiServerMessage)
+      : m,
+  )
+
+  it('rides every catalog last', () => {
+    expect(HIDDEN_STATE_CHECKS.map((c) => c.id)).toEqual(['word-secret', 'fleet-secret', 'fleet-shot-applied', 'word-move-applied', 'fleet-hud'])
+  })
+
+  it('the recorded opening with no GameHud is GAME_HUD_MISSING', () => {
+    expect(codes(fleetHudCheck, [], opening)).toEqual(['GAME_HUD_MISSING battleship-1:sea'])
+  })
+
+  it('the same opening with a GameHud passes, as do a later turn, a word board and a read-only board', () => {
+    expect(codes(fleetHudCheck, [], withHud)).toEqual([])
+    expect(codes(fleetHudCheck, [assistant(opening)], [data('battleship-1', { sea: { cells: [shot(0, 0, '✕')] } })])).toEqual([])
+    expect(codes(fleetHudCheck, [], [...board('word-forge'), data('word-forge', { secret: { word: 'lodge' }, cells: [] })])).toEqual([])
+    expect(codes(fleetHudCheck, [], [...mine('home', []), data('home', { secret: { fleet, playerFleet } })])).toEqual([])
   })
 })

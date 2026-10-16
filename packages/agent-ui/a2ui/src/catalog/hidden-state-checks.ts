@@ -15,7 +15,8 @@
 // - Battleship: a BoardGrid with an `actionName` (the board the player fires on, the `board-grid` idiom).
 // T-0265 adds one more Battleship check that reads the say turn's words rather than a surface: a typed shot at the
 // targeted board answered in prose alone, or a game asked for with no board. T-0280 adds its word-game twin: a typed
-// guess or a give-up at the targeted board answered in prose alone, or a give-up with no ResultCard.
+// guess or a give-up at the targeted board answered in prose alone, or a give-up with no ResultCard. T-0284: a
+// Battleship board opened with no GameHud.
 // Both games ride base `agent-ui` and both draw a clickable BoardGrid, so each check also skips the other game's
 // surface (T-0263): a word cue (that TextField, or `/secret/word`) with no committed fleet is never judged for a fleet,
 // and a committed fleet with no word cue is never judged for a word.
@@ -364,5 +365,34 @@ export const wordMoveAppliedCheck: SemanticCheck = {
   },
 }
 
+/**
+ * T-0284 (the recorded Haiku 5.5 Admiral, round 4 row-sweep t0): "Battleship, please." opened a Column with a Text
+ * title, the BoardGrid and a Text bound to /hud/status, so the GameHud composite row (which reads literal words)
+ * stayed silent. GAME_HUD_MISSING: a Battleship board opened this round (a clickable BoardGrid on a surface that
+ * commits a fleet) with no GameHud on its surface.
+ */
+export const fleetHudCheck: SemanticCheck = {
+  id: 'fleet-hud',
+  requires: ['BoardGrid', 'GameHud'],
+  check({ surfaces }) {
+    const findings: SemanticFinding[] = []
+    for (const view of surfaces) {
+      if (view.priorDataModel !== undefined || !hasFleetCue(view)) continue
+      const types = new Set([...view.components.values()].map((c) => c.component))
+      if (types.has('GameHud')) continue
+      const board = boardGrids(view).find((b) => typeof b['actionName'] === 'string' && b['actionName'] !== '')
+      if (board === undefined) continue
+      findings.push({
+        code: 'GAME_HUD_MISSING',
+        path: `${view.surfaceId}:${board.id}`,
+        message:
+          `${view.surfaceId} opens a Battleship board with no GameHud, so the game's status and score have no strip. ` +
+          `Add ONE GameHud beside BoardGrid "${board.id}" with its title, status and stats (shots fired, ships left) bound to the data model, and drop the hand-built title and status text.`,
+      })
+    }
+    return findings
+  },
+}
+
 /** Every hidden-state check, in the order the hosts run them. */
-export const HIDDEN_STATE_CHECKS: readonly SemanticCheck[] = [wordSecretCheck, fleetSecretCheck, fleetShotAppliedCheck, wordMoveAppliedCheck]
+export const HIDDEN_STATE_CHECKS: readonly SemanticCheck[] = [wordSecretCheck, fleetSecretCheck, fleetShotAppliedCheck, wordMoveAppliedCheck, fleetHudCheck]
