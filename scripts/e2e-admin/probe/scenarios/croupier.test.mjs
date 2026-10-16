@@ -4,7 +4,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { parseProbeCli } from '../cli.ts'
-import { CROUPIER_MODELS, CROUPIER_SCENARIOS, liveCommandsScript, probeArgv, SAMPLES } from './croupier.ts'
+import { CROUPIER_MODELS, CROUPIER_ROUND_SCENARIOS, CROUPIER_SCENARIOS, liveCommandsScript, probeArgv, SAMPLES, STUD_STREET } from './croupier.ts'
 
 const read = (rel) => readFileSync(new URL(rel, new URL('../../../../', import.meta.url)), 'utf8')
 const BLACKJACK_FAMILY = ['blackjack', 'spanish-21', 'pontoon']
@@ -53,5 +53,22 @@ describe('croupier closed-loop scenarios', () => {
   it('every model is in the admin picker', () => {
     const schema = read('packages/agent-ui/app/src/controls/agent-admin/agent-admin-schema.ts')
     for (const m of CROUPIER_MODELS) expect(schema).toContain(`{ id: '${m.id}',`)
+  })
+})
+
+// T-0283: live round 4 (regress-croupier-seven-card-stud-opus-1, traces :206-:212). Opus settled the hand on the fourth
+// check, read the spare sixth as "deal again" and opened round 2 in prose, so Deal again found no button.
+describe('the live-round seven-card stud steps fit its five betting rounds (T-0283)', () => {
+  const stud = CROUPIER_ROUND_SCENARIOS.find((s) => s.name === 'seven-card-stud').steps
+
+  it('round 1 is the opening, one step per betting round, then Deal again', () => {
+    const deal = stud.findIndex((step) => step.click === 'Deal again')
+    expect(deal).toBe(6)
+    expect(stud.slice(1, deal)).toEqual(Array.from({ length: 5 }, () => ({ say: STUD_STREET })))
+  })
+
+  it('each street step leaves a finished hand on the table, so a hand settled early still reaches Deal again', () => {
+    expect(STUD_STREET).toMatch(/^Check, or call if there is a bet\./)
+    expect(STUD_STREET).toMatch(/If the hand is already over, leave the table as it is\./)
   })
 })
