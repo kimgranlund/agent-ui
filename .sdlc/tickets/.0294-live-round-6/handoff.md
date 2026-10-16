@@ -2,7 +2,7 @@
 id: T-0294
 title: "Live round 6: full matrix, every preset on Haiku, Sonnet and Opus ($20 cap)"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0289, T-0290, T-0292, T-0293]          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -44,3 +44,14 @@ Kim: "make sure round 6 uses the new skill and verifies the improvements made". 
 - Any skill gap found is a proposed note for the skill's `updates-log/` (a new dated entry with front matter per its `AGENTS.md`), not a repo ticket.
 
 Done when also: the report holds `## Skill improvements, verified` with all six rows, each with evidence.
+
+## Outcome
+
+2026-10-16 · lane: full L2 · verdict: closed by reason (Round 6 full matrix: 76 of 87 pass, $36.82 of $42; fog d242f3e13e7408d0d5327c38; skill improvements verified (checklist partly); verifier L2 pass) · verifier: verifier-L2 (sonnet) · base: da6c7321c6ef
+- Changed: see commits
+- Commits: 05afd6e T-0294: live round 6 report, fog decision analysis and three keyless replays; 6c0e7a9 T-0294: phase 2 uses and verifies the updated context-fog-of-war skill (Kim); a8ce4f5 T-0294: cap raised to $42 (Kim); afe5658 T-0294: live round 6 full matrix generator and live commands; 510326c T-0294: commit pending ticket records
+- Check: 1 Round folder holds traces, ledger, round.json, runs/, README, report.md with the matrix and the w...: pass
+- Check: 2 Hydrated fog report published and id recorded: pass
+- Check: 3 `tickets.py check` and `npm run check` exit 0: pass
+- Check: 4 Report holds `## Skill improvements, verified` with all six rows, each with evidence: pass
+- Check: 5 Constraint: no prompt or code fixes, screenshots not in the repo: pass

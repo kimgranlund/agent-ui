@@ -122,7 +122,7 @@ Representative turns, with the exposure chain as recorded on the trace line (obs
 | :2 deal | Haiku | same as :11 | same as :11 | blackjack | ACTION_NOT_APPLIED x2, 3 | nothing (SEMANTIC_UNCORRECTED) |
 | :366 deal | Opus | same as :11 | same as :11 | blackjack | none, 1 | CardTable |
 | :75 spa booking | Haiku | concierge-booking-request, service-gateway, commerce-product-card | none | none | SURFACE_MISSING x2, then FEED_SCOPE, SURFACE_DEGRADED, 3 | nothing |
-| :161 spa services | Haiku | concierge-booking-request, service-gateway, backable-wizard | greeting-card, product-presentation | none | PRODUCT_CARD_MISSING, PARSE, 3 | Card with a DescriptionList |
+| :161 spa services (run long-concierge-booking-haiku-1) | Haiku | concierge-booking-request, service-gateway, backable-wizard | greeting-card, product-presentation | none | PRODUCT_CARD_MISSING, PARSE, 3 | Card with a DescriptionList |
 | :347 spa services | Sonnet | same as :161 | same as :161 | none | none, 1 | Grid of ProductCard |
 | :234 showdown | Sonnet | card-table-round, booking-reservation, button-icon-actions | game-hud | omaha | none, 1 | Card holding only Deal again |
 

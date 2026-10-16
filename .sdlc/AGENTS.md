@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:9d9f6a48f487 -->
+<!-- sdlc-lite:managed:start v1 sha256:e6e2ea8bb465 -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -20,7 +20,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0197 BookingForm field kinds (dateRange, radio, time, stepper) and sharing it with the Maitre d' (0197-bookingform-kinds)
   - T-0198 Step flow pattern: step n of m, Back and Next, shared /draft data (0198-step-flow)
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (0199-itinerary-compare)
-- ready: 16
+- ready: 15
   - T-0160 Agent content as files: extract preset and pack seeds to .md manifests with a generated, drift-gated registry (0160-agent-content-files)
   - T-0161 Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind (0161-agent-content-overlays)
   - T-0162 Settings pane forms generated from each content kind's schema, with provenance, diff and reset (0162-agent-content-schema-forms)
@@ -36,11 +36,10 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0209 One source per concept: layer membership, calibration bullets, persona list; mini-skill ranking stability test (0209-context-single-source)
   - T-0246 Docs-page persona exemplar fixtures carry the same game and booking defects as the seeds (0246-persona-exemplar-fixture-defects)
   - T-0247 validate-payload --catalog cannot load persona catalog ids (<base>--<persona>) (0247-validate-payload-persona-ids)
-  - T-0294 Live round 6: full matrix, every preset on Haiku, Sonnet and Opus ($20 cap) (0294-live-round-6)
 - claimed: 0
 - paused: 0
 - blocked: 0
-- done: 264
+- done: 266
 - dropped: 4
 
 ## Procedures

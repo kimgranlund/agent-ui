@@ -2,13 +2,11 @@
 id: T-0295
 title: "Write the round 3 to 5 context-fog-of-war lessons into the standing specs, references and skills"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
 created: 2026-10-16
-branch: docs/fog-lessons-into-docs
-worktree: ../agent-ui.worktrees/wave-fl
 router: .sdlc/tickets/AGENTS.md  # how to claim and close this ticket
 ---
 
@@ -32,3 +30,23 @@ Docs only, plus the skill. `grammar.md` and ADRs are untouched. No em dashes. Ci
 ## Done when
 - Each of the six scope items is present at its named home (a grep per item, listed in the handoff's acceptance criteria).
 - `doc_lint` exits 0 on every touched doc; `npm run check` exits 0; `site/lib/docs-grammar.test.ts` exits 0.
+
+## Outcome
+
+2026-10-16 · lane: full L2 · verdict: closed by reason (Merged: round 3 to 5 fog lessons in the standing docs, specs and skills; verifier L2 pass) · verifier: verifier-L2 (sonnet) · base: da6c7321c6ef
+- Changed: see commits
+- Commits: d0b416e T-0295: record lane wave-fl
+- Check: 1 `grep -q "one-line description" agent-model.md`: pass
+- Check: 2 `grep -qi "known gap" agent-model.md agent-content.spec.md` exits 1: pass
+- Check: 3 `grep -q "let the USER take the final action" a2ui-prompt-authoring/SKILL.md`: pass
+- Check: 4 `grep -q "fabricated system notice" response-type-selection.spec.md`: pass
+- Check: 5 `grep -q "Concierge rulings" a2ui-catalog-architecture.spec.md`: pass
+- Check: 6 `grep -q "conflicting guidance" agent-closed-loop.spec.md`: pass
+- Check: 7 `grep -q "Why it failed and how to fix it" agent-closed-loop.spec.md`: pass
+- Check: 8 `grep -q "AUTHORED" agent-closed-loop.spec.md`: pass
+- Check: 9 `grep -q "Rounds 3 to 5" agent-closed-loop.spec.md`: pass
+- Check: 10 `grep -q "cause class" scripts/e2e-admin/README.md`: pass
+- Check: 11 `grep -q "passes on any Card" scripts/e2e-admin/README.md`: pass
+- Check: 12 `git diff --quiet fea771f1 -- grammar.md .claude/docs/adr`: pass
+- Check: 13 `npx vitest run site/lib/docs-grammar.test.ts`: pass
+- Check: 14 `npm run check`: pass
