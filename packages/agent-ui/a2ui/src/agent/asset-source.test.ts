@@ -15,6 +15,14 @@ describe('asset-source', () => {
     expect(text).toBe(readFileSync(`${SRC}/agent/prompts/grammar.md`, 'utf8'))
   })
 
+  // T-0308 (Kim's ruling, 2026-10-16): the shared grammar settles a receipt with no reference-Badge example, since the
+  // concierge confirm check asks for no reference number and the catalog's BookingConfirmation has no such field.
+  it('T-0308: the shared grammar carries no reference-Badge example', () => {
+    const grammar = readAsset('agent/prompts/grammar.md')
+    expect(grammar).toMatch(/settled-status Badge/)
+    expect(grammar).not.toMatch(/#[A-Z]{2}\d+/)
+  })
+
   it('readAsset throws AgentAssetError naming the regen script on an unknown key', () => {
     expect(() => readAsset('agent/prompts/no-such-prompt.md')).toThrow(AgentAssetError)
     expect(() => readAsset('agent/prompts/no-such-prompt.md')).toThrow(/generate-agent-assets\.mjs/)

@@ -21,16 +21,15 @@
 // T-0289 (round 5, the Haiku confirm refusal): a guest's chat confirm on a complete BookingForm IS the submission, so
 // the confirm repair asks for a BookingConfirmation reading back the form's values and never for a reference (the
 // catalog's BookingConfirmation has no such field, and Haiku refused to invent one).
+//
+// T-0313: the confirm, services and booking asks are read from the composite-moment rows (`askedCompositeMoment`), the
+// one matcher for each moment; only the facility ask stays here, since its answer is no composite.
 // DOM-less and node-free, like `semantic-check.ts`: both server hosts import the manifest that carries it.
 
+import { askedCompositeMoment } from '../../composite-moments.ts'
 import { readPointer } from '../../semantic-check.ts'
 import type { SemanticCheck, SemanticCheckInput, SemanticFinding, SurfaceView } from '../../semantic-check.ts'
 
-/** The guest confirms a booking already read back ("please confirm the booking"; T-0282: "Confirm it, the details are
- *  right.", "Yes, confirm the table for four."). */
-const CONFIRM = /\bconfirm\s+it\b|\bconfirm\b[^.?!]*\b(booking|reservation|appointment|slot|table|tour)\b/i
-/** The guest asks what can be booked ("What spa services can I book?"). */
-const SERVICES = /\b(services|treatments|amenities|menu)\b/i
 /** T-0285: the guest asks about the hotel's facilities or their hours ("When do the pool and gym close?", "What are
  *  the opening hours of the pool, gym and spa?", "Which restaurants and bars does the hotel have?"). */
 const FACILITY_NOUN = '(pool|gym|spa|sauna|restaurant|restaurants|bar|bars)'
@@ -39,14 +38,12 @@ const FACILITY = new RegExp(
     `\\b${FACILITY_NOUN}\\b[^.?!]*\\b(open|opens|close|closes|closed|hours)\\b|\\b(open|opens|close|closes|hours)\\b[^.?!]*\\b${FACILITY_NOUN}\\b`,
   'i',
 )
-/** The guest asks to book ("Book a 60-minute massage on Thursday at 15:00"; T-0282: "I'd like a table at Vela"). */
-const BOOK = /\b(book|reserve|reservation)\b|\b(i'?d|i would|we'?d|we would) like (a|an) (table|room|treatment|massage|tour|appointment)\b/i
 
-/** The moment a say turn's words ask for, with the surface that answers it, or undefined. */
+/** The moment a say turn's words ask for, with the surface that answers it, or undefined: a composite moment's row
+ *  first (confirm, services, booking), then the facility ask. */
 function askedMoment(intent: string): { moment: string; surface: string } | undefined {
-  if (CONFIRM.test(intent)) return { moment: 'confirm', surface: 'a BookingConfirmation reading back the values on the open BookingForm (the guest\'s confirm in chat is their submission, so nothing waits on the form button; add no reference number)' }
-  if (SERVICES.test(intent)) return { moment: 'services', surface: 'one ProductCard per service the guest can book, templated in a Grid, each with its price and book action' }
-  if (BOOK.test(intent)) return { moment: 'booking', surface: 'a BookingForm with its value bound to the details the guest already gave, so they arrive pre-filled' }
+  const composite = askedCompositeMoment(intent)
+  if (composite !== undefined) return composite
   if (FACILITY.test(intent)) return { moment: 'facility', surface: 'one compact info card: ONE Card holding a DescriptionList, one row per facility with its hours and location' }
   return undefined
 }

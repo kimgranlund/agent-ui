@@ -12,6 +12,11 @@
 // The link to the sidecar is a test, not an import (`composite-moments.test.ts`: every `moment` is one of its
 // composite's intents): the module imports no JSON, so plain Node (`scripts/e2e-admin/probe/trace.ts`) and both
 // server hosts can import it, and `selection-guidance.ts` keeps its closed `{intents, notFor}` row shape.
+//
+// T-0313 (Kim 2026-10-16, P1 as revised): a row is the one matcher for its moment. Its `ask` holds the turn words that
+// ask for the moment and the surface that answers it; the Concierge SURFACE_MISSING check reads them through
+// `askedCompositeMoment` instead of keeping its own regexes. The facility ask stays in that check: its answer, a Card
+// holding a DescriptionList, is no composite.
 
 import type { A2uiComponent } from '../protocol.ts'
 import type { SemanticCheck, SemanticFinding, SurfaceView } from './semantic-check.ts'
@@ -47,9 +52,20 @@ export interface CompositeMoment {
   readonly notInside?: readonly string[]
   /** T-0279: a Table with a column whose key or label matches `cue`, while the surface words match `words`. */
   readonly tableColumn?: { readonly cue: RegExp }
+  /** T-0313: the turn words that ask for this moment (`cue`), its short name (the SURFACE_MISSING path), the surface that
+   *  answers it, and its precedence when one turn's words ask for two moments (lowest first). */
+  readonly ask?: { readonly moment: string; readonly cue: RegExp; readonly surface: string; readonly rank: number }
 }
 
 const BOOKING_INPUTS = ['TextField', 'Calendar', 'Select', 'ComboBox', 'Slider', 'RadioGroup', 'ChoiceGroup'] as const
+
+/** The guest confirms a booking already read back ("please confirm the booking"; T-0282: "Confirm it, the details are
+ *  right.", "Yes, confirm the table for four."). */
+const CONFIRM_ASK = /\bconfirm\s+it\b|\bconfirm\b[^.?!]*\b(booking|reservation|appointment|slot|table|tour)\b/i
+/** The guest asks what can be booked ("What spa services can I book?"). */
+const SERVICES_ASK = /\b(services|treatments|amenities|menu)\b/i
+/** The guest asks to book ("Book a 60-minute massage on Thursday at 15:00"; T-0282: "I'd like a table at Vela"). */
+const BOOK_ASK = /\b(book|reserve|reservation)\b|\b(i'?d|i would|we'?d|we would) like (a|an) (table|room|treatment|massage|tour|appointment)\b/i
 
 export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
   {
@@ -63,6 +79,7 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
     // T-0266: a fully specified ask read back as a DescriptionList with a confirm Button is still this moment.
     readBack: { types: ['DescriptionList'], cue: /\bconfirm\b/i },
     words: /\b(book|booking|reserve|reservation|guest|guests|party)\b/i,
+    ask: { moment: 'booking', cue: BOOK_ASK, rank: 2, surface: 'a BookingForm with its value bound to the details the guest already gave, so they arrive pre-filled' },
   },
   {
     composite: 'BookingConfirmation',
@@ -75,6 +92,13 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
     notInside: ['Card'],
     noInputs: BOOKING_INPUTS,
     words: /\b(confirmed|booked|reserved|confirmation)\b/i,
+    ask: {
+      moment: 'confirm',
+      cue: CONFIRM_ASK,
+      rank: 0,
+      surface:
+        "a BookingConfirmation reading back the values on the open BookingForm (the guest's confirm in chat is their submission, so nothing waits on the form button; add no reference number)",
+    },
   },
   {
     composite: 'BoardGrid',
@@ -114,6 +138,7 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
     lacks: ['BookingForm', 'BookingConfirmation', 'CardTable'],
     tableColumn: { cue: /\b(price|prices|cost|rate|fee)\b/i },
     words: /\b(book|bookable|treatment|treatments|service|services|spa|massage|room|rooms|offer|offers)\b/i,
+    ask: { moment: 'services', cue: SERVICES_ASK, rank: 1, surface: 'one ProductCard per service the guest can book, templated in a Grid, each with its price and book action' },
   },
 ]
 
@@ -239,6 +264,15 @@ export function compositeMomentCheck(m: CompositeMoment): SemanticCheck {
 }
 
 export const compositeMomentChecks: readonly SemanticCheck[] = COMPOSITE_MOMENTS.map(compositeMomentCheck)
+
+/** T-0313: the rows that carry an ask cue, in precedence order. */
+const ASKED = COMPOSITE_MOMENTS.filter((m) => m.ask !== undefined).sort((a, b) => a.ask!.rank - b.ask!.rank)
+
+/** T-0313: the composite moment a turn's words ask for, with the surface that answers it, or undefined. */
+export function askedCompositeMoment(intent: string): { moment: string; surface: string } | undefined {
+  const ask = ASKED.find((m) => m.ask!.cue.test(intent))?.ask
+  return ask === undefined ? undefined : { moment: ask.moment, surface: ask.surface }
+}
 
 /** T-0299: the row a `<COMPOSITE>_MISSING` code names, or undefined for any other code. */
 export function missingCompositeMoment(code: string): CompositeMoment | undefined {

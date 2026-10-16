@@ -15,3 +15,21 @@ P1 as revised and P5's replacement (Kim 2026-10-16 debate): the composite-moment
 
 ## Done when
 - Tests: the Concierge moments resolve through the rows with no behavior change on the existing replays; structured-container is not selected on a confirm turn; "Play again." retrieval excludes the word board; each red at the base. The catalog, live-agent and probe suites and `npm run check` exit 0.
+
+## Lane bundle
+One solo lane (wave-gr), one commit per ticket, in order:
+1. T-0308: drop the reference-Badge example from the grammar and the library text (`.sdlc/tickets/0308-grammar-drop-reference-badge/`).
+2. T-0312: persona type-name lint, Croupier reword, pin tests per ruling, committed audit mapping (`.sdlc/tickets/0312-persona-type-name-lint/`).
+3. T-0313: one matcher per composite moment, the structured-container trigger fix, the Play again vocabulary fix (this ticket).
+
+## Acceptance criteria
+verifier: L3
+- (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts -t "ask cue"` exits 0: the BookingConfirmation, ProductCard and BookingForm rows carry the Concierge ask cues (confirm, services, booking) in that precedence, each matching its round-scenario sentence. The facility ask stays local to `personas/concierge/checks.ts`: its answer (one Card holding a DescriptionList) is no composite, so no row owns it.
+- `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog` exits 0 with `personas/concierge/checks.test.ts` unchanged: every Concierge moment resolves with the same finding path and message as before.
+- `npx vitest run --project scripts scripts/e2e-admin/probe` exits 0 (the Concierge replays unchanged).
+- (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/mini-skills.test.ts -t "confirm turn"` exits 0: structured-container is not selected on a booking confirm turn; a trip summary turn still selects it.
+- `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent` exits 0 (agent-assets freshness; the prompt-equivalence baseline recaptured deliberately only if the trigger edit moves it).
+- `npm run check` exits 0.
+
+## Conductor ruling (2026-10-16)
+The "Play again." retrieval part is dropped from T-0313: its criterion already passes at the base (retrieval returns nothing for "Play again." on agent-ui), so no change can be shown, and the semantic checks already catch the case (round 6: 6 of 6 saved). The real defect the solo found, cross-game retrieval on the shared agent-ui catalog ("New game" ranks the word board first for the Admiral), is filed separately for the debate process. Judge T-0313 on its other two parts.

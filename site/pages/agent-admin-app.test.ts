@@ -1010,7 +1010,7 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
   it('a persisted OLD-version store is dropped and the new seed applies; same-version edits survive', async () => {
     const { presetStore, AGENT_PRESETS, resetPreset } = await import('./agent-admin-presets.ts')
     const concierge = AGENT_PRESETS.find((p) => p.id === 'concierge')!
-    expect(concierge.seedVersion, 'the upgrade declares its bump').toBe(15) // T-0289: a chat confirm on a complete form is the submission
+    expect(concierge.seedVersion, 'the upgrade declares its bump').toBe(16) // T-0308: the settled receipt's title carries no reference number
 
     // Simulate a PRE-upgrade browser: old persisted content, NO seedVersion marker (=1 implicitly).
     resetPreset(concierge) // clean slate for the probe (drops cache + keys)
@@ -1038,6 +1038,9 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
     expect(flow.content).toMatch(/every detail[\s\S]*BookingForm, pre-filled/)
     expect(flow.content).toMatch(/ONE BookingConfirmation/)
     expect(flow.content).not.toMatch(/settled-status Badge|reading back/)
+    // T-0308 (Kim's ruling): the settled BookingConfirmation's title carries no reference number, as the confirm check asks.
+    expect(flow.content).toMatch(/ONE BookingConfirmation \(a title such as "Booked"/)
+    expect(flow.content).not.toMatch(/#[A-Z]{2}\d+/)
     expect(concierge.houseFacts).toMatch(/booking form pre-filled/)
     expect(concierge.houseFacts).not.toMatch(/read them back/)
     // T-0267: the spa treatment list rides the House facts, so a spa services ask has treatments to list.
@@ -1054,7 +1057,7 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
     expect(facility?.description).toMatch(/ONE Card holding a DescriptionList, never a ServiceCard/)
     expect(facility?.content).toMatch(/ONE Card holding a DescriptionList/)
     expect(facility?.content).not.toMatch(/ONE ServiceCard per facility/)
-    expect(localStorage.getItem('agent-admin-app.concierge.seedVersion')).toBe('15')
+    expect(localStorage.getItem('agent-admin-app.concierge.seedVersion')).toBe('16')
 
     // Same-version edits SURVIVE a rebuild (persisted-wins is untouched at the current version).
     migrated.set('entries:skill', [...skills.map((s) => s), { id: 'my-edit', kind: 'skill', label: 'my-edit', description: '', content: 'mine', order: 99, enabled: true, builtin: false }])
