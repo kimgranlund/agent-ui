@@ -6,7 +6,9 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { parseProbeCli } from '../cli.ts'
 import { describeCommands } from '../run-capped.ts'
-import { round3Runs } from './round3.ts'
+import { round3CommandsScript, round3Runs } from './round3.ts'
+import { roundCommandsScript } from './round.ts'
+import { routingCommandsScript } from './routing.ts'
 import { R3_FAILED, ROUND4_DIR, ROUND4_FILE, ROUND4_LONG_FLOWS, round4CommandsScript, round4Runs } from './round4.ts'
 
 const root = new URL('../../../../', import.meta.url)
@@ -72,5 +74,14 @@ describe('live round 4', () => {
     const described = describeCommands(text)
     expect(described).toHaveLength(37)
     expect(described.at(-1)).toBe('long-concierge-booking-opus-1: concierge on claude-opus-5-5, 5 steps, 4 --expect-turn, 1 --expect-routing')
+  })
+
+  // T-0277: T-0267's spa list has two 60-minute massages, so an ask for "a 60-minute massage" cannot be confirmed.
+  it('every spa booking ask in every generator names one treatment, the Swedish massage', () => {
+    for (const script of [roundCommandsScript(), routingCommandsScript(), round3CommandsScript(), round4CommandsScript()]) {
+      const asks = script.match(/Book a [^"]*massage[^"]*/g) ?? []
+      expect(asks.length).toBeGreaterThan(0)
+      for (const ask of asks) expect(ask).toContain('60-minute Swedish massage')
+    }
   })
 })
