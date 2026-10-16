@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:16835581ebee -->
+<!-- sdlc-lite:managed:start v1 sha256:d82b2fd6ded9 -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -20,7 +20,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0197 BookingForm field kinds (dateRange, radio, time, stepper) and sharing it with the Maitre d' (0197-bookingform-kinds)
   - T-0198 Step flow pattern: step n of m, Back and Next, shared /draft data (0198-step-flow)
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (0199-itinerary-compare)
-- ready: 20
+- ready: 17
   - T-0160 Agent content as files: extract preset and pack seeds to .md manifests with a generated, drift-gated registry (0160-agent-content-files)
   - T-0161 Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind (0161-agent-content-overlays)
   - T-0162 Settings pane forms generated from each content kind's schema, with provenance, diff and reset (0162-agent-content-schema-forms)
@@ -36,15 +36,12 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0209 One source per concept: layer membership, calibration bullets, persona list; mini-skill ranking stability test (0209-context-single-source)
   - T-0246 Docs-page persona exemplar fixtures carry the same game and booking defects as the seeds (0246-persona-exemplar-fixture-defects)
   - T-0247 validate-payload --catalog cannot load persona catalog ids (<base>--<persona>) (0247-validate-payload-persona-ids)
-  - T-0296 Admiral: a surrender ends with one ResultCard beside the revealed board (0296-admiral-surrender-result-card)
-  - T-0297 NARRATED_MECHANICS misses a capitalized surface id ('Table-3 is dealt.') (0297-narrated-mechanics-case)
-  - T-0298 Haiku repair rounds never call render_surface: force the tool on a no-tool repair round (0298-haiku-repair-forced-tool)
-  - T-0299 The last repair round drops or swaps the Concierge surface (FEED_SCOPE then SURFACE_DEGRADED) (0299-final-round-surface-drop)
-  - T-0300 A settled table frames Deal again alone in a Card: a LONE_BUTTON_FRAME check (0300-lone-button-frame)
+  - T-0301 A forced render_surface repair round turns thinking off so the forced tool reaches the model (0301-forced-repair-thinking-off)
+  - T-0302 The last repair round halts with SURFACE_DROPPED and ships nothing (round 6 :170) (0302-last-round-surface-dropped)
 - claimed: 0
 - paused: 0
 - blocked: 0
-- done: 266
+- done: 271
 - dropped: 4
 
 ## Procedures

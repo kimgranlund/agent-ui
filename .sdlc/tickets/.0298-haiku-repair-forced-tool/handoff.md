@@ -2,7 +2,7 @@
 id: T-0298
 title: "Haiku repair rounds never call render_surface: force the tool on a no-tool repair round"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -27,3 +27,9 @@ Round 6 cluster C (`.sdlc/evals/rounds/2026-10-15-r6-matrix/report.md`): :2 ran 
 - (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/produce-forced-surface.test.ts`
 - (guard) `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent`
 - (guard) `npm run check`
+
+## Outcome
+
+2026-10-16 · lane: full L2 · verdict: closed by reason (Merged in the round 6 producer lane; verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

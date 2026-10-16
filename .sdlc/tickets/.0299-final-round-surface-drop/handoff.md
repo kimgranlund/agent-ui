@@ -2,7 +2,7 @@
 id: T-0299
 title: "The last repair round drops or swaps the Concierge surface (FEED_SCOPE then SURFACE_DEGRADED)"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -31,6 +31,17 @@ Round 6 cluster D (`.sdlc/evals/rounds/2026-10-15-r6-matrix/report.md`, P1, foll
 - (guard) `npm run check`
 
 ## Lane bundle
-- T-0297: NARRATED_MECHANICS misses a capitalized surface id (`.sdlc/tickets/0297-narrated-mechanics-case/handoff.md`)
-- T-0298: Haiku repair rounds never call render_surface: force the tool on a no-tool repair round (`.sdlc/tickets/0298-haiku-repair-forced-tool/handoff.md`)
+- T-0297: NARRATED_MECHANICS misses a capitalized surface id (`.sdlc/tickets/.0297-narrated-mechanics-case/handoff.md`)
+- T-0298: Haiku repair rounds never call render_surface: force the tool on a no-tool repair round (`.sdlc/tickets/.0298-haiku-repair-forced-tool/handoff.md`)
 - T-0299: The last repair round drops or swaps the Concierge surface (this handoff)
+
+## Outcome
+
+2026-10-16 · lane: full L3 · verdict: closed by reason (Merged in the round 6 producer lane; verifier L2 pass) · verifier: verifier-L2 (sonnet) · base: 81896b34c19f
+- Changed: see commits
+- Commits: none
+- Check: 1 (red) concierge-haiku-final-round-feed-scope replay: pass
+- Check: 2 (red) produce-binding-finding.test.ts: pass
+- Check: 3 (guard) concierge personas + composite-moments.test.ts: pass
+- Check: 4 (guard) live-agent: pass
+- Check: 5 (guard) `npm run check`: pass
