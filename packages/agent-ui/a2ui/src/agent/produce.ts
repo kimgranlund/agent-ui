@@ -1332,7 +1332,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   let lastCaptureRound = false // RTS-R8: the previous round's payload came from `render_surface` (tool-aware repair wording)
   // T-0298: the previous round answered with no payload and a semantic finding sent it back (Haiku wrote a target
   // meta-line and prose through every repair round, round 6 :2), so this repair round forces `render_surface`. The
-  // adapter sends the choice only where the model takes one: never with thinking on (the API rejects it).
+  // adapter sends the choice only where the model takes one: never with thinking on (the API rejects it). T-0301: so
+  // the forced round asks for thinking off; the adapter keeps it only where the model's capability row allows it.
   let forceSurfaceRound = false
   let surfaceRequestedFedBack = false // RTS-R6: the ONE correction round a surface override with no payload gets
   let textJsonlIgnored = false // RTS-R3: sticky, a capture round's text channel carried wire or genui lines that were dropped
@@ -1439,7 +1440,9 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       ...(systemCacheBoundary > 0 ? { systemCacheBoundary } : {}),
       messages: messagesFor(input, failures, lastRaw, deps.catalog, lastOutput, lastCaptureRound, surfacesNote),
       effort: roundEffort,
-      ...(opts.modelSettings !== undefined ? { modelSettings: opts.modelSettings } : {}),
+      ...(forceSurface
+        ? { modelSettings: { ...opts.modelSettings, thinking: 'disabled' as const } }
+        : opts.modelSettings !== undefined ? { modelSettings: opts.modelSettings } : {}),
       onEvent,
       // GH #49 — relayed verbatim; the adapter owns the tool loop. Its TEXT stays buffered for the whole
       // round (intentional — GH #290's fix is scoped to PROGRESS delivery only), but its onEvent 'tool'

@@ -22,3 +22,9 @@ T-0298 (closed) forces render_surface on a repair round after a no-tool round, b
 ## Done when
 - A produce test: at effort medium (thinking on), a no-tool ACTION_NOT_APPLIED round builds round 2 with thinking off and tool_choice render_surface, and round 1 keeps thinking on; red at the base.
 - The live-agent tests and `npm run check` exit 0.
+
+## Acceptance criteria
+verifier: L3
+- (red) `npx vitest run packages/agent-ui/a2ui/src/live-agent/produce-forced-surface.test.ts` exits 0: at effort medium on Haiku 5.5, round 1 sends `thinking: adaptive` with no `tool_choice`; the forced repair round 2 sends `thinking: {type:'disabled'}`, keeps `output_config.effort: medium`, and sends `tool_choice` render_surface. At xhigh (the capability row has no thinking off there) round 2 keeps thinking and is not forced.
+- `npx vitest run packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent` exits 0.
+- `npm run check` exits 0.

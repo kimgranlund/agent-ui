@@ -59,7 +59,8 @@ T-0172 rules (2026-10-14 traces):
   (`SemanticCheckInput.action`, the click's name, surface, context and click-time data model), so a click
   answered in prose alone spends a repair round (the Croupier's `ACTION_NOT_APPLIED`) and ships tallied at the
   bound. The repair round after such a no-payload finding passes `toolChoice` `render_surface` (T-0298); the
-  Anthropic adapter sends it only with thinking off and never on a model that rejects a forced choice. A say turn is judged the same way (`intent`, plus `target` when its meta-line names an open surface): a
+  Anthropic adapter sends it only with thinking off and never on a model that rejects a forced choice, so that
+  round also asks for thinking off, kept where the model's capability row allows it at the round's effort (T-0301). A say turn is judged the same way (`intent`, plus `target` when its meta-line names an open surface): a
   typed move or shot at that surface with no update is `ACTION_NOT_APPLIED`, and a game opening or a Concierge
   services, booking or confirm ask answered with no surface is `SURFACE_MISSING` (T-0265).
 - A missing-composite finding (`<COMPOSITE>_MISSING`, `catalog/composite-moments.ts`) stays binding for the rest
