@@ -1,0 +1,1438 @@
+{
+  "kind": "agent-ui-chat-probe-report",
+  "version": 1,
+  "name": "routing-decoy-words-sonnet-1",
+  "mode": "live",
+  "agent": "concierge",
+  "model": "claude-sonnet-5-5",
+  "runId": "routing-decoy-words-sonnet-1-b9edf3be",
+  "at": "2026-10-16T22:01:15.538Z",
+  "turns": [
+    {
+      "index": 0,
+      "request": {
+        "model": "claude-sonnet-5-5",
+        "effort": "high",
+        "catalogId": "agent-ui--concierge",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I don't actually know the current\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" local time in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Sorrento to t\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ell if\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bo\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"arding is still possible.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Chec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"king we\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ather for Sorrento might\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" also surface local time info\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", which could help answ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"er this.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"weather\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I don't have\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" access to the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" current time or live\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" seat availability, so I should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" be up\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"front about that. I know the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" cruise depart\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"s daily at 17:00\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and conditions seem f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ine, so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'll su\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ggest they conf\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"irm the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" boarding cutoff with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the front desk to be safe\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"The harbor cruise runs every day at 17:00, so there is one today. I can't see the current local time, and I don't have the boarding cut-off or seat availability. If it's before 17:00 you should be able to make it, but I'd confirm with the front desk first. They can check whether seats are left and how early you need to be at the dock.\\n\\nConditions look good for it. It's 19.5°C in Sorrento with light wind (8 km/h) and no rain.\\n\\nI can also book you a spot if you'd like. Just tell me how many guests.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Can I still board the 5pm cruise today?\",\"k\":3},\"exemplarIds\":[\"domain-concierge-booking-request\",\"frontier-service-gateway\",\"frontier-review-split\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":56641,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":4417},{\"id\":\"mini-skills\",\"chars\":1180},{\"id\":\"persona\",\"chars\":4979}],\"over\":false},\"usage\":{\"inputTokens\":8608,\"outputTokens\":418,\"cacheReadInputTokens\":17759,\"cacheCreationInputTokens\":17759},\"miniSkillIds\":[\"card-game-sheet\",\"greeting-card\"],\"cacheBoundary\":46065}}}"
+      ],
+      "rounds": [
+        {
+          "text": "The harbor cruise runs every day at 17:00, so there is one today. I can't see the current local time, and I don't have the boarding cut-off or seat availability. If it's before 17:00 you should be able to make it, but I'd confirm with the front desk first. They can check whether seats are left and how early you need to be at the dock.\n\nConditions look good for it. It's 19.5°C in Sorrento with light wind (8 km/h) and no rain.\n\nI can also book you a spot if you'd like. Just tell me how many guests.",
+          "tools": [
+            {
+              "name": "weather",
+              "input": {
+                "place": "Sorrento"
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-16.jsonl:1350",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          445
+        ]
+      },
+      "routing": {
+        "domains": [
+          "concierge"
+        ],
+        "exemplars": [
+          "domain-concierge-booking-request",
+          "frontier-service-gateway",
+          "frontier-review-split"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "facility-info-card",
+            "load": "index-only"
+          },
+          {
+            "name": "amenity-service-card",
+            "load": "index-only"
+          },
+          {
+            "name": "booking-flow",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "index-only"
+          },
+          {
+            "name": "curated-local-guides",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Wikipedia search",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          }
+        ]
+      },
+      "step": {
+        "say": "Can I still board the 5pm cruise today?",
+        "expectRouting": {
+          "domains": [
+            "concierge"
+          ],
+          "exemplars": {
+            "exclude": [
+              "domain-admiral-battleship-board",
+              "domain-lexicographer-word-board",
+              "domain-croupier-card-table-round"
+            ]
+          }
+        }
+      },
+      "domHosts": 0,
+      "proseText": "You Can I still board the 5pm cruise today? The harbor cruise runs every day at 17:00, so there is one today. I can't see the current local time, and I don't have the boarding cut-off or seat availability. If it's before 17:00 you should be able to make it, but I'd confirm with the front desk first. They can check whether seats are left and how early you need to be at the dock. Conditions look good for it. It's 19.5°C in Sorrento with light wind (8 km/h) and no rain. I can also book you a spot if you'd like. Just tell me how many guests.",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-16-r8-matrix/routing-decoy-words-sonnet-1/turn-1.png"
+    },
+    {
+      "index": 1,
+      "request": {
+        "model": "claude-sonnet-5-5",
+        "effort": "high",
+        "catalogId": "agent-ui--concierge",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I don't have act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ual r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ate or promotion\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" data\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", so I shouldn't\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" make\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ything up. Better to be up\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"front about\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" that and offer to help\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" check avail\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ability or start a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" suite booking, maybe\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" asking for dates to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" move\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" things\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" forward.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" set up a we\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ekend date-range pic\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ker t\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ied to a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" check\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-in/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"check-out data\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" model, with a button to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" search\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" su\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ite availability that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pass\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"es the sel\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ected dates along.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"catalogId\\\":\\\"agent-ui--concierge\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"value\\\":{\\\"stay\\\":{\\\"start\\\":\\\"\\\",\\\"end\\\":\\\"\\\"}}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Card\\\",\\\"children\\\":[\\\"hdr\\\",\\\"content\\\",\\\"footer\\\"]},{\\\"id\\\":\\\"hdr\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"hdrText\\\"]},{\\\"id\\\":\\\"hdrText\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Suite stay dates\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"content\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"cal\\\"]},{\\\"id\\\":\\\"cal\\\",\\\"component\\\":\\\"Calendar\\\",\\\"mode\\\":\\\"range\\\",\\\"valueStart\\\":{\\\"path\\\":\\\"/stay/start\\\"},\\\"valueEnd\\\":{\\\"path\\\":\\\"/stay/end\\\"},\\\"name\\\":\\\"stay\\\"},{\\\"id\\\":\\\"footer\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"go\\\"]},{\\\"id\\\":\\\"go\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Continue with these dates\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"suite_dates\\\",\\\"context\\\":{\\\"stay\\\":{\\\"path\\\":\\\"/stay\\\"}}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Pick your weekend dates and I'll set up a suite booking.\",\"ask\":{\"surfaceId\":\"ask-1\"},\"target\":{\"surfaceId\":\"ask-1\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Any deals on suites this weekend?\",\"k\":3},\"exemplarIds\":[\"domain-concierge-booking-request\",\"frontier-service-gateway\",\"frontier-result-card-win\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":54528,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3484},{\"id\":\"persona\",\"chars\":4979}],\"over\":false},\"usage\":{\"inputTokens\":3548,\"outputTokens\":1268,\"cacheReadInputTokens\":17759,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":46065}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui--concierge\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"stay\":{\"start\":\"\",\"end\":\"\"}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"children\":[\"hdr\",\"content\",\"footer\"]},{\"id\":\"hdr\",\"component\":\"CardHeader\",\"children\":[\"hdrText\"]},{\"id\":\"hdrText\",\"component\":\"Text\",\"text\":\"Suite stay dates\",\"variant\":\"h4\"},{\"id\":\"content\",\"component\":\"CardContent\",\"children\":[\"cal\"]},{\"id\":\"cal\",\"component\":\"Calendar\",\"mode\":\"range\",\"valueStart\":{\"path\":\"/stay/start\"},\"valueEnd\":{\"path\":\"/stay/end\"},\"name\":\"stay\"},{\"id\":\"footer\",\"component\":\"CardFooter\",\"children\":[\"go\"]},{\"id\":\"go\",\"component\":\"Button\",\"label\":\"Continue with these dates\",\"variant\":\"solid\",\"action\":{\"action\":\"suite_dates\",\"context\":{\"stay\":{\"path\":\"/stay\"}}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"I don't have live rates or promotions, so I can't confirm any suite deals this weekend. The front desk can tell you what's on offer. What I can tell you is that cancellation is free up to 48 hours before arrival, and late check-out to 14:00 is available subject to availability. Which dates would you like for a suite? Pick them below and I'll set up the booking.\",\"ask\":{\"surfaceId\":\"ask-1\"}}}",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Pick your weekend dates and I'll set up a suite booking.",
+                "target": "ask-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-1",
+                      "catalogId": "agent-ui--concierge",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "ask-1",
+                      "value": {
+                        "stay": {
+                          "start": "",
+                          "end": ""
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "children": [
+                            "hdr",
+                            "content",
+                            "footer"
+                          ]
+                        },
+                        {
+                          "id": "hdr",
+                          "component": "CardHeader",
+                          "children": [
+                            "hdrText"
+                          ]
+                        },
+                        {
+                          "id": "hdrText",
+                          "component": "Text",
+                          "text": "Suite stay dates",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "content",
+                          "component": "CardContent",
+                          "children": [
+                            "cal"
+                          ]
+                        },
+                        {
+                          "id": "cal",
+                          "component": "Calendar",
+                          "mode": "range",
+                          "valueStart": {
+                            "path": "/stay/start"
+                          },
+                          "valueEnd": {
+                            "path": "/stay/end"
+                          },
+                          "name": "stay"
+                        },
+                        {
+                          "id": "footer",
+                          "component": "CardFooter",
+                          "children": [
+                            "go"
+                          ]
+                        },
+                        {
+                          "id": "go",
+                          "component": "Button",
+                          "label": "Continue with these dates",
+                          "variant": "solid",
+                          "action": {
+                            "action": "suite_dates",
+                            "context": {
+                              "stay": {
+                                "path": "/stay"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-16.jsonl:1351",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          383
+        ]
+      },
+      "routing": {
+        "domains": [
+          "concierge"
+        ],
+        "exemplars": [
+          "domain-concierge-booking-request",
+          "frontier-service-gateway",
+          "frontier-result-card-win"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "facility-info-card",
+            "load": "index-only"
+          },
+          {
+            "name": "amenity-service-card",
+            "load": "index-only"
+          },
+          {
+            "name": "booking-flow",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "index-only"
+          },
+          {
+            "name": "curated-local-guides",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Wikipedia search",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          }
+        ]
+      },
+      "step": {
+        "say": "Any deals on suites this weekend?",
+        "expectRouting": {
+          "domains": [
+            "concierge"
+          ],
+          "exemplars": {
+            "exclude": [
+              "domain-admiral-battleship-board",
+              "domain-lexicographer-word-board",
+              "domain-croupier-card-table-round"
+            ]
+          }
+        }
+      },
+      "domHosts": 1,
+      "proseText": "You Can I still board the 5pm cruise today? The harbor cruise runs every day at 17:00, so there is one today. I can't see the current local time, and I don't have the boarding cut-off or seat availability. If it's before 17:00 you should be able to make it, but I'd confirm with the front desk first. They can check whether seats are left and how early you need to be at the dock. Conditions look good for it. It's 19.5°C in Sorrento with light wind (8 km/h) and no rain. I can also book you a spot if you'd like. Just tell me how many guests. You Any deals on suites this weekend? Pick your weekend dates and I'll set up a suite booking.",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-16-r8-matrix/routing-decoy-words-sonnet-1/turn-2.png"
+    },
+    {
+      "index": 2,
+      "request": {
+        "model": "claude-sonnet-5-5",
+        "effort": "high",
+        "catalogId": "agent-ui--concierge",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since there's still\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" an un\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"answered ask about suite\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dates, I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" need to think about whether the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" new it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"inerary surface should retire\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" that st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ale \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ask aff\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ordance, given\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" only\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" one surface should ever invite\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" action\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" at a time—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and the itinerary itself\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" doesn't have action butt\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ons, so I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to check what\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" happ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ens to ask-1's button\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"etch Sorrento's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" evening weather f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"resh rather than reu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"se the earlier call\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and build the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"inerary with the Time\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"line skill. For the evening\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" plan, I only want\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to include\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" fac\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ts I actually know—harb\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"or cruise,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Vela dinner,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Quay Bar drinks\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", pool/gym, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" spa hours—without invent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing details\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m unsure of\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", like Vela's act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ual hours.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"weather\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"evening-1\\\",\\\"catalogId\\\":\\\"agent-ui--concierge\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"evening-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Card\\\",\\\"children\\\":[\\\"hdr\\\",\\\"content\\\"]},{\\\"id\\\":\\\"hdr\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"hdrText\\\",\\\"wx\\\"]},{\\\"id\\\":\\\"hdrText\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"This evening in Sorrento\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"wx\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"19.5°C, dry\\\",\\\"intent\\\":\\\"success\\\"},{\\\"id\\\":\\\"content\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"tl\\\"]},{\\\"id\\\":\\\"tl\\\",\\\"component\\\":\\\"Timeline\\\",\\\"label\\\":\\\"Evening plan\\\",\\\"children\\\":[\\\"t1\\\",\\\"t2\\\",\\\"t3\\\",\\\"t4\\\"]},{\\\"id\\\":\\\"t1\\\",\\\"component\\\":\\\"TimelineItem\\\",\\\"status\\\":\\\"active\\\",\\\"label\\\":\\\"Harbor cruise\\\",\\\"timestamp\\\":\\\"17:00\\\",\\\"description\\\":\\\"Daily departure. Dry and calm, with light wind (8 km/h). Check seats and boarding time with the front desk.\\\"},{\\\"id\\\":\\\"t2\\\",\\\"component\\\":\\\"TimelineItem\\\",\\\"status\\\":\\\"pending\\\",\\\"label\\\":\\\"Aperitivo at the Quay Bar\\\",\\\"timestamp\\\":\\\"After the cruise\\\",\\\"description\\\":\\\"Casual drinks with the bay view. Hours: check with the front desk.\\\"},{\\\"id\\\":\\\"t3\\\",\\\"component\\\":\\\"TimelineItem\\\",\\\"status\\\":\\\"pending\\\",\\\"label\\\":\\\"Dinner at Vela\\\",\\\"timestamp\\\":\\\"Evening\\\",\\\"description\\\":\\\"Our fine-dining restaurant. I can book a table.\\\"},{\\\"id\\\":\\\"t4\\\",\\\"component\\\":\\\"TimelineItem\\\",\\\"status\\\":\\\"pending\\\",\\\"label\\\":\\\"Swim or gym\\\",\\\"timestamp\\\":\\\"Until 22:00\\\",\\\"description\\\":\\\"The pool and gym are open 06:00 to 22:00. The spa closes at 20:00.\\\"}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Here's an evening plan, in order. Times marked \\\"check\\\" need confirming with the front desk.\",\"target\":{\"surfaceId\":\"evening-1\"},\"trace\":{\"turnIndex\":4,\"query\":{\"intent\":\"Read my mind: what should I do this evening?\",\"k\":3},\"exemplarIds\":[\"domain-concierge-booking-request\",\"frontier-service-gateway\",\"frontier-greet-card\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":55692,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3844},{\"id\":\"mini-skills\",\"chars\":804},{\"id\":\"persona\",\"chars\":4979}],\"over\":false},\"usage\":{\"inputTokens\":9546,\"outputTokens\":1217,\"cacheReadInputTokens\":35518,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"greeting-card\"],\"cacheBoundary\":46065}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"evening-1\",\"catalogId\":\"agent-ui--concierge\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"evening-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"children\":[\"hdr\",\"content\"]},{\"id\":\"hdr\",\"component\":\"CardHeader\",\"children\":[\"hdrText\",\"wx\"]},{\"id\":\"hdrText\",\"component\":\"Text\",\"text\":\"This evening in Sorrento\",\"variant\":\"h4\"},{\"id\":\"wx\",\"component\":\"Badge\",\"label\":\"19.5°C, dry\",\"intent\":\"success\"},{\"id\":\"content\",\"component\":\"CardContent\",\"children\":[\"tl\"]},{\"id\":\"tl\",\"component\":\"Timeline\",\"label\":\"Evening plan\",\"children\":[\"t1\",\"t2\",\"t3\",\"t4\"]},{\"id\":\"t1\",\"component\":\"TimelineItem\",\"status\":\"active\",\"label\":\"Harbor cruise\",\"timestamp\":\"17:00\",\"description\":\"Daily departure. Dry and calm, with light wind (8 km/h). Check seats and boarding time with the front desk.\"},{\"id\":\"t2\",\"component\":\"TimelineItem\",\"status\":\"pending\",\"label\":\"Aperitivo at the Quay Bar\",\"timestamp\":\"After the cruise\",\"description\":\"Casual drinks with the bay view. Hours: check with the front desk.\"},{\"id\":\"t3\",\"component\":\"TimelineItem\",\"status\":\"pending\",\"label\":\"Dinner at Vela\",\"timestamp\":\"Evening\",\"description\":\"Our fine-dining restaurant. I can book a table.\"},{\"id\":\"t4\",\"component\":\"TimelineItem\",\"status\":\"pending\",\"label\":\"Swim or gym\",\"timestamp\":\"Until 22:00\",\"description\":\"The pool and gym are open 06:00 to 22:00. The spa closes at 20:00.\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "weather",
+              "input": {
+                "place": "Sorrento"
+              }
+            },
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here's an evening plan, in order. Times marked \"check\" need confirming with the front desk.",
+                "target": "evening-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "evening-1",
+                      "catalogId": "agent-ui--concierge"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "evening-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "children": [
+                            "hdr",
+                            "content"
+                          ]
+                        },
+                        {
+                          "id": "hdr",
+                          "component": "CardHeader",
+                          "children": [
+                            "hdrText",
+                            "wx"
+                          ]
+                        },
+                        {
+                          "id": "hdrText",
+                          "component": "Text",
+                          "text": "This evening in Sorrento",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "wx",
+                          "component": "Badge",
+                          "label": "19.5°C, dry",
+                          "intent": "success"
+                        },
+                        {
+                          "id": "content",
+                          "component": "CardContent",
+                          "children": [
+                            "tl"
+                          ]
+                        },
+                        {
+                          "id": "tl",
+                          "component": "Timeline",
+                          "label": "Evening plan",
+                          "children": [
+                            "t1",
+                            "t2",
+                            "t3",
+                            "t4"
+                          ]
+                        },
+                        {
+                          "id": "t1",
+                          "component": "TimelineItem",
+                          "status": "active",
+                          "label": "Harbor cruise",
+                          "timestamp": "17:00",
+                          "description": "Daily departure. Dry and calm, with light wind (8 km/h). Check seats and boarding time with the front desk."
+                        },
+                        {
+                          "id": "t2",
+                          "component": "TimelineItem",
+                          "status": "pending",
+                          "label": "Aperitivo at the Quay Bar",
+                          "timestamp": "After the cruise",
+                          "description": "Casual drinks with the bay view. Hours: check with the front desk."
+                        },
+                        {
+                          "id": "t3",
+                          "component": "TimelineItem",
+                          "status": "pending",
+                          "label": "Dinner at Vela",
+                          "timestamp": "Evening",
+                          "description": "Our fine-dining restaurant. I can book a table."
+                        },
+                        {
+                          "id": "t4",
+                          "component": "TimelineItem",
+                          "status": "pending",
+                          "label": "Swim or gym",
+                          "timestamp": "Until 22:00",
+                          "description": "The pool and gym are open 06:00 to 22:00. The spa closes at 20:00."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-16.jsonl:1352",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          652
+        ]
+      },
+      "routing": {
+        "domains": [
+          "concierge"
+        ],
+        "exemplars": [
+          "domain-concierge-booking-request",
+          "frontier-service-gateway",
+          "frontier-greet-card"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "facility-info-card",
+            "load": "index-only"
+          },
+          {
+            "name": "amenity-service-card",
+            "load": "index-only"
+          },
+          {
+            "name": "booking-flow",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "index-only"
+          },
+          {
+            "name": "curated-local-guides",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Wikipedia search",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          }
+        ]
+      },
+      "step": {
+        "say": "Read my mind: what should I do this evening?",
+        "expectRouting": {
+          "domains": [
+            "concierge"
+          ],
+          "exemplars": {
+            "exclude": [
+              "domain-admiral-battleship-board",
+              "domain-lexicographer-word-board",
+              "domain-croupier-card-table-round"
+            ]
+          }
+        }
+      },
+      "domHosts": 2,
+      "proseText": "You Can I still board the 5pm cruise today? The harbor cruise runs every day at 17:00, so there is one today. I can't see the current local time, and I don't have the boarding cut-off or seat availability. If it's before 17:00 you should be able to make it, but I'd confirm with the front desk first. They can check whether seats are left and how early you need to be at the dock. Conditions look good for it. It's 19.5°C in Sorrento with light wind (8 km/h) and no rain. I can also book you a spot if you'd like. Just tell me how many guests. You Any deals on suites this weekend? Pick your weekend dates and I'll set up a suite booking. You Read my mind: what should I do this evening? Here's an evening plan, in order. Times marked \"check\" need confirming with the front desk.",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-16-r8-matrix/routing-decoy-words-sonnet-1/turn-3.png"
+    },
+    {
+      "index": 3,
+      "request": {
+        "model": "claude-sonnet-5-5",
+        "effort": "high",
+        "catalogId": "agent-ui--concierge",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" thinking I should build a f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"resh surface for spa services\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", using a product\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" card gr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"id to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" show bookable treatments with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" prices, and since this\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" new surface takes over intera\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ction, I should retire the st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ale ask-1 surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" along with the ev\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ening-1 one.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll set up each item with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" id, title, subtitle\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", price, and priceNote\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"couples pri\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ced\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" at €230 \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"for two\\\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" others \\\"per person\\\"—with the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" action context\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bound relatively to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the item\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" id\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". I should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" mention booking a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" day ahead during\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" season and spa hours of \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"09:00-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"20:00,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" then send\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" full\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" set of messages: cre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ating the spa surface, upd\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ating the data model, updating components\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and retiring \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ask-1.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Card\\\",\\\"children\\\":[\\\"hdr\\\",\\\"content\\\"]}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"spa-1\\\",\\\"catalogId\\\":\\\"agent-ui--concierge\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"spa-1\\\",\\\"value\\\":{\\\"treatments\\\":[{\\\"id\\\":\\\"swedish\\\",\\\"title\\\":\\\"Swedish massage\\\",\\\"subtitle\\\":\\\"60 min\\\",\\\"price\\\":\\\"€120\\\",\\\"priceNote\\\":\\\"per person\\\"},{\\\"id\\\":\\\"deep-tissue\\\",\\\"title\\\":\\\"Deep-tissue massage\\\",\\\"subtitle\\\":\\\"60 min\\\",\\\"price\\\":\\\"€135\\\",\\\"priceNote\\\":\\\"per person\\\"},{\\\"id\\\":\\\"hot-stone\\\",\\\"title\\\":\\\"Hot-stone massage\\\",\\\"subtitle\\\":\\\"90 min\\\",\\\"price\\\":\\\"€170\\\",\\\"priceNote\\\":\\\"per person\\\"},{\\\"id\\\":\\\"body-scrub\\\",\\\"title\\\":\\\"Sea-salt and lemon body scrub\\\",\\\"subtitle\\\":\\\"45 min\\\",\\\"price\\\":\\\"€95\\\",\\\"priceNote\\\":\\\"per person\\\"},{\\\"id\\\":\\\"facial\\\",\\\"title\\\":\\\"Hydrating facial\\\",\\\"subtitle\\\":\\\"50 min\\\",\\\"price\\\":\\\"€110\\\",\\\"priceNote\\\":\\\"per person\\\"},{\\\"id\\\":\\\"couples\\\",\\\"title\\\":\\\"Couples massage\\\",\\\"subtitle\\\":\\\"60 min\\\",\\\"price\\\":\\\"€230\\\",\\\"priceNote\\\":\\\"for two\\\"}]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"spa-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"heading\\\",\\\"grid\\\"]},{\\\"id\\\":\\\"heading\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Spa treatments · open 09:00–20:00\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"grid\\\",\\\"component\\\":\\\"Grid\\\",\\\"min\\\":\\\"16rem\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":{\\\"path\\\":\\\"/treatments\\\",\\\"componentId\\\":\\\"card\\\"}},{\\\"id\\\":\\\"card\\\",\\\"component\\\":\\\"ProductCard\\\",\\\"title\\\":{\\\"path\\\":\\\"title\\\"},\\\"subtitle\\\":{\\\"path\\\":\\\"subtitle\\\"},\\\"price\\\":{\\\"path\\\":\\\"price\\\"},\\\"priceNote\\\":{\\\"path\\\":\\\"priceNote\\\"},\\\"icon\\\":\\\"spa\\\",\\\"actionLabel\\\":\\\"Book\\\",\\\"action\\\":{\\\"action\\\":\\\"book_spa\\\",\\\"context\\\":{\\\"treatment\\\":{\\\"path\\\":\\\"id\\\"}}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Here are the spa treatments you can book. The spa is open 09:00 to 20:00, and in season treatments need booking at least a day ahead. Pick one and I'll set up the booking form.\",\"target\":{\"surfaceId\":\"ask-1\"},\"trace\":{\"turnIndex\":6,\"query\":{\"intent\":\"What spa services can I book during my stay?\",\"k\":3},\"exemplarIds\":[\"domain-concierge-booking-request\",\"frontier-service-gateway\",\"backable-wizard\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":59670,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":7111},{\"id\":\"mini-skills\",\"chars\":1515},{\"id\":\"persona\",\"chars\":4979}],\"over\":false},\"usage\":{\"inputTokens\":6858,\"outputTokens\":1631,\"cacheReadInputTokens\":17759,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"greeting-card\",\"product-presentation\"],\"cacheBoundary\":46065}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"children\":[\"hdr\",\"content\"]}]}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"spa-1\",\"catalogId\":\"agent-ui--concierge\"}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"spa-1\",\"value\":{\"treatments\":[{\"id\":\"swedish\",\"title\":\"Swedish massage\",\"subtitle\":\"60 min\",\"price\":\"€120\",\"priceNote\":\"per person\"},{\"id\":\"deep-tissue\",\"title\":\"Deep-tissue massage\",\"subtitle\":\"60 min\",\"price\":\"€135\",\"priceNote\":\"per person\"},{\"id\":\"hot-stone\",\"title\":\"Hot-stone massage\",\"subtitle\":\"90 min\",\"price\":\"€170\",\"priceNote\":\"per person\"},{\"id\":\"body-scrub\",\"title\":\"Sea-salt and lemon body scrub\",\"subtitle\":\"45 min\",\"price\":\"€95\",\"priceNote\":\"per person\"},{\"id\":\"facial\",\"title\":\"Hydrating facial\",\"subtitle\":\"50 min\",\"price\":\"€110\",\"priceNote\":\"per person\"},{\"id\":\"couples\",\"title\":\"Couples massage\",\"subtitle\":\"60 min\",\"price\":\"€230\",\"priceNote\":\"for two\"}]}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"spa-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"heading\",\"grid\"]},{\"id\":\"heading\",\"component\":\"Text\",\"text\":\"Spa treatments · open 09:00–20:00\",\"variant\":\"h4\"},{\"id\":\"grid\",\"component\":\"Grid\",\"min\":\"16rem\",\"gap\":\"md\",\"children\":{\"path\":\"/treatments\",\"componentId\":\"card\"}},{\"id\":\"card\",\"component\":\"ProductCard\",\"title\":{\"path\":\"title\"},\"subtitle\":{\"path\":\"subtitle\"},\"price\":{\"path\":\"price\"},\"priceNote\":{\"path\":\"priceNote\"},\"icon\":\"spa\",\"actionLabel\":\"Book\",\"action\":{\"action\":\"book_spa\",\"context\":{\"treatment\":{\"path\":\"id\"}}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Here are the spa treatments you can book. The spa is open 09:00 to 20:00, and in season treatments need booking at least a day ahead.\",\"target\":{\"surfaceId\":\"ask-1\"}}}\n\nHere are the spa treatments you can book. The spa is open 09:00 to 20:00, and in season treatments need booking at least a day ahead. Pick one and I'll set up the booking form.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Choose a treatment to start your spa booking.",
+                "target": "spa-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "children": [
+                            "hdr",
+                            "content"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "spa-1",
+                      "catalogId": "agent-ui--concierge"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "spa-1",
+                      "value": {
+                        "treatments": [
+                          {
+                            "id": "swedish",
+                            "title": "Swedish massage",
+                            "subtitle": "60 min",
+                            "price": "€120",
+                            "priceNote": "per person"
+                          },
+                          {
+                            "id": "deep-tissue",
+                            "title": "Deep-tissue massage",
+                            "subtitle": "60 min",
+                            "price": "€135",
+                            "priceNote": "per person"
+                          },
+                          {
+                            "id": "hot-stone",
+                            "title": "Hot-stone massage",
+                            "subtitle": "90 min",
+                            "price": "€170",
+                            "priceNote": "per person"
+                          },
+                          {
+                            "id": "body-scrub",
+                            "title": "Sea-salt and lemon body scrub",
+                            "subtitle": "45 min",
+                            "price": "€95",
+                            "priceNote": "per person"
+                          },
+                          {
+                            "id": "facial",
+                            "title": "Hydrating facial",
+                            "subtitle": "50 min",
+                            "price": "€110",
+                            "priceNote": "per person"
+                          },
+                          {
+                            "id": "couples",
+                            "title": "Couples massage",
+                            "subtitle": "60 min",
+                            "price": "€230",
+                            "priceNote": "for two"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "spa-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "heading",
+                            "grid"
+                          ]
+                        },
+                        {
+                          "id": "heading",
+                          "component": "Text",
+                          "text": "Spa treatments · open 09:00–20:00",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "grid",
+                          "component": "Grid",
+                          "min": "16rem",
+                          "gap": "md",
+                          "children": {
+                            "path": "/treatments",
+                            "componentId": "card"
+                          }
+                        },
+                        {
+                          "id": "card",
+                          "component": "ProductCard",
+                          "title": {
+                            "path": "title"
+                          },
+                          "subtitle": {
+                            "path": "subtitle"
+                          },
+                          "price": {
+                            "path": "price"
+                          },
+                          "priceNote": {
+                            "path": "priceNote"
+                          },
+                          "icon": "spa",
+                          "actionLabel": "Book",
+                          "action": {
+                            "action": "book_spa",
+                            "context": {
+                              "treatment": {
+                                "path": "id"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-16.jsonl:1353",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          641
+        ]
+      },
+      "routing": {
+        "domains": [
+          "concierge"
+        ],
+        "exemplars": [
+          "domain-concierge-booking-request",
+          "frontier-service-gateway",
+          "backable-wizard"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "facility-info-card",
+            "load": "index-only"
+          },
+          {
+            "name": "amenity-service-card",
+            "load": "index-only"
+          },
+          {
+            "name": "booking-flow",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "index-only"
+          },
+          {
+            "name": "curated-local-guides",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Wikipedia search",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          }
+        ]
+      },
+      "step": {
+        "say": "What spa services can I book during my stay?",
+        "expect": [
+          "ProductCard"
+        ],
+        "expectRouting": {
+          "domains": [
+            "concierge"
+          ],
+          "exemplars": {
+            "exclude": [
+              "domain-admiral-battleship-board",
+              "domain-lexicographer-word-board",
+              "domain-croupier-card-table-round"
+            ]
+          }
+        }
+      },
+      "domHosts": 3,
+      "proseText": "You Can I still board the 5pm cruise today? The harbor cruise runs every day at 17:00, so there is one today. I can't see the current local time, and I don't have the boarding cut-off or seat availability. If it's before 17:00 you should be able to make it, but I'd confirm with the front desk first. They can check whether seats are left and how early you need to be at the dock. Conditions look good for it. It's 19.5°C in Sorrento with light wind (8 km/h) and no rain. I can also book you a spot if you'd like. Just tell me how many guests. You Any deals on suites this weekend? Pick your weekend dates and I'll set up a suite booking. You Read my mind: what should I do this evening? Here's an evening plan, in order. Times marked \"check\" need confirming with the front desk. You What spa services can I book during my stay? Here are the spa treatments you can book. The spa is open 09:00 to 20:00, and in season treatments need booking at least a day ahead. Pick one and I'll set up the booking form.",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-16-r8-matrix/routing-decoy-words-sonnet-1/turn-4.png"
+    }
+  ],
+  "checks": [
+    {
+      "check": "model-pick",
+      "turn": 0,
+      "status": "pass",
+      "detail": "claude-sonnet-5-5 / high"
+    },
+    {
+      "check": "click-target",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 0,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 0,
+      "status": "pass",
+      "detail": "543 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 0,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 0,
+      "status": "skip",
+      "detail": "no A2UI lines shipped (a text turn)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 0,
+      "status": "pass",
+      "detail": "rounds created [], open [] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn or a targeted say turn"
+    },
+    {
+      "check": "expect-component",
+      "turn": 0,
+      "status": "skip",
+      "detail": "no --expect-turn on this step"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 0,
+      "status": "pass",
+      "detail": "routing as expected"
+    },
+    {
+      "check": "render-lint",
+      "turn": 0,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 0,
+      "status": "pass",
+      "detail": "445 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 1,
+      "status": "pass",
+      "detail": "claude-sonnet-5-5 / high"
+    },
+    {
+      "check": "click-target",
+      "turn": 1,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 1,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 1,
+      "status": "pass",
+      "detail": "638 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 1,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 1,
+      "status": "pass",
+      "detail": "56 chars of reply beside 3 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 1,
+      "status": "pass",
+      "detail": "rounds created [ask-1], open [ask-1] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 1,
+      "status": "pass",
+      "detail": "ask-1 updated"
+    },
+    {
+      "check": "expect-component",
+      "turn": 1,
+      "status": "skip",
+      "detail": "no --expect-turn on this step"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 1,
+      "status": "pass",
+      "detail": "routing as expected"
+    },
+    {
+      "check": "render-lint",
+      "turn": 1,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 1,
+      "status": "pass",
+      "detail": "383 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 2,
+      "status": "pass",
+      "detail": "claude-sonnet-5-5 / high"
+    },
+    {
+      "check": "click-target",
+      "turn": 2,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 2,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 2,
+      "status": "pass",
+      "detail": "779 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 2,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 2,
+      "status": "pass",
+      "detail": "91 chars of reply beside 2 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 2,
+      "status": "pass",
+      "detail": "rounds created [evening-1], open [ask-1, evening-1] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 2,
+      "status": "pass",
+      "detail": "evening-1 updated"
+    },
+    {
+      "check": "expect-component",
+      "turn": 2,
+      "status": "skip",
+      "detail": "no --expect-turn on this step"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 2,
+      "status": "pass",
+      "detail": "routing as expected"
+    },
+    {
+      "check": "render-lint",
+      "turn": 2,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 2,
+      "status": "pass",
+      "detail": "652 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 3,
+      "status": "pass",
+      "detail": "claude-sonnet-5-5 / high"
+    },
+    {
+      "check": "click-target",
+      "turn": 3,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 3,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 3,
+      "status": "pass",
+      "detail": "1005 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 3,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 3,
+      "status": "pass",
+      "detail": "176 chars of reply beside 4 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 3,
+      "status": "pass",
+      "detail": "rounds created [spa-1], open [ask-1, evening-1, spa-1] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 3,
+      "status": "pass",
+      "detail": "ask-1 updated"
+    },
+    {
+      "check": "expect-component",
+      "turn": 3,
+      "status": "pass",
+      "detail": "spa-1 holds ProductCard"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 3,
+      "status": "pass",
+      "detail": "routing as expected"
+    },
+    {
+      "check": "render-lint",
+      "turn": 3,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 3,
+      "status": "pass",
+      "detail": "641 thinking chars"
+    },
+    {
+      "check": "expect-component",
+      "status": "pass",
+      "detail": "found ProductCard"
+    }
+  ],
+  "verdict": "pass"
+}

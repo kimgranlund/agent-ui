@@ -1,0 +1,662 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "long-concierge-booking-confirm-sonnet-1",
+  "agent": "concierge",
+  "model": "claude-sonnet-5-5",
+  "source": "probe live run 2026-10-16T22:08:00.040Z, traces 2026-10-16.jsonl:1391,2026-10-16.jsonl:1392,2026-10-16.jsonl:1393",
+  "steps": [
+    {
+      "say": "Book a 60-minute Swedish massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau.",
+      "expect": [
+        "BookingForm"
+      ],
+      "expectRouting": {
+        "domains": [
+          "concierge"
+        ],
+        "exemplars": {
+          "include": [
+            "domain-concierge-booking-request"
+          ]
+        }
+      }
+    },
+    {
+      "say": "Those details are right, please confirm the booking.",
+      "expect": [
+        "BookingConfirmation"
+      ]
+    },
+    {
+      "say": "Thanks, that's all."
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"This is a b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ookable item\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", so I should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" render a booking surface r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ather than a text\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-based ask. I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" go with render_surface using\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"re-filled BookingFor\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" skipping the \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ask meta-line since the form\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" itself hand\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"les the inter\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"action.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m confirming\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Thursday, November\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 19, 2026 is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" val\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"id and checking spa hours\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"it a 15:00 sl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a 60-minute session\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". For fields, I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" stick to known kinds like\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dateSingle, select,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and text, pre-filling\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" treatment as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"sw\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"edish,\\\" date as \\\"2026\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-11-19,\\\" time as \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"15:00,\\\" one\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" guest, and the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" client\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s name, with a confirm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"_booking subm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"it action and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" short prose intro before the call\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"codes\":[\"PARSE\"],\"detail\":\"Round 1 failed:\\n  PARSE: the payload did not parse as JSON lines\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need to call\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" render_surface with a compl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ete, corrected messages array\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", repl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ying to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the user without\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" any correction not\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"es. I'm building a p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"re-filled BookingFor\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m following\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the exist\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing pattern of\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" createSurface, updateD\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ataModel, and updateCom\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ponents, fig\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"uring out which field kinds\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to use for name, time, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" guest count\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since I'm only\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" certain about dateSingle\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", select, and checkbox\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"The error message h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ints that name\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" should use\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"text\\\" kind, so I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll go\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with select for treatment, time\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and guests, d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ateSingle for the date\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and text for name. I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m setting the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" date to 2026-11-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"19,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" time to 15:00, sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face id to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"spa-booking\\\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and ad\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding a confirm_\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"booking button t\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ied to the booking context, with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a root BookingForm contain\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" button as a child.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"spa-booking\\\",\\\"catalogId\\\":\\\"agent-ui--concierge\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"spa-booking\\\",\\\"path\\\":\\\"/booking\\\",\\\"value\\\":{\\\"treatment\\\":\\\"swedish\\\",\\\"date\\\":\\\"2026-11-19\\\",\\\"time\\\":\\\"15:00\\\",\\\"guests\\\":\\\"1\\\",\\\"name\\\":\\\"Alex Moreau\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"spa-booking\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"BookingForm\\\",\\\"title\\\":\\\"Book your spa treatment\\\",\\\"value\\\":{\\\"path\\\":\\\"/booking\\\"},\\\"child\\\":\\\"bookBtn\\\",\\\"fields\\\":[{\\\"kind\\\":\\\"select\\\",\\\"label\\\":\\\"Treatment\\\",\\\"path\\\":\\\"treatment\\\",\\\"required\\\":true,\\\"options\\\":[{\\\"label\\\":\\\"Swedish massage, 60 min, €120\\\",\\\"value\\\":\\\"swedish\\\"},{\\\"label\\\":\\\"Deep-tissue massage, 60 min, €135\\\",\\\"value\\\":\\\"deep-tissue\\\"},{\\\"label\\\":\\\"Hot-stone massage, 90 min, €170\\\",\\\"value\\\":\\\"hot-stone\\\"},{\\\"label\\\":\\\"Sea-salt and lemon body scrub, 45 min, €95\\\",\\\"value\\\":\\\"scrub\\\"},{\\\"label\\\":\\\"Hydrating facial, 50 min, €110\\\",\\\"value\\\":\\\"facial\\\"},{\\\"label\\\":\\\"Couples massage, 60 min, €230 for two\\\",\\\"value\\\":\\\"couples\\\"}]},{\\\"kind\\\":\\\"dateSingle\\\",\\\"label\\\":\\\"Date\\\",\\\"path\\\":\\\"date\\\",\\\"required\\\":true},{\\\"kind\\\":\\\"select\\\",\\\"label\\\":\\\"Time\\\",\\\"path\\\":\\\"time\\\",\\\"required\\\":true,\\\"options\\\":[{\\\"label\\\":\\\"14:00\\\",\\\"value\\\":\\\"14:00\\\"},{\\\"label\\\":\\\"15:00\\\",\\\"value\\\":\\\"15:00\\\"},{\\\"label\\\":\\\"16:00\\\",\\\"value\\\":\\\"16:00\\\"}]},{\\\"kind\\\":\\\"select\\\",\\\"label\\\":\\\"Guests\\\",\\\"path\\\":\\\"guests\\\",\\\"required\\\":true,\\\"options\\\":[{\\\"label\\\":\\\"1 guest\\\",\\\"value\\\":\\\"1\\\"},{\\\"label\\\":\\\"2 guests\\\",\\\"value\\\":\\\"2\\\"}]},{\\\"kind\\\":\\\"text\\\",\\\"label\\\":\\\"Name\\\",\\\"path\\\":\\\"name\\\",\\\"required\\\":true}]},{\\\"id\\\":\\\"bookBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Book now\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"confirm_booking\\\",\\\"context\\\":{\\\"booking\\\":{\\\"path\\\":\\\"/booking\\\"}},\\\"submit\\\":true}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"I've pre-filled your Swedish massage for Thursday 19 November 2026 at 15:00 (60 minutes, €120, one guest, Alex Moreau). Press Book now, or tell me to confirm, and it's booked.\",\"target\":{\"surfaceId\":\"spa-booking\"},\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Book a 60-minute Swedish massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau.\",\"k\":3},\"exemplarIds\":[\"domain-concierge-booking-request\",\"frontier-service-gateway\",\"commerce-product-card\"],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"PARSE\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":55213,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":4169},{\"id\":\"persona\",\"chars\":4979}],\"over\":false},\"usage\":{\"inputTokens\":7630,\"outputTokens\":2871,\"cacheReadInputTokens\":35518,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":46065}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"spa-booking\",\"catalogId\":\"agent-ui--concierge\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"spa-booking\",\"path\":\"/booking\",\"value\":{\"treatment\":\"swedish\",\"date\":\"2026-11-19\",\"time\":\"15:00\",\"guests\":\"1\",\"name\":\"Alex Moreau\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"spa-booking\",\"components\":[{\"id\":\"root\",\"component\":\"BookingForm\",\"title\":\"Book your spa treatment\",\"value\":{\"path\":\"/booking\"},\"child\":\"bookBtn\",\"fields\":[{\"kind\":\"select\",\"label\":\"Treatment\",\"path\":\"treatment\",\"required\":true,\"options\":[{\"label\":\"Swedish massage, 60 min, €120\",\"value\":\"swedish\"},{\"label\":\"Deep-tissue massage, 60 min, €135\",\"value\":\"deep-tissue\"},{\"label\":\"Hot-stone massage, 90 min, €170\",\"value\":\"hot-stone\"},{\"label\":\"Sea-salt and lemon body scrub, 45 min, €95\",\"value\":\"scrub\"},{\"label\":\"Hydrating facial, 50 min, €110\",\"value\":\"facial\"},{\"label\":\"Couples massage, 60 min, €230 for two\",\"value\":\"couples\"}]},{\"kind\":\"dateSingle\",\"label\":\"Date\",\"path\":\"date\",\"required\":true},{\"kind\":\"select\",\"label\":\"Time\",\"path\":\"time\",\"required\":true,\"options\":[{\"label\":\"14:00\",\"value\":\"14:00\"},{\"label\":\"15:00\",\"value\":\"15:00\"},{\"label\":\"16:00\",\"value\":\"16:00\"}]},{\"kind\":\"select\",\"label\":\"Guests\",\"path\":\"guests\",\"required\":true,\"options\":[{\"label\":\"1 guest\",\"value\":\"1\"},{\"label\":\"2 guests\",\"value\":\"2\"}]},{\"kind\":\"text\",\"label\":\"Name\",\"path\":\"name\",\"required\":true}]},{\"id\":\"bookBtn\",\"component\":\"Button\",\"label\":\"Book now\",\"variant\":\"solid\",\"action\":{\"action\":\"confirm_booking\",\"context\":{\"booking\":{\"path\":\"/booking\"}},\"submit\":true}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "I've pre-filled your Swedish massage on Thursday 19 November at 15:00 (60 minutes, €120). Press the button, or tell me to confirm, and it's booked.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Your spa booking is ready: check the details and press Book now.",
+                "target": "spa-booking",
+                "messages": "[{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"spa-booking\",\"catalogId\":\"agent-ui--concierge\",\"sendDataModel\":true}},{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"spa-booking\",\"path\":\"/booking\",\"value\":{\"treatment\":\"swedish\",\"date\":\"2026-11-19\",\"time\":\"15:00\",\"guests\":\"1\",\"name\":\"Alex Moreau\"}}},{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"spa-booking\",\"components\":[{\"id\":\"root\",\"component\":\"BookingForm\",\"title\":\"Book your spa treatment\",\"value\":{\"path\":\"/booking\"},\"child\":\"bookBtn\",\"fields\":[{\"kind\":\"select\",\"label\":\"Treatment\",\"path\":\"treatment\",\"required\":true,\"options\":[{\"label\":\"Swedish massage, 60 min, €120\",\"value\":\"swedish\"},{\"label\":\"Deep-tissue massage, 60 min, €135\",\"value\":\"deep-tissue\"},{\"label\":\"Hot-stone massage, 90 min, €170\",\"value\":\"hot-stone\"},{\"label\":\"Sea-salt and lemon body scrub, 45 min, €95\",\"value\":\"scrub\"},{\"label\":\"Hydrating facial, 50 min, €110\",\"value\":\"facial\"},{\"label\":\"Couples massage, 60 min, €230 for two\",\"value\":\"couples\"}]},{\"kind\":\"dateSingle\",\"label\":\"Date\",\"path\":\"date\",\"required\":true},{\"kind\":\"select\",\"label\":\"Time\",\"path\":\"time\",\"required\":true,\"options\":[{\"label\":\"13:00\",\"value\":\"13:00\"},{\"label\":\"14:00\",\"value\":\"14:00\"},{\"label\":\"15:00\",\"value\":\"15:00\"},{\"label\":\"16:00\",\"value\":\"16:00\"},{\"label\":\"17:00\",\"value\":\"17:00\"}]},{\"kind\":\"select\",\"label\":\"Guests\",\"path\":\"guests\",\"required\":true,\"options\":[{\"label\":\"1 guest\",\"value\":\"1\"},{\"label\":\"2 guests\",\"value\":\"2\"}]},{\"kind\":\"text\",\"label\":\"Name\",\"path\":\"name\",\"required\":true}]}},{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"spa-booking\",\"components\":[{\"id\":\"bookBtn\",\"component\":\"Button\",\"label\":\"Book now\",\"variant\":\"solid\",\"action\":{\"action\":\"confirm_booking\",\"submit\":true,\"context\":{\"booking\":{\"path\":\"/booking\"}}}}]}}]"
+              }
+            }
+          ]
+        },
+        {
+          "text": "I've pre-filled your Swedish massage for Thursday 19 November 2026 at 15:00 (60 minutes, €120, one guest, Alex Moreau). Press Book now, or tell me to confirm, and it's booked.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Your Swedish massage is pre-filled: Thursday 19 November 2026 at 15:00, one guest, Alex Moreau. Press Book now or tell me to confirm.",
+                "target": "spa-booking",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "spa-booking",
+                      "catalogId": "agent-ui--concierge",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "spa-booking",
+                      "path": "/booking",
+                      "value": {
+                        "treatment": "swedish",
+                        "date": "2026-11-19",
+                        "time": "15:00",
+                        "guests": "1",
+                        "name": "Alex Moreau"
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "spa-booking",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "BookingForm",
+                          "title": "Book your spa treatment",
+                          "value": {
+                            "path": "/booking"
+                          },
+                          "child": "bookBtn",
+                          "fields": [
+                            {
+                              "kind": "select",
+                              "label": "Treatment",
+                              "path": "treatment",
+                              "required": true,
+                              "options": [
+                                {
+                                  "label": "Swedish massage, 60 min, €120",
+                                  "value": "swedish"
+                                },
+                                {
+                                  "label": "Deep-tissue massage, 60 min, €135",
+                                  "value": "deep-tissue"
+                                },
+                                {
+                                  "label": "Hot-stone massage, 90 min, €170",
+                                  "value": "hot-stone"
+                                },
+                                {
+                                  "label": "Sea-salt and lemon body scrub, 45 min, €95",
+                                  "value": "scrub"
+                                },
+                                {
+                                  "label": "Hydrating facial, 50 min, €110",
+                                  "value": "facial"
+                                },
+                                {
+                                  "label": "Couples massage, 60 min, €230 for two",
+                                  "value": "couples"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "dateSingle",
+                              "label": "Date",
+                              "path": "date",
+                              "required": true
+                            },
+                            {
+                              "kind": "select",
+                              "label": "Time",
+                              "path": "time",
+                              "required": true,
+                              "options": [
+                                {
+                                  "label": "14:00",
+                                  "value": "14:00"
+                                },
+                                {
+                                  "label": "15:00",
+                                  "value": "15:00"
+                                },
+                                {
+                                  "label": "16:00",
+                                  "value": "16:00"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "select",
+                              "label": "Guests",
+                              "path": "guests",
+                              "required": true,
+                              "options": [
+                                {
+                                  "label": "1 guest",
+                                  "value": "1"
+                                },
+                                {
+                                  "label": "2 guests",
+                                  "value": "2"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "text",
+                              "label": "Name",
+                              "path": "name",
+                              "required": true
+                            }
+                          ]
+                        },
+                        {
+                          "id": "bookBtn",
+                          "component": "Button",
+                          "label": "Book now",
+                          "variant": "solid",
+                          "action": {
+                            "action": "confirm_booking",
+                            "context": {
+                              "booking": {
+                                "path": "/booking"
+                              }
+                            },
+                            "submit": true
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "concierge"
+        ],
+        "exemplars": [
+          "domain-concierge-booking-request",
+          "frontier-service-gateway",
+          "commerce-product-card"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "facility-info-card",
+            "load": "index-only"
+          },
+          {
+            "name": "amenity-service-card",
+            "load": "index-only"
+          },
+          {
+            "name": "booking-flow",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "index-only"
+          },
+          {
+            "name": "curated-local-guides",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Wikipedia search",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since the user confirm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ed in chat, I should tre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"at that as the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" submission and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" settle it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as a booking confirmation\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ading\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" back the form's values\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". Since the root surface type\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" is chang\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing from BookingForm to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" BookingConfirmation\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", I need to re-create the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" surface with the same surfa\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ceId rather than just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" updating it,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since switching root component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" types requires a fresh create\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Surface call with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the complete new\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" tree.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll structure Booking\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Confirmation with a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" title and rows of label/value\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pairs re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"flecting the boo\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"king details, no\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" reference number needed. I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll write the br\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ief prose first\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", then call createSurface with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the same surfaceId follow\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ed by updateComponents to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" set the new\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" root.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"spa-booking\\\",\\\"catalogId\\\":\\\"agent-ui--concierge\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"spa-booking\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"BookingConfirmation\\\",\\\"title\\\":\\\"Spa booking confirmed\\\",\\\"rows\\\":[{\\\"label\\\":\\\"Treatment\\\",\\\"value\\\":\\\"Swedish massage, 60 min\\\"},{\\\"label\\\":\\\"Date\\\",\\\"value\\\":\\\"Thursday 19 November 2026\\\"},{\\\"label\\\":\\\"Time\\\",\\\"value\\\":\\\"15:00\\\"},{\\\"label\\\":\\\"Guests\\\",\\\"value\\\":\\\"1 guest\\\"},{\\\"label\\\":\\\"Name\\\",\\\"value\\\":\\\"Alex Moreau\\\"},{\\\"label\\\":\\\"Price\\\",\\\"value\\\":\\\"€120\\\"}]}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Confirmed. Your Swedish massage is booked for Thursday 19 November 2026 at 15:00, one guest, under Alex Moreau. The details are below.\",\"target\":{\"surfaceId\":\"spa-booking\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Those details are right, please confirm the booking.\",\"k\":3},\"exemplarIds\":[\"frontier-service-gateway\",\"domain-concierge-booking-request\",\"frontier-booking-receipt\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":56139,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3613},{\"id\":\"mini-skills\",\"chars\":1482},{\"id\":\"persona\",\"chars\":4979}],\"over\":false},\"usage\":{\"inputTokens\":4815,\"outputTokens\":832,\"cacheReadInputTokens\":17759,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"feature-collection\",\"greeting-card\"],\"cacheBoundary\":46065}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"spa-booking\",\"catalogId\":\"agent-ui--concierge\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"spa-booking\",\"components\":[{\"id\":\"root\",\"component\":\"BookingConfirmation\",\"title\":\"Spa booking confirmed\",\"rows\":[{\"label\":\"Treatment\",\"value\":\"Swedish massage, 60 min\"},{\"label\":\"Date\",\"value\":\"Thursday 19 November 2026\"},{\"label\":\"Time\",\"value\":\"15:00\"},{\"label\":\"Guests\",\"value\":\"1 guest\"},{\"label\":\"Name\",\"value\":\"Alex Moreau\"},{\"label\":\"Price\",\"value\":\"€120\"}]}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Confirmed. Your Swedish massage is booked for Thursday 19 November 2026 at 15:00, one guest, under Alex Moreau. The details are below.\",\"target\":{\"surfaceId\":\"spa-booking\"}}}\n\nConfirmed. Your Swedish massage is booked for Thursday 19 November 2026 at 15:00, one guest, under Alex Moreau. The details are below.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Your spa booking is confirmed and held.",
+                "target": "spa-booking",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "spa-booking",
+                      "catalogId": "agent-ui--concierge"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "spa-booking",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "BookingConfirmation",
+                          "title": "Spa booking confirmed",
+                          "rows": [
+                            {
+                              "label": "Treatment",
+                              "value": "Swedish massage, 60 min"
+                            },
+                            {
+                              "label": "Date",
+                              "value": "Thursday 19 November 2026"
+                            },
+                            {
+                              "label": "Time",
+                              "value": "15:00"
+                            },
+                            {
+                              "label": "Guests",
+                              "value": "1 guest"
+                            },
+                            {
+                              "label": "Name",
+                              "value": "Alex Moreau"
+                            },
+                            {
+                              "label": "Price",
+                              "value": "€120"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "concierge"
+        ],
+        "exemplars": [
+          "frontier-service-gateway",
+          "domain-concierge-booking-request",
+          "frontier-booking-receipt"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "facility-info-card",
+            "load": "index-only"
+          },
+          {
+            "name": "amenity-service-card",
+            "load": "index-only"
+          },
+          {
+            "name": "booking-flow",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "index-only"
+          },
+          {
+            "name": "curated-local-guides",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Wikipedia search",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"This\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" is just a closing courtes\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"y message\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since the booking was\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" already confirmed earlier\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" not part\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" of a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" multi-step ask flow\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". A br\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ief, fri\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"endly closing response should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" suffice here without\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" needing flow\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-spec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ific hand\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ling.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You're welcome, Alex. Your Swedish massage is held for Thursday 19 November 2026 at 15:00, and the spa has your booking. We put the details together and you confirmed them. Please arrive a few minutes early. Enjoy your treatment, and we look forward to welcoming you at the Grand Meridian.\",\"flowEnd\":true,\"trace\":{\"turnIndex\":4,\"query\":{\"intent\":\"Thanks, that's all.\",\"k\":3},\"exemplarIds\":[\"frontier-service-gateway\",\"domain-concierge-booking-request\",\"frontier-booking-receipt\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":54657,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3613},{\"id\":\"persona\",\"chars\":4979}],\"over\":false},\"usage\":{\"inputTokens\":4608,\"outputTokens\":531,\"cacheReadInputTokens\":17759,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":46065}}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"You're welcome, Alex. Your Swedish massage is held for Thursday 19 November 2026 at 15:00, and the spa has your booking. We put the details together and you confirmed them. The spa opens at 09:00, so please arrive a few minutes early. Enjoy your treatment, and we look forward to welcoming you at the Grand Meridian!\",\"flowEnd\":true}}\n\nYou're welcome, Alex. Your Swedish massage is held for Thursday 19 November 2026 at 15:00, and the spa has your booking. We put the details together and you confirmed them. Please arrive a few minutes early. Enjoy your treatment, and we look forward to welcoming you at the Grand Meridian.",
+          "tools": []
+        }
+      ],
+      "routing": {
+        "domains": [
+          "concierge"
+        ],
+        "exemplars": [
+          "frontier-service-gateway",
+          "domain-concierge-booking-request",
+          "frontier-booking-receipt"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "facility-info-card",
+            "load": "index-only"
+          },
+          {
+            "name": "amenity-service-card",
+            "load": "index-only"
+          },
+          {
+            "name": "booking-flow",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "index-only"
+          },
+          {
+            "name": "curated-local-guides",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Wikipedia search",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}

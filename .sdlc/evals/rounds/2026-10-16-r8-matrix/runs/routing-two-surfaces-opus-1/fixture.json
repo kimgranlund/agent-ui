@@ -1,0 +1,697 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "routing-two-surfaces-opus-1",
+  "agent": "concierge",
+  "model": "claude-opus-5-5",
+  "source": "probe live run 2026-10-16T22:48:21.119Z, traces 2026-10-16.jsonl:1557,2026-10-16.jsonl:1558,2026-10-16.jsonl:1559",
+  "steps": [
+    {
+      "say": "What spa services can I book during my stay?",
+      "expect": [
+        "ProductCard"
+      ],
+      "expectRouting": {
+        "domains": [
+          "concierge"
+        ]
+      }
+    },
+    {
+      "say": "I'd like a table at Vela on Friday 20 November 2026 at 20:00 for two, name Alex Moreau.",
+      "expect": [
+        "BookingForm"
+      ],
+      "expectRouting": {
+        "domains": [
+          "concierge"
+        ],
+        "exemplars": {
+          "include": [
+            "domain-concierge-booking-request"
+          ]
+        }
+      }
+    },
+    {
+      "say": "Make it bigger.",
+      "expectRouting": {
+        "domains": [
+          "concierge"
+        ],
+        "exemplars": {
+          "exclude": [
+            "domain-admiral-battleship-board",
+            "domain-lexicographer-word-board",
+            "domain-croupier-card-table-round"
+          ]
+        }
+      }
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"This is a bookable list of\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sp\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"a tre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"atments with prices, so I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll build a surface with a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" gr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"id of ProductCards,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" using icons instead of images and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a \\\"Book\\\" action on\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" each, with a brief prose\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" lead-in.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Binding the action to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" each tre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"atment's id via relative path\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", then adding a header above the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" grid with a title \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Spa treatments\\\" and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a caption noting hours and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" boo\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"king l\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ead time. No\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" greeting needed since this is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"n't the first turn.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"spa-services\\\",\\\"catalogId\\\":\\\"agent-ui--concierge\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"spa-services\\\",\\\"value\\\":{\\\"treatments\\\":[{\\\"id\\\":\\\"swedish\\\",\\\"title\\\":\\\"Swedish massage\\\",\\\"subtitle\\\":\\\"60 min\\\",\\\"price\\\":\\\"€120\\\",\\\"icon\\\":\\\"spa\\\"},{\\\"id\\\":\\\"deep-tissue\\\",\\\"title\\\":\\\"Deep-tissue massage\\\",\\\"subtitle\\\":\\\"60 min\\\",\\\"price\\\":\\\"€135\\\",\\\"icon\\\":\\\"spa\\\"},{\\\"id\\\":\\\"hot-stone\\\",\\\"title\\\":\\\"Hot-stone massage\\\",\\\"subtitle\\\":\\\"90 min\\\",\\\"price\\\":\\\"€170\\\",\\\"icon\\\":\\\"spa\\\"},{\\\"id\\\":\\\"scrub\\\",\\\"title\\\":\\\"Sea-salt and lemon body scrub\\\",\\\"subtitle\\\":\\\"45 min\\\",\\\"price\\\":\\\"€95\\\",\\\"icon\\\":\\\"spa\\\"},{\\\"id\\\":\\\"facial\\\",\\\"title\\\":\\\"Hydrating facial\\\",\\\"subtitle\\\":\\\"50 min\\\",\\\"price\\\":\\\"€110\\\",\\\"icon\\\":\\\"spa\\\"},{\\\"id\\\":\\\"couples\\\",\\\"title\\\":\\\"Couples massage\\\",\\\"subtitle\\\":\\\"60 min\\\",\\\"price\\\":\\\"€230\\\",\\\"priceNote\\\":\\\"for two\\\",\\\"icon\\\":\\\"favorite\\\"}]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"spa-services\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"title\\\",\\\"hours\\\",\\\"grid\\\"]},{\\\"id\\\":\\\"title\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Spa treatments\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"hours\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Open 09:00–20:00 · book at least a day ahead in season\\\",\\\"variant\\\":\\\"caption\\\"},{\\\"id\\\":\\\"grid\\\",\\\"component\\\":\\\"Grid\\\",\\\"gap\\\":\\\"md\\\",\\\"min\\\":\\\"16rem\\\",\\\"children\\\":{\\\"path\\\":\\\"/treatments\\\",\\\"componentId\\\":\\\"tmpl\\\"}},{\\\"id\\\":\\\"tmpl\\\",\\\"component\\\":\\\"ProductCard\\\",\\\"title\\\":{\\\"path\\\":\\\"title\\\"},\\\"subtitle\\\":{\\\"path\\\":\\\"subtitle\\\"},\\\"price\\\":{\\\"path\\\":\\\"price\\\"},\\\"priceNote\\\":{\\\"path\\\":\\\"priceNote\\\"},\\\"icon\\\":{\\\"path\\\":\\\"icon\\\"},\\\"actionLabel\\\":\\\"Book\\\",\\\"action\\\":{\\\"action\\\":\\\"book_spa\\\",\\\"context\\\":{\\\"treatment\\\":{\\\"path\\\":\\\"id\\\"}}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"The spa is open daily from 09:00 to 20:00, and there are six treatments you can book. In high season, please book at least a day ahead. Tap any treatment to start a booking.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"What spa services can I book during my stay?\",\"k\":3},\"exemplarIds\":[\"domain-concierge-booking-request\",\"frontier-service-gateway\",\"backable-wizard\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-opus-5-5\",\"prompt\":{\"limit\":142000,\"total\":59670,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":7111},{\"id\":\"mini-skills\",\"chars\":1515},{\"id\":\"persona\",\"chars\":4979}],\"over\":false},\"usage\":{\"inputTokens\":5562,\"outputTokens\":1134,\"cacheReadInputTokens\":17759,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"greeting-card\",\"product-presentation\"],\"cacheBoundary\":46065}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"spa-services\",\"catalogId\":\"agent-ui--concierge\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"spa-services\",\"value\":{\"treatments\":[{\"id\":\"swedish\",\"title\":\"Swedish massage\",\"subtitle\":\"60 min\",\"price\":\"€120\",\"icon\":\"spa\"},{\"id\":\"deep-tissue\",\"title\":\"Deep-tissue massage\",\"subtitle\":\"60 min\",\"price\":\"€135\",\"icon\":\"spa\"},{\"id\":\"hot-stone\",\"title\":\"Hot-stone massage\",\"subtitle\":\"90 min\",\"price\":\"€170\",\"icon\":\"spa\"},{\"id\":\"scrub\",\"title\":\"Sea-salt and lemon body scrub\",\"subtitle\":\"45 min\",\"price\":\"€95\",\"icon\":\"spa\"},{\"id\":\"facial\",\"title\":\"Hydrating facial\",\"subtitle\":\"50 min\",\"price\":\"€110\",\"icon\":\"spa\"},{\"id\":\"couples\",\"title\":\"Couples massage\",\"subtitle\":\"60 min\",\"price\":\"€230\",\"priceNote\":\"for two\",\"icon\":\"favorite\"}]}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"spa-services\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"title\",\"hours\",\"grid\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Spa treatments\",\"variant\":\"h4\"},{\"id\":\"hours\",\"component\":\"Text\",\"text\":\"Open 09:00–20:00 · book at least a day ahead in season\",\"variant\":\"caption\"},{\"id\":\"grid\",\"component\":\"Grid\",\"gap\":\"md\",\"min\":\"16rem\",\"children\":{\"path\":\"/treatments\",\"componentId\":\"tmpl\"}},{\"id\":\"tmpl\",\"component\":\"ProductCard\",\"title\":{\"path\":\"title\"},\"subtitle\":{\"path\":\"subtitle\"},\"price\":{\"path\":\"price\"},\"priceNote\":{\"path\":\"priceNote\"},\"icon\":{\"path\":\"icon\"},\"actionLabel\":\"Book\",\"action\":{\"action\":\"book_spa\",\"context\":{\"treatment\":{\"path\":\"id\"}}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "The spa is open daily from 09:00 to 20:00, and there are six treatments you can book. In high season, please book at least a day ahead. Tap any treatment to start a booking.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here are the spa treatments you can book. Tap one to reserve it.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "spa-services",
+                      "catalogId": "agent-ui--concierge",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "spa-services",
+                      "value": {
+                        "treatments": [
+                          {
+                            "id": "swedish",
+                            "title": "Swedish massage",
+                            "subtitle": "60 min",
+                            "price": "€120",
+                            "icon": "spa"
+                          },
+                          {
+                            "id": "deep-tissue",
+                            "title": "Deep-tissue massage",
+                            "subtitle": "60 min",
+                            "price": "€135",
+                            "icon": "spa"
+                          },
+                          {
+                            "id": "hot-stone",
+                            "title": "Hot-stone massage",
+                            "subtitle": "90 min",
+                            "price": "€170",
+                            "icon": "spa"
+                          },
+                          {
+                            "id": "scrub",
+                            "title": "Sea-salt and lemon body scrub",
+                            "subtitle": "45 min",
+                            "price": "€95",
+                            "icon": "spa"
+                          },
+                          {
+                            "id": "facial",
+                            "title": "Hydrating facial",
+                            "subtitle": "50 min",
+                            "price": "€110",
+                            "icon": "spa"
+                          },
+                          {
+                            "id": "couples",
+                            "title": "Couples massage",
+                            "subtitle": "60 min",
+                            "price": "€230",
+                            "priceNote": "for two",
+                            "icon": "favorite"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "spa-services",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "title",
+                            "hours",
+                            "grid"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Spa treatments",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "hours",
+                          "component": "Text",
+                          "text": "Open 09:00–20:00 · book at least a day ahead in season",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "grid",
+                          "component": "Grid",
+                          "gap": "md",
+                          "min": "16rem",
+                          "children": {
+                            "path": "/treatments",
+                            "componentId": "tmpl"
+                          }
+                        },
+                        {
+                          "id": "tmpl",
+                          "component": "ProductCard",
+                          "title": {
+                            "path": "title"
+                          },
+                          "subtitle": {
+                            "path": "subtitle"
+                          },
+                          "price": {
+                            "path": "price"
+                          },
+                          "priceNote": {
+                            "path": "priceNote"
+                          },
+                          "icon": {
+                            "path": "icon"
+                          },
+                          "actionLabel": "Book",
+                          "action": {
+                            "action": "book_spa",
+                            "context": {
+                              "treatment": {
+                                "path": "id"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "concierge"
+        ],
+        "exemplars": [
+          "domain-concierge-booking-request",
+          "frontier-service-gateway",
+          "backable-wizard"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "facility-info-card",
+            "load": "index-only"
+          },
+          {
+            "name": "amenity-service-card",
+            "load": "index-only"
+          },
+          {
+            "name": "booking-flow",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "index-only"
+          },
+          {
+            "name": "curated-local-guides",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Wikipedia search",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" this Vela table booking,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I should b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ring up the pre-filled\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" booking form since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" new task\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" requ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"iring a new surface. That\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" means the spa-services card\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" its Book buttons is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" now stale and should have\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" its action aff\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ordances removed, since only one\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" surface should be in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"viting action at a time.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll create a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"vela-booking\\\" sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face with a BookingForm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" using date\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", time, party size, and name\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" fields, filling in the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" known\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" details like\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" date 2026-11-20\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", time 20:00, \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"2 guests, and the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" name Alex Moreau\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", plus an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" optional special requests field.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"spa-services\\\",\\\"components\\\":[{\\\"id\\\":\\\"tmpl\\\",\\\"component\\\":\\\"ProductCard\\\",\\\"title\\\":{\\\"path\\\":\\\"title\\\"},\\\"subtitle\\\":{\\\"path\\\":\\\"subtitle\\\"},\\\"price\\\":{\\\"path\\\":\\\"price\\\"},\\\"priceNote\\\":{\\\"path\\\":\\\"priceNote\\\"},\\\"icon\\\":{\\\"path\\\":\\\"icon\\\"}}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"vela-booking\\\",\\\"catalogId\\\":\\\"agent-ui--concierge\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"vela-booking\\\",\\\"path\\\":\\\"/booking\\\",\\\"value\\\":{\\\"date\\\":\\\"2026-11-20\\\",\\\"time\\\":\\\"20:00\\\",\\\"guests\\\":\\\"2\\\",\\\"name\\\":\\\"Alex Moreau\\\",\\\"requests\\\":\\\"\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"vela-booking\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"BookingForm\\\",\\\"title\\\":\\\"Table at Vela\\\",\\\"value\\\":{\\\"path\\\":\\\"/booking\\\"},\\\"fields\\\":[{\\\"kind\\\":\\\"dateSingle\\\",\\\"label\\\":\\\"Date\\\",\\\"path\\\":\\\"date\\\",\\\"required\\\":true},{\\\"kind\\\":\\\"select\\\",\\\"label\\\":\\\"Time\\\",\\\"path\\\":\\\"time\\\",\\\"required\\\":true,\\\"options\\\":[{\\\"label\\\":\\\"19:00\\\",\\\"value\\\":\\\"19:00\\\"},{\\\"label\\\":\\\"19:30\\\",\\\"value\\\":\\\"19:30\\\"},{\\\"label\\\":\\\"20:00\\\",\\\"value\\\":\\\"20:00\\\"},{\\\"label\\\":\\\"20:30\\\",\\\"value\\\":\\\"20:30\\\"},{\\\"label\\\":\\\"21:00\\\",\\\"value\\\":\\\"21:00\\\"},{\\\"label\\\":\\\"21:30\\\",\\\"value\\\":\\\"21:30\\\"}]},{\\\"kind\\\":\\\"select\\\",\\\"label\\\":\\\"Guests\\\",\\\"path\\\":\\\"guests\\\",\\\"required\\\":true,\\\"options\\\":[{\\\"label\\\":\\\"1 guest\\\",\\\"value\\\":\\\"1\\\"},{\\\"label\\\":\\\"2 guests\\\",\\\"value\\\":\\\"2\\\"},{\\\"label\\\":\\\"3 guests\\\",\\\"value\\\":\\\"3\\\"},{\\\"label\\\":\\\"4 guests\\\",\\\"value\\\":\\\"4\\\"},{\\\"label\\\":\\\"5 guests\\\",\\\"value\\\":\\\"5\\\"},{\\\"label\\\":\\\"6 guests\\\",\\\"value\\\":\\\"6\\\"}]},{\\\"kind\\\":\\\"text\\\",\\\"label\\\":\\\"Name\\\",\\\"path\\\":\\\"name\\\",\\\"required\\\":true},{\\\"kind\\\":\\\"text\\\",\\\"label\\\":\\\"Dietary needs or occasion (optional)\\\",\\\"path\\\":\\\"requests\\\"}],\\\"child\\\":\\\"reserveBtn\\\"},{\\\"id\\\":\\\"reserveBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Reserve table\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"confirm_table\\\",\\\"context\\\":{\\\"booking\\\":{\\\"path\\\":\\\"/booking\\\"}},\\\"submit\\\":true}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"I've filled in a table booking at Vela for Friday 20 November 2026 at 20:00, for two, under Alex Moreau. Check the details and press **Reserve table** to book it. You can also add any dietary needs or a special occasion before you send it.\",\"target\":{\"surfaceId\":\"spa-services\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"I'd like a table at Vela on Friday 20 November 2026 at 20:00 for two, name Alex Moreau.\",\"k\":3},\"exemplarIds\":[\"domain-concierge-booking-request\",\"frontier-service-gateway\",\"frontier-result-card-win\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-opus-5-5\",\"prompt\":{\"limit\":142000,\"total\":56198,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3484},{\"id\":\"mini-skills\",\"chars\":1670},{\"id\":\"persona\",\"chars\":4979}],\"over\":false},\"usage\":{\"inputTokens\":4794,\"outputTokens\":1589,\"cacheReadInputTokens\":17759,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"master-detail-split\",\"feature-collection\",\"table-toolbar-pagination\"],\"cacheBoundary\":46065}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"spa-services\",\"components\":[{\"id\":\"tmpl\",\"component\":\"ProductCard\",\"title\":{\"path\":\"title\"},\"subtitle\":{\"path\":\"subtitle\"},\"price\":{\"path\":\"price\"},\"priceNote\":{\"path\":\"priceNote\"},\"icon\":{\"path\":\"icon\"}}]}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"vela-booking\",\"catalogId\":\"agent-ui--concierge\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"vela-booking\",\"path\":\"/booking\",\"value\":{\"date\":\"2026-11-20\",\"time\":\"20:00\",\"guests\":\"2\",\"name\":\"Alex Moreau\",\"requests\":\"\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"vela-booking\",\"components\":[{\"id\":\"root\",\"component\":\"BookingForm\",\"title\":\"Table at Vela\",\"value\":{\"path\":\"/booking\"},\"fields\":[{\"kind\":\"dateSingle\",\"label\":\"Date\",\"path\":\"date\",\"required\":true},{\"kind\":\"select\",\"label\":\"Time\",\"path\":\"time\",\"required\":true,\"options\":[{\"label\":\"19:00\",\"value\":\"19:00\"},{\"label\":\"19:30\",\"value\":\"19:30\"},{\"label\":\"20:00\",\"value\":\"20:00\"},{\"label\":\"20:30\",\"value\":\"20:30\"},{\"label\":\"21:00\",\"value\":\"21:00\"},{\"label\":\"21:30\",\"value\":\"21:30\"}]},{\"kind\":\"select\",\"label\":\"Guests\",\"path\":\"guests\",\"required\":true,\"options\":[{\"label\":\"1 guest\",\"value\":\"1\"},{\"label\":\"2 guests\",\"value\":\"2\"},{\"label\":\"3 guests\",\"value\":\"3\"},{\"label\":\"4 guests\",\"value\":\"4\"},{\"label\":\"5 guests\",\"value\":\"5\"},{\"label\":\"6 guests\",\"value\":\"6\"}]},{\"kind\":\"text\",\"label\":\"Name\",\"path\":\"name\",\"required\":true},{\"kind\":\"text\",\"label\":\"Dietary needs or occasion (optional)\",\"path\":\"requests\"}],\"child\":\"reserveBtn\"},{\"id\":\"reserveBtn\",\"component\":\"Button\",\"label\":\"Reserve table\",\"variant\":\"solid\",\"action\":{\"action\":\"confirm_table\",\"context\":{\"booking\":{\"path\":\"/booking\"}},\"submit\":true}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "I've filled in a table booking at Vela for Friday 20 November 2026 at 20:00, for two, under Alex Moreau. Check the details and press **Reserve table** to book it. You can also add any dietary needs or a special occasion before you send it.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here's your Vela table, filled in and ready to reserve.",
+                "target": "spa-services",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "spa-services",
+                      "components": [
+                        {
+                          "id": "tmpl",
+                          "component": "ProductCard",
+                          "title": {
+                            "path": "title"
+                          },
+                          "subtitle": {
+                            "path": "subtitle"
+                          },
+                          "price": {
+                            "path": "price"
+                          },
+                          "priceNote": {
+                            "path": "priceNote"
+                          },
+                          "icon": {
+                            "path": "icon"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "vela-booking",
+                      "catalogId": "agent-ui--concierge",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "vela-booking",
+                      "path": "/booking",
+                      "value": {
+                        "date": "2026-11-20",
+                        "time": "20:00",
+                        "guests": "2",
+                        "name": "Alex Moreau",
+                        "requests": ""
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "vela-booking",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "BookingForm",
+                          "title": "Table at Vela",
+                          "value": {
+                            "path": "/booking"
+                          },
+                          "fields": [
+                            {
+                              "kind": "dateSingle",
+                              "label": "Date",
+                              "path": "date",
+                              "required": true
+                            },
+                            {
+                              "kind": "select",
+                              "label": "Time",
+                              "path": "time",
+                              "required": true,
+                              "options": [
+                                {
+                                  "label": "19:00",
+                                  "value": "19:00"
+                                },
+                                {
+                                  "label": "19:30",
+                                  "value": "19:30"
+                                },
+                                {
+                                  "label": "20:00",
+                                  "value": "20:00"
+                                },
+                                {
+                                  "label": "20:30",
+                                  "value": "20:30"
+                                },
+                                {
+                                  "label": "21:00",
+                                  "value": "21:00"
+                                },
+                                {
+                                  "label": "21:30",
+                                  "value": "21:30"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "select",
+                              "label": "Guests",
+                              "path": "guests",
+                              "required": true,
+                              "options": [
+                                {
+                                  "label": "1 guest",
+                                  "value": "1"
+                                },
+                                {
+                                  "label": "2 guests",
+                                  "value": "2"
+                                },
+                                {
+                                  "label": "3 guests",
+                                  "value": "3"
+                                },
+                                {
+                                  "label": "4 guests",
+                                  "value": "4"
+                                },
+                                {
+                                  "label": "5 guests",
+                                  "value": "5"
+                                },
+                                {
+                                  "label": "6 guests",
+                                  "value": "6"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "text",
+                              "label": "Name",
+                              "path": "name",
+                              "required": true
+                            },
+                            {
+                              "kind": "text",
+                              "label": "Dietary needs or occasion (optional)",
+                              "path": "requests"
+                            }
+                          ],
+                          "child": "reserveBtn"
+                        },
+                        {
+                          "id": "reserveBtn",
+                          "component": "Button",
+                          "label": "Reserve table",
+                          "variant": "solid",
+                          "action": {
+                            "action": "confirm_table",
+                            "context": {
+                              "booking": {
+                                "path": "/booking"
+                              }
+                            },
+                            "submit": true
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "concierge"
+        ],
+        "exemplars": [
+          "domain-concierge-booking-request",
+          "frontier-service-gateway",
+          "frontier-result-card-win"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "facility-info-card",
+            "load": "index-only"
+          },
+          {
+            "name": "amenity-service-card",
+            "load": "index-only"
+          },
+          {
+            "name": "booking-flow",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "index-only"
+          },
+          {
+            "name": "curated-local-guides",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Wikipedia search",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\\"Make it bigger\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" is ambiguous —\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bigger party or bigger\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" text? I should just ask a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" short clarifying question in pl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ain prose rather than over\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"complicate\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" options\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"What would you like to make bigger: the number of guests at your Vela table, or the size of the booking form on screen? If it's the guests, tell me how many and I'll update it.\",\"trace\":{\"turnIndex\":4,\"query\":{\"intent\":\"Make it bigger.\",\"k\":3},\"exemplarIds\":[\"domain-concierge-booking-request\",\"frontier-service-gateway\",\"agent-task-status\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-opus-5-5\",\"prompt\":{\"limit\":142000,\"total\":54797,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3753},{\"id\":\"persona\",\"chars\":4979}],\"over\":false},\"usage\":{\"inputTokens\":5185,\"outputTokens\":174,\"cacheReadInputTokens\":17759,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":46065}}}"
+      ],
+      "rounds": [
+        {
+          "text": "What would you like to make bigger: the number of guests at your Vela table, or the size of the booking form on screen? If it's the guests, tell me how many and I'll update it.",
+          "tools": []
+        }
+      ],
+      "routing": {
+        "domains": [
+          "concierge"
+        ],
+        "exemplars": [
+          "domain-concierge-booking-request",
+          "frontier-service-gateway",
+          "agent-task-status"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "facility-info-card",
+            "load": "index-only"
+          },
+          {
+            "name": "amenity-service-card",
+            "load": "index-only"
+          },
+          {
+            "name": "booking-flow",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "index-only"
+          },
+          {
+            "name": "curated-local-guides",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Wikipedia search",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}

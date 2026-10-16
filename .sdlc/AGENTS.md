@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:5a5e6c557abc -->
+<!-- sdlc-lite:managed:start v1 sha256:06add7d6bf3c -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -21,7 +21,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0198 Step flow pattern: step n of m, Back and Next, shared /draft data (0198-step-flow)
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (0199-itinerary-compare)
   - T-0315 Admiral and Lexicographer share the agent-ui catalog: 'New game' ranks the word board first on the Admiral's opening (0315-shared-catalog-cross-game-retrieval)
-- ready: 19
+- ready: 15
   - T-0160 Agent content as files: extract preset and pack seeds to .md manifests with a generated, drift-gated registry (0160-agent-content-files)
   - T-0161 Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind (0161-agent-content-overlays)
   - T-0162 Settings pane forms generated from each content kind's schema, with provenance, diff and reset (0162-agent-content-schema-forms)
@@ -36,15 +36,11 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0205 Context archaeology: how the a2ui producer builds context and routes (0205-context-archaeology)
   - T-0209 One source per concept: layer membership, calibration bullets, persona list; mini-skill ranking stability test (0209-context-single-source)
   - T-0247 validate-payload --catalog cannot load persona catalog ids (<base>--<persona>) (0247-validate-payload-persona-ids)
-  - T-0307 Sweep docs-site pages, descriptors, exemplar fixtures and selection sidecars for guidance left stale by rounds 3 to 7 (0307-stale-surface-sweep)
-  - T-0309 Infer flowEnd when a turn declares no ask and no surface instead of a FLOW_END_MISSING repair round (Kim's N1 ruling) (0309-flowend-inference)
-  - T-0310 R8 experiment: force render_surface with thinking off on round 1 of Haiku click turns (0310-haiku-round1-forced-tool)
-  - T-0311 Dev trace: content-addressed prompt store, stopReason and max_tokens per round, and the max_tokens tier floor (P3, P7) (0311-trace-prompt-store)
-  - T-0314 Check contracts: pass and fail fixtures cross-run across all checks, a repair-text vocabulary test, and a repair-loop property test (P2) (0314-check-contract-tests)
+  - T-0318 Replace two corpus records that teach what the rulings forbid (frontier-booking-receipt, frontier-greet-card) (0318-corpus-records-rulings)
 - claimed: 0
 - paused: 0
 - blocked: 0
-- done: 281
+- done: 289
 - dropped: 4
 
 ## Procedures

@@ -1,0 +1,57 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "lexicographer-haiku-opening-prose",
+  "agent": "lexicographer",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "2026-10-16.jsonl:1137 (catalog agent-ui)",
+  "steps": [
+    {
+      "say": "New word game, please."
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"note\":\"New game. I've locked a secret five-letter word and you have six guesses. Enter your first guess below: exactly five lowercase letters.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"New word game, please.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":47218,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1938}],\"over\":false},\"miniSkillIds\":[\"product-presentation\",\"card-game-sheet\",\"card-layout\"],\"cacheBoundary\":45280}}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"New game. I've locked a secret five-letter word and you have six guesses. Enter your first guess below: exactly five lowercase letters.\",\"ask\":{\"surfaceId\":\"ask-1\"}}}",
+          "tools": []
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "New word game, please."
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "domain-lexicographer-word-board",
+          "domain-lexicographer-game-over",
+          "notification-status-stack"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "word-tiles",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}

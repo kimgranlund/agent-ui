@@ -1,0 +1,788 @@
+{
+  "kind": "agent-ui-chat-probe-report",
+  "version": 1,
+  "name": "long-concierge-facility-hours-sonnet-1",
+  "mode": "live",
+  "agent": "concierge",
+  "model": "claude-sonnet-5-5",
+  "runId": "long-concierge-facility-hours-sonnet-1-6ff061eb",
+  "at": "2026-10-16T22:09:58.051Z",
+  "turns": [
+    {
+      "index": 0,
+      "request": {
+        "model": "claude-sonnet-5-5",
+        "effort": "high",
+        "catalogId": "agent-ui--concierge",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm plan\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ning a compact info card with one\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" row per facility show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing hours,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since location\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" data\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" isn't available in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the house facts and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I shouldn't invent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Rows will cover Pool\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", Gym, and Sp\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"a with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" their respective opening times\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Now I'll struct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ure it with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a CardHeader title\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" CardContent Descript\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ionList under\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the agent-ui--\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"concierge catalog,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" writing brief prose first before\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" calling render_surface.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"facility-hours\\\",\\\"catalogId\\\":\\\"agent-ui--concierge\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"facility-hours\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"hdr\\\",\\\"content\\\"]},{\\\"id\\\":\\\"hdr\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"title\\\"]},{\\\"id\\\":\\\"title\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Pool, gym and spa hours\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"content\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"hours\\\"]},{\\\"id\\\":\\\"hours\\\",\\\"component\\\":\\\"DescriptionList\\\",\\\"rows\\\":[{\\\"label\\\":\\\"Pool (25m, heated)\\\",\\\"value\\\":\\\"06:00–22:00, daily\\\"},{\\\"label\\\":\\\"Gym\\\",\\\"value\\\":\\\"06:00–22:00, daily\\\"},{\\\"label\\\":\\\"Spa\\\",\\\"value\\\":\\\"09:00–20:00, daily. In season, book treatments at least a day ahead.\\\"}]}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Pool and gym are open 06:00 to 22:00, and the spa is open 09:00 to 20:00. Here are the hours:\",\"target\":{\"surfaceId\":\"facility-hours\"},\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"## Referenced for this message\\n### property-knowledge-base (resource)\\nAccessibility, policy, group-booking, and wedding facts the concierge cites.\\n\\nStep-free throughout — ramped entrance, lifts to every floor, four ADA rooms with roll-in showers and a portable hoist on request. Check-in 15:00, check-out 11:00; late check-out to 14:00 subject to availability. Cancellations are free up to 48h before arrival, one night’s rate after. Groups of 10+ rooms get a dedicated coordinator and a 10% rate; the event spaces seat 120 banquet-style or 200 standing. Weddings run three packages — Intimate, Classic, Grand — covering the ballroom or the waterfront terrace, in-house catering from Vela’s kitchen, and a preferred-vendor list for florists and photographers; quote a package, never a firm price, without confirming the date with the events team. Pool (25m, heated) and gym open 06:00–22:00; spa 09:00–20:00 — book treatments at least a day ahead in season.\\n\\nWhat are the opening hours of the pool, gym and spa? Check the property-knowledge-base.\",\"k\":3},\"exemplarIds\":[\"domain-concierge-booking-request\",\"frontier-service-gateway\",\"booking-reservation\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":58306,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5048},{\"id\":\"mini-skills\",\"chars\":2214},{\"id\":\"persona\",\"chars\":4979}],\"over\":false},\"usage\":{\"inputTokens\":5174,\"outputTokens\":730,\"cacheReadInputTokens\":17759,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"greeting-card\",\"nested-record-editor\",\"feature-collection\"],\"cacheBoundary\":46065}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"facility-hours\",\"catalogId\":\"agent-ui--concierge\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"facility-hours\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"hdr\",\"content\"]},{\"id\":\"hdr\",\"component\":\"CardHeader\",\"children\":[\"title\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Pool, gym and spa hours\",\"variant\":\"h4\"},{\"id\":\"content\",\"component\":\"CardContent\",\"children\":[\"hours\"]},{\"id\":\"hours\",\"component\":\"DescriptionList\",\"rows\":[{\"label\":\"Pool (25m, heated)\",\"value\":\"06:00–22:00, daily\"},{\"label\":\"Gym\",\"value\":\"06:00–22:00, daily\"},{\"label\":\"Spa\",\"value\":\"09:00–20:00, daily. In season, book treatments at least a day ahead.\"}]}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Pool and gym are open 06:00 to 22:00, and the spa is open 09:00 to 20:00. Here are the hours:",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Hours for the pool, gym and spa. Want me to book a spa treatment?",
+                "target": "facility-hours",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "facility-hours",
+                      "catalogId": "agent-ui--concierge"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "facility-hours",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "hdr",
+                            "content"
+                          ]
+                        },
+                        {
+                          "id": "hdr",
+                          "component": "CardHeader",
+                          "children": [
+                            "title"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Pool, gym and spa hours",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "content",
+                          "component": "CardContent",
+                          "children": [
+                            "hours"
+                          ]
+                        },
+                        {
+                          "id": "hours",
+                          "component": "DescriptionList",
+                          "rows": [
+                            {
+                              "label": "Pool (25m, heated)",
+                              "value": "06:00–22:00, daily"
+                            },
+                            {
+                              "label": "Gym",
+                              "value": "06:00–22:00, daily"
+                            },
+                            {
+                              "label": "Spa",
+                              "value": "09:00–20:00, daily. In season, book treatments at least a day ahead."
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-16.jsonl:1401",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          406
+        ]
+      },
+      "routing": {
+        "domains": [
+          "concierge"
+        ],
+        "exemplars": [
+          "domain-concierge-booking-request",
+          "frontier-service-gateway",
+          "booking-reservation"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "facility-info-card",
+            "load": "index-only"
+          },
+          {
+            "name": "amenity-service-card",
+            "load": "index-only"
+          },
+          {
+            "name": "booking-flow",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "index-only"
+          },
+          {
+            "name": "curated-local-guides",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Wikipedia search",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "full"
+          }
+        ]
+      },
+      "step": {
+        "say": "What are the opening hours of the pool, gym and spa? Check the property-knowledge-base.",
+        "expect": [
+          "DescriptionList"
+        ],
+        "expectRouting": {
+          "domains": [
+            "concierge"
+          ],
+          "references": [
+            {
+              "name": "property-knowledge-base",
+              "load": "full"
+            }
+          ]
+        }
+      },
+      "domHosts": 1,
+      "proseText": "You What are the opening hours of the pool, gym and spa? Check the property-knowledge-base. property-knowledge-base Pool and gym are open 06:00 to 22:00, and the spa is open 09:00 to 20:00. Here are the hours:",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-16-r8-matrix/long-concierge-facility-hours-sonnet-1/turn-1.png"
+    },
+    {
+      "index": 1,
+      "request": {
+        "model": "claude-sonnet-5-5",
+        "effort": "high",
+        "catalogId": "agent-ui--concierge",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"This is a sim\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ple policy fact about late check\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-out, so a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" comp\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"act answer mak\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"es sense rather than a full\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" structured card—something\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" conc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ise like confirming check\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-out ext\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ends to 14:00.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Yes, late check-out is possible until 14:00, subject to availability. Standard check-out is 11:00.\\n\\nI don't have details on availability for your dates or any charge for it. The front desk can confirm both. If you give me your stay dates, I can note the request.\",\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Is late check-out possible?\",\"k\":3},\"exemplarIds\":[\"frontier-service-gateway\",\"domain-concierge-booking-request\",\"booking-reservation\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":56092,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5048},{\"id\":\"persona\",\"chars\":4979}],\"over\":false},\"usage\":{\"inputTokens\":4792,\"outputTokens\":305,\"cacheReadInputTokens\":17759,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":46065}}}"
+      ],
+      "rounds": [
+        {
+          "text": "Yes, late check-out is possible until 14:00, subject to availability. Standard check-out is 11:00.\n\nI don't have details on availability for your dates or any charge for it. The front desk can confirm both. If you give me your stay dates, I can note the request.",
+          "tools": []
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-16.jsonl:1402",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          181
+        ]
+      },
+      "routing": {
+        "domains": [
+          "concierge"
+        ],
+        "exemplars": [
+          "frontier-service-gateway",
+          "domain-concierge-booking-request",
+          "booking-reservation"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "facility-info-card",
+            "load": "index-only"
+          },
+          {
+            "name": "amenity-service-card",
+            "load": "index-only"
+          },
+          {
+            "name": "booking-flow",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "index-only"
+          },
+          {
+            "name": "curated-local-guides",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Wikipedia search",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "full"
+          }
+        ]
+      },
+      "step": {
+        "say": "Is late check-out possible?"
+      },
+      "domHosts": 1,
+      "proseText": "You What are the opening hours of the pool, gym and spa? Check the property-knowledge-base. property-knowledge-base Pool and gym are open 06:00 to 22:00, and the spa is open 09:00 to 20:00. Here are the hours: You Is late check-out possible? Yes, late check-out is possible until 14:00, subject to availability. Standard check-out is 11:00. I don't have details on availability for your dates or any charge for it. The front desk can confirm both. If you give me your stay dates, I can note the request.",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-16-r8-matrix/long-concierge-facility-hours-sonnet-1/turn-2.png"
+    },
+    {
+      "index": 2,
+      "request": {
+        "model": "claude-sonnet-5-5",
+        "effort": "high",
+        "catalogId": "agent-ui--concierge",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You're welcome! Enjoy your stay at the Grand Meridian. If anything else comes up, just ask.\",\"flowEnd\":true,\"trace\":{\"turnIndex\":4,\"query\":{\"intent\":\"Thanks, that's all.\",\"k\":3},\"exemplarIds\":[\"frontier-service-gateway\",\"domain-concierge-booking-request\",\"frontier-booking-receipt\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[\"FLOW_END_INFERRED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":54657,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3613},{\"id\":\"persona\",\"chars\":4979}],\"over\":false},\"usage\":{\"inputTokens\":4280,\"outputTokens\":38,\"cacheReadInputTokens\":17759,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":46065}}}"
+      ],
+      "rounds": [
+        {
+          "text": "You're welcome! Enjoy your stay at the Grand Meridian. If anything else comes up, just ask.",
+          "tools": []
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-16.jsonl:1403",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          0
+        ]
+      },
+      "routing": {
+        "domains": [
+          "concierge"
+        ],
+        "exemplars": [
+          "frontier-service-gateway",
+          "domain-concierge-booking-request",
+          "frontier-booking-receipt"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "facility-info-card",
+            "load": "index-only"
+          },
+          {
+            "name": "amenity-service-card",
+            "load": "index-only"
+          },
+          {
+            "name": "booking-flow",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "index-only"
+          },
+          {
+            "name": "curated-local-guides",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Wikipedia search",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "full"
+          }
+        ]
+      },
+      "step": {
+        "say": "Thanks, that's all."
+      },
+      "domHosts": 1,
+      "proseText": "You What are the opening hours of the pool, gym and spa? Check the property-knowledge-base. property-knowledge-base Pool and gym are open 06:00 to 22:00, and the spa is open 09:00 to 20:00. Here are the hours: You Is late check-out possible? Yes, late check-out is possible until 14:00, subject to availability. Standard check-out is 11:00. I don't have details on availability for your dates or any charge for it. The front desk can confirm both. If you give me your stay dates, I can note the request. You Thanks, that's all. You're welcome! Enjoy your stay at the Grand Meridian. If anything else comes up, just ask. Done Start over",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-16-r8-matrix/long-concierge-facility-hours-sonnet-1/turn-3.png"
+    }
+  ],
+  "checks": [
+    {
+      "check": "model-pick",
+      "turn": 0,
+      "status": "pass",
+      "detail": "claude-sonnet-5-5 / high"
+    },
+    {
+      "check": "click-target",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 0,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 0,
+      "status": "pass",
+      "detail": "209 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 0,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 0,
+      "status": "pass",
+      "detail": "93 chars of reply beside 2 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 0,
+      "status": "pass",
+      "detail": "rounds created [facility-hours], open [facility-hours] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 0,
+      "status": "pass",
+      "detail": "facility-hours updated"
+    },
+    {
+      "check": "expect-component",
+      "turn": 0,
+      "status": "pass",
+      "detail": "facility-hours holds DescriptionList"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 0,
+      "status": "pass",
+      "detail": "routing as expected"
+    },
+    {
+      "check": "render-lint",
+      "turn": 0,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 0,
+      "status": "pass",
+      "detail": "406 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 1,
+      "status": "pass",
+      "detail": "claude-sonnet-5-5 / high"
+    },
+    {
+      "check": "click-target",
+      "turn": 1,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 1,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 1,
+      "status": "pass",
+      "detail": "503 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 1,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 1,
+      "status": "skip",
+      "detail": "no A2UI lines shipped (a text turn)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 1,
+      "status": "pass",
+      "detail": "rounds created [], open [facility-hours] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 1,
+      "status": "skip",
+      "detail": "not a click turn or a targeted say turn"
+    },
+    {
+      "check": "expect-component",
+      "turn": 1,
+      "status": "skip",
+      "detail": "no --expect-turn on this step"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 1,
+      "status": "skip",
+      "detail": "no --expect-routing on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 1,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 1,
+      "status": "pass",
+      "detail": "181 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 2,
+      "status": "pass",
+      "detail": "claude-sonnet-5-5 / high"
+    },
+    {
+      "check": "click-target",
+      "turn": 2,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 2,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 2,
+      "status": "pass",
+      "detail": "635 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 2,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 2,
+      "status": "skip",
+      "detail": "no A2UI lines shipped (a text turn)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 2,
+      "status": "pass",
+      "detail": "rounds created [], open [facility-hours] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 2,
+      "status": "skip",
+      "detail": "not a click turn or a targeted say turn"
+    },
+    {
+      "check": "expect-component",
+      "turn": 2,
+      "status": "skip",
+      "detail": "no --expect-turn on this step"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 2,
+      "status": "skip",
+      "detail": "no --expect-routing on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 2,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 2,
+      "status": "warn",
+      "detail": "effort high but no thinking text captured"
+    },
+    {
+      "check": "expect-component",
+      "status": "pass",
+      "detail": "found DescriptionList"
+    }
+  ],
+  "verdict": "pass"
+}

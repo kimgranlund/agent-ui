@@ -1,0 +1,20 @@
+{
+  "round": "2026-10-16-r8-matrix",
+  "ticket": "T-0319",
+  "reportId": "62dbbb423e6e2d348a4444c9",
+  "mapping": ".sdlc/evals/fog-manifest.json",
+  "mappingHash": "2dff31b70205e58efd04f5b801ebc69221daaf887ed9df3bdaf1da02dfe9f9ae",
+  "bundleFingerprint": "96e4e74edb031a55072f22174250bf0532f74ab16f2feed92119a30eb2c1500a",
+  "engineeringRun": "run-6cfdae29b69b0d5ba77fef14",
+  "events": 1744,
+  "sources": 604,
+  "decisions": 9,
+  "findings": 6,
+  "diagnosticFindings": 0,
+  "excluded": "none: every one of the 548 trace lines is a completed produce turn (no provider-error line), so nothing was blanked",
+  "ingest": "python3 ~/.claude/skills/context-fog-of-war/scripts/engineer.py ingest .sdlc/evals/rounds/2026-10-16-r8-matrix --mapping .sdlc/evals/fog-manifest.json --out <dir>",
+  "publish": "python3 ~/.claude/skills/context-fog-of-war/scripts/library.py publish <dir>/final.json",
+  "audit": "python3 ~/.claude/skills/context-fog-of-war/scripts/audit.py scan --root . --mapping .sdlc/evals/fog/contract-audit/mapping.json --out <dir>/audit.json (80 surfaces, 57 candidates); then audit.py link --report <dir>/audit.json --finding f1..f6 --data <dir>/final.json",
+  "analysis": "T-0319 decision analysis: d1 to d8 are clusters A to H of report.md (messages strings one brace short; unforced SURFACE_DROPPED repair rounds and a fallback that ships a judged-wrong round; prose say turns no check covers; a priced DescriptionList the ProductCard row misses; the poker betting-phase ambiguity; a non-natural settled on the deal; the Opus hold'em scenario defect; the PlayingCard type floor), d9 is the T-0310 measurement, with 17 guidance edges and 6 reviewed findings (report.md, Why it failed and how to fix it).",
+  "hydrate": "decisions, guidanceEdges and findings added to the ingested session.json with exact excerpts and event ids before the first publish, then diagnostics.py --data --out, fog.py validate and library.py publish; run by the context-fog-of-war SKILL.md Autonomous run checklist"
+}

@@ -1,0 +1,897 @@
+{
+  "kind": "agent-ui-chat-probe-report",
+  "version": 1,
+  "name": "long-concierge-spa-services-sonnet-1",
+  "mode": "live",
+  "agent": "concierge",
+  "model": "claude-sonnet-5-5",
+  "runId": "long-concierge-spa-services-sonnet-1-c140cdd1",
+  "at": "2026-10-16T22:08:30.076Z",
+  "turns": [
+    {
+      "index": 0,
+      "request": {
+        "model": "claude-sonnet-5-5",
+        "effort": "high",
+        "catalogId": "agent-ui--concierge",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"This is about bookable spa\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" services with p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ricing, so I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m thinking a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing treatments as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ards or\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a table makes sense, even\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" though the specific amenity sk\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ill wasn't expl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"icitly inv\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"oked—something like a grid\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" of product\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" cards with prices and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" booking actions f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"its best\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll write a short prose\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" intro noting the spa's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hours and booking adv\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ice, then build a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" surface with a grid of tre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"atment cards, each showing\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" du\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ration, price, and a \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Book\\\" action t\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ied to the tre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"atment's ident\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ifier.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"spa-menu\\\",\\\"catalogId\\\":\\\"agent-ui--concierge\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"spa-menu\\\",\\\"value\\\":{\\\"treatments\\\":[{\\\"id\\\":\\\"swedish\\\",\\\"title\\\":\\\"Swedish massage\\\",\\\"subtitle\\\":\\\"60 min\\\",\\\"price\\\":\\\"€120\\\",\\\"note\\\":\\\"per person\\\"},{\\\"id\\\":\\\"deep-tissue\\\",\\\"title\\\":\\\"Deep-tissue massage\\\",\\\"subtitle\\\":\\\"60 min\\\",\\\"price\\\":\\\"€135\\\",\\\"note\\\":\\\"per person\\\"},{\\\"id\\\":\\\"hot-stone\\\",\\\"title\\\":\\\"Hot-stone massage\\\",\\\"subtitle\\\":\\\"90 min\\\",\\\"price\\\":\\\"€170\\\",\\\"note\\\":\\\"per person\\\"},{\\\"id\\\":\\\"body-scrub\\\",\\\"title\\\":\\\"Sea-salt and lemon body scrub\\\",\\\"subtitle\\\":\\\"45 min\\\",\\\"price\\\":\\\"€95\\\",\\\"note\\\":\\\"per person\\\"},{\\\"id\\\":\\\"facial\\\",\\\"title\\\":\\\"Hydrating facial\\\",\\\"subtitle\\\":\\\"50 min\\\",\\\"price\\\":\\\"€110\\\",\\\"note\\\":\\\"per person\\\"},{\\\"id\\\":\\\"couples\\\",\\\"title\\\":\\\"Couples massage\\\",\\\"subtitle\\\":\\\"60 min\\\",\\\"price\\\":\\\"€230\\\",\\\"note\\\":\\\"for two\\\"}]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"spa-menu\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"heading\\\",\\\"grid\\\"]},{\\\"id\\\":\\\"heading\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Spa treatments\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"grid\\\",\\\"component\\\":\\\"Grid\\\",\\\"min\\\":\\\"16rem\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":{\\\"path\\\":\\\"/treatments\\\",\\\"componentId\\\":\\\"tmpl\\\"}},{\\\"id\\\":\\\"tmpl\\\",\\\"component\\\":\\\"ProductCard\\\",\\\"title\\\":{\\\"path\\\":\\\"title\\\"},\\\"subtitle\\\":{\\\"path\\\":\\\"subtitle\\\"},\\\"price\\\":{\\\"path\\\":\\\"price\\\"},\\\"priceNote\\\":{\\\"path\\\":\\\"note\\\"},\\\"icon\\\":\\\"spa\\\",\\\"actionLabel\\\":\\\"Book\\\",\\\"action\\\":{\\\"action\\\":\\\"book_spa\\\",\\\"context\\\":{\\\"treatment\\\":{\\\"path\\\":\\\"id\\\"}}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Our spa is open daily from 09:00 to 20:00. In season, please book treatments at least a day ahead. Here's the full treatment menu. Choose one to start a booking.\",\"target\":{\"surfaceId\":\"spa-menu\"},\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"What spa services can I book during my stay?\",\"k\":3},\"exemplarIds\":[\"domain-concierge-booking-request\",\"frontier-service-gateway\",\"backable-wizard\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":59670,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":7111},{\"id\":\"mini-skills\",\"chars\":1515},{\"id\":\"persona\",\"chars\":4979}],\"over\":false},\"usage\":{\"inputTokens\":5562,\"outputTokens\":1249,\"cacheReadInputTokens\":17759,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"greeting-card\",\"product-presentation\"],\"cacheBoundary\":46065}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"spa-menu\",\"catalogId\":\"agent-ui--concierge\"}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"spa-menu\",\"value\":{\"treatments\":[{\"id\":\"swedish\",\"title\":\"Swedish massage\",\"subtitle\":\"60 min\",\"price\":\"€120\",\"note\":\"per person\"},{\"id\":\"deep-tissue\",\"title\":\"Deep-tissue massage\",\"subtitle\":\"60 min\",\"price\":\"€135\",\"note\":\"per person\"},{\"id\":\"hot-stone\",\"title\":\"Hot-stone massage\",\"subtitle\":\"90 min\",\"price\":\"€170\",\"note\":\"per person\"},{\"id\":\"body-scrub\",\"title\":\"Sea-salt and lemon body scrub\",\"subtitle\":\"45 min\",\"price\":\"€95\",\"note\":\"per person\"},{\"id\":\"facial\",\"title\":\"Hydrating facial\",\"subtitle\":\"50 min\",\"price\":\"€110\",\"note\":\"per person\"},{\"id\":\"couples\",\"title\":\"Couples massage\",\"subtitle\":\"60 min\",\"price\":\"€230\",\"note\":\"for two\"}]}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"spa-menu\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"heading\",\"grid\"]},{\"id\":\"heading\",\"component\":\"Text\",\"text\":\"Spa treatments\",\"variant\":\"h4\"},{\"id\":\"grid\",\"component\":\"Grid\",\"min\":\"16rem\",\"gap\":\"md\",\"children\":{\"path\":\"/treatments\",\"componentId\":\"tmpl\"}},{\"id\":\"tmpl\",\"component\":\"ProductCard\",\"title\":{\"path\":\"title\"},\"subtitle\":{\"path\":\"subtitle\"},\"price\":{\"path\":\"price\"},\"priceNote\":{\"path\":\"note\"},\"icon\":\"spa\",\"actionLabel\":\"Book\",\"action\":{\"action\":\"book_spa\",\"context\":{\"treatment\":{\"path\":\"id\"}}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Our spa is open daily from 09:00 to 20:00. In season, please book treatments at least a day ahead. Here's the full treatment menu. Choose one to start a booking.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Pick a treatment and I'll set up the booking form with it pre-filled.",
+                "target": "spa-menu",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "spa-menu",
+                      "catalogId": "agent-ui--concierge"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "spa-menu",
+                      "value": {
+                        "treatments": [
+                          {
+                            "id": "swedish",
+                            "title": "Swedish massage",
+                            "subtitle": "60 min",
+                            "price": "€120",
+                            "note": "per person"
+                          },
+                          {
+                            "id": "deep-tissue",
+                            "title": "Deep-tissue massage",
+                            "subtitle": "60 min",
+                            "price": "€135",
+                            "note": "per person"
+                          },
+                          {
+                            "id": "hot-stone",
+                            "title": "Hot-stone massage",
+                            "subtitle": "90 min",
+                            "price": "€170",
+                            "note": "per person"
+                          },
+                          {
+                            "id": "body-scrub",
+                            "title": "Sea-salt and lemon body scrub",
+                            "subtitle": "45 min",
+                            "price": "€95",
+                            "note": "per person"
+                          },
+                          {
+                            "id": "facial",
+                            "title": "Hydrating facial",
+                            "subtitle": "50 min",
+                            "price": "€110",
+                            "note": "per person"
+                          },
+                          {
+                            "id": "couples",
+                            "title": "Couples massage",
+                            "subtitle": "60 min",
+                            "price": "€230",
+                            "note": "for two"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "spa-menu",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "heading",
+                            "grid"
+                          ]
+                        },
+                        {
+                          "id": "heading",
+                          "component": "Text",
+                          "text": "Spa treatments",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "grid",
+                          "component": "Grid",
+                          "min": "16rem",
+                          "gap": "md",
+                          "children": {
+                            "path": "/treatments",
+                            "componentId": "tmpl"
+                          }
+                        },
+                        {
+                          "id": "tmpl",
+                          "component": "ProductCard",
+                          "title": {
+                            "path": "title"
+                          },
+                          "subtitle": {
+                            "path": "subtitle"
+                          },
+                          "price": {
+                            "path": "price"
+                          },
+                          "priceNote": {
+                            "path": "note"
+                          },
+                          "icon": "spa",
+                          "actionLabel": "Book",
+                          "action": {
+                            "action": "book_spa",
+                            "context": {
+                              "treatment": {
+                                "path": "id"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-16.jsonl:1394",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          490
+        ]
+      },
+      "routing": {
+        "domains": [
+          "concierge"
+        ],
+        "exemplars": [
+          "domain-concierge-booking-request",
+          "frontier-service-gateway",
+          "backable-wizard"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "facility-info-card",
+            "load": "index-only"
+          },
+          {
+            "name": "amenity-service-card",
+            "load": "index-only"
+          },
+          {
+            "name": "booking-flow",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "index-only"
+          },
+          {
+            "name": "curated-local-guides",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Wikipedia search",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          }
+        ]
+      },
+      "step": {
+        "say": "What spa services can I book during my stay?",
+        "expect": [
+          "ProductCard"
+        ],
+        "expectRouting": {
+          "domains": [
+            "concierge"
+          ]
+        }
+      },
+      "domHosts": 1,
+      "proseText": "You What spa services can I book during my stay? Our spa is open daily from 09:00 to 20:00. In season, please book treatments at least a day ahead. Here's the full treatment menu. Choose one to start a booking.",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-16-r8-matrix/long-concierge-spa-services-sonnet-1/turn-1.png"
+    },
+    {
+      "index": 1,
+      "request": {
+        "model": "claude-sonnet-5-5",
+        "effort": "high",
+        "catalogId": "agent-ui--concierge",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pre-fill the booking\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" form with the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Swedish massage,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Thursday November\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 19 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"2026 at 15:00\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", one guest, and Al\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ex Moreau's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" name\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"let\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" me just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" double\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-check that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" date actually falls on a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Thursday before conf\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"irming.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Now I'm thinking\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" about how to structure the sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face: since this is a next step\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" from the spa men\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"u r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ather than a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" br\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and new\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" task\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", I could\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" update the exist\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing spa-menu surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", but changing its root type is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"n't allowed, so I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll create\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a new boo\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"king surface inst\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ead and retire the old menu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s Book buttons by res\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ending its\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" template without the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" action.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For the B\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ookingForm fields, I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" only know of\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ateSingle, select, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" checkbox kinds,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" so I'll use select for time\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" slots (\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"hourly \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"09:00–19:00),\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" select\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for guest count (\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"1–4), select\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for treatment (pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"efilled\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Swedish mass\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"age), and text for the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" name field\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" date pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"efilled to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 2026-11-19 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and time to 15:00.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll add a submit button with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" confirm_booking action as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a child of the form.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll write\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" some br\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ief prose first, then\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" make\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the tool call with the meta\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-line as the first line.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"spa-menu\\\",\\\"components\\\":[{\\\"id\\\":\\\"tmpl\\\",\\\"component\\\":\\\"ProductCard\\\",\\\"title\\\":{\\\"path\\\":\\\"title\\\"},\\\"subtitle\\\":{\\\"path\\\":\\\"subtitle\\\"},\\\"price\\\":{\\\"path\\\":\\\"price\\\"},\\\"priceNote\\\":{\\\"path\\\":\\\"note\\\"},\\\"icon\\\":\\\"spa\\\"}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"spa-booking\\\",\\\"catalogId\\\":\\\"agent-ui--concierge\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"spa-booking\\\",\\\"path\\\":\\\"/booking\\\",\\\"value\\\":{\\\"treatment\\\":\\\"swedish\\\",\\\"date\\\":\\\"2026-11-19\\\",\\\"time\\\":\\\"15:00\\\",\\\"guests\\\":\\\"1\\\",\\\"name\\\":\\\"Alex Moreau\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"spa-booking\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"BookingForm\\\",\\\"title\\\":\\\"Book your spa treatment\\\",\\\"value\\\":{\\\"path\\\":\\\"/booking\\\"},\\\"fields\\\":[{\\\"kind\\\":\\\"select\\\",\\\"label\\\":\\\"Treatment\\\",\\\"path\\\":\\\"treatment\\\",\\\"required\\\":true,\\\"options\\\":[{\\\"label\\\":\\\"Swedish massage · 60 min · €120\\\",\\\"value\\\":\\\"swedish\\\"},{\\\"label\\\":\\\"Deep-tissue massage · 60 min · €135\\\",\\\"value\\\":\\\"deep-tissue\\\"},{\\\"label\\\":\\\"Hot-stone massage · 90 min · €170\\\",\\\"value\\\":\\\"hot-stone\\\"},{\\\"label\\\":\\\"Sea-salt and lemon body scrub · 45 min · €95\\\",\\\"value\\\":\\\"body-scrub\\\"},{\\\"label\\\":\\\"Hydrating facial · 50 min · €110\\\",\\\"value\\\":\\\"facial\\\"},{\\\"label\\\":\\\"Couples massage · 60 min · €230 for two\\\",\\\"value\\\":\\\"couples\\\"}]},{\\\"kind\\\":\\\"dateSingle\\\",\\\"label\\\":\\\"Date\\\",\\\"path\\\":\\\"date\\\",\\\"required\\\":true},{\\\"kind\\\":\\\"select\\\",\\\"label\\\":\\\"Time\\\",\\\"path\\\":\\\"time\\\",\\\"required\\\":true,\\\"options\\\":[{\\\"label\\\":\\\"09:00\\\",\\\"value\\\":\\\"09:00\\\"},{\\\"label\\\":\\\"10:00\\\",\\\"value\\\":\\\"10:00\\\"},{\\\"label\\\":\\\"11:00\\\",\\\"value\\\":\\\"11:00\\\"},{\\\"label\\\":\\\"12:00\\\",\\\"value\\\":\\\"12:00\\\"},{\\\"label\\\":\\\"13:00\\\",\\\"value\\\":\\\"13:00\\\"},{\\\"label\\\":\\\"14:00\\\",\\\"value\\\":\\\"14:00\\\"},{\\\"label\\\":\\\"15:00\\\",\\\"value\\\":\\\"15:00\\\"},{\\\"label\\\":\\\"16:00\\\",\\\"value\\\":\\\"16:00\\\"},{\\\"label\\\":\\\"17:00\\\",\\\"value\\\":\\\"17:00\\\"},{\\\"label\\\":\\\"18:00\\\",\\\"value\\\":\\\"18:00\\\"}]},{\\\"kind\\\":\\\"select\\\",\\\"label\\\":\\\"Guests\\\",\\\"path\\\":\\\"guests\\\",\\\"required\\\":true,\\\"options\\\":[{\\\"label\\\":\\\"1 guest\\\",\\\"value\\\":\\\"1\\\"},{\\\"label\\\":\\\"2 guests\\\",\\\"value\\\":\\\"2\\\"}]},{\\\"kind\\\":\\\"text\\\",\\\"label\\\":\\\"Name\\\",\\\"path\\\":\\\"name\\\",\\\"required\\\":true}],\\\"child\\\":\\\"bookBtn\\\"},{\\\"id\\\":\\\"bookBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Book treatment\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"confirm_booking\\\",\\\"context\\\":{\\\"booking\\\":{\\\"path\\\":\\\"/booking\\\"}},\\\"submit\\\":true}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"I've filled in your Swedish massage (60 min, €120) for Thursday 19 November 2026 at 15:00, for one guest under the name Alex Moreau. Check the details and press \\\"Book treatment\\\", or just tell me to confirm.\",\"target\":{\"surfaceId\":\"spa-menu\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Book the first one for Thursday 19 November 2026 at 15:00, one guest, name Alex Moreau.\",\"k\":3},\"exemplarIds\":[\"domain-concierge-booking-request\",\"frontier-service-gateway\",\"frontier-round-outcome\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":54763,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3719},{\"id\":\"persona\",\"chars\":4979}],\"over\":false},\"usage\":{\"inputTokens\":4223,\"outputTokens\":2121,\"cacheReadInputTokens\":17759,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":46065}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"spa-menu\",\"components\":[{\"id\":\"tmpl\",\"component\":\"ProductCard\",\"title\":{\"path\":\"title\"},\"subtitle\":{\"path\":\"subtitle\"},\"price\":{\"path\":\"price\"},\"priceNote\":{\"path\":\"note\"},\"icon\":\"spa\"}]}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"spa-booking\",\"catalogId\":\"agent-ui--concierge\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"spa-booking\",\"path\":\"/booking\",\"value\":{\"treatment\":\"swedish\",\"date\":\"2026-11-19\",\"time\":\"15:00\",\"guests\":\"1\",\"name\":\"Alex Moreau\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"spa-booking\",\"components\":[{\"id\":\"root\",\"component\":\"BookingForm\",\"title\":\"Book your spa treatment\",\"value\":{\"path\":\"/booking\"},\"fields\":[{\"kind\":\"select\",\"label\":\"Treatment\",\"path\":\"treatment\",\"required\":true,\"options\":[{\"label\":\"Swedish massage · 60 min · €120\",\"value\":\"swedish\"},{\"label\":\"Deep-tissue massage · 60 min · €135\",\"value\":\"deep-tissue\"},{\"label\":\"Hot-stone massage · 90 min · €170\",\"value\":\"hot-stone\"},{\"label\":\"Sea-salt and lemon body scrub · 45 min · €95\",\"value\":\"body-scrub\"},{\"label\":\"Hydrating facial · 50 min · €110\",\"value\":\"facial\"},{\"label\":\"Couples massage · 60 min · €230 for two\",\"value\":\"couples\"}]},{\"kind\":\"dateSingle\",\"label\":\"Date\",\"path\":\"date\",\"required\":true},{\"kind\":\"select\",\"label\":\"Time\",\"path\":\"time\",\"required\":true,\"options\":[{\"label\":\"09:00\",\"value\":\"09:00\"},{\"label\":\"10:00\",\"value\":\"10:00\"},{\"label\":\"11:00\",\"value\":\"11:00\"},{\"label\":\"12:00\",\"value\":\"12:00\"},{\"label\":\"13:00\",\"value\":\"13:00\"},{\"label\":\"14:00\",\"value\":\"14:00\"},{\"label\":\"15:00\",\"value\":\"15:00\"},{\"label\":\"16:00\",\"value\":\"16:00\"},{\"label\":\"17:00\",\"value\":\"17:00\"},{\"label\":\"18:00\",\"value\":\"18:00\"}]},{\"kind\":\"select\",\"label\":\"Guests\",\"path\":\"guests\",\"required\":true,\"options\":[{\"label\":\"1 guest\",\"value\":\"1\"},{\"label\":\"2 guests\",\"value\":\"2\"}]},{\"kind\":\"text\",\"label\":\"Name\",\"path\":\"name\",\"required\":true}],\"child\":\"bookBtn\"},{\"id\":\"bookBtn\",\"component\":\"Button\",\"label\":\"Book treatment\",\"variant\":\"solid\",\"action\":{\"action\":\"confirm_booking\",\"context\":{\"booking\":{\"path\":\"/booking\"}},\"submit\":true}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"spa-menu\"}}}\nI've filled in your Swedish massage (60 min, €120) for Thursday 19 November 2026 at 15:00, for one guest under the name Alex Moreau. Check the details and press \"Book treatment\", or just tell me to confirm.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Your Swedish massage is pre-filled. Press Book treatment to confirm.",
+                "target": "spa-booking",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "spa-menu",
+                      "components": [
+                        {
+                          "id": "tmpl",
+                          "component": "ProductCard",
+                          "title": {
+                            "path": "title"
+                          },
+                          "subtitle": {
+                            "path": "subtitle"
+                          },
+                          "price": {
+                            "path": "price"
+                          },
+                          "priceNote": {
+                            "path": "note"
+                          },
+                          "icon": "spa"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "spa-booking",
+                      "catalogId": "agent-ui--concierge",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "spa-booking",
+                      "path": "/booking",
+                      "value": {
+                        "treatment": "swedish",
+                        "date": "2026-11-19",
+                        "time": "15:00",
+                        "guests": "1",
+                        "name": "Alex Moreau"
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "spa-booking",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "BookingForm",
+                          "title": "Book your spa treatment",
+                          "value": {
+                            "path": "/booking"
+                          },
+                          "fields": [
+                            {
+                              "kind": "select",
+                              "label": "Treatment",
+                              "path": "treatment",
+                              "required": true,
+                              "options": [
+                                {
+                                  "label": "Swedish massage · 60 min · €120",
+                                  "value": "swedish"
+                                },
+                                {
+                                  "label": "Deep-tissue massage · 60 min · €135",
+                                  "value": "deep-tissue"
+                                },
+                                {
+                                  "label": "Hot-stone massage · 90 min · €170",
+                                  "value": "hot-stone"
+                                },
+                                {
+                                  "label": "Sea-salt and lemon body scrub · 45 min · €95",
+                                  "value": "body-scrub"
+                                },
+                                {
+                                  "label": "Hydrating facial · 50 min · €110",
+                                  "value": "facial"
+                                },
+                                {
+                                  "label": "Couples massage · 60 min · €230 for two",
+                                  "value": "couples"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "dateSingle",
+                              "label": "Date",
+                              "path": "date",
+                              "required": true
+                            },
+                            {
+                              "kind": "select",
+                              "label": "Time",
+                              "path": "time",
+                              "required": true,
+                              "options": [
+                                {
+                                  "label": "09:00",
+                                  "value": "09:00"
+                                },
+                                {
+                                  "label": "10:00",
+                                  "value": "10:00"
+                                },
+                                {
+                                  "label": "11:00",
+                                  "value": "11:00"
+                                },
+                                {
+                                  "label": "12:00",
+                                  "value": "12:00"
+                                },
+                                {
+                                  "label": "13:00",
+                                  "value": "13:00"
+                                },
+                                {
+                                  "label": "14:00",
+                                  "value": "14:00"
+                                },
+                                {
+                                  "label": "15:00",
+                                  "value": "15:00"
+                                },
+                                {
+                                  "label": "16:00",
+                                  "value": "16:00"
+                                },
+                                {
+                                  "label": "17:00",
+                                  "value": "17:00"
+                                },
+                                {
+                                  "label": "18:00",
+                                  "value": "18:00"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "select",
+                              "label": "Guests",
+                              "path": "guests",
+                              "required": true,
+                              "options": [
+                                {
+                                  "label": "1 guest",
+                                  "value": "1"
+                                },
+                                {
+                                  "label": "2 guests",
+                                  "value": "2"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "text",
+                              "label": "Name",
+                              "path": "name",
+                              "required": true
+                            }
+                          ],
+                          "child": "bookBtn"
+                        },
+                        {
+                          "id": "bookBtn",
+                          "component": "Button",
+                          "label": "Book treatment",
+                          "variant": "solid",
+                          "action": {
+                            "action": "confirm_booking",
+                            "context": {
+                              "booking": {
+                                "path": "/booking"
+                              }
+                            },
+                            "submit": true
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-16.jsonl:1395",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          1040
+        ]
+      },
+      "routing": {
+        "domains": [
+          "concierge"
+        ],
+        "exemplars": [
+          "domain-concierge-booking-request",
+          "frontier-service-gateway",
+          "frontier-round-outcome"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "facility-info-card",
+            "load": "index-only"
+          },
+          {
+            "name": "amenity-service-card",
+            "load": "index-only"
+          },
+          {
+            "name": "booking-flow",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "index-only"
+          },
+          {
+            "name": "curated-local-guides",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Wikipedia search",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          }
+        ]
+      },
+      "step": {
+        "say": "Book the first one for Thursday 19 November 2026 at 15:00, one guest, name Alex Moreau.",
+        "expect": [
+          "BookingForm"
+        ]
+      },
+      "domHosts": 2,
+      "proseText": "You What spa services can I book during my stay? Our spa is open daily from 09:00 to 20:00. In season, please book treatments at least a day ahead. Here's the full treatment menu. Choose one to start a booking. You Book the first one for Thursday 19 November 2026 at 15:00, one guest, name Alex Moreau. I've filled in your Swedish massage (60 min, €120) for Thursday 19 November 2026 at 15:00, for one guest under the name Alex Moreau. Check the details and press \"Book treatment\", or just tell me to confirm.",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-16-r8-matrix/long-concierge-spa-services-sonnet-1/turn-2.png"
+    }
+  ],
+  "checks": [
+    {
+      "check": "model-pick",
+      "turn": 0,
+      "status": "pass",
+      "detail": "claude-sonnet-5-5 / high"
+    },
+    {
+      "check": "click-target",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 0,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 0,
+      "status": "pass",
+      "detail": "210 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 0,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 0,
+      "status": "pass",
+      "detail": "161 chars of reply beside 3 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 0,
+      "status": "pass",
+      "detail": "rounds created [spa-menu], open [spa-menu] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 0,
+      "status": "pass",
+      "detail": "spa-menu updated"
+    },
+    {
+      "check": "expect-component",
+      "turn": 0,
+      "status": "pass",
+      "detail": "spa-menu holds ProductCard"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 0,
+      "status": "pass",
+      "detail": "routing as expected"
+    },
+    {
+      "check": "render-lint",
+      "turn": 0,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 0,
+      "status": "pass",
+      "detail": "490 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 1,
+      "status": "pass",
+      "detail": "claude-sonnet-5-5 / high"
+    },
+    {
+      "check": "click-target",
+      "turn": 1,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 1,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 1,
+      "status": "pass",
+      "detail": "509 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 1,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 1,
+      "status": "pass",
+      "detail": "206 chars of reply beside 4 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 1,
+      "status": "pass",
+      "detail": "rounds created [spa-booking], open [spa-menu, spa-booking] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 1,
+      "status": "pass",
+      "detail": "spa-menu updated"
+    },
+    {
+      "check": "expect-component",
+      "turn": 1,
+      "status": "pass",
+      "detail": "spa-booking holds BookingForm"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 1,
+      "status": "skip",
+      "detail": "no --expect-routing on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 1,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 1,
+      "status": "pass",
+      "detail": "1040 thinking chars"
+    },
+    {
+      "check": "expect-component",
+      "status": "pass",
+      "detail": "found ProductCard, BookingForm"
+    }
+  ],
+  "verdict": "pass"
+}

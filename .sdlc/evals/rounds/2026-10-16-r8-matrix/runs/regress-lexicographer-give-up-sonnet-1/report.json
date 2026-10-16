@@ -1,0 +1,1355 @@
+{
+  "kind": "agent-ui-chat-probe-report",
+  "version": 1,
+  "name": "regress-lexicographer-give-up-sonnet-1",
+  "mode": "live",
+  "agent": "lexicographer",
+  "model": "claude-sonnet-5-5",
+  "runId": "regress-lexicographer-give-up-sonnet-1-e1d4127b",
+  "at": "2026-10-16T21:54:09.951Z",
+  "turns": [
+    {
+      "index": 0,
+      "request": {
+        "model": "claude-sonnet-5-5",
+        "effort": "high",
+        "catalogId": "agent-ui",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm setting up a new\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" word game called\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"word-forge\\\": picking\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a secret five\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-letter word to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" store,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" then building the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" game surface with a grid board\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", used-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"letters tracker, and a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" guess form valid\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ated against a let\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ter pattern,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" leaving the used-letters\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" list empty for now since noth\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing's been guessed yet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"I've\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" picked a secret five-let\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ter word. You have six gues\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ses. Each\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" letter is marked as\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" right sp\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ot, w\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"rong spot or\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" absent.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"word-forge\\\",\\\"catalogId\\\":\\\"agent-ui\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"word-forge\\\",\\\"value\\\":{\\\"board\\\":{\\\"cells\\\":[]},\\\"guess\\\":\\\"\\\",\\\"hud\\\":{\\\"progress\\\":{\\\"label\\\":\\\"Guesses used\\\",\\\"max\\\":6,\\\"value\\\":0},\\\"stats\\\":[{\\\"label\\\":\\\"Guesses left\\\",\\\"value\\\":6},{\\\"label\\\":\\\"Letters placed\\\",\\\"value\\\":\\\"0 of 5\\\"}],\\\"status\\\":\\\"In play\\\",\\\"title\\\":\\\"Word forge\\\"},\\\"secret\\\":{\\\"word\\\":\\\"quilt\\\"},\\\"used\\\":[]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"word-forge\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"hud\\\",\\\"board\\\",\\\"usedLabel\\\",\\\"usedLetters\\\",\\\"guessForm\\\"]},{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":{\\\"path\\\":\\\"/hud/title\\\"},\\\"status\\\":{\\\"path\\\":\\\"/hud/status\\\"},\\\"statusIntent\\\":\\\"info\\\",\\\"stats\\\":{\\\"path\\\":\\\"/hud/stats\\\"},\\\"progress\\\":{\\\"path\\\":\\\"/hud/progress\\\"}},{\\\"id\\\":\\\"board\\\",\\\"component\\\":\\\"BoardGrid\\\",\\\"rows\\\":6,\\\"cols\\\":5,\\\"cells\\\":{\\\"path\\\":\\\"/board/cells\\\"},\\\"label\\\":\\\"Word guesses\\\"},{\\\"id\\\":\\\"usedLabel\\\",\\\"component\\\":\\\"Text\\\",\\\"variant\\\":\\\"label\\\",\\\"text\\\":\\\"Letters used\\\"},{\\\"id\\\":\\\"usedLetters\\\",\\\"component\\\":\\\"List\\\",\\\"gap\\\":\\\"xs\\\",\\\"wrap\\\":true,\\\"children\\\":{\\\"path\\\":\\\"/used\\\",\\\"componentId\\\":\\\"usedLetter\\\"}},{\\\"id\\\":\\\"usedLetter\\\",\\\"component\\\":\\\"Badge\\\",\\\"intent\\\":{\\\"path\\\":\\\"intent\\\"},\\\"label\\\":{\\\"path\\\":\\\"label\\\"}},{\\\"id\\\":\\\"guessForm\\\",\\\"component\\\":\\\"FormProvider\\\",\\\"children\\\":[\\\"guessRow\\\"]},{\\\"id\\\":\\\"guessRow\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"align\\\":\\\"end\\\",\\\"children\\\":[\\\"guessField\\\",\\\"guessBtn\\\"]},{\\\"id\\\":\\\"guessField\\\",\\\"component\\\":\\\"Field\\\",\\\"label\\\":\\\"Next guess\\\",\\\"child\\\":\\\"guessInput\\\"},{\\\"id\\\":\\\"guessInput\\\",\\\"component\\\":\\\"TextField\\\",\\\"name\\\":\\\"guess\\\",\\\"placeholder\\\":\\\"five lowercase letters\\\",\\\"required\\\":true,\\\"value\\\":{\\\"path\\\":\\\"/guess\\\"},\\\"checks\\\":[{\\\"call\\\":\\\"regex\\\",\\\"args\\\":{\\\"value\\\":{\\\"path\\\":\\\"/guess\\\"},\\\"pattern\\\":\\\"^[a-z]{5}$\\\"},\\\"message\\\":\\\"Enter exactly five lowercase letters\\\"}]},{\\\"id\\\":\\\"guessBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Guess\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"submit_guess\\\",\\\"submit\\\":true,\\\"context\\\":{\\\"guess\\\":{\\\"path\\\":\\\"/guess\\\"}}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"I've picked a secret five-letter word. You have six guesses. Each letter is marked as right spot, wrong spot or absent.\",\"target\":{\"surfaceId\":\"word-forge\"},\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Start a new word game.\",\"k\":3},\"exemplarIds\":[\"domain-lexicographer-word-board\",\"domain-lexicographer-game-over\",\"backable-wizard\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":58465,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":8918},{\"id\":\"mini-skills\",\"chars\":1891},{\"id\":\"persona\",\"chars\":2376}],\"over\":false},\"usage\":{\"inputTokens\":5613,\"outputTokens\":1334,\"cacheReadInputTokens\":17109,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"product-presentation\",\"greeting-card\",\"card-game-sheet\"],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"word-forge\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"word-forge\",\"value\":{\"board\":{\"cells\":[]},\"guess\":\"\",\"hud\":{\"progress\":{\"label\":\"Guesses used\",\"max\":6,\"value\":0},\"stats\":[{\"label\":\"Guesses left\",\"value\":6},{\"label\":\"Letters placed\",\"value\":\"0 of 5\"}],\"status\":\"In play\",\"title\":\"Word forge\"},\"secret\":{\"word\":\"quilt\"},\"used\":[]}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"word-forge\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"board\",\"usedLabel\",\"usedLetters\",\"guessForm\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":{\"path\":\"/hud/title\"},\"status\":{\"path\":\"/hud/status\"},\"statusIntent\":\"info\",\"stats\":{\"path\":\"/hud/stats\"},\"progress\":{\"path\":\"/hud/progress\"}},{\"id\":\"board\",\"component\":\"BoardGrid\",\"rows\":6,\"cols\":5,\"cells\":{\"path\":\"/board/cells\"},\"label\":\"Word guesses\"},{\"id\":\"usedLabel\",\"component\":\"Text\",\"variant\":\"label\",\"text\":\"Letters used\"},{\"id\":\"usedLetters\",\"component\":\"List\",\"gap\":\"xs\",\"wrap\":true,\"children\":{\"path\":\"/used\",\"componentId\":\"usedLetter\"}},{\"id\":\"usedLetter\",\"component\":\"Badge\",\"intent\":{\"path\":\"intent\"},\"label\":{\"path\":\"label\"}},{\"id\":\"guessForm\",\"component\":\"FormProvider\",\"children\":[\"guessRow\"]},{\"id\":\"guessRow\",\"component\":\"Row\",\"gap\":\"sm\",\"align\":\"end\",\"children\":[\"guessField\",\"guessBtn\"]},{\"id\":\"guessField\",\"component\":\"Field\",\"label\":\"Next guess\",\"child\":\"guessInput\"},{\"id\":\"guessInput\",\"component\":\"TextField\",\"name\":\"guess\",\"placeholder\":\"five lowercase letters\",\"required\":true,\"value\":{\"path\":\"/guess\"},\"checks\":[{\"call\":\"regex\",\"args\":{\"value\":{\"path\":\"/guess\"},\"pattern\":\"^[a-z]{5}$\"},\"message\":\"Enter exactly five lowercase letters\"}]},{\"id\":\"guessBtn\",\"component\":\"Button\",\"label\":\"Guess\",\"variant\":\"solid\",\"action\":{\"action\":\"submit_guess\",\"submit\":true,\"context\":{\"guess\":{\"path\":\"/guess\"}}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "I've picked a secret five-letter word. You have six guesses. Each letter is marked as right spot, wrong spot or absent.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "New game ready: type a five-letter guess below.",
+                "target": "word-forge",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "word-forge",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "word-forge",
+                      "value": {
+                        "board": {
+                          "cells": []
+                        },
+                        "guess": "",
+                        "hud": {
+                          "progress": {
+                            "label": "Guesses used",
+                            "max": 6,
+                            "value": 0
+                          },
+                          "stats": [
+                            {
+                              "label": "Guesses left",
+                              "value": 6
+                            },
+                            {
+                              "label": "Letters placed",
+                              "value": "0 of 5"
+                            }
+                          ],
+                          "status": "In play",
+                          "title": "Word forge"
+                        },
+                        "secret": {
+                          "word": "quilt"
+                        },
+                        "used": []
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "word-forge",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "board",
+                            "usedLabel",
+                            "usedLetters",
+                            "guessForm"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": {
+                            "path": "/hud/title"
+                          },
+                          "status": {
+                            "path": "/hud/status"
+                          },
+                          "statusIntent": "info",
+                          "stats": {
+                            "path": "/hud/stats"
+                          },
+                          "progress": {
+                            "path": "/hud/progress"
+                          }
+                        },
+                        {
+                          "id": "board",
+                          "component": "BoardGrid",
+                          "rows": 6,
+                          "cols": 5,
+                          "cells": {
+                            "path": "/board/cells"
+                          },
+                          "label": "Word guesses"
+                        },
+                        {
+                          "id": "usedLabel",
+                          "component": "Text",
+                          "variant": "label",
+                          "text": "Letters used"
+                        },
+                        {
+                          "id": "usedLetters",
+                          "component": "List",
+                          "gap": "xs",
+                          "wrap": true,
+                          "children": {
+                            "path": "/used",
+                            "componentId": "usedLetter"
+                          }
+                        },
+                        {
+                          "id": "usedLetter",
+                          "component": "Badge",
+                          "intent": {
+                            "path": "intent"
+                          },
+                          "label": {
+                            "path": "label"
+                          }
+                        },
+                        {
+                          "id": "guessForm",
+                          "component": "FormProvider",
+                          "children": [
+                            "guessRow"
+                          ]
+                        },
+                        {
+                          "id": "guessRow",
+                          "component": "Row",
+                          "gap": "sm",
+                          "align": "end",
+                          "children": [
+                            "guessField",
+                            "guessBtn"
+                          ]
+                        },
+                        {
+                          "id": "guessField",
+                          "component": "Field",
+                          "label": "Next guess",
+                          "child": "guessInput"
+                        },
+                        {
+                          "id": "guessInput",
+                          "component": "TextField",
+                          "name": "guess",
+                          "placeholder": "five lowercase letters",
+                          "required": true,
+                          "value": {
+                            "path": "/guess"
+                          },
+                          "checks": [
+                            {
+                              "call": "regex",
+                              "args": {
+                                "value": {
+                                  "path": "/guess"
+                                },
+                                "pattern": "^[a-z]{5}$"
+                              },
+                              "message": "Enter exactly five lowercase letters"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "guessBtn",
+                          "component": "Button",
+                          "label": "Guess",
+                          "variant": "solid",
+                          "action": {
+                            "action": "submit_guess",
+                            "submit": true,
+                            "context": {
+                              "guess": {
+                                "path": "/guess"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-16.jsonl:1319",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          300
+        ]
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "domain-lexicographer-word-board",
+          "domain-lexicographer-game-over",
+          "backable-wizard"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "word-tiles",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          }
+        ]
+      },
+      "step": {
+        "say": "Start a new word game.",
+        "expect": [
+          "BoardGrid"
+        ]
+      },
+      "domHosts": 1,
+      "proseText": "You Start a new word game. I've picked a secret five-letter word. You have six guesses. Each letter is marked as right spot, wrong spot or absent.",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-16-r8-matrix/regress-lexicographer-give-up-sonnet-1/turn-1.png"
+    },
+    {
+      "index": 1,
+      "request": {
+        "model": "claude-sonnet-5-5",
+        "effort": "high",
+        "catalogId": "agent-ui",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Comparing \\\"qu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ilt\\\" against \\\"audio\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" letter by letter: the u\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" in the corre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ct spot, but I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" need to check if i app\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ears el\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"sewhere in the secret\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" word at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a different position\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" than\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s guessed.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll update the data model with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the used\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" letters mar\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ked\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" accordingly (a absent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", u corre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ct,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" d abs\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ent, i wrong spot\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", o absent), reset the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" guess field, and preserve\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the sec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ret word qu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ilt,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" making\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sure the status\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ind\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"icators use both\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" color\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and text/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"shape so they're acc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"essible r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ather than rel\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ying on color alone.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"AUDIO sc\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ored: U is in the right sp\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ot, I is in the word\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" but in the wrong spot\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\", and A, D and O are\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" absent. Five guesses\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" left.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"word-forge\\\",\\\"value\\\":{\\\"board\\\":{\\\"cells\\\":[{\\\"row\\\":0,\\\"col\\\":0,\\\"mark\\\":\\\"A\\\",\\\"intent\\\":\\\"neutral\\\"},{\\\"row\\\":0,\\\"col\\\":1,\\\"mark\\\":\\\"U\\\",\\\"intent\\\":\\\"success\\\"},{\\\"row\\\":0,\\\"col\\\":2,\\\"mark\\\":\\\"D\\\",\\\"intent\\\":\\\"neutral\\\"},{\\\"row\\\":0,\\\"col\\\":3,\\\"mark\\\":\\\"I\\\",\\\"intent\\\":\\\"warning\\\"},{\\\"row\\\":0,\\\"col\\\":4,\\\"mark\\\":\\\"O\\\",\\\"intent\\\":\\\"neutral\\\"}]},\\\"guess\\\":\\\"\\\",\\\"hud\\\":{\\\"progress\\\":{\\\"label\\\":\\\"Guesses used\\\",\\\"max\\\":6,\\\"value\\\":1},\\\"stats\\\":[{\\\"label\\\":\\\"Guesses left\\\",\\\"value\\\":5},{\\\"label\\\":\\\"Letters placed\\\",\\\"value\\\":\\\"1 of 5\\\"}],\\\"status\\\":\\\"In play\\\",\\\"title\\\":\\\"Word forge\\\"},\\\"secret\\\":{\\\"word\\\":\\\"quilt\\\"},\\\"used\\\":[{\\\"intent\\\":\\\"neutral\\\",\\\"label\\\":\\\"A absent\\\"},{\\\"intent\\\":\\\"success\\\",\\\"label\\\":\\\"U right spot\\\"},{\\\"intent\\\":\\\"neutral\\\",\\\"label\\\":\\\"D absent\\\"},{\\\"intent\\\":\\\"warning\\\",\\\"label\\\":\\\"I wrong spot\\\"},{\\\"intent\\\":\\\"neutral\\\",\\\"label\\\":\\\"O absent\\\"}]}}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"AUDIO scored: U is in the right spot, I is in the word but in the wrong spot, and A, D and O are absent. Five guesses left.\",\"target\":{\"surfaceId\":\"word-forge\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"My guess: audio.\",\"k\":3},\"exemplarIds\":[\"domain-lexicographer-word-board\",\"frontier-media-tour\",\"wallet-summary-card\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":54015,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":6359},{\"id\":\"persona\",\"chars\":2376}],\"over\":false},\"usage\":{\"inputTokens\":4605,\"outputTokens\":1007,\"cacheReadInputTokens\":17109,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"word-forge\",\"value\":{\"board\":{\"cells\":[{\"row\":0,\"col\":0,\"mark\":\"A\",\"intent\":\"neutral\"},{\"row\":0,\"col\":1,\"mark\":\"U\",\"intent\":\"success\"},{\"row\":0,\"col\":2,\"mark\":\"D\",\"intent\":\"neutral\"},{\"row\":0,\"col\":3,\"mark\":\"I\",\"intent\":\"warning\"},{\"row\":0,\"col\":4,\"mark\":\"O\",\"intent\":\"neutral\"}]},\"guess\":\"\",\"hud\":{\"progress\":{\"label\":\"Guesses used\",\"max\":6,\"value\":1},\"stats\":[{\"label\":\"Guesses left\",\"value\":5},{\"label\":\"Letters placed\",\"value\":\"1 of 5\"}],\"status\":\"In play\",\"title\":\"Word forge\"},\"secret\":{\"word\":\"quilt\"},\"used\":[{\"intent\":\"neutral\",\"label\":\"A absent\"},{\"intent\":\"success\",\"label\":\"U right spot\"},{\"intent\":\"neutral\",\"label\":\"D absent\"},{\"intent\":\"warning\",\"label\":\"I wrong spot\"},{\"intent\":\"neutral\",\"label\":\"O absent\"}]}}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"AUDIO scored: U is in the right spot, I is in the word but in the wrong spot, and A, D and O are absent. Five guesses left.\",\"target\":{\"surfaceId\":\"word-forge\"}}}\nAUDIO scored: U is in the right spot, I is in the word but in the wrong spot, and A, D and O are absent. Five guesses left.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "target": "word-forge",
+                "reply": "AUDIO scored: U right spot, I wrong spot, A, D and O absent. Five guesses left.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "word-forge",
+                      "value": {
+                        "board": {
+                          "cells": [
+                            {
+                              "row": 0,
+                              "col": 0,
+                              "mark": "A",
+                              "intent": "neutral"
+                            },
+                            {
+                              "row": 0,
+                              "col": 1,
+                              "mark": "U",
+                              "intent": "success"
+                            },
+                            {
+                              "row": 0,
+                              "col": 2,
+                              "mark": "D",
+                              "intent": "neutral"
+                            },
+                            {
+                              "row": 0,
+                              "col": 3,
+                              "mark": "I",
+                              "intent": "warning"
+                            },
+                            {
+                              "row": 0,
+                              "col": 4,
+                              "mark": "O",
+                              "intent": "neutral"
+                            }
+                          ]
+                        },
+                        "guess": "",
+                        "hud": {
+                          "progress": {
+                            "label": "Guesses used",
+                            "max": 6,
+                            "value": 1
+                          },
+                          "stats": [
+                            {
+                              "label": "Guesses left",
+                              "value": 5
+                            },
+                            {
+                              "label": "Letters placed",
+                              "value": "1 of 5"
+                            }
+                          ],
+                          "status": "In play",
+                          "title": "Word forge"
+                        },
+                        "secret": {
+                          "word": "quilt"
+                        },
+                        "used": [
+                          {
+                            "intent": "neutral",
+                            "label": "A absent"
+                          },
+                          {
+                            "intent": "success",
+                            "label": "U right spot"
+                          },
+                          {
+                            "intent": "neutral",
+                            "label": "D absent"
+                          },
+                          {
+                            "intent": "warning",
+                            "label": "I wrong spot"
+                          },
+                          {
+                            "intent": "neutral",
+                            "label": "O absent"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-16.jsonl:1320",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          495
+        ]
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "domain-lexicographer-word-board",
+          "frontier-media-tour",
+          "wallet-summary-card"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "word-tiles",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          }
+        ]
+      },
+      "step": {
+        "say": "My guess: audio.",
+        "expect": [
+          "BoardGrid"
+        ],
+        "expectRouting": {
+          "exemplars": {
+            "include": [
+              "domain-lexicographer-word-board"
+            ]
+          }
+        }
+      },
+      "domHosts": 1,
+      "proseText": "You Start a new word game. I've picked a secret five-letter word. You have six guesses. Each letter is marked as right spot, wrong spot or absent. You My guess: audio. AUDIO scored: U is in the right spot, I is in the word but in the wrong spot, and A, D and O are absent. Five guesses left.",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-16-r8-matrix/regress-lexicographer-give-up-sonnet-1/turn-2.png"
+    },
+    {
+      "index": 2,
+      "request": {
+        "model": "claude-sonnet-5-5",
+        "effort": "high",
+        "catalogId": "agent-ui",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Chec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"king st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ern against\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" quilt: S,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" E\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", R, N are\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" absent, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" T is in the word but in the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" wrong position. Rech\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ecking the earlier audio\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" gu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ess against quilt conf\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"irms U is corre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ct in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sp\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot while\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I ex\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ists but is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" misplaced. Now I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m updating the board state\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with these results\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"STERN scored: T is\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" in the word but in the wr\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ong spot, and S, E\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\", R and N are absent.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Four guesses left.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"word-forge\\\",\\\"value\\\":{\\\"board\\\":{\\\"cells\\\":[{\\\"row\\\":0,\\\"col\\\":0,\\\"mark\\\":\\\"A\\\",\\\"intent\\\":\\\"neutral\\\"},{\\\"row\\\":0,\\\"col\\\":1,\\\"mark\\\":\\\"U\\\",\\\"intent\\\":\\\"success\\\"},{\\\"row\\\":0,\\\"col\\\":2,\\\"mark\\\":\\\"D\\\",\\\"intent\\\":\\\"neutral\\\"},{\\\"row\\\":0,\\\"col\\\":3,\\\"mark\\\":\\\"I\\\",\\\"intent\\\":\\\"warning\\\"},{\\\"row\\\":0,\\\"col\\\":4,\\\"mark\\\":\\\"O\\\",\\\"intent\\\":\\\"neutral\\\"},{\\\"row\\\":1,\\\"col\\\":0,\\\"mark\\\":\\\"S\\\",\\\"intent\\\":\\\"neutral\\\"},{\\\"row\\\":1,\\\"col\\\":1,\\\"mark\\\":\\\"T\\\",\\\"intent\\\":\\\"warning\\\"},{\\\"row\\\":1,\\\"col\\\":2,\\\"mark\\\":\\\"E\\\",\\\"intent\\\":\\\"neutral\\\"},{\\\"row\\\":1,\\\"col\\\":3,\\\"mark\\\":\\\"R\\\",\\\"intent\\\":\\\"neutral\\\"},{\\\"row\\\":1,\\\"col\\\":4,\\\"mark\\\":\\\"N\\\",\\\"intent\\\":\\\"neutral\\\"}]},\\\"guess\\\":\\\"\\\",\\\"hud\\\":{\\\"progress\\\":{\\\"label\\\":\\\"Guesses used\\\",\\\"max\\\":6,\\\"value\\\":2},\\\"stats\\\":[{\\\"label\\\":\\\"Guesses left\\\",\\\"value\\\":4},{\\\"label\\\":\\\"Letters placed\\\",\\\"value\\\":\\\"1 of 5\\\"}],\\\"status\\\":\\\"In play\\\",\\\"title\\\":\\\"Word forge\\\"},\\\"secret\\\":{\\\"word\\\":\\\"quilt\\\"},\\\"used\\\":[{\\\"intent\\\":\\\"neutral\\\",\\\"label\\\":\\\"A absent\\\"},{\\\"intent\\\":\\\"success\\\",\\\"label\\\":\\\"U right spot\\\"},{\\\"intent\\\":\\\"neutral\\\",\\\"label\\\":\\\"D absent\\\"},{\\\"intent\\\":\\\"warning\\\",\\\"label\\\":\\\"I wrong spot\\\"},{\\\"intent\\\":\\\"neutral\\\",\\\"label\\\":\\\"O absent\\\"},{\\\"intent\\\":\\\"neutral\\\",\\\"label\\\":\\\"S absent\\\"},{\\\"intent\\\":\\\"warning\\\",\\\"label\\\":\\\"T wrong spot\\\"},{\\\"intent\\\":\\\"neutral\\\",\\\"label\\\":\\\"E absent\\\"},{\\\"intent\\\":\\\"neutral\\\",\\\"label\\\":\\\"R absent\\\"},{\\\"intent\\\":\\\"neutral\\\",\\\"label\\\":\\\"N absent\\\"}]}}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"STERN scored: T is in the word but in the wrong spot, and S, E, R and N are absent. Four guesses left.\",\"target\":{\"surfaceId\":\"word-forge\"},\"trace\":{\"turnIndex\":4,\"query\":{\"intent\":\"My guess: stern.\",\"k\":3},\"exemplarIds\":[\"domain-lexicographer-word-board\",\"wallet-summary-card\",\"frontier-button-icon-actions\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":53609,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5953},{\"id\":\"persona\",\"chars\":2376}],\"over\":false},\"usage\":{\"inputTokens\":4845,\"outputTokens\":1198,\"cacheReadInputTokens\":17109,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"word-forge\",\"value\":{\"board\":{\"cells\":[{\"row\":0,\"col\":0,\"mark\":\"A\",\"intent\":\"neutral\"},{\"row\":0,\"col\":1,\"mark\":\"U\",\"intent\":\"success\"},{\"row\":0,\"col\":2,\"mark\":\"D\",\"intent\":\"neutral\"},{\"row\":0,\"col\":3,\"mark\":\"I\",\"intent\":\"warning\"},{\"row\":0,\"col\":4,\"mark\":\"O\",\"intent\":\"neutral\"},{\"row\":1,\"col\":0,\"mark\":\"S\",\"intent\":\"neutral\"},{\"row\":1,\"col\":1,\"mark\":\"T\",\"intent\":\"warning\"},{\"row\":1,\"col\":2,\"mark\":\"E\",\"intent\":\"neutral\"},{\"row\":1,\"col\":3,\"mark\":\"R\",\"intent\":\"neutral\"},{\"row\":1,\"col\":4,\"mark\":\"N\",\"intent\":\"neutral\"}]},\"guess\":\"\",\"hud\":{\"progress\":{\"label\":\"Guesses used\",\"max\":6,\"value\":2},\"stats\":[{\"label\":\"Guesses left\",\"value\":4},{\"label\":\"Letters placed\",\"value\":\"1 of 5\"}],\"status\":\"In play\",\"title\":\"Word forge\"},\"secret\":{\"word\":\"quilt\"},\"used\":[{\"intent\":\"neutral\",\"label\":\"A absent\"},{\"intent\":\"success\",\"label\":\"U right spot\"},{\"intent\":\"neutral\",\"label\":\"D absent\"},{\"intent\":\"warning\",\"label\":\"I wrong spot\"},{\"intent\":\"neutral\",\"label\":\"O absent\"},{\"intent\":\"neutral\",\"label\":\"S absent\"},{\"intent\":\"warning\",\"label\":\"T wrong spot\"},{\"intent\":\"neutral\",\"label\":\"E absent\"},{\"intent\":\"neutral\",\"label\":\"R absent\"},{\"intent\":\"neutral\",\"label\":\"N absent\"}]}}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"STERN scored: T is in the word but in the wrong spot, and S, E, R and N are absent. Four guesses left.\",\"target\":{\"surfaceId\":\"word-forge\"}}}\nSTERN scored: T is in the word but in the wrong spot, and S, E, R and N are absent. Four guesses left.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "STERN scored: T is in the word but in the wrong spot, and S, E, R and N are absent. Four guesses left.",
+                "target": "word-forge",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "word-forge",
+                      "value": {
+                        "board": {
+                          "cells": [
+                            {
+                              "row": 0,
+                              "col": 0,
+                              "mark": "A",
+                              "intent": "neutral"
+                            },
+                            {
+                              "row": 0,
+                              "col": 1,
+                              "mark": "U",
+                              "intent": "success"
+                            },
+                            {
+                              "row": 0,
+                              "col": 2,
+                              "mark": "D",
+                              "intent": "neutral"
+                            },
+                            {
+                              "row": 0,
+                              "col": 3,
+                              "mark": "I",
+                              "intent": "warning"
+                            },
+                            {
+                              "row": 0,
+                              "col": 4,
+                              "mark": "O",
+                              "intent": "neutral"
+                            },
+                            {
+                              "row": 1,
+                              "col": 0,
+                              "mark": "S",
+                              "intent": "neutral"
+                            },
+                            {
+                              "row": 1,
+                              "col": 1,
+                              "mark": "T",
+                              "intent": "warning"
+                            },
+                            {
+                              "row": 1,
+                              "col": 2,
+                              "mark": "E",
+                              "intent": "neutral"
+                            },
+                            {
+                              "row": 1,
+                              "col": 3,
+                              "mark": "R",
+                              "intent": "neutral"
+                            },
+                            {
+                              "row": 1,
+                              "col": 4,
+                              "mark": "N",
+                              "intent": "neutral"
+                            }
+                          ]
+                        },
+                        "guess": "",
+                        "hud": {
+                          "progress": {
+                            "label": "Guesses used",
+                            "max": 6,
+                            "value": 2
+                          },
+                          "stats": [
+                            {
+                              "label": "Guesses left",
+                              "value": 4
+                            },
+                            {
+                              "label": "Letters placed",
+                              "value": "1 of 5"
+                            }
+                          ],
+                          "status": "In play",
+                          "title": "Word forge"
+                        },
+                        "secret": {
+                          "word": "quilt"
+                        },
+                        "used": [
+                          {
+                            "intent": "neutral",
+                            "label": "A absent"
+                          },
+                          {
+                            "intent": "success",
+                            "label": "U right spot"
+                          },
+                          {
+                            "intent": "neutral",
+                            "label": "D absent"
+                          },
+                          {
+                            "intent": "warning",
+                            "label": "I wrong spot"
+                          },
+                          {
+                            "intent": "neutral",
+                            "label": "O absent"
+                          },
+                          {
+                            "intent": "neutral",
+                            "label": "S absent"
+                          },
+                          {
+                            "intent": "warning",
+                            "label": "T wrong spot"
+                          },
+                          {
+                            "intent": "neutral",
+                            "label": "E absent"
+                          },
+                          {
+                            "intent": "neutral",
+                            "label": "R absent"
+                          },
+                          {
+                            "intent": "neutral",
+                            "label": "N absent"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-16.jsonl:1321",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          267
+        ]
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "domain-lexicographer-word-board",
+          "wallet-summary-card",
+          "frontier-button-icon-actions"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "word-tiles",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          }
+        ]
+      },
+      "step": {
+        "say": "My guess: stern.",
+        "expect": [
+          "BoardGrid"
+        ]
+      },
+      "domHosts": 1,
+      "proseText": "You Start a new word game. I've picked a secret five-letter word. You have six guesses. Each letter is marked as right spot, wrong spot or absent. You My guess: audio. AUDIO scored: U is in the right spot, I is in the word but in the wrong spot, and A, D and O are absent. Five guesses left. You My guess: stern. STERN scored: T is in the word but in the wrong spot, and S, E, R and N are absent. Four guesses left.",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-16-r8-matrix/regress-lexicographer-give-up-sonnet-1/turn-3.png"
+    },
+    {
+      "index": 3,
+      "request": {
+        "model": "claude-sonnet-5-5",
+        "effort": "high",
+        "catalogId": "agent-ui",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"The secret word is \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"quilt\\\" with 2 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"of 6 guesses used\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" far. I need to update the game\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" surface to show a result card rev\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealing the word, repl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"acing the guess form while\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keeping the board vis\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ible.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"The word was **\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"QUILT**. A\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"UDIO put\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" U in the right spot and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the I in the w\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"rong one, and STERN\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" found\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the T.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Say \\\"Play again.\\\"\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" when\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" you want\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" a f\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"resh word.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"word-forge\\\",\\\"path\\\":\\\"/result\\\",\\\"value\\\":{\\\"title\\\":\\\"Word forge\\\",\\\"summary\\\":\\\"You gave up after 2 of 6 guesses. The word was QUILT.\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Guesses used\\\",\\\"value\\\":\\\"2 of 6\\\"},{\\\"label\\\":\\\"Letters placed\\\",\\\"value\\\":\\\"1 of 5\\\",\\\"intent\\\":\\\"warning\\\"}]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"word-forge\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"result\\\",\\\"board\\\"]},{\\\"id\\\":\\\"result\\\",\\\"component\\\":\\\"ResultCard\\\",\\\"outcome\\\":\\\"lose\\\",\\\"title\\\":{\\\"path\\\":\\\"/result/title\\\"},\\\"summary\\\":{\\\"path\\\":\\\"/result/summary\\\"},\\\"stats\\\":{\\\"path\\\":\\\"/result/stats\\\"},\\\"children\\\":[\\\"newGameBtn\\\"]},{\\\"id\\\":\\\"newGameBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Play again\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"new_game\\\",\\\"context\\\":{\\\"newGame\\\":true}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"The word was **QUILT**. AUDIO put the U in the right spot and the I in the wrong one, and STERN found the T. Say \\\"Play again.\\\" when you want a fresh word.\",\"target\":{\"surfaceId\":\"word-forge\"},\"trace\":{\"turnIndex\":6,\"query\":{\"intent\":\"I give up. What was the word?\",\"k\":3},\"exemplarIds\":[\"domain-lexicographer-game-over\",\"travel-itinerary\",\"support-ticket-close-then-new\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":57185,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":7712},{\"id\":\"mini-skills\",\"chars\":1817},{\"id\":\"persona\",\"chars\":2376}],\"over\":false},\"usage\":{\"inputTokens\":6907,\"outputTokens\":989,\"cacheReadInputTokens\":17109,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"login-form\",\"form-rhythm\",\"greeting-card\"],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"word-forge\",\"path\":\"/result\",\"value\":{\"title\":\"Word forge\",\"summary\":\"You gave up after 2 of 6 guesses. The word was QUILT.\",\"stats\":[{\"label\":\"Guesses used\",\"value\":\"2 of 6\"},{\"label\":\"Letters placed\",\"value\":\"1 of 5\",\"intent\":\"warning\"}]}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"word-forge\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"result\",\"board\"]},{\"id\":\"result\",\"component\":\"ResultCard\",\"outcome\":\"lose\",\"title\":{\"path\":\"/result/title\"},\"summary\":{\"path\":\"/result/summary\"},\"stats\":{\"path\":\"/result/stats\"},\"children\":[\"newGameBtn\"]},{\"id\":\"newGameBtn\",\"component\":\"Button\",\"label\":\"Play again\",\"variant\":\"solid\",\"action\":{\"action\":\"new_game\",\"context\":{\"newGame\":true}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"The word was QUILT. Your guess AUDIO had U in the right spot, and STERN had T in the word but misplaced. The board stays up with your two guesses. Say \\\"Play again.\\\" for a fresh word.\",\"target\":{\"surfaceId\":\"word-forge\"}}}\n\nThe word was **QUILT**. AUDIO put the U in the right spot and the I in the wrong one, and STERN found the T. Say \"Play again.\" when you want a fresh word.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "The word was QUILT. Say \"Play again.\" for a new one.",
+                "target": "word-forge",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "word-forge",
+                      "path": "/result",
+                      "value": {
+                        "title": "Word forge",
+                        "summary": "You gave up after 2 of 6 guesses. The word was QUILT.",
+                        "stats": [
+                          {
+                            "label": "Guesses used",
+                            "value": "2 of 6"
+                          },
+                          {
+                            "label": "Letters placed",
+                            "value": "1 of 5",
+                            "intent": "warning"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "word-forge",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "result",
+                            "board"
+                          ]
+                        },
+                        {
+                          "id": "result",
+                          "component": "ResultCard",
+                          "outcome": "lose",
+                          "title": {
+                            "path": "/result/title"
+                          },
+                          "summary": {
+                            "path": "/result/summary"
+                          },
+                          "stats": {
+                            "path": "/result/stats"
+                          },
+                          "children": [
+                            "newGameBtn"
+                          ]
+                        },
+                        {
+                          "id": "newGameBtn",
+                          "component": "Button",
+                          "label": "Play again",
+                          "variant": "solid",
+                          "action": {
+                            "action": "new_game",
+                            "context": {
+                              "newGame": true
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-16.jsonl:1322",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          195
+        ]
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "domain-lexicographer-game-over",
+          "travel-itinerary",
+          "support-ticket-close-then-new"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "word-tiles",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          }
+        ]
+      },
+      "step": {
+        "say": "I give up. What was the word?",
+        "expect": [
+          "ResultCard"
+        ]
+      },
+      "domHosts": 1,
+      "proseText": "You Start a new word game. I've picked a secret five-letter word. You have six guesses. Each letter is marked as right spot, wrong spot or absent. You My guess: audio. AUDIO scored: U is in the right spot, I is in the word but in the wrong spot, and A, D and O are absent. Five guesses left. You My guess: stern. STERN scored: T is in the word but in the wrong spot, and S, E, R and N are absent. Four guesses left. You I give up. What was the word? The word was QUILT . AUDIO put the U in the right spot and the I in the wrong one, and STERN found the T. Say \"Play again.\" when you want a fresh word.",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-16-r8-matrix/regress-lexicographer-give-up-sonnet-1/turn-4.png"
+    }
+  ],
+  "checks": [
+    {
+      "check": "model-pick",
+      "turn": 0,
+      "status": "pass",
+      "detail": "claude-sonnet-5-5 / high"
+    },
+    {
+      "check": "click-target",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 0,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 0,
+      "status": "pass",
+      "detail": "146 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 0,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 0,
+      "status": "pass",
+      "detail": "119 chars of reply beside 3 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 0,
+      "status": "pass",
+      "detail": "rounds created [word-forge], open [word-forge] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 0,
+      "status": "pass",
+      "detail": "word-forge updated"
+    },
+    {
+      "check": "expect-component",
+      "turn": 0,
+      "status": "pass",
+      "detail": "word-forge holds BoardGrid"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 0,
+      "status": "skip",
+      "detail": "no --expect-routing on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 0,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 0,
+      "status": "pass",
+      "detail": "300 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 1,
+      "status": "pass",
+      "detail": "claude-sonnet-5-5 / high"
+    },
+    {
+      "check": "click-target",
+      "turn": 1,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 1,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 1,
+      "status": "pass",
+      "detail": "291 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 1,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 1,
+      "status": "pass",
+      "detail": "123 chars of reply beside 1 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 1,
+      "status": "pass",
+      "detail": "rounds created [], open [word-forge] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 1,
+      "status": "pass",
+      "detail": "word-forge updated"
+    },
+    {
+      "check": "expect-component",
+      "turn": 1,
+      "status": "pass",
+      "detail": "word-forge holds BoardGrid"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 1,
+      "status": "pass",
+      "detail": "routing as expected"
+    },
+    {
+      "check": "render-lint",
+      "turn": 1,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 1,
+      "status": "pass",
+      "detail": "495 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 2,
+      "status": "pass",
+      "detail": "claude-sonnet-5-5 / high"
+    },
+    {
+      "check": "click-target",
+      "turn": 2,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 2,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 2,
+      "status": "pass",
+      "detail": "415 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 2,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 2,
+      "status": "pass",
+      "detail": "102 chars of reply beside 1 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 2,
+      "status": "pass",
+      "detail": "rounds created [], open [word-forge] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 2,
+      "status": "pass",
+      "detail": "word-forge updated"
+    },
+    {
+      "check": "expect-component",
+      "turn": 2,
+      "status": "pass",
+      "detail": "word-forge holds BoardGrid"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 2,
+      "status": "skip",
+      "detail": "no --expect-routing on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 2,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 2,
+      "status": "pass",
+      "detail": "267 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 3,
+      "status": "pass",
+      "detail": "claude-sonnet-5-5 / high"
+    },
+    {
+      "check": "click-target",
+      "turn": 3,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 3,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 3,
+      "status": "pass",
+      "detail": "601 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 3,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 3,
+      "status": "pass",
+      "detail": "154 chars of reply beside 2 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 3,
+      "status": "pass",
+      "detail": "rounds created [], open [word-forge] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 3,
+      "status": "pass",
+      "detail": "word-forge updated"
+    },
+    {
+      "check": "expect-component",
+      "turn": 3,
+      "status": "pass",
+      "detail": "word-forge holds ResultCard"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 3,
+      "status": "skip",
+      "detail": "no --expect-routing on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 3,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 3,
+      "status": "pass",
+      "detail": "195 thinking chars"
+    },
+    {
+      "check": "expect-component",
+      "status": "pass",
+      "detail": "found BoardGrid, GameHud, ResultCard"
+    }
+  ],
+  "verdict": "pass"
+}
