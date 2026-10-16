@@ -30,3 +30,6 @@ verifier: L3
 - (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/mini-skills.test.ts -t "confirm turn"` exits 0: structured-container is not selected on a booking confirm turn; a trip summary turn still selects it.
 - `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent` exits 0 (agent-assets freshness; the prompt-equivalence baseline recaptured deliberately only if the trigger edit moves it).
 - `npm run check` exits 0.
+
+## Conductor ruling (2026-10-16)
+The "Play again." retrieval part is dropped from T-0313: its criterion already passes at the base (retrieval returns nothing for "Play again." on agent-ui), so no change can be shown, and the semantic checks already catch the case (round 6: 6 of 6 saved). The real defect the solo found, cross-game retrieval on the shared agent-ui catalog ("New game" ranks the word board first for the Admiral), is filed separately for the debate process. Judge T-0313 on its other two parts.
