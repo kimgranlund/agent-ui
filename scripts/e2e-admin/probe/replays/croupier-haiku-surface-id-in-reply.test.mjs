@@ -6,16 +6,16 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: round 6 cluster B (proposed ticket). Live round 6 (2026-10-15-r6-matrix :3-:11, Haiku 5.5; Sonnet
-// five-card draw :244 and :246 did the same). The third deal's reply opens "Table-3 is dealt." The producer's
-// NARRATED_MECHANICS check matches a surface id case-sensitively, so a capitalized id at the start of a sentence
-// passes the producer and only the probe's no-internal-leak check catches it. Pinned red on that check until the
-// producer check matches the id in any case.
+// T-0297: live round 6 (2026-10-15-r6-matrix :3-:11, Haiku 5.5; Sonnet five-card draw :244 and :246 did the same).
+// The third deal's reply opened "Table-3 is dealt." and the producer's NARRATED_MECHANICS check matched the surface id
+// case-sensitively, so only the probe's no-internal-leak check caught it. The check now matches the id in any case.
+// Turn 8's third round is AUTHORED (the live turn had two): round 2 with "Table-3 is dealt. " cut, so the replay
+// shows the repaired turn. Without the finding round 2 ships and no-internal-leak:8 fails.
 const trace = (record) => record.lines.map((l) => JSON.parse(l)).map((l) => l.a2uiMeta?.trace).find((t) => t !== undefined)
 
-it('croupier-haiku-surface-id-in-reply: "Table-3" reaches the chat prose and no producer code fires on it', async () => {
+it('croupier-haiku-surface-id-in-reply: "Table-3" in the reply is sent back with NARRATED_MECHANICS and every probe check is green', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./croupier-haiku-surface-id-in-reply.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed).toEqual([{ check: 'no-internal-leak', turn: 8, status: 'fail', detail: 'internal text in the chat prose: "Table-3"' }])
-  expect(trace(report.records[8]).failureCodes).not.toContain('NARRATED_MECHANICS')
+  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual([])
+  expect(trace(report.records[8])).toMatchObject({ rounds: 3, failureCodes: ['NARRATED_MECHANICS'] })
 })

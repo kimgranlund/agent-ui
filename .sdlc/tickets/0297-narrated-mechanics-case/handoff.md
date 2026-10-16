@@ -19,3 +19,9 @@ Round 6 cluster B (`.sdlc/evals/rounds/2026-10-15-r6-matrix/report.md`): "Table-
 ## Done when
 - A produce test with reply "Table-3 is dealt." fires NARRATED_MECHANICS; red at the base.
 - `scripts/e2e-admin/probe/replays/croupier-haiku-surface-id-in-reply.test.mjs` flipped to expect the check; the live-agent tests and `npm run check` exit 0.
+
+## Acceptance criteria
+- (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/produce-narration.test.ts -t 'a capitalized surface id'`
+- (red) `npx vitest run --project scripts scripts/e2e-admin/probe/replays/croupier-haiku-surface-id-in-reply.test.mjs`
+- (guard) `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent`
+- (guard) `npm run check`

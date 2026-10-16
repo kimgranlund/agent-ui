@@ -1146,13 +1146,13 @@ const CORRECTION_IN_REPLY =
   /\b(?:I (?:also )?need to correct\b|I made a mistake\b|(?:correction|corrected)\s*:|last (?:turn|message|round) I (?:described|announced|said|showed)\b|never (?:actually )?(?:built|updated)\b)/i
 
 /** T-0234: the NARRATED_MECHANICS failure for a reply that names one of `surfaceIds` as a whole token (an id with a
- *  digit or a hyphen: a plain-word id such as "booking" is an ordinary word too) or opens a correction of an earlier
- *  turn, else undefined. The path is the fragment found. */
+ *  digit or a hyphen: a plain-word id such as "booking" is an ordinary word too) in any case (T-0297: "Table-3 is
+ *  dealt." opens a sentence) or opens a correction of an earlier turn, else undefined. The path is the fragment found. */
 function narratedMechanics(reply: string | undefined, surfaceIds: Iterable<string>): RoundFailure | undefined {
   if (reply === undefined || reply.trim() === '') return undefined
   for (const sid of surfaceIds) {
     if (!/[-\d]/.test(sid)) continue
-    if (new RegExp(`(?<![\\w-])${sid.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\w-])`).test(reply)) return { code: 'NARRATED_MECHANICS', path: sid }
+    if (new RegExp(`(?<![\\w-])${sid.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\w-])`, 'i').test(reply)) return { code: 'NARRATED_MECHANICS', path: sid }
   }
   const m = CORRECTION_IN_REPLY.exec(reply)
   return m === null ? undefined : { code: 'NARRATED_MECHANICS', path: m[0] }
