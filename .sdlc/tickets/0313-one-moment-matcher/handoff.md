@@ -15,3 +15,9 @@ P1 as revised and P5's replacement (Kim 2026-10-16 debate): the composite-moment
 
 ## Done when
 - Tests: the Concierge moments resolve through the rows with no behavior change on the existing replays; structured-container is not selected on a confirm turn; "Play again." retrieval excludes the word board; each red at the base. The catalog, live-agent and probe suites and `npm run check` exit 0.
+
+## Lane bundle
+One solo lane (wave-gr), one commit per ticket, in order:
+1. T-0308: drop the reference-Badge example from the grammar and the library text (`.sdlc/tickets/0308-grammar-drop-reference-badge/`).
+2. T-0312: persona type-name lint, Croupier reword, pin tests per ruling, committed audit mapping (`.sdlc/tickets/0312-persona-type-name-lint/`).
+3. T-0313: one matcher per composite moment, the structured-container trigger fix, the Play again vocabulary fix (this ticket).
