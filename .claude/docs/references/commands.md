@@ -56,7 +56,7 @@
 
 - `npm run dev` / `npm run build`: the docs site (`site/`) is the app entry. `npm run deploy:docs`: ui.nonoun.io.
 - `npm run ops:reap-worktrees` / `ops:reap-branches` / `ops:reap-scratch-clones`: gated, dry-run-by-default reap
-  scripts (append `-- --execute` to apply) for `.claude/worktrees/` entries, local branches, and orphaned
+  scripts (append `-- --execute` to apply) for `.claude/worktrees/` and `../<repo>.worktrees/` entries, local branches, and orphaned
   `dispatch_envelope.py` scratch-clone dirs, respectively.
 - `npm run ops:bootstrap-scratch-clone -- <clone-dir> [--root <path>]`: deterministic per-entry `node_modules`
   symlink bootstrap for a `dispatch_envelope.py` scratch clone (GH #1695); a build seat in a scratch clone runs

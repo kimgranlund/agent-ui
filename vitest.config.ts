@@ -1,6 +1,7 @@
 import { defineConfig, configDefaults } from 'vitest/config'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { inLaneWorktree } from './scripts/lib/worktree-roots.mjs'
 
 const r = (p: string) => fileURLToPath(new URL(p, import.meta.url))
 
@@ -25,13 +26,13 @@ const componentsSubpathAliases: Record<string, string> = Object.fromEntries(
 // glob is excluded from both jsdom projects so those real-engine tests never run under jsdom (where computed
 // geometry isn't true). Workspace packages resolve via the aliases below.
 // Worktree-aware worker cap (Kim ruling 2026-08-20, the load-108 postmortem): a run whose cwd sits
-// under an agent worktree (`.claude/worktrees/`) defaults to 4 workers — N parallel lanes at
+// under an agent worktree (`.claude/worktrees/` or sdlc-lite's `../<repo>.worktrees/`) defaults to 4 workers, N parallel lanes at
 // workers-per-core is exactly the N×cores thread explosion that saturated the host — while the
 // primary checkout keeps vitest's full-speed default. An explicit VITEST_MAX_WORKERS env var wins
 // over both (set it to a number, or leave unset for the location-based default).
 const WORKER_CAP = process.env['VITEST_MAX_WORKERS']
   ? Number(process.env['VITEST_MAX_WORKERS'])
-  : process.cwd().includes('/.claude/worktrees/')
+  : inLaneWorktree(process.cwd())
     ? 4
     : undefined
 

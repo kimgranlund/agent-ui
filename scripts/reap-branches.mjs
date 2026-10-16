@@ -84,6 +84,8 @@ import { join } from 'node:path';
 
 const NAME = 'reap-branches';
 const WORKTREE_MARKER_RE = /^worktree-agent-(.+)$/;
+// The two lane roots as path tails (T-0288): the legacy `.claude/worktrees` and the sibling `<repo>.worktrees`.
+const LANE_ROOT_SUFFIXES = ['.claude/worktrees', '.worktrees'];
 
 /* ── Plumbing ─────────────────────────────────────────────────── */
 
@@ -195,7 +197,7 @@ function classifyBranch(cwd, branch, { checkedOut, paths, gh, hasOriginMain }) {
   const wtMatch = branch.match(WORKTREE_MARKER_RE);
   if (wtMatch) {
     const hash = wtMatch[1];
-    const stillLive = paths.some((p) => p.endsWith(`.claude/worktrees/agent-${hash}`));
+    const stillLive = paths.some((p) => LANE_ROOT_SUFFIXES.some((root) => p.endsWith(`${root}/agent-${hash}`)));
     if (stillLive) {
       return { branch, tip, disposition: 'KEPT', reason: `worktree agent-${hash} still registered in git worktree list` };
     }
@@ -347,6 +349,9 @@ function selftest() {
     git(work, 'branch', 'worktree-agent-live1234');
     git(work, 'worktree', 'add', join(scratch, '.claude', 'worktrees', 'agent-live1234'), '-b', 'real-lane-live1234', 'main');
     git(work, 'branch', 'worktree-agent-gone5678');
+    // The same live-lane control under the sibling root sdlc-lite 0.24 uses (`<repo>.worktrees`, T-0288).
+    git(work, 'branch', 'worktree-agent-sibl9012');
+    git(work, 'worktree', 'add', join(scratch, 'work.worktrees', 'agent-sibl9012'), '-b', 'real-lane-sibl9012', 'main');
 
     const invoke = (...args) => spawnSync(process.execPath, [process.argv[1], ...args], { cwd: work, encoding: 'utf8' });
 
@@ -358,6 +363,7 @@ function selftest() {
     assert(/unmerged-branch\s+\S+\s+PROPOSED/.test(dry.stdout), 'dry-run: unmerged-branch → PROPOSED (negative control)');
     assert(/wt-branch\s+\S+\s+KEPT/.test(dry.stdout), 'dry-run: wt-branch → KEPT (worktree-checked-out, Rule 3)');
     assert(/worktree-agent-live1234\s+\S+\s+KEPT/.test(dry.stdout), 'dry-run: worktree-agent-live1234 → KEPT (Rule 2, path still registered)');
+    assert(/worktree-agent-sibl9012\s+\S+\s+KEPT/.test(dry.stdout), 'dry-run: worktree-agent-sibl9012 → KEPT (Rule 2, path under <repo>.worktrees)');
     assert(/worktree-agent-gone5678\s+\S+\s+REAP/.test(dry.stdout), 'dry-run: worktree-agent-gone5678 → REAP (Rule 2, no matching path)');
     const afterDry = git(work, 'for-each-ref', 'refs/heads', '--format=%(refname:short)');
     assert(afterDry.includes('merged-branch'), 'dry-run deleted nothing (merged-branch still present)');
@@ -372,6 +378,7 @@ function selftest() {
     assert(after.includes('unmerged-branch'), '--execute kept unmerged-branch (NEGATIVE CONTROL bit)');
     assert(after.includes('wt-branch'), '--execute kept wt-branch (worktree guard held)');
     assert(after.includes('worktree-agent-live1234'), '--execute kept worktree-agent-live1234 (Rule 2 guard held)');
+    assert(after.includes('worktree-agent-sibl9012'), '--execute kept worktree-agent-sibl9012 (Rule 2 guard held, sibling root)');
 
     // Usage contract.
     const usage = invoke('--bogus-flag');
