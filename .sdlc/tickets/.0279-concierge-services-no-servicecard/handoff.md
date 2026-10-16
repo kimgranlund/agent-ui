@@ -2,11 +2,13 @@
 id: T-0279
 title: "A spa services list is a Table or a ProductCard grid on every model, never ServiceCard: the skill and the catalog selection disagree"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
 created: 2026-10-15
+branch: fix/r4-concierge-guidance
+worktree: ../agent-ui.worktrees/wave-cg
 router: .sdlc/tickets/AGENTS.md  # how to claim and close this ticket
 ---
 
@@ -46,3 +48,13 @@ verifier: L3
 - `npx vitest run scripts/e2e-admin/probe/scenarios` exits 0: the six "What spa services can I book" turns expect ProductCard; facility turns keep ServiceCard.
 - The `amenity-service-card` skill in `site/pages/agent-admin-libraries.ts` teaches one ProductCard per priced service, never a Table; Concierge seedVersion is 13 and its manifest is refreshed.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged in #2042: ProductCard per priced service (Kim's ruling); verifier L3 pass) · verifier: verifier-L3 (fable) · base: 3b0ab74745d7
+- Changed: see commits
+- Commits: 87f8a8a T-0279: record lane wave-cg
+- Check: 1 `npx vitest run packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts` exits 0, with a Pro...: pass
+- Check: 2 `npx vitest run scripts/e2e-admin/probe/scenarios` exits 0: the six "What spa services can I book...: pass
+- Check: 3 The `amenity-service-card` skill in `site/pages/agent-admin-libraries.ts` teaches one ProductCard...: pass
+- Check: 4 `npm run check` exits 0: pass

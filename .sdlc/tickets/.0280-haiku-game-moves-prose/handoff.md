@@ -2,7 +2,7 @@
 id: T-0280
 title: "Haiku answers word guesses, give-ups and the Omaha river in prose with no board update, and no check sends them back"
 type: bug             # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -42,3 +42,9 @@ This solo lane delivers these tickets in order, one commit each (`T-NNNN: <title
 
 ## Scope change (conductor, 2026-10-16)
 This ticket covers the Lexicographer guesses and give-up. The Croupier Omaha streets and the stud reply (traces :52-:55, :67) moved to T-0286.
+
+## Outcome
+
+2026-10-15 · lane: full L2 · verdict: closed by reason (Merged in #2041 (Haiku prose game moves); verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none
