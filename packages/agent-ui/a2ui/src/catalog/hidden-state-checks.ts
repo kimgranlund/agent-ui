@@ -12,7 +12,8 @@
 // check is silent unless a surface carries its game's signature:
 // - the word game: a TextField gated by a `^[a-z]{N}$` regex check (the `word-tiles` idiom) that names a guess, or
 //   sits beside a BoardGrid;
-// - Battleship: a BoardGrid with an `actionName` (the board the player fires on, the `board-grid` idiom).
+// - Battleship: a BoardGrid with an `actionName` (the board the player fires on, the `board-grid` idiom) that also
+//   reads as Battleship (a committed fleet, a Battleship cue word, or the player's own read-only board; T-0316).
 // T-0265 adds one more Battleship check that reads the say turn's words rather than a surface: a typed shot at the
 // targeted board answered in prose alone, or a game asked for with no board. T-0280 adds its word-game twin: a typed
 // guess or a give-up at the targeted board answered in prose alone, or a give-up with no ResultCard; T-0291 judges one
@@ -75,6 +76,17 @@ function wordLength(view: SurfaceView): number | undefined {
 const hasWordCue = (view: SurfaceView): boolean => wordLength(view) !== undefined || typeof readPointer(view.dataModel, '/secret/word') === 'string'
 const hasFleetCue = (view: SurfaceView): boolean =>
   readPointer(view.dataModel, '/secret/fleet') !== undefined || readPointer(view.dataModel, '/secret/playerFleet') !== undefined
+
+/** T-0316 (D1): the Battleship words a recorded Admiral board carries in its id, labels, stats or bound paths ("Enemy
+ *  waters", "Ships afloat", `/fleet`). A clickable BoardGrid alone is any board game (tic-tac-toe, the plainest). */
+const FLEET_WORDS = /\b(?:battleships?|fleets?|ships?|waters|seas?|navy|naval|admiral|salvo|torpedo(?:es)?|sunk|afloat)\b/i
+
+/** T-0316 (D1): a surface that reads as Battleship: a fleet cue, a Battleship word on the surface, or a read-only
+ *  BoardGrid (the player's own board) beside the one the player fires on. */
+const hasBattleshipCue = (view: SurfaceView): boolean =>
+  hasFleetCue(view) ||
+  FLEET_WORDS.test(`${view.surfaceId} ${JSON.stringify([...view.components.values()])}`) ||
+  boardGrids(view).some((b) => typeof b['actionName'] !== 'string' || b['actionName'] === '')
 
 /** The committed word, lowercased, when it is `n` letters; undefined otherwise. */
 function committedWord(dataModel: unknown, n: number): string | undefined {
@@ -197,8 +209,8 @@ const resolved = (cells: readonly Cell[]): Set<string> =>
 const listCells = (cells: readonly Cell[]): string => cells.map((c) => `(${c.row}, ${c.col}) ${c.mark!.trim() === HIT ? 'hit' : 'miss'}`).join(', ')
 
 /**
- * FLEET_SECRET_MISSING: a surface with a clickable BoardGrid (the board the player fires on) whose data model
- * commits no `/secret/fleet` or `/secret/playerFleet`. SHOT_RESULT_WRONG: a ● on that board where the committed
+ * FLEET_SECRET_MISSING: a surface with a clickable BoardGrid (the board the player fires on) and a Battleship cue
+ * (`hasBattleshipCue`, T-0316) whose data model commits no `/secret/fleet` or `/secret/playerFleet`. SHOT_RESULT_WRONG: a ● on that board where the committed
  * fleet has no ship, or a ✕ where it has one. RETURN_FIRE_WRONG: the same on a read-only BoardGrid (the player's
  * board) of any surface this round touches, against `/secret/playerFleet`. FLEET_SECRET_CHANGED: a committed fleet
  * differs from the one the session left while a shot resolved before this round is still on the board.
@@ -209,7 +221,8 @@ export const fleetSecretCheck: SemanticCheck = {
   check({ surfaces, action }) {
     const findings: SemanticFinding[] = []
     const targets = surfaces.filter(
-      (v) => boardGrids(v).some((b) => typeof b['actionName'] === 'string' && b['actionName'] !== '') && !(hasWordCue(v) && !hasFleetCue(v)),
+      (v) =>
+        boardGrids(v).some((b) => typeof b['actionName'] === 'string' && b['actionName'] !== '') && hasBattleshipCue(v) && !(hasWordCue(v) && !hasFleetCue(v)),
     )
     let playerFleet: Set<string> | undefined
     for (const view of targets) {

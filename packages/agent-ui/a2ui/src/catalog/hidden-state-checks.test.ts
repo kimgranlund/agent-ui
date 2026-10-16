@@ -177,6 +177,19 @@ describe('T-0263: each hidden-state check judges only its own game', () => {
   it('negative control: a plain Battleship board with no word cue still gets FLEET_SECRET_MISSING', () => {
     expect(codes(fleetSecretCheck, [], [...waters('sea'), data('sea', { cells: [] })])).toHaveLength(2)
   })
+
+  // T-0316 (D1): a clickable BoardGrid with no Battleship cue (id, words, a fleet or the player's own board) is any
+  // board game; the 3x3 tic-tac-toe board drew FLEET_SECRET_MISSING for both fleets.
+  it('a tic-tac-toe board is no Battleship board', () => {
+    const ttt: A2uiOutput = [
+      { version: 'v1.0', createSurface: { surfaceId: 'ttt', catalogId: 'agent-ui' } } as A2uiServerMessage,
+      { version: 'v1.0', updateComponents: { surfaceId: 'ttt', components: [{ id: 'root', component: 'BoardGrid', rows: 3, cols: 3, label: 'Tic-tac-toe', actionName: 'mark', cells: { path: '/cells' } }] } } as A2uiServerMessage,
+      data('ttt', { cells: [] }),
+    ]
+    expect(codes(fleetSecretCheck, [], ttt)).toEqual([])
+    // The same board on a surface named for the game is one.
+    expect(codes(fleetSecretCheck, [], ttt.map((m) => JSON.parse(JSON.stringify(m).replaceAll('"ttt"', '"enemy-waters"')) as A2uiServerMessage))).toHaveLength(2)
+  })
 })
 
 // T-0265 (the recorded Haiku 5.5 Admiral, round 3 opening-salvo t4 and row-sweep t2): "Fire at A2." was answered with
