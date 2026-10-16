@@ -8,7 +8,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import type { A2uiOutput, A2uiServerMessage } from '../protocol.ts'
 import { fleetSecretCheck, fleetShotAppliedCheck, gradeGuess, HIDDEN_STATE_CHECKS, fleetHudCheck, wordMoveAppliedCheck, wordSecretCheck } from './hidden-state-checks.ts'
-import { semanticSurfaceViews } from './semantic-check.ts'
+import { semanticSurfaceViews, sessionSurfaceViews } from './semantic-check.ts'
 import type { SemanticAction, SemanticTurnLog } from './semantic-check.ts'
 
 type Turn = { role: string; content: string }
@@ -252,6 +252,43 @@ describe('T-0280: word-move-applied', () => {
     expect(said('Fire at A2.', [], 'word-forge')).toEqual([])
     expect(said('My guess: audio.')).toEqual([])
     expect(wordMoveAppliedCheck.check({ surfaces: [], action: fire(0, 1) })).toEqual([])
+  })
+})
+
+// T-0291 (the recorded Haiku 5.5 Lexicographer, round 5 :94, :95, :72): "I give up." was answered in prose with a
+// meta-line that declared no target, and "Play again." in prose with or without one; no check fired on either.
+describe('T-0291: word-move-applied with no target, and a replay ask', () => {
+  const session: SemanticTurnLog = { turns: [assistant([...board('word-forge'), data('word-forge', { secret: { word: 'lodge' }, cells: [], draft: '' })])] }
+  const open = sessionSurfaceViews(session)
+  const said = (intent: string, out: A2uiOutput = [], target?: string) =>
+    wordMoveAppliedCheck.check({ surfaces: semanticSurfaceViews(session, out), intent, open, ...(target !== undefined ? { target } : {}) })
+  const reset: A2uiOutput = [{ version: 'v1.0', updateDataModel: { surfaceId: 'word-forge', value: { secret: { word: 'crane' }, cells: [], draft: '' } } } as A2uiServerMessage]
+  const result: A2uiOutput = [
+    { version: 'v1.0', updateComponents: { surfaceId: 'word-forge', components: [{ id: 'root', component: 'ResultCard', outcome: 'loss', title: 'The word was LODGE' }] } } as A2uiServerMessage,
+  ]
+
+  it('a prose give-up that declares no target is ACTION_NOT_APPLIED at the open word game, framed as a check result', () => {
+    const giveUp = said('I give up.')
+    expect(giveUp.map((f) => [f.code, f.path])).toEqual([['ACTION_NOT_APPLIED', 'word-forge:give-up']])
+    expect(giveUp[0]!.message).toMatch(/^The word-game check found/)
+    expect(giveUp[0]!.message).toMatch(/ends the game, not an ask flow/)
+  })
+
+  it('a prose "Play again." is ACTION_NOT_APPLIED, with or without a target', () => {
+    for (const target of [undefined, 'word-forge']) {
+      const replay = said('Play again.', [], target)
+      expect(replay.map((f) => [f.code, f.path])).toEqual([['ACTION_NOT_APPLIED', 'word-forge:play-again']])
+      expect(replay[0]!.message).toMatch(/new secret word at \/secret\/word, an empty board/)
+    }
+  })
+
+  it('a ResultCard give-up, a reset or a new board on replay, a targetless guess, or no open word game passes', () => {
+    expect(said('I give up.', result)).toEqual([])
+    expect(said('Play again.', reset)).toEqual([])
+    expect(said('Play again.', board('word-forge-2'))).toEqual([])
+    expect(said('My guess: cat.')).toEqual([])
+    expect(wordMoveAppliedCheck.check({ surfaces: [], intent: 'Play again.', open: [] })).toEqual([])
+    expect(wordMoveAppliedCheck.check({ surfaces: [], intent: 'I give up.' })).toEqual([])
   })
 })
 
