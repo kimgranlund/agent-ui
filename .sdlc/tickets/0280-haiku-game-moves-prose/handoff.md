@@ -17,7 +17,7 @@ A Haiku game move that should update an open board (a word guess, a give-up, a p
 `npx vitest run scripts/e2e-admin/probe/replays/lexicographer-haiku-guess-prose.test.mjs` (keyless, pinned). Live: `.sdlc/evals/rounds/2026-10-15-r4-fixes/`traces :87-:89, :91-:95, :120-:123 (Lexicographer), :52-:55 (Omaha), :67 (stud).
 
 ## Expected
-Each guess updates the BoardGrid, the give-up ships a ResultCard, and each Omaha street updates the table, or a repair round makes it.
+Each guess updates the BoardGrid and the give-up ships a ResultCard, or a repair round makes it. (The Omaha streets and the stud reply moved to T-0286, conductor 2026-10-16.)
 
 ## Actual
 Haiku answers every Lexicographer guess in prose with a `target` on the board and no update, and says "I've put the result on the board" (:89). Give-ups ship no ResultCard (prose at :89 and :94, a hand-built Card at :122). Omaha streets update only a Text (:52-:54) and the river ends in prose with no surface (:55). No check fires on any of these turns: 0 codes. On seven-card stud (:67) ACTION_NOT_APPLIED fired and counted as saved, but the retry updated only the actions Row while the reply dealt fifth street in prose, so `action-updates-surface` failed t1. Sonnet passes the same scenarios (3 of 3 Lexicographer runs).
@@ -39,3 +39,6 @@ This solo lane delivers these tickets in order, one commit each (`T-NNNN: <title
 - `npx vitest run scripts/e2e-admin/probe/replays/lexicographer-haiku-guess-prose.test.mjs` exits 0, pinned to ACTION_NOT_APPLIED on turns 1 and 3.
 - `npx vitest run scripts/e2e-admin/probe` exits 0.
 - `npm run check` exits 0.
+
+## Scope change (conductor, 2026-10-16)
+This ticket covers the Lexicographer guesses and give-up. The Croupier Omaha streets and the stud reply (traces :52-:55, :67) moved to T-0286.
