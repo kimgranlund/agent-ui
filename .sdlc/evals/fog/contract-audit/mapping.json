@@ -1,0 +1,191 @@
+{
+ "version": 1,
+ "notes": "agent-ui contract-audit mapping (T-0312). Load modes from rounds 3 to 7 traces: persona foundation/surfaceStyle/houseFacts, grammar prompts, catalogs, selection sidecars and the tool definition framed in full; library and preset skills index-only; mini-skills, exemplars and repair text triggered (repair only after a failed round).",
+ "surfaces": [
+  {
+   "id": "catalog",
+   "kind": "catalog",
+   "paths": [
+    "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+    "packages/agent-ui/a2ui/src/catalog/personas/*/catalog.json"
+   ],
+   "load": "full",
+   "authority": true,
+   "scope": "agent-ui"
+  },
+  {
+   "id": "selection",
+   "kind": "catalog",
+   "paths": [
+    "packages/agent-ui/a2ui/src/catalog/default/selection.json",
+    "packages/agent-ui/a2ui/src/catalog/personas/*/selection.json"
+   ],
+   "load": "full",
+   "authority": true,
+   "scope": "agent-ui"
+  },
+  {
+   "id": "basic-catalog",
+   "kind": "catalog",
+   "paths": [
+    "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+    "packages/agent-ui/a2ui/src/catalog/a2ui-basic/selection.json"
+   ],
+   "load": "full",
+   "authority": true,
+   "scope": "a2ui-basic"
+  },
+  {
+   "id": "grammar",
+   "kind": "prompt",
+   "paths": [
+    "packages/agent-ui/a2ui/src/agent/prompts/*.md"
+   ],
+   "load": "full",
+   "scope": "agent-ui"
+  },
+  {
+   "id": "mini-skills",
+   "kind": "skill",
+   "paths": [
+    "packages/agent-ui/a2ui/src/agent/prompts/mini-skills/*.md"
+   ],
+   "load": "triggered",
+   "scope": "agent-ui"
+  },
+  {
+   "id": "library-skills",
+   "kind": "skill",
+   "paths": [
+    "site/pages/agent-admin-libraries.ts"
+   ],
+   "load": "index-only",
+   "regions": [
+    {
+     "start": "^\\s+(description|content):",
+     "end": "^\\s+[a-zA-Z]+:|^\\s*\\}"
+    }
+   ],
+   "index": {
+    "linePattern": "^\\s+description:"
+   },
+   "scope": "agent-ui"
+  },
+  {
+   "id": "preset-skills",
+   "kind": "skill",
+   "paths": [
+    "site/pages/agent-admin-presets.ts"
+   ],
+   "load": "index-only",
+   "regions": [
+    {
+     "start": "^\\s+(description|content):",
+     "end": "^\\s+[a-zA-Z]+:|^\\s*\\}"
+    }
+   ],
+   "index": {
+    "linePattern": "^\\s+description:"
+   },
+   "scope": "agent-ui"
+  },
+  {
+   "id": "persona",
+   "kind": "persona",
+   "paths": [
+    "site/pages/agent-admin-presets.ts"
+   ],
+   "load": "full",
+   "modalityFree": true,
+   "regions": [
+    {
+     "start": "^\\s+(foundation|surfaceStyle|houseFacts):",
+     "end": "^\\s+[a-zA-Z]+:"
+    }
+   ],
+   "scope": "agent-ui"
+  },
+  {
+   "id": "checks",
+   "kind": "check",
+   "paths": [
+    "packages/agent-ui/a2ui/src/catalog/*check*.ts",
+    "packages/agent-ui/a2ui/src/catalog/composite-moments.ts",
+    "packages/agent-ui/a2ui/src/catalog/personas/*/checks.ts"
+   ],
+   "load": "full",
+   "include": "['\"`]",
+   "exclude": "^\\s*(//|\\*|/\\*)|^\\s*import ",
+   "scope": "agent-ui"
+  },
+  {
+   "id": "repair",
+   "kind": "repair",
+   "paths": [
+    "packages/agent-ui/a2ui/src/agent/produce.ts"
+   ],
+   "load": "triggered",
+   "include": "['\"`]",
+   "exclude": "^\\s*(//|\\*|/\\*)|^\\s*import ",
+   "scope": "agent-ui"
+  },
+  {
+   "id": "tool",
+   "kind": "tool",
+   "paths": [
+    "packages/agent-ui/a2ui/src/agent/response-type.ts"
+   ],
+   "load": "full",
+   "include": "['\"`]",
+   "exclude": "^\\s*(//|\\*|/\\*)|^\\s*import ",
+   "scope": "agent-ui"
+  },
+  {
+   "id": "oracles",
+   "kind": "oracle",
+   "paths": [
+    "scripts/e2e-admin/probe/scenarios/*.ts"
+   ],
+   "load": "none",
+   "include": "say\\(|expect",
+   "exclude": "^\\s*(//|\\*)",
+   "scope": "agent-ui"
+  },
+  {
+   "id": "exemplars",
+   "kind": "exemplar",
+   "paths": [
+    "packages/agent-ui/a2ui/corpus/exemplar/v1_0/*.jsonl"
+   ],
+   "load": "triggered",
+   "scope": [
+    "agent-ui",
+    "a2ui-basic"
+   ]
+  }
+ ],
+ "entities": {
+  "fromJson": [
+   {
+    "path": "packages/agent-ui/a2ui/src/catalog/*/catalog.json",
+    "pointer": "/components"
+   },
+   {
+    "path": "packages/agent-ui/a2ui/src/catalog/personas/*/catalog.json",
+    "pointer": "/components"
+   }
+  ],
+  "referencePattern": "\\b[A-Z][a-z]+(?:[A-Z][a-z]+)*(?:Card|Form|List|Table|Confirmation|Grid|Badge|Picker|Chart|Deck|Board)\\b"
+ },
+ "generated": [
+  {
+   "output": "packages/agent-ui/a2ui/src/agent/assets.gen.ts",
+   "sources": [
+    "packages/agent-ui/a2ui/src/agent/prompts/*.md",
+    "packages/agent-ui/a2ui/src/agent/prompts/mini-skills/*.md"
+   ],
+   "embedded": true,
+   "mtime": false
+  }
+ ]
+}

@@ -68,6 +68,14 @@ describe('live round 2 scenarios', () => {
     expect(JSON.stringify(flow)).not.toContain('ServiceCard')
   })
 
+  // T-0312: a ruled oracle expects its ruling's composite (T-0266 and T-0289: a chat confirm settles as a
+  // BookingConfirmation; T-0296: a surrender ends on one ResultCard).
+  it('the ruled confirm and surrender oracles expect their rulings\' composites', () => {
+    const step = (scenarios, name, text) => scenarios.find((s) => s.name === name).steps.find((st) => st.say === text)
+    expect(step(CONCIERGE_SCENARIOS, 'spa-booking', 'Those details are right, please confirm the booking.').expect).toEqual(['BookingConfirmation'])
+    expect(step(ADMIRAL_SCENARIOS, 'concede', 'I surrender. Reveal your fleet.').expect).toEqual(['ResultCard'])
+  })
+
   it('the round fixes its scenario defects: no click after a Hit, five stud streets, dated bookings, named knowledge', () => {
     const steps = (name) => CROUPIER_ROUND_SCENARIOS.find((s) => s.name === name).steps
     const rounds = steps('blackjack-rounds')

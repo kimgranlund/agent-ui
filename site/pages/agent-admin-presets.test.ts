@@ -11,6 +11,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { DEFAULT_PROMPT_SECTIONS, ENTRY_KINDS, composeLiveSystemPrompt } from '@agent-ui/app/agent-admin-entries'
 import { entriesStoreKey, type Entry } from '@agent-ui/app/entry-data'
 import { lintSectionContent } from '@agent-ui/app/agent-admin-prompt-lint'
+import { SELECTION_PROJECTION } from '@agent-ui/a2ui/registry'
 import {
   AGENT_PRESETS,
   deleteImportedPersona,
@@ -47,6 +48,29 @@ import {
 /** The worst case for the lint: NO modality is on, so every term in the vocabulary is live. */
 const ALL_OFF = { a2ui: false, genui: false }
 
+/** T-0312 (Kim's ruling, 2026-10-16, P6): a catalog type name in persona text is a modality leak. `lintSectionContent`
+ *  already flags the compound names; a single-word type (Button, Badge, Menu) is also an English word, so it counts
+ *  only capitalized inside a sentence ("a Deal again Button"), never as a sentence's first word ("Menu or wine
+ *  enquiries") and never in lower case ("a button"). */
+const SINGLE_WORD_TYPES: readonly string[] = [
+  ...new Set(
+    [...Object.values(SELECTION_PROJECTION.base), ...Object.values(SELECTION_PROJECTION.persona)].flatMap((types) =>
+      Object.keys(types).filter((type) => !/^[A-Z][a-z0-9]+[A-Z]/.test(type)),
+    ),
+  ),
+].sort()
+
+/** The first single-word catalog type `text` names mid-sentence, or undefined. */
+function typeNameIn(text: string): string | undefined {
+  for (const type of SINGLE_WORD_TYPES) {
+    for (const m of text.matchAll(new RegExp(`\\b${type}\\b`, 'g'))) {
+      const before = text.slice(0, m.index).trimEnd()
+      if (before !== '' && !/[.!?:"“]$/.test(before)) return type
+    }
+  }
+  return undefined
+}
+
 describe('the shipped personas name no modality (GH #412’s rewrite, gated by GH #419’s vocabulary)', () => {
   it('all fifteen `surfaceStyle` texts are modality-neutral', () => {
     expect(AGENT_PRESETS).toHaveLength(15) // anti-vacuity: the loop below really covers the roster
@@ -80,6 +104,22 @@ describe('the shipped personas name no modality (GH #412’s rewrite, gated by G
       'Always play on ONE A2UI surface: create the table once (each playing card its own Card tile ' +
       'holding a rank+suit glyph Text), then UPDATE THAT SAME surface via the data model on every move.'
     expect(lintSectionContent(before, ALL_OFF)).toBeDefined()
+  })
+
+  it('no persona section names a catalog type, single-word types included (T-0312)', () => {
+    expect(SINGLE_WORD_TYPES).toContain('Button') // anti-vacuity: the projection really yields the single-word types
+    for (const preset of AGENT_PRESETS) {
+      for (const section of presetSeed(preset)[entriesStoreKey(ENTRY_KINDS.promptSection)] as Entry[]) {
+        expect(typeNameIn(section.content), `${preset.id} / ${section.id}`).toBeUndefined()
+      }
+    }
+  })
+
+  it('the type-name rule is discriminating: a mid-sentence type fires, a sentence opener or lower case does not (T-0312)', () => {
+    expect(typeNameIn('Its closing control is a Deal again Button whose action starts the next round.')).toBe('Button')
+    expect(typeNameIn('Show the score in a Badge beside the name.')).toBe('Badge')
+    expect(typeNameIn('Menu or wine enquiries → a menu surface. Text marks spell out each diet.')).toBeUndefined()
+    expect(typeNameIn('Its closing control is a Deal again button.')).toBeUndefined()
   })
 
   it('every persona’s ASSEMBLED prompt-section list is clean — the shape the admin actually lints', () => {
@@ -389,5 +429,31 @@ describe('T-0231: the facts a preset must always know reach its prompt without a
     // The resources stay index lines: their own text is not what puts the hours here.
     expect(prompt).toContain('- property-knowledge-base')
     for (const fact of ['Pool and gym: 06:00 to 22:00', 'Spa: 09:00 to 20:00', 'Check-out 11:00', 'Tuesday, Thursday and Saturday']) expect(prompt).toContain(fact)
+  })
+})
+
+// ── T-0312: one pin per standing ruling (`.sdlc/notes/notes.md`) that had no test, in the T-0285 shape: the ruled
+// sentence stays in the persona section the model reads on every turn, so a reword that drops it reds here. ──────────
+
+describe('standing rulings stay in the persona text the model reads (T-0312)', () => {
+  const preset = (id: string): (typeof AGENT_PRESETS)[number] => AGENT_PRESETS.find((p) => p.id === id)!
+
+  it('T-0289: the Concierge house facts make a chat confirm on a complete form the submission, with no reference number', () => {
+    const facts = preset('concierge').houseFacts ?? ''
+    expect(facts).toMatch(/a chat confirm on a complete form is the submission/)
+    expect(facts).toMatch(/with no reference number you were not given/)
+  })
+
+  it('T-0291: the Lexicographer ends a give-up on the game surface with one result card, and Play again resets it', () => {
+    const foundation = preset('lexicographer').foundation
+    expect(foundation).toMatch(/A give-up or the last miss ends the GAME, not an ask flow/)
+    expect(foundation).toMatch(/updates the game surface with ONE result card naming the word/)
+    expect(foundation).toMatch(/"Play again\." resets that same surface/)
+  })
+
+  it('T-0296: a battleship surrender is a loss, one ResultCard beside the revealed board, in the foundation and the board-grid End state', () => {
+    expect(preset('admiral').foundation).toMatch(/A player who surrenders has lost: end the game as you would any loss/)
+    const boardGrid = GAMES_SKILLS.find((s) => s.label === 'board-grid')
+    expect(boardGrid?.content).toMatch(/or the player surrenders or concedes \(a loss, the hidden fleet revealed on the board\), show ONE ResultCard/)
   })
 })
