@@ -1196,10 +1196,13 @@ function newSurfaceIds(output: A2uiOutput, session: Session): Set<string> {
   return out
 }
 
-/** T-0281: the surfaces a round's payload creates that the session does not already hold and the round does not delete. */
+/** T-0281: the surfaces a round's payload creates that the session does not already hold and the round does not delete.
+ *  T-0317: and delivers components to. A bare `createSurface` never became a surface (ADR-0187 fails it
+ *  `sid:root-missing` and its repair may drop the line), so it binds no later round. */
 function builtSurfaceIds(output: A2uiOutput, session: Session): string[] {
   const deleted = new Set(output.flatMap((msg) => ('deleteSurface' in msg ? [msg.deleteSurface.surfaceId] : [])))
-  return [...newSurfaceIds(output, session)].filter((sid) => !deleted.has(sid))
+  const filled = new Set(output.flatMap((msg) => ('updateComponents' in msg ? [msg.updateComponents.surfaceId] : [])))
+  return [...newSurfaceIds(output, session)].filter((sid) => !deleted.has(sid) && filled.has(sid))
 }
 
 /** T-0305: a `SURFACE_NOT_CREATED` failure per surface this round updates (`updateComponents` or `updateDataModel`) that
@@ -1228,24 +1231,35 @@ function uncreatedSurfaceFailures(output: A2uiOutput, input: TurnInput): RoundFa
 }
 
 /** T-0172: the surfaces a failed round created that none of its failures names, so the repair has no
- *  reason to change or drop them. A failure path names a surface by its `sid:` prefix (IDGRAPH, FEED_SCOPE)
+ *  reason to change them. A failure path names a surface by its `sid:` prefix (IDGRAPH, FEED_SCOPE)
  *  or a component id the payload delivered to that surface (`id.prop`, `parent->child`). A failure with no
- *  attributable path (PARSE, SCHEMA) makes every surface suspect, so nothing is required. */
+ *  attributable path (PARSE, SCHEMA) makes every surface suspect, so nothing is named as unchanged.
+ *  T-0317: a component id delivered to more than one surface (each surface has its own `root`) names every
+ *  one of them, except a `parent->child` path, which names the surfaces whose `parent` lists that child; and a
+ *  SURFACE_DROPPED path is a surface the round left out, so it says nothing about the ones it holds. */
 function surfacesToKeep(failed: A2uiOutput, failures: readonly RoundFailure[], session: Session): string[] {
-  const owner = new Map<string, string>() // component id → the surface it was delivered to
+  const owners = new Map<string, Set<string>>() // component id → the surfaces it was delivered to
+  const lists = new Map<string, Set<string>>() // `parent->child` → the surfaces whose `parent` lists `child`
   const surfaces = new Set<string>()
   for (const msg of failed) {
     const sid = messageSurfaceId(msg)
     if (sid !== undefined) surfaces.add(sid)
-    if ('updateComponents' in msg) for (const c of msg.updateComponents.components) owner.set(c.id, msg.updateComponents.surfaceId)
+    if (!('updateComponents' in msg)) continue
+    for (const c of msg.updateComponents.components) {
+      owners.set(c.id, (owners.get(c.id) ?? new Set()).add(msg.updateComponents.surfaceId))
+      const refs = [...(typeof c['child'] === 'string' ? [c['child']] : []), ...(Array.isArray(c['children']) ? c['children'].filter((r): r is string => typeof r === 'string') : [])]
+      for (const ref of refs) lists.set(`${c.id}->${ref}`, (lists.get(`${c.id}->${ref}`) ?? new Set()).add(msg.updateComponents.surfaceId))
+    }
   }
   const failing = new Set<string>()
   for (const f of failures) {
+    if (f.code === 'SURFACE_DROPPED') continue
     const colon = f.path.indexOf(':')
     const head = f.path.split('->')[0]!.split('.')[0]!
-    const sid = colon > 0 && surfaces.has(f.path.slice(0, colon)) ? f.path.slice(0, colon) : surfaces.has(f.path) ? f.path : owner.get(head)
-    if (sid === undefined) return []
-    failing.add(sid)
+    const named =
+      colon > 0 && surfaces.has(f.path.slice(0, colon)) ? [f.path.slice(0, colon)] : surfaces.has(f.path) ? [f.path] : [...(lists.get(f.path) ?? owners.get(head) ?? [])]
+    if (named.length === 0) return []
+    for (const sid of named) failing.add(sid)
   }
   return [...newSurfaceIds(failed, session)].filter((sid) => !failing.has(sid))
 }
@@ -1253,7 +1267,7 @@ function surfacesToKeep(failed: A2uiOutput, failures: readonly RoundFailure[], s
 /** T-0172: a self-correct round must not lose a surface the failed round created. The Concierge trace
  *  (2026-10-14) failed `greet-1:root` with a correct new `ask-1` beside it, and the "corrected" round
  *  shipped only `greet-1`: the requested form never reached the user. Named in the repair message, and fed
- *  back as `SURFACE_DROPPED` when a passing round still lost one. */
+ *  back as `SURFACE_DROPPED` when a passing round still lost one (T-0317: any surface built this turn, named or not). */
 function keepSurfacesHint(failed: A2uiOutput | undefined, session: Session, failures: readonly RoundFailure[]): string {
   const keep = failed === undefined ? [] : surfacesToKeep(failed, failures, session)
   if (keep.length === 0) return ''
@@ -1391,11 +1405,10 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   // T-0286: the surfaces the session holds before this say turn, so a check can find the table a move typed with
   // no target was meant for.
   const turnOpen = turnIntent !== undefined ? sessionSurfaceViews(input.session) : undefined
-  // T-0172: every surface a failed round of this turn created that no failure named; a later round that
-  // passes without one has dropped it (SURFACE_DROPPED), never a success.
-  const keptSurfaces = new Set<string>()
-  // T-0281: every surface an earlier round of this turn built and kept to its end, failure-named or not; a later round
-  // that answers in prose alone has dropped them all (the FEED_SCOPE retry that lost ask-1), never a success.
+  // T-0281, T-0317 (Kim's L1 ruling, 2026-10-16): every surface an earlier round of this turn built and kept to its end,
+  // failure-named or not. A later round that ships without one, in prose alone or in lines that neither create nor
+  // delete it, has dropped it (SURFACE_DROPPED), never a success: the turn-scoped invariant replaced T-0172's
+  // keep-only-unnamed set, which let a failure-named surface go and pinned an id-graph fault to the wrong surface.
   const builtSurfaces = new Set<string>()
   // T-0299: each missing-composite finding (`<COMPOSITE>_MISSING`) a round of this turn got, binding on every later round.
   const boundComposites = new Map<string, SemanticFinding>()
@@ -1416,7 +1429,6 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     const failuresFedBack = failures // what THIS round's prompt carried back — the trace's failureCodes
     const forceSurface = forceSurfaceRound
     forceSurfaceRound = false
-    if (round > 0 && failures !== undefined && lastOutput !== undefined) for (const sid of surfacesToKeep(lastOutput, failures, input.session)) keptSurfaces.add(sid)
     if (round > 0 && lastOutput !== undefined) for (const sid of builtSurfaceIds(lastOutput, input.session)) builtSurfaces.add(sid)
     // RTS-R9: the escalation seam, consulted at the top of every self-correct round. A returned field
     // replaces only this round's effort or model; absent ⇒ byte-identical.
@@ -1788,7 +1800,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     }
     lastOutput = assembled.output // GH #288 — this round's parsed output, kept for the NEXT round's self-correct feedback (expectedTypeNote)
     const createdThisRound = newSurfaceIds(assembled.output, input.session)
-    const dropped = [...keptSurfaces].filter((sid) => !createdThisRound.has(sid))
+    const deletedThisRound = new Set(assembled.output.flatMap((msg) => ('deleteSurface' in msg ? [msg.deleteSurface.surfaceId] : [])))
+    const dropped = [...builtSurfaces].filter((sid) => !createdThisRound.has(sid) && !deletedThisRound.has(sid))
     stampCreateSurfaceCatalogId(assembled.output, deps.catalog.catalogId) // ADR-0169 cl.4 — the server-selected catalog is authoritative, unconditional + idempotent, BEFORE validateA2ui runs
     // SPEC-N3 — the shared validator, no fork; TKT-0081 — seeded with the session's prior graphs so the
     // per-round judgment matches the MERGED state the renderer will hold (update-only follow-ups valid;

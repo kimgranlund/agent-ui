@@ -1579,9 +1579,10 @@ describe('produce() feed-embedded ask — the FEED_SCOPE self-correct gate (ADR-
   it('the shared validateA2ui call sites are unchanged — FEED_SCOPE runs strictly AFTER validation passes (SPEC-N3 parity)', async () => {
     // A payload the shared validator would ALREADY reject (an unknown component) must surface as the
     // ordinary CATALOG/SCHEMA failure, never as FEED_SCOPE — proving the gate never runs ahead of, or
-    // instead of, the shared validator.
+    // instead of, the shared validator. T-0317: the invalid payload is the ask surface itself, so the valid round
+    // that follows drops no surface the turn built.
     const { provider, reqs } = stubProvider([
-      '{"a2uiMeta":{"note":"x","ask":{"surfaceId":"ask-1"}}}\n' + INVALID,
+      '{"a2uiMeta":{"note":"x","ask":{"surfaceId":"ask-1"}}}\n' + INVALID.replace(/"main"/g, '"ask-1"'),
       '{"a2uiMeta":{"note":"x","ask":{"surfaceId":"ask-1"}}}\n' + ASK_VALID,
     ])
     const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }

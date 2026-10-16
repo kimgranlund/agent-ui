@@ -70,10 +70,11 @@ T-0172 rules (2026-10-14 traces):
 - A missing-composite finding (`<COMPOSITE>_MISSING`, `catalog/composite-moments.ts`) stays binding for the rest
   of the turn (T-0299): a later round whose surfaces hold neither the composite nor a type its row stands aside for
   gets the same code again, so a swap to a shape no row detects is repaired, or ships tallied `SEMANTIC_UNCORRECTED`.
-- A self-correct round never loses a surface: a session-new surface the failed round created that no
-  failure names must come back. The repair message names it ("Keep `ask-1` ..."); a later valid round
-  without it spends a `SURFACE_DROPPED` round, and on the last round halts with `SURFACE_DROPPED` unless an
-  earlier round can ship (below).
+- A self-correct round never loses a surface (T-0317, turn-scoped): every session-new surface an earlier
+  round of the turn built (created and gave components; a bare `createSurface` is not a surface) must come
+  back or be explicitly deleted, failure-named or not. The repair message names the failed round's surfaces
+  no failure names ("Keep `ask-1` ..."); a later valid round without one spends a `SURFACE_DROPPED` round,
+  and on the last round halts with `SURFACE_DROPPED` unless an earlier round can ship (below).
 - An update (`updateComponents`, `updateDataModel`) to a surface that no earlier turn created, that the client
   turn does not come from, and that no earlier message of the payload creates fails `SURFACE_NOT_CREATED` on
   any round (T-0305): the renderer drops it, so the repair sends the `createSurface` first.

@@ -5,8 +5,8 @@
 // through the real `produce()`: green-button and recorded-haiku-hello (the live smoke's trace, its Card-per-choice round
 // repaired to a Row of Buttons by the framed-choice check, T-0258) are green, seeded-json-prose fails `no-json-as-prose` (and
 // `no-surface-loss`, since the surface the model wrote as prose never ships; its JSON is pretty-printed, the
-// shape the producer's prose routing leaves as text, T-0172), seeded-dropped-surface fails
-// exactly `no-surface-loss`, seeded-click-no-update exactly `action-updates-surface`, and seeded-no-reply
+// shape the producer's prose routing leaves as text, T-0172), seeded-dropped-surface (a bare createSurface
+// the repair drops, the one drop the producer allows since T-0317) fails exactly `no-surface-loss`, seeded-click-no-update exactly `action-updates-surface`, and seeded-no-reply
 // (a `render_surface` call with no text and no `reply`, T-0194) exactly `reply-text`, and seeded-wrong-routing (the
 // green button turn with a booking exemplar framed against its `expectRouting`, T-0260) exactly `routing-expect`.
 // recorded-haiku-hello-cards (the live smoke verbatim, T-0258) is green offline, where render-lint has no DOM, but its

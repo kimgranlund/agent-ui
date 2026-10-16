@@ -20,3 +20,11 @@ Kim 2026-10-16 (L1 ruling): the turn-scoped invariant wins over the T-0172 desig
 
 ## Done when
 - The property test's allowlisted classes are empty and I1 holds over every 2- and 3-round sequence on all transports; the existing replays pass (re-pinned only with a stated reason); the live-agent, probe suites and `npm run check` exit 0.
+
+## Acceptance criteria
+verifier: L3
+
+- (red) `npx vitest run packages/agent-ui/a2ui/src/live-agent/produce-loop-property.test.ts` exits 0 with the I1 class allowlist gone: no counterexample over every 2- and 3-round sequence on all three transports.
+- (red) `npx vitest run packages/agent-ui/a2ui/src/live-agent/produce-response-type.test.ts -t T-0317` exits 0: a failure-named surface dropped by a later round is sent back as SURFACE_DROPPED; an id-graph path is pinned to the surface whose component lists the child (the repair keeps the valid ask-2, never the broken ask-1); a round sent back only for SURFACE_DROPPED still names its own valid surface in the keep hint.
+- `npx vitest run packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent scripts/e2e-admin/probe` exits 0 (the live-agent, agent and probe suites, every replay; a re-pinned replay is named with its reason in the report).
+- `npm run check` exits 0.

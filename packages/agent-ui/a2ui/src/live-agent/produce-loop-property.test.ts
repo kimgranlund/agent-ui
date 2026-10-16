@@ -9,6 +9,9 @@
 // Each round reaches the loop as legacy text, as a `render_surface` call, or as the live shapes of round 7 (:16, :69):
 // `messages` as one JSON string and `target` as a string holding JSON. Every round's texts carry its index, so the
 // round that shipped is read off the lines, never assumed.
+// T-0317 (Kim's L1 ruling, 2026-10-16): the three I1 classes this enumeration found (a failure-named surface dropped,
+// an id-graph fault blamed on the wrong surface, a round sent back for SURFACE_DROPPED keeping none of its own) are
+// fixed, so no counterexample is allowed.
 
 import { describe, expect, it } from 'vitest'
 import { produce, ProduceHalt } from '../agent/produce.ts'
@@ -149,42 +152,6 @@ function violations(shapes: readonly Shape[], outcome: Outcome): string[] {
   return [...new Set(out)]
 }
 
-/** The surfaces a shape's own failures name: a broken or flagged surface. */
-const NAMED: Partial<Record<Shape, readonly string[]>> = { Aflag: [A], Abroken: [A], AbrokenB: [A], ABbroken: [B] }
-
-/**
- * The I1 counterexample classes the enumeration finds today, each reported for filing (T-0314) and held here so the test
- * stays green; a class the loop no longer shows reds the test, so the list only shrinks.
- * - `named`: a surface an earlier round created, which that round's own failure named (a finding or an id-graph fault on
- *   it), is dropped by a later round that ships other lines. `surfacesToKeep` (T-0172) keeps only unnamed surfaces, and
- *   the T-0281 `builtSurfaces` ledger guards only a round with no payload, so the repair may replace it with nothing.
- *   This is the T-0172 design against the I1 Kim adopted: a ruling, then a fix.
- * - `misattributed`: a valid surface beside a broken one is dropped. An id-graph path names a component id
- *   (`root->gone`) and `surfacesToKeep` maps ids to surfaces across the whole payload, so the last surface that delivered
- *   `root` takes the blame: the valid one is not kept, and the repair is told to keep the broken one "exactly as you sent
- *   it (no failure names it)".
- * - `unattributed`: a valid surface of a round sent back only for SURFACE_DROPPED is dropped. That failure's path is the
- *   lost surface, which the failed round does not hold, so `surfacesToKeep` reads it as unattributable and keeps
- *   nothing: the round's own new surface is not kept, and the next round may leave it out.
- */
-const KNOWN_I1_CLASSES = ['named', 'misattributed', 'unattributed'] as const
-type I1Class = (typeof KNOWN_I1_CLASSES)[number] | 'unexplained'
-
-/** The class of one I1 counterexample line (`I1: <sid> (created in round <j>) ...`) of `shapes`. */
-function classOf(shapes: readonly Shape[], line: string): I1Class {
-  const m = /^I1: (\S+) \(created in round (\d+)\)/.exec(line)
-  if (m === null) return 'unexplained'
-  const [sid, j] = [m[1]!, Number(m[2])]
-  const shape = shapes[j]!
-  if (NAMED[shape]?.includes(sid)) return 'named'
-  // AbrokenB delivers B's `root` after A's broken one, so the id-graph fault on `root` is pinned to B.
-  if (shape === 'AbrokenB' && sid === B) return 'misattributed'
-  const created = new Set(createdBy(shape, j))
-  const lostBefore = shapes.slice(0, j).some((s, r) => createdBy(s, r).some((x) => !created.has(x)))
-  if (NAMED[shape] === undefined && lostBefore) return 'unattributed'
-  return 'unexplained'
-}
-
 function* sequences(length: number, menu: readonly Shape[] = ALL_SHAPES): Generator<Shape[]> {
   if (length === 0) {
     yield []
@@ -194,36 +161,30 @@ function* sequences(length: number, menu: readonly Shape[] = ALL_SHAPES): Genera
 }
 
 /** The I1 and I2 counterexamples over every sequence of `length` rounds, one line each. */
-async function counterexamples(length: number, transport: Transport): Promise<{ checked: number; shipped: number; failures: { line: string; cls: I1Class }[] }> {
-  const failures: { line: string; cls: I1Class }[] = []
+async function counterexamples(length: number, transport: Transport): Promise<{ checked: number; shipped: number; failures: string[] }> {
+  const failures: string[] = []
   let checked = 0
   let shipped = 0
   for (const shapes of sequences(length)) {
     const outcome = await runTurn(shapes, transport)
     checked += 1
     if (outcome.kind === 'shipped' && !outcome.failureCodes.includes('SURFACE_DEGRADED')) shipped += 1
-    for (const v of violations(shapes, outcome)) failures.push({ line: `${transport} [${shapes.join(' > ')}] ${v}`, cls: classOf(shapes, v) })
+    for (const v of violations(shapes, outcome)) failures.push(`${transport} [${shapes.join(' > ')}] ${v}`)
   }
   return { checked, shipped, failures }
 }
 
 describe('T-0314: the repair loop keeps the turn invariant over every enumerated round sequence', () => {
   for (const transport of TRANSPORTS) {
-    it(`I1 and I2 hold for every 2- and 3-round sequence outside the known, filed I1 classes (${transport})`, { timeout: 600_000 }, async () => {
-      const all: { line: string; cls: I1Class }[] = []
+    it(`I1 and I2 hold for every 2- and 3-round sequence (${transport})`, { timeout: 600_000 }, async () => {
+      const all: string[] = []
       for (const length of [2, 3]) {
         const { checked, shipped, failures } = await counterexamples(length, transport)
         expect(checked).toBe(ALL_SHAPES.length ** length)
         expect(shipped).toBeGreaterThan(checked / 4) // anti-vacuity: most turns ship a round the invariant judges
         all.push(...failures)
       }
-      expect(all.filter((f) => f.cls === 'unexplained').map((f) => f.line)).toEqual([])
-      // Shrink-only: a known class the loop no longer shows is a fix, and its entry goes.
-      expect([...new Set(all.map((f) => f.cls))].sort()).toEqual([...KNOWN_I1_CLASSES].sort())
-      // The shortest witness of each class, by name, so a reader sees each class without running the enumeration.
-      expect(all.map((f) => f.line)).toContain(`${transport} [Aflag > B] I1: ask-1 (created in round 0) is missing from shipped round 1`)
-      expect(all.map((f) => f.line)).toContain(`${transport} [AbrokenB > A] I1: ask-2 (created in round 0) is missing from shipped round 1`)
-      expect(all.map((f) => f.line)).toContain(`${transport} [ABbroken > B > A] I1: ask-2 (created in round 1) is missing from shipped round 2`)
+      expect(all).toEqual([])
     })
   }
 
