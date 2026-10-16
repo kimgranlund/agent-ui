@@ -1,0 +1,18 @@
+{
+  "round": "2026-10-15-r6-matrix",
+  "ticket": "T-0294",
+  "reportId": "d242f3e13e7408d0d5327c38",
+  "mapping": ".sdlc/evals/fog-manifest.json",
+  "mappingHash": "8255a4d8d99d5c802205393662f9d4cc07d59738d6f05ce7fda6e6e3efff7eb8",
+  "bundleFingerprint": "ceb693f50a4dde75cdb2fa376c3b857fd7204f3c49724434a8adfe988e20d4f3",
+  "engineeringRun": "run-1338070f7980c30ca7be8a13",
+  "events": 1114,
+  "sources": 601,
+  "decisions": 6,
+  "findings": 6,
+  "diagnosticFindings": 0,
+  "ingest": "python3 ~/.claude/skills/context-fog-of-war/scripts/engineer.py ingest .sdlc/evals/rounds/2026-10-15-r6-matrix --mapping .sdlc/evals/fog-manifest.json --out <dir>",
+  "publish": "python3 ~/.claude/skills/context-fog-of-war/scripts/library.py publish <dir>/session.json",
+  "analysis": "T-0294 decision analysis: 6 failure clusters hydrated as decisions d1 to d6 with 16 guidance edges and 6 reviewed findings (report.md, Why it failed and how to fix it).",
+  "hydrate": "decisions, guidanceEdges and findings added to the ingested session.json with exact excerpts and event ids before the first publish, then diagnostics.py --data --out, fog.py validate and library.py publish; run by the context-fog-of-war SKILL.md Autonomous run checklist (2026-10-16 revision)"
+}
