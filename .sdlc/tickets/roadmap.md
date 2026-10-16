@@ -305,5 +305,6 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0298 | [.0298-haiku-repair-forced-tool](.0298-haiku-repair-forced-tool/handoff.md) | Haiku repair rounds never call render_surface: force the tool on a no-tool repair round | bug | L2 | P2 | none | 🟢 done |
 | T-0299 | [.0299-final-round-surface-drop](.0299-final-round-surface-drop/handoff.md) | The last repair round drops or swaps the Concierge surface (FEED_SCOPE then SURFACE_DEGRADED) | bug | L3 | P2 | none | 🟢 done |
 | T-0300 | [.0300-lone-button-frame](.0300-lone-button-frame/handoff.md) | A settled table frames Deal again alone in a Card: a LONE_BUTTON_FRAME check | bug | L2 | P2 | none | 🟢 done |
-| T-0301 | [0301-forced-repair-thinking-off](0301-forced-repair-thinking-off/handoff.md) | A forced render_surface repair round turns thinking off so the forced tool reaches the model | bug | L2 | P2 | none | 🔵 ready |
-| T-0302 | [0302-last-round-surface-dropped](0302-last-round-surface-dropped/handoff.md) | The last repair round halts with SURFACE_DROPPED and ships nothing (round 6 :170) | bug | L2 | P2 | none | 🔵 ready |
+| T-0301 | [.0301-forced-repair-thinking-off](.0301-forced-repair-thinking-off/handoff.md) | A forced render_surface repair round turns thinking off so the forced tool reaches the model | bug | L2 | P2 | none | 🟢 done |
+| T-0302 | [.0302-last-round-surface-dropped](.0302-last-round-surface-dropped/handoff.md) | The last repair round halts with SURFACE_DROPPED and ships nothing (round 6 :170) | bug | L2 | P2 | none | 🟢 done |
+| T-0303 | [0303-live-round-7](0303-live-round-7/handoff.md) | Live round 7: rerun round 6's 11 fails plus Haiku long flows ($6 cap) | chore | L2 | P2 | T-0296, T-0297, T-0298, T-0299, T-0300, T-0301, T-0302 | 🔵 ready |

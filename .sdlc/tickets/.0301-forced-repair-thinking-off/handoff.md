@@ -2,7 +2,7 @@
 id: T-0301
 title: "A forced render_surface repair round turns thinking off so the forced tool reaches the model"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -28,3 +28,9 @@ verifier: L3
 - (red) `npx vitest run packages/agent-ui/a2ui/src/live-agent/produce-forced-surface.test.ts` exits 0: at effort medium on Haiku 5.5, round 1 sends `thinking: adaptive` with no `tool_choice`; the forced repair round 2 sends `thinking: {type:'disabled'}`, keeps `output_config.effort: medium`, and sends `tool_choice` render_surface. At xhigh (the capability row has no thinking off there) round 2 keeps thinking and is not forced.
 - `npx vitest run packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent` exits 0.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-16 · lane: full L2 · verdict: closed by reason (Merged in the round 6 follow-up lane; verifier L3 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

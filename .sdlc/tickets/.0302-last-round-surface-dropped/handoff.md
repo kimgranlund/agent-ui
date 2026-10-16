@@ -2,7 +2,7 @@
 id: T-0302
 title: "The last repair round halts with SURFACE_DROPPED and ships nothing (round 6 :170)"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -24,7 +24,7 @@ Round 6 cluster D (`.sdlc/evals/rounds/2026-10-15-r6-matrix/report.md`) :170, Ha
 - The live-agent, concierge and probe suites and `npm run check` exit 0.
 
 ## Lane bundle
-- T-0301: A forced render_surface repair round turns thinking off so the forced tool reaches the model (`.sdlc/tickets/0301-forced-repair-thinking-off`)
+- T-0301: A forced render_surface repair round turns thinking off so the forced tool reaches the model (`.sdlc/tickets/.0301-forced-repair-thinking-off`)
 - T-0302: The last repair round halts with SURFACE_DROPPED and ships nothing (`.sdlc/tickets/0302-last-round-surface-dropped`)
 
 ## Acceptance criteria
@@ -36,3 +36,13 @@ Reading of "unless a binding finding forbids it": the Done-when's own :170 case 
 - `npx vitest run packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent packages/agent-ui/a2ui/src/catalog/personas/concierge` exits 0.
 - `npx vitest run --project scripts scripts/e2e-admin/probe` exits 0.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-16 · lane: full L2 · verdict: closed by reason (Merged in the round 6 follow-up lane; verifier L3 pass) · verifier: verifier-L3 (fable) · base: 007fe75371ef
+- Changed: see commits
+- Commits: none
+- Check: 1 (red) `npx vitest run --project scripts scripts/e2e-admin/probe/replays/concierge-haiku-last-roun...: pass
+- Check: 2 `npx vitest run packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent packages/a...: pass
+- Check: 3 `npx vitest run --project scripts scripts/e2e-admin/probe` exits 0: pass
+- Check: 4 `npm run check` exits 0: pass
