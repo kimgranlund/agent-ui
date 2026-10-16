@@ -18,7 +18,8 @@
           "outcome": "eventual",
           "rounds": 2,
           "failureCodes": [
-            "CATALOG"
+            "CATALOG",
+            "SURFACE_NOT_CREATED"
           ]
         },
         "tree": [

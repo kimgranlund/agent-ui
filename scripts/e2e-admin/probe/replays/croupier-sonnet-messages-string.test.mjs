@@ -3,22 +3,50 @@
 // no browser. The browser leg is `npm run chat:probe -- --replay croupier-sonnet-messages-string.json` from this folder.
 import { readFileSync } from 'node:fs'
 import { expect, it } from 'vitest'
+import { produce } from '../../../../packages/agent-ui/a2ui/src/agent/produce.ts'
+import { nodeCatalogResolver } from '../../../../packages/agent-ui/a2ui/tools/testkit/load.node.ts'
 import { parseProbeFixture } from '../model.ts'
-import { offlineReplay } from '../trace.ts'
+import { offlineReplay, replaySemanticChecks } from '../trace.ts'
 
-// expectedFail: round 7 cluster A (T-0303, 2026-10-16-r7-fails :91-:96, Sonnet 5.5; Haiku :16 did the same). Every round
-// of the deal-again click and of "Fold." called render_surface with `messages` as one JSON string, not an array, so each
-// round is PARSE and both turns degrade to text (SURFACE_DEGRADED): the table is never redealt. Pinned to today's
-// behavior; a fix that reads a stringified array flips turns 4 and 5 and action-updates-surface:4.
+// T-0304 (fixed). Round 7 cluster A (T-0303, 2026-10-16-r7-fails :91-:96, Sonnet 5.5; Haiku :16 did the same). Every
+// round of the deal-again click and of "Fold." called render_surface with `messages` as one JSON string, each one `}`
+// short where the updateDataModel value meets the next message, so every round was PARSE and both turns degraded to
+// text (SURFACE_DEGRADED). The harness never edits the string (Kim 2026-10-16): the PARSE repair now names where it
+// broke. Turns 4 and 5 keep their recorded round 1 and replace the live repairs with an AUTHORED round 2 that follows
+// that repair (the same messages sent as an array of objects). Live compliance waits for the next round.
 const trace = (record) => record.lines.map((l) => JSON.parse(l)).map((l) => l.a2uiMeta?.trace).find((t) => t !== undefined)
+const fixture = parseProbeFixture(readFileSync(new URL('./croupier-sonnet-messages-string.json', import.meta.url), 'utf8'))
 
-it('croupier-sonnet-messages-string: a stringified messages array is PARSE on every round and the deal-again click degrades', async () => {
-  const fixture = parseProbeFixture(readFileSync(new URL('./croupier-sonnet-messages-string.json', import.meta.url), 'utf8'))
+it('croupier-sonnet-messages-string: the PARSE repair names the missing brace and the corrected round redeals the table', async () => {
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual(['action-updates-surface:4'])
+  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual([])
   for (const turn of [4, 5]) {
-    expect(trace(report.records[turn])).toMatchObject({ rounds: 3, failureCodes: ['PARSE', 'SURFACE_DEGRADED'] })
+    expect(trace(report.records[turn])).toMatchObject({ rounds: 2, failureCodes: ['PARSE'] })
     const wire = report.records[turn].lines.map((l) => JSON.parse(l))
-    expect(wire.some((m) => m.createSurface ?? m.updateComponents ?? m.updateDataModel)).toBe(false) // no surface line ships
+    expect(wire.some((m) => m.createSurface ?? m.updateComponents ?? m.updateDataModel)).toBe(true) // a surface line ships
   }
+
+  // The repair text reaches the model: turn 4 run again on the replayed session, its requests recorded.
+  const catalog = nodeCatalogResolver(process.cwd())('agent-ui--croupier')
+  const session = { turns: report.records.slice(0, 4).flatMap((r, i) => [
+    { role: 'user', content: fixture.turns[i].input.kind === 'intent' ? fixture.turns[i].input.text : JSON.stringify(fixture.turns[i].input.message) },
+    { role: 'assistant', content: r.lines.filter((l) => !l.includes('"a2uiMeta"')).join('\n') },
+  ]) }
+  const rounds = fixture.turns[4].rounds
+  const requests = []
+  let n = 0
+  const provider = {
+    async *stream(req) {
+      requests.push(req)
+      const round = rounds[Math.min(n++, rounds.length - 1)]
+      const tool = round.tools.find((t) => t.name === 'render_surface')
+      if (tool !== undefined) await req.executeTool?.(tool.name, tool.input, req.signal)
+      yield round.text
+    },
+  }
+  const deps = { provider, retrieve: () => [], catalog, semanticChecks: replaySemanticChecks(catalog) }
+  for await (const _line of produce({ ...fixture.turns[4].input, session }, deps, { maxRounds: 3 })) void _line
+  expect(requests).toHaveLength(2)
+  const repair = requests[1].messages.at(-1).content
+  expect(repair).toContain('Your `messages` was not valid JSON: a closing } is missing in message 3 (its updateDataModel), so it is still open where message 4 begins.')
 })

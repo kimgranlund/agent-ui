@@ -118,7 +118,7 @@ import type { SemanticCheckInput } from '../catalog/semantic-check.ts'
 import type { SemanticCheck } from '../catalog/semantic-check.ts'
 import type { SemanticFinding, SurfaceView } from '../catalog/semantic-check.ts'
 import { compositeAnswered, missingCompositeMoment } from '../catalog/composite-moments.ts'
-import { RENDER_SURFACE_TOOL_NAME, detectUserOverride, isLegacyShape, openSurfacesNote, renderSurfaceJsonl, renderSurfaceReply, renderSurfaceTool } from './response-type.ts'
+import { RENDER_SURFACE_TOOL_NAME, detectUserOverride, isLegacyShape, openSurfacesNote, renderSurfaceJsonl, renderSurfaceReply, renderSurfaceTool, stringifiedMessages, messagesParseNote } from './response-type.ts'
 import type { ResponsePreference } from './response-type.ts'
 
 const PROTOCOL_VERSION = 'v1.0'
@@ -674,6 +674,7 @@ function messagesFor(
   lastOutput: A2uiOutput | undefined,
   toolRound = false,
   surfacesNote = '',
+  parseNote: string | undefined = undefined,
 ): Turn[] {
   // T-0206: a turn offering `render_surface` names the open surfaces here, after the cached prefix.
   const content = surfacesNote !== '' ? `${userContent(input)}\n\n${surfacesNote}` : userContent(input)
@@ -688,12 +689,13 @@ function messagesFor(
       .map((f) => `${f.code}${f.path ? ` at ${f.path}` : ''}${expectedTypeNote(f, catalog, lastOutput)}${misplacedSurfaceIdNote(f, lastOutput)}${f.detail ? `: ${f.detail}` : ''}`)
       .join('; ')
     const hint =
-      (failures.some((f) => f.code === 'PARSE') ? (toolRound ? TOOL_PARSE_HINT : PARSE_HINT) : '') +
+      (failures.some((f) => f.code === 'PARSE') ? (toolRound ? `${parseNote !== undefined ? ` ${parseNote}` : ''}${TOOL_PARSE_HINT}` : PARSE_HINT) : '') + // T-0304: where the string broke
       idgraphHint(failures) +
       (failures.some((f) => f.code === 'NET_NOOP') ? NET_NOOP_HINT : '') + // GH #1142 — the net-no-op correction round's guidance
       (failures.some((f) => f.code === 'FLOW_END_MISSING') ? FLOW_END_HINT : '') + // GH #1168 — the missing-flowEnd correction round's guidance
       (failures.some((f) => f.code === 'NARRATED_MECHANICS') ? NARRATION_HINT : '') + // T-0234: a narrated reply's guidance
       (failures.some((f) => f.code === 'SURFACE_DROPPED') ? SURFACE_DROPPED_HINT : '') + // T-0281: resend a dropped surface
+      (failures.some((f) => f.code === 'SURFACE_NOT_CREATED') ? SURFACE_NOT_CREATED_HINT : '') + // T-0305: create before update
       (failures.some((f) => f.code === 'FEED_SCOPE') ? FEED_SCOPE_HINT : '') + // T-0290: keep the surface, drop the ask
       (failures.some((f) => f.detail !== undefined) ? SEMANTIC_HINT : '') + // ADR-0238: a semantic-finding round's guidance
       keepSurfacesHint(lastOutput, input.session, failures) // T-0172: never lose a surface the failed round created
@@ -1121,6 +1123,11 @@ const SURFACE_DROPPED_HINT =
   'never see it. Resend that surface with its components and data. If it was sent back as the ask surface ' +
   '(FEED_SCOPE), keep it as an ordinary surface and leave "ask" out of your meta-line.'
 
+/** T-0305: the self-correct sentence for a SURFACE_NOT_CREATED round (an update to a surface nothing created). */
+const SURFACE_NOT_CREATED_HINT =
+  ' SURFACE_NOT_CREATED means this answer updates a surface that was never created, so the user would never see it. ' +
+  'Send a createSurface for it first, then its components and data, in the same answer.'
+
 /** T-0290: the self-correct sentence for a FEED_SCOPE round. The recorded Haiku 5.5 booking turn built its BookingForm
  *  as the ask surface; the generic re-emit wording sent it back with no way out, the next rounds dropped the form, and
  *  the turn halted. The way out is the surface the ask cannot host, kept whole as an ordinary surface. */
@@ -1204,6 +1211,31 @@ function newSurfaceIds(output: A2uiOutput, session: Session): Set<string> {
 function builtSurfaceIds(output: A2uiOutput, session: Session): string[] {
   const deleted = new Set(output.flatMap((msg) => ('deleteSurface' in msg ? [msg.deleteSurface.surfaceId] : [])))
   return [...newSurfaceIds(output, session)].filter((sid) => !deleted.has(sid))
+}
+
+/** T-0305: a `SURFACE_NOT_CREATED` failure per surface this round updates (`updateComponents` or `updateDataModel`) that
+ *  no earlier turn created, the client turn does not come from, and no earlier message of the round creates. The renderer
+ *  drops an update to a surface it does not hold, so the user would never see it. The recorded Haiku 5.5 repair round
+ *  (round 7 :4) sent its BookingForm as updates to ask-1, which only the rejected round 1 created, and the guest lost the
+ *  form. The shared validator opens such a surface implicitly (ADR-0064 A2: it judges a standalone payload); only the
+ *  conversation knows the surface was never created, so the check lives here and runs on every round, the first too. */
+function uncreatedSurfaceFailures(output: A2uiOutput, input: TurnInput): RoundFailure[] {
+  const known = sessionKnownSurfaceIds(input.session)
+  if (input.kind === 'client') {
+    for (const body of Object.values(input.message)) {
+      const sid = body !== null && typeof body === 'object' ? (body as { surfaceId?: unknown }).surfaceId : undefined
+      if (typeof sid === 'string') known.add(sid)
+    }
+  }
+  const orphans = new Set<string>()
+  for (const msg of output) {
+    if ('createSurface' in msg) known.add(msg.createSurface.surfaceId)
+    else if ('updateComponents' in msg || 'updateDataModel' in msg) {
+      const sid = messageSurfaceId(msg)
+      if (sid !== undefined && !known.has(sid)) orphans.add(sid)
+    }
+  }
+  return [...orphans].map((sid) => ({ code: 'SURFACE_NOT_CREATED', path: sid }))
 }
 
 /** T-0172: the surfaces a failed round created that none of its failures names, so the repair has no
@@ -1355,6 +1387,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   let surfaceRequestedFedBack = false // RTS-R6: the ONE correction round a surface override with no payload gets
   let textJsonlIgnored = false // RTS-R3: sticky, a capture round's text channel carried wire or genui lines that were dropped
   let textJsonlRouted = false // T-0172: sticky, a text round's prose carried A2UI lines that became the payload
+  let messagesStringDecoded = false // T-0304: sticky, a render_surface call sent `messages` as a JSON string holding the array
+  let parseNote: string | undefined // T-0304: where the last capture round's `messages` string broke, for its PARSE repair
   // T-0172: the action a client turn answers, read by the semantic checks (a no-payload round is judged too).
   // T-0215: a press with no client `dataModel` reads the surface's data model replayed off the session.
   const turnAction = input.kind === 'client' ? semanticActionOf(input.message, input.session) : undefined
@@ -1453,10 +1487,11 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     }
     // RTS-R1: on a turn that offers `render_surface`, this round's executor captures its input and answers
     // `received`; every other name goes to the caller's executor. Reset every round.
-    let capture = undefined as { jsonl: string; reply: string; target: string | undefined } | undefined
+    let capture = undefined as { jsonl: string; reply: string; target: string | undefined; parseNote: string | undefined } | undefined
     const captureTool: ExecuteTool = async (name, toolInput, signal) => {
       if (name === RENDER_SURFACE_TOOL_NAME) {
-        capture = { jsonl: renderSurfaceJsonl(toolInput), reply: renderSurfaceReply(toolInput), target: toolTargetOf(toolInput['target']) }
+        capture = { jsonl: renderSurfaceJsonl(toolInput), reply: renderSurfaceReply(toolInput), target: toolTargetOf(toolInput['target']), parseNote: messagesParseNote(toolInput) }
+        if (stringifiedMessages(toolInput) !== undefined) messagesStringDecoded = true
         return 'received'
       }
       if (opts.executeTool === undefined) throw new Error(`no executor for tool ${name}`)
@@ -1466,7 +1501,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       model: roundModel,
       system,
       ...(systemCacheBoundary > 0 ? { systemCacheBoundary } : {}),
-      messages: messagesFor(input, failures, lastRaw, deps.catalog, lastOutput, lastCaptureRound, surfacesNote),
+      messages: messagesFor(input, failures, lastRaw, deps.catalog, lastOutput, lastCaptureRound, surfacesNote, parseNote),
       effort: roundEffort,
       ...(forceSurface
         ? { modelSettings: { ...opts.modelSettings, thinking: 'disabled' as const } }
@@ -1549,6 +1584,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     // RTS-R3/R4: classify the round. A legacy-shape text channel keeps today's body exactly; otherwise the
     // text after the meta-line is the reply and the payload is the captured `render_surface` input, or none.
     const captured = capture
+    parseNote = captured?.parseNote
     const textRound = captured === undefined && !isLegacyRound(raw, afterMeta)
     // T-0172: a text round whose prose carries A2UI lines (Haiku 5.5 wrote its surface as text instead of
     // calling the tool, 2026-10-14) routes them as the payload, as a capture round's would be, instead of
@@ -1743,6 +1779,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       if (genuiPeel.failure !== undefined) failureCodes.push(genuiPeel.failure.code)
       if (textJsonlIgnored) failureCodes.push('TEXT_JSONL_IGNORED') // RTS-R3: a factual tally, never a retry trigger
       if (textJsonlRouted) failureCodes.push('TEXT_JSONL_ROUTED') // T-0172: a factual tally, never a retry trigger
+      if (messagesStringDecoded) failureCodes.push('MESSAGES_STRING_DECODED') // T-0304: a factual tally, never a retry trigger
       if (surfaceUnmet) failureCodes.push('SURFACE_REQUESTED_UNMET') // RTS-R6: the override asked for a surface and none came
       if (emitProgress) yield formatProgressLine({ stage: 'done' }) // before the final (note-only/genui-only) yield
       if (note !== undefined) yield formatMetaLine(note, traceFor(round + 1, 0, failureCodes), undefined, plan, personaPatch, flowEnd, team, target)
@@ -1774,7 +1811,9 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     // abandoned surface that would mount a permanently-empty `ui-surface-host` (GH #802). At
     // `atFinalize: true` it fails `${sid}:root-missing` PRE-WIRE and becomes an ordinary self-correct
     // round (SPEC-R4), fed back with `IDGRAPH_HINTS.rootMissing`'s repair instruction — never a browser.
-    const verdict = validateA2ui(assembled.output, deps.catalog, sessionSeeds, { atFinalize: true })
+    const validated = validateA2ui(assembled.output, deps.catalog, sessionSeeds, { atFinalize: true })
+    const uncreated = uncreatedSurfaceFailures(assembled.output, input) // T-0305: an update to a surface nothing created
+    const verdict = uncreated.length > 0 ? { valid: false, failures: [...validated.failures, ...uncreated] } : validated
     if (verdict.valid) {
       // T-0172: a valid round that lost a surface an earlier round of this turn created is not a success.
       // One more round while one is left (the repair names the surface), else a halt that says so, unless an earlier
@@ -1873,6 +1912,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         failureCodes.push(...semanticTally) // ADR-0238: SEMANTIC_UNCORRECTED / SEMANTIC_CHECK_ERROR on the shipping round, never a retry trigger
         if (textJsonlIgnored) failureCodes.push('TEXT_JSONL_IGNORED') // RTS-R3: a factual tally, never a retry trigger
         if (textJsonlRouted) failureCodes.push('TEXT_JSONL_ROUTED') // T-0172: a factual tally, never a retry trigger
+        if (messagesStringDecoded) failureCodes.push('MESSAGES_STRING_DECODED') // T-0304: a factual tally, never a retry trigger
         // RTS-R1: the tool's `target` (the open surface this payload updates) states the ADR-0206 target arm
         // when the meta-line declared none.
         const shippedTarget = target ?? capturedTarget
@@ -1915,6 +1955,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     if (genuiMultiplicityHit) failureCodes.push('GENUI_MULTIPLICITY')
     if (textJsonlIgnored) failureCodes.push('TEXT_JSONL_IGNORED')
     if (textJsonlRouted) failureCodes.push('TEXT_JSONL_ROUTED')
+    if (messagesStringDecoded) failureCodes.push('MESSAGES_STRING_DECODED')
     failureCodes.push('EARLIER_ROUND_SHIPPED')
     if (emitProgress) yield formatProgressLine({ stage: 'done' })
     if (fb.note !== undefined || finalAsk !== undefined) yield formatMetaLine(fb.note, traceFor(opts.maxRounds, fb.healed, failureCodes), finalAsk, fb.plan, fb.personaPatch, fb.flowEnd, fb.team, fb.target)
@@ -1930,6 +1971,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     if (genuiMultiplicityHit) failureCodes.push('GENUI_MULTIPLICITY')
     if (textJsonlIgnored) failureCodes.push('TEXT_JSONL_IGNORED')
     if (textJsonlRouted) failureCodes.push('TEXT_JSONL_ROUTED')
+    if (messagesStringDecoded) failureCodes.push('MESSAGES_STRING_DECODED')
     failureCodes.push('SURFACE_DEGRADED')
     if (emitProgress) yield formatProgressLine({ stage: 'done' })
     yield formatMetaLine(degrade.note, traceFor(opts.maxRounds, 0, failureCodes), undefined, degrade.plan, degrade.personaPatch, degrade.flowEnd, degrade.team, degrade.target)

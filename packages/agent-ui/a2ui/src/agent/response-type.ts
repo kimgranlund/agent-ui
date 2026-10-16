@@ -54,9 +54,76 @@ export function openSurfacesNote(openSurfaceIds: readonly string[]): string {
  * fixtures and traces made before the change. Anything else is the empty payload (a PARSE round).
  */
 export function renderSurfaceJsonl(input: Record<string, unknown>): string {
-  const { messages, jsonl } = input
-  if (Array.isArray(messages)) return messages.map((m) => (typeof m === 'string' ? m : JSON.stringify(m))).join('\n')
+  const { jsonl } = input
+  const messages = Array.isArray(input['messages']) ? input['messages'] : stringifiedMessages(input)
+  if (messages !== undefined) return messages.map((m) => (typeof m === 'string' ? m : JSON.stringify(m))).join('\n')
   return typeof jsonl === 'string' ? jsonl : ''
+}
+
+/** T-0304: the array a `messages` sent as one JSON string holds, or undefined. Haiku and Sonnet 5.5 sent the list as a
+ *  string on every round of a turn despite the tool description (round 7 :16, :95, :96), so every round was PARSE and
+ *  the turn shipped text. A string that does not parse as an array stays the empty payload (a PARSE round); the harness
+ *  never edits it (Kim 2026-10-16), and `messagesParseNote` tells the model where it broke. */
+export function stringifiedMessages(input: Record<string, unknown>): unknown[] | undefined {
+  const { messages } = input
+  if (typeof messages !== 'string') return undefined
+  try {
+    const parsed: unknown = JSON.parse(messages)
+    return Array.isArray(parsed) ? parsed : undefined
+  } catch {
+    return undefined
+  }
+}
+
+/** T-0304: one model-facing sentence naming where a `messages` string stopped being JSON, or undefined when `messages`
+ *  is not a string or parses. The position is JSON.parse's own; when a new `{"version"` message begins there while
+ *  objects of the one before are still open (every recorded round 7 string), the sentence names that message, its kind
+ *  and how many `}` it lacks, else it quotes the text at the position. */
+export function messagesParseNote(input: Record<string, unknown>): string | undefined {
+  const { messages } = input
+  if (typeof messages !== 'string') return undefined
+  let pos: number | undefined
+  try {
+    JSON.parse(messages)
+    return undefined
+  } catch (err) {
+    const m = /position (\d+)/.exec(err instanceof Error ? err.message : '')
+    pos = m === null ? undefined : Number(m[1])
+  }
+  if (pos === undefined || pos > messages.length) return 'Your `messages` was not valid JSON.'
+  const scan = openAt(messages, pos)
+  const extra = scan.open.slice(1)
+  if (scan.open[0] === '[' && extra.length > 0 && extra.every((b) => b === '{') && /^\s*\{\s*"version"\s*:/.test(messages.slice(pos))) {
+    const missing = extra.length === 1 ? 'a closing } is missing' : `${extra.length} closing } are missing`
+    const kind = scan.kind === undefined ? '' : ` (its ${scan.kind})`
+    return `Your \`messages\` was not valid JSON: ${missing} in message ${scan.message}${kind}, so it is still open where message ${scan.message + 1} begins.`
+  }
+  const near = messages.slice(Math.max(0, pos - 40), pos + 20)
+  return `Your \`messages\` was not valid JSON at character ${pos}${scan.message > 0 ? ` (message ${scan.message})` : ''}, here: ${near}`
+}
+
+/** The brackets still open at `pos` (outside strings), the 1-based number of the last message opened in the top-level
+ *  array, and that message's kind (the key of the first object inside it). */
+function openAt(text: string, pos: number): { open: string[]; message: number; kind: string | undefined } {
+  const open: string[] = []
+  let message = 0
+  let kind: string | undefined
+  let inString = false
+  for (let i = 0; i < pos; i++) {
+    const ch = text[i]!
+    if (inString) {
+      if (ch === '\\') i++
+      else if (ch === '"') inString = false
+    } else if (ch === '"') inString = true
+    else if (ch === '{' || ch === '[') {
+      if (open.length === 1 && ch === '{') {
+        message += 1
+        kind = undefined
+      } else if (open.length === 2 && ch === '{' && kind === undefined) kind = /"([^"\\]*)"\s*:\s*$/.exec(text.slice(0, i))?.[1]
+      open.push(ch)
+    } else if (ch === '}' || ch === ']') open.pop()
+  }
+  return { open, message, kind }
 }
 
 /** T-0194: the trimmed `reply` line a `render_surface` call carries, or '' (a recording made before the field). */

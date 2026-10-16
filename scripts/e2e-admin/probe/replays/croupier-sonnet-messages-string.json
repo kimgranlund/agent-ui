@@ -1695,22 +1695,309 @@
             {
               "name": "render_surface",
               "input": {
-                "reply": "New round: ante 10 is in, bankroll 1,050, pot 20. You hold a pair of eights with an ace kicker. Check, bet 20, or fold.",
+                "reply": "Round 2 is dealt: pair of eights, ace kicker. Check, bet 20, or fold.",
                 "target": "table-2",
-                "messages": "[{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"resultCol\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"resultText\"]}]}},{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-2\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}},{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-2\",\"value\":{\"bankroll\":1050,\"pot\":20,\"stats\":[{\"label\":\"Bankroll\",\"value\":\"1050\"},{\"label\":\"Pot\",\"value\":\"20\"},{\"label\":\"Ante\",\"value\":\"10\"}],\"dealerHand\":[{\"rank\":\"J\",\"suit\":\"spades\",\"faceDown\":true},{\"rank\":\"10\",\"suit\":\"hearts\",\"faceDown\":true},{\"rank\":\"6\",\"suit\":\"clubs\",\"faceDown\":true},{\"rank\":\"4\",\"suit\":\"diamonds\",\"faceDown\":true},{\"rank\":\"2\",\"suit\":\"hearts\",\"faceDown\":true}],\"playerHand\":[{\"rank\":\"8\",\"suit\":\"spades\",\"faceDown\":false},{\"rank\":\"8\",\"suit\":\"hearts\",\"faceDown\":false},{\"rank\":\"A\",\"suit\":\"diamonds\",\"faceDown\":false},{\"rank\":\"5\",\"suit\":\"clubs\",\"faceDown\":false},{\"rank\":\"3\",\"suit\":\"spades\",\"faceDown\":false}]}},{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"dealerCard\",\"playerCard\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Five-card draw\",\"status\":\"Betting round 1 — your action\",\"statusIntent\":\"info\",\"stats\":{\"path\":\"/stats\"}},{\"id\":\"dealerCard\",\"component\":\"Card\",\"children\":[\"dealerHeader\",\"dealerContent\"]},{\"id\":\"dealerHeader\",\"component\":\"CardHeader\",\"children\":[\"dealerTitle\",\"dealerBadge\"]},{\"id\":\"dealerTitle\",\"component\":\"Text\",\"text\":\"Dealer\",\"variant\":\"h4\"},{\"id\":\"dealerBadge\",\"component\":\"Badge\",\"label\":\"5 cards\",\"intent\":\"neutral\",\"slot\":\"trailing\"},{\"id\":\"dealerContent\",\"component\":\"CardContent\",\"children\":[\"dealerRow\"]},{\"id\":\"dealerRow\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/dealerHand\",\"componentId\":\"dealerCardTpl\"}},{\"id\":\"dealerCardTpl\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":{\"path\":\"faceDown\"},\"size\":\"md\"},{\"id\":\"playerCard\",\"component\":\"Card\",\"children\":[\"playerHeader\",\"playerContent\",\"playerFooter\"]},{\"id\":\"playerHeader\",\"component\":\"CardHeader\",\"children\":[\"playerTitle\",\"playerBadge\"]},{\"id\":\"playerTitle\",\"component\":\"Text\",\"text\":\"You\",\"variant\":\"h4\"},{\"id\":\"playerBadge\",\"component\":\"Badge\",\"label\":\"Pair of 8s\",\"intent\":\"success\",\"slot\":\"trailing\"},{\"id\":\"playerContent\",\"component\":\"CardContent\",\"children\":[\"playerRow\"]},{\"id\":\"playerRow\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/playerHand\",\"componentId\":\"playerCardTpl\"}},{\"id\":\"playerCardTpl\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":{\"path\":\"faceDown\"},\"size\":\"md\"},{\"id\":\"playerFooter\",\"component\":\"CardFooter\",\"children\":[\"actions\"]},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"betBtn\",\"checkBtn\",\"foldBtn\"]},{\"id\":\"betBtn\",\"component\":\"Button\",\"label\":\"Bet 20\",\"variant\":\"solid\",\"action\":{\"action\":\"bet\",\"context\":{\"amount\":20}}},{\"id\":\"checkBtn\",\"component\":\"Button\",\"label\":\"Check\",\"variant\":\"soft\",\"action\":{\"action\":\"check\"}},{\"id\":\"foldBtn\",\"component\":\"Button\",\"label\":\"Fold\",\"variant\":\"ghost\",\"action\":{\"action\":\"fold\"}}]}}]"
-              }
-            }
-          ]
-        },
-        {
-          "text": "New round, five-card draw again. I anted 10 for you, so the bankroll is 1,050 and the pot is 20. You were dealt a pair of eights with an ace kicker. Your action: check, bet 20, or fold.",
-          "tools": [
-            {
-              "name": "render_surface",
-              "input": {
-                "reply": "New round, five-card draw again. I anted 10 for you, so the bankroll is 1,050 and the pot is 20. You were dealt a pair of eights with an ace kicker. Your action: check, bet 20, or fold.",
-                "target": "table-2",
-                "messages": "[{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-2\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}},{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-2\",\"value\":{\"bankroll\":1050,\"pot\":20,\"stats\":[{\"label\":\"Bankroll\",\"value\":\"1050\"},{\"label\":\"Pot\",\"value\":\"20\"},{\"label\":\"Ante\",\"value\":\"10\"}],\"dealerHand\":[{\"rank\":\"J\",\"suit\":\"spades\",\"faceDown\":true},{\"rank\":\"10\",\"suit\":\"hearts\",\"faceDown\":true},{\"rank\":\"6\",\"suit\":\"clubs\",\"faceDown\":true},{\"rank\":\"4\",\"suit\":\"diamonds\",\"faceDown\":true},{\"rank\":\"2\",\"suit\":\"hearts\",\"faceDown\":true}],\"playerHand\":[{\"rank\":\"8\",\"suit\":\"spades\",\"faceDown\":false},{\"rank\":\"8\",\"suit\":\"hearts\",\"faceDown\":false},{\"rank\":\"A\",\"suit\":\"diamonds\",\"faceDown\":false},{\"rank\":\"5\",\"suit\":\"clubs\",\"faceDown\":false},{\"rank\":\"3\",\"suit\":\"hearts\",\"faceDown\":false}]}},{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"dealerCard\",\"playerCard\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Five-card draw\",\"status\":\"Betting round 1 — your action\",\"statusIntent\":\"info\",\"stats\":{\"path\":\"/stats\"}},{\"id\":\"dealerCard\",\"component\":\"Card\",\"children\":[\"dealerHeader\",\"dealerContent\"]},{\"id\":\"dealerHeader\",\"component\":\"CardHeader\",\"children\":[\"dealerTitle\",\"dealerBadge\"]},{\"id\":\"dealerTitle\",\"component\":\"Text\",\"text\":\"Dealer\",\"variant\":\"h4\"},{\"id\":\"dealerBadge\",\"component\":\"Badge\",\"label\":\"5 cards\",\"intent\":\"neutral\",\"slot\":\"trailing\"},{\"id\":\"dealerContent\",\"component\":\"CardContent\",\"children\":[\"dealerRow\"]},{\"id\":\"dealerRow\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/dealerHand\",\"componentId\":\"dealerCardTpl\"}},{\"id\":\"dealerCardTpl\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":{\"path\":\"faceDown\"},\"size\":\"md\"},{\"id\":\"playerCard\",\"component\":\"Card\",\"children\":[\"playerHeader\",\"playerContent\",\"playerFooter\"]},{\"id\":\"playerHeader\",\"component\":\"CardHeader\",\"children\":[\"playerTitle\",\"playerBadge\"]},{\"id\":\"playerTitle\",\"component\":\"Text\",\"text\":\"You\",\"variant\":\"h4\"},{\"id\":\"playerBadge\",\"component\":\"Badge\",\"label\":\"Pair of 8s\",\"intent\":\"success\",\"slot\":\"trailing\"},{\"id\":\"playerContent\",\"component\":\"CardContent\",\"children\":[\"playerRow\"]},{\"id\":\"playerRow\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/playerHand\",\"componentId\":\"playerCardTpl\"}},{\"id\":\"playerCardTpl\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":{\"path\":\"faceDown\"},\"size\":\"md\"},{\"id\":\"playerFooter\",\"component\":\"CardFooter\",\"children\":[\"actions\"]},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"betBtn\",\"checkBtn\",\"foldBtn\"]},{\"id\":\"betBtn\",\"component\":\"Button\",\"label\":\"Bet 20\",\"variant\":\"solid\",\"action\":{\"action\":\"bet\",\"context\":{\"amount\":20}}},{\"id\":\"checkBtn\",\"component\":\"Button\",\"label\":\"Check\",\"variant\":\"soft\",\"action\":{\"action\":\"check\"}},{\"id\":\"foldBtn\",\"component\":\"Button\",\"label\":\"Fold\",\"variant\":\"ghost\",\"action\":{\"action\":\"fold\"}}]}},{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"resultCol\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"resultText\"]}]}}]"
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "resultCol",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "resultText"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-2",
+                      "catalogId": "agent-ui--croupier",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-2",
+                      "value": {
+                        "bankroll": 1050,
+                        "pot": 20,
+                        "stats": [
+                          {
+                            "label": "Bankroll",
+                            "value": "1050"
+                          },
+                          {
+                            "label": "Pot",
+                            "value": "20"
+                          },
+                          {
+                            "label": "Ante",
+                            "value": "10"
+                          }
+                        ],
+                        "dealerHand": [
+                          {
+                            "rank": "J",
+                            "suit": "clubs",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "8",
+                            "suit": "hearts",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "5",
+                            "suit": "diamonds",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "4",
+                            "suit": "spades",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "2",
+                            "suit": "clubs",
+                            "faceDown": true
+                          }
+                        ],
+                        "playerHand": [
+                          {
+                            "rank": "8",
+                            "suit": "clubs",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "8",
+                            "suit": "spades",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "A",
+                            "suit": "hearts",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "J",
+                            "suit": "diamonds",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "3",
+                            "suit": "hearts",
+                            "faceDown": false
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-2",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "dealerCard",
+                            "playerCard"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Five-card draw",
+                          "status": "Betting round 1 — your action",
+                          "statusIntent": "info",
+                          "stats": {
+                            "path": "/stats"
+                          }
+                        },
+                        {
+                          "id": "dealerCard",
+                          "component": "Card",
+                          "children": [
+                            "dealerHeader",
+                            "dealerContent"
+                          ]
+                        },
+                        {
+                          "id": "dealerHeader",
+                          "component": "CardHeader",
+                          "children": [
+                            "dealerTitle",
+                            "dealerBadge"
+                          ]
+                        },
+                        {
+                          "id": "dealerTitle",
+                          "component": "Text",
+                          "text": "Dealer",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "dealerBadge",
+                          "component": "Badge",
+                          "label": "5 cards",
+                          "intent": "neutral",
+                          "slot": "trailing"
+                        },
+                        {
+                          "id": "dealerContent",
+                          "component": "CardContent",
+                          "children": [
+                            "dealerRow"
+                          ]
+                        },
+                        {
+                          "id": "dealerRow",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/dealerHand",
+                            "componentId": "dealerCardTpl"
+                          }
+                        },
+                        {
+                          "id": "dealerCardTpl",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "faceDown": {
+                            "path": "faceDown"
+                          },
+                          "size": "md"
+                        },
+                        {
+                          "id": "playerCard",
+                          "component": "Card",
+                          "children": [
+                            "playerHeader",
+                            "playerContent",
+                            "playerFooter"
+                          ]
+                        },
+                        {
+                          "id": "playerHeader",
+                          "component": "CardHeader",
+                          "children": [
+                            "playerTitle",
+                            "playerBadge"
+                          ]
+                        },
+                        {
+                          "id": "playerTitle",
+                          "component": "Text",
+                          "text": "You",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "playerBadge",
+                          "component": "Badge",
+                          "label": "Pair of 8s",
+                          "intent": "success",
+                          "slot": "trailing"
+                        },
+                        {
+                          "id": "playerContent",
+                          "component": "CardContent",
+                          "children": [
+                            "playerRow"
+                          ]
+                        },
+                        {
+                          "id": "playerRow",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/playerHand",
+                            "componentId": "playerCardTpl"
+                          }
+                        },
+                        {
+                          "id": "playerCardTpl",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "faceDown": {
+                            "path": "faceDown"
+                          },
+                          "size": "md"
+                        },
+                        {
+                          "id": "playerFooter",
+                          "component": "CardFooter",
+                          "children": [
+                            "actions"
+                          ]
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": [
+                            "betBtn",
+                            "checkBtn",
+                            "foldBtn"
+                          ]
+                        },
+                        {
+                          "id": "betBtn",
+                          "component": "Button",
+                          "label": "Bet 20",
+                          "variant": "solid",
+                          "action": {
+                            "action": "bet",
+                            "context": {
+                              "amount": 20
+                            }
+                          }
+                        },
+                        {
+                          "id": "checkBtn",
+                          "component": "Button",
+                          "label": "Check",
+                          "variant": "soft",
+                          "action": {
+                            "action": "check"
+                          }
+                        },
+                        {
+                          "id": "foldBtn",
+                          "component": "Button",
+                          "label": "Fold",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "fold"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
               }
             }
           ]
@@ -1904,22 +2191,298 @@
             {
               "name": "render_surface",
               "input": {
-                "reply": "You fold. The dealer takes the 20 pot, and you're out your 10 ante. Your bankroll is 1,050.",
+                "reply": "Folded: the dealer takes the 20 pot, -10 for the round. Bankroll 1,050.",
                 "target": "table-2",
-                "messages": "[{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-2\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}},{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-2\",\"value\":{\"bankroll\":1050,\"pot\":0,\"stats\":[{\"label\":\"Bankroll\",\"value\":\"1050\",\"delta\":-10,\"intent\":\"danger\"},{\"label\":\"Pot\",\"value\":\"0\"},{\"label\":\"Ante\",\"value\":\"10\"}],\"dealerHand\":[{\"rank\":\"J\",\"suit\":\"hearts\",\"faceDown\":true},{\"rank\":\"10\",\"suit\":\"clubs\",\"faceDown\":true},{\"rank\":\"6\",\"suit\":\"diamonds\",\"faceDown\":true},{\"rank\":\"5\",\"suit\":\"spades\",\"faceDown\":true},{\"rank\":\"3\",\"suit\":\"hearts\",\"faceDown\":true}],\"playerHand\":[{\"rank\":\"8\",\"suit\":\"hearts\",\"faceDown\":false},{\"rank\":\"8\",\"suit\":\"clubs\",\"faceDown\":false},{\"rank\":\"A\",\"suit\":\"diamonds\",\"faceDown\":false},{\"rank\":\"J\",\"suit\":\"spades\",\"faceDown\":false},{\"rank\":\"4\",\"suit\":\"hearts\",\"faceDown\":false}]}},{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"dealerCard\",\"playerCard\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Five-card draw\",\"status\":\"You folded — dealer wins -10\",\"statusIntent\":\"danger\",\"stats\":{\"path\":\"/stats\"}},{\"id\":\"dealerCard\",\"component\":\"Card\",\"children\":[\"dealerHeader\",\"dealerContent\"]},{\"id\":\"dealerHeader\",\"component\":\"CardHeader\",\"children\":[\"dealerTitle\",\"dealerBadge\"]},{\"id\":\"dealerTitle\",\"component\":\"Text\",\"text\":\"Dealer\",\"variant\":\"h4\"},{\"id\":\"dealerBadge\",\"component\":\"Badge\",\"label\":\"Wins pot\",\"intent\":\"neutral\",\"slot\":\"trailing\"},{\"id\":\"dealerContent\",\"component\":\"CardContent\",\"children\":[\"dealerRow\"]},{\"id\":\"dealerRow\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/dealerHand\",\"componentId\":\"dealerCardTpl\"}},{\"id\":\"dealerCardTpl\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":{\"path\":\"faceDown\"},\"size\":\"md\"},{\"id\":\"playerCard\",\"component\":\"Card\",\"children\":[\"playerHeader\",\"playerContent\",\"playerFooter\"]},{\"id\":\"playerHeader\",\"component\":\"CardHeader\",\"children\":[\"playerTitle\",\"playerBadge\"]},{\"id\":\"playerTitle\",\"component\":\"Text\",\"text\":\"You\",\"variant\":\"h4\"},{\"id\":\"playerBadge\",\"component\":\"Badge\",\"label\":\"Folded\",\"intent\":\"warning\",\"slot\":\"trailing\"},{\"id\":\"playerContent\",\"component\":\"CardContent\",\"children\":[\"playerRow\"]},{\"id\":\"playerRow\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/playerHand\",\"componentId\":\"playerCardTpl\"}},{\"id\":\"playerCardTpl\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":{\"path\":\"faceDown\"},\"size\":\"md\"},{\"id\":\"playerFooter\",\"component\":\"CardFooter\",\"children\":[\"resultCol\"]},{\"id\":\"resultCol\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"resultText\",\"dealAgainBtn\"]},{\"id\":\"resultText\",\"component\":\"Text\",\"text\":\"Dealer wins: you folded a pair of eights, so the dealer takes the 20 pot. You lose your 10 ante, -10 for the round.\",\"variant\":\"body\",\"emphasis\":true},{\"id\":\"dealAgainBtn\",\"component\":\"Button\",\"label\":\"Deal again\",\"variant\":\"solid\",\"action\":{\"action\":\"deal_again\",\"context\":{\"newRound\":true}}}]}}]"
-              }
-            }
-          ]
-        },
-        {
-          "text": "You fold. The dealer takes the 20 pot and you're out your 10 ante. Your bankroll is 1,050.",
-          "tools": [
-            {
-              "name": "render_surface",
-              "input": {
-                "reply": "You fold. The dealer takes the 20 pot and you're out your 10 ante. Bankroll: 1,050.",
-                "target": "table-2",
-                "messages": "[{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-2\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}},{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-2\",\"value\":{\"bankroll\":1050,\"pot\":0,\"stats\":[{\"label\":\"Bankroll\",\"value\":\"1050\",\"delta\":-10,\"intent\":\"danger\"},{\"label\":\"Pot\",\"value\":\"0\"},{\"label\":\"Ante\",\"value\":\"10\"}],\"dealerHand\":[{\"rank\":\"J\",\"suit\":\"clubs\",\"faceDown\":true},{\"rank\":\"J\",\"suit\":\"hearts\",\"faceDown\":true},{\"rank\":\"6\",\"suit\":\"spades\",\"faceDown\":true},{\"rank\":\"4\",\"suit\":\"diamonds\",\"faceDown\":true},{\"rank\":\"2\",\"suit\":\"clubs\",\"faceDown\":true}],\"playerHand\":[{\"rank\":\"8\",\"suit\":\"spades\",\"faceDown\":false},{\"rank\":\"8\",\"suit\":\"hearts\",\"faceDown\":false},{\"rank\":\"A\",\"suit\":\"diamonds\",\"faceDown\":false},{\"rank\":\"5\",\"suit\":\"clubs\",\"faceDown\":false},{\"rank\":\"3\",\"suit\":\"hearts\",\"faceDown\":false}]}},{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"dealerCard\",\"playerCard\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Five-card draw\",\"status\":\"Folded — dealer wins the pot\",\"statusIntent\":\"danger\",\"stats\":{\"path\":\"/stats\"}},{\"id\":\"dealerCard\",\"component\":\"Card\",\"children\":[\"dealerHeader\",\"dealerContent\"]},{\"id\":\"dealerHeader\",\"component\":\"CardHeader\",\"children\":[\"dealerTitle\",\"dealerBadge\"]},{\"id\":\"dealerTitle\",\"component\":\"Text\",\"text\":\"Dealer\",\"variant\":\"h4\"},{\"id\":\"dealerBadge\",\"component\":\"Badge\",\"label\":\"Wins pot\",\"intent\":\"neutral\",\"slot\":\"trailing\"},{\"id\":\"dealerContent\",\"component\":\"CardContent\",\"children\":[\"dealerRow\"]},{\"id\":\"dealerRow\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/dealerHand\",\"componentId\":\"dealerCardTpl\"}},{\"id\":\"dealerCardTpl\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":{\"path\":\"faceDown\"},\"size\":\"md\"},{\"id\":\"playerCard\",\"component\":\"Card\",\"children\":[\"playerHeader\",\"playerContent\",\"playerFooter\"]},{\"id\":\"playerHeader\",\"component\":\"CardHeader\",\"children\":[\"playerTitle\",\"playerBadge\"]},{\"id\":\"playerTitle\",\"component\":\"Text\",\"text\":\"You\",\"variant\":\"h4\"},{\"id\":\"playerBadge\",\"component\":\"Badge\",\"label\":\"Folded\",\"intent\":\"danger\",\"slot\":\"trailing\"},{\"id\":\"playerContent\",\"component\":\"CardContent\",\"children\":[\"playerRow\",\"resultText\"]},{\"id\":\"playerRow\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":{\"path\":\"/playerHand\",\"componentId\":\"playerCardTpl\"}},{\"id\":\"playerCardTpl\",\"component\":\"PlayingCard\",\"rank\":{\"path\":\"rank\"},\"suit\":{\"path\":\"suit\"},\"faceDown\":{\"path\":\"faceDown\"},\"size\":\"md\"},{\"id\":\"resultText\",\"component\":\"Text\",\"text\":\"You folded a pair of eights with an ace kicker. The dealer takes the 20 pot, and you lose your 10 ante: -10 for the round.\",\"variant\":\"body\",\"emphasis\":true},{\"id\":\"playerFooter\",\"component\":\"CardFooter\",\"children\":[\"dealAgainBtn\"]},{\"id\":\"dealAgainBtn\",\"component\":\"Button\",\"label\":\"Deal again\",\"variant\":\"solid\",\"action\":{\"action\":\"deal_again\",\"context\":{\"newRound\":true}}}]}}]"
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-2",
+                      "catalogId": "agent-ui--croupier",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-2",
+                      "value": {
+                        "bankroll": 1050,
+                        "pot": 0,
+                        "stats": [
+                          {
+                            "label": "Bankroll",
+                            "value": "1050",
+                            "delta": -10,
+                            "intent": "danger"
+                          },
+                          {
+                            "label": "Pot",
+                            "value": "0"
+                          },
+                          {
+                            "label": "Ante",
+                            "value": "10"
+                          }
+                        ],
+                        "dealerHand": [
+                          {
+                            "rank": "J",
+                            "suit": "clubs",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "9",
+                            "suit": "hearts",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "6",
+                            "suit": "spades",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "4",
+                            "suit": "diamonds",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "2",
+                            "suit": "hearts",
+                            "faceDown": true
+                          }
+                        ],
+                        "playerHand": [
+                          {
+                            "rank": "8",
+                            "suit": "hearts",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "8",
+                            "suit": "spades",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "A",
+                            "suit": "diamonds",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "5",
+                            "suit": "clubs",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "3",
+                            "suit": "spades",
+                            "faceDown": false
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-2",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "dealerCard",
+                            "playerCard"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Five-card draw",
+                          "status": "You folded — dealer wins -10",
+                          "statusIntent": "danger",
+                          "stats": {
+                            "path": "/stats"
+                          }
+                        },
+                        {
+                          "id": "dealerCard",
+                          "component": "Card",
+                          "children": [
+                            "dealerHeader",
+                            "dealerContent"
+                          ]
+                        },
+                        {
+                          "id": "dealerHeader",
+                          "component": "CardHeader",
+                          "children": [
+                            "dealerTitle",
+                            "dealerBadge"
+                          ]
+                        },
+                        {
+                          "id": "dealerTitle",
+                          "component": "Text",
+                          "text": "Dealer",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "dealerBadge",
+                          "component": "Badge",
+                          "label": "Takes pot",
+                          "intent": "neutral",
+                          "slot": "trailing"
+                        },
+                        {
+                          "id": "dealerContent",
+                          "component": "CardContent",
+                          "children": [
+                            "dealerRow"
+                          ]
+                        },
+                        {
+                          "id": "dealerRow",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/dealerHand",
+                            "componentId": "dealerCardTpl"
+                          }
+                        },
+                        {
+                          "id": "dealerCardTpl",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "faceDown": {
+                            "path": "faceDown"
+                          },
+                          "size": "md"
+                        },
+                        {
+                          "id": "playerCard",
+                          "component": "Card",
+                          "children": [
+                            "playerHeader",
+                            "playerContent",
+                            "playerFooter"
+                          ]
+                        },
+                        {
+                          "id": "playerHeader",
+                          "component": "CardHeader",
+                          "children": [
+                            "playerTitle",
+                            "playerBadge"
+                          ]
+                        },
+                        {
+                          "id": "playerTitle",
+                          "component": "Text",
+                          "text": "You",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "playerBadge",
+                          "component": "Badge",
+                          "label": "Folded",
+                          "intent": "warning",
+                          "slot": "trailing"
+                        },
+                        {
+                          "id": "playerContent",
+                          "component": "CardContent",
+                          "children": [
+                            "playerRow"
+                          ]
+                        },
+                        {
+                          "id": "playerRow",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/playerHand",
+                            "componentId": "playerCardTpl"
+                          }
+                        },
+                        {
+                          "id": "playerCardTpl",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "faceDown": {
+                            "path": "faceDown"
+                          },
+                          "size": "md"
+                        },
+                        {
+                          "id": "playerFooter",
+                          "component": "CardFooter",
+                          "children": [
+                            "resultCol"
+                          ]
+                        },
+                        {
+                          "id": "resultCol",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "resultText",
+                            "dealAgainBtn"
+                          ]
+                        },
+                        {
+                          "id": "resultText",
+                          "component": "Text",
+                          "text": "Dealer wins by fold. You folded a pair of eights with an ace kicker, and the dealer takes the 20 pot. You lose your 10 ante, -10 for the round.",
+                          "variant": "body",
+                          "emphasis": true
+                        },
+                        {
+                          "id": "dealAgainBtn",
+                          "component": "Button",
+                          "label": "Deal again",
+                          "variant": "solid",
+                          "action": {
+                            "action": "deal_again",
+                            "context": {
+                              "newRound": true
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "resultCol",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "resultText"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
               }
             }
           ]

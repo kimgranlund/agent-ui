@@ -49,8 +49,8 @@ describe('runProducerTurn and judgeProduce', () => {
 
   it('failureCodes come from the trace when the final round carries a note', async () => {
     const r = await runProducerTurn(input, [INVALID, NOTED], defaultCatalog)
-    expect(r.failureCodes).toEqual(['CATALOG'])
-    expect(judgeProduce(r, { produce: { outcome: 'eventual', failureCodes: ['CATALOG'] } })).toEqual([])
+    expect(r.failureCodes).toEqual(['CATALOG', 'SURFACE_NOT_CREATED']) // T-0305: INVALID updates a surface it never creates
+    expect(judgeProduce(r, { produce: { outcome: 'eventual', failureCodes: ['CATALOG', 'SURFACE_NOT_CREATED'] } })).toEqual([])
     expect(judgeProduce(r, { produce: { outcome: 'eventual', failureCodes: ['SCHEMA'] } }).map((f) => f.code)).toEqual(['PRODUCE_MISMATCH'])
   })
 

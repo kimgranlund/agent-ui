@@ -22,3 +22,14 @@ Round 7 cluster A (`.sdlc/evals/rounds/2026-10-16-r7-fails/report.md`, P1): Haik
 ## Done when
 - A produce test with a stringified array ships the surface with the tally; a non-array string still fails PARSE; red at the base.
 - The cluster A replay is flipped; the live-agent and probe suites and `npm run check` exit 0.
+
+## Acceptance criteria
+
+Rescope (Kim 2026-10-16): every recorded cluster A string (r7 :16, :95, :96 and the replay's turns 4 and 5) fails JSON.parse, one `}` short where an `updateDataModel` value meets the next `{"version"` message, so a decode alone flips nothing. The harness does not edit model output: a string that does not parse stays a PARSE round, and its repair names where it broke (`messagesParseNote`, from the JSON.parse position and the nearest message boundary, else the plain position). The replay is re-pinned with an AUTHORED round 2 that follows the repair, as T-0281 and T-0289 did; live compliance waits for the next round.
+
+- (red) `npx vitest run packages/agent-ui/a2ui/src/agent/response-type.test.ts -t "T-0304"` exits 0: `renderSurfaceJsonl` reads a `messages` string that parses as a JSON array exactly as the array, and any other string is the empty payload, never edited; `messagesParseNote` names the message a `}` short at a message boundary, its kind and the count, else the position and the text there.
+- (red) `npx vitest run packages/agent-ui/a2ui/src/live-agent/produce-response-type.test.ts -t "T-0304"` exits 0: a stringified array ships in one round tallied `MESSAGES_STRING_DECODED`; a string a `}` short is PARSE and the repair message carries the pinpointed sentence; another broken string is still PARSE.
+- (red) `npx vitest run --project scripts scripts/e2e-admin/probe/replays/croupier-sonnet-messages-string.test.mjs` exits 0: the cluster A replay passes every check, turns 4 and 5 ship a surface on the authored round 2 with trace `{rounds: 2, failureCodes: ['PARSE']}`, and turn 4's repair request carries the pinpointed sentence.
+- `npx vitest run packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent` exits 0.
+- `npx vitest run --project scripts scripts/e2e-admin/probe` exits 0.
+- `npm run check` exits 0.
