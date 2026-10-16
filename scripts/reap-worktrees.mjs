@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * scripts/reap-worktrees.mjs — gated reap of provably-finished `.claude/worktrees/` entries.
+ * scripts/reap-worktrees.mjs — gated reap of provably-finished lane worktrees (`.claude/worktrees/` and
+ * sdlc-lite 0.24's sibling `../<repo>.worktrees/`, T-0288).
  * Sibling of `scripts/reap-branches.mjs` (same propose-by-default / `--execute` shape, the same
  * exit contract, the same selftest discipline) — GH #1440, the load-108 incident (2026-08-19/20):
  * 14 finished lane worktrees sat parked until campaign-end, each a full tree Spotlight kept
@@ -21,12 +22,15 @@
  *   (c) the worktree is NOT `locked` (a live Agent-tool process holds the lock — the
  *       lane-kill incident class this script must never repeat).
  *
- * Only entries physically under `<repo-root>/.claude/worktrees/` are ever candidates — the
- * main checkout (and any worktree registered elsewhere) is never touched, never even listed.
+ * Only entries physically under `<repo-root>/.claude/worktrees/` or `<repo-root>.worktrees/` (see
+ * `lib/worktree-roots.mjs`) are ever candidates — the main checkout (and any worktree registered
+ * elsewhere) is never touched, never even listed.
  *
- * Refuses to run at all (exit 2) when `.claude/worktrees/.metadata_never_index` is missing —
- * that marker keeps Spotlight/Time Machine from re-indexing every live lane tree across
- * machines, and a reap cycle silently proceeding without it would defeat its own purpose.
+ * Refuses to run (exit 2) when `.claude/worktrees/` exists without its
+ * `.metadata_never_index` — that marker keeps Spotlight/Time Machine from re-indexing every live
+ * lane tree across machines, and a reap cycle silently proceeding without it would defeat its
+ * own purpose. The sibling root sits outside the repo (sdlc-lite creates no marker there), so it
+ * is listed with a warning when its marker is absent, never refused.
  *
  * On `--execute`: REAP rows get `git worktree remove <path>`, then one `git worktree prune`
  * once every removal has been attempted. Branch deletion stays `reap-branches.mjs`'s job —
@@ -54,7 +58,8 @@
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, rmSync, writeFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve, sep } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
+import { laneRoots, underLaneRoot } from './lib/worktree-roots.mjs';
 
 const NAME = 'reap-worktrees';
 
@@ -117,8 +122,8 @@ function cherryClean(cwd, ref, hasOriginMain) {
 }
 
 /** The main checkout root, resolved from ANY worktree via the shared common git dir —
- *  `.claude/worktrees/` physically lives once, under that root, regardless of which
- *  worktree this script itself happens to be invoked from. */
+ *  both lane roots hang off that root, regardless of which worktree this script itself
+ *  happens to be invoked from. */
 function repoRoot(cwd) {
   const commonDir = git(cwd, 'rev-parse', '--git-common-dir');
   const abs = resolve(cwd, commonDir);
@@ -153,15 +158,14 @@ function listWorktrees(cwd) {
 
 function classify(cwd) {
   const root = repoRoot(cwd);
-  const worktreesDir = join(root, '.claude', 'worktrees') + sep;
   const gh = githubRepo(cwd);
   const hasOriginMain = gitOk(cwd, 'rev-parse', '--verify', '--quiet', 'refs/remotes/origin/main');
 
   const all = listWorktrees(cwd);
   const rows = [];
   for (const wt of all) {
-    // Never the main checkout, never anything outside `.claude/worktrees/`.
-    if (!(wt.path + sep).startsWith(worktreesDir)) continue;
+    // Never the main checkout, never anything outside the lane roots.
+    if (!underLaneRoot(wt.path, root)) continue;
 
     if (wt.prunable) {
       rows.push({ path: wt.path, branch: wt.branch, disposition: 'PRUNABLE', reason: 'git already reports this entry as prunable — run `git worktree prune`' });
@@ -202,19 +206,23 @@ function classify(cwd) {
 }
 
 function printTable(rows) {
-  if (!rows.length) { console.log('(no worktrees under .claude/worktrees/)'); return; }
+  if (!rows.length) { console.log('(no worktrees under .claude/worktrees/ or the <repo>.worktrees/ sibling)'); return; }
   const w = Math.max(...rows.map((r) => r.path.length), 6);
   for (const r of rows) {
     console.log(`  ${r.path.padEnd(w)}  ${(r.branch ?? '(detached)').padEnd(24)}  ${r.disposition.padEnd(16)}  ${r.reason}`);
   }
 }
 
-/** Refuses to run (exit 2) unless `.claude/worktrees/.metadata_never_index` exists. */
+/** Refuses to run (exit 2) when the legacy root exists without `.metadata_never_index`; the
+ *  sibling root only ever warns. A repo with neither root has nothing to refuse over. */
 function checkMarker(cwd) {
-  const root = repoRoot(cwd);
-  const marker = join(root, '.claude', 'worktrees', '.metadata_never_index');
-  if (existsSync(marker)) return null;
-  return marker;
+  const [legacy, sibling] = laneRoots(repoRoot(cwd));
+  const marker = join(legacy, '.metadata_never_index');
+  if (existsSync(legacy) && !existsSync(marker)) return marker;
+  if (existsSync(sibling) && !existsSync(join(sibling, '.metadata_never_index'))) {
+    console.error(`${NAME} · warn · ${sibling} has no .metadata_never_index (Spotlight may index lane trees)`);
+  }
+  return null;
 }
 
 function run(execute) {
@@ -266,6 +274,7 @@ function selftest() {
   const bare = join(scratch, 'origin.git');
   const work = join(scratch, 'work');
   const wtRoot = join(work, '.claude', 'worktrees');
+  const sibRoot = `${work}.worktrees`; // sdlc-lite 0.24's lane root (T-0288)
   const failures = [];
   const assert = (cond, msg) => { if (!cond) failures.push(msg); console.log(`  ${cond ? 'ok ' : 'FAIL'} ${msg}`); };
 
@@ -309,6 +318,12 @@ function selftest() {
     git(work, 'checkout', 'main');
     git(work, 'worktree', 'add', join(wtRoot, 'keep-unmerged'), 'keep-unmerged-branch');
 
+    /* fixtures under the sibling root: a merged clean lane → REAP, an unmerged one → KEEP */
+    git(work, 'branch', 'sib-clean-branch');
+    git(work, 'worktree', 'add', join(sibRoot, 'sib-clean'), 'sib-clean-branch');
+    git(work, 'branch', 'sib-unmerged-branch', 'keep-unmerged-branch');
+    git(work, 'worktree', 'add', join(sibRoot, 'sib-unmerged'), 'sib-unmerged-branch');
+
     writeFileSync(join(wtRoot, '.metadata_never_index'), '');
 
     const invoke = (...args) => spawnSync(process.execPath, [process.argv[1], ...args], { cwd: work, encoding: 'utf8' });
@@ -329,12 +344,16 @@ function selftest() {
     assert(/keep-unmerged-branch\s+KEEP\(live-branch\)/.test(dry.stdout), 'dry-run: keep-unmerged → KEEP(live-branch), negative control');
     assert(!dry.stdout.includes(work + '\n') && !new RegExp(`${work.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+main`).test(dry.stdout),
       'dry-run: main checkout is never a candidate/listed');
-    assert(existsSync(join(wtRoot, 'reap-clean')), 'dry-run removed nothing (reap-clean still on disk)');
+    assert(/sib-clean\s+sib-clean-branch\s+REAP/.test(dry.stdout), 'dry-run: sibling-root sib-clean → REAP');
+    assert(/sib-unmerged-branch\s+KEEP\(live-branch\)/.test(dry.stdout), 'dry-run: sibling-root sib-unmerged → KEEP(live-branch), negative control');
+    assert(existsSync(join(wtRoot, 'reap-clean')) && existsSync(join(sibRoot, 'sib-clean')), 'dry-run removed nothing (reap-clean, sib-clean still on disk)');
 
     /* --execute: only the REAP row is removed; every KEEP row + main survive untouched. */
     const applied = invoke('--execute');
     assert(applied.status === 0, `--execute exits 0 (got ${applied.status})`);
     assert(!existsSync(join(wtRoot, 'reap-clean')), '--execute removed reap-clean');
+    assert(!existsSync(join(sibRoot, 'sib-clean')), '--execute removed sib-clean (sibling root)');
+    assert(existsSync(join(sibRoot, 'sib-unmerged')), '--execute kept sib-unmerged (sibling root, NEGATIVE CONTROL bit)');
     assert(existsSync(join(wtRoot, 'keep-dirty')), '--execute kept keep-dirty (dirty guard held)');
     assert(existsSync(join(wtRoot, 'keep-locked')), '--execute kept keep-locked (locked guard held)');
     assert(existsSync(join(wtRoot, 'keep-unmerged')), '--execute kept keep-unmerged (NEGATIVE CONTROL bit)');

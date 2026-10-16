@@ -2,7 +2,7 @@
 /**
  * scripts/reap-scratch-clones.mjs — gated reap of orphaned scratch-clone directories left by
  * `teamwork:dispatch-ticket`'s Agent-tool isolation rung (`references/isolation-ladder.md` Rung
- * 2) — a plain `git clone` cut by `dispatch_envelope.py` outside `.claude/worktrees/`, never
+ * 2) — a plain `git clone` cut by `dispatch_envelope.py` outside the lane roots (`.claude/worktrees/`, `../<repo>.worktrees/`), never
  * registered with `git worktree list`, so `reap-worktrees.mjs` structurally never sees it, and
  * never a local branch of THIS checkout, so `reap-branches.mjs` never sees it either (GH #1661:
  * a repo-cleaner sweep found 33 such directories, ~6.4G, 32 stale — manually verified and

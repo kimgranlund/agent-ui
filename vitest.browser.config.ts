@@ -1,6 +1,7 @@
 import { resolve } from 'node:path'
 import { defineConfig } from 'vitest/config'
 import { playwright } from '@vitest/browser-playwright'
+import { inLaneWorktree } from './scripts/lib/worktree-roots.mjs'
 
 // The browser-truth runner (decomp s12) — a SEPARATE vitest config from the jsdom inner loop
 // (`vitest.config.ts`). Real engines (Playwright-driven Chromium + WebKit) are where @scope, the
@@ -216,7 +217,7 @@ const isUpdatingVisualBaselines = process.argv.includes('--update') || process.a
 // lane cap matters most here.
 const WORKER_CAP = process.env['VITEST_MAX_WORKERS']
   ? Number(process.env['VITEST_MAX_WORKERS'])
-  : process.cwd().includes('/.claude/worktrees/')
+  : inLaneWorktree(process.cwd())
     ? 4
     : undefined
 

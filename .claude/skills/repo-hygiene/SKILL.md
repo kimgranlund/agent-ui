@@ -52,7 +52,7 @@ independently-verified gate a seat may EXECUTE directly, not merely surface. Two
 that tier here (`npm run ops:reap-worktrees` and `npm run ops:reap-branches`, dry-run by
 default), chained in that order (worktree removal, then branch deletion, GH #1440):
 
-- `node scripts/reap-worktrees.mjs --execute` — removes a `.claude/worktrees/` entry only when
+- `node scripts/reap-worktrees.mjs --execute` — removes a lane entry (`.claude/worktrees/` or `../<repo>.worktrees/`) only when
   ALL of clean (`git status --porcelain` empty), branch provably disposed (PR MERGED at this tip,
   or `git cherry origin/main` clean), and unlocked hold; a live-locked lane is never touched.
 - `node scripts/reap-branches.mjs --execute` — deletes the now-orphaned local branch under the
