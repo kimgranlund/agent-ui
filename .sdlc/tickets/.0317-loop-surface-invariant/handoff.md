@@ -2,7 +2,7 @@
 id: T-0317
 title: "Repair loop: never drop a turn's surface silently (L1 to L3 found by the T-0314 property test)"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -28,3 +28,13 @@ verifier: L3
 - (red) `npx vitest run packages/agent-ui/a2ui/src/live-agent/produce-response-type.test.ts -t T-0317` exits 0: a failure-named surface dropped by a later round is sent back as SURFACE_DROPPED; an id-graph path is pinned to the surface whose component lists the child (the repair keeps the valid ask-2, never the broken ask-1); a round sent back only for SURFACE_DROPPED still names its own valid surface in the keep hint.
 - `npx vitest run packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent scripts/e2e-admin/probe` exits 0 (the live-agent, agent and probe suites, every replay; a re-pinned replay is named with its reason in the report).
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-16 · lane: full L3 · verdict: closed by reason (Merged; verifier L3 pass) · verifier: verifier-L3 (fable) · base: b178a8fd3f70
+- Changed: see commits
+- Commits: aaae1b1 T-0317: Repair loop: never drop a turn's surface silently (#2071)
+- Check: 1 (red) `npx vitest run packages/agent-ui/a2ui/src/live-agent/produce-loop-property.test.ts` exits ...: pass
+- Check: 2 (red) `npx vitest run packages/agent-ui/a2ui/src/live-agent/produce-response-type.test.ts -t T-03...: pass
+- Check: 3 `npx vitest run packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent scripts/e2...: pass
+- Check: 4 `npm run check` exits 0: pass

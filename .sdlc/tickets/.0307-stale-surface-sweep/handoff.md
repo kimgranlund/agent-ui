@@ -2,7 +2,7 @@
 id: T-0307
 title: "Sweep docs-site pages, descriptors, exemplar fixtures and selection sidecars for guidance left stale by rounds 3 to 7"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -80,3 +80,19 @@ Evidence beyond the commands: 400px screenshots of the changed widgets (scratch,
 
 ## Conductor note for the verifier (2026-10-16)
 Kim's debate rule applies to the two library wording changes (F7 board-grid glyph order, the table-reservation "confirmation restates"): besides the criteria, argue against each as an adversary (does it change what a model does on a turn in a way no ruling covers? cite the ruling it applies, T-0245 for the miss glyph) and state keep or revert.
+
+## Outcome
+
+2026-10-16 · lane: full L3 · verdict: closed by reason (Merged; 12 fixed, 16 ruled out; absorbs T-0246; verifier L3 pass (try 2)) · verifier: verifier-L3 (fable) · base: 92a90712d3bb
+- Changed: see commits
+- Commits: none
+- Check: 1 Every Fixed row of the stale list holds on the tree, and every Ruled-out row names its reason or ...: pass
+- Check: 2 `npx vitest run --project packages packages/agent-ui/a2ui/src/examples packages/agent-ui/a2ui/src...: pass
+- Check: 3 `npx vitest run --project site site/pages/agent-admin-app.test.ts site/pages/agent-admin-presets....: pass
+- Check: 4 `npx vitest run --config vitest.browser.config.ts --project site site/pages/dogfood-render.browse...: pass
+- Check: 5 `npx vitest run --config vitest.browser.config.ts --project packages-rest packages/agent-ui/a2ui/...: pass
+- Check: 6 `node scripts/dogfood-compose.mjs --gate` exits 0: pass
+- Check: 7 `node scripts/generate-agent-assets.mjs --check` exits 0: pass
+- Check: 8 `grep -rn "○" site/lib/component-preview.ts site/pages/board-grid-demo.ts site/pages/board-grid-d...: pass
+- Check: 9 `grep -n "mark a hit ● and a miss ✕" site/pages/agent-admin-libraries.ts` exits 0: pass
+- Check: 10 `npm run check` exits 0: pass

@@ -2,7 +2,7 @@
 id: T-0316
 title: "Check defects D1 to D3 found by the T-0314 contract tests"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -30,3 +30,15 @@ verifier: L3
 - (red) each defect's allowlist entry is gone: `! grep -qE "composite-moment-board-grid/pass fleet-secret|': D2,|': D3," packages/agent-ui/a2ui/src/live-agent/check-contracts.test.ts`
 - the contract, catalog and live-agent suites are green: `npx vitest run packages/agent-ui/a2ui/src/catalog packages/agent-ui/a2ui/src/live-agent`
 - `npm run check`
+
+## Outcome
+
+2026-10-16 · lane: full L2 · verdict: closed by reason (Merged; verifier L3 pass) · verifier: verifier-L3 (fable) · base: b178a8fd3f70
+- Changed: see commits
+- Commits: none
+- Check: 1 (red) D1, a tic-tac-toe board draws no fleet finding: pass
+- Check: 2 (red) D2, no concierge check on a2ui-basic--concierge asks for ProductCard, Grid or DescriptionList: pass
+- Check: 3 (red) D3, the framed-choice repair names only the wrappers the surface holds: pass
+- Check: 4 (red) each defect's allowlist entry is gone: pass
+- Check: 5 the contract, catalog and live-agent suites are green: pass
+- Check: 6 `npm run check`: pass
