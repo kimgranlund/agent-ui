@@ -237,12 +237,13 @@ ticket against this SPEC runs that ticket's named tests and checks each cited `f
    DAG; site-internal content stays site-internal.
 2. The frontmatter grammar choice, subset or JSON (T-0160, ACS-R3).
 3. Whether `compile` returns a promise or digests in a separate step (T-0163, ACS-R12).
-4. Known gap, context loading (T-0231): skills, playbooks (workflows) and resources reach the prompt as index lines
-   only (ADR-0190), so a preset's own hours, policies or booking flow never load unless the user names the item,
-   which attaches it. Live round 2 (T-0225): the Concierge said it lacked hours its `property-knowledge-base`
-   holds, and Haiku never followed `booking-flow`. Until T-0231 rules, probe scenarios name the item. The gap is
-   visible per turn: each trace line's `routing.references[]` lists every entry with `load: 'index-only'` or
-   `'full'` (T-0239, agent-closed-loop CL-R12).
+4. Context loading, decided (T-0231): skills, playbooks (workflows) and resources reach the prompt as index lines
+   only (ADR-0190), so an index-only entry reaches the model as its label and one-line description, and its content
+   loads only when the user names it. Live round 2 (T-0225) showed the cost: the Concierge said it lacked hours its
+   `property-knowledge-base` holds. T-0231 took the prompt-section escape: a preset's own facts ride its always-loaded
+   "House facts" section. The standing rule (T-0285): a rule the model must follow lives in the entry's description
+   or in persona text, never only in its content (agent-model reference, Capabilities). Each trace line's
+   `routing.references[]` lists every entry with `load: 'index-only'` or `'full'` (T-0239, agent-closed-loop CL-R12).
 5. Hidden state, decided (T-0230): state the user must trust (a secret word, a fleet) lives in the game surface's own
    data model under the reserved key `/secret` (`/secret/word`; `/secret/fleet` and `/secret/playerFleet` as `{row,
    col}` lists), committed on the opening turn and bound to no component. It is client-visible, the T-0218

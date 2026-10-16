@@ -71,8 +71,12 @@ the store again" (ADR-0136).
 `pattern-source`, `catalog` (ADR-0170). Each kind is one ordered array under the store key
 `entries:<kind>`. A disabled entry is skipped, never removed (ADR-0132 Fork 4). A skill, workflow
 or resource reaches the prompt as an index line only (ADR-0190); its full content loads when the user
-names it. That leaves a preset's own facts unread (T-0231, a known gap: agent-content SPEC §8); a
-trace line's `routing.references[]` shows each entry's load, `index-only` or `full`, per turn (T-0239).
+names it. An index-only entry reaches the model as its label and one-line description only, so a rule
+the model must follow on every turn lives in that description or in always-loaded persona text, never
+only in the entry's content: a preset's own facts ride its "House facts" prompt section (T-0231), and
+the `facility-info-card` skill states its ruled shape in its description (T-0285; round 4 fog report
+`ffe6d0ef720852da99edbff0`, finding f2). A trace line's `routing.references[]` shows each entry's
+load, `index-only` or `full`, per turn (T-0239).
 
 **Composition.** `composeSystemPrompt(sections, team?)` (`entries.ts`) projects the enabled,
 in-context entries into one markdown prompt of `## {heading}` blocks; `composeLiveSystemPrompt`
