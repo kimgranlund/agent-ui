@@ -40,7 +40,7 @@ Also update the round scenario oracles that still expect ServiceCard for a price
 ## Lane bundle
 This solo lane delivers these tickets in order, one commit each (`T-NNNN: <title>`):
 - .sdlc/tickets/0279-concierge-services-no-servicecard/handoff.md
-- .sdlc/tickets/0285-concierge-facility-hours-composite/handoff.md
+- .sdlc/tickets/.0285-concierge-facility-hours-composite/handoff.md
 
 ## Acceptance criteria
 verifier: L3
