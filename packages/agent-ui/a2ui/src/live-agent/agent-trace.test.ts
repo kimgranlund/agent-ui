@@ -5,19 +5,23 @@
 // with the key redacted, while the chat line carries the dev reason.
 
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
-import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs'
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { a2uiDevProxyPlugin } from '../../tools/agent/dev-proxy-plugin.ts'
 import { GENERIC_FAILURE_MESSAGE } from '../../tools/agent/chat-validation.ts'
 import {
+  PROMPT_STORE_DIR,
+  TRACE_DIR_NAME,
   TurnTraceCollector,
   agentLabel,
+  appendTraceLine,
   catalogRouting,
   defaultTracing,
   describeFailure,
   devFailureReason,
   diagnoseParse,
+  promptDigest,
   readUpstreamError,
   redactSecrets,
   serializeTraceLine,
@@ -232,6 +236,7 @@ function writtenLines(): AgentTraceLine[] {
 
 function rawLog(): string {
   return readdirSync(dir)
+    .filter((n) => n.endsWith('.jsonl'))
     .map((n) => readFileSync(join(dir, n), 'utf8'))
     .join('')
 }
@@ -498,5 +503,104 @@ describe('the trace line carries the probe run id (T-0259)', () => {
     expect(readRunId(newRunId('n'.repeat(200), 'deadbeef'))).toBeDefined()
     // The probe forwards the page's headers and adds its id, replacing a page-sent one of any casing.
     expect(withRunId({ 'content-type': 'application/json', 'X-A2UI-Run-Id': 'stale' }, 'r-9')).toEqual({ 'content-type': 'application/json', [RUN_ID_HEADER]: 'r-9' })
+  })
+})
+
+// T-0311 (P3, P7, Kim 2026-10-16): the trace records what reached the model and why each round stopped. A round carries
+// the request's max_tokens and the stop reason from the adapter's `done` event, plus a per-round request id (and the run
+// id) so the fog bundle mapping reads one model_request per round. The composed prompt sections go to a content-addressed
+// store beside the trace (`<dir>/prompts/<digest>.txt`, redacted, written once); the line carries only the digests.
+describe('stop reason, max_tokens and the prompt store (T-0311)', () => {
+  const GRAMMAR = 'Reply in prose; call render_surface to show UI.\n'
+  const PERSONA = `You are the Concierge. The house key is ${KEY}.\n`
+  const finalWith = (sections: Array<{ id: string; chars: number }>): string =>
+    JSON.stringify({ a2uiMeta: { note: 'ok', trace: { turnIndex: 0, query: { intent: 'x', k: 3 }, exemplarIds: [], rounds: 1, healed: 0, failureCodes: [], model: 'm', prompt: { limit: 1e6, total: sections.reduce((n, x) => n + x.chars, 0), sections, over: false }, cacheBoundary: sections[0]!.chars } } })
+
+  async function turnWith(events: ProviderEvent[][], runId?: string): Promise<TurnTraceCollector> {
+    let call = 0
+    const t = new TurnTraceCollector({ route: 'produce', provider: 'anthropic', model: 'claude-haiku-5-5', user: 'hello', ...(runId !== undefined ? { runId } : {}) })
+    t.noteRouting('agent-ui--concierge', undefined)
+    const provider = t.wrapProvider({
+      async *stream(req) {
+        for (const ev of events[call++] ?? []) req.onEvent?.(ev)
+        yield '{"a2uiMeta":{"note":"ok"}}'
+      },
+    })
+    for (let r = 0; r < events.length; r++) {
+      const messages = [{ role: 'user' as const, content: r === 0 ? 'hello' : 'Check result: INVALID (PARSE)' }]
+      for await (const _ of provider.stream({ model: 'm', system: GRAMMAR + PERSONA, messages })) void _
+    }
+    t.observeLine(finalWith([{ id: 'grammar', chars: GRAMMAR.length }, { id: 'persona', chars: PERSONA.length }]))
+    return t
+  }
+
+  it('each round records the request max_tokens, the stop reason, its own request id and the run id', async () => {
+    const t = await turnWith([[{ kind: 'usage', usage: { inputTokens: 10, outputTokens: 4096 } }, { kind: 'done', stopReason: 'max_tokens', maxTokens: 4096 }], [{ kind: 'done', stopReason: 'end_turn', maxTokens: 5376 }]], 'run-7')
+    const line = t.finish()
+    expect(line.rounds[0]).toMatchObject({ round: 1, requestId: `${line.at}#1`, runId: 'run-7', stopReason: 'max_tokens', maxTokens: 4096, usage: { outputTokens: 4096 } })
+    expect(line.rounds[1]).toMatchObject({ round: 2, requestId: `${line.at}#2`, stopReason: 'end_turn', maxTokens: 5376 })
+    const bare = (await turnWith([[]])).finish()
+    expect(bare.rounds[0]).not.toHaveProperty('stopReason')
+    expect(bare.rounds[0]).not.toHaveProperty('maxTokens')
+    expect(bare.rounds[0]).not.toHaveProperty('runId')
+  })
+
+  it('the line carries a digest per section and per round message; the store holds the redacted text under its digest', async () => {
+    const t = await turnWith([[], []])
+    const line = t.finish([KEY])
+    const files = t.promptFiles()
+    const sections = line.routing!.sections!
+    expect(sections.map((x) => x.id)).toEqual(['grammar', 'persona'])
+    for (const x of sections) expect(files.get(x.digest!)).toBeDefined()
+    expect(files.get(sections[0]!.digest!)).toBe(GRAMMAR)
+    expect(files.get(sections[1]!.digest!)).toBe(redactSecrets(PERSONA, [KEY]))
+    for (const [digest, text] of files) {
+      expect(digest).toBe(promptDigest(text)) // content-addressed: the digest is of the stored bytes
+      expect(text).not.toContain(KEY)
+    }
+    expect(files.get(line.rounds[0]!.userDigest!)).toBe('hello')
+    expect(files.get(line.rounds[1]!.userDigest!)).toBe('Check result: INVALID (PARSE)')
+    expect(serializeTraceLine(line, [KEY])).not.toContain('The house key') // the text stays out of the line
+  })
+
+  it('appendTraceLine writes each distinct text once into prompts/ beside the day file', async () => {
+    const store = mkdtempSync(join(tmpdir(), 'agent-traces-store-'))
+    try {
+      for (let i = 0; i < 2; i++) {
+        const t = await turnWith([[]])
+        appendTraceLine(store, t.finish([KEY]), [KEY], t.promptFiles())
+      }
+      const stored = readdirSync(join(store, PROMPT_STORE_DIR))
+      expect(stored.sort()).toEqual([...new Set(stored)].sort())
+      expect(stored).toHaveLength(3) // grammar, persona, the user message: written once across two turns
+      for (const name of stored) {
+        const text = readFileSync(join(store, PROMPT_STORE_DIR, name), 'utf8')
+        expect(name).toBe(`${promptDigest(text)}.txt`)
+        expect(text).not.toContain(KEY)
+      }
+      expect(readdirSync(store).filter((n) => n.endsWith('.jsonl'))).toHaveLength(1)
+    } finally {
+      rmSync(store, { recursive: true, force: true })
+    }
+  })
+
+  it('the store sits inside the git-ignored trace folder', () => {
+    const ignore = readFileSync(join(process.cwd(), '.gitignore'), 'utf8')
+    expect(ignore.split('\n')).toContain(`/${TRACE_DIR_NAME}/`)
+  })
+
+  it('a live produce turn through the dev proxy writes the store: every section digest resolves, no key is stored', async () => {
+    state.script = ['{"a2uiMeta":{"note":"Late check-out to 14:00 is possible on request."}}']
+    const out = await post('/produce', { ...produceBody({ kind: 'intent', text: 'late check-out?', session: { turns: [] } }), catalogId: 'agent-ui--concierge', personaSystem: `${CONCIERGE_PERSONA}\nInternal: ${KEY}` })
+    expect(out.status).toBe(200)
+    const line = writtenLines().at(-1)!
+    const sections = line.routing!.sections!
+    expect(sections.length).toBeGreaterThan(2)
+    for (const x of sections) {
+      const path = join(dir, PROMPT_STORE_DIR, `${x.digest}.txt`)
+      expect(existsSync(path), x.id).toBe(true)
+      expect(readFileSync(path, 'utf8').length).toBeLessThanOrEqual(x.chars)
+    }
+    for (const name of readdirSync(join(dir, PROMPT_STORE_DIR))) expect(readFileSync(join(dir, PROMPT_STORE_DIR, name), 'utf8')).not.toContain(KEY)
   })
 })

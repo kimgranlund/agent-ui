@@ -11,7 +11,7 @@
 //
 // T-0278 (round 4, the Haiku spa confirm): a confirm while the open BookingForm still has a blank required field cannot
 // be confirmed, so the reply that asks for the missing value is right. Such a turn is held open: no SURFACE_MISSING
-// asking for a BookingConfirmation, and no FLOW_END_MISSING round (`holdsFlowOpen`).
+// asking for a BookingConfirmation, and no inferred flowEnd (`holdsFlowOpen`, T-0309).
 //
 // T-0293 (round 5, the Haiku boat tour): a BookingForm bound to /booking named its fields "booking.tour", "booking.date"
 // and so on. The factory prefills each field from value[field.path], so all four rendered blank, and the T-0278 hold

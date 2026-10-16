@@ -20,3 +20,23 @@ Kim 2026-10-16 (P7 allowed, P3 as revised): the dev trace records what reached t
 
 ## Done when
 - Tests for each part, red at the base; the trace and live-agent tests and `npm run check` exit 0; the fog bundle mapping can read the new fields.
+
+## Lane bundle
+- T-0309: infer flowEnd when a turn declares no ask and no surface (N1). Handoff `.sdlc/tickets/0309-flowend-inference/handoff.md`.
+- T-0310: force render_surface with thinking off on round 1 of Haiku click turns (R8). Handoff `.sdlc/tickets/0310-haiku-round1-forced-tool/handoff.md`.
+- T-0311: dev-trace prompt store, stopReason and max_tokens per round, max_tokens tier floor (P3, P7). This handoff.
+
+verifier: L3
+
+## Acceptance criteria
+- (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/anthropic-request-body.test.ts` exits 0: no effort tier caps `max_tokens` below the unset tier on any current-family model (medium 4096 on Sonnet 5.5, 5376 on Haiku 5.5); the legacy arm is unchanged.
+- (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/anthropic-usage.test.ts` exits 0: each upstream request's `done` event carries `stopReason` and the body's `maxTokens`, on the text-only path and per request in the tool loop.
+- (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/agent-trace.test.ts` exits 0: each trace round records `requestId`, `runId`, `stopReason` and `maxTokens`; `routing.sections[].digest` and `rounds[].userDigest` resolve in `prompts/<digest>.txt`, written once per distinct text, redacted (no configured key value is stored), with the digest computed over the stored bytes; a live dev-proxy turn writes the store.
+- (red) `npx vitest run --project scripts scripts/e2e-admin/probe/fog-round.test.mjs` exits 0: the fog bundle mapping reads one `model_request` per round with `maxTokens`, `outputTokens` and `stopReason` (the ingest leg runs where the context-fog-of-war skill is installed).
+- (red) `python3 scripts/agent-traces-to-fog.py selftest` exits 0: a section digest names its prompt-store file.
+- (red) `grep -q "REV 2026-10-16, T-0311" .claude/docs/spec/response-type-selection.spec.md` exits 0 (RTS-R9 and RTS-P3 repaired).
+- `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent` exits 0.
+- `npm run check` exits 0.
+
+## Conductor note for the verifier (2026-10-16)
+Security: the prompt store writes composed prompt text to disk. Confirm `.agent-traces/` is git-ignored, that no key, token or .env value can be written (the solo reports redaction covers env names containing KEY, TOKEN, SECRET or PASSWORD plus key patterns, not every .env value; judge whether a value from .env can reach a prompt at all, and say so), and that the store is dev-only (never in the Worker or a shipped package).

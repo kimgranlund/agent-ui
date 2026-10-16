@@ -35,7 +35,8 @@
   (T-0225, T-0241; README, Live rounds).
 - `npm run traces`: the last live agent turns from the dev proxy's git-ignored trace log
   (`.agent-traces/YYYY-MM-DD.jsonl`, one redacted line per turn, on under `npm run dev`, `A2UI_AGENT_TRACES=0`
-  turns it off); `-- --full 1` prints the newest turn in full (T-0151).
+  turns it off); `-- --full 1` prints the newest turn in full (T-0151). The prompt text each line's digests name
+  sits beside it in `.agent-traces/prompts/<digest>.txt` (T-0311).
 - `python3 scripts/agent-traces-to-fog.py <trace.jsonl> --out <session.json>`: converts one `.agent-traces` day
   file into a context-fog-of-war v2 session (each turn an event, its prompt sections, exemplars, mini-skills and
   referenced entries as sources, index-only or full); `fog.py validate` and `library.py publish` belong to that

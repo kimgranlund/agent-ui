@@ -71,7 +71,7 @@
 // self-correct round fed back like a validator failure, carrying its one-sentence `detail` (the GH #288
 // lesson: a code and a path alone teach nothing). Rounds are spent while any remain (bounded by
 // `maxRounds`); a finding on the LAST round never halts: that structurally valid payload ships with
-// `SEMANTIC_UNCORRECTED` tallied on the trace (the NET_NOOP/FLOW_END posture for a policy check, because a
+// `SEMANTIC_UNCORRECTED` tallied on the trace (the NET_NOOP posture for a policy check, because a
 // domain check is a heuristic and a false positive must never stall a turn). A throwing check is skipped
 // and tallied `SEMANTIC_CHECK_ERROR`. Absent or empty `semanticChecks` ⇒ none of this runs: byte-identical.
 //
@@ -109,6 +109,7 @@ import { readMetaLine } from './meta-line.ts'
 import type { AskDeclaration, PersonaPatch, PlanDeclaration, PromptSectionId, TargetDeclaration, TeamDeclaration, TokenUsage, TurnProgress, TurnTrace } from './meta-line.ts'
 import type { GenUiMode } from './gen-ui-mode.ts'
 import type { ModelSettings } from './model-capabilities.ts'
+import { acceptsForcedToolWithThinkingOff } from './model-capabilities.ts'
 import { MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, selectMiniSkills } from './mini-skills.ts'
 import { FEED_SURFACE_TYPE_SET } from './feed-catalog.ts'
 import { isGenuiCandidate, readGenuiLine, utf8ByteLength, GENUI_MAX_HTML_BYTES } from './genui-line.ts'
@@ -692,7 +693,6 @@ function messagesFor(
       (failures.some((f) => f.code === 'PARSE') ? (toolRound ? `${parseNote !== undefined ? ` ${parseNote}` : ''}${TOOL_PARSE_HINT}` : PARSE_HINT) : '') + // T-0304: where the string broke
       idgraphHint(failures) +
       (failures.some((f) => f.code === 'NET_NOOP') ? NET_NOOP_HINT : '') + // GH #1142 — the net-no-op correction round's guidance
-      (failures.some((f) => f.code === 'FLOW_END_MISSING') ? FLOW_END_HINT : '') + // GH #1168 — the missing-flowEnd correction round's guidance
       (failures.some((f) => f.code === 'NARRATED_MECHANICS') ? NARRATION_HINT : '') + // T-0234: a narrated reply's guidance
       (failures.some((f) => f.code === 'SURFACE_DROPPED') ? SURFACE_DROPPED_HINT : '') + // T-0281: resend a dropped surface
       (failures.some((f) => f.code === 'SURFACE_NOT_CREATED') ? SURFACE_NOT_CREATED_HINT : '') + // T-0305: create before update
@@ -836,7 +836,7 @@ function toolTargetOf(value: unknown): string | undefined {
  * check, passed through unchanged onto the outgoing meta-line (readMetaLine already shallow-validated
  * it to `true | undefined`). Before GH #1168 this recompose DROPPED the field entirely (peel and
  * formatMetaLine both omitted it), so even a compliant model's `flowEnd` never reached the wire —
- * fixed here as the pass-through wiring the #1168 correction round relies on.
+ * fixed here as the pass-through wiring. T-0309: a closing turn that omits it gets it set by produce() itself.
  * `team` (GH #1196 / ADR-0203 clause 4) is peeled on the SAME plan/personaPatch terms — no integrity
  * check, passed through unchanged, gate-blind: whether a declared team is ever CONSUMED is entirely
  * the host's call, exactly like `personaPatch`.
@@ -944,8 +944,8 @@ function peelGenuiLines(afterMeta: string): GenuiPeelResult {
  * when present, key omitted entirely when absent, and GATE-BLIND — SPEC-R29's rule: the SPEC-R30 gate
  * governs consumption and teaching, never framing), the model's own `flowEnd` on the SAME plan terms
  * (ADR-0198 cl.1 / GH #1168 — through unchanged when the model declared it, key omitted entirely when
- * absent; NEVER synthesized by the runtime — a missing `flowEnd` after the #1168 correction round ships
- * missing, tallied on the trace instead), plus the `TurnTrace` `produce()` assembled for this
+ * absent, except that T-0309 sets it on a closing-shaped turn that omitted it, tallied FLOW_END_INFERRED),
+ * plus the `TurnTrace` `produce()` assembled for this
  * turn (never the model's raw wrapper verbatim — the model never has `trace`). The model's own `team`
  * declaration (GH #1196 / ADR-0203 clause 4) rides on the SAME `personaPatch` terms — through
  * unchanged when present, key omitted entirely when absent, gate-blind. The model's own `target`
@@ -1087,7 +1087,7 @@ const NET_NOOP_HINT =
  * message (`kind: 'message'` — an action click, a data change) is machine-composed prose that can
  * never carry the user's own closing words, so it conservatively never triggers. The lexicon covers
  * the issue's quoted live shapes ("no further questions", "we are done") plus their nearest common
- * variants; a miss degrades to today's behavior (no correction round), never to a wrong rewrite.
+ * variants; a miss degrades to no inferred flowEnd (T-0309), never to a wrong rewrite.
  */
 const EXPLICIT_CLOSE_RE =
   /\b(?:no (?:further|more|other) questions?|(?:we|i)(?:'re|'m| are| am)? ?(?:all )?done(?: here)?|that(?:'s| is| will be) (?:all|everything)|(?:we're|we are|i'm|i am) (?:all )?set|nothing (?:else|further|more)|that'?s it,? thanks?|goodbye)\b/i
@@ -1096,7 +1096,7 @@ const EXPLICIT_CLOSE_RE =
  *  "yes, confirm", "go ahead and order it") answering the flow-final confirm ask. Safe under the same
  *  note-only guard as the explicit-close lexicon: a MID-flow commit ("Next", a step answer) is answered
  *  by a content-bearing turn (scene-swap updates), which the closing-shaped predicate already excludes —
- *  only a prose-concluding turn after a commit phrase reaches the hint. A miss degrades to no round. */
+ *  only a prose-concluding turn after a commit phrase is inferred closed (T-0309). A miss infers nothing. */
 const CONFIRM_COMMIT_RE =
   /\b(?:confirm(?:ed)?(?:[\s,—-]+(?:please\s+)?(?:book|order|send|submit|do|place) (?:it|that|this))?|yes[,!]?\s+(?:please\s+)?(?:confirm|book(?: it)?|proceed|go ahead)|go ahead(?: and)? (?:book|confirm|order|submit|send)|book it|place (?:the|my) order|submit (?:it|the (?:form|request|booking)))\b/i
 
@@ -1104,17 +1104,6 @@ const CONFIRM_COMMIT_RE =
 export function isExplicitClose(input: TurnInput): boolean {
   return input.kind === 'intent' && (EXPLICIT_CLOSE_RE.test(input.text) || CONFIRM_COMMIT_RE.test(input.text))
 }
-
-/** GH #1168 — the self-correct sentence for a FLOW_END_MISSING round (the NET_NOOP_HINT shape: one
- *  appended sentence set, one message, no new round kind). The model complied with everything EXCEPT
- *  the ADR-0198 completion signal; the repair is a byte-level re-emit of the same closing meta-line
- *  with the one field added — never new content, never A2UI lines. */
-const FLOW_END_HINT =
-  ' FLOW_END_MISSING means this turn is the CLOSING turn of a completed flow — the user explicitly ' +
-  'confirmed there is nothing more — but your leading meta-line did not carry "flowEnd": true ' +
-  '(literally true, never a string). Re-emit the SAME closing meta-line — the same courtesy-close ' +
-  'note, addressed to the user in persona — with "flowEnd": true added on that same line, and still ' +
-  'NO A2UI lines after it.'
 
 /** T-0281: the self-correct sentence for a SURFACE_DROPPED round. The recorded Haiku 5.5 FEED_SCOPE retry dropped the
  *  BookingForm the ask surface could not host and answered in prose, so the guest saw no form. */
@@ -1358,7 +1347,6 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   // ADR-0234 (proposed): the opt-in hard stop: an over-budget prompt halts before ANY provider call.
   if (opts.promptBudget?.mode === 'halt' && promptReport.over) throw new ProduceHalt([{ code: 'PROMPT_OVER_BUDGET', path: '' }])
   let narrationFedBack = false // T-0234: the ONE correction round a reply that narrates the surfaces gets; on refusal it ships tallied NARRATION_UNCORRECTED
-  let flowEndFedBack = false // GH #1168 — the ONE correction round a closing-shaped turn missing `flowEnd` gets; on refusal (or a last-round hit) the turn ships UNCHANGED — the runtime never synthesizes the field, only tallies FLOW_END_UNCORRECTED on the trace
 
   // RTS-R6: the effective override. The intent's own words win as the latest instruction, else the request's
   // `responsePreference` ('auto' means none). The persona hint `prefers` never reaches the offer.
@@ -1383,6 +1371,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   // meta-line and prose through every repair round, round 6 :2), so this repair round forces `render_surface`. The
   // adapter sends the choice only where the model takes one: never with thinking on (the API rejects it). T-0301: so
   // the forced round asks for thinking off; the adapter keeps it only where the model's capability row allows it.
+  // T-0310: round 1 of a Haiku click turn is forced too (set below, once the turn's action is read).
   let forceSurfaceRound = false
   let surfaceRequestedFedBack = false // RTS-R6: the ONE correction round a surface override with no payload gets
   let textJsonlIgnored = false // RTS-R3: sticky, a capture round's text channel carried wire or genui lines that were dropped
@@ -1392,6 +1381,11 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   // T-0172: the action a client turn answers, read by the semantic checks (a no-payload round is judged too).
   // T-0215: a press with no client `dataModel` reads the surface's data model replayed off the session.
   const turnAction = input.kind === 'client' ? semanticActionOf(input.message, input.session) : undefined
+  // T-0310 (Kim's R8 ruling, 2026-10-16, an experiment measured live): round 1 of a click turn is forced the T-0301 way
+  // when the row takes a forced tool with thinking off (Haiku 5.5 up to high; r7 had 12 Haiku round-1 rounds with no
+  // tool call). A typed turn, a Sonnet or Opus click, and a turn with live integration tools are left as they were.
+  if (turnAction !== undefined && offeredTools !== undefined && integrationTools.length === 0 && acceptsForcedToolWithThinkingOff(model, opts.effort))
+    forceSurfaceRound = true
   // T-0232: a say turn's own words, so a check can tell a stake the user typed from one the model picked.
   const turnIntent = input.kind === 'intent' ? typedWords(input.text) : undefined
   // T-0286: the surfaces the session holds before this say turn, so a check can find the table a move typed with
@@ -1707,37 +1701,30 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         if (fallback === undefined) throw new ProduceHalt(failures)
         break // T-0302: the earlier valid round ships below
       }
-      // GH #1168 — the missing-flowEnd correction round (the #1142 NET_NOOP precedent, on the ADR-0187
-      // atFinalize correction seam's shape: one targeted round, then pass through unchanged). Trigger,
-      // fully mechanical: this turn is CLOSING-SHAPED — a note with NO ask, NO plan, NO genui line, and
-      // zero A2UI content lines (this very branch) — the model omitted `flowEnd`, AND the user's own
-      // message is an explicit close (`isExplicitClose`, the strongest deterministic signal produce()
-      // receives — see its doc for why the prior-turn-confirm-ask signal is unavailable here). Exactly
-      // ONE round, and only when a round is left to spend; on refusal the turn ships UNCHANGED below
-      // (never a synthesized field, never a halt) with FLOW_END_UNCORRECTED tallied on the trace.
+      // GH #1168, T-0309 (Kim's N1 ruling, 2026-10-16): a closing turn missing `flowEnd` gets it from the producer,
+      // tallied FLOW_END_INFERRED, instead of a FLOW_END_MISSING repair round (on Opus round 1 was already a correct
+      // close, and round 2 only added the flag). Fully mechanical: this turn is CLOSING-SHAPED (a note with NO ask, NO
+      // plan, NO genui line, and zero A2UI content lines, this very branch), the model omitted `flowEnd`, AND the
+      // user's own message is an explicit close (`isExplicitClose`, the strongest deterministic signal produce()
+      // receives; see its doc for why the prior-turn-confirm-ask signal is unavailable here). It is set only on the
+      // round that ships with no other finding: a semantic or narration repair runs first, and an uncorrected one
+      // ships without it.
       // T-0278: a say turn judged with no payload sees the session's open surfaces, and a persona check may hold the
-      // flow open (a confirm while the open booking still has a blank required field), so no FLOW_END_MISSING round
-      // pushes a reply that rightly asks for the missing value into claiming a booking that was not made.
+      // flow open (a confirm while the open booking still has a blank required field), so a reply that rightly asks
+      // for the missing value is never closed as a booking that was not made.
       const sayInput: SemanticCheckInput | undefined =
         turnAction === undefined && turnIntent !== undefined && deps.semanticChecks !== undefined && deps.semanticChecks.length > 0
           ? { surfaces: [], intent: turnIntent, ...(roundTarget !== undefined ? { target: roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}) }
           : undefined
       const heldOpen = sayInput !== undefined && flowHeldOpen(deps.semanticChecks!, sayInput)
-      if (
+      const closeInferable =
         !heldOpen &&
         flowEnd === undefined &&
         note !== undefined &&
         ask === undefined &&
         plan === undefined &&
         genuiLine === undefined &&
-        !flowEndFedBack &&
-        round < opts.maxRounds - 1 &&
         isExplicitClose(input)
-      ) {
-        flowEndFedBack = true
-        failures = [{ code: 'FLOW_END_MISSING', path: '' }]
-        continue
-      }
       // T-0172: an action turn answered with no payload is still judged (`surfaces` empty), so a check can catch
       // a click narrated in prose that never reached the surface. A finding spends a repair round while one is
       // left (worded for render_surface when the tool is offered); on the last round it ships tallied. T-0214: a say
@@ -1771,7 +1758,10 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       failureCodes.push(...actionSemanticTally)
       if (narrated !== undefined) failureCodes.push('NARRATION_UNCORRECTED') // T-0234: a factual tally, never a halt
       if (genuiMultiplicityHit) failureCodes.push('GENUI_MULTIPLICITY') // SPEC-R1 — a factual tally, never a retry trigger
-      if (flowEndFedBack && flowEnd === undefined) failureCodes.push('FLOW_END_UNCORRECTED') // GH #1168 — the model refused the correction round; ships unchanged, tallied (the NET_NOOP_STRIPPED naming shape)
+      if (closeInferable && !actionSemanticTally.includes('SEMANTIC_UNCORRECTED') && narrated === undefined) {
+        flowEnd = true // T-0309: the producer closes the flow; the model's own flag was missing
+        failureCodes.push('FLOW_END_INFERRED')
+      }
       // SPEC-N4/SPEC-R1 — a genui structural failure on THIS shipping round is dropped from the wire
       // (never blocks a clean note-only/genui-only success), but its failure code MUST still land on the
       // trace — SPEC-N4's "every drop path increments an observable counter" applies to this drop too,
@@ -1907,7 +1897,6 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         // SPEC-N4/SPEC-R1 — see the note-only branch's identical comment: a genui failure dropped on an
         // otherwise-successful round still needs to land on the trace, not just the retried case.
         if (genuiPeel.failure !== undefined) failureCodes.push(genuiPeel.failure.code)
-        if (flowEndFedBack && flowEnd === undefined) failureCodes.push('FLOW_END_UNCORRECTED') // GH #1168 — the correction round came back content-bearing and still without flowEnd: ships unchanged, tallied
         if (feedScopeRescoped) failureCodes.push('FEED_SCOPE_RESCOPED') // T-0299: a factual tally, the ask dropped on the last round
         failureCodes.push(...semanticTally) // ADR-0238: SEMANTIC_UNCORRECTED / SEMANTIC_CHECK_ERROR on the shipping round, never a retry trigger
         if (textJsonlIgnored) failureCodes.push('TEXT_JSONL_IGNORED') // RTS-R3: a factual tally, never a retry trigger

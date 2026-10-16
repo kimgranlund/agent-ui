@@ -39,7 +39,8 @@ own ADR-argued exception, not silence:
 
 1. **Model-authored.** The model declares the fact (like `note`/`ask`), never runtime-composed
    (like `progress`/`trace`/`error`). The seam exists for facts ONLY the model holds — see the
-   transferable lesson below.
+   transferable lesson below. One ruled exception (T-0309, Kim 2026-10-16): `produce()` sets a
+   missing `flowEnd` on a closing-shaped turn after an explicit close, tallied `FLOW_END_INFERRED`.
 2. **Additive-only vocabulary.** The envelope stays versionless; `AgentTransport.turn`'s signature
    stays byte-identical; existing fields are never touched. Unknown keys are dropped by
    `readMetaLine`, so old readers degrade silently.

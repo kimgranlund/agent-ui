@@ -116,7 +116,7 @@ export interface SemanticCheck {
   readonly requires?: readonly string[]
   check(input: SemanticCheckInput): readonly SemanticFinding[]
   /** T-0278: true when the turn cannot close its flow (the open booking still has a blank required field), so
-   *  `produce()` sends no FLOW_END_MISSING round for a reply that rightly asks for the missing value. */
+   *  `produce()` never infers flowEnd (T-0309) on a reply that rightly asks for the missing value. */
   holdsFlowOpen?(input: SemanticCheckInput): boolean
 }
 

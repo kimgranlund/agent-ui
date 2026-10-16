@@ -1907,10 +1907,9 @@ describe('produce() net-no-op strip + self-correct hint (GH #1142)', () => {
 // ── GH #1168 — flowEnd non-compliance (the #1142 NET_NOOP precedent): a live closing turn carries the
 // courtesy-close note but drops `"flowEnd": true`. produce() now (a) PASSES a model-authored flowEnd
 // through the peel/recompose (pre-#1168 the recompose silently dropped the field — formatMetaLine never
-// carried it), and (b) gives a closing-shaped turn missing it ONE targeted FLOW_END_MISSING correction
-// round, triggered mechanically: note + no ask + no plan + no genui + zero A2UI lines + flowEnd absent
-// + the user's own message matching the explicit-close lexicon. On refusal the turn ships UNCHANGED
-// (never a synthesized field) with FLOW_END_UNCORRECTED tallied on the trace. ────────────────────────
+// carried it), and (b) T-0309 (N1): sets flowEnd itself on a closing-shaped turn missing it, tallied
+// FLOW_END_INFERRED, with no repair round. Closing-shaped, mechanically: note + no ask + no plan + no genui
+// + zero A2UI lines + flowEnd absent + the user's own message matching the explicit-close lexicon. ───────
 const CLOSE_NOTE = '{"a2uiMeta":{"note":"Great working with you — your booking is all confirmed. Take care!"}}'
 const CLOSE_NOTE_WITH_FLOWEND =
   '{"a2uiMeta":{"note":"Great working with you — your booking is all confirmed. Take care!","flowEnd":true}}'
@@ -1960,7 +1959,7 @@ describe('isExplicitClose — the GH #1168 detection predicate', () => {
   )
 })
 
-describe('produce() flowEnd pass-through + FLOW_END_MISSING correction round (GH #1168)', () => {
+describe('produce() flowEnd pass-through + inference on a closing turn (GH #1168, T-0309)', () => {
   const mkDeps = (provider: AgentProvider): ProduceDeps => ({ provider, retrieve: () => [], catalog: defaultCatalog })
   const run = async (provider: AgentProvider, text: string, maxRounds = 3): Promise<string[]> => {
     const lines: string[] = []
@@ -1978,50 +1977,53 @@ describe('produce() flowEnd pass-through + FLOW_END_MISSING correction round (GH
     expect(meta.a2uiMeta.trace!.failureCodes).toEqual([])
   })
 
-  it('gives the missing flowEnd ONE correction round with the FLOW_END_MISSING hint; the corrected re-emit ships WITH flowEnd', async () => {
-    const { provider, calls, reqs } = stubProvider([CLOSE_NOTE, CLOSE_NOTE_WITH_FLOWEND])
+  // T-0309 (Kim's N1 ruling, 2026-10-16): a closing turn that declares no ask and no surface ships on round 1 with
+  // flowEnd set by the producer and FLOW_END_INFERRED tallied, instead of a FLOW_END_MISSING repair round.
+  it('N1: infers flowEnd on a closing turn with no ask and no surface; one round, FLOW_END_INFERRED tallied', async () => {
+    const { provider, calls } = stubProvider([CLOSE_NOTE, CLOSE_NOTE_WITH_FLOWEND])
     const lines = await run(provider, 'no further questions, we are done here')
-    expect(calls()).toBe(2)
-    const feedback = reqs()[1]!.messages.at(-1)!.content
-    expect(feedback).toContain('FLOW_END_MISSING')
-    expect(feedback).toContain('"flowEnd": true')
+    expect(calls()).toBe(1) // no FLOW_END_MISSING round
+    expect(lines).toHaveLength(1)
     const meta = readMetaLine(lines[0]!)!
     expect(meta.a2uiMeta.flowEnd).toBe(true)
-    expect(meta.a2uiMeta.trace!.failureCodes).toContain('FLOW_END_MISSING') // the fed-back round is on the trace
-    expect(meta.a2uiMeta.trace!.failureCodes).not.toContain('FLOW_END_UNCORRECTED')
+    expect(meta.a2uiMeta.trace!.rounds).toBe(1)
+    expect(meta.a2uiMeta.trace!.failureCodes).toEqual(['FLOW_END_INFERRED'])
   })
 
-  it('on refusal, ships the turn UNCHANGED (no synthesized flowEnd) and tallies FLOW_END_UNCORRECTED — exactly one round spent', async () => {
-    const { provider, calls } = stubProvider([CLOSE_NOTE, CLOSE_NOTE])
+  it('N1: a turn that declares an ask gets no inferred flowEnd and no FLOW_END_INFERRED', async () => {
+    const ASK_NOTE = '{"a2uiMeta":{"note":"Before you go, would you rate your stay?","ask":{"surfaceId":"ask-1"}}}'
+    const { provider } = stubProvider([ASK_NOTE])
     const lines = await run(provider, 'we are done')
-    expect(calls()).toBe(2) // never a second correction round, never a halt
-    const meta = readMetaLine(lines[0]!)!
-    expect(meta.a2uiMeta.flowEnd).toBeUndefined() // NEVER synthesized
-    expect(meta.a2uiMeta.trace!.failureCodes).toContain('FLOW_END_UNCORRECTED')
+    const meta = readMetaLine(lines.find((l) => readMetaLine(l)?.a2uiMeta.trace !== undefined)!)!
+    expect(meta.a2uiMeta.flowEnd).toBeUndefined()
+    expect(meta.a2uiMeta.trace!.failureCodes).not.toContain('FLOW_END_INFERRED')
+    expect(meta.a2uiMeta.trace!.failureCodes).not.toContain('FLOW_END_MISSING')
   })
 
-  it('negative control: an ordinary mid-flow note-only turn never triggers the round (lexicon miss)', async () => {
+  it('negative control: an ordinary mid-flow note-only turn is never inferred closed (lexicon miss)', async () => {
     const { provider, calls } = stubProvider([CLOSE_NOTE])
     const lines = await run(provider, 'tell me a joke')
     expect(calls()).toBe(1)
+    expect(readMetaLine(lines[0]!)!.a2uiMeta.flowEnd).toBeUndefined()
     expect(readMetaLine(lines[0]!)!.a2uiMeta.trace!.failureCodes).toEqual([])
   })
 
-  it('negative control: an explicit close whose turn carries A2UI content is NOT closing-shaped — no correction round', async () => {
+  it('negative control: an explicit close whose turn carries A2UI content is NOT closing-shaped: no inferred flowEnd', async () => {
     const { provider, calls } = stubProvider([`${CLOSE_NOTE}\n${VALID}`])
     const lines = await run(provider, 'we are done')
     expect(calls()).toBe(1)
     expect(lines.filter(isPureContent)).toHaveLength(2)
+    expect(readMetaLine(lines[0]!)!.a2uiMeta.flowEnd).toBeUndefined()
     expect(readMetaLine(lines[0]!)!.a2uiMeta.trace!.failureCodes).toEqual([])
   })
 
-  it('negative control: no round left to spend (maxRounds: 1) — ships unchanged, no correction attempted, no tally', async () => {
+  it('N1: the inference spends no round, so it holds with no round left (maxRounds: 1)', async () => {
     const { provider, calls } = stubProvider([CLOSE_NOTE])
     const lines = await run(provider, 'we are done', 1)
     expect(calls()).toBe(1)
     const meta = readMetaLine(lines[0]!)!
-    expect(meta.a2uiMeta.flowEnd).toBeUndefined()
-    expect(meta.a2uiMeta.trace!.failureCodes).toEqual([]) // never fed back ⇒ never UNCORRECTED
+    expect(meta.a2uiMeta.flowEnd).toBe(true)
+    expect(meta.a2uiMeta.trace!.failureCodes).toEqual(['FLOW_END_INFERRED'])
   })
 })
 

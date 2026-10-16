@@ -5,6 +5,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { buildRequestBody } from '../agent/providers/anthropic.ts'
+import { MODEL_CAPABILITIES } from '../agent/model-capabilities.ts'
 
 const BASE = { model: 'claude-sonnet-5-5', system: 'be helpful', messages: [] }
 
@@ -41,14 +42,14 @@ describe('buildRequestBody — the Effort dial → Anthropic extended-thinking m
 
   it("'medium'/'high'/'xhigh' on a CURRENT-family model (sonnet-5): adaptive thinking + output_config.effort — NEVER budget_tokens (TKT-0075: the API 400s on it)", () => {
     for (const [effort, maxTokens] of [
-      ['medium', 3072],
+      ['medium', 4096],
       ['high', 4096],
       ['xhigh', 6144],
     ] as const) {
       const body = buildRequestBody({ ...BASE, effort })
       expect(body['thinking']).toEqual({ type: 'adaptive', display: 'summarized' })
       expect(body['output_config']).toEqual({ effort })
-      expect(body['max_tokens']).toBe(maxTokens) // same tiered cap as the legacy arm — reply room unchanged by the migration
+      expect(body['max_tokens']).toBe(maxTokens) // T-0311: medium is floored at the unset tier (it was 3072)
     }
   })
 
@@ -103,14 +104,27 @@ describe('buildRequestBody — the Effort dial → Anthropic extended-thinking m
     }
   })
 
-  it('haiku-5-5 max_tokens tiers are ~30% above the shared 3072/4096/6144 (T-0035: the heavier tokenizer), Bedrock id included', () => {
+  it('haiku-5-5 max_tokens tiers are ~30% above the shared 4096/4096/6144 (T-0035: the heavier tokenizer; T-0311: medium floored at the unset 5376), Bedrock id included', () => {
     for (const model of ['claude-haiku-5-5', 'anthropic.claude-haiku-5-5']) {
       for (const [effort, maxTokens] of [
-        ['medium', 4096],
+        ['medium', 5376],
         ['high', 5376],
         ['xhigh', 8192],
       ] as const) {
         expect(buildRequestBody({ ...BASE, model, effort })['max_tokens'], `${model} @ ${effort}`).toBe(maxTokens)
+      }
+    }
+  })
+
+  // T-0311 (P3): adaptive thinking and the payload share max_tokens, so no effort tier may cap below the unset tier on a
+  // current-family model (medium was 3072 against 4096, and 4096 against 5376 on Haiku 5.5; r7 rounds stopped there).
+  it('T-0311: no effort tier caps max_tokens below the unset tier on any current-family model', () => {
+    const current = Object.entries(MODEL_CAPABILITIES).filter(([, row]) => !row.legacyBudget).map(([id]) => id)
+    expect(current.length).toBeGreaterThan(3)
+    for (const model of [...current, 'anthropic.claude-haiku-5-5']) {
+      const unset = buildRequestBody({ ...BASE, model })['max_tokens'] as number
+      for (const effort of ['low', 'medium', 'high', 'xhigh'] as const) {
+        expect(buildRequestBody({ ...BASE, model, effort })['max_tokens'] as number, `${model} @ ${effort}`).toBeGreaterThanOrEqual(unset)
       }
     }
   })

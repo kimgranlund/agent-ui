@@ -64,9 +64,9 @@ exists only at the call site. ADR-0187 therefore makes the caller SAY so:
   `round < maxRounds - 1`; otherwise it strips at once), then strips the whole group (the turn ships
   prose-only when a note exists; `NET_NOOP_STRIPPED` on the trace). A delete of a previously-open surface is never
   stripped. With nothing to render, send no A2UI lines (GH #1142).
-- The other `produce()` atFinalize correction round is `FLOW_END_MISSING`: the user explicitly closed a
-  completed flow but the leading meta-line lacks `"flowEnd": true`. The repair re-emits the same closing
-  meta-line with the field added, no A2UI lines (ADR-0198, GH #1168; `references/meta-line-vocabulary.md`).
+- A closing turn costs no round: when the user explicitly closed a completed flow and the leading meta-line
+  lacks `"flowEnd": true`, `produce()` sets it and tallies `FLOW_END_INFERRED` (T-0309, which replaced the
+  GH #1168 `FLOW_END_MISSING` round; ADR-0198, `references/meta-line-vocabulary.md`). Still send it yourself.
 - Split `updateComponents` streams stay legal (runtime SPEC-R4 out-of-order tolerance): mid-stream
   emptiness is a prefix, and only the COMPLETE set is judged. A live producer that opens-and-abandons
   eats one self-correct round; the lever if that runs hot is prompt teaching, never loosening the
