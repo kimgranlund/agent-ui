@@ -497,7 +497,7 @@ function stampCreateSurfaceCatalogId(output: A2uiOutput, catalogId: string): voi
  * Assemble the model messages for one generation round: the session history, the current user turn, and
  * — on a self-correct round — the prior INVALID attempt plus the validator's structured failures, so the
  * model sees exactly what it emitted and what was wrong (ADR-0070's "feed the failures back"). A
- * `'FEED_SCOPE'` round-failure (ADR-0097 §3) is fed back through the SAME check-result, re-emit wording (T-0289), plus its own hint (T-0290) — a
+ * `'FEED_SCOPE'` round-failure (ADR-0097 §3) is fed back through the SAME check-result, re-emit wording (T-0289), plus its own hint (T-0290): a
  * feed ask hosting an out-of-scope type is exactly as re-emittable as a schema/catalog defect.
  *
  * GH #174: the feedback message ALSO pins the note's audience. The leading meta-line's `note` (ADR-0088
