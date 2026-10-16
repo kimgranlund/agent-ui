@@ -2,7 +2,7 @@
 id: T-0319
 title: "Live round 8: full matrix after the round 6 and 7 fixes and the routing review ($42 cap)"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -38,3 +38,15 @@ No prompt or code fixes in this ticket. Screenshots stay out of the repo.
 - The round folder holds traces, ledger, round.json, runs/, README and report.md with the matrix and the per-ticket table; spend at or under $42.
 - The fog report is published and its id recorded.
 - `tickets.py check` and `npm run check` exit 0.
+
+## Outcome
+
+2026-10-16 · lane: full L2 · verdict: closed by reason (Round 8: 77 of 87, $36.18 of $42; T-0310 36 of 36 round-1 tool calls; FLOW_END_INFERRED 10; fog 62dbbb423e6e2d348a4444c9; verifier L2 pass) · verifier: verifier-L2 (sonnet) · base: 2fac78e87f3d
+- Changed: see commits
+- Commits: bd10d00 T-0319: acceptance criteria and a report wording fix; c740228 T-0319: Live round 8: full matrix after the round 6 and 7 fixes and the routing review ($42 cap); 910042a T-0319: Live round 8: full matrix after the round 6 and 7 fixes and the routing review ($42 cap)
+- Check: 1 `npx vitest run --project scripts scripts/e2e-admin/probe` exits 0: pass
+- Check: 2 `test -s .../2026-10-16-r8-matrix/report.md` plus the matrix against rounds 6 and 7 and the per-t...: pass
+- Check: 3 `jq -e '.reportId and (.round == "2026-10-16-r8-matrix")' .sdlc/evals/fog/2026-10-16-r8-matrix.json`: pass
+- Check: 4 `jq -e '.totals.costUsd <= 42 and .stop == "done"' .../round.json`: pass
+- Check: 5 `tickets.py check` exits 0: pass
+- Check: 6 `npm run check` exits 0: pass

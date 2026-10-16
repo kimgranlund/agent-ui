@@ -323,4 +323,4 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0316 | [.0316-check-cross-fires](.0316-check-cross-fires/handoff.md) | Check defects D1 to D3 found by the T-0314 contract tests | bug | L2 | P2 | none | 🟢 done |
 | T-0317 | [.0317-loop-surface-invariant](.0317-loop-surface-invariant/handoff.md) | Repair loop: never drop a turn's surface silently (L1 to L3 found by the T-0314 property test) | bug | L3 | P2 | none | 🟢 done |
 | T-0318 | [0318-corpus-records-rulings](0318-corpus-records-rulings/handoff.md) | Replace two corpus records that teach what the rulings forbid (frontier-booking-receipt, frontier-greet-card) | chore | L2 | P2 | none | 🔵 ready |
-| T-0319 | [0319-live-round-8](0319-live-round-8/handoff.md) | Live round 8: full matrix after the round 6 and 7 fixes and the routing review ($42 cap) | chore | L2 | P2 | none | 🔵 ready |
+| T-0319 | [.0319-live-round-8](.0319-live-round-8/handoff.md) | Live round 8: full matrix after the round 6 and 7 fixes and the routing review ($42 cap) | chore | L2 | P2 | none | 🟢 done |

@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:dbe05a08e58e -->
+<!-- sdlc-lite:managed:start v1 sha256:06add7d6bf3c -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -21,7 +21,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0198 Step flow pattern: step n of m, Back and Next, shared /draft data (0198-step-flow)
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (0199-itinerary-compare)
   - T-0315 Admiral and Lexicographer share the agent-ui catalog: 'New game' ranks the word board first on the Admiral's opening (0315-shared-catalog-cross-game-retrieval)
-- ready: 16
+- ready: 15
   - T-0160 Agent content as files: extract preset and pack seeds to .md manifests with a generated, drift-gated registry (0160-agent-content-files)
   - T-0161 Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind (0161-agent-content-overlays)
   - T-0162 Settings pane forms generated from each content kind's schema, with provenance, diff and reset (0162-agent-content-schema-forms)
@@ -37,11 +37,10 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0209 One source per concept: layer membership, calibration bullets, persona list; mini-skill ranking stability test (0209-context-single-source)
   - T-0247 validate-payload --catalog cannot load persona catalog ids (<base>--<persona>) (0247-validate-payload-persona-ids)
   - T-0318 Replace two corpus records that teach what the rulings forbid (frontier-booking-receipt, frontier-greet-card) (0318-corpus-records-rulings)
-  - T-0319 Live round 8: full matrix after the round 6 and 7 fixes and the routing review ($42 cap) (0319-live-round-8)
 - claimed: 0
 - paused: 0
 - blocked: 0
-- done: 288
+- done: 289
 - dropped: 4
 
 ## Procedures
