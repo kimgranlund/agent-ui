@@ -87,6 +87,9 @@ export interface SemanticCheckInput {
   /** T-0214: the surface a say turn's meta-line declares it is about to change (`target`, ADR-0206), when the
    *  session holds it, so a check can see a typed move answered with no update to that surface. */
   readonly target?: string
+  /** T-0286: on a say turn, every surface the session holds as its prior turns left it, so a check can find the
+   *  open table a move typed with no `target` was meant for. Absent on a client turn. */
+  readonly open?: readonly SurfaceView[]
 }
 
 /** The `SemanticAction` of a client message (`{action:{name, surfaceId, context?, dataModel?}}`), or undefined.
@@ -218,6 +221,11 @@ function replaySession(session: SemanticTurnLog): Map<string, MutableView> {
     }
   }
   return views
+}
+
+/** T-0286: every surface the session's prior ASSISTANT turns leave open, in the order the session first wrote them. */
+export function sessionSurfaceViews(session: SemanticTurnLog): SurfaceView[] {
+  return [...replaySession(session)].map(([surfaceId, view]) => ({ surfaceId, components: view.components, dataModel: view.dataModel, priorDataModel: view.dataModel }))
 }
 
 /**
