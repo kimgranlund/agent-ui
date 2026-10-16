@@ -782,6 +782,9 @@ export class UIAgentAdminElement extends UIElement {
    *  precedent — the shared `#unsubscribes` map is cleared on every DRAFT-store rewire). */
   #authoringUnsub: (() => void) | undefined
   #settingsEl: UISettingsElement | null = null
+  /** T-0306 (Kim's ruling 2026-10-16, "just show the options by default"): the schema's `model` section
+   *  renders in its own `ui-settings` inside the Model fold, so no section hides behind a section select. */
+  #modelSettingsEl: UISettingsElement | null = null
   // Every entry-list instantiation (prompt sections + all four capability kinds), keyed by `kind` — the
   // ONE registry `#rewireAllSections`/`#compose` both iterate uniformly.
   #capabilitySections: Map<string, EntryListSection> = new Map()
@@ -997,9 +1000,13 @@ export class UIAgentAdminElement extends UIElement {
         if (this.#storeSeen && this.#lastStore !== store) this.#resetConversationState()
         this.#storeSeen = true
         this.#lastStore = store
-        if (this.#settingsEl) {
-          this.#settingsEl.schema = schema
+        if (this.#settingsEl && this.#modelSettingsEl) {
+          const [agentSchema, modelSchema] = splitModelSection(schema)
+          this.#settingsEl.schema = agentSchema
           this.#settingsEl.store = store
+          this.#modelSettingsEl.schema = modelSchema
+          this.#modelSettingsEl.store = store
+          this.#modelSettingsEl.hidden = modelSchema === undefined
         }
         this.#rewireAllSections(store)
         // GH #1212 — warm the IndexedDB-routed resource cache for whatever this store currently holds
@@ -1199,6 +1206,10 @@ export class UIAgentAdminElement extends UIElement {
     // a listener on THIS element, which owns no event vocabulary of its own (descriptor `events: []`).
     settingsEl.addEventListener('select', (event) => event.stopPropagation())
     settingsEl.addEventListener('change', (event) => event.stopPropagation())
+    // T-0306: the Model section's own settings unit (same guards), mounted in the Model fold below the grid.
+    const modelSettingsEl = new UISettingsElement()
+    modelSettingsEl.addEventListener('select', (event) => event.stopPropagation())
+    modelSettingsEl.addEventListener('change', (event) => event.stopPropagation())
     // GH #574 — the three ranked content units the old single `settingsContent` div split into. Each is
     // its OWN reparent-able node (the TKT-0085 wrapper discipline, tripled again like GH #161's Context
     // split): `data-role` names the unit for CSS/tests (the `settings-content` precedent), `data-segment`
@@ -1545,7 +1556,7 @@ export class UIAgentAdminElement extends UIElement {
     // only because `settingsItem(...)`'s content rest-parameter and a `slot="summary"` child are two
     // different things: the icon must be appended AFTER, like every other slotted control on this file.
     // GH #845's `deleteAgentRow` rides the SAME call as ordinary fold CONTENT — the two are orthogonal.
-    const modelItem = settingsItem('model', 'Model', modelGrid, resetAgentRow, deleteAgentRow)
+    const modelItem = settingsItem('model', 'Model', modelGrid, modelSettingsEl, resetAgentRow, deleteAgentRow)
     modelItem.append(buildAdminHelpForSummary('model'))
 
     // GH #574 — Agent tab: who it is (Agent · Model · Bankroll — persona state lives with the persona).
@@ -1816,6 +1827,7 @@ export class UIAgentAdminElement extends UIElement {
     this.#shell = shell
     this.#conversation = conversation
     this.#settingsEl = settingsEl
+    this.#modelSettingsEl = modelSettingsEl
     // Paint the entry visibility state (LLD §16.2's OQ-D rec: all three shown, Chat primary) and the first
     // settings sub-section.
     this.#applySettingsSection(settingsNav.selected)
@@ -4917,6 +4929,15 @@ function appendSectionHelp(item: HTMLElement, kind: string): void {
  *  for the element's lifetime, so none of Context's rebuild-capture machinery applies here, and (like
  *  Context) the state is deliberately session-ephemeral: the store persists the agent's CONFIG, never
  *  its view state. */
+/** T-0306: split a version-1 schema into the Agent fold's sections and the Model fold's `model` section, so
+ *  each settings unit holds one section and `ui-settings`' single-section posture shows no rail or select.
+ *  Any other schema (no `model` section, an unsupported version) stays whole in the Agent fold. */
+function splitModelSection(schema: SettingsSchema | undefined): [SettingsSchema | undefined, SettingsSchema | undefined] {
+  const model = schema?.version === 1 ? schema.sections.find((section) => section.id === 'model') : undefined
+  if (schema === undefined || model === undefined) return [schema, undefined]
+  return [{ ...schema, sections: schema.sections.filter((section) => section !== model) }, { ...schema, sections: [model] }]
+}
+
 function settingsItem(key: string, summary: string, ...content: HTMLElement[]): HTMLElement {
   const item = foldItem('settings-item', key, summary, true)
   item.append(...content)

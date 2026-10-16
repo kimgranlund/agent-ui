@@ -290,11 +290,20 @@ describe('tabs.css — [overflow=menu] (GH #586) — shell grid, part assignment
     expect(rule).toMatch(/inline-size:\s*var\(--ui-tabs-tab-height\)/)
     expect(rule).toMatch(/block-size:\s*var\(--ui-tabs-tab-height\)/)
     expect(rule).toMatch(/color:\s*var\(--ui-tabs-ink-hover\)/) // full ink at rest (T-0149)
-    expect(rule).toMatch(/background:\s*var\(--ui-tabs-trigger-bg\)/) // a resting shape, not stray dots (T-0149)
-    expect(stylesBlock).toMatch(/:scope\[overflow='menu'\] > \[data-part='overflow'\] > \[data-part='trigger'\]:hover\s*\{\s*color:\s*var\(--ui-tabs-ink-hover\)/)
+    expect(rule).toMatch(/background:\s*var\(--ui-tabs-trigger-bg\)/) // the resting token (transparent since T-0306)
+    expect(stylesBlock).toMatch(/:scope\[overflow='menu'\] > \[data-part='overflow'\] > \[data-part='trigger'\]:hover(,[^{]*)?\s*\{\s*color:\s*var\(--ui-tabs-ink-hover\)/)
     expect(stylesBlock).toMatch(
       /:scope\[overflow='menu'\] > \[data-part='overflow'\] > \[data-part='trigger'\]:focus-visible\s*\{\s*outline:\s*var\(--md-sys-state-focus-ring-width\)\s+solid\s+var\(--md-sys-color-focus-ring\)/,
     )
+  })
+
+  it('T-0306: the trigger is ghost: a transparent resting token, the low container wash on hover and on press', () => {
+    expect(tokenBlock).toMatch(/--ui-tabs-trigger-bg:\s*transparent;/)
+    expect(tokenBlock).toMatch(/--ui-tabs-trigger-bg-hover:\s*var\(--md-sys-color-neutral-container-low\);/)
+    const sel = String.raw`:scope\[overflow='menu'\] > \[data-part='overflow'\] > \[data-part='trigger'\]`
+    const m = stylesBlock.match(new RegExp(`${sel}:hover,\\s*${sel}:active\\s*\\{([^}]*)\\}`))
+    expect(m, 'one wash rule covers hover and press').not.toBeNull()
+    expect((m as RegExpMatchArray)[1]).toMatch(/background:\s*var\(--ui-tabs-trigger-bg-hover\)/)
   })
 
   it('the overflow part authors its OWN [hidden]{display:none} — ui-menu\'s display:contents (an author rule) outranks the UA [hidden] rule otherwise', () => {

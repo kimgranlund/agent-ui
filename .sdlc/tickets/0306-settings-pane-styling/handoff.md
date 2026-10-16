@@ -22,3 +22,19 @@ The Agent tab of agent-admin's Settings pane looks like the rest of the pane (Ki
 - A screenshot of the real pane at 400 and 1000px, light and dark, next to Kim's screenshot shows the three fixes (evidence cache, not the repo).
 - Tests that pin each change (the section select hidden when the host navigates, or aligned with a gap; the overflow trigger's idle background transparent); red at the base.
 - The settings and tabs tests, the dogfood render lint for the touched widgets, and `npm run check` exit 0.
+
+## Acceptance criteria
+verifier: L3
+
+Kim ruling (2026-10-16) on the section select: "just show the options by default". Every settings section renders in the page in its own fold (Agent in the Agent fold, the T-0185 Model section in the Model fold), and no section select renders in the pane. Reading of finding 2: each settings unit is its own card in its fold; the generated panel inside carries no card of its own.
+
+tests: packages/agent-ui/app/src/controls/agent-admin/agent-admin.browser.test.ts, packages/agent-ui/components/src/controls/tabs/tabs.browser.test.ts, packages/agent-ui/components/src/controls/tabs/tabs-css.test.ts
+
+- (red) `npx vitest run --config vitest.browser.config.ts --project packages packages/agent-ui/app/src/controls/agent-admin/agent-admin.browser.test.ts -t T-0306` exits 0: `ui-settings` carries the entry-card chrome and its panel none; in the compact band no section select renders, the Model fields (max tokens) are visible inside the Model fold, and the Agent fold holds only the Agent section.
+- `npx vitest run --config vitest.browser.config.ts --project packages packages/agent-ui/components/src/controls/tabs/tabs.browser.test.ts -t T-0306` exits 0 (red at a1b93141, recorded pre-edit in the first pass): the overflow trigger's idle background is transparent, its hover background is the neutral container-low role, and it stays a round square.
+- `npx vitest run packages/agent-ui/components/src/controls/tabs/tabs-css.test.ts -t T-0306` exits 0 (red at a1b93141, recorded pre-edit in the first pass): the resting token is transparent and one rule washes hover and press.
+- `npx vitest run packages/agent-ui/app/src/controls/settings packages/agent-ui/app/src/controls/agent-admin packages/agent-ui/components/src/controls/tabs` exits 0.
+- `npx vitest run --config vitest.browser.config.ts --project packages packages/agent-ui/app/src/controls/settings packages/agent-ui/app/src/controls/agent-admin packages/agent-ui/components/src/controls/tabs` exits 0.
+- `npx vitest run --config vitest.browser.config.ts --project site site/pages/dogfood-render.browser.test.ts` exits 0.
+- `npm run check` exits 0.
+- Screenshots of the real Settings pane at 400 and 1000px, light and dark, before and after, sit beside Kim's screenshot in `/private/tmp/claude-501/scratch/t0306-shots/` (not the repo).
