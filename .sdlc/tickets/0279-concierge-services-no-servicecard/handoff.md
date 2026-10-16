@@ -34,3 +34,8 @@ ProductCard. A priced, bookable treatment is a product or offer by the catalog s
 
 ## Scope note (conductor, 2026-10-16)
 Also update the round scenario oracles that still expect ServiceCard for a priced services list (six, per `.sdlc/evals/rounds/2026-10-15-r4-fixes/report.md` cluster A) to expect ProductCard, with the generators and their pinning tests.
+
+## Lane bundle
+This solo lane delivers these tickets in order, one commit each (`T-NNNN: <title>`):
+- .sdlc/tickets/0279-concierge-services-no-servicecard/handoff.md
+- .sdlc/tickets/0285-concierge-facility-hours-composite/handoff.md
