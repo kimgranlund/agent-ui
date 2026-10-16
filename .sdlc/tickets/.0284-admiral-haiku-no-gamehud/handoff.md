@@ -2,7 +2,7 @@
 id: T-0284
 title: "Haiku opens Battleship with no GameHud, and no check sends the Admiral opening back"
 type: bug             # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P3         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -29,6 +29,14 @@ GAME_HUD_MISSING exists for the word board (round 3 :110) but did not fire on th
 - A checks test: a battleship opening with no GameHud is sent back; one with it passes.
 - `npm run check` exits 0.
 
+<<<<<<< HEAD:.sdlc/tickets/0284-admiral-haiku-no-gamehud/handoff.md
 ## Acceptance criteria
 - `npx vitest run packages/agent-ui/a2ui/src/catalog/hidden-state-checks.test.ts` exits 0: the T-0284 fleet-hud block fails the recorded row-sweep opening with GAME_HUD_MISSING and passes the same opening with a GameHud.
 - `npm run check` exits 0.
+=======
+## Outcome
+
+2026-10-15 · lane: full L1 · verdict: closed by reason (Merged in #2041 (Haiku prose game moves); verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none
+>>>>>>> eff30aec (Ticket store: closes for T-0279, T-0280, T-0284, T-0286 (stale open copies removed); T-0285 ruling; T-0287 round 5 filed):.sdlc/tickets/.0284-admiral-haiku-no-gamehud/handoff.md
