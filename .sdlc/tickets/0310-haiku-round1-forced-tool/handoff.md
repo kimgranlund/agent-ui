@@ -15,7 +15,7 @@ Kim 2026-10-16 (R8): on round 1 of a Haiku turn triggered by a click (an action 
 
 ## Done when
 - A produce test: a Haiku click turn builds round 1 with thinking disabled and tool_choice render_surface; a typed-message turn and a Sonnet click turn are unchanged; red at the base.
-- The live-agent tests and `npm run check` exit 0; the next live round measures round-1 tool calls on Haiku click turns.
+- The live-agent tests and `npm run check` exit 0.
 
 verifier: L3
 
@@ -25,4 +25,6 @@ verifier: L3
 - `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent` exits 0.
 - `npx vitest run --project scripts scripts/e2e-admin/probe/replays` exits 0.
 - `npm run check` exits 0.
-- Live measurement (not a gate): the next live round counts round-1 `render_surface` calls on Haiku click turns against r7's 12 no-tool round-1 calls.
+
+## Follow-up (not an acceptance criterion; conductor amendment 2026-10-16)
+The next live round (round 8) counts round-1 `render_surface` calls on Haiku click turns against round 7's 12 no-tool round-1 calls. Try 1's verifier failed only this line, which no check can run before a live round (AGENTS.md: live legs are never a gate); it moves here.
