@@ -1,0 +1,20 @@
+{
+  "round": "2026-10-16-r7-fails",
+  "ticket": "T-0303",
+  "reportId": "1e10193208c4414271381d65",
+  "mapping": ".sdlc/evals/fog-manifest.json",
+  "mappingHash": "8255a4d8d99d5c802205393662f9d4cc07d59738d6f05ce7fda6e6e3efff7eb8",
+  "bundleFingerprint": "0b3488492a0b4afa40ecc7a437d0746dd1e057caf8a2c5b0ed830c0bcb03df4f",
+  "engineeringRun": "run-925852ff3dce18af004a8831",
+  "events": 174,
+  "sources": 104,
+  "decisions": 4,
+  "findings": 3,
+  "diagnosticFindings": 0,
+  "excluded": "traces/2026-10-16.jsonl lines 62 to 70 (9 upstream 400 usage-limit error turns, 15:54 to 15:57 UTC, before the key swap) were blanked in the ingested copy, so line numbers match the round folder; the two runs they belonged to were rerun clean at lines 71 to 80 and 91 to 96",
+  "ingest": "python3 ~/.claude/skills/context-fog-of-war/scripts/engineer.py ingest <copy of .sdlc/evals/rounds/2026-10-16-r7-fails with trace lines 62 to 70 blanked> --mapping .sdlc/evals/fog-manifest.json --out <dir>",
+  "publish": "python3 ~/.claude/skills/context-fog-of-war/scripts/library.py publish <dir>/final.json",
+  "audit": "python3 ~/.claude/skills/context-fog-of-war/scripts/audit.py scan --root . --mapping <the contract-audit field-run mapping-topics.json plus producer-repair (produce.ts string literals) and tool-definition (response-type.ts) surfaces> --out <dir>/audit.json; then audit.py link --finding f1|f2|f4 --data <dir>/final.json",
+  "analysis": "T-0303 decision analysis: clusters A (render_surface messages as a JSON string, SURFACE_DEGRADED) and B (a repair round updates a failure-named new surface without creating it) as d1 and d2, plus d3 (the forced Haiku repair round held) and d4 (Haiku round 1 at max_tokens 4096), with 8 guidance edges and 3 reviewed findings (report.md, Why it failed and how to fix it).",
+  "hydrate": "decisions, guidanceEdges and findings added to the ingested session.json with exact excerpts and event ids before the first publish, then diagnostics.py --data --out, fog.py validate and library.py publish; run by the context-fog-of-war SKILL.md Autonomous run checklist"
+}

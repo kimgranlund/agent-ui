@@ -1,7 +1,7 @@
 ---
 id: W-fog-skill-contract-audit
 title: "context-fog-of-war: a static contract audit of a harness's guidance surfaces (catalogs, schemas, skills, prompts, checks, corpus)"
-status: ready
+status: done
 size: L3
 created: 2026-10-16
 ---
@@ -32,5 +32,8 @@ Harness-agnostic: no agent-ui paths or names in the skill's own files or fixture
 ## Done when
 - The routing table names the codebase/corpus input; `references/contract-audit.md` holds the rubric with every defect class above; `scripts/audit.py` runs with `--help` and on a fixture.
 - One unit test per mechanical detector, each failing without the detector; `python3 -B -m unittest discover -s tests` exits 0.
-- The field run report lists findings with file:line and the caught/partly/missed table for the seven field-evidence cases.
+- The field run report lists findings with file:line and the caught/partly/missed table for the field-evidence cases (eight: bullet 5 holds three).
 - The changelog entry exists; no em dash on added lines (diff against the backup).
+
+## Conductor note for the verifier (2026-10-16)
+The acceptance checks are in the solo report (`.sdlc/runtime/tasks/fog-skill-contract-audit/solo-report.md`); judge them against the Done when above. Also judge honesty: the conflict detector is noisy (54 and 8 candidates, none held on review); its output and the docs must label conflicts as candidates and state the precision limit, and the field-report caught/partly/missed table must match what the script and the rubric actually do. Verifier L3: two criteria pin exact strings.
