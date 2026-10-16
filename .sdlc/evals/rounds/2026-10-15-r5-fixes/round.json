@@ -1,0 +1,48 @@
+{
+  "kind": "live-round",
+  "commit": "08da7dda10a42ba94c2bdee28804bf0b8da40989",
+  "liveCommands": ".sdlc/evals/rounds/2026-10-15-r5-fixes/live-commands.sh",
+  "cap": 15,
+  "stop": "done",
+  "window": {
+    "since": "2026-10-16T04:23:19.422Z",
+    "until": "2026-10-16T05:06:03.949Z"
+  },
+  "prices": {
+    "source": "claude-api skill price table, 2026-10-06",
+    "table": {
+      "haiku": [
+        0.1,
+        0.5
+      ],
+      "sonnet": [
+        2,
+        10
+      ],
+      "opus": [
+        4,
+        20
+      ]
+    },
+    "fallback": "opus",
+    "note": "USD per million tokens, input and output; cache reads priced as input, cache writes at 1.25x input"
+  },
+  "totals": {
+    "runs": 29,
+    "traceLines": 173,
+    "tokens": {
+      "input": 1505156,
+      "output": 352827,
+      "cacheRead": 3893288,
+      "cacheCreation": 140388
+    },
+    "costUsd": 7.483305
+  },
+  "files": {
+    "traces": "traces/<day>.jsonl: the .agent-traces lines inside the window, same shape as the dev proxy log",
+    "ledger": "ledger.jsonl: one row per run, traces as 1-based inclusive line ranges into traces/",
+    "runs": "runs/<name>/: report.json and fixture.json, committed",
+    "screenshots": "$AGENT_UI_EVIDENCE_DIR (default `~/Library/Caches/agent-ui/evidence` on macOS, `${XDG_CACHE_HOME:-~/.cache}/agent-ui/evidence` elsewhere)/<round>/<run>/turn-<n>.png: local cache outside the repo, may be gone; report.json names each one by absolute path",
+    "readme": "README.md: the entry file, what each file is, where it came from and how to read it"
+  }
+}
