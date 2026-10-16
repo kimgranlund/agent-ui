@@ -21,6 +21,7 @@ grammar.md is byte-pinned: recapture only through the deliberate flow in skill `
 - The prompt-equivalence baseline is recaptured deliberately; agent-assets freshness, the live-agent tests and `npm run check` exit 0.
 
 ## Acceptance criteria
+verifier: L3
 - (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/agent/asset-source.test.ts` exits 0: the grammar pin asserts no `#AB123`-shaped reference in `grammar.md`.
 - (red) `npx vitest run --project site site/pages/agent-admin-app.test.ts -t "seedVersion migration"` exits 0: the booking-flow playbook's BookingConfirmation title is "Booked" with no reference, and the Concierge seed is at version 16.
 - `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent` exits 0 after the deliberate baseline recapture (the only baseline delta is the dropped parenthetical, in each of the four keys).

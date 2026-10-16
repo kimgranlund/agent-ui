@@ -23,6 +23,7 @@ One solo lane (wave-gr), one commit per ticket, in order:
 3. T-0313: one matcher per composite moment, the structured-container trigger fix, the Play again vocabulary fix (this ticket).
 
 ## Acceptance criteria
+verifier: L3
 - (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts -t "ask cue"` exits 0: the BookingConfirmation, ProductCard and BookingForm rows carry the Concierge ask cues (confirm, services, booking) in that precedence, each matching its round-scenario sentence. The facility ask stays local to `personas/concierge/checks.ts`: its answer (one Card holding a DescriptionList) is no composite, so no row owns it.
 - `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog` exits 0 with `personas/concierge/checks.test.ts` unchanged: every Concierge moment resolves with the same finding path and message as before.
 - `npx vitest run --project scripts scripts/e2e-admin/probe` exits 0 (the Concierge replays unchanged).
