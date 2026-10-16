@@ -144,12 +144,12 @@ export const HOSPITALITY_SKILLS: readonly NewEntryInput[] = [
   },
   {
     label: 'amenity-service-card',
-    description: 'hotel services and amenities to open: spa, dining, transfers, room service',
+    description: 'bookable hotel services and treatments with a price: spa, dining, transfers, room service',
     content:
-      'A list of bookable services (spa, dining, airport transfer) is one ServiceCard each, never a hand-built ' +
-      'Card: name the service, a one-line description, available bound to its data-model flag so the card ' +
-      'shows Unavailable when it is closed, and actionLabel the verb ("Book", "Reserve"). Group them in one ' +
-      'Column; a room or product to buy stays a ProductCard.',
+      'A list of priced, bookable services (spa treatments, airport transfer) is one ProductCard each, never a ' +
+      'Table or a hand-built Card: a Grid templated over the list in the data model, title the service, price ' +
+      'its price, priceNote the duration or unit ("60 min", "per car"), and one action, actionLabel "Book", with ' +
+      'the service id in its context. A ServiceCard stays for a service or agent to open, with no price.',
   },
 ]
 

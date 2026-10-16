@@ -49,7 +49,7 @@ describe('live round 4', () => {
     const flow = (name) => ROUND4_LONG_FLOWS.find((f) => f.scenario.name === name).scenario
     expect(flow('booking-confirm').steps.flatMap((s) => s.expect ?? [])).toEqual(['BookingForm', 'BookingConfirmation'])
     expect(flow('booking-confirm').steps[0].expectRouting.exemplars).toEqual({ include: ['domain-concierge-booking-request'] })
-    expect(flow('spa-services').steps[0].expect).toEqual(['ServiceCard'])
+    expect(flow('spa-services').steps[0].expect).toEqual(['ProductCard'])
     const game = flow('game-give-up').steps
     expect(game[0].expectRouting.exemplars).toEqual({ include: ['domain-lexicographer-word-board'] })
     expect(game.find((s) => s.say === 'I give up.').expectRouting.exemplars).toEqual({ include: ['domain-lexicographer-game-over'] })

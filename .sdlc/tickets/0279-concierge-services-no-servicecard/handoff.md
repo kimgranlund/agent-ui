@@ -39,3 +39,10 @@ Also update the round scenario oracles that still expect ServiceCard for a price
 This solo lane delivers these tickets in order, one commit each (`T-NNNN: <title>`):
 - .sdlc/tickets/0279-concierge-services-no-servicecard/handoff.md
 - .sdlc/tickets/0285-concierge-facility-hours-composite/handoff.md
+
+## Acceptance criteria
+verifier: L3
+- `npx vitest run packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts` exits 0, with a ProductCard row whose recorded Haiku spa Table yields `PRODUCT_CARD_MISSING` and whose ProductCard Grid, hours Table and unworded priced Table yield none.
+- `npx vitest run scripts/e2e-admin/probe/scenarios` exits 0: the six "What spa services can I book" turns expect ProductCard; facility turns keep ServiceCard.
+- The `amenity-service-card` skill in `site/pages/agent-admin-libraries.ts` teaches one ProductCard per priced service, never a Table; Concierge seedVersion is 13 and its manifest is refreshed.
+- `npm run check` exits 0.

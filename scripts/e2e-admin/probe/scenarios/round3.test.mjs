@@ -70,7 +70,7 @@ describe('live round 3', () => {
     const hand = LONG_FLOWS.find((f) => f.agent === 'croupier').scenario.steps
     expect(hand.map((s) => s.say ?? s.click)).toEqual(["Let's play blackjack.", '100', 'Hit', 'Stand.', 'Deal again', '50', 'Stand.'])
     const booking = LONG_FLOWS.find((f) => f.agent === 'concierge').scenario.steps
-    expect(booking.flatMap((s) => s.expect ?? [])).toEqual(['ServiceCard', 'BookingForm', 'BookingForm', 'BookingConfirmation'])
+    expect(booking.flatMap((s) => s.expect ?? [])).toEqual(['ProductCard', 'BookingForm', 'BookingForm', 'BookingConfirmation'])
     for (const f of LONG_FLOWS) expect(runs.filter((r) => r.part === 'long' && r.agent === f.agent).map((r) => r.model.short)).toEqual(['haiku', 'sonnet', 'opus'])
   })
 

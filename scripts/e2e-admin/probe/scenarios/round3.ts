@@ -122,13 +122,13 @@ export const LONG_FLOWS: ReadonlyArray<{ agent: string; scenario: RoundScenario 
     scenario: {
       name: 'booking',
       steps: [
-        say('What spa services can I book during my stay?', undefined, 'ServiceCard'),
+        say('What spa services can I book during my stay?', undefined, 'ProductCard'),
         say('Book a 60-minute massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau.', { domains: ['concierge'], exemplars: { include: [BOOKING_REQUEST] } }, 'BookingForm'),
         say('Make it 16:00 instead, same day.', undefined, 'BookingForm'),
         say('Those details are right, please confirm the booking.', undefined, 'BookingConfirmation'),
         say("Thanks, that's all."),
       ],
-      expectComponents: ['ServiceCard', 'BookingForm', 'BookingConfirmation'],
+      expectComponents: ['ProductCard', 'BookingForm', 'BookingConfirmation'],
     },
   },
 ]
