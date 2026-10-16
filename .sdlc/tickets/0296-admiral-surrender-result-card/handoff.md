@@ -22,3 +22,7 @@ The board-grid End state in `site/pages/agent-admin-libraries.ts` (and the alway
 ## Done when
 - The replay and the new check's test exit 0, each red at the base.
 - `site/pages/agent-admin-presets.test.ts`, the manifest drift test (`site/lib/agent-manifest`, bump seedVersion and regenerate if the seed changes) and `npm run check` exit 0.
+
+## Lane bundle
+- T-0296 Admiral: a surrender ends with one ResultCard beside the revealed board (`.sdlc/tickets/0296-admiral-surrender-result-card`)
+- T-0300 A settled table frames Deal again alone in a Card: a LONE_BUTTON_FRAME check (`.sdlc/tickets/0300-lone-button-frame`)
