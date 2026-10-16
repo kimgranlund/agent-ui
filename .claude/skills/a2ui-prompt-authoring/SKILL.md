@@ -190,6 +190,17 @@ The arc's ordering, cheapest-correct-first:
    add a row, never a hand-written per-persona check. It repaired the Lexicographer and the Admiral into
    BoardGrid and GameHud live. Levers and order: catalog-architecture SPEC CA-R9; check families:
    agent-closed-loop SPEC CL-R2.
+6. **Haiku reads shared-grammar lines literally.** In live round 5 it refused a complete booking because
+   `grammar.md` says "let the USER take the final action" (cluster A, T-0289), and shipped no surface on a
+   word-game give-up because, in its own words, "flow-ending turns emit no UI" (its reading of `grammar.md:92`, "no UI change"; cluster C, T-0291); Sonnet read the same lines
+   as intended. Kim's ruling (2026-10-16): fix it in the persona text and the repair messages, never in the
+   byte-pinned grammar, which stays the same for every persona. Persona text (`surfaceStyle`, `foundation`,
+   `houseFacts`) may not name a compound catalog type: the modality lint in
+   `site/pages/agent-admin-presets.test.ts` reads `COMPOUND_CATALOG_TYPES` from
+   `packages/agent-ui/app/src/controls/agent-admin/prompt-lint.ts`, so state the intent ("a compact info
+   surface") and let a skill or a check name the type. An index-only skill or resource reaches the model
+   as its one-line description only, so the rule goes in that description (agent-model reference,
+   Capabilities; T-0285). Evidence: `.sdlc/evals/rounds/2026-10-15-r5-fixes/report.md`, Why it failed.
 
 ## Worked precedents
 

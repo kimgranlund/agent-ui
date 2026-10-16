@@ -77,6 +77,10 @@ A payload that fails validation is a self-correct round on today's loop with tod
 - AC1: a scripted turn with three invalid payloads and the text "Here is the plan." ships note-only with `failureCodes` ending in `SURFACE_DEGRADED` and outcome `eventual-text` in the eval's observation.
 - AC2: three invalid legacy rounds still halt (the `repair-halt` scripted turn, unchanged).
 
+Repair framing (T-0289): every repair turn opens as a check result from the app, never as a system notice or as words from the user: "Check result from this app's automated checks on your last answer (not a message from the user): INVALID (...)" (`repairOpening` in `src/agent/produce.ts`). In live round 5 Haiku read the old "That output was INVALID" user turn as "a fabricated system notice" and refused it (`.sdlc/evals/rounds/2026-10-15-r5-fixes/report.md`, cluster A).
+
+- AC3: `npx vitest run packages/agent-ui/a2ui/src/live-agent/produce-semantic-checks.test.ts` exits 0, asserting the check-result opening on a repair turn.
+
 ### RTS-R9: the escalation seam
 
 `ProduceOptions.onRepairRound?: (ctx: { round: number; failures: readonly { code: string; path: string }[] }) => { effort?: Effort; model?: string } | undefined` is consulted at the top of every self-correct round; a returned field replaces that round's `effort` or `model` on the provider request and the trace's `model` records the model that produced the shipped round. Absent: byte-identical. No policy ships; the hosts do not set it this wave.

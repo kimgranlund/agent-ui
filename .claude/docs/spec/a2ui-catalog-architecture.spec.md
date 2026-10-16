@@ -149,7 +149,7 @@ T-0208 ships the moment checks before W2 as one data table, `src/catalog/composi
 |---|---|---|---|---|
 | croupier | games | croupier | games | CardTable, PlayingCard, GameHud skill |
 | quant | none | none | none (knowledge later, D7) | `dashboard-kpi-grid`, `drilldown` skills use core types |
-| concierge | hospitality | concierge | hospitality | BookingForm, `amenity-service-card` (ProductCard per priced service, T-0279) |
+| concierge | hospitality | concierge | hospitality | BookingForm, `amenity-service-card` (ProductCard per priced service, T-0279); Kim's rulings below the table |
 | restaurant (Maitre d') | hospitality | none | hospitality | T-0197 wants BookingForm; T-0200 wants ServiceCard |
 | travel | hospitality | none | hospitality, commerce | `trip-plan` ProductCards (T-0200 item 4), itinerary (T-0199) |
 | curator | none | none | none (knowledge later, D7) | `collection-carousel`, `itinerary-tabs` use core types |
@@ -162,6 +162,11 @@ T-0208 ships the moment checks before W2 as one data table, `src/catalog/composi
 | admiral | games | none | games | `board-grid` skill, BoardGrid |
 | alchemist | games | none | games, design | tagline: Swatch targets, ColorPicker, Ramp reveals |
 | dungeon-master | games | none | games | `quest-log` skill |
+
+Concierge rulings (Kim), each enforced by a check or an oracle, not by prose alone:
+- 2026-10-15 (T-0266): a booking ask that already carries every detail shows a BookingForm pre-filled for the guest to confirm, never a read-back Card.
+- 2026-10-16 (T-0279, T-0292): a priced, bookable service or add-on is one ProductCard each (price, duration, a Book action), never a Table; ServiceCard stays for a service or agent to open.
+- 2026-10-16 (T-0285): facility hours are one compact info Card holding a DescriptionList, one row per facility, never a ServiceCard per facility.
 
 Two presets (travel, alchemist) need two domains once ProductCard and Ramp leave the default in W2, and W0 builds the id mechanism, so D2 must be ruled before W0 unless ProductCard and Ramp stay in core.
 
