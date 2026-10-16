@@ -24,7 +24,8 @@ Source of truth: `produce` in `packages/agent-ui/a2ui/src/agent/produce.ts` (wit
    `atFinalize` is a turn-end-only judgment (ADR-0187), off mid-stream, so a
    `createSurface` with no components fails `root-missing` before anything ships.
 7. On a valid verdict: the FEED_SCOPE gate when an `ask` is declared (a violation is a
-   self-correct round), then the persona's semantic checks when `deps.semanticChecks` is set
+   self-correct round; on the last round the ask is dropped and the surface ships whole as an
+   ordinary one, tallied `FEED_SCOPE_RESCOPED`, T-0299), then the persona's semantic checks when `deps.semanticChecks` is set
    (ADR-0238: a finding is a self-correct round carrying its sentence; on the last round
    the valid payload ships tallied `SEMANTIC_UNCORRECTED`, never a halt), then the NET_NOOP dodge check (a surface created and deleted in one turn
    gets one correction round, then the group is stripped and the turn degrades to prose,
@@ -57,9 +58,13 @@ T-0172 rules (2026-10-14 traces):
 - An action turn is judged even when its round sends no payload: the semantic checks read the action
   (`SemanticCheckInput.action`, the click's name, surface, context and click-time data model), so a click
   answered in prose alone spends a repair round (the Croupier's `ACTION_NOT_APPLIED`) and ships tallied at the
-  bound. A say turn is judged the same way (`intent`, plus `target` when its meta-line names an open surface): a
+  bound. The repair round after such a no-payload finding passes `toolChoice` `render_surface` (T-0298); the
+  Anthropic adapter sends it only with thinking off and never on a model that rejects a forced choice. A say turn is judged the same way (`intent`, plus `target` when its meta-line names an open surface): a
   typed move or shot at that surface with no update is `ACTION_NOT_APPLIED`, and a game opening or a Concierge
   services, booking or confirm ask answered with no surface is `SURFACE_MISSING` (T-0265).
+- A missing-composite finding (`<COMPOSITE>_MISSING`, `catalog/composite-moments.ts`) stays binding for the rest
+  of the turn (T-0299): a later round whose surfaces hold neither the composite nor a type its row stands aside for
+  gets the same code again, so a swap to a shape no row detects is repaired, or ships tallied `SEMANTIC_UNCORRECTED`.
 - A self-correct round never loses a surface: a session-new surface the failed round created that no
   failure names must come back. The repair message names it ("Keep `ask-1` ..."); a later valid round
   without it spends a `SURFACE_DROPPED` round, and on the last round halts with `SURFACE_DROPPED`.

@@ -239,3 +239,13 @@ export function compositeMomentCheck(m: CompositeMoment): SemanticCheck {
 }
 
 export const compositeMomentChecks: readonly SemanticCheck[] = COMPOSITE_MOMENTS.map(compositeMomentCheck)
+
+/** T-0299: the row a `<COMPOSITE>_MISSING` code names, or undefined for any other code. */
+export function missingCompositeMoment(code: string): CompositeMoment | undefined {
+  return COMPOSITE_MOMENTS.find((m) => `${upperSnake(m.composite)}_MISSING` === code)
+}
+
+/** T-0299: whether these surfaces answer `m`'s moment: one holds the composite or a type the row stands aside for. */
+export function compositeAnswered(m: CompositeMoment, views: readonly SurfaceView[]): boolean {
+  return views.some((view) => [...view.components.values()].some((c) => c.component === m.composite || m.lacks.includes(c.component)))
+}

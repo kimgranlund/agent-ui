@@ -6,16 +6,20 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: round 6 cluster D (proposed ticket, follows T-0290). Live round 6 (2026-10-15-r6-matrix :74-:75, Haiku
-// 5.5). The booking ask answered rounds 1 and 2 with a meta-line and no render_surface call (SURFACE_MISSING twice),
-// then round 3 built the BookingForm on the feed ask ask-3. FEED_SCOPE on the last round has no round left to repair
-// it, so the form is degraded away (SURFACE_DEGRADED) and the turn ships nothing. Pinned on today's codes and the
-// lost ask-3 until the last round keeps a valid form.
+// T-0299: live round 6 (2026-10-15-r6-matrix :74-:75, Haiku 5.5). The booking ask answered rounds 1 and 2 with a
+// meta-line and no render_surface call (SURFACE_MISSING twice), then round 3 built the BookingForm on the feed ask
+// ask-3. FEED_SCOPE on the last round had no round left to repair it, so the form was degraded away
+// (SURFACE_DEGRADED) and the turn shipped nothing. The last round now re-scopes it: the ask is dropped, the form ships
+// as an ordinary surface, tallied FEED_SCOPE_RESCOPED.
 const trace = (record) => record.lines.map((l) => JSON.parse(l)).map((l) => l.a2uiMeta?.trace).find((t) => t !== undefined)
 
-it('concierge-haiku-final-round-feed-scope: a BookingForm built on a feed ask in the last round is dropped', async () => {
+it('concierge-haiku-final-round-feed-scope: a BookingForm built on a feed ask in the last round ships as an ordinary surface', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./concierge-haiku-final-round-feed-scope.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed).toEqual([{ check: 'no-surface-loss', turn: 1, status: 'fail', detail: 'created in a round but never shipped: ask-3' }])
-  expect(trace(report.records[1])).toMatchObject({ rounds: 3, failureCodes: ['FEED_SCOPE', 'SURFACE_DEGRADED'] })
+  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual([])
+  expect(trace(report.records[1])).toMatchObject({ rounds: 3, failureCodes: ['SURFACE_MISSING', 'FEED_SCOPE_RESCOPED'] })
+  const shipped = report.records[1].lines.map((l) => JSON.parse(l))
+  expect(shipped.some((m) => m.createSurface?.surfaceId === 'ask-3')).toBe(true)
+  expect(shipped.some((m) => m.updateComponents?.components?.some((c) => c.component === 'BookingForm'))).toBe(true)
+  expect(shipped.find((m) => m.a2uiMeta?.trace !== undefined).a2uiMeta.ask).toBeUndefined()
 })

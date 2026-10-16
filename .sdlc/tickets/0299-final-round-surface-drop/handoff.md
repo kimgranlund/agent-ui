@@ -23,6 +23,13 @@ Round 6 cluster D (`.sdlc/evals/rounds/2026-10-15-r6-matrix/report.md`, P1, foll
 - `scripts/e2e-admin/probe/replays/concierge-haiku-final-round-feed-scope.test.mjs` flipped (ask-3 kept, no SURFACE_DEGRADED) and a test for the binding finding; each red at the base.
 - The concierge checks, live-agent tests and `npm run check` exit 0.
 
+## Acceptance criteria
+- (red) `npx vitest run --project scripts scripts/e2e-admin/probe/replays/concierge-haiku-final-round-feed-scope.test.mjs`
+- (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/produce-binding-finding.test.ts`
+- (guard) `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog/personas/concierge packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts`
+- (guard) `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent`
+- (guard) `npm run check`
+
 ## Lane bundle
 - T-0297: NARRATED_MECHANICS misses a capitalized surface id (`.sdlc/tickets/0297-narrated-mechanics-case/handoff.md`)
 - T-0298: Haiku repair rounds never call render_surface: force the tool on a no-tool repair round (`.sdlc/tickets/0298-haiku-repair-forced-tool/handoff.md`)

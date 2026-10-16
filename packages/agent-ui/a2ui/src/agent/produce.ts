@@ -115,6 +115,8 @@ import type { GenuiSurfaceConfig } from './genui-surface-config.ts'
 import { flowHeldOpen, runSemanticChecks, semanticActionOf, semanticSurfaceViews, sessionSurfaceViews } from '../catalog/semantic-check.ts'
 import type { SemanticCheckInput } from '../catalog/semantic-check.ts'
 import type { SemanticCheck } from '../catalog/semantic-check.ts'
+import type { SemanticFinding, SurfaceView } from '../catalog/semantic-check.ts'
+import { compositeAnswered, missingCompositeMoment } from '../catalog/composite-moments.ts'
 import { RENDER_SURFACE_TOOL_NAME, detectUserOverride, isLegacyShape, openSurfacesNote, renderSurfaceJsonl, renderSurfaceReply, renderSurfaceTool } from './response-type.ts'
 import type { ResponsePreference } from './response-type.ts'
 
@@ -1158,6 +1160,21 @@ function narratedMechanics(reply: string | undefined, surfaceIds: Iterable<strin
   return m === null ? undefined : { code: 'NARRATED_MECHANICS', path: m[0] }
 }
 
+/** T-0299: `findings` plus every missing-composite finding an earlier round of this turn got (`bound`, by code) that
+ *  `views` still leave unanswered, worded as still binding; then each new missing-composite finding is bound. A round
+ *  cannot drop the composite its moment asks for by building something no row detects (round 6 :161, a Card holding a
+ *  DescriptionList after PRODUCT_CARD_MISSING). */
+function withBoundComposites(findings: readonly SemanticFinding[], bound: Map<string, SemanticFinding>, views: readonly SurfaceView[]): SemanticFinding[] {
+  const out = [...findings]
+  for (const [code, first] of bound) {
+    const m = missingCompositeMoment(code)
+    if (m === undefined || out.some((f) => f.code === code) || compositeAnswered(m, views)) continue
+    out.push({ code, path: first.path, message: `Earlier this turn: ${first.message} This answer still holds no ${m.composite}, so make it now.` })
+  }
+  for (const f of out) if (!bound.has(f.code) && missingCompositeMoment(f.code) !== undefined) bound.set(f.code, f)
+  return out
+}
+
 /** T-0172: the surfaces a round's payload creates that the session does not already hold. */
 function newSurfaceIds(output: A2uiOutput, session: Session): Set<string> {
   const known = sessionKnownSurfaceIds(session)
@@ -1334,6 +1351,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   // T-0281: every surface an earlier round of this turn built and kept to its end, failure-named or not; a later round
   // that answers in prose alone has dropped them all (the FEED_SCOPE retry that lost ask-1), never a success.
   const builtSurfaces = new Set<string>()
+  // T-0299: each missing-composite finding (`<COMPOSITE>_MISSING`) a round of this turn got, binding on every later round.
+  const boundComposites = new Map<string, SemanticFinding>()
   // RTS-R8: the last capture round's reply and declarations, kept for the degrade at the bound.
   let degrade: Pick<ReturnType<typeof peelMetaLine>, 'plan' | 'personaPatch' | 'flowEnd' | 'team' | 'target'> & { note: string } | undefined
   for (let round = 0; round < opts.maxRounds; round++) {
@@ -1661,13 +1680,14 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
           deps.semanticChecks,
           turnAction !== undefined ? { surfaces: [], action: turnAction } : sayInput!,
         )
-        if (semantic.findings.length > 0 && round < opts.maxRounds - 1) {
-          failures = semantic.findings.map((f) => ({ code: f.code, path: f.path, detail: f.message }))
+        const findings = withBoundComposites(semantic.findings, boundComposites, []) // T-0299
+        if (findings.length > 0 && round < opts.maxRounds - 1) {
+          failures = findings.map((f) => ({ code: f.code, path: f.path, detail: f.message }))
           lastCaptureRound = offeredTools !== undefined
           forceSurfaceRound = offeredTools !== undefined // T-0298
           continue
         }
-        if (semantic.findings.length > 0) actionSemanticTally.push('SEMANTIC_UNCORRECTED')
+        if (findings.length > 0) actionSemanticTally.push('SEMANTIC_UNCORRECTED')
         if (semantic.errored.length > 0) actionSemanticTally.push('SEMANTIC_CHECK_ERROR')
       }
       // T-0234: a reply that narrates the surfaces gets one targeted round, then ships tallied.
@@ -1731,12 +1751,19 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         throw new ProduceHalt(failures)
       }
       // ADR-0097 §3 FEED_SCOPE gate — AFTER the shared validator, BEFORE anything streams. A violation is
-      // a self-correct round (never a stream), exactly like a validator failure.
+      // a self-correct round (never a stream), exactly like a validator failure. T-0299: on the last round, with no
+      // round left to repair it, the repair FEED_SCOPE_HINT asks for is made here: the ask is dropped and the surface
+      // ships whole as an ordinary one, tallied FEED_SCOPE_RESCOPED (round 6 :75 degraded the BookingForm away).
+      let feedScopeRescoped = false
       if (ask !== undefined) {
         const scopeFailures = feedScopeFailures(ask, assembled.output)
-        if (scopeFailures.length > 0) {
+        if (scopeFailures.length > 0 && round < opts.maxRounds - 1) {
           failures = scopeFailures
           continue
+        }
+        if (scopeFailures.length > 0) {
+          ask = undefined
+          feedScopeRescoped = true
         }
       }
       // ADR-0238: the persona's semantic checks, AFTER structure and feed scope, BEFORE anything
@@ -1744,12 +1771,14 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       // payload ships with a tally instead (see the header). Skipped entirely when no check is declared.
       const semanticTally: string[] = []
       if (deps.semanticChecks !== undefined && deps.semanticChecks.length > 0) {
-        const semantic = runSemanticChecks(deps.semanticChecks, { surfaces: semanticSurfaceViews(input.session, assembled.output), ...(turnAction !== undefined ? { action: turnAction } : {}), ...(turnIntent !== undefined ? { intent: turnIntent } : {}), ...(roundTarget !== undefined ? { target: roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}) })
-        if (semantic.findings.length > 0 && round < opts.maxRounds - 1) {
-          failures = semantic.findings.map((f) => ({ code: f.code, path: f.path, detail: f.message }))
+        const surfaces = semanticSurfaceViews(input.session, assembled.output)
+        const semantic = runSemanticChecks(deps.semanticChecks, { surfaces, ...(turnAction !== undefined ? { action: turnAction } : {}), ...(turnIntent !== undefined ? { intent: turnIntent } : {}), ...(roundTarget !== undefined ? { target: roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}) })
+        const findings = withBoundComposites(semantic.findings, boundComposites, surfaces) // T-0299
+        if (findings.length > 0 && round < opts.maxRounds - 1) {
+          failures = findings.map((f) => ({ code: f.code, path: f.path, detail: f.message }))
           continue
         }
-        if (semantic.findings.length > 0) semanticTally.push('SEMANTIC_UNCORRECTED')
+        if (findings.length > 0) semanticTally.push('SEMANTIC_UNCORRECTED')
         if (semantic.errored.length > 0) semanticTally.push('SEMANTIC_CHECK_ERROR')
       }
       // T-0234: a reply that narrates the surfaces (the session's, or this payload's own) gets one targeted round.
@@ -1793,10 +1822,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       // GH #1142 — the net-no-op strip composes with the #1064 ask-degrade filter: every message naming
       // a net-no-op surfaceId is removed from the wire (create + updateDataModel/updateComponents +
       // deleteSurface alike — the whole group, nothing survives client-side anyway).
-      const askDegraded =
-        ask !== undefined && finalAsk === undefined
-          ? assembled.output.filter((m) => messageSurfaceId(m) !== ask.surfaceId)
-          : assembled.output
+      const droppedAsk = finalAsk === undefined ? ask?.surfaceId : undefined // T-0299: `ask` is reassigned above, so read it once
+      const askDegraded = droppedAsk !== undefined ? assembled.output.filter((m) => messageSurfaceId(m) !== droppedAsk) : assembled.output
       const shippedOutput =
         netNoop.size > 0
           ? askDegraded.filter((m) => {
@@ -1817,6 +1844,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         // otherwise-successful round still needs to land on the trace, not just the retried case.
         if (genuiPeel.failure !== undefined) failureCodes.push(genuiPeel.failure.code)
         if (flowEndFedBack && flowEnd === undefined) failureCodes.push('FLOW_END_UNCORRECTED') // GH #1168 — the correction round came back content-bearing and still without flowEnd: ships unchanged, tallied
+        if (feedScopeRescoped) failureCodes.push('FEED_SCOPE_RESCOPED') // T-0299: a factual tally, the ask dropped on the last round
         failureCodes.push(...semanticTally) // ADR-0238: SEMANTIC_UNCORRECTED / SEMANTIC_CHECK_ERROR on the shipping round, never a retry trigger
         if (textJsonlIgnored) failureCodes.push('TEXT_JSONL_IGNORED') // RTS-R3: a factual tally, never a retry trigger
         if (textJsonlRouted) failureCodes.push('TEXT_JSONL_ROUTED') // T-0172: a factual tally, never a retry trigger
