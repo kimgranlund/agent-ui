@@ -3,8 +3,11 @@
 // T-0265 (the recorded Haiku 5.5 spa booking, round 3 regress-concierge-spa-booking-haiku-1): the services ask, the
 // booking and its confirmation were each answered in prose with no surface, so the guest never saw a treatment list, a
 // pre-filled BookingForm or a BookingConfirmation. A say turn whose words ask for one of those moments must open a
-// surface; an answer with none is SURFACE_MISSING. A question with no services, booking or confirm word (pool hours,
-// a policy) may still be answered in prose.
+// surface; an answer with none is SURFACE_MISSING. A question with no services, facility, booking or confirm word (a
+// policy) may still be answered in prose.
+//
+// T-0285 (Kim's ruling): a facility or hours ask ("When do the pool and gym close?") is its own moment, answered with a
+// compact info card, ONE Card holding a DescriptionList; a services ask is one ProductCard per priced service (T-0279).
 //
 // T-0278 (round 4, the Haiku spa confirm): a confirm while the open BookingForm still has a blank required field cannot
 // be confirmed, so the reply that asks for the missing value is right. Such a turn is held open: no SURFACE_MISSING
@@ -18,15 +21,24 @@ import type { SemanticCheck, SemanticCheckInput, SemanticFinding, SurfaceView } 
  *  right.", "Yes, confirm the table for four."). */
 const CONFIRM = /\bconfirm\s+it\b|\bconfirm\b[^.?!]*\b(booking|reservation|appointment|slot|table|tour)\b/i
 /** The guest asks what can be booked ("What spa services can I book?"). */
-const SERVICES = /\b(services|treatments|amenities|facilities|menu)\b/i
+const SERVICES = /\b(services|treatments|amenities|menu)\b/i
+/** T-0285: the guest asks about the hotel's facilities or their hours ("When do the pool and gym close?", "What are
+ *  the opening hours of the pool, gym and spa?", "Which restaurants and bars does the hotel have?"). */
+const FACILITY_NOUN = '(pool|gym|spa|sauna|restaurant|restaurants|bar|bars)'
+const FACILITY = new RegExp(
+  `\\b(facilities|opening hours)\\b|\\b(which|what) (restaurants|bars|facilities)\\b|` +
+    `\\b${FACILITY_NOUN}\\b[^.?!]*\\b(open|opens|close|closes|closed|hours)\\b|\\b(open|opens|close|closes|hours)\\b[^.?!]*\\b${FACILITY_NOUN}\\b`,
+  'i',
+)
 /** The guest asks to book ("Book a 60-minute massage on Thursday at 15:00"; T-0282: "I'd like a table at Vela"). */
 const BOOK = /\b(book|reserve|reservation)\b|\b(i'?d|i would|we'?d|we would) like (a|an) (table|room|treatment|massage|tour|appointment)\b/i
 
 /** The moment a say turn's words ask for, with the surface that answers it, or undefined. */
 function askedMoment(intent: string): { moment: string; surface: string } | undefined {
   if (CONFIRM.test(intent)) return { moment: 'confirm', surface: 'a BookingConfirmation with the confirmed details and a reference' }
-  if (SERVICES.test(intent)) return { moment: 'services', surface: 'one ServiceCard per service the guest can book, each with its book action' }
+  if (SERVICES.test(intent)) return { moment: 'services', surface: 'one ProductCard per service the guest can book, templated in a Grid, each with its price and book action' }
   if (BOOK.test(intent)) return { moment: 'booking', surface: 'a BookingForm with its value bound to the details the guest already gave, so they arrive pre-filled' }
+  if (FACILITY.test(intent)) return { moment: 'facility', surface: 'one compact info card: ONE Card holding a DescriptionList, one row per facility with its hours and location' }
   return undefined
 }
 
