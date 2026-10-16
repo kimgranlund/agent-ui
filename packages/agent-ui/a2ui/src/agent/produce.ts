@@ -695,6 +695,7 @@ function messagesFor(
       (failures.some((f) => f.code === 'FLOW_END_MISSING') ? FLOW_END_HINT : '') + // GH #1168 — the missing-flowEnd correction round's guidance
       (failures.some((f) => f.code === 'NARRATED_MECHANICS') ? NARRATION_HINT : '') + // T-0234: a narrated reply's guidance
       (failures.some((f) => f.code === 'SURFACE_DROPPED') ? SURFACE_DROPPED_HINT : '') + // T-0281: resend a dropped surface
+      (failures.some((f) => f.code === 'SURFACE_NOT_CREATED') ? SURFACE_NOT_CREATED_HINT : '') + // T-0305: create before update
       (failures.some((f) => f.code === 'FEED_SCOPE') ? FEED_SCOPE_HINT : '') + // T-0290: keep the surface, drop the ask
       (failures.some((f) => f.detail !== undefined) ? SEMANTIC_HINT : '') + // ADR-0238: a semantic-finding round's guidance
       keepSurfacesHint(lastOutput, input.session, failures) // T-0172: never lose a surface the failed round created
@@ -1122,6 +1123,11 @@ const SURFACE_DROPPED_HINT =
   'never see it. Resend that surface with its components and data. If it was sent back as the ask surface ' +
   '(FEED_SCOPE), keep it as an ordinary surface and leave "ask" out of your meta-line.'
 
+/** T-0305: the self-correct sentence for a SURFACE_NOT_CREATED round (an update to a surface nothing created). */
+const SURFACE_NOT_CREATED_HINT =
+  ' SURFACE_NOT_CREATED means this answer updates a surface that was never created, so the user would never see it. ' +
+  'Send a createSurface for it first, then its components and data, in the same answer.'
+
 /** T-0290: the self-correct sentence for a FEED_SCOPE round. The recorded Haiku 5.5 booking turn built its BookingForm
  *  as the ask surface; the generic re-emit wording sent it back with no way out, the next rounds dropped the form, and
  *  the turn halted. The way out is the surface the ask cannot host, kept whole as an ordinary surface. */
@@ -1205,6 +1211,31 @@ function newSurfaceIds(output: A2uiOutput, session: Session): Set<string> {
 function builtSurfaceIds(output: A2uiOutput, session: Session): string[] {
   const deleted = new Set(output.flatMap((msg) => ('deleteSurface' in msg ? [msg.deleteSurface.surfaceId] : [])))
   return [...newSurfaceIds(output, session)].filter((sid) => !deleted.has(sid))
+}
+
+/** T-0305: a `SURFACE_NOT_CREATED` failure per surface this round updates (`updateComponents` or `updateDataModel`) that
+ *  no earlier turn created, the client turn does not come from, and no earlier message of the round creates. The renderer
+ *  drops an update to a surface it does not hold, so the user would never see it. The recorded Haiku 5.5 repair round
+ *  (round 7 :4) sent its BookingForm as updates to ask-1, which only the rejected round 1 created, and the guest lost the
+ *  form. The shared validator opens such a surface implicitly (ADR-0064 A2: it judges a standalone payload); only the
+ *  conversation knows the surface was never created, so the check lives here and runs on every round, the first too. */
+function uncreatedSurfaceFailures(output: A2uiOutput, input: TurnInput): RoundFailure[] {
+  const known = sessionKnownSurfaceIds(input.session)
+  if (input.kind === 'client') {
+    for (const body of Object.values(input.message)) {
+      const sid = body !== null && typeof body === 'object' ? (body as { surfaceId?: unknown }).surfaceId : undefined
+      if (typeof sid === 'string') known.add(sid)
+    }
+  }
+  const orphans = new Set<string>()
+  for (const msg of output) {
+    if ('createSurface' in msg) known.add(msg.createSurface.surfaceId)
+    else if ('updateComponents' in msg || 'updateDataModel' in msg) {
+      const sid = messageSurfaceId(msg)
+      if (sid !== undefined && !known.has(sid)) orphans.add(sid)
+    }
+  }
+  return [...orphans].map((sid) => ({ code: 'SURFACE_NOT_CREATED', path: sid }))
 }
 
 /** T-0172: the surfaces a failed round created that none of its failures names, so the repair has no
@@ -1780,7 +1811,9 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     // abandoned surface that would mount a permanently-empty `ui-surface-host` (GH #802). At
     // `atFinalize: true` it fails `${sid}:root-missing` PRE-WIRE and becomes an ordinary self-correct
     // round (SPEC-R4), fed back with `IDGRAPH_HINTS.rootMissing`'s repair instruction — never a browser.
-    const verdict = validateA2ui(assembled.output, deps.catalog, sessionSeeds, { atFinalize: true })
+    const validated = validateA2ui(assembled.output, deps.catalog, sessionSeeds, { atFinalize: true })
+    const uncreated = uncreatedSurfaceFailures(assembled.output, input) // T-0305: an update to a surface nothing created
+    const verdict = uncreated.length > 0 ? { valid: false, failures: [...validated.failures, ...uncreated] } : validated
     if (verdict.valid) {
       // T-0172: a valid round that lost a surface an earlier round of this turn created is not a success.
       // One more round while one is left (the repair names the surface), else a halt that says so, unless an earlier

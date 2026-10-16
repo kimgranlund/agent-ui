@@ -74,6 +74,9 @@ T-0172 rules (2026-10-14 traces):
   failure names must come back. The repair message names it ("Keep `ask-1` ..."); a later valid round
   without it spends a `SURFACE_DROPPED` round, and on the last round halts with `SURFACE_DROPPED` unless an
   earlier round can ship (below).
+- An update (`updateComponents`, `updateDataModel`) to a surface that no earlier turn created, that the client
+  turn does not come from, and that no earlier message of the payload creates fails `SURFACE_NOT_CREATED` on
+  any round (T-0305): the renderer drops it, so the repair sends the `createSurface` first.
 
 `maxRounds` bounds the loop. T-0302: when the last round fails to parse, fails schema or drops a surface, the last
 earlier round whose payload validated and dropped nothing ships whole instead (its note, ask and lines), as a last
@@ -81,7 +84,7 @@ round would ship it (a feed-scoped ask dropped as `FEED_SCOPE_RESCOPED`, a findi
 the trace carrying the last round's codes plus `EARLIER_ROUND_SHIPPED`; it comes before the `SURFACE_DEGRADED`
 text. With no such round, exhaustion throws `ProduceHalt` carrying the last failures; a
 transport that already committed a 200 turns that into the terminal error line below.
-`FEED_SCOPE`, `NET_NOOP`, `FLOW_END_MISSING`, `SURFACE_DROPPED`, the genui codes and a semantic check's own codes
+`FEED_SCOPE`, `NET_NOOP`, `FLOW_END_MISSING`, `SURFACE_DROPPED`, `SURFACE_NOT_CREATED`, the genui codes and a semantic check's own codes
 (`HAND_TOTAL`, `HAND_COUNT`, `NATURAL_ACTIONS`, `SEMANTIC_UNCORRECTED`, `SEMANTIC_CHECK_ERROR`) are produce-layer-only and
 are not members of the protocol `ErrorCode` union.
 

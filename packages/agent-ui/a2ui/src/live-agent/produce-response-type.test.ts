@@ -738,3 +738,38 @@ describe('T-0304: a render_surface `messages` sent as one JSON string', () => {
     expect(finalMeta(lines).trace?.failureCodes).toEqual(['PARSE'])
   })
 })
+
+describe('T-0305: an update to a surface no message created', () => {
+  const objects = (jsonl: string): Record<string, unknown>[] => jsonl.split('\n').map((l) => JSON.parse(l) as Record<string, unknown>)
+  // A complete tree for `main` with no createSurface: valid to the shared validator (its implicit open), never rendered.
+  const ORPHAN_MAIN = '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[{"id":"root","component":"Button","label":"Hi","action":{"action":"submit"}}]}}'
+  const call = (jsonl: string): Round => ({ text: 'Here it is.', call: [{ name: 'render_surface', input: { reply: 'Here it is.', messages: objects(jsonl) } }] })
+
+  it('a first round that updates an uncreated surface fails SURFACE_NOT_CREATED and the repair asks for createSurface', async () => {
+    const { provider, calls, reqs } = scripted([call(ORPHAN_MAIN), call(VALID)])
+    const lines = await run(NEUTRAL, provider)
+    expect(calls()).toBe(2)
+    expect(lastUserMessage(reqs()[1]!)).toMatch(/SURFACE_NOT_CREATED at main/)
+    expect(lastUserMessage(reqs()[1]!)).toMatch(/createSurface/)
+    expect(contentOf(lines)).toEqual(VALID.split('\n'))
+    expect(finalMeta(lines).trace?.failureCodes).toEqual(['SURFACE_NOT_CREATED'])
+  })
+
+  it('a repair round that updates the surface the failed round created, with no createSurface, fails the same way', async () => {
+    const { provider, calls, reqs } = scripted([call(INVALID), call(ORPHAN_MAIN), call(VALID)])
+    const lines = await run(NEUTRAL, provider)
+    expect(calls()).toBe(3)
+    expect(lastUserMessage(reqs()[2]!)).toMatch(/SURFACE_NOT_CREATED at main/)
+    expect(contentOf(lines)).toEqual(VALID.split('\n'))
+    expect(finalMeta(lines).trace?.failureCodes).toEqual(['SURFACE_NOT_CREATED'])
+  })
+
+  it('an update to a surface an earlier turn created ships in one round (the control)', async () => {
+    let session: Session = appendUserTurn({ turns: [] }, 'a submit button')
+    session = appendAssistantTurn(session, VALID)
+    const { provider, calls } = scripted([call(ORPHAN_MAIN.replace('"label":"Hi"', '"label":"Again"'))])
+    const lines = await run(intentOf('change the label', session), provider)
+    expect(calls()).toBe(1)
+    expect(contentOf(lines)).toHaveLength(1)
+  })
+})

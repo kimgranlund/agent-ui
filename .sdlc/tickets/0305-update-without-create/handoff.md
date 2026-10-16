@@ -23,6 +23,16 @@ Either the validator rejects an update to a surface never created in the convers
 - A test: an update to an uncreated surface fails with the named code and the repair asks for createSurface; red at the base.
 - The cluster B replay is flipped; the live-agent, concierge and probe suites and `npm run check` exit 0.
 
+## Acceptance criteria
+
+Where the check lives: in `produce.ts` at the per-round verdict, not in `surfacesToKeep` and not in the shared validator. `surfacesToKeep` and the SURFACE_DROPPED logic run only on a repair round, so they cannot catch a first round that updates an uncreated surface. The shared validator (`renderer/validate.ts`) judges a standalone payload for the renderer and corpus admission, where an update with no create is the ratified implicit open (ADR-0064 amendment A2); only `produce()` holds the conversation, so it adds the failure to the verdict on every round, round 1 included. The renderer no-ops an update to a surface it does not hold, so such a payload never reaches the user.
+
+- (red) `npx vitest run packages/agent-ui/a2ui/src/live-agent/produce-response-type.test.ts -t "T-0305"` exits 0: an updateComponents for a surface no earlier turn and no earlier message of the round created fails `SURFACE_NOT_CREATED at <sid>` on a first round and on a repair round, the repair message asks for a createSurface, and an update to a surface an earlier turn created still ships in one round.
+- (red) `npx vitest run --project scripts scripts/e2e-admin/probe/replays/concierge-haiku-orphan-update.test.mjs` exits 0: the cluster B replay passes every check (no-surface-loss:0 included), and turn 0 ships a createSurface for ask-1, with `SURFACE_NOT_CREATED` on its trace.
+- `npx vitest run packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent packages/agent-ui/a2ui/src/catalog/personas/concierge` exits 0.
+- `npx vitest run --project scripts scripts/e2e-admin/probe` exits 0.
+- `npm run check` exits 0.
+
 ## Lane bundle
 - T-0304 render_surface messages sent as one JSON string (`.sdlc/tickets/0304-messages-as-json-string`)
 - T-0305 a repair round updates a surface it never created (`.sdlc/tickets/0305-update-without-create`)

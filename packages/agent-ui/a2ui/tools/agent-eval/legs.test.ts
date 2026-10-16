@@ -162,7 +162,7 @@ describe('response-type leg', () => {
     const { session: _dropped, ...bare } = c
     const without = await runResponseTypeLeg([bare], deps(t))
     expect(without.exitCode).toBe(1)
-    expect(without.observations.get(c.id)?.failureCodes).toEqual(['IDGRAPH'])
+    expect(without.observations.get(c.id)?.failureCodes).toEqual(['IDGRAPH', 'SURFACE_NOT_CREATED']) // T-0305: no session holds the surface
     expect(without.lines.find((l) => l.startsWith(`FAIL ${c.id}`))).toContain('response-type: halted, expected both')
   })
 })
@@ -218,7 +218,7 @@ describe('tool path', () => {
     const { session: _dropped, ...bare } = c
     const without = await runResponseTypeLeg([bare], deps(t))
     expect(without.exitCode).toBe(1)
-    expect(without.observations.get(c.id)).toMatchObject({ outcome: 'eventual-text', failureCodes: ['IDGRAPH', 'SURFACE_DEGRADED'] })
+    expect(without.observations.get(c.id)).toMatchObject({ outcome: 'eventual-text', failureCodes: ['IDGRAPH', 'SURFACE_NOT_CREATED', 'SURFACE_DEGRADED'] }) // T-0305: no session holds t1
     expect(without.lines.find((l) => l.startsWith(`FAIL ${c.id}`))).toContain('response-type: missed-surface, expected both')
   })
 })
