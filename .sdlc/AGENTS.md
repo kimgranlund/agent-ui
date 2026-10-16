@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:669a3d868dc1 -->
+<!-- sdlc-lite:managed:start v1 sha256:89b6df8ca08f -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -40,7 +40,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0277 Round scenarios ask for 'a 60-minute massage', which T-0267's spa list makes ambiguous, so every model rightly refuses to confirm (0277-spa-booking-ask-ambiguous), branch fix/r4-scenarios-checks
   - T-0278 SURFACE_MISSING and FLOW_END_MISSING on a confirm turn demand a BookingConfirmation the booking cannot have, and Haiku and Opus then claim it is booked (0278-confirm-repair-forces-false-booking)
   - T-0279 A spa services list is a Table or a ProductCard grid on every model, never ServiceCard: the skill and the catalog selection disagree (0279-concierge-services-no-servicecard), branch fix/r4-concierge-guidance
-  - T-0280 Haiku answers word guesses, give-ups and the Omaha river in prose with no board update, and no check sends them back (0280-haiku-game-moves-prose)
+  - T-0280 Haiku answers word guesses, give-ups and the Omaha river in prose with no board update, and no check sends them back (0280-haiku-game-moves-prose), branch fix/r4-haiku-prose-moves
   - T-0281 A FEED_SCOPE repair round passes with prose only, so the round 1 BookingForm never ships (0281-feed-scope-repair-drops-surface)
   - T-0282 SURFACE_MISSING misses 'Confirm it' and 'I'd like a table', so Haiku books a tour in prose with no surface (0282-surface-missing-confirm-vocabulary)
   - T-0283 seven-card-stud scenario still has one check too many: Opus ends the hand on the fourth and opens round 2 with no table (0283-stud-scenario-extra-check)
