@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:8c977b5f5900 -->
+<!-- sdlc-lite:managed:start v1 sha256:3872d3240cd5 -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -20,7 +20,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0197 BookingForm field kinds (dateRange, radio, time, stepper) and sharing it with the Maitre d' (0197-bookingform-kinds)
   - T-0198 Step flow pattern: step n of m, Back and Next, shared /draft data (0198-step-flow)
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (0199-itinerary-compare)
-- ready: 19
+- ready: 24
   - T-0160 Agent content as files: extract preset and pack seeds to .md manifests with a generated, drift-gated registry (0160-agent-content-files)
   - T-0161 Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind (0161-agent-content-overlays)
   - T-0162 Settings pane forms generated from each content kind's schema, with provenance, diff and reset (0162-agent-content-schema-forms)
@@ -36,14 +36,19 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0209 One source per concept: layer membership, calibration bullets, persona list; mini-skill ranking stability test (0209-context-single-source)
   - T-0246 Docs-page persona exemplar fixtures carry the same game and booking defects as the seeds (0246-persona-exemplar-fixture-defects)
   - T-0247 validate-payload --catalog cannot load persona catalog ids (<base>--<persona>) (0247-validate-payload-persona-ids)
-  - T-0304 render_surface messages sent as one JSON string fail every round: decode a string that parses as an array (0304-messages-as-json-string)
-  - T-0305 A repair round updates a surface it never created and no check catches it (0305-update-without-create)
   - T-0306 Agent-admin Settings pane: redundant section select, a lone-field card, and a filled overflow trigger (0306-settings-pane-styling)
   - T-0307 Sweep docs-site pages, descriptors, exemplar fixtures and selection sidecars for guidance left stale by rounds 3 to 7 (0307-stale-surface-sweep)
+  - T-0308 Drop the reference-Badge example from the shared grammar and the library text (Kim's P4 ruling) (0308-grammar-drop-reference-badge)
+  - T-0309 Infer flowEnd when a turn declares no ask and no surface instead of a FLOW_END_MISSING repair round (Kim's N1 ruling) (0309-flowend-inference)
+  - T-0310 R8 experiment: force render_surface with thinking off on round 1 of Haiku click turns (0310-haiku-round1-forced-tool)
+  - T-0311 Dev trace: content-addressed prompt store, stopReason and max_tokens per round, and the max_tokens tier floor (P3, P7) (0311-trace-prompt-store)
+  - T-0312 Persona text type names are a modality leak: lint them and reword the Croupier persona; pin tests per ruling (P6) (0312-persona-type-name-lint)
+  - T-0313 One matcher per composite moment for teaching and check; the structured-container trigger fix; the Play again vocabulary fix (P1, P5) (0313-one-moment-matcher)
+  - T-0314 Check contracts: pass and fail fixtures cross-run across all checks, a repair-text vocabulary test, and a repair-loop property test (P2) (0314-check-contract-tests)
 - claimed: 0
 - paused: 0
 - blocked: 0
-- done: 274
+- done: 276
 - dropped: 4
 
 ## Procedures

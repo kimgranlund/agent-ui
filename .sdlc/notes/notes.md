@@ -93,3 +93,14 @@
 
 ## 2026-10-16: Admiral surrender (T-0294 round 6, cluster A)
 - Kim: a battleship surrender ends like a normal game end: one ResultCard (the loss, shots, a Play again action) with the revealed board kept beside it. Teach it in the board-grid End state and add a check.
+
+## 2026-10-16: context-fog-of-war skill upkeep (Kim)
+- Apply skill gaps as they are learned (each round, field test or verifier note), not only log them in the skill's updates-log: back up, fix with a test, verify, changelog entry.
+- Kim 2026-10-16: every proposed change to the skill and to the repo context routing architecture and model behavior design gets an adversarial review and a debate before it is applied: a reviewer on a different model family challenges it, the author answers, and unresolved points go to Kim.
+
+## 2026-10-16: routing architecture review rulings (Kim, after the proposer, adversary and rebuttal debate)
+- P4: drop the reference-Badge example from `grammar.md:92-98` and `site/pages/agent-admin-libraries.ts:242` (narrowed C), with a deliberate byte-pin recapture. The T-0289 "never the grammar" ruling stays for model-reading fixes; a grammar line that contradicts a shipped check may change by ruling.
+- N1: the producer infers `flowEnd` when a turn declares no ask and no surface, tallied, instead of a FLOW_END_MISSING repair round.
+- R8: force render_surface with thinking off on round 1 of Haiku turns triggered by a click (an experiment, measured live).
+- P7: the dev trace may store prompt text in a local, git-ignored content-addressed store beside it (reverses `tools/agent/trace-log.ts:19`).
+- P6: catalog type names in persona text are a modality leak; the lint flags them and the Croupier persona is reworded.

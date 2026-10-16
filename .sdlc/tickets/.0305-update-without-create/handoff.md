@@ -2,7 +2,7 @@
 id: T-0305
 title: "A repair round updates a surface it never created and no check catches it"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -34,5 +34,16 @@ Where the check lives: in `produce.ts` at the per-round verdict, not in `surface
 - `npm run check` exits 0.
 
 ## Lane bundle
-- T-0304 render_surface messages sent as one JSON string (`.sdlc/tickets/0304-messages-as-json-string`)
+- T-0304 render_surface messages sent as one JSON string (`.sdlc/tickets/.0304-messages-as-json-string`)
 - T-0305 a repair round updates a surface it never created (`.sdlc/tickets/0305-update-without-create`)
+
+## Outcome
+
+2026-10-16 · lane: full L2 · verdict: closed by reason (Merged in #2061 (round 7 producer lane); verifier L2 pass) · verifier: verifier-L2 (sonnet) · base: a1b9314153a0
+- Changed: see commits
+- Commits: none
+- Check: 1 (red) produce-response-type.test.ts -t "T-0305": pass
+- Check: 2 (red) concierge-haiku-orphan-update replay: pass
+- Check: 3 live-agent, agent and concierge suites: pass
+- Check: 4 scripts probe suite: pass
+- Check: 5 `npm run check`: pass
