@@ -6,14 +6,17 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0278. Live round 4 (2026-10-15-r4-fixes :114-:115, Haiku 5.5). The booking ask names "a 60-minute
-// massage", which matches two treatments, so the pre-filled BookingForm leaves the treatment blank (T-0277). On the
-// confirm turn the model rightly refuses to book, and FLOW_END_MISSING then SURFACE_MISSING (which asks for a
-// BookingConfirmation) send it back twice; it ships uncorrected with no surface. Every probe check passes.
-it('concierge-haiku-confirm-no-treatment: the unconfirmable confirm turn is sent back twice and ships uncorrected', async () => {
+// T-0278 (fixed). Live round 4 (2026-10-15-r4-fixes :114-:115, Haiku 5.5). The booking ask named "a 60-minute
+// massage", which matches two treatments, so the pre-filled BookingForm left the treatment blank (T-0277). On the
+// confirm turn the model rightly refused to book, and FLOW_END_MISSING then SURFACE_MISSING sent it back twice. The
+// concierge check now holds a confirm open while the BookingForm has a blank required field, so round 1's refusal
+// ships as it is; the recorded rounds 2 and 3 are left unread.
+it('concierge-haiku-confirm-no-treatment: the confirm on a blank treatment ships its refusal on round 1', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./concierge-haiku-confirm-no-treatment.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
   expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual([])
-  const trace = report.records[1].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
-  expect(trace).toMatchObject({ rounds: 3, failureCodes: ['SURFACE_MISSING', 'SEMANTIC_UNCORRECTED', 'FLOW_END_UNCORRECTED'] })
+  const meta = report.records[1].lines.map((l) => JSON.parse(l).a2uiMeta).find((m) => m?.trace !== undefined)
+  expect(meta.trace).toMatchObject({ rounds: 1, failureCodes: [] })
+  expect(meta.note).toMatch(/^I can't confirm the booking yet because no treatment is selected\./)
+  expect(meta.flowEnd).toBeUndefined()
 })

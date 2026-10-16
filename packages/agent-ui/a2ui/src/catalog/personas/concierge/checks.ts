@@ -5,9 +5,14 @@
 // pre-filled BookingForm or a BookingConfirmation. A say turn whose words ask for one of those moments must open a
 // surface; an answer with none is SURFACE_MISSING. A question with no services, booking or confirm word (pool hours,
 // a policy) may still be answered in prose.
+//
+// T-0278 (round 4, the Haiku spa confirm): a confirm while the open BookingForm still has a blank required field cannot
+// be confirmed, so the reply that asks for the missing value is right. Such a turn is held open: no SURFACE_MISSING
+// asking for a BookingConfirmation, and no FLOW_END_MISSING round (`holdsFlowOpen`).
 // DOM-less and node-free, like `semantic-check.ts`: both server hosts import the manifest that carries it.
 
-import type { SemanticCheck, SemanticFinding } from '../../semantic-check.ts'
+import { readPointer } from '../../semantic-check.ts'
+import type { SemanticCheck, SemanticCheckInput, SemanticFinding, SurfaceView } from '../../semantic-check.ts'
 
 /** The guest confirms a booking already read back ("please confirm the booking"). */
 const CONFIRM = /\bconfirm\b[^.?!]*\b(booking|reservation|appointment|slot)\b/i
@@ -24,12 +29,38 @@ function askedMoment(intent: string): { moment: string; surface: string } | unde
   return undefined
 }
 
+const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
+const isBlank = (v: unknown): boolean => v === undefined || v === null || (typeof v === 'string' && v.trim() === '') || (Array.isArray(v) && v.length === 0)
+
+/** T-0278: the label (or path) of the first required BookingForm field an open surface leaves blank, or undefined. */
+export function blankRequiredField(open: readonly SurfaceView[]): string | undefined {
+  for (const view of open) {
+    for (const node of view.components.values()) {
+      const n = node as Record<string, unknown>
+      if (n['component'] !== 'BookingForm' || !Array.isArray(n['fields'])) continue
+      const value = n['value']
+      const booking = isRecord(value) && typeof value['path'] === 'string' ? readPointer(view.dataModel, value['path']) : value
+      for (const field of n['fields']) {
+        if (!isRecord(field) || field['required'] !== true || typeof field['path'] !== 'string') continue
+        const key = field['path'].replace(/^\//, '')
+        if (isBlank(readPointer(booking, `/${key}`))) return typeof field['label'] === 'string' ? field['label'] : key
+      }
+    }
+  }
+  return undefined
+}
+
+/** T-0278: a confirm ask while the open booking still has a blank required field; the turn cannot confirm. */
+const confirmHeldOpen = ({ intent, open }: SemanticCheckInput): boolean =>
+  intent !== undefined && open !== undefined && askedMoment(intent)?.moment === 'confirm' && blankRequiredField(open) !== undefined
+
 /** T-0265: a services, booking or confirm ask answered with no surface is SURFACE_MISSING. */
 export const conciergeSurfaceRequired: SemanticCheck = {
   id: 'concierge-surface-required',
   requires: ['BookingForm', 'BookingConfirmation'],
-  check({ surfaces, action, intent }): SemanticFinding[] {
-    if (action !== undefined || intent === undefined || surfaces.length > 0) return []
+  check(input): SemanticFinding[] {
+    const { surfaces, action, intent } = input
+    if (action !== undefined || intent === undefined || surfaces.length > 0 || confirmHeldOpen(input)) return []
     const asked = askedMoment(intent)
     if (asked === undefined) return []
     return [
@@ -42,6 +73,7 @@ export const conciergeSurfaceRequired: SemanticCheck = {
       },
     ]
   },
+  holdsFlowOpen: confirmHeldOpen,
 }
 
 /** Every concierge semantic check, in the order `produce()` runs them. */

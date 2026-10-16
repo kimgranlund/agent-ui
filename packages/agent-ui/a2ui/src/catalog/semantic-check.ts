@@ -87,8 +87,9 @@ export interface SemanticCheckInput {
   /** T-0214: the surface a say turn's meta-line declares it is about to change (`target`, ADR-0206), when the
    *  session holds it, so a check can see a typed move answered with no update to that surface. */
   readonly target?: string
-  /** T-0286: on a say turn, every surface the session holds as its prior turns left it, so a check can find the
-   *  open table a move typed with no `target` was meant for. Absent on a client turn. */
+  /** T-0286, T-0278: on a say turn, every surface the session holds as its prior turns left it (`sessionSurfaceViews`),
+   *  so a check can find the open table a move typed with no `target` was meant for, or see a form whose required
+   *  field is still blank. Absent on a client turn. */
   readonly open?: readonly SurfaceView[]
 }
 
@@ -114,6 +115,9 @@ export interface SemanticCheck {
    *  a type the turn cannot emit. Absent: the check runs on every turn it is resolved for. */
   readonly requires?: readonly string[]
   check(input: SemanticCheckInput): readonly SemanticFinding[]
+  /** T-0278: true when the turn cannot close its flow (the open booking still has a blank required field), so
+   *  `produce()` sends no FLOW_END_MISSING round for a reply that rightly asks for the missing value. */
+  holdsFlowOpen?(input: SemanticCheckInput): boolean
 }
 
 /** T-0202 (D4): the checks of `checks` whose `requires` types `catalog` all declares, in order. */
@@ -223,7 +227,8 @@ function replaySession(session: SemanticTurnLog): Map<string, MutableView> {
   return views
 }
 
-/** T-0286: every surface the session's prior ASSISTANT turns leave open, in the order the session first wrote them. */
+/** T-0286, T-0278: every surface the session's prior ASSISTANT turns leave open, in the order the session first wrote
+ *  them; the say turn's `open` input. */
 export function sessionSurfaceViews(session: SemanticTurnLog): SurfaceView[] {
   return [...replaySession(session)].map(([surfaceId, view]) => ({ surfaceId, components: view.components, dataModel: view.dataModel, priorDataModel: view.dataModel }))
 }
@@ -249,6 +254,17 @@ export function semanticSurfaceViews(session: SemanticTurnLog, output: A2uiOutpu
     if (view !== undefined) out.push({ surfaceId: sid, components: view.components, dataModel: view.dataModel, priorDataModel: created.has(sid) ? undefined : prior.get(sid) })
   }
   return out
+}
+
+/** T-0278: whether any check holds the flow open for this input; a throwing check holds nothing (fail-open). */
+export function flowHeldOpen(checks: readonly SemanticCheck[], input: SemanticCheckInput): boolean {
+  return checks.some((c) => {
+    try {
+      return c.holdsFlowOpen?.(input) === true
+    } catch {
+      return false
+    }
+  })
 }
 
 /** Run every check over one input; a throwing check is skipped and named in `errored` (fail-open). */

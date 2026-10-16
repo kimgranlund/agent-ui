@@ -112,7 +112,8 @@ import { MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, selectMiniSkills } from './mini-sk
 import { FEED_SURFACE_TYPE_SET } from './feed-catalog.ts'
 import { isGenuiCandidate, readGenuiLine, utf8ByteLength, GENUI_MAX_HTML_BYTES } from './genui-line.ts'
 import type { GenuiSurfaceConfig } from './genui-surface-config.ts'
-import { runSemanticChecks, semanticActionOf, semanticSurfaceViews, sessionSurfaceViews } from '../catalog/semantic-check.ts'
+import { flowHeldOpen, runSemanticChecks, semanticActionOf, semanticSurfaceViews, sessionSurfaceViews } from '../catalog/semantic-check.ts'
+import type { SemanticCheckInput } from '../catalog/semantic-check.ts'
 import type { SemanticCheck } from '../catalog/semantic-check.ts'
 import { RENDER_SURFACE_TOOL_NAME, detectUserOverride, isLegacyShape, openSurfacesNote, renderSurfaceJsonl, renderSurfaceReply, renderSurfaceTool } from './response-type.ts'
 import type { ResponsePreference } from './response-type.ts'
@@ -1575,7 +1576,16 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       // receives — see its doc for why the prior-turn-confirm-ask signal is unavailable here). Exactly
       // ONE round, and only when a round is left to spend; on refusal the turn ships UNCHANGED below
       // (never a synthesized field, never a halt) with FLOW_END_UNCORRECTED tallied on the trace.
+      // T-0278: a say turn judged with no payload sees the session's open surfaces, and a persona check may hold the
+      // flow open (a confirm while the open booking still has a blank required field), so no FLOW_END_MISSING round
+      // pushes a reply that rightly asks for the missing value into claiming a booking that was not made.
+      const sayInput: SemanticCheckInput | undefined =
+        turnAction === undefined && turnIntent !== undefined && deps.semanticChecks !== undefined && deps.semanticChecks.length > 0
+          ? { surfaces: [], intent: turnIntent, ...(roundTarget !== undefined ? { target: roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}) }
+          : undefined
+      const heldOpen = sayInput !== undefined && flowHeldOpen(deps.semanticChecks!, sayInput)
       if (
+        !heldOpen &&
         flowEnd === undefined &&
         note !== undefined &&
         ask === undefined &&
@@ -1598,7 +1608,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       if ((turnAction !== undefined || turnIntent !== undefined) && deps.semanticChecks !== undefined && deps.semanticChecks.length > 0 && genuiLine === undefined) {
         const semantic = runSemanticChecks(
           deps.semanticChecks,
-          turnAction !== undefined ? { surfaces: [], action: turnAction } : { surfaces: [], intent: turnIntent!, ...(roundTarget !== undefined ? { target: roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}) },
+          turnAction !== undefined ? { surfaces: [], action: turnAction } : sayInput!,
         )
         if (semantic.findings.length > 0 && round < opts.maxRounds - 1) {
           failures = semantic.findings.map((f) => ({ code: f.code, path: f.path, detail: f.message }))
