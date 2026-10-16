@@ -45,8 +45,8 @@ function renderTargetBoard(): HTMLElement {
   board.cells = [
     { row: 0, col: 1, mark: '●', intent: 'danger', disabled: true },
     { row: 0, col: 2, mark: '●', intent: 'danger', disabled: true },
-    { row: 1, col: 1, mark: '○', intent: 'neutral', disabled: true },
-    { row: 3, col: 4, mark: '○', intent: 'neutral', disabled: true },
+    { row: 1, col: 1, mark: '✕', intent: 'neutral', disabled: true },
+    { row: 3, col: 4, mark: '✕', intent: 'neutral', disabled: true },
   ]
   const log = document.createElement('code')
   log.textContent = 'action: (none yet)'

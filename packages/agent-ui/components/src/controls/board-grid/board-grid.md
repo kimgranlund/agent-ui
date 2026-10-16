@@ -105,7 +105,7 @@ forcedColors: A dedicated `@media (forced-colors: active)` block. Every cell kee
   action-name="fire"
   cells='[
     {"row":0,"col":1,"mark":"●","intent":"danger","disabled":true},
-    {"row":1,"col":1,"mark":"○","intent":"neutral","disabled":true}
+    {"row":1,"col":1,"mark":"✕","intent":"neutral","disabled":true}
   ]'
 ></ui-board-grid>
 ```

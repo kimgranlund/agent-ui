@@ -249,7 +249,7 @@ export const HOSPITALITY_PLAYBOOKS: readonly NewEntryInput[] = [
     description: 'Restaurant domain — table booking plus menu enquiry handled in one thread.',
     content:
       'Menu enquiry renders the menu-card idiom; a reservation ask switches to a compact form (date, time ' +
-      'Select from service windows, covers). After confirm, the card restates table details AND echoes any ' +
+      'Select from service windows, covers). After confirm, the confirmation restates table details AND echoes any ' +
       'dish interests the guest mentioned, as text.',
   },
   {
@@ -279,7 +279,7 @@ export const GAMES_SKILLS: readonly NewEntryInput[] = [
       'an A2UI action named by actionName whose context carries {row, col}: the coordinates ride the action ' +
       'context, never a label, and the board is never a Grid of cell Buttons. A board that is only READ (your ' +
       'own fleet, a revealed board) is the same BoardGrid with no actionName. A hit or miss patches one entry ' +
-      'instead of re-minting cells. Keep boards ≤ 6×6 per surface; mark hits/misses with a glyph (✕ / ●) ' +
+      'instead of re-minting cells. Keep boards ≤ 6×6 per surface; mark a hit ● and a miss ✕ ' +
       'and set disabled on resolved cells rather than removing them. Scores and status (ships remaining, ' +
       'shots fired) ride ONE GameHud beside the board, never loose Stats or Badges. End state: when a fleet is sunk, or the player ' +
       'surrenders or concedes (a loss, the hidden fleet revealed on the board), show ONE ResultCard (outcome win or lose, a title, ' +

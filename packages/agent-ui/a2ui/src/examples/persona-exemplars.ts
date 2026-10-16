@@ -72,90 +72,95 @@ export const personaBasicFixtureDemoSeed: PersonaExampleSeed = {
 
 const BOOKING_SID = 'concierge-booking'
 
+/** The room-type choices, shared by the form's select and the confirmation's read-back row. */
+const ROOM_OPTIONS = [
+  { value: 'king', label: 'King room' },
+  { value: 'twin', label: 'Twin room' },
+  { value: 'suite', label: 'Junior suite' },
+]
+
 /** The booking form's field kinds (a dateSingle arrival and departure pair, a select, a checkbox), shared by both booking seeds. */
 const BOOKING_FIELDS = [
   { kind: 'dateSingle', path: 'checkIn', label: 'Arrival', required: true },
   { kind: 'dateSingle', path: 'checkOut', label: 'Departure', required: true },
-  {
-    kind: 'select',
-    path: 'roomType',
-    label: 'Room type',
-    required: true,
-    options: [
-      { value: 'king', label: 'King room' },
-      { value: 'twin', label: 'Twin room' },
-      { value: 'suite', label: 'Junior suite' },
-    ],
-  },
+  { kind: 'select', path: 'roomType', label: 'Room type', required: true, options: ROOM_OPTIONS },
   { kind: 'checkbox', path: 'breakfast', label: 'Add breakfast' },
 ]
 
-/** The confirmation's rows, read from the same `/booking` object the form writes. */
+/** Every detail the guest named, written once at `/booking`: the form opens pre-filled with it (T-0266), and the
+ *  confirmation reads it back after the submit. */
+const BOOKING_DATA = { checkIn: '2026-11-14', checkOut: '2026-11-17', roomType: 'king', breakfast: 'Yes' }
+
+/** The confirmation's rows, read from the same `/booking` object the form writes; the room type reads as its label. */
 const BOOKING_ROWS = [
   { label: 'Arrival', path: 'checkIn' },
   { label: 'Departure', path: 'checkOut' },
-  { label: 'Room type', path: 'roomType' },
+  { label: 'Room type', path: 'roomType', options: ROOM_OPTIONS },
   { label: 'Breakfast', path: 'breakfast' },
 ]
 
-/** The concierge persona over agent-ui: a BookingForm writing `/booking` and a BookingConfirmation reading it. */
+const BOOKING_PROMPT = 'Book me a king room at the hotel, arriving 14 November 2026 and leaving 17 November, with breakfast.'
+const CONFIRM_PROMPT = 'Those details are right, please confirm the booking.'
+
+/** The confirm turn's surface root (T-0289, T-0308): ONE BookingConfirmation reading the form's values back, no
+ *  reference number. The same node on both bases. */
+const BOOKING_CONFIRMATION = { id: 'root', component: 'BookingConfirmation', title: 'Booked', rows: BOOKING_ROWS, data: { path: '/booking' } }
+
+/** The concierge persona over agent-ui: the request turn, a BookingForm pre-filled with every detail the guest gave. */
 export const personaConciergeBookingSeed: PersonaExampleSeed = {
   name: 'persona-concierge-booking',
   description:
-    'The concierge persona over the agent-ui base: a BookingForm titled "Book your stay" with a required ' +
-    'dateSingle arrival and departure (drawn as two date fields), a required room-type select and a breakfast ' +
-    'checkbox (a Yes / No choice), its aggregate bound to /booking and its child a submit Button; beside it a ' +
-    'BookingConfirmation whose rows read arrival, departure, room type and breakfast back from the same ' +
-    '/booking object.',
-  promptText: 'I want to book a room at the hotel: pick an arrival and a departure date, a room type and whether I want breakfast.',
+    'The concierge persona over the agent-ui base, on an ask that names every detail: one BookingForm titled ' +
+    '"Book your stay" as the surface root, pre-filled from /booking with the dateSingle arrival and departure ' +
+    '(drawn as two date fields), the king room on the room-type select and Yes on the breakfast choice. Its child ' +
+    'Book now Button is a submit action whose context carries /booking, and the surface sends its data model. No ' +
+    'confirmation renders before the guest submits.',
+  promptText: BOOKING_PROMPT,
   surfaceId: BOOKING_SID,
   protocolVersion: 'v1.0',
   catalogId: 'agent-ui--concierge',
   messages: [
-    { version: 'v1.0', createSurface: { surfaceId: BOOKING_SID, catalogId: 'agent-ui--concierge' } },
-    {
-      version: 'v1.0',
-      updateDataModel: { surfaceId: BOOKING_SID, path: '/booking', value: { checkIn: '2026-11-14', checkOut: '2026-11-17', roomType: 'king', breakfast: true } },
-    },
+    { version: 'v1.0', createSurface: { surfaceId: BOOKING_SID, catalogId: 'agent-ui--concierge', sendDataModel: true } },
+    { version: 'v1.0', updateDataModel: { surfaceId: BOOKING_SID, path: '/booking', value: BOOKING_DATA } },
     {
       version: 'v1.0',
       updateComponents: {
         surfaceId: BOOKING_SID,
         components: [
-          { id: 'root', component: 'Column', gap: 'md', children: ['form', 'summary'] },
-          { id: 'form', component: 'BookingForm', title: 'Book your stay', fields: BOOKING_FIELDS, value: { path: '/booking' }, child: 'submitBtn' },
-          { id: 'submitBtn', component: 'Button', variant: 'solid', label: 'Book now', action: { action: 'confirmBooking', submit: true } },
-          { id: 'summary', component: 'BookingConfirmation', title: 'Your booking', rows: BOOKING_ROWS, data: { path: '/booking' } },
+          { id: 'root', component: 'BookingForm', title: 'Book your stay', fields: BOOKING_FIELDS, value: { path: '/booking' }, child: 'submitBtn' },
+          {
+            id: 'submitBtn',
+            component: 'Button',
+            variant: 'solid',
+            label: 'Book now',
+            action: { action: 'confirm_booking', submit: true, context: { booking: { path: '/booking' } } },
+          },
         ],
       },
     },
   ],
 }
 
-/** The concierge persona over a2ui-basic: the same pair, the submit Button in the Basic dialect. */
+/** The concierge persona over a2ui-basic: the same pre-filled form, the submit Button in the Basic dialect. */
 export const personaBasicConciergeBookingSeed: PersonaExampleSeed = {
   name: 'persona-basic-concierge-booking',
   description:
-    'The concierge persona over the a2ui-basic base: the same BookingForm and BookingConfirmation pair bound ' +
-    'to /booking inside a Basic Column, with the form\'s child a Basic Button whose label is a child Text and ' +
-    'whose confirm_booking event carries the bound /booking object.',
-  promptText: 'I want to book a room at the hotel: pick an arrival and a departure date, a room type and whether I want breakfast.',
+    'The concierge persona over the a2ui-basic base: the same pre-filled BookingForm as the surface root, ' +
+    'bound to /booking, with the form\'s child a Basic Button whose label is a child Text and whose ' +
+    'confirm_booking event carries the bound /booking object. No confirmation renders before the submit.',
+  promptText: BOOKING_PROMPT,
   surfaceId: BOOKING_SID,
   protocolVersion: 'v1.0',
   catalogId: 'a2ui-basic--concierge',
   messages: [
-    { version: 'v1.0', createSurface: { surfaceId: BOOKING_SID, catalogId: 'a2ui-basic--concierge' } },
-    {
-      version: 'v1.0',
-      updateDataModel: { surfaceId: BOOKING_SID, path: '/booking', value: { checkIn: '2026-11-14', checkOut: '2026-11-17', roomType: 'twin', breakfast: false } },
-    },
+    { version: 'v1.0', createSurface: { surfaceId: BOOKING_SID, catalogId: 'a2ui-basic--concierge', sendDataModel: true } },
+    { version: 'v1.0', updateDataModel: { surfaceId: BOOKING_SID, path: '/booking', value: BOOKING_DATA } },
     {
       version: 'v1.0',
       updateComponents: {
         surfaceId: BOOKING_SID,
         components: [
-          { id: 'root', component: 'Column', justify: 'start', align: 'stretch', children: ['form', 'summary'] },
-          { id: 'form', component: 'BookingForm', title: 'Book your stay', fields: BOOKING_FIELDS, value: { path: '/booking' }, child: 'submitBtn' },
+          { id: 'root', component: 'BookingForm', title: 'Book your stay', fields: BOOKING_FIELDS, value: { path: '/booking' }, child: 'submitBtn' },
           { id: 'submitLabel', component: 'Text', text: 'Book now' },
           {
             id: 'submitBtn',
@@ -164,10 +169,44 @@ export const personaBasicConciergeBookingSeed: PersonaExampleSeed = {
             child: 'submitLabel',
             action: { event: { name: 'confirm_booking', context: { booking: { path: '/booking' } } } },
           },
-          { id: 'summary', component: 'BookingConfirmation', title: 'Your booking', rows: BOOKING_ROWS, data: { path: '/booking' } },
         ],
       },
     },
+  ],
+}
+
+/** The concierge persona over agent-ui: the confirm turn, the booking settled as one BookingConfirmation. */
+export const personaConciergeBookingConfirmedSeed: PersonaExampleSeed = {
+  name: 'persona-concierge-booking-confirmed',
+  description:
+    'The concierge persona over the agent-ui base, on the turn after the guest confirms: the surface root is ONE ' +
+    'BookingConfirmation titled "Booked" whose rows read the arrival, departure, room type (as its label, King ' +
+    'room) and breakfast back from the same /booking object the form wrote, with no reference number.',
+  promptText: CONFIRM_PROMPT,
+  surfaceId: BOOKING_SID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui--concierge',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: BOOKING_SID, catalogId: 'agent-ui--concierge' } },
+    { version: 'v1.0', updateDataModel: { surfaceId: BOOKING_SID, path: '/booking', value: BOOKING_DATA } },
+    { version: 'v1.0', updateComponents: { surfaceId: BOOKING_SID, components: [BOOKING_CONFIRMATION] } },
+  ],
+}
+
+/** The concierge persona over a2ui-basic: the same confirm turn. */
+export const personaBasicConciergeBookingConfirmedSeed: PersonaExampleSeed = {
+  name: 'persona-basic-concierge-booking-confirmed',
+  description:
+    'The concierge persona over the a2ui-basic base, on the turn after the guest confirms: the same ' +
+    'BookingConfirmation titled "Booked" as the surface root, reading the booking back from /booking.',
+  promptText: CONFIRM_PROMPT,
+  surfaceId: BOOKING_SID,
+  protocolVersion: 'v1.0',
+  catalogId: 'a2ui-basic--concierge',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: BOOKING_SID, catalogId: 'a2ui-basic--concierge' } },
+    { version: 'v1.0', updateDataModel: { surfaceId: BOOKING_SID, path: '/booking', value: BOOKING_DATA } },
+    { version: 'v1.0', updateComponents: { surfaceId: BOOKING_SID, components: [BOOKING_CONFIRMATION] } },
   ],
 }
 
@@ -181,27 +220,21 @@ const STAY_FIELDS = [
   { kind: 'dateSingle', path: 'checkOut', label: 'Departure', required: true },
 ]
 
-const STAY_ROWS = [
-  { label: 'Guest', path: 'guestName' },
-  { label: 'Guests', path: 'guests' },
-  { label: 'Arrival', path: 'checkIn' },
-  { label: 'Departure', path: 'checkOut' },
-]
-
 /** The concierge persona over agent-ui: a BookingForm using the text and number kinds and a two-field date range. */
 export const personaConciergeStaySeed: PersonaExampleSeed = {
   name: 'persona-concierge-stay-details',
   description:
-    'The concierge persona over the agent-ui base: a BookingForm titled "Your stay" with a required text guest ' +
-    'name, a required number guest count and the date range as two required dateSingle fields (arrival, ' +
-    'departure), its aggregate bound to /stay and its child a submit Button; beside it a BookingConfirmation ' +
-    'whose rows read the four values back from the same /stay object.',
-  promptText: 'Book a stay for two guests: take the guest name, the number of guests, and the arrival and departure dates.',
+    'The concierge persona over the agent-ui base, on an ask that names every detail: a BookingForm titled ' +
+    '"Your stay" as the surface root, pre-filled from /stay with the text guest name, the number guest count and ' +
+    'the date range as two dateSingle fields (arrival, departure), all required. Its child Reserve Button is a ' +
+    'submit action whose context carries /stay, and the surface sends its data model. No confirmation renders ' +
+    'before the guest submits.',
+  promptText: 'Book a stay for two guests under the name Ada Lovelace, arriving 14 November 2026 and leaving 17 November.',
   surfaceId: STAY_SID,
   protocolVersion: 'v1.0',
   catalogId: 'agent-ui--concierge',
   messages: [
-    { version: 'v1.0', createSurface: { surfaceId: STAY_SID, catalogId: 'agent-ui--concierge' } },
+    { version: 'v1.0', createSurface: { surfaceId: STAY_SID, catalogId: 'agent-ui--concierge', sendDataModel: true } },
     {
       version: 'v1.0',
       updateDataModel: {
@@ -215,67 +248,89 @@ export const personaConciergeStaySeed: PersonaExampleSeed = {
       updateComponents: {
         surfaceId: STAY_SID,
         components: [
-          { id: 'root', component: 'Column', gap: 'md', children: ['form', 'summary'] },
-          { id: 'form', component: 'BookingForm', title: 'Your stay', fields: STAY_FIELDS, value: { path: '/stay' }, child: 'submitBtn' },
-          { id: 'submitBtn', component: 'Button', variant: 'solid', label: 'Reserve', action: { action: 'reserveStay', submit: true } },
-          { id: 'summary', component: 'BookingConfirmation', title: 'Stay summary', rows: STAY_ROWS, data: { path: '/stay' } },
+          { id: 'root', component: 'BookingForm', title: 'Your stay', fields: STAY_FIELDS, value: { path: '/stay' }, child: 'submitBtn' },
+          {
+            id: 'submitBtn',
+            component: 'Button',
+            variant: 'solid',
+            label: 'Reserve',
+            action: { action: 'reserveStay', submit: true, context: { stay: { path: '/stay' } } },
+          },
         ],
       },
     },
   ],
 }
 
-const TABLE_SID = 'blackjack-table'
+const TABLE_SID = 'holdem-table'
 
-/** The croupier persona over agent-ui: an opening blackjack deal, the dealer's hole card face down. */
+/** Both hold'em seeds show the flop of one hand: blinds of 20 each in a pot of 40, the player's chips at 980. */
+const HOLDEM_PROMPT = 'Deal me a hand of Texas hold’em.'
+
+/** The croupier persona over agent-ui: a hold'em hand in the Card frame, since CardTable is the blackjack table only
+ *  (`game-table-chrome`: other games keep the Card frame with PlayingCard hands). */
 export const personaCroupierHandSeed: PersonaExampleSeed = {
   name: 'persona-croupier-opening-hand',
   description:
-    'The croupier persona over the agent-ui base: a Card blackjack table whose content holds the dealer row ' +
-    '(a 9 of clubs up, the hole card a face-down PlayingCard) and the player row (a king of hearts and a 7 of ' +
-    'spades, total 17), and whose footer offers Hit and Stand Buttons.',
-  promptText: 'Deal me a hand of blackjack.',
+    'The croupier persona over the agent-ui base: a Texas hold’em hand in ONE Card, its header the title and a ' +
+    'trailing Badge bound to /chips, its content a zone per participant (the dealer\'s two hole cards as face-down ' +
+    'PlayingCards, the flop of a king of spades, a 7 of diamonds and a 2 of clubs, and the player\'s king and queen ' +
+    'of hearts for a pair of kings), and its footer a Row of Check, Bet and Fold Buttons.',
+  promptText: HOLDEM_PROMPT,
   surfaceId: TABLE_SID,
   protocolVersion: 'v1.0',
   catalogId: 'agent-ui--croupier',
   messages: [
-    { version: 'v1.0', createSurface: { surfaceId: TABLE_SID, catalogId: 'agent-ui--croupier' } },
+    { version: 'v1.0', createSurface: { surfaceId: TABLE_SID, catalogId: 'agent-ui--croupier', sendDataModel: true } },
+    { version: 'v1.0', updateDataModel: { surfaceId: TABLE_SID, value: { chips: 'Chips 980 · Pot 40' } } },
     {
       version: 'v1.0',
       updateComponents: {
         surfaceId: TABLE_SID,
         components: [
           { id: 'root', component: 'Card', children: ['tableHeader', 'tableContent', 'tableFooter'] },
-          { id: 'tableHeader', component: 'CardHeader', children: ['title'] },
-          { id: 'title', component: 'Text', variant: 'h4', text: 'Blackjack' },
-          { id: 'tableContent', component: 'CardContent', children: ['dealerLabel', 'dealerCards', 'playerLabel', 'playerCards', 'playerTotal'] },
-          { id: 'dealerLabel', component: 'Text', variant: 'h5', text: 'Dealer shows 9' },
+          { id: 'tableHeader', component: 'CardHeader', children: ['title', 'chips'] },
+          { id: 'title', component: 'Text', variant: 'h4', text: 'Texas hold’em' },
+          { id: 'chips', component: 'Badge', label: { path: '/chips' }, intent: 'neutral', slot: 'trailing' },
+          {
+            id: 'tableContent',
+            component: 'CardContent',
+            children: ['dealerLabel', 'dealerCards', 'boardLabel', 'boardCards', 'playerLabel', 'playerCards', 'handRank'],
+          },
+          { id: 'dealerLabel', component: 'Text', variant: 'h5', text: 'Dealer' },
           { id: 'dealerCards', component: 'Row', gap: 'md', justify: 'center', children: ['dealerCard1', 'dealerCard2'] },
-          { id: 'dealerCard1', component: 'PlayingCard', rank: '9', suit: 'clubs' },
+          { id: 'dealerCard1', component: 'PlayingCard', rank: '9', suit: 'clubs', faceDown: true },
           { id: 'dealerCard2', component: 'PlayingCard', rank: '4', suit: 'diamonds', faceDown: true },
+          { id: 'boardLabel', component: 'Text', variant: 'h5', text: 'Flop' },
+          { id: 'boardCards', component: 'Row', gap: 'md', justify: 'center', children: ['boardCard1', 'boardCard2', 'boardCard3'] },
+          { id: 'boardCard1', component: 'PlayingCard', rank: 'K', suit: 'spades' },
+          { id: 'boardCard2', component: 'PlayingCard', rank: '7', suit: 'diamonds' },
+          { id: 'boardCard3', component: 'PlayingCard', rank: '2', suit: 'clubs' },
           { id: 'playerLabel', component: 'Text', variant: 'h5', text: 'You' },
           { id: 'playerCards', component: 'Row', gap: 'md', justify: 'center', children: ['playerCard1', 'playerCard2'] },
           { id: 'playerCard1', component: 'PlayingCard', rank: 'K', suit: 'hearts' },
-          { id: 'playerCard2', component: 'PlayingCard', rank: '7', suit: 'spades' },
-          { id: 'playerTotal', component: 'Text', variant: 'body', text: 'Total: 17. Hit or stand?' },
+          { id: 'playerCard2', component: 'PlayingCard', rank: 'Q', suit: 'hearts' },
+          { id: 'handRank', component: 'Text', variant: 'body', text: 'Pair of kings. Check or bet?' },
           { id: 'tableFooter', component: 'CardFooter', children: ['moves'] },
-          { id: 'moves', component: 'Row', gap: 'sm', justify: 'center', children: ['hitBtn', 'standBtn'] },
-          { id: 'hitBtn', component: 'Button', variant: 'ghost', label: 'Hit', action: { action: 'hit' } },
-          { id: 'standBtn', component: 'Button', variant: 'solid', label: 'Stand', action: { action: 'stand' } },
+          { id: 'moves', component: 'Row', gap: 'sm', justify: 'center', children: ['checkBtn', 'betBtn', 'foldBtn'] },
+          { id: 'checkBtn', component: 'Button', variant: 'soft', label: 'Check', action: { action: 'check' } },
+          { id: 'betBtn', component: 'Button', variant: 'solid', label: 'Bet 20', action: { action: 'bet', context: { amount: 20 } } },
+          { id: 'foldBtn', component: 'Button', variant: 'soft', label: 'Fold', action: { action: 'fold' } },
         ],
       },
     },
   ],
 }
 
-/** The croupier persona over a2ui-basic: the same deal in Basic rows, the moves as Basic event Buttons. */
+/** The croupier persona over a2ui-basic: the same hold'em hand in Basic rows, the moves as Basic event Buttons. */
 export const personaBasicCroupierHandSeed: PersonaExampleSeed = {
   name: 'persona-basic-croupier-opening-hand',
   description:
-    'The croupier persona over the a2ui-basic base: a Basic Column table with the dealer Row (a 9 of clubs ' +
-    'up, a face-down hole card) and the player Row (a king of hearts and a 7 of spades, total 17), then a ' +
-    'Row of Basic Buttons whose child Text labels read Hit and Stand and whose events name the move.',
-  promptText: 'Deal me a hand of blackjack.',
+    'The croupier persona over the a2ui-basic base: the same Texas hold’em hand in a Basic Column, a Row per ' +
+    'participant (the dealer\'s two face-down hole cards, the flop, the player\'s king and queen of hearts), a ' +
+    'line stating the hand and the chips, then a Row of Basic Buttons whose child Text labels read Check, Bet 20 ' +
+    'and Fold and whose events name the move.',
+  promptText: HOLDEM_PROMPT,
   surfaceId: TABLE_SID,
   protocolVersion: 'v1.0',
   catalogId: 'a2ui-basic--croupier',
@@ -291,23 +346,30 @@ export const personaBasicCroupierHandSeed: PersonaExampleSeed = {
             component: 'Column',
             justify: 'start',
             align: 'stretch',
-            children: ['title', 'dealerLabel', 'dealerCards', 'playerLabel', 'playerCards', 'playerTotal', 'moves'],
+            children: ['title', 'dealerLabel', 'dealerCards', 'boardLabel', 'boardCards', 'playerLabel', 'playerCards', 'handRank', 'moves'],
           },
-          { id: 'title', component: 'Text', variant: 'h4', text: 'Blackjack' },
-          { id: 'dealerLabel', component: 'Text', variant: 'h5', text: 'Dealer shows 9' },
+          { id: 'title', component: 'Text', variant: 'h4', text: 'Texas hold’em' },
+          { id: 'dealerLabel', component: 'Text', variant: 'h5', text: 'Dealer' },
           { id: 'dealerCards', component: 'Row', justify: 'center', align: 'center', children: ['dealerCard1', 'dealerCard2'] },
-          { id: 'dealerCard1', component: 'PlayingCard', rank: '9', suit: 'clubs' },
+          { id: 'dealerCard1', component: 'PlayingCard', rank: '9', suit: 'clubs', faceDown: true },
           { id: 'dealerCard2', component: 'PlayingCard', rank: '4', suit: 'diamonds', faceDown: true },
+          { id: 'boardLabel', component: 'Text', variant: 'h5', text: 'Flop' },
+          { id: 'boardCards', component: 'Row', justify: 'center', align: 'center', children: ['boardCard1', 'boardCard2', 'boardCard3'] },
+          { id: 'boardCard1', component: 'PlayingCard', rank: 'K', suit: 'spades' },
+          { id: 'boardCard2', component: 'PlayingCard', rank: '7', suit: 'diamonds' },
+          { id: 'boardCard3', component: 'PlayingCard', rank: '2', suit: 'clubs' },
           { id: 'playerLabel', component: 'Text', variant: 'h5', text: 'You' },
           { id: 'playerCards', component: 'Row', justify: 'center', align: 'center', children: ['playerCard1', 'playerCard2'] },
           { id: 'playerCard1', component: 'PlayingCard', rank: 'K', suit: 'hearts' },
-          { id: 'playerCard2', component: 'PlayingCard', rank: '7', suit: 'spades' },
-          { id: 'playerTotal', component: 'Text', variant: 'body', text: 'Total: 17. Hit or stand?' },
-          { id: 'moves', component: 'Row', justify: 'center', align: 'center', children: ['hitBtn', 'standBtn'] },
-          { id: 'hitLabel', component: 'Text', text: 'Hit' },
-          { id: 'hitBtn', component: 'Button', variant: 'default', child: 'hitLabel', action: { event: { name: 'hit', context: {} } } },
-          { id: 'standLabel', component: 'Text', text: 'Stand' },
-          { id: 'standBtn', component: 'Button', variant: 'primary', child: 'standLabel', action: { event: { name: 'stand', context: {} } } },
+          { id: 'playerCard2', component: 'PlayingCard', rank: 'Q', suit: 'hearts' },
+          { id: 'handRank', component: 'Text', variant: 'body', text: 'Pair of kings. Chips 980, pot 40. Check or bet?' },
+          { id: 'moves', component: 'Row', justify: 'center', align: 'center', children: ['checkBtn', 'betBtn', 'foldBtn'] },
+          { id: 'checkLabel', component: 'Text', text: 'Check' },
+          { id: 'checkBtn', component: 'Button', variant: 'default', child: 'checkLabel', action: { event: { name: 'check', context: {} } } },
+          { id: 'betLabel', component: 'Text', text: 'Bet 20' },
+          { id: 'betBtn', component: 'Button', variant: 'primary', child: 'betLabel', action: { event: { name: 'bet', context: { amount: 20 } } } },
+          { id: 'foldLabel', component: 'Text', text: 'Fold' },
+          { id: 'foldBtn', component: 'Button', variant: 'default', child: 'foldLabel', action: { event: { name: 'fold', context: {} } } },
         ],
       },
     },
@@ -316,8 +378,10 @@ export const personaBasicCroupierHandSeed: PersonaExampleSeed = {
 
 const CARD_TABLE_SID = 'card-table'
 
-/** The opening deal both CardTable seeds write: the dealer's hole card face down, the player on 17. */
+/** The opening deal both CardTable seeds write: the dealer's hole card face down, the player on 17, and the bankroll
+ *  950 because the 50 bet sits on the felt (`round-loop`: the deal takes the bet out of /bankroll). */
 const CARD_TABLE_DATA = {
+  phase: 'playing',
   dealerHand: [
     { rank: '9', suit: 'clubs' },
     { rank: '4', suit: 'diamonds', faceDown: true },
@@ -328,17 +392,18 @@ const CARD_TABLE_DATA = {
   ],
   dealerTotal: 'showing 9', // the up card only while the hole card is face down, as the approved table reads
   playerTotal: 17,
-  bankroll: 1000,
+  bankroll: 950,
   bet: 50,
 }
 
-/** The CardTable node both seeds share: every table figure bound to its data-model path (ADR-0243). */
+/** The CardTable node both seeds share: the phase and every table figure bound to its data-model path (ADR-0243). */
 const CARD_TABLE_ROOT = {
   id: 'root',
   component: 'CardTable',
   title: 'Blackjack',
   status: 'Your turn',
   statusIntent: 'success',
+  phase: { path: '/phase' },
   dealerHand: { path: '/dealerHand' },
   playerHand: { path: '/playerHand' },
   dealerTotal: { path: '/dealerTotal' },
@@ -352,9 +417,10 @@ const CARD_TABLE_ROOT = {
 export const personaCroupierCardTableSeed: PersonaExampleSeed = {
   name: 'persona-croupier-card-table',
   description:
-    'The croupier persona over the agent-ui base: one CardTable titled Blackjack whose hands, totals, bankroll ' +
-    'and bet are bound to the data model (a 9 of clubs up and a face-down hole card for the dealer, a king of ' +
-    'hearts and a 7 of spades for the player, total 17), with Hit, Stand and Double Buttons as its children.',
+    'The croupier persona over the agent-ui base: one CardTable titled Blackjack in its playing phase whose phase, ' +
+    'hands, totals, bankroll and bet are bound to the data model (a 9 of clubs up and a face-down hole card for the ' +
+    'dealer, a king of hearts and a 7 of spades for the player, total 17, the bankroll at 950 with the 50 bet on ' +
+    'the felt), with Hit, Stand and Double Buttons as its children.',
   promptText: 'Deal me a hand of blackjack.',
   surfaceId: CARD_TABLE_SID,
   protocolVersion: 'v1.0',
@@ -381,8 +447,8 @@ export const personaCroupierCardTableSeed: PersonaExampleSeed = {
 export const personaBasicCroupierCardTableSeed: PersonaExampleSeed = {
   name: 'persona-basic-croupier-card-table',
   description:
-    'The croupier persona over the a2ui-basic base: the same bound CardTable and opening deal, with Basic ' +
-    'Buttons whose child Text labels read Hit, Stand and Double and whose events name the move.',
+    'The croupier persona over the a2ui-basic base: the same bound CardTable and opening deal in its playing ' +
+    'phase, with Basic Buttons whose child Text labels read Hit, Stand and Double and whose events name the move.',
   promptText: 'Deal me a hand of blackjack.',
   surfaceId: CARD_TABLE_SID,
   protocolVersion: 'v1.0',
@@ -715,6 +781,8 @@ export const personaExemplarSeeds: readonly PersonaExampleSeed[] = [
   personaBasicFixtureDemoSeed,
   personaConciergeBookingSeed,
   personaBasicConciergeBookingSeed,
+  personaConciergeBookingConfirmedSeed,
+  personaBasicConciergeBookingConfirmedSeed,
   personaConciergeStaySeed,
   personaCroupierHandSeed,
   personaBasicCroupierHandSeed,

@@ -27,8 +27,8 @@ const SHIPS = new Set(['0,1', '0,2', '0,3', '2,4', '3,4', '5,0'])
 const shots: Cell[] = [
   { row: 0, col: 1, mark: '●', intent: 'danger', disabled: true },
   { row: 0, col: 2, mark: '●', intent: 'danger', disabled: true },
-  { row: 1, col: 1, mark: '○', intent: 'neutral', disabled: true },
-  { row: 4, col: 4, mark: '○', intent: 'neutral', disabled: true },
+  { row: 1, col: 1, mark: '✕', intent: 'neutral', disabled: true },
+  { row: 4, col: 4, mark: '✕', intent: 'neutral', disabled: true },
   { row: 2, col: 4, mark: '●', intent: 'danger', disabled: true },
   { row: 5, col: 0, mark: '▣', intent: 'success', disabled: true },
 ]
@@ -39,12 +39,12 @@ target.addEventListener('action', (e) => {
   const detail = (e as CustomEvent<{ action: string; context: { row: number; col: number } }>).detail
   const { row, col } = detail.context
   const hit = SHIPS.has(`${row},${col}`)
-  shots.push(hit ? { row, col, mark: '●', intent: 'danger', disabled: true } : { row, col, mark: '○', intent: 'neutral', disabled: true })
+  shots.push(hit ? { row, col, mark: '●', intent: 'danger', disabled: true } : { row, col, mark: '✕', intent: 'neutral', disabled: true })
   target.cells = [...shots] // a cells write patches the cell in place; the roving position survives
   lastEvent.textContent = `last action: ${JSON.stringify(detail)}`
 })
 const targetNote = el('p', {}, [
-  text('Legend: '), code('●'), text(' hit (danger), '), code('○'), text(' miss (neutral), '), code('▣'),
+  text('Legend: '), code('●'), text(' hit (danger), '), code('✕'), text(' miss (neutral), '), code('▣'),
   text(' sunk (success). Played cells are disabled, so the arrow keys skip them and they never fire.'),
 ])
 

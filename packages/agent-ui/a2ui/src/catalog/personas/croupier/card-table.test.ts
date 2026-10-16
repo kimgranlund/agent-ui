@@ -179,7 +179,7 @@ describe('CardTable renders through the real renderer (ADR-0243)', () => {
     const status = table.querySelector<HTMLElement>('[data-part="status"]')! as HTMLElement & { label: string; intent: string }
     expect(total('dealer')).toBe('showing 9') // a string total reads as given (the seed's face-down deal)
     expect(total('player')).toBe('Total 17')
-    expect(readout.textContent).toBe('Bankroll 1,000 · Bet 50')
+    expect(readout.textContent).toBe('Bankroll 950 · Bet 50') // the deal took the 50 bet out of the 1,000 bankroll
     expect(status.style.display).toBe('none') // /status is not written yet
     await ingest(dataLine('/playerTotal', 20))
     await ingest(dataLine('/dealerTotal', 'Dealer shows 9'))
@@ -198,7 +198,7 @@ describe('CardTable renders through the real renderer (ADR-0243)', () => {
   })
 
   it('CardTable with no phase is the playing table: cards and totals shown, the bet row and the result line hidden', async () => {
-    const { table, ingest, errors, cleanup } = await render()
+    const { table, ingest, errors, cleanup } = await render(withRoot((root) => delete root['phase'])) // the seed binds /phase
     await ingest(dataLine('/result', 'You win')) // a result outside `settled` stays hidden
     expect(errors()).toEqual([])
     expect(part(table, 'bet').style.display).toBe('none')
