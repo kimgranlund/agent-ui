@@ -1254,6 +1254,11 @@ R20/R29; ADR-0198 cl.1): *(→ PRD-G1/G6; ADR-0198 cl.1)*
   `flowEnd` — NEVER the whole envelope (every sibling field on the SAME line still parses normally).
 - **Safe degrade.** A model that OMITS `flowEnd` MUST yield today's behavior for that turn — no chrome
   affordance fires; consumers MUST act only on the explicit field, never a heuristic (ADR-0198 Non-goals).
+- REV 2026-10-16, T-0309 (Kim's N1 ruling, which narrows "model-authored" and the safe degrade above): when
+  the model omits `flowEnd` on a closing-shaped turn (a note, no ask, no plan, no genui line, no A2UI lines)
+  whose user message is an explicit close and whose flow no persona check holds open, `produce()` sets
+  `flowEnd: true` itself and tallies `FLOW_END_INFERRED` on the trace, in place of the GH #1168
+  `FLOW_END_MISSING` repair round (RTS-R3 REV). Consumers still act only on the field on the wire.
 - The envelope MUST stay versionless and provably disjoint from `A2uiServerMessage` — the SPEC-R5
   disjointness proof (no `version` key) is UNCHANGED, and `AgentTransport.turn()`'s signature stays
   BYTE-IDENTICAL (additive framing INSIDE the string stream, the standing precedent).
