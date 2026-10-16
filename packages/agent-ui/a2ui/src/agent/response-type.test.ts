@@ -11,6 +11,8 @@ import {
   renderSurfaceJsonl,
   renderSurfaceReply,
   renderSurfaceTool,
+  messagesParseNote,
+  stringifiedMessages,
 } from './response-type.ts'
 
 const intent = (text: string): TurnInput => ({ kind: 'intent', text, session: { turns: [] } }) as TurnInput
@@ -46,6 +48,32 @@ describe('renderSurfaceTool', () => {
     expect(renderSurfaceJsonl({ jsonl: 'line' })).toBe('line')
     expect(renderSurfaceJsonl({ messages: [create], jsonl: 'ignored' })).toBe(JSON.stringify(create))
     expect(renderSurfaceJsonl({})).toBe('')
+  })
+  it('T-0304: a `messages` string that parses as a JSON array reads as the array (Haiku and Sonnet 5.5, round 7), else empty', () => {
+    const create = { version: 'v1.0', createSurface: { surfaceId: 's', catalogId: 'agent-ui' } }
+    const update = { version: 'v1.0', updateComponents: { surfaceId: 's', components: [{ id: 'root', component: 'Text', text: 'a "quoted" {brace}' }] } }
+    expect(renderSurfaceJsonl({ messages: JSON.stringify([create, update]) })).toBe(renderSurfaceJsonl({ messages: [create, update] }))
+    expect(renderSurfaceJsonl({ messages: '[{"version":"v1.0","createSurface":{"surfaceId":"s"' })).toBe('')
+    expect(renderSurfaceJsonl({ messages: JSON.stringify(create) })).toBe('')
+    expect(stringifiedMessages({ messages: JSON.stringify([create]) })).toEqual([create])
+    expect(stringifiedMessages({ messages: [create] })).toBeUndefined()
+  })
+  it('T-0304: a string that does not parse is never edited; the note names where it broke', () => {
+    const data = { version: 'v1.0', updateDataModel: { surfaceId: 's', value: { hand: [{ rank: 'A' }], note: 'a ,{"version": in text' } } }
+    const update = { version: 'v1.0', updateComponents: { surfaceId: 's', components: [{ id: 'root', component: 'Text', text: 'hi' }] } }
+    const whole = JSON.stringify([update, data, update])
+    const short = whole.replace('"}}},{"version"', '"}},{"version"') // round 7 :95: one `}` short before the next message
+    expect(short).not.toBe(whole)
+    expect(renderSurfaceJsonl({ messages: short })).toBe('')
+    expect(messagesParseNote({ messages: short })).toBe(
+      'Your `messages` was not valid JSON: a closing } is missing in message 2 (its updateDataModel), so it is still open where message 3 begins.',
+    )
+    const shorter = whole.replace('"}}},{"version"', '"},{"version"')
+    expect(messagesParseNote({ messages: shorter })).toMatch(/^Your `messages` was not valid JSON: 2 closing \} are missing in message 2 \(its updateDataModel\)/)
+    // No message boundary at the break: the position and the text there.
+    expect(messagesParseNote({ messages: whole.slice(0, -3) })).toMatch(/^Your `messages` was not valid JSON at character \d+ \(message 3\), here: /)
+    expect(messagesParseNote({ messages: whole })).toBeUndefined()
+    expect(messagesParseNote({ messages: [update] })).toBeUndefined()
   })
   it('T-0206: the note names every open surface; the stable description gates on a structure and prefers an update', () => {
     expect(openSurfacesNote(['main', 'quiz-7'])).toBe('[Open surfaces: main, quiz-7.]')

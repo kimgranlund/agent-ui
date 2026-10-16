@@ -697,3 +697,44 @@ describe('T-0229: the text shape with a trailing meta-line', () => {
     expect(deltasOf(lines).join('')).not.toContain('"version"')
   })
 })
+
+describe('T-0304: a render_surface `messages` sent as one JSON string', () => {
+  const objects = (jsonl: string): Record<string, unknown>[] => jsonl.split('\n').map((l) => JSON.parse(l) as Record<string, unknown>)
+
+  it('a string that parses as an array ships the surface in one round, tallied MESSAGES_STRING_DECODED', async () => {
+    const { provider, calls } = scripted([{ text: 'Here it is.', call: [{ name: 'render_surface', input: { reply: 'Here it is.', messages: JSON.stringify(objects(VALID)) } }] }])
+    const lines = await run(NEUTRAL, provider)
+    expect(calls()).toBe(1)
+    expect(contentOf(lines)).toEqual(VALID.split('\n'))
+    expect(finalMeta(lines).trace?.failureCodes).toEqual(['MESSAGES_STRING_DECODED'])
+  })
+
+  it('a string one `}` short where the next message begins is PARSE, and the repair names where it broke', async () => {
+    const short = JSON.stringify(objects(VALID)).replace('"}},{"version"', '"},{"version"')
+    expect(short).not.toBe(JSON.stringify(objects(VALID)))
+    const { provider, calls, reqs } = scripted([
+      { text: 'Here it is.', call: [{ name: 'render_surface', input: { reply: 'Here it is.', messages: short } }] },
+      { text: 'Here it is.', call: [{ name: 'render_surface', input: { reply: 'Here it is.', messages: objects(VALID) } }] },
+    ])
+    const lines = await run(NEUTRAL, provider)
+    expect(calls()).toBe(2)
+    expect(lastUserMessage(reqs()[1]!)).toContain(
+      'Your `messages` was not valid JSON: a closing } is missing in message 1 (its createSurface), so it is still open where message 2 begins.',
+    )
+    expect(lastUserMessage(reqs()[1]!)).toMatch(/`messages` is an ARRAY of A2UI message objects/)
+    expect(contentOf(lines)).toEqual(VALID.split('\n'))
+    expect(finalMeta(lines).trace?.failureCodes).toEqual(['PARSE'])
+  })
+
+  it('a string that does not parse is still PARSE', async () => {
+    const broken = JSON.stringify(objects(VALID)).slice(0, -2)
+    const { provider, calls } = scripted([
+      { text: 'One moment.', call: [{ name: 'render_surface', input: { reply: 'One moment.', messages: broken } }] },
+      { text: 'One moment.', call: [{ name: 'render_surface', input: { reply: 'One moment.', messages: objects(VALID) } }] },
+    ])
+    const lines = await run(NEUTRAL, provider)
+    expect(calls()).toBe(2)
+    expect(contentOf(lines)).toEqual(VALID.split('\n'))
+    expect(finalMeta(lines).trace?.failureCodes).toEqual(['PARSE'])
+  })
+})
