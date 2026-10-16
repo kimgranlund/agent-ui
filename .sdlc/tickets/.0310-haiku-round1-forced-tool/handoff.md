@@ -2,7 +2,7 @@
 id: T-0310
 title: "R8 experiment: force render_surface with thinking off on round 1 of Haiku click turns"
 type: feature        # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -28,3 +28,9 @@ verifier: L3
 
 ## Follow-up (not an acceptance criterion; conductor amendment 2026-10-16)
 The next live round (round 8) counts round-1 `render_surface` calls on Haiku click turns against round 7's 12 no-tool round-1 calls. Try 1's verifier failed only this line, which no check can run before a live round (AGENTS.md: live legs are never a gate); it moves here.
+
+## Outcome
+
+2026-10-16 · lane: full L2 · verdict: closed by reason (Merged in the producer-loop rulings lane; verifier L3 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

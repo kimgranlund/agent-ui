@@ -2,7 +2,7 @@
 id: T-0314
 title: "Check contracts: pass and fail fixtures cross-run across all checks, a repair-text vocabulary test, and a repair-loop property test (P2)"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -24,3 +24,15 @@ verifier: L3
 - `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog packages/agent-ui/a2ui/src/live-agent` exits 0.
 - `git diff --quiet 92a90712d3bbab0091b0d091c6c7a7f7b3d57f3a -- packages/agent-ui/a2ui/src/catalog packages/agent-ui/a2ui/src/agent packages/agent-ui/a2ui/tools` exits 0: tests only, no source edit.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-16 · lane: full L3 · verdict: closed by reason (Merged; check contracts and loop property tests; six defects filed; verifier L3 pass) · verifier: verifier-L3 (fable) · base: 92a90712d3bb
+- Changed: see commits
+- Commits: none
+- Check: 1 `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/check-contracts.test.ts`...: pass
+- Check: 2 `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/check-contracts.test.ts ...: pass
+- Check: 3 `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/produce-loop-property.te...: pass
+- Check: 4 `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog packages/agent-ui/a2ui/src/...: pass
+- Check: 5 `git diff --quiet 92a90712d3bbab0091b0d091c6c7a7f7b3d57f3a -- packages/agent-ui/a2ui/src/catalog ...: pass
+- Check: 6 `npm run check` exits 0: pass

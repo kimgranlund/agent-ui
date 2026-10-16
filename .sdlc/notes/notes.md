@@ -104,3 +104,4 @@
 - R8: force render_surface with thinking off on round 1 of Haiku turns triggered by a click (an experiment, measured live).
 - P7: the dev trace may store prompt text in a local, git-ignored content-addressed store beside it (reverses `tools/agent/trace-log.ts:19`).
 - P6: catalog type names in persona text are a modality leak; the lint flags them and the Croupier persona is reworded.
+- L1 (T-0314, 2026-10-16): the turn-scoped invariant wins over the T-0172 design: a surface that existed in the turn is kept or explicitly deleted; a later round that omits it is sent back, or the earlier version ships. The property test is the gate.
