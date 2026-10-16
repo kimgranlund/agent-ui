@@ -1567,9 +1567,9 @@ const COMPONENT_SAMPLE_INIT: Record<string, (el: HTMLElement) => void> = {
       { row: 0, col: 1, mark: '●', intent: 'danger', disabled: true },
       { row: 0, col: 2, mark: '●', intent: 'danger', disabled: true },
       { row: 0, col: 3, mark: '▣', intent: 'success', disabled: true },
-      { row: 1, col: 1, mark: '○', intent: 'neutral', disabled: true },
+      { row: 1, col: 1, mark: '✕', intent: 'neutral', disabled: true },
       { row: 2, col: 4, mark: '●', intent: 'danger', disabled: true },
-      { row: 4, col: 4, mark: '○', intent: 'neutral', disabled: true },
+      { row: 4, col: 4, mark: '✕', intent: 'neutral', disabled: true },
     ]
   },
   // ui-game-hud (ADR-0243): the representative blackjack HUD, written as properties (see COMPONENT_INITIAL).

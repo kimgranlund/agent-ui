@@ -307,7 +307,7 @@ The fill paints `CanvasText` and the track keeps its shape via a `Canvas` backgr
   action-name="fire"
   cells='[
     {"row":0,"col":1,"mark":"●","intent":"danger","disabled":true},
-    {"row":1,"col":1,"mark":"○","intent":"neutral","disabled":true}
+    {"row":1,"col":1,"mark":"✕","intent":"neutral","disabled":true}
   ]'
 ></ui-board-grid>
 ```
