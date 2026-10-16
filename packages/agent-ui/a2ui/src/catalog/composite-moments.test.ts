@@ -53,6 +53,9 @@ const HAND_BUILT: Record<string, A2uiComponent[]> = {
     { id: 'board', component: 'BoardGrid', rows: 3, cols: 3, cells: { path: '/cells' }, actionName: 'fire' },
     { id: 'over', component: 'Text', text: 'Game over, you won' },
   ],
+  ProductCard: [
+    { id: 'root', component: 'Table', label: 'Spa treatments', columns: [{ key: 'treatment', label: 'Treatment' }, { key: 'price', label: 'Price' }], rows: [] },
+  ],
 }
 
 const COMPOSED: Record<string, A2uiComponent[]> = {
@@ -68,6 +71,10 @@ const COMPOSED: Record<string, A2uiComponent[]> = {
     { id: 'root', component: 'Column', children: ['board', 'res'] },
     { id: 'board', component: 'BoardGrid', rows: 3, cols: 3, cells: { path: '/cells' }, actionName: 'fire' },
     { id: 'res', component: 'ResultCard', outcome: 'win', title: 'You won', summary: 'Game over' },
+  ],
+  ProductCard: [
+    { id: 'root', component: 'Grid', children: { path: '/treatments', componentId: 'tile' } },
+    { id: 'tile', component: 'ProductCard', title: { path: 'name' }, price: { path: 'price' }, actionLabel: 'Book' },
   ],
 }
 
@@ -219,12 +226,68 @@ describe('composite moment checks (T-0208)', () => {
     expect(codes([{ id: 't', component: 'Text', text: 'Score: 3, attempts remaining: 2' }])).toEqual([])
   })
 
-  it('the catalog gate keeps the booking rows only on agent-ui--concierge, the games rows on agent-ui, and none on a2ui-basic', () => {
+  // T-0279: the recorded Haiku answer to "What spa services can I book during my stay?" (round 2026-10-15-r4-fixes,
+  // long-concierge-spa-services-haiku-1, turn 1): a priced Table where Kim's ruling asks for one ProductCard each.
+  const SPA_TABLE: A2uiComponent[] = [
+    {
+      id: 'root',
+      component: 'Table',
+      label: 'Grand Meridian spa treatments',
+      columns: [
+        { key: 'treatment', label: 'Treatment' },
+        { key: 'duration', label: 'Duration' },
+        { key: 'price', label: 'Price' },
+      ],
+      rows: [
+        { treatment: 'Swedish massage', duration: '60 min', price: '€120' },
+        { treatment: 'Deep-tissue massage', duration: '60 min', price: '€135' },
+      ],
+    },
+  ]
+
+  it('T-0279: the recorded spa services Table yields PRODUCT_CARD_MISSING alone, asking for a ProductCard per item', () => {
+    expect(codes(SPA_TABLE)).toEqual(['PRODUCT_CARD_MISSING'])
+    const [f] = runSemanticChecks(compositeMomentChecks, { surfaces: [view(SPA_TABLE, 'spa-menu')] }).findings
+    expect(f!.path).toBe('spa-menu:root')
+    expect(f!.message).toContain('root (a Table)')
+    expect(f!.message).toContain('Make it ONE ProductCard per item')
+  })
+
+  it('T-0279: the same list in a Column beside an intro Text still fires; a ProductCard Grid beside it does not', () => {
+    const inColumn: A2uiComponent[] = [
+      { id: 'col', component: 'Column', children: ['intro', 'root'] },
+      { id: 'intro', component: 'Text', text: 'Our spa is open daily.' },
+      ...SPA_TABLE,
+    ]
+    expect(codes(inColumn)).toEqual(['PRODUCT_CARD_MISSING'])
+    expect(codes([...inColumn, ...COMPOSED['ProductCard']!.map((c) => ({ ...c, id: `p-${c.id}` }))])).toEqual([])
+  })
+
+  it('negative control: a hours Table with no price column yields none', () => {
+    expect(
+      codes([{ id: 'root', component: 'Table', label: 'Spa and pool hours', columns: [{ key: 'facility', label: 'Facility' }, { key: 'hours', label: 'Hours' }], rows: [] }]),
+    ).toEqual([])
+  })
+
+  it('negative control: a priced Table with no buy or book words yields none', () => {
+    expect(
+      codes([{ id: 'root', component: 'Table', label: 'Quarterly revenue', columns: [{ key: 'region', label: 'Region' }, { key: 'price', label: 'Average price' }], rows: [] }]),
+    ).toEqual([])
+  })
+
+  it('negative control: a priced booking Table beside a BookingForm or a CardTable yields no PRODUCT_CARD_MISSING', () => {
+    const form: A2uiComponent = { id: 'form', component: 'BookingForm', title: 'Book a treatment', fields: [] }
+    expect(codes([...SPA_TABLE, form])).not.toContain('PRODUCT_CARD_MISSING')
+    const table: A2uiComponent = { id: 'tbl', component: 'CardTable', phase: 'betting', title: 'Blackjack' }
+    expect(codes([...SPA_TABLE, table])).not.toContain('PRODUCT_CARD_MISSING')
+  })
+
+  it('the catalog gate keeps the booking rows only on agent-ui--concierge, the games and ProductCard rows on agent-ui, and none on a2ui-basic', () => {
     const base = loadCatalog(defaultCatalogRaw)
     const concierge = composeCatalog(base, loadCatalogFragment(conciergeFragmentRaw), 'concierge')
     const basic = loadCatalog(basicCatalogRaw)
     const ids = (catalog: { components: Readonly<Record<string, unknown>> }) => gateChecksOnCatalog(compositeMomentChecks, catalog).map((c) => c.id)
-    const games = ['composite-moment-board-grid', 'composite-moment-game-hud', 'composite-moment-result-card']
+    const games = ['composite-moment-board-grid', 'composite-moment-game-hud', 'composite-moment-result-card', 'composite-moment-product-card']
     expect(ids(base)).toEqual(games)
     expect(concierge.catalogId).toBe('agent-ui--concierge')
     expect(ids(concierge)).toEqual(['composite-moment-booking-form', 'composite-moment-booking-confirmation', ...games])
@@ -243,8 +306,9 @@ describe('composite moment checks (T-0208)', () => {
       'composite-moment-board-grid',
       'composite-moment-game-hud',
       'composite-moment-result-card',
+      'composite-moment-product-card',
     ])
-    expect(COMPOSITE_MOMENTS.map((m) => codeOf(m.composite))).toEqual(['BOOKING_FORM_MISSING', 'BOOKING_CONFIRMATION_MISSING', 'BOARD_GRID_MISSING', 'GAME_HUD_MISSING', 'RESULT_CARD_MISSING'])
+    expect(COMPOSITE_MOMENTS.map((m) => codeOf(m.composite))).toEqual(['BOOKING_FORM_MISSING', 'BOOKING_CONFIRMATION_MISSING', 'BOARD_GRID_MISSING', 'GAME_HUD_MISSING', 'RESULT_CARD_MISSING', 'PRODUCT_CARD_MISSING'])
     for (const [i, m] of COMPOSITE_MOMENTS.entries()) expect(compositeMomentChecks[i]!.requires).toEqual([m.composite, ...(m.requires ?? [])])
   })
 })

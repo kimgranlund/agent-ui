@@ -1010,7 +1010,7 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
   it('a persisted OLD-version store is dropped and the new seed applies; same-version edits survive', async () => {
     const { presetStore, AGENT_PRESETS, resetPreset } = await import('./agent-admin-presets.ts')
     const concierge = AGENT_PRESETS.find((p) => p.id === 'concierge')!
-    expect(concierge.seedVersion, 'the upgrade declares its bump').toBe(12) // T-0267: the spa treatment list in the House facts
+    expect(concierge.seedVersion, 'the upgrade declares its bump').toBe(13) // T-0279: amenity-service-card teaches a ProductCard per priced service
 
     // Simulate a PRE-upgrade browser: old persisted content, NO seedVersion marker (=1 implicitly).
     resetPreset(concierge) // clean slate for the probe (drops cache + keys)
@@ -1042,7 +1042,11 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
     expect(concierge.houseFacts).not.toMatch(/read them back/)
     // T-0267: the spa treatment list rides the House facts, so a spa services ask has treatments to list.
     expect(concierge.houseFacts).toMatch(/Spa treatments: Swedish massage, 60 min, €120;[^.]*Hydrating facial/)
-    expect(localStorage.getItem('agent-admin-app.concierge.seedVersion')).toBe('12')
+    // T-0279 (Kim's ruling): a priced, bookable services list is one ProductCard each, never a Table or a ServiceCard.
+    const amenity = skills.find((s) => s.id === 'amenity-service-card') as { content: string } | undefined
+    expect(amenity?.content).toMatch(/one ProductCard each, never a Table/)
+    expect(amenity?.content).not.toMatch(/one ServiceCard each/)
+    expect(localStorage.getItem('agent-admin-app.concierge.seedVersion')).toBe('13')
 
     // Same-version edits SURVIVE a rebuild (persisted-wins is untouched at the current version).
     migrated.set('entries:skill', [...skills.map((s) => s), { id: 'my-edit', kind: 'skill', label: 'my-edit', description: '', content: 'mine', order: 99, enabled: true, builtin: false }])

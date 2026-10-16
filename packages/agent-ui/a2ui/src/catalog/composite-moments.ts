@@ -6,7 +6,8 @@
 // surface ONE composite. A row's `notInside` also sends back a composite wrapped in a card of its own (T-0262,
 // `<COMPOSITE>_WRAPPED`). The check `requires` the composite (and any type it reads), so `gateChecksOnCatalog`
 // keeps a row on exactly the catalogs that can emit it: the booking rows ride `<base>--concierge`, the games rows
-// ride `agent-ui` until the games types move to a domain, and `a2ui-basic` gets none.
+// ride `agent-ui` until the games types move to a domain, the ProductCard row rides `agent-ui`, and `a2ui-basic`
+// gets none.
 //
 // The link to the sidecar is a test, not an import (`composite-moments.test.ts`: every `moment` is one of its
 // composite's intents): the module imports no JSON, so plain Node (`scripts/e2e-admin/probe/trace.ts`) and both
@@ -44,6 +45,8 @@ export interface CompositeMoment {
   readonly gridOf?: { readonly child: string; readonly min: number }
   /** T-0262: types the composite must not sit inside (it draws its own card); a wrapper yields `<COMPOSITE>_WRAPPED`. */
   readonly notInside?: readonly string[]
+  /** T-0279: a Table with a column whose key or label matches `cue`, while the surface words match `words`. */
+  readonly tableColumn?: { readonly cue: RegExp }
 }
 
 const BOOKING_INPUTS = ['TextField', 'Calendar', 'Select', 'ComboBox', 'Slider', 'RadioGroup', 'ChoiceGroup'] as const
@@ -100,6 +103,18 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
     has: ['BoardGrid'],
     words: /\b(game over|you win|you won|you lose|you lost|the word was|play again)\b/i,
   },
+  {
+    // T-0279 (Kim's ruling): a priced, bookable treatment or service list is one ProductCard each, never a Table.
+    composite: 'ProductCard',
+    moment: 'one product, room or offer to buy or book',
+    repair:
+      'per item, templated in a Grid over the list in the data model (title, price, the duration or unit as priceNote, and one ' +
+      'action with the item id in its context), and drop the priced Table.',
+    // Not `requires: ['Table']`: required types' props never count as words, and the Table's label carries them.
+    lacks: ['BookingForm', 'BookingConfirmation', 'CardTable'],
+    tableColumn: { cue: /\b(price|prices|cost|rate|fee)\b/i },
+    words: /\b(book|bookable|treatment|treatments|service|services|spa|massage|room|rooms|offer|offers)\b/i,
+  },
 ]
 
 const WORD_PROPS = ['text', 'label', 'title', 'status'] as const
@@ -141,6 +156,18 @@ function strays(m: CompositeMoment, view: SurfaceView): A2uiComponent[] {
     return [...grids, ...cued]
   }
   if (m.words !== undefined && !m.words.test(surfaceWords)) return []
+  if (m.tableColumn !== undefined) {
+    const { cue } = m.tableColumn
+    return comps.filter(
+      (c) =>
+        c.component === 'Table' &&
+        Array.isArray(c['columns']) &&
+        (c['columns'] as unknown[]).some((col) => typeof col === 'object' && col !== null && ['key', 'label'].some((k) => {
+          const v = (col as Record<string, unknown>)[k]
+          return typeof v === 'string' && cue.test(v)
+        })),
+    )
+  }
   if (m.inputs !== undefined) {
     const inputs = comps.filter((c) => m.inputs!.types.includes(c.component))
     if (inputs.length >= m.inputs.min) return inputs

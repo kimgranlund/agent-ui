@@ -7,8 +7,8 @@
 //   regenerated from the current generators (`round3.ts`, `routing.ts`, `round.ts`), so the T-0270 doc-only and
 //   T-0272 stud fixes carry through.
 // - L. Long flows on Haiku and Sonnet: a fully specified Concierge booking through confirmation (a pre-filled
-//   BookingForm, then one BookingConfirmation, T-0266), a spa services ask then a booking from it (ServiceCard,
-//   T-0267), and a Lexicographer game from the opening through a give-up and a replay (word board on the opening,
+//   BookingForm, then one BookingConfirmation, T-0266), a spa services ask then a booking from it (ProductCard,
+//   T-0267, T-0279), and a Lexicographer game from the opening through a give-up and a replay (word board on the opening,
 //   T-0268; ResultCard and the game-over exemplar on the give-up, T-0274).
 //
 // Run `node --experimental-strip-types scripts/e2e-admin/probe/scenarios/round4.ts` to print the script;
@@ -89,10 +89,10 @@ export const ROUND4_LONG_FLOWS: ReadonlyArray<{ agent: string; scenario: RoundSc
     scenario: {
       name: 'spa-services',
       steps: [
-        say('What spa services can I book during my stay?', { domains: ['concierge'] }, 'ServiceCard'),
+        say('What spa services can I book during my stay?', { domains: ['concierge'] }, 'ProductCard'),
         say('Book the first one for Thursday 19 November 2026 at 15:00, one guest, name Alex Moreau.', undefined, 'BookingForm'),
       ],
-      expectComponents: ['ServiceCard', 'BookingForm'],
+      expectComponents: ['ProductCard', 'BookingForm'],
     },
   },
   {

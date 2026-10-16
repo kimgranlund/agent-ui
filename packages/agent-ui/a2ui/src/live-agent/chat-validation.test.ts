@@ -136,7 +136,8 @@ describe('semanticChecksDeps (ADR-0238; GH #1795): the selected catalog decides 
   // framed-choice check, each kept only where its `requires` types exist.
   const ids = (deps: ReturnType<typeof semanticChecksDeps>): string[] => (deps.semanticChecks ?? []).map((c) => c.id)
   const hidden = (c: Catalog): string[] => gateChecksOnCatalog(HIDDEN_STATE_CHECKS, c).map((x) => x.id)
-  const GAMES = ['composite-moment-board-grid', 'composite-moment-game-hud', 'composite-moment-result-card']
+  // The base-catalog rows: the games rows and (T-0279) the ProductCard row.
+  const GAMES = ['composite-moment-board-grid', 'composite-moment-game-hud', 'composite-moment-result-card', 'composite-moment-product-card']
   const BOOKING = ['composite-moment-booking-form', 'composite-moment-booking-confirmation']
   const CROUPIER = croupierSemanticChecks.map((c) => c.id)
   const FRAMED = [framedChoiceCheck.id]

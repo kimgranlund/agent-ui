@@ -149,7 +149,7 @@ T-0208 ships the moment checks before W2 as one data table, `src/catalog/composi
 |---|---|---|---|---|
 | croupier | games | croupier | games | CardTable, PlayingCard, GameHud skill |
 | quant | none | none | none (knowledge later, D7) | `dashboard-kpi-grid`, `drilldown` skills use core types |
-| concierge | hospitality | concierge | hospitality | BookingForm, `amenity-service-card` (ServiceCard) |
+| concierge | hospitality | concierge | hospitality | BookingForm, `amenity-service-card` (ProductCard per priced service, T-0279) |
 | restaurant (Maitre d') | hospitality | none | hospitality | T-0197 wants BookingForm; T-0200 wants ServiceCard |
 | travel | hospitality | none | hospitality, commerce | `trip-plan` ProductCards (T-0200 item 4), itinerary (T-0199) |
 | curator | none | none | none (knowledge later, D7) | `collection-carousel`, `itinerary-tabs` use core types |
