@@ -27,12 +27,13 @@ describe('concierge-surface-required (T-0265)', () => {
     expect(paths('Those details are right, please confirm the booking.')).toEqual([['SURFACE_MISSING', 'intent:confirm']])
     expect(said('Book a massage.')[0]!.message).toMatch(/BookingForm/)
     expect(said('Please confirm the reservation.')[0]!.message).toMatch(/BookingConfirmation/)
-    expect(said('What treatments do you offer?')[0]!.message).toMatch(/ServiceCard/)
+    expect(said('What treatments do you offer?')[0]!.message).toMatch(/ProductCard/)
   })
 
-  it('a turn that ships a surface, a question with no services, booking or confirm word, and a client turn pass', () => {
+  it('a turn that ships a surface, a question with no services, facility, booking or confirm word, and a client turn pass', () => {
     expect(said('What spa services can I book during my stay?', card)).toEqual([])
-    expect(said('When do the pool and gym close?')).toEqual([])
+    expect(said('When do the pool and gym close?', card)).toEqual([])
+    expect(said('Is late check-out possible?')).toEqual([])
     expect(said('Thanks, that is all.')).toEqual([])
     expect(conciergeSurfaceRequired.check({ surfaces: [], action: { name: 'book', surfaceId: 'spa', context: {}, dataModel: undefined } })).toEqual([])
   })
@@ -102,8 +103,33 @@ describe('the round scenarios\' confirm and booking asks (T-0282)', () => {
     expect(paths("I'd like a table at Vela on Friday 20 November 2026 at 20:00 for two, name Alex Moreau.")).toEqual([['SURFACE_MISSING', 'intent:booking']])
   })
 
-  it('a pool-hours question still passes in prose', () => {
-    expect(said('When do the pool and gym close?')).toEqual([])
-    expect(said('What time does the pool open tomorrow?')).toEqual([])
+})
+
+// T-0285 (Kim's ruling): a facility or hours ask is its own moment, repaired toward a compact info card (ONE Card holding
+// a DescriptionList), never a ServiceCard; a services ask keeps T-0279's ProductCard.
+describe('facility and services asks repair toward their ruled composites (T-0285)', () => {
+  it('"When do the pool and gym close?" with no surface asks for one compact info card listing each facility with its hours', () => {
+    const [f, ...rest] = said('When do the pool and gym close?')
+    expect(rest).toEqual([])
+    expect([f!.code, f!.path]).toEqual(['SURFACE_MISSING', 'intent:facility'])
+    expect(f!.message).toContain('one compact info card: ONE Card holding a DescriptionList, one row per facility with its hours and location')
+    expect(f!.message).not.toMatch(/ServiceCard|ProductCard/)
+  })
+
+  it('"What spa services can I book during my stay?" with no surface asks for one ProductCard per service', () => {
+    const [f, ...rest] = said('What spa services can I book during my stay?')
+    expect(rest).toEqual([])
+    expect([f!.code, f!.path]).toEqual(['SURFACE_MISSING', 'intent:services'])
+    expect(f!.message).toContain('one ProductCard per service the guest can book, templated in a Grid, each with its price and book action')
+    expect(f!.message).not.toMatch(/ServiceCard|DescriptionList/)
+  })
+
+  it('the round facility asks are the facility moment; a museum or policy question is not', () => {
+    const paths = (intent: string) => said(intent).map((f) => f.path)
+    expect(paths('What are the opening hours of the pool, gym and spa? Check the property-knowledge-base.')).toEqual(['intent:facility'])
+    expect(paths('Which restaurants and bars does the hotel have?')).toEqual(['intent:facility'])
+    expect(paths('What time does the pool open tomorrow?')).toEqual(['intent:facility'])
+    expect(said('Is the Maritime Museum open on Monday?')).toEqual([])
+    expect(said('Is late check-out possible?')).toEqual([])
   })
 })

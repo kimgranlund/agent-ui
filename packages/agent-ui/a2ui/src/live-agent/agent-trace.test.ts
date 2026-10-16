@@ -421,9 +421,9 @@ describe('the trace line records per-turn routing (T-0239)', () => {
   })
 
   it('a concierge turn: the knowledge base is index-only, the booking flow loaded in full from history', async () => {
-    state.script = ['{"a2uiMeta":{"note":"The pool opens at 06:00."}}']
+    state.script = ['{"a2uiMeta":{"note":"Late check-out to 14:00 is possible on request."}}']
     const session = { turns: [{ role: 'user', content: BOOKING_FRAMED }, { role: 'assistant', content: '{"a2uiMeta":{"note":"Which day?"}}' }] }
-    const out = await post('/produce', { ...produceBody({ kind: 'intent', text: 'What are the pool hours?', session }), catalogId: 'agent-ui--concierge', personaSystem: CONCIERGE_PERSONA })
+    const out = await post('/produce', { ...produceBody({ kind: 'intent', text: 'Is late check-out possible?', session }), catalogId: 'agent-ui--concierge', personaSystem: CONCIERGE_PERSONA })
     expect(out.status).toBe(200)
     const line = writtenLines().at(-1)!
     expect(line).toMatchObject({ agent: 'concierge', outcome: 'ok' })
@@ -451,9 +451,9 @@ describe('the trace line records per-turn routing (T-0239)', () => {
 
 describe('the trace line carries the probe run id (T-0259)', () => {
   const quick = (): void => {
-    state.script = ['{"a2uiMeta":{"note":"The pool opens at 06:00."}}']
+    state.script = ['{"a2uiMeta":{"note":"Late check-out to 14:00 is possible on request."}}']
   }
-  const body = (): Record<string, unknown> => ({ input: { kind: 'intent', text: 'pool hours', session: { turns: [] } }, provider: 'anthropic', model: 'claude-sonnet-5-5', catalogId: 'agent-ui--concierge' })
+  const body = (): Record<string, unknown> => ({ input: { kind: 'intent', text: 'late check-out?', session: { turns: [] } }, provider: 'anthropic', model: 'claude-sonnet-5-5', catalogId: 'agent-ui--concierge' })
 
   it('a produce turn sent with x-a2ui-run-id writes it as runId; a turn without the header writes none', async () => {
     quick()

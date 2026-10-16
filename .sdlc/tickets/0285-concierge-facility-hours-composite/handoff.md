@@ -2,7 +2,7 @@
 id: T-0285
 title: "Concierge facility-hours turns never draw ServiceCard: facility-info-card is index-only and the loaded persona asks for a compact info surface"
 type: bug             # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -35,3 +35,13 @@ The failing test lands before or with the fix, never after. Needs a ruling first
 
 ## Ruling (Kim, 2026-10-16)
 A compact info card: one Card holding a DescriptionList (facility: hours, location), matching the always-loaded persona rule "Facts (hours, directions, policies) -> a compact info surface". Change the `facility-info-card` skill to teach that, and the facility oracles in `concierge.ts` and `routing.ts` to expect Card plus DescriptionList, not ServiceCard. ServiceCard stays for a service or agent to open.
+
+## Acceptance criteria
+verifier: L3
+- The `facility-info-card` skill (`site/pages/agent-admin-libraries.ts`) teaches ONE Card holding a DescriptionList, never a ServiceCard per facility, in its content and in its description; the description is the index line every Concierge turn loads (`entries.ts` composeLiveSystemPrompt: label plus description), so the ruled shape reaches the model while the content stays index-only.
+- The Concierge `surfaceStyle` names "a compact info card, one row per facility with its hours and location" with no catalog type (the GH #412 modality lint in `agent-admin-presets.test.ts` bans compound type names there); seedVersion 14 and `concierge.manifest.json` agree.
+- Every facility-hours oracle (`concierge.ts` spa-booking, dinner-at-vela, facilities-then-tour; `routing.ts` long-session) expects `DescriptionList`, not `ServiceCard`. Card is not listed because a step's `expect` is any-of (T-0222, `model.ts` `want.some`), so `['Card', 'DescriptionList']` would pass on any Card. ServiceCard stays on "What services could I add".
+- `scripts/e2e-admin/probe/replays/concierge-sonnet-facility-hours.test.mjs` replays the round 4 Sonnet facility answer keyless: it passes the DescriptionList oracle and fails the ServiceCard one. The ticket's Repro fixture (`runs/regress-concierge-facilities-then-tour-sonnet-1/fixture.json`) carries its own step 0 oracle, `ServiceCard`, and stays red by design: it is a frozen round record, and the pinned replay is the keyless proof.
+- `npx vitest run scripts/e2e-admin/probe/scenarios` exits 0.
+- `npx vitest run scripts/e2e-admin/probe/replays/concierge-sonnet-facility-hours.test.mjs site/pages/agent-admin-app.test.ts site/pages/agent-admin-presets.test.ts site/lib/agent-manifest` exits 0.
+- `npm run check` exits 0.

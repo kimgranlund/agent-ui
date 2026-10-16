@@ -53,9 +53,9 @@ describe('live round 2 scenarios', () => {
     }
   })
 
-  it('the Concierge measures BookingForm, BookingConfirmation, ProductCard and ServiceCard; the games measure BoardGrid and ResultCard', () => {
+  it('the Concierge measures BookingForm, BookingConfirmation, DescriptionList, ProductCard and ServiceCard; the games measure BoardGrid and ResultCard', () => {
     const turnTypes = (scenarios) => new Set(scenarios.flatMap((s) => s.steps.flatMap((step) => step.expect ?? [])))
-    expect([...turnTypes(CONCIERGE_SCENARIOS)].sort()).toEqual(['BookingConfirmation', 'BookingForm', 'ProductCard', 'ServiceCard'])
+    expect([...turnTypes(CONCIERGE_SCENARIOS)].sort()).toEqual(['BookingConfirmation', 'BookingForm', 'DescriptionList', 'ProductCard', 'ServiceCard'])
     for (const scenarios of [LEXICOGRAPHER_SCENARIOS, ADMIRAL_SCENARIOS]) expect([...turnTypes(scenarios)].sort()).toEqual(['BoardGrid', 'ResultCard'])
   })
 
