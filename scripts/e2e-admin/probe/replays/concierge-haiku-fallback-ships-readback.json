@@ -1,0 +1,228 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "concierge-haiku-fallback-ships-readback",
+  "agent": "concierge",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "2026-10-16.jsonl:1205 (catalog agent-ui--concierge)",
+  "steps": [
+    {
+      "say": "Book a 60-minute Swedish massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau."
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"note\":\"Your spa booking is ready to confirm. Please check the details below.\",\"ask\":{\"surfaceId\":\"ask-1\"},\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Book a 60-minute Swedish massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau.\",\"k\":3},\"exemplarIds\":[],\"rounds\":3,\"healed\":0,\"failureCodes\":[\"SURFACE_DROPPED\",\"SEMANTIC_UNCORRECTED\",\"EARLIER_ROUND_SHIPPED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":46065,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145}],\"over\":false},\"miniSkillIds\":[],\"cacheBoundary\":46065}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui--concierge\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"head\",\"content\",\"foot\"]},{\"id\":\"head\",\"component\":\"CardHeader\",\"format\":\"default\",\"children\":[\"title\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Spa booking\",\"variant\":\"h4\"},{\"id\":\"content\",\"component\":\"CardContent\",\"children\":[\"rows\"]},{\"id\":\"rows\",\"component\":\"DescriptionList\",\"rows\":[{\"label\":\"Treatment\",\"value\":\"Swedish massage\"},{\"label\":\"Duration\",\"value\":\"60 minutes\"},{\"label\":\"Price\",\"value\":\"€120\"},{\"label\":\"Date\",\"value\":\"Thursday 19 November 2026\"},{\"label\":\"Time\",\"value\":\"15:00\"},{\"label\":\"Guests\",\"value\":\"One\"},{\"label\":\"Guest name\",\"value\":\"Alex Moreau\"},{\"label\":\"Location\",\"value\":\"Grand Meridian spa, Sorrento\"}]},{\"id\":\"foot\",\"component\":\"CardFooter\",\"children\":[\"btn\"]},{\"id\":\"btn\",\"component\":\"Button\",\"label\":\"Confirm booking\",\"variant\":\"solid\",\"action\":{\"action\":\"confirm_booking\",\"submit\":true,\"context\":{\"treatment\":\"Swedish massage\",\"durationMinutes\":60,\"price\":\"€120\",\"date\":\"2026-11-19\",\"time\":\"15:00\",\"guests\":1,\"guestName\":\"Alex Moreau\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"I've prepared your spa booking for Alex Moreau: a 60-minute Swedish massage on Thursday 19 November 2026 at 15:00 for one guest, at €120. Please check the details and press Confirm booking to reserve it. Let me know if anything needs changing first.\",\"ask\":{\"surfaceId\":\"ask-1\"}}}",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Your spa booking is ready to confirm. Please check the details below.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-1",
+                      "catalogId": "agent-ui--concierge",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "head",
+                            "content",
+                            "foot"
+                          ]
+                        },
+                        {
+                          "id": "head",
+                          "component": "CardHeader",
+                          "format": "default",
+                          "children": [
+                            "title"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Spa booking",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "content",
+                          "component": "CardContent",
+                          "children": [
+                            "rows"
+                          ]
+                        },
+                        {
+                          "id": "rows",
+                          "component": "DescriptionList",
+                          "rows": [
+                            {
+                              "label": "Treatment",
+                              "value": "Swedish massage"
+                            },
+                            {
+                              "label": "Duration",
+                              "value": "60 minutes"
+                            },
+                            {
+                              "label": "Price",
+                              "value": "€120"
+                            },
+                            {
+                              "label": "Date",
+                              "value": "Thursday 19 November 2026"
+                            },
+                            {
+                              "label": "Time",
+                              "value": "15:00"
+                            },
+                            {
+                              "label": "Guests",
+                              "value": "One"
+                            },
+                            {
+                              "label": "Guest name",
+                              "value": "Alex Moreau"
+                            },
+                            {
+                              "label": "Location",
+                              "value": "Grand Meridian spa, Sorrento"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "foot",
+                          "component": "CardFooter",
+                          "children": [
+                            "btn"
+                          ]
+                        },
+                        {
+                          "id": "btn",
+                          "component": "Button",
+                          "label": "Confirm booking",
+                          "variant": "solid",
+                          "action": {
+                            "action": "confirm_booking",
+                            "submit": true,
+                            "context": {
+                              "treatment": "Swedish massage",
+                              "durationMinutes": 60,
+                              "price": "€120",
+                              "date": "2026-11-19",
+                              "time": "15:00",
+                              "guests": 1,
+                              "guestName": "Alex Moreau"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Here's your spa booking for Alex Moreau: a 60-minute Swedish massage on Thursday 19 November 2026 at 15:00 for one guest, at €120. Check the details and press Confirm booking to submit it, or tell me what to change first.\",\"ask\":{\"surfaceId\":\"ask-2\"}}}",
+          "tools": []
+        },
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Here's your spa booking for Alex Moreau: a 60-minute Swedish massage on Thursday 19 November 2026 at 15:00 for one guest, at €120. Check the details and press Confirm booking to submit it, or tell me what to change first.\",\"ask\":{\"surfaceId\":\"ask-2\"}}}",
+          "tools": []
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "Book a 60-minute Swedish massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau."
+      },
+      "routing": {
+        "domains": [
+          "concierge"
+        ],
+        "exemplars": [
+          "domain-concierge-booking-request",
+          "frontier-service-gateway",
+          "commerce-product-card"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "facility-info-card",
+            "load": "index-only"
+          },
+          {
+            "name": "amenity-service-card",
+            "load": "index-only"
+          },
+          {
+            "name": "booking-flow",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "index-only"
+          },
+          {
+            "name": "curated-local-guides",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Wikipedia search",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}
