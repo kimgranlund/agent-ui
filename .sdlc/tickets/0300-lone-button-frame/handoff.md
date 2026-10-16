@@ -19,3 +19,9 @@ Round 6 cluster E (`.sdlc/evals/rounds/2026-10-15-r6-matrix/report.md`, P3): Son
 ## Done when
 - A semantic-check test on the :234 payload fires LONE_BUTTON_FRAME; a valid table does not; red at the base.
 - The catalog check tests, `site/pages/agent-admin-presets.test.ts` and `npm run check` exit 0.
+
+## Acceptance criteria
+1. `npx vitest run packages/agent-ui/a2ui/src/catalog/framed-choice-check.test.ts` exits 0: a `T-0300` block replays the recorded Sonnet Omaha showdown (`.sdlc/evals/rounds/2026-10-15-r6-matrix/runs/regress-croupier-omaha-sonnet-1/fixture.json` turn 4, report :234) and the check fires exactly `LONE_BUTTON_FRAME table-1:actionsCard`; the opening table (turn 0, three buttons in the footer) and a Card with a header and a Button do not fire; two lone-button Cards under one parent stay `FRAMED_CHOICE` only (red at the base: no LONE_BUTTON_FRAME code exists).
+2. The check rides every catalog through the existing `framedChoiceCheck` registration (chat-validation, the probe replay host, the domain seeds), so no host list changes.
+3. `npx vitest run packages/agent-ui/a2ui/src/catalog packages/agent-ui/a2ui/src/examples packages/agent-ui/a2ui/src/live-agent scripts/e2e-admin/probe` exits 0.
+4. `npx vitest run --project site site/pages/agent-admin-presets.test.ts` and `npm run check` exit 0.

@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import type { A2uiOutput, A2uiServerMessage } from '../protocol.ts'
-import { fleetSecretCheck, fleetShotAppliedCheck, gradeGuess, HIDDEN_STATE_CHECKS, fleetHudCheck, wordMoveAppliedCheck, wordSecretCheck } from './hidden-state-checks.ts'
+import { fleetConcedeCheck, fleetSecretCheck, fleetShotAppliedCheck, gradeGuess, HIDDEN_STATE_CHECKS, fleetHudCheck, wordMoveAppliedCheck, wordSecretCheck } from './hidden-state-checks.ts'
 import { semanticSurfaceViews, sessionSurfaceViews } from './semantic-check.ts'
 import type { SemanticAction, SemanticTurnLog } from './semantic-check.ts'
 
@@ -306,8 +306,8 @@ describe('T-0284: fleet-hud', () => {
       : m,
   )
 
-  it('rides every catalog last', () => {
-    expect(HIDDEN_STATE_CHECKS.map((c) => c.id)).toEqual(['word-secret', 'fleet-secret', 'fleet-shot-applied', 'word-move-applied', 'fleet-hud'])
+  it('rides every catalog after the word-move check', () => {
+    expect(HIDDEN_STATE_CHECKS.map((c) => c.id).slice(0, 5)).toEqual(['word-secret', 'fleet-secret', 'fleet-shot-applied', 'word-move-applied', 'fleet-hud'])
   })
 
   it('the recorded opening with no GameHud is GAME_HUD_MISSING', () => {
@@ -319,5 +319,55 @@ describe('T-0284: fleet-hud', () => {
     expect(codes(fleetHudCheck, [assistant(opening)], [data('battleship-1', { sea: { cells: [shot(0, 0, '✕')] } })])).toEqual([])
     expect(codes(fleetHudCheck, [], [...board('word-forge'), data('word-forge', { secret: { word: 'lodge' }, cells: [] })])).toEqual([])
     expect(codes(fleetHudCheck, [], [...mine('home', []), data('home', { secret: { fleet, playerFleet } })])).toEqual([])
+  })
+})
+
+// T-0296 (live round 6 :112, :298, :484): "I surrender. Reveal your fleet." targeting enemy-waters revealed the fleet on
+// the board and shipped no ResultCard. Kim's ruling: a surrender ends like a normal game end.
+describe('T-0296: fleet-concede', () => {
+  const session: SemanticTurnLog = { turns: [assistant([...waters('enemy-waters'), data('enemy-waters', { secret: { fleet, playerFleet }, cells: [] })])] }
+  const open = sessionSurfaceViews(session)
+  const said = (intent: string, out: A2uiOutput = [], target?: string) =>
+    fleetConcedeCheck.check({ surfaces: semanticSurfaceViews(session, out), intent, open, ...(target !== undefined ? { target } : {}) })
+  const revealed: A2uiOutput = [{ version: 'v1.0', updateDataModel: { surfaceId: 'enemy-waters', path: '/cells', value: [shot(0, 0, '■'), shot(0, 1, '■')] } } as A2uiServerMessage]
+  const result: A2uiOutput = [
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: 'enemy-waters',
+        components: [
+          { id: 'root', component: 'Column', children: ['board', 'result'] },
+          { id: 'board', component: 'BoardGrid', rows: 6, cols: 6, cells: { path: '/cells' } },
+          { id: 'result', component: 'ResultCard', outcome: 'lose', title: 'You surrendered' },
+        ],
+      },
+    } as A2uiServerMessage,
+  ]
+
+  it('rides every catalog last', () => {
+    expect(HIDDEN_STATE_CHECKS.map((c) => c.id)).toEqual(['word-secret', 'fleet-secret', 'fleet-shot-applied', 'word-move-applied', 'fleet-hud', 'fleet-concede'])
+  })
+
+  it('the recorded surrender that reveals the fleet on the board with no ResultCard is RESULT_CARD_MISSING', () => {
+    const findings = said('I surrender. Reveal your fleet.', revealed, 'enemy-waters')
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['RESULT_CARD_MISSING', 'enemy-waters:concede']])
+    expect(findings[0]!.message).toMatch(/keep the revealed board and add ONE ResultCard beside it/)
+    expect(said('I concede.', revealed).map((f) => f.code)).toEqual(['RESULT_CARD_MISSING']) // no target: the open fleet game
+  })
+
+  it('a prose-only surrender is ACTION_NOT_APPLIED', () => {
+    expect(said('I give up.', [], 'enemy-waters').map((f) => [f.code, f.path])).toEqual([['ACTION_NOT_APPLIED', 'enemy-waters:concede']])
+  })
+
+  it('a ResultCard surrender, a turn with no concession, a word game give-up or a click passes', () => {
+    expect(said('I surrender. Reveal your fleet.', result, 'enemy-waters')).toEqual([])
+    expect(said('Fire at A2.', revealed, 'enemy-waters')).toEqual([])
+    const words: SemanticTurnLog = { turns: [assistant([...board('word-forge'), data('word-forge', { secret: { word: 'lodge' }, cells: [] })])] }
+    expect(fleetConcedeCheck.check({ surfaces: semanticSurfaceViews(words, []), intent: 'I give up.', target: 'word-forge', open: sessionSurfaceViews(words) })).toEqual([])
+    expect(fleetConcedeCheck.check({ surfaces: [], action: fire(0, 1) })).toEqual([])
+  })
+
+  it('the word-move check leaves a Battleship give-up to this check', () => {
+    expect(wordMoveAppliedCheck.check({ surfaces: semanticSurfaceViews(session, revealed), intent: 'I give up.', target: 'enemy-waters', open })).toEqual([])
   })
 })

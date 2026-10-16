@@ -22,3 +22,14 @@ The board-grid End state in `site/pages/agent-admin-libraries.ts` (and the alway
 ## Done when
 - The replay and the new check's test exit 0, each red at the base.
 - `site/pages/agent-admin-presets.test.ts`, the manifest drift test (`site/lib/agent-manifest`, bump seedVersion and regenerate if the seed changes) and `npm run check` exit 0.
+
+## Lane bundle
+- T-0296 Admiral: a surrender ends with one ResultCard beside the revealed board (`.sdlc/tickets/0296-admiral-surrender-result-card`)
+- T-0300 A settled table frames Deal again alone in a Card: a LONE_BUTTON_FRAME check (`.sdlc/tickets/0300-lone-button-frame`)
+
+## Acceptance criteria
+1. `npx vitest run scripts/e2e-admin/probe/replays/admiral-surrender-board-reveal.test.mjs` exits 0, and the test expects RESULT_CARD_MISSING on the recorded surrender turn (red at the base: the base test asserts no code fires).
+2. `npx vitest run packages/agent-ui/a2ui/src/catalog/hidden-state-checks.test.ts` exits 0: a `T-0296: fleet-concede` block fires RESULT_CARD_MISSING on a surrender that updates the fleet board with no ResultCard, ACTION_NOT_APPLIED on a prose-only surrender, and passes a ResultCard surrender, a word game give-up and a turn with no concession (red at the base: `fleetConcedeCheck` does not exist).
+3. The board-grid End state in `site/pages/agent-admin-libraries.ts` names a surrender or concession and keeps the revealed board beside the one ResultCard; the Admiral persona text names no catalog type.
+4. `npx vitest run --project site site/pages/agent-admin-presets.test.ts site/lib/agent-manifest/agent-manifest.test.ts` exits 0 (admiral seedVersion bumped, manifest refreshed via the armed writer).
+5. `npm run check` exits 0.

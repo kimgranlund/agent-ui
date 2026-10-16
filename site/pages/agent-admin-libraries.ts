@@ -281,8 +281,9 @@ export const GAMES_SKILLS: readonly NewEntryInput[] = [
       'own fleet, a revealed board) is the same BoardGrid with no actionName. A hit or miss patches one entry ' +
       'instead of re-minting cells. Keep boards ≤ 6×6 per surface; mark hits/misses with a glyph (✕ / ●) ' +
       'and set disabled on resolved cells rather than removing them. Scores and status (ships remaining, ' +
-      'shots fired) ride ONE GameHud beside the board, never loose Stats or Badges. End state: when a fleet is sunk, show ONE ' +
-      'ResultCard (outcome win or lose, a title, a one-line summary, the final stats) whose child is a Play again Button with newGame true in its action context.',
+      'shots fired) ride ONE GameHud beside the board, never loose Stats or Badges. End state: when a fleet is sunk, or the player ' +
+      'surrenders or concedes (a loss, the hidden fleet revealed on the board), show ONE ResultCard (outcome win or lose, a title, ' +
+      'a one-line summary, the final stats) beside the board, whose child is a Play again Button with newGame true in its action context.',
   },
   {
     label: 'guess-hud',

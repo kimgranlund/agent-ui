@@ -17,7 +17,7 @@
 // targeted board answered in prose alone, or a game asked for with no board. T-0280 adds its word-game twin: a typed
 // guess or a give-up at the targeted board answered in prose alone, or a give-up with no ResultCard; T-0291 judges one
 // typed with no target against the open word game, and a Play again answered in prose. T-0284: a
-// Battleship board opened with no GameHud.
+// Battleship board opened with no GameHud. T-0296: a Battleship surrender answered with no ResultCard.
 // Both games ride base `agent-ui` and both draw a clickable BoardGrid, so each check also skips the other game's
 // surface (T-0263): a word cue (that TextField, or `/secret/word`) with no committed fleet is never judged for a fleet,
 // and a committed fleet with no word cue is never judged for a word.
@@ -338,7 +338,7 @@ export const wordMoveAppliedCheck: SemanticCheck = {
   check({ surfaces, action, intent, target, open }) {
     if (action !== undefined || intent === undefined) return []
     const game = target ?? (open ?? []).filter((v) => hasWordCue(v) && !hasFleetCue(v)).at(-1)?.surfaceId
-    if (game === undefined) return []
+    if (game === undefined || isFleetGame(game, surfaces, open)) return []
     const touched = surfaces.some((v) => v.surfaceId === game || v.priorDataModel === undefined)
     if (GIVE_UP.test(intent)) {
       if (surfaces.some((v) => [...v.components.values()].some((c) => c.component === 'ResultCard'))) return []
@@ -417,5 +417,49 @@ export const fleetHudCheck: SemanticCheck = {
   },
 }
 
+/** T-0296: the player concedes a Battleship game ("I surrender. Reveal your fleet.", "I concede", "I give up"). */
+const CONCEDE = /\b(?:surrender(?:s|ed)?|concede[sd]?|forfeit|i resign|give up|gave up|i quit)\b/i
+
+/**
+ * T-0296 (live round 6, :112, :298 and :484, all three models): "I surrender. Reveal your fleet." targeting
+ * enemy-waters revealed the fleet on the board and shipped no ResultCard, so the game never ended. Kim's ruling
+ * (2026-10-16): a surrender ends like a normal game end, ONE ResultCard beside the revealed board.
+ * RESULT_CARD_MISSING: a concession at a Battleship surface (the target, or with none the last open fleet game)
+ * answered with surfaces but no ResultCard on any of them; ACTION_NOT_APPLIED: one answered in prose alone.
+ */
+export const fleetConcedeCheck: SemanticCheck = {
+  id: 'fleet-concede',
+  requires: ['BoardGrid', 'ResultCard'],
+  check({ surfaces, action, intent, target, open }) {
+    if (action !== undefined || intent === undefined || !CONCEDE.test(intent)) return []
+    const game = target ?? (open ?? []).filter((v) => hasFleetCue(v) && !hasWordCue(v)).at(-1)?.surfaceId
+    if (game === undefined || !isFleetGame(game, surfaces, open)) return []
+    if (surfaces.some((v) => [...v.components.values()].some((c) => c.component === 'ResultCard'))) return []
+    const touched = surfaces.some((v) => v.surfaceId === game || v.priorDataModel === undefined)
+    return [
+      touched
+        ? {
+            code: 'RESULT_CARD_MISSING',
+            path: `${game}:concede`,
+            message:
+              `The Battleship check found that the player conceded the game on ${game} and this turn shows the outcome without a ResultCard. ` +
+              'A surrender ends the game like a sunk fleet: keep the revealed board and add ONE ResultCard beside it (outcome lose, a title, a one-line summary, the final stats such as shots fired and hits) whose child is a Play again Button with newGame true.',
+          }
+        : {
+            code: 'ACTION_NOT_APPLIED',
+            path: `${game}:concede`,
+            message:
+              `The Battleship check found that the player conceded the game on ${game} and this turn sends it no update, so the end of the game exists only in prose. ` +
+              `Call render_surface with an updateComponents for ${game} that reveals your fleet on the board and adds ONE ResultCard beside it (outcome lose, title, summary, stats, a Play again action), not only prose.`,
+          },
+    ]
+  },
+}
+
+/** T-0296: whether a surface id names a Battleship game (it commits a fleet and asks for no word), this turn or earlier. */
+function isFleetGame(id: string, surfaces: readonly SurfaceView[], open: readonly SurfaceView[] | undefined): boolean {
+  return [...surfaces, ...(open ?? [])].some((v) => v.surfaceId === id && hasFleetCue(v) && !hasWordCue(v))
+}
+
 /** Every hidden-state check, in the order the hosts run them. */
-export const HIDDEN_STATE_CHECKS: readonly SemanticCheck[] = [wordSecretCheck, fleetSecretCheck, fleetShotAppliedCheck, wordMoveAppliedCheck, fleetHudCheck]
+export const HIDDEN_STATE_CHECKS: readonly SemanticCheck[] = [wordSecretCheck, fleetSecretCheck, fleetShotAppliedCheck, wordMoveAppliedCheck, fleetHudCheck, fleetConcedeCheck]
