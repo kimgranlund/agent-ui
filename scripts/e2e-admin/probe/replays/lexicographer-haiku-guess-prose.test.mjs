@@ -6,13 +6,14 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0280. Live round 4 (2026-10-15-r4-fixes :86-:89, Haiku 5.5). After a good opening board, both guesses
-// and the give-up are answered in prose aimed at word-forge with no update ("I've put the result on the board"), and
-// no check fires, so the board never moves and no ResultCard ships. When guesses are sent back, recapture.
-it('lexicographer-haiku-guess-prose: the guesses and the give-up ship in prose with no board update', async () => {
+// T-0280. Live round 4 (2026-10-15-r4-fixes :86-:89, Haiku 5.5). After a good opening board, the first guess and the
+// give-up are answered in prose aimed at word-forge with no update ("I've put the result on the board"), so the board
+// never moves and no ResultCard ships. The word-move check now sends both back with ACTION_NOT_APPLIED, and the probe's
+// action-updates-surface judges the targeted say turns. The fixture records no repaired round, so both stay red here.
+it('lexicographer-haiku-guess-prose: the prose-only guess and give-up get ACTION_NOT_APPLIED and fail action-updates-surface', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./lexicographer-haiku-guess-prose.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
   expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual(['action-updates-surface:1', 'action-updates-surface:3'])
   const traces = report.records.map((r) => r.lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined))
-  expect(traces.map((t) => t.failureCodes)).toEqual([[], [], [], []])
+  expect(traces.map((t) => t.failureCodes)).toEqual([[], ['ACTION_NOT_APPLIED', 'SEMANTIC_UNCORRECTED'], [], ['ACTION_NOT_APPLIED', 'SEMANTIC_UNCORRECTED']])
 })

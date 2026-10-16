@@ -14,7 +14,9 @@
 //   sits beside a BoardGrid;
 // - Battleship: a BoardGrid with an `actionName` (the board the player fires on, the `board-grid` idiom).
 // T-0265 adds one more Battleship check that reads the say turn's words rather than a surface: a typed shot at the
-// targeted board answered in prose alone, or a game asked for with no board.
+// targeted board answered in prose alone, or a game asked for with no board. T-0280 adds its word-game twin: a typed
+// guess or a give-up at the targeted board answered in prose alone, or a give-up with no ResultCard. T-0284: a
+// Battleship board opened with no GameHud.
 // Both games ride base `agent-ui` and both draw a clickable BoardGrid, so each check also skips the other game's
 // surface (T-0263): a word cue (that TextField, or `/secret/word`) with no committed fleet is never judged for a fleet,
 // and a committed fleet with no word cue is never judged for a word.
@@ -311,5 +313,86 @@ export const fleetShotAppliedCheck: SemanticCheck = {
   },
 }
 
+/** T-0280: a guess the player types ("My guess: audio.", "Guess crane"), the word as the capture. */
+const TYPED_GUESS = /\bguess\b(?:\s+is)?\s*[:,-]?\s*["'“‘]?([a-z]{2,12})\b/i
+/** T-0280: the player gives the word game up ("I give up.", "What was the word?"). */
+const GIVE_UP = /\b(?:give up|gave up|i quit|i resign|what was the word|what's the word|tell me the word|reveal the word)\b/i
+
+/**
+ * T-0280 (the recorded Haiku 5.5 Lexicographer, round 4 :86-:89): "My guess: audio." and "I give up." were answered
+ * with a meta-line targeting word-forge and the grades and the answer in prose, so the board never moved and no
+ * ResultCard shipped. ACTION_NOT_APPLIED: a say turn that types a guess, or gives up, and declares an open surface its
+ * target sends that surface no update and opens no new surface. RESULT_CARD_MISSING: a give-up answered with
+ * surfaces but no ResultCard on any of them (the hand-built Card of round 4 :122).
+ */
+export const wordMoveAppliedCheck: SemanticCheck = {
+  id: 'word-move-applied',
+  requires: ['BoardGrid', 'ResultCard'],
+  check({ surfaces, action, intent, target }) {
+    if (action !== undefined || intent === undefined || target === undefined) return []
+    const touched = surfaces.some((v) => v.surfaceId === target || v.priorDataModel === undefined)
+    if (GIVE_UP.test(intent)) {
+      if (surfaces.some((v) => [...v.components.values()].some((c) => c.component === 'ResultCard'))) return []
+      return [
+        touched
+          ? {
+              code: 'RESULT_CARD_MISSING',
+              path: `${target}:give-up`,
+              message:
+                `The player gave up the game on ${target}, and this turn shows the outcome without a ResultCard. ` +
+                'Make it ONE ResultCard with its outcome, title, the answer in the summary, stats and a Play again action, and drop the hand-built result.',
+            }
+          : {
+              code: 'ACTION_NOT_APPLIED',
+              path: `${target}:give-up`,
+              message:
+                `The player gave up the game on ${target}, and this turn sends it no update, so the answer exists only in prose. ` +
+                `Call render_surface with an updateComponents for ${target} that shows ONE ResultCard (outcome, title, the answer in the summary, stats, a Play again action), not only prose.`,
+            },
+      ]
+    }
+    const guess = TYPED_GUESS.exec(intent)?.[1]?.toLowerCase()
+    if (guess === undefined || touched) return []
+    return [
+      {
+        code: 'ACTION_NOT_APPLIED',
+        path: `${target}:${guess}`,
+        message:
+          `The player guessed "${guess}" on ${target}, and this turn sends it no update, so the board still shows the old rows. ` +
+          `Call render_surface with an updateDataModel for ${target}: the guess's graded row on the board (or, for a guess that is not a valid word, the status saying so), the guesses left and the cleared field, not only prose.`,
+      },
+    ]
+  },
+}
+
+/**
+ * T-0284 (the recorded Haiku 5.5 Admiral, round 4 row-sweep t0): "Battleship, please." opened a Column with a Text
+ * title, the BoardGrid and a Text bound to /hud/status, so the GameHud composite row (which reads literal words)
+ * stayed silent. GAME_HUD_MISSING: a Battleship board opened this round (a clickable BoardGrid on a surface that
+ * commits a fleet) with no GameHud on its surface.
+ */
+export const fleetHudCheck: SemanticCheck = {
+  id: 'fleet-hud',
+  requires: ['BoardGrid', 'GameHud'],
+  check({ surfaces }) {
+    const findings: SemanticFinding[] = []
+    for (const view of surfaces) {
+      if (view.priorDataModel !== undefined || !hasFleetCue(view)) continue
+      const types = new Set([...view.components.values()].map((c) => c.component))
+      if (types.has('GameHud')) continue
+      const board = boardGrids(view).find((b) => typeof b['actionName'] === 'string' && b['actionName'] !== '')
+      if (board === undefined) continue
+      findings.push({
+        code: 'GAME_HUD_MISSING',
+        path: `${view.surfaceId}:${board.id}`,
+        message:
+          `${view.surfaceId} opens a Battleship board with no GameHud, so the game's status and score have no strip. ` +
+          `Add ONE GameHud beside BoardGrid "${board.id}" with its title, status and stats (shots fired, ships left) bound to the data model, and drop the hand-built title and status text.`,
+      })
+    }
+    return findings
+  },
+}
+
 /** Every hidden-state check, in the order the hosts run them. */
-export const HIDDEN_STATE_CHECKS: readonly SemanticCheck[] = [wordSecretCheck, fleetSecretCheck, fleetShotAppliedCheck]
+export const HIDDEN_STATE_CHECKS: readonly SemanticCheck[] = [wordSecretCheck, fleetSecretCheck, fleetShotAppliedCheck, wordMoveAppliedCheck, fleetHudCheck]

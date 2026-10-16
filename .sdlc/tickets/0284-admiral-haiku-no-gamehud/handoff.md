@@ -28,3 +28,7 @@ GAME_HUD_MISSING exists for the word board (round 3 :110) but did not fire on th
 ## Done when
 - A checks test: a battleship opening with no GameHud is sent back; one with it passes.
 - `npm run check` exits 0.
+
+## Acceptance criteria
+- `npx vitest run packages/agent-ui/a2ui/src/catalog/hidden-state-checks.test.ts` exits 0: the T-0284 fleet-hud block fails the recorded row-sweep opening with GAME_HUD_MISSING and passes the same opening with a GameHud.
+- `npm run check` exits 0.
