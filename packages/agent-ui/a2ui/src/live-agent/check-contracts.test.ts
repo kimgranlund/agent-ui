@@ -25,6 +25,7 @@ import type { SemanticAction, SemanticCheck, SemanticCheckInput, SemanticFinding
 import { CORRECTED_LINE, DEAL_TURN, EVIDENCE_LINE, toJsonl } from '../catalog/personas/croupier/hands.fixture.ts'
 import { personaCroupierCardTableBettingSeed, personaCroupierCardTableSettledSeed } from '../examples/persona-exemplars.ts'
 import { sessionSurfaceSeeds } from '../agent/surface-seeds.ts'
+import type { Turn } from '../agent/agent-transport.ts'
 import { validateA2ui } from '../renderer/validate.ts'
 import type { A2uiComponent, A2uiOutput, A2uiServerMessage } from '../protocol.ts'
 
@@ -387,7 +388,7 @@ const KNOWN_CROSS_FIRES: Record<string, string> = {
 
 // ── the cross-run ───────────────────────────────────────────────────────────────────────────────────────────────
 
-const turnsOf = (f: Fixture) => (f.session ?? []).flatMap(({ say, out }) => [
+const turnsOf = (f: Fixture): Turn[] => (f.session ?? []).flatMap(({ say, out }): Turn[] => [
   { role: 'user', content: say },
   { role: 'assistant', content: toJsonl(out) },
 ])
