@@ -18,3 +18,8 @@ Round 8 cluster B, `.sdlc/evals/rounds/2026-10-16-r8-matrix/report.md` (`## Why 
 
 ## Done when
 - A produce test: after SURFACE_DROPPED the next Haiku round is forced with thinking off; a fallback candidate that failed a semantic check is not shipped (the turn degrades or halts as the spec says); red at the base. The T-0317 property test and the replays stay green (re-pin with a stated reason); `npm run check` exits 0; RTS spec updated.
+
+## Lane bundle
+Lane `fix/r8-producer` (round 8 producer), one commit per ticket, in order:
+1. T-0320: root-cause the one-brace-short `messages` strings (ours or the model's).
+2. T-0321: force render_surface on a SURFACE_DROPPED repair round; the fallback never ships a check-failed round.
