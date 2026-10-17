@@ -957,7 +957,7 @@ describe('ui-super-shell — pane-resizer visual states (GH #182 regression pin)
     const { el } = mount()
     // --md-sys-color-primary and --md-sys-color-focus-ring are both light-dark() roles that COINCIDE in
     // light mode by design (ADR-0009's dedicated-role tokens.test.ts pins) — forcing dark scheme is what
-    // makes them diverge (primary-450 vs primary-400), so only here can a probe tell the two apart.
+    // makes them diverge (primary-600 vs primary-400), so only here can a probe tell the two apart.
     el.style.colorScheme = 'dark'
     await el.updateComplete
     const sep = el.querySelector('[data-part="pane-resizer"][data-side="end"]') as HTMLElement

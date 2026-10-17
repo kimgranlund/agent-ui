@@ -134,7 +134,7 @@
   --md-sys-color-primary-scrim-900: oklch(0.6037 0.101 256.19 / 90%);
   --md-sys-color-primary-scrim-950: oklch(0.6037 0.101 256.19 / 95%);
   /* primary — semantic roles */
-  --md-sys-color-primary: light-dark(var(--md-sys-color-primary-550), var(--md-sys-color-primary-450));
+  --md-sys-color-primary: light-dark(var(--md-sys-color-primary-550), var(--md-sys-color-primary-600));
   --md-sys-color-primary-dim: light-dark(var(--md-sys-color-primary-650), var(--md-sys-color-primary-700));
   --md-sys-color-primary-bright: light-dark(var(--md-sys-color-primary-350), var(--md-sys-color-primary-400));
   --md-sys-color-primary-low: light-dark(var(--md-sys-color-primary-350), var(--md-sys-color-primary-700));
@@ -1074,7 +1074,7 @@
 
   /* ③ Persistent-SELECTED accent fill (ADR-0048) — the calendar selected-day + segmented-control
         selected-segment fill. Both legs clear WCAG-AA (≥4.5:1) against on-primary WHITE text, which
-        the plain `primary` anchor (500) does NOT in dark. The generated ladder has no "selected" rung
+        the plain `primary` anchor also does since T-0340 (dark leg 600). The generated ladder has no "selected" rung
         (hover/active shift the wrong way for a fill that always bears white text). Pinned by tokens.test.ts.
         RE-DERIVED for the new ramp (was 550/600): the regenerated primary mid-tones are lighter, so
         primary-550 fell to 3.85:1 vs white — below AA. primary-600 is the lightest stop clearing 4.5:1

@@ -175,9 +175,9 @@ describe('tokens.css — the composed surface stays WCAG-AA (ADR-0015 cl.3 — t
 })
 
 // tok-selected (ADR-0048) — the AA-guaranteed persistent-SELECTED accent fill. The accent ANCHOR pair
-// (--md-sys-color-primary + --md-sys-color-primary-on-primary/white) is report-only and drops to 3.32:1 in dark — fine for a GLYPH
-// at the 3:1 non-text bar (the checkmark/thumb of every prior solid control), but BELOW the 4.5:1 bar for real
-// TEXT. The ui-calendar selected-day NUMERAL is text, so it reads a DEDICATED --md-sys-color-primary-selected whose BOTH
+// (--md-sys-color-primary + --md-sys-color-primary-on-primary/white) used to drop to 3.25:1 in dark (dark leg 450), below
+// the 4.5:1 bar for real TEXT; T-0340 moved that leg to 600 and gates the anchor pair below too.
+// The ui-calendar selected-day NUMERAL is text, so it reads a DEDICATED --md-sys-color-primary-selected whose BOTH
 // light-dark() legs clear AA against --md-sys-color-primary-on-primary. This probe re-derives the contrast from the
 // DECLARED role legs (not hardcoded stops), so a future repoint re-runs the math. Same OKLCH→sRGB→WCAG path
 // as the surface-AA block above (jsdom paints nothing — the contrast is recomputed from the token values).
@@ -228,11 +228,21 @@ describe('tokens.css — the AA-guaranteed --md-sys-color-primary-selected fill 
     expect(dark, `dark: on-primary(${inkD}) on selected(${fillD}) = ${dark.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA)
   })
 
-  it('NEGATIVE control: the plain --md-sys-color-primary anchor pair FAILS the 4.5:1 TEXT bar in dark (why the dedicated role exists)', () => {
-    const [, anchorD] = legsOf('primary') // --md-sys-color-primary dark leg = the report-only 450
-    const [, inkD] = legsOf('primary-on-primary')
+  // T-0340: the plain anchor pair is the gate now. ui-button's solid fill and ui-checkbox's checked box set
+  // on-primary ink on --md-sys-color-primary, so its dark leg moved 450 -> 600 (Kim 2026-10-17) to clear 4.5:1.
+  it('the plain --md-sys-color-primary anchor pair clears WCAG-AA (>=4.5:1) against on-primary TEXT in BOTH light and dark (T-0340)', () => {
+    const [anchorL, anchorD] = legsOf('primary')
+    const [inkL, inkD] = legsOf('primary-on-primary')
+    const light = contrast(gammaOf(inkL), gammaOf(anchorL))
     const dark = contrast(gammaOf(inkD), gammaOf(anchorD))
-    expect(dark, `dark: on-primary(${inkD}) on --md-sys-color-primary(${anchorD}) = ${dark.toFixed(2)}:1 (report-only)`).toBeLessThan(AA)
+    expect(light, `light: on-primary(${inkL}) on --md-sys-color-primary(${anchorL}) = ${light.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA)
+    expect(dark, `dark: on-primary(${inkD}) on --md-sys-color-primary(${anchorD}) = ${dark.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA)
+  })
+
+  it('NEGATIVE control: the retired dark anchor (450) FAILS the 4.5:1 bar against on-primary, so the gate above has teeth', () => {
+    const [, inkD] = legsOf('primary-on-primary')
+    const dark = contrast(gammaOf(inkD), gammaOf('450'))
+    expect(dark, `dark: on-primary(${inkD}) on primary-450 = ${dark.toFixed(2)}:1`).toBeLessThan(AA)
   })
 })
 

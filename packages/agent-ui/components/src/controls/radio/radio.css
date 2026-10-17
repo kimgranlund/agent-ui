@@ -21,7 +21,7 @@
  * ring, unlike ui-switch's checked thumb (`--md-sys-color-primary-on-primary`, bright on a primary track).
  * Fix: the checked ring FILLS solid primary (`background: var(--ui-radio-ink)`, matching the switch's
  * filled-track pattern) and the NEW `::after` dot reads the bright `--md-sys-color-primary-on-primary` role —
- * the switch's own high-contrast pair, verified 4.79:1 light / 3.32:1 dark against the primary fill
+ * the switch's own high-contrast pair, verified 4.79:1 light / 5.64:1 dark against the primary fill (dark leg 600 since T-0340)
  * (`tokens.test.ts`'s AA-selected block independently reproduces the light leg; both clear the SC 1.4.11
  * 3:1 non-text bar). Radio's geometry (a single filled disc, no rail/page-surface straddle) has none of
  * ui-slider's competing-backdrop constraint, so the switch's flat on-primary pair ports directly.
@@ -51,7 +51,7 @@
 
   /* Dot: the checked glyph — BRIGHT on-primary, the ui-switch checked-thumb role (2026-07-07 fix). Was
      `--ui-radio-ink` reused (same blue as the ring/fill it sits on) — a same-hue dot never reads as a
-     distinct indicator. Clears SC 1.4.11 (3:1) against the primary fill: 4.79:1 light / 3.32:1 dark. */
+     distinct indicator. Clears SC 1.4.11 (3:1) against the primary fill: 4.79:1 light / 5.64:1 dark. */
   --ui-radio-dot: var(--md-sys-color-primary-on-primary);
 
   /* Gap: between the circle and the label slot (font/2, the anatomy gap law — density-bearing). */
