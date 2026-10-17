@@ -123,9 +123,8 @@ export interface AgentPreset {
   disabledBuiltins?: readonly string[]
   /** The seed version: the `version` of its `agent.md` (T-0160, with the reason on its `changelog` list),
    *  pinned in this agent's `site/lib/agent-manifest/<id>.manifest.json`. Absent = 1. A user's edits are an
-   *  overlay keyed `id@version` (T-0161, `personaStore`): a bump merges them onto the new seed per field,
-   *  never wipes them. Only a store persisted in the pre-overlay shape at an OLDER version is dropped once,
-   *  because the seed it was written against no longer exists to diff with. */
+   *  overlay keyed `id@version` (T-0161, `personaStore`): a bump merges them onto the new seed per field and
+   *  never wipes them; a field both sides changed keeps the user value, flagged `seedChanged`. */
   seedVersion?: number
   /** GH #497 — this persona's `SHIPPED_PERSONA_CATALOGS` `personaId` (`concierge`/`croupier`), seeded as
    *  its `A2UI_LOCAL_PATTERNS_KEY` selection. Absent (every OTHER preset) ⇒ no local set seeded — the
@@ -365,13 +364,14 @@ export function personaInstantiated(id: string): boolean {
   return storeCache.has(id) || rosterSource.seedVersionSync(id) !== undefined
 }
 
-/** A shipped persona's store over its seed plus its persisted overlay (T-0161). Three starting states:
+/** A shipped persona's store over its seed plus its persisted overlay (T-0161, agent-content SPEC ACS-R6
+ *  and ACS-R7). Three starting states:
  *  - an overlay exists: merge it onto the current seed (`rebaseOverlay`, a no-op when the seed is the
- *    same), so a seed bump keeps every user edit and flags a field both sides changed;
+ *    same), so a seed bump keeps every user edit and flags a field both sides changed `seedChanged`;
  *  - today's pre-overlay shape (full per-key copies) at the CURRENT version: diff the copies against the
  *    seed into an overlay, then drop the copies (the one-time migration);
- *  - those copies at an OLDER version: drop them, as the pre-overlay bump did. The seed they were written
- *    against is not in the registry, so a user edit cannot be told from the old seed text there.
+ *  - those copies at an OLDER version: the seed they were written against is not in the registry, so a
+ *    user edit cannot be told from the old seed text; every differing value is kept, flagged `seedChanged`.
  *  The sweep-before-hydrate ordering leans on the storage tier's same-tick writes (agent-roster-source.ts's
  *  own stated law). */
 function overlayStoreFor(persona: Persona): OverlayStore {
@@ -385,7 +385,7 @@ function overlayStoreFor(persona: Persona): OverlayStore {
   } else {
     const legacy = rosterSource.legacyStateSync(id)
     const persisted = rosterSource.seedVersionSync(id) ?? 1
-    overlay = persisted < wanted ? emptyOverlay(id, wanted, seed) : diffOverlay(id, wanted, seed, legacy)
+    overlay = diffOverlay(id, wanted, seed, legacy, { baseUnknown: persisted < wanted })
     if (Object.keys(legacy).length > 0) {
       rosterSource.dropLegacyStateSync(id)
       rosterSource.writeOverlaySync(id, overlay)

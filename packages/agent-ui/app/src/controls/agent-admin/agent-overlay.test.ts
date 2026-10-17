@@ -1,6 +1,7 @@
 // agent-overlay.test.ts: T-0161, user edits stored as a diff over the seed. The laws: resolve(seed,
 // diff(seed, value)) gives back exactly what was written; a seed update merges per field (base, new seed,
-// user) and never wipes; a conflict keeps the user value and carries both values; reset per field and
+// user) and never wipes; a conflict keeps the user value and is flagged seedChanged with the base, seed and
+// user values; a legacy copy at an older version is kept flagged; reset per field and
 // per key; the overlay round-trips through JSON (the StorageAdapter encoding).
 import { describe, it, expect } from 'vitest'
 import {
@@ -112,10 +113,10 @@ describe('3-way merge on a seed update', () => {
     const skills = resolved['entries:skill'] as ReturnType<typeof entry>[]
     expect(skills.find((e) => e.id === 'greet')!.content).toBe('Greet warmly.')
     expect(skills.find((e) => e.id === 'book')!.content).toBe('Book a table for two.')
-    expect(modifiedPaths(merged).some((p) => p.conflict !== undefined), 'nothing flagged').toBe(false)
+    expect(modifiedPaths(merged).some((p) => p.seedChanged !== undefined), 'nothing flagged').toBe(false)
   })
 
-  it('conflict: both sides changed the field; the user value is kept and flagged with both values', () => {
+  it('conflict: both sides changed the field; the user value is kept and flagged seedChanged with base, seed and user', () => {
     const v1 = seedV1()
     const overlay = editBook(v1, 'Book a table for two.')
     const v2 = { ...v1, name: 'Hotel Concierge', 'entries:skill': (v1['entries:skill'] as ReturnType<typeof entry>[]).map((e) => (e.id === 'book' ? { ...e, content: 'Book a table, confirm the time.' } : e)) }
@@ -125,8 +126,13 @@ describe('3-way merge on a seed update', () => {
     expect((resolved['entries:skill'] as ReturnType<typeof entry>[]).find((e) => e.id === 'book')!.content).toBe('Book a table for two.')
     expect(modifiedPaths(merged)).toEqual(
       expect.arrayContaining([
-        { key: 'name', conflict: { seed: 'Hotel Concierge', user: 'Max' } },
-        { key: 'entries:skill', entryId: 'book', field: 'content', conflict: { seed: 'Book a table, confirm the time.', user: 'Book a table for two.' } },
+        { key: 'name', seedChanged: { base: 'Concierge', seed: 'Hotel Concierge', user: 'Max' } },
+        {
+          key: 'entries:skill',
+          entryId: 'book',
+          field: 'content',
+          seedChanged: { base: 'Book a table.', seed: 'Book a table, confirm the time.', user: 'Book a table for two.' },
+        },
       ]),
     )
   })
@@ -149,7 +155,7 @@ describe('3-way merge on a seed update', () => {
     expect(skills.find((e) => e.id === 'book')).toEqual({ ...entry('book', 'Book a table for two.', 1) })
     const flagged = modifiedPaths(merged).find((p) => p.entryId === 'book')!
     expect(flagged.change).toBe('added')
-    expect(flagged.conflict, 'seed removed it: seed side is absent').toEqual({ user: entry('book', 'Book a table for two.', 1) })
+    expect(flagged.seedChanged, 'seed removed it: no seed side').toEqual({ base: entry('book', 'Book a table.', 1), user: entry('book', 'Book a table for two.', 1) })
   })
 
   it('a scalar key deleted upstream keeps a user edit and flags it', () => {
@@ -158,7 +164,7 @@ describe('3-way merge on a seed update', () => {
     const { a2uiLocalPatterns: _gone, ...v2 } = v1
     const merged = reload(rebaseOverlay(overlay, v2, 'concierge', 2))
     expect(resolveOverlay(v2, merged)['a2uiLocalPatterns']).toBe('croupier')
-    expect(modifiedPaths(merged)).toEqual([{ key: 'a2uiLocalPatterns', conflict: { user: 'croupier' } }])
+    expect(modifiedPaths(merged)).toEqual([{ key: 'a2uiLocalPatterns', seedChanged: { base: 'concierge', user: 'croupier' } }])
   })
 
   it('the same seed (digest and version) is a no-op', () => {
@@ -179,6 +185,37 @@ describe('migration from today’s stored shape (full per-key copies)', () => {
       { key: 'entries:skill', entryId: 'greet', field: 'enabled' },
     ])
     expect(resolveOverlay(seed, overlay)).toEqual({ ...seed, ...stored })
+  })
+})
+
+describe('the spec example and the older-version migration (ACS-R7)', () => {
+  it('E1: effort medium to low; the next version sets high; low is kept, flagged with medium, high and low', () => {
+    const v7 = { effort: 'medium', surfaceStyle: 'old' }
+    const overlay = setOverlayKey(v7, emptyOverlay('concierge', 7, v7), 'effort', 'low')
+    const quiet = rebaseOverlay(overlay, { effort: 'medium', surfaceStyle: 'new' }, 'concierge', 8)
+    expect(resolveOverlay({ effort: 'medium', surfaceStyle: 'new' }, quiet)).toEqual({ effort: 'low', surfaceStyle: 'new' })
+    expect(modifiedPaths(quiet)).toEqual([{ key: 'effort' }])
+    const flagged = rebaseOverlay(overlay, { effort: 'high', surfaceStyle: 'new' }, 'concierge', 8)
+    expect(modifiedPaths(flagged)).toEqual([{ key: 'effort', seedChanged: { base: 'medium', seed: 'high', user: 'low' } }])
+  })
+
+  it('a copy written against an older version keeps every differing value, flagged with no base; a missing seed entry is not a removal', () => {
+    const seed = seedV1()
+    const stale = [entry('greet', 'Old hello.', 0), entry('retired', 'A skill the seed dropped.', 1)]
+    const overlay = diffOverlay('concierge', 2, seed, { model: 'claude-haiku-4-5', 'entries:skill': stale }, { baseUnknown: true })
+    const resolved = resolveOverlay(seed, reload(overlay))
+    expect(resolved['model']).toBe('claude-haiku-4-5')
+    expect((resolved['entries:skill'] as ReturnType<typeof entry>[]).map((e) => [e.id, e.content])).toEqual([
+      ['greet', 'Old hello.'],
+      ['book', 'Book a table.'],
+      ['farewell', 'Say goodbye.'],
+      ['retired', 'A skill the seed dropped.'],
+    ])
+    expect(modifiedPaths(overlay)).toEqual([
+      { key: 'model', seedChanged: { seed: 'claude-sonnet-5-5', user: 'claude-haiku-4-5' } },
+      { key: 'entries:skill', entryId: 'greet', field: 'content', seedChanged: { seed: 'Say hello.', user: 'Old hello.' } },
+      { key: 'entries:skill', entryId: 'retired', change: 'added', seedChanged: { user: stale[1] } },
+    ])
   })
 })
 

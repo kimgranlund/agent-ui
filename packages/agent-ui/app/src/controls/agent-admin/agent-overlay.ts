@@ -10,8 +10,9 @@
 // - A seed update (`rebaseOverlay`) merges per field: the seed moved and the user did not, the new seed
 //   flows in (the user never had an op there); the seed still equals the op's base, the op is kept; the
 //   seed converged on the user value, the op drops; both moved apart, the USER value is kept and the op is
-//   flagged `conflict` with the new seed value beside it. An entry the seed removed that the user edited
-//   is kept whole as a user entry, flagged. Nothing is ever wiped.
+//   flagged `seedChanged` with the base and the new seed value beside it. An entry the seed removed that
+//   the user edited is kept whole as a user entry, flagged. Nothing is ever wiped
+//   (`.claude/docs/spec/agent-content.spec.md` ACS-R6 to ACS-R8).
 // - Pure and zero-dep: the persistence (one `StorageAdapter` record per agent) is the caller's, through
 //   `createOverlayStore`'s `persist` seam.
 //
@@ -20,21 +21,29 @@ import type { SettingsStore } from '../settings/store.ts'
 
 type Item = Readonly<Record<string, unknown>> & { readonly id: string }
 
+/** A merge the seed and the user disagreed on: the seed value the user's op was made against (`base`)
+ *  and the seed value that replaced it (`seed`). An absent side had no value (a key or entry the seed
+ *  did not carry, or a base nobody kept). The user value is the op's own. */
+export interface SeedChanged {
+  base?: unknown
+  seed?: unknown
+}
+
 /** One scalar store key's op. Presence carries meaning: no `value` means the user removed the key, no
- *  `base` means the seed had none. `conflict.seed` (absent: the seed dropped the key) is the new seed
- *  value a merge could not reconcile with the user's. */
+ *  `base` means the seed had none. */
 export interface ValueOp {
   value?: unknown
   base?: unknown
-  conflict?: { seed?: unknown }
+  seedChanged?: SeedChanged
 }
 
 /** One entry's op inside an entry list. `added` holds a whole user entry (no seed counterpart, or one
- *  the seed has since removed); `removed` and `patch` hold the seed entry they were diffed against. */
+ *  the seed has since removed); `removed` and `patch` hold the seed entry they were diffed against. A
+ *  patch flags per field. */
 export type EntryOp =
-  | { op: 'added'; entry: Item; conflict?: { seed?: unknown } }
-  | { op: 'removed'; base: Item; conflict?: { seed?: unknown } }
-  | { op: 'patch'; base: Item; set: Record<string, unknown>; unset: string[]; conflicts?: Record<string, { seed?: unknown }> }
+  | { op: 'added'; entry: Item; seedChanged?: SeedChanged }
+  | { op: 'removed'; base: Item; seedChanged?: SeedChanged }
+  | { op: 'patch'; base: Item; set: Record<string, unknown>; unset: string[]; seedChanged?: Record<string, SeedChanged> }
 
 /** One entry-list key's ops. `order` is the user's id sequence, present only when it differs from the
  *  natural one (seed order, then added entries). */
@@ -55,13 +64,13 @@ export interface AgentOverlay {
 }
 
 /** One modified place, for the per-field "modified" state (T-0162). `change` names an entry-level op;
- *  `conflict` carries both values (an absent side means that side has no value there). */
+ *  `seedChanged` carries the base, the new seed and the user values (an absent side has no value there). */
 export interface OverlayPath {
   key: string
   entryId?: string
   field?: string
   change?: 'added' | 'removed' | 'order'
-  conflict?: { seed?: unknown; user?: unknown }
+  seedChanged?: SeedChanged & { user?: unknown }
 }
 
 /** The address `resetPath` takes: a whole key, one entry, or one entry field. */
@@ -172,8 +181,8 @@ function seedListAt(seed: Readonly<Record<string, unknown>>, key: string): Item[
   return isItemList(value) ? value : undefined
 }
 
-/** A copy of `overlay` with `key`'s op replaced by the diff of `value` against the seed. A conflict flag
- *  on a place the user still differs at is kept: it stays until reset or until the seed agrees. */
+/** A copy of `overlay` with `key`'s op replaced by the diff of `value` against the seed. A `seedChanged`
+ *  flag on a place the user still differs at is kept: it stays until reset or until the seed agrees. */
 export function setOverlayKey(seed: Readonly<Record<string, unknown>>, overlay: AgentOverlay, key: string, value: unknown): AgentOverlay {
   const values = { ...overlay.values }
   const lists = { ...overlay.lists }
@@ -187,10 +196,10 @@ export function setOverlayKey(seed: Readonly<Record<string, unknown>>, overlay: 
       for (const [id, next] of Object.entries(op.entries)) {
         const prior = previous[id]
         if (prior === undefined) continue
-        if (next.op === 'patch' && prior.op === 'patch' && prior.conflicts !== undefined) {
-          const kept = Object.fromEntries(Object.entries(prior.conflicts).filter(([field]) => field in next.set || next.unset.includes(field)))
-          if (Object.keys(kept).length > 0) next.conflicts = kept
-        } else if (next.op !== 'patch' && prior.op === next.op && prior.conflict !== undefined) next.conflict = prior.conflict
+        if (next.op === 'patch' && prior.op === 'patch' && prior.seedChanged !== undefined) {
+          const kept = Object.fromEntries(Object.entries(prior.seedChanged).filter(([field]) => field in next.set || next.unset.includes(field)))
+          if (Object.keys(kept).length > 0) next.seedChanged = kept
+        } else if (next.op !== 'patch' && prior.op === next.op && prior.seedChanged !== undefined) next.seedChanged = prior.seedChanged
       }
       lists[key] = op
     }
@@ -199,7 +208,7 @@ export function setOverlayKey(seed: Readonly<Record<string, unknown>>, overlay: 
     const op: ValueOp = {}
     if (value !== undefined) op.value = clone(value)
     if (has(seed, key)) op.base = clone(seed[key])
-    if (prior?.conflict !== undefined) op.conflict = prior.conflict
+    if (prior?.seedChanged !== undefined) op.seedChanged = prior.seedChanged
     values[key] = op
   }
   return { ...overlay, values, lists }
@@ -210,11 +219,37 @@ export function emptyOverlay(id: string, version: number, seed: Readonly<Record<
   return { format: 1, base: `${id}@${version}`, baseVersion: version, baseDigest: seedFingerprint(seed), values: {}, lists: {} }
 }
 
-/** The one-time migration: diff a full stored copy (today's per-key shape) against `seed`. */
-export function diffOverlay(id: string, version: number, seed: Readonly<Record<string, unknown>>, stored: Readonly<Record<string, unknown>>): AgentOverlay {
+/** The one-time migration (ACS-R7): diff a full stored copy (today's per-key shape) against `seed`.
+ *  `baseUnknown` is the copy written against an OLDER seed version, which the registry no longer holds:
+ *  a stored value that differs from the seed may be the user's or the old seed's, so every differing
+ *  place keeps the stored value and is flagged `seedChanged` (no base). A seed entry missing from the
+ *  stored list is no evidence of a user removal there (a later version may have added it), so that
+ *  branch records no removals and no order. */
+export function diffOverlay(
+  id: string,
+  version: number,
+  seed: Readonly<Record<string, unknown>>,
+  stored: Readonly<Record<string, unknown>>,
+  options: { baseUnknown?: boolean } = {},
+): AgentOverlay {
   let overlay = emptyOverlay(id, version, seed)
   for (const [key, value] of Object.entries(stored)) overlay = setOverlayKey(seed, overlay, key, value)
-  return overlay
+  if (options.baseUnknown !== true) return overlay
+  const values: Record<string, ValueOp> = {}
+  for (const [key, op] of Object.entries(overlay.values)) values[key] = { ...op, seedChanged: seedSide(seed, key) }
+  const lists: Record<string, ListOp> = {}
+  for (const [key, list] of Object.entries(overlay.lists)) {
+    const entries: Record<string, EntryOp> = {}
+    for (const [entryId, op] of Object.entries(list.entries)) {
+      if (op.op === 'added') entries[entryId] = { ...op, seedChanged: {} }
+      else if (op.op === 'patch') {
+        const flags = Object.fromEntries([...Object.keys(op.set), ...op.unset].map((field) => [field, seedSide(op.base, field)]))
+        entries[entryId] = { ...op, seedChanged: flags }
+      }
+    }
+    if (Object.keys(entries).length > 0) lists[key] = { entries }
+  }
+  return { ...overlay, values, lists }
 }
 
 // ── resolve ──────────────────────────────────────────────────────────────────────────────────────────
@@ -258,7 +293,9 @@ export function resolveOverlay(seed: Readonly<Record<string, unknown>>, overlay:
 
 // ── merge ────────────────────────────────────────────────────────────────────────────────────────────
 
-const seedSide = (record: Readonly<Record<string, unknown>>, key: string): { seed?: unknown } => (has(record, key) ? { seed: clone(record[key]) } : {})
+/** `{ seed: record[key] }` (or `{ base: … }`), or `{}` when the record carries no value there. */
+const seedSide = (record: Readonly<Record<string, unknown>>, key: string, side: 'seed' | 'base' = 'seed'): SeedChanged =>
+  has(record, key) ? { [side]: clone(record[key]) } : {}
 
 function rebaseValue(op: ValueOp, seed: Readonly<Record<string, unknown>>, key: string): ValueOp | undefined {
   const next = seed[key]
@@ -267,7 +304,7 @@ function rebaseValue(op: ValueOp, seed: Readonly<Record<string, unknown>>, key: 
   if (same(next, user)) return undefined
   if (same(next, base)) return op
   const rebased: ValueOp = { ...('value' in op ? { value: op.value } : {}), ...(has(seed, key) ? { base: clone(next) } : {}) }
-  rebased.conflict = seedSide(seed, key)
+  rebased.seedChanged = { ...('base' in op ? { base: op.base } : {}), ...seedSide(seed, key) }
   return rebased
 }
 
@@ -277,30 +314,30 @@ function rebaseEntry(op: EntryOp, next: Item | undefined): EntryOp | undefined {
     if (same(next, op.entry)) return undefined
     const patch = patchFor(next, op.entry)
     if (patch === undefined || patch.op !== 'patch') return undefined
-    patch.conflicts = Object.fromEntries([...Object.keys(patch.set), ...patch.unset].map((field) => [field, seedSide(next, field)]))
+    patch.seedChanged = Object.fromEntries([...Object.keys(patch.set), ...patch.unset].map((field) => [field, seedSide(next, field)]))
     return patch
   }
   if (op.op === 'removed') {
     if (next === undefined) return undefined
     if (same(next, op.base)) return op
-    return { op: 'removed', base: clone(next), conflict: { seed: clone(next) } }
+    return { op: 'removed', base: clone(next), seedChanged: { base: op.base, seed: clone(next) } }
   }
   // A patch: the seed removed the entry the user edited, so the user's whole entry is kept as theirs.
-  if (next === undefined) return { op: 'added', entry: applyPatch(op.base, op), conflict: {} }
+  if (next === undefined) return { op: 'added', entry: applyPatch(op.base, op), seedChanged: { base: op.base } }
   const set: Record<string, unknown> = {}
   const unset: string[] = []
-  const conflicts: Record<string, { seed?: unknown }> = {}
+  const flags: Record<string, SeedChanged> = {}
   for (const field of [...Object.keys(op.set), ...op.unset]) {
     const user = field in op.set ? op.set[field] : undefined
     if (same(next[field], user)) continue
     if (user === undefined) unset.push(field)
     else set[field] = user
-    const prior = op.conflicts?.[field]
-    if (!same(next[field], op.base[field])) conflicts[field] = seedSide(next, field)
-    else if (prior !== undefined) conflicts[field] = prior
+    const prior = op.seedChanged?.[field]
+    if (!same(next[field], op.base[field])) flags[field] = { ...seedSide(op.base, field, 'base'), ...seedSide(next, field) }
+    else if (prior !== undefined) flags[field] = prior
   }
   if (Object.keys(set).length === 0 && unset.length === 0) return undefined
-  return { op: 'patch', base: clone(next), set, unset, ...(Object.keys(conflicts).length > 0 ? { conflicts } : {}) }
+  return { op: 'patch', base: clone(next), set, unset, ...(Object.keys(flags).length > 0 ? { seedChanged: flags } : {}) }
 }
 
 function rebaseList(op: ListOp, seedList: readonly Item[]): ListOp | undefined {
@@ -334,7 +371,7 @@ export function rebaseOverlay(overlay: AgentOverlay, seed: Readonly<Record<strin
     const seedList = seedListAt(seed, key)
     if (seedList === undefined) {
       // The seed turned this key into a non-list: keep the user's resolved list whole, as a value op.
-      values[key] = { value: resolveList([], op), conflict: seedSide(seed, key), ...(has(seed, key) ? { base: clone(seed[key]) } : {}) }
+      values[key] = { value: resolveList([], op), seedChanged: seedSide(seed, key), ...(has(seed, key) ? { base: clone(seed[key]) } : {}) }
       continue
     }
     const next = rebaseList(op, seedList)
@@ -345,24 +382,24 @@ export function rebaseOverlay(overlay: AgentOverlay, seed: Readonly<Record<strin
 
 // ── modified state and reset ─────────────────────────────────────────────────────────────────────────
 
-/** Every modified place in `overlay`, conflicts carrying both values. */
+/** Every modified place in `overlay`; a `seedChanged` place carries the base, seed and user values. */
 export function modifiedPaths(overlay: AgentOverlay): OverlayPath[] {
   const out: OverlayPath[] = []
   for (const [key, op] of Object.entries(overlay.values)) {
-    out.push(op.conflict === undefined ? { key } : { key, conflict: { ...op.conflict, ...('value' in op ? { user: op.value } : {}) } })
+    out.push(op.seedChanged === undefined ? { key } : { key, seedChanged: { ...op.seedChanged, ...('value' in op ? { user: op.value } : {}) } })
   }
   for (const [key, list] of Object.entries(overlay.lists)) {
     for (const [entryId, op] of Object.entries(list.entries)) {
       if (op.op === 'patch') {
         for (const field of [...Object.keys(op.set), ...op.unset]) {
-          const conflict = op.conflicts?.[field]
+          const flag = op.seedChanged?.[field]
           const path: OverlayPath = { key, entryId, field }
-          if (conflict !== undefined) path.conflict = { ...conflict, ...(field in op.set ? { user: op.set[field] } : {}) }
+          if (flag !== undefined) path.seedChanged = { ...flag, ...(field in op.set ? { user: op.set[field] } : {}) }
           out.push(path)
         }
       } else {
         const path: OverlayPath = { key, entryId, change: op.op }
-        if (op.conflict !== undefined) path.conflict = { ...op.conflict, ...(op.op === 'added' ? { user: op.entry } : {}) }
+        if (op.seedChanged !== undefined) path.seedChanged = { ...op.seedChanged, ...(op.op === 'added' ? { user: op.entry } : {}) }
         out.push(path)
       }
     }
@@ -391,9 +428,9 @@ export function resetPath(overlay: AgentOverlay, address: OverlayAddress): Agent
     const set = { ...op.set }
     delete set[address.field]
     const unset = op.unset.filter((f) => f !== address.field)
-    const conflicts = Object.fromEntries(Object.entries(op.conflicts ?? {}).filter(([f]) => f !== address.field))
+    const flags = Object.fromEntries(Object.entries(op.seedChanged ?? {}).filter(([f]) => f !== address.field))
     if (Object.keys(set).length === 0 && unset.length === 0) delete entries[address.entryId]
-    else entries[address.entryId] = { op: 'patch', base: op.base, set, unset, ...(Object.keys(conflicts).length > 0 ? { conflicts } : {}) }
+    else entries[address.entryId] = { op: 'patch', base: op.base, set, unset, ...(Object.keys(flags).length > 0 ? { seedChanged: flags } : {}) }
   }
   if (Object.keys(entries).length === 0 && list.order === undefined) delete lists[address.key]
   else lists[address.key] = { ...list, entries }

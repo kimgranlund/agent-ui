@@ -313,13 +313,20 @@ describe('personaInstantiated (GH #1277 — the From-catalog dedup probe)', () =
 describe('the Quizmaster seedVersion bump (T-0036): saved stores move to Haiku 5.5', () => {
   const quizmaster = () => personaFromPreset(AGENT_PRESETS.find((p) => p.id === 'quizmaster')!)
 
-  it('a pre-bump store (seedVersion 1, Haiku 4.5) migrates to claude-haiku-5-5', () => {
+  // T-0161 (ACS-R7): a bump no longer wipes. A pre-overlay store at an older version keeps its value, flagged
+  // seedChanged against the current seed: the base it was written against is gone, so a user edit and the old
+  // seed text cannot be told apart, and T-0162's "take seed" is how a user moves to the new value.
+  it('a pre-bump store (seedVersion 1, Haiku 4.5) keeps its value, flagged seedChanged against claude-haiku-5-5', () => {
     const persona = quizmaster()
     resetPersona(persona) // empties the cache so personaStore re-reads the keys below
     localStorage.setItem(`${PREFIX}.quizmaster.seedVersion`, '1')
     localStorage.setItem(`${PREFIX}.quizmaster.model`, JSON.stringify('claude-haiku-4-5'))
-    expect(personaStore(persona).get('model')).toBe('claude-haiku-5-5')
+    expect(personaStore(persona).get('model')).toBe('claude-haiku-4-5')
+    expect(personaModified(persona)).toEqual([{ key: 'model', seedChanged: { seed: 'claude-haiku-5-5', user: 'claude-haiku-4-5' } }])
+    resetPersonaField(persona, { key: 'model' })
+    expect(personaStore(persona).get('model'), 'reset takes the seed').toBe('claude-haiku-5-5')
     expect(persona.seedVersion).toBeGreaterThan(1)
+    resetPersona(persona)
   })
 
   it('a current store keeps its edits', () => {
@@ -388,7 +395,7 @@ describe('agent content overlays (T-0161)', () => {
     personaStore(probe(2, v1())).set('name', 'Mine')
     const store = reopen(probe(3, { ...v1(), name: 'Probe Deluxe' }))
     expect(store.get('name')).toBe('Mine')
-    expect(personaModified(probe(3, { ...v1(), name: 'Probe Deluxe' }))).toEqual([{ key: 'name', conflict: { seed: 'Probe Deluxe', user: 'Mine' } }])
+    expect(personaModified(probe(3, { ...v1(), name: 'Probe Deluxe' }))).toEqual([{ key: 'name', seedChanged: { base: 'Probe', seed: 'Probe Deluxe', user: 'Mine' } }])
   })
 
   it('reset one field, then the whole agent', () => {
