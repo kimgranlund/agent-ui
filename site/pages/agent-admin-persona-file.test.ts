@@ -44,6 +44,7 @@ import {
   presetSeed,
   resetPersona,
   saveImportedPersona,
+  __testEvictPersonaStore,
   type Persona,
 } from './agent-admin-presets.ts'
 // ADR-0227 wave 1 (GH #1542) — the raw library-record key lives in the roster source now (same
@@ -776,10 +777,13 @@ describe('a persona’s Surface Options / master toggles survive a reload, per p
   const CONCIERGE = personaFromPreset(SOURCE_PRESET)
   const TRAVEL = personaFromPreset(AGENT_PRESETS.find((p) => p.id === 'travel')!)
 
-  /** A FRESH store over the same persisted namespace — what a real page RELOAD builds. `personaStore`
-   *  caches one live instance per id for the page's lifetime, so a reload cannot be observed through it. */
-  const reloaded = (persona: Persona): SettingsStore =>
-    createMemoryStore({ initial: persona.seed, persistKey: `agent-admin-app.${persona.id}` })
+  /** A FRESH store over the same persisted state — what a real page RELOAD builds: `personaStore` caches
+   *  one live instance per id for the page's lifetime, so the cache is dropped first. A shipped persona
+   *  rebuilds from seed plus overlay (T-0161), an imported one from its namespace. */
+  const reloaded = (persona: Persona): SettingsStore => {
+    __testEvictPersonaStore(persona.id)
+    return personaStore(persona)
+  }
 
   const touched: Persona[] = []
   const live = (persona: Persona): SettingsStore => {
@@ -806,8 +810,9 @@ describe('a persona’s Surface Options / master toggles survive a reload, per p
     expect(state[SURFACE_A2UI_KEY]).toBe(false)
     expect(state[AGENT_ENABLED_KEY]).toBe(false)
     // …and nothing NEW joins the file: the page parks its own per-persona `seedVersion` marker inside this
-    // namespace, so the store now answers it as a key — but the file's key set is enumerated, never scanned.
-    expect(afterReload.get('seedVersion')).toBe(SOURCE_PRESET.seedVersion)
+    // namespace, which a seed-plus-overlay store never answers as a key (T-0161), and the file's key set is
+    // enumerated, never scanned.
+    expect(afterReload.get('seedVersion')).toBeUndefined()
     expect(Object.keys(state)).not.toContain('seedVersion')
     for (const key of Object.keys(state)) expect(PERSONA_STATE_KEYS).toContain(key)
   })

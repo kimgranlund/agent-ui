@@ -1,7 +1,7 @@
 // agent-roster-source.ts — ADR-0227 clause 4 (wave 1, GH #1542): `AgentRosterSource`, the persona
 // roster CRUD as `@agent-ui/data`'s FIRST real consumer surface. This module is the ONE owner of the
 // roster's persisted records — the imported-personas library, the display order, the active-agent id,
-// and the per-persona `seedVersion`/`modifiedAt` markers — all riding the `StorageAdapter` localStorage
+// the per-persona `seedVersion`/`modifiedAt` markers, and each shipped persona's edit overlay (T-0161) — all riding the `StorageAdapter` localStorage
 // tier (ADR-0193) under the SAME raw keys the retired hand-rolled `agent-admin-presets.ts` bookkeeping
 // used, so every existing user's persisted personas survive the migration byte-for-byte (the adapter's
 // `${namespace}.${key}` law reproduces `agent-admin-app.importedPersonas` etc. exactly; the one
@@ -17,8 +17,8 @@
 //
 // SAME-TICK WRITES (load-bearing, stated): `createLocalStorageAdapter`'s `set`/`delete` bodies contain
 // no `await`, so the backing `localStorage` write completes IN THE CALLING TICK — only the promise's
-// settlement is deferred. `writeSeedVersionSync`/`resetStateSync` lean on that: the persona-store
-// construction path (agent-admin-presets.ts) must sweep stale keys BEFORE `createMemoryStore` hydrates
+// settlement is deferred. `writeSeedVersionSync`/`resetStateSync`/`dropLegacyStateSync` lean on that: the
+// persona-store construction path (agent-admin-presets.ts) must sweep stale keys BEFORE a store hydrates
 // synchronously. A future async tier swap must re-derive this sequencing.
 //
 // Generic on P (never a concrete site type): the shipped personas — page-local data by TKT-0074's own
@@ -27,6 +27,7 @@
 
 import type { DataSource, SourceContext, Streamed } from '@agent-ui/data'
 import { createLocalStorageAdapter, type SyncReadableStorageAdapter } from '@agent-ui/shared'
+import { parseOverlay, type AgentOverlay } from './agent-overlay.ts'
 
 /** The roster's persisted namespace — the SAME prefix the pre-ADR-0227 hand-rolled keys used. */
 export const PERSONA_ROSTER_NAMESPACE = 'agent-admin-app'
@@ -38,6 +39,11 @@ const ORDER_KEY = 'rosterOrder'
 // `ACTIVE_PRESET_KEY` to zero references outside this module — consumers read/write through
 // `activeIdSync`/`writeActiveIdSync` (or the page's mutation) instead of touching the key.
 const ACTIVE_KEY = 'activePreset'
+// The per-persona records that are bookkeeping, not store state: the markers and the T-0161 overlay.
+const SEED_VERSION = 'seedVersion'
+const MODIFIED_AT = 'modifiedAt'
+const OVERLAY = 'overlay'
+const BOOKKEEPING = new Set([SEED_VERSION, MODIFIED_AT, OVERLAY])
 
 /** The two roster-record raw keys, exported for test seeding/cleanup (full localStorage key names —
  *  byte-identical to the retired `agent-admin-presets.ts` constants). */
@@ -138,6 +144,16 @@ export interface AgentRosterSource<P extends AgentRecord> extends DataSource<P, 
   writeSeedVersionSync(id: string, version: number): void
   modifiedAtSync(id: string): number | undefined
   bumpModifiedAtSync(id: string): void
+
+  // ── T-0161: a shipped persona's edits as an overlay over its seed (`agent-overlay.ts`) ──
+  /** The persisted overlay under `${id}.overlay`, fail-closed (a foreign value reads as none). */
+  overlaySync(id: string): AgentOverlay | undefined
+  writeOverlaySync(id: string, overlay: AgentOverlay): void
+  /** Today's pre-overlay shape: every store key persisted as a full copy under `${id}.<key>` (the
+   *  markers and the overlay excluded), for the one-time migration. */
+  legacyStateSync(id: string): Record<string, unknown>
+  /** Drop those full copies once the overlay holds their diff. */
+  dropLegacyStateSync(id: string): void
   /** Drop every persisted key under `${id}.` — the persona's own store state + markers, NEVER the
    *  roster records (the trailing dot keeps `travel` and `travel-imported` from crossing). */
   resetStateSync(id: string): void
@@ -228,21 +244,47 @@ export function createAgentRosterSource<P extends AgentRecord>(
   }
 
   const seedVersionSync = (id: string): number | undefined => {
-    const value = adapter.getSync(`${id}.seedVersion`)
+    const value = adapter.getSync(`${id}.${SEED_VERSION}`)
     return typeof value === 'number' && Number.isFinite(value) ? value : undefined
   }
 
   const writeSeedVersionSync = (id: string, version: number): void => {
-    void adapter.set(`${id}.seedVersion`, version)
+    void adapter.set(`${id}.${SEED_VERSION}`, version)
   }
 
   const modifiedAtSync = (id: string): number | undefined => {
-    const value = adapter.getSync(`${id}.modifiedAt`)
+    const value = adapter.getSync(`${id}.${MODIFIED_AT}`)
     return typeof value === 'number' && Number.isFinite(value) ? value : undefined
   }
 
   const bumpModifiedAtSync = (id: string): void => {
-    void adapter.set(`${id}.modifiedAt`, Date.now())
+    void adapter.set(`${id}.${MODIFIED_AT}`, Date.now())
+  }
+
+  const overlaySync = (id: string): AgentOverlay | undefined => parseOverlay(adapter.getSync(`${id}.${OVERLAY}`))
+
+  const writeOverlaySync = (id: string, overlay: AgentOverlay): void => {
+    void adapter.set(`${id}.${OVERLAY}`, overlay)
+  }
+
+  /** The adapter-relative keys of `id`'s pre-overlay store copies (the trailing dot keeps `travel` and
+   *  `travel-imported` apart). */
+  const legacyKeys = (id: string): string[] => {
+    const prefix = `${id}.`
+    return adapter.keysSync().filter((key) => key.startsWith(prefix) && !BOOKKEEPING.has(key.slice(prefix.length)))
+  }
+
+  const legacyStateSync = (id: string): Record<string, unknown> => {
+    const out: Record<string, unknown> = {}
+    for (const key of legacyKeys(id)) {
+      const value = adapter.getSync(key)
+      if (value !== undefined) out[key.slice(id.length + 1)] = value
+    }
+    return out
+  }
+
+  const dropLegacyStateSync = (id: string): void => {
+    for (const key of legacyKeys(id)) void adapter.delete(key)
   }
 
   const resetStateSync = (id: string): void => {
@@ -374,6 +416,10 @@ export function createAgentRosterSource<P extends AgentRecord>(
     writeSeedVersionSync,
     modifiedAtSync,
     bumpModifiedAtSync,
+    overlaySync,
+    writeOverlaySync,
+    legacyStateSync,
+    dropLegacyStateSync,
     resetStateSync,
   }
 }

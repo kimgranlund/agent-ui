@@ -1059,14 +1059,13 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
     expect(facility?.content).not.toMatch(/ONE ServiceCard per facility/)
     expect(localStorage.getItem('agent-admin-app.concierge.seedVersion')).toBe('17')
 
-    // Same-version edits SURVIVE a rebuild (persisted-wins is untouched at the current version).
+    // Same-version edits SURVIVE a rebuild: T-0161 keeps them as an overlay over the seed, so a reload
+    // (a cold store cache) reads them back.
     migrated.set('entries:skill', [...skills.map((s) => s), { id: 'my-edit', kind: 'skill', label: 'my-edit', description: '', content: 'mine', order: 99, enabled: true, builtin: false }])
-    const { presetStore: freshImport } = await import('./agent-admin-presets.ts')
-    // the module cache holds the store cache — drop it via resetPreset-free rebuild: new store instance
-    // requires a cold cache; assert through localStorage instead (the persistence layer both read paths share).
-    const persisted = JSON.parse(localStorage.getItem('agent-admin-app.concierge.entries:skill') ?? '[]') as Array<{ id: string }>
-    expect(persisted.some((s) => s.id === 'my-edit'), 'a current-version edit persists — no migration fired').toBe(true)
-    void freshImport
+    const { __testEvictPersonaStore } = await import('./agent-admin-presets.ts')
+    __testEvictPersonaStore(concierge.id)
+    const rebuilt = presetStore(concierge).get('entries:skill') as Array<{ id: string }>
+    expect(rebuilt.some((s) => s.id === 'my-edit'), 'a current-version edit persists — no migration fired').toBe(true)
     resetPreset(concierge) // leave no residue for sibling tests
   })
 })

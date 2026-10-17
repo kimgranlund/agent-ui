@@ -43,6 +43,16 @@ import {
   type AgentRecord,
   type AgentRosterSource,
 } from '@agent-ui/app/agent-admin-roster-source'
+// T-0161: a shipped persona's edits are an overlay (a diff over its seed) merged on a seed update.
+import {
+  createOverlayStore,
+  diffOverlay,
+  emptyOverlay,
+  rebaseOverlay,
+  type OverlayAddress,
+  type OverlayPath,
+  type OverlayStore,
+} from '@agent-ui/app/agent-admin-overlay'
 import { ENTRY_KINDS, DEFAULT_PROMPT_SECTIONS } from '@agent-ui/app/agent-admin-entries'
 import { entriesStoreKey } from '@agent-ui/app/entry-data'
 import type { Entry } from '@agent-ui/app/entry-data'
@@ -111,11 +121,11 @@ export interface AgentPreset {
   tools: readonly SeedEntry[]
   /** Builtin prompt-section ids to seed DISABLED (coverage: disabled-but-never-removed, ADR-0132 Fork 4). */
   disabledBuiltins?: readonly string[]
-  /** Bump when a preset's SEED is rewritten in place (GH #46's Concierge upgrade): a browser holding an
-   *  older persisted store for this id gets a one-time reset-to-new-seed (see `presetStore`). Absent = 1.
-   *  Authored as the `version` of its `agent.md` (T-0160, with the reason on its `changelog` list) and
-   *  pinned in this agent's `site/lib/agent-manifest/<id>.manifest.json`; a bump is a human edit there too.
-   *  User edits on the CURRENT version always survive — only a version bump migrates. */
+  /** The seed version: the `version` of its `agent.md` (T-0160, with the reason on its `changelog` list),
+   *  pinned in this agent's `site/lib/agent-manifest/<id>.manifest.json`. Absent = 1. A user's edits are an
+   *  overlay keyed `id@version` (T-0161, `personaStore`): a bump merges them onto the new seed per field,
+   *  never wipes them. Only a store persisted in the pre-overlay shape at an OLDER version is dropped once,
+   *  because the seed it was written against no longer exists to diff with. */
   seedVersion?: number
   /** GH #497 — this persona's `SHIPPED_PERSONA_CATALOGS` `personaId` (`concierge`/`croupier`), seeded as
    *  its `A2UI_LOCAL_PATTERNS_KEY` selection. Absent (every OTHER preset) ⇒ no local set seeded — the
@@ -355,31 +365,77 @@ export function personaInstantiated(id: string): boolean {
   return storeCache.has(id) || rosterSource.seedVersionSync(id) !== undefined
 }
 
-/** The persona's store — cached per id so switching away and back keeps one live instance; persisted
- *  values (this persona's OWN prior edits) win over the seed, memory-store.ts's parity law.
- *
- *  The seedVersion marker (GH #46 / PR #60 review): persisted-wins-over-seed is correct for USER edits,
- *  but it makes an in-place PRESET UPGRADE invisible to a browser holding the old persisted store — a
- *  bumped `seedVersion` performs an explicit one-time migration (drop the stale store, apply the new
- *  seed), the user's own "Reset persona" semantic triggered by the upgrade. The marker sits INSIDE the
- *  persona's namespace so the reset sweep drops and rewrites it; the sweep-before-reseed ordering here
- *  leans on the storage tier's same-tick writes (agent-roster-source.ts's own stated law). */
+/** A shipped persona's store over its seed plus its persisted overlay (T-0161). Three starting states:
+ *  - an overlay exists: merge it onto the current seed (`rebaseOverlay`, a no-op when the seed is the
+ *    same), so a seed bump keeps every user edit and flags a field both sides changed;
+ *  - today's pre-overlay shape (full per-key copies) at the CURRENT version: diff the copies against the
+ *    seed into an overlay, then drop the copies (the one-time migration);
+ *  - those copies at an OLDER version: drop them, as the pre-overlay bump did. The seed they were written
+ *    against is not in the registry, so a user edit cannot be told from the old seed text there.
+ *  The sweep-before-hydrate ordering leans on the storage tier's same-tick writes (agent-roster-source.ts's
+ *  own stated law). */
+function overlayStoreFor(persona: Persona): OverlayStore {
+  const { id, seed } = persona
+  const wanted = persona.seedVersion ?? 1
+  let overlay = rosterSource.overlaySync(id)
+  if (overlay !== undefined) {
+    const merged = rebaseOverlay(overlay, seed, id, wanted)
+    if (merged !== overlay) rosterSource.writeOverlaySync(id, merged)
+    overlay = merged
+  } else {
+    const legacy = rosterSource.legacyStateSync(id)
+    const persisted = rosterSource.seedVersionSync(id) ?? 1
+    overlay = persisted < wanted ? emptyOverlay(id, wanted, seed) : diffOverlay(id, wanted, seed, legacy)
+    if (Object.keys(legacy).length > 0) {
+      rosterSource.dropLegacyStateSync(id)
+      rosterSource.writeOverlaySync(id, overlay)
+    }
+  }
+  rosterSource.writeSeedVersionSync(id, wanted)
+  return createOverlayStore({ seed, overlay, persist: (next) => rosterSource.writeOverlaySync(id, next) })
+}
+
+/** The persona's store, cached per id so switching away and back keeps one live instance. A shipped
+ *  persona reads seed plus overlay (`overlayStoreFor`); an imported or duplicated one is a full record
+ *  (its seed IS the user's), so its own persisted keys win over that seed, memory-store.ts's parity law. */
 export function personaStore(persona: Persona): SettingsStore {
   let store = storeCache.get(persona.id)
   if (!store) {
-    const wanted = persona.seedVersion ?? 1
-    const persisted = rosterSource.seedVersionSync(persona.id) ?? 1
-    if (persisted < wanted) resetPersona(persona) // the one-time migration — drops the stale persisted store
-    rosterSource.writeSeedVersionSync(persona.id, wanted)
-    store = createMemoryStore({ initial: persona.seed, persistKey: persistKeyFor(persona.id) })
+    if (persona.imported === true) {
+      rosterSource.writeSeedVersionSync(persona.id, persona.seedVersion ?? 1)
+      store = createMemoryStore({ initial: persona.seed, persistKey: persistKeyFor(persona.id) })
+    } else store = overlayStoreFor(persona)
     // GH #921 — bump the modified-at marker on every REAL write (never on construction itself — a fresh
-    // store's seed read is not an edit). `subscribe` is optional on `SettingsStore`; `createMemoryStore`
-    // always implements it, but the guard keeps this inert against a hypothetical future store shape that
-    // doesn't.
+    // store's seed read is not an edit). `subscribe` is optional on `SettingsStore`; both store kinds
+    // implement it, but the guard keeps this inert against a hypothetical future store shape that doesn't.
     store.subscribe?.(() => rosterSource.bumpModifiedAtSync(persona.id))
     storeCache.set(persona.id, store)
   }
   return store
+}
+
+/** The overlay store of a shipped persona, or `undefined` for an imported one (no overlay). */
+function overlayStore(persona: Persona): OverlayStore | undefined {
+  if (persona.imported === true) return undefined
+  return personaStore(persona) as OverlayStore
+}
+
+/** Every place a user changed on a shipped persona, conflicts with both values (the per-field
+ *  "modified" state, T-0161 for T-0162). Empty for an imported persona: it has no seed to differ from. */
+export function personaModified(persona: Persona): OverlayPath[] {
+  return overlayStore(persona)?.modified() ?? []
+}
+
+/** Return one place (a key, an entry, or one entry field) of a shipped persona to its seed. The whole
+ *  agent's reset stays `resetPersona`. */
+export function resetPersonaField(persona: Persona, address: OverlayAddress): void {
+  overlayStore(persona)?.reset(address)
+}
+
+/** Test seam: drop the cached store without touching storage, so the next `personaStore` reads storage
+ *  again as a reload would. */
+export function __testEvictPersonaStore(id: string): void {
+  storeCache.delete(id)
 }
 
 /** Reset a persona to its seed: drop every persisted key under its namespace (including keys the
@@ -575,6 +631,8 @@ export function builderPersona(): Persona {
  *  construction and there is no overwrite step to lose a race with. Absent ⇒ the Builder preset's own
  *  Sonnet-class id stands (LLD §15: interview quality is the product). */
 export function builderStore(model?: string): SettingsStore {
-  const seed = builderPersona().seed
-  return createMemoryStore({ initial: model === undefined ? seed : { ...seed, model } })
+  const base = builderPersona().seed
+  const seed = model === undefined ? base : { ...base, model }
+  // The same seed-plus-overlay read every persona store has (T-0161), with nothing persisted.
+  return createOverlayStore({ seed, overlay: emptyOverlay('builder', 1, seed) })
 }
