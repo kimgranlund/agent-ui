@@ -57,13 +57,14 @@ describe('UIBadgeElement — upgrade + typed props', () => {
 })
 
 describe('UIBadgeElement — DOM shape (LLD-C7)', () => {
-  it('connect builds exactly a glyph span + a label span, once', () => {
+  it('connect builds exactly a glyph (a ui-glyph) + a label span, once', () => {
     const el = make()
     document.body.append(el)
     expect(el.children.length).toBe(2)
     const glyph = el.children[0] as HTMLElement
     const label = el.children[1] as HTMLElement
     expect(glyph.dataset.part).toBe('glyph')
+    expect(glyph.localName).toBe('ui-glyph')
     expect(glyph.getAttribute('aria-hidden')).toBe('true')
     expect(label.dataset.part).toBe('label')
     el.remove()

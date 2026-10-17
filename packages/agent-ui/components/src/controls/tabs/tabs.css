@@ -44,6 +44,7 @@
 /* ════════════════════════ [1] TOKEN BLOCK — :where() declarations (the --md-sys-color-* + ramp entry) ════════════════════════ */
 
 /* uses: synced from tabs.md by scripts/codemod-uses.mjs */
+@import '../glyph/glyph.css';
 @import '../menu/menu.css';
 
 :where(ui-tabs) {
@@ -78,7 +79,6 @@
   --ui-tabs-ink-hover: var(--md-sys-color-neutral-on-surface); /* hover */
   --ui-tabs-trigger-bg: transparent; /* the overflow trigger is ghost at rest (T-0306, Kim; full ink keeps the dots legible, T-0149) */
   --ui-tabs-trigger-bg-hover: var(--md-sys-color-neutral-container-low); /* the overflow trigger's hover and press wash */
-  --ui-tabs-trigger-icon: var(--md-sys-icon-box, 1em); /* the overflow trigger's glyph on the 2n icon box */
   --ui-tabs-ink-selected: var(--md-sys-color-neutral-on-surface); /* the active tab label */
   --ui-tabs-indicator: var(--md-sys-color-primary); /* the active-tab underline */
 }
@@ -322,8 +322,8 @@
      ink ladder + focus ring. An icon-only control is a round square (Kim's ruling; radius h/2, the icon-only
      ui-button shape), ghost at rest with full ink (T-0306 reverses T-0149's resting fill; the full ink, not a
      fill, keeps the dots from reading as stray punctuation) and the low container wash on hover and press
-     (T-0141, T-0306). `setIcon`
-     (tabs.ts) injects a fresh <svg fill="currentColor"> that inherits `color` here, on the 2n icon box. */
+     (T-0141, T-0306). The mark is a `<ui-glyph symbol="more">` child (tabs.ts, T-0351) that inherits `color`
+     here and sizes itself to its glyph box in the 2n slot, so no size rule lives here. */
   :scope[overflow='menu'] > [data-part='overflow'] > [data-part='trigger'] {
     grid-area: trigger;
     position: relative;
@@ -341,10 +341,6 @@
     font-size: var(--ui-tabs-tab-font);
     color: var(--ui-tabs-ink-hover);
     cursor: pointer;
-  }
-  :scope[overflow='menu'] > [data-part='overflow'] > [data-part='trigger'] svg {
-    inline-size: var(--ui-tabs-trigger-icon);
-    block-size: var(--ui-tabs-trigger-icon);
   }
   :scope[overflow='menu'] > [data-part='overflow'] > [data-part='trigger']:hover,
   :scope[overflow='menu'] > [data-part='overflow'] > [data-part='trigger']:active {

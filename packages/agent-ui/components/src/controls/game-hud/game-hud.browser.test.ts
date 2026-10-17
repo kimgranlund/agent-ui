@@ -171,7 +171,8 @@ describe('ui-game-hud: intent glyphs', () => {
     expect(badge.getAttribute('intent')).toBe('warning')
     const glyph = badge.querySelector('[data-part="glyph"]') as HTMLElement
     expect(getComputedStyle(glyph).display).not.toBe('none')
-    expect(getComputedStyle(glyph).clipPath).toMatch(/polygon/)
+    expect(glyph.getAttribute('symbol'), 'the badge mark is the ui-glyph warning mark (T-0351)').toBe('warning')
+    expect(glyph.querySelector('svg path')?.getAttribute('d')).toBeTruthy()
     expect(glyph.getBoundingClientRect().width).toBeGreaterThan(0)
   })
 })

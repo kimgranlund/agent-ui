@@ -20,7 +20,7 @@
 // `.claude/docs/lld/tabs-vertical-overflow.lld.md` §3 for the frozen ruling.
 //
 // GH #586 — `overflow` (default `'scroll'`) collects the tabs that don't fit behind a tab-height 3-dot
-// (`dots-three`) icon-button trigger that opens a composed `ui-menu` of PROXY items (never a reparented
+// (the `more` ui-glyph) icon-button trigger that opens a composed `ui-menu` of PROXY items (never a reparented
 // `ui-tab` — role=tab must stay inside role=tablist). The visible set is a PURE FUNCTION of the cached
 // full-set tab sizes, the observed strip main-size, and the pinned selected identity — never of the
 // currently-rendered subset (hiding a tab must never feed the observer, the hysteresis ruling). The selected
@@ -40,10 +40,10 @@
 import { UIContainerElement } from '../../dom/container.ts'
 import { prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import { rovingFocus } from '../../traits/roving-focus.ts'
-import { setIcon } from '@agent-ui/icons'
 import { UITabElement } from './tab.ts'
 import { UITabPanelElement } from './tab-panel.ts'
 import { UIMenuElement } from '../menu/menu.ts' // sanctioned sibling-control import — self-defines ui-menu
+import '../glyph/glyph.ts' // registers <ui-glyph>: the overflow trigger's `more` mark (ADR-0245 cl.5, T-0351)
 
 // GH #221 — TYPE-only re-exports of the sub-elements: a composing consumer (ui-super-shell's panel-less
 // strips) needs the PUBLIC coordination API's type (`link`, `key`) to drive tabs it creates itself.
@@ -86,7 +86,7 @@ const props = {
   // tabs.css + connected() below). Default `'horizontal'` keeps every existing consumer byte-identical
   // (negative controls in tabs.test.ts / tabs.browser.test.ts).
   orientation: { ...prop.enum(ORIENTATIONS, 'horizontal'), reflect: true },
-  // `overflow` — GH #586: 'menu' collects the tabs that don't fit behind a dots-three trigger opening a
+  // `overflow`, GH #586: 'menu' collects the tabs that don't fit behind a `more` trigger opening a
   // composed `ui-menu` of proxy items (§4/§5 below). Default `'scroll'` is today's `overflow-x/y auto`,
   // byte-identical (negative controls in tabs.test.ts / tabs.browser.test.ts).
   overflow: { ...prop.enum(OVERFLOWS, 'scroll'), reflect: true },
@@ -311,8 +311,8 @@ export class UITabsElement extends UIContainerElement {
   /**
    * Create the `[data-part=overflow]` part ONCE (idempotent across reconnect — persists like `#tablist`):
    * a composed `<ui-menu>` wrapping a square `<button aria-label="More tabs">` icon trigger (LLD §4 "trigger
-   * anatomy" — `setIcon` from `@agent-ui/icons`, the swiper-paddles.ts precedent for a literal English label
-   * on a control-created icon button). Built fully OFFLINE then appended in one shot, so `ui-menu`'s own
+   * anatomy"; its mark is a `<ui-glyph symbol="more">` child, the library mark (ADR-0245 cl.5, T-0351); the
+   * swiper-paddles.ts precedent for a literal English label on a control-created icon button). Built fully OFFLINE then appended in one shot, so `ui-menu`'s own
    * `connected()` sees its trigger as `firstElementChild` already in place (menu.ts `#ensureParts`).
    * Appended AFTER the strip as a shell child — never inside the tablist (a non-tab tablist child is an ARIA
    * required-owned-children violation).
@@ -330,7 +330,9 @@ export class UITabsElement extends UIContainerElement {
       const trigger = document.createElement('button')
       trigger.type = 'button'
       trigger.setAttribute('aria-label', 'More tabs') // literal English label — control-created, sanctioned
-      setIcon(trigger, 'dots-three') // GH #168 — the fleet's one horizontal overflow glyph
+      const mark = document.createElement('ui-glyph') // GH #168: the fleet's one horizontal overflow mark
+      mark.setAttribute('symbol', 'more')
+      trigger.append(mark)
       menu.append(trigger)
       this.#overflowMenu = menu
     }

@@ -414,7 +414,7 @@ describe('ui-tabs — `overflow` reflected enum (GH #586, jsdom part of LLD-C11)
     expect(trigger, 'the trigger part is missing (menu.ts auto-stamps data-part=trigger on the first child)').not.toBeNull()
     expect(trigger.tagName.toLowerCase()).toBe('button')
     expect(trigger.getAttribute('aria-label')).toBe('More tabs')
-    expect(trigger.querySelector('svg'), 'setIcon must have injected an <svg> (dots-three)').not.toBeNull()
+    expect(trigger.querySelector('ui-glyph')?.getAttribute('symbol'), 'the trigger carries the `more` ui-glyph mark (T-0351)').toBe('more')
   })
 
   it('a strip that is NOT inside role=tablist: the trigger never becomes a tablist child (ARIA required-owned-children)', () => {

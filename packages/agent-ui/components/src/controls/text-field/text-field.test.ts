@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { signal, effect, inspect, whenFlushed, type Signal } from '@agent-ui/components'
 import { UITextFieldElement } from './text-field.ts'
 import { currencySymbol, unitLabel } from '../../traits/value-codec.ts'
-import { phosphorPack } from '@agent-ui/icons/phosphor'
+import { GLYPH_MARKS } from '../glyph/glyph-paths.ts'
 import type { FormValue, ValidityResult } from '../../dom/form.ts'
 import { readFileSync } from 'node:fs'
 
@@ -922,14 +922,14 @@ describe('ui-text-field type=number — inputmode + steppers + codec + validatio
     const down = el.querySelector('[data-part="step-down"]') as HTMLElement
     const up = el.querySelector('[data-part="step-up"]') as HTMLElement
     expect(down.nextElementSibling, 'step-down must immediately precede step-up (− left of +)').toBe(up)
-    // Glyphs are minus/plus (not the retired caret-up/caret-down stack): both svgs exist and DIFFER.
+    // Marks are minus/plus (not the retired caret-up/caret-down stack): both ui-glyph svgs exist and DIFFER.
     const downPath = down.querySelector('svg path')?.getAttribute('d')
     const upPath = up.querySelector('svg path')?.getAttribute('d')
     expect(downPath, 'step-down must carry an injected glyph').toBeTruthy()
     expect(upPath, 'step-up must carry an injected glyph').toBeTruthy()
-    // Pin the exact pack bodies: step-down = Phosphor `minus`, step-up = Phosphor `plus`.
-    expect(phosphorPack.icons.minus).toContain(`d="${downPath as string}"`)
-    expect(phosphorPack.icons.plus).toContain(`d="${upPath as string}"`)
+    // Pin the exact library marks (T-0351, ADR-0245 cl.5): step-down = glyph `minus`, step-up = glyph `plus`.
+    expect(downPath).toBe(GLYPH_MARKS.minus.d)
+    expect(upPath).toBe(GLYPH_MARKS.plus.d)
     expect(downPath).not.toBe(upPath)
     el.remove()
   })

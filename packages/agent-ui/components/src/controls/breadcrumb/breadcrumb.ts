@@ -28,8 +28,8 @@
 // intake). The FIRST crumb is always pinned; the LAST `collapseKeepTrailing` crumbs are pinned (inclusive of
 // the auto-stamped current/last crumb); the non-empty MIDDLE range folds: each folded crumb is stamped
 // `data-collapsed` (breadcrumb.css: `display:none`, stays in the DOM — never removed, so the relay below can
-// still reach it), and a composed `<ui-menu data-part="overflow">` (a `dots-three` trigger, GH #168's one
-// horizontal overflow glyph) is inserted in its place — "the first gap": right after the separator that used
+// still reach it), and a composed `<ui-menu data-part="overflow">` (a `more` ui-glyph trigger, GH #168's one
+// horizontal overflow mark) is inserted in its place; "the first gap": right after the separator that used
 // to precede the first folded crumb (that ONE separator stays visible, becoming the gap the menu itself
 // occupies; every separator BETWEEN two folded crumbs is also stamped `data-collapsed`, so no stray glyph
 // renders beside an invisible crumb). Selecting a proxy `[role=menuitem]` row RELAYS to the real hidden
@@ -65,8 +65,8 @@
 // OWN roving/overlay machinery, scoped to its own panel.
 
 import { UIElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
-import { setIcon } from '@agent-ui/icons'
 import { UIMenuElement } from '../menu/menu.ts' // sanctioned sibling-control import — self-defines ui-menu
+import '../glyph/glyph.ts' // registers <ui-glyph>: the overflow trigger's `more` mark (ADR-0245 cl.5, T-0351)
 
 const COLLAPSE_VALUES = ['none', 'menu'] as const
 
@@ -281,7 +281,7 @@ export class UIBreadcrumbElement extends UIElement {
 
   /**
    * Build a fresh composed `<ui-menu data-part="overflow">` (GH #586 tabs precedent, minus fit-measurement):
-   * a control-created `<button aria-label="Show hidden breadcrumbs">` trigger with the `dots-three` glyph
+   * a control-created `<button aria-label="Show hidden breadcrumbs">` trigger with the `more` ui-glyph mark
    * (GH #168, the fleet's one horizontal overflow icon) as the menu's first child, plus one proxy
    * `[role=menuitem]` row per folded crumb — built fully OFFLINE (so `ui-menu`'s own `connected()` sees its
    * trigger as `firstElementChild` already in place, `menu.ts` `#ensureParts`) and returned; the CALLER
@@ -297,7 +297,9 @@ export class UIBreadcrumbElement extends UIElement {
     const trigger = document.createElement('button')
     trigger.type = 'button'
     trigger.setAttribute('aria-label', 'Show hidden breadcrumbs') // literal English label — control-created, the tabs "More tabs" sanction
-    setIcon(trigger, 'dots-three')
+    const mark = document.createElement('ui-glyph')
+    mark.setAttribute('symbol', 'more')
+    trigger.append(mark)
     menu.append(trigger)
 
     for (const [i, crumb] of folded.entries()) {

@@ -11,12 +11,11 @@
  *   [2] STYLES BLOCK — `@scope (ui-badge)` consumes ONLY --ui-badge-*. The host is an inline-flex pill:
  *       fixed square block-size (the compact-realm box), the compact pad law `2px + box·ratio·density`
  *       (never `h/2` — geometry.md's compact-realm exception), radius = box/2 (the realm's "count pill"
- *       case). The glyph is a real, constant `[data-part=glyph]` node; its SHAPE differs per `[intent]`
- *       via `clip-path` (the checkbox tick precedent, ADR-0057's non-color signifier — shape is the
- *       meaning channel, colour is the redundant one) — `neutral` shows no glyph at all (absence IS its
- *       signifier). Forced-colors maps the host to Canvas/CanvasText and the glyph to CanvasText so both
- *       survive WHCM (the bar-chart fill lesson: a background-drawn clip-path glyph is otherwise flattened
- *       to `Canvas` and vanishes).
+ *       case). The glyph is a real, constant `[data-part=glyph]` `<ui-glyph>` whose library mark follows
+ *       `[intent]` (T-0351, ADR-0245 cl.5; ADR-0057's non-color signifier: shape is the meaning channel,
+ *       colour the redundant one). `neutral` shows no glyph at all (absence IS its signifier).
+ *       Forced-colors maps the host to Canvas/CanvasText; the mark strokes in `currentColor`, so it
+ *       follows the host's CanvasText and survives WHCM.
  *
  * No interaction states at all (SPEC-R11 — non-interactive, no focus/hover/active, no post-connect motion
  * gate: there is nothing to transition). Standalone stylesheet — linked via the host page / component-
@@ -24,6 +23,9 @@
  */
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-badge) declares --ui-badge-* ════════════════ */
+
+/* uses: synced from badge.md by scripts/codemod-uses.mjs */
+@import '../glyph/glyph.css';
 
 :where(ui-badge) {
   /* Compact-realm widget-box (ADR-0041; SPEC-R13) — fixed regardless of content/label length; [scale] on
@@ -51,8 +53,8 @@
   /* Rhythm: the mark to label gap. Derived: the chip gutter c, plus the label margin c on the label part. */
   --ui-badge-gap: var(--md-sys-chip-gutter, var(--md-sys-gap-sm)); /* the chip gutter c (Amendment 4) */
 
-  /* The glyph fills half the box — a content-mark, not an inline affordance (anatomy.md's frame family).
-     Derived: the glyph box 2n - 2c (ADR-0245 cl.4). */
+  /* The mark box: the ui-glyph part's svg fills it (a content-mark, not an inline affordance).
+     Derived: the glyph box 2n - 2c (ADR-0245 cl.4); half the box under the legacy opt-out. */
   --ui-badge-glyph: var(--md-sys-glyph-box, calc(var(--ui-badge-box) * 0.5));
 
   /* Colour channel — neutral default (the "tag" reading of the one component, ADR-0111 fork F3). */
@@ -138,64 +140,36 @@ ui-badge:not([data-size]) {
   :scope [data-part='label'] {
     padding-inline: var(--ui-badge-label-inset); /* the chip's label margin c: text edge 2c */
   }
+  /* The part is a ui-glyph whose box IS the glyph box (the svg fills it, no inset of its own); its inline
+     margin c centres it in the 2n mark box at the chip margin. This rule outranks glyph.css's own `:scope`
+     slot sizing (the select caret precedent, select.css). */
   :scope [data-part='glyph'] {
     display: none;
     flex: none;
-    margin-inline: var(--ui-badge-glyph-inset); /* centers the glyph in its 2n mark box, which sits at the chip margin */
-    background-color: currentColor;
+    padding: 0;
+    margin-inline: var(--ui-badge-glyph-inset);
     inline-size: var(--ui-badge-glyph);
     block-size: var(--ui-badge-glyph);
   }
 
-  /* Per-intent glyph SHAPES — pairwise-distinct clip-paths (SPEC-R12 AC1/AC2; the checkbox tick
-     precedent). Shape is the meaning channel; the [intent] colour repoints above are the REDUNDANT hue
-     channel (ADR-0057) — removing colour (e.g. grayscale) must never collapse two intents together.
-     `neutral` (and any unrecognized [intent]) inherits the base rule's `display: none` — absence IS
-     neutral's signifier, and it is also the safe fallback for anything not in this closed set. */
-  :scope[intent='success'] [data-part='glyph'] {
-    /* tick — the checkbox ✓ clip-path polygon, reused verbatim as the shared fleet "affirmative" mark */
-    display: inline-block;
-    clip-path: polygon(14% 44%, 0% 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
-  }
-  :scope[intent='danger'] [data-part='glyph'] {
-    /* cross — an X polygon, distinct from the tick and the triangle at every corner */
-    display: inline-block;
-    clip-path: polygon(
-      20% 8%,
-      8% 20%,
-      38% 50%,
-      8% 80%,
-      20% 92%,
-      50% 62%,
-      80% 92%,
-      92% 80%,
-      62% 50%,
-      92% 20%,
-      80% 8%,
-      50% 38%
-    );
-  }
-  :scope[intent='warning'] [data-part='glyph'] {
-    display: inline-block;
-    clip-path: polygon(50% 0, 100% 100%, 0 100%); /* triangle */
-  }
-  :scope[intent='info'] [data-part='glyph'] {
-    display: inline-block;
-    clip-path: circle(50%); /* disc */
+  /* Per-intent visibility. The pairwise-distinct SHAPES are the ui-glyph marks badge.ts picks per intent
+     (check, x, warning, info; SPEC-R12 AC1/AC2). Shape is the meaning channel; the [intent] colour repoints
+     above are the REDUNDANT hue channel (ADR-0057), so removing colour never collapses two intents together.
+     `neutral` (and any unrecognized [intent]) keeps the base rule's `display: none`: absence IS neutral's
+     signifier, and the safe fallback for anything outside the closed set. */
+  :scope:is([intent='success'], [intent='danger'], [intent='warning'], [intent='info']) [data-part='glyph'] {
+    display: inline-flex;
   }
 
-  /* Forced-colors (SPEC-R15) — the badge keeps its boxed identity via a system-ink border, and the glyph
-     paints in CanvasText: a background-drawn clip-path glyph is otherwise forced to `Canvas` and vanishes
-     (the bar-chart fill lesson). forced-color-adjust:none preserves these explicit system-colour mappings. */
+  /* Forced-colors (SPEC-R15): the badge keeps its boxed identity via a system-ink border, and the mark
+     strokes in currentColor, so it paints the host's CanvasText. forced-color-adjust:none preserves these
+     explicit system-colour mappings. */
   @media (forced-colors: active) {
     :scope {
       background-color: Canvas;
       color: CanvasText;
       border-color: CanvasText;
       forced-color-adjust: none;
-    }
-    :scope [data-part='glyph'] {
-      background-color: CanvasText;
     }
   }
 }

@@ -24,3 +24,17 @@ GH #1941 (closed into this ticket). Kim's ruling 2026-10-17: ui-glyph children, 
 
 ## Constraints
 The foundations census gate (`node scripts/foundations-census.mjs --gate`) stays green; no px geometry literals; light DOM, ARIA via ElementInternals.
+
+## Acceptance criteria
+verifier: L3
+
+Scope note: the select caret (T-0148) and the calendar carets (T-0149) were already `ui-glyph` children at the base; the remaining setIcon calls in text-field (`magnifying-glass`, `eye`, `eye-slash`, `calendar-blank`) are pictorial icons that ADR-0245 cl.5 keeps on the pack, not marks.
+
+- `! grep -n clip-path packages/agent-ui/components/src/controls/badge/badge.css`
+- `! git grep -nE "setIcon\([^)]*'(x|minus|plus|check|more|dots-three|caret-[a-z]+)'" -- packages/agent-ui/components/src/controls/badge packages/agent-ui/components/src/controls/select packages/agent-ui/components/src/controls/text-field packages/agent-ui/components/src/controls/calendar packages/agent-ui/components/src/controls/tabs packages/agent-ui/components/src/controls/breadcrumb`
+- `npm run check`
+- `npx vitest run packages/agent-ui/components/src/controls/badge packages/agent-ui/components/src/controls/tabs packages/agent-ui/components/src/controls/breadcrumb packages/agent-ui/components/src/controls/text-field packages/agent-ui/components/src/controls/glyph packages/agent-ui/components/src/controls/game-hud packages/agent-ui/components/src/controls/sandbox-frame packages/agent-ui/components/src/controls/tree-shake.test.ts`
+- `npx vitest run --config vitest.browser.config.ts --project packages packages/agent-ui/components/src/controls/badge packages/agent-ui/components/src/controls/tabs packages/agent-ui/components/src/controls/breadcrumb packages/agent-ui/components/src/controls/text-field packages/agent-ui/components/src/controls/glyph packages/agent-ui/components/src/controls/game-hud packages/agent-ui/components/src/controls/product-card packages/agent-ui/components/src/controls/control-rule.browser.test.ts`
+- `npx vitest run --config vitest.browser.config.ts --project site site/pages/dogfood-render.browser.test.ts site/pages/breadcrumb-demo.browser.test.ts site/pages/badge-demo.browser.test.ts site/pages/text-field-demo.browser.test.ts`
+- `npm run test:visual`
+- Before and after screenshots of badge, text-field (search clear, number stepper), tabs overflow and breadcrumb overflow at sm, md and lg are in the run's `shots/` folder and listed in solo-report.md.

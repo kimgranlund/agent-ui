@@ -70,6 +70,7 @@ import { overlay, type OverlayHandle } from '../../traits/overlay.ts'
 import { colorCodecOptions } from '../color-picker/color.ts'
 import { UISwatchElement } from '../swatch/swatch.ts'
 import { setIcon } from '@agent-ui/icons'
+import '../glyph/glyph.ts' // registers <ui-glyph>: the clear and stepper marks are library marks, pictorial icons stay setIcon (ADR-0245 cl.5, T-0351)
 
 // The editor's editable mode (ADR-0014 cl.1) and a per-instance id seed for aria-describedby.
 const EDITABLE = 'plaintext-only'
@@ -159,6 +160,13 @@ const props = {
   // reactive ONLY for type=color (the currency/unit precedent).
   format: { ...prop.enum(['hex', 'oklch'] as const, 'hex'), reflect: true },
 } satisfies PropsSchema
+
+/** A decorative mark for an affordance button: a ui-glyph (empty label, so aria-hidden; the button carries the name). */
+function markGlyph(symbol: 'x' | 'minus' | 'plus'): HTMLElement {
+  const glyph = document.createElement('ui-glyph')
+  glyph.setAttribute('symbol', symbol)
+  return glyph
+}
 
 export interface UITextFieldElement extends ReactiveProps<typeof props> {}
 export class UITextFieldElement extends UIFormElement {
@@ -922,7 +930,7 @@ export class UITextFieldElement extends UIFormElement {
       btn.type = 'button'
       btn.setAttribute('data-part', 'clear-button')
       btn.setAttribute('aria-label', 'Clear')
-      setIcon(btn, 'x') // Phosphor, via @agent-ui/icons
+      btn.append(markGlyph('x')) // the library mark, not pack art (ADR-0245 cl.5)
       btn.addEventListener('click', () => {
         if (this.value === '') return // nothing to clear
         this.value = ''
@@ -992,7 +1000,7 @@ export class UITextFieldElement extends UIFormElement {
 
   /**
    * Create and append a control-injected TRAILING numeric adornment: a side-by-side − + stepper pair
-   * (Phosphor minus/plus, step-down LEFT of step-up — the iOS/Material stepper convention, GH #1406)
+   * (ui-glyph minus/plus marks, step-down LEFT of step-up; the iOS/Material stepper convention, GH #1406)
    * with an optional suffix span. Used for ALL numeric types (number · currency · unit · percent — ADR-0047: codec ≠ null
    * implies steppers). `suffixText` is non-null for unit (the localized label) and percent ('%').
    * The trailing container's data-role is 'numeric' when a suffix is present, 'stepper' otherwise —
@@ -1017,14 +1025,14 @@ export class UITextFieldElement extends UIFormElement {
     down.type = 'button'
     down.setAttribute('data-part', 'step-down')
     down.setAttribute('aria-label', 'Decrease')
-    setIcon(down, 'minus') // Phosphor, via @agent-ui/icons
+    down.append(markGlyph('minus')) // the library mark, not pack art (ADR-0245 cl.5)
     down.addEventListener('click', () => { this.#step(-1) }, { signal: typeAc })
 
     const up = document.createElement('button')
     up.type = 'button'
     up.setAttribute('data-part', 'step-up')
     up.setAttribute('aria-label', 'Increase')
-    setIcon(up, 'plus') // Phosphor, via @agent-ui/icons
+    up.append(markGlyph('plus')) // the library mark, not pack art (ADR-0245 cl.5)
     up.addEventListener('click', () => { this.#step(1) }, { signal: typeAc })
 
     container.append(down, up) // − before + (minus left of plus — GH #1406, Kim's 2026-08-19 ruling)

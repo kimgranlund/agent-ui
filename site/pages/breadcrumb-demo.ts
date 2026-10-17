@@ -81,7 +81,7 @@ const collapsed = el('ui-breadcrumb', { label: 'Breadcrumb', collapse: 'menu' },
 collapsed.id = 'breadcrumb-collapse-demo' // the page-level browser test's stable hook
 const collapsedNote = el('p', {}, [
   text('Six crumbs, '), code('collapse="menu"'), text(' (keep-trailing defaults to 2): Home stays pinned, ' +
-    'the last two crumbs stay pinned, and the three in between fold behind the '), code('dots-three'),
+    'the last two crumbs stay pinned, and the three in between fold behind the '), code('more'),
   text(' overflow trigger. Selecting a folded row in the opened menu RELAYS activation to the real hidden ' +
     'crumb (never reparented) — logged below like any other crumb click. The fold is author-driven, ' +
     'viewport-independent (no ResizeObserver): a narrow-viewport layout is simply the author choosing '),

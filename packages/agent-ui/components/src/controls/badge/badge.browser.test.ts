@@ -122,24 +122,28 @@ describe('ui-badge geometry — the compact pad law, NOT h/2 (SPEC-R13 AC1, ADR-
 describe('ui-badge intent glyph — pairwise-distinct shapes, colour-independent (SPEC-R12, ADR-0057)', () => {
   const INTENTS = ['info', 'success', 'warning', 'danger'] as const
 
-  it('every non-neutral intent glyph has a real, non-empty clip-path', () => {
+  // The shape channel is the ui-glyph library mark (T-0351, ADR-0245 cl.5): a drawn path, visibly painted.
+  const pathOf = (el: HTMLElement): SVGPathElement | null => el.querySelector('[data-part="glyph"] svg path')
+
+  it('every non-neutral intent glyph draws a real, painted library mark', () => {
     for (const intent of INTENTS) {
       const el = mount(`<ui-badge intent="${intent}" label="x"></ui-badge>`)
       const glyph = el.querySelector('[data-part="glyph"]') as HTMLElement
-      const clip = getComputedStyle(glyph).clipPath
-      expect(clip, `${intent} glyph has no clip-path`).not.toBe('none')
+      expect(glyph.localName, `${intent} glyph is not a ui-glyph`).toBe('ui-glyph')
+      expect(getComputedStyle(glyph).display, `${intent} glyph is hidden`).not.toBe('none')
+      const path = pathOf(el)
+      expect(path?.getAttribute('d'), `${intent} glyph draws no mark`).toBeTruthy()
+      const svg = path!.ownerSVGElement as SVGSVGElement
+      const r = svg.getBoundingClientRect()
+      expect(r.width * r.height, `${intent} glyph collapsed to zero area`).toBeGreaterThan(0)
     }
   })
 
-  it('every PAIR of non-neutral intents has a DIFFERENT clip-path (the shape channel, independent of colour — SPEC-R12 AC1/AC2)', () => {
-    const clipOf = (intent: string): string => {
-      const el = mount(`<ui-badge intent="${intent}" label="x"></ui-badge>`)
-      return getComputedStyle(el.querySelector('[data-part="glyph"]') as HTMLElement).clipPath
-    }
-    const clips = INTENTS.map((i) => [i, clipOf(i)] as const)
-    for (let i = 0; i < clips.length; i++) {
-      for (let j = i + 1; j < clips.length; j++) {
-        expect(clips[i][1], `${clips[i][0]} and ${clips[j][0]} share the same clip-path`).not.toBe(clips[j][1])
+  it('every PAIR of non-neutral intents draws a DIFFERENT mark (the shape channel, independent of colour; SPEC-R12 AC1/AC2)', () => {
+    const marks = INTENTS.map((i) => [i, pathOf(mount(`<ui-badge intent="${i}" label="x"></ui-badge>`))?.getAttribute('d')] as const)
+    for (let i = 0; i < marks.length; i++) {
+      for (let j = i + 1; j < marks.length; j++) {
+        expect(marks[i][1], `${marks[i][0]} and ${marks[j][0]} share the same mark`).not.toBe(marks[j][1])
       }
     }
   })
@@ -190,11 +194,11 @@ describe('ui-badge forced-colors (SPEC-R15 AC1)', () => {
   it('the boxed identity (border) + the glyph survive under forced-colors — Chromium emulates (CDP); WebKit asserts baseline', async () => {
     const el = mount('<ui-badge intent="danger" label="x"></ui-badge>')
 
-    // Baseline (BOTH engines): the host paints a real fill/border/ink; the glyph paints a real fill.
+    // Baseline (BOTH engines): the host paints a real fill/border/ink; the glyph's mark paints a real stroke.
     expect(alphaOf(getComputedStyle(el).backgroundColor), 'baseline host fill is invisible').toBeGreaterThan(0)
     expect(alphaOf(getComputedStyle(el).borderTopColor), 'baseline host border is invisible').toBeGreaterThan(0)
-    const glyph = el.querySelector('[data-part="glyph"]') as HTMLElement
-    expect(alphaOf(getComputedStyle(glyph).backgroundColor), 'baseline glyph fill is invisible').toBeGreaterThan(0)
+    const glyph = el.querySelector('[data-part="glyph"] svg path') as SVGPathElement
+    expect(alphaOf(getComputedStyle(glyph).stroke), 'baseline glyph stroke is invisible').toBeGreaterThan(0)
 
     if (server.browser !== 'chromium') {
       expect(window.matchMedia('(forced-colors: active)').matches).toBe(false)
@@ -206,7 +210,7 @@ describe('ui-badge forced-colors (SPEC-R15 AC1)', () => {
     try {
       expect(window.matchMedia('(forced-colors: active)').matches, 'CDP did not enter forced-colors').toBe(true)
       expect(alphaOf(getComputedStyle(el).borderTopColor), 'the boxed identity (border) vanished under forced-colors').toBeGreaterThan(0)
-      expect(alphaOf(getComputedStyle(glyph).backgroundColor), 'the glyph vanished under forced-colors (the bar-chart fill lesson)').toBeGreaterThan(0)
+      expect(alphaOf(getComputedStyle(glyph).stroke), 'the glyph vanished under forced-colors').toBeGreaterThan(0)
     } finally {
       await session.send('Emulation.setEmulatedMedia', { features: [] })
     }

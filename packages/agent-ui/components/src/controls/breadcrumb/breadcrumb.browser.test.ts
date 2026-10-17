@@ -235,7 +235,7 @@ describe('ui-breadcrumb — collapse="menu" whole-shape (test-the-whole-shape, b
     const tr = trigger.getBoundingClientRect()
     expect(tr.width, `${server.browser}: the overflow trigger painted zero width`).toBeGreaterThan(0)
     expect(tr.height, `${server.browser}: the overflow trigger painted zero height`).toBeGreaterThan(0)
-    expect(trigger.querySelector('svg'), 'the dots-three glyph must be present').not.toBeNull()
+    expect(trigger.querySelector('ui-glyph svg path'), 'the `more` mark must be drawn').not.toBeNull()
   })
 
   it('collapse="none" (default) NEGATIVE — every crumb paints, no overflow trigger exists', async () => {
@@ -351,12 +351,12 @@ describe('ui-breadcrumb — collapse="menu" end-to-end keyboard commit relay (bo
 })
 
 describe('ui-breadcrumb — collapse="menu" forced-colors survival for the overflow trigger (the intake\'s named law)', () => {
-  it('the dots-three glyph survives forced-colors — Chromium emulates (CDP); WebKit asserts the baseline', async () => {
+  it('the `more` mark survives forced-colors: Chromium emulates (CDP); WebKit asserts the baseline', async () => {
     const el = mount(COLLAPSE_FIVE) as HTMLElement
     await settle()
     const trigger = el.querySelector('[data-part="overflow"] [data-part="trigger"]') as HTMLElement
-    const svg = trigger.querySelector('svg')
-    expect(svg, 'the dots-three glyph must be present').not.toBeNull()
+    const svg = trigger.querySelector('ui-glyph svg path')
+    expect(svg, 'the `more` mark must be drawn').not.toBeNull()
 
     if (server.browser !== 'chromium') {
       expect(window.matchMedia('(forced-colors: active)').matches).toBe(false)

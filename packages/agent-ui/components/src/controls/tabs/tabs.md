@@ -12,6 +12,7 @@ description: A tab strip and panel container that switches visible content via k
 tier: pattern          # geometry size-class — geometry.md "Pattern" (container + control-height rows); tabs is the named example: the interactive tab rows take the CONTROL height, the shell uses the --md-sys-space ladder
 extends: UIContainerElement  # the FIRST non-form family — surface axes + reused internals (ARIA); NOT form-associated (face below). NOTE: UIContainerElement enters the descriptor BASE_CLASSES at decomp s12 (integration) — until then validateComponentDescriptor flags BAD_EXTENDS, filtered in tabs-descriptor.test.ts
 uses:
+  - ui-glyph
   - ui-menu
 defines:               # the tab and panel sub-elements tabs.ts self-defines on import besides ui-tabs; held equal to the module graph by defines-driftwire.test.ts, emitted into registry.gen.ts for the A2UI built-in loader (ADR-0233)
   - ui-tab
@@ -52,7 +53,7 @@ attributes:            # attributes-as-API — mirrors tabs.ts `static props` (t
     type: enum
     values: [scroll, menu]
     default: scroll
-    reflect: true      # GH #586 — the strip's not-enough-room strategy. 'menu' collects the tabs that don't fit behind a dots-three trigger opening a composed ui-menu of PROXY items (never a reparented ui-tab); the selected tab is ALWAYS pinned visible. Absent/scroll ⇒ byte-identical to today's overflow-x/y auto.
+    reflect: true      # GH #586: the strip's not-enough-room strategy. 'menu' collects the tabs that don't fit behind a `more` trigger opening a composed ui-menu of PROXY items (never a reparented ui-tab); the selected tab is ALWAYS pinned visible. Absent/scroll ⇒ byte-identical to today's overflow-x/y auto.
 
 properties:            # IDL beyond attributes-as-API
   - name: selected
@@ -69,7 +70,7 @@ parts:                 # the control-created tablist strip is a PART (role=tabli
   - name: tablist
     description: The control-created `<div data-part="tablist" role="tablist">` strip the ui-tab children are reparented into (the panels stay as siblings). role=tablist rides the PART div — the HOST carries no role/aria-* attribute. The strip is the control's own horizontal overflow viewport (GH #221 — `overflow-x auto`; labels never clip mid-word, the strip scrolls); its scrollbar visibility is the consumer-inherited `--ui-tabs-strip-scrollbar-width` seam (var()-fallback `auto`, never declared in the token block).
   - name: overflow
-    description: Present ONLY when `overflow="menu"` (the overflow-menu build, created lazily, once, at connect — persists like `tablist`). A composed `<ui-menu data-part="overflow">` wrapping a square, tab-height icon-button trigger (`aria-label="More tabs"`, the `dots-three` glyph) that opens a panel of PROXY rows (`role="menuitem"`, never a reparented `ui-tab`) for exactly the tabs that don't currently fit. Lives as a shell child OUTSIDE `role=tablist` — a non-tab tablist child is an ARIA required-owned-children violation. `hidden` whenever every tab fits.
+    description: Present ONLY when `overflow="menu"` (the overflow-menu build, created lazily, once, at connect; persists like `tablist`). A composed `<ui-menu data-part="overflow">` wrapping a square, tab-height icon-button trigger (`aria-label="More tabs"`, a `<ui-glyph symbol="more">` mark) that opens a panel of PROXY rows (`role="menuitem"`, never a reparented `ui-tab`) for exactly the tabs that don't currently fit. Lives as a shell child OUTSIDE `role=tablist`; a non-tab tablist child is an ARIA required-owned-children violation. `hidden` whenever every tab fits.
 
 customStates:          # :state() hooks the stylesheet keys off — set via internals.states, never host attrs
   - ready              # the motion gate (ADR-0008): armed one frame past first paint on ui-tabs so the upgrade/first selection SNAPS and only later changes animate
@@ -116,7 +117,7 @@ geometry:
   panelPadding: var(--ui-tabs-panel-pad)    # the panel body padding — --md-sys-space
   surface: --ui-container-bg                 # the shell plane (ADR-0015 surface seam); transparent by default (ADR-0104) — a plane is asked-for via `elevation`/`brightness`
   fillPanelScrollbarSeam: --ui-tabs-panel-scrollbar-width  # ADR-0144 Q1 cl.3 — consumer-INHERITED, var()-fallback ONLY (never declared in the :where() token block); a composing surface hides the filled panel's scrollbar by setting this on ITSELF (the ui-split-pane `--ui-split-pane-scrollbar-width` shape)
-  overflowTrigger: var(--ui-tabs-tab-height)  # the overflow-menu trigger's square footprint (inline-size = block-size), a round square (radius h/2), ghost at rest (--ui-tabs-trigger-bg transparent, T-0306) with full ink (T-0149), --ui-tabs-trigger-bg-hover (the neutral container-low wash on hover and press, T-0141, T-0306) and --ui-tabs-trigger-icon (the 2n icon box)
+  overflowTrigger: var(--ui-tabs-tab-height)  # the overflow-menu trigger's square footprint (inline-size = block-size), a round square (radius h/2), ghost at rest (--ui-tabs-trigger-bg transparent, T-0306) with full ink (T-0149), --ui-tabs-trigger-bg-hover (the neutral container-low wash on hover and press, T-0141, T-0306); its `more` ui-glyph mark sizes itself in the 2n slot (T-0351)
 
 forcedColors: A `@media (forced-colors: active)` block keeps the SELECTED-tab indicator + label visible (Highlight) and the strip divider visible (CanvasText); the shell surface drops to Canvas via the container.css role layer.
 ---
@@ -185,7 +186,7 @@ becomes a pinned, internally-scrolling column, and the visible panel keeps its e
 ## Overflow
 
 `<ui-tabs overflow="menu">` collects the tabs that don't fit the strip's available space behind a square,
-tab-height `dots-three` trigger that opens a composed [`ui-menu`](../menu/menu.md) of **proxy** rows — never a
+tab-height `more` trigger (a `ui-glyph` mark) that opens a composed [`ui-menu`](../menu/menu.md) of **proxy** rows; never a
 reparented `ui-tab` (`role="tab"` must stay inside `role="tablist"`; a moved tab would also churn DOM identity
 under roving/focus). The shell becomes a CSS grid so the trigger stays its own child, outside `role="tablist"`
 (a non-tab tablist child is an ARIA required-owned-children violation), without absolute positioning.

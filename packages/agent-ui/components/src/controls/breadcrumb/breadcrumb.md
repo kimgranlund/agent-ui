@@ -9,6 +9,7 @@ description: A wayfinding trail of ordered crumb links ending in the current pag
 tier: pattern          # geometry.md Pattern band — NO control-height row of its own (the intake's Geometry row, citing ADR-0163 cl.6 verbatim: the crumbs carry their own geometry, the novelty is zero)
 extends: UIElement     # NOT form-associated (face below) — transient wayfinding view state, not a submittable value
 uses:
+  - ui-glyph
   - ui-menu
 
 attributes:             # attributes-as-API — mirrors breadcrumb.ts `static props` (label, inline, collapse, collapseKeepTrailing)
@@ -42,7 +43,7 @@ parts:
   - name: separator
     description: One `[data-part="separator"] [aria-hidden="true"]` node injected between every adjacent pair of crumbs — either a `cloneNode(true)` of the author's `[slot="separator"]` template (SNAPSHOT semantics, see the `separator` slot above) or, unslotted, a control-created `<span>/</span>`. Real DOM text either way — never a painted-only mark, so it cannot vanish under `forced-colors`. Non-interactive, carries no click handler. `collapse="menu"`: a separator sitting between two FOLDED crumbs is stamped `data-collapsed` (display:none) — except the one immediately before the first folded crumb, which stays visible as "the first gap" the overflow menu occupies.
   - name: overflow
-    description: GH #1515 S2 — a composed `<ui-menu data-part="overflow">`, built fresh on every fold-relevant rebuild pass (never persisted — the tabs.ts `#ensureOverflowMenu` mechanism minus fit-measurement), inserted where the first folded crumb used to render. Its own first child is a control-created `<button aria-label="Show hidden breadcrumbs">` carrying the `dots-three` glyph (GH #168, the fleet's one horizontal overflow icon); every other child is one proxy `[role="menuitem"]` row per folded crumb, labeled from that crumb's `aria-label` (falling back to its trimmed textContent). Selecting a proxy row relays activation to the REAL folded crumb (`crumb.matches('a') ? crumb : (crumb.querySelector('a') ?? crumb)`, then `.click()` — dispatches even on a `display:none` node) rather than reparenting it; the menu's own `select`/`toggle`/`close` are `stopPropagation`-contained at this part's boundary, never surfacing as a `ui-breadcrumb` event. Present in the DOM only when a non-empty middle actually folds; absent entirely when `collapse="none"` (default) or when there aren't enough crumbs to fold.
+    description: GH #1515 S2: a composed `<ui-menu data-part="overflow">`, built fresh on every fold-relevant rebuild pass (never persisted; the tabs.ts `#ensureOverflowMenu` mechanism minus fit-measurement), inserted where the first folded crumb used to render. Its own first child is a control-created `<button aria-label="Show hidden breadcrumbs">` carrying a `<ui-glyph symbol="more">` mark (GH #168, the fleet's one horizontal overflow mark); every other child is one proxy `[role="menuitem"]` row per folded crumb, labeled from that crumb's `aria-label` (falling back to its trimmed textContent). Selecting a proxy row relays activation to the REAL folded crumb (`crumb.matches('a') ? crumb : (crumb.querySelector('a') ?? crumb)`, then `.click()`; dispatches even on a `display:none` node) rather than reparenting it; the menu's own `select`/`toggle`/`close` are `stopPropagation`-contained at this part's boundary, never surfacing as a `ui-breadcrumb` event. Present in the DOM only when a non-empty middle actually folds; absent entirely when `collapse="none"` (default) or when there aren't enough crumbs to fold.
 
 customStates: []        # no interaction/motion state of its own; a ui-router-link or a plain <span> crumb rides its own states, and a real <a> crumb takes the trail's idle and hover ink from breadcrumb.css (T-0141); the composed overflow menu rides ui-menu's own states
 
@@ -134,7 +135,7 @@ between different crumb pairs) is not supported — a consumer needing that auth
 
 `collapse="menu"` pins the FIRST crumb and the LAST `collapse-keep-trailing` crumbs (default 2, clamped ≥1
 — inclusive of the auto-stamped current/last crumb); a non-empty middle folds behind a composed overflow
-`ui-menu`, a `dots-three`-glyph trigger placed at the fold's position. The folded crumbs never leave the
+`ui-menu`, a `more`-mark trigger placed at the fold's position. The folded crumbs never leave the
 DOM (`display:none` only) — selecting a proxy row in the opened menu relays activation to the real hidden
 crumb (a real `<a>`, or a composed `<ui-router-link>`'s own inner anchor once upgraded) rather than
 reparenting it. The overflow menu's own `select`/`toggle`/`close` never surface as `ui-breadcrumb` events —
