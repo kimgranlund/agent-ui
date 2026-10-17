@@ -6,16 +6,15 @@
 // come from each persona dir that holds a `selection.json`, composed against the `agent-ui` base exactly
 // as the runtime derives `agent-ui--<persona>`, keeping only the edges of the fragment's OWN types.
 //
-// The persona dir is scanned from disk, the pre-T-0209 workaround for persona `manifest.ts` files that
-// imported `catalog.json` without an import attribute (plain Node rejects that, `ERR_IMPORT_ATTRIBUTE_MISSING`,
-// see `tools/catalog-files.ts`); they now carry `with { type: 'json' }`, so importing
-// `SHIPPED_PERSONA_CATALOG_MANIFESTS` here would also load. Everything here reads from `process.cwd()` (the repo root).
+// The persona list is `SHIPPED_PERSONA_IDS` (`src/catalog/personas/ids.ts`, T-0209), the one list the runtime
+// guidance resolver reads too, held equal to `SHIPPED_PERSONA_CATALOG_MANIFESTS` by its test. Fragments and
+// sidecars are read from `process.cwd()` (the repo root).
 //
 // The persona leg's acceptance cases are the hand-authored `fixtures/persona-cases.json`, protected by
 // the pinned hash in `fixtures/pins.json` (`pins.ts`). The response-type leg's labelled set (T-0060,
 // RTS-R10) is the hand-authored `fixtures/response-type-cases.json`, pinned the same way.
 
-import { readFileSync, readdirSync, existsSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { loadCatalogById } from '../catalog-files.ts'
 import { composeCatalog, loadCatalogFragment } from '../../src/catalog/compose.ts'
@@ -23,6 +22,7 @@ import type { CatalogFragment } from '../../src/catalog/compose.ts'
 import type { Catalog } from '../../src/catalog/catalog.ts'
 import type { Session } from '../../src/agent/agent-transport.ts'
 import { selectionGuidanceFor } from '../../src/agent/selection-guidance.ts'
+import { SHIPPED_PERSONA_IDS } from '../../src/catalog/personas/ids.ts'
 
 const PERSONAS_DIR = 'packages/agent-ui/a2ui/src/catalog/personas'
 const BASE_IDS = ['agent-ui', 'a2ui-basic'] as const
@@ -55,13 +55,9 @@ function root(): string {
   return process.cwd()
 }
 
-/** Persona ids, sorted: every dir under the personas folder that holds a `selection.json`. */
+/** Persona ids, sorted: the shipped personas (`SHIPPED_PERSONA_IDS`). */
 export function personaIds(): string[] {
-  const dir = join(root(), PERSONAS_DIR)
-  return readdirSync(dir, { withFileTypes: true })
-    .filter((e) => e.isDirectory() && existsSync(join(dir, e.name, 'selection.json')))
-    .map((e) => e.name)
-    .sort()
+  return [...SHIPPED_PERSONA_IDS].sort()
 }
 
 const fragmentCache = new Map<string, CatalogFragment>()

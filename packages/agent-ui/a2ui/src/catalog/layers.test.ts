@@ -6,7 +6,7 @@
 // drift into a copy and run the same predicate.
 
 import { describe, it, expect } from 'vitest'
-import { CATALOG_LAYER_MAP, LAYER_MAP_EXEMPT_HOMES, layerOf } from './layers.ts'
+import { CATALOG_LAYER_MAP, LAYER_MAP_EXEMPT_HOMES } from './layers.ts'
 import type { LayerRow } from './layers.ts'
 import { defaultCatalog } from './default/index.ts'
 import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from './personas/manifests.ts'
@@ -21,8 +21,33 @@ const HOMES: Homes = {
   ...Object.fromEntries(SHIPPED_DOMAIN_CATALOG_MANIFESTS.map((m) => [`domains/${m.domainId}`, Object.keys(m.fragment.components)])),
 }
 
+/** T-0209: the default-catalog types already classified core (SPEC §5.1). Core stays derived at run time (no row in
+ *  `layers.ts`); this snapshot is the decision record that makes a NEW default type red until someone classifies it,
+ *  by adding a row in `layers.ts` or adding the type here. */
+const CLASSIFIED_CORE: readonly string[] = [
+  // primitives and display
+  'Text', 'Icon', 'Image', 'Video', 'AudioPlayer', 'Avatar', 'Badge', 'Code', 'Attachment', 'Swatch',
+  // layout and containers
+  'Row', 'Column', 'Grid', 'List', 'Split', 'SplitPane', 'Card', 'CardHeader', 'CardContent', 'CardFooter', 'Tabs', 'Tab',
+  'TabPanel', 'Disclosure', 'Swiper', 'SwiperItem', 'Drill', 'DrillPanel', 'Timeline', 'TimelineItem', 'DescriptionList',
+  'Toolbar', 'Breadcrumb', 'Pagination',
+  // overlays and feedback
+  'Modal', 'Drawer', 'Popover', 'Tooltip', 'Menu', 'MenuItem', 'Toast', 'FormPopover',
+  // form controls
+  'Button', 'TextField', 'Textarea', 'Field', 'FormProvider', 'Checkbox', 'Switch', 'Toggle', 'Select', 'Option',
+  'RadioGroup', 'Radio', 'ChoiceGroup', 'ChoiceCard', 'SegmentedControl', 'Segment', 'Slider', 'SliderMulti', 'Rating',
+  'Calendar', 'ComboBox', 'MultiSelect', 'FileDrop', 'ColorPicker',
+  // data viz
+  'Sparkline', 'BarChart', 'LineChart', 'PieChart', 'ColumnChart', 'Gauge', 'Table', 'Stat', 'Progress',
+]
+
 /** What differs between `map` and the catalogs in `homes`; empty when the map is complete and every row agrees. */
-function layerMapDefects(map: Readonly<Record<string, LayerRow>>, homes: Homes, exempt: readonly string[]): string[] {
+function layerMapDefects(
+  map: Readonly<Record<string, LayerRow>>,
+  homes: Homes,
+  exempt: readonly string[],
+  core: readonly string[] = CLASSIFIED_CORE,
+): string[] {
   const out: string[] = []
   for (const [home, types] of Object.entries(homes)) {
     if (exempt.includes(home)) continue
@@ -30,6 +55,7 @@ function layerMapDefects(map: Readonly<Record<string, LayerRow>>, homes: Homes, 
       const row = map[t]
       if (row === undefined) {
         if (home !== 'default') out.push(`"${t}" (${home}) has no layer row`)
+        else if (!core.includes(t)) out.push(`"${t}" (default) is unclassified: add a layer row or classify it core`)
       } else if (row.home !== home) out.push(`"${t}" is declared by ${home} but mapped to ${row.home}`)
     }
   }
@@ -41,6 +67,10 @@ function layerMapDefects(map: Readonly<Record<string, LayerRow>>, homes: Homes, 
     if (row.home.startsWith('personas/') && row.layer !== 'domain') out.push(`"${t}" is a fragment type outside the domain layer`)
     if (row.home.startsWith('domains/') && row.home !== `domains/${row.domain}`) out.push(`"${t}" is homed in ${row.home} but mapped to domain ${String(row.domain)}`)
   }
+  for (const t of core) {
+    if (Object.hasOwn(map, t)) out.push(`"${t}" is classified core and also has a layer row`)
+    else if (!(homes.default ?? []).includes(t)) out.push(`"${t}" is classified core but the default catalog does not declare it`)
+  }
   return out
 }
 
@@ -51,6 +81,7 @@ describe('the layer map (CA-R1)', () => {
 
   it('anti-vacuous: all three layers hold default-catalog types, and every listed default row is a default type', () => {
     const defaultTypes = Object.keys(defaultCatalog.components)
+    const layerOf = (t: string): string => (Object.hasOwn(CATALOG_LAYER_MAP, t) ? CATALOG_LAYER_MAP[t]!.layer : CLASSIFIED_CORE.includes(t) ? 'core' : 'unclassified')
     expect([...new Set(defaultTypes.map(layerOf))].sort()).toEqual(['agentic', 'core', 'domain'])
     const mappedDefault = Object.entries(CATALOG_LAYER_MAP).filter(([, r]) => r.home === 'default').map(([t]) => t)
     expect(mappedDefault.length).toBeGreaterThan(0)
@@ -67,12 +98,24 @@ describe('the layer map (CA-R1)', () => {
 describe('the layer map gate bites (planted drift)', () => {
   const copy = (): Record<string, LayerRow> => ({ ...CATALOG_LAYER_MAP })
 
+  it('NEGATIVE CONTROL: a new default type with no row and no core classification reds', () => {
+    const added: Homes = { ...HOMES, default: [...HOMES.default!, 'Dial'] }
+    expect(layerMapDefects(CATALOG_LAYER_MAP, added, LAYER_MAP_EXEMPT_HOMES)).toEqual(['"Dial" (default) is unclassified: add a layer row or classify it core'])
+    expect(layerMapDefects(CATALOG_LAYER_MAP, added, LAYER_MAP_EXEMPT_HOMES, [...CLASSIFIED_CORE, 'Dial'])).toEqual([])
+    expect(layerMapDefects(CATALOG_LAYER_MAP, HOMES, LAYER_MAP_EXEMPT_HOMES, [...CLASSIFIED_CORE, 'Dial'])).toEqual([
+      '"Dial" is classified core but the default catalog does not declare it',
+    ])
+  })
+
   it('NEGATIVE CONTROL: a fragment type with no row reds, and a hand-listed core row reds', () => {
     const planted = copy()
     delete planted.PlayingCard
     expect(layerMapDefects(planted, HOMES, LAYER_MAP_EXEMPT_HOMES)).toEqual(['"PlayingCard" (personas/croupier) has no layer row'])
     const listed = { ...copy(), Badge: { layer: 'core' as const, home: 'default' } }
-    expect(layerMapDefects(listed, HOMES, LAYER_MAP_EXEMPT_HOMES)).toEqual(['"Badge" is a listed core row (core is derived from the default catalog)'])
+    expect(layerMapDefects(listed, HOMES, LAYER_MAP_EXEMPT_HOMES)).toEqual([
+      '"Badge" is a listed core row (core is derived from the default catalog)',
+      '"Badge" is classified core and also has a layer row',
+    ])
   })
 
   it('NEGATIVE CONTROL: a type moved to its domain without a map edit reds (the W2 move and the row change together)', () => {
@@ -90,6 +133,7 @@ describe('the layer map gate bites (planted drift)', () => {
     expect(layerMapDefects(coreDomain, HOMES, LAYER_MAP_EXEMPT_HOMES)).toEqual([
       '"Badge" is a listed core row (core is derived from the default catalog)',
       '"Badge" is core with domain games',
+      '"Badge" is classified core and also has a layer row',
     ])
     const fragmentCore = { ...copy(), CardTable: { layer: 'core' as const, home: 'personas/croupier' } }
     expect(layerMapDefects(fragmentCore, HOMES, LAYER_MAP_EXEMPT_HOMES)).toEqual([

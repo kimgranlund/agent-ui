@@ -3,9 +3,10 @@
 //   1. domain: its props or meaning carry one field's vocabulary, so an agent outside that field never picks it;
 //   2. agentic: it stands for a moment between agent and user and no prop names a field;
 //   3. core: everything else, every form control and every chart included.
-// Only the agentic and domain rows are listed (T-0209): core membership is derived, never hand-listed, as every type
-// the default catalog's `catalog.json` declares that has no row (`layerOf`), so the catalog stays the one list of
-// core types. Each row names the catalog that declares the type today (`home`). A domain-layer row homed in `default`
+// Only the agentic and domain rows are listed (T-0209): core membership is derived, never hand-listed here, as every
+// type the default catalog's `catalog.json` declares that has no row. A NEW default type still forces a decision:
+// `layers.test.ts` pins the default catalog's type set, so it reds until the type gets a row here or joins that
+// snapshot as core. Each row names the catalog that declares the type today (`home`). A domain-layer row homed in `default`
 // is a type the SPEC moves out in W2 (§5.3); the row and the move change together. `layers.test.ts` holds the map
 // equal to the catalogs: a fragment or domain type with no row, a listed core row, a row whose home does not declare
 // its type, or a layer its home cannot hold reds the gate. Content is SPEC §5's classification (AC2). Pure data plus
@@ -49,11 +50,6 @@ export const CATALOG_LAYER_MAP: Readonly<Record<string, LayerRow>> = Object.free
   QuestionCard: domain('games', 'personas/quizmaster'),
   ContrastPair: domain('design', 'personas/stylist'),
 })
-
-/** A type's layer: its row's, else `core` (SPEC §5.1, every default-catalog type no row classifies). */
-export function layerOf(type: string): CatalogLayer {
-  return Object.hasOwn(CATALOG_LAYER_MAP, type) ? CATALOG_LAYER_MAP[type]!.layer : 'core'
-}
 
 /** Fragments outside the map: `fixture-demo` is the composition mechanism's test fixture, never a shipped pattern
  *  (persona SPEC-N6), so its type belongs to no layer. */

@@ -780,9 +780,9 @@ describe('selectMiniSkills: ranking stability over the full registry (T-0209)', 
       body: 'A generic screen.',
       catalogId: 'agent-ui',
     }
-    // The inbox pin's third idiom, crud-entry-list, falls out of the top 3 to the plant.
-    expect(rankingDefects([...MINI_SKILLS, generic])).toContain(
-      'An inbox with a list of messages and a detail pane: master-detail-split,feature-collection,crud-entry-list -> master-detail-split,aa-generic-screen,feature-collection',
-    )
+    // A frozen copy of the registry, so the control never depends on a later edit to a live entry object.
+    const frozen: readonly MiniSkill[] = Object.freeze(MINI_SKILLS.map((m) => Object.freeze({ ...m })))
+    expect(rankingDefects(frozen)).toEqual([])
+    expect(rankingDefects([...frozen, generic]).length).toBeGreaterThan(0)
   })
 })

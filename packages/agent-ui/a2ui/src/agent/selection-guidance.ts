@@ -9,10 +9,11 @@
 //
 // The five sidecars are read at MODULE LOAD from the build-time embed (`assets.gen.ts`, ADR-0236) through
 // `asset-source.ts`, keyed `catalog/<dir>/selection.json`, so this module touches no filesystem and imports
-// no `node:*` builtin. The persona list below is `SHIPPED_PERSONA_CATALOG_MANIFESTS` itself (T-0209): the
-// persona `manifest.ts` files import their `catalog.json` with a `type: 'json'` import attribute, so a
-// plain-Node import of `@agent-ui/a2ui/agent` loads them. A shipped persona with no embedded sidecar throws
-// at load; `catalog/selection-guidance.test.ts`'s orphan leg reds a sidecar no manifest ships.
+// no `node:*` builtin. The persona list below is `SHIPPED_PERSONA_IDS` (`catalog/personas/ids.ts`, T-0209), the
+// import-free twin of `SHIPPED_PERSONA_CATALOG_MANIFESTS` held equal to it by `ids.test.ts`, so this module never
+// bundles the manifests' fragments and checks. A shipped persona with no embedded sidecar gets no clause (it never
+// throws at load); `catalog/selection-guidance.test.ts`'s persona leg reds it, and its orphan leg reds a sidecar
+// no manifest ships.
 //
 // Two consumers: the catalog inventory (`system-prompt.ts` `catalogInventory`, through
 // `selectionGuidanceFor` and `renderSelectionClause`) and the genui dogfood inventory
@@ -21,9 +22,9 @@
 // `Catalog` object, hence the id-keyed resolver; both clauses come from the one formatter.
 
 import type { Catalog } from '../catalog/catalog.ts'
-import { listAssets, readAsset } from './asset-source.ts'
+import { hasAsset, listAssets, readAsset } from './asset-source.ts'
 import { parseDomainCatalogId, splitCatalogId } from '../catalog/catalog-id.ts'
-import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from '../catalog/personas/manifests.ts'
+import { SHIPPED_PERSONA_IDS } from '../catalog/personas/ids.ts'
 
 /** One `notFor` edge: a confusable sibling type and the axis that separates it from this type. */
 export interface SelectionEdge {
@@ -247,8 +248,8 @@ function readPinned(rel: string, pinKey: (typeof PIN_KEYS)[number], pinValue: st
   return guidance
 }
 
-/** The shipped persona fragments, one sidecar each (T-0209: the manifests are the one persona list). */
-const PERSONA_IDS: readonly string[] = SHIPPED_PERSONA_CATALOG_MANIFESTS.map((m) => m.personaId)
+/** The shipped personas whose sidecar is embedded (T-0209): a missing one degrades to no clause, never a load throw. */
+const PERSONA_IDS: readonly string[] = SHIPPED_PERSONA_IDS.filter((id) => hasAsset(`catalog/personas/${id}/selection.json`))
 
 const BASE_GUIDANCE: Readonly<Record<string, SelectionGuidance>> = Object.freeze({
   'agent-ui': readPinned('default/selection.json', 'catalogId', 'agent-ui'),

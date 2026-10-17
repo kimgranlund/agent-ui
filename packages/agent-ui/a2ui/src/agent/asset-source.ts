@@ -17,6 +17,11 @@ export class AgentAssetError extends Error {
   }
 }
 
+/** True iff an asset carries `key` (T-0209: a reader that degrades on a missing file asks first). */
+export function hasAsset(key: string): boolean {
+  return Object.hasOwn(AGENT_ASSETS, key)
+}
+
 /** The embedded text of `key`. Throws `AgentAssetError` when no asset carries that key. */
 export function readAsset(key: string): string {
   if (Object.hasOwn(AGENT_ASSETS, key)) return AGENT_ASSETS[key]!

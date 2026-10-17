@@ -95,8 +95,11 @@ function loadMiniSkills(): MiniSkill[] {
     if (!data.id || !data.triggers) throw new Error(`mini-skills: ${name} is missing id/triggers frontmatter`)
     if (!data.catalogId) throw new Error(`mini-skills: ${name} is missing catalogId frontmatter (SPEC-R6)`)
     const calibration = data.calibration === undefined ? undefined : Number(data.calibration)
-    if (calibration !== undefined && !(Number.isInteger(calibration) && calibration > 0)) {
-      throw new Error(`mini-skills: ${name} calibration must be a positive integer`)
+    if (calibration !== undefined) {
+      if (!(Number.isInteger(calibration) && calibration > 0)) throw new Error(`mini-skills: ${name} calibration must be a positive integer`)
+      // The blue-sky grammar inlines every flagged body on an `agent-ui` turn of any domain, so a flagged entry
+      // must speak the base dialect alone.
+      if (data.catalogId !== 'agent-ui' || data.domain) throw new Error(`mini-skills: ${name} calibration needs catalogId agent-ui and no domain`)
     }
     return {
       id: data.id,
@@ -110,6 +113,16 @@ function loadMiniSkills(): MiniSkill[] {
 }
 
 export const MINI_SKILLS: MiniSkill[] = loadMiniSkills()
+
+{
+  const seen = new Map<number, string>()
+  for (const m of MINI_SKILLS) {
+    if (m.calibration === undefined) continue
+    const prior = seen.get(m.calibration)
+    if (prior !== undefined) throw new Error(`mini-skills: ${prior} and ${m.id} share calibration ${m.calibration}`)
+    seen.set(m.calibration, m.id)
+  }
+}
 
 /** T-0209: the blue-sky calibration entries, in `calibration` order (the flag is their one source). */
 export const CALIBRATION_SKILLS: readonly MiniSkill[] = MINI_SKILLS.filter((m) => m.calibration !== undefined).sort(
