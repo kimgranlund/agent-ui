@@ -3,6 +3,7 @@
 // T-0266, T-0267, T-0268 and T-0274 oracles; runs go Haiku then Sonnet then Opus; and `live-commands.sh` is exactly
 // the generated script, which the capped runner describes.
 import { readFileSync } from 'node:fs'
+import { withoutSkipMarks } from './croupier.ts'
 import { describe, expect, it } from 'vitest'
 import { parseProbeCli } from '../cli.ts'
 import { describeCommands } from '../run-capped.ts'
@@ -69,7 +70,7 @@ describe('live round 4', () => {
 
   it('live-commands.sh is the generated script, and the capped runner describes every run keyless', () => {
     const text = read(ROUND4_FILE)
-    expect(text).toBe(round4CommandsScript())
+    expect(text).toBe(withoutSkipMarks(round4CommandsScript()))
     expect(text).toContain('run-capped.ts .sdlc/evals/rounds/2026-10-15-r4-fixes/live-commands.sh --cap 15 --round r4-fixes')
     const described = describeCommands(text)
     expect(described).toHaveLength(37)
