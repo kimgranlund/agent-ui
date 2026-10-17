@@ -355,13 +355,13 @@ isolated behind one interface (ADR-0069).
   extracted so there is exactly ONE implementation). Selection degrades to `[]` on zero vocabulary overlap
   or a non-positive `cap`/registry, mirroring `retrieve()`'s and `fewShot`'s degrade-to-empty discipline —
   and, unlike `retrieve()`, NEVER pads the result with a genuinely unrelated (zero-score) module.
-  `buildSystemPrompt` composes the selection — first passed through `miniSkillsFor(mode, selected)` — as a
+  `buildSystemPrompt` composes the selection (first passed through the blue-sky placement rule) as a
   `fewShot`-structural-twin segment (`miniSkillsBlock`) that renders `''` on an empty selection. The block
   composes IDENTICALLY across modes for any selected entry NOT among the three ADR-0090 ★ calibration ids
-  (`card-game-sheet`/`settings-screen`/`dashboard-kpi-grid`); in `'blue-sky'` mode ONLY, `miniSkillsFor`
-  excludes those three from the selection BEFORE `miniSkillsBlock` composes it, because their `body` is
-  already inlined verbatim inside blue-sky's own `NEGOTIATE_BLUE_SKY` grammar (via
-  `calibrationExampleBullet`) — composing them again here would double-inject the identical paragraph
+  (`card-game-sheet`/`settings-screen`/`dashboard-kpi-grid`, flagged `calibration:` in their frontmatter,
+  T-0209); in `'blue-sky'` mode ONLY, a flagged entry stays out of the selection BEFORE `miniSkillsBlock`
+  composes it, because its `body` is already inlined verbatim as one of blue-sky's own calibration bullets
+  (composed from the same flag); composing it again here would double-inject the identical paragraph
   (ADR-0091 §4 fix). `'specific'`/`'default'`/absent `mode` carry none of that inlined prose, so the
   registry selection injects all three normally there. Orthogonal to `retrieve()`'s worked-EXEMPLAR
   conditioning (SPEC-R7) — the two channels COEXIST: mini-skills are the INSTRUCTION-shaped complement,
@@ -698,11 +698,11 @@ selection of `MiniSkill` modules (`readonly MiniSkill[]`, SPEC-R13), and append 
 block AFTER the few-shot exemplars — a structural twin of the existing `fewShot` segment: it MUST render
 `''` when the selection is empty or absent (reproducing the pre-ADR-0091 prompt BYTE-FOR-BYTE — the same
 zero-regression discipline the `mode` parameter itself proves) and otherwise render the selected modules'
-`body`s under one header. The block MUST compose from the MODE-FILTERED selection (`miniSkillsFor(mode,
-selected)`): for any selected entry NOT among the three ADR-0090 ★ calibration ids
+`body`s under one header. The block MUST compose from the MODE-FILTERED selection (the blue-sky placement
+rule keyed on the `calibration:` frontmatter flag, T-0209): for any selected entry NOT among the three ADR-0090 ★ calibration ids
 (`card-game-sheet`/`settings-screen`/`dashboard-kpi-grid`), composition MUST be IDENTICAL regardless of
 `mode`; but when `mode === 'blue-sky'`, those three specific ids MUST be excluded from the block, because
-their `body` text is already inlined verbatim inside blue-sky's own `NEGOTIATE_BLUE_SKY` grammar paragraph
+their `body` text is already inlined verbatim as blue-sky's own calibration bullets
 — composing them again here would double-inject the identical paragraph in one prompt. In
 `'specific'`/`'default'`/absent `mode`, none of that prose is inlined anywhere, so the selection MUST
 compose all three normally there, same as any other id. This filtering MUST NOT alter the catalog-derived
@@ -717,7 +717,7 @@ SPEC-R13; this requirement covers only the COMPOSITION seam.
   *given* the same selection with `mode === 'blue-sky'`, *when* read, *then* the block instead contains
   exactly the selected `body`s MINUS any of the three ADR-0090 ★ ids (`card-game-sheet`/`settings-screen`/
   `dashboard-kpi-grid`) — each of those three still appears in the prompt exactly ONCE, via the inlined
-  `NEGOTIATE_BLUE_SKY` calibration bullet rather than the `## Composition idioms` block — a standing
+  blue-sky calibration bullet rather than the `## Composition idioms` block, a standing
   `system-prompt-grammar.test.ts` assertion (the ADR-0091 §4 fix regression block, lines 300-368),
   `npm test` green, no live model.
 
@@ -1796,7 +1796,7 @@ type GenUiMode = "default" | "specific" | "blue-sky";
 // absent/empty composes a prompt byte-identical to omitting it (SPEC-R6 AC4); a non-empty selection
 // appends ONE `## Composition idioms` block after the few-shot examples — EXCEPT that in 'blue-sky' mode,
 // any selected entry among the three ADR-0090 ★ calibration ids is excluded from that block (ADR-0091 §4
-// fix), because it is already inlined verbatim in blue-sky's own NEGOTIATE_BLUE_SKY grammar paragraph;
+// fix), because it is already inlined verbatim as one of blue-sky's own calibration bullets;
 // every other mode, and every other id, composes the block unfiltered.
 function buildSystemPrompt(
   catalog: Catalog, exemplars: CorpusRecord[], mode?: GenUiMode, miniSkills?: readonly MiniSkill[],

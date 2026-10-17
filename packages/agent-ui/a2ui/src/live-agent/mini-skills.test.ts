@@ -742,3 +742,47 @@ describe('mini-skill domain scope (T-0202, CA-R4 AC2)', () => {
     expect(MINI_SKILLS.filter((m) => m.domain !== undefined).map((m) => [m.id, m.domain])).toEqual([['game-table-chrome', 'games']])
   })
 })
+
+// T-0209: ranking stability. `selectMiniSkills` is TF-IDF top 3 with an id tiebreak, so a new module with generic
+// triggers can silently push an established idiom out of a turn's top 3 (IDF shifts too as the registry grows).
+// These pins hold the ordered top 3 for a set of intents over the FULL live registry; a registry change that moves
+// one reds here and is re-pinned only on purpose. The negative control plants a generic-trigger module into a copy
+// and runs the same predicate.
+describe('selectMiniSkills: ranking stability over the full registry (T-0209)', () => {
+  const PINS: readonly (readonly [intent: string, top: readonly string[]])[] = [
+    ['Build me a settings screen with toggles for notifications and account preferences', ['settings-screen', 'login-form']],
+    ['Show a sales dashboard with KPI stats and a revenue chart', ['dashboard-kpi-grid']],
+    ['A login form with email and password', ['login-form', 'form-rhythm']],
+    ['An inbox with a list of messages and a detail pane', ['master-detail-split', 'feature-collection', 'crud-entry-list']],
+    ['A data table with search, sort and pagination toolbar', ['table-toolbar-pagination', 'master-detail-split', 'feature-collection']],
+    ['Compare three pricing plans side by side', ['comparison-table', 'feature-collection']],
+    ['Show a photo gallery grid', ['media-grid', 'dashboard-kpi-grid', 'table-toolbar-pagination']],
+    ['A card game with my hand and a discard pile', ['card-game-sheet', 'card-layout', 'structured-container']],
+    ['Edit a team record and its members', ['nested-record-editor', 'crud-entry-list']],
+  ]
+
+  /** Each pin whose ordered top 3 over `registry` differs, as `intent: expected -> got`. */
+  function rankingDefects(registry: readonly MiniSkill[]): string[] {
+    return PINS.flatMap(([intent, top]) => {
+      const got = selectMiniSkills(intent, registry, DEFAULT_MINI_SKILL_CAP, 'agent-ui').map((m) => m.id)
+      return got.join(',') === top.join(',') ? [] : [`${intent}: ${top.join(',')} -> ${got.join(',')}`]
+    })
+  }
+
+  it('every pinned intent keeps its ordered top 3', () => {
+    expect(rankingDefects(MINI_SKILLS)).toEqual([])
+  })
+
+  it('NEGATIVE CONTROL: a seeded generic-trigger module displaces a pinned idiom and reds the predicate', () => {
+    const generic: MiniSkill = {
+      id: 'aa-generic-screen',
+      triggers: 'screen form list grid card table dashboard settings detail edit record game show build',
+      body: 'A generic screen.',
+      catalogId: 'agent-ui',
+    }
+    // A frozen copy of the registry, so the control never depends on a later edit to a live entry object.
+    const frozen: readonly MiniSkill[] = Object.freeze(MINI_SKILLS.map((m) => Object.freeze({ ...m })))
+    expect(rankingDefects(frozen)).toEqual([])
+    expect(rankingDefects([...frozen, generic]).length).toBeGreaterThan(0)
+  })
+})

@@ -19,12 +19,12 @@
 // · ADR-0090 §1 — the per-turn `GenUiMode` axis: GRAMMAR IS the `'default'`/absent composition (byte-identity
 //   by construction). `INTRO_AND_NOTE`/`OUTPUT_RULES` are SLICED from the loaded grammar; `HONESTY_FLOOR`
 //   (§2, never scaled), `CLARIFY_SPECIFIC`/`NEGOTIATE_SPECIFIC` (dialed DOWN) and `CLARIFY_BLUE_SKY`/
-//   `NEGOTIATE_BLUE_SKY` (dialed UP) are the mode-SCALED block `grammarFor` composes (`prompts/*.md`).
+//   the blue-sky negotiate block (dialed UP) are the mode-SCALED block `grammarFor` composes (`prompts/*.md`).
 // · ADR-0091 §3 — the fifth composed segment `miniSkillsBlock`, a twin of `fewShot`, additive + orthogonal
 //   to `mode`, degrades to `''` when empty (registry text lives in `prompts/mini-skills/*.md`).
-// · ADR-0091 §4 fix — the three (★) calibration examples are single-sourced from `MINI_SKILLS[id].body`
-//   (`calibrationExampleBullet`) and `NEGOTIATE_BLUE_SKY`'s bullets are appended from the registry in code;
-//   `miniSkillsFor` filters those ids out of a `'blue-sky'` selection to avoid double-injection.
+// · ADR-0091 §4 fix, single-sourced by T-0209: the (★) calibration examples are the mini-skills flagged
+//   `calibration:` (`CALIBRATION_SKILLS`); the blue-sky negotiate block composes its bullets from their bodies,
+//   and a `'blue-sky'` turn places a selected flagged entry there instead of in the idioms block.
 // · ADR-0097 §4 — feed-embedded ask mechanics (mode-invariant, in `prompts/grammar.md`) + the mode-scaled
 //   archetype vocabulary (`prompts/ask-archetypes-*.md`); the feed-allowed list is composed FROM
 //   `feed-catalog.ts` via the `{{FEED_SURFACE_TYPES}}` placeholder the loader fills (drift-impossible).
@@ -50,7 +50,7 @@ import type { Catalog } from '../catalog/catalog.ts'
 import { describePropType } from '../catalog/catalog.ts'
 import type { CorpusRecord } from '../corpus/record.ts'
 import type { GenUiMode } from './gen-ui-mode.ts'
-import { MINI_SKILLS } from './mini-skills.ts'
+import { CALIBRATION_SKILLS } from './mini-skills.ts'
 import type { MiniSkill } from './mini-skills.ts'
 import { FEED_SURFACE_TYPES } from './feed-catalog.ts'
 import type { GenuiSurfaceConfig } from './genui-surface-config.ts'
@@ -124,26 +124,15 @@ const NEGOTIATE_SPECIFIC = loadPrompt('negotiate-specific.md')
 
 const CLARIFY_BLUE_SKY = loadPrompt('clarify-blue-sky.md')
 
-// ADR-0091 §4 fix (independent-review defect): the three (★) calibration examples below are now SOURCED
-// from `MINI_SKILLS` (mini-skills.ts) rather than hardcoded here a second time — the registry entry's
-// `body` IS the bullet text. This closes the drift risk of two hand-maintained copies silently diverging,
-// and the composition-site filter in `buildSystemPrompt` below skips re-injecting these same three ids
-// via `miniSkillsBlock` in `'blue-sky'` mode (they're already present here) — see `BLUE_SKY_CALIBRATION_IDS`.
-const BLUE_SKY_CALIBRATION_IDS = ['card-game-sheet', 'settings-screen', 'dashboard-kpi-grid'] as const
+// ADR-0091 §4 fix, single-sourced by T-0209: the STATIC prose (through the `Calibration examples (…):` header)
+// loads from `prompts/negotiate-blue-sky.md` (ADR-0135 cl.10); the bullets under it are composed in `grammarFor`
+// from every mini-skill flagged `calibration:` (`CALIBRATION_SKILLS`, in flag order), each bullet that entry's
+// `body`. The flag is the one source of which idioms calibrate blue-sky; no id list lives here.
+const BLUE_SKY_NEGOTIATE_PROSE = loadPrompt('negotiate-blue-sky.md')
 
-function calibrationExampleBullet(id: string): string {
-  const skill = MINI_SKILLS.find((m) => m.id === id)
-  if (!skill) throw new Error(`system-prompt: missing MINI_SKILLS entry for calibration id "${id}"`)
-  return `- ${skill.body}`
+if (CALIBRATION_SKILLS.length === 0) {
+  throw new Error('system-prompt: no mini-skill carries `calibration:`, so the blue-sky calibration header has no bullets')
 }
-
-// ADR-0135 cl.10: the STATIC prose (through the `Calibration examples (…):` header) loads from
-// `prompts/negotiate-blue-sky.md`; the dynamic calibration bullets — computed from `MINI_SKILLS` via
-// `calibrationExampleBullet` — are appended in code after load (a trailing append, chosen over a mid-file
-// placeholder because the dynamic block is strictly TRAILING today, keeping the `MINI_SKILLS` dependency
-// visible in code). Byte-identical to the prior interpolated literal.
-const NEGOTIATE_BLUE_SKY = `${loadPrompt('negotiate-blue-sky.md')}
-${BLUE_SKY_CALIBRATION_IDS.map(calibrationExampleBullet).join('\n')}`
 
 // ---- ADR-0097 §4/§5: the feed-ask archetype vocabulary, mode-SCALED alongside the clarify/negotiate
 // paragraphs above. The mechanics (HOW to emit an ask) are mode-INVARIANT — inlined into the literal
@@ -170,9 +159,8 @@ function grammarFor(mode: GenUiMode | undefined): string {
     )
   }
   if (mode === 'blue-sky') {
-    return [INTRO_AND_NOTE, CLARIFY_BLUE_SKY, NEGOTIATE_BLUE_SKY, ASK_ARCHETYPES_BLUE_SKY, HONESTY_FLOOR, OUTPUT_RULES].join(
-      '\n\n',
-    )
+    const negotiate = [BLUE_SKY_NEGOTIATE_PROSE, ...CALIBRATION_SKILLS.map((m) => `- ${m.body}`)].join('\n')
+    return [INTRO_AND_NOTE, CLARIFY_BLUE_SKY, negotiate, ASK_ARCHETYPES_BLUE_SKY, HONESTY_FLOOR, OUTPUT_RULES].join('\n\n')
   }
   return GRAMMAR // undefined or 'default' — byte-identical to the pre-mode ADR-0089 grammar
 }
@@ -361,21 +349,6 @@ function genuiBlock(genui: GenuiSurfaceConfig | undefined, a2uiEnabled: boolean)
   return `\n\n${GENUI_TEACHING}${noteLine}${exclusive}${dogfood}${source}`
 }
 
-// ADR-0091 §4 fix (independent-review defect): in `'blue-sky'` mode, `NEGOTIATE_BLUE_SKY` above already
-// carries the three ★ calibration examples' `body` text verbatim (via `calibrationExampleBullet`). If
-// `selectMiniSkills` ALSO picked one of those same three ids, injecting it again through
-// `miniSkillsBlock` would duplicate the identical paragraph in ONE composed prompt — the exact defect an
-// independent reviewer's live probe caught ("dashboard paragraph occurrences in ONE blue-sky prompt: 2").
-// Filter those three ids out of the selection ONLY when `mode === 'blue-sky'` — in `'specific'`/`'default'`
-// /absent mode, none of this prose is inlined anywhere, so the registry selection must keep injecting them
-// normally there. `login-form`/`master-detail-split` are never inlined in any mode and are never filtered.
-const BLUE_SKY_CALIBRATION_ID_SET: ReadonlySet<string> = new Set(BLUE_SKY_CALIBRATION_IDS)
-
-function miniSkillsFor(mode: GenUiMode | undefined, selected: readonly MiniSkill[]): readonly MiniSkill[] {
-  if (mode !== 'blue-sky') return selected
-  return selected.filter((skill) => !BLUE_SKY_CALIBRATION_ID_SET.has(skill.id))
-}
-
 /**
  * Compose the machine system prompt (SPEC-R6): the `mode`-composed GRAMMAR half (ADR-0090 §1) + the
  * catalog-derived component/function inventory + the few-shot block + the selected mini-skills block
@@ -391,9 +364,9 @@ function miniSkillsFor(mode: GenUiMode | undefined, selected: readonly MiniSkill
  * byte-identical to calling `buildSystemPrompt` without the parameter at all (ADR-0091 Acceptance) — the
  * block is `''` on empty, exactly like `fewShot`. A non-empty selection appends ONE `## Composition
  * idioms` block after the few-shot examples, capped at whatever size the caller (`produce()`,
- * `selectMiniSkills`) already bounded it to. In `'blue-sky'` mode ONLY, `miniSkillsFor` first drops any
- * selected entry whose id is already inlined verbatim in `NEGOTIATE_BLUE_SKY` (§4 fix) — everywhere else
- * the selection composes unfiltered.
+ * `selectMiniSkills`) already bounded it to. In `'blue-sky'` mode ONLY, a selected entry flagged
+ * `calibration:` stays in the grammar's calibration bullets and leaves this block (§4 fix, T-0209), so no
+ * paragraph composes twice; everywhere else the selection composes as given.
  *
  * GH #418 — `a2uiEnabled` is the 7th, additive parameter: absent/`true` reproduces every byte of the
  * pre-existing composition (`grammarFor` + the catalog/functions inventory + `fewShot` + the mini-skills
@@ -486,7 +459,9 @@ export function buildSystemPromptSections(
     const shot = fewShot(exemplars)
     framedExemplarIds = shot.framedIds
     parts.push(['few-shot', shot.text])
-    parts.push(['mini-skills', miniSkillsBlock(miniSkillsFor(mode, miniSkills ?? []))])
+    // §4 fix (T-0209): one flag places a calibration entry; in 'blue-sky' mode the grammar above already holds it.
+    const idioms = mode === 'blue-sky' ? (miniSkills ?? []).filter((m) => m.calibration === undefined) : (miniSkills ?? [])
+    parts.push(['mini-skills', miniSkillsBlock(idioms)])
   }
   parts.push(['genui', genuiBlock(genui, a2uiOn)])
   parts.push(['authoring', authoringBlock(authoringSurface)])

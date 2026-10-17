@@ -277,7 +277,7 @@ describe('exclusion single source', () => {
 // ── 5 · personas ────────────────────────────────────────────────────────────────────────────────────────
 
 describe('personas: the loader list equals the shipped manifests, and the views equal the guidance resolver', () => {
-  it('the hard-coded persona list and targets equal SHIPPED_PERSONA_CATALOG_MANIFESTS', () => {
+  it('the loader persona list and targets equal SHIPPED_PERSONA_CATALOG_MANIFESTS', () => {
     const shipped = SHIPPED_PERSONA_CATALOG_MANIFESTS.map((m) => ({ personaId: m.personaId, targetCatalogs: [...(m.targetCatalogs ?? [])] })).sort((a, b) => (a.personaId < b.personaId ? -1 : 1))
     const loader = PERSONA_FRAGMENTS.map((p) => ({ personaId: p.personaId, targetCatalogs: [...p.targetCatalogs] })).sort((a, b) => (a.personaId < b.personaId ? -1 : 1))
     expect(shipped.length).toBeGreaterThan(0)

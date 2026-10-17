@@ -4,11 +4,10 @@
 // exclusion allowlist.
 //
 // Plain-Node safe (`node --experimental-strip-types`, no DOM, no vite): catalog and fragment JSON is read
-// with `readFileSync`, because a persona `manifest.ts` imports its `catalog.json` without an import
-// attribute and so cannot load under plain Node (`ERR_IMPORT_ATTRIBUTE_MISSING`). The persona list and each
-// persona's `targetCatalogs` are therefore hard-coded below, the `selection-guidance.ts` precedent;
-// `src/registry/registry-wiring.test.ts` holds both equal to `SHIPPED_PERSONA_CATALOG_MANIFESTS`. A
-// plain-Node-loadable persona manifest (T-0012, GH #1812) replaces this list and adds the preset rows.
+// with `readFileSync`. The persona list and each persona's `targetCatalogs` derive from
+// `SHIPPED_PERSONA_CATALOG_MANIFESTS` (T-0209): the persona `manifest.ts` files import their `catalog.json` with
+// `with { type: 'json' }`, so plain Node loads them; `src/registry/registry-wiring.test.ts` still holds the
+// two equal. The preset rows (T-0012, GH #1812) are not added here.
 //
 // Reads resolve from `process.cwd()` (the repo root), like `mini-skills.ts` and `selection-guidance.ts`
 // whose registries this loader reuses; `root` names the repo root for the files read here.
@@ -18,6 +17,7 @@ import { join } from 'node:path'
 import { parseDescriptor, scalarSeq, splitFrontmatter } from '@agent-ui/components/descriptor'
 import { BASE_CATALOG_IDS, CATALOG_FILES, loadCatalogById } from '../catalog-files.ts'
 import { loadCatalogFragment } from '../../src/catalog/compose.ts'
+import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from '../../src/catalog/personas/manifests.ts'
 import { EXCLUSION_ALLOWLIST } from '../../src/catalog/default/exclusions.ts'
 import { FEED_EXCLUDED, FEED_SURFACE_TYPES } from '../../src/agent/feed-catalog.ts'
 import { MINI_SKILLS } from '../../src/agent/mini-skills.ts'
@@ -41,14 +41,10 @@ const CONTROLS_DIR = 'packages/agent-ui/components/src/controls'
 const PROMPTS_DIR = `${A2UI}/src/agent/prompts`
 const CORPUS_DIR = `${A2UI}/corpus`
 
-/** The shipped persona fragments and the bases each targets (see the header: hard-coded, gated). */
-export const PERSONA_FRAGMENTS: readonly { readonly personaId: string; readonly targetCatalogs: readonly string[] }[] = [
-  { personaId: 'concierge', targetCatalogs: ['agent-ui', 'a2ui-basic'] },
-  { personaId: 'croupier', targetCatalogs: ['agent-ui', 'a2ui-basic'] },
-  { personaId: 'fixture-demo', targetCatalogs: ['agent-ui', 'a2ui-basic'] },
-  { personaId: 'quizmaster', targetCatalogs: ['agent-ui', 'a2ui-basic'] },
-  { personaId: 'stylist', targetCatalogs: ['agent-ui'] },
-]
+/** The shipped persona fragments and the bases each targets, sorted by id: derived from the manifests. */
+export const PERSONA_FRAGMENTS: readonly { readonly personaId: string; readonly targetCatalogs: readonly string[] }[] = SHIPPED_PERSONA_CATALOG_MANIFESTS.map(
+  (m) => ({ personaId: m.personaId, targetCatalogs: [...(m.targetCatalogs ?? [])] }),
+).sort((a, b) => (a.personaId < b.personaId ? -1 : 1))
 
 /** T-0202 (catalog architecture CA-R7): the shipped domain fragments and their bases, hard-coded and held equal to
  *  `SHIPPED_DOMAIN_CATALOG_MANIFESTS` by `registry-wiring.test.ts`. Empty until W1 lands the first domain; their

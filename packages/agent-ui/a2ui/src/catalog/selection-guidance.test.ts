@@ -9,8 +9,8 @@
 //     implies B -> A (each direction carries its own why). A persona edge to a type present in EVERY base
 //     that persona targets is exempt, since a base cannot name persona types.
 //  5. Personas: for every shipped manifest and every base it targets, the derived catalog's guidance
-//     covers every fragment type and every clause renders. This also holds the loader's hard-coded persona
-//     list equal to `SHIPPED_PERSONA_CATALOG_MANIFESTS`, together with the orphan leg below.
+//     covers every fragment type and every clause renders. The loader's persona list IS
+//     `SHIPPED_PERSONA_CATALOG_MANIFESTS` (T-0209); the orphan leg below reds a sidecar no manifest ships.
 //  6. Orphans: every `selection.json` under `src/catalog/` belongs to default, a2ui-basic, a shipped
 //     persona, or a shipped domain.
 //  7. Domains (T-0202, catalog architecture CA-R4, CA-R9, D8): a domain sidecar is a bijection with its fragment,

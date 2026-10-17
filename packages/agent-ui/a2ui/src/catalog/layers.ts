@@ -3,11 +3,14 @@
 //   1. domain: its props or meaning carry one field's vocabulary, so an agent outside that field never picks it;
 //   2. agentic: it stands for a moment between agent and user and no prop names a field;
 //   3. core: everything else, every form control and every chart included.
-// Each row also names the catalog that declares the type today (`home`). A domain-layer row homed in `default` is a
-// type the SPEC moves out in W2 (§5.3); the row and the move change together. `layers.test.ts` holds the map equal
-// to the catalogs: a type with no row, a row whose home does not declare its type, or a layer its home cannot hold
-// reds the gate. Content is SPEC §5's classification (AC2). Pure data plus the selected-domain read (T-0207), whose
-// one import is the import-free id grammar.
+// Only the agentic and domain rows are listed (T-0209): core membership is derived, never hand-listed here, as every
+// type the default catalog's `catalog.json` declares that has no row. A NEW default type still forces a decision:
+// `layers.test.ts` pins the default catalog's type set, so it reds until the type gets a row here or joins that
+// snapshot as core. Each row names the catalog that declares the type today (`home`). A domain-layer row homed in `default`
+// is a type the SPEC moves out in W2 (§5.3); the row and the move change together. `layers.test.ts` holds the map
+// equal to the catalogs: a fragment or domain type with no row, a listed core row, a row whose home does not declare
+// its type, or a layer its home cannot hold reds the gate. Content is SPEC §5's classification (AC2). Pure data plus
+// the selected-domain read (T-0207), whose one import is the import-free id grammar.
 
 import { catalogIdDomains, splitCatalogId } from './catalog-id.ts'
 
@@ -17,36 +20,17 @@ export type CatalogLayer = 'core' | 'agentic' | 'domain'
 /** One type's layer, its domain when the layer is `domain`, and the catalog folder that declares it today. */
 export interface LayerRow {
   readonly layer: CatalogLayer
-  /** The domain id (CA-R8) for a `domain` row; absent for core and agentic. */
+  /** The domain id (CA-R8) for a `domain` row; absent for an agentic one. */
   readonly domain?: string
   /** `default`, `domains/<domain>` or `personas/<persona>`: the folder whose `catalog.json` declares the type. */
   readonly home: string
 }
 
-const core = (home = 'default'): LayerRow => ({ layer: 'core', home })
 const agentic: LayerRow = { layer: 'agentic', home: 'default' }
 const domain = (id: string, home: string): LayerRow => ({ layer: 'domain', domain: id, home })
 
-const CORE_TYPES = [
-  // primitives and display
-  'Text', 'Icon', 'Image', 'Video', 'AudioPlayer', 'Avatar', 'Badge', 'Code', 'Attachment', 'Swatch',
-  // layout and containers
-  'Row', 'Column', 'Grid', 'List', 'Split', 'SplitPane', 'Card', 'CardHeader', 'CardContent', 'CardFooter', 'Tabs', 'Tab',
-  'TabPanel', 'Disclosure', 'Swiper', 'SwiperItem', 'Drill', 'DrillPanel', 'Timeline', 'TimelineItem', 'DescriptionList',
-  'Toolbar', 'Breadcrumb', 'Pagination',
-  // overlays and feedback
-  'Modal', 'Drawer', 'Popover', 'Tooltip', 'Menu', 'MenuItem', 'Toast', 'FormPopover',
-  // form controls
-  'Button', 'TextField', 'Textarea', 'Field', 'FormProvider', 'Checkbox', 'Switch', 'Toggle', 'Select', 'Option',
-  'RadioGroup', 'Radio', 'ChoiceGroup', 'ChoiceCard', 'SegmentedControl', 'Segment', 'Slider', 'SliderMulti', 'Rating',
-  'Calendar', 'ComboBox', 'MultiSelect', 'FileDrop', 'ColorPicker',
-  // data viz
-  'Sparkline', 'BarChart', 'LineChart', 'PieChart', 'ColumnChart', 'Gauge', 'Table', 'Stat', 'Progress',
-] as const
-
-/** Type name to its layer row: SPEC §5.1 to §5.4. */
+/** Type name to its layer row, for the agentic and domain layers: SPEC §5.2 to §5.4 (§5.1 core is derived). */
 export const CATALOG_LAYER_MAP: Readonly<Record<string, LayerRow>> = Object.freeze({
-  ...Object.fromEntries(CORE_TYPES.map((t) => [t, core()])),
   // §5.2 agentic
   SourceList: agentic,
   Suggestions: agentic,

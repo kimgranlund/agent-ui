@@ -14,7 +14,8 @@
 // its file here is a compile error, not a runtime "unknown catalog" surprise.
 //
 // T-0240: a persona shard id (`PersonaShardCatalogId`, `<base>--<persona>`) is registered too. Its path is the
-// persona's fragment (`catalog/personas/<persona>/catalog.json`, read by fs for the same reason), and
+// persona's fragment (`catalog/personas/<persona>/catalog.json`, read by fs like the bases; its manifest also loads
+// under plain Node since T-0209), and
 // `loadCatalogById` composes it over its base with the SAME `composeCatalog` the renderer and the server hosts
 // use, so a persona seed is admitted against exactly the catalog a live persona turn validates against.
 //
@@ -22,8 +23,8 @@
 // `<base>--<persona>` or `<base>--<d1>+<d2>` id resolves ONLY when its persona or domains are in
 // `SHIPPED_PERSONA_CATALOG_MANIFESTS` / `SHIPPED_DOMAIN_CATALOG_MANIFESTS` and target that base, through the hosts'
 // own derive steps (`composePersonaCatalogDocs`, `composeDomainCatalogDocs`), so no second copy of those rules
-// lives here. The manifests import `catalog.json` without an import attribute, so `loadShippedManifests` first
-// registers a Node load hook that supplies it. This is the catalog only: a domain's `semanticChecks` are not run
+// lives here. The persona manifests import `catalog.json` with `with { type: 'json' }` (T-0209), so plain Node loads
+// them with no load hook; a domain `manifest.ts` must carry the same attribute. This is the catalog only: a domain's `semanticChecks` are not run
 // by `validate-payload.ts`, so a payload can pass here and still fail a live turn's checks.
 //
 // Paths are repo-root-relative (the CLIs run from the repo root, `process.cwd()`), so a sandbox repo
@@ -32,7 +33,6 @@
 // Zero new deps (SPEC-N5). Plain `.ts`, run via Node type-stripping (`erasableSyntaxOnly`, ADR-0062).
 
 import { readFileSync } from 'node:fs'
-import { registerHooks } from 'node:module'
 import { join } from 'node:path'
 import { loadCatalog } from '../src/catalog/catalog.ts'
 import type { Catalog } from '../src/catalog/catalog.ts'
@@ -106,13 +106,9 @@ export interface ShippedManifests {
   domains: readonly DomainCatalogManifest[]
 }
 
-/** Import the shipped manifests under plain Node. Their `catalog.json` imports carry no import attribute, which
- *  Node's native ESM loader rejects (`ERR_IMPORT_ATTRIBUTE_MISSING`), so a load hook supplies `type: 'json'` first. */
+/** Import the shipped manifests under plain Node. Their `catalog.json` imports carry `with { type: 'json' }`
+ *  (T-0209), which Node's native ESM loader requires (`ERR_IMPORT_ATTRIBUTE_MISSING` otherwise). */
 export async function loadShippedManifests(): Promise<ShippedManifests> {
-  registerHooks({
-    load: (url, context, next) =>
-      url.endsWith('.json') && context.importAttributes?.type === undefined ? next(url, { ...context, importAttributes: { type: 'json' } }) : next(url, context),
-  })
   const personas = await import('../src/catalog/personas/manifests.ts')
   const domains = await import('../src/catalog/domains/manifests.ts')
   return { personas: personas.SHIPPED_PERSONA_CATALOG_MANIFESTS, domains: domains.SHIPPED_DOMAIN_CATALOG_MANIFESTS }

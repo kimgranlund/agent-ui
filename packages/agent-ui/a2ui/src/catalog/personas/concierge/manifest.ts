@@ -7,7 +7,7 @@
 
 import { loadCatalogFragment } from '../../compose.ts'
 import type { CatalogFragment, PersonaCatalogManifest } from '../../compose.ts'
-import fragmentDoc from './catalog.json'
+import fragmentDoc from './catalog.json' with { type: 'json' }
 import { conciergeSemanticChecks } from './checks.ts'
 
 export const CONCIERGE_PERSONA_ID = 'concierge'
