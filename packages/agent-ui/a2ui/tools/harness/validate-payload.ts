@@ -5,7 +5,7 @@
 // side of the loop reads (harness LLD §6):
 //
 //   node --experimental-strip-types packages/agent-ui/a2ui/tools/harness/validate-payload.ts \
-//     <payload.json> [--catalog agent-ui|a2ui-basic]
+//     <payload.json> [--catalog agent-ui|a2ui-basic|<base>--<persona>|<base>--<d1>+<d2>]
 //   # exit 0 → {ok:true, repairs:[…]}   (heal applied first — ADR-0061's closed list; repairs named)
 //   # exit 1 → [{code, path, message}]  (the shared validator's verdicts, unforked)
 //
@@ -24,7 +24,9 @@
 // registry reads `catalog.json` via `fs` and feeds it through the SAME exported `loadCatalog()`,
 // byte-identical to the module catalogs, just assembled without an ES-module JSON import in the way. An
 // id outside the registry still exits 1 (naming the registered ids), never a silent fallback to the
-// default catalog.
+// default catalog. T-0247: a derived id (`agent-ui--stylist`, `agent-ui--design+games`) outside the registry loads
+// only when a shipped persona or domain set derives it over that base, through the hosts' own derive steps
+// (`loadDerivedCatalogById`); the catalog is checked, a domain's `semanticChecks` are not run here.
 //
 // ADR-0187 / GH #829: the validator runs at FINALIZE granularity here (`{atFinalize: true}`), mirroring
 // corpus admission — a payload FILE is a complete set by construction, and a divergent verdict between
@@ -39,7 +41,8 @@ import { heal } from '../../src/corpus/heal.ts'
 import { validateA2ui } from '../../src/corpus/validate.ts'
 import type { Catalog } from '../../src/catalog/catalog.ts'
 import type { Failure } from '../../src/protocol.ts'
-import { CATALOG_IDS, isCatalogId, loadCatalogById } from '../catalog-files.ts'
+import { BASE_CATALOG_IDS, CATALOG_IDS, isCatalogId, loadCatalogById, loadDerivedCatalogById, loadShippedManifests } from '../catalog-files.ts'
+import { splitCatalogId } from '../../src/catalog/catalog-id.ts'
 
 declare const process: { argv: string[]; cwd(): string; exit(code?: number): never }
 declare const console: { log(...args: unknown[]): void; error(...args: unknown[]): void }
@@ -64,7 +67,7 @@ function parseArgs(argv: string[]): Args {
   }
 
   if (payloadPath === undefined) {
-    console.error(`usage: validate-payload.ts <payload.json> [--catalog <${CATALOG_IDS.join('|')}>]`)
+    console.error(`usage: validate-payload.ts <payload.json> [--catalog <${CATALOG_IDS.join('|')}|<base>--<persona>|<base>--<d1>+<d2>>]`)
     process.exit(1)
   }
   return { payloadPath, catalogId }
@@ -92,16 +95,25 @@ function toPrintable(f: Failure): { code: Failure['code']; path: string; message
   return { code: f.code, path: f.path, message: FAILURE_DESCRIPTIONS[f.code] }
 }
 
-function main(): void {
+async function main(): Promise<void> {
   const { payloadPath, catalogId } = parseArgs(process.argv)
 
-  if (!isCatalogId(catalogId)) {
-    console.error(`validate-payload: unknown catalog "${catalogId}", loadable ids: ${CATALOG_IDS.join(', ')}`)
-    process.exit(1)
-  }
   let catalog: Catalog
   try {
-    catalog = loadCatalogById(process.cwd(), catalogId)
+    // A registered id loads from the registry; any other `<base>--<persona>` or `<base>--<d1>+<d2>` id loads only
+    // when the hosts would derive it from the shipped manifests (T-0247), never a silent default.
+    const loaded = isCatalogId(catalogId) ? loadCatalogById(process.cwd(), catalogId) : loadDerivedCatalogById(process.cwd(), catalogId, await loadShippedManifests())
+    if (loaded === undefined) {
+      const { base, tail } = splitCatalogId(catalogId)
+      const shipped = tail !== undefined && (BASE_CATALOG_IDS as readonly string[]).includes(base)
+      console.error(
+        shipped
+          ? `validate-payload: no such persona or domain "${tail}" for base "${base}" (no shipped persona or domain set derives "${catalogId}")`
+          : `validate-payload: unknown catalog "${catalogId}", loadable ids: ${CATALOG_IDS.join(', ')}, or a derived <base>--<persona> / <base>--<d1>+<d2>`,
+      )
+      process.exit(1)
+    }
+    catalog = loaded
   } catch (err) {
     // A registered id whose catalog file is missing or mis-mapped is an operator-facing condition: one
     // line naming it (catalog-files.ts words it), exit 1, never a raw stack.
@@ -131,4 +143,4 @@ function main(): void {
   console.log(JSON.stringify({ ok: true, repairs: healed.repairs }, null, 2))
 }
 
-main()
+await main()

@@ -7,7 +7,9 @@ import { describe, it, expect, afterEach } from 'vitest'
 import { cpSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
-import { BASE_CATALOG_IDS, CATALOG_FILES, CATALOG_IDS, createCatalogResolver, isCatalogId, loadCatalogById } from './catalog-files.ts'
+import { BASE_CATALOG_IDS, CATALOG_FILES, CATALOG_IDS, createCatalogResolver, isCatalogId, loadCatalogById, loadDerivedCatalogById, loadShippedManifests } from './catalog-files.ts'
+import type { ShippedManifests } from './catalog-files.ts'
+import { loadCatalogFragment } from '../src/catalog/compose.ts'
 
 declare const process: { cwd(): string }
 
@@ -100,5 +102,42 @@ describe('catalog-files: failure arms, proven on throwaway roots (never the real
     const resolve = createCatalogResolver(root)
     expect(resolve('a2ui-basic')).toBe(resolve('a2ui-basic'))
     expect(resolve('agent-ui')).not.toBe(resolve('a2ui-basic'))
+  })
+})
+
+// T-0247: a derived id resolves only through the hosts' derive steps over the shipped manifests.
+describe('catalog-files: loadDerivedCatalogById derives only what the hosts derive (T-0247)', () => {
+  const fragment = (name: string) => loadCatalogFragment({ components: { [name]: { properties: { label: { type: { type: 'string' }, bindable: true, mapsTo: 'label' } } } }, functions: {} })
+  // No domain ships in the real tree yet, so the two-domain legs inject two (the shape `SHIPPED_DOMAIN_CATALOG_MANIFESTS` takes).
+  const injected = (shipped: ShippedManifests): ShippedManifests => ({
+    ...shipped,
+    domains: [
+      { domainId: 'design', fragment: fragment('PaletteChip') },
+      { domainId: 'games', fragment: fragment('Token') },
+    ],
+  })
+
+  it('loads the real shipped manifests under plain Node and composes a persona only over a base it targets', async () => {
+    const shipped = await loadShippedManifests()
+    expect(shipped.personas.map((p) => p.personaId)).toContain('stylist')
+    expect(loadDerivedCatalogById(REAL_ROOT, 'agent-ui--stylist', shipped)?.components['ContrastPair']).toBeDefined()
+    expect(loadDerivedCatalogById(REAL_ROOT, 'a2ui-basic--stylist', shipped), 'stylist targets agent-ui alone').toBeUndefined()
+    expect(loadDerivedCatalogById(REAL_ROOT, 'a2ui-basic--croupier', shipped)?.catalogId).toBe('a2ui-basic--croupier')
+    expect(loadDerivedCatalogById(REAL_ROOT, 'agent-ui--stylst', shipped)).toBeUndefined()
+    expect(loadDerivedCatalogById(REAL_ROOT, 'bogus--stylist', shipped)).toBeUndefined()
+    expect(loadDerivedCatalogById(REAL_ROOT, 'agent-ui', shipped)).toBeUndefined()
+  })
+
+  it('a two-domain id composes both domains over the base; the single ids hold one each; a reversed spelling or an unshipped domain derives nothing', async () => {
+    const shipped = injected(await loadShippedManifests())
+    const pair = loadDerivedCatalogById(REAL_ROOT, 'agent-ui--design+games', shipped)
+    expect(pair?.catalogId).toBe('agent-ui--design+games')
+    expect(pair?.components['PaletteChip']).toBeDefined()
+    expect(pair?.components['Token']).toBeDefined()
+    expect(pair?.components['Button']).toEqual(loadCatalogById(REAL_ROOT, 'agent-ui').components['Button'])
+    expect(loadDerivedCatalogById(REAL_ROOT, 'agent-ui--design', shipped)?.components['Token']).toBeUndefined()
+    expect(loadDerivedCatalogById(REAL_ROOT, 'agent-ui--games+design', shipped)).toBeUndefined()
+    expect(loadDerivedCatalogById(REAL_ROOT, 'agent-ui--design+hospitality', shipped)).toBeUndefined()
+    expect(loadDerivedCatalogById(REAL_ROOT, 'agent-ui--design+games', await loadShippedManifests()), 'none ships in the real tree').toBeUndefined()
   })
 })
