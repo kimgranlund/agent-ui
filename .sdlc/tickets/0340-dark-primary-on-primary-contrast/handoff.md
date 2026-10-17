@@ -2,7 +2,7 @@
 id: T-0340
 title: "Dark primary under on-primary is 3.25:1: buttons, calendar day, segmented control and checkbox text fail AA"
 type: bug             # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -23,3 +23,6 @@ Found by the T-0337 code review: dark primary is primary-450 and on-primary is p
 
 ## Constraints
 Foundations are generated (ADR-0245); never hand-edit the .gen.css files.
+
+## Ruling
+Kim 2026-10-17: darken dark primary (around 600 to 650) with the same on-primary ink; bring before/after screenshots of button, calendar selected day, segmented control and checkbox for Kim's approval.
