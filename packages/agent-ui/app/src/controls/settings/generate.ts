@@ -132,6 +132,9 @@ export function generateSection(section: SettingsSection, store: SettingsStore |
   for (const field of section.fields) {
     const wrapper = document.createElement('ui-field') as UIFieldElement
     wrapper.label = field.label
+    // T-0162: the field's store key, so a host can find the row a key renders in (the agent-admin
+    // provenance strip and its coverage test). Presentational only.
+    wrapper.setAttribute('data-field', field.key)
     if (field.description) wrapper.description = field.description
 
     const factory = FIELD_CONTROL_REGISTRY[field.type]

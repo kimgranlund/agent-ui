@@ -14,7 +14,9 @@
 import type { SettingsSchema, SettingsSection, SettingsField } from '../settings/schema.ts'
 // T-0185: the pure per-model capability table (no producer bytes cross; the `./agent/meta-line` posture).
 import { capabilitiesFor, normalizeModelSettings, DEFAULT_DISPLAY } from '@agent-ui/a2ui/agent/model-capabilities'
-import type { ModelSettings, ThinkingMode } from '@agent-ui/a2ui/agent/model-capabilities'
+import type { ModelCapabilities, ModelSettings, ThinkingMode } from '@agent-ui/a2ui/agent/model-capabilities'
+// T-0162: the persona kind schema, the one field definition the Agent and Model sections derive from.
+import { PERSONA_FIELDS, type ContentField } from './content-fields.ts'
 import type { EffortLevel } from '../conversation/composer-options.ts'
 import type { PersonaPatch } from '@agent-ui/a2ui/agent/meta-line' // ADR-0178 cl.2 / SPEC-R29 — the declared-patch shape, type-only from the SAME pure meta-line module `TurnProgress` rides (SPEC-N1-safe: no producer bytes cross)
 import type { PlanDeclaration } from '@agent-ui/a2ui/agent/meta-line' // ADR-0182 cl.4 / SPEC-R20 — the ALREADY-SHIPPED plan-step shape, the SAME type-only import as PersonaPatch above
@@ -169,96 +171,81 @@ export const MODEL_SETTING_KEYS = {
   cacheTtl: 'cacheTtl',
 } as const
 
-const EFFORT_LABELS: Record<EffortLevel, string> = { low: 'Low', medium: 'Medium', high: 'High', xhigh: 'Extra high' }
-const THINKING_LABELS: Record<ThinkingMode, string> = { adaptive: 'Adaptive', disabled: 'Off', between_tools: 'Between tools' }
 /** `off` is the cache TTL select's "no cache_control" value. */
 const CACHE_OFF = 'off'
 
-/** T-0185: the Model section, generated from `model`'s capability row: a field appears only when the model
- *  accepts that setting, and a select offers only the values the row lists. A model with no row (an OpenAI
- *  or Gemini roster id) gets no section. Temperature is gone: the 5.5 models accept only 1.0. */
+/** One `agent` or `model` row of the persona kind schema (content-fields.ts) as a settings form field. A
+ *  `gate`d row shows only when `row` accepts that setting and offers only the values the row lists; the
+ *  labels, help text and defaults are the schema's own hints (ACS-R10: one field definition). */
+function settingsFieldFor(field: ContentField, row: ModelCapabilities | undefined): SettingsField | undefined {
+  const hint = field.form
+  if (hint === undefined || field.key === undefined) return undefined
+  const base = { key: field.key, label: field.label, ...(field.description === undefined ? {} : { description: field.description }) }
+  const options = (values: readonly string[]): SettingsField['options'] => values.map((v) => ({ value: v, label: hint.optionLabels?.[v] ?? v }))
+  switch (hint.gate) {
+    case 'efforts':
+      if (!row || row.efforts.length === 0) return undefined
+      return { ...base, type: 'select', default: row.defaultEffort ?? row.efforts[0]!, options: options(row.efforts) }
+    case 'thinking': {
+      const modes = row ? (Object.keys(row.thinking) as ThinkingMode[]) : []
+      if (modes.length <= 1) return undefined
+      const notes = modes.map((m) => hint.notes?.[m]).filter((n): n is string => n !== undefined)
+      return { ...base, description: [field.description ?? '', ...notes].join(' ').trim(), type: 'select', default: String(hint.default), options: options(modes) }
+    }
+    case 'displays':
+      if (!row || row.displays.length === 0) return undefined
+      return { ...base, type: 'boolean', default: DEFAULT_DISPLAY === 'summarized' }
+    case 'cacheTtls':
+      if (!row || row.cacheTtls.length === 0) return undefined
+      return { ...base, type: 'select', default: String(hint.default), options: options([CACHE_OFF, ...row.cacheTtls]) }
+  }
+  if (hint.control === 'number') {
+    // The ceiling is the model's own: the schema states the floor, the row the max.
+    const max = row?.maxOutputTokens
+    return {
+      ...base,
+      ...(max === undefined ? {} : { description: `${field.description ?? ''} Up to ${max}.`.trim() }),
+      type: 'number',
+      default: Number(hint.default ?? 0),
+      validation: { min: field.min ?? 0, ...(max === undefined ? {} : { max }), step: 1 },
+    }
+  }
+  return {
+    ...base,
+    type: hint.control,
+    ...(hint.default === undefined ? {} : { default: hint.default }),
+    ...(hint.required === true ? { validation: { required: true } } : {}),
+  } as SettingsField
+}
+
+/** T-0185 and T-0162: the Model section, generated from the persona kind schema's `model` rows for
+ *  `model`'s capability row: a field appears only when the model accepts that setting, and a select offers
+ *  only the values the row lists. A model with no row (an OpenAI or Gemini roster id) gets no section.
+ *  Temperature is gone: the 5.5 models accept only 1.0. */
 export function modelSettingsSection(model: string): SettingsSection | undefined {
   const row = capabilitiesFor(model)
   if (!row) return undefined
-  const fields: SettingsField[] = []
-  if (row.efforts.length > 0) {
-    fields.push({
-      key: MODEL_SETTING_KEYS.effort,
-      type: 'select',
-      label: 'Effort',
-      description: 'How much the model thinks and writes per turn. The chat composer starts here and can change it per turn.',
-      default: row.defaultEffort ?? row.efforts[0]!,
-      options: row.efforts.map((e) => ({ value: e, label: EFFORT_LABELS[e] })),
-    })
-  }
-  const modes = Object.keys(row.thinking) as ThinkingMode[]
-  if (modes.length > 1) {
-    fields.push({
-      key: MODEL_SETTING_KEYS.thinking,
-      type: 'select',
-      label: 'Thinking',
-      description: `Adaptive lets the model decide. ${modes.includes('disabled') ? 'Off turns thinking off (effort high or below). ' : ''}${modes.includes('between_tools') ? 'Between tools skips up-front thinking (effort high or below). ' : ''}`.trim(),
-      default: 'adaptive',
-      options: modes.map((m) => ({ value: m, label: THINKING_LABELS[m] })),
-    })
-  }
-  if (row.displays.length > 0) {
-    fields.push({
-      key: MODEL_SETTING_KEYS.showReasoning,
-      type: 'boolean',
-      label: 'Show reasoning',
-      description: 'Stream a summary of the model\'s thinking into the chat. Off returns thinking empty; billing is the same.',
-      default: DEFAULT_DISPLAY === 'summarized',
-    })
-  }
-  fields.push({
-    key: MODEL_SETTING_KEYS.maxTokens,
-    type: 'number',
-    label: 'Max tokens',
-    description: `The output ceiling per call, thinking included. 0 uses the effort-based default. Up to ${row.maxOutputTokens}.`,
-    default: 0,
-    validation: { min: 0, max: row.maxOutputTokens, step: 1 },
-  })
-  if (row.cacheTtls.length > 0) {
-    fields.push({
-      key: MODEL_SETTING_KEYS.cacheTtl,
-      type: 'select',
-      label: 'Prompt cache',
-      description: 'Cache the system prompt between turns for this long.',
-      default: CACHE_OFF,
-      options: [{ value: CACHE_OFF, label: 'Off' }, ...row.cacheTtls.map((t) => ({ value: t, label: t === '5m' ? '5 minutes' : '1 hour' }))],
-    })
-  }
+  const fields = PERSONA_FIELDS.filter((f) => f.home === 'model')
+    .map((f) => settingsFieldFor(f, row))
+    .filter((f): f is SettingsField => f !== undefined)
   return { id: 'model', label: 'Model', description: 'The settings this agent\'s model accepts; each one reaches the API.', fields }
 }
 
-/** Build the agent-config `SettingsSchema` (ADR-0131 cl.1 — no external runtime dependency). The MODEL
- *  itself lives in the admin's own Model GRID (Kim, 2026-07-19 rev.2), writing the `model`/`modelsIncluded`
- *  store keys; this schema keeps the name plus the T-0185 Model section generated for `model` (the
- *  temperature slider is removed: no live request ever sent it). Rendered by the composed `ui-settings`
- *  pane exactly as any other settings schema (SPEC-R10/R11/R12). */
+/** Build the agent-config `SettingsSchema` (ADR-0131 cl.1, no external runtime dependency) from the persona
+ *  kind schema (T-0162): the `agent` rows, then the Model section for `model`. The MODEL itself lives in
+ *  the admin's own Model GRID (Kim, 2026-07-19 rev.2), writing the `model`/`modelsIncluded` store keys.
+ *  Rendered by the composed `ui-settings` pane exactly as any other settings schema (SPEC-R10/R11/R12). */
 export function agentConfigSchema(model: string = DEFAULT_MODEL_ID): SettingsSchema {
   const modelSection = modelSettingsSection(model)
+  const agentFields = PERSONA_FIELDS.filter((f) => f.home === 'agent')
+    .map((f) => settingsFieldFor(f, undefined))
+    .filter((f): f is SettingsField => f !== undefined)
   return {
-  version: 1,
-  sections: [
-    {
-      id: 'agent',
-      label: 'Agent',
-      description: 'The identity and generation behavior this preview reads before every turn.',
-      fields: [
-        {
-          key: 'name',
-          type: 'text',
-          label: 'Name',
-          description: "The agent's display name.",
-          default: 'Untitled agent',
-          validation: { required: true },
-        },
-      ],
-    },
-    ...(modelSection ? [modelSection] : []),
-  ],
+    version: 1,
+    sections: [
+      { id: 'agent', label: 'Agent', description: 'The identity and generation behavior this preview reads before every turn.', fields: agentFields },
+      ...(modelSection ? [modelSection] : []),
+    ],
   }
 }
 

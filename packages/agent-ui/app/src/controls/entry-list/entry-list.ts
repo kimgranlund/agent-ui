@@ -78,6 +78,17 @@ export interface EntryListSection {
    *  is remembered and re-applied after any `render`, so a list rebuild (a sibling toggle, an external
    *  store write) cannot silently drop a live notice. */
   showNotices(notices: ReadonlyMap<string, string>): void
+  /** T-0162: mark each named entry's row (`entryId → mark`): `data-provenance` on the row, and the mark's
+   *  `element`, when it has one, placed under the row's header (after any notice). Purely presentational,
+   *  like `showNotices`: the caller builds the element, and the last map is re-applied after any `render`.
+   *  A row the map omits loses its mark. */
+  showRowMarks(marks: ReadonlyMap<string, EntryRowMark>): void
+}
+
+/** One row's mark (`showRowMarks`). */
+export interface EntryRowMark {
+  provenance: string
+  element?: HTMLElement
 }
 
 /** Build one kind's section shell (list + collapsible add-form), once — HEADLESS since GH #225: the
@@ -277,8 +288,9 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
       //
       // GH #783/LLD-C5 — forward the ADDING PACK's own `rejectOnCollision` as `onAdd`'s optional context,
       // so the caller's ONE `validateNewEntry` call rejects a foreign-key duplicate even for a pack under
-      // an ordinary kind. An unflagged pack forwards `undefined` — byte-identical to the pre-#783 call.
-      void handlers.onAdd(entry, pack?.rejectOnCollision === true ? { rejectOnCollision: true } : undefined)
+      // an ordinary kind. T-0162: every library add also names its source, so the caller records the
+      // entry as the pack's (agent-content ACS-R8).
+      void handlers.onAdd(entry, pack?.rejectOnCollision === true ? { rejectOnCollision: true, source: 'pack' } : { source: 'pack' })
     })
 
     return libraryMenu
@@ -848,6 +860,7 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
       }
     }
     applyNotices() // GH #419 — a rebuild must not drop a live notice (the map outlives any one render)
+    applyRowMarks() // T-0162 — nor a provenance mark
     // GH #564 — a `rejectOnCollision` kind's add/delete just changed what's "already in the list"; rebuild
     // the picker so a newly-collided row disables (or a deleted one re-enables), never a stale menu. Gated
     // on the flag so every other kind's render stays exactly as before (no picker rebuild at all).
@@ -892,6 +905,29 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
     applyNotices()
   }
 
+  // T-0162: the per-row provenance marks, re-applied after every render like the notices above. A mark's
+  // element already in place is left alone, so re-applying an unchanged map mutates nothing.
+  let marks: ReadonlyMap<string, EntryRowMark> = new Map()
+
+  function applyRowMarks(): void {
+    for (const row of list.querySelectorAll<HTMLElement>('[data-part="entry"]')) {
+      const mark = marks.get(row.getAttribute('data-entry-id') ?? '')
+      if (mark === undefined) row.removeAttribute('data-provenance')
+      else if (row.getAttribute('data-provenance') !== mark.provenance) row.setAttribute('data-provenance', mark.provenance)
+      for (const placed of row.querySelectorAll<HTMLElement>('[data-entry-mark]')) if (placed !== mark?.element) placed.remove()
+      if (mark?.element === undefined || row.contains(mark.element)) continue
+      mark.element.setAttribute('data-entry-mark', '')
+      const anchor = row.querySelector('[data-part="entry-notice"]') ?? row.querySelector('[data-part="entry-header"]')
+      if (anchor) anchor.after(mark.element)
+      else row.append(mark.element)
+    }
+  }
+
+  function showRowMarks(next: ReadonlyMap<string, EntryRowMark>): void {
+    marks = next
+    applyRowMarks()
+  }
+
   /** GH #143 — swap the library menu for one built from `libraries`, in place — see `refreshLibraryMenu`'s
    *  own doc comment above for the mechanics; this just points it at a new pack list. */
   function updateLibraries(libraries: readonly EntryLibraryPack[]): void {
@@ -899,7 +935,7 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
     refreshLibraryMenu()
   }
 
-  const built: EntryListSection = { host: section, render, updateLibraries, showNotices }
+  const built: EntryListSection = { host: section, render, updateLibraries, showNotices, showRowMarks }
   errorSinks.set(built, showError)
   return built
 }

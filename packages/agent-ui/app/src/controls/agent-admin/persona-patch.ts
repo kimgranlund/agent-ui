@@ -61,6 +61,8 @@ import {
 import { EFFORT_LEVELS } from '../conversation/composer-options.ts'
 import type { SettingsSchema } from '../settings/schema.ts'
 import { ENTRY_KINDS } from './entries.ts'
+// T-0162: the persona kind schema: the state key set and the per-key value check.
+import { PERSONA_FIELD_BY_KEY, PERSONA_STATE_FIELD_KEYS, checkFieldValue } from './content-fields.ts'
 import { entriesStoreKey, readEntries, validateNewEntry, type Entry, type NewEntryInput } from '../entry-list/entry-data.ts'
 
 /** The six-plus entry-list store keys — one per `ENTRY_KINDS` member, derived, never hand-listed. */
@@ -70,46 +72,14 @@ export const PERSONA_ENTRY_LIST_KEYS: readonly string[] = Object.values(ENTRY_KI
  *  from the kind rather than spelled as a literal so a kind rename cannot silently widen or void the fence. */
 const PROMPT_SECTION_KEY: string = entriesStoreKey(ENTRY_KINDS.promptSection)
 
-/** Every persona-scoped store key, in a stable order (a Set: `kindEnabledKey('tool')` IS the pre-existing
- *  `toolsEnabled` config key — one key, two readers). Order is the JSON key order of an exported persona
- *  file, so two exports of the same state are byte-identical strings.
+/** Every persona-scoped store key, in a stable order: the persona kind schema's `state` rows
+ *  (content-fields.ts, T-0162), so the persona file, the patch gate and the settings form share one field
+ *  definition. Order is the JSON key order of an exported persona file, so two exports of the same state
+ *  are byte-identical strings (persona-patch.test.ts pins it against the key constants).
  *
- *  GH #640 (Kim's ruling) — `SURFACE_PLANNER_KEY` joins the set here. Its omission was pre-persona-file
- *  drift, not a decision: it is a persona-scoped Surface Option exactly like the four keys around it, so a
- *  planner-enabled persona used to re-import with the capability silently reverted to the inverse default. */
-export const PERSONA_STATE_KEYS: readonly string[] = [
-  ...new Set([
-    // the agent config (the settings pane's own fields + the Model grid's selection/inclusion record)
-    'name',
-    'model',
-    // T-0185: the Model section (the temperature key is retired; a stored temperature is ignored)
-    ...Object.values(MODEL_SETTING_KEYS),
-    MODELS_INCLUDED_KEY,
-    // the master switches — the Agent card's own, plus one per capability kind
-    AGENT_ENABLED_KEY,
-    ...Object.values(ENTRY_KINDS).map((kind) => kindEnabledKey(kind)),
-    // Surface Options (the output-modality contract)
-    SURFACE_MARKDOWN_KEY,
-    SURFACE_A2UI_KEY,
-    SURFACE_GENUI_KEY,
-    SURFACE_GENUI_DOGFOOD_KEY,
-    // ADR-0174 cl.1 / SPEC-R21 — the planner-stage opt-in (GH #640's ruled fix, above).
-    SURFACE_PLANNER_KEY,
-    // ADR-0178 cl.3 / SPEC-R30 — the persona-authoring modality gate. Persona-scoped like every other
-    // Surface Option, so an exported Builder-shaped persona re-imports with its authoring capability
-    // intact instead of silently reverting to the inverse default (OFF).
-    SURFACE_AUTHORING_KEY,
-    A2UI_CATALOG_KEY,
-    // M-D SPEC-R5 — the persona's local-pattern-set SELECTION (never its definitions, which are
-    // package-shipped code, SPEC-R1): symmetrical in storage shape to A2UI_CATALOG_KEY above.
-    A2UI_LOCAL_PATTERNS_KEY,
-    // GH #525 — the persistent-bankroll capability opt-in + its own persisted figure.
-    BANKROLL_CAPABLE_KEY,
-    BANKROLL_KEY,
-    // the entry lists
-    ...PERSONA_ENTRY_LIST_KEYS,
-  ]),
-]
+ *  GH #640 (Kim's ruling): `SURFACE_PLANNER_KEY` is in the set. Its omission was pre-persona-file drift,
+ *  not a decision: a planner-enabled persona used to re-import with the capability silently reverted. */
+export const PERSONA_STATE_KEYS: readonly string[] = PERSONA_STATE_FIELD_KEYS
 
 /** The VALUE half of the canonical set — every persona key that is not an entry list. A patch's `values`
  *  member may name these and nothing else (§3 filter 1). */
@@ -120,9 +90,11 @@ export interface PersonaStateReader {
   get(key: string): unknown
 }
 
-/** The read/write surface `applyPersonaPatch` needs — `SettingsStore`'s `get`/`set`, nothing else. */
+/** The read/write surface `applyPersonaPatch` needs — `SettingsStore`'s `get`/`set`, nothing else. The
+ *  `source` argument (T-0162, ACS-R8) tells an overlay store the write is the Builder's; a plain store
+ *  ignores it. */
 export interface PersonaStateStore extends PersonaStateReader {
-  set(key: string, value: unknown): void
+  set(key: string, value: unknown, source?: 'builder'): void
 }
 
 /** The persona-scoped state a store currently answers, restricted to `PERSONA_STATE_KEYS` and to keys the
@@ -181,10 +153,16 @@ export interface PatchDeps {
 
 type Admit = (value: unknown, deps: PatchDeps) => boolean
 
-/** Every switch-shaped key admits a LITERAL boolean only — never a truthy string/number. A stored
- *  non-boolean must not be able to turn a capability on by accident (each key's own fail-closed reader
- *  already refuses one; admitting it here would write a value those readers then ignore). */
-const admitBoolean: Admit = (value) => typeof value === 'boolean'
+/** T-0162: the schema-backed half of filter 2. Every value key is admitted by its persona kind schema
+ *  row's `checkFieldValue` (content-fields.ts: the same check the content validator and the CLI run), so a
+ *  switch admits a literal boolean only, never a truthy string or number. The keys whose admission also
+ *  depends on live state add a fixpoint over their shipped reader here. */
+const REFINE: Readonly<Record<string, Admit>> = {
+  model: (value, deps) => sanitizeModel(value, deps.models) === value,
+  [A2UI_CATALOG_KEY]: (value) => sanitizeCatalog(value) === value,
+  [A2UI_LOCAL_PATTERNS_KEY]: (value) => sanitizeLocalPatterns(value) === value,
+  [BANKROLL_KEY]: (value) => sanitizeBankroll(value) === value,
+}
 
 /**
  * A MAP, not an object literal — and that is a correctness requirement, not a style preference.
@@ -204,36 +182,13 @@ const admitBoolean: Admit = (value) => typeof value === 'boolean'
  * construction rather than by a guard someone must remember at each lookup (the `KIND_FOR_ENTRY_KEY`
  * precedent, applied to the table that actually faces untrusted input).
  */
-const ADMISSION: ReadonlyMap<string, Admit> = new Map<string, Admit>(Object.entries({
-  // `name` is free text — the settings field's own `required` validation is a UI-level affordance, and an
-  // empty name degrades to 'Untitled agent' at read time exactly as a hand-cleared field does.
-  name: (value) => typeof value === 'string',
-  model: (value, deps) => sanitizeModel(value, deps.models) === value,
-  // T-0185: the Model section keys, admitted by value shape; the turn-time read checks them against the model.
-  [MODEL_SETTING_KEYS.effort]: (value) => typeof value === 'string' && EFFORT_LEVELS.some((e) => e.id === value),
-  [MODEL_SETTING_KEYS.thinking]: (value) => value === 'adaptive' || value === 'disabled' || value === 'between_tools',
-  [MODEL_SETTING_KEYS.showReasoning]: admitBoolean,
-  [MODEL_SETTING_KEYS.maxTokens]: (value) => typeof value === 'number' && Number.isInteger(value) && value >= 0,
-  [MODEL_SETTING_KEYS.cacheTtl]: (value) => value === 'off' || value === '5m' || value === '1h',
-  // The Model grid's inclusion record — a plain object of booleans, the ONE shape `isModelIncluded` reads.
-  [MODELS_INCLUDED_KEY]: (value) =>
-    typeof value === 'object' &&
-    value !== null &&
-    !Array.isArray(value) &&
-    Object.values(value as Record<string, unknown>).every((v) => typeof v === 'boolean'),
-  [AGENT_ENABLED_KEY]: admitBoolean,
-  ...Object.fromEntries(Object.values(ENTRY_KINDS).map((kind) => [kindEnabledKey(kind), admitBoolean])),
-  [SURFACE_MARKDOWN_KEY]: admitBoolean,
-  [SURFACE_A2UI_KEY]: admitBoolean,
-  [SURFACE_GENUI_KEY]: admitBoolean,
-  [SURFACE_GENUI_DOGFOOD_KEY]: admitBoolean,
-  [SURFACE_PLANNER_KEY]: admitBoolean,
-  [SURFACE_AUTHORING_KEY]: admitBoolean,
-  [BANKROLL_CAPABLE_KEY]: admitBoolean,
-  [A2UI_CATALOG_KEY]: (value) => sanitizeCatalog(value) === value,
-  [A2UI_LOCAL_PATTERNS_KEY]: (value) => sanitizeLocalPatterns(value) === value,
-  [BANKROLL_KEY]: (value) => sanitizeBankroll(value) === value,
-}))
+const ADMISSION: ReadonlyMap<string, Admit> = new Map<string, Admit>(
+  PERSONA_VALUE_KEYS.map((key): [string, Admit] => {
+    const field = PERSONA_FIELD_BY_KEY.get(key)!
+    const refine = REFINE[key]
+    return [key, (value, deps) => checkFieldValue(field, value) === undefined && (refine === undefined || refine(value, deps))]
+  }),
+)
 
 /**
  * One human-readable VALUE SHAPE per patchable key — what a model must send for that key to be admitted.
@@ -397,7 +352,7 @@ export function applyPersonaPatch(
       report.dropped.push(key)
       continue
     }
-    store.set(key, value)
+    store.set(key, value, 'builder')
     report.applied.push(key)
   }
 
@@ -449,7 +404,7 @@ export function applyPersonaPatch(
       appended += 1
     }
     if (appended === 0 && updatedIds.length === 0) continue
-    store.set(key, next)
+    store.set(key, next, 'builder')
     // Each sub-record stays ABSENT when its own verb did nothing, so an append-only patch's report is
     // byte-identical to the one it produced before updates existed, and an update-only patch never claims a
     // zero-count append that a consumer keyed on `Object.keys(added)` would read as a change.
