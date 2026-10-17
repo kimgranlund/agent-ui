@@ -100,7 +100,7 @@ describe('ui-theme-provider — the scheme→color-scheme mapping, unset-inherit
   })
 })
 
-describe('ui-theme-provider — the one effect reads only scheme (LLD-C2)', () => {
+describe('ui-theme-provider: the one effect reads only scheme (LLD-C2)', () => {
   it('the single this.effect(...) body reads this.scheme and no other axis', () => {
     // The ONE effect this component establishes (LLD-C2) is a single-statement `this.style.colorScheme = …`
     // reading only `this.scheme`.
