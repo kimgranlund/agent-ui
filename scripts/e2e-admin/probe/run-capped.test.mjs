@@ -77,6 +77,35 @@ describe('run-capped', () => {
     expect([d.scenario, d.sample, d.effort]).toEqual(['regress-croupier-spanish-21', 2, 'default'])
   })
 
+  // T-0341: a run whose estimate would take the spend past the cap is not started; cheaper runs after it still run.
+  it('skips a run as a cap skip when the spend plus its estimate would pass the cap', () => {
+    const script = ['# est $1', 'npm run chat:probe -- --out runs/a', '# est $5', 'npm run chat:probe -- --out runs/b', '# est $0.5', 'npm run chat:probe -- --out runs/c', 'npm run chat:probe -- --out runs/d'].join('\n')
+    const cmds = parseCommands(script)
+    expect(cmds.map((c) => c.est)).toEqual([1, 5, 0.5, undefined])
+    let spend = 0
+    const ran = []
+    const skips = []
+    const result = runCapped({
+      commands: cmds,
+      cap: 4,
+      spend: () => spend,
+      exec: (cmd) => {
+        ran.push(/--out (\S+)/.exec(cmd)[1])
+        spend += 1.5
+        return 0
+      },
+      onCapSkip: (c, at) => skips.push([c.out, at]),
+      done: () => false,
+    })
+    // a starts at $0 (+1 <= 4); b would reach $6.5; c starts at $1.5 (+0.5); d has no estimate and starts at $3.
+    expect(ran).toEqual(['runs/a', 'runs/c', 'runs/d'])
+    expect(skips).toEqual([['runs/b', 1.5]])
+    expect(result).toMatchObject({ ran: 3, capped: true, capSkipped: ['runs/b'] })
+    // Without the estimate line the same run starts: the skip is the estimate's doing.
+    const plain = runCapped({ commands: parseCommands(script.replace('# est $5\n', '')), cap: 4, spend: () => 0, exec: () => 0, done: () => false })
+    expect(plain).toMatchObject({ ran: 4, capped: false, capSkipped: [] })
+  })
+
   it('keeps the round start across a restart', () => {
     const file = join(mkdtempSync(join(tmpdir(), 'run-capped-')), 'runs', '.capped-start')
     expect(roundStart(file, () => '2026-10-14T10:00:00.000Z')).toBe('2026-10-14T10:00:00.000Z')
@@ -195,6 +224,16 @@ describe('run-capped', () => {
       expect(ledger.map((r) => r.name)).toEqual(['croupier-deal-haiku-1', 'croupier-deal-sonnet-1', 'admiral-salvo-sonnet-1'])
       expect(ledger[0].traces).toEqual([{ file: 'traces/2026-10-14.jsonl', from: 1, to: 2 }])
       expect(JSON.parse(readFileSync(join(round, 'round.json'), 'utf8'))).toMatchObject({ stop: 'done', totals: { runs: 3, costUsd: 4.92 } })
+    })
+
+    // T-0341: an estimate that would pass the cap records a cap skip in round.json and stops the round as `cap`.
+    it('records cap skips in round.json', () => {
+      const { root, now, exec, round } = setup()
+      const lines = ROUND.split('\n')
+      const script = [lines[0], '# est $50', lines[1], lines[2]].join('\n')
+      const result = runRound({ root, liveCommands: 'live.sh', commands: parseCommands(script), cap: 10, since: SINCE, exec, commit: 'abc123', now })
+      expect(result).toMatchObject({ ran: 2, capped: true, capSkipped: ['.sdlc/rt/runs/croupier-deal-sonnet-1'] })
+      expect(JSON.parse(readFileSync(join(round, 'round.json'), 'utf8'))).toMatchObject({ stop: 'cap', capSkipped: ['.sdlc/rt/runs/croupier-deal-sonnet-1'], totals: { runs: 2 } })
     })
 
     it('marks a crashed round and keeps the runs it finished', () => {

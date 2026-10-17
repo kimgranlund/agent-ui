@@ -1,124 +1,155 @@
-// T-0341: live round 10 is well-formed before any credit is spent. Keyless: the selection is round 9's failed runs
-// plus the runs each round 9 fix touches, minus the exclusions named with a reason; the unstable Haiku blackjack
-// openings run 3 samples; every run is round 9's argv apart from `--out` and `--name`; the estimate is pinned to the
-// round 8 and 9 ledgers and sits near $8 under the $10 cap; and `live-commands.sh` is exactly the generated script,
-// which the capped runner describes.
-import { readFileSync } from 'node:fs'
+// T-0341: live round 10 is well-formed before any credit is spent. Keyless. The generator derives the selection from
+// the round 8 and 9 records; this test pins what it derives to the evidence read off round 9 by hand (the failed
+// runs, each fix's runs with their trace lines, the unstable openings), checks every argv against round 9, and checks
+// that the committed `live-commands.sh`, with its `# est` lines, is the generated script and stays under the cap.
+import { readFileSync, statSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { parseProbeCli } from '../cli.ts'
-import { describeCommands } from '../run-capped.ts'
-import { ROUND8_DIR } from './round8.ts'
-import { ROUND9_DIR, round9Runs } from './round9.ts'
-import {
-  R10_COST,
-  R10_EXCLUDED,
-  R10_SAMPLES,
-  R10_UNSTABLE,
-  R9_FAILED,
-  R9_FIX_RUNS,
-  ROUND10_CAP,
-  ROUND10_DIR,
-  ROUND10_FILE,
-  round10CommandsScript,
-  round10ExpectedUsd,
-  round10Runs,
-} from './round10.ts'
+import { describeCommands, parseCommands, runCapped } from '../run-capped.ts'
+import { round9Runs } from './round9.ts'
+import { FIX_SIGNALS, R10_SAMPLES, R10_TARGET, ROUND10_CAP, ROUND10_DIR, ROUND10_FILE, round10CommandsScript, round10Plan, round10Runs, round9Lines } from './round10.ts'
 
 const root = new URL('../../../../', import.meta.url)
 const read = (rel) => readFileSync(new URL(rel, root), 'utf8')
-const ledgerOf = (dir) =>
-  read(`${dir}/ledger.jsonl`)
-    .split('\n')
-    .filter((l) => l.trim() !== '')
-    .map((l) => JSON.parse(l))
-const r8 = ledgerOf(ROUND8_DIR)
-const r9 = ledgerOf(ROUND9_DIR)
+const H = (s) => `${s}-haiku-1`
+const S = (s) => `${s}-sonnet-1`
+const O = (s) => `${s}-opus-1`
 const base = (name) => name.replace(/-\d+$/, '-1')
 
 describe('live round 10', () => {
-  const runs = round10Runs()
+  const plan = round10Plan()
+  const runs = round10Runs(plan)
   const names = runs.map((r) => r.name)
 
-  it("R9_FAILED is round 9's 10 failed runs, in its ledger order", () => {
-    expect(R9_FAILED).toEqual(r9.filter((r) => r.verdict === 'fail').map((r) => r.name))
-    expect(R9_FAILED).toHaveLength(10)
+  it("derives round 9's 10 failed runs from its ledger", () => {
+    expect(plan.failed).toEqual([
+      H('regress-croupier-blackjack-rounds'),
+      H('regress-concierge-facilities-then-tour'),
+      H('routing-domain-switch'),
+      H('routing-long-session'),
+      H('routing-guidance-conflict'),
+      H('long-croupier-blackjack-hand'),
+      H('long-concierge-spa-services'),
+      S('regress-croupier-blackjack-moves'),
+      O('regress-croupier-omaha'),
+      O('regress-croupier-five-card-draw'),
+    ])
   })
 
-  it('every fix maps to round 9 runs, and each exclusion is a failed or touched run with a reason', () => {
-    const r9Names = new Set(r9.map((r) => r.name))
-    expect(Object.keys(R9_FIX_RUNS).sort()).toEqual(['T-0328', 'T-0330', 'T-0331', 'T-0332', 'T-0333', 'T-0334', 'T-0335'])
-    for (const [ticket, list] of Object.entries(R9_FIX_RUNS)) {
-      expect(list.length, ticket).toBeGreaterThan(0)
-      for (const n of list) expect(r9Names.has(n), `${ticket}: ${n}`).toBe(true)
+  it('derives the runs each fix touches from the round 9 trace lines that carry its signal', () => {
+    expect(Object.keys(FIX_SIGNALS).sort()).toEqual(['T-0328', 'T-0330', 'T-0331', 'T-0332', 'T-0333', 'T-0334', 'T-0335'])
+    expect(plan.evidence).toEqual({
+      'T-0328': {
+        [H('regress-croupier-blackjack-rounds')]: [1],
+        [H('regress-concierge-facilities-then-tour')]: [84],
+        [H('routing-domain-switch')]: [120],
+        [H('routing-long-session')]: [128],
+        [H('routing-guidance-conflict')]: [143],
+        [H('long-croupier-blackjack-hand')]: [147],
+        [H('long-concierge-spa-services')]: [157],
+      },
+      'T-0330': { [H('routing-long-session')]: [128], [H('long-concierge-spa-services')]: [157] },
+      'T-0331': { [H('regress-concierge-facilities-then-tour')]: [84], [H('long-concierge-spa-services')]: [157] },
+      'T-0332': {
+        [H('regress-croupier-blackjack-moves')]: [8],
+        [H('regress-croupier-spanish-21')]: [20],
+        [H('regress-croupier-pontoon')]: [28, 29],
+        [H('regress-croupier-texas-holdem')]: [42],
+        [H('regress-croupier-omaha')]: [49],
+        [H('regress-croupier-seven-card-stud')]: [70],
+        [H('regress-admiral-opening-salvo')]: [105],
+        [S('regress-croupier-blackjack-moves')]: [182],
+        [S('regress-croupier-spanish-21')]: [190],
+        [S('regress-croupier-texas-holdem')]: [207],
+        [S('regress-croupier-seven-card-stud')]: [240],
+        [S('routing-domain-switch')]: [294],
+        [O('regress-croupier-texas-holdem')]: [391],
+      },
+      'T-0333': { [H('regress-concierge-facilities-then-tour')]: [85], [S('regress-concierge-facilities-then-tour')]: [257], [O('routing-long-session')]: [491] },
+      'T-0334': { [H('regress-croupier-spanish-21')]: [14, 19], [H('regress-croupier-pontoon')]: [27], [S('regress-croupier-spanish-21')]: [189] },
+      'T-0335': {
+        [H('regress-concierge-facilities-then-tour')]: [85],
+        [H('routing-long-session')]: [138],
+        [S('regress-concierge-facilities-then-tour')]: [256],
+        [S('routing-long-session')]: [312],
+        [O('regress-concierge-facilities-then-tour')]: [442],
+        [O('routing-long-session')]: [498],
+      },
+    })
+  })
+
+  it('each listed trace line is in its run and carries the signal; a line of another run does not', () => {
+    const lines = new Map(round9Lines().map((l) => [l.n, l]))
+    for (const [fix, byRun] of Object.entries(plan.evidence)) {
+      for (const [run, ns] of Object.entries(byRun)) {
+        for (const n of ns) {
+          expect(lines.get(n).run, `${fix} :${n}`).toBe(run)
+          expect(FIX_SIGNALS[fix].test(lines.get(n).line), `${fix} :${n}`).toBe(true)
+        }
+      }
     }
-    const candidates = new Set([...R9_FAILED, ...Object.values(R9_FIX_RUNS).flat()])
-    for (const [n, why] of Object.entries(R10_EXCLUDED)) {
-      expect(candidates.has(n), n).toBe(true)
-      expect(why.length, n).toBeGreaterThan(20)
+    // Negative controls: a clean Haiku blackjack turn and a Concierge spa-services ask carry no signal.
+    for (const n of [3, 148]) for (const [fix, { test }] of Object.entries(FIX_SIGNALS)) expect(test(lines.get(n).line), `${fix} :${n}`).toBe(false)
+  })
+
+  it('the unstable runs are the Haiku blackjack openings that failed BET_TABLE_MISSING on round 1, 3 samples each', () => {
+    expect(plan.unstable).toEqual([H('regress-croupier-blackjack-rounds'), H('regress-croupier-blackjack-moves'), H('routing-domain-switch'), H('routing-guidance-conflict'), H('long-croupier-blackjack-hand')])
+    const lines = new Map(round9Lines().map((l) => [l.n, l.line]))
+    for (const n of [1, 2, 120, 143, 147]) {
+      const l = lines.get(n)
+      expect(l.model).toBe('claude-haiku-5-5')
+      expect(l.retries.find((r) => r.round === 2).failures.map((f) => f.code)).toContain('BET_TABLE_MISSING')
     }
-  })
-
-  it('selects the round 9 failures plus the runs each fix touches, minus the exclusions, each base run once per sample', () => {
-    const candidates = new Set([...R9_FAILED, ...Object.values(R9_FIX_RUNS).flat()])
-    const selected = [...candidates].filter((n) => !(n in R10_EXCLUDED)).sort()
-    expect([...new Set(names.map(base))].sort()).toEqual(selected)
-    expect(new Set(names).size).toBe(runs.length)
-    for (const r of runs) expect(r.name).toBe(`${base(r.name).replace(/-1$/, '')}-${r.sample}`)
-  })
-
-  it('the unstable Haiku blackjack openings run 3 samples, every other run 1', () => {
     expect(R10_SAMPLES).toBe(3)
-    expect([...R10_UNSTABLE].sort()).toEqual(
-      [
-        'regress-croupier-blackjack-rounds-haiku-1',
-        'regress-croupier-blackjack-moves-haiku-1',
-        'regress-croupier-spanish-21-haiku-1',
-        'regress-croupier-pontoon-haiku-1',
-        'routing-domain-switch-haiku-1',
-        'routing-guidance-conflict-haiku-1',
-        'long-croupier-blackjack-hand-haiku-1',
-      ].sort(),
-    )
     const count = (b) => names.filter((n) => base(n) === b).length
-    for (const b of new Set(names.map(base))) expect(count(b), b).toBe(R10_UNSTABLE.includes(b) ? 3 : 1)
+    for (const b of new Set(names.map(base))) expect(count(b), b).toBe(plan.unstable.includes(b) ? 3 : 1)
+  })
+
+  it('selects the failed, touched and unstable runs minus the exclusions, whose reasons carry computed numbers', () => {
+    const candidates = new Set([...plan.failed, ...Object.values(plan.evidence).flatMap((e) => Object.keys(e)), ...plan.unstable])
+    expect([...new Set(names.map(base))].sort()).toEqual([...candidates].filter((n) => !(n in plan.excluded)).sort())
+    expect(Object.keys(plan.excluded)).toEqual([O('regress-croupier-omaha'), O('regress-croupier-five-card-draw'), O('routing-long-session')])
+    expect(plan.excluded[O('regress-croupier-omaha')]).toBe('failed in round 9 with no fix signal on its trace lines, so no round 9 fix can move it ($1.42)')
+    expect(plan.excluded[O('routing-long-session')]).toBe('estimate $10.24 over the $8.00 target; T-0333 keeps 2 selected runs, T-0335 keeps 5 selected runs ($2.44)')
+    for (const fix of Object.keys(plan.evidence)) expect(Object.keys(plan.evidence[fix]).filter((r) => !(r in plan.excluded)).length, fix).toBeGreaterThanOrEqual(2)
+    expect(new Set(names).size).toBe(runs.length)
   })
 
   it("each run is round 9's argv for the same scenario and model, with only --out and --name changed", () => {
     const prior = new Map(round9Runs().map((r) => [r.name, r]))
     for (const { agent, model, name, argv } of runs) {
       const p = prior.get(base(name))
-      expect(p, name).toBeDefined()
       expect([agent, model.id]).toEqual([p.agent, p.model.id])
-      const out = argv.indexOf('--out') + 1
-      const nm = argv.indexOf('--name') + 1
-      expect(argv[out]).toBe(`${ROUND10_DIR}/runs/${name}`)
-      expect(argv[nm]).toBe(name)
+      expect(argv[argv.indexOf('--out') + 1]).toBe(`${ROUND10_DIR}/runs/${name}`)
+      expect(argv[argv.indexOf('--name') + 1]).toBe(name)
       const keep = (a) => a.filter((_, j) => j !== a.indexOf('--out') + 1 && j !== a.indexOf('--name') + 1)
       expect(keep(argv)).toEqual(keep(p.argv))
       const cmd = parseProbeCli(argv)
-      expect(cmd.mode).toBe('probe')
-      expect([cmd.agent, cmd.model, cmd.name]).toEqual([agent, model.id, name])
+      expect([cmd.mode, cmd.agent, cmd.model, cmd.name]).toEqual(['probe', agent, model.id, name])
     }
   })
 
-  it('each cost is the larger of the round 8 and round 9 ledger costs, runs go cheapest first, the estimate leaves headroom', () => {
-    const c8 = new Map(r8.map((r) => [r.name, r.costUsd]))
-    const c9 = new Map(r9.map((r) => [r.name, r.costUsd]))
-    expect(Object.keys(R10_COST).sort()).toEqual([...new Set(names.map(base))].sort())
-    for (const [n, c] of Object.entries(R10_COST)) expect(c, n).toBeCloseTo(Math.max(c8.get(n) ?? 0, c9.get(n)), 6)
-    const costs = names.map((n) => R10_COST[base(n)])
-    expect(costs).toEqual([...costs].sort((a, b) => a - b))
+  it('costs are the larger of the round 8 and 9 ledger costs, runs go cheapest first, the estimate meets the target', () => {
+    expect(plan.cost[H('regress-croupier-blackjack-rounds')]).toBe(0.03305) // round 8; round 9 halted on turn 0 at 0.009683
+    expect(plan.cost[S('regress-croupier-spanish-21')]).toBe(0.913908) // round 9; round 8 was 0.676054
+    const est = runs.map((r) => r.est)
+    expect(est).toEqual(runs.map((r) => plan.cost[r.of]))
+    expect(est).toEqual([...est].sort((a, b) => a - b))
     expect(ROUND10_CAP).toBe(10)
-    expect(round10ExpectedUsd()).toBeLessThanOrEqual(8)
+    expect(plan.expectedUsd).toBeCloseTo(est.reduce((s, c) => s + c, 0), 9)
+    expect(plan.expectedUsd).toBeLessThanOrEqual(R10_TARGET)
   })
 
-  it('live-commands.sh is the generated script, and the capped runner describes every run keyless', () => {
+  it('live-commands.sh is the generated, executable script; every run has its estimate and none is a cap skip at the estimates', () => {
     const text = read(ROUND10_FILE)
     expect(text).toBe(round10CommandsScript())
+    expect(statSync(new URL(ROUND10_FILE, root)).mode & 0o111).not.toBe(0)
     expect(text).toContain(`run-capped.ts ${ROUND10_FILE} --cap 10 --round r10-targeted`)
-    for (const n of Object.keys(R10_EXCLUDED)) expect(text).toContain(n)
-    const described = describeCommands(text)
-    expect(described).toHaveLength(runs.length)
-    expect(described.map((d) => d.split(':')[0])).toEqual(names)
+    const cmds = parseCommands(text)
+    expect(cmds.map((c) => c.est)).toEqual(runs.map((r) => r.est))
+    expect(describeCommands(text).map((d) => d.split(':')[0])).toEqual(names)
+    let spend = 0
+    const result = runCapped({ commands: cmds, cap: ROUND10_CAP, spend: () => spend, exec: (cmd) => ((spend += cmds.find((c) => c.cmd === cmd).est), 0), done: () => false })
+    expect(result).toMatchObject({ ran: runs.length, capped: false, capSkipped: [] })
   })
 })
