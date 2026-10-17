@@ -1267,7 +1267,8 @@ function surfacesToKeep(failed: A2uiOutput, failures: readonly RoundFailure[], s
 /** T-0172: a self-correct round must not lose a surface the failed round created. The Concierge trace
  *  (2026-10-14) failed `greet-1:root` with a correct new `ask-1` beside it, and the "corrected" round
  *  shipped only `greet-1`: the requested form never reached the user. Named in the repair message, and fed
- *  back as `SURFACE_DROPPED` when a passing round still lost one (T-0317: any surface built this turn, named or not). */
+ *  back as `SURFACE_DROPPED` when a passing round still lost one (T-0317: any surface built this turn, named or not;
+ *  T-0328: a valid round that builds a new id may leave out one only flagged rounds built). */
 function keepSurfacesHint(failed: A2uiOutput | undefined, session: Session, failures: readonly RoundFailure[]): string {
   const keep = failed === undefined ? [] : surfacesToKeep(failed, failures, session)
   if (keep.length === 0) return ''
@@ -1411,6 +1412,11 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   // delete it, has dropped it (SURFACE_DROPPED), never a success: the turn-scoped invariant replaced T-0172's
   // keep-only-unnamed set, which let a failure-named surface go and pinned an id-graph fault to the wrong surface.
   const builtSurfaces = new Set<string>()
+  // T-0328 (Kim 2026-10-17, amends T-0317): the built surfaces that would have shipped, those some round built with no
+  // failure naming them (`surfacesToKeep`). A surface only flagged rounds built never shipped, so a later round that
+  // rebuilds it under a new id has superseded it, not dropped it (round 9 :1 rebuilt a flagged ask-1 as table-1).
+  const cleanSurfaces = new Set<string>()
+  let outputRound = -1 // the round `lastOutput` came from; a prose round keeps the previous output
   // T-0299: each missing-composite finding (`<COMPOSITE>_MISSING`) a round of this turn got, binding on every later round.
   const boundComposites = new Map<string, SemanticFinding>()
   // RTS-R8: the last capture round's reply and declarations, kept for the degrade at the bound.
@@ -1442,7 +1448,13 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     const failuresFedBack = failures // what THIS round's prompt carried back — the trace's failureCodes
     const forceSurface = forceSurfaceRound
     forceSurfaceRound = false
-    if (round > 0 && lastOutput !== undefined) for (const sid of builtSurfaceIds(lastOutput, input.session)) builtSurfaces.add(sid)
+    if (round > 0 && lastOutput !== undefined) {
+      const clean = outputRound === round - 1 ? new Set(surfacesToKeep(lastOutput, failures ?? [], input.session)) : new Set<string>()
+      for (const sid of builtSurfaceIds(lastOutput, input.session)) {
+        builtSurfaces.add(sid)
+        if (clean.has(sid)) cleanSurfaces.add(sid)
+      }
+    }
     // RTS-R9: the escalation seam, consulted at the top of every self-correct round. A returned field
     // replaces only this round's effort or model; absent ⇒ byte-identical.
     roundModel = model
@@ -1817,9 +1829,11 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       continue
     }
     lastOutput = assembled.output // GH #288 — this round's parsed output, kept for the NEXT round's self-correct feedback (expectedTypeNote)
+    outputRound = round
     const createdThisRound = newSurfaceIds(assembled.output, input.session)
     const deletedThisRound = new Set(assembled.output.flatMap((msg) => ('deleteSurface' in msg ? [msg.deleteSurface.surfaceId] : [])))
-    const dropped = [...builtSurfaces].filter((sid) => !createdThisRound.has(sid) && !deletedThisRound.has(sid))
+    const rebuilt = builtSurfaceIds(assembled.output, input.session).some((sid) => !builtSurfaces.has(sid)) // T-0328: a new id
+    const dropped = [...builtSurfaces].filter((sid) => !createdThisRound.has(sid) && !deletedThisRound.has(sid) && (cleanSurfaces.has(sid) || !rebuilt))
     stampCreateSurfaceCatalogId(assembled.output, deps.catalog.catalogId) // ADR-0169 cl.4 — the server-selected catalog is authoritative, unconditional + idempotent, BEFORE validateA2ui runs
     // SPEC-N3 — the shared validator, no fork; TKT-0081 — seeded with the session's prior graphs so the
     // per-round judgment matches the MERGED state the renderer will hold (update-only follow-ups valid;
@@ -1836,7 +1850,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     const uncreated = uncreatedSurfaceFailures(assembled.output, input) // T-0305: an update to a surface nothing created
     const verdict = uncreated.length > 0 ? { valid: false, failures: [...validated.failures, ...uncreated] } : validated
     if (verdict.valid) {
-      // T-0172: a valid round that lost a surface an earlier round of this turn created is not a success.
+      // T-0172: a valid round that lost a surface an earlier round of this turn created is not a success (T-0328: unless
+      // only flagged rounds built it and this round builds a new id in its place).
       // One more round while one is left (the repair names the surface, and T-0321 forces render_surface), else a halt
       // that says so, unless an earlier valid round can ship (T-0302).
       if (dropped.length > 0) {

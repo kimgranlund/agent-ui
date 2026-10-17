@@ -3,6 +3,8 @@
 // provider. Test only: the loop is not refactored unless a property reds.
 // - I1, scoped to the turn: every surface an earlier round of this turn created is kept, updated or explicitly deleted
 //   in the round that ships. A turn that halts or degrades to text ships no round, so I1 holds there trivially.
+//   T-0328 (Kim 2026-10-17, amends T-0317): a surface every creating round flagged never shipped, so a shipped round
+//   that builds a new id in its place has rebuilt it under that id, not dropped it.
 // - I2: the shipped lines never update a surface that neither the session nor the shipped lines created (T-0305).
 // - The T-0302 pin: when the last round fails and an earlier round of the turn validated with nothing dropped, that
 //   round's lines ship and the trace ends with EARLIER_ROUND_SHIPPED. T-0321 (Kim 2026-10-16): never a round a semantic
@@ -12,7 +14,7 @@
 // round that shipped is read off the lines, never assumed.
 // T-0317 (Kim's L1 ruling, 2026-10-16): the three I1 classes this enumeration found (a failure-named surface dropped,
 // an id-graph fault blamed on the wrong surface, a round sent back for SURFACE_DROPPED keeping none of its own) are
-// fixed, so no counterexample is allowed.
+// fixed, so no counterexample is allowed. T-0328 narrows the first class to a surface some round built unflagged.
 
 import { describe, expect, it } from 'vitest'
 import { produce, ProduceHalt } from '../agent/produce.ts'
@@ -129,6 +131,9 @@ function createdBy(shape: Shape, r: number): string[] {
   return payload.flatMap((m) => ('createSurface' in m && !HELD.has(m.createSurface.surfaceId) && !deleted.has(m.createSurface.surfaceId) ? [m.createSurface.surfaceId] : []))
 }
 
+/** The surfaces a shape's own failure names: the flagCheck finding or the `root->gone` id-graph fault. */
+const FLAGGED: Partial<Record<Shape, string[]>> = { Aflag: [A], Abroken: [A], AbrokenB: [A], ABbroken: [B] }
+
 /** The round whose lines shipped. The last round run, unless an earlier round shipped (T-0302): then the latest round
  *  whose payload is the shipped content (each round's texts carry its index; only index-free shapes can tie). */
 function shippedRound(shapes: readonly Shape[], outcome: Extract<Outcome, { kind: 'shipped' }>): number | undefined {
@@ -144,7 +149,11 @@ function violations(shapes: readonly Shape[], outcome: Outcome): string[] {
   const k = shippedRound(shapes, outcome)
   if (k === undefined) return [`shipped lines match no single round: ${JSON.stringify(outcome.content)}`]
   const named = new Set(outcome.content.map(sidOf))
-  for (let j = 0; j < k; j++) for (const sid of createdBy(shapes[j]!, j)) if (!named.has(sid)) out.push(`I1: ${sid} (created in round ${j}) is missing from shipped round ${k}`)
+  const earlier = new Set(shapes.slice(0, k).flatMap((s, j) => createdBy(s, j)))
+  const clean = new Set(shapes.slice(0, k).flatMap((s, j) => createdBy(s, j).filter((sid) => !(FLAGGED[s] ?? []).includes(sid))))
+  const rebuilt = createdBy(shapes[k]!, k).some((sid) => !earlier.has(sid)) // T-0328: the shipped round builds a new id
+  for (let j = 0; j < k; j++)
+    for (const sid of createdBy(shapes[j]!, j)) if (!named.has(sid) && (clean.has(sid) || !rebuilt)) out.push(`I1: ${sid} (created in round ${j}) is missing from shipped round ${k}`)
   const known = new Set(HELD)
   for (const m of outcome.content) {
     if ('createSurface' in m) known.add(m.createSurface.surfaceId)
@@ -192,6 +201,9 @@ describe('T-0314: the repair loop keeps the turn invariant over every enumerated
   it('the oracle bites: a loop that shipped the last valid round whatever it dropped would red I1', () => {
     const lost: Outcome = { kind: 'shipped', content: SHAPES.B(1), failureCodes: [], rounds: 2 }
     expect(violations(['AB', 'B'], lost)).toEqual(['I1: ask-1 (created in round 0) is missing from shipped round 1'])
+    // T-0328: a new id excuses only a surface that never shipped; one an earlier round built unflagged still counts.
+    expect(violations(['A', 'B'], lost)).toEqual(['I1: ask-1 (created in round 0) is missing from shipped round 1'])
+    expect(violations(['Aflag', 'B'], lost)).toEqual([])
     const orphan: Outcome = { kind: 'shipped', content: SHAPES.Aorphan(0), failureCodes: [], rounds: 1 }
     expect(violations(['Aorphan'], orphan)).toEqual(['I2: shipped an update to ask-1, which nothing created'])
   })

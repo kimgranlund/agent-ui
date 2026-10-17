@@ -707,6 +707,41 @@ describe('T-0172: structured render_surface, prose routing, surface loss', () =>
     expect(lastUserMessage(reqs()[2]!)).toMatch(/Keep `ask-2` exactly as you sent it/)
     expect(contentOf(lines)).toEqual([...ASK_VALID.split('\n'), ...ASK2_VALID.split('\n')])
   })
+
+  // T-0328 (Kim 2026-10-17, amends T-0317): a surface rebuilt under a new id within the same turn is not a drop; only a
+  // surface that would have shipped (some round built it and no failure named it) counts (round 9 :1, cluster A).
+  const ASK1_INVALID = INVALID.replace(/main/g, 'ask-1')
+  const ASK3_VALID = ASK_VALID.replace(/ask-1/g, 'ask-3')
+
+  it('T-0328: a flagged surface that never shipped, rebuilt under a new id in the same turn, is not SURFACE_DROPPED', async () => {
+    const { provider, reqs, calls } = scripted([
+      { text: 'Booking.', call: [surface(ASK1_INVALID)] },
+      { text: 'Booking.', call: [surface(ASK2_VALID)] },
+    ])
+    const lines = await run(intentOf('book a table'), provider, { maxRounds: 2 })
+    expect(calls()).toBe(2)
+    expect(lastUserMessage(reqs()[1]!)).toMatch(/CATALOG/)
+    expect(contentOf(lines)).toEqual(ASK2_VALID.split('\n'))
+    expect(finalMeta(lines).trace?.failureCodes).not.toContain('SURFACE_DROPPED')
+  })
+
+  it('T-0328: a surface that would have shipped and disappears is still SURFACE_DROPPED when another surface is new', async () => {
+    const { provider } = scripted([
+      { text: 'Booking.', call: [surface(`${ASK_VALID}\n${brokenAsk('ask-2')}`)] },
+      { text: 'Booking.', call: [surface(ASK3_VALID)] },
+    ])
+    const err = await run(intentOf('book a table'), provider, { maxRounds: 2 }).then(
+      () => undefined,
+      (e: unknown) => e,
+    )
+    expect(err).toBeInstanceOf(ProduceHalt)
+    expect((err as ProduceHalt).failures).toEqual([{ code: 'SURFACE_DROPPED', path: 'ask-1' }])
+  })
+
+  it('T-0328: a flagged surface answered in prose is still SURFACE_DROPPED (nothing rebuilt it)', async () => {
+    const { provider } = scripted([{ text: 'Booking.', call: [surface(ASK1_INVALID)] }, { text: 'Booking.' }])
+    await expect(run(intentOf('book a table'), provider, { maxRounds: 2 })).rejects.toThrow(/SURFACE_DROPPED at ask-1/)
+  })
 })
 
 // T-0229: Haiku 5.5's text shape (trace 2026-10-15.jsonl:42): the prose, then a meta-line, then wire lines. The

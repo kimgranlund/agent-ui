@@ -25,3 +25,11 @@ Kim 2026-10-17 ruling: a surface rebuilt under a new id within the same turn is 
 
 ## Constraints
 The invariant for shipped surfaces stays (Kim L1: invariant wins). grammar.md untouched.
+
+## Acceptance criteria
+verifier: L3
+
+- `npx vitest run scripts/e2e-admin/probe/replays/croupier-haiku-rename-halts.test.mjs` exits 0: the round 9 :1 replay ships round 2's CardTable on `table-1`, no halt, no `ask-1` line (red before the fix: ProduceHalt SURFACE_DROPPED).
+- `npx vitest run packages/agent-ui/a2ui/src/live-agent/produce-response-type.test.ts -t T-0328` exits 0: a flagged `ask-1` rebuilt as `ask-2` ships with no SURFACE_DROPPED; an unflagged `ask-1` left out beside a new `ask-3` halts with exactly `SURFACE_DROPPED` at `ask-1`; a flagged `ask-1` answered in prose still halts SURFACE_DROPPED.
+- `npx vitest run packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent scripts/e2e-admin/probe` exits 0 (the property test's I1 amended to the ruling; `lexicographer-haiku-fleet-check` re-pinned: its third round's `ask-2` now ships).
+- `npm run check` exits 0.
