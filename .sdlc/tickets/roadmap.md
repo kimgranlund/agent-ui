@@ -33,7 +33,7 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0333 | [0333-r9-booking-confirmation-caption](0333-r9-booking-confirmation-caption/handoff.md) | BOOKING_CONFIRMATION_MISSING fires on a confirm turn or a read-back, not caption words (round 9 cluster G) | bug | L1 | P2 | none | 🔵 ready (branch fix/0333-confirmation-caption) |
 | T-0335 | [0335-corpus-readback-records](0335-corpus-readback-records/handoff.md) | Replace confirmation-view and backable-wizard, which read back a booking before confirming | chore | L2 | P2 | none | 🔵 ready (branch chore/0335-readback-records) |
 | T-0336 | [0336-figure-parity-demos](0336-figure-parity-demos/handoff.md) | Site demos align captioned figures to a shared top edge (figure-parity allowlist debt) | chore | L1 | P3 | none | 🔵 ready (branch fix/0336-figure-parity) |
-| T-0337 | [0337-column-chart-callout-contrast](0337-column-chart-callout-contrast/handoff.md) | Column-chart highlight callout ink meets 4.5:1 on its pill in dark mode (chip-opaque debt) | bug | L1 | P3 | none | 🔵 ready |
+| T-0337 | [0337-column-chart-callout-contrast](0337-column-chart-callout-contrast/handoff.md) | Column-chart highlight callout ink meets 4.5:1 on its pill in dark mode (chip-opaque debt) | bug | L1 | P3 | none | 🔵 ready (branch fix/0337-callout-contrast) |
 | T-0338 | [0338-product-card-icon-box](0338-product-card-icon-box/handoff.md) | product-card icon header: 2n icon box or a ruled exemption (icon-box debt) | chore | L1 | P3 | none | ⏳ proposed |
 | T-0339 | [0339-gauge-rtl-layout](0339-gauge-rtl-layout/handoff.md) | ui-gauge in RTL keeps its rings on the left and its legend about 190px away | bug | L1 | P3 | none | 🔵 ready |
 
