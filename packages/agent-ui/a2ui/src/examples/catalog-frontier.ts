@@ -323,36 +323,45 @@ export const roundOutcomeToastSeed: ExampleSeed = {
   ],
 }
 
-const RECEIPT_ID = 'frontier-booking-receipt'
-/** Frontier 6 — the DESCRIPTION-LIST receipt (ADR-0201, GH #1185: the key–value receipt primitive the
- *  GH #1174 grammar composition pattern was written to be superseded by): a confirm-step booking summary
- *  as ONE `DescriptionList` node — `rows` BOUND to the data model (an amend-answer turn updates the
- *  receipt in place, never re-emits the tree), values arriving HUMANIZED from the producer ("Included",
- *  never `true`; "Deluxe King", never `deluxe-king`) — plus the single commit Button the grammar's
- *  confirm-before-concluding law mandates. Contrast `receipt-order-summary` (a List of templated line
- *  items — an itemized COLLECTION); this is the flat label/value RECORD shape. */
+const RECEIPT_ID = 'expense-claim-receipt'
+/** Frontier 6: the DESCRIPTION-LIST receipt (ADR-0201, GH #1185: the key-value receipt primitive the
+ *  GH #1174 grammar composition pattern was written to be superseded by): a SETTLED expense-claim receipt
+ *  looked up after the claim was filed, as ONE `DescriptionList` node, `rows` BOUND to the data model,
+ *  values arriving HUMANIZED from the producer ("Attached", never `true`; "Client travel", never
+ *  `client-travel`), with a settled-status Badge beside the heading and no buttons: the action is done, so
+ *  nothing is left to commit. Contrast `receipt-order-summary` (a List of templated line items, an
+ *  itemized COLLECTION); this is the flat label/value RECORD shape, and `confirmation-view` is the
+ *  pre-commit confirm card.
+ *  T-0318 (2026-10-17): this record used to read back a hotel booking before a Confirm-booking Button,
+ *  which a Concierge turn retrieves and the rulings forbid (T-0266: a booking ask gets the BookingForm
+ *  pre-filled for the guest to confirm, never a read-back Card; T-0289: the guest's confirm settles it as
+ *  a BookingConfirmation). T-0318 re-admitted it through the judged `--replace` exit twice: first as a
+ *  pre-commit expense-claim summary with a Submit-claim Button, which the lane review sent back because
+ *  it kept the read-back-then-commit shape, then as this post-commit lookup receipt. The record name stays
+ *  because `--replace` keys on it. */
 export const bookingReceiptSeed: ExampleSeed = {
   name: 'frontier-booking-receipt',
-  description: 'A confirm-step booking receipt — one DescriptionList with data-bound humanized rows (label secondary, value adjacent; a valueless field never renders) and the single Confirm-booking commit Button.',
-  promptText: 'That all works for me — show me the booking summary so I can confirm it.',
+  description: 'A settled expense-claim receipt looked up after filing: a heading with a Submitted status Badge, then one DescriptionList with data-bound humanized rows including the claim reference; no buttons, since nothing is left to commit.',
+  promptText: 'Pull up the receipt for the expense claim I filed on Tuesday.',
   surfaceId: RECEIPT_ID,
   protocolVersion: 'v1.0',
   catalogId: 'agent-ui',
   messages: [
-    { version: 'v1.0', createSurface: { surfaceId: RECEIPT_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    { version: 'v1.0', createSurface: { surfaceId: RECEIPT_ID, catalogId: 'agent-ui' } },
     {
       version: 'v1.0',
       updateDataModel: {
         surfaceId: RECEIPT_ID,
         value: {
-          booking: {
+          claim: {
             rows: [
-              { label: 'Room', value: 'Deluxe King' },
-              { label: 'Check-in', value: 'Fri, Aug 21' },
-              { label: 'Nights', value: 3 },
-              { label: 'Guests', value: 2 },
-              { label: 'Breakfast', value: 'Included' },
-              { label: 'Total', value: '$412.00' },
+              { label: 'Reference', value: 'EXP-20418' },
+              { label: 'Filed', value: 'Tue, Oct 13' },
+              { label: 'Merchant', value: 'Northline Rail' },
+              { label: 'Category', value: 'Client travel' },
+              { label: 'Receipt', value: 'Attached' },
+              { label: 'Reimburse to', value: 'Checking ending 4417' },
+              { label: 'Amount', value: '$186.40' },
             ],
           },
         },
@@ -363,11 +372,11 @@ export const bookingReceiptSeed: ExampleSeed = {
       updateComponents: {
         surfaceId: RECEIPT_ID,
         components: [
-          { id: 'root', component: 'Column', gap: 'md', children: ['heading', 'receipt', 'controls'] },
-          { id: 'heading', component: 'Text', variant: 'h4', text: 'Booking summary' },
-          { id: 'receipt', component: 'DescriptionList', rows: { path: '/booking/rows' } },
-          { id: 'controls', component: 'Row', gap: 'md', justify: 'end', children: ['btn_confirm'] },
-          { id: 'btn_confirm', component: 'Button', variant: 'solid', label: 'Confirm booking', action: { action: 'confirm_booking' } },
+          { id: 'root', component: 'Column', gap: 'md', children: ['head', 'receipt'] },
+          { id: 'head', component: 'Row', gap: 'sm', align: 'center', children: ['heading', 'status'] },
+          { id: 'heading', component: 'Text', variant: 'h4', text: 'Expense claim' },
+          { id: 'status', component: 'Badge', label: 'Submitted', intent: 'success' },
+          { id: 'receipt', component: 'DescriptionList', rows: { path: '/claim/rows' } },
         ],
       },
     },
@@ -654,35 +663,25 @@ export const backableWizardSeed: ExampleSeed = {
 }
 
 const GREET_ID = 'greet-1'
-/** Frontier 10 — the GREET CARD (GH #1201, req-a2ui-patterns R3): a persona's opening bookend. The
- *  first turn's note introduces the persona; alongside it, a short orientation Text plus a Row
- *  (gap "sm") of 2–4 small option Cards side by side, never stacked — each a BARE Card › CardFooter
- *  with ONE Button (no CardContent label), each Button's `action.context` naming a concrete starter
- *  intent. REVISED 2026-08-24 (Kim, live off a design-mode report): the GH #1483 CardContent(Text,
- *  short label) form this seed carried since 2026-08-20 rendered every option's label TWICE — once as
- *  the plain CardContent text, once again as the button's own label, always byte-identical — so the
- *  label was dropped rather than kept in sync with itself; the `greeting-card` mini-skill's own
- *  teaching (`agent/prompts/mini-skills/greeting-card.md`) was updated in the same change to bless
- *  this bare-footer form instead of the superseded CardContent-label one. T-0172 (Kim, 2026-10-14):
- *  the mini-skill now teaches a Row of plain Buttons, never a Card around each Button; this judged
- *  record keeps its per-option Cards until T-0193 re-admits it (dogfood-compose allowlist). NOT an ask
- *  despite riding the meta-line `ask` field for feed placement: the reserved `greet-1` id class
- *  (grammar.md's reserved-vocabulary sentence) — no commit button, no data model (`sendDataModel`
- *  omitted), no `ask-<n>` id consumed, and the answered-ask freeze never applies (a greet is never
- *  an answered ask; its buttons are retired per the stale-affordance rule when the first real task
- *  starts). Supersedes the CardFooter>Row>Buttons form the GH #1475 footer-stacking repair
- *  introduced (2026-08-19) — that form still stands as a valid non-ask greet shape for a leaner
- *  2-4-quick-intent case, just not as this seed's own demonstrated form. All three option Buttons
- *  ride `variant:'soft'` DELIBERATELY, not left to default — three equal-standing starter intents,
- *  no ranked/primary option among them, so a uniform variant is the honest signal (the
- *  `corpus-growth.ts` quiz-answer idiom for peer choices, e.g. `q1_helsinki`/`q1_stockholm`); an
- *  earlier revision left one Button variant-less (neither `solid` nor `ghost` nor `soft`),
- *  fabricating an unintended hierarchy across peer options — a GH #1483 rescore-judge finding
- *  (D1/P5), repaired here. */
+/** Frontier 10: the GREET (GH #1201, req-a2ui-patterns R3): a persona's opening bookend. The first
+ *  turn's note introduces the persona; alongside it, a short orientation Text plus a Row (gap "sm") of
+ *  2-4 plain option Buttons side by side, never stacked and never a Card around each Button, each
+ *  Button's `action.context` naming a concrete starter intent, as the `greeting-card` mini-skill
+ *  (`agent/prompts/mini-skills/greeting-card.md`) teaches. T-0318 (2026-10-17): re-admitted through the
+ *  judged `--replace` exit in this Row form; it used to wrap each Button in its own Card › CardFooter,
+ *  which the rulings rule out (Kim 2026-10-14, T-0193: no button inside a card container; T-0172 moved
+ *  the mini-skill to the Row). NOT an ask despite
+ *  riding the meta-line `ask` field for feed placement: the reserved `greet-1` id class (grammar.md's
+ *  reserved-vocabulary sentence), no commit button, no data model (`sendDataModel` omitted), no
+ *  `ask-<n>` id consumed, and the answered-ask freeze never applies (a greet is never an answered ask;
+ *  its buttons are retired per the stale-affordance rule when the first real task starts). All three
+ *  option Buttons ride `variant:'soft'` DELIBERATELY: three equal-standing starter intents, no ranked
+ *  or primary option among them, so a uniform variant is the honest signal (a GH #1483 rescore-judge
+ *  finding, D1/P5, against an earlier variant-less option). */
 export const greetCardSeed: ExampleSeed = {
   name: 'frontier-greet-card',
-  description: 'A persona\'s opening greet — reserved greet-1 surface (not an ask: no commit button, no data model), a short orientation Text plus a Row of 2–4 small option Cards (each a bare CardFooter with ONE starter Button carrying its intent in action.context — no separate CardContent label, since it only ever duplicated the button\'s own text), retired when the first real task starts.',
-  promptText: 'Hi — who are you and what can you do?',
+  description: 'A persona\'s opening greet: reserved greet-1 surface (not an ask: no commit button, no data model), a short orientation Text plus a Row of 2-4 plain soft starter Buttons side by side (never a Card around a Button), each carrying its intent in action.context, retired when the first real task starts.',
+  promptText: 'Hi, who are you and what can you do?',
   surfaceId: GREET_ID,
   protocolVersion: 'v1.0',
   catalogId: 'agent-ui',
@@ -696,15 +695,9 @@ export const greetCardSeed: ExampleSeed = {
           { id: 'root', component: 'Column', gap: 'md', children: ['prompt', 'options'] },
           { id: 'prompt', component: 'Text', variant: 'body', text: 'What would you like to do?' },
           { id: 'options', component: 'Row', gap: 'sm', wrap: true, children: ['opt_room', 'opt_table', 'opt_faq'] },
-          { id: 'opt_room', component: 'Card', children: ['opt_room_ft'] },
-          { id: 'opt_room_ft', component: 'CardFooter', children: ['opt_room_btn'] },
-          { id: 'opt_room_btn', component: 'Button', variant: 'soft', label: 'Book a room', action: { action: 'start', context: { intent: 'room' } } },
-          { id: 'opt_table', component: 'Card', children: ['opt_table_ft'] },
-          { id: 'opt_table_ft', component: 'CardFooter', children: ['opt_table_btn'] },
-          { id: 'opt_table_btn', component: 'Button', variant: 'soft', label: 'Reserve a table', action: { action: 'start', context: { intent: 'table' } } },
-          { id: 'opt_faq', component: 'Card', children: ['opt_faq_ft'] },
-          { id: 'opt_faq_ft', component: 'CardFooter', children: ['opt_faq_btn'] },
-          { id: 'opt_faq_btn', component: 'Button', variant: 'soft', label: 'Just a question', action: { action: 'start', context: { intent: 'faq' } } },
+          { id: 'opt_room', component: 'Button', variant: 'soft', label: 'Book a room', action: { action: 'start', context: { intent: 'room' } } },
+          { id: 'opt_table', component: 'Button', variant: 'soft', label: 'Reserve a table', action: { action: 'start', context: { intent: 'table' } } },
+          { id: 'opt_faq', component: 'Button', variant: 'soft', label: 'Just a question', action: { action: 'start', context: { intent: 'faq' } } },
         ],
       },
     },

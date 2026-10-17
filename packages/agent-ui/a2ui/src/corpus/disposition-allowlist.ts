@@ -84,7 +84,11 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // SOUGHT YET, not a refusal). Added with the DescriptionList catalog row to close the type-coverage gap
   // (examples.test.ts's GH #729 gate); its corpus admission is a pending judged import wave — the
   // authoring session judging its own seed is the manufactured judgment ADR-0068's Alternatives ban.
-  // Run the judged pipeline and DELETE this entry when that wave lands.
+  // Run the judged pipeline and DELETE this entry when that wave lands. Admitted 2026-08-18
+  // (`corpus/verdicts/2026-08-18--verdicts-2026-08-18.json`, 4/PASS); entry removed. T-0318 (2026-10-17)
+  // re-admitted it via `import-seeds --replace` as a settled expense-claim receipt (the hotel read-back
+  // the T-0266/T-0289 rulings forbid is gone; VerdictsFile `corpus/verdicts/2026-10-17t13-06-33z--t0318-booking-receipt-rejudge.json`, independent
+  // a2ui-review-agent judge).
   //
   // GH #1189 (2026-08-17) — `frontier-image-hero-card`: the same pending-state shape (NO VERDICT SOUGHT
   // YET, not a refusal). Added with the Image catalog row to close the type-coverage gap
@@ -116,7 +120,11 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // not a refusal). Added alongside the `greeting-card` mini-skill + grammar.md's reserved greet-1
   // sentence (req-a2ui-patterns.md R3) as its worked greet-bookend exemplar — the authoring session
   // judging its own seed is the manufactured judgment ADR-0068's Alternatives ban. Run the judged
-  // pipeline and DELETE this entry when that wave lands.
+  // pipeline and DELETE this entry when that wave lands. Admitted 2026-08-18
+  // (`corpus/verdicts/2026-08-18--verdicts-2026-08-18.json`, 4/PASS); entry removed. T-0318 (2026-10-17)
+  // re-admitted it via `import-seeds --replace` as a Row of plain Buttons, no Card per option
+  // (VerdictsFile `corpus/verdicts/2026-10-17t12-47-14z--t0318-greet-card.json`, independent
+  // a2ui-review-agent judge).
   //
   // GH #1205 (2026-08-17) — the four COMPOSITION PACK A seeds (`slideshow-gallery` ·
   // `confirmation-view` · `trend-list` · `card-layouts`): the same pending-state shape (NO VERDICT

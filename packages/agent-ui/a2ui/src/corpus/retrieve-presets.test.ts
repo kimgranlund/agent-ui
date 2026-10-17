@@ -9,6 +9,8 @@
 // T-0268 adds the Lexicographer's opening turns, which reach the word board through its prompt's "word game".
 // T-0273 adds croupier "Hit" turns: another game's board is out of scope on a card table's turn.
 // T-0274 pinned the Lexicographer give-up turns: the game-over exemplar (a ResultCard revealing the word) ranks first.
+// T-0318: a pin holds only the ranks a reader can defend for its turn and compares that prefix; the ranks after it are
+// known poor (zero-signal padding off the turn's domain) and are named in a comment on the row, never pinned as correct.
 import { describe, it, expect } from 'vitest'
 import { readdirSync, readFileSync } from 'node:fs'
 import { retrieve } from './retrieve.ts'
@@ -40,15 +42,19 @@ const PINS: readonly (readonly [preset: string, catalogId: string, turn: string,
   ['concierge', 'agent-ui--concierge', 'Book me a spa treatment for tomorrow afternoon', ['domain-concierge-booking-request', 'frontier-service-gateway', 'invite-decline-then-focus-block']],
   ['quizmaster', 'agent-ui--quizmaster', 'Next question please', ['trivia-round-resume', 'frontier-round-outcome', 'card-layouts']],
   ['stylist', 'agent-ui--stylist', 'Check the contrast of my brand palette', ['brand-palette', 'booking-reservation', 'ops-report']],
-  ['quant', 'agent-ui', 'Show me the KPI dashboard for last quarter', ['card-layouts', 'frontier-booking-receipt', 'frontier-column-chart-revenue']],
+  // Known poor (T-0318): rank 3 is frontier-product-card-rooms, a room-booking card on a KPI turn.
+  ['quant', 'agent-ui', 'Show me the KPI dashboard for last quarter', ['card-layouts', 'frontier-column-chart-revenue']],
   ['restaurant', 'agent-ui', 'What is on the menu tonight', ['travel-itinerary', 'frontier-review-split', 'frontier-result-card-win']],
   ['travel', 'agent-ui', 'Plan a three day trip itinerary to Lisbon', ['frontier-trip-card', 'structured-container-trip-summary', 'comparison-pricing-table']],
-  ['curator', 'agent-ui', 'Show me the highlights of the collection', ['customer-review-card', 'slideshow-gallery', 'five-day-weather']],
+  // Known poor (T-0318): rank 3 is frontier-product-card-rooms, off the collection domain.
+  ['curator', 'agent-ui', 'Show me the highlights of the collection', ['customer-review-card', 'slideshow-gallery']],
   ['shopkeeper', 'agent-ui', 'Show me the product options', ['frontier-choice-group-rooms', 'frontier-column-chart-revenue', 'frontier-product-card-rooms']],
   ['mentalist', 'agent-ui', 'Read my mind', ['domain-lexicographer-word-board', 'wallet-summary-card', 'frontier-button-icon-actions']],
-  ['negotiator', 'agent-ui', 'I offer 200 for it', ['frontier-suggestions-chips', 'frontier-booking-receipt', 'plan-and-execute-plan']],
+  // Known poor (T-0318): ranks 2 and 3 are plan-and-execute-plan and the expense-claim receipt, neither an offer surface.
+  ['negotiator', 'agent-ui', 'I offer 200 for it', ['frontier-suggestions-chips']],
   ['lexicographer', 'agent-ui', 'My guess is CRANE', ['domain-lexicographer-word-board', 'frontier-button-icon-actions', 'frontier-pane-switcher']],
-  ['lexicographer', 'agent-ui', 'I give up.', ['domain-lexicographer-game-over', 'frontier-suggestions-chips', 'support-ticket-close-then-new']],
+  // Known poor (T-0318): rank 2 is the expense-claim receipt, matched on the bare "I" of its prompt.
+  ['lexicographer', 'agent-ui', 'I give up.', ['domain-lexicographer-game-over']],
   ['lexicographer', 'agent-ui', 'Show me the word.', ['domain-lexicographer-game-over', 'domain-lexicographer-word-board', 'frontier-product-card-rooms']],
   ['admiral', 'agent-ui', 'Fire at B3', ['domain-admiral-battleship-board', 'frontier-product-card-rooms', 'restaurant-menu']],
   ['alchemist', 'agent-ui', 'Mix the two elements', ['media-file-grid', 'list-nested', 'pattern-settings-form']],
@@ -58,7 +64,18 @@ const PINS: readonly (readonly [preset: string, catalogId: string, turn: string,
 describe('retrieve: the shipped-preset ranking pin (T-0238)', () => {
   it.each(PINS)('%s (%s) on "%s"', (_preset, catalogId, turn, top) => {
     const got = retrieve(shard, { intent: turn, k: 3, catalogId, protocolVersion: 'v1.0', componentTypes: typesOf(catalogId) })
-    expect(got.map((r) => r.name)).toEqual(top)
+    expect(got.slice(0, top.length).map((r) => r.name)).toEqual(top)
+  })
+})
+
+// T-0318: the rulings forbid a booking read-back before the confirm (T-0266: the BookingForm pre-filled; T-0289: the
+// confirm settles as a BookingConfirmation), so a confirm turn must not retrieve the receipt exemplar. Before T-0318 the
+// first phrasing ranked the then hotel read-back third on the Concierge and first on the base catalog.
+describe('retrieve: a booking confirm turn does not surface the receipt exemplar (T-0318)', () => {
+  const turns = ['Yes that works, show me the summary so I can confirm', 'Those details are right, please confirm the booking.']
+  it.each(['agent-ui--concierge', 'agent-ui'].flatMap((c) => turns.map((t) => [c, t] as const)))('%s on "%s"', (catalogId, turn) => {
+    const got = retrieve(shard, { intent: turn, k: 5, catalogId, protocolVersion: 'v1.0', componentTypes: typesOf(catalogId) })
+    expect(got.map((r) => r.name)).not.toContain('frontier-booking-receipt')
   })
 })
 
