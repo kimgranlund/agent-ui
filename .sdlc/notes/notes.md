@@ -115,3 +115,4 @@
 
 - note: redck.py deviations printed no process deviation lines.
 - note: packages/agent-ui/a2ui/tools/catalog-files.test.ts the two-domain test calls heal and validateA2ui directly rather than the CLI, since no domain pair ships in the real tree; it mirrors the CLI path.
+- 2026-10-17 Kim rulings (round 9): (1) T-0317 drop rule: a surface rebuilt under a new id within the same turn is not a drop; only shipped surfaces count (fixes cluster A). (2) Blackjack opening regression from T-0323 wording: debate a wording fix (Opus proposal, other-family challenge), Kim rules. (3) confirmation-view and backable-wizard corpus records get replaced like T-0318; grammar.md example stays for now.
