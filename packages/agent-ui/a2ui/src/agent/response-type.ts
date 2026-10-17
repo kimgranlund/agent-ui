@@ -99,7 +99,7 @@ export function messagesParseNote(input: Record<string, unknown>): string | unde
     return `Your \`messages\` was not valid JSON: ${missing} in message ${scan.message}${kind}, so it is still open where message ${scan.message + 1} begins.`
   }
   const near = messages.slice(Math.max(0, pos - 40), pos + 20)
-  return `Your \`messages\` was not valid JSON at character ${pos}${scan.message > 0 ? ` (message ${scan.message})` : ''}, here: ${near}`
+  return `Your \`messages\` was not valid JSON at character ${pos}${scan.message > 0 ? ` (message ${scan.message})` : ''}, here: \`${near}\`.`
 }
 
 /** The brackets still open at `pos` (outside strings), the 1-based number of the last message opened in the top-level

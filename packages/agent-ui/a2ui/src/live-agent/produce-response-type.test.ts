@@ -68,6 +68,7 @@ async function run(input: TurnInput, provider: AgentProvider, opts: Partial<Prod
 const metaOf = (line: string): A2uiMetaEnvelope['a2uiMeta'] | undefined => readMetaLine(line)?.a2uiMeta
 const deltasOf = (lines: string[]): string[] => lines.map((l) => metaOf(l)?.textDelta).filter((d): d is string => d !== undefined)
 const contentOf = (lines: string[]): string[] => lines.filter((l) => readMetaLine(l) === undefined)
+const objects = (jsonl: string): Record<string, unknown>[] => jsonl.split('\n').map((l) => JSON.parse(l) as Record<string, unknown>)
 /** The single outgoing meta-line, the one carrying the runtime trace. */
 function finalMeta(lines: string[]): A2uiMetaEnvelope['a2uiMeta'] {
   const traced = lines.map(metaOf).filter((m) => m?.trace !== undefined)
@@ -561,7 +562,6 @@ describe('a2ui disabled', () => {
 
 // T-0172: the Croupier and Concierge traces of 2026-10-14, keyless. Each case is red on the pre-T-0172 loop.
 describe('T-0172: structured render_surface, prose routing, surface loss', () => {
-  const objects = (jsonl: string): Record<string, unknown>[] => jsonl.split('\n').map((l) => JSON.parse(l) as Record<string, unknown>)
 
   it('render_surface `messages` (an array of message objects) is the payload: no hand-escaped JSONL string, no PARSE round', async () => {
     const { provider, calls } = scripted([{ text: 'Here it is.', call: [{ name: 'render_surface', input: { messages: objects(VALID) } }] }])
@@ -891,8 +891,9 @@ describe('T-0229: the text shape with a trailing meta-line', () => {
   })
 })
 
+const ASK = 'Send `messages` as an array of A2UI message objects, one object per entry, not as a string or JSONL text.'
+
 describe('T-0304: a render_surface `messages` sent as one JSON string', () => {
-  const objects = (jsonl: string): Record<string, unknown>[] => jsonl.split('\n').map((l) => JSON.parse(l) as Record<string, unknown>)
 
   it('a string that parses as an array ships the surface in one round, tallied MESSAGES_STRING_DECODED', async () => {
     const { provider, calls } = scripted([{ text: 'Here it is.', call: [{ name: 'render_surface', input: { reply: 'Here it is.', messages: JSON.stringify(objects(VALID)) } }] }])
@@ -912,28 +913,76 @@ describe('T-0304: a render_surface `messages` sent as one JSON string', () => {
     const lines = await run(NEUTRAL, provider)
     expect(calls()).toBe(2)
     expect(lastUserMessage(reqs()[1]!)).toContain(
-      'Your `messages` was not valid JSON: a closing } is missing in message 1 (its createSurface), so it is still open where message 2 begins.',
+      `${ASK} Your \`messages\` was not valid JSON: a closing } is missing in message 1 (its createSurface), so it is still open where message 2 begins.`,
     )
-    expect(lastUserMessage(reqs()[1]!)).toMatch(/`messages` is an ARRAY of A2UI message objects/)
     expect(contentOf(lines)).toEqual(VALID.split('\n'))
     expect(finalMeta(lines).trace?.failureCodes).toEqual(['PARSE'])
   })
 
-  it('a string that does not parse is still PARSE', async () => {
+  it('a string that does not parse is still PARSE; the repair asks for the array, then quotes the text at the break', async () => {
     const broken = JSON.stringify(objects(VALID)).slice(0, -2)
-    const { provider, calls } = scripted([
+    const { provider, calls, reqs } = scripted([
       { text: 'One moment.', call: [{ name: 'render_surface', input: { reply: 'One moment.', messages: broken } }] },
       { text: 'One moment.', call: [{ name: 'render_surface', input: { reply: 'One moment.', messages: objects(VALID) } }] },
     ])
     const lines = await run(NEUTRAL, provider)
     expect(calls()).toBe(2)
+    expect(lastUserMessage(reqs()[1]!)).toMatch(/not as a string or JSONL text\. Your `messages` was not valid JSON at character \d+ \(message \d+\), here: `[^`]*`\. /)
     expect(contentOf(lines)).toEqual(VALID.split('\n'))
     expect(finalMeta(lines).trace?.failureCodes).toEqual(['PARSE'])
   })
 })
 
+describe('T-0344: a PARSE repair on a string `messages` asks for an array first', () => {
+  // Round 10 :193 round 1 (Sonnet 5.5), verbatim: one `}` short where message 2 begins; rounds 2 and 3 resent a string.
+  const R10_193 =
+    '[{"version":"v1.0","updateDataModel":{"surfaceId":"table-1","value":{"bankroll":940,"pot":0,"street":"Showdown","stats":[{"label":"Pot","value":0},{"label":"Net this hand","value":-60},{"label":"Street","value":"Showdown"}],"dealerHand":[{"rank":"A","suit":"spades","faceDown":false},{"rank":"K","suit":"clubs","faceDown":false}],"playerHand":[{"rank":"J","suit":"hearts","faceDown":false},{"rank":"10","suit":"hearts","faceDown":false}],"board":[{"rank":"Q","suit":"hearts","faceDown":false},{"rank":"9","suit":"diamonds","faceDown":false},{"rank":"3","suit":"hearts","faceDown":false},{"rank":"2","suit":"clubs","faceDown":false},{"rank":"7","suit":"diamonds","faceDown":false}],"result":"Dealer wins the 120 pot with ace-high (A K Q 9 7) over your queen-high (Q J 10 9 7). You lose 60 chips this hand. Bankroll: 940."}},{"version":"v1.0","updateComponents":{"surfaceId":"table-1","components":[{"id":"streetBadge","component":"Badge","label":"Showdown","intent":"danger"},{"id":"hud","component":"GameHud","title":"Heads-up vs dealer","status":"Dealer wins","statusIntent":"danger","stats":{"path":"/stats"}},{"id":"actions","component":"Row","gap":"sm","justify":"end","children":["dealBtn"]},{"id":"dealBtn","component":"Button","label":"Deal again","variant":"solid","action":{"action":"deal_again","context":{"newRound":true}}}]}]'
+  const NOTE = 'Your `messages` was not valid JSON: a closing } is missing in message 1 (its updateDataModel), so it is still open where message 2 begins.'
+  const AGAIN = 'You sent a string again; send `messages` as an array of A2UI message objects, one object per entry, not as a string or JSONL text.'
+  const stringCall = (messages: string): Round => ({ text: 'Showdown.', call: [{ name: 'render_surface', input: { reply: 'Showdown.', target: 'table-1', messages } }] })
+  const arrayCall: Round = { text: 'Showdown.', call: [{ name: 'render_surface', input: { reply: 'Showdown.', messages: objects(VALID) } }] }
+
+  it('round 2 asks for an array of objects before it names where the string broke; round 3 says the string came again', async () => {
+    const { provider, calls, reqs } = scripted([stringCall(R10_193), stringCall(R10_193), arrayCall])
+    const lines = await run(NEUTRAL, provider)
+    expect(calls()).toBe(3)
+    const round2 = lastUserMessage(reqs()[1]!)
+    expect(round2).toContain(`${ASK} ${NOTE}`)
+    expect(round2).not.toContain('a string again')
+    expect(round2).not.toMatch(/Reminder: `messages` is an ARRAY/)
+    expect(lastUserMessage(reqs()[2]!)).toContain(`${AGAIN} ${NOTE}`)
+    expect(contentOf(lines)).toEqual(VALID.split('\n'))
+    expect(finalMeta(lines).trace?.failureCodes).toEqual(['PARSE'])
+  })
+
+  it('a string that parses to something other than an array (one object, a double-encoded array) gets the ask with no note', async () => {
+    for (const messages of [JSON.stringify(objects(VALID)[0]), JSON.stringify(JSON.stringify(objects(VALID)))]) {
+      const { provider, calls, reqs } = scripted([stringCall(messages), arrayCall])
+      const lines = await run(NEUTRAL, provider)
+      expect(calls()).toBe(2)
+      const repair = lastUserMessage(reqs()[1]!)
+      expect(repair).toContain(ASK)
+      expect(repair).not.toContain('was not valid JSON')
+      expect(repair).not.toMatch(/Reminder: `messages` is an ARRAY/)
+      expect(contentOf(lines)).toEqual(VALID.split('\n'))
+    }
+  })
+
+  it('a string JSON.parse gives no position for gets the ask and the generic note', async () => {
+    const { provider, reqs } = scripted([stringCall(''), arrayCall])
+    await run(NEUTRAL, provider)
+    expect(lastUserMessage(reqs()[1]!)).toContain(`${ASK} Your \`messages\` was not valid JSON.`)
+  })
+
+  it('an array round keeps the old reminder (the control)', async () => {
+    const { provider, reqs } = scripted([{ text: 'Hi.', call: [{ name: 'render_surface', input: { reply: 'Hi.', messages: ['{"version":"v1.0",'] } }] }, arrayCall])
+    await run(NEUTRAL, provider)
+    expect(lastUserMessage(reqs()[1]!)).toMatch(/Reminder: `messages` is an ARRAY of A2UI message objects/)
+    expect(lastUserMessage(reqs()[1]!)).not.toContain(ASK)
+  })
+})
+
 describe('T-0305: an update to a surface no message created', () => {
-  const objects = (jsonl: string): Record<string, unknown>[] => jsonl.split('\n').map((l) => JSON.parse(l) as Record<string, unknown>)
   // A complete tree for `main` with no createSurface: valid to the shared validator (its implicit open), never rendered.
   const ORPHAN_MAIN = '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[{"id":"root","component":"Button","label":"Hi","action":{"action":"submit"}}]}}'
   const call = (jsonl: string): Round => ({ text: 'Here it is.', call: [{ name: 'render_surface', input: { reply: 'Here it is.', messages: objects(jsonl) } }] })
