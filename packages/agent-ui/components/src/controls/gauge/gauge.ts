@@ -105,7 +105,7 @@ export class UIGaugeElement extends UIElement {
 
   /** Layer 1 — the aria-hidden, zero-inset SVG rings: one track circle + one rounded-cap progress
    *  circle per datum, OUTER→INNER in data order (ADR-0229 cl.4). `preserveAspectRatio="xMinYMid meet"`
-   *  (`xMaxYMid` under a computed `direction: rtl`, see #syncAnchor) pins the ring drawing to the box's start edge
+   *  (`xMaxYMid` under a computed `direction: rtl`, see #anchor() (re-read in #syncScale)) pins the ring drawing to the box's start edge
    *  (letterboxing any extra width to the end side) so a
    *  wide host reserves real, empty room for the legend layer WITHOUT shrinking the ring's own
    *  coordinate system or this layer's own full-bleed element box (ADR-0228 cl.2/cl.3's rejected
