@@ -1,0 +1,14 @@
+{
+  "id": "playbooks-games",
+  "version": 1,
+  "kind": "workflow",
+  "order": 3,
+  "label": "Game playbooks",
+  "description": "Turn-loop playbooks for the game roster.",
+  "category": "games",
+  "entries": [
+    "twenty-questions@1",
+    "negotiation-loop@1",
+    "battle-rounds@1"
+  ]
+}

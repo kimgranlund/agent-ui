@@ -1,0 +1,13 @@
+{
+  "id": "playbooks-core",
+  "version": 1,
+  "kind": "workflow",
+  "order": 1,
+  "label": "Core playbooks",
+  "description": "General task-navigation playbooks.",
+  "entries": [
+    "intake-confirm@1",
+    "round-loop@1",
+    "drilldown@1"
+  ]
+}

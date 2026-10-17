@@ -8,8 +8,9 @@
 // The rule: run it after a deliberate seed, fragment or sidecar change, never to green a red gate you do
 // not understand. It rewrites every existing `*.manifest.json` (always, even when the bytes are unchanged)
 // through `refreshManifest`, so only the digests and derived facts move; it never creates a manifest. A
-// `seedVersion` bump stays a human edit to the manifest, because the bump drops users' persisted stores
-// (`personaStore` in site/pages/agent-admin-presets.ts). On an unchanged tree an armed run is a
+// `seedVersion` bump is a human edit to the persona's agent.md `version` (site/agent-content/, T-0160),
+// because the bump drops users' persisted stores (`personaStore` in site/pages/agent-admin-presets.ts);
+// `node scripts/generate-agent-content.mjs` copies it into the manifest. On an unchanged tree an armed run is a
 // byte-identical no-op.
 import { describe, it } from 'vitest'
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime (site/tsconfig.json carries no node types)

@@ -3,9 +3,12 @@
 // fragment and sidecar it pins; every leg has a planted-defect negative control (`bites: <leg>`).
 //
 // A red `seed-digest`, `fragment-digest`, `selection-digest`, `fragment-types` or `target-catalogs` after a
-// deliberate change: run the armed writer (agent-manifest.write.test.ts header), then decide by hand
-// whether the preset's `seedVersion` bumps (a bump drops users' persisted stores).
+// deliberate change: run the armed writer (agent-manifest.write.test.ts header). Whether the preset's
+// `seedVersion` bumps (a bump drops users' persisted stores) is decided in its agent.md `version`
+// (site/agent-content/, T-0160), which `node scripts/generate-agent-content.mjs` copies here.
 import { describe, it, expect } from 'vitest'
+import { ENTRY_KINDS } from '@agent-ui/app/agent-admin-entries'
+import { entriesStoreKey } from '@agent-ui/app/entry-data'
 import { AGENT_PRESETS, personaFromPreset } from '../../pages/agent-admin-presets.ts'
 import {
   canonicalDigest,
@@ -72,6 +75,16 @@ describe('agent manifests: the drift gate', () => {
     const input = clone()
     ;(input.presets.find((p) => p.id === 'quant')!.seed as Record<string, unknown>)['label'] = 'Another Quant'
     expect(legsOf(input)).toContain('seed-digest')
+  })
+
+  it('bites: seed-digest on an assembly change (a builtin prompt section), not only a content edit', () => {
+    const input = clone()
+    const seed = (input.presets.find((p) => p.id === 'quant')!.seed as { seed: Record<string, unknown> }).seed
+    const sections = seed[entriesStoreKey(ENTRY_KINDS.promptSection)] as { builtin: boolean; id: string; content: string }[]
+    const builtin = sections.find((s) => s.builtin && s.id !== 'foundation')
+    expect(builtin, 'quant seeds a builtin section besides its foundation').toBeDefined()
+    builtin!.content += ' (an edited DEFAULT_PROMPT_SECTIONS text)'
+    expect(driftFindings(input).filter((f) => f.leg === 'seed-digest').map((f) => f.id)).toEqual(['quant'])
   })
 
   it('bites: fragment-digest', () => {

@@ -229,7 +229,7 @@ content.append(
     el('ul', {}, [
       relatedItem(
         'Persona',
-        'site/pages/agent-admin-presets.ts:711-722',
+        'site/pages/agent-admin-presets.ts:312-314',
         'One roster entry’s identity + seed — id, label, tagline, category, seed (the store’s initial values). Export/import format, validation, and the collision-safe mint rule: ',
         'persona-library-pattern.html',
       ),

@@ -1,0 +1,14 @@
+{
+  "id": "integrations",
+  "version": 1,
+  "kind": "tool",
+  "order": 1,
+  "label": "Integrations",
+  "description": "Keyless live integrations executed by the dev proxy (GH #49) — enable + toolsEnabled to arm.",
+  "rejectOnCollision": true,
+  "entries": [
+    "weather@1",
+    "wikipedia-search@1",
+    "currency@1"
+  ]
+}

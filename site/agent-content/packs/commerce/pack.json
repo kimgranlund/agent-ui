@@ -1,0 +1,12 @@
+{
+  "id": "commerce",
+  "version": 1,
+  "kind": "skill",
+  "order": 3,
+  "label": "Commerce",
+  "description": "Product grid and cart-summary idioms the Shopkeeper seeds from (T-0075).",
+  "entries": [
+    "product-grid@1",
+    "cart-summary@1"
+  ]
+}

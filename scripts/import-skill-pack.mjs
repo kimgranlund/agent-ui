@@ -13,7 +13,7 @@
  *
  * D1 mapping rules (the contract, verbatim from the ADR):
  *   · frontmatter is the SAME minimal single-line `key: value` split the site page already uses
- *     (agent-admin-libraries.ts `splitFrontmatter`, CRLF-tolerant); a file without the leading `---`
+ *     (site/agent-content/schema.ts `splitKeyValueFrontmatter`, CRLF-tolerant); a file without the leading `---`
  *     fence is SKIPPED-AND-LISTED (`provenance.skipped`), never thrown.
  *   · entry id = the folder name — an EXPLICIT stable id (LLD-C7's `NewEntryInput.id` law: survives
  *     label edits, never slugged); label = frontmatter `name` (else the folder name); description =
@@ -81,7 +81,7 @@ export function packLabelFrom(sourceUrl) {
 }
 
 /** The minimal single-line-`key: value` frontmatter split — the SAME shape the site page uses
- *  (agent-admin-libraries.ts `splitFrontmatter`, CRLF-tolerant, PR #58's `\r?` law). Returns null for
+ *  (site/agent-content/schema.ts `splitKeyValueFrontmatter`, CRLF-tolerant, PR #58's `\r?` law). Returns null for
  *  a file without the leading `---` fence — the caller skips-and-lists it, never throws. */
 export function splitFrontmatter(source) {
   const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/.exec(source)

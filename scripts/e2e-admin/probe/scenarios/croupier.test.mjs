@@ -3,6 +3,8 @@
 // in the game-rules pack has a scenario, and every model is one the admin picker offers.
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
+// T-0160: the game-rules pack is a pack.json of refs; read its entries through the agent-content registry.
+import { AGENT_CONTENT } from '../../../../site/agent-content/registry.gen.ts'
 import { parseProbeCli } from '../cli.ts'
 import { CROUPIER_MODELS, CROUPIER_ROUND_SCENARIOS, CROUPIER_SCENARIOS, liveCommandsScript, probeArgv, SAMPLES, STUD_STREET } from './croupier.ts'
 
@@ -35,8 +37,11 @@ describe('croupier closed-loop scenarios', () => {
   })
 
   it('every game in the game-rules pack has a scenario, and the blackjack family expects CardTable', () => {
-    const pack = read('site/pages/agent-admin-libraries.ts').split('export const GAMES_RULES')[1].split('\n]\n')[0]
-    const games = [...pack.matchAll(/^ {4}label: '([^']+)'/gm)].map((m) => m[1])
+    const pack = AGENT_CONTENT.find((r) => r.kind === 'pack' && r.id === 'game-rules')
+    const games = pack.frontmatter.entries.map((ref) => {
+      const id = ref.split('@')[0]
+      return AGENT_CONTENT.find((r) => r.kind === 'resource' && r.id === id && r.scope === undefined).frontmatter.label
+    })
     expect(games.length).toBeGreaterThan(0)
     expect([...new Set(CROUPIER_SCENARIOS.map((s) => s.game))].sort()).toEqual([...games].sort())
     for (const s of CROUPIER_SCENARIOS) expect(s.expectComponents).toEqual(BLACKJACK_FAMILY.includes(s.game) ? ['CardTable'] : ['PlayingCard'])

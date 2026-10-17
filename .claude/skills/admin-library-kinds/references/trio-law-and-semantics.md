@@ -9,8 +9,8 @@ the three shapes a new kind's selection semantics can pick from.
 A pack whose entries key an EXTERNAL vocabulary supplies `NewEntryInput.id` (`entries.ts`) so the
 stable key survives a label edit; packs without explicit ids keep slugify-from-label. The same
 law binds BOTH projections from pack to store: the library-add path (`validateNewEntry`) and the
-preset seed path (`seedId`, `site/pages/agent-admin-presets.ts` — seeding by label where an
-id exists mints an armed-but-silently-inert entry). A pack keying a live registry derives from an
+preset seed path (`seedEntries`, `site/pages/agent-admin-presets.ts`, which seeds each entry file's
+`id`; seeding by label where an id exists mints an armed-but-silently-inert entry). A pack keying a live registry derives from an
 IMPORT of it, never a hand-copied table (ADR-0170 cl.7; `agent-admin-libraries.ts`'s registry-import).
 
 When a new kind picks its semantics, three shapes exist — pick by the kind's own truth table:

@@ -6,29 +6,26 @@
 // them in agreement, and `agent-manifest.write.test.ts` is the armed writer that refreshes the digests
 // after a deliberate change.
 //
+// T-0160 (persona-catalog-composition SPEC-R7): the preset config and text are content files under
+// `site/agent-content/`, so `seedVersion` is the persona agent.md's `version` and
+// `node scripts/generate-agent-content.mjs` writes it here. `seedDigest` stays the digest of the ASSEMBLED
+// seed (`personaFromPreset`), so a change to the assembly code (the builtin prompt sections, `presetSeed`)
+// reds the gate as surely as a content edit; the armed writer refreshes it.
+//
 // Consumer-owned on purpose: two members live in `site/` and two in `@agent-ui/a2ui`, and a2ui may never
 // import site. The a2ui `PersonaCatalogManifest` (the Node-safe fragment triple) is a different thing and
 // stays untouched.
 import { AGENT_PRESETS, personaFromPreset } from '../../pages/agent-admin-presets.ts'
 import { SHIPPED_PERSONA_CATALOGS, SHIPPED_PERSONA_CATALOG_MANIFESTS } from '@agent-ui/a2ui'
-// @ts-expect-error - node:crypto is typed via @types/node; vitest/node resolves it at runtime (site/tsconfig.json carries no node types, see build-css.ts)
-import { createHash } from 'node:crypto'
-// @ts-expect-error - see above
+import { canonicalJson } from '../../agent-content/schema.ts'
+import { canonicalDigest } from '../../agent-content/digest.ts'
+import { formatManifest, type AgentManifest } from './format.ts'
+// @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime (site/tsconfig.json carries no node types, see build-css.ts)
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 
-declare const process: { cwd(): string }
+export { canonicalJson, canonicalDigest, formatManifest, type AgentManifest }
 
-/** One agent's pin set. Key order here is the on-disk key order (`formatManifest`). */
-export interface AgentManifest {
-  id: string
-  preset: string | null
-  seedVersion: number | null
-  seedDigest: string | null
-  fragment: { personaId: string; types: string[]; targetCatalogs: string[]; digest: string } | null
-  selection: { digest: string } | null
-  noFragment?: { why: string }
-  noPreset?: { why: string }
-}
+declare const process: { cwd(): string }
 
 /** The drift gate's legs, one finding code each. */
 export const DRIFT_LEGS = [
@@ -61,29 +58,6 @@ export interface DriftInput {
   folders: { id: string; catalog: unknown; selection: unknown }[]
   shippedPackageIds: string[]
   shippedManifests: { personaId: string; targetCatalogs: string[] }[]
-}
-
-function sortKeys(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(sortKeys)
-  if (value !== null && typeof value === 'object') {
-    const out: Record<string, unknown> = {}
-    const obj = value as Record<string, unknown>
-    for (const key of Object.keys(obj).sort()) {
-      if (obj[key] !== undefined) out[key] = sortKeys(obj[key])
-    }
-    return out
-  }
-  return value
-}
-
-/** Sorted-key, undefined-dropped, unspaced JSON: the form every digest is taken over. */
-export function canonicalJson(value: unknown): string {
-  return JSON.stringify(sortKeys(value))
-}
-
-/** `sha256:` plus the hex sha256 of `canonicalJson(value)` as UTF-8. */
-export function canonicalDigest(value: unknown): string {
-  return `sha256:${createHash('sha256').update(canonicalJson(value), 'utf8').digest('hex')}`
 }
 
 const ROOT = process.cwd()
@@ -295,19 +269,4 @@ export function refreshManifest(manifest: AgentManifest, input: DriftInput): Age
         ? null
         : { digest: folder && folder.selection !== null ? canonicalDigest(folder.selection) : manifest.selection.digest },
   }
-}
-
-/** The on-disk bytes: interface key order, two-space indent, trailing newline. */
-export function formatManifest(m: AgentManifest): string {
-  const ordered: AgentManifest = {
-    id: m.id,
-    preset: m.preset,
-    seedVersion: m.seedVersion,
-    seedDigest: m.seedDigest,
-    fragment: m.fragment === null ? null : { personaId: m.fragment.personaId, types: m.fragment.types, targetCatalogs: m.fragment.targetCatalogs, digest: m.fragment.digest },
-    selection: m.selection === null ? null : { digest: m.selection.digest },
-    ...(m.noFragment === undefined ? {} : { noFragment: { why: m.noFragment.why } }),
-    ...(m.noPreset === undefined ? {} : { noPreset: { why: m.noPreset.why } }),
-  }
-  return `${JSON.stringify(ordered, null, 2)}\n`
 }
