@@ -2,6 +2,6 @@
   "demo/icon-demo#figure-parity": "owner T-0336: baseline ramp: glyphs share a text baseline by design",
   "demo/line-chart-demo#dash-scale": "owner T-0188: the projected line's 3px 2px dash is authored in screen px on purpose (--ui-line-chart-projected-dash), and non-scaling-stroke keeps it 3px at any box size (T-0141); not the gauge class of bug. T-0188 decides between this entry and a user-unit dash",
   "demo/playing-card-demo#type-floor": "owner T-0189: the playing card's corner index scales with the card face and reads 6.8px on the smallest specimen, under the 9px floor (ADR-0245 M5); T-0189 decides between a floor and a ruled pictorial exemption",
-  "demo/product-card-demo#icon-box": "owner T-0338: the image-free icon header (exhibit mode, data-part=icon) paints a 48px icon where Kim's 2n ruling gives 16; a fix or a ruled media exemption",
+  "demo/product-card-demo#icon-box": "ruled exemption (Kim 2026-10-17, T-0338): the image-free icon header (exhibit mode, data-part=icon) is pictorial media, the card's stand-in for its image, so it keeps its 48px 4n glyph on the tinted tile (T-0142) and is not an inline icon under the 2n icon box",
   "demo/split-pane-demo#column": "owner T-0187: the split-pane specimen keeps both panes' minimum widths and ends 63px past the 400px column; T-0187 stacks or scrolls it at narrow widths"
 }

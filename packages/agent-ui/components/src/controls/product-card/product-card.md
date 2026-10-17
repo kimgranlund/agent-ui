@@ -210,7 +210,7 @@ plus one control-height action row.
 
 - **Offer.** An image (16:10, reserved so a late load does not shift layout), the badge over its
   top-start corner, rating, price and one action.
-- **Icon header.** No `image` but an `icon`: the icon is the card's media, a 4n glyph in the primary color on a tinted widget-radius tile (T-0142), no aspect box.
+- **Icon header.** No `image` but an `icon`: the icon is the card's media, a 4n glyph in the primary color on a tinted widget-radius tile (T-0142), no aspect box. It is pictorial media standing in for the image, not an inline icon, so it keeps its 48px size outside the 2n icon box (Kim 2026-10-17, T-0338; the dogfood `icon-box` finding is allowlisted as a ruled exemption).
 - **Exhibit tile.** No `price` and no `action`: there is no price row at all, so no empty price, badge
   or button renders (the `product-presentation` rule).
 
