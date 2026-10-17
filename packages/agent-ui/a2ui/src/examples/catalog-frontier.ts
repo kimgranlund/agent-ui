@@ -521,7 +521,7 @@ const WIZARD_ID = 'ask-1'
 export const backableWizardSeed: ExampleSeed = {
   name: 'backable-wizard',
   description: 'A 3-step backable time-off request (dates, leave type, submit) on ONE ask surface: draft answers under /draft/*, a stable root>Card>CardContent scene container swapped by updateComponents, per-step nav Buttons in their own CardFooter (two-button steps in a Row inside it), Field-wrapped Calendar/RadioGroup controls (ADR-0051), and a BACK round-trip that leaves both prior answers untouched.',
-  promptText: 'I need to request time off. Let me pick the days first, then the leave type, and step back to change either one before my manager sees the request.',
+  promptText: 'Request time off: pick the days, then leave type; let me step back to change either.',
   surfaceId: WIZARD_ID,
   protocolVersion: 'v1.0',
   catalogId: 'agent-ui',
