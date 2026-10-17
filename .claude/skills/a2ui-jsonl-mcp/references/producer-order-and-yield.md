@@ -76,10 +76,10 @@ T-0172 rules (2026-10-14 traces):
   no failure names ("Keep `ask-1` ..."); a later valid round without one spends a `SURFACE_DROPPED` round,
   and on the last round halts with `SURFACE_DROPPED` unless an earlier round can ship (below). The repair round
   after a `SURFACE_DROPPED` round, a prose round or a valid one, is forced the T-0298 way (`toolChoice`
-  `render_surface`, thinking off where the row allows it; T-0321). T-0328 (Kim 2026-10-17): a surface a defect failure named alone in
-  every round that built it never shipped, so a valid round that builds a replacement (first built after it, with
-  the same root type, both the ask, or the type the finding asked for) supersedes it and is not `SURFACE_DROPPED`;
-  one replacement per surface, and narration or an unattributable path never flags a surface.
+  `render_surface`, thinking off where the row allows it; T-0321). T-0328 (Kim 2026-10-17): a surface rebuilt under a new id
+  is not a drop. Each id a round builds for the first time retires one left-out surface that a failure naming it
+  alone flagged in every round that built it (earliest built first); narration, FEED_SCOPE and unattributable paths
+  flag nothing, and a round with no new id drops as before.
 - An update (`updateComponents`, `updateDataModel`) to a surface that no earlier turn created, that the client
   turn does not come from, and that no earlier message of the payload creates fails `SURFACE_NOT_CREATED` on
   any round (T-0305): the renderer drops it, so the repair sends the `createSurface` first.

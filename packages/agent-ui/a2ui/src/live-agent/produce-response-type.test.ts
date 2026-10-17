@@ -13,6 +13,7 @@ import { readMetaLine } from '../agent/meta-line.ts'
 import type { A2uiMetaEnvelope } from '../agent/meta-line.ts'
 import { appendAssistantTurn, appendUserTurn } from '../agent/session.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
+import type { SemanticCheck } from '../catalog/semantic-check.ts'
 
 const VALID =
   '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}\n' +
@@ -708,12 +709,12 @@ describe('T-0172: structured render_surface, prose routing, surface loss', () =>
     expect(contentOf(lines)).toEqual([...ASK_VALID.split('\n'), ...ASK2_VALID.split('\n')])
   })
 
-  // T-0328 (Kim 2026-10-17, amends T-0317): a surface rebuilt under a new id within the same turn is not a drop; only a
-  // surface that would have shipped counts (round 9 :1, cluster A). Per surface: a surface a defect failure named in
-  // every round that built it is excused only when a surface first built after it plausibly replaces it (the same root
-  // type here); a clean surface, and one an unrelated surface stands beside, still halt.
+  // T-0328 (Kim 2026-10-17, amends T-0317): a surface rebuilt under a new id within the turn is not a drop; only one that
+  // would have shipped counts (round 9 :1, cluster A). A surface is protected once some round built it with no failure
+  // naming it alone; each id a round builds for the first time retires one surface every building round flagged.
+  // Narration, FEED_SCOPE and unattributable paths flag nothing.
   const ASK1_INVALID = INVALID.replace(/main/g, 'ask-1')
-  /** A valid Column surface: the same root type as `brokenAsk`, so it plausibly replaces one. */
+  /** A valid Column surface. */
   const column = (sid: string): string =>
     `{"version":"v1.0","createSurface":{"surfaceId":"${sid}","catalogId":"agent-ui"}}\n` +
     `{"version":"v1.0","updateComponents":{"surfaceId":"${sid}","components":[{"id":"root","component":"Column","children":["t"]},{"id":"t","component":"Text","text":"Hi"}]}}`
@@ -738,7 +739,7 @@ describe('T-0172: structured render_surface, prose routing, surface loss', () =>
     expect(finalMeta(lines).trace?.failureCodes).not.toContain('SURFACE_DROPPED')
   })
 
-  it('T-0328: a rename that needs a second repair round still replaces the flagged surface', async () => {
+  it('T-0328: a rename that needs a second repair round ships', async () => {
     const { provider, calls } = scripted([
       { text: 'Booking.', call: [surface(brokenAsk('ask-1'))] },
       { text: 'Booking.', call: [surface(brokenAsk('table-1'))] },
@@ -749,7 +750,7 @@ describe('T-0172: structured render_surface, prose routing, surface loss', () =>
     expect(contentOf(lines)).toEqual(column('table-1').split('\n'))
   })
 
-  it('T-0328: a surface that would have shipped and disappears is still SURFACE_DROPPED beside a replaced one', async () => {
+  it('T-0328: a surface that would have shipped and disappears is still SURFACE_DROPPED beside a flagged one', async () => {
     const { provider } = scripted([
       { text: 'Booking.', call: [surface(`${ASK_VALID}\n${brokenAsk('ask-2')}`)] },
       { text: 'Booking.', call: [surface(column('ask-3'))] },
@@ -759,14 +760,67 @@ describe('T-0172: structured render_surface, prose routing, surface loss', () =>
     expect((err as ProduceHalt).failures).toEqual([{ code: 'SURFACE_DROPPED', path: 'ask-1' }])
   })
 
-  it('T-0328: one new surface replaces one flagged surface, so an unrelated flagged sibling is still SURFACE_DROPPED', async () => {
+  it('T-0328: one new id retires one flagged surface, the earliest built, so a flagged sibling is still SURFACE_DROPPED', async () => {
     const { provider } = scripted([
       { text: 'Booking.', call: [surface(`${badRow('greet-1')}\n${brokenAsk('ask-1')}`)] },
       { text: 'Booking.', call: [surface(column('ask-2'))] },
     ])
     const err = await halted(run(intentOf('book a table'), provider, { maxRounds: 2 }))
     expect(err).toBeInstanceOf(ProduceHalt)
-    expect((err as ProduceHalt).failures).toEqual([{ code: 'SURFACE_DROPPED', path: 'greet-1' }])
+    expect((err as ProduceHalt).failures).toEqual([{ code: 'SURFACE_DROPPED', path: 'ask-1' }])
+  })
+
+  it('T-0328: a round that builds no new id still drops a flagged surface', async () => {
+    const { provider } = scripted([
+      { text: 'Booking.', call: [surface(`${brokenAsk('ask-1')}\n${column('ask-2')}`)] },
+      { text: 'Booking.', call: [surface(column('ask-2'))] },
+    ])
+    const err = await halted(run(intentOf('book a table'), provider, { maxRounds: 2 }))
+    expect(err).toBeInstanceOf(ProduceHalt)
+    expect((err as ProduceHalt).failures).toEqual([{ code: 'SURFACE_DROPPED', path: 'ask-1' }])
+  })
+
+  it('T-0328: a chained rename (CATALOG on ask-1, a finding on ask-2) ships the clean ask-3', async () => {
+    const flag: SemanticCheck = {
+      id: 'flag',
+      check: ({ surfaces }) => surfaces.flatMap((v) => [...v.components.values()].filter((c) => c['text'] === 'flagged').map((c) => ({ code: 'FLAGGED', path: `${v.surfaceId}:${c.id}`, message: 'Drop the word.' }))),
+    }
+    const flagged = column('ask-2').replace('"text":"Hi"', '"text":"flagged"')
+    const { provider, calls } = scripted([
+      { text: 'Booking.', call: [surface(ASK1_INVALID)] },
+      { text: 'Booking.', call: [surface(flagged)] },
+      { text: 'Booking.', call: [surface(column('ask-3'))] },
+    ])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog, semanticChecks: [flag] }
+    const lines: string[] = []
+    for await (const line of produce(intentOf('book a table'), deps, { maxRounds: 3 })) lines.push(line)
+    expect(calls()).toBe(3)
+    expect(contentOf(lines)).toEqual(column('ask-3').split('\n'))
+  })
+
+  it('T-0328: a CONTAINMENT failure flags its surface, so a rename ships', async () => {
+    const stray =
+      '{"version":"v1.0","createSurface":{"surfaceId":"ask-1","catalogId":"agent-ui"}}\n' +
+      '{"version":"v1.0","updateComponents":{"surfaceId":"ask-1","components":[{"id":"root","component":"Column","children":["stray-header"]},{"id":"stray-header","component":"CardHeader","children":["title"]},{"id":"title","component":"Text","text":"Hi"}]}}'
+    const { provider, reqs, calls } = scripted([
+      { text: 'Booking.', call: [surface(stray)] },
+      { text: 'Booking.', call: [surface(column('ask-2'))] },
+    ])
+    const lines = await run(intentOf('book a table'), provider, { maxRounds: 2 })
+    expect(lastUserMessage(reqs()[1]!)).toMatch(/CONTAINMENT/)
+    expect(calls()).toBe(2)
+    expect(contentOf(lines)).toEqual(column('ask-2').split('\n'))
+  })
+
+  it('T-0328: a flagged ask-1, then a Row on ask-2, then a fixed ask-1 never halts', async () => {
+    const { provider } = scripted([
+      { text: 'Booking.', call: [surface(brokenAsk('ask-1'))] },
+      { text: 'Booking.', call: [surface(column('ask-2').replace('"Column"', '"Row"'))] },
+      { text: 'Booking.', call: [surface(column('ask-1'))] },
+    ])
+    const lines = await run(intentOf('book a table'), provider)
+    expect(finalMeta(lines).trace?.failureCodes).not.toContain('SURFACE_DROPPED')
+    expect(contentOf(lines).length).toBeGreaterThan(0)
   })
 
   it('T-0328: an unattributable genui failure beside ask-1 flags nothing, so dropping ask-1 is still SURFACE_DROPPED', async () => {
