@@ -21,6 +21,9 @@
 //   revealed for settlement). One finding names both faults. A player hand the check cannot resolve is
 //   never a natural; a dealer hand it cannot resolve is never judged for a hole card. T-0276: a surface whose
 //   words name another game (hold'em, Omaha, stud) and no blackjack-family game is never judged for a natural.
+//   T-0334: the CardTable's title or status, else a heading Text (literal or bound), picks the game rules (`gameRules`):
+//   pontoon pays a natural or a five-card trick 2:1, the banker wins every tie, a buy adds the original stake, and a
+//   natural forbids Twist, Stick and Buy.
 //
 // - HAND_BINDING (ADR-0243): a CardTable's `dealerHand`/`playerHand` must be a `{path}` binding to
 //   `/dealerHand` (resp. `/playerHand`), so a draw is a list append. A literal list or another pointer fails.
@@ -259,16 +262,86 @@ function isNatural(cards: readonly Card[]): boolean {
   return aces === 1 && tens === 1
 }
 
-const MOVE_WORDS: ReadonlySet<string> = new Set(['hit', 'stand', 'double'])
+/** T-0334: the rules that differ across the blackjack family, resolved once per view from the table's own game. */
+interface GameRules {
+  game: 'blackjack' | 'pontoon'
+  /** What a natural returns per unit of stake, the stake included (3:2 is 2.5, pontoon's 2:1 is 3). */
+  naturalMultiplier: number
+  /** The natural as the repair names it, and its payout odds. */
+  naturalLabel: string
+  payLabel: string
+  /** Pontoon's banker takes every tie, a natural against a natural included. */
+  bankerWinsTies: boolean
+  tieLabel: string
+  /** Pontoon's five-card trick (five cards at 21 or under) pays 2:1 and beats everything but a banker pontoon. */
+  fiveCardTrick: boolean
+  /** Pontoon's buy: a face-down card for an added stake equal to the original stake. */
+  buy: boolean
+  /** What a natural forbids: the game's move words (a buy is matched separately), and the Buttons the repair names. */
+  moveWords: ReadonlySet<string>
+  moveLabels: string
+}
+
+const BLACKJACK_RULES: GameRules = {
+  game: 'blackjack',
+  naturalMultiplier: 2.5,
+  naturalLabel: 'a natural blackjack',
+  payLabel: '3:2',
+  bankerWinsTies: false,
+  tieLabel: 'a push',
+  fiveCardTrick: false,
+  buy: false,
+  moveWords: new Set(['hit', 'stand', 'double']),
+  moveLabels: 'Hit, Stand or Double',
+}
+const PONTOON_RULES: GameRules = {
+  game: 'pontoon',
+  naturalMultiplier: 3,
+  naturalLabel: 'a pontoon',
+  payLabel: '2:1',
+  bankerWinsTies: true,
+  tieLabel: 'the dealer wins the tie',
+  fiveCardTrick: true,
+  buy: true,
+  moveWords: new Set(['hit', 'stand', 'double', 'twist', 'stick']),
+  moveLabels: 'Twist, Stick or Buy',
+}
+
+/** The game comes from the table itself: its `title` or `status`, then a heading Text on the surface, literal or
+ *  bound, and the first family game a source names wins ("Pontoon (British blackjack)" is pontoon, "Blackjack
+ *  (they call it pontoon in the UK)" is blackjack). Any other mention (a picker listing several games, body
+ *  text) never decides it, and a surface that names none is blackjack. */
+function gameRules(view: SurfaceView): GameRules {
+  const comps = [...view.components.values()]
+  const sources = [
+    ...comps.filter((c) => c.component === 'CardTable').flatMap((c) => [c['title'], c['status']]),
+    ...comps.filter((c) => c.component === 'Text' && /^h[1-5]$/.test(String(c['variant']))).map((c) => c['text']),
+  ]
+  for (const source of sources) {
+    const value = resolveProp(source, view.dataModel, undefined)
+    const names = typeof value === 'string' ? [...value.matchAll(new RegExp(BLACKJACK_GAMES.source, 'gi'))].map((m) => m[1]!.toLowerCase()) : []
+    const named = names.find((n) => n !== '21') // a bare 21 names the family, not a variant
+    if (named !== undefined) return named === 'pontoon' ? PONTOON_RULES : BLACKJACK_RULES
+  }
+  return BLACKJACK_RULES
+}
+
+/** A control that buys a card: buy, buy_card, "Buy", "Buy a card". "Buy chips" and "Buy in" are not moves. */
+function isBuyCard(text: string): boolean {
+  const words = text.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase().split(/[^a-z]+/).filter((w) => w !== '' && w !== 'btn' && w !== 'button')
+  return words[0] === 'buy' && (words.length === 1 || ['buy card', 'buy a card'].includes(words.join(' ')))
+}
 
 /** The move word a Button carries in its id or its label (`hitBtn`, `stand-button`, "Double down"), or
- *  `undefined`. Tokens split on case changes and non-letters, so "Standings" and "Deal again" do not match. */
-function moveWord(comp: A2uiComponent, dataModel: unknown): string | undefined {
+ *  `undefined`; a card-buying control is "buy" where the game has one. Tokens split on case changes and
+ *  non-letters, so "Standings" and "Deal again" do not match. */
+function moveWord(comp: A2uiComponent, dataModel: unknown, rules: GameRules): string | undefined {
   const label = resolveProp(comp['label'], dataModel, undefined)
   for (const text of [comp.id, typeof label === 'string' ? label : '']) {
     const tokens = text.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase().split(/[^a-z]+/)
-    const word = tokens.find((t) => MOVE_WORDS.has(t))
+    const word = tokens.find((t) => rules.moveWords.has(t))
     if (word !== undefined) return word
+    if (rules.buy && isBuyCard(text)) return 'buy'
   }
   return undefined
 }
@@ -276,10 +349,11 @@ function moveWord(comp: A2uiComponent, dataModel: unknown): string | undefined {
 /** NATURAL_ACTIONS: the player's two-card 21 ends the round, so no move button and no face-down dealer card. */
 function naturalFinding(view: SurfaceView, hand: HandContainer, dealer: readonly HandContainer[]): SemanticFinding | undefined {
   if (hand.cards === undefined || !isNatural(hand.cards)) return undefined
+  const rules = gameRules(view)
   const moves: { id: string; word: string }[] = []
   for (const comp of view.components.values()) {
     if (comp.component !== 'Button') continue
-    const word = moveWord(comp, view.dataModel)
+    const word = moveWord(comp, view.dataModel, rules)
     if (word !== undefined) moves.push({ id: comp.id, word })
   }
   const hole = dealer.find((d) => d.cards?.some((c) => c.faceDown) === true)
@@ -291,9 +365,9 @@ function naturalFinding(view: SurfaceView, hand: HandContainer, dealer: readonly
     code: 'NATURAL_ACTIONS',
     path: `${view.surfaceId}:${moves[0]?.id ?? hole!.id}`,
     message:
-      `The player's cards in ${hand.id} (${describeCards(hand.cards)}) are a natural blackjack, which ends the round on the deal, but the surface ${faults.join(' and ')}. ` +
-      `Settle the round in this same turn: turn the dealer's hole card face up, state the result (the player wins 3:2 unless the dealer also has 21, then a push) with the chip delta and the updated bankroll, ` +
-      `and leave only the Deal again Button in the actions row, with no Hit, Stand or Double.`,
+      `The player's cards in ${hand.id} (${describeCards(hand.cards)}) are ${rules.naturalLabel}, which ends the round on the deal, but the surface ${faults.join(' and ')}. ` +
+      `Settle the round in this same turn: turn the dealer's hole card face up, state the result (the player wins ${rules.payLabel} unless the dealer also has ${rules.naturalLabel}, then ${rules.tieLabel}) with the chip delta and the updated bankroll, ` +
+      `and leave only the Deal again Button in the actions row, with no ${rules.moveLabels}.`,
   }
 }
 
@@ -488,13 +562,14 @@ function betStepWithoutTable(view: SurfaceView): SemanticFinding[] {
 
 /** T-0233: the player's move words across the blackjack family (pontoon twists, sticks and buys). Wider than
  *  `MOVE_WORDS`, which names only what a natural forbids. */
-const PLAYER_MOVES: ReadonlySet<string> = new Set(['hit', 'stand', 'double', 'split', 'surrender', 'twist', 'stick', 'buy'])
+const PLAYER_MOVES: ReadonlySet<string> = new Set(['hit', 'stand', 'double', 'split', 'surrender', 'twist', 'stick'])
 
-/** A Button offers a move when its id, label or action name carries a player move word (T-0286: or one of `moves`). */
-function offersMove(comp: A2uiComponent, dataModel: unknown, moves: ReadonlySet<string> = PLAYER_MOVES): boolean {
+/** A Button offers a move when its id, label or action name carries a player move word (T-0286: or one of `moves`),
+ *  or, in a game with a buy (`buy`), when it buys a card (T-0334). */
+function offersMove(comp: A2uiComponent, dataModel: unknown, moves: ReadonlySet<string> = PLAYER_MOVES, buy = false): boolean {
   const label = resolveProp(comp['label'], dataModel, undefined)
-  return [comp.id, typeof label === 'string' ? label : '', actionName(comp)].some((text) =>
-    text.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase().split(/[^a-z]+/).some((t) => moves.has(t)),
+  return [comp.id, typeof label === 'string' ? label : '', actionName(comp)].some(
+    (text) => text.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase().split(/[^a-z]+/).some((t) => moves.has(t)) || (buy && isBuyCard(text)),
   )
 }
 
@@ -505,7 +580,7 @@ function offersMove(comp: A2uiComponent, dataModel: unknown, moves: ReadonlySet<
 function movesMissing(view: SurfaceView): SemanticFinding[] {
   const findings: SemanticFinding[] = []
   const comps = [...view.components.values()]
-  if (comps.some((c) => c.component === 'Button' && offersMove(c, view.dataModel))) return []
+  if (comps.some((c) => c.component === 'Button' && offersMove(c, view.dataModel, PLAYER_MOVES, gameRules(view).buy))) return []
   if (namesOtherGame(comps)) return [] // T-0323: the move words are blackjack's
   for (const table of comps) {
     if (table.component !== 'CardTable' || phaseOf(table, view.dataModel) !== 'playing') continue
@@ -532,6 +607,7 @@ export const croupierBetControls: SemanticCheck = {
 
 const DEAL_ACTION = /^(deal|place_?bet|bet|deal_blackjack)$/i
 const MOVE_ACTION = /^(hit|stand|double|double_?down)$/i
+const PONTOON_MOVE_ACTION = /^(twist|stick|buy(_?card)?)$/i // T-0334: on a pontoon table these settle a round too
 const NEW_ROUND_ACTION = /^(deal_?again|new_?round|next_?round)$/i
 const finiteNumber = (v: unknown): number | undefined => (typeof v === 'number' && Number.isFinite(v) ? v : undefined)
 
@@ -598,8 +674,9 @@ function newRoundFindings(surfaces: readonly SurfaceView[], action: SemanticActi
 function actionApplied(surfaces: readonly SurfaceView[], action: SemanticAction): SemanticFinding[] {
   if (action.context['newRound'] === true || NEW_ROUND_ACTION.test(action.name)) return newRoundFindings(surfaces, action)
   const deal = DEAL_ACTION.test(action.name)
-  if (!deal && !MOVE_ACTION.test(action.name)) return []
   const view = surfaces.find((v) => v.surfaceId === action.surfaceId)
+  const pontoonMove = view !== undefined && gameRules(view).game === 'pontoon' && PONTOON_MOVE_ACTION.test(action.name)
+  if (!deal && !MOVE_ACTION.test(action.name) && !pontoonMove) return []
   // A move answered on a NEW table (the next round) hands the flow on; the clicked one is history.
   const handedOn = surfaces.some((v) => v.surfaceId !== action.surfaceId && [...v.components.values()].some((c) => c.component === 'CardTable'))
   if (view === undefined) {
@@ -615,6 +692,7 @@ function actionApplied(surfaces: readonly SurfaceView[], action: SemanticAction)
     ]
   }
   const findings: SemanticFinding[] = []
+  const rules = gameRules(view)
   for (const table of view.components.values()) {
     if (table.component !== 'CardTable') continue
     if (deal && phaseOf(table, view.dataModel) === 'betting')
@@ -647,7 +725,8 @@ function actionApplied(surfaces: readonly SurfaceView[], action: SemanticAction)
         path: `${view.surfaceId}:${path ?? table.id}`,
         message:
           `The bankroll reads ${after} after a bet of ${bet} from ${before}. The deal takes the bet out of the bankroll: write ${before - bet}. ` +
-          `Settlement later pays the bet back with the winnings (2x the bet for a win, 2.5x for a natural, 1x for a push).`,
+          `Settlement later pays the bet back with the winnings (2x the bet for a win, ${rules.naturalMultiplier}x for a natural, ` +
+          `${rules.bankerWinsTies ? 'nothing for a tie, which the dealer wins' : '1x for a push'}).`,
       })
   }
   return findings
@@ -667,17 +746,22 @@ function cardsAt(dataModel: unknown, path: string | undefined): Card[] | undefin
   return cards.every((c): c is Card => c !== undefined) ? cards : undefined
 }
 
-/** What a settled round pays back on a stake already taken out at the deal: 2x on a win, 2.5x on a natural,
- *  the stake on a push, nothing on a loss, with the result in words for the repair sentence. */
-function payout(player: readonly Card[], dealer: readonly Card[], stake: number): { amount: number; result: string } {
+/** What a settled round pays back on a stake already taken out at the deal: 2x on a win, the game's natural
+ *  multiplier on a natural (2.5x, or 3x in pontoon), the stake on a push (a loss in pontoon, where the banker
+ *  wins every tie), nothing on a loss, with the result in words for the repair sentence. A pontoon five-card
+ *  trick pays like a natural and beats everything but a banker pontoon; the banker's beats all but a pontoon. */
+function payout(player: readonly Card[], dealer: readonly Card[], stake: number, rules: GameRules): { amount: number; result: string } {
   const p = bestTotal(player)
   const d = bestTotal(dealer)
+  const trick = (cards: readonly Card[], total: number): boolean => rules.fiveCardTrick && cards.length >= 5 && total <= 21
   if (p > 21) return { amount: 0, result: `a bust (${p})` }
-  if (isNatural(player) && !isNatural(dealer)) return { amount: stake * 2.5, result: 'a natural' }
+  if (isNatural(player) && !isNatural(dealer)) return { amount: stake * rules.naturalMultiplier, result: `${rules.naturalLabel} (${rules.payLabel})` }
   if (isNatural(dealer) && !isNatural(player)) return { amount: 0, result: 'a loss to the dealer\'s natural' }
+  if (trick(player, p)) return { amount: stake * rules.naturalMultiplier, result: `a five-card trick (${rules.payLabel})` }
+  if (trick(dealer, d)) return { amount: 0, result: `a loss to the dealer's five-card trick (${d})` }
   if (d > 21) return { amount: stake * 2, result: `a win (the dealer bust on ${d})` }
   if (p > d) return { amount: stake * 2, result: `a win (${p} over ${d})` }
-  if (p === d) return { amount: stake, result: `a push (${p})` }
+  if (p === d) return rules.bankerWinsTies ? { amount: 0, result: `a loss (${rules.tieLabel} at ${p})` } : { amount: stake, result: `a push (${p})` }
   return { amount: 0, result: `a loss (${p} under ${d})` }
 }
 
@@ -715,10 +799,14 @@ function settleFinding(view: SurfaceView, table: A2uiComponent, action: Semantic
   const player = cardsAt(view.dataModel, bindingPath(table['playerHand']))
   const dealer = cardsAt(view.dataModel, bindingPath(table['dealerHand']))
   if (before === undefined || after === undefined || player === undefined || dealer === undefined || bet === undefined || bet <= 0) return undefined
-  const doubled = /^double/i.test(action.name)
-  const stake = doubled ? bet * 2 : bet
-  const takenNow = deal ? bet : doubled ? bet : 0 // the stake leaves the bankroll at the deal; a double adds one more
-  const { amount, result } = payout(player, dealer, stake)
+  const rules = gameRules(view)
+  // The stake leaves the bankroll at the deal; a double adds one more, and a pontoon buy adds one equal to the
+  // original stake, which is the click-time bet less the buys already made (each left a face-down player card).
+  const priorBuys = (handList(table, 'player', clickTime)?.filter((c) => isRecord(c) && c['faceDown'] === true).length ?? 0)
+  const added = deal ? 0 : /^double/i.test(action.name) ? bet : rules.buy && BUY_ACTION.test(action.name) ? bet / (1 + priorBuys) : 0
+  const stake = deal ? bet : bet + added
+  const takenNow = deal ? bet : added
+  const { amount, result } = payout(player, dealer, stake, rules)
   const expected = before - takenNow + amount
   if (after === expected) return undefined
   return {
@@ -960,7 +1048,7 @@ const BUY_ACTION = /^buy(_?card)?$/i
  *  table appends only face-down player cards (Sonnet 5.5 bought a card face up). */
 function boughtFaceUp(view: SurfaceView, action: SemanticAction): SemanticFinding[] {
   if (view.surfaceId !== action.surfaceId || !BUY_ACTION.test(action.name)) return []
-  if (!/\bpontoon\b/i.test(literalWords(view.components.values()))) return []
+  if (!gameRules(view).buy) return []
   const findings: SemanticFinding[] = []
   for (const table of view.components.values()) {
     if (table.component !== 'CardTable') continue
