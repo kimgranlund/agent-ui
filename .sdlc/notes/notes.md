@@ -186,3 +186,9 @@
 - note: `scripts/e2e-admin/probe/replays/croupier-haiku-surface-id-in-reply.json` turn 8 drops the live prose round, so the replay no longer exercises ACTION_NOT_APPLIED followed by the reply-only narration round; a fixture keeping round 1 prose, round 2 the live call, round 3 the cut reply could pin that interplay and stay closer to the record (not run here).
 - note: `packages/agent-ui/a2ui/src/agent/produce.ts:683` "Send only your reply to the user again" reads as "repeat it" on first pass; "Write your reply to the user again" or "Send a new reply" is less ambiguous.
 - note: `packages/agent-ui/a2ui/src/agent/produce.ts:1529-1554` `narrationReplyRound` yields `retry` and `sent` progress lines but does not thread provider events through `interleaveProgress`, so a `progress: 'full'` consumer sees no `started`/`reasoning` for the narration call.
+
+## T-0339: ui-gauge in RTL keeps its rings on the left and its legend about 190px away (2026-10-17)
+
+- note: packages/agent-ui/components/src/controls/gauge/gauge.ts: a direction flip with no box change does not re-anchor until the next ResizeObserver tick (the post-mount test changes inline-size to trigger it). In practice low impact: a dir change usually comes with a page/locale re-render or reflow that resizes, but a pure `dir` toggle on a fixed-width container leaves the rings on the wrong edge until something resizes.
+- fix-now: packages/agent-ui/components/src/controls/gauge/gauge.ts:108 comment cites `#syncAnchor`, which does not exist (the logic is `#anchor()` plus `#syncScale`).
+- decide: site/pages/dogfood-render.browser.test.ts: with the anchor reverted, the dogfood legend-gap sweep (`-t "legend-gap"` 4 passed; `-t "demo/gauge"` 2 passed) stayed green, so the sweep and the rtl clean twin do not catch this regression; only gauge.browser.test.ts bites. The `legend-gap, rtl` plant proves the rule reports a padded legend, not that it measures the rings' edge.
