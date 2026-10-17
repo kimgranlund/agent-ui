@@ -243,6 +243,7 @@ describe('createOverlayStore: the SettingsStore every reader goes through', () =
     const store = createOverlayStore({ seed, overlay: emptyOverlay('concierge', 1, seed), persist: (o) => persisted.push(o) })
     store.subscribe?.((key, value) => seen.push([key, value]))
     expect(store.get('name')).toBe('Concierge')
+    expect(store.get('entries:skill'), 'a stable reference between writes').toBe(store.get('entries:skill'))
     store.set('name', 'Max')
     expect(store.get('name')).toBe('Max')
     expect(persisted.at(-1) && modifiedPaths(persisted.at(-1)!)).toEqual([{ key: 'name' }])

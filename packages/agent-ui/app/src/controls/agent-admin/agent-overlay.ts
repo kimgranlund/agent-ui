@@ -470,20 +470,22 @@ export interface OverlayStore extends SettingsStore {
 export function createOverlayStore(options: OverlayStoreOptions): OverlayStore {
   const { seed, persist } = options
   let overlay = options.overlay
-  // The last value written per key, so `get` hands back the very object `set` received (the settings
-  // fields' zero-echo check compares by identity).
-  const written = new Map<string, unknown>()
+  // The resolved value per key, cached until that key is written or reset: `get` hands back a stable
+  // reference between writes (and the very object `set` received, for the settings fields' zero-echo
+  // check, which compares by identity), as a plain Map-backed store does.
+  const resolved = new Map<string, unknown>()
   const listeners = new Set<(key: string, value: unknown) => void>()
   const notify = (key: string, value: unknown): void => {
     for (const listener of listeners) listener(key, value)
   }
   return {
     get(key) {
-      return written.has(key) ? written.get(key) : resolveOverlayKey(seed, overlay, key)
+      if (!resolved.has(key)) resolved.set(key, resolveOverlayKey(seed, overlay, key))
+      return resolved.get(key)
     },
     set(key, value) {
       overlay = setOverlayKey(seed, overlay, key, value)
-      written.set(key, value)
+      resolved.set(key, value)
       persist?.(overlay)
       notify(key, value)
     },
@@ -498,9 +500,10 @@ export function createOverlayStore(options: OverlayStoreOptions): OverlayStore {
     modified: () => modifiedPaths(overlay),
     reset(address) {
       overlay = resetPath(overlay, address)
-      written.delete(address.key)
+      const value = resolveOverlayKey(seed, overlay, address.key)
+      resolved.set(address.key, value)
       persist?.(overlay)
-      notify(address.key, resolveOverlayKey(seed, overlay, address.key))
+      notify(address.key, value)
     },
   }
 }
