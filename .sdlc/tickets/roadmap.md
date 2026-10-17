@@ -27,7 +27,7 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0345 | [0345-r10-poker-opens-with-cards](0345-r10-poker-opens-with-cards/handoff.md) | Haiku poker and blackjack openings deal on the first turn instead of asking for a stake (round 10 cluster B) | bug | L2 | P1 | none | ⏳ proposed |
 | T-0346 | [0346-r10-omaha-showdown-settles](0346-r10-omaha-showdown-settles/handoff.md) | A poker showdown reveals the opponent hand and settles in the same turn (round 10 cluster C) | bug | L1 | P2 | none | 🔵 ready (branch fix/0346-showdown-settles) |
 | T-0347 | [0347-r10-probe-natural-skip](0347-r10-probe-natural-skip/handoff.md) | Scripted card scenarios skip the rest of a hand when a natural settles it (round 10 cluster D) | chore | L1 | P2 | none | 🔵 ready (branch chore/0347-probe-natural-skip) |
-| T-0348 | [0348-r10-override-playing-card](0348-r10-override-playing-card/handoff.md) | The surface override does not read a playing card as a UI card (round 10 cluster E) | bug | L1 | P2 | none | 🔵 ready |
+| T-0348 | [0348-r10-override-playing-card](0348-r10-override-playing-card/handoff.md) | The surface override does not read a playing card as a UI card (round 10 cluster E) | bug | L1 | P2 | none | 🔵 ready (branch fix/0348-override-playing-card) |
 | T-0349 | [0349-signals-gaps-r10](0349-signals-gaps-r10/handoff.md) | eval:signals follow-ups from round 10: like-sample churn, halt and failureCode tallies, retrieval table | chore | L2 | P3 | none | 🔵 ready |
 
 Closed: 320 done, 4 dropped (git log or .NNNN-* folders)
