@@ -13,10 +13,9 @@
 - `.claude/hooks/adr-status-guard.py` — REMOVED 2026-08-17 (Kim: "remove all hooks", repo-wide;
   `.claude/settings.json` carries no `hooks` key). No PreToolUse guard blocks a direct agent
   Status-flip; since the ADR freeze (T-0164, 2026-10-14) no Status cell is flipped at all.
-- `scripts/adr_ratify.py`: RETIRED with the ADR system (T-0164). It was the flip executor for a
-  verified owner utterance, whole-ADR and amendment modes (ADR-0149, GH #664); nothing calls it
-  now. Its unit test `scripts/adr_ratify_test.py` still runs in `check:scripts` and stays green
-  until a cleanup ticket removes both.
+- `scripts/adr_ratify.py`: RETIRED with the ADR system (T-0164) and DELETED with its unit test
+  (T-0169). It was the flip executor for a verified owner utterance, whole-ADR and amendment modes
+  (ADR-0149, GH #664); frozen ADRs that cite it are history.
 - scribe's `doc_lint.py` fit ONLY tickets here (YAML) while the file-based tier existed; with no
   new ticket files being authored, that particular fit is now moot going forward — the blockquote
   types stay out of its dialect regardless, do not "fix" a doc to satisfy it.

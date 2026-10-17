@@ -4,7 +4,7 @@
 
 | Type | Dialect | Vocabulary | Who flips |
 |---|---|---|---|
-| ADR (FROZEN, T-0164, 2026-10-14) | blockquote TABLE — `> \| **Status** \| <kw> \|`, six fixed rows (Status · Date · Proposed by · Ratified by · Repairs · Supersedes / Superseded by) | `proposed · accepted · superseded · deprecated` — ONE bare keyword, never trailing prose | **Nobody.** The ADR system is retired: Status cells and amendment headers stay as they stood at the freeze, `scripts/adr_ratify.py` is retired, and an amendment left `proposed` is listed in `adr-log-mechanics.md` with where its live rule sits. Historically only Kim flipped a cell (ADR-0149) |
+| ADR (FROZEN, T-0164, 2026-10-14) | blockquote TABLE — `> \| **Status** \| <kw> \|`, six fixed rows (Status · Date · Proposed by · Ratified by · Repairs · Supersedes / Superseded by) | `proposed · accepted · superseded · deprecated` — ONE bare keyword, never trailing prose | **Nobody.** The ADR system is retired: Status cells and amendment headers stay as they stood at the freeze, the `adr_ratify.py` flip script is deleted (T-0169), and an amendment left `proposed` is listed in `adr-log-mechanics.md` with where its live rule sits. Historically only Kim flipped a cell (ADR-0149) |
 | Ticket (HISTORICAL — through TKT-0096) | YAML frontmatter (`doc-type: ticket`) | `open · doing · done · wontfix`; `kind: bug\|feature`; `size` on features only | Agents flip freely as work progresses |
 | SPEC / LLD / PRD | blockquote STATUS LINE — `> Status: <kw> · v# · <date> · Layer: …` | `proposed · accepted · superseded` | PRDs flip when Kim accepts them; SPEC/LLD — see §2 |
 
