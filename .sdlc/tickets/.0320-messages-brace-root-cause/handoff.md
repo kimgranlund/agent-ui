@@ -2,7 +2,7 @@
 id: T-0320
 title: "Root-cause the render_surface messages strings that are one brace short (ours or the model's?)"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -38,3 +38,9 @@ Evidence:
 - The same model sent byte-identical broken strings in separate API requests: r7 :16 rounds 2 and 3 (Haiku, 1046 chars, the same break at char 476) and r8 :252 rounds 1 and 2 (Sonnet, 1490 chars, break at 591). Our code cannot drop the same byte at the same place in two independent streams; a model repeating its own output can.
 - Where it breaks: 20 of the 26 rounds close a message one `}` short at a bracket run (`"}}` or `]}}` before `,{"version"`, or `}]}` before the final `]`), always where a message's nested objects close (15 `updateDataModel` messages, 5 `updateComponents` messages whose last component ends in an action `context` or a bound prop); r8 :178 (both rounds) lost the `{"id":` opener of `guessBtn`; r7 :20 and r8 :120, :172, :355 break at other bracket runs (one too many, or a `]` where `}` belongs). All sit at multi-brace token boundaries, the model's counting error, not a byte loss.
 - Reproduced through our path: the T-0320 test in `anthropic-terminal-tool.test.ts` re-streams the recorded r8 :305 input (Sonnet, `regress-admiral-row-sweep`) as fragments of 1 to 7 characters, cut into 13-byte network chunks that split the 3-byte `✕` and `■`, and the executor receives it byte-identical, still one `}` short at the end of message 3.
+
+## Outcome
+
+2026-10-16 · lane: full L2 · verdict: closed by reason (Merged in the round 8 producer lane; verifier pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

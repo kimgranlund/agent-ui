@@ -2,7 +2,7 @@
 id: T-0321
 title: "Force render_surface on a SURFACE_DROPPED repair round; the fallback never ships a round a check already failed"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -32,3 +32,14 @@ verifier: L3
 Lane `fix/r8-producer` (round 8 producer), one commit per ticket, in order:
 1. T-0320: root-cause the one-brace-short `messages` strings (ours or the model's).
 2. T-0321: force render_surface on a SURFACE_DROPPED repair round; the fallback never ships a check-failed round.
+
+## Outcome
+
+2026-10-16 · lane: full L2 · verdict: closed by reason (Merged in the round 8 producer lane; verifier pass) · verifier: verifier-L3 (fable) · base: 4de395ede491
+- Changed: see commits
+- Commits: none
+- Check: 1 (red) `npx vitest run packages/agent-ui/a2ui/src/live-agent/produce-forced-surface.test.ts -t T-0...: pass
+- Check: 2 `npx vitest run packages/agent-ui/a2ui/src/live-agent/produce-loop-property.test.ts` exits 0: pass
+- Check: 3 `npx vitest run packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent scripts/e2...: pass
+- Check: 4 `grep -c "T-0321" .claude/docs/spec/response-type-selection.spec.md` exits 0: pass
+- Check: 5 `npm run check` exits 0: pass

@@ -2,7 +2,7 @@
 id: T-0325
 title: "The texas-holdem scenario assumes a showdown: no fixed click after a move that can end the hand"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -21,3 +21,9 @@ Round 8 cluster G, `.sdlc/evals/rounds/2026-10-16-r8-matrix/report.md` (`## Why 
 - The round generators regenerate cleanly: the r2 to r6 and r8 `live-commands.sh` files are regenerated with only their texas-holdem lines changed, and every round pin is green: `npx vitest run scripts/e2e-admin/probe/scenarios` exits 0.
 - The probe suite: `npx vitest run scripts/e2e-admin/probe` exits 0.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-16 · lane: full L1 · verdict: closed by reason (Merged in the round 8 checks lane; verifier L2 pass) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

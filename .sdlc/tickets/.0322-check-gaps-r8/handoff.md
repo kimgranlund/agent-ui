@@ -2,7 +2,7 @@
 id: T-0322
 title: "Check gaps: uncovered prose answers (word-game opening, Concierge form edit) and the ProductCard check missing a priced DescriptionList"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -31,3 +31,14 @@ Close round 8 clusters C and D, `.sdlc/evals/rounds/2026-10-16-r8-matrix/report.
 - T-0322: check gaps C1 (word-game opening), C2 (Concierge edit in prose), D (priced DescriptionList on a services ask).
 - T-0324: a blackjack deal that settles needs a two-card 21.
 - T-0325: the texas-holdem round scenario has no fixed move after one that can end the hand.
+
+## Outcome
+
+2026-10-16 · lane: full L2 · verdict: closed by reason (Merged in the round 8 checks lane; verifier L2 pass) · verifier: verifier-L2 (sonnet) · base: 4de395ede491
+- Changed: see commits
+- Commits: none
+- Check: 1 C1, C2, D tests red at base, green after: pass
+- Check: 2 Replays flip to the new codes: pass
+- Check: 3 T-0314 contract tests green with new fixtures: pass
+- Check: 4 Catalog, live-agent and probe suites: pass
+- Check: 5 `npm run check`: pass

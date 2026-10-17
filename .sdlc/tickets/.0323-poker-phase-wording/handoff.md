@@ -2,7 +2,7 @@
 id: T-0323
 title: "Poker phases: a post-deal betting round is phase playing; the BET_CONTROL_DUPLICATE repair must not strip the moves"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -35,3 +35,14 @@ verifier: L3
 - (red) `npx vitest run site/pages/agent-admin-presets.test.ts -t T-0323` exits 0: the croupier card-layout and game-table-chrome entries scope the table to blackjack, gloss betting as before the deal, and seedVersion is 15.
 - `npx vitest run packages/agent-ui/a2ui/src/catalog packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent packages/agent-ui/a2ui/tools/registry scripts/e2e-admin/probe site/pages/agent-admin-presets.test.ts site/lib/agent-manifest` exits 0 (the T-0314 contract cross-run with the DEALT_IN_BETTING probes, the prompt-equivalence baseline after one deliberate recapture, assets freshness, the Croupier replays, the manifests).
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-17 · lane: full L2 · verdict: closed by reason (Merged #2076; poker on a Card frame (debate option C as revised); verifier L3 pass) · verifier: verifier-L3 (fable) · base: 4de395ede491
+- Changed: see commits
+- Commits: none
+- Check: 1 (red) `npx vitest run packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.test.ts -t T-03...: pass
+- Check: 2 (red) `npx vitest run packages/agent-ui/a2ui/src/live-agent/mini-skills.test.ts -t T-0323` exits 0: pass
+- Check: 3 (red) `npx vitest run site/pages/agent-admin-presets.test.ts -t T-0323` exits 0: pass
+- Check: 4 `npx vitest run packages/agent-ui/a2ui/src/catalog packages/agent-ui/a2ui/src/live-agent packages...: pass
+- Check: 5 `npm run check` exits 0: pass
