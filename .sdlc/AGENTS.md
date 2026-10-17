@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:f5922820bd90 -->
+<!-- sdlc-lite:managed:start v1 sha256:155c8c7bf015 -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -38,7 +38,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0209 One source per concept: layer membership, calibration bullets, persona list; mini-skill ranking stability test (0209-context-single-source), branch chore/0209-context-single-source
   - T-0328 A same-turn repair that rebuilds a flagged surface under a new id must not halt (round 9 cluster A) (0328-r9-rename-after-repair), branch fix/0328-rename-after-repair
   - T-0330 Feed a dropped surface's bound composite finding with SURFACE_DROPPED (round 9 cluster C) (0330-r9-dropped-surface-finding)
-  - T-0331 BookingForm read-back check matches booking verbs and the confirm_booking action (round 9 cluster D) (0331-r9-bookingform-readback-cue)
+  - T-0331 BookingForm read-back check matches booking verbs and the confirm_booking action (round 9 cluster D) (0331-r9-bookingform-readback-cue), branch fix/0331-readback-cue
   - T-0332 NARRATION_HINT leaves the surface as it is when the reply needs no change (round 9 cluster E) (0332-r9-narration-hint-no-change)
   - T-0333 BOOKING_CONFIRMATION_MISSING fires on a confirm turn or a read-back, not caption words (round 9 cluster G) (0333-r9-booking-confirmation-caption)
   - T-0334 BANKROLL_MISMATCH and NATURAL_ACTIONS price a pontoon at 2:1 (round 9 cluster H) (0334-r9-pontoon-payout)
