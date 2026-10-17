@@ -74,16 +74,19 @@ T-0172 rules (2026-10-14 traces):
   round of the turn built (created and gave components; a bare `createSurface` is not a surface) must come
   back or be explicitly deleted, failure-named or not. The repair message names the failed round's surfaces
   no failure names ("Keep `ask-1` ..."); a later valid round without one spends a `SURFACE_DROPPED` round,
-  and on the last round halts with `SURFACE_DROPPED` unless an earlier round can ship (below).
+  and on the last round halts with `SURFACE_DROPPED` unless an earlier round can ship (below). The repair round
+  after a `SURFACE_DROPPED` round, a prose round or a valid one, is forced the T-0298 way (`toolChoice`
+  `render_surface`, thinking off where the row allows it; T-0321).
 - An update (`updateComponents`, `updateDataModel`) to a surface that no earlier turn created, that the client
   turn does not come from, and that no earlier message of the payload creates fails `SURFACE_NOT_CREATED` on
   any round (T-0305): the renderer drops it, so the repair sends the `createSurface` first.
 
 `maxRounds` bounds the loop. T-0302: when the last round fails to parse, fails schema or drops a surface, the last
-earlier round whose payload validated and dropped nothing ships whole instead (its note, ask and lines), as a last
-round would ship it (a feed-scoped ask dropped as `FEED_SCOPE_RESCOPED`, a finding tallied `SEMANTIC_UNCORRECTED`),
-the trace carrying the last round's codes plus `EARLIER_ROUND_SHIPPED`; it comes before the `SURFACE_DEGRADED`
-text. With no such round, exhaustion throws `ProduceHalt` carrying the last failures; a
+earlier round whose payload validated, dropped nothing and has no semantic finding (judged at the bound with the
+turn's binding composites, T-0321) ships whole instead (its note, ask and lines), as a last round would ship it (a
+feed-scoped ask dropped as `FEED_SCOPE_RESCOPED`, a throwing check tallied `SEMANTIC_CHECK_ERROR`), the trace carrying
+the last round's codes plus `EARLIER_ROUND_SHIPPED`; it comes before the `SURFACE_DEGRADED` text. A round a check
+failed never ships this way (Kim 2026-10-16, round 8 :169 shipped a read-back the composite check had failed). With no such round, exhaustion throws `ProduceHalt` carrying the last failures; a
 transport that already committed a 200 turns that into the terminal error line below.
 `FEED_SCOPE`, `NET_NOOP`, `FLOW_END_INFERRED`, `SURFACE_DROPPED`, `SURFACE_NOT_CREATED`, the genui codes and a semantic check's own codes
 (`HAND_TOTAL`, `HAND_COUNT`, `NATURAL_ACTIONS`, `SEMANTIC_UNCORRECTED`, `SEMANTIC_CHECK_ERROR`) are produce-layer-only and

@@ -9,19 +9,16 @@ import { offlineReplay } from '../trace.ts'
 // T-0302: live round 6 (2026-10-15-r6-matrix :169-:170, Haiku 5.5). The spa booking ask built a hand-made confirm card
 // on ask-1 (BOOKING_FORM_MISSING), round 2 sent nothing that parsed (PARSE), and round 3 answered with a meta-line
 // alone, so the turn halted with SURFACE_DROPPED and shipped nothing. The last round now ships the last schema-valid
-// round whole (round 1: its note, ask and card), tallied EARLIER_ROUND_SHIPPED.
-const trace = (record) => record.lines.map((l) => JSON.parse(l)).map((l) => l.a2uiMeta?.trace).find((t) => t !== undefined)
+// round whole (round 1: its note, ask and card), tallied EARLIER_ROUND_SHIPPED. T-0321 (Kim 2026-10-16): the fallback
+// never ships a round a check failed, and round 1 is the BOOKING_FORM_MISSING card, so the turn halts with
+// SURFACE_DROPPED again (live, round 3 is now forced to render_surface after the drop).
+const halt = (record) => record.lines.map((l) => JSON.parse(l)).map((l) => l.a2uiMeta?.error).find((e) => e !== undefined)
 
-it('concierge-haiku-last-round-drop: a last round that drops the surface ships the earlier valid round instead of halting', async () => {
+it('concierge-haiku-last-round-drop: a last round that drops the surface halts rather than ship the flagged card', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./concierge-haiku-last-round-drop.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed).toEqual([])
-  expect(trace(report.records[1])).toMatchObject({ rounds: 3, failureCodes: ['SURFACE_DROPPED', 'SEMANTIC_UNCORRECTED', 'EARLIER_ROUND_SHIPPED'] })
+  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual(['no-halt:1'])
+  expect(halt(report.records[1])).toMatch(/SURFACE_DROPPED/)
   const shipped = report.records[1].lines.map((l) => JSON.parse(l))
-  expect(shipped.some((m) => m.a2uiMeta?.error !== undefined)).toBe(false)
-  expect(shipped.some((m) => m.createSurface?.surfaceId === 'ask-1')).toBe(true)
-  expect(shipped.some((m) => m.updateComponents?.components?.some((c) => c.component === 'DescriptionList'))).toBe(true)
-  const meta = shipped.find((m) => m.a2uiMeta?.trace !== undefined).a2uiMeta
-  expect(meta.ask).toEqual({ surfaceId: 'ask-1' })
-  expect(meta.note).toMatch(/Press Confirm booking/)
+  expect(shipped.some((m) => m.createSurface !== undefined || m.updateComponents !== undefined)).toBe(false)
 })

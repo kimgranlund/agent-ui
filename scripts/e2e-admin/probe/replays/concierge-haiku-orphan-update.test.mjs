@@ -10,15 +10,17 @@ import { offlineReplay } from '../trace.ts'
 // at ask-1:summary; round 2 sent the BookingForm as updates to ask-1 with no createSurface. The failure named ask-1, so
 // no SURFACE_DROPPED fired, the validator accepted updates to a surface never created, and the guest never saw the
 // form. T-0305: an update to a surface nothing created fails SURFACE_NOT_CREATED, so round 2 (and its replayed repeat)
-// is a repair round and the turn ships round 1's ask-1, tallied EARLIER_ROUND_SHIPPED.
+// is a repair round and the turn shipped round 1's ask-1, tallied EARLIER_ROUND_SHIPPED. T-0321 (Kim 2026-10-16): round 1
+// is the BOOKING_FORM_MISSING card, and the fallback never ships a round a check failed, so the last capture round
+// degrades to its reply text (SURFACE_DEGRADED, RTS-R8) and the probe's no-surface-loss check records the missing form.
 const trace = (record) => record.lines.map((l) => JSON.parse(l)).map((l) => l.a2uiMeta?.trace).find((t) => t !== undefined)
 
-it('concierge-haiku-orphan-update: a repair round that updates ask-1 without creating it fails, and ask-1 still ships', async () => {
+it('concierge-haiku-orphan-update: a repair round that updates ask-1 without creating it fails, and the flagged ask-1 never ships', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./concierge-haiku-orphan-update.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual([])
+  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual(['no-surface-loss:0'])
   const booking = report.records[0]
-  expect(trace(booking)).toMatchObject({ rounds: 3, failureCodes: ['SURFACE_NOT_CREATED', 'SEMANTIC_UNCORRECTED', 'EARLIER_ROUND_SHIPPED'] })
+  expect(trace(booking)).toMatchObject({ rounds: 3, failureCodes: ['SURFACE_NOT_CREATED', 'SURFACE_DEGRADED'] })
   const wire = booking.lines.map((l) => JSON.parse(l))
-  expect(wire.some((m) => m.createSurface?.surfaceId === 'ask-1')).toBe(true)
+  expect(wire.some((m) => m.createSurface !== undefined)).toBe(false)
 })

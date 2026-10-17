@@ -5,7 +5,8 @@
 //   in the round that ships. A turn that halts or degrades to text ships no round, so I1 holds there trivially.
 // - I2: the shipped lines never update a surface that neither the session nor the shipped lines created (T-0305).
 // - The T-0302 pin: when the last round fails and an earlier round of the turn validated with nothing dropped, that
-//   round's lines ship and the trace ends with EARLIER_ROUND_SHIPPED.
+//   round's lines ship and the trace ends with EARLIER_ROUND_SHIPPED. T-0321 (Kim 2026-10-16): never a round a semantic
+//   check failed, so in the single-surface family below (where every valid round is flagged) the turn ships no payload.
 // Each round reaches the loop as legacy text, as a `render_surface` call, or as the live shapes of round 7 (:16, :69):
 // `messages` as one JSON string and `target` as a string holding JSON. Every round's texts carry its index, so the
 // round that shipped is read off the lines, never assumed.
@@ -196,14 +197,16 @@ describe('T-0314: the repair loop keeps the turn invariant over every enumerated
   })
 })
 
-describe('T-0314: the T-0302 pin, an earlier valid round ships when the last round fails', () => {
+describe('T-0314: the T-0302 pin, as narrowed by T-0321: a flagged earlier round never ships when the last round fails', () => {
   // The single-surface family: no round can drop a surface the loop keeps (every failure names ask-1, or none is
   // attributable), so a round "validated with nothing dropped" is exactly an Aflag round (valid, sent back by a finding).
+  // T-0302 shipped the last of them; T-0321 rules a round a check failed out of the fallback, so these turns halt or
+  // degrade to text. The positive case (a clean earlier round ships) is pinned in produce-forced-surface.test.ts.
   const FAMILY: Shape[] = ['parse', 'Aflag', 'Abroken', 'prose']
   const FAILING_LAST: Shape[] = ['parse', 'Abroken']
 
   for (const transport of TRANSPORTS) {
-    it(`the last valid earlier round ships, tallied EARLIER_ROUND_SHIPPED (${transport})`, { timeout: 600_000 }, async () => {
+    it(`no flagged earlier round ships and nothing is tallied EARLIER_ROUND_SHIPPED (${transport})`, { timeout: 600_000 }, async () => {
       let pinned = 0
       for (const length of [2, 3, 4]) {
         for (const head of sequences(length - 1, FAMILY)) {
@@ -216,11 +219,10 @@ describe('T-0314: the T-0302 pin, an earlier valid round ships when the last rou
             pinned += 1
             const outcome = await runTurn(shapes, transport)
             const where = `${transport} [${shapes.join(' > ')}]`
-            expect(outcome.kind, where).toBe('shipped')
-            if (outcome.kind !== 'shipped') continue
-            expect(outcome.content, where).toEqual(SHAPES.Aflag(valid.at(-1)!))
-            expect(outcome.failureCodes.at(-1), where).toBe('EARLIER_ROUND_SHIPPED')
-            expect(outcome.failureCodes, where).toContain('SEMANTIC_UNCORRECTED')
+            if (outcome.kind !== 'shipped') continue // a halt ships nothing
+            expect(outcome.content, where).toEqual([])
+            expect(outcome.failureCodes, where).toContain('SURFACE_DEGRADED')
+            expect(outcome.failureCodes, where).not.toContain('EARLIER_ROUND_SHIPPED')
           }
         }
       }

@@ -454,7 +454,7 @@ Amendment pointers ([ADR-0242](../adr/0242-render-surface-terminal-tool-response
 
 | Requirement | Amended by | What changes |
 |---|---|---|
-| SPEC-R4 | [`response-type-selection.spec.md`](./response-type-selection.spec.md) RTS-R8 | the repair feedback names the `render_surface` tool; at the round bound an earlier round that validated ships first (T-0302, `EARLIER_ROUND_SHIPPED`); otherwise a failed surface with non-empty text ships as text, tallied `SURFACE_DEGRADED` |
+| SPEC-R4 | [`response-type-selection.spec.md`](./response-type-selection.spec.md) RTS-R8 | the repair feedback names the `render_surface` tool; at the round bound an earlier round that validated and that no semantic check fails ships first (T-0302, T-0321, `EARLIER_ROUND_SHIPPED`); otherwise a failed surface with non-empty text ships as text, tallied `SURFACE_DEGRADED` |
 | SPEC-R5 | [`response-type-selection.spec.md`](./response-type-selection.spec.md) RTS-R3, RTS-R5 | text is not content: the `textDelta` meta arm may precede validation; A2UI lines still never do |
 | SPEC-R6 | [`response-type-selection.spec.md`](./response-type-selection.spec.md) RTS-R7, RTS-R11 | two composed preference sections (text, surface) and the grammar's reply-first opening |
 | SPEC-R11 | [`response-type-selection.spec.md`](./response-type-selection.spec.md) RTS-R2 | `AgentProvider.stream` gains optional `terminalTools` and `toolChoice`; trust boundary unchanged |
