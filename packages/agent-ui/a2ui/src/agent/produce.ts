@@ -677,6 +677,7 @@ function messagesFor(
   surfacesNote = '',
   parseNote: string | undefined = undefined,
   keep: readonly string[] = [],
+  droppedNote = '',
 ): Turn[] {
   // T-0206: a turn offering `render_surface` names the open surfaces here, after the cached prefix.
   const content = surfacesNote !== '' ? `${userContent(input)}\n\n${surfacesNote}` : userContent(input)
@@ -695,7 +696,7 @@ function messagesFor(
       idgraphHint(failures) +
       (failures.some((f) => f.code === 'NET_NOOP') ? NET_NOOP_HINT : '') + // GH #1142 — the net-no-op correction round's guidance
       (failures.some((f) => f.code === 'NARRATED_MECHANICS') ? NARRATION_HINT : '') + // T-0234: a narrated reply's guidance
-      (failures.some((f) => f.code === 'SURFACE_DROPPED') ? SURFACE_DROPPED_HINT : '') + // T-0281: resend a dropped surface
+      (failures.some((f) => f.code === 'SURFACE_DROPPED') ? SURFACE_DROPPED_HINT + droppedNote : '') + // T-0281: resend a dropped surface; T-0330: fixed
       (failures.some((f) => f.code === 'SURFACE_NOT_CREATED') ? SURFACE_NOT_CREATED_HINT : '') + // T-0305: create before update
       (failures.some((f) => f.code === 'FEED_SCOPE') ? FEED_SCOPE_HINT : '') + // T-0290: keep the surface, drop the ask
       (failures.some((f) => f.detail !== undefined) ? SEMANTIC_HINT : '') + // ADR-0238: a semantic-finding round's guidance
@@ -1444,6 +1445,22 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   let outputRound = -1 // the round `lastOutput` came from; a prose round keeps the previous output
   // T-0299: each missing-composite finding (`<COMPOSITE>_MISSING`) a round of this turn got, binding on every later round.
   const boundComposites = new Map<string, SemanticFinding>()
+  // T-0330: every missing-composite finding a round of this turn got, and each built surface as its latest round built it,
+  // so a SURFACE_DROPPED repair restates the finding a dropped surface still fails instead of asking for it back as it was
+  // (round 9 :157 resent a BOOKING_FORM_MISSING read-back). Looked up by surface id, so a renamed surface's own finding counts.
+  const compositeFindings: SemanticFinding[] = []
+  const builtViews = new Map<string, SurfaceView>()
+  const droppedNote = (fs: readonly RoundFailure[]): string =>
+    fs
+      .filter((f) => f.code === 'SURFACE_DROPPED')
+      .map((f) => {
+        const view = builtViews.get(f.path)
+        const finding = compositeFindings.findLast((c) => c.path === f.path || c.path.startsWith(`${f.path}:`))
+        const m = finding !== undefined ? missingCompositeMoment(finding.code) : undefined
+        if (view === undefined || m === undefined || compositeAnswered(m, [view])) return ''
+        return ` Earlier this turn \`${f.path}\` failed: ${finding!.message.replace(/\.?$/, '.')} Resend it fixed, not as it was.`
+      })
+      .join('')
   // RTS-R8: the last capture round's reply and declarations, kept for the degrade at the bound.
   let degrade: Pick<ReturnType<typeof peelMetaLine>, 'plan' | 'personaPatch' | 'flowEnd' | 'team' | 'target'> & { note: string } | undefined
   // T-0302: the rounds whose payload passed the validator and dropped no surface. When the last round would otherwise
@@ -1477,7 +1494,10 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     const keep = namedBy !== undefined && failures !== undefined ? surfacesToKeep(lastOutput!, failures, input.session, namedBy) : [] // T-0172
     if (round > 0 && lastOutput !== undefined && outputRound === round - 1) {
       const flagged = flaggedSurfaces(failures ?? [], namedBy!)
+      const views = semanticSurfaceViews(input.session, lastOutput)
       for (const sid of builtSurfaceIds(lastOutput, input.session)) {
+        const view = views.find((v) => v.surfaceId === sid)
+        if (view !== undefined) builtViews.set(sid, view) // T-0330
         builtSurfaces.add(sid)
         everBuilt.add(sid)
         if (!flagged.has(sid)) protectedSurfaces.add(sid) // T-0328
@@ -1560,7 +1580,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       model: roundModel,
       system,
       ...(systemCacheBoundary > 0 ? { systemCacheBoundary } : {}),
-      messages: messagesFor(input, failures, lastRaw, deps.catalog, lastOutput, lastCaptureRound, surfacesNote, parseNote, keep),
+      messages: messagesFor(input, failures, lastRaw, deps.catalog, lastOutput, lastCaptureRound, surfacesNote, parseNote, keep, droppedNote(failures ?? [])),
       effort: roundEffort,
       ...(forceSurface
         ? { modelSettings: { ...opts.modelSettings, thinking: 'disabled' as const } }
@@ -1807,6 +1827,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
           turnAction !== undefined ? { surfaces: [], action: turnAction } : sayInput!,
         )
         const findings = withBoundComposites(semantic.findings, boundComposites, []) // T-0299
+        compositeFindings.push(...semantic.findings.filter((f) => missingCompositeMoment(f.code) !== undefined)) // T-0330
         if (findings.length > 0 && round < opts.maxRounds - 1) {
           failures = findings.map((f) => ({ code: f.code, path: f.path, detail: f.message }))
           lastCaptureRound = offeredTools !== undefined
@@ -1921,6 +1942,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         const surfaces = semanticSurfaceViews(input.session, assembled.output)
         const semantic = runSemanticChecks(deps.semanticChecks, { surfaces, ...(turnAction !== undefined ? { action: turnAction } : {}), ...(turnIntent !== undefined ? { intent: turnIntent } : {}), ...(roundTarget !== undefined ? { target: roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}) })
         const findings = withBoundComposites(semantic.findings, boundComposites, surfaces) // T-0299
+        compositeFindings.push(...semantic.findings.filter((f) => missingCompositeMoment(f.code) !== undefined)) // T-0330
         if (findings.length > 0 && round < opts.maxRounds - 1) {
           failures = findings.map((f) => ({ code: f.code, path: f.path, detail: f.message }))
           continue
