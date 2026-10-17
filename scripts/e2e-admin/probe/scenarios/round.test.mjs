@@ -9,7 +9,7 @@ import { AGENT_CONTENT } from '../../../../site/agent-content/registry.gen.ts'
 import { parseProbeCli } from '../cli.ts'
 import { ADMIRAL_SCENARIOS } from './admiral.ts'
 import { CONCIERGE_SCENARIOS } from './concierge.ts'
-import { CROUPIER_MODELS, CROUPIER_ROUND_SCENARIOS, STUD_STREET } from './croupier.ts'
+import { CROUPIER_MODELS, CROUPIER_ROUND_SCENARIOS, STUD_STREET, withoutSkipMarks } from './croupier.ts'
 import { LEXICOGRAPHER_SCENARIOS } from './lexicographer.ts'
 import { MODEL_ORDER, ROUND_PRESETS, roundCommandsScript, roundRuns } from './round.ts'
 
@@ -81,7 +81,7 @@ describe('live round 2 scenarios', () => {
   it('the round fixes its scenario defects: no click after a Hit, five stud streets, dated bookings, named knowledge', () => {
     const steps = (name) => CROUPIER_ROUND_SCENARIOS.find((s) => s.name === name).steps
     const rounds = steps('blackjack-rounds')
-    expect(rounds[rounds.findIndex((step) => step.click === 'Hit') + 1]).toEqual({ say: 'Stand.' })
+    expect(rounds[rounds.findIndex((step) => step.click === 'Hit') + 1]).toEqual({ say: 'Stand.', skipIfPhase: 'settled' })
     const stud = steps('seven-card-stud')
     // T-0272: every round 1 street is a check or call, legal under fixed-limit house rules with no bring-in. T-0283: one
     // per betting round, each harmless on a finished hand.
@@ -117,6 +117,6 @@ describe('live round 2 scenarios', () => {
   })
 
   it('.sdlc/evals/rounds/2026-10-15-r2-presets/live-commands.sh is the generated script', () => {
-    expect(read('.sdlc/evals/rounds/2026-10-15-r2-presets/live-commands.sh')).toBe(roundCommandsScript())
+    expect(read('.sdlc/evals/rounds/2026-10-15-r2-presets/live-commands.sh')).toBe(withoutSkipMarks(roundCommandsScript()))
   })
 })

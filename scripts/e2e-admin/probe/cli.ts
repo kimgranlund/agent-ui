@@ -21,15 +21,16 @@ export type ProbeCommand =
 
 export const PROBE_USAGE = [
   'usage: npm run chat:probe -- --agent <preset id> [--model <id>] [--effort <level>] --say "<text>" [--click <label>] [--say ...]',
-  '                            [--expect-turn <Type>]... [--expect-routing <json>]... [--expect-component <Type>]... [--out <dir>] [--name <name>]     (live: spends API credit)',
+  '                            [--expect-turn <Type>]... [--expect-routing <json>]... [--expect-component <Type>]... [--skip-if-phase <phase>]... [--out <dir>] [--name <name>]     (live: spends API credit)',
   '       (--expect-turn: the step before it must update a surface holding <Type>; --expect-component: any turn ships <Type>;',
-  '        --expect-routing: the step before it must get this routing, {domains, exemplars: {include, exclude}, sections, references})',
+  '        --expect-routing: the step before it must get this routing, {domains, exemplars: {include, exclude}, sections, references};',
+  '        --skip-if-phase: the step before it is not played when the hand\'s newest table is already in <phase>, a natural that settled on the deal)',
   '       npm run chat:probe -- --replay <fixture.json> [--expect-component <Type>]... [--out <dir>]   (keyless)',
   '       npm run chat:probe -- --from-trace <last | last:<k> | <day>.jsonl:<line>[,...]> [--agent <preset id>] [--out <dir>] [--name <name>]',
   '       npm run chat:probe -- selftest [--browser]',
 ].join('\n')
 
-const VALUE_FLAGS = ['--agent', '--model', '--effort', '--say', '--click', '--expect-turn', '--expect-routing', '--expect-component', '--replay', '--out', '--name', '--from-trace'] as const
+const VALUE_FLAGS = ['--agent', '--model', '--effort', '--say', '--click', '--expect-turn', '--expect-routing', '--expect-component', '--skip-if-phase', '--replay', '--out', '--name', '--from-trace'] as const
 const REPEATABLE = ['--say', '--click', '--expect-turn', '--expect-routing', '--expect-component']
 
 export function parseProbeCli(argv: readonly string[]): ProbeCommand {
@@ -68,6 +69,12 @@ export function parseProbeCli(argv: readonly string[]): ProbeCommand {
       } catch (err) {
         throw err instanceof FixtureError ? new SetupError(err.message) : err
       }
+    } else if (flag === '--skip-if-phase') {
+      // T-0347: the step before it is skipped when the newest table is already in this phase on the deal (a natural).
+      const step = steps.at(-1)
+      if (step === undefined) throw new SetupError('--skip-if-phase follows the --say or --click it applies to')
+      if (step.skipIfPhase !== undefined) throw new SetupError('--skip-if-phase given twice for one step')
+      step.skipIfPhase = value
     } else if (flag === '--expect-component') expectComponents.push(value)
     else {
       if (single.has(flag) && !REPEATABLE.includes(flag)) throw new SetupError(`${flag} given twice`)

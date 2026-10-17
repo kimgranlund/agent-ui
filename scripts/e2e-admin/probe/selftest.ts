@@ -95,7 +95,9 @@ export async function runProbeSelftest(): Promise<number> {
   expectThat(turnExpect.mode === 'probe' && JSON.stringify(turnExpect.steps) === '[{"say":"deal","expect":["CardTable"]},{"click":"Stand"}]', 'cli: --expect-turn attaches to the step before it')
   const routed = parseProbeCli(['--agent', 'croupier', '--say', 'deal', '--expect-routing', '{"domains":["croupier"],"exemplars":{"exclude":["booking-reservation"]}}', '--click', 'Stand'])
   expectThat(routed.mode === 'probe' && JSON.stringify(routed.steps) === '[{"say":"deal","expectRouting":{"domains":["croupier"],"exemplars":{"exclude":["booking-reservation"]}}},{"click":"Stand"}]', 'cli: --expect-routing attaches to the step before it')
-  for (const bad of [['--agent', 'x', '--expect-routing', '{"domains":["a"]}', '--say', 'hi'], ['--agent', 'x', '--say', 'hi', '--expect-routing', '{domains'], ['--agent', 'x', '--say', 'hi', '--expect-routing', '{"domain":["a"]}'], ['--agent', 'x', '--say', 'hi', '--expect-routing', '{}'], ['--say', 'hi'], ['--agent', 'x'], ['--agent', 'x', '--click', 'y'], ['--bogus', '1'], ['--from-trace', 'last', '--say', 'x'], ['--agent', 'x', '--expect-turn', 'T', '--say', 'hi']]) {
+  const skipFlag = parseProbeCli(['--agent', 'croupier', '--say', 'deal', '--click', 'Stand', '--skip-if-phase', 'settled'])
+  expectThat(skipFlag.mode === 'probe' && JSON.stringify(skipFlag.steps) === '[{"say":"deal"},{"click":"Stand","skipIfPhase":"settled"}]', 'cli: --skip-if-phase attaches to the step before it')
+  for (const bad of [['--agent', 'x', '--expect-routing', '{"domains":["a"]}', '--say', 'hi'], ['--agent', 'x', '--say', 'hi', '--expect-routing', '{domains'], ['--agent', 'x', '--say', 'hi', '--expect-routing', '{"domain":["a"]}'], ['--agent', 'x', '--say', 'hi', '--expect-routing', '{}'], ['--say', 'hi'], ['--agent', 'x'], ['--agent', 'x', '--click', 'y'], ['--bogus', '1'], ['--from-trace', 'last', '--say', 'x'], ['--agent', 'x', '--expect-turn', 'T', '--say', 'hi'], ['--agent', 'x', '--skip-if-phase', 'settled', '--say', 'hi']]) {
     let threw = false
     try {
       parseProbeCli(bad)

@@ -18,7 +18,7 @@
 // `node --experimental-strip-types scripts/e2e-admin/probe/scenarios/routing.ts` to print `routing-pack.sh`;
 // `routing.test.mjs` pins the file to this generator.
 
-import type { ProbeStep, RoutingExpect } from '../model.ts'
+import { stepArgv, type ProbeStep, type RoutingExpect } from '../model.ts'
 import { quote } from './croupier.ts'
 import type { RoundModel, RoundScenario } from './round.ts'
 
@@ -143,11 +143,7 @@ export function routingArgv(scenario: RoutingScenario, model: RoundModel): strin
   return [
     '--agent', scenario.agent,
     '--model', model.id,
-    ...scenario.steps.flatMap((s) => [
-      ...('say' in s ? ['--say', s.say] : 'click' in s ? ['--click', s.click] : []),
-      ...(s.expect ?? []).flatMap((c) => ['--expect-turn', c]),
-      ...(s.expectRouting !== undefined ? ['--expect-routing', JSON.stringify(s.expectRouting)] : []),
-    ]),
+    ...scenario.steps.flatMap(stepArgv),
     ...scenario.expectComponents.flatMap((c) => ['--expect-component', c]),
     '--out', `runs/${name}`,
     '--name', name,

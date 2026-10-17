@@ -9,14 +9,19 @@
 import { heal } from '../../../packages/agent-ui/a2ui/src/corpus/heal.ts'
 import { readMetaLine } from '../../../packages/agent-ui/a2ui/src/agent/meta-line.ts'
 import { renderSurfaceJsonl } from '../../../packages/agent-ui/a2ui/src/agent/response-type.ts'
+import { readPointer } from '../../../packages/agent-ui/a2ui/src/catalog/semantic-check.ts'
+import type { A2uiComponent } from '../../../packages/agent-ui/a2ui/src/protocol.ts'
+import { applyComponentBatch } from '../../../packages/agent-ui/a2ui/src/renderer/component-merge.ts'
 
 // ── the probe fixture (`agent-ui-chat-probe` v1) ──────────────────────────────────────────────────────
 
 /** `expect` (T-0222, `--expect-turn`): component types this step's turn must leave on a surface it updates.
  *  `expectRouting` (T-0260, `--expect-routing`): the routing this step's turn must get, read against its trace.
+ *  `skipIfPhase` (T-0347, `--skip-if-phase`): an in-hand step the probe does not play while the newest table is in
+ *  this phase (a natural settled the hand on the deal); see `stepSkip`.
  *  `page` (T-0222): a turn the page fired itself (an error turn after a renderer rejection), recorded as its own
  *  row; a replay never plays it, the page fires it again. */
-export type ProbeStep = ({ say: string } | { click: string } | { page: string }) & { expect?: string[]; expectRouting?: RoutingExpect }
+export type ProbeStep = ({ say: string } | { click: string } | { page: string }) & { expect?: string[]; expectRouting?: RoutingExpect; skipIfPhase?: string }
 
 /** T-0260: the routing a step's turn should get. `domains`: each is the turn's catalog persona or one of its
  *  domains. `exemplars`: ids the turn's framed exemplars must hold (`include`) or must not (`exclude`).
@@ -36,6 +41,18 @@ export interface RoutingSeen {
   exemplars: string[]
   sections: string[]
   references: Array<{ name: string; load: string }>
+}
+
+/** The probe argv for one step, in the order the CLI reads it: the `--say` or `--click`, then every flag that attaches
+ *  to it (`--expect-turn`, `--expect-routing`, `--skip-if-phase`). The one place a scenario's steps become flags, so a
+ *  flag a step carries reaches every round (T-0347: round3Argv dropped `--skip-if-phase`). A `page` step has none. */
+export function stepArgv(s: ProbeStep): string[] {
+  return [
+    ...('say' in s ? ['--say', s.say] : 'click' in s ? ['--click', s.click] : []),
+    ...(s.expect ?? []).flatMap((c) => ['--expect-turn', c]),
+    ...(s.expectRouting !== undefined ? ['--expect-routing', JSON.stringify(s.expectRouting)] : []),
+    ...(s.skipIfPhase !== undefined ? ['--skip-if-phase', s.skipIfPhase] : []),
+  ]
 }
 
 /** One provider call as the trace log records it: the raw text and the tool calls (`render_surface`
@@ -76,6 +93,11 @@ export class FixtureError extends Error {
 }
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
+
+function nonEmpty(v: unknown, path: string): string {
+  if (typeof v !== 'string' || v === '') throw new FixtureError(`${path} must be a non-empty string`)
+  return v
+}
 
 function strings(v: unknown, path: string): string[] {
   if (!Array.isArray(v) || v.some((s) => typeof s !== 'string')) throw new FixtureError(`${path} must be an array of strings`)
@@ -144,10 +166,11 @@ export function parseProbeFixture(text: string): ProbeFixture {
   if (!Array.isArray(raw.steps) || raw.steps.length === 0) throw new FixtureError('steps must be a non-empty array')
   const steps = raw.steps.map((s, i): ProbeStep => {
     const bad = (): FixtureError => new FixtureError(`steps[${i}] must be {"say": string}, {"click": string} or {"page": string}, with an optional "expect" string array and "expectRouting"`)
-    if (!isObject(s) || Object.keys(s).some((k) => !['say', 'click', 'page', 'expect', 'expectRouting'].includes(k))) throw bad()
+    if (!isObject(s) || Object.keys(s).some((k) => !['say', 'click', 'page', 'expect', 'expectRouting', 'skipIfPhase'].includes(k))) throw bad()
     const expect = {
       ...(s.expect !== undefined ? { expect: strings(s.expect, `steps[${i}].expect`) } : {}),
       ...(s.expectRouting !== undefined ? { expectRouting: parseRoutingExpect(s.expectRouting, `steps[${i}].expectRouting`) } : {}),
+      ...(s.skipIfPhase !== undefined ? { skipIfPhase: nonEmpty(s.skipIfPhase, `steps[${i}].skipIfPhase`) } : {}),
     }
     const kinds = (['say', 'click', 'page'] as const).filter((k) => s[k] !== undefined)
     if (kinds.length !== 1 || typeof s[kinds[0]!] !== 'string') throw bad()
@@ -254,6 +277,88 @@ export function shippedComponent(lines: readonly string[], id: string): Record<s
   }
   return found
 }
+
+/** Set `value` at an absolute pointer without mutating `doc` (only the nodes along the path are copied). */
+function setPointer(doc: unknown, pointer: string, value: unknown): unknown {
+  const tokens = pointer.slice(1).split('/').map((t) => t.replace(/~1/g, '/').replace(/~0/g, '~'))
+  const set = (node: unknown, i: number): unknown => {
+    if (i === tokens.length) return value
+    const key = tokens[i]!
+    if (Array.isArray(node)) {
+      const copy = node.slice()
+      copy[Number(key)] = set(node[Number(key)], i + 1)
+      return copy
+    }
+    const base = isObject(node) ? node : {}
+    return { ...base, [key]: set(base[key], i + 1) }
+  }
+  return set(doc, 0)
+}
+
+/** T-0347: the wire lines folded, one batch at a time, into each surface's components and data model the way the
+ *  renderer applies them (`applyComponentBatch`, `updateDataModel` at a pointer), so the probe can read the phase of
+ *  the newest table. `feed` takes only the lines not yet folded; a live run feeds each turn once. */
+export class TablePhase {
+  #views = new Map<string, { components: Map<string, A2uiComponent>; model: unknown }>()
+
+  feed(lines: readonly string[]): this {
+    for (const line of lines) {
+      for (const msg of messagesOf(line)) {
+        const created = surfaceOf(msg, 'createSurface')
+        if (created !== undefined) {
+          this.#views.delete(created) // a re-created surface is the newest again
+          this.#views.set(created, { components: new Map(), model: undefined })
+        }
+        const deleted = surfaceOf(msg, 'deleteSurface')
+        if (deleted !== undefined) this.#views.delete(deleted)
+        const comps = msg.updateComponents
+        if (isObject(comps) && typeof comps.surfaceId === 'string' && Array.isArray(comps.components)) {
+          const view = this.#view(comps.surfaceId)
+          applyComponentBatch(view.components, comps.components)
+        }
+        const data = msg.updateDataModel
+        if (isObject(data) && typeof data.surfaceId === 'string') {
+          const view = this.#view(data.surfaceId)
+          const path = data.path
+          if (path === undefined || path === '' || path === '/') view.model = data.value
+          else if (typeof path === 'string' && path.startsWith('/')) view.model = setPointer(view.model, path, data.value)
+        }
+      }
+    }
+    return this
+  }
+
+  #view(surfaceId: string): { components: Map<string, A2uiComponent>; model: unknown } {
+    let view = this.#views.get(surfaceId)
+    if (view === undefined) {
+      view = { components: new Map(), model: undefined }
+      this.#views.set(surfaceId, view)
+    }
+    return view
+  }
+
+  /** The phase of the newest surface that holds a CardTable (the factory's reading: the literal or the bound value,
+   *  anything but `betting` and `settled` is `playing`); undefined when no surface holds one. */
+  phase(): string | undefined {
+    for (const view of [...this.#views.values()].reverse()) {
+      const table = [...view.components.values()].find((c) => c.component === 'CardTable')
+      if (table === undefined) continue
+      const raw = table.phase
+      const path = isObject(raw) && typeof raw.path === 'string' ? raw.path : undefined
+      const value = path === undefined ? raw : readPointer(view.model, path)
+      return value === 'betting' || value === 'settled' ? value : 'playing'
+    }
+    return undefined
+  }
+}
+
+/** The newest table's phase after these lines, folded from scratch (a test's one-shot form of `TablePhase`). */
+export const newestTablePhase = (lines: readonly string[]): string | undefined => new TablePhase().feed(lines).phase()
+
+/** T-0347 (live round 10 cluster D): a natural settles the hand on the deal, so the scripted Stand, Twist or Stick
+ *  that follows finds no button, or a model that answers one in prose opens a new table the next Deal again misses.
+ *  A step marked `skipIfPhase` is not played while the newest table is in that phase, however it got there. */
+export const stepSkip = (step: ProbeStep, phase: string | undefined): boolean => step.skipIfPhase !== undefined && phase === step.skipIfPhase
 
 /** What the meta-lines say about the turn: the terminal error, the runtime trace, the prose shown
  *  (the note, else the streamed text deltas), and whether reasoning excerpts rode the progress channel. */

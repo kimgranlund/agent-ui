@@ -20,7 +20,7 @@ import type { RecordRouteLike } from '../record.ts'
 import { bootVite, launchChromium, newFlowContext, stopVite, type DevServerKit, type ViteHandle } from '../runner.ts'
 import { scrubJson, type AdminScenario } from '../scenario.ts'
 import { evidenceDir } from './evidence.ts'
-import { formatTable, ownExchange, pageStep, runChecks, type CheckResult, type ClickMissing, type ProbeFixture, type ProbeRound, type ProbeStep, type TurnRecord } from './model.ts'
+import { formatTable, ownExchange, pageStep, runChecks, stepSkip, TablePhase, type CheckResult, type ClickMissing, type ProbeFixture, type ProbeRound, type ProbeStep, type TurnRecord } from './model.ts'
 import { readTraceEntries, routingSeen, toProbeRounds, traceRef, TRACE_DIR, type TraceEntry } from './trace.ts'
 
 export interface ProbePlan {
@@ -48,6 +48,9 @@ export interface ProbeReport {
   runId?: string
   at: string
   turns: TurnRecord[]
+  /** T-0347: the steps skipped because a natural settled the hand on the deal (`--skip-if-phase`), each with the turn
+   *  count when it was reached. Absent when none was. */
+  skipped?: Array<{ before: number; step: ProbeStep; phase: string }>
   checks: CheckResult[]
   verdict: 'pass' | 'fail'
 }
@@ -282,6 +285,9 @@ export async function probeOnce(shared: SharedRun, plan: ProbePlan, root: string
   const shotDir = evidenceDir(plan.out)
   mkdirSync(shotDir, { recursive: true })
   const turns: TurnRecord[] = []
+  const skipped: NonNullable<ProbeReport['skipped']> = []
+  const table = new TablePhase()
+  let folded = 0 // turns already folded into `table`
   try {
     let wire: ReturnType<typeof installIntercept> | undefined
     const seedScenario: AdminScenario =
@@ -315,6 +321,13 @@ export async function probeOnce(shared: SharedRun, plan: ProbePlan, root: string
     if (plan.effort !== undefined) await pick(page, 'effort', plan.effort)
     for (const step of plan.steps) {
       if ('page' in step) continue // a replayed page-fired turn: the page fires it again and it is recorded where it lands
+      // T-0347: a natural settled the hand on the deal, so the rest of its in-hand steps have no button; skip them.
+      for (; folded < turns.length; folded += 1) table.feed(turns[folded]!.lines)
+      const phase = table.phase()
+      if (stepSkip(step, phase)) {
+        skipped.push({ before: turns.length, step, phase: phase! })
+        continue
+      }
       const traceBefore = plan.mode === 'live' ? traceCount(traceDir) : 0
       const before = edgeSeq()
       const reach: ClickReach = {}
@@ -400,6 +413,7 @@ export async function probeOnce(shared: SharedRun, plan: ProbePlan, root: string
     ...(runId !== undefined ? { runId } : {}),
     at: new Date().toISOString(),
     turns,
+    ...(skipped.length > 0 ? { skipped } : {}),
     checks,
     verdict: checks.some((c) => c.status === 'fail') ? 'fail' : 'pass',
   }
@@ -410,6 +424,7 @@ export function writeReport(report: ProbeReport, out: string): void {
   const text = `${JSON.stringify(scrubJson(report, process.env), null, 2)}\n`
   writeFileSync(path.join(out, 'report.json'), text)
   console.log(formatTable(report.turns, report.checks))
+  for (const s of report.skipped ?? []) console.log(`[chat-probe] skipped before turn ${s.before}: ${JSON.stringify(s.step)} (the table is ${s.phase})`)
   console.log(`[chat-probe] report: ${path.join(out, 'report.json')}`)
 }
 

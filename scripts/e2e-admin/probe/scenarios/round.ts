@@ -6,7 +6,7 @@
 //
 // Run `node --experimental-strip-types scripts/e2e-admin/probe/scenarios/round.ts` to print the script.
 
-import type { ProbeStep } from '../model.ts'
+import { stepArgv, type ProbeStep } from '../model.ts'
 import { ADMIRAL_MODELS, ADMIRAL_SCENARIOS } from './admiral.ts'
 import { CONCIERGE_MODELS, CONCIERGE_SCENARIOS } from './concierge.ts'
 import { CROUPIER_MODELS, CROUPIER_ROUND_SCENARIOS, quote } from './croupier.ts'
@@ -50,7 +50,7 @@ export function roundArgv(agent: string, scenario: RoundScenario, model: RoundMo
   return [
     '--agent', agent,
     '--model', model.id,
-    ...scenario.steps.flatMap((s) => [...('say' in s ? ['--say', s.say] : 'click' in s ? ['--click', s.click] : []), ...(s.expect ?? []).flatMap((c) => ['--expect-turn', c])]),
+    ...scenario.steps.flatMap(stepArgv),
     ...scenario.expectComponents.flatMap((c) => ['--expect-component', c]),
     '--out', `${ROUND_RUNS_DIR}/${name}`,
     '--name', name,

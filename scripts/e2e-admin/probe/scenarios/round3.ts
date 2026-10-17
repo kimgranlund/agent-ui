@@ -17,7 +17,7 @@
 // Run `node --experimental-strip-types scripts/e2e-admin/probe/scenarios/round3.ts` to print the script;
 // `round3.test.mjs` pins the file to this generator.
 
-import type { ProbeStep, RoutingExpect } from '../model.ts'
+import { stepArgv, type ProbeStep, type RoutingExpect } from '../model.ts'
 import { quote } from './croupier.ts'
 import { ROUND_PRESETS, type RoundModel, type RoundScenario } from './round.ts'
 import { routingRuns } from './routing.ts'
@@ -146,11 +146,7 @@ export function round3Argv(agent: string, scenario: RoundScenario, m: RoundModel
   return [
     '--agent', agent,
     '--model', m.id,
-    ...scenario.steps.flatMap((s) => [
-      ...('say' in s ? ['--say', s.say] : 'click' in s ? ['--click', s.click] : []),
-      ...(s.expect ?? []).flatMap((c) => ['--expect-turn', c]),
-      ...(s.expectRouting !== undefined ? ['--expect-routing', JSON.stringify(s.expectRouting)] : []),
-    ]),
+    ...scenario.steps.flatMap(stepArgv),
     ...scenario.expectComponents.flatMap((c) => ['--expect-component', c]),
     '--out', `${ROUND3_DIR}/runs/${name}`,
     '--name', name,

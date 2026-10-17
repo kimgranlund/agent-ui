@@ -6,14 +6,15 @@
 // Clicks only where the label is fixed: the CardTable bet strip ("25" to "250"), "Deal again" (the round-loop
 // teaching) and blackjack's "Hit" and "Stand". Every other move is a `--say`, so a model-authored label
 // (Twist, Fold, Surrender) cannot stop the run. A deal is random: a click whose button the hand took away (a
-// natural, a bust before Stand) fails `click-target` by name and ends that run, which the report classifies.
+// bust before Stand) fails `click-target` by name and ends that run, which the report classifies. T-0347: a natural
+// settles the hand on the deal, so the live-round blackjack-family steps carry `--skip-if-phase settled` (below).
 //
 // T-0222: the opening step and every Deal again carry `--expect-turn` for the game's table component, so a deal
 // answered in prose fails that turn. Other moves carry none: a refused illegal move is answered in prose on purpose.
 //
 // Run `node --experimental-strip-types scripts/e2e-admin/probe/scenarios/croupier.ts` to print the script.
 
-import type { ProbeStep } from '../model.ts'
+import { stepArgv, type ProbeStep } from '../model.ts'
 
 export interface CroupierScenario {
   name: string
@@ -108,8 +109,28 @@ const ROUND_STEPS: Readonly<Record<string, ProbeStep[]>> = {
   'seven-card-stud': [say("Let's play seven-card stud."), ...Array.from({ length: 5 }, () => say(STUD_STREET)), DEAL_AGAIN, say('Fold.'), DEAL_AGAIN, say('Bet 50.')],
 }
 
+/** T-0347 (live round 10 cluster D, :80 and :101 to :103): a natural settles the hand on the deal, and the scripted
+ *  in-hand steps after the bet (Stand, Twist, Stick, Buy a card) then have no button, or a model that answers one in
+ *  prose opens a new table the next Deal again misses. The agent was right, so every in-hand step of the blackjack family
+ *  carries `--skip-if-phase settled`: the probe does not play it while the newest table is settled, so a hand a natural
+ *  ended is skipped and Deal again comes next (`stepSkip`). The opening, a bet and Deal again stay unmarked, and so
+ *  does blackjack-moves' "Hit me again.", which probes a hit on a busted table. */
+const BLACKJACK_FAMILY = ['blackjack-rounds', 'blackjack-moves', 'spanish-21', 'pontoon']
+const SKIP_PHASE = 'settled'
+const isBet = (step: ProbeStep): boolean => 'click' in step && /^\d+$/.test(step.click)
+/** Played on a settled table on purpose: the post-bust probe of blackjack-moves. */
+const HIT_AFTER_BUST = 'Hit me again.'
+const skipOnNatural = (s: CroupierScenario): CroupierScenario =>
+  BLACKJACK_FAMILY.includes(s.name)
+    ? { ...s, steps: s.steps.map((step, i) => (i === 0 || step === DEAL_AGAIN || isBet(step) || ('say' in step && step.say === HIT_AFTER_BUST) ? step : { ...step, skipIfPhase: SKIP_PHASE })) }
+    : s
+
+/** The flag every finished round's committed `live-commands.sh` predates (T-0347): a finished run record is never
+ *  rewritten, so each finished round's pin compares its committed file with the generator's output minus this flag. */
+export const withoutSkipMarks = (script: string): string => script.replaceAll(` --skip-if-phase ${SKIP_PHASE}`, '')
+
 /** The live-round scenarios: SCENARIOS with the round's fixes. */
-export const CROUPIER_ROUND_SCENARIOS: readonly CroupierScenario[] = SCENARIOS.map((s) => withDealExpect({ ...s, steps: ROUND_STEPS[s.name] ?? s.steps }))
+export const CROUPIER_ROUND_SCENARIOS: readonly CroupierScenario[] = SCENARIOS.map((s) => withDealExpect(skipOnNatural({ ...s, steps: ROUND_STEPS[s.name] ?? s.steps })))
 
 /** The picker's Anthropic 5.5 models in spend order (Opus 5.5 joined the picker in T-0185; live round 2, T-0225). */
 export const CROUPIER_MODELS: ReadonlyArray<{ id: string; short: string }> = [
@@ -130,7 +151,7 @@ export function probeArgv(scenario: CroupierScenario, model: { id: string; short
   return [
     '--agent', 'croupier',
     '--model', model.id,
-    ...scenario.steps.flatMap((s) => [...('say' in s ? ['--say', s.say] : 'click' in s ? ['--click', s.click] : []), ...(s.expect ?? []).flatMap((c) => ['--expect-turn', c])]),
+    ...scenario.steps.flatMap(stepArgv),
     ...scenario.expectComponents.flatMap((c) => ['--expect-component', c]),
     '--out', `${RUNS_DIR}/${name}`,
     '--name', name,
