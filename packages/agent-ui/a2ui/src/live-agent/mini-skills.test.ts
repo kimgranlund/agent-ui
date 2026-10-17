@@ -697,6 +697,26 @@ describe('card-layout + game-table-chrome: the CardTable teaching (ADR-0243, T-0
   })
 })
 
+// T-0323 (round 8 cluster E, Kim's ruling): the CardTable is the blackjack family's table and poker keeps a Card.
+// Haiku 5.5 read the unscoped "If the catalog has CardTable" on a five-card draw turn and opened a CardTable.
+describe('card-layout + game-table-chrome: the CardTable is blackjack only, poker keeps a Card (T-0323)', () => {
+  const body = (id: string): string => MINI_SKILLS.find((m) => m.id === id)!.body
+
+  it('game-table-chrome scopes the CardTable to blackjack and seats poker on ONE Card', () => {
+    expect(body('game-table-chrome')).toMatch(/^In blackjack, if the catalog has CardTable, ONE CardTable is the table:/)
+    expect(body('game-table-chrome')).toMatch(/Otherwise, poker too, ONE Card is the table\./)
+  })
+
+  it('card-layout draws CardTable hands in blackjack only; every other hand is PlayingCard items', () => {
+    expect(body('card-layout')).toMatch(/If the catalog has CardTable, it draws both hands in blackjack:/)
+    expect(body('card-layout')).toMatch(/Otherwise each card is a PlayingCard/)
+  })
+
+  it('both re-cut modules stay within the per-module token budget', () => {
+    for (const id of ['card-layout', 'game-table-chrome']) expect(estimateTokens(body(id)), id).toBeLessThanOrEqual(PER_MODULE_TOKEN_BUDGET)
+  })
+})
+
 // T-0202 (catalog architecture CA-R4): a module that names a domain type declares the domain in its frontmatter and
 // is selected only when the effective catalog holds it (T-0207: a persona catalog holds its fragment's domain). The
 // scope is proven on a seeded module; game-table-chrome is the one shipped module retagged (T-0207).
