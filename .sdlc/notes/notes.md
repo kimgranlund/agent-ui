@@ -200,3 +200,8 @@
 - 2026-10-17 Kim close-out rulings: round 10 is a targeted run (round 9 failures plus the runs each fix touches, 3 samples on unstable ones, about $10 cap), next full matrix after it; T-0340 darkens dark primary (around 600 to 650) with the same on-primary ink, before/after screenshots for Kim's approval; T-0338 product-card exhibit icon header is pictorial media, exempt at 48px with a reason; next wave: content-files chain (T-0160 to T-0163), T-0315 debate, eval framework re-scope (T-0176 to T-0179), T-0169.
 - 2026-10-17 Kim ruling T-0315: scope retrieval by the persona's declared /secret hidden-state keys parsed from the persona text, with a coupling pin; a structured preset field is a later follow-up; exclusion only (no ranking boost).
 - 2026-10-17 Kim ruling (round 10 cluster A): a PARSE failure on a string `messages` gets a repair that asks for `messages` as an array of objects; the producer never edits model output (no bracket repair).
+
+## T-0341: Live round 10: targeted rerun of round 9 failures and the runs each fix touches ($10 cap) (2026-10-17)
+
+- note: .sdlc/evals/rounds/2026-10-17-r10-targeted/report.md (Comparison set and the mechanism section header) says "25 round 9 runs"; the set is 23 distinct round 9 runs (18 single plus 5 triple-sampled bases, 33 runs); the 170 round 9 turns figure does match the 23 runs.
+- note: origin/main has moved to 3c9bac639 (#2102) since the merge base fb301c09d; the merge path rebases again.
