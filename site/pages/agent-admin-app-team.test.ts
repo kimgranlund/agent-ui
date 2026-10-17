@@ -16,7 +16,7 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { installDialogPolyfill } from '@agent-ui/shared/testing/dialog-polyfill'
 import { personaRoster } from './agent-admin-presets.ts'
-import { loadAgentTeams } from '@agent-ui/app/agent-admin-team'
+import { __testSetAdapter, loadAgentTeams } from '@agent-ui/app/agent-admin-team'
 // `mintTeamId`/`handleTeamDeclared` are deliberately NOT statically imported here: a static import of
 // `./agent-admin-app.ts` (even just for one named export) hoists and evaluates that page module's own
 // side effects — mounting the real `ui-agent-admin`, connecting every one of the active persona's entry
@@ -180,5 +180,34 @@ describe('one team write path: the Team pane and handleTeamDeclared share the te
     await pageModule.teamStore.remove('pane-team')
     expect((await loadAgentTeams()).some((t) => t.id === 'pane-team')).toBe(false)
     run.mockRestore()
+  })
+})
+
+describe('the page team store fails closed and gives each save its own result (T-0161 review)', () => {
+  it('concurrent saves each get their own validation result', async () => {
+    const known = personaRoster().map((p) => p.id)
+    const good = { id: 'good-concurrent', label: 'Good', gmAgentId: known[0]!, members: [{ agentId: known[1]!, role: 'R', routingDescription: 'Use it.' }] }
+    const bad = { id: 'bad-concurrent', label: 'Bad', gmAgentId: 'nobody', members: [] }
+    const results = await Promise.all([pageModule.teamStore.save(bad, known), pageModule.teamStore.save(good, known), pageModule.teamStore.save(bad, known)])
+    expect(results.map((r) => r.valid)).toEqual([false, true, false])
+    expect(results[0]!.issues.length).toBeGreaterThan(0)
+    await pageModule.teamStore.remove('good-concurrent')
+  })
+
+  it('list() keeps the last good list and shows an error while the teams resource is in error, never a rejection', async () => {
+    const before = await pageModule.teamStore.list()
+    __testSetAdapter({
+      get: async () => undefined,
+      set: async () => {},
+      delete: async () => {},
+      keys: async () => Promise.reject(new Error('storage unavailable')),
+    })
+    try {
+      await handleTeamDeclared({ label: 'Doomed Team', members: [{ name: 'X', role: 'X', routingDescription: 'Use X.' }] }) // its refetch puts the resource in error
+      await expect(pageModule.teamStore.list()).resolves.toEqual(before)
+      await vi.waitFor(() => expect(document.querySelector('ui-toast-region')?.textContent ?? '').toContain('showing the last list loaded'))
+    } finally {
+      __testSetAdapter(undefined)
+    }
   })
 })

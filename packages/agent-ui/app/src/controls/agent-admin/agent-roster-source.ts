@@ -28,6 +28,7 @@
 import type { DataSource, SourceContext, Streamed } from '@agent-ui/data'
 import { createLocalStorageAdapter, type SyncReadableStorageAdapter } from '@agent-ui/shared'
 import { parseOverlay, type AgentOverlay } from './agent-overlay.ts'
+import { adapterChanges } from './storage-changes.ts'
 
 /** The roster's persisted namespace — the SAME prefix the pre-ADR-0227 hand-rolled keys used. */
 export const PERSONA_ROSTER_NAMESPACE = 'agent-admin-app'
@@ -314,35 +315,9 @@ export function createAgentRosterSource<P extends AgentRecord>(
    *  settings stores' own business — a cross-tab edit there changes a store, not the roster view. */
   const isRosterRecordKey = (key: string): boolean => key === IMPORTED_KEY || key === ORDER_KEY || key === ACTIVE_KEY
 
-  /** One shared cross-tab pump: resolves once per roster-record change from ANOTHER tab (the adapter's
-   *  `storage`-event seam), until `signal` aborts. Both `subscribe` legs ride it. The adapter listener
-   *  tears down in the generator's `finally` — a consumer must drive `return()` (or abort the signal)
-   *  on abandonment, as `resource()`'s own `stopLive` does; a bare-`.next()` abandoner would leak it. */
-  async function* rosterChanges(ctx: SourceContext): AsyncGenerator<void> {
-    if (!adapter.subscribe || ctx.signal.aborted) return
-    let wake: (() => void) | undefined
-    let pending = false
-    const unsubscribe = adapter.subscribe((change) => {
-      if (!isRosterRecordKey(change.key)) return
-      pending = true
-      wake?.()
-    })
-    const aborted = new Promise<void>((resolve) => {
-      ctx.signal.addEventListener('abort', () => resolve(), { once: true })
-    })
-    try {
-      while (!ctx.signal.aborted) {
-        if (!pending) await Promise.race([new Promise<void>((resolve) => (wake = resolve)), aborted])
-        if (ctx.signal.aborted) return
-        if (pending) {
-          pending = false
-          yield
-        }
-      }
-    } finally {
-      unsubscribe()
-    }
-  }
+  /** The cross-tab pump both `subscribe` legs ride: once per roster-record change from ANOTHER tab, until
+   *  `signal` aborts (the shared `adapterChanges`, storage-changes.ts, owns the teardown contract). */
+  const rosterChanges = (ctx: SourceContext): AsyncGenerator<void> => adapterChanges(adapter, ctx, (change) => isRosterRecordKey(change.key))
 
   const notFound = (id: string): Error => new Error(`agent-roster-source: no roster entry with id "${id}"`)
 

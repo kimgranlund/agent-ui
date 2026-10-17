@@ -57,7 +57,13 @@ import type { AdminAgentSurfaceTurn, TeamDeclaration } from '@agent-ui/app/agent
 // GH #1196 (ADR-0203 clause 4) — the team record this page's team-shaped mint path persists; ADR-0227
 // wave 2 (GH #1545): the records now reach this page as a DataSource — the read is ONE `resource()`
 // and `handleTeamDeclared` writes through a `mutation()` (same keys, same validation-closed law).
-import { AgentTeamValidationError, createAgentTeamSource, type AgentTeam, type AgentTeamStore } from '@agent-ui/app/agent-admin-team'
+import {
+  AgentTeamValidationError,
+  createAgentTeamSource,
+  type AgentTeam,
+  type AgentTeamStore,
+  type AgentTeamValidationResult,
+} from '@agent-ui/app/agent-admin-team'
 import type { UIToastRegionElement } from '@agent-ui/components/controls/toast-region'
 // GH #845 (LLD-C15/§7) — the Edit Agents drawer's vehicle: `ui-drawer` (ADR-0188), COMPOSED byte-unmodified.
 // Its content (the roster rows and every management verb on them) is page-owned by that control's own fence.
@@ -348,14 +354,22 @@ const TEAMS_KEY = 'agent-admin/teams'
 const teamsStore = createStore()
 const teamsResource = resource<readonly AgentTeam[]>(TEAMS_KEY, teamSource.view, { store: teamsStore, live: true })
 
-// The team write: validation-closed create (the source THROWS AgentTeamValidationError — nothing lands
+// The team write: validation-closed create (the source THROWS AgentTeamValidationError and nothing lands
 // on an invalid record) settling with the same atomic read-back mirror commit the roster and shelf
-// mutations document (resource.ts's mirror doctrine, the wave-1 deviation precedent).
+// mutations document (resource.ts's mirror doctrine, the wave-1 deviation precedent). A refusal RESOLVES
+// as this run's own validation result (T-0161 review): a caller never reads it back off the shared `error`
+// signal, which a concurrent run may already have overwritten. Only a failure that is not a refusal
+// rejects, so the run resolves `undefined`.
 const saveTeamMutation = mutation(
-  async (input: { team: AgentTeam; knownAgentIds: readonly string[] }, ctx) => {
-    const created = await teamSource.create(input, ctx)
+  async (input: { team: AgentTeam; knownAgentIds: readonly string[] }, ctx): Promise<AgentTeamValidationResult> => {
+    try {
+      await teamSource.create(input, ctx)
+    } catch (error) {
+      if (error instanceof AgentTeamValidationError) return { valid: false, issues: error.issues }
+      throw error
+    }
     teamsStore.commit(TEAMS_KEY, await teamSource.view.read(TEAMS_KEY, ctx))
-    return created
+    return { valid: true, issues: [] }
   },
   { store: teamsStore },
 )
@@ -374,22 +388,25 @@ const removeTeamMutation = mutation(
 export const teamMutations = { save: saveTeamMutation, remove: removeTeamMutation }
 
 /** The Team pane's store: reads the one teams resource and writes through the mutations above. A save
- *  refusal comes back as the validation issues (the pane shows them inline); any other failure throws. */
+ *  refusal comes back as the validation issues (the pane shows them inline); any other failed write
+ *  throws, which the pane shows inline too. A failed READ fails closed: the last list loaded (or none)
+ *  plus a visible error, never a rejection. */
 export const teamStore: AgentTeamStore = {
   async list() {
     if (teamsResource.data.peek() === undefined) await teamsResource.refetch()
-    const error = teamsResource.error.peek()
-    if (teamsResource.status.peek() === 'error' && error !== undefined) throw error
-    return teamsResource.data.peek() ?? []
+    const data = teamsResource.data.peek()
+    if (teamsResource.status.peek() === 'error') {
+      notify(`The team list could not be read; ${data === undefined ? 'no teams are shown' : 'showing the last list loaded'}.`, true)
+    }
+    return data ?? []
   },
   async save(team, knownAgentIds) {
-    if ((await saveTeamMutation.run({ team, knownAgentIds })) !== undefined) return { valid: true, issues: [] }
-    const cause = saveTeamMutation.error.peek()?.cause
-    if (cause instanceof AgentTeamValidationError) return { valid: false, issues: cause.issues }
-    throw saveTeamMutation.error.peek() ?? new Error('agent-admin: the team could not be saved')
+    const result = await saveTeamMutation.run({ team, knownAgentIds })
+    if (result === undefined) throw new Error('the team could not be stored')
+    return result
   },
   async remove(id) {
-    if ((await removeTeamMutation.run(id)) === undefined) throw removeTeamMutation.error.peek() ?? new Error('agent-admin: the team could not be deleted')
+    if ((await removeTeamMutation.run(id)) === undefined) throw new Error('the team could not be deleted')
   },
   // A change of the resource's value (a write here, the Builder's, or another tab's through the live leg)
   // wakes the listener; the first run only subscribes. Deferred so the pane's refresh reads outside the effect.
@@ -870,13 +887,12 @@ export async function handleTeamDeclared(team: TeamDeclaration): Promise<void> {
     members: minted.map(({ persona, member }) => ({ agentId: persona.id, role: member.role, routingDescription: member.routingDescription })),
   }
 
-  // ADR-0227 wave 2: the write rides the mutation; a validation refusal surfaces as the mutation's
-  // error whose CAUSE is the source's typed AgentTeamValidationError — the same issue set
-  // `saveAgentTeam`'s result shape used to hand back directly.
+  // ADR-0227 wave 2: the write rides the mutation. A validation refusal resolves as this run's own result
+  // (T-0161 review: never read back off the shared `error` signal), the same issue set `saveAgentTeam`'s
+  // result shape hands back; `undefined` is any other failure.
   const saved = await saveTeamMutation.run({ team: agentTeam, knownAgentIds })
-  if (saved === undefined) {
-    const cause = saveTeamMutation.error.peek()?.cause
-    const detail = cause instanceof AgentTeamValidationError ? cause.issues.map((i) => i.message).join(' ') : 'something went wrong saving it.'
+  if (saved === undefined || !saved.valid) {
+    const detail = saved === undefined ? 'something went wrong saving it.' : saved.issues.map((i) => i.message).join(' ')
     notify(`Team “${label}” could not be saved — ${detail}`, true)
     return
   }

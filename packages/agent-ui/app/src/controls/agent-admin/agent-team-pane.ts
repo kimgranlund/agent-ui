@@ -227,6 +227,33 @@ export function buildAgentTeamPane(options: AgentTeamPaneOptions): AgentTeamPane
   list.setAttribute('data-part', 'team-list')
   host.append(list)
 
+  // T-0161 review: a failed read or delete fails CLOSED and visibly, never as an unhandled rejection; the
+  // last good list stays rendered under the note.
+  const listError = document.createElement('p')
+  listError.setAttribute('data-part', 'team-list-error')
+  listError.setAttribute('role', 'alert')
+  listError.hidden = true
+  host.append(listError)
+  const showListError = (message?: string): void => {
+    listError.textContent = message ?? ''
+    listError.hidden = message === undefined
+  }
+  const reason = (error: unknown): string => (error instanceof Error ? error.message : String(error))
+
+  /** Re-read the teams through the store and re-render; a failed read shows on the pane and keeps the
+   *  last good list. */
+  async function reload(): Promise<void> {
+    try {
+      currentTeams = await teamStore().list()
+    } catch (error) {
+      showListError(`The team list could not be read: ${reason(error)}`)
+      return
+    }
+    showListError()
+    options.onTeamsChanged?.(currentTeams)
+    renderList()
+  }
+
   const addToggle = button('team-add-toggle', 'Add team', 'soft')
   host.append(addToggle)
 
@@ -404,10 +431,13 @@ export function buildAgentTeamPane(options: AgentTeamPaneOptions): AgentTeamPane
       const deleteBtn = button('team-card-delete', 'Delete', 'soft')
       deleteBtn.addEventListener('click', () => {
         void (async () => {
-          await teamStore().remove(team.id)
-          currentTeams = await teamStore().list()
-          options.onTeamsChanged?.(currentTeams)
-          renderList()
+          try {
+            await teamStore().remove(team.id)
+          } catch (error) {
+            showListError(`Team “${team.label}” could not be deleted: ${reason(error)}`)
+            return
+          }
+          await reload()
         })()
       })
       header.append(editBtn, deleteBtn)
@@ -461,15 +491,21 @@ export function buildAgentTeamPane(options: AgentTeamPaneOptions): AgentTeamPane
       // VALIDATION CLOSED (`agent-team.ts`'s own law): the store never persists an invalid team:
       // a rejection surfaces every issue inline and leaves the form open with every typed field intact,
       // the SAME "reject visibly, never silently discard" law `entry-list.ts`'s `submitAdd` already holds.
-      const result = await teamStore().save(team, knownAgents.map((agent) => agent.id))
+      let result: Awaited<ReturnType<AgentTeamStore['save']>>
+      try {
+        result = await teamStore().save(team, knownAgents.map((agent) => agent.id))
+      } catch (error) {
+        // A failure that is not a validation refusal (storage full, a read-back that failed) shows inline
+        // the same way, the form still open with every typed field intact.
+        showFormErrors([{ path: 'team', message: `The team could not be saved: ${reason(error)}` }])
+        return
+      }
       if (!result.valid) {
         showFormErrors(result.issues)
         return
       }
-      currentTeams = await teamStore().list()
-      options.onTeamsChanged?.(currentTeams)
       closeForm()
-      renderList()
+      await reload()
     })()
   })
 
@@ -492,10 +528,6 @@ export function buildAgentTeamPane(options: AgentTeamPaneOptions): AgentTeamPane
 
   return {
     host,
-    async refresh(): Promise<void> {
-      currentTeams = await teamStore().list()
-      options.onTeamsChanged?.(currentTeams)
-      renderList()
-    },
+    refresh: reload,
   }
 }

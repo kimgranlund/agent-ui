@@ -188,6 +188,42 @@ describe('migration from today’s stored shape (full per-key copies)', () => {
   })
 })
 
+describe('review findings: nothing is wiped, every write reads back, a malformed record fails closed', () => {
+  it('a seed that turns an edited list into a non-list keeps the user\'s entries, flagged', () => {
+    const v1 = { l: [{ id: 'p', t: 'seed' }, { id: 'q' }] }
+    const overlay = setOverlayKey(v1, emptyOverlay('a', 1, v1), 'l', [{ id: 'p', t: 'mine' }, { id: 'q' }])
+    const v2 = { l: 'now a string' }
+    const merged = reload(rebaseOverlay(overlay, v2, 'a', 2))
+    expect(resolveOverlay(v2, merged)['l']).toEqual([{ id: 'p', t: 'mine' }])
+    expect(modifiedPaths(merged)).toEqual([{ key: 'l', seedChanged: { seed: 'now a string', user: [{ id: 'p', t: 'mine' }] } }])
+  })
+
+  it('an empty list on a key the seed lacks reads back as the empty list', () => {
+    const seed = seedV1()
+    const overlay = reload(setOverlayKey(seed, emptyOverlay('concierge', 1, seed), 'entries:extra', []))
+    expect(resolveOverlay(seed, overlay)['entries:extra']).toEqual([])
+    expect(modifiedPaths(overlay)).toEqual([{ key: 'entries:extra' }])
+  })
+
+  it('parseOverlay refuses a record with a malformed value op or entry op', () => {
+    const good = setOverlayKey(seedV1(), emptyOverlay('concierge', 1, seedV1()), 'name', 'Max')
+    expect(parseOverlay(JSON.parse(JSON.stringify(good)))).toBeDefined()
+    const head = { format: 1, base: 'a@1', baseVersion: 1, baseDigest: 'fnv:0' }
+    const bad: unknown[] = [
+      { ...head, values: { name: 'not an op' }, lists: {} },
+      { ...head, values: { name: { value: 1, seedChanged: 'x' } }, lists: {} },
+      { ...head, values: {}, lists: { l: { entries: { p: { op: 'patch', base: { id: 'p' }, set: {} } } } } },
+      { ...head, values: {}, lists: { l: { entries: { p: { op: 'patch', base: { id: 'p' }, set: [], unset: [] } } } } },
+      { ...head, values: {}, lists: { l: { entries: { p: { op: 'patch', set: {}, unset: [] } } } } },
+      { ...head, values: {}, lists: { l: { entries: { p: { op: 'added' } } } } },
+      { ...head, values: {}, lists: { l: { entries: { p: { op: 'removed', base: 3 } } } } },
+      { ...head, values: {}, lists: { l: { entries: { p: { op: 'renamed' } } } } },
+      { ...head, values: {}, lists: { l: { entries: {}, order: [1] } } },
+    ]
+    for (const record of bad) expect(parseOverlay(record), JSON.stringify(record)).toBeUndefined()
+  })
+})
+
 describe('the spec example and the older-version migration (ACS-R7)', () => {
   it('E1: effort medium to low; the next version sets high; low is kept, flagged with medium, high and low', () => {
     const v7 = { effort: 'medium', surfaceStyle: 'old' }

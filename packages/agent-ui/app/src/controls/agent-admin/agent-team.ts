@@ -16,6 +16,7 @@
 
 import { createLocalStorageAdapter, type StorageAdapter } from '@agent-ui/shared'
 import type { DataSource, SourceContext, Streamed } from '@agent-ui/data'
+import { adapterChanges } from './storage-changes.ts'
 
 /** One roster member — a short job title (CrewAI grammar) plus the when-to-use sentence (Anthropic
  *  subagents grammar). Declared prose only; see this module's own header for the IDR-0001 fence. */
@@ -244,32 +245,10 @@ export interface AgentTeamSource extends DataSource<AgentTeam, undefined, AgentT
   readonly view: AgentTeamListSource
 }
 
-/** One cross-tab pump over the adapter's change seam (the roster source's `rosterChanges` shape): yields
- *  the fresh list once per change until `ctx.signal` aborts, and unsubscribes in `finally`. */
+/** The live leg: the fresh list once per cross-tab change to a team record, until `ctx.signal` aborts
+ *  (the shared `adapterChanges` pump, storage-changes.ts, owns the teardown contract). */
 async function* teamChanges(ctx: SourceContext): AsyncGenerator<readonly AgentTeam[]> {
-  const adapter = getAdapter()
-  if (!adapter.subscribe || ctx.signal.aborted) return
-  let wake: (() => void) | undefined
-  let pending = false
-  const unsubscribe = adapter.subscribe(() => {
-    pending = true
-    wake?.()
-  })
-  const aborted = new Promise<void>((resolve) => {
-    ctx.signal.addEventListener('abort', () => resolve(), { once: true })
-  })
-  try {
-    while (!ctx.signal.aborted) {
-      if (!pending) await Promise.race([new Promise<void>((resolve) => (wake = resolve)), aborted])
-      if (ctx.signal.aborted) return
-      if (pending) {
-        pending = false
-        yield await loadAgentTeams()
-      }
-    }
-  } finally {
-    unsubscribe()
-  }
+  for await (const _ of adapterChanges(getAdapter(), ctx)) yield await loadAgentTeams()
 }
 
 export function createAgentTeamSource(): AgentTeamSource {

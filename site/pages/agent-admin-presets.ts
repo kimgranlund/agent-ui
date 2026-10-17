@@ -2,13 +2,14 @@
 // (TKT-0074) + the GH #46 hospitality/travel additions (the Concierge upgraded in place to the Hotel
 // Concierge; the Maître d' and the Travel Agent new) + their persona-scoped store mechanics. PAGE-LOCAL
 // data, deliberately not a package export (the ticket's scope line): the PAGE owns which personas
-// exist; the packages own only the primitives this file composes (createMemoryStore · entriesStoreKey ·
-// DEFAULT_PROMPT_SECTIONS).
+// exist; the packages own only the primitives this file composes (createOverlayStore · createMemoryStore ·
+// entriesStoreKey · DEFAULT_PROMPT_SECTIONS).
 //
-// The design (ruled in-conversation 2026-07-16, the option-2 shape): each preset is its OWN store —
-// `createMemoryStore({ initial: seed, persistKey: 'agent-admin-app.<id>' })` — so edits persist PER
-// PERSONA and survive switching away and back (persisted values WIN over the seed,
-// memory-store.ts's native-parity law). Switching personas swaps `admin.store`; the component's own
+// The design (ruled in-conversation 2026-07-16, the option-2 shape): each persona is its OWN store, so
+// edits persist PER PERSONA and survive switching away and back. A shipped preset's store reads its seed
+// plus the user's overlay (`createOverlayStore`, T-0161: edits are a diff, merged onto a new seed); an
+// imported or duplicated persona's is `createMemoryStore({ initial: seed, persistKey:
+// 'agent-admin-app.<id>' })`, persisted values winning over the seed (memory-store.ts's parity law). Switching personas swaps `admin.store`; the component's own
 // reactive store effect (agent-admin.ts's connected()) re-pushes it into the settings pane, rewires
 // every entry section, and — GH #145 fix — genuinely resets the conversation: a real store
 // reassignment (a different object reference from the previously-seen one) clears the visible chat
@@ -541,9 +542,10 @@ export function renameImportedPersona(persona: Persona, label: string): boolean 
 // machinery the flow arms for them. Its agent.md says `"roster": false`; reversing this is that one line
 // (plus an `order`) if it ever earns a row.
 //
-// Its store is a FRESH `createMemoryStore` per flow entry with NO `persistKey`: nothing user-editable
-// reaches the Builder (no pane binds it — the panes all bind the DRAFT), so persisting it could only
-// accumulate drift against host-authored config, never preserve a user's work.
+// Its store is a FRESH overlay store per flow entry (`createOverlayStore` over an empty overlay, T-0161)
+// with NO `persist`: nothing user-editable reaches the Builder (no pane binds it; the panes all bind the
+// DRAFT), so persisting it could only accumulate drift against host-authored config, never preserve a
+// user's work.
 
 /** The interview craft (`site/agent-content/personas/builder/agent.md`) — CONFIG, like every other
  *  persona's prompt content. What it must NOT carry is
@@ -624,7 +626,7 @@ export function builderPersona(): Persona {
   }
 }
 
-/** A FRESH store per flow entry — no `persistKey`, no cache (see this section's header for why).
+/** A FRESH store per flow entry: no `persist`, no cache (see this section's header for why).
  *
  *  GH #670 — `model` is the Co-pilot card's PRE-ARM pick, folded into the seed rather than written after the
  *  fact: the interview's own config read then finds the user's choice already committed, so the pick wins by

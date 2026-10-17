@@ -191,6 +191,8 @@ export function setOverlayKey(seed: Readonly<Record<string, unknown>>, overlay: 
   const seedList = seedListAt(seed, key)
   if (seedList !== undefined && isItemList(value)) {
     const op = diffList(seedList, value)
+    // An empty list on a key the seed lacks diffs to nothing, yet must read back as `[]`, not as absent.
+    if (op === undefined && !has(seed, key)) values[key] = { value: [] }
     if (op !== undefined) {
       const previous = overlay.lists[key]?.entries ?? {}
       for (const [id, next] of Object.entries(op.entries)) {
@@ -356,6 +358,18 @@ function rebaseList(op: ListOp, seedList: readonly Item[]): ListOp | undefined {
   return order === undefined ? { entries } : { entries, order }
 }
 
+/** The entries a list op holds whole: added ones, and edited ones rebuilt from their base, in the user's
+ *  order when it kept one. */
+function userEntries(op: ListOp): Item[] {
+  const byId = new Map<string, Item>()
+  for (const [id, entryOp] of Object.entries(op.entries)) {
+    if (entryOp.op === 'added') byId.set(id, clone(entryOp.entry))
+    else if (entryOp.op === 'patch') byId.set(id, applyPatch(entryOp.base, entryOp))
+  }
+  const ids = [...(op.order ?? []).filter((id) => byId.has(id)), ...[...byId.keys()].filter((id) => !(op.order ?? []).includes(id))]
+  return ids.map((id) => byId.get(id)!)
+}
+
 /** Move `overlay` onto a new seed with a per-field 3-way merge (the module banner's rule). The same seed
  *  (version and fingerprint) returns `overlay` itself. */
 export function rebaseOverlay(overlay: AgentOverlay, seed: Readonly<Record<string, unknown>>, id: string, version: number): AgentOverlay {
@@ -370,8 +384,11 @@ export function rebaseOverlay(overlay: AgentOverlay, seed: Readonly<Record<strin
   for (const [key, op] of Object.entries(overlay.lists)) {
     const seedList = seedListAt(seed, key)
     if (seedList === undefined) {
-      // The seed turned this key into a non-list: keep the user's resolved list whole, as a value op.
-      values[key] = { value: resolveList([], op), seedChanged: seedSide(seed, key), ...(has(seed, key) ? { base: clone(seed[key]) } : {}) }
+      // The seed turned this key into a non-list: keep every entry the user added or edited (an edit
+      // rebuilt from the base it patched), flagged, as a value op. An entry the user only removed, or never
+      // touched, goes with the seed.
+      const kept = userEntries(op)
+      if (kept.length > 0) values[key] = { value: kept, seedChanged: seedSide(seed, key), ...(has(seed, key) ? { base: clone(seed[key]) } : {}) }
       continue
     }
     const next = rebaseList(op, seedList)
@@ -437,16 +454,47 @@ export function resetPath(overlay: AgentOverlay, address: OverlayAddress): Agent
   return { ...overlay, values, lists }
 }
 
-/** A persisted overlay, fail-closed: anything that is not one reads as `undefined`. */
-export function parseOverlay(value: unknown): AgentOverlay | undefined {
-  if (typeof value !== 'object' || value === null) return undefined
-  const o = value as Partial<AgentOverlay>
-  if (o.format !== 1 || typeof o.base !== 'string' || typeof o.baseVersion !== 'number' || typeof o.baseDigest !== 'string') return undefined
-  if (typeof o.values !== 'object' || o.values === null || typeof o.lists !== 'object' || o.lists === null) return undefined
-  for (const list of Object.values(o.lists)) {
-    if (typeof list !== 'object' || list === null || typeof (list as ListOp).entries !== 'object' || (list as ListOp).entries === null) return undefined
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
+const isItem = (value: unknown): value is Item => isRecord(value) && typeof value['id'] === 'string'
+const isFlag = (value: unknown): boolean => value === undefined || isRecord(value)
+
+function isEntryOp(value: unknown): value is EntryOp {
+  if (!isRecord(value)) return false
+  switch (value['op']) {
+    case 'added':
+      return isItem(value['entry']) && isFlag(value['seedChanged'])
+    case 'removed':
+      return isItem(value['base']) && isFlag(value['seedChanged'])
+    case 'patch':
+      return (
+        isItem(value['base']) &&
+        isRecord(value['set']) &&
+        Array.isArray(value['unset']) &&
+        value['unset'].every((f) => typeof f === 'string') &&
+        (value['seedChanged'] === undefined || (isRecord(value['seedChanged']) && Object.values(value['seedChanged']).every(isRecord)))
+      )
+    default:
+      return false
   }
-  return o as AgentOverlay
+}
+
+function isListOp(value: unknown): value is ListOp {
+  if (!isRecord(value) || !isRecord(value['entries'])) return false
+  const order = value['order']
+  if (order !== undefined && !(Array.isArray(order) && order.every((id) => typeof id === 'string'))) return false
+  return Object.values(value['entries']).every(isEntryOp)
+}
+
+/** A persisted overlay, fail-closed: anything that is not one, down to each op's shape, reads as
+ *  `undefined` (the caller then starts from an empty overlay). */
+export function parseOverlay(value: unknown): AgentOverlay | undefined {
+  if (!isRecord(value)) return undefined
+  if (value['format'] !== 1 || typeof value['base'] !== 'string' || typeof value['baseVersion'] !== 'number' || typeof value['baseDigest'] !== 'string') return undefined
+  const { values, lists } = value
+  if (!isRecord(values) || !isRecord(lists)) return undefined
+  if (!Object.values(values).every((op) => isRecord(op) && isFlag(op['seedChanged']))) return undefined
+  if (!Object.values(lists).every(isListOp)) return undefined
+  return value as unknown as AgentOverlay
 }
 
 // ── the store ────────────────────────────────────────────────────────────────────────────────────────
