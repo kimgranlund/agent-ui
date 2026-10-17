@@ -5,8 +5,6 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 
 | ID | Ticket | Title | Type | Size | Pri | Depends on | Status |
 |---|---|---|---|---|---|---|---|
-| T-0169 | [0169-lint-dead-plumbing](0169-lint-dead-plumbing/handoff.md) | Remove dead lint plumbing: adr_ratify, docs-grammar S8, census lane code, ADR wording in gates, [scale]/[density] bridge | chore | L2 | P3 | T-0152, T-0159 | 🔵 ready |
-| T-0160 | [0160-agent-content-files](0160-agent-content-files/handoff.md) | Agent content as files: extract preset and pack seeds to .md manifests with a generated, drift-gated registry | feature | L3 | P2 | T-0159, T-0182 | 🔵 ready |
 | T-0161 | [0161-agent-content-overlays](0161-agent-content-overlays/handoff.md) | Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind | feature | L3 | P2 | T-0160 | 🔵 ready |
 | T-0162 | [0162-agent-content-schema-forms](0162-agent-content-schema-forms/handoff.md) | Settings pane forms generated from each content kind's schema, with provenance, diff and reset | feature | L3 | P2 | T-0160, T-0161 | 🔵 ready |
 | T-0163 | [0163-agent-content-compiler](0163-agent-content-compiler/handoff.md) | One agent compiler for Test Chat, proxy, Worker and CLI, with a resolution trace and bundle digest in every turn trace | feature | L3 | P2 | T-0160, T-0161 | 🔵 ready |
@@ -23,7 +21,6 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0203 | [0203-composer-model-controls](0203-composer-model-controls/handoff.md) | Composer model controls: thinking off and show reasoning in the effort menu, web search and fetch toggles, server tools in requests, mid-conversation effort header | feature | L2 | P2 | T-0185 | 🔵 ready |
 | T-0315 | [0315-shared-catalog-cross-game-retrieval](0315-shared-catalog-cross-game-retrieval/handoff.md) | Admiral and Lexicographer share the agent-ui catalog: 'New game' ranks the word board first on the Admiral's opening | bug | L2 | P2 | none | 🔵 ready |
 | T-0340 | [0340-dark-primary-on-primary-contrast](0340-dark-primary-on-primary-contrast/handoff.md) | Dark primary under on-primary is 3.25:1: buttons, calendar day, segmented control and checkbox text fail AA | bug | L2 | P2 | none | 🔵 ready |
-| T-0342 | [0342-eval-signals](0342-eval-signals/handoff.md) | Eval signals over the round archive: one command for pass rates, churn, check fires and spend, with --against | feature | L3 | P1 | none | 🔵 ready |
 | T-0178 | [0178-eval-judged-checks](0178-eval-judged-checks/handoff.md) | Agent eval framework 3: judged checks with a pinned judge model, rubrics per persona, seeded known-bad transcripts | feature | L2 | P2 | T-0342 | 🔵 ready |
 | T-0343 | [0343-eval-smoke-scenarios](0343-eval-smoke-scenarios/handoff.md) | Smoke scenarios for every preset, planned from tags, replayed in CI | feature | L3 | P2 | none | 🔵 ready |
 | T-0344 | [0344-r10-parse-ask-array](0344-r10-parse-ask-array/handoff.md) | A PARSE failure on a string messages asks for an array of objects (round 10 cluster A) | bug | L2 | P1 | none | 🔵 ready |
@@ -33,4 +30,4 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0348 | [0348-r10-override-playing-card](0348-r10-override-playing-card/handoff.md) | The surface override does not read a playing card as a UI card (round 10 cluster E) | bug | L1 | P2 | none | 🔵 ready |
 | T-0349 | [0349-signals-gaps-r10](0349-signals-gaps-r10/handoff.md) | eval:signals follow-ups from round 10: like-sample churn, halt and failureCode tallies, retrieval table | chore | L2 | P3 | none | 🔵 ready |
 
-Closed: 317 done, 4 dropped (git log or .NNNN-* folders)
+Closed: 320 done, 4 dropped (git log or .NNNN-* folders)
