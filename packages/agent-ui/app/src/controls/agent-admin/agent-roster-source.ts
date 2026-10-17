@@ -1,7 +1,7 @@
 // agent-roster-source.ts — ADR-0227 clause 4 (wave 1, GH #1542): `AgentRosterSource`, the persona
 // roster CRUD as `@agent-ui/data`'s FIRST real consumer surface. This module is the ONE owner of the
 // roster's persisted records — the imported-personas library, the display order, the active-agent id,
-// and the per-persona `seedVersion`/`modifiedAt` markers — all riding the `StorageAdapter` localStorage
+// the per-persona `seedVersion`/`modifiedAt` markers, and each shipped persona's edit overlay (T-0161), all riding the `StorageAdapter` localStorage
 // tier (ADR-0193) under the SAME raw keys the retired hand-rolled `agent-admin-presets.ts` bookkeeping
 // used, so every existing user's persisted personas survive the migration byte-for-byte (the adapter's
 // `${namespace}.${key}` law reproduces `agent-admin-app.importedPersonas` etc. exactly; the one
@@ -17,8 +17,8 @@
 //
 // SAME-TICK WRITES (load-bearing, stated): `createLocalStorageAdapter`'s `set`/`delete` bodies contain
 // no `await`, so the backing `localStorage` write completes IN THE CALLING TICK — only the promise's
-// settlement is deferred. `writeSeedVersionSync`/`resetStateSync` lean on that: the persona-store
-// construction path (agent-admin-presets.ts) must sweep stale keys BEFORE `createMemoryStore` hydrates
+// settlement is deferred. `writeSeedVersionSync`/`resetStateSync`/`dropLegacyStateSync` lean on that: the
+// persona-store construction path (agent-admin-presets.ts) must sweep stale keys BEFORE a store hydrates
 // synchronously. A future async tier swap must re-derive this sequencing.
 //
 // Generic on P (never a concrete site type): the shipped personas — page-local data by TKT-0074's own
@@ -27,6 +27,8 @@
 
 import type { DataSource, SourceContext, Streamed } from '@agent-ui/data'
 import { createLocalStorageAdapter, type SyncReadableStorageAdapter } from '@agent-ui/shared'
+import { parseOverlay, type AgentOverlay } from './agent-overlay.ts'
+import { adapterChanges } from './storage-changes.ts'
 
 /** The roster's persisted namespace — the SAME prefix the pre-ADR-0227 hand-rolled keys used. */
 export const PERSONA_ROSTER_NAMESPACE = 'agent-admin-app'
@@ -38,6 +40,11 @@ const ORDER_KEY = 'rosterOrder'
 // `ACTIVE_PRESET_KEY` to zero references outside this module — consumers read/write through
 // `activeIdSync`/`writeActiveIdSync` (or the page's mutation) instead of touching the key.
 const ACTIVE_KEY = 'activePreset'
+// The per-persona records that are bookkeeping, not store state: the markers and the T-0161 overlay.
+const SEED_VERSION = 'seedVersion'
+const MODIFIED_AT = 'modifiedAt'
+const OVERLAY = 'overlay'
+const BOOKKEEPING = new Set([SEED_VERSION, MODIFIED_AT, OVERLAY])
 
 /** The two roster-record raw keys, exported for test seeding/cleanup (full localStorage key names —
  *  byte-identical to the retired `agent-admin-presets.ts` constants). */
@@ -138,6 +145,16 @@ export interface AgentRosterSource<P extends AgentRecord> extends DataSource<P, 
   writeSeedVersionSync(id: string, version: number): void
   modifiedAtSync(id: string): number | undefined
   bumpModifiedAtSync(id: string): void
+
+  // ── T-0161: a shipped persona's edits as an overlay over its seed (`agent-overlay.ts`) ──
+  /** The persisted overlay under `${id}.overlay`, fail-closed (a foreign value reads as none). */
+  overlaySync(id: string): AgentOverlay | undefined
+  writeOverlaySync(id: string, overlay: AgentOverlay): void
+  /** Today's pre-overlay shape: every store key persisted as a full copy under `${id}.<key>` (the
+   *  markers and the overlay excluded), for the one-time migration. */
+  legacyStateSync(id: string): Record<string, unknown>
+  /** Drop those full copies once the overlay holds their diff. */
+  dropLegacyStateSync(id: string): void
   /** Drop every persisted key under `${id}.` — the persona's own store state + markers, NEVER the
    *  roster records (the trailing dot keeps `travel` and `travel-imported` from crossing). */
   resetStateSync(id: string): void
@@ -228,21 +245,47 @@ export function createAgentRosterSource<P extends AgentRecord>(
   }
 
   const seedVersionSync = (id: string): number | undefined => {
-    const value = adapter.getSync(`${id}.seedVersion`)
+    const value = adapter.getSync(`${id}.${SEED_VERSION}`)
     return typeof value === 'number' && Number.isFinite(value) ? value : undefined
   }
 
   const writeSeedVersionSync = (id: string, version: number): void => {
-    void adapter.set(`${id}.seedVersion`, version)
+    void adapter.set(`${id}.${SEED_VERSION}`, version)
   }
 
   const modifiedAtSync = (id: string): number | undefined => {
-    const value = adapter.getSync(`${id}.modifiedAt`)
+    const value = adapter.getSync(`${id}.${MODIFIED_AT}`)
     return typeof value === 'number' && Number.isFinite(value) ? value : undefined
   }
 
   const bumpModifiedAtSync = (id: string): void => {
-    void adapter.set(`${id}.modifiedAt`, Date.now())
+    void adapter.set(`${id}.${MODIFIED_AT}`, Date.now())
+  }
+
+  const overlaySync = (id: string): AgentOverlay | undefined => parseOverlay(adapter.getSync(`${id}.${OVERLAY}`))
+
+  const writeOverlaySync = (id: string, overlay: AgentOverlay): void => {
+    void adapter.set(`${id}.${OVERLAY}`, overlay)
+  }
+
+  /** The adapter-relative keys of `id`'s pre-overlay store copies (the trailing dot keeps `travel` and
+   *  `travel-imported` apart). */
+  const legacyKeys = (id: string): string[] => {
+    const prefix = `${id}.`
+    return adapter.keysSync().filter((key) => key.startsWith(prefix) && !BOOKKEEPING.has(key.slice(prefix.length)))
+  }
+
+  const legacyStateSync = (id: string): Record<string, unknown> => {
+    const out: Record<string, unknown> = {}
+    for (const key of legacyKeys(id)) {
+      const value = adapter.getSync(key)
+      if (value !== undefined) out[key.slice(id.length + 1)] = value
+    }
+    return out
+  }
+
+  const dropLegacyStateSync = (id: string): void => {
+    for (const key of legacyKeys(id)) void adapter.delete(key)
   }
 
   const resetStateSync = (id: string): void => {
@@ -272,35 +315,9 @@ export function createAgentRosterSource<P extends AgentRecord>(
    *  settings stores' own business — a cross-tab edit there changes a store, not the roster view. */
   const isRosterRecordKey = (key: string): boolean => key === IMPORTED_KEY || key === ORDER_KEY || key === ACTIVE_KEY
 
-  /** One shared cross-tab pump: resolves once per roster-record change from ANOTHER tab (the adapter's
-   *  `storage`-event seam), until `signal` aborts. Both `subscribe` legs ride it. The adapter listener
-   *  tears down in the generator's `finally` — a consumer must drive `return()` (or abort the signal)
-   *  on abandonment, as `resource()`'s own `stopLive` does; a bare-`.next()` abandoner would leak it. */
-  async function* rosterChanges(ctx: SourceContext): AsyncGenerator<void> {
-    if (!adapter.subscribe || ctx.signal.aborted) return
-    let wake: (() => void) | undefined
-    let pending = false
-    const unsubscribe = adapter.subscribe((change) => {
-      if (!isRosterRecordKey(change.key)) return
-      pending = true
-      wake?.()
-    })
-    const aborted = new Promise<void>((resolve) => {
-      ctx.signal.addEventListener('abort', () => resolve(), { once: true })
-    })
-    try {
-      while (!ctx.signal.aborted) {
-        if (!pending) await Promise.race([new Promise<void>((resolve) => (wake = resolve)), aborted])
-        if (ctx.signal.aborted) return
-        if (pending) {
-          pending = false
-          yield
-        }
-      }
-    } finally {
-      unsubscribe()
-    }
-  }
+  /** The cross-tab pump both `subscribe` legs ride: once per roster-record change from ANOTHER tab, until
+   *  `signal` aborts (the shared `adapterChanges`, storage-changes.ts, owns the teardown contract). */
+  const rosterChanges = (ctx: SourceContext): AsyncGenerator<void> => adapterChanges(adapter, ctx, (change) => isRosterRecordKey(change.key))
 
   const notFound = (id: string): Error => new Error(`agent-roster-source: no roster entry with id "${id}"`)
 
@@ -374,6 +391,10 @@ export function createAgentRosterSource<P extends AgentRecord>(
     writeSeedVersionSync,
     modifiedAtSync,
     bumpModifiedAtSync,
+    overlaySync,
+    writeOverlaySync,
+    legacyStateSync,
+    dropLegacyStateSync,
     resetStateSync,
   }
 }

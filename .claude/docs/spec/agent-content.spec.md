@@ -256,3 +256,15 @@ ticket against this SPEC runs that ticket's named tests and checks each cited `f
    face-down hole-card precedent, and the producer and the host's checks read it
    (`packages/agent-ui/a2ui/src/catalog/hidden-state-checks.ts`, every catalog). Host-held state was rejected. The
    authoring rule is in the `a2ui-payload-authoring` skill, Common traps.
+6. Overlays, decided (T-0161, ACS-R6 to ACS-R9). The overlay module is `@agent-ui/app/agent-admin-overlay`
+   (`agent-overlay.ts`: `resolveOverlay`, `setOverlayKey`, `rebaseOverlay`, `diffOverlay`, `modifiedPaths`,
+   `resetPath`, `createOverlayStore`), persisted as one record per preset under `agent-admin-app.<id>.overlay`
+   through the roster source. The base digest is a synchronous browser-side fingerprint of the assembled seed,
+   not sha256 (the browser registry carries no digests), and a changed digest at an unchanged version also
+   merges, a superset of ACS-R7's "higher version": an unbumped seed text edit reaches every user who did not
+   edit that field. An entry patch keeps its whole base entry, which case 5 needs to keep the user's entry. At a
+   lower stored version (ACS-R7's migration) a seed entry missing from the stored list is not read as a user
+   removal (a later version may have added it), so that branch records no removals and no order. ACS-R8's
+   per-op `source` is not recorded yet: every write reaches the store through `SettingsStore.set`, which carries
+   no source, so the provenance plumbing stays with T-0162. The Teams pane takes its store through
+   `ui-agent-admin`'s `setTeamStore`; the page's store writes through the `teamsResource` mutations.

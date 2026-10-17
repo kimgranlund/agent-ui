@@ -17,16 +17,32 @@ async function openOnDefault(ctx: Parameters<AdminFlow['run']>[0]): Promise<{ ad
   return { admin, id }
 }
 
-/** Parse a stored entry list; absent reads as empty. */
-function storedListLength(raw: string | null): number {
-  if (raw === null) return 0
-  const value = JSON.parse(raw) as unknown
-  if (!Array.isArray(value)) throw new Error(`stored entry list is not an array: ${raw}`)
-  return value.length
+/** A shipped persona persists its edits as one overlay record over its seed (T-0161): the key the store
+ *  keeps under `agent-admin-app.<id>.overlay`, parsed; absent reads as no edits. */
+interface StoredOverlay {
+  values: Record<string, { value?: unknown }>
+  lists: Record<string, { entries: Record<string, { op: string; entry?: { label?: unknown } }> }>
+}
+async function storedOverlay(admin: AdminPage, id: string): Promise<StoredOverlay> {
+  const raw = await admin.readStorage(`agent-admin-app.${id}.overlay`)
+  return raw === null ? { values: {}, lists: {} } : (JSON.parse(raw) as StoredOverlay)
 }
 
-/** Edit the Agent name, reload the page, and the persisted key and the field both hold the new value
- *  (the seed marker keeps the reload from re-seeding). */
+/** One store key's persisted edit as the JSON text the old per-key record held, or null when unedited. */
+async function storedValue(admin: AdminPage, id: string, key: string): Promise<string | null> {
+  const op = (await storedOverlay(admin, id)).values[key]
+  return op === undefined || !('value' in op) ? null : JSON.stringify(op.value)
+}
+
+/** The labels of the entries the user added to one entry list. */
+async function addedLabels(admin: AdminPage, id: string, key: string): Promise<unknown[]> {
+  const entries = (await storedOverlay(admin, id)).lists[key]?.entries ?? {}
+  return Object.values(entries)
+    .filter((op) => op.op === 'added')
+    .map((op) => op.entry?.label)
+}
+
+/** Edit the Agent name, reload the page, and the persisted overlay and the field both hold the new value. */
 export const settingsEditPersists: AdminFlow = {
   name: 'settings-edit-persists',
   fixture: 'settings-edit-persists.json',
@@ -37,15 +53,15 @@ export const settingsEditPersists: AdminFlow = {
     assertFlow(before === DEFAULT_NAME, `the Agent name field reads ${JSON.stringify(before)} before the edit, expected "${DEFAULT_NAME}"`)
 
     const edited = 'Scripted Croupier'
-    const key = `agent-admin-app.${id}.name`
+    const key = `the ${id} overlay's name`
     await admin.editAgentName(edited)
-    await pollUntil(() => admin.readStorage(key), (raw) => raw === JSON.stringify(edited), `${key} to hold "${edited}"`)
+    await pollUntil(() => storedValue(admin, id, 'name'), (raw) => raw === JSON.stringify(edited), `${key} to hold "${edited}"`)
 
     await ctx.page.reload()
     await admin.waitArmed()
     const after = await admin.activeAgentId()
     assertFlow(after === id, `active agent is "${after}" after the reload, expected "${id}"`)
-    const stored = await admin.readStorage(key)
+    const stored = await storedValue(admin, id, 'name')
     assertFlow(stored === JSON.stringify(edited), `${key} holds ${JSON.stringify(stored)} after the reload, expected "${edited}"`)
     await pollUntil(() => admin.readAgentName(), (v) => v === edited, `the Agent name field to read "${edited}" after the reload`)
   },
@@ -58,8 +74,8 @@ export const settingsKindToggle: AdminFlow = {
   async run(ctx) {
     const { admin, id } = await openOnDefault(ctx)
     await admin.openSettingsTab('capabilities-content')
-    const key = `agent-admin-app.${id}.skillsEnabled`
-    const raw = await admin.readStorage(key)
+    const key = `the ${id} overlay's skillsEnabled`
+    const raw = await storedValue(admin, id, 'skillsEnabled')
     // A master switch reads default ON: only an explicit stored false disables (`isEnabledFlag`).
     const wasOn = raw !== 'false'
     const switchOn = await admin.kindEnabled('skill')
@@ -67,50 +83,36 @@ export const settingsKindToggle: AdminFlow = {
 
     await admin.toggleKind('skill')
     await pollUntil(
-      () => admin.readStorage(key),
+      () => storedValue(admin, id, 'skillsEnabled'),
       (value) => value === JSON.stringify(!wasOn),
       `${key} to flip to ${!wasOn}`,
     )
   },
 }
 
-/** Add a skill entry, then remove it: the persisted list grows by one, then returns to its prior length. */
+/** Add a skill entry, then remove it: the overlay records the added entry, then drops it again. */
 export const settingsEntryAddRemove: AdminFlow = {
   name: 'settings-entry-add-remove',
   fixture: 'settings-entry-add-remove.json',
   async run(ctx) {
     const { admin, id } = await openOnDefault(ctx)
     await admin.openSettingsTab('capabilities-content')
-    // The key is the persona store's persist prefix plus `entriesStoreKey('skill')`.
-    const key = `agent-admin-app.${id}.entries:skill`
+    // The overlay's list key is `entriesStoreKey('skill')`; only the user's changes are stored, never the seed.
+    const listKey = 'entries:skill'
+    const key = `the ${id} overlay's ${listKey}`
     const label = 'Scripted Skill'
-    // The seed is not persisted until the store's first write, so an absent key means the rendered list.
     const rows = await pollUntil(() => admin.entryLabels('skill'), (labels) => labels.length > 0, 'the seeded skill rows')
     assertFlow(!rows.includes(label), `the skill list already holds "${label}" before the add`)
-    const raw = await admin.readStorage(key)
-    const prior = raw === null ? rows.length : storedListLength(raw)
-    assertFlow(prior === rows.length, `${key} holds ${prior} entries but the skill list renders ${rows.length}`)
+    const prior = await addedLabels(admin, id, listKey)
+    assertFlow(!prior.includes(label), `${key} already records "${label}" as added`)
 
     await admin.addEntry('skill', label)
-    const grown = await pollUntil(
-      async () => storedListLength(await admin.readStorage(key)),
-      (n) => n === prior + 1,
-      `${key} to grow from ${prior} to ${prior + 1} entries`,
-    )
-    const stored = JSON.parse((await admin.readStorage(key)) ?? '[]') as { label?: unknown }[]
-    assertFlow(
-      stored.some((e) => e.label === label),
-      `${key} holds ${grown} entries but none labelled "${label}"`,
-    )
+    await pollUntil(() => addedLabels(admin, id, listKey), (labels) => labels.includes(label), `${key} to record "${label}" as added`)
+    await pollUntil(() => admin.entryLabels('skill'), (labels) => labels.length === rows.length + 1, `the skill list to grow to ${rows.length + 1} rows`)
 
     await admin.removeEntry('skill', label)
-    await pollUntil(
-      async () => storedListLength(await admin.readStorage(key)),
-      (n) => n === prior,
-      `${key} to return to ${prior} entries`,
-    )
-    const after = JSON.parse((await admin.readStorage(key)) ?? '[]') as { label?: unknown }[]
-    assertFlow(!after.some((e) => e.label === label), `${key} still holds "${label}" after the remove`)
+    await pollUntil(() => addedLabels(admin, id, listKey), (labels) => !labels.includes(label), `${key} to drop "${label}"`)
+    await pollUntil(() => admin.entryLabels('skill'), (labels) => labels.length === rows.length, `the skill list to return to ${rows.length} rows`)
   },
 }
 
@@ -137,14 +139,14 @@ export const settingsResetAgent: AdminFlow = {
     const { admin, id } = await openOnDefault(ctx)
     await admin.openSettingsTab('agent-content')
     const edited = 'Scripted Reset Target'
-    const key = `agent-admin-app.${id}.name`
+    const key = `the ${id} overlay's name`
     await admin.editAgentName(edited)
-    await pollUntil(() => admin.readStorage(key), (raw) => raw === JSON.stringify(edited), `${key} to hold "${edited}"`)
+    await pollUntil(() => storedValue(admin, id, 'name'), (raw) => raw === JSON.stringify(edited), `${key} to hold "${edited}"`)
     await pollUntil(() => admin.readAgentName(), (v) => v === edited, `the Agent name field to read "${edited}"`)
 
     await admin.resetAgent()
     await pollUntil(() => admin.readAgentName(), (v) => v === DEFAULT_NAME, `the Agent name field to return to "${DEFAULT_NAME}"`)
-    const stored = await admin.readStorage(key)
+    const stored = await storedValue(admin, id, 'name')
     assertFlow(stored !== JSON.stringify(edited), `${key} still holds the edited name after the reset`)
     const namespace = await admin.readStorageWithPrefix(`agent-admin-app.${id}.`)
     const leftover = Object.entries(namespace).filter(([, value]) => value.includes(edited))

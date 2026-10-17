@@ -32,3 +32,11 @@ A user's edits to a seeded agent survive seed updates: edits are stored as a dif
 
 ## Constraints
 - ADR-0227 state grammar (one signal-backed owner, explicit injection, `StorageAdapter`). Zero dependencies. No em dashes.
+
+## Acceptance criteria
+- [ ] `npm run check` exits 0.
+- [ ] `npx vitest run packages/agent-ui/app/src/controls/agent-admin/agent-overlay.test.ts` exits 0: merge with no conflict, a conflict (flagged `seedChanged` with base, seed and user), a field and an entry deleted upstream, the agent-content E1 example, the older-version migration, reset per field, entry and key.
+- [ ] `npx vitest run site/pages/agent-admin-presets.test.ts` exits 0: the one-time migration from today's stored shape, a seed bump that keeps a user edit, reset per field and per agent, an import carries no overlay.
+- [ ] `npx vitest run packages/agent-ui/app/src/controls/agent-admin/agent-team.test.ts site/pages/agent-admin-app-team.test.ts` exits 0: the Team pane and `handleTeamDeclared` both write through the one save mutation, and the teams list has a live leg.
+- [ ] `npx vitest run site/pages/agent-admin- packages/agent-ui/app/src/controls/agent-admin packages/agent-ui/data` exits 0.
+- [ ] `npm run e2e:admin` exits 0.

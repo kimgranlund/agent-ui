@@ -1,8 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import type { StorageAdapter, StorageChange } from '@agent-ui/shared'
+import { readdirSync, readFileSync } from 'node:fs'
+declare const process: { cwd(): string }
 import {
   __testSetAdapter,
   AgentTeamValidationError,
+  agentTeamStoreOver,
   createAgentTeamSource,
   deleteAgentTeam,
   loadAgentTeam,
@@ -245,5 +248,59 @@ describe('createAgentTeamSource — the DataSource face over the SAME records (A
     await expect(source.read('never-persisted', ctx)).rejects.toThrow('no persisted team with id "never-persisted"')
     await source.remove(team.id, ctx)
     expect(await source.list(undefined, ctx)).toEqual([])
+  })
+})
+
+// ── T-0161: one write path for teams, and a live leg on the list read ─────────────────────────────────
+describe('teams have one write path and a live list (T-0161)', () => {
+  const ctx = (): { signal: AbortSignal } => ({ signal: new AbortController().signal })
+  let emit: ((change: StorageChange) => void) | undefined
+
+  beforeEach(() => {
+    const fake = createFakeAdapter()
+    // A fake whose `subscribe` this test can fire, standing in for another tab's `storage` event.
+    __testSetAdapter({ ...fake, subscribe: (listener) => ((emit = listener), () => (emit = undefined)) })
+  })
+
+  afterEach(() => {
+    __testSetAdapter(undefined)
+    emit = undefined
+  })
+
+  it('view.subscribe yields the fresh list when another tab changes a team, and stops on abort', async () => {
+    const source = createAgentTeamSource()
+    const controller = new AbortController()
+    const stream = source.view.subscribe('teams', { signal: controller.signal })[Symbol.asyncIterator]()
+    const next = stream.next()
+    await saveAgentTeam(makeTeam(), KNOWN_AGENT_IDS) // the other tab's write
+    emit?.({ key: 'team-support', value: makeTeam(), oldValue: undefined })
+    expect((await next).value?.map((t: AgentTeam) => t.id)).toEqual(['team-support'])
+    controller.abort()
+    expect((await stream.next()).done).toBe(true)
+  })
+
+  it('agentTeamStoreOver: save reports issues instead of throwing, and lands only a valid team', async () => {
+    const store = agentTeamStoreOver(createAgentTeamSource())
+    const refused = await store.save(makeTeam({ gmAgentId: 'agent-never-existed' }), KNOWN_AGENT_IDS)
+    expect(refused.valid).toBe(false)
+    expect(refused.issues.some((i) => i.path === 'gmAgentId')).toBe(true)
+    expect(await store.list()).toEqual([])
+    expect((await store.save(makeTeam(), KNOWN_AGENT_IDS)).valid).toBe(true)
+    expect((await store.list()).map((t) => t.id)).toEqual(['team-support'])
+    await store.remove('team-support')
+    expect(await store.list()).toEqual([])
+    void ctx
+  })
+
+  it('the Team pane writes only through its injected store: no module write or read function is called outside the source', () => {
+    const here = `${process.cwd()}/packages/agent-ui/app/src/controls/agent-admin/`
+    const pane = readFileSync(`${here}agent-team-pane.ts`, 'utf8') as string
+    for (const name of ['saveAgentTeam', 'deleteAgentTeam', 'loadAgentTeams']) expect(pane, name).not.toMatch(new RegExp(`\\b${name}\\(`))
+    // Across the app package's agent-admin sources, the module write functions are called only inside
+    // agent-team.ts (the source's own create/remove).
+    const callers = (readdirSync(here) as string[])
+      .filter((f) => f.endsWith('.ts') && !f.endsWith('.test.ts') && f !== 'agent-team.ts')
+      .filter((f) => /\b(saveAgentTeam|deleteAgentTeam)\(/.test(readFileSync(`${here}${f}`, 'utf8') as string))
+    expect(callers).toEqual([])
   })
 })

@@ -99,16 +99,16 @@ never does. The persisted flavour rides the localStorage `StorageAdapter` tier e
 ADR-0193 Amendment A1): no module touches `localStorage` directly. Owner: ADR-0132 cl.5, ADR-0193 cl.2 and Amendment;
 `controls/settings/memory-store.ts`; `agent-admin-presets.ts:personaStore`.
 
-**SPEC-R5 (preset seed migration).** On first construction of a preset's store in a session, if the persisted
-`<id>.seedVersion` marker is lower than the preset's `seedVersion` (absent reads 1 on both sides), the persisted
-state under `<id>.` is swept (`resetStateSync`) before the store hydrates, and the marker is rewritten to the
-preset's value. A user's edits on an unchanged preset are never swept. The sweep-then-hydrate order relies on the
-localStorage tier's same-tick writes (`agent-roster-source.ts` header). Owner: `agent-admin-presets.ts:personaStore`;
-`agent-roster-source.ts:writeSeedVersionSync`, `resetStateSync`.
-*Planned change (T-0161, [agent-content](./agent-content.spec.md) ACS-R6, ACS-R7):* the sweep on a bump becomes a
-per-field 3-way merge of the user's overlay onto the new seed; a user edit survives a bump, a conflict keeps the
-user value and is flagged `seedChanged`, and the wipe in `personaStore`/`resetPersona` retires. Until T-0161 lands
-the clause above is the shipped behavior.
+**SPEC-R5 (preset seed migration).** A preset's user edits are an overlay over its seed
+([agent-content](./agent-content.spec.md) ACS-R6, ACS-R7; landed 2026-10-17, T-0161). On first construction of a
+preset's store in a session the overlay is merged per field onto the current seed (`rebaseOverlay`): a user edit
+survives a bump, a conflict keeps the user value and is flagged `seedChanged`, and nothing is swept. A store
+persisted in the pre-overlay shape is migrated once (`diffOverlay`): at the preset's version each differing value
+becomes a plain op; at a lower `<id>.seedVersion` (absent reads 1) each becomes a `seedChanged` op that keeps the
+stored value. The full copies are then dropped (`dropLegacyStateSync`) before the store hydrates, an order that
+relies on the localStorage tier's same-tick writes (`agent-roster-source.ts` header). `resetPersona` still drops
+the whole namespace, the overlay included. Owner: `agent-admin-presets.ts:personaStore`; `agent-overlay.ts`;
+`agent-roster-source.ts:overlaySync`, `writeOverlaySync`, `resetStateSync`.
 
 **SPEC-R6 (mint, duplicate, import, export).** An import mints a NEW record: `importedPersonaFrom(file, roster)` and
 `duplicatePersonaFrom(source, store, taken)` uniquify only the roster identity (`id`, `label`) and carry the state
@@ -365,18 +365,18 @@ exception citing ADR-0227 cl.5.
 | Fact | Tier | Key or namespace | Owner |
 |---|---|---|---|
 | Roster records: imports, order, active id, per-agent `seedVersion`/`modifiedAt` | localStorage adapter | namespace `agent-admin-app`; keys `importedPersonas`, `rosterOrder`, `activePreset`, `<id>.seedVersion`, `<id>.modifiedAt` | `agent-roster-source.ts` |
-| Per-agent config and entry lists | `SettingsStore` over the localStorage adapter | namespace `agent-admin-app.<id>`; keys per `PERSONA_STATE_KEYS`, `entries:<kind>` | `memory-store.ts`, `persona-patch.ts` |
+| Per-agent config and entry lists of an import or duplicate (full records) | `SettingsStore` over the localStorage adapter | namespace `agent-admin-app.<id>`; keys per `PERSONA_STATE_KEYS`, `entries:<kind>` | `memory-store.ts`, `persona-patch.ts` |
 | Large resource text | IndexedDB adapter | database `agent-ui-resource-text`, store `kv`, key `idbRef` | `resource-idb-store.ts` |
 | Skill-pack shelf | IndexedDB adapter | database `agent-ui-skill-packs`, keys `skill-packs:<packId>` | `skill-pack-store.ts` |
 | Teams | localStorage adapter | namespace `agent-ui-agent-teams`, key `<teamId>` | `agent-team.ts` |
 | Conversation history, Dialog Turns, Effort | element lifetime only | none | `agent-admin.ts` |
 | Seed content (presets, Builder preset, packs): T-0160 | build time only, no runtime tier | the generated `site/agent-content/registry.gen.ts` over the content root `site/agent-content/` | `scripts/generate-agent-content.mjs` |
-| User overlays on seeds: planned, T-0161 | localStorage adapter (large text on the IndexedDB adapter) | keyed by `id@baseVersion`; namespace chosen by T-0161 | the overlay store (planned) |
+| User overlays on seeds: T-0161 | localStorage adapter (large resource text on the IndexedDB adapter, by `idbRef` as above) | namespace `agent-admin-app`, key `<id>.overlay`; the record carries `base` (`id@baseVersion`) | `agent-overlay.ts`, `agent-roster-source.ts` |
 
 Owner: ADR-0193 cl.2, cl.3, Amendment A1; ADR-0208 D3; ADR-0227 cl.2. The seed-content row is
-[agent-content](./agent-content.spec.md) ACS-R4 (landed, T-0160) and the planned overlay row ACS-R6; when T-0161 lands, the per-agent `SettingsStore` row
-holds only imports and duplicates as full records, and the `<id>.seedVersion` marker is superseded by the
-overlay's `baseVersion`.
+[agent-content](./agent-content.spec.md) ACS-R4 (landed, T-0160) and the overlay row ACS-R6 (landed, T-0161). The
+`<id>.seedVersion` marker stays: it is the instantiated probe (`personaInstantiated`) and the pre-overlay
+migration's version; the overlay's `baseVersion` is what a merge compares.
 
 ### 3.9 Seams
 
@@ -471,9 +471,8 @@ Each criterion names the pinning test; a criterion with no existing test names t
 - **AC-R1/R2:** `controls/agent-admin/agent-roster-source.test.ts` proves the order rule, the fail-closed reads, the
   import-only rename and remove, the legacy active-id read, and the cross-tab subscribe.
 - **AC-R3:** `controls/agent-admin/agent-admin.test.ts` proves `deletable` absent hides the delete affordance.
-- **AC-R4/R5/R7:** `site/pages/agent-admin-presets.test.ts` proves persisted-wins-over-seed, the seedVersion sweep,
-  reset, and that the active id survives a reset. When T-0161 lands, the sweep case is replaced by the
-  agent-content AC-R6/R7 merge and migration tests.
+- **AC-R4/R5/R7:** `site/pages/agent-admin-presets.test.ts` proves persisted-wins-over-seed, the overlay merge and
+  migration (agent-content AC-R6/R7, T-0161), reset, and that the active id survives a reset.
 - **AC-R6:** `site/pages/agent-admin-persona-file.test.ts` proves the round trip, the key filter both ways, and the
   stripped `idbRef` on export; `controls/agent-admin/persona-patch.test.ts` pins `PERSONA_STATE_KEYS`.
 - **AC-R8:** `controls/settings/store.test.ts` grep-guards that `ui-settings` imports only the interface.
@@ -546,9 +545,10 @@ Added 2026-10-14 (T-0182, against main `968a02d7`): the content-model drift the
    Planned: T-0160 (ACS-R2, ACS-R4). Landed 2026-10-17: the seeds are files under `site/agent-content/`, the
    rationale is each persona's `changelog`, and both modules read the generated registry.
 8. A `seedVersion` bump wipes every user edit to that preset (SPEC-R5; the Quizmaster v2 comment records Kim
-   choosing that loss). Planned: T-0161 (ACS-R7).
+   choosing that loss). Planned: T-0161 (ACS-R7). Landed 2026-10-17: edits are an overlay merged onto the new seed.
 9. Teams have two write paths: the Teams pane calls `saveAgentTeam` directly, the Builder goes through
-   `saveTeamMutation`. Planned: T-0161 (ACS-R9).
+   `saveTeamMutation`. Planned: T-0161 (ACS-R9). Landed 2026-10-17: the pane writes through the page's
+   `teamStore` (`setTeamStore`), the same mutations, and `teamsResource` is live.
 10. The settings forms are hand-written (`agentConfigSchema`, SPEC-R11) beside the data they edit. Planned: T-0162
     (ACS-R10).
 11. No turn trace or debug bundle records which content versions a turn ran with, and the debug bundle's

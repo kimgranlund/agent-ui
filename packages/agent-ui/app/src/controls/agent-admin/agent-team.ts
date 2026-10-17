@@ -15,7 +15,8 @@
 // this module only guarantees the record it returns is STRUCTURALLY well-formed.
 
 import { createLocalStorageAdapter, type StorageAdapter } from '@agent-ui/shared'
-import type { DataSource, SourceContext } from '@agent-ui/data'
+import type { DataSource, SourceContext, Streamed } from '@agent-ui/data'
+import { adapterChanges } from './storage-changes.ts'
 
 /** One roster member — a short job title (CrewAI grammar) plus the when-to-use sentence (Anthropic
  *  subagents grammar). Declared prose only; see this module's own header for the IDR-0001 fence. */
@@ -225,21 +226,29 @@ export class AgentTeamValidationError extends Error {
 }
 
 /** The whole-list view a page's ONE teams `resource()` reads — `read` present by contract (the
- *  persona source's `view` sub-source shape, list-as-one-value). */
+ *  persona source's `view` sub-source shape, list-as-one-value). `subscribe` is the live leg (T-0161):
+ *  it yields the fresh list whenever another tab changes a team record. */
 export interface AgentTeamListSource extends DataSource<readonly AgentTeam[]> {
   read(key: string, ctx: SourceContext): Promise<readonly AgentTeam[]>
+  subscribe(key: string, ctx: SourceContext): Streamed<readonly AgentTeam[]>
 }
 
-/** The team records as a `DataSource<AgentTeam>` (ADR-0227's verb set; no `subscribe` — no consumer
- *  needs the cross-tab leg yet, and a non-live `resource()` never asks for it) plus the `view`
- *  sub-source. `create` is the validation-closed upsert (same-id last-write-wins, `saveAgentTeam`'s
- *  own law) and THROWS `AgentTeamValidationError` on an invalid record — nothing lands. */
+/** The team records as a `DataSource<AgentTeam>` (ADR-0227's verb set; the cross-tab leg rides the
+ *  `view` sub-source, the one a live `resource()` reads) plus the `view` sub-source. `create` is the
+ *  validation-closed upsert (same-id last-write-wins, `saveAgentTeam`'s own law) and THROWS
+ *  `AgentTeamValidationError` on an invalid record: nothing lands. */
 export interface AgentTeamSource extends DataSource<AgentTeam, undefined, AgentTeamWriteInput> {
   read(key: string, ctx: SourceContext): Promise<AgentTeam>
   list(query: undefined, ctx: SourceContext): Promise<readonly AgentTeam[]>
   create(input: AgentTeamWriteInput, ctx: SourceContext): Promise<AgentTeam>
   remove(key: string, ctx: SourceContext): Promise<void>
   readonly view: AgentTeamListSource
+}
+
+/** The live leg: the fresh list once per cross-tab change to a team record, until `ctx.signal` aborts
+ *  (the shared `adapterChanges` pump, storage-changes.ts, owns the teardown contract). */
+async function* teamChanges(ctx: SourceContext): AsyncGenerator<readonly AgentTeam[]> {
+  for await (const _ of adapterChanges(getAdapter(), ctx)) yield await loadAgentTeams()
 }
 
 export function createAgentTeamSource(): AgentTeamSource {
@@ -262,6 +271,41 @@ export function createAgentTeamSource(): AgentTeamSource {
     },
     view: {
       read: async () => loadAgentTeams(),
+      subscribe: (_key, ctx) => teamChanges(ctx),
     },
+  }
+}
+
+// ── the Team pane's port (T-0161: one write path) ────────────────────────────────────────────────────
+// The Team pane never calls the module functions above: it reads and writes through an injected
+// `AgentTeamStore`, so a page routes the pane's writes through the SAME owner its other team writes use
+// (agent-admin-app.ts: the teams `resource()` and its mutations). A host with no page owner gets
+// `agentTeamStoreOver(createAgentTeamSource())`, the same source.
+
+/** The team reads and writes the Team pane makes. `save` reports a validation refusal as issues (the
+ *  pane shows them inline) and throws anything else. */
+export interface AgentTeamStore {
+  list(): Promise<readonly AgentTeam[]>
+  save(team: AgentTeam, knownAgentIds: readonly string[]): Promise<AgentTeamValidationResult>
+  remove(id: string): Promise<void>
+  /** Called after a change made elsewhere (another write path, another tab); returns an unsubscribe. */
+  subscribe?(listener: () => void): () => void
+}
+
+/** An `AgentTeamStore` straight over a team source (no page owner, no live leg). */
+export function agentTeamStoreOver(source: AgentTeamSource): AgentTeamStore {
+  const ctx = (): SourceContext => ({ signal: new AbortController().signal })
+  return {
+    list: () => source.list(undefined, ctx()),
+    async save(team, knownAgentIds) {
+      try {
+        await source.create({ team, knownAgentIds }, ctx())
+        return { valid: true, issues: [] }
+      } catch (error) {
+        if (error instanceof AgentTeamValidationError) return { valid: false, issues: error.issues }
+        throw error
+      }
+    },
+    remove: (id) => source.remove(id, ctx()),
   }
 }

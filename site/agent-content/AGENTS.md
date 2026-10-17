@@ -60,7 +60,7 @@ A ref is `<id>@<version>`. `./<id>@<version>` names an entry under the persona's
 
 ## Change seed text
 
-Edit the file and run the generator. Decide whether the persona's `version` bumps: a bump drops users' persisted stores for that persona, so bump only when an existing store must not keep the old text, and add a `changelog` line saying why. The generator copies `version` into the manifest's `seedVersion`. The manifest's `seedDigest` pins the assembled seed (so a change to the assembly code reds it too): refresh it with the armed writer, `AGENT_MANIFEST_WRITE=1 npx vitest run --project site site/lib/agent-manifest/agent-manifest.write.test.ts`. `site/pages/agent-admin-seed-digests.test.ts` pins every assembled seed and needs its row updated for a deliberate change.
+Edit the file and run the generator. A user's edits are an overlay over the seed (T-0161), so a seed change never drops them: on the next load every field the user did not edit takes the new text, an edited field keeps the user's value, and a field both changed keeps the user's value flagged `seedChanged`. That merge runs on any seed change, bumped or not. Bump the persona's `version` when the change is a new seed release, and add a `changelog` line saying why. The generator copies `version` into the manifest's `seedVersion`. The manifest's `seedDigest` pins the assembled seed (so a change to the assembly code reds it too): refresh it with the armed writer, `AGENT_MANIFEST_WRITE=1 npx vitest run --project site site/lib/agent-manifest/agent-manifest.write.test.ts`. `site/pages/agent-admin-seed-digests.test.ts` pins every assembled seed and needs its row updated for a deliberate change.
 
 ## Validate and generate
 
