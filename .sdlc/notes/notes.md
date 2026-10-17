@@ -192,3 +192,8 @@
 - note: packages/agent-ui/components/src/controls/gauge/gauge.ts: a direction flip with no box change does not re-anchor until the next ResizeObserver tick (the post-mount test changes inline-size to trigger it). In practice low impact: a dir change usually comes with a page/locale re-render or reflow that resizes, but a pure `dir` toggle on a fixed-width container leaves the rings on the wrong edge until something resizes.
 - fix-now: packages/agent-ui/components/src/controls/gauge/gauge.ts:108 comment cites `#syncAnchor`, which does not exist (the logic is `#anchor()` plus `#syncScale`).
 - decide: site/pages/dogfood-render.browser.test.ts: with the anchor reverted, the dogfood legend-gap sweep (`-t "legend-gap"` 4 passed; `-t "demo/gauge"` 2 passed) stayed green, so the sweep and the rtl clean twin do not catch this regression; only gauge.browser.test.ts bites. The `legend-gap, rtl` plant proves the rule reports a padded legend, not that it measures the rings' edge.
+
+## T-0336: Site demos align captioned figures to a shared top edge (figure-parity allowlist debt) (2026-10-17)
+
+- note: shots/after/button-chromium.png: captions are bottom-aligned (`margin-block-start:auto`), so when a caption wraps to two lines ("size=\"md\" (default)") the first lines are not level. Only the caption bottoms line up.
+- decide: scripts/dogfood-render-allowlist.json:3: the icon-demo figure-parity entry is still owned by T-0336, which is closing. Re-own it to a standing ruling or a ticket so the owner reference does not go stale.
