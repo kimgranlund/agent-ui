@@ -18,15 +18,13 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0198 | [0198-step-flow](0198-step-flow/handoff.md) | Step flow pattern: step n of m, Back and Next, shared /draft data | feature | L3 | P3 | T-0197 | ⏳ proposed |
 | T-0199 | [0199-itinerary-compare](0199-itinerary-compare/handoff.md) | Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper | feature | L3 | P3 | T-0193 | ⏳ proposed |
 | T-0203 | [0203-composer-model-controls](0203-composer-model-controls/handoff.md) | Composer model controls: thinking off and show reasoning in the effort menu, web search and fetch toggles, server tools in requests, mid-conversation effort header | feature | L2 | P2 | T-0185 | 🔵 ready |
-| T-0340 | [0340-dark-primary-on-primary-contrast](0340-dark-primary-on-primary-contrast/handoff.md) | Dark primary under on-primary is 3.25:1: buttons, calendar day, segmented control and checkbox text fail AA | bug | L2 | P2 | none | 🔵 ready |
 | T-0178 | [0178-eval-judged-checks](0178-eval-judged-checks/handoff.md) | Agent eval framework 3: judged checks with a pinned judge model, rubrics per persona, seeded known-bad transcripts | feature | L2 | P2 | T-0342 | 🔵 ready |
 | T-0343 | [0343-eval-smoke-scenarios](0343-eval-smoke-scenarios/handoff.md) | Smoke scenarios for every preset, planned from tags, replayed in CI | feature | L3 | P2 | none | 🔵 ready |
 | T-0345 | [0345-r10-poker-opens-with-cards](0345-r10-poker-opens-with-cards/handoff.md) | Haiku poker and blackjack openings deal on the first turn instead of asking for a stake (round 10 cluster B) | bug | L2 | P1 | none | ⏳ proposed |
-| T-0347 | [0347-r10-probe-natural-skip](0347-r10-probe-natural-skip/handoff.md) | Scripted card scenarios skip the rest of a hand when a natural settles it (round 10 cluster D) | chore | L1 | P2 | none | 🔵 ready (branch chore/0347-probe-natural-skip) |
 | T-0349 | [0349-signals-gaps-r10](0349-signals-gaps-r10/handoff.md) | eval:signals follow-ups from round 10: like-sample churn, halt and failureCode tallies, retrieval table | chore | L2 | P3 | none | 🔵 ready |
 | T-0350 | [0350-r10-settled-table-no-way-forward](0350-r10-settled-table-no-way-forward/handoff.md) | A settled card table ships with no way forward (no Deal again), and no check names it | bug | L1 | P2 | none | ⏳ proposed |
 | T-0351 | [0351-glyph-marks](0351-glyph-marks/handoff.md) | Badge intent marks and the setIcon carets, clear and stepper marks move to ui-glyph children (GH #1941) | chore | L3 | P2 | none | 🔵 ready |
 | T-0352 | [0352-part-size-step](0352-part-size-step/handoff.md) | Card action parts declare their own size step inside a data-tier region (GH #1940) | bug | L2 | P2 | none | 🔵 ready |
 | T-0353 | [0353-foundations-final-cleanup](0353-foundations-final-cleanup/handoff.md) | ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) | chore | L3 | P2 | none | 🔴 blocked |
 
-Closed: 325 done, 4 dropped (git log or .NNNN-* folders)
+Closed: 327 done, 4 dropped (git log or .NNNN-* folders)
