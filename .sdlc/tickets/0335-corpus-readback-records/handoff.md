@@ -25,3 +25,9 @@ Kim 2026-10-17: replace both the way T-0318 did (judged --replace, fresh a2ui-re
 
 ## Constraints
 grammar.md is byte-pinned; do not touch it.
+
+## Acceptance criteria
+- `node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus/import-seeds.ts` exits 0 as the all-E_DUP no-op (96 already present): both replaced records are admitted and judged.
+- `npx vitest run packages/agent-ui/a2ui/src/corpus packages/agent-ui/a2ui/tools/corpus packages/agent-ui/a2ui/src/examples` exits 0: the corpus shard gate, the re-pinned retrieval prefixes, the backable-wizard real-renderer proof, and the T-0335 case that five booking confirm phrasings on `agent-ui--concierge` and `agent-ui` retrieve neither `confirmation-view` nor `backable-wizard` (red on the pre-T-0335 shard, 10 of 10).
+- `node scripts/dogfood-compose.mjs --gate` exits 0.
+- `npm run check` exits 0.

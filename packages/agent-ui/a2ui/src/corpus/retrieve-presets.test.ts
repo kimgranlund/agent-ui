@@ -59,7 +59,8 @@ const PINS: readonly (readonly [preset: string, catalogId: string, turn: string,
   ['lexicographer', 'agent-ui', 'Show me the word.', ['domain-lexicographer-game-over', 'domain-lexicographer-word-board', 'frontier-product-card-rooms']],
   ['admiral', 'agent-ui', 'Fire at B3', ['domain-admiral-battleship-board', 'frontier-product-card-rooms', 'restaurant-menu']],
   ['alchemist', 'agent-ui', 'Mix the two elements', ['media-file-grid', 'list-nested', 'pattern-settings-form']],
-  ['dungeon-master', 'agent-ui', 'I open the door and look around', ['frontier-game-hud-quest', 'frontier-service-gateway', 'backable-wizard']],
+  // Known poor (T-0335): rank 3 is plan-and-execute-plan, off the quest domain (it was the then hotel wizard).
+  ['dungeon-master', 'agent-ui', 'I open the door and look around', ['frontier-game-hud-quest', 'frontier-service-gateway']],
 ]
 
 describe('retrieve: the shipped-preset ranking pin (T-0238)', () => {
@@ -77,6 +78,24 @@ describe('retrieve: a booking confirm turn does not surface the receipt exemplar
   it.each(['agent-ui--concierge', 'agent-ui'].flatMap((c) => turns.map((t) => [c, t] as const)))('%s on "%s"', (catalogId, turn) => {
     const got = retrieve(shard, { intent: turn, k: 5, catalogId, protocolVersion: 'v1.0', componentTypes: typesOf(catalogId) })
     expect(got.map((r) => r.name)).not.toContain('frontier-booking-receipt')
+  })
+})
+
+// T-0335: the same rulings, for the two records that read a booking back before its confirm. Before T-0335
+// confirmation-view (a dinner reservation summary with Confirm) ranked first on the base catalog and third on the
+// Concierge for the summary turns, and backable-wizard (a hotel stay wizard ending in "Confirm booking") ranked first
+// on the base catalog and third on the Concierge for the book-it turns.
+describe('retrieve: a booking confirm turn does not surface a read-back exemplar (T-0335)', () => {
+  const turns = [
+    'Yes that works, show me the summary so I can confirm',
+    'Those details are right, please confirm the booking.',
+    'Everything looks right, show me the final summary of my reservation so I can confirm it.',
+    'Book the room for those dates, I want to confirm the stay.',
+    'Go ahead and book it',
+  ]
+  it.each(['agent-ui--concierge', 'agent-ui'].flatMap((c) => turns.map((t) => [c, t] as const)))('%s on "%s"', (catalogId, turn) => {
+    const got = retrieve(shard, { intent: turn, k: 5, catalogId, protocolVersion: 'v1.0', componentTypes: typesOf(catalogId) })
+    expect(got.map((r) => r.name).filter((n) => n === 'confirmation-view' || n === 'backable-wizard')).toEqual([])
   })
 })
 

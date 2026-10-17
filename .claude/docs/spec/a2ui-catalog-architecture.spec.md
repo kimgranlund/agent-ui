@@ -279,8 +279,8 @@ Evidence names a preset skill, a playbook, a trace or a corpus record name (`pac
 | Pattern | Purpose | Evidence | Priority | Ticket |
 |---|---|---|---|---|
 | OptionDeck | pick one of a few options to start; the card is the target | Croupier greeting Buttons in Cards (ruled defect), `greeting-card` mini-skill | P2 | T-0193 |
-| Confirm and receipt | read back, confirm, then a settled receipt | concierge `booking-flow`, restaurant `table-reservation`, shopkeeper `cart-summary`; corpus `receipt-order-summary`, `confirmation-view`, and `frontier-booking-receipt` (the settled receipt; its booking read-back was replaced in T-0318) | P2 | T-0195 (absorbs BookingConfirmation) |
-| Step flow | step n of m with Back and Next over one draft | concierge `booking-flow` (about 2,000 chars of prose); corpus `backable-wizard`, `pattern-wizard` | P3 | T-0198 |
+| Confirm and receipt | read back, confirm, then a settled receipt | concierge `booking-flow`, restaurant `table-reservation`, shopkeeper `cart-summary`; corpus `receipt-order-summary`, `confirmation-view` and `frontier-booking-receipt` (both settled; their booking read-backs were replaced in T-0335 and T-0318) | P2 | T-0195 (absorbs BookingConfirmation) |
+| Step flow | step n of m with Back and Next over one draft | concierge `booking-flow` (about 2,000 chars of prose); corpus `backable-wizard` (a time-off request since T-0335), `pattern-wizard` | P3 | T-0198 |
 | Compare | options as columns by attribute rows, one pick per column | travel `trip-plan`, `comparison-table` mini-skill, shopkeeper `product-grid`; corpus `comparison-pricing-table` | P3 | T-0199 (compare half) |
 | Clarify | one structured question before acting | corpus `frontier-card-anatomy-ask`; no trace yet | P2 | new |
 | Approval gate | approve, edit or deny a pending action | corpus `plan-and-execute-approve-ask` | P2 | new |

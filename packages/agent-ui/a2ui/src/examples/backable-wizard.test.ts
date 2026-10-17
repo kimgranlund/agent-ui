@@ -14,9 +14,10 @@
 // updated in the SAME repair to match, per the clause's card-anatomy-on-every-step requirement.
 //
 // Repaired again 2026-08-18 (GH #1262 second pass, the P7 ground a fresh judge sustained on this seed:
-// "cal"/"rooms" ship with no accessible name and no label prop of their own): both controls now ride an
-// ADR-0051 Field wrap ("f_dates"/"f_room", per the booking-reservation/frontier-card-anatomy-ask
-// precedents) — this file's ids/assertions were updated in the SAME repair to match.
+// "cal" and the RadioGroup ship with no accessible name and no label prop of their own): both controls now ride an
+// ADR-0051 Field wrap ("f_dates" and the RadioGroup's own Field) — this file's ids/assertions were updated in the SAME repair to match.
+// T-0335 (2026-10-17): the seed moved off a hotel stay to a time-off request (days off, leave type, submit), so no
+// booking read-back ends it. The "room" names below (MSG_SCENE_ROOM, roomRow) now index the leave-type scene.
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import '@agent-ui/components/all' // ADR-0233: the catalog factories import no control; the test defines the fleet
 import { whenFlushed } from '@agent-ui/components'
@@ -117,7 +118,7 @@ describe('backable-wizard seed (GH #1192, req-a2ui-patterns.md R2) — real-rend
     expect(mount.querySelector('ui-calendar')).toBeNull()
     const rooms = mount.querySelector('ui-radio-group') as (HTMLElement & { value: string | null }) | null
     expect(rooms).not.toBeNull()
-    expect(rooms!.value).toBe('deluxe')
+    expect(rooms!.value).toBe('vacation')
     // the room scene's Back/Continue pair rides ONE Row inside CardFooter, never bare siblings (GH #1787).
     const roomRow = mount.querySelector('ui-card-footer > ui-row')
     expect(roomRow, 'the room footer\'s Buttons must ride a Row inside CardFooter').not.toBeNull()
@@ -134,14 +135,14 @@ describe('backable-wizard seed (GH #1192, req-a2ui-patterns.md R2) — real-rend
     expect(calAgain!.valueStart, 'the range chosen before the detour must survive the scene swap').toBe('2026-08-21')
     expect(calAgain!.valueEnd, 'the range chosen before the detour must survive the scene swap').toBe('2026-08-24')
 
-    // forward again: the room scene remounts, and /draft/room is STILL "deluxe" — the value already
+    // forward again: the room scene remounts, and /draft/leave is STILL "vacation" — the value already
     // committed before the detour, the second half of the round-trip proof.
     r.ingest(line(MSG_FORWARD_TO_ROOM!))
     r.ingest(line(MSG_WIRE_ROOM_VALUE_2!))
     await whenFlushed()
     const roomsAgain = mount.querySelector('ui-radio-group') as (HTMLElement & { value: string | null }) | null
     expect(roomsAgain).not.toBeNull()
-    expect(roomsAgain!.value, 'the room chosen before the detour must survive the round-trip too').toBe('deluxe')
+    expect(roomsAgain!.value, 'the room chosen before the detour must survive the round-trip too').toBe('vacation')
 
     r.dispose()
     mount.remove()
@@ -172,8 +173,8 @@ describe('backable-wizard seed (GH #1192, req-a2ui-patterns.md R2) — real-rend
     expect(rows).toHaveLength(2)
     const labels = rows.map((row) => row.querySelector('[data-part="label"]')?.textContent?.trim())
     const values = rows.map((row) => row.querySelector('[data-part="value"]')?.textContent?.trim())
-    expect(labels).toEqual(['Dates', 'Room'])
-    expect(values).toEqual(['21–24 Aug · 3 nights', 'Deluxe King · €240/night'])
+    expect(labels).toEqual(['Days off', 'Leave type'])
+    expect(values).toEqual(['Fri 21 Aug to Mon 24 Aug · 2 working days', 'Vacation'])
 
     // the flow-final commit Button is present, alongside a ghost Back — the confirm-before-concluding
     // law (grammar.md) still lets the user go back and amend even at the last scene. Both ride the
@@ -181,12 +182,12 @@ describe('backable-wizard seed (GH #1192, req-a2ui-patterns.md R2) — real-rend
     const footer = mount.querySelector('ui-card-footer')
     expect(footer, 'the confirm scene\'s nav Buttons must ride a CardFooter').not.toBeNull()
     const buttons = [...footer!.querySelectorAll('ui-button')].map((b) => b.textContent?.trim())
-    expect(buttons).toEqual(['Back', 'Confirm booking'])
+    expect(buttons).toEqual(['Back', 'Submit request'])
     // the two-button footer carries ONE Row, never bare Button siblings (the CardFooter multi-action
     // rule, node-idioms.md GH #1475; GH #1787).
     const row = footer!.querySelector(':scope > ui-row')
     expect(row, 'the confirm footer\'s Buttons must ride a Row inside CardFooter').not.toBeNull()
-    expect([...row!.querySelectorAll('ui-button')].map((b) => b.textContent?.trim())).toEqual(['Back', 'Confirm booking'])
+    expect([...row!.querySelectorAll('ui-button')].map((b) => b.textContent?.trim())).toEqual(['Back', 'Submit request'])
 
     r.dispose()
     mount.remove()
@@ -220,7 +221,7 @@ describe('backable-wizard seed (GH #1192, req-a2ui-patterns.md R2) — real-rend
       if (!('updateComponents' in m)) continue
       for (const c of m.updateComponents.components) {
         if (c.id === 'scene') {
-          // "scene"'s own children are always the substantive content ids (f_dates/f_room/rcpt), never a
+          // "scene"'s own children are always the substantive content ids (f_dates/f_leave/rcpt), never a
           // nav Button id — the loose-Row-in-scene shape this repair removes.
           const children = 'children' in c && Array.isArray(c.children) ? c.children : []
           expect(children).not.toContain('nav1')
@@ -231,22 +232,22 @@ describe('backable-wizard seed (GH #1192, req-a2ui-patterns.md R2) — real-rend
     }
   })
 
-  // GH #1262 second pass (a2ui-payload.md P7): "cal"/"rooms" carry no label prop of their own, so each
+  // GH #1262 second pass (a2ui-payload.md P7): "cal"/"leave_types" carry no label prop of their own, so each
   // must ride a Field wrap — checked structurally (scene never names the raw control id directly) AND at
   // the real-renderer level (the mounted control sits inside a `ui-field` whose `label` names it).
-  it('P7: "scene" always names the Field wrapper id ("f_dates"/"f_room"/"rcpt"), never the raw "cal"/"rooms" id, in every occurrence', () => {
+  it('P7: "scene" always names the Field wrapper id ("f_dates"/"f_leave"/"rcpt"), never the raw "cal"/"leave_types" id, in every occurrence', () => {
     for (const m of backableWizardSeed.messages) {
       if (!('updateComponents' in m)) continue
       for (const c of m.updateComponents.components) {
         if (c.id !== 'scene') continue
         const children = 'children' in c && Array.isArray(c.children) ? c.children : []
         expect(children).not.toContain('cal')
-        expect(children).not.toContain('rooms')
+        expect(children).not.toContain('leave_types')
       }
     }
   })
 
-  it('P7: every "f_dates"/"f_room" Field record wraps exactly the expected control by id, with the precedent label', () => {
+  it('P7: every "f_dates"/"f_leave" Field record wraps exactly the expected control by id, with the precedent label', () => {
     const byId = new Map<string, { component: string; label?: string; child?: string }>()
     for (const m of backableWizardSeed.messages) {
       if (!('updateComponents' in m)) continue
@@ -254,8 +255,8 @@ describe('backable-wizard seed (GH #1192, req-a2ui-patterns.md R2) — real-rend
         if (c.component === 'Field') byId.set(c.id, c as { component: string; label?: string; child?: string })
       }
     }
-    expect(byId.get('f_dates')).toMatchObject({ label: 'Check-in — check-out', child: 'cal' })
-    expect(byId.get('f_room')).toMatchObject({ label: 'Room type', child: 'rooms' })
+    expect(byId.get('f_dates')).toMatchObject({ label: 'First and last day off', child: 'cal' })
+    expect(byId.get('f_leave')).toMatchObject({ label: 'Leave type', child: 'leave_types' })
   })
 
   it('P7 real-renderer proof: the mounted Calendar and RadioGroup each sit inside a labelled ui-field, in both scenes they appear', async () => {
@@ -264,23 +265,23 @@ describe('backable-wizard seed (GH #1192, req-a2ui-patterns.md R2) — real-rend
     document.body.appendChild(mount)
     r.mount(mount)
 
-    // scene 1 (dates): the Calendar is wrapped by a ui-field labelled "Check-in — check-out".
+    // scene 1 (dates): the Calendar is wrapped by a ui-field labelled "First and last day off".
     r.ingest(line(MSG_CREATE!))
     r.ingest(line(MSG_SEED_DRAFT!))
     r.ingest(line(MSG_SCENE_DATES!))
     await whenFlushed()
     const datesField = mount.querySelector('ui-field') as (HTMLElement & { label: string }) | null
     expect(datesField, 'the dates scene\'s Calendar must ride a ui-field wrap').not.toBeNull()
-    expect(datesField!.label).toBe('Check-in — check-out')
+    expect(datesField!.label).toBe('First and last day off')
     expect(datesField!.querySelector('ui-calendar'), 'the ui-field must directly wrap the Calendar').not.toBeNull()
 
-    // scene 2 (room): the RadioGroup is wrapped by a ui-field labelled "Room type".
+    // scene 2 (room): the RadioGroup is wrapped by a ui-field labelled "Leave type".
     r.ingest(line(MSG_SCENE_ROOM!))
     r.ingest(line(MSG_WIRE_ROOM_VALUE_1!))
     await whenFlushed()
     const roomField = mount.querySelector('ui-field') as (HTMLElement & { label: string }) | null
     expect(roomField, 'the room scene\'s RadioGroup must ride a ui-field wrap').not.toBeNull()
-    expect(roomField!.label).toBe('Room type')
+    expect(roomField!.label).toBe('Leave type')
     expect(roomField!.querySelector('ui-radio-group'), 'the ui-field must directly wrap the RadioGroup').not.toBeNull()
 
     // BACK to dates: the SAME wrap reappears on the fresh mount, proving every occurrence is wrapped, not
@@ -289,7 +290,7 @@ describe('backable-wizard seed (GH #1192, req-a2ui-patterns.md R2) — real-rend
     await whenFlushed()
     const datesFieldAgain = mount.querySelector('ui-field') as (HTMLElement & { label: string }) | null
     expect(datesFieldAgain).not.toBeNull()
-    expect(datesFieldAgain!.label).toBe('Check-in — check-out')
+    expect(datesFieldAgain!.label).toBe('First and last day off')
     expect(datesFieldAgain!.querySelector('ui-calendar')).not.toBeNull()
 
     // forward again to room: same proof on the second room-scene occurrence.
@@ -298,7 +299,7 @@ describe('backable-wizard seed (GH #1192, req-a2ui-patterns.md R2) — real-rend
     await whenFlushed()
     const roomFieldAgain = mount.querySelector('ui-field') as (HTMLElement & { label: string }) | null
     expect(roomFieldAgain).not.toBeNull()
-    expect(roomFieldAgain!.label).toBe('Room type')
+    expect(roomFieldAgain!.label).toBe('Leave type')
     expect(roomFieldAgain!.querySelector('ui-radio-group')).not.toBeNull()
 
     r.dispose()

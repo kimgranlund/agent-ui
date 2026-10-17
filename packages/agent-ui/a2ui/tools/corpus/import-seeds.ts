@@ -332,7 +332,7 @@ const SEEDS_BY_MODULE: ReadonlyArray<SeedGroup<'agent-ui'>> = [
       bookingReceiptSeed, // GH #1185, re-admitted by T-0318 as a settled expense-claim receipt (2026-10-17t13-06-33z--t0318-booking-receipt-rejudge.json)
       heroListingCardSeed,
       cardAnatomyAskSeed, // GH #1199 — the card-anatomy law exemplar; admission pending the judged wave (disposition-allowlist.ts)
-      backableWizardSeed, // GH #1192 — the backable-multi-step wizard exemplar; admission pending the judged wave (disposition-allowlist.ts)
+      backableWizardSeed, // GH #1192, the backable-multi-step wizard exemplar; re-admitted by T-0335 as a time-off request (2026-10-17t14-04-03z--t0335-backable-wizard.json)
       greetCardSeed, // GH #1201, the greet-bookend exemplar (reserved greet-1 id class); re-admitted by T-0318 as a Row of plain Buttons (2026-10-17t12-47-14z--t0318-greet-card.json)
       latencyLineChartSeed, // ADR-0205/GH #1207 — the LineChart coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
       mediaTourSeed, // GH #1209 — the Video/AudioPlayer coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
