@@ -135,7 +135,7 @@ const contractNote = el('p', {}, [
 ])
 
 // ── the axis specimens — length × size × state ──────────────────────────────────────────────────────────────
-const axes = el('ui-row', { gap: 'md', align: 'end', wrap: '' }, [
+const axes = el('ui-row', { gap: 'md', align: 'stretch', wrap: '' }, [
   // the long code takes the small size and the short one the large: eight lg cells (8 x 4n + 7n) outrun a 400px column
   captioned('length="4" size="lg"', el('ui-otp-field', { length: '4', size: 'lg', label: 'PIN' })),
   captioned('length="6" (default)', el('ui-otp-field', { label: 'Code' })),

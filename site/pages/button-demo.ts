@@ -99,7 +99,7 @@ const formNote = el('p', {}, [
 ])
 
 // ── [3] the axis specimens — size × variant, and the label-overflow ellipsis (ADR-0133) ────────────────────
-const sizes = el('ui-row', { gap: 'sm', align: 'center', wrap: '' }, [
+const sizes = el('ui-row', { gap: 'sm', align: 'stretch', wrap: '' }, [
   captioned('size="sm"', wire(el('ui-button', { size: 'sm' }, [text('Small')]), 'Small')),
   captioned('size="md" (default)', wire(el('ui-button', {}, [text('Medium')]), 'Medium')),
   captioned('size="lg"', wire(el('ui-button', { size: 'lg' }, [text('Large')]), 'Large')),

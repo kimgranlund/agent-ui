@@ -74,6 +74,7 @@
 /* T-0150: the caption never sizes its figure. With no intrinsic inline size of its own it stretches to the width the
    specimen sets and wraps there, so a row of size-axis figures compares the specimens and not the caption lengths. */
 .demo-figure > figcaption {
+  margin-block-start: auto; /* T-0336: a row stretches its figures so their tops share an edge; the caption sinks to the bottom so captions stay level */
   contain: inline-size;
   overflow-wrap: break-word; /* breaks inside a word only when the word alone is wider than the figure */
 }

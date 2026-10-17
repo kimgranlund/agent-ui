@@ -509,10 +509,13 @@ export function heading(level: number, text: string): HTMLElement {
   return h
 }
 
-/** specimenRow — a wrapping flex row of live specimens (inline layout; a doc page ships no stylesheet of its own). */
+/** specimenRow: a wrapping flex row of live specimens (inline layout; a doc page ships no stylesheet of its own).
+ *  A row of captioned figures (`.demo-figure`) stretches them so their tops share an edge (T-0336, the figure-parity
+ *  render rule); a row of bare specimens centres them. */
 export function specimenRow(children: readonly Node[]): HTMLElement {
   const row = document.createElement('div')
-  row.style.cssText = 'display:flex; gap:var(--md-sys-widget-margin); align-items:center; flex-wrap:wrap; margin:var(--md-sys-inset) 0 var(--md-sys-card-margin);' // levels, not rem literals (T-0121): specimens sit a widget margin apart
+  const figures = children.some((c) => c instanceof Element && c.classList.contains('demo-figure'))
+  row.style.cssText = `display:flex; gap:var(--md-sys-widget-margin); align-items:${figures ? 'stretch' : 'center'}; flex-wrap:wrap; margin:var(--md-sys-inset) 0 var(--md-sys-card-margin);` // levels, not rem literals (T-0121): specimens sit a widget margin apart
   row.append(...children)
   return row
 }
