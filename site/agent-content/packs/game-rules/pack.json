@@ -1,0 +1,18 @@
+{
+  "id": "game-rules",
+  "version": 1,
+  "kind": "resource",
+  "order": 1,
+  "label": "Game rules",
+  "description": "How each table game is played — deal, actions, settlement — the dealer cites and plays by.",
+  "category": "games",
+  "entries": [
+    "blackjack@1",
+    "spanish-21@1",
+    "pontoon@1",
+    "texas-holdem@1",
+    "omaha@1",
+    "five-card-draw@1",
+    "seven-card-stud@1"
+  ]
+}

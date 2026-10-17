@@ -1,0 +1,17 @@
+{
+  "id": "games",
+  "version": 1,
+  "kind": "skill",
+  "order": 4,
+  "label": "Games",
+  "description": "Board, HUD, word, color, and quest idioms the game roster seeds from.",
+  "category": "games",
+  "entries": [
+    "board-grid@1",
+    "guess-hud@1",
+    "word-tiles@1",
+    "color-duel@1",
+    "deal-sheet@1",
+    "quest-log@1"
+  ]
+}

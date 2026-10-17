@@ -1,19 +1,16 @@
-// site/pages/agent-admin-libraries.ts — the entry-library packs the agent-admin app offers per capability
-// kind (GH #47 skills · GH #48 workflows). PAGE-LOCAL data, deliberately not a package export (the
-// agent-admin-presets.ts scope law: the page owns which packs exist — plus whatever the imported shelf
+// site/pages/agent-admin-libraries.ts: the entry-library packs the agent-admin app offers per capability
+// kind (GH #47 skills, GH #48 workflows). PAGE-LOCAL data, deliberately not a package export (the
+// agent-admin-presets.ts scope law: the page owns which packs exist, plus whatever the imported shelf
 // holds (ADR-0208: `skill-packs:*` snapshots the app page projects in beside these, agent-admin-app.ts's
-// `librariesWithShelf`); the packages own only the generic
-// library seam this file feeds — `EntryLibraryPack` + entry-list's add-from-library menu).
+// `librariesWithShelf`); the packages own only the generic library seam this file feeds,
+// `EntryLibraryPack` plus entry-list's add-from-library menu).
 //
-// Three of the packs derive LIVE from a registry rather than being authored here: #1 + the GenUI packs
-// from the shipped `.md` registries (raw-globbed below), and "Registered catalogs" from the
-// `A2UI_CATALOG_OPTIONS` import (ADR-0170 cl.7 — the bottom of ADMIN_LIBRARIES).
-//
-// Pack #1 derives LIVE from the shipped mini-skill registry: the SAME `prompts/mini-skills/*.md` files
-// `@agent-ui/a2ui`'s `MINI_SKILLS` loads node-side are raw-globbed here by Vite (the registry's own
-// loader is `node:fs`-based, ADR-0135 cl.11 — unimportable in the browser), so a registry edit flows into
-// the pack with zero hand-copying. The frontmatter split below mirrors `prompts/frontmatter.ts` (not an
-// exported subpath; the format is three trivial lines — id/triggers + body).
+// T-0160: a thin reader. Every authored pack is a `site/agent-content/packs/<id>/pack.json` of refs to
+// entry files, and the a2ui mini-skill and GenUI pack `.md` files are folded into the same generated
+// registry (`site/agent-content/registry.gen.ts`, `node scripts/generate-agent-content.mjs`), so this file
+// globs nothing and copies no text. What stays here is what is not content: the live overlays (the
+// Integrations and MCP-services getters) and the "Registered catalogs" pack mapped from the
+// `A2UI_CATALOG_OPTIONS` import (ADR-0170 cl.7, the bottom of ADMIN_LIBRARIES).
 import { ENTRY_KINDS } from '@agent-ui/app/agent-admin-entries'
 import { A2UI_CATALOG_OPTIONS } from '@agent-ui/app/agent-admin-schema'
 import type { EntryLibraryPack, NewEntryInput } from '@agent-ui/app/entry-data'
@@ -22,460 +19,43 @@ import type { EntryLibraryPack, NewEntryInput } from '@agent-ui/app/entry-data'
 // site overlay hands it, no restated inline literal. No runtime cycle: admin-live-runner.ts imports nothing
 // from this page.
 import type { LiveServiceRow } from '../lib/admin-live-runner.ts'
+import { packEntries, packRecord, packRecords, promptRecords } from '../agent-content/registry.ts'
+import type { PackRecord } from '../agent-content/schema.ts'
 
-// ── pack #1: the shipped A2UI composition idioms, derived from the registry's own .md files ─────────────
+// ── pack #4 (genui-surface.spec.md SPEC-R9/R11, D4): the shipped GenUI pattern-source packs, one per
+// `@agent-ui/a2ui` `prompts/genui-packs/*.md` record in the registry. Each projects to ONE
+// `EntryLibraryPack` carrying ONE ready-to-add entry whose `content` is the pack body verbatim, mirroring
+// `@agent-ui/a2ui/agent`'s own `genuiPackLibrary` projection (SPEC-R11), reimplemented here because that
+// function's input type (`GenuiPatternPack`) is Node-loaded data, not something this page holds.
+const GENUI_PACK_LIBRARY: EntryLibraryPack[] = promptRecords('genui-pack').map((r) => {
+  const label = r.frontmatter['label'] ?? r.id
+  const description = r.frontmatter['description'] ?? ''
+  return { id: r.id, label, description, entries: [{ label, description, content: r.body }] }
+})
 
-const MINI_SKILL_SOURCES = import.meta.glob('../../packages/agent-ui/a2ui/src/agent/prompts/mini-skills/*.md', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>
+// ── the authored packs, read from site/agent-content/packs/ (hospitality landed with GH #46's trio, games
+// with the roster wave, commerce with T-0075). The named exports stay the module's surface for tests and
+// readers that want one pack's entries.
+export const HOSPITALITY_SKILLS: readonly NewEntryInput[] = packEntries('hospitality')
+export const COMMERCE_SKILLS: readonly NewEntryInput[] = packEntries('commerce')
+export const CORE_PLAYBOOKS: readonly NewEntryInput[] = packEntries('playbooks-core')
+export const HOSPITALITY_PLAYBOOKS: readonly NewEntryInput[] = packEntries('playbooks-hospitality')
+export const GAMES_SKILLS: readonly NewEntryInput[] = packEntries('games')
+export const GAMES_PLAYBOOKS: readonly NewEntryInput[] = packEntries('playbooks-games')
+// The Game-rules pack: HOW each table game is played, as Resources the dealer cites and plays by.
+export const GAMES_RULES: readonly NewEntryInput[] = packEntries('game-rules')
+// The Integrations pack (GH #49/#402): the `{id, label, description}` trio (ADR-0168 cl.2). `id` is the
+// registry key AND the enablement wire vocabulary (what `agent-admin.ts` forwards and `resolveIntegrations`
+// intersects on); `label` is display text; `description` the menu-row tooltip. The registry itself
+// (tools/agent/integrations/registry.ts) is the node-side shell (ADR-0137), so a data-integrity test pins
+// this trio against it.
+export const INTEGRATION_TOOLS: readonly NewEntryInput[] = packEntries('integrations')
 
-/** The minimal single-line-`key: value` frontmatter split (mirrors prompts/frontmatter.ts, which is not
- *  on the a2ui exports map). Returns null for a file without the leading `---` fence — skipped, never
- *  thrown (a malformed registry file is the registry gate's problem, not this page's). */
-function splitFrontmatter(source: string): { data: Record<string, string>; body: string } | null {
-  // `\r?` throughout — a CRLF-normalized checkout must not silently drop registry files from the pack
-  // (PR #58 review finding; no .gitattributes pins *.md to LF in this repo).
-  const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/.exec(source)
-  if (!match) return null
-  const data: Record<string, string> = {}
-  for (const line of match[1]!.split(/\r?\n/)) {
-    const at = line.indexOf(':')
-    if (at > 0) data[line.slice(0, at).trim()] = line.slice(at + 1).trim()
-  }
-  return { data, body: match[2]!.trim() }
+/** One authored pack as the menu takes it. */
+function libraryPack(record: PackRecord): EntryLibraryPack {
+  const { id, label, description, rejectOnCollision } = record.frontmatter
+  return { id, label, description, ...(rejectOnCollision === true ? { rejectOnCollision } : {}), entries: packEntries(id) }
 }
-
-const registryEntries: NewEntryInput[] = Object.keys(MINI_SKILL_SOURCES)
-  .sort()
-  .flatMap((path) => {
-    const parsed = splitFrontmatter(MINI_SKILL_SOURCES[path]!)
-    if (!parsed?.data.id) return []
-    return [{
-      label: parsed.data.id,
-      description: parsed.data.triggers ?? '',
-      content: parsed.body,
-    }]
-  })
-
-// ── pack #4 (genui-surface.spec.md SPEC-R9/R11, D4): the shipped GenUI pattern-source packs, derived
-// LIVE from `@agent-ui/a2ui`'s `prompts/genui-packs/*.md` — the SAME Vite raw-glob technique pack #1 uses
-// above (`GENUI_PACKS`'s own loader is `node:fs`-based, Node-only by SPEC-R9, unimportable in the
-// browser). Each pack projects to ONE `EntryLibraryPack` carrying ONE ready-to-add entry whose `content`
-// is the pack body verbatim — mirroring `@agent-ui/a2ui/agent`'s own `genuiPackLibrary` projection
-// (SPEC-R11), reimplemented here rather than imported because that function's INPUT type
-// (`GenuiPatternPack`) is Node-loaded data this browser-side glob produces independently, not a value
-// this page could hand it without ALSO importing the Node-only registry module.
-const GENUI_PACK_SOURCES = import.meta.glob('../../packages/agent-ui/a2ui/src/agent/prompts/genui-packs/*.md', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>
-
-const GENUI_PACK_LIBRARY: EntryLibraryPack[] = Object.keys(GENUI_PACK_SOURCES)
-  .sort()
-  .flatMap((path) => {
-    const parsed = splitFrontmatter(GENUI_PACK_SOURCES[path]!)
-    if (!parsed?.data.id || !parsed.data.label) return []
-    const description = parsed.data.description ?? ''
-    return [
-      {
-        id: parsed.data.id,
-        label: parsed.data.label,
-        description,
-        entries: [{ label: parsed.data.label, description, content: parsed.body }],
-      },
-    ]
-  })
-
-// ── the authored packs (hospitality lands with GH #46's trio; games join with the roster wave) ──────────
-
-export const HOSPITALITY_SKILLS: readonly NewEntryInput[] = [
-  // The hand-built form stays (T-0159): this pack is shared, and only a persona with the concierge fragment
-  // (`localPatterns: 'concierge'`) has BookingForm in its catalog. The Concierge drops this entry for the
-  // structural BookingForm; the Restaurant has no fragment and keeps it. A single date is a date TextField
-  // (T-0135); only a multi-night stay takes a range Calendar, a kind BookingForm does not offer.
-  {
-    label: 'hotel-booking-form',
-    description: 'room, spa, amenity, restaurant, breakfast booking; reservation intake',
-    content:
-      'A booking ask becomes ONE Card: a short form (a TextField type "date" for a single date or slot, one ' +
-      'range Calendar only for a multi-night stay; ' +
-      'Select for room/table/treatment type; Slider for budget where price flexes; Checkbox for extras), ' +
-      'required-field checks gating ONE Submit button, and after submit a confirmation Card bound to the ' +
-      'SAME data-model values the form wrote — never re-ask a value the model already holds.',
-  },
-  {
-    label: 'gallery-swiper',
-    description: 'photos, gallery, rooms tour, venue, showcase',
-    content:
-      'Photo/tour asks render a Swiper (loop + pagination + paddles), one SwiperItem per exhibit: a Card ' +
-      'with a title Text, a caption Text (variant caption), and a Badge for the standout fact (view, size, rating). ' +
-      'Lead each card with an Image (usageHint hero, fit cover, alt always set) over the title Text; ' +
-      'never a broken src, so use only a src you were given.',
-  },
-  {
-    label: 'itinerary-timeline',
-    description: 'itinerary, day plan, schedule, local trip, excursion',
-    content:
-      'Itineraries are ONE Timeline whose children are a {path:"/stops",componentId} template: a single ' +
-      'TimelineItem repeated per stop, fields bound with relative paths (label the stop, description its ' +
-      'one-line detail, timestamp the time, status done/active/pending as the day progresses), never one ' +
-      'hand-written TimelineItem per stop. Cap at ~6 stops per surface; offer a follow-up action Button ' +
-      '("Evening plan") instead of scrolling sprawl.',
-  },
-  {
-    label: 'menu-card',
-    description: 'restaurant menu, wine list, bar, dishes, courses, tasting',
-    content:
-      'Menus render as a Card per course/section: a title Text, a List of dishes (name + one-line ' +
-      'description), price as a trailing Badge. Wine/pairing asks add a second column via Row. Dietary ' +
-      'marks are text chips (gf/veg), never color-only.',
-  },
-  {
-    label: 'facility-info-card',
-    description: 'hours, directions, pool, gym, spa facilities, policy questions: ONE Card holding a DescriptionList, never a ServiceCard',
-    content:
-      'Facility/policy answers are a compact info card: ONE Card holding a DescriptionList, one row per ' +
-      'facility (the facility as the term, its hours and location as the detail), never a ServiceCard per ' +
-      'facility and never action Buttons. Several facilities share the one Card; a bookable service goes to ' +
-      'the booking flow instead. Prose answers stay in chat; the card carries only the structured facts.',
-  },
-  {
-    label: 'amenity-service-card',
-    description: 'bookable hotel services and treatments with a price: spa, dining, transfers, room service',
-    content:
-      'A list of priced, bookable services (spa treatments, airport transfer) is one ProductCard each, never a ' +
-      'Table or a hand-built Card: a Grid templated over the list in the data model, title the service, price ' +
-      'its price, priceNote the duration or unit ("60 min", "per car"), and one action, actionLabel "Book", with ' +
-      'the service id in its context. A ServiceCard stays for a service or agent to open, with no price.',
-  },
-]
-
-// ── the Commerce pack (T-0075, ADR-0243 cl.5): the Shopkeeper preset seeds from it; generic (no flavor) ──
-
-export const COMMERCE_SKILLS: readonly NewEntryInput[] = [
-  {
-    label: 'product-grid',
-    description: 'products, catalog, shop, storefront, offers, rooms for sale, pick one to buy',
-    content:
-      'A browse ask is ONE Grid of product tiles, one ProductCard per item repeated from a ' +
-      '{path:"/products",componentId} template (title, price, badge, image and the buy action bound with ' +
-      'relative paths), never one hand-built Card per product. Show 3-6 items per surface; sort or filter ' +
-      'by updating the data model on the SAME surface. Use an Image only with a src you were given. A ' +
-      'badge is a fact ("Sale", "New", "Sold out") spelled out as text.',
-  },
-  {
-    label: 'cart-summary',
-    description: 'cart, basket, order summary, quantity, checkout, total',
-    content:
-      'The cart is ONE summary Card on the same surface: a List of chosen items (name, quantity as ' +
-      'text, line price), a Stat for the total bound to the data model, and exactly one commit Button. ' +
-      'A quantity change updates the data model and the total in place, never a second cart. Never ' +
-      'collect payment details; prices are illustrative demo values.',
-  },
-]
-
-export const CORE_PLAYBOOKS: readonly NewEntryInput[] = [
-  {
-    label: 'intake-confirm',
-    description: 'Any structured-intake domain — a form collects input, validates, and confirms from the submitted values.',
-    content:
-      'Form → validate → submit → confirmation. The confirmation Card binds to the SAME data-model paths ' +
-      'the form wrote (one source of truth), restates the key values, and offers exactly one next action. ' +
-      'Tappable follow-up prompts the user may send next ("Change the date", "Add a guest") are ONE ' +
-      'Suggestions (suggestions as {label, value}, one action carrying the pick), never a Row of Buttons.',
-  },
-  {
-    label: 'round-loop',
-    description: 'Turn-based games or stepped tasks — rounds play out on one persistent surface updated in place.',
-    content:
-      'One surface, updated in place: each user action drives ONE updateDataModel turn (never a fresh ' +
-      'surface per round). Keep score/state in the data model; disable action Buttons that are invalid in ' +
-      'the current state rather than removing them. A transient round RESULT ("Dealer wins") may be a ' +
-      'Toast, an ephemeral, self-expiring announcement, never a Badge; Badge is for persistent inline ' +
-      'status the player should still see next round (score, deal state). The GAME’s end state is never ' +
-      'a Toast: it is ONE ResultCard (outcome win, lose or draw, a title, a one-line summary, the final ' +
-      'stats) whose child is a Play again Button with newGame true in its action context.',
-  },
-  {
-    label: 'drilldown',
-    description: 'Data / dashboard exploration — an aggregate overview first, drill into detail on the same surface.',
-    content:
-      'Lead with the aggregate view (Stat row / Table / chart). Every row or tile that HAS depth gets an ' +
-      'action; the drill-in updates the SAME surface with a back action, never a second parallel surface.',
-  },
-]
-
-export const HOSPITALITY_PLAYBOOKS: readonly NewEntryInput[] = [
-  // `booking-flow` keeps its own scenes 1 to 4 (T-0159): a step arc on one surface (Back at every scene) whose
-  // stay dates are a range, which BookingForm's field kinds do not carry. T-0266 (Kim's ruling): the confirm is a
-  // pre-filled BookingForm, never a read-back Card, an ask that already carries every detail goes straight to it,
-  // and the settle is a BookingConfirmation, never a Badge. The Concierge seeds it beside its BookingForm fragment.
-  {
-    label: 'booking-flow',
-    description: 'Hotel domain — a booking end to end: dates, guests, room, extras (Back at every step), a pre-filled BookingForm to confirm, a BookingConfirmation once booked.',
-    content:
-      'A booking ask that already names every detail (a spa slot, a table or a tour with its day, time, ' +
-      'guests and name) skips the scenes: answer it at once with the step (5) BookingForm, pre-filled with ' +
-      'what the guest said, never a read-back Card or DescriptionList and never a re-ask of a value you hold. ' +
-      'A room booking runs on ONE surface transitioned scene to scene — create it once, then advance ' +
-      'each step via updateComponents/updateDataModel on that SAME surface (never a fresh surface per ' +
-      'step, never redeliver the root). The scenes, in order: (1) stay dates — ONE Calendar with ' +
-      'mode "range" (valueStart/valueEnd bound two-way), NEVER two side-by-side calendars; (2) guests — ' +
-      'a typed number ask (Field+TextField type "number", labeled "Guests"); (3) room & rate — a ' +
-      'RadioGroup of room types with the nightly rate in each label, the recommended room preselected ' +
-      'via the data model, plus a commit Button; (4) extras — independent Checkboxes (breakfast, spa ' +
-      'credit, late check-out) each on its own data-model path, wrapped in a Column one per row, the ' +
-      'commit Button a sibling AFTER the Column; (5) confirm before concluding: ONE BookingForm on that ' +
-      'SAME surface, pre-filled for the guest to check, never a read-back Card. First write every value ' +
-      'you hold with ONE updateDataModel on the draft path, then bind the form\'s value to that path, one ' +
-      'field per detail (dateSingle for each date, so a stay is an Arrival and a Departure field; select ' +
-      'for the time, the room or the treatment; number for guests; text for the name; checkbox per ' +
-      'extra), and its child is ONE confirm Button with submit true and the draft in its action context. ' +
-      'Every scene after the first also carries a Back Button — ' +
-      'an ordinary action beside Next/commit; Back and Next are scene transitions on the ONE still-open ' +
-      'ask (never a new ask per step), and every draft answer lives under a shared "/draft/*" data-model ' +
-      'prefix so nothing typed is lost when Back returns to an earlier scene. Only AFTER the user ' +
-      'confirms: the closing turn SETTLES the booking with exactly one updateComponents on that SAME ' +
-      'surface whose root becomes ONE BookingConfirmation (a title such as "Booked", literal rows ' +
-      'of {label, path}, never rows bound to a path, and data bound to the draft), never a Badge on a Card, ' +
-      'then the courtesy-close note with "flowEnd": true, same turn, no other UI. Never collect payment ' +
-      'details.',
-  },
-  {
-    label: 'table-reservation',
-    description: 'Restaurant domain — table booking plus menu enquiry handled in one thread.',
-    content:
-      'Menu enquiry renders the menu-card idiom; a reservation ask switches to a compact form (date, time ' +
-      'Select from service windows, covers). After confirm, the confirmation restates table details AND echoes any ' +
-      'dish interests the guest mentioned, as text.',
-  },
-  {
-    label: 'trip-plan',
-    description: 'Travel domain — multi-leg trip planning: compare legs, choose, accumulate an itinerary, summarize.',
-    content:
-      'Compare 4 or more legs in a Table (mode, duration, price) with a choose action Button per row; ' +
-      'for 2-3 legs use ONE Grid of ProductCard tiles repeated from a {path:"/legs",componentId} template (title ' +
-      'the mode, subtitle the duration, price the fare, actionLabel Choose, the leg id in the action ' +
-      'context, all bound with relative paths), never one hand-built ProductCard per leg. The user picks via the ' +
-      'row or card action; chosen legs accumulate into an itinerary-timeline surface updated in place. End ' +
-      'with ONE ResultCard on that surface: outcome done, the trip as its title, a one-line summary, nights ' +
-      'and total in its stats bound to the accumulated data model, and the next action (view or share the ' +
-      'itinerary) as its Button children.',
-  },
-]
-
-// ── the Games packs (the games-roster wave) — board/HUD idioms the six game personas seed from ─────────
-
-export const GAMES_SKILLS: readonly NewEntryInput[] = [
-  {
-    label: 'board-grid',
-    description: 'battleship, minesweeper, grid targeting, cell board',
-    content:
-      'A board the player CLICKS is ONE BoardGrid: rows, cols, a label, actionName "cell" and cells = the ' +
-      'marked positions [{row, col, mark, intent, disabled}] bound to the data model. A cell click arrives as ' +
-      'an A2UI action named by actionName whose context carries {row, col}: the coordinates ride the action ' +
-      'context, never a label, and the board is never a Grid of cell Buttons. A board that is only READ (your ' +
-      'own fleet, a revealed board) is the same BoardGrid with no actionName. A hit or miss patches one entry ' +
-      'instead of re-minting cells. Keep boards ≤ 6×6 per surface; mark a hit ● and a miss ✕ ' +
-      'and set disabled on resolved cells rather than removing them. Scores and status (ships remaining, ' +
-      'shots fired) ride ONE GameHud beside the board, never loose Stats or Badges. End state: when a fleet is sunk, or the player ' +
-      'surrenders or concedes (a loss, the hidden fleet revealed on the board), show ONE ResultCard (outcome win or lose, a title, ' +
-      'a one-line summary, the final stats) beside the board, whose child is a Play again Button with newGame true in its action context.',
-  },
-  {
-    label: 'guess-hud',
-    description: 'twenty questions, guessing progress, confidence, question log',
-    content:
-      'A guessing game runs on one HUD surface: a Timeline of asked questions (status done/active), ONE ' +
-      'GameHud (stats: confidence with a signed delta each round; progress: questions used out of 20), and a ' +
-      'SegmentedControl for the answer (Yes / No / Sort of). The final guess opens a Modal via the data ' +
-      'model; the player closes it. End state: the reveal Modal holds ONE ResultCard (outcome win or lose, a ' +
-      'title, a one-line summary, the final stats) whose child is a Play again Button with newGame true in its action context.',
-  },
-  {
-    label: 'word-tiles',
-    description: 'wordle, letter grid, word guess, spelling game',
-    content:
-      'Word guesses render as ONE BoardGrid (rows = the guess limit, cols = the word length) with cells ' +
-      'bound to the data model: one entry per letter {row, col, mark, intent}, intent success (right spot) ' +
-      '/ warning (wrong spot) / neutral (absent). The input is ONE TextField with a ' +
-      'regex check (^[a-z]{5}$) gating the Submit button. Show the used-letter state as a compact List, ' +
-      'never a full keyboard. Guesses used and the round status ride ONE GameHud (progress = guesses used ' +
-      'out of 6, status solved or in play). End state: solved or out of guesses shows ONE ResultCard (outcome win or lose, ' +
-      'a title, a one-line summary, the final stats) whose child is a Play again Button with newGame true in its action context.',
-  },
-  {
-    label: 'color-duel',
-    description: 'color guessing, oklch, swatch match, palette game',
-    content:
-      'A color round shows the target as a Swatch, takes the guess through a ColorPicker (oklch), and ' +
-      'scores in coarse closeness BANDS (perfect / close / warm / cold — never numeric distance math). ' +
-      'Show the reveal as a Ramp between target and guess; the running score and the rounds ride ONE ' +
-      'GameHud (a score stat, progress = rounds played). End state: after the last round show ONE ' +
-      'ResultCard (outcome win, lose or draw, a title, a one-line summary, the final score in its stats) ' +
-      'whose child is a Play again Button with newGame true in its action context.',
-  },
-  {
-    label: 'deal-sheet',
-    description: 'haggling, offers, negotiation state, trade',
-    content:
-      'A negotiation runs on one deal-sheet surface: the item as a Card, ONE GameHud for asking price, ' +
-      'current offer and mood (the mood stat carries a signed delta), a two-way Slider for the player’s offer with ONE Offer ' +
-      'action Button, a price-history Sparkline, and Accept / Walk-away actions. A closed deal disables ' +
-      'the offer controls — never remove them. End state: Accept reads as a win, Walk-away as a loss; ' +
-      'either ends on ONE ResultCard (outcome win or lose, a title, a one-line summary, the final stats) ' +
-      'whose child is a Play again Button with newGame true in its action context.',
-  },
-  {
-    label: 'quest-log',
-    description: 'adventure, dungeon, narrative quest, inventory, HP',
-    content:
-      'An adventure runs on one surface: a Timeline quest log (append one item per scene, cap ~8 and ' +
-      'summarize older ones), ONE GameHud (stats HP and Gold with signed deltas, status = the scene), an inventory List (≤6 items), and ' +
-      '2-3 choice Buttons per scene. Lore goes in a Disclosure, never inline walls of text. Narration ' +
-      'stays in chat; the surface carries STATE. End state: HP at 0 or the quest done shows ONE ResultCard ' +
-      '(outcome lose or win, a title, a one-line summary, the final stats) whose child is a Play again Button with newGame true in its action context.',
-  },
-]
-
-export const GAMES_PLAYBOOKS: readonly NewEntryInput[] = [
-  {
-    label: 'twenty-questions',
-    description: 'Guessing-game domain — the 20-questions loop: one question per turn, HUD-tracked, honest reveal by 20.',
-    content:
-      'Think of the answer FIRST and keep it fixed (state it honestly in the final reveal). Ask ONE ' +
-      'question per turn in chat; the surface only tracks state (guess-hud idiom). Guess early when ' +
-      'confidence is high; always reveal by question 20 via the Modal.',
-  },
-  {
-    label: 'negotiation-loop',
-    description: 'Trading-game domain — haggling rounds of offers and counter-offers on one deal-sheet surface.',
-    content:
-      'Run offers on one deal-sheet surface: the player moves a Slider, commits via an Offer action; ' +
-      'respond in character in chat AND update the surface — mood Stat (signed delta), price-history ' +
-      'Sparkline, deal-state Badge. Walking away and accepting are surface actions; a closed deal ' +
-      'disables the offer controls.',
-  },
-  {
-    label: 'battle-rounds',
-    description: 'Board-game domain — battleship-style alternating-fire rounds on phased-in 6×6 grids.',
-    content:
-      // GH #144: the opening turn is ONE board only (theirs — the one the player fires on); yours joins
-      // the turn after the first shot lands. Keeps the heaviest turn of the game inside a small, reliable
-      // self-correct budget instead of asking for 72 cells across two boards at once.
-      'Two 6×6 BoardGrid surfaces, phased in: turn one is theirs (hidden) ONLY, one BoardGrid with an ' +
-      'actionName: the player fires by clicking a cell (the action context carries row and col); resolve, ' +
-      'mark and disable the cell, then take YOUR shot and narrate it in chat. Add yours (revealed, no ' +
-      'actionName) as a second BoardGrid from turn two onward. Track ships remaining as GameHud stats; announce a round’s outcome (a ship sunk, a miss streak broken) as an ' +
-      'ephemeral Toast, and declare victory honestly the moment a fleet is sunk.',
-  },
-]
-
-// ── the Game-rules pack — HOW each table game is played (deal, actions, settlement), as Resources ───────
-// Rules are reference facts the dealer cites and plays by (the Quant's `metric-definitions` shape), not
-// surface idioms — GAMES_SKILLS above stays about HOW a game RENDERS; this pack is about how it RUNS.
-// The Croupier seeds every entry and picks AT RANDOM among the ENABLED ones when the player names no
-// game — toggling a rules entry off takes that game off the table.
-
-export const GAMES_RULES: readonly NewEntryInput[] = [
-  {
-    label: 'blackjack',
-    description: 'blackjack, 21, hit, stand, double, split: the classic house game',
-    content:
-      'Two cards each; dealer shows one, hole card face-down. Values: pips as printed, faces 10, Ace 1 or ' +
-      '11. A natural (Ace + ten-card on the deal) ends the round at once: reveal the hole card, settle it ' +
-      '(3:2 unless the dealer also has 21, then a push), and offer no hit, stand or double. Otherwise the ' +
-      'player acts first: hit, stand, double (one card, doubled stake), split pairs; over 21 busts ' +
-      'immediately. Dealer then reveals and draws to 17, standing on all 17s. Blackjack (Ace + ten-card) ' +
-      'pays 3:2, a win pays 1:1, equal totals push.',
-  },
-  {
-    label: 'spanish-21',
-    description: 'spanish 21, no-tens deck, bonus 21s, late surrender',
-    content:
-      'Blackjack on a 48-card Spanish deck — every 10-spot removed, faces stay. A player 21 ALWAYS wins, ' +
-      'and player blackjack beats dealer blackjack. Bonus payouts for a five-plus-card 21 and for 6-7-8 or ' +
-      '7-7-7; double-after-split and late surrender allowed. Deal and settle as blackjack otherwise.',
-  },
-  {
-    label: 'pontoon',
-    description: 'pontoon, twist, stick, buy, five-card trick — British blackjack',
-    content:
-      'British blackjack: BOTH dealer cards stay face-down and the dealer wins all ties. Twist = hit, ' +
-      'stick = stand (only on 15 or better), buy = double the stake for a face-down card (repeatable). ' +
-      'Pontoon (Ace + ten-card) pays 2:1; a five-card trick (five cards, 21 or under) beats everything ' +
-      'but pontoon.',
-  },
-  {
-    label: 'texas-holdem',
-    description: "texas hold'em, hole cards, flop, turn, river, community cards",
-    content:
-      "Heads-up hold'em against the dealer: two hole cards each, then a shared flop (three cards), turn, " +
-      'and river, with a betting round before each street — check, bet, call, raise, or fold, staked from ' +
-      'the running chip count. Best five-card hand from the seven wins the pot, standard rankings (high ' +
-      'card up to royal flush). Reveal both hands honestly at showdown.',
-  },
-  {
-    label: 'omaha',
-    description: "omaha hold'em, four hole cards, exactly two plus three, pot limit",
-    content:
-      "Hold'em variant: FOUR hole cards each, same streets and betting rounds. A hand must use exactly " +
-      'two hole cards plus exactly three board cards — no more, no fewer. Traditionally pot-limit; ' +
-      "otherwise settle as hold'em.",
-  },
-  {
-    label: 'five-card-draw',
-    description: 'five-card draw, discard and draw, classic poker',
-    content:
-      'Classic draw poker: five cards each, face-down, then a betting round; each side may discard up to ' +
-      'three cards (four when keeping an Ace) and draw replacements; one final betting round, then ' +
-      'showdown. Standard rankings; tied hands split the pot.',
-  },
-  {
-    label: 'seven-card-stud',
-    description: 'seven-card stud, up cards, no community board',
-    content:
-      'No shared board: two down cards and one up card each, betting, then three more up cards and a ' +
-      'final down card, betting after every street. Up cards are dealt face-up on the table so the player ' +
-      'can read them. Best five of the seven wins; standard rankings.',
-  },
-]
-
-// ── the Integrations pack (GH #49/#402) — the `{id, label, description}` TRIO table (ADR-0168 cl.2) ─────
-// The registry itself (tools/agent/integrations/registry.ts, fed by the self-registering manifest modules
-// beside it) is the node-side shell (ADR-0137's law) — this page hardcodes the trio and a data-integrity
-// test pins parity against the real registry (importable under vitest's node runtime), so a registry edit
-// that forgets this pack goes red.
-//
-// LLD-C7 — three facts, three fields. `id` is the registry key AND the enablement wire vocabulary (it is
-// what `agent-admin.ts` forwards and what `resolveIntegrations` intersects on); `label` is human display
-// text, free to change without touching enablement; `description` is the menu-row tooltip. Before this
-// slice the label WAS the id — one string tripling as three facts, and the wire only worked because
-// `slugify(label)` happened to reproduce the registry id. The explicit `id` (NewEntryInput's optional
-// field) is what keeps the minted store entry keyed to the registry now that the labels are human.
-export const INTEGRATION_TOOLS: readonly NewEntryInput[] = [
-  {
-    id: 'weather',
-    label: 'Weather (Open-Meteo)',
-    description: 'Current conditions + short forecast for a named place. Keyless.',
-    content: 'Use for any weather/forecast ask. Surface results as a compact facts Card or Stat row bound to the data model — never a prose dump.',
-  },
-  {
-    id: 'wikipedia-search',
-    label: 'Wikipedia search',
-    description: 'Search Wikipedia and return the top results with one-line summaries. Keyless.',
-    content: 'Use for factual/background lookups. Cite the article titles in the reply; surface comparisons as a List or Table.',
-  },
-  {
-    id: 'currency',
-    label: 'Currency rates (Frankfurter)',
-    description: 'Convert an amount between currencies at the latest ECB reference rates. Keyless.',
-    content: 'Use for price/FX asks. Show the converted figure prominently (Stat) with the rate + date as the caption.',
-  },
-]
 
 // GH #567 S6 (Kim's F1 ruling) — the DEV-only live-read override. `undefined` (the default, and the
 // ONLY state a production build ever reaches — the dev proxy's `GET /integrations` route exists only
@@ -540,21 +120,20 @@ export function setLiveServices(rows: readonly LiveServiceRow[] | undefined): vo
 export type PresetCategory = 'hospitality' | 'games'
 
 /** GH #143 — which packs are PERSONA-FLAVORED (relevant to one preset category only) vs GENERIC
- *  (relevant to every preset regardless of category). The generic/flavored split is read off each pack's
- *  OWN description text, not invented for this ticket: `a2ui-idioms` IS "the exact idioms the producer
- *  matches at turn time" for ANY persona, `playbooks-core` self-labels "General task-navigation
- *  playbooks", and `integrations` are keyless utilities (weather/wikipedia/currency) with no persona
- *  affinity at all — none of the three names a persona type the way "Hospitality" and "Games" do. Kim's
- *  open design question (GH #143) is resolved here: yes, generic packs stay visible to every preset;
- *  only the flavored two pairs are gated. A pack id absent from this map is generic by construction —
- *  the safe default for any future pack that doesn't explicitly opt into a flavor. */
-const FLAVORED_PACK_CATEGORY: Record<string, PresetCategory> = {
-  hospitality: 'hospitality',
-  'playbooks-hospitality': 'hospitality',
-  games: 'games',
-  'playbooks-games': 'games',
-  'game-rules': 'games',
-}
+ *  (relevant to every preset regardless of category). The split is each pack.json's own `category`
+ *  (T-0160), read off each pack's OWN description text, not invented: `a2ui-idioms` IS "the exact idioms
+ *  the producer matches at turn time" for ANY persona, `playbooks-core` self-labels "General
+ *  task-navigation playbooks", and `integrations` are keyless utilities (weather/wikipedia/currency) with
+ *  no persona affinity at all; none of the three names a persona type the way "Hospitality" and "Games"
+ *  do. Kim's open design question (GH #143) is resolved here: yes, generic packs stay visible to every
+ *  preset; only the flavored packs are gated. A pack without a `category` (and every pack not authored as
+ *  a file: GenUI, MCP services, Registered catalogs) is generic by construction, the safe default for any
+ *  future pack that doesn't explicitly opt into a flavor. */
+const FLAVORED_PACK_CATEGORY: Record<string, PresetCategory> = Object.fromEntries(
+  (['skill', 'workflow', 'resource', 'tool'] as const)
+    .flatMap((kind) => packRecords(kind))
+    .flatMap((r) => (r.frontmatter.category === undefined ? [] : [[r.id, r.frontmatter.category]])),
+)
 
 /** GH #143 — `ADMIN_LIBRARIES` filtered to the packs relevant to `category`: every GENERIC pack (not in
  *  `FLAVORED_PACK_CATEGORY`) passes through for every preset; a FLAVORED pack passes through only for its
@@ -575,20 +154,21 @@ export function librariesForCategory(category: PresetCategory | undefined): Reco
 }
 
 // GH #783 S4 (LLD-C6/SPEC-R5) — the two `tool`-kind packs, hoisted to named consts so the tool key below
-// can be a GETTER that returns one or both. INTEGRATIONS_PACK is the shipped inline literal, byte-identical
-// body (its own GH #567 S6 getter unchanged); MCP_SERVICES_PACK is the NEW live-derived services pack.
+// can be a GETTER that returns one or both. INTEGRATIONS_PACK takes its label, description and
+// rejectOnCollision from packs/integrations/pack.json (T-0160) around its own GH #567 S6 getter;
+// MCP_SERVICES_PACK is the live-derived services pack.
 const INTEGRATIONS_PACK: EntryLibraryPack = {
   id: 'integrations',
-  label: 'Integrations',
-  description: 'Keyless live integrations executed by the dev proxy (GH #49) — enable + toolsEnabled to arm.',
+  label: packRecord('integrations').frontmatter.label,
+  description: packRecord('integrations').frontmatter.description,
   // GH #793/#783/#791 — `rejectOnCollision: true` (LLD-C5's per-pack widening, GH #564's foreign-key
   // law at pack grain): an integration id keys the dev proxy's EXTERNAL registry, so re-adding one
   // already in the list is a DUPLICATE `validateNewEntry` rejects with `Already in the list.` — never
   // a suffixed `weather-2` phantom row that looks armed and is wire-inert. Generalizes the same flip
   // MCP_SERVICES_PACK carries below to every foreign-key-keyed tool pack, not a one-off exception.
-  rejectOnCollision: true,
+  rejectOnCollision: packRecord('integrations').frontmatter.rejectOnCollision === true,
   // GH #567 S6 — a getter, not a fixed array: reads whatever `setLiveIntegrations` last set, falling
-  // back to the hand-authored INTEGRATION_TOOLS trio. `librariesForCategory` filters this SAME pack
+  // back to the authored INTEGRATION_TOOLS trio. `librariesForCategory` filters this SAME pack
   // object (never clones it), so a live-read that lands AFTER the first `admin.libraries` assignment
   // still reaches the menu once the page reassigns `admin.libraries` (the identity-change law below).
   get entries(): readonly NewEntryInput[] {
@@ -616,60 +196,11 @@ const MCP_SERVICES_PACK: EntryLibraryPack = {
 
 /** The packs the page hands `ui-agent-admin` (`admin.libraries`), keyed by entry kind. */
 export const ADMIN_LIBRARIES: Record<string, EntryLibraryPack[]> = {
-  [ENTRY_KINDS.skill]: [
-    {
-      id: 'a2ui-idioms',
-      label: 'A2UI idioms',
-      description: 'The shipped mini-skill registry — the exact idioms the producer matches at turn time.',
-      entries: registryEntries,
-    },
-    {
-      id: 'hospitality',
-      label: 'Hospitality',
-      description: 'Hotel, restaurant, and travel surface idioms (GH #46).',
-      entries: HOSPITALITY_SKILLS,
-    },
-    {
-      id: 'commerce',
-      label: 'Commerce',
-      description: 'Product grid and cart-summary idioms the Shopkeeper seeds from (T-0075).',
-      entries: COMMERCE_SKILLS,
-    },
-    {
-      id: 'games',
-      label: 'Games',
-      description: 'Board, HUD, word, color, and quest idioms the game roster seeds from.',
-      entries: GAMES_SKILLS,
-    },
-  ],
-  [ENTRY_KINDS.workflow]: [
-    {
-      id: 'playbooks-core',
-      label: 'Core playbooks',
-      description: 'General task-navigation playbooks.',
-      entries: CORE_PLAYBOOKS,
-    },
-    {
-      id: 'playbooks-hospitality',
-      label: 'Hospitality playbooks',
-      description: 'Booking, reservation, and trip-planning playbooks (GH #46).',
-      entries: HOSPITALITY_PLAYBOOKS,
-    },
-    {
-      id: 'playbooks-games',
-      label: 'Game playbooks',
-      description: 'Turn-loop playbooks for the game roster.',
-      entries: GAMES_PLAYBOOKS,
-    },
-  ],
-  [ENTRY_KINDS.resource]: [
-    {
-      id: 'game-rules',
-      label: 'Game rules',
-      description: 'How each table game is played — deal, actions, settlement — the dealer cites and plays by.',
-      entries: GAMES_RULES,
-    },
-  ],
+  // T-0160: the authored packs of each kind, in each pack.json's `order`. `a2ui-idioms` is the
+  // `derived: mini-skill` pack: the shipped mini-skill registry, the exact idioms the producer matches.
+  [ENTRY_KINDS.skill]: packRecords('skill').map(libraryPack),
+  [ENTRY_KINDS.workflow]: packRecords('workflow').map(libraryPack),
+  [ENTRY_KINDS.resource]: packRecords('resource').map(libraryPack),
   // GH #783 S4 (LLD-C6/SPEC-R5) — a GETTER, not a fixed array: the MCP-services pack is ABSENT when the
   // live services GET degrades (`liveServiceEntries === undefined`: production, network fault, malformed
   // body — the ONLY state a production build reaches) and PRESENT once `setLiveServices` lands rows. Because
@@ -681,7 +212,7 @@ export const ADMIN_LIBRARIES: Record<string, EntryLibraryPack[]> = {
     return liveServiceEntries === undefined ? [INTEGRATIONS_PACK] : [INTEGRATIONS_PACK, MCP_SERVICES_PACK]
   },
   // genui-surface.spec.md SPEC-R9/R11 (B2) — the shipped GenUI pattern-source packs (data-viz layouts,
-  // interactive widgets, animated explainers), live-derived from the registry's own .md files above.
+  // interactive widgets, animated explainers), one per GenUI `.md` record in the agent-content registry.
   [ENTRY_KINDS.patternSource]: GENUI_PACK_LIBRARY,
   // ADR-0170 cl.7 — the "Registered catalogs" pack: mapped LIVE from the `A2UI_CATALOG_OPTIONS` IMPORT,
   // not a hand-copied trio table. The registry is browser-importable (unlike the node-fenced integrations

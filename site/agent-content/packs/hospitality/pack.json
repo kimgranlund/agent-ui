@@ -1,0 +1,17 @@
+{
+  "id": "hospitality",
+  "version": 1,
+  "kind": "skill",
+  "order": 2,
+  "label": "Hospitality",
+  "description": "Hotel, restaurant, and travel surface idioms (GH #46).",
+  "category": "hospitality",
+  "entries": [
+    "hotel-booking-form@1",
+    "gallery-swiper@1",
+    "itinerary-timeline@1",
+    "menu-card@1",
+    "facility-info-card@1",
+    "amenity-service-card@1"
+  ]
+}

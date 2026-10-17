@@ -1,0 +1,14 @@
+{
+  "id": "playbooks-hospitality",
+  "version": 1,
+  "kind": "workflow",
+  "order": 2,
+  "label": "Hospitality playbooks",
+  "description": "Booking, reservation, and trip-planning playbooks (GH #46).",
+  "category": "hospitality",
+  "entries": [
+    "booking-flow@1",
+    "table-reservation@1",
+    "trip-plan@1"
+  ]
+}

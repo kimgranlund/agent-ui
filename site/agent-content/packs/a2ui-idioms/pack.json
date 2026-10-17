@@ -1,0 +1,9 @@
+{
+  "id": "a2ui-idioms",
+  "version": 1,
+  "kind": "skill",
+  "order": 1,
+  "label": "A2UI idioms",
+  "description": "The shipped mini-skill registry — the exact idioms the producer matches at turn time.",
+  "derived": "mini-skill"
+}
