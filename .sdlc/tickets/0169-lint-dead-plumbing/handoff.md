@@ -27,3 +27,15 @@ Gates carry no code for finished campaigns or the retired ADR workflow.
 
 ## Constraints
 - No em dashes. Generated files only through their scripts.
+
+## Acceptance criteria
+- `npm run check` exits 0.
+- `npx vitest run packages/agent-ui/components packages/agent-ui/shared packages/agent-ui/icons site/lib packages/agent-ui/a2ui/src/agent` exits 0.
+- `npx vitest run --config vitest.browser.config.ts --project packages-rest packages/agent-ui/shared/src/tokens/foundations.browser.test.ts` exits 0 in chromium and webkit.
+- `node scripts/foundations-census.mjs --gate` exits 0 with an empty allowlist: no unmarked `[scale]` / `[density]` / ui-icon `glyph` use in code (comments blanked).
+- `git ls-files scripts/adr_ratify.py scripts/adr_ratify_test.py` prints nothing, and `package.json` `check:scripts` no longer names them.
+- `site/lib/docs-grammar.test.ts` has no `KNOWN_GAPS` set; S8 is listed as RETIRED in its header.
+- `scripts/foundations-census.mjs` defines no `LANES`, `PACKAGE_LANES`, `laneOf` or `reasonFor`.
+- `foundations-bridge.gen.css` and `foundations.gen.css` carry no `[scale=` or `[density=` selector, and `node scripts/generate-foundations.mjs --check` exits 0.
+- `ui-theme-provider` props are exactly `scheme`, `theme`; `ui-icon` props are exactly `symbol`, `label`.
+- `scripts/dogfood-rules.json` rows carry `source`, never `adr`.
