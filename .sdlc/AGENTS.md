@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:61b94c5ba2be -->
+<!-- sdlc-lite:managed:start v1 sha256:5cc8e21b83c6 -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -38,7 +38,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0329 Haiku blackjack openings back on the CardTable after the T-0323 wording (round 9 cluster B) (0329-r9-blackjack-opening-wording), branch fix/0329-blackjack-opening-wording
   - T-0330 Feed a dropped surface's bound composite finding with SURFACE_DROPPED (round 9 cluster C) (0330-r9-dropped-surface-finding)
   - T-0332 NARRATION_HINT leaves the surface as it is when the reply needs no change (round 9 cluster E) (0332-r9-narration-hint-no-change)
-  - T-0333 BOOKING_CONFIRMATION_MISSING fires on a confirm turn or a read-back, not caption words (round 9 cluster G) (0333-r9-booking-confirmation-caption)
+  - T-0333 BOOKING_CONFIRMATION_MISSING fires on a confirm turn or a read-back, not caption words (round 9 cluster G) (0333-r9-booking-confirmation-caption), branch fix/0333-confirmation-caption
   - T-0334 BANKROLL_MISMATCH and NATURAL_ACTIONS price a pontoon at 2:1 (round 9 cluster H) (0334-r9-pontoon-payout), branch fix/0334-pontoon-payout
   - T-0335 Replace confirmation-view and backable-wizard, which read back a booking before confirming (0335-corpus-readback-records), branch chore/0335-readback-records
   - T-0336 Site demos align captioned figures to a shared top edge (figure-parity allowlist debt) (0336-figure-parity-demos)
