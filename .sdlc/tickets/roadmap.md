@@ -26,8 +26,8 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0199 | [0199-itinerary-compare](0199-itinerary-compare/handoff.md) | Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper | feature | L3 | P3 | T-0193 | ⏳ proposed |
 | T-0203 | [0203-composer-model-controls](0203-composer-model-controls/handoff.md) | Composer model controls: thinking off and show reasoning in the effort menu, web search and fetch toggles, server tools in requests, mid-conversation effort header | feature | L2 | P2 | T-0185 | 🔵 ready |
 | T-0315 | [0315-shared-catalog-cross-game-retrieval](0315-shared-catalog-cross-game-retrieval/handoff.md) | Admiral and Lexicographer share the agent-ui catalog: 'New game' ranks the word board first on the Admiral's opening | bug | L2 | P2 | none | ⏳ proposed |
-| T-0329 | [0329-r9-blackjack-opening-wording](0329-r9-blackjack-opening-wording/handoff.md) | Haiku blackjack openings back on the CardTable after the T-0323 wording (round 9 cluster B) | bug | L2 | P1 | none | 🔵 ready (branch fix/0329-blackjack-opening-wording) |
-| T-0338 | [0338-product-card-icon-box](0338-product-card-icon-box/handoff.md) | product-card icon header: 2n icon box or a ruled exemption (icon-box debt) | chore | L1 | P3 | none | ⏳ proposed |
-| T-0340 | [0340-dark-primary-on-primary-contrast](0340-dark-primary-on-primary-contrast/handoff.md) | Dark primary under on-primary is 3.25:1: buttons, calendar day, segmented control and checkbox text fail AA | bug | L2 | P2 | none | ⏳ proposed |
+| T-0338 | [0338-product-card-icon-box](0338-product-card-icon-box/handoff.md) | product-card icon header: 2n icon box or a ruled exemption (icon-box debt) | chore | L1 | P3 | none | 🔵 ready |
+| T-0340 | [0340-dark-primary-on-primary-contrast](0340-dark-primary-on-primary-contrast/handoff.md) | Dark primary under on-primary is 3.25:1: buttons, calendar day, segmented control and checkbox text fail AA | bug | L2 | P2 | none | 🔵 ready |
+| T-0341 | [0341-live-round-10](0341-live-round-10/handoff.md) | Live round 10: targeted rerun of round 9 failures and the runs each fix touches ($10 cap) | chore | L2 | P2 | none | 🔵 ready |
 
-Closed: 311 done, 4 dropped (git log or .NNNN-* folders)
+Closed: 312 done, 4 dropped (git log or .NNNN-* folders)
