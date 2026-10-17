@@ -1139,7 +1139,8 @@ const NARRATION_HINT =
   ' NARRATED_MECHANICS means your reply talked about the surfaces or an earlier turn instead of the game or the ' +
   'booking: state only where things stand now (the cards, totals, options, the booking details). Never name a ' +
   'surface id, never say you built, removed, replaced or corrected something, and never apologize for an earlier ' +
-  'turn; a fix is made silently on the surface.'
+  'turn; if the turn needs no surface change, leave every surface as it is and reword only your reply, and if it does, ' +
+  'make the fix silently on the surface.'
 
 /** T-0234: a reply opening a correction of an earlier turn ("I need to correct my last turn", "Last turn I described
  *  round 2 but never actually built its table", "correction: Q♦ Q♣"), as the live round 2 traces recorded it. */

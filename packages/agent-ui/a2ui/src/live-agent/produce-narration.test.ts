@@ -54,6 +54,15 @@ describe('produce(): a reply that narrates the surfaces is sent back once (T-023
     expect(r.note).toMatch(/^I check behind/)
   })
 
+  it('the repair sentence leaves the surface as it is when the turn needs no change (T-0332, round 9 :182)', async () => {
+    // "Hit me again." after a bust: the reply rightly says nothing is left to hit but names table-3. Told only that a
+    // fix is made silently on the surface, Sonnet 5.5 dealt a new round; the hint must say a no-change turn changes nothing.
+    const r = await run([note('There is no hand to hit; the round on table-3 is settled.'), CLEAN])
+    expect(r.reqs[1]).toContain('NARRATED_MECHANICS')
+    expect(r.reqs[1]).toContain('if the turn needs no surface change, leave every surface as it is and reword only your reply')
+    expect(r.reqs[1]).toContain('make the fix silently on the surface')
+  })
+
   it('a capitalized surface id at the start of a sentence is sent back too (T-0297, "Table-3 is dealt.")', async () => {
     const r = await run([`${note('Table-3 is dealt. You have 10 and 5 for 15 against the dealer\'s 9.')}\n${UPDATE}`, `${CLEAN}\n${UPDATE}`])
     expect(r.calls).toBe(2)
