@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:b2689c9af876 -->
+<!-- sdlc-lite:managed:start v1 sha256:7aee71dedc8a -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -21,27 +21,24 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0198 Step flow pattern: step n of m, Back and Next, shared /draft data (0198-step-flow)
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (0199-itinerary-compare)
   - T-0345 Haiku poker and blackjack openings deal on the first turn instead of asking for a stake (round 10 cluster B) (0345-r10-poker-opens-with-cards)
-- ready: 16
-  - T-0160 Agent content as files: extract preset and pack seeds to .md manifests with a generated, drift-gated registry (0160-agent-content-files)
-  - T-0161 Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind (0161-agent-content-overlays)
+- ready: 13
+  - T-0161 Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind (0161-agent-content-overlays), branch feat/0161-agent-content-overlays
   - T-0162 Settings pane forms generated from each content kind's schema, with provenance, diff and reset (0162-agent-content-schema-forms)
   - T-0163 One agent compiler for Test Chat, proxy, Worker and CLI, with a resolution trace and bundle digest in every turn trace (0163-agent-content-compiler)
-  - T-0169 Remove dead lint plumbing: adr_ratify, docs-grammar S8, census lane code, ADR wording in gates, [scale]/[density] bridge (0169-lint-dead-plumbing)
   - T-0178 Agent eval framework 3: judged checks with a pinned judge model, rubrics per persona, seeded known-bad transcripts (0178-eval-judged-checks)
   - T-0203 Composer model controls: thinking off and show reasoning in the effort menu, web search and fetch toggles, server tools in requests, mid-conversation effort header (0203-composer-model-controls)
   - T-0315 Admiral and Lexicographer share the agent-ui catalog: 'New game' ranks the word board first on the Admiral's opening (0315-shared-catalog-cross-game-retrieval)
   - T-0340 Dark primary under on-primary is 3.25:1: buttons, calendar day, segmented control and checkbox text fail AA (0340-dark-primary-on-primary-contrast)
-  - T-0342 Eval signals over the round archive: one command for pass rates, churn, check fires and spend, with --against (0342-eval-signals)
   - T-0343 Smoke scenarios for every preset, planned from tags, replayed in CI (0343-eval-smoke-scenarios)
-  - T-0344 A PARSE failure on a string messages asks for an array of objects (round 10 cluster A) (0344-r10-parse-ask-array)
-  - T-0346 A poker showdown reveals the opponent hand and settles in the same turn (round 10 cluster C) (0346-r10-omaha-showdown-settles)
-  - T-0347 Scripted card scenarios skip the rest of a hand when a natural settles it (round 10 cluster D) (0347-r10-probe-natural-skip)
-  - T-0348 The surface override does not read a playing card as a UI card (round 10 cluster E) (0348-r10-override-playing-card)
+  - T-0344 A PARSE failure on a string messages asks for an array of objects (round 10 cluster A) (0344-r10-parse-ask-array), branch fix/0344-parse-ask-array
+  - T-0346 A poker showdown reveals the opponent hand and settles in the same turn (round 10 cluster C) (0346-r10-omaha-showdown-settles), branch fix/0346-showdown-settles
+  - T-0347 Scripted card scenarios skip the rest of a hand when a natural settles it (round 10 cluster D) (0347-r10-probe-natural-skip), branch chore/0347-probe-natural-skip
+  - T-0348 The surface override does not read a playing card as a UI card (round 10 cluster E) (0348-r10-override-playing-card), branch fix/0348-override-playing-card
   - T-0349 eval:signals follow-ups from round 10: like-sample churn, halt and failureCode tallies, retrieval table (0349-signals-gaps-r10)
 - claimed: 0
 - paused: 0
 - blocked: 0
-- done: 317
+- done: 320
 - dropped: 4
 
 ## Procedures

@@ -2,7 +2,7 @@
 id: T-0169
 title: "Remove dead lint plumbing: adr_ratify, docs-grammar S8, census lane code, ADR wording in gates, [scale]/[density] bridge"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P3         # P1 | P2 | P3
 depends: [T-0152, T-0159]  # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -40,3 +40,24 @@ verifier: L3
 - `foundations-bridge.gen.css` and `foundations.gen.css` carry no `[scale=` or `[density=` selector, and `node scripts/generate-foundations.mjs --check` exits 0.
 - `ui-theme-provider` props are exactly `scheme`, `theme`; `ui-icon` props are exactly `symbol`, `label`.
 - `scripts/dogfood-rules.json` rows carry `source`, never `adr`.
+
+## Outcome
+
+2026-10-17 · lane: full L2 · verdict: pass · verifier: verifier-L3 (fable) · base: cdbeb6fc6940
+- Changed: Dead lint plumbing removed; census catches attribute names in variables (#2102)
+- Commits: none
+- Check: 1 `npm run check` exits 0: pass
+- Check: 2 `npx vitest run packages/agent-ui/components packages/agent-ui/shared packages/agent-ui/icons sit...: pass
+- Check: 3 foundations.browser.test.ts in chromium and webkit: pass
+- Check: 4 `node scripts/foundations-census.mjs --gate` exits 0 with an empty allowlist: pass
+- Check: 5 adr_ratify gone from git and `check:scripts`: pass
+- Check: 6 docs-grammar.test.ts has no `KNOWN_GAPS` set, S8 RETIRED in the header: pass
+- Check: 7 census defines no `LANES`, `PACKAGE_LANES`, `laneOf`, `reasonFor`: pass
+- Check: 8 gen.css carry no `[scale=` / `[density=` and `generate-foundations.mjs --check` exits 0: pass
+- Check: 9 `ui-theme-provider` props exactly `scheme`, `theme`; `ui-icon` props exactly `symbol`, `label`: pass
+- Check: 10 `scripts/dogfood-rules.json` rows carry `source`, never `adr`: pass
+- Follow-up: decide: site/lib/docs-grammar.test.ts:201 note: the describe title still... -> notes.md
+- Follow-up: decide: scripts/lib/foundations-rules.mjs:204 note: ALIAS_MARKER and the... -> notes.md
+- Follow-up: decide: scripts/lib/foundations-rules.mjs:31 decide: DERIVED stays a hand... -> notes.md
+- Follow-up: decide: packages/agent-ui/components/src/controls/sizing-gates.test.ts:133... -> notes.md
+- Follow-up: decide: site/pages/theming.ts:1 note: 17 added lines across 10 files carry... -> notes.md

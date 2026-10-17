@@ -205,3 +205,22 @@
 
 - note: .sdlc/evals/rounds/2026-10-17-r10-targeted/report.md (Comparison set and the mechanism section header) says "25 round 9 runs"; the set is 23 distinct round 9 runs (18 single plus 5 triple-sampled bases, 33 runs); the 170 round 9 turns figure does match the 23 runs.
 - note: origin/main has moved to 3c9bac639 (#2102) since the merge base fb301c09d; the merge path rebases again.
+
+## T-0160: Agent content as files: extract preset and pack seeds to .md manifests with a generated, drift-gated registry (2026-10-17)
+
+- note: `scripts/generate-agent-content.mjs --check` does not cover a builtin `DEFAULT_PROMPT_SECTIONS` edit (it stays exit 0); that drift is gated by the manifest drift test and `agent-admin-seed-digests.test.ts`, both inside `check`'s sibling test set but not in `npm run check` itself.
+- note: the handoff's Do names the pack as `pack.json` refs and the content root as a choice; the build chose `site/agent-content/`, and the criteria name that path, so it is consistent.
+
+## T-0169: Remove dead lint plumbing: adr_ratify, docs-grammar S8, census lane code, ADR wording in gates, [scale]/[density] bridge (2026-10-17)
+
+- decide: site/lib/docs-grammar.test.ts:201 note: the describe title still reads `S5-S9 (S5-S8 promoted at Phase 5 ...)` while S8 is now RETIRED in the header.
+- decide: scripts/lib/foundations-rules.mjs:204 note: `ALIAS_MARKER` and the marker exemption at :214 keep working code for a `foundations-alias` marker nothing in packages or site carries any more (only the census selftests use it); the solo report flags the same.
+- decide: scripts/lib/foundations-rules.mjs:31 decide: `DERIVED` stays a hand list guarded by a drift test in foundations.test.ts rather than derived from the generator's emitted tokens as Do item 3 asked; the builder's reason (foundations-rules.mjs must stay browser-safe) is sound, and the test makes drift red.
+- decide: packages/agent-ui/components/src/controls/sizing-gates.test.ts:133 decide: `WHOLE_SHAPE_FLOORS` is still a hand table ("if practical" in Do item 4; the builder judged it needs a new descriptor field).
+- decide: site/pages/theming.ts:1 note: 17 added lines across 10 files carry an em dash (theming.ts:1, sizing-gates.test.ts:116, theme-provider.md:11 among them; dogfood-fleet.gen.ts and dogfood-assets.ts are generated from descriptor prose). Most re-emit text already on the edited line; a one-line nit, not a rebuild.
+
+## T-0342: Eval signals over the round archive: one command for pass rates, churn, check fires and spend, with --against (2026-10-17)
+
+- note: `scripts/e2e-admin/probe/signals.ts:547` The gates default to `--min-samples 3`, and every real archived round has 1 sample per cell. So `--floor all=1 --max-drop 0.1` on r9 against r8 exits 0 with all 87 cells listed as "Not gated (too few samples)". That is declared, listed in the output and passes the criteria, but the gate bites on real rounds only when a caller passes `--min-samples 1`.
+- note: The retry table differs from r9 `report.md` on IDGRAPH (signals 6 fires, report.md 13); the builder explains that report.md counted failure entries rather than failed rounds. I did not recompute the retry table independently.
+- note: Scratch files remain in /Users/kimgranlund/Projects/nonoun/agent-ui.worktrees/tmp/0342-verifier-L2 (mk.py, recompute.py, rd/); `rm -rf` was denied in this session. The throwaway git worktree itself is removed.

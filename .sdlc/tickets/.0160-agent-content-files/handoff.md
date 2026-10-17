@@ -2,7 +2,7 @@
 id: T-0160
 title: "Agent content as files: extract preset and pack seeds to .md manifests with a generated, drift-gated registry"
 type: feature         # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0159, T-0182]  # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -43,3 +43,19 @@ Agent-admin seed content (15 presets, the Builder preset, library packs) lives a
 - `npx vitest run --config vitest.browser.config.ts --project site site/pages/agent-admin-` exits 0.
 - `npx vitest run --project packages packages/agent-ui/app/src/controls/agent-admin` exits 0.
 - `npm run e2e:admin` exits 0.
+
+## Outcome
+
+2026-10-17 · lane: full L3 · verdict: pass · verifier: verifier-L2 (sonnet) · base: cdbeb6fc6940
+- Changed: Agent content as files with a generated, drift-gated registry; seeds byte-identical (#2100)
+- Commits: none
+- Check: 1 `npm run check` exits 0: pass
+- Check: 2 `node scripts/generate-agent-content.mjs --check` exits 0: pass
+- Check: 3 `npx vitest run --project scripts scripts/generate-agent-content.test.mjs`: pass
+- Check: 4 site vitest set (agent-admin-, agent-manifest, capability-registry, site/agent-content, persona-l...: pass
+- Check: 5 `vitest.browser.config.ts --project site site/pages/agent-admin-`: pass
+- Check: 6 `--project packages packages/agent-ui/app/src/controls/agent-admin`: pass
+- Check: 7 `npm run e2e:admin`: pass
+- Check: 8 Goal clause, browser runtime registry: pass
+- Follow-up: note: scripts/generate-agent-content.mjs --check does not cover a builtin... -> notes.md
+- Follow-up: note: the handoff's Do names the pack as pack.json refs and the content... -> notes.md

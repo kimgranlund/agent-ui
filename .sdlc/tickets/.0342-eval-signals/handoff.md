@@ -2,7 +2,7 @@
 id: T-0342
 title: "Eval signals over the round archive: one command for pass rates, churn, check fires and spend, with --against"
 type: feature        # feature | bug | chore | spike | idea
-status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -48,3 +48,17 @@ Never read or print .env; live legs only under their cap; keys never enter devto
 - `npm run eval:signals -- --round 2026-10-17-r9-matrix --against 2026-10-16-r8-matrix` exits 0; its By model line gives 22, 28 and 27 of 29 for Haiku, Sonnet and Opus, and its churn table counts 6 / 6 / 4 / 71.
 - `npx vitest run --project scripts scripts/e2e-admin/` exits 0 (run-capped writes `signals.md` and the ledger carries `sample` and `effort`).
 - `npm run eval:signals -- --round 2026-10-17-t0329-old` exits 0 and shows one scenario cell for the arm's 30 samples, plus one for its pontoon witness.
+
+## Outcome
+
+2026-10-17 · lane: full L3 · verdict: pass · verifier: verifier-L2 (sonnet) · base: eb0f074d045a
+- Changed: eval:signals reproduces round tables from the archive with churn and gates (#2101)
+- Commits: none
+- Check: 1 `npm run check` exits 0: pass
+- Check: 2 `npx vitest run --project scripts scripts/e2e-admin/probe/signals.test.mjs` exits 0 (fixtures, ce...: pass
+- Check: 3 `npm run eval:signals -- --round 2026-10-17-r9-matrix --against 2026-10-16-r8-matrix` exits 0, 22...: pass
+- Check: 4 `npx vitest run --project scripts scripts/e2e-admin/` exits 0 (signals.md written, ledger carries...: pass
+- Check: 5 `npm run eval:signals -- --round 2026-10-17-t0329-old` exits 0, one scenario cell for the 30 samp...: pass
+- Follow-up: note: scripts/e2e-admin/probe/signals.ts:547 The gates default to... -> notes.md
+- Follow-up: note: The retry table differs from r9 report.md on IDGRAPH signals 6... -> notes.md
+- Follow-up: note: Scratch files remain in... -> notes.md
