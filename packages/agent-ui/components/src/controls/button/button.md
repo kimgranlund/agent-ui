@@ -131,7 +131,7 @@ its `:hover`/`:active` shades from a colour-role **ladder step** (never a `color
 colour opinions; ADR-0008), so the change reads in the real palette and survives `forced-colors` for free
 (every value is a `--md-sys-color-{family}-{role}` role):
 
-- **solid** — `--md-sys-color-primary` idle → `--md-sys-color-primary-dim` on `:hover` → `--md-sys-color-primary-high` on `:active`.
+- **solid** — `--md-sys-color-primary` idle → `--md-sys-color-primary-dim` on `:hover` → `--md-sys-color-primary-high` on `:active` in light, `--md-sys-color-primary-active` in dark (T-0340: dark rest 600, hover 700, pressed 750, each clearing 4.5:1 under on-primary).
 - **soft** — `--md-sys-color-primary-container-low` idle → `--md-sys-color-primary-container` on `:hover` → `--md-sys-color-primary-container-high` on `:active`.
 - **ghost** — `transparent` idle, gaining a low container wash on `:hover`/`:active` (`--md-sys-color-primary-container-low` → `--md-sys-color-primary-container`).
 

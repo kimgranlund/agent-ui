@@ -32,3 +32,6 @@ Kim 2026-10-17: darken dark primary (around 600 to 650) with the same on-primary
 - `npm run check` exits 0.
 - `npx vitest run --config vitest.browser.config.ts --project packages packages/agent-ui/components/src/controls/button packages/agent-ui/components/src/controls/checkbox packages/agent-ui/components/src/controls/radio` exits 0.
 - Before/after dark screenshots of button, calendar selected day, segmented control and checkbox sit in the run artifacts dir for Kim's approval (calendar and segmented read `--md-sys-color-primary-selected`, already 600, so they do not change).
+- Round 2 (Kim 2026-10-17, states and packs): `npx vitest run packages/agent-ui/shared/src/tokens/theme-packs.test.ts packages/agent-ui/shared/src/tokens/wrap-pack.test.ts` exits 0: every pack and tokens.css has dark rest, -dim, -hover and -active at 4.5:1 or better under on-primary, a darkening ladder, the stock 450/350/250 legs failing as the negative control, and each file a fixed point of `repointDarkPrimary`.
+- `npx vitest run --config vitest.browser.config.ts --project packages packages/agent-ui/components/src/controls/button/button-states.browser.test.ts` exits 0 (dark pressed reads `-active`, not `-high`).
+- `npx vitest run --config vitest.browser.config.ts --project site site/pages/dogfood-render.browser.test.ts site/lib/theme-pack-apply.browser.test.ts` exits 0.

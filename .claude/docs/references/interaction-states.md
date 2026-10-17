@@ -99,6 +99,11 @@ variants on the `primary` family:
 > by `ui-button`; a future control needing a collapse-free solid-hover ladder should reach for them,
 > or re-derive its own per the family-role pattern — never assume the generic `-dim`/`-high` ladder
 > is collapse-free for the `primary` family in light scheme.
+>
+> **T-0340 (2026-10-17, Kim):** every primary fill carries on-primary text, so its dark legs clear 4.5:1. Dark
+> `--md-sys-color-primary` is 600, `-hover` 700 and `-active` 750 (a darkening ladder, as in light), in tokens.css and,
+> through `wrap-pack.ts`'s `repointDarkPrimary`, in every theme pack. `ui-button`'s solid pressed fill reads
+> `light-dark(-high, -active)`: light keeps the Amendment 2 ladder, dark leaves `-high` (dark 400, an ink role).
 
 ### Disabled holds at idle (no lift)
 

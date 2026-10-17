@@ -141,13 +141,13 @@
   --md-sys-color-primary-scrim-900: oklch(0.6038 0.0822 235.93 / 90%);
   --md-sys-color-primary-scrim-950: oklch(0.6038 0.0822 235.93 / 95%);
   /* primary — semantic roles */
-  --md-sys-color-primary: light-dark(var(--md-sys-color-primary-550), var(--md-sys-color-primary-450));
+  --md-sys-color-primary: light-dark(var(--md-sys-color-primary-550), var(--md-sys-color-primary-600));
   --md-sys-color-primary-dim: light-dark(var(--md-sys-color-primary-650), var(--md-sys-color-primary-700));
   --md-sys-color-primary-bright: light-dark(var(--md-sys-color-primary-350), var(--md-sys-color-primary-400));
   --md-sys-color-primary-low: light-dark(var(--md-sys-color-primary-350), var(--md-sys-color-primary-700));
   --md-sys-color-primary-high: light-dark(var(--md-sys-color-primary-650), var(--md-sys-color-primary-400));
-  --md-sys-color-primary-hover: light-dark(var(--md-sys-color-primary-650), var(--md-sys-color-primary-350));
-  --md-sys-color-primary-active: light-dark(var(--md-sys-color-primary-750), var(--md-sys-color-primary-250));
+  --md-sys-color-primary-hover: light-dark(var(--md-sys-color-primary-650), var(--md-sys-color-primary-700));
+  --md-sys-color-primary-active: light-dark(var(--md-sys-color-primary-750), var(--md-sys-color-primary-750));
   --md-sys-color-primary-disabled: light-dark(var(--md-sys-color-primary-scrim-600), var(--md-sys-color-primary-scrim-600));
   --md-sys-color-primary-on-primary: light-dark(var(--md-sys-color-primary-050), var(--md-sys-color-primary-050));
   --md-sys-color-primary-on-primary-variant: light-dark(var(--md-sys-color-primary-200), var(--md-sys-color-primary-200));

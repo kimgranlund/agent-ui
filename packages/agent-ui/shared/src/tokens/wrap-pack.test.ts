@@ -3,7 +3,7 @@
 // `tools/`-side script's logic is co-tested from its nearest `src/` sibling, never from inside `tools/`
 // itself, which the standing run never collects).
 import { describe, it, expect } from 'vitest'
-import { extractRootBody, wrapPack } from '../../tools/themes/wrap-pack.ts'
+import { extractRootBody, wrapPack, repointDarkPrimary } from '../../tools/themes/wrap-pack.ts'
 
 const VALID_EXPORT = `:root {
   color-scheme: light dark;
@@ -60,5 +60,42 @@ describe('wrapPack', () => {
 
   it('propagates extractRootBody\'s validation (a foreign export never silently wraps)', () => {
     expect(() => wrapPack('ocean', '.foo { color: red; }')).toThrow(/no `:root` block/)
+  })
+})
+
+// T-0340: repointDarkPrimary derives the dark fill legs from the body's own primary ramp.
+describe('repointDarkPrimary', () => {
+  // a grey ramp: L only, so the AA crossing is easy to reason about (white ink, L=1)
+  const ramp = (ls: Record<string, number>) => Object.entries(ls).map(([s, l]) => `--md-sys-color-primary-${s}: oklch(${l} 0 0);`).join('\n')
+  const roles = (rest: string, hover: string, active: string) => `
+--md-sys-color-primary: light-dark(var(--md-sys-color-primary-550), var(--md-sys-color-primary-${rest}));
+--md-sys-color-primary-hover: light-dark(var(--md-sys-color-primary-650), var(--md-sys-color-primary-${hover}));
+--md-sys-color-primary-active: light-dark(var(--md-sys-color-primary-750), var(--md-sys-color-primary-${active}));
+--md-sys-color-primary-on-primary: light-dark(var(--md-sys-color-primary-050), var(--md-sys-color-primary-050));`
+  const STOPS = { '050': 1, '250': 0.82, '350': 0.74, '450': 0.65, '550': 0.56, '600': 0.52, '650': 0.47, '700': 0.43, '750': 0.38, '800': 0.33, '850': 0.29 }
+
+  it('moves dark rest/hover/active onto 600/700/750 when 600 clears AA', () => {
+    const out = repointDarkPrimary(ramp(STOPS) + roles('450', '350', '250'))
+    expect(out).toContain('--md-sys-color-primary: light-dark(var(--md-sys-color-primary-550), var(--md-sys-color-primary-600));')
+    expect(out).toContain('--md-sys-color-primary-hover: light-dark(var(--md-sys-color-primary-650), var(--md-sys-color-primary-700));')
+    expect(out).toContain('--md-sys-color-primary-active: light-dark(var(--md-sys-color-primary-750), var(--md-sys-color-primary-750));')
+  })
+
+  it('walks darker when the 600 stop fails AA on that ramp (rest 650, hover 750, active 800)', () => {
+    const out = repointDarkPrimary(ramp({ ...STOPS, '600': 0.6 }) + roles('450', '350', '250'))
+    expect(out).toContain('var(--md-sys-color-primary-550), var(--md-sys-color-primary-650));')
+    expect(out).toContain('--md-sys-color-primary-hover: light-dark(var(--md-sys-color-primary-650), var(--md-sys-color-primary-750));')
+    expect(out).toContain('--md-sys-color-primary-active: light-dark(var(--md-sys-color-primary-750), var(--md-sys-color-primary-800));')
+  })
+
+  it('is idempotent and leaves a body with no primary role untouched', () => {
+    const once = repointDarkPrimary(ramp(STOPS) + roles('450', '350', '250'))
+    expect(repointDarkPrimary(once)).toBe(once)
+    expect(repointDarkPrimary('--md-sys-color-neutral-100: oklch(0.95 0 0);')).toBe('--md-sys-color-neutral-100: oklch(0.95 0 0);')
+  })
+
+  it('throws when no stop from 600 clears AA', () => {
+    const dim = Object.fromEntries(Object.entries(STOPS).map(([s, l]) => [s, s === '050' ? l : 0.9]))
+    expect(() => repointDarkPrimary(ramp(dim) + roles('450', '350', '250'))).toThrow(/clears 4.5:1/)
   })
 })

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync } from 'node:fs'
+import { repointDarkPrimary } from '../../tools/themes/wrap-pack.ts'
 declare const process: { cwd(): string }
 
 // theme-packs.test.ts — ADR-0141/TKT-0087's STANDING parity gate: every `[theme='<name>']` pack under
@@ -150,4 +151,71 @@ describe('theme-packs.test.ts — the ADR-0141 parity gate', () => {
     const flat = flattenedRoles(declaredProps(flattened))
     expect(flat).toContain(pairedName)
   })
+})
+
+// T-0340 (Kim 2026-10-17): every primary FILL carries on-primary text, so each pack's (and the default's) dark fill
+// legs clear WCAG-AA 4.5:1 against the dark on-primary leg, and the dark ladder darkens rest -> hover -> pressed.
+// The contrast math here is a second derivation, independent of wrap-pack.ts's repointDarkPrimary: it reads the
+// declared role legs and primitives of each file and recomputes OKLCH -> sRGB -> WCAG luminance itself.
+describe('theme-packs.test.ts: dark primary fills clear 4.5:1 under on-primary (T-0340)', () => {
+  const AA = 4.5
+  const lum = ([L, C, H]: number[]): number => {
+    const h = ((H as number) * Math.PI) / 180, a = (C as number) * Math.cos(h), b = (C as number) * Math.sin(h)
+    const l = ((L as number) + 0.3963377774 * a + 0.2158037573 * b) ** 3
+    const m = ((L as number) - 0.1055613458 * a - 0.0638541728 * b) ** 3
+    const s = ((L as number) - 0.0894841775 * a - 1.291485548 * b) ** 3
+    const lin = [
+      4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+      -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+      -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+    ].map((c) => Math.min(1, Math.max(0, c)))
+    return 0.2126 * (lin[0] as number) + 0.7152 * (lin[1] as number) + 0.0722 * (lin[2] as number)
+  }
+  const stopOf = (css: string, stop: string): number[] => {
+    const m = css.match(new RegExp(`--md-sys-color-primary-${stop}:\\s*oklch\\(([-\\d.]+)\\s+([-\\d.]+)\\s+([-\\d.]+)`))
+    if (!m) throw new Error(`primitive primary-${stop} not found`)
+    return [Number(m[1]), Number(m[2]), Number(m[3])]
+  }
+  const darkLeg = (css: string, role: string): string => {
+    const m = css.match(new RegExp(`--md-sys-color-${role}:\\s*light-dark\\(\\s*var\\(--md-sys-color-primary-\\d+\\)\\s*,\\s*var\\(--md-sys-color-primary-(\\d+)\\)\\s*\\)`))
+    if (!m) throw new Error(`role ${role} not a two-leg primary light-dark()`)
+    return m[1] as string
+  }
+  const ratio = (css: string, fillStop: string, inkStop: string): number => {
+    const f = lum(stopOf(css, fillStop)), i = lum(stopOf(css, inkStop))
+    return (Math.max(f, i) + 0.05) / (Math.min(f, i) + 0.05)
+  }
+  // [fill role, ink role]: rest, ui-button hover (-dim), ui-switch hover (-hover), pressed (-active)
+  const PAIRS = [
+    ['primary', 'primary-on-primary'],
+    ['primary-dim', 'primary-on-primary-hover'],
+    ['primary-hover', 'primary-on-primary-hover'],
+    ['primary-active', 'primary-on-primary-active'],
+  ] as const
+  const sources = [['tokens.css', TOKENS_CSS], ...packFiles().map((f) => [`themes/${f}`, readFileSync(`${THEMES_DIR}/${f}`, 'utf8')])]
+
+  for (const [file, css] of sources) {
+    describe(file as string, () => {
+      for (const [fill, ink] of PAIRS) {
+        it(`dark ${fill} clears 4.5:1 under ${ink}`, () => {
+          const f = darkLeg(css as string, fill), i = darkLeg(css as string, ink)
+          const r = ratio(css as string, f, i)
+          expect(r, `dark ${ink}(${i}) on ${fill}(${f}) = ${r.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA)
+        })
+      }
+      it('dark ladder darkens rest -> hover -> pressed, each step distinct', () => {
+        const [rest, dim, hover, active] = PAIRS.map(([fill]) => Number(darkLeg(css as string, fill)))
+        expect(dim, 'button hover (-dim) not darker than rest').toBeGreaterThan(rest as number)
+        expect(hover, 'hover not darker than rest').toBeGreaterThan(rest as number)
+        expect(active, 'pressed not darker than hover').toBeGreaterThan(Math.max(dim as number, hover as number))
+      })
+      it('NEGATIVE control: the stock export legs (rest 450, hover 350, pressed 250) fail 4.5:1 on this ramp', () => {
+        const ink = darkLeg(css as string, 'primary-on-primary')
+        for (const stop of ['450', '350', '250']) expect(ratio(css as string, stop, ink), `primary-${stop}`).toBeLessThan(AA)
+      })
+      it('is a fixed point of wrap-pack.ts repointDarkPrimary (the derived legs, not a hand edit)', () => {
+        expect(repointDarkPrimary(css as string)).toBe(css)
+      })
+    })
+  }
 })

@@ -29,10 +29,12 @@
      `-hover`/`-active` roles the interim `tok-states` amendment added are UNUSED by this control again — kept in
      tokens.css for any other consumer, per the ADR's own note). KNOWN REGRESSION (see the amendment): -dim and
      -high both resolve to --md-sys-color-primary-650 in the LIGHT scheme, so a hovered solid button is visually
-     indistinguishable from a pressed one in light mode — the exact collapse the tok-states amendment fixed. */
+     indistinguishable from a pressed one in light mode — the exact collapse the tok-states amendment fixed.
+     T-0340: dark pressed reads -active (750), not -high, whose dark 400 is the accent INK role on dark surfaces and
+     carries on-primary text at 2.8:1. Light keeps -high. Dark ladder: rest 600, hover 700, pressed 750. */
   --ui-button-bg: var(--md-sys-color-primary);
   --ui-button-bg-hover: var(--md-sys-color-primary-dim);
-  --ui-button-bg-active: var(--md-sys-color-primary-high);
+  --ui-button-bg-active: light-dark(var(--md-sys-color-primary-high), var(--md-sys-color-primary-active));
   --ui-button-ink: var(--md-sys-color-primary-on-primary);
   --ui-button-border: transparent;
 

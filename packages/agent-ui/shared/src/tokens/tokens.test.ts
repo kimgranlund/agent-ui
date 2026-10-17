@@ -244,6 +244,42 @@ describe('tokens.css — the AA-guaranteed --md-sys-color-primary-selected fill 
     const dark = contrast(gammaOf(inkD), gammaOf('450'))
     expect(dark, `dark: on-primary(${inkD}) on primary-450 = ${dark.toFixed(2)}:1`).toBeLessThan(AA)
   })
+
+  // T-0340 round 2: the dark fill STATES carry on-primary text too. ui-button's solid hover reads -dim, its pressed
+  // fill reads -active in dark (button.css), and ui-switch's track hover reads -hover. Each dark pair clears AA and
+  // the ladder darkens rest -> hover -> pressed, so hover differs from rest and pressed from hover.
+  const STATE_PAIRS = [
+    ['primary-dim', 'primary-on-primary-hover'],
+    ['primary-hover', 'primary-on-primary-hover'],
+    ['primary-active', 'primary-on-primary-active'],
+  ] as const
+  for (const [fill, ink] of STATE_PAIRS) {
+    it(`dark --md-sys-color-${fill} clears WCAG-AA (>=4.5:1) against --md-sys-color-${ink} TEXT (T-0340)`, () => {
+      const [, fillD] = legsOf(fill)
+      const [, inkD] = legsOf(ink)
+      const dark = contrast(gammaOf(inkD), gammaOf(fillD))
+      expect(dark, `dark: ${ink}(${inkD}) on ${fill}(${fillD}) = ${dark.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA)
+    })
+  }
+
+  it('dark fill ladder darkens rest -> hover -> pressed, each step distinct (T-0340)', () => {
+    const rest = Number(legsOf('primary')[1])
+    const hover = Number(legsOf('primary-hover')[1])
+    const buttonHover = Number(legsOf('primary-dim')[1])
+    const pressed = Number(legsOf('primary-active')[1])
+    expect(hover, 'dark hover is not darker than rest').toBeGreaterThan(rest)
+    expect(buttonHover, 'dark button hover (-dim) is not darker than rest').toBeGreaterThan(rest)
+    expect(pressed, 'dark pressed is not darker than hover').toBeGreaterThan(hover)
+    expect(pressed, 'dark pressed is not darker than button hover (-dim)').toBeGreaterThan(buttonHover)
+  })
+
+  it('NEGATIVE control: the retired dark state legs (hover 350, pressed 250, button pressed -high 400) FAIL 4.5:1', () => {
+    const [, inkD] = legsOf('primary-on-primary-hover')
+    for (const stop of ['350', '250', '400']) {
+      const dark = contrast(gammaOf(inkD), gammaOf(stop))
+      expect(dark, `dark: on-primary(${inkD}) on primary-${stop} = ${dark.toFixed(2)}:1`).toBeLessThan(AA)
+    }
+  })
 })
 
 // tok-dialog-backdrop (TKT-0019) — the fleet-wide ui-modal ::backdrop scrim role, Kim-specified verbatim: black
