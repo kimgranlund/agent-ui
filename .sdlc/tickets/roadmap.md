@@ -30,9 +30,8 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0332 | [0332-r9-narration-hint-no-change](0332-r9-narration-hint-no-change/handoff.md) | NARRATION_HINT leaves the surface as it is when the reply needs no change (round 9 cluster E) | bug | L1 | P3 | none | 🔵 ready (branch fix/0332-narration-hint) |
 | T-0335 | [0335-corpus-readback-records](0335-corpus-readback-records/handoff.md) | Replace confirmation-view and backable-wizard, which read back a booking before confirming | chore | L2 | P2 | none | 🔵 ready (branch chore/0335-readback-records) |
 | T-0336 | [0336-figure-parity-demos](0336-figure-parity-demos/handoff.md) | Site demos align captioned figures to a shared top edge (figure-parity allowlist debt) | chore | L1 | P3 | none | 🔵 ready (branch fix/0336-figure-parity) |
-| T-0337 | [0337-column-chart-callout-contrast](0337-column-chart-callout-contrast/handoff.md) | Column-chart highlight callout ink meets 4.5:1 on its pill in dark mode (chip-opaque debt) | bug | L1 | P3 | none | 🔵 ready (branch fix/0337-callout-contrast) |
 | T-0338 | [0338-product-card-icon-box](0338-product-card-icon-box/handoff.md) | product-card icon header: 2n icon box or a ruled exemption (icon-box debt) | chore | L1 | P3 | none | ⏳ proposed |
 | T-0339 | [0339-gauge-rtl-layout](0339-gauge-rtl-layout/handoff.md) | ui-gauge in RTL keeps its rings on the left and its legend about 190px away | bug | L1 | P3 | none | 🔵 ready (branch fix/0339-gauge-rtl) |
 | T-0340 | [0340-dark-primary-on-primary-contrast](0340-dark-primary-on-primary-contrast/handoff.md) | Dark primary under on-primary is 3.25:1: buttons, calendar day, segmented control and checkbox text fail AA | bug | L2 | P2 | none | ⏳ proposed |
 
-Closed: 306 done, 4 dropped (git log or .NNNN-* folders)
+Closed: 307 done, 4 dropped (git log or .NNNN-* folders)

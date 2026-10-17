@@ -165,3 +165,8 @@
 ## T-0330: Feed a dropped surface's bound composite finding with SURFACE_DROPPED (round 9 cluster C) (2026-10-17)
 
 - note: `.sdlc/runtime/tasks/0330-r9-dropped-surface-finding/verifier-L2.running` marker and throwaway worktree were mine to clean; the base worktree was removed and the tmp prefix is empty.
+
+## T-0337: Column-chart highlight callout ink meets 4.5:1 on its pill in dark mode (chip-opaque debt) (2026-10-17)
+
+- decide: packages/agent-ui/components/src/controls/column-chart/column-chart.css:78 `black 25%` is a named-color operand under a "no literals" constraint; the alternative `--md-sys-color-primary-dim` is a token role but drops re-theme following. Pick one ruling for derived dim steps.
+- note: packages/agent-ui/components/src/controls/column-chart/column-chart.css:77 `--ui-column-chart-highlight-ink-on` was renamed to `--ui-column-chart-callout-ink`; any external override of the old name silently stops applying (builder reports it was undocumented).
