@@ -29,6 +29,7 @@ Gates carry no code for finished campaigns or the retired ADR workflow.
 - No em dashes. Generated files only through their scripts.
 
 ## Acceptance criteria
+verifier: L3
 - `npm run check` exits 0.
 - `npx vitest run packages/agent-ui/components packages/agent-ui/shared packages/agent-ui/icons site/lib packages/agent-ui/a2ui/src/agent` exits 0.
 - `npx vitest run --config vitest.browser.config.ts --project packages-rest packages/agent-ui/shared/src/tokens/foundations.browser.test.ts` exits 0 in chromium and webkit.
