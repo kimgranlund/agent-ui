@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:e4fc7d0ea1c0 -->
+<!-- sdlc-lite:managed:start v1 sha256:56943279bdcd -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -41,7 +41,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0335 Replace confirmation-view and backable-wizard, which read back a booking before confirming (0335-corpus-readback-records), branch chore/0335-readback-records
   - T-0336 Site demos align captioned figures to a shared top edge (figure-parity allowlist debt) (0336-figure-parity-demos), branch fix/0336-figure-parity
   - T-0337 Column-chart highlight callout ink meets 4.5:1 on its pill in dark mode (chip-opaque debt) (0337-column-chart-callout-contrast), branch fix/0337-callout-contrast
-  - T-0339 ui-gauge in RTL keeps its rings on the left and its legend about 190px away (0339-gauge-rtl-layout)
+  - T-0339 ui-gauge in RTL keeps its rings on the left and its legend about 190px away (0339-gauge-rtl-layout), branch fix/0339-gauge-rtl
 - claimed: 0
 - paused: 0
 - blocked: 0
