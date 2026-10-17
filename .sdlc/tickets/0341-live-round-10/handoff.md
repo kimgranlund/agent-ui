@@ -23,3 +23,11 @@ Kim 2026-10-17: targeted, about $10 (alternate full and targeted; closed-loop-ru
 
 ## Constraints
 Never read or print .env; key check by HTTP status only. Live spend only under the $10 cap.
+
+## Acceptance criteria
+Phase 1 (solo, keyless):
+- `npx vitest run scripts/e2e-admin/probe/scenarios/round10.test.mjs` exits 0: the selection is round 9's 10 failed runs plus `R9_FIX_RUNS` minus `R10_EXCLUDED` (each with a reason in the script header), 3 samples on the 7 Haiku blackjack-family openings, round 9 argv apart from `--out` and `--name`, the estimate at most $8, and `live-commands.sh` equal to the generated script.
+- `node --experimental-strip-types scripts/e2e-admin/probe/run-capped.ts --describe .sdlc/evals/rounds/2026-10-17-r10-targeted/live-commands.sh` exits 0 (39 runs parse as live probes).
+- `npm run check` exits 0.
+
+Phase 2 (deferred to the conductor's live run, not runnable keyless): round.json spend <= 10 and stop done; report.md has the churn table against round 9 and one mechanism metric per fix.
