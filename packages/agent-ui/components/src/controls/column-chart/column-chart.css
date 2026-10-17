@@ -74,7 +74,8 @@
   --ui-column-chart-projected-ink: var(--ui-chart-projected-ink);
   --ui-column-chart-projected-dash: var(--ui-chart-projected-dash);
   --ui-column-chart-highlight-ink: var(--md-sys-color-primary);
-  --ui-column-chart-highlight-ink-on: var(--md-sys-color-primary-on-primary);
+  --ui-column-chart-callout-ink: var(--md-sys-color-primary-on-primary);
+  --ui-column-chart-callout-bg: light-dark(var(--ui-column-chart-highlight-ink), color-mix(in oklch, var(--ui-column-chart-highlight-ink), black 25%)); /* follows the highlight outline; dark dims it one step, since on-primary ink on plain primary is 3.25:1 in dark (T-0337) and 6:1 on the dimmed step */
   --ui-column-chart-series-1-ink: var(--ui-chart-series-1-ink);
   --ui-column-chart-series-2-ink: var(--ui-chart-series-2-ink);
   --ui-column-chart-series-3-ink: var(--ui-chart-series-3-ink);
@@ -275,8 +276,8 @@
     inset-inline-start: calc(var(--_cat-pct, 0) * 1%);
     inset-block-start: 0;
     translate: calc(var(--_cat-shift, -50) * 1%) 0;
-    background: var(--ui-column-chart-highlight-ink);
-    color: var(--ui-column-chart-highlight-ink-on);
+    background: var(--ui-column-chart-callout-bg);
+    color: var(--ui-column-chart-callout-ink);
     display: flex;
     gap: 0.35ch;
   }

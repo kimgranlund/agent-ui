@@ -1,7 +1,6 @@
 {
   "demo/button-demo#figure-parity": "owner T-0336: the captioned figures sit in a centre-aligned row, so their tops differ by the specimen heights; the row aligns to start",
   "demo/checkbox-demo#figure-parity": "owner T-0336: the captioned figures sit in a centre-aligned row, so their tops differ by the specimen heights; the row aligns to start",
-  "demo/column-chart-demo#chip-opaque": "owner T-0337: the highlight callout's on-primary ink reads 3.25:1 on its primary pill in dark; the pair needs an AA ink",
   "demo/icon-demo#figure-parity": "owner T-0336: the captioned figures sit in a centre-aligned row, so their tops differ by the specimen heights; the row aligns to start",
   "demo/line-chart-demo#dash-scale": "owner T-0188: the projected line's 3px 2px dash is authored in screen px on purpose (--ui-line-chart-projected-dash), and non-scaling-stroke keeps it 3px at any box size (T-0141); not the gauge class of bug. T-0188 decides between this entry and a user-unit dash",
   "demo/otp-field-demo#figure-parity": "owner T-0336: the captioned figures sit in a centre-aligned row, so their tops differ by the specimen heights; the row aligns to start",
