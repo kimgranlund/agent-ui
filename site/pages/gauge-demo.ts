@@ -111,10 +111,19 @@ const liveNote = el('p', {}, [
   code('updateDataModel'), text(' semantics) — watch the rings and legend rows re-derive together.'),
 ])
 
+// ── [6] right-to-left — the rings sit on the start edge, the legend follows on the inline end ──────────
+const rtl = gauge(SYSTEM_LOAD, 'System load, right to left')
+const rtlBox = el('div', { dir: 'rtl', style: 'inline-size: 100%;' }, [rtl])
+const rtlNote = el('p', {}, [
+  text('Under '), code('dir="rtl"'), text(' the gauge mirrors: the rings sit on the right (start) edge with the legend ' +
+    'beside them, the same distance apart as in left-to-right.'),
+])
+
 content.append(
   exampleSection('Outer→inner ring order', load, orderNote),
   exampleSection('A zero-padding full-bleed composition', bleedCard, bleedNote),
   exampleSection('Out-of-range values clamp, never drop', clamped, clampedNote),
   exampleSection('Degenerate data', degenerate),
   exampleSection('Live data rewrite', liveBlock, liveNote),
+  exampleSection('Right to left', rtlBox, rtlNote),
 )

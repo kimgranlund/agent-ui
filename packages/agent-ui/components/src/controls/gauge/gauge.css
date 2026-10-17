@@ -104,6 +104,14 @@
     inset: 0;
   }
 
+  /* `preserveAspectRatio` pins the drawing to the PHYSICAL left, so under dir=rtl the rings stayed on the left
+     while the legend's logical inline-start padding moved to the right (about 190px apart, T-0339). Mirror the
+     layer instead: the rings land on the start edge in either direction (the arcs sweep the mirrored way, as an
+     RTL progress mark does) and the legend, already laid out by logical edges, follows beside them. */
+  :scope:dir(rtl) svg[data-part='rings'] {
+    transform: scaleX(-1);
+  }
+
   :scope [data-part='track'] {
     fill: none;
     stroke: var(--ui-gauge-track-ink);
