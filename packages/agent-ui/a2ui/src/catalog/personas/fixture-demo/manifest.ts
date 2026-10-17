@@ -8,7 +8,7 @@
 
 import { loadCatalogFragment } from '../../compose.ts'
 import type { CatalogFragment, PersonaCatalogManifest } from '../../compose.ts'
-import fragmentDoc from './catalog.json'
+import fragmentDoc from './catalog.json' with { type: 'json' }
 
 export const FIXTURE_DEMO_PERSONA_ID = 'fixture-demo'
 

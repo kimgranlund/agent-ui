@@ -25,5 +25,15 @@ Evidence: T-0205 map `.sdlc/runtime/tasks/context-archaeology/archaeologist-L1.m
 - The ranking test fails when a seeded generic-trigger skill displaces a pinned one.
 - `npm run check` plus the touched tests.
 
+## Acceptance criteria
+verifier: L3
+
+- `git grep -nE "BLUE_SKY_CALIBRATION_IDS|calibrationExampleBullet|miniSkillsFor|NEGOTIATE_BLUE_SKY|CORE_TYPES" -- packages; test $? -eq 1` exits 0: the hand-keyed calibration id list, its bullet helper, the composed constant, the blue-sky filter function and the hand-listed core types are gone from code.
+- `git grep -n "SHIPPED_PERSONA_CATALOG_MANIFESTS.map((m) => m.personaId)" -- packages/agent-ui/a2ui/src/agent/selection-guidance.ts` exits 0: the persona list derives from the manifests.
+- `npx vitest run packages/agent-ui/a2ui/src/live-agent/prompt-equivalence.test.ts packages/agent-ui/a2ui/src/live-agent/system-prompt-grammar.test.ts packages/agent-ui/a2ui/src/catalog/layers.test.ts packages/agent-ui/a2ui/src/catalog/selection-guidance.test.ts packages/agent-ui/a2ui/src/corpus/retrieve-presets.test.ts` exits 0: the prompt-equivalence baseline holds unrecaptured, each calibration paragraph composes once per blue-sky prompt, and core membership is derived from the default catalog.
+- `npx vitest run packages/agent-ui/a2ui/src/live-agent/mini-skills.test.ts -t "ranking stability"` exits 0: nine intents keep their pinned ordered top 3 over the full registry, and a seeded generic-trigger module displaces a pinned idiom and reds the predicate.
+- `npx vitest run packages/agent-ui/a2ui/src` exits 0.
+- `npm run check` exits 0.
+
 ## Constraints
 No em dashes. Never hand-edit generated files; rerun their scripts. Live spend only through `chat:probe` under the stated cap.

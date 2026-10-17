@@ -1,5 +1,5 @@
 // prompt-equivalence.test.ts — ADR-0135 cl.15 (the equivalence gate). Piece C moved the hand-authored
-// GRAMMAR half, the six mode-scaled consts, `NEGOTIATE_BLUE_SKY`'s static prose, and the six-entry
+// GRAMMAR half, the six mode-scaled consts, the blue-sky negotiate block's static prose, and the six-entry
 // mini-skill registry out of TypeScript source into `tools/agent/prompts/*.md`, loaded via `readFileSync`
 // at module load. This gate asserts that move was byte-neutral: the default/absent-mode composed prompt
 // (GRAMMAR's byte-identity guarantee, ADR-0090 §1) AND every loaded `MINI_SKILLS` body are byte-identical

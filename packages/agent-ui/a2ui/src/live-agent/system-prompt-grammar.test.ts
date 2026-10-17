@@ -17,7 +17,7 @@ import type { ProduceDeps } from '../agent/produce.ts'
 import type { AgentProvider, TurnInput } from '../agent/agent-transport.ts'
 import { readMetaLine } from '../agent/meta-line.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
-import { MINI_SKILLS } from '../agent/mini-skills.ts'
+import { CALIBRATION_SKILLS, MINI_SKILLS } from '../agent/mini-skills.ts'
 import type { MiniSkill } from '../agent/mini-skills.ts'
 import { FEED_SURFACE_TYPES } from '../agent/feed-catalog.ts'
 
@@ -354,12 +354,12 @@ describe('buildSystemPrompt miniSkills block (ADR-0091 §3)', () => {
 })
 
 // ── ADR-0091 §4 fix (independent-review defect): the three (★) calibration examples used to be
-// hardcoded VERBATIM in both `NEGOTIATE_BLUE_SKY` (system-prompt.ts) and the `MINI_SKILLS` registry, so a
-// blue-sky prompt whose intent ALSO selected one of those three ids got the identical paragraph injected
-// TWICE. Fixed by single-sourcing `NEGOTIATE_BLUE_SKY`'s bullets FROM the registry, then filtering those
-// same three ids OUT of a `'blue-sky'`-mode selection before `miniSkillsBlock` composes it. This block is
-// the regression proof: exactly ONE occurrence, never two, and only in the mode where the text is
-// pre-inlined. ────────────────────────────────────────────────────────────────────────────────────────
+// hardcoded VERBATIM in both the blue-sky negotiate block (system-prompt.ts) and the `MINI_SKILLS` registry,
+// so a blue-sky prompt whose intent ALSO selected one of those three ids got the identical paragraph
+// injected TWICE. T-0209 single-sources them: the `calibration:` frontmatter flag (`CALIBRATION_SKILLS`)
+// both composes the blue-sky bullets and keeps a selected flagged entry out of the blue-sky idioms block.
+// This block is the regression proof: exactly ONE occurrence, never two, and only in the mode where the
+// text is pre-inlined. ──────────────────────────────────────────────────────────────────────────────────
 
 describe('ADR-0091 §4 fix — no double-injection of the ★ calibration examples in blue-sky mode', () => {
   // A substring unique to each ★ entry's body — present once per copy, so counting occurrences in the
@@ -378,6 +378,10 @@ describe('ADR-0091 §4 fix — no double-injection of the ★ calibration exampl
   function skillOf(id: string): MiniSkill {
     return MINI_SKILLS.find((m) => m.id === id)!
   }
+
+  it('the `calibration:` flag marks exactly the three ★ entries, in bullet order (T-0209)', () => {
+    expect(CALIBRATION_SKILLS.map((m) => m.id)).toEqual([...STARRED_IDS])
+  })
 
   for (const id of STARRED_IDS) {
     it(`"${id}" selected in 'blue-sky' mode: its paragraph appears exactly ONCE (regression for the bug)`, () => {

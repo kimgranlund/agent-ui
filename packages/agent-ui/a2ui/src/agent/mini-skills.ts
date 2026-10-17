@@ -9,14 +9,12 @@
 // ALL FIVE as selectable modules here. The registry is a superset that composes on TOP of every mode
 // (including `'specific'`, which today carries zero inline idioms).
 //
-// ADR-0091 §4 fix (independent-review defect, post-ship): the three (★) entries below
-// (`card-game-sheet`/`settings-screen`/`dashboard-kpi-grid`) are THIS module's SINGLE SOURCE for that
-// prose — `system-prompt.ts`'s `NEGOTIATE_BLUE_SKY` now COMPOSES its "Calibration examples" bullets from
-// these entries' `body` (via `calibrationExampleBullet`) rather than hardcoding a second verbatim copy,
-// and `buildSystemPrompt`'s `miniSkillsFor` filters these same three ids out of a `'blue-sky'`-mode
-// selection (already present via `NEGOTIATE_BLUE_SKY`) to avoid double-injecting the identical paragraph.
-// `'specific'`/`'default'` carry none of this prose inline, so the registry selection still injects these
-// three normally there. `login-form`/`master-detail-split` were never duplicated and are unaffected.
+// ADR-0091 §4 fix, single-sourced by T-0209: an entry whose frontmatter carries `calibration: <n>` (today
+// `card-game-sheet`/`settings-screen`/`dashboard-kpi-grid`) is one of the blue-sky grammar's "Calibration
+// examples" bullets, at position n (`CALIBRATION_SKILLS`). That flag is the one source: `system-prompt.ts`
+// composes the bullets from these entries' `body` and, in `'blue-sky'` mode only, places a selected flagged
+// entry in the grammar rather than the idioms block, so no paragraph composes twice. `'specific'`/`'default'`
+// carry none of this prose inline, so the registry selection injects these entries normally there.
 //
 // ADR-0103 §Decision cl.4 (Lane C, "one ADR-0091 mini-skill module recommended at build"): a SIXTH entry,
 // `form-rhythm`, teaches the `FormProvider > Column gap > fields` idiom the fork settled on — FormProvider
@@ -67,6 +65,9 @@ export interface MiniSkill {
    *  is selected only on a turn whose effective catalog holds that domain (`selectedDomains`), so a plain base
    *  turn is never taught a domain type it cannot emit. Absent: any turn on the base. */
   domain?: string
+  /** T-0209: the entry's position among the blue-sky grammar's calibration bullets (`calibration:` frontmatter, a
+   *  positive integer); absent for an ordinary idiom. */
+  calibration?: number
 }
 
 /** ADR-0091 §3: the indicative per-module token budget (~200 tokens), enforced by `mini-skills.test.ts`
@@ -83,7 +84,7 @@ export const DEFAULT_MINI_SKILL_CAP = 3
  * plus the ADR-0103 `form-rhythm` module (the Lane C teaching lane for `ui-form-provider`'s spacing fork).
  * Loaded from `prompts/mini-skills/*.md` (ADR-0135 cl.11), one frontmatter file per module. Loaded in a
  * stable filename-sorted order; the order is NOT load-bearing — `selectMiniSkills` ranks by relevance with
- * an id tiebreak, and every id-keyed consumer (`calibrationExampleBullet`, the §4 filter) looks up by id.
+ * an id tiebreak, and the calibration bullets order by their `calibration` value (`CALIBRATION_SKILLS`).
  */
 function loadMiniSkills(): MiniSkill[] {
   const files = listAssets('agent/prompts/mini-skills')
@@ -93,11 +94,27 @@ function loadMiniSkills(): MiniSkill[] {
     const { data, body } = parseFrontmatter(readAsset('agent/prompts/mini-skills/' + name))
     if (!data.id || !data.triggers) throw new Error(`mini-skills: ${name} is missing id/triggers frontmatter`)
     if (!data.catalogId) throw new Error(`mini-skills: ${name} is missing catalogId frontmatter (SPEC-R6)`)
-    return { id: data.id, triggers: data.triggers, body, catalogId: data.catalogId, ...(data.domain ? { domain: data.domain } : {}) }
+    const calibration = data.calibration === undefined ? undefined : Number(data.calibration)
+    if (calibration !== undefined && !(Number.isInteger(calibration) && calibration > 0)) {
+      throw new Error(`mini-skills: ${name} calibration must be a positive integer`)
+    }
+    return {
+      id: data.id,
+      triggers: data.triggers,
+      body,
+      catalogId: data.catalogId,
+      ...(data.domain ? { domain: data.domain } : {}),
+      ...(calibration !== undefined ? { calibration } : {}),
+    }
   })
 }
 
 export const MINI_SKILLS: MiniSkill[] = loadMiniSkills()
+
+/** T-0209: the blue-sky calibration entries, in `calibration` order (the flag is their one source). */
+export const CALIBRATION_SKILLS: readonly MiniSkill[] = MINI_SKILLS.filter((m) => m.calibration !== undefined).sort(
+  (a, b) => a.calibration! - b.calibration!,
+)
 
 /**
  * Select up to `cap` mini-skills from `registry` whose `triggers` best match `intent` (ADR-0091 §2), via

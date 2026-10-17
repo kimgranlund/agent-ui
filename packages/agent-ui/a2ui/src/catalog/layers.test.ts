@@ -1,11 +1,12 @@
 // layers.test.ts: the layer map gate (T-0202, catalog architecture SPEC CA-R1 AC1). The map in `layers.ts` is held
-// equal to the catalogs: every type the default catalog, a shipped persona fragment or a shipped domain declares has
-// exactly one row, every row's home declares its type, and every layer sits where its home allows (core and agentic
-// only in the default catalog, a fragment's types only in the domain layer, a domain folder's types only in that
-// domain). The negative controls plant each drift into a copy and run the same predicate.
+// equal to the catalogs: every type a shipped persona fragment or a shipped domain declares has exactly one row, a
+// default-catalog type with no row is core (derived, T-0209, so no core row is ever listed), every row's home
+// declares its type, and every layer sits where its home allows (agentic only in the default catalog, a fragment's
+// types only in the domain layer, a domain folder's types only in that domain). The negative controls plant each
+// drift into a copy and run the same predicate.
 
 import { describe, it, expect } from 'vitest'
-import { CATALOG_LAYER_MAP, LAYER_MAP_EXEMPT_HOMES } from './layers.ts'
+import { CATALOG_LAYER_MAP, LAYER_MAP_EXEMPT_HOMES, layerOf } from './layers.ts'
 import type { LayerRow } from './layers.ts'
 import { defaultCatalog } from './default/index.ts'
 import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from './personas/manifests.ts'
@@ -27,12 +28,14 @@ function layerMapDefects(map: Readonly<Record<string, LayerRow>>, homes: Homes, 
     if (exempt.includes(home)) continue
     for (const t of types) {
       const row = map[t]
-      if (row === undefined) out.push(`"${t}" (${home}) has no layer row`)
-      else if (row.home !== home) out.push(`"${t}" is declared by ${home} but mapped to ${row.home}`)
+      if (row === undefined) {
+        if (home !== 'default') out.push(`"${t}" (${home}) has no layer row`)
+      } else if (row.home !== home) out.push(`"${t}" is declared by ${home} but mapped to ${row.home}`)
     }
   }
   for (const [t, row] of Object.entries(map)) {
     if (!(homes[row.home] ?? []).includes(t)) out.push(`"${t}" is mapped to ${row.home}, which does not declare it`)
+    if (row.layer === 'core') out.push(`"${t}" is a listed core row (core is derived from the default catalog)`)
     if ((row.layer === 'domain') !== (row.domain !== undefined)) out.push(`"${t}" is ${row.layer} with domain ${String(row.domain)}`)
     if (row.layer !== 'domain' && row.home !== 'default') out.push(`"${t}" is ${row.layer} but homed in ${row.home}`)
     if (row.home.startsWith('personas/') && row.layer !== 'domain') out.push(`"${t}" is a fragment type outside the domain layer`)
@@ -46,11 +49,12 @@ describe('the layer map (CA-R1)', () => {
     expect(layerMapDefects(CATALOG_LAYER_MAP, HOMES, LAYER_MAP_EXEMPT_HOMES)).toEqual([])
   })
 
-  it('anti-vacuous: all three layers hold types, and the default catalog is mapped in full', () => {
-    const layers = new Set(Object.values(CATALOG_LAYER_MAP).map((r) => r.layer))
-    expect([...layers].sort()).toEqual(['agentic', 'core', 'domain'])
+  it('anti-vacuous: all three layers hold default-catalog types, and every listed default row is a default type', () => {
+    const defaultTypes = Object.keys(defaultCatalog.components)
+    expect([...new Set(defaultTypes.map(layerOf))].sort()).toEqual(['agentic', 'core', 'domain'])
     const mappedDefault = Object.entries(CATALOG_LAYER_MAP).filter(([, r]) => r.home === 'default').map(([t]) => t)
-    expect(mappedDefault.sort()).toEqual(Object.keys(defaultCatalog.components).sort())
+    expect(mappedDefault.length).toBeGreaterThan(0)
+    for (const t of mappedDefault) expect(defaultTypes, t).toContain(t)
   })
 
   it('domain ids are the CA-R8 nouns, and the exempt home is the composition fixture alone', () => {
@@ -63,10 +67,12 @@ describe('the layer map (CA-R1)', () => {
 describe('the layer map gate bites (planted drift)', () => {
   const copy = (): Record<string, LayerRow> => ({ ...CATALOG_LAYER_MAP })
 
-  it('NEGATIVE CONTROL: a default type with no row reds', () => {
+  it('NEGATIVE CONTROL: a fragment type with no row reds, and a hand-listed core row reds', () => {
     const planted = copy()
-    delete planted.Badge
-    expect(layerMapDefects(planted, HOMES, LAYER_MAP_EXEMPT_HOMES)).toEqual(['"Badge" (default) has no layer row'])
+    delete planted.PlayingCard
+    expect(layerMapDefects(planted, HOMES, LAYER_MAP_EXEMPT_HOMES)).toEqual(['"PlayingCard" (personas/croupier) has no layer row'])
+    const listed = { ...copy(), Badge: { layer: 'core' as const, home: 'default' } }
+    expect(layerMapDefects(listed, HOMES, LAYER_MAP_EXEMPT_HOMES)).toEqual(['"Badge" is a listed core row (core is derived from the default catalog)'])
   })
 
   it('NEGATIVE CONTROL: a type moved to its domain without a map edit reds (the W2 move and the row change together)', () => {
@@ -81,9 +87,13 @@ describe('the layer map gate bites (planted drift)', () => {
 
   it('NEGATIVE CONTROL: a layer its home cannot hold reds', () => {
     const coreDomain = { ...copy(), Badge: { layer: 'core' as const, domain: 'games', home: 'default' } }
-    expect(layerMapDefects(coreDomain, HOMES, LAYER_MAP_EXEMPT_HOMES)).toEqual(['"Badge" is core with domain games'])
+    expect(layerMapDefects(coreDomain, HOMES, LAYER_MAP_EXEMPT_HOMES)).toEqual([
+      '"Badge" is a listed core row (core is derived from the default catalog)',
+      '"Badge" is core with domain games',
+    ])
     const fragmentCore = { ...copy(), CardTable: { layer: 'core' as const, home: 'personas/croupier' } }
     expect(layerMapDefects(fragmentCore, HOMES, LAYER_MAP_EXEMPT_HOMES)).toEqual([
+      '"CardTable" is a listed core row (core is derived from the default catalog)',
       '"CardTable" is core but homed in personas/croupier',
       '"CardTable" is a fragment type outside the domain layer',
     ])

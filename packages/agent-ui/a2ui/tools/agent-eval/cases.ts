@@ -6,11 +6,10 @@
 // come from each persona dir that holds a `selection.json`, composed against the `agent-ui` base exactly
 // as the runtime derives `agent-ui--<persona>`, keeping only the edges of the fragment's OWN types.
 //
-// Why the persona dir is scanned and `SHIPPED_PERSONA_CATALOG_MANIFESTS` is not imported: the persona
-// `manifest.ts` files import `catalog.json` without an import attribute, which plain Node rejects
-// (`ERR_IMPORT_ATTRIBUTE_MISSING`; see the headers of `src/agent/selection-guidance.ts` and
-// `tools/catalog-files.ts`). Everything here reads from `process.cwd()` (the repo root), the same rule
-// `selection-guidance.ts` follows at module load.
+// The persona dir is scanned from disk, the pre-T-0209 workaround for persona `manifest.ts` files that
+// imported `catalog.json` without an import attribute (plain Node rejects that, `ERR_IMPORT_ATTRIBUTE_MISSING`,
+// see `tools/catalog-files.ts`); they now carry `with { type: 'json' }`, so importing
+// `SHIPPED_PERSONA_CATALOG_MANIFESTS` here would also load. Everything here reads from `process.cwd()` (the repo root).
 //
 // The persona leg's acceptance cases are the hand-authored `fixtures/persona-cases.json`, protected by
 // the pinned hash in `fixtures/pins.json` (`pins.ts`). The response-type leg's labelled set (T-0060,

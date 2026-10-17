@@ -16,6 +16,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { retrieve } from './retrieve.ts'
 import type { CorpusRecord } from './record.ts'
 import { CATALOG_LAYER_MAP } from '../catalog/layers.ts'
+import { defaultCatalog } from '../catalog/default/index.ts'
 import { splitCatalogId } from '../catalog/catalog-id.ts'
 
 declare const process: { cwd(): string }
@@ -30,11 +31,11 @@ const shard = (readdirSync(SHARD_DIR) as string[])
   .filter((l) => l.trim() !== '')
   .map((l) => JSON.parse(l) as CorpusRecord)
 
-/** The effective catalog's types: the default catalog's rows plus the persona fragment's. */
+/** The effective catalog's types: the default catalog's plus the persona fragment's rows. */
 function typesOf(catalogId: string): string[] {
   const { tail } = splitCatalogId(catalogId)
   const home = tail === undefined ? undefined : `personas/${tail}`
-  return Object.entries(CATALOG_LAYER_MAP).filter(([, r]) => r.home === 'default' || r.home === home).map(([t]) => t)
+  return [...Object.keys(defaultCatalog.components), ...Object.entries(CATALOG_LAYER_MAP).filter(([, r]) => r.home === home).map(([t]) => t)]
 }
 
 const PINS: readonly (readonly [preset: string, catalogId: string, turn: string, top: readonly string[]])[] = [
