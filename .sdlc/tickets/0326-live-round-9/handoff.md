@@ -26,6 +26,14 @@ Kim 2026-10-17: full matrix, $42 cap. Live calls use the main checkout's `.env` 
 ## Constraints
 No prompt or code fixes in this ticket. Screenshots stay out of the repo.
 
+## Acceptance criteria
+- `npx vitest run --project scripts scripts/e2e-admin/probe` exits 0 (the round 9 generator pin among the probe tests).
+- `test -s .sdlc/evals/rounds/2026-10-17-r9-matrix/report.md` exits 0, and the report holds the matrix against rounds 6 and 8, the per-ticket table for T-0320 to T-0325, the T-0321 halt count against round 8 and the churn against round 8.
+- `jq -e '.reportId and (.round == "2026-10-17-r9-matrix")' .sdlc/evals/fog/2026-10-17-r9-matrix.json` exits 0.
+- `jq -e '.totals.costUsd <= 42 and .stop == "done"' .sdlc/evals/rounds/2026-10-17-r9-matrix/round.json` exits 0.
+- `python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.24.0/scripts/tickets.py --root .sdlc check` exits 0.
+- `npm run check` exits 0.
+
 ## Done when
 - The round folder holds traces, ledger, round.json, runs/, README and report.md with the matrix, the per-ticket table and the halt count; spend at or under $42.
 - The fog report is published and its id recorded.

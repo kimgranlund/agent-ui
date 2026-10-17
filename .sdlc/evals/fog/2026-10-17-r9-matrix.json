@@ -1,0 +1,20 @@
+{
+  "round": "2026-10-17-r9-matrix",
+  "ticket": "T-0326",
+  "reportId": "f45df100a61db66dc502558c",
+  "mapping": ".sdlc/evals/fog-manifest.json",
+  "mappingHash": "2dff31b70205e58efd04f5b801ebc69221daaf887ed9df3bdaf1da02dfe9f9ae",
+  "bundleFingerprint": "a63ae473d36d920a41e7773ba72477a76f1c80a120183638b7fe1a6de444f43d",
+  "engineeringRun": "run-19d7a496c6511c650c95c0d9",
+  "events": 1711,
+  "sources": 599,
+  "decisions": 9,
+  "findings": 7,
+  "diagnosticFindings": 0,
+  "excluded": "none: the 534 trace lines are 528 completed produce turns and 6 ProduceHalt turns (no provider-error line), so nothing was blanked",
+  "ingest": "python3 ~/.claude/skills/context-fog-of-war/scripts/engineer.py ingest .sdlc/evals/rounds/2026-10-17-r9-matrix --mapping .sdlc/evals/fog-manifest.json --out <dir>",
+  "publish": "python3 ~/.claude/skills/context-fog-of-war/scripts/library.py publish <dir>/final.json",
+  "audit": "python3 ~/.claude/skills/context-fog-of-war/scripts/audit.py scan --root . --mapping .sdlc/evals/fog/contract-audit/mapping.json --out <dir>/audit.json (81 surfaces, 61 candidates); then audit.py link --report <dir>/audit.json --finding f1..f7 --data <dir>/final.json",
+  "analysis": "T-0326 decision analysis: d1 to d8 are clusters A to H of report.md (a repair that renames the surface is SURFACE_DROPPED and halts; the T-0323 wording moves Haiku blackjack openings off the CardTable; the SURFACE_DROPPED repair asks for the rejected read-back; the BookingForm read-back check misses a Book now button; the narration repair deals a new round; the PlayingCard type floor; BOOKING_CONFIRMATION_MISSING on caption words; BANKROLL_MISMATCH prices a pontoon at 3:2), d9 is the T-0310 measurement, with 18 guidance edges and 7 reviewed findings (report.md, Why it failed and how to fix it).",
+  "hydrate": "decisions, guidanceEdges and findings added to the ingested session.json with exact excerpts and event ids before the first publish, then diagnostics.py --data --out, fog.py validate and library.py publish; run by the context-fog-of-war SKILL.md route for a full investigation (references/investigation.md)"
+}
