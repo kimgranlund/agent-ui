@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:a6683f9bfb3e -->
+<!-- sdlc-lite:managed:start v1 sha256:657d772b5f0d -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -23,7 +23,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0315 Admiral and Lexicographer share the agent-ui catalog: 'New game' ranks the word board first on the Admiral's opening (0315-shared-catalog-cross-game-retrieval)
   - T-0329 Haiku blackjack openings back on the CardTable after the T-0323 wording (round 9 cluster B) (0329-r9-blackjack-opening-wording)
   - T-0338 product-card icon header: 2n icon box or a ruled exemption (icon-box debt) (0338-product-card-icon-box)
-- ready: 22
+- ready: 21
   - T-0160 Agent content as files: extract preset and pack seeds to .md manifests with a generated, drift-gated registry (0160-agent-content-files)
   - T-0161 Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind (0161-agent-content-overlays)
   - T-0162 Settings pane forms generated from each content kind's schema, with provenance, diff and reset (0162-agent-content-schema-forms)
@@ -36,7 +36,6 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0179 Agent eval framework 4: live matrix (personas x models x efforts x N) under a $5 cap, baselines, pass-rate floors, digest-affected selection (0179-eval-matrix-baselines)
   - T-0203 Composer model controls: thinking off and show reasoning in the effort menu, web search and fetch toggles, server tools in requests, mid-conversation effort header (0203-composer-model-controls)
   - T-0209 One source per concept: layer membership, calibration bullets, persona list; mini-skill ranking stability test (0209-context-single-source), branch chore/0209-context-single-source
-  - T-0318 Replace two corpus records that teach what the rulings forbid (frontier-booking-receipt, frontier-greet-card) (0318-corpus-records-rulings), branch chore/0318-corpus-records
   - T-0328 A same-turn repair that rebuilds a flagged surface under a new id must not halt (round 9 cluster A) (0328-r9-rename-after-repair)
   - T-0330 Feed a dropped surface's bound composite finding with SURFACE_DROPPED (round 9 cluster C) (0330-r9-dropped-surface-finding)
   - T-0331 BookingForm read-back check matches booking verbs and the confirm_booking action (round 9 cluster D) (0331-r9-bookingform-readback-cue)
@@ -49,7 +48,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
 - claimed: 0
 - paused: 0
 - blocked: 0
-- done: 298
+- done: 299
 - dropped: 4
 
 ## Procedures
