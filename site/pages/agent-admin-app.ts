@@ -499,7 +499,7 @@ admin.setAgentCatalog({
       .map((p) => ({ id: p.id, label: p.label, tagline: p.tagline, ...(p.category === undefined ? {} : { category: p.category }) })),
   instantiate: async (id) => instantiateCatalogPersona(id),
 })
-// T-0161 — the Team pane writes through the page's one team owner (the mutations above), never its own.
+// T-0161: the Team pane writes through the page's one team owner (the mutations above), never its own.
 admin.setTeamStore(teamStore)
 
 admin.onAgentSelect((id) => {

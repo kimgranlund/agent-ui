@@ -683,7 +683,7 @@ export class UIAgentAdminElement extends UIElement {
   // `#personaSystemFor`/the live-arm compose call sites are not, so this cache is what lets a turn's
   // compose step see a just-saved team without awaiting a fresh storage round-trip.
   #teams: readonly AgentTeam[] = []
-  // T-0161 — the page's team store (`setTeamStore`): the Team pane reads and writes through it AT INVOKE
+  // T-0161: the page's team store (`setTeamStore`): the Team pane reads and writes through it AT INVOKE
   // TIME, so the pane and the page's own team writes share one owner. Its `subscribe` re-renders the pane
   // on a change made elsewhere (another write path, another tab).
   #teamStore: AgentTeamStore | undefined
@@ -4487,7 +4487,7 @@ export class UIAgentAdminElement extends UIElement {
   }
 
   /**
-   * T-0161 — register (or clear, `undefined`) the store the Team pane reads and writes teams through, so a
+   * T-0161: register (or clear, `undefined`) the store the Team pane reads and writes teams through, so a
    * page routes the pane's writes through the same owner as its own (one write path). Safe before or after
    * connect: the pane reads it at invoke time, and a registration after the pane exists refreshes it. The
    * store's `subscribe`, when present, refreshes the pane on a change made elsewhere.

@@ -1,7 +1,7 @@
 // agent-roster-source.ts — ADR-0227 clause 4 (wave 1, GH #1542): `AgentRosterSource`, the persona
 // roster CRUD as `@agent-ui/data`'s FIRST real consumer surface. This module is the ONE owner of the
 // roster's persisted records — the imported-personas library, the display order, the active-agent id,
-// the per-persona `seedVersion`/`modifiedAt` markers, and each shipped persona's edit overlay (T-0161) — all riding the `StorageAdapter` localStorage
+// the per-persona `seedVersion`/`modifiedAt` markers, and each shipped persona's edit overlay (T-0161), all riding the `StorageAdapter` localStorage
 // tier (ADR-0193) under the SAME raw keys the retired hand-rolled `agent-admin-presets.ts` bookkeeping
 // used, so every existing user's persisted personas survive the migration byte-for-byte (the adapter's
 // `${namespace}.${key}` law reproduces `agent-admin-app.importedPersonas` etc. exactly; the one

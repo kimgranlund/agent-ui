@@ -289,7 +289,8 @@ prompts pane, merged in) + four capability kinds (Skills/Workflows/Knowledge/Too
 switch on ITS fold heading row) + GH #1197's **Teams** fold (ADR-0203 cl.1/R5, `agent-team-pane.ts`) — a
 sixth, bespoke fold (not one more `CAPABILITY_KINDS` row: a team is a GM pick plus a nested member roster,
 not an `Entry`): list/create/edit/delete a declared `AgentTeam`, validation-closed against the live
-`AgentRosterEntry` roster (`getKnownAgents`, read at invoke time), a dangling GM/member `agentId` flagged
+`AgentRosterEntry` roster (`getKnownAgents`, read at invoke time; teams read and written through the store a page
+registers with `setTeamStore`, T-0161's one team write path), a dangling GM/member `agentId` flagged
 visibly rather than dropped. **Surface** — how it renders: the Surface Options card (rev.6 — the
 output-modality contract: Markdown · A2UI + its nested catalog picker · GenUI, live since genui-surface
 B2) + Pattern sources (the one remaining capability kind, riding this tab since it configures the GenUI

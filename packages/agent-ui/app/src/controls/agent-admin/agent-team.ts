@@ -235,7 +235,7 @@ export interface AgentTeamListSource extends DataSource<readonly AgentTeam[]> {
 /** The team records as a `DataSource<AgentTeam>` (ADR-0227's verb set; the cross-tab leg rides the
  *  `view` sub-source, the one a live `resource()` reads) plus the `view` sub-source. `create` is the
  *  validation-closed upsert (same-id last-write-wins, `saveAgentTeam`'s own law) and THROWS
- *  `AgentTeamValidationError` on an invalid record — nothing lands. */
+ *  `AgentTeamValidationError` on an invalid record: nothing lands. */
 export interface AgentTeamSource extends DataSource<AgentTeam, undefined, AgentTeamWriteInput> {
   read(key: string, ctx: SourceContext): Promise<AgentTeam>
   list(query: undefined, ctx: SourceContext): Promise<readonly AgentTeam[]>

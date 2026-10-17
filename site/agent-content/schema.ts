@@ -40,7 +40,7 @@ export const PERSONA_SECTIONS = { surfaceStyle: 'Surface style', houseFacts: 'Ho
 
 export interface PersonaFrontmatter {
   id: string
-  /** The seed version. A bump drops users' persisted stores for this persona (`personaStore`); 1 is the
+  /** The seed version. Users' edits are an overlay keyed `id@version` and merged onto a new seed (`personaStore`); 1 is the
    *  unbumped default and seeds no `seedVersion` field. */
   version: number
   /** Roster position, 1-based. Required unless `roster` is false. */

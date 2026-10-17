@@ -1074,7 +1074,7 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
     const { __testEvictPersonaStore } = await import('./agent-admin-presets.ts')
     __testEvictPersonaStore(concierge.id)
     const rebuilt = presetStore(concierge).get('entries:skill') as Array<{ id: string }>
-    expect(rebuilt.some((s) => s.id === 'my-edit'), 'a current-version edit persists — no migration fired').toBe(true)
+    expect(rebuilt.some((s) => s.id === 'my-edit'), 'a current-version edit persists, no migration fired').toBe(true)
     resetPreset(concierge) // leave no residue for sibling tests
   })
 })

@@ -70,9 +70,10 @@ export function createMemoryStore(options: MemoryStoreOptions = {}): SettingsSto
     //
     // The namespace is the whole contract, so a caller that parks its OWN bookkeeping under a store's
     // persistKey now has it rehydrated as a store key too (agent-admin-presets.ts's per-persona
-    // `agent-admin-app.<id>.seedVersion` marker is the one such neighbour in this repo — inert: nothing
-    // reads a `seedVersion` store key, and the persona file's exported key set is enumerated, never
-    // "whatever the namespace holds"). Keys are namespaced by the trailing `.`, so two persistKeys where
+    // `agent-admin-app.<id>.seedVersion` and `.modifiedAt` markers are the such neighbours in this repo, on
+    // an imported persona's store, the one kind still built here; a shipped preset reads seed plus overlay,
+    // T-0161; inert: nothing reads those store keys, and the persona file's exported key set is enumerated,
+    // never "whatever the namespace holds"). Keys are namespaced by the trailing `.`, so two persistKeys where
     // one is a leading substring of the other (`…app.travel` vs `…app.travel-imported`) never cross.
     for (const key of adapter.keysSync()) {
       const value = adapter.getSync(key)

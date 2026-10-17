@@ -79,7 +79,7 @@ export interface AgentTeamPaneOptions {
    *  the mint failed (the pick resets to nothing-selected, never a dangling catalog value). Required for
    *  the catalog section to render at all — a catalog without a mint path would be a dead menu. */
   instantiateFromCatalog?(entryId: string): Promise<KnownAgent | undefined>
-  /** T-0161 — the store every team read and write goes through, read AT INVOKE TIME (a page may register
+  /** T-0161: the store every team read and write goes through, read AT INVOKE TIME (a page may register
    *  its own after the pane is built). Omit, or return `undefined`, for a store straight over
    *  `createAgentTeamSource()`. */
   getTeamStore?(): AgentTeamStore | undefined
@@ -458,7 +458,7 @@ export function buildAgentTeamPane(options: AgentTeamPaneOptions): AgentTeamPane
           ...(row.instructionsField.value.trim().length > 0 ? { instructions: row.instructionsField.value } : {}),
         })),
       }
-      // VALIDATION CLOSED (`agent-team.ts`'s own law): the store never persists an invalid team —
+      // VALIDATION CLOSED (`agent-team.ts`'s own law): the store never persists an invalid team:
       // a rejection surfaces every issue inline and leaves the form open with every typed field intact,
       // the SAME "reject visibly, never silently discard" law `entry-list.ts`'s `submitAdd` already holds.
       const result = await teamStore().save(team, knownAgents.map((agent) => agent.id))
