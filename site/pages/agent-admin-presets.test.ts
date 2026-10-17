@@ -457,3 +457,27 @@ describe('standing rulings stay in the persona text the model reads (T-0312)', (
     expect(boardGrid?.content).toMatch(/or the player surrenders or concedes \(a loss, the hidden fleet revealed on the board\), show ONE ResultCard/)
   })
 })
+
+// T-0323 (round 8 cluster E, Kim's ruling): the CardTable is the blackjack family's table and poker keeps a Card.
+// Haiku 5.5 opened five-card draw on a CardTable in phase betting; the persona entries now scope the table to
+// blackjack and say betting is the stake pick before the deal.
+describe('the Croupier table entries scope the CardTable to blackjack (T-0323)', () => {
+  const croupier = AGENT_PRESETS.find((p) => p.id === 'croupier')!
+  const skill = (id: string) => croupier.skills.find((s) => s.id === id)!
+
+  it('card-layout binds the hands to the CardTable in blackjack only, with betting before the deal', () => {
+    expect(skill('card-layout').content).toMatch(/In blackjack the CardTable draws both hands/)
+    expect(skill('card-layout').content).toMatch(/betting is the stake pick before the deal/)
+    expect(skill('card-layout').content).toMatch(/Poker and other games/)
+  })
+
+  it('game-table-chrome keeps poker off the CardTable and glosses the betting phase', () => {
+    expect(skill('game-table-chrome').content).toMatch(/betting \(the stake pick before the deal, both hands empty;/)
+    expect(skill('game-table-chrome').content).toMatch(/Poker and other games keep the Card frame with PlayingCard hands, never a CardTable/)
+    expect(skill('game-table-chrome').description).toMatch(/poker and other games keep a card frame/)
+  })
+
+  it('the bump migrates saved Croupier stores', () => {
+    expect(croupier.seedVersion).toBe(15)
+  })
+})

@@ -1017,3 +1017,79 @@ describe('croupier action check: a deal that settles needs a two-card 21 (T-0324
     expect(run(withHands([{ rank: '9', suit: 'spades' }, seven], [ace, king], 925))).toEqual([])
   })
 })
+
+// T-0323 (round 8 cluster E, Kim's ruling): poker stays on a Card frame, and the CardTable's blackjack strip rules
+// never judge a surface that names another game. The recorded Haiku 5.5 five-card draw (2026-10-16.jsonl:61 round 2)
+// opened a dealt CardTable in phase betting with Check, Bet and Fold; BET_CONTROL_DUPLICATE stripped the moves. Its
+// deal again (:65 round 1) opened dealt in betting too, and NEW_ROUND_NOT_BETTING sent it back to a stake pick.
+describe('croupier checks: a poker table is never judged by the blackjack strip rules (T-0323)', () => {
+  const S = (rank: string, suit: string, faceDown = false) => ({ rank, suit, ...(faceDown ? { faceDown } : {}) })
+  const pokerTable = (sid: string, value: Record<string, unknown>, children?: string[], extra: Record<string, unknown>[] = []): A2uiOutput => [
+    { version: 'v1.0', createSurface: { surfaceId: sid, catalogId: 'agent-ui--croupier' } },
+    { version: 'v1.0', updateDataModel: { surfaceId: sid, value } },
+    { version: 'v1.0', updateComponents: { surfaceId: sid, components: [
+      { id: 'root', component: 'CardTable', title: 'Five-card draw', phase: 'betting', ...(children === undefined ? { betAction: 'deal' } : {}), bankroll: { path: '/bankroll' }, bet: { path: '/pot' }, dealerHand: { path: '/dealerHand' }, playerHand: { path: '/playerHand' }, status: { path: '/status' }, statusIntent: 'info', ...(children === undefined ? {} : { children }) },
+      ...extra,
+    ] } },
+  ] as A2uiOutput
+  // :61 round 2, as recorded.
+  const round2 = pokerTable(
+    'table-1',
+    {
+      bankroll: 990, pot: 20, status: 'Your bet: check, bet 20, or fold',
+      playerHand: [S('7', 'hearts'), S('7', 'clubs'), S('2', 'spades'), S('9', 'diamonds'), S('J', 'hearts')],
+      dealerHand: [S('K', 'spades', true), S('4', 'diamonds', true), S('8', 'clubs', true), S('3', 'hearts', true), S('Q', 'clubs', true)],
+    },
+    ['checkBtn', 'betBtn', 'foldBtn'],
+    [
+      { id: 'checkBtn', component: 'Button', label: 'Check', variant: 'soft', action: { action: 'check' } },
+      { id: 'betBtn', component: 'Button', label: 'Bet 20', variant: 'solid', action: { action: 'bet', context: { amount: 20 } } },
+      { id: 'foldBtn', component: 'Button', label: 'Fold', variant: 'ghost', action: { action: 'fold' } },
+    ],
+  )
+  // :65 round 1, as recorded: dealt in betting with "betAction":"deal" and no children.
+  const dealAgain = pokerTable('table-2', {
+    bankroll: 1060, pot: 20, status: 'Place your bet to deal',
+    playerHand: [S('Q', 'diamonds'), S('5', 'spades'), S('5', 'hearts'), S('10', 'clubs'), S('2', 'diamonds')],
+    dealerHand: [S('A', 'clubs', true), S('9', 'hearts', true), S('6', 'spades', true), S('J', 'diamonds', true), S('4', 'clubs', true)],
+  })
+  const again = { name: 'deal_again', surfaceId: 'table-1', context: { newRound: true }, dataModel: { bankroll: 1060 } }
+  const all = (input: Parameters<typeof croupierBetControls.check>[0]) => croupierSemanticChecks.flatMap((c) => c.check(input))
+
+  it('the :61 round 2 table is one DEALT_IN_BETTING that keeps its three moves, never BET_CONTROL_DUPLICATE', () => {
+    const findings = all({ surfaces: semanticSurfaceViews({ turns: [] }, round2), intent: "Let's play five-card draw." })
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['DEALT_IN_BETTING', 'table-1:root']])
+    expect(findings[0]!.message).toMatch(/phase "playing"/)
+    expect(findings[0]!.message).toMatch(/keep checkBtn, betBtn and foldBtn/)
+  })
+
+  it('the :65 round 1 deal again is one DEALT_IN_BETTING asking for the moves, never NEW_ROUND_NOT_BETTING', () => {
+    const findings = all({ surfaces: semanticSurfaceViews({ turns: [] }, dealAgain), action: again })
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['DEALT_IN_BETTING', 'table-2:root']])
+    expect(findings[0]!.message).toMatch(/Check, Bet and Fold/)
+  })
+
+  it('the same poker table in phase playing passes, and a blackjack table keeps the strip rules', () => {
+    const playing = JSON.parse(JSON.stringify(round2).replace('"phase":"betting"', '"phase":"playing"')) as A2uiOutput
+    expect(all({ surfaces: semanticSurfaceViews({ turns: [] }, playing) })).toEqual([])
+    const blackjack = JSON.parse(JSON.stringify(round2).replace('Five-card draw', 'Blackjack')) as A2uiOutput
+    expect(croupierBetControls.check({ surfaces: semanticSurfaceViews({ turns: [] }, blackjack) }).map((f) => [f.code, f.path])).toEqual([
+      ['BET_CONTROL_DUPLICATE', 'table-1:root'],
+      ['BET_CONTROL_DUPLICATE', 'table-1:checkBtn'],
+      ['BET_CONTROL_DUPLICATE', 'table-1:betBtn'],
+      ['BET_CONTROL_DUPLICATE', 'table-1:foldBtn'],
+    ])
+  })
+
+  it('the repair texts that open a table name the Card frame for poker', () => {
+    const none = croupierActionApplied.check({ surfaces: [], action: again })
+    expect(none.map((f) => f.code)).toEqual(['ACTION_NOT_APPLIED'])
+    expect(none[0]!.message).toMatch(/one CardTable in phase "betting"/)
+    expect(none[0]!.message).toMatch(/for poker, one Card with the dealt PlayingCard hands/)
+    const poker = croupierActionApplied.check({ surfaces: [], intent: "Let's play five-card draw." })
+    expect(poker[0]!.message).toMatch(/one Card with the dealt PlayingCard hands and its Check, Bet and Fold Buttons, never a CardTable/)
+    const blackjack = croupierActionApplied.check({ surfaces: [], intent: 'Deal me in for a hand of blackjack' })
+    expect(blackjack[0]!.message).toMatch(/one CardTable in phase "betting"/)
+    expect(blackjack[0]!.message).not.toMatch(/poker/)
+  })
+})

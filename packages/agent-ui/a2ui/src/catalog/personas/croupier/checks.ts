@@ -380,14 +380,24 @@ const BET_INPUTS = new Set(['Slider', 'TextField'])
 /** T-0172 (Kim's ruling): a CardTable owns the whole bet phase. In `betting` its strip of bet buttons places the
  *  bet and fires `betAction`, so the table needs `betAction`, carries no Button child, and the surface holds no
  *  Slider or TextField for the bet. In any phase, a second control bound to the table's bet path doubles its
- *  controls (the Sonnet 5 trace of 2026-10-14 added a Slider on `/bet` beside the table). */
+ *  controls (the Sonnet 5 trace of 2026-10-14 added a Slider on `/bet` beside the table).
+ *  T-0323 (Kim's ruling, round 8 :61): the strip is blackjack's, so a surface that names another game skips the
+ *  strip rules; a poker table in betting with dealt cards is past betting (DEALT_IN_BETTING). Known gap: a poker
+ *  table whose words name no game is still judged as blackjack. */
 function betControls(view: SurfaceView): SemanticFinding[] {
   const findings: SemanticFinding[] = []
   const finding = (id: string, message: string): void => void findings.push({ code: 'BET_CONTROL_DUPLICATE', path: `${view.surfaceId}:${id}`, message })
-  for (const table of view.components.values()) {
+  const comps = [...view.components.values()]
+  const otherGame = namesOtherGame(comps)
+  for (const table of comps) {
     if (table.component !== 'CardTable') continue
     const bet = bindingPath(table['bet'])
-    const betting = phaseOf(table, view.dataModel) === 'betting'
+    const phaseBetting = phaseOf(table, view.dataModel) === 'betting'
+    if (otherGame && phaseBetting) {
+      const dealt = PARTICIPANTS.filter((p) => (handList(table, p, view.dataModel)?.length ?? 0) > 0)
+      if (dealt.length > 0) findings.push(dealtInBetting(view, table, dealt))
+    }
+    const betting = phaseBetting && !otherGame
     if (betting && typeof table['betAction'] !== 'string')
       finding(table.id, `${table.id} is in the betting phase with no "betAction". Set "betAction":"deal" so a press on its bet strip places the bet and deals.`)
     const kids = Array.isArray(table['children']) ? (table['children'] as unknown[]) : []
@@ -406,6 +416,25 @@ function betControls(view: SurfaceView): SemanticFinding[] {
   }
   return findings
 }
+
+/** T-0323: a poker table in phase betting whose hand lists hold cards; betting hides them. The repair moves the
+ *  table forward to phase playing and keeps its move Buttons, or asks for them when it has none (:65 round 1). */
+function dealtInBetting(view: SurfaceView, table: A2uiComponent, dealt: readonly Participant[]): SemanticFinding {
+  const kids = Array.isArray(table['children']) ? (table['children'] as unknown[]) : []
+  const moves = [...view.components.values()].filter((c) => c.component === 'Button' && kids.includes(c.id)).map((c) => c.id)
+  const keep = moves.length === 0 ? 'give it the moves the hand has now as Button children (Check, Bet and Fold)' : `keep ${listed(moves)} as its moves`
+  return {
+    code: 'DEALT_IN_BETTING',
+    path: `${view.surfaceId}:${table.id}`,
+    message:
+      `${table.id} holds dealt cards in ${dealt.map((p) => `/${p}Hand`).join(' and ')}, so this poker hand is past the betting phase, ` +
+      `and phase "betting" hides the cards. Set phase "playing" and ${keep}` +
+      `${typeof table['betAction'] === 'string' ? '; drop "betAction", the blackjack stake strip' : ''}.`,
+  }
+}
+
+/** `a`, `a and b`, `a, b and c`. */
+const listed = (items: readonly string[]): string => (items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`)
 
 const BET_WORDS = /\b(bet|bets|stake|wager)\b/i
 const BLACKJACK_GAMES = /\b(blackjack|black jack|twenty[- ]one|spanish 21|pontoon|21)\b/i
@@ -477,6 +506,7 @@ function movesMissing(view: SurfaceView): SemanticFinding[] {
   const findings: SemanticFinding[] = []
   const comps = [...view.components.values()]
   if (comps.some((c) => c.component === 'Button' && offersMove(c, view.dataModel))) return []
+  if (namesOtherGame(comps)) return [] // T-0323: the move words are blackjack's
   for (const table of comps) {
     if (table.component !== 'CardTable' || phaseOf(table, view.dataModel) !== 'playing') continue
     const cards = handList(table, 'player', view.dataModel)?.map(itemCard)
@@ -531,7 +561,8 @@ function newRoundFindings(surfaces: readonly SurfaceView[], action: SemanticActi
         path: `${action.surfaceId}:${action.name}`,
         message:
           `The player pressed ${action.name} to start the next round, and this turn opens no table. ` +
-          `Create the next round's surface: one CardTable in phase "betting" with empty /dealerHand and /playerHand, the settled bankroll and "betAction":"deal".`,
+          `Create the next round's surface: for blackjack, one CardTable in phase "betting" with empty /dealerHand and /playerHand, the settled bankroll and "betAction":"deal"; ` +
+          `for poker, one Card with the dealt PlayingCard hands, the settled bankroll and the hand's moves as Buttons.`,
       },
     ]
   const settledBankroll = finiteNumber((action.dataModel as Record<string, unknown> | undefined)?.['bankroll'])
@@ -539,7 +570,8 @@ function newRoundFindings(surfaces: readonly SurfaceView[], action: SemanticActi
   for (const { view, table } of tables) {
     const dealt = PARTICIPANTS.filter((p) => (handList(table, p, view.dataModel)?.length ?? 0) > 0)
     const phase = phaseOf(table, view.dataModel)
-    if (phase !== 'betting' || dealt.length > 0)
+    // T-0323: a poker hand opens dealt, so another game's table is judged by the bet controls check alone.
+    if ((phase !== 'betting' || dealt.length > 0) && !namesOtherGame([...view.components.values()]))
       findings.push({
         code: 'NEW_ROUND_NOT_BETTING',
         path: `${view.surfaceId}:${table.id}`,
@@ -774,7 +806,11 @@ function openingMissing(surfaces: readonly SurfaceView[], intent: string, target
       path: `opening:${game.toLowerCase()}`,
       message:
         `The player asked to play ${game} and this turn opens no table, so the game exists only in prose. ` +
-        `Call render_surface with a createSurface for the game's table (a CardTable in phase "betting" for blackjack, the dealt cards and moves for poker), not only prose.`,
+        `Call render_surface with a createSurface for the game's table (${
+          BLACKJACK_GAMES.test(game)
+            ? 'one CardTable in phase "betting"'
+            : 'one Card with the dealt PlayingCard hands and its Check, Bet and Fold Buttons, never a CardTable'
+        }), not only prose.`,
     },
   ]
 }

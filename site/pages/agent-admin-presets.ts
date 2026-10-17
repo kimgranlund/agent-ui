@@ -166,7 +166,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'croupier',
     category: 'games', // GH #143 — a card table, thematically a game even though it predates the games-roster wave
-    seedVersion: 14, // T-0312 (Kim's ruling, P6): surfaceStyle names the Deal again button in plain words, no catalog type name; migrates pre-v14 stores. 13: T-0172 (Kim's ruling, 2026-10-14): a game pick is one row of plain buttons, never a framed box per choice, and with no bankroll on file the first round opens at 1,000 (a live Sonnet turn chose 500); migrates pre-v13 stores. 12: T-0172 live probe: round-loop says the deal takes the bet out of /bankroll, settlement pays it back with the winnings, and every move updates the table; migrates pre-v12 stores. 11: T-0172 (Kim's ruling): the betting phase is the CardTable's own strip of bet buttons (one press bets and deals, betAction deal), no Deal Button, Slider or field; surfaceStyle drops em dashes the model copied into status text; migrates pre-v11 stores. 10: T-0159: game-hud defers to the CardTable in blackjack; migrates pre-v10 stores. 9: T-0088 (ADR-0243 Amendment 3): each round runs the CardTable's phases (betting on the table's own chips and a Deal Button, playing, settled with the result line and Deal again), taught by the card-layout and game-table-chrome skills and round-loop; migrates pre-v9 stores. 8, T-0073 (ADR-0243): the blackjack table is one CardTable, taught by the card-layout and game-table-chrome skills; migrates pre-v8 stores. 7, T-0020: a natural blackjack ends the round on the deal (surfaceStyle, round-loop and the blackjack rules entry); no mini-skill carries it, so a pre-v7 store would never hear it; migrates pre-v7 stores. 6: one surface per round (Kim 2026-10-04), supersedes #525's one-persistent-surface surfaceStyle; #525's bankroll opt-in + cross-session resume carry over; migrates pre-v6 stores. T-0016 (GH #1795) edited the hand/total seed text WITHOUT a bump: existing stores get the data-driven hand teaching from the server-composed card-layout/game-table-chrome mini-skills and the ADR-0238 hand check, so no store needs dropping
+    seedVersion: 15, // T-0323 (Kim's ruling, round 8 cluster E): the card-layout and game-table-chrome entries scope the CardTable to blackjack, say betting is the stake pick before the deal, and keep poker on the Card frame; migrates pre-v15 stores. 14: T-0312 (Kim's ruling, P6): surfaceStyle names the Deal again button in plain words, no catalog type name; migrates pre-v14 stores. 13: T-0172 (Kim's ruling, 2026-10-14): a game pick is one row of plain buttons, never a framed box per choice, and with no bankroll on file the first round opens at 1,000 (a live Sonnet turn chose 500); migrates pre-v13 stores. 12: T-0172 live probe: round-loop says the deal takes the bet out of /bankroll, settlement pays it back with the winnings, and every move updates the table; migrates pre-v12 stores. 11: T-0172 (Kim's ruling): the betting phase is the CardTable's own strip of bet buttons (one press bets and deals, betAction deal), no Deal Button, Slider or field; surfaceStyle drops em dashes the model copied into status text; migrates pre-v11 stores. 10: T-0159: game-hud defers to the CardTable in blackjack; migrates pre-v10 stores. 9: T-0088 (ADR-0243 Amendment 3): each round runs the CardTable's phases (betting on the table's own chips and a Deal Button, playing, settled with the result line and Deal again), taught by the card-layout and game-table-chrome skills and round-loop; migrates pre-v9 stores. 8, T-0073 (ADR-0243): the blackjack table is one CardTable, taught by the card-layout and game-table-chrome skills; migrates pre-v8 stores. 7, T-0020: a natural blackjack ends the round on the deal (surfaceStyle, round-loop and the blackjack rules entry); no mini-skill carries it, so a pre-v7 store would never hear it; migrates pre-v7 stores. 6: one surface per round (Kim 2026-10-04), supersedes #525's one-persistent-surface surfaceStyle; #525's bankroll opt-in + cross-session resume carry over; migrates pre-v6 stores. T-0016 (GH #1795) edited the hand/total seed text WITHOUT a bump: existing stores get the data-driven hand teaching from the server-composed card-layout/game-table-chrome mini-skills and the ADR-0238 hand check, so no store needs dropping
     label: 'The Croupier',
     tagline: 'Card games — Blackjack, Poker, and their variants — one table per round, each a new step in the dialog',
     config: { name: 'The Croupier', model: 'claude-sonnet-5-5', toolsEnabled: true }, // rev.4: fable retired from the roster
@@ -216,24 +216,25 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
         // Mirrors the byte-pinned `card-layout.md` and `game-table-chrome.md` mini-skills (the recapture flow).
         id: 'card-layout',
         label: 'card-layout',
-        description: 'A hand is a data list the CardTable binds; each total comes from the listed cards.',
+        description: 'A hand is a data list; in blackjack the CardTable binds both; each total comes from the listed cards.',
         content:
           'Each hand is a list at /dealerHand or /playerHand (a draw appends to the list); compute each total ' +
-          'from the cards you list and write it at /dealerTotal or /playerTotal. The CardTable draws both hands ' +
+          'from the cards you list and write it at /dealerTotal or /playerTotal. In blackjack the CardTable draws both hands ' +
           'from those lists: "dealerHand":{"path":"/dealerHand"} and "playerHand":{"path":"/playerHand"}, never ' +
-          'a literal list. While the table is betting both lists are [], until the deal writes the cards.',
+          'a literal list; betting is the stake pick before the deal, so while the table is betting both lists are [], ' +
+          'until the deal writes the cards. Poker and other games draw each hand as cards on their own frame, dealt from the start.',
       },
       {
         id: 'game-table-chrome',
         label: 'game-table-chrome',
-        description: 'The blackjack table is one CardTable: phase, hands, totals, bankroll, bet, status and the action Buttons.',
+        description: 'The blackjack table is one CardTable: phase, hands, totals, bankroll, bet, status and the action Buttons; poker and other games keep a card frame.',
         content:
           'A blackjack round is ONE CardTable: title, status with statusIntent, phase bound to /phase, bet bound to ' +
           '/bet, bankroll bound to /bankroll, each total bound to /dealerTotal or /playerTotal, and the action ' +
-          'Buttons as its children; never rebuild it from Card, Row and Text. Its phase runs betting (set ' +
+          'Buttons as its children; never rebuild it from Card, Row and Text. Its phase runs betting (the stake pick before the deal, both hands empty; set ' +
           '"betAction":"deal": the table draws its own strip of bet buttons, 25, 50, 75, 100 and 250, and one ' +
           'press places that bet and deals; add no Button, Slider or field), playing (Hit, Stand, Double) and ' +
-          'settled (the result line and a lone Deal again). Other games keep the Card frame with PlayingCard hands.',
+          'settled (the result line and a lone Deal again). Poker and other games keep the Card frame with PlayingCard hands, never a CardTable.',
       },
       {
         id: 'game-hud',

@@ -184,6 +184,23 @@ const settled = (result: string): A2uiOutput => {
   ;(out[2] as { updateDataModel: { value: Record<string, unknown> } }).updateDataModel.value['result'] = result
   return out
 }
+/** T-0323: a five-card draw dealt on a CardTable in phase betting, with its move Buttons or none. */
+const dealtPoker = (moves: string[] = []): A2uiOutput =>
+  surface(
+    'table-1',
+    CROUPIER,
+    [
+      { ...TABLE_ROOT, title: 'Five-card draw', bet: { path: '/pot' }, ...(moves.length > 0 ? { children: moves } : {}) },
+      ...moves.map((id) => ({ id, component: 'Button', label: id.replace('Btn', ''), action: { event: { name: id.replace('Btn', '') } } })),
+    ],
+    {
+      bankroll: 990,
+      pot: 20,
+      phase: 'betting',
+      playerHand: [{ rank: '7', suit: 'hearts' }, { rank: '7', suit: 'clubs' }, { rank: '2', suit: 'spades' }, { rank: '9', suit: 'diamonds' }, { rank: 'J', suit: 'hearts' }],
+      dealerHand: [{ rank: 'K', suit: 'spades', faceDown: true }, { rank: '4', suit: 'diamonds', faceDown: true }, { rank: '8', suit: 'clubs', faceDown: true }, { rank: '3', suit: 'hearts', faceDown: true }, { rank: 'Q', suit: 'clubs', faceDown: true }],
+    },
+  )
 const omaha = (board: { rank: string; suit: string; faceDown?: boolean }[]): A2uiOutput =>
   surface(
     'poker-1',
@@ -565,6 +582,9 @@ const PROBES: Record<string, readonly Fixture[]> = {
         }),
       ],
     },
+    // T-0323: the poker arms of the new-round and opening repair texts.
+    { catalog: CROUPIER, action: { name: 'deal_again', surfaceId: 'table-1', context: { newRound: true }, dataModel: { bankroll: 1060 } }, output: [] },
+    { catalog: CROUPIER, intent: "Let's play five-card draw.", output: [] },
   ],
   'word-move-applied': [
     { catalog: UI, session: wordSession, intent: 'I give up.', target: 'word-1', output: [] },
@@ -584,6 +604,12 @@ const PROBES: Record<string, readonly Fixture[]> = {
     },
   ],
   'fleet-concede': [{ catalog: UI, session: fleetSession, intent: 'I concede.', target: 'waters-1', output: [] }],
+  // T-0323: DEALT_IN_BETTING's two arms (round 8 :61 round 2 keeps the moves, :65 round 1 asks for them) and the
+  // poker arms of the new-round and opening repair texts.
+  'croupier-bet-controls': [
+    { catalog: CROUPIER, output: dealtPoker(['checkBtn', 'betBtn', 'foldBtn']) },
+    { catalog: CROUPIER, output: dealtPoker() },
+  ],
 }
 
 /** The types a fixture's own surfaces hold: a repair that names one describes the surface, it asks for nothing. */
