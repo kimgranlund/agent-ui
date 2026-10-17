@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:ccf1a7d41dce -->
+<!-- sdlc-lite:managed:start v1 sha256:4644f1dcdc8b -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -22,7 +22,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (0199-itinerary-compare)
   - T-0345 Haiku poker and blackjack openings deal on the first turn instead of asking for a stake (round 10 cluster B) (0345-r10-poker-opens-with-cards)
   - T-0350 A settled card table ships with no way forward (no Deal again), and no check names it (0350-r10-settled-table-no-way-forward)
-- ready: 8
+- ready: 10
   - T-0162 Settings pane forms generated from each content kind's schema, with provenance, diff and reset (0162-agent-content-schema-forms)
   - T-0163 One agent compiler for Test Chat, proxy, Worker and CLI, with a resolution trace and bundle digest in every turn trace (0163-agent-content-compiler)
   - T-0178 Agent eval framework 3: judged checks with a pinned judge model, rubrics per persona, seeded known-bad transcripts (0178-eval-judged-checks)
@@ -31,9 +31,12 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0343 Smoke scenarios for every preset, planned from tags, replayed in CI (0343-eval-smoke-scenarios)
   - T-0347 Scripted card scenarios skip the rest of a hand when a natural settles it (round 10 cluster D) (0347-r10-probe-natural-skip), branch chore/0347-probe-natural-skip
   - T-0349 eval:signals follow-ups from round 10: like-sample churn, halt and failureCode tallies, retrieval table (0349-signals-gaps-r10)
+  - T-0351 Badge intent marks and the setIcon carets, clear and stepper marks move to ui-glyph children (GH #1941) (0351-glyph-marks)
+  - T-0352 Card action parts declare their own size step inside a data-tier region (GH #1940) (0352-part-size-step)
 - claimed: 0
 - paused: 0
-- blocked: 0
+- blocked: 1
+  - T-0353 ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) (0353-foundations-final-cleanup)
 - done: 325
 - dropped: 4
 
