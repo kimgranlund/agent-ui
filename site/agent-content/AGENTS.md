@@ -74,7 +74,7 @@ node scripts/agent-content.mjs add-skill <id> --pack <pack> # a library skill of
 node scripts/agent-content.mjs compile-check                # validate, then the registries' and manifests' freshness
 ```
 
-Every command takes `--root <dir>` (default: the current directory) and exits 1 on a content problem. `new --from` lists each value the seed format cannot carry (switches, the model grid's record, builtin sections other than Foundation, an entry's display label); edit the files it writes, then run the generator and add the manifest.
+Every command takes `--root <dir>` (default: the current directory) and exits 1 on a content problem. `add-skill` needs exactly one of `--persona` and `--pack`, refuses a skill file that already exists unless `--force`, and never lists a ref twice. `new --from` lists each value the seed format cannot carry (switches, the model grid's record, builtin sections other than Foundation, an entry's display label); edit the files it writes, then run the generator and add the manifest.
 
 ## Validate and generate
 

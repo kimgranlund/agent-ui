@@ -63,6 +63,7 @@ import type { SettingsSchema } from '../settings/schema.ts'
 import { ENTRY_KINDS } from './entries.ts'
 // T-0162: the persona kind schema: the state key set and the per-key value check.
 import { PERSONA_FIELD_BY_KEY, PERSONA_STATE_FIELD_KEYS, checkFieldValue } from './content-fields.ts'
+import { writeFrom } from './agent-overlay.ts'
 import { entriesStoreKey, readEntries, validateNewEntry, type Entry, type NewEntryInput } from '../entry-list/entry-data.ts'
 
 /** The six-plus entry-list store keys — one per `ENTRY_KINDS` member, derived, never hand-listed. */
@@ -90,11 +91,11 @@ export interface PersonaStateReader {
   get(key: string): unknown
 }
 
-/** The read/write surface `applyPersonaPatch` needs: `SettingsStore`'s `get`/`set`, nothing else. The
- *  `source` argument (T-0162, ACS-R8) tells an overlay store the write is the Builder's; a plain store
- *  ignores it. */
+/** The read/write surface `applyPersonaPatch` needs: `SettingsStore`'s `get`/`set`, nothing else. Its
+ *  writes go through `writeFrom` (T-0162, ACS-R8): an overlay store records them as the Builder's through
+ *  its declared `setFrom`; a plain store takes a plain `set`. */
 export interface PersonaStateStore extends PersonaStateReader {
-  set(key: string, value: unknown, source?: 'builder'): void
+  set(key: string, value: unknown): void
 }
 
 /** The persona-scoped state a store currently answers, restricted to `PERSONA_STATE_KEYS` and to keys the
@@ -352,7 +353,7 @@ export function applyPersonaPatch(
       report.dropped.push(key)
       continue
     }
-    store.set(key, value, 'builder')
+    writeFrom(store, key, value, 'builder')
     report.applied.push(key)
   }
 
@@ -404,7 +405,7 @@ export function applyPersonaPatch(
       appended += 1
     }
     if (appended === 0 && updatedIds.length === 0) continue
-    store.set(key, next, 'builder')
+    writeFrom(store, key, next, 'builder')
     // Each sub-record stays ABSENT when its own verb did nothing, so an append-only patch's report is
     // byte-identical to the one it produced before updates existed, and an update-only patch never claims a
     // zero-count append that a consumer keyed on `Object.keys(added)` would read as a change.

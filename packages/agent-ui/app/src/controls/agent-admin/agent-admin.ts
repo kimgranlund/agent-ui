@@ -263,7 +263,7 @@ import {
 } from '../entry-list/entry-data.ts'
 import { mountEntryList, showAddError, type EntryListSection, type EntryRowMark } from '../entry-list/entry-list.ts'
 // T-0162: the per-place provenance an overlay store (or a whole-record store) answers (ACS-R8).
-import type { OverlayPath, Provenance, ProvenanceReader } from './agent-overlay.ts'
+import { writeFrom, type OverlayPath, type Provenance, type ProvenanceReader } from './agent-overlay.ts'
 import { PERSONA_FIELD_BY_KEY } from './content-fields.ts'
 import { lintPromptSections } from './prompt-lint.ts'
 // GH #1197 (ADR-0203 cl.1/cl.2 / req-agent-teams.md R5) — the Team pane (list/create/edit/delete,
@@ -3062,7 +3062,10 @@ export class UIAgentAdminElement extends UIElement {
   // changed it, a Modified (or Seed changed) marker, the seed value it differs from, and Reset (Take seed
   // on a seedChanged place, which drops the op so the place reads the new seed). Entry rows get the same
   // strip through the entry list's row marks. The strips are cached by content, so a pass that finds
-  // nothing new mutates nothing (the observer below cannot loop).
+  // nothing new mutates nothing. A pass runs on a store write, and on a settings unit regenerating its rows
+  // (the observer below reacts only to a `[data-field]` control arriving or a strip being dropped, never to
+  // an edit inside a field). A runtime row (`runtime` in the schema: the bankroll the agent's games keep)
+  // is game state, not an edit, so it carries no provenance and never gets a strip.
 
   #provenanceQueued = false
   #provenanceObserver: MutationObserver | undefined
@@ -3088,7 +3091,9 @@ export class UIAgentAdminElement extends UIElement {
       this.#provenanceStore = store
     }
     if (this.#provenanceObserver === undefined && typeof MutationObserver !== 'undefined') {
-      this.#provenanceObserver = new MutationObserver(() => this.#scheduleProvenance())
+      this.#provenanceObserver = new MutationObserver((records) => {
+        if (records.some(regeneratedRows)) this.#scheduleProvenance()
+      })
       for (const unit of [this.#settingsEl, this.#modelSettingsEl]) if (unit) this.#provenanceObserver.observe(unit, { childList: true, subtree: true })
     }
     this.#scheduleProvenance()
@@ -3102,12 +3107,16 @@ export class UIAgentAdminElement extends UIElement {
     const live = new Set<HTMLElement | string>()
     for (const anchor of pane.querySelectorAll<HTMLElement>('[data-field]')) {
       if (anchor.closest('[data-entry-mark], [data-part="field-provenance"]')) continue
-      const keys = (anchor.getAttribute('data-field') ?? '').split(' ').filter((k) => k !== '')
+      const keys = (anchor.getAttribute('data-field') ?? '').split(' ').filter((k) => k !== '' && PERSONA_FIELD_BY_KEY.get(k)?.runtime !== true)
+      if (keys.length === 0) {
+        anchor.removeAttribute('data-provenance')
+        continue
+      }
       const list = keys.find((k) => k.startsWith('entries:'))
       // A list control's own places are its order and its removed seed entries (no row shows those); an
       // added or edited entry's places belong to that entry's row.
       const places = modified.filter((p) => keys.includes(p.key) && (p.key !== list ? p.entryId === undefined : p.entryId === undefined || p.change === 'removed'))
-      const provenance: Provenance = places[0] !== undefined ? (places[0].source ?? 'user') : (store?.provenance?.({ key: keys[0] ?? '' }) ?? 'seed')
+      const provenance = places.length > 0 ? sourceOfPlaces(places) : (store?.provenance?.({ key: keys[0]! }) ?? 'seed')
       if (anchor.getAttribute('data-provenance') !== provenance) anchor.setAttribute('data-provenance', provenance)
       if (places.length > 0 && store?.reset !== undefined) {
         live.add(anchor)
@@ -3125,8 +3134,9 @@ export class UIAgentAdminElement extends UIElement {
     }
   }
 
-  /** The strip for one control's modified places: the newest source among them, Seed changed when the seed
-   *  moved under any of them, the seed value (a scalar) or what changed (a list), and the reset. */
+  /** The strip for one control's modified places: their source (`mixed` when they differ: ops carry no
+   *  time, so no newest is known), Seed changed when the seed moved under any of them, the seed value (a
+   *  scalar) or what changed (a list), and the reset. */
   #stripSpec(store: SettingsStore & Partial<ProvenanceReader>, places: readonly OverlayPath[]): ProvenanceStripSpec {
     const conflict = places.find((p) => p.seedChanged !== undefined)
     const scalar = places.find((p) => p.entryId === undefined && p.change === undefined)
@@ -3137,7 +3147,7 @@ export class UIAgentAdminElement extends UIElement {
     if (removed > 0) diff.push(`${removed} seed ${removed === 1 ? 'entry' : 'entries'} removed`)
     if (places.some((p) => p.change === 'order')) diff.push('order changed')
     return {
-      provenance: (conflict ?? places[0]!).source ?? 'user',
+      provenance: sourceOfPlaces(places),
       conflict: conflict !== undefined,
       diff: diff.join(', '),
       // Exactly the places this strip names: a scalar key whole, a removed seed entry back, the order back.
@@ -3237,9 +3247,9 @@ export class UIAgentAdminElement extends UIElement {
    *  persist but never visibly appear). Falls back to a direct render ONLY when this store genuinely has
    *  no `subscribe` to rely on. */
   #updateEntries(kind: string, updater: (entries: Entry[]) => Entry[], source?: 'pack'): void {
-    const store = this.store as (SettingsStore & { set(key: string, value: unknown, source?: 'pack'): void }) | undefined
+    const store = this.store
     const current = readEntries(store, kind)
-    store?.set(entriesStoreKey(kind), updater(current), source)
+    if (store !== undefined) writeFrom(store, entriesStoreKey(kind), updater(current), source ?? 'user')
     if (store !== undefined && store.subscribe === undefined) {
       this.#renders.get(kind)?.()
       // GH #419 — and re-derive the modality lint against the NEW content (a fixed section's warning must
@@ -5168,16 +5178,31 @@ function fieldLabel(key: string): string {
   return PERSONA_FIELD_BY_KEY.get(key)?.label ?? key
 }
 
+/** T-0162: the one source of a control's modified places, or `mixed` when two surfaces wrote them. */
+function sourceOfPlaces(places: readonly OverlayPath[]): Provenance | 'mixed' {
+  const sources = new Set(places.map((p) => p.source ?? 'user'))
+  return sources.size === 1 ? [...sources][0]! : 'mixed'
+}
+
+/** T-0162: a settings unit regenerated its rows (a `[data-field]` control arrived) or a provenance strip was
+ *  dropped with the rows it sat beside; any other mutation (typing, a validation message) is not one. */
+function regeneratedRows(record: MutationRecord): boolean {
+  const field = (node: Node): boolean => node instanceof Element && (node.matches('[data-field]') || node.querySelector('[data-field]') !== null)
+  const strip = (node: Node): boolean => node instanceof Element && node.getAttribute('data-part') === 'field-provenance'
+  return [...record.addedNodes].some(field) || [...record.removedNodes].some(strip)
+}
+
 /** T-0162: what one provenance strip shows (`#stripFor`). */
 interface ProvenanceStripSpec {
-  provenance: Provenance
+  provenance: Provenance | 'mixed'
   conflict: boolean
   diff: string
   reset: () => void
 }
 
 /** T-0162: the provenance a strip names (agent-content ACS-R8); a user edit reads "Edited". */
-const PROVENANCE_LABELS: Readonly<Record<Provenance, string>> = {
+const PROVENANCE_LABELS: Readonly<Record<Provenance | 'mixed', string>> = {
+  mixed: 'Mixed',
   seed: 'Seed',
   pack: 'Pack',
   imported: 'Imported',

@@ -280,7 +280,10 @@ ticket against this SPEC runs that ticket's named tests and checks each cited `f
    (`provenance.browser.test.ts`). Each op records its `source` (`builder` from the patch gate, `pack` from the
    library menu, `user` stored as no member, so a user op keeps its T-0161 shape); a whole-record store (an
    import, a duplicate, a blank new agent) answers one provenance from the record's `origin`. A modified place
-   shows a strip with its source, a Modified or Seed changed marker, the seed value and Reset; on a seed-changed
+   shows a strip with its source (`mixed` when two surfaces wrote a control's places: ops carry no time), a
+   Modified or Seed changed marker, the seed value and Reset; a runtime row (the bankroll a game writes) carries
+   no provenance and no strip. A writer names its source through the store's declared `setFrom` (`writeFrom`),
+   and a re-write of an unchanged value keeps the prior source. On a seed-changed
    place Reset reads "Take seed" and drops the op, whose base already moved to the new seed. A seed place shows
    no strip (its `data-provenance` says seed), so an unedited pane reads as it did. A seed entry the user removed
    and a reordered list show on the list's own strip. The CLI is `scripts/agent-content.mjs`; the Builder export

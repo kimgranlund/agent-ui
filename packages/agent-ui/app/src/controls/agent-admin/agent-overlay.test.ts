@@ -329,6 +329,15 @@ describe('ACS-R8: every op records the surface that wrote it', () => {
     expect(modifiedPaths(userEdit).find((p) => p.entryId === 'cheese')).toEqual({ key: 'entries:skill', entryId: 'cheese', change: 'added', source: 'pack' })
   })
 
+  it('re-writing a scalar to the value it holds keeps its source; a new value takes the writer\'s', () => {
+    const store = createOverlayStore({ seed, overlay: base() })
+    store.setFrom('model', 'claude-opus-5-5', 'builder')
+    store.set('model', 'claude-opus-5-5')
+    expect(provenanceAt(store.overlay(), { key: 'model' })).toBe('builder')
+    store.set('model', 'claude-sonnet-5-5')
+    expect(provenanceAt(store.overlay(), { key: 'model' })).toBe('user')
+  })
+
   it('a seed update keeps each op\'s source, flagged or not', () => {
     const o = setOverlayKey(seed, base(), 'effort', 'low', 'builder')
     const next = rebaseOverlay(o, { ...seed, effort: 'high' }, 'a', 2)

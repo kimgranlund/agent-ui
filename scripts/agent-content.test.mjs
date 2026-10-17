@@ -3,7 +3,9 @@
 //   (a) `validate` exits 0 on the repo and 1 on a copy with one seeded bad file, naming the problem;
 //   (b) `new` writes a blank roster persona that validates; `new --from` turns an exported persona file into
 //       a seed folder that validates, refs an identical library entry, and lists what it could not carry;
-//   (c) `add-skill` writes a persona-local and a library skill, each referenced and valid;
+//   (c) `add-skill` writes a persona-local and a library skill, each referenced and valid; it refuses an
+//       existing file unless --force, never lists a ref twice, and needs exactly one of --persona and --pack;
+//       `new --from` refuses a file whose state is not an object;
 //   (d) `compile-check` exits 0 on an unedited copy and 1 on a hand-edited registry;
 //   (e) a usage error exits 2.
 
@@ -106,6 +108,52 @@ describe('agent-content CLI', () => {
     expect(library.stderr).toBe('')
     expect(library.status).toBe(0)
     expect(JSON.parse(readFileSync(join(dir, 'site/agent-content/packs/hospitality/pack.json'), 'utf8')).entries).toContain('room-map@1')
+  })
+
+  it('add-skill refuses an existing skill file (library or persona-local) unless --force, and never lists a ref twice', () => {
+    const dir = copyTree()
+    const libraryPath = join(dir, 'site/agent-content/skills/amenity-service-card/SKILL.md')
+    const before = readFileSync(libraryPath, 'utf8')
+    const refused = cli(dir, 'add-skill', 'amenity-service-card', '--pack', 'hospitality')
+    expect(refused.status).toBe(2)
+    expect(refused.stderr).toContain('already exists')
+    expect(readFileSync(libraryPath, 'utf8')).toBe(before)
+
+    const packPath = join(dir, 'site/agent-content/packs/hospitality/pack.json')
+    const forced = cli(dir, 'add-skill', 'amenity-service-card', '--pack', 'hospitality', '--force')
+    expect(forced.status).toBe(0)
+    const entries = JSON.parse(readFileSync(packPath, 'utf8')).entries
+    expect(entries.filter((ref) => ref.startsWith('amenity-service-card@'))).toHaveLength(1)
+
+    const agentPath = 'site/agent-content/personas/quant/agent.md'
+    const local = frontmatterOf(dir, agentPath).skills.find((ref) => ref.startsWith('./'))
+    const localId = local.slice(2, local.indexOf('@'))
+    expect(cli(dir, 'add-skill', localId, '--persona', 'quant').status).toBe(2)
+    expect(cli(dir, 'add-skill', localId, '--persona', 'quant', '--force').status).toBe(0)
+    expect(frontmatterOf(dir, agentPath).skills.filter((ref) => ref === local)).toHaveLength(1)
+  })
+
+  it('add-skill without --persona or --pack (or with both) is a usage error', () => {
+    const dir = copyTree()
+    for (const args of [['add-skill', 'loose-skill'], ['add-skill', 'loose-skill', '--persona', 'quant', '--pack', 'hospitality']]) {
+      const r = cli(dir, ...args)
+      expect(r.status).toBe(2)
+      expect(r.stderr).toContain('exactly one of --persona and --pack')
+    }
+    expect(existsSync(join(dir, 'site/agent-content/skills/loose-skill'))).toBe(false)
+  })
+
+  it('new --from a file whose state is not an object is a usage error, never a crash', () => {
+    const dir = copyTree()
+    for (const state of [null, [], 'text']) {
+      const exported = join(dir, 'bad.persona.json')
+      writeFileSync(exported, JSON.stringify({ kind: 'agent-ui-persona', version: 1, persona: null, state }))
+      const r = cli(dir, 'new', 'bad-one', '--from', exported)
+      expect(r.status).toBe(2)
+      expect(r.stderr).toContain('with a state object')
+      expect(r.stderr).not.toContain('    at ')
+    }
+    expect(existsSync(join(dir, 'site/agent-content/personas/bad-one'))).toBe(false)
   })
 
   it('compile-check exits 0 on an unedited copy and 1 on a hand-edited registry', () => {

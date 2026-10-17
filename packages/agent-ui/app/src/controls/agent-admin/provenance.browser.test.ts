@@ -14,7 +14,7 @@ import './agent-admin.css'
 import './agent-admin.ts'
 import type { UIAgentAdminElement } from './agent-admin.ts'
 import '@agent-ui/icons/phosphor'
-import { BANKROLL_CAPABLE_KEY, SURFACE_AUTHORING_KEY } from './agent-admin-schema.ts'
+import { BANKROLL_CAPABLE_KEY, BANKROLL_KEY, MODELS_INCLUDED_KEY, SURFACE_AUTHORING_KEY } from './agent-admin-schema.ts'
 import { PANE_HOMES, PERSONA_FIELDS, PERSONA_FIELD_BY_KEY } from './content-fields.ts'
 import { createOverlayStore, emptyOverlay, rebaseOverlay, setOverlayKey, type OverlayStore, type Provenance } from './agent-overlay.ts'
 import { createMemoryStore } from '../settings/memory-store.ts'
@@ -175,6 +175,29 @@ describe('ACS-R8: provenance, the modified marker, the diff and reset', () => {
     take.click()
     await until(() => stripFor(el, 'name') === null, 'the strip leaves after Take seed')
     expect(store.get('name')).toBe('New seed')
+  })
+
+  it('runtime state (the bankroll a game writes, and its own reset) carries no provenance and no strip', async () => {
+    const store = overlayStore({ ...SEED, [BANKROLL_CAPABLE_KEY]: true })
+    const el = await mount(store)
+    store.set(BANKROLL_KEY, 120)
+    await frames()
+    await new Promise((r) => setTimeout(r, 50))
+    expect(store.overlay().values[BANKROLL_KEY]).toBeDefined()
+    expect(stripFor(el, BANKROLL_KEY)).toBeNull()
+    expect(provenanceOf(el, BANKROLL_KEY)).toBeNull()
+    ;(el.querySelector('[data-part="bankroll-reset"]') as HTMLElement).click()
+    await frames()
+    expect(stripFor(el, BANKROLL_KEY)).toBeNull()
+  })
+
+  it('a control whose places two surfaces wrote reads Mixed, never one of them', async () => {
+    const store = overlayStore()
+    const el = await mount(store)
+    store.setFrom('model', 'claude-opus-5-5', 'builder')
+    store.set(MODELS_INCLUDED_KEY, { 'gpt-4.1': true })
+    await until(() => provenanceOf(el, 'model') === 'mixed', 'the model grid reads mixed')
+    expect(el.querySelector('[data-part="model-grid"] + [data-part="field-provenance"] [data-part="provenance-source"]')?.textContent).toBe('Mixed')
   })
 
   it('a whole-record store (an import) stamps its provenance on every control and offers no reset', async () => {

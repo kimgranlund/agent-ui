@@ -13,11 +13,21 @@
 // site reads them through its live raw glob, so a mini-skill edit has one generated copy (a2ui's
 // `assets.gen.ts`) and one generator.
 
-import { ENTRY_FIELDS, PACK_FIELDS, PERSONA_FIELDS, checkFrontmatter } from '@agent-ui/app/agent-admin-content-fields'
+import {
+  CONTENT_ENTRY_KINDS,
+  ENTRY_FIELDS,
+  ID_PATTERN as ID,
+  PACK_FIELDS,
+  PERSONA_FIELDS,
+  PRESET_CATEGORIES,
+  REF_PATTERN as REF,
+  checkFrontmatter,
+} from '@agent-ui/app/agent-admin-content-fields'
 
-/** The capability entry kinds a persona references and a pack groups. */
-export const ENTRY_KINDS = ['skill', 'workflow', 'resource', 'tool'] as const
+/** The capability entry kinds a persona references and a pack groups (defined once, in the kind schema). */
+export const ENTRY_KINDS = CONTENT_ENTRY_KINDS
 export type EntryKind = (typeof ENTRY_KINDS)[number]
+export { ID_PATTERN, PRESET_CATEGORIES } from '@agent-ui/app/agent-admin-content-fields'
 
 export const CONTENT_KINDS = ['persona', ...ENTRY_KINDS, 'pack'] as const
 export type ContentKind = (typeof CONTENT_KINDS)[number]
@@ -33,9 +43,7 @@ export const ENTRY_LAYOUT: Record<EntryKind, { dir: string; file: string }> = {
 /** Repo-relative content root. */
 export const CONTENT_ROOT = 'site/agent-content'
 
-/** The persona-flavored pack categories (GH #143). A third flavor earns its own member the day a third
- *  persona-flavored pack ships, never a bare string. */
-export const PRESET_CATEGORIES = ['hospitality', 'games'] as const
+/** The persona-flavored pack categories (GH #143; the list lives in the kind schema). */
 export type PresetCategoryName = (typeof PRESET_CATEGORIES)[number]
 
 /** The persona body's named sections, in file order. The text before the first heading is the
@@ -254,9 +262,6 @@ export function parseContentFile(path: string, source: string, hash: (text: stri
 }
 
 // ── validation ──────────────────────────────────────────────────────────────────────────────────────
-
-const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
-const REF = /^(\.\/)?([a-z0-9]+(?:-[a-z0-9]+)*)@([1-9][0-9]*)$/
 
 const isObject = (v: unknown): v is Record<string, unknown> => v !== null && typeof v === 'object' && !Array.isArray(v)
 const isStringArray = (v: unknown): v is string[] => Array.isArray(v) && v.every((s) => typeof s === 'string')

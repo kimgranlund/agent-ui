@@ -58,10 +58,27 @@ export interface ContentField {
   home: FieldHome
   /** Persona state: exported in a persona file and patchable by the Builder (`PERSONA_STATE_KEYS`). */
   state?: boolean
+  /** Runtime state the agent's turns write (game state), not an edit: no provenance, no strip. */
+  runtime?: true
   label: string
   description?: string
   form?: FormHint
 }
+
+/** The capability entry kinds a persona references and a pack groups: the content files' kinds, defined
+ *  here once (`site/agent-content/schema.ts` re-exports them as `ENTRY_KINDS`). */
+export const CONTENT_ENTRY_KINDS = ['skill', 'workflow', 'resource', 'tool'] as const
+export type ContentEntryKind = (typeof CONTENT_ENTRY_KINDS)[number]
+
+/** The persona-flavored pack categories (GH #143), defined here once (re-exported by schema.ts). A third
+ *  flavor earns its own member the day a third persona-flavored pack ships, never a bare string. */
+export const PRESET_CATEGORIES = ['hospitality', 'games'] as const
+
+/** A content id: lowercase and hyphenated, the folder name. */
+export const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+/** A ref: `<id>@<version>`, or `./<id>@<version>` for an entry under the persona's own folder. The groups
+ *  are the `./`, the id and the version (`parseRef` in schema.ts reads them). */
+export const REF_PATTERN = /^(\.\/)?([a-z0-9]+(?:-[a-z0-9]+)*)@([1-9][0-9]*)$/
 
 /** The entry kinds the admin pane lists, in `ENTRY_KINDS` order (pinned by content-fields.test.ts). */
 export const PANE_ENTRY_KINDS = ['prompt-section', 'skill', 'workflow', 'resource', 'tool', 'pattern-source', 'catalog'] as const
@@ -76,13 +93,8 @@ const KIND_LABELS: Readonly<Record<(typeof PANE_ENTRY_KINDS)[number], string>> =
   catalog: 'Catalogs',
 }
 
-/** The content file's ref list for each capability kind (`skills: ["menu-card@1"]`). */
-const FILE_REFS: Readonly<Partial<Record<(typeof PANE_ENTRY_KINDS)[number], string>>> = {
-  skill: 'skills',
-  workflow: 'workflows',
-  resource: 'resources',
-  tool: 'tools',
-}
+/** The content file's ref list for a capability kind (`skills: ["menu-card@1"]`); none for a pane-only kind. */
+const fileRefsOf = (kind: string): string | undefined => ((CONTENT_ENTRY_KINDS as readonly string[]).includes(kind) ? `${kind}s` : undefined)
 
 /** The persona kind. State rows are in the persona file's key order. */
 export const PERSONA_FIELDS: readonly ContentField[] = [
@@ -92,7 +104,7 @@ export const PERSONA_FIELDS: readonly ContentField[] = [
   { file: 'roster', type: 'false', home: 'file', label: 'In the roster' },
   { file: 'label', type: 'string', nonEmpty: true, required: true, home: 'roster', label: 'Label' },
   { file: 'tagline', type: 'string', nonEmpty: true, required: true, home: 'file', label: 'Tagline' },
-  { file: 'category', type: 'enum', values: ['hospitality', 'games'], home: 'file', label: 'Category' },
+  { file: 'category', type: 'enum', values: PRESET_CATEGORIES, home: 'file', label: 'Category' },
   {
     key: 'name',
     file: 'name',
@@ -187,11 +199,11 @@ export const PERSONA_FIELDS: readonly ContentField[] = [
   { key: 'a2uiCatalog', type: 'string', home: 'catalog', state: true, label: 'Catalog' },
   { key: 'a2uiLocalPatterns', file: 'localPatterns', type: 'string', home: 'seed', state: true, label: 'Local patterns' },
   { key: 'bankrollCapable', file: 'bankroll', type: 'boolean', fileType: 'true', home: 'seed', state: true, label: 'Bankroll' },
-  { key: 'bankroll', type: 'number', min: 0, home: 'bankroll', state: true, label: 'Stored bankroll' },
+  { key: 'bankroll', type: 'number', min: 0, home: 'bankroll', state: true, runtime: true, label: 'Stored bankroll' },
   ...PANE_ENTRY_KINDS.map(
     (kind): ContentField => ({
       key: `entries:${kind}`,
-      ...(FILE_REFS[kind] === undefined ? {} : { file: FILE_REFS[kind], fileType: 'refs' as const, required: true }),
+      ...(fileRefsOf(kind) === undefined ? {} : { file: fileRefsOf(kind), fileType: 'refs' as const, required: true }),
       type: 'entries',
       home: 'entries',
       state: true,
@@ -214,7 +226,7 @@ export const ENTRY_FIELDS: readonly ContentField[] = [
   { file: 'description', type: 'string', required: true, home: 'file', label: 'Description' },
   { file: 'id', type: 'id', required: true, home: 'file', label: 'Id' },
   { file: 'version', type: 'integer', min: 1, required: true, home: 'file', label: 'Version' },
-  { file: 'kind', type: 'enum', values: ['skill', 'workflow', 'resource', 'tool'], required: true, home: 'file', label: 'Kind' },
+  { file: 'kind', type: 'enum', values: CONTENT_ENTRY_KINDS, required: true, home: 'file', label: 'Kind' },
   { file: 'availability', type: 'enum', values: ['context', 'invocable'], required: true, home: 'file', label: 'Availability' },
   { file: 'label', type: 'string', nonEmpty: true, required: true, home: 'file', label: 'Label' },
 ]
@@ -223,11 +235,11 @@ export const ENTRY_FIELDS: readonly ContentField[] = [
 export const PACK_FIELDS: readonly ContentField[] = [
   { file: 'id', type: 'id', required: true, home: 'file', label: 'Id' },
   { file: 'version', type: 'integer', min: 1, required: true, home: 'file', label: 'Version' },
-  { file: 'kind', type: 'enum', values: ['skill', 'workflow', 'resource', 'tool'], required: true, home: 'file', label: 'Kind' },
+  { file: 'kind', type: 'enum', values: CONTENT_ENTRY_KINDS, required: true, home: 'file', label: 'Kind' },
   { file: 'order', type: 'integer', min: 1, required: true, home: 'file', label: 'Order' },
   { file: 'label', type: 'string', nonEmpty: true, required: true, home: 'file', label: 'Label' },
   { file: 'description', type: 'string', required: true, home: 'file', label: 'Description' },
-  { file: 'category', type: 'enum', values: ['hospitality', 'games'], home: 'file', label: 'Category' },
+  { file: 'category', type: 'enum', values: PRESET_CATEGORIES, home: 'file', label: 'Category' },
   { file: 'rejectOnCollision', type: 'true', home: 'file', label: 'Reject on collision' },
   { file: 'entries', type: 'refs', home: 'file', label: 'Entries' },
   { file: 'derived', type: 'enum', values: ['mini-skill'], home: 'file', label: 'Derived' },
@@ -241,8 +253,6 @@ export const PERSONA_FIELD_BY_KEY: ReadonlyMap<string, ContentField> = new Map(
 /** The persona file's state keys, in order: `PERSONA_STATE_KEYS`' source. */
 export const PERSONA_STATE_FIELD_KEYS: readonly string[] = PERSONA_FIELDS.filter((f) => f.state === true && f.key !== undefined).map((f) => f.key!)
 
-const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
-const REF = /^(\.\/)?[a-z0-9]+(?:-[a-z0-9]+)*@[1-9][0-9]*$/
 const isPlainObject = (v: unknown): v is Record<string, unknown> => v !== null && typeof v === 'object' && !Array.isArray(v)
 
 /** The one value check: `undefined` when `value` fits `field` (on the store side, or the file side when
@@ -253,7 +263,7 @@ export function checkFieldValue(field: ContentField, value: unknown, side: 'stor
   const name = (side === 'file' ? field.file : field.key) ?? field.key ?? field.file ?? field.label
   switch (type) {
     case 'id':
-      return typeof value === 'string' && ID.test(value) ? undefined : `${name} is not a lowercase-hyphenated id`
+      return typeof value === 'string' && ID_PATTERN.test(value) ? undefined : `${name} is not a lowercase-hyphenated id`
     case 'string':
       if (typeof value !== 'string') return `${name} is not a string`
       return field.nonEmpty === true && value === '' ? `${name} is not a non-empty string` : undefined
@@ -275,7 +285,7 @@ export function checkFieldValue(field: ContentField, value: unknown, side: 'stor
       return Array.isArray(value) && value.every((s) => typeof s === 'string') ? undefined : `${name} is not a string array`
     case 'refs':
       if (!Array.isArray(value) || !value.every((s) => typeof s === 'string')) return `${name} is not a string array`
-      for (const ref of value) if (!REF.test(ref)) return `${name} ref ${ref} is not <id>@<version> or ./<id>@<version>`
+      for (const ref of value) if (!REF_PATTERN.test(ref)) return `${name} ref ${ref} is not <id>@<version> or ./<id>@<version>`
       return undefined
     case 'flags':
       return isPlainObject(value) && Object.values(value).every((v) => typeof v === 'boolean') ? undefined : `${name} is not an object of booleans`

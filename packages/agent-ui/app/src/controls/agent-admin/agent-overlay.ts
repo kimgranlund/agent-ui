@@ -237,7 +237,10 @@ export function setOverlayKey(
     if (value !== undefined) op.value = clone(value)
     if (has(seed, key)) op.base = clone(seed[key])
     if (prior?.seedChanged !== undefined) op.seedChanged = prior.seedChanged
-    Object.assign(op, sourceOf({ source }))
+    // A write that leaves the value as it was keeps the source that wrote it (a Builder-set model re-set by
+    // the picker stays the Builder's), the rule `sameOp` applies to list entries.
+    const unchanged = prior !== undefined && ('value' in prior ? same(prior.value, value) : value === undefined)
+    Object.assign(op, sourceOf({ source: unchanged ? prior.source : source }))
     values[key] = op
   }
   return { ...overlay, values, lists }
@@ -504,8 +507,8 @@ export function resetPath(overlay: AgentOverlay, address: OverlayAddress): Agent
 
 /** One place's provenance (ACS-R8): the source of the op that holds it, or `seed` when no op does. An
  *  entry field reads its entry's op (a patch is one op per entry); a whole entry-list key reads `seed`
- *  only when no entry op and no order op touch it, else the newest-looking source among them (a user op
- *  wins a tie: the list as a whole is the user's once any part of it is). */
+ *  only when no entry op and no order op touch it, else by precedence, not recency: `user` when any entry
+ *  op or the order is the user's, then `builder`, then `pack`. */
 export function provenanceAt(overlay: AgentOverlay, address: OverlayAddress): Provenance {
   const value = overlay.values[address.key]
   if (value !== undefined) return value.source ?? 'user'
@@ -587,10 +590,23 @@ export interface ProvenanceReader {
   reset?(address: OverlayAddress): void
 }
 
-/** A `SettingsStore` over seed plus overlay: `get` resolves, `set` diffs against the seed. `set`'s optional
- *  `source` records which surface wrote the op (ACS-R8; `user` when omitted). */
-export interface OverlayStore extends SettingsStore, ProvenanceReader {
-  set(key: string, value: unknown, source?: EditSource): void
+/** A store that records which surface wrote a value (ACS-R8). `set` is a `user` write; `setFrom` names the
+ *  source. A writer reaches it through `writeFrom`, which falls back to `set` on a store without it (an
+ *  import's whole record has no ops to tag). */
+export interface SourcedStore extends SettingsStore {
+  setFrom(key: string, value: unknown, source: EditSource): void
+}
+
+/** Write `value` as `source`: `setFrom` on a store that records sources, else a plain `set`. */
+export function writeFrom(store: SettingsStore, key: string, value: unknown, source: EditSource): void {
+  const sourced = store as Partial<SourcedStore>
+  if (typeof sourced.setFrom === 'function') sourced.setFrom(key, value, source)
+  else store.set(key, value)
+}
+
+/** A `SettingsStore` over seed plus overlay: `get` resolves, `set` diffs against the seed as a `user` op,
+ *  `setFrom` as the named source's. */
+export interface OverlayStore extends SourcedStore, ProvenanceReader {
   subscribe(listener: (key: string, value: unknown) => void): () => void
   overlay(): AgentOverlay
   modified(): OverlayPath[]
@@ -609,16 +625,22 @@ export function createOverlayStore(options: OverlayStoreOptions): OverlayStore {
   const notify = (key: string, value: unknown): void => {
     for (const listener of listeners) listener(key, value)
   }
+  const write = (key: string, value: unknown, source: EditSource): void => {
+    overlay = setOverlayKey(seed, overlay, key, value, source)
+    resolved.set(key, value)
+    persist?.(overlay)
+    notify(key, value)
+  }
   return {
     get(key) {
       if (!resolved.has(key)) resolved.set(key, resolveOverlayKey(seed, overlay, key))
       return resolved.get(key)
     },
-    set(key, value, source?: EditSource) {
-      overlay = setOverlayKey(seed, overlay, key, value, source)
-      resolved.set(key, value)
-      persist?.(overlay)
-      notify(key, value)
+    set(key, value) {
+      write(key, value, 'user')
+    },
+    setFrom(key, value, source) {
+      write(key, value, source)
     },
     subscribe(listener) {
       listeners.add(listener)

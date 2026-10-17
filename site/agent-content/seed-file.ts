@@ -9,7 +9,7 @@
 // (content-fields.ts) plus the body sections; switches, the model grid's record and the selection keys are
 // user state that a fresh seed starts at its defaults.
 import { PERSONA_FIELDS, checkFieldValue } from '@agent-ui/app/agent-admin-content-fields'
-import { CONTENT_ROOT, ENTRY_KINDS, ENTRY_LAYOUT, PERSONA_SECTIONS, type ContentRecord, type EntryKind } from './schema.ts'
+import { CONTENT_ROOT, ENTRY_KINDS, ENTRY_LAYOUT, ID_PATTERN, PERSONA_SECTIONS, type ContentRecord, type EntryKind } from './schema.ts'
 
 /** One content `.md` file: the frontmatter as two-space JSON between `---` fences, then the body and one
  *  final newline (the shape every shipped file has; `splitJsonFrontmatter` reads it back exactly). */
@@ -37,7 +37,6 @@ interface StateEntry {
   idbRef?: unknown
 }
 
-const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const BODY_SECTIONS: Readonly<Record<string, string>> = { 'surface-style': PERSONA_SECTIONS.surfaceStyle, 'house-facts': PERSONA_SECTIONS.houseFacts }
 
 /** `state` as a seed folder under `CONTENT_ROOT/personas/<id>/`: `agent.md` plus one persona-local file per
@@ -113,7 +112,7 @@ export function personaSeedFiles(
     const refs: string[] = []
     const list = Array.isArray(state[`entries:${kind}`]) ? (state[`entries:${kind}`] as StateEntry[]) : []
     for (const entry of list) {
-      if (typeof entry.id !== 'string' || !ID.test(entry.id)) {
+      if (typeof entry.id !== 'string' || !ID_PATTERN.test(entry.id)) {
         dropped.push(`${kind} ${String(entry.label ?? entry.id)}: its id is not a lowercase-hyphenated folder name`)
         continue
       }
