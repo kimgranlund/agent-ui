@@ -244,3 +244,60 @@ describe('ui-gauge: the legend keys its rings, and no data still draws a track (
     expect((tracks[0] as unknown as SVGGraphicsElement).getBoundingClientRect().width).toBeGreaterThan(40)
   })
 })
+
+describe('ui-gauge: right to left puts the rings on the start edge with the legend beside them (T-0339)', () => {
+  const WIDE = `<ui-gauge data='${SYSTEM_LOAD}'></ui-gauge>`
+  const settle = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
+  const measure = (gauge: HTMLElement) => {
+    const host = gauge.getBoundingClientRect()
+    const tracks = [...gauge.querySelectorAll("[data-part='track']")].map((t) => t.getBoundingClientRect())
+    const ring = tracks.reduce((a, b) => (b.width > a.width ? b : a))
+    const rows = [...gauge.querySelectorAll("[data-part='legend'] > *")].map((r) => r.getBoundingClientRect())
+    const progress = [...gauge.querySelectorAll("[data-part='progress']")] as SVGElement[]
+    return { host, ring, rows, progress, svg: gauge.querySelector("svg[data-part='rings']") as SVGElement }
+  }
+
+  const cases: Array<[string, string]> = [
+    ['the dir attribute', `<div dir="rtl" style="inline-size: 640px">${WIDE}</div>`],
+    ['a CSS-only direction: rtl (no dir attribute)', `<div style="inline-size: 640px; direction: rtl">${WIDE}</div>`],
+  ]
+  for (const [name, markup] of cases) {
+    it(`${name}: the rings hug the right edge, every legend row sits just left of them, and the arcs sweep as in ltr`, async () => {
+      const ltrGauge = mount(`<div style="inline-size: 640px">${WIDE}</div>`).querySelector('ui-gauge') as HTMLElement
+      const gauge = mount(markup).querySelector('ui-gauge') as HTMLElement
+      await settle()
+      const ltr = measure(ltrGauge)
+      const rtl = measure(gauge)
+      expect(ltr.rows.length, 'anti-vacuous: the legend rendered rows').toBeGreaterThan(0)
+      expect(rtl.rows.length).toBe(ltr.rows.length)
+      expect(rtl.host.width, 'anti-vacuous: the wide layout, not the stacked one').toBeGreaterThan(450)
+      // the rings on the start edge: the outer ring sits as far from the right edge as it does from the left in ltr
+      expect(Math.abs(rtl.host.right - rtl.ring.right - (ltr.ring.left - ltr.host.left)), 'the outer ring hugs the right (start) edge').toBeLessThanOrEqual(1)
+      for (const row of rtl.rows) {
+        expect(row.right, 'a legend row sits on the inline-end side of the rings').toBeLessThanOrEqual(rtl.ring.left + 1)
+        expect(rtl.ring.left - row.right, 'the legend sits beside the rings, not a gutter away').toBeLessThanOrEqual(48)
+      }
+      // the same distance as in ltr
+      const gap = (m: ReturnType<typeof measure>, rtlSide: boolean): number => (rtlSide ? m.ring.left - Math.max(...m.rows.map((r) => r.right)) : Math.min(...m.rows.map((r) => r.left)) - m.ring.right)
+      expect(Math.abs(gap(rtl, true) - gap(ltr, false)), 'ring-to-legend distance matches ltr').toBeLessThanOrEqual(2)
+      // sweep unchanged: no mirroring transform on the layer, the same rotation and dash offsets on every arc
+      expect(getComputedStyle(rtl.svg).transform, 'the rings layer is never mirrored').toBe('none')
+      expect(rtl.progress.length).toBe(ltr.progress.length)
+      rtl.progress.forEach((arc, i) => {
+        expect(arc.getAttribute('transform')).toBe(ltr.progress[i]!.getAttribute('transform'))
+        expect(arc.style.getPropertyValue('--_ring-dashoffset')).toBe(ltr.progress[i]!.style.getPropertyValue('--_ring-dashoffset'))
+      })
+    })
+  }
+
+  it('a gauge flipped to rtl after mount re-anchors on the next box change', async () => {
+    const host = mount(`<div style="inline-size: 640px">${WIDE}</div>`)
+    const gauge = host.querySelector('ui-gauge') as HTMLElement
+    await settle()
+    expect(gauge.querySelector("svg[data-part='rings']")?.getAttribute('preserveAspectRatio')).toBe('xMinYMid meet')
+    host.style.direction = 'rtl'
+    host.style.inlineSize = '600px' // the host box changes, the observer re-reads the direction
+    await settle()
+    expect(gauge.querySelector("svg[data-part='rings']")?.getAttribute('preserveAspectRatio')).toBe('xMaxYMid meet')
+  })
+})
