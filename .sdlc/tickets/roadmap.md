@@ -29,7 +29,6 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0329 | [0329-r9-blackjack-opening-wording](0329-r9-blackjack-opening-wording/handoff.md) | Haiku blackjack openings back on the CardTable after the T-0323 wording (round 9 cluster B) | bug | L2 | P1 | none | 🔵 ready (branch fix/0329-blackjack-opening-wording) |
 | T-0330 | [0330-r9-dropped-surface-finding](0330-r9-dropped-surface-finding/handoff.md) | Feed a dropped surface's bound composite finding with SURFACE_DROPPED (round 9 cluster C) | bug | L2 | P2 | none | 🔵 ready (branch fix/0330-dropped-surface-finding) |
 | T-0332 | [0332-r9-narration-hint-no-change](0332-r9-narration-hint-no-change/handoff.md) | NARRATION_HINT leaves the surface as it is when the reply needs no change (round 9 cluster E) | bug | L1 | P3 | none | 🔵 ready |
-| T-0333 | [0333-r9-booking-confirmation-caption](0333-r9-booking-confirmation-caption/handoff.md) | BOOKING_CONFIRMATION_MISSING fires on a confirm turn or a read-back, not caption words (round 9 cluster G) | bug | L1 | P2 | none | 🔵 ready (branch fix/0333-confirmation-caption) |
 | T-0335 | [0335-corpus-readback-records](0335-corpus-readback-records/handoff.md) | Replace confirmation-view and backable-wizard, which read back a booking before confirming | chore | L2 | P2 | none | 🔵 ready (branch chore/0335-readback-records) |
 | T-0336 | [0336-figure-parity-demos](0336-figure-parity-demos/handoff.md) | Site demos align captioned figures to a shared top edge (figure-parity allowlist debt) | chore | L1 | P3 | none | 🔵 ready (branch fix/0336-figure-parity) |
 | T-0337 | [0337-column-chart-callout-contrast](0337-column-chart-callout-contrast/handoff.md) | Column-chart highlight callout ink meets 4.5:1 on its pill in dark mode (chip-opaque debt) | bug | L1 | P3 | none | 🔵 ready (branch fix/0337-callout-contrast) |
@@ -37,4 +36,4 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0339 | [0339-gauge-rtl-layout](0339-gauge-rtl-layout/handoff.md) | ui-gauge in RTL keeps its rings on the left and its legend about 190px away | bug | L1 | P3 | none | 🔵 ready (branch fix/0339-gauge-rtl) |
 | T-0340 | [0340-dark-primary-on-primary-contrast](0340-dark-primary-on-primary-contrast/handoff.md) | Dark primary under on-primary is 3.25:1: buttons, calendar day, segmented control and checkbox text fail AA | bug | L2 | P2 | none | ⏳ proposed |
 
-Closed: 304 done, 4 dropped (git log or .NNNN-* folders)
+Closed: 305 done, 4 dropped (git log or .NNNN-* folders)

@@ -154,3 +154,10 @@
 - decide: packages/agent-ui/a2ui/src/agent/produce.ts:1863 a failed rename followed by a return to the fixed original id halts: probe P4 (`ask-1` IDGRAPH; new `table-1` CATALOG; fixed `ask-1`) halts `SURFACE_DROPPED at table-1` because round 3 builds no new id. Rule-consistent, over-conservative for a live oscillation.
 - note: packages/agent-ui/a2ui/src/agent/produce.ts:1284 identical defects in two surfaces are unattributable (P3b: `root->gone` in `ask-1` and `ask-2` names both, flags neither), so a double rename halts `SURFACE_DROPPED at ask-1, ask-2`; with distinct defects two new ids retire both (P3). The safe direction, as the spec REV states.
 - note: packages/agent-ui/a2ui/src/live-agent/produce-loop-property.test.ts:19 the T-0328 shapes run in 2-round sequences only; the three-round chained rename is covered by produce-response-type.test.ts and by the oracle-only assertion at :243.
+
+## T-0333: BOOKING_CONFIRMATION_MISSING fires on a confirm turn or a read-back, not caption words (round 9 cluster G) (2026-10-17)
+
+- note: the handoff wording ":85 still fires" now means BOOKING_FORM_MISSING fires on :85, not BOOKING_CONFIRMATION_MISSING. This matches the lead's stated goal.
+- note: redck.py deviations was run, and the output had no red-checkpoint line to act on.
+- note: hand-built confirmations whose settled word sits only in body Text (no heading variant) no longer fire. The fixtures were updated to h4 to show this is deliberate.
+- 2026-10-17 follow-ups from local code review (not ticketed): composite-moments submitsReadBack also treats a `confirm_cancellation` action or an "Add to calendar" `submit: true` Button as a read-back confirm; a "Confirm availability" label on an info CTA with a non-start_intent action still matches the label fallback; `bound()` in composite-moments duplicates croupier `resolveProp` with different semantics (relative template paths). Gauge: the render lint's legend-gap does not check which edge the rings sit on (only gauge.browser.test.ts guards the T-0339 anchor); a dir toggle with no resize re-anchors on the next resize.
