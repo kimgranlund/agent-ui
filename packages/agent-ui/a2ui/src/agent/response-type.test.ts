@@ -71,7 +71,7 @@ describe('renderSurfaceTool', () => {
     const shorter = whole.replace('"}}},{"version"', '"},{"version"')
     expect(messagesParseNote({ messages: shorter })).toMatch(/^Your `messages` was not valid JSON: 2 closing \} are missing in message 2 \(its updateDataModel\)/)
     // No message boundary at the break: the position and the text there.
-    expect(messagesParseNote({ messages: whole.slice(0, -3) })).toMatch(/^Your `messages` was not valid JSON at character \d+ \(message 3\), here: /)
+    expect(messagesParseNote({ messages: whole.slice(0, -3) })).toMatch(/^Your `messages` was not valid JSON at character \d+ \(message 3\), here: `[^`]*`\.$/)
     expect(messagesParseNote({ messages: whole })).toBeUndefined()
     expect(messagesParseNote({ messages: [update] })).toBeUndefined()
   })

@@ -663,10 +663,13 @@ const TOOL_PARSE_HINT =
   ' Reminder: `messages` is an ARRAY of A2UI message objects, one message per entry, never a JSON string ' +
   'and never JSONL text.'
 
-/** T-0344: the PARSE ask when the round's `messages` was a string that does not parse, in place of TOOL_PARSE_HINT and
- *  ahead of the `messagesParseNote` pinpoint. Round 10 :193 got the pinpoint then the reminder three times and resent a
- *  hand-edited string each time, one `}` short again; the harness never edits the string (Kim 2026-10-17). */
-const STRING_PARSE_ASK = ' Send `messages` as an array of A2UI message objects, one object per entry, not as a string.'
+/** T-0344: the PARSE ask when the round's `messages` was any string, in place of TOOL_PARSE_HINT and ahead of the
+ *  `messagesParseNote` pinpoint when there is one. Round 10 :193 got the pinpoint then the reminder three times and
+ *  resent a hand-edited string each time, one `}` short again; the harness never edits the string (Kim 2026-10-17).
+ *  When the round before also sent a string, the ask says so once. */
+const ARRAY_ASK = '`messages` as an array of A2UI message objects, one object per entry, not as a string or JSONL text.'
+const stringParseHint = (again: boolean, parseNote: string | undefined): string =>
+  `${again ? ` You sent a string again; send ${ARRAY_ASK}` : ` Send ${ARRAY_ASK}`}${parseNote !== undefined ? ` ${parseNote}` : ''}`
 
 /** RTS-R8: the repair tail for a round whose payload came from `render_surface`, in place of the legacy
  *  "Re-emit the COMPLETE corrected A2UI JSONL" sentence (which legacy rounds keep, byte for byte). T-0217:
@@ -735,6 +738,7 @@ function messagesFor(
   parseNote: string | undefined = undefined,
   keep: readonly string[] = [],
   droppedNote = '',
+  stringRounds = 0,
 ): Turn[] {
   const turns = baseTurns(input, surfacesNote)
   if (failures && failures.length > 0 && lastRaw !== undefined) {
@@ -747,7 +751,7 @@ function messagesFor(
       .map((f) => `${f.code}${f.path ? ` at ${f.path}` : ''}${expectedTypeNote(f, catalog, lastOutput)}${misplacedSurfaceIdNote(f, lastOutput)}${f.detail ? `: ${f.detail}` : ''}`)
       .join('; ')
     const hint =
-      (failures.some((f) => f.code === 'PARSE') ? (toolRound ? (parseNote !== undefined ? `${STRING_PARSE_ASK} ${parseNote}` : TOOL_PARSE_HINT) : PARSE_HINT) : '') + // T-0304, T-0344: ask for the array, then where the string broke
+      (failures.some((f) => f.code === 'PARSE') ? (toolRound ? (stringRounds > 0 ? stringParseHint(stringRounds > 1, parseNote) : TOOL_PARSE_HINT) : PARSE_HINT) : '') + // T-0304, T-0344: ask for the array, then where the string broke
       idgraphHint(failures) +
       (failures.some((f) => f.code === 'NET_NOOP') ? NET_NOOP_HINT : '') + // GH #1142 — the net-no-op correction round's guidance
       (failures.some((f) => f.code === 'NARRATED_MECHANICS') ? NARRATION_HINT : '') + // T-0234: a narrated reply's guidance
@@ -1473,6 +1477,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   let textJsonlRouted = false // T-0172: sticky, a text round's prose carried A2UI lines that became the payload
   let messagesStringDecoded = false // T-0304: sticky, a render_surface call sent `messages` as a JSON string holding the array
   let parseNote: string | undefined // T-0304: where the last capture round's `messages` string broke, for its PARSE repair
+  let stringRounds = 0 // T-0344: consecutive capture rounds, up to the last, whose `messages` was a string
   // T-0172: the action a client turn answers, read by the semantic checks (a no-payload round is judged too).
   // T-0215: a press with no client `dataModel` reads the surface's data model replayed off the session.
   const turnAction = input.kind === 'client' ? semanticActionOf(input.message, input.session) : undefined
@@ -1652,10 +1657,10 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     }
     // RTS-R1: on a turn that offers `render_surface`, this round's executor captures its input and answers
     // `received`; every other name goes to the caller's executor. Reset every round.
-    let capture = undefined as { jsonl: string; reply: string; target: string | undefined; parseNote: string | undefined } | undefined
+    let capture = undefined as { jsonl: string; reply: string; target: string | undefined; parseNote: string | undefined; stringSent: boolean } | undefined
     const captureTool: ExecuteTool = async (name, toolInput, signal) => {
       if (name === RENDER_SURFACE_TOOL_NAME) {
-        capture = { jsonl: renderSurfaceJsonl(toolInput), reply: renderSurfaceReply(toolInput), target: toolTargetOf(toolInput['target']), parseNote: messagesParseNote(toolInput) }
+        capture = { jsonl: renderSurfaceJsonl(toolInput), reply: renderSurfaceReply(toolInput), target: toolTargetOf(toolInput['target']), parseNote: messagesParseNote(toolInput), stringSent: typeof toolInput['messages'] === 'string' }
         if (stringifiedMessages(toolInput) !== undefined) messagesStringDecoded = true
         return 'received'
       }
@@ -1666,7 +1671,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       model: roundModel,
       system,
       ...(systemCacheBoundary > 0 ? { systemCacheBoundary } : {}),
-      messages: messagesFor(input, failures, lastRaw, deps.catalog, lastOutput, lastCaptureRound, surfacesNote, parseNote, keep, droppedNote(failures ?? [])),
+      messages: messagesFor(input, failures, lastRaw, deps.catalog, lastOutput, lastCaptureRound, surfacesNote, parseNote, keep, droppedNote(failures ?? []), stringRounds),
       effort: roundEffort,
       ...(forceSurface
         ? { modelSettings: { ...opts.modelSettings, thinking: 'disabled' as const } }
@@ -1750,6 +1755,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     // text after the meta-line is the reply and the payload is the captured `render_surface` input, or none.
     const captured = capture
     parseNote = captured?.parseNote
+    stringRounds = captured?.stringSent === true ? stringRounds + 1 : 0
     const textRound = captured === undefined && !isLegacyRound(raw, afterMeta)
     // T-0172: a text round whose prose carries A2UI lines (Haiku 5.5 wrote its surface as text instead of
     // calling the tool, 2026-10-14) routes them as the payload, as a capture round's would be, instead of
