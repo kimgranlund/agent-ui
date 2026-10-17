@@ -59,8 +59,9 @@ const PINS: readonly (readonly [preset: string, catalogId: string, turn: string,
   ['lexicographer', 'agent-ui', 'Show me the word.', ['domain-lexicographer-game-over', 'domain-lexicographer-word-board', 'frontier-product-card-rooms']],
   ['admiral', 'agent-ui', 'Fire at B3', ['domain-admiral-battleship-board', 'frontier-product-card-rooms', 'restaurant-menu']],
   ['alchemist', 'agent-ui', 'Mix the two elements', ['media-file-grid', 'list-nested', 'pattern-settings-form']],
-  // Known poor (T-0335): rank 3 is plan-and-execute-plan, off the quest domain (it was the then hotel wizard).
-  ['dungeon-master', 'agent-ui', 'I open the door and look around', ['frontier-game-hud-quest', 'frontier-service-gateway']],
+  // Known poor (T-0335): rank 3 is plan-and-execute-plan, off the quest domain (it was the then hotel wizard); pinned so a
+  // shard change that moves it is a deliberate re-pin.
+  ['dungeon-master', 'agent-ui', 'I open the door and look around', ['frontier-game-hud-quest', 'frontier-service-gateway', 'plan-and-execute-plan']],
 ]
 
 describe('retrieve: the shipped-preset ranking pin (T-0238)', () => {

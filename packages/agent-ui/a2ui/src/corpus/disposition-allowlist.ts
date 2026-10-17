@@ -116,7 +116,7 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // independent judge (VerdictsFile `corpus/verdicts/2026-08-18t22-00-00z--bw-admission-verdicts.json`,
   // qualityScore 4/PASS — D1 floored by P7=4, D2–D5 all 5). Entry removed per this map's own instruction.
   // T-0335 (2026-10-17) re-admitted it via `import-seeds --replace` as a time-off request, no hotel booking
-  // read-back before "Confirm booking" (VerdictsFile `corpus/verdicts/2026-10-17t14-04-03z--t0335-backable-wizard.json`,
+  // read-back before "Confirm booking" (VerdictsFile `corpus/verdicts/2026-10-17t14-17-58z--t0335-backable-wizard-dates.json`,
   // independent a2ui-review-agent judge).
   //
   // GH #1201 (2026-08-17) — `frontier-greet-card`: the same pending-state shape (NO VERDICT SOUGHT YET,
@@ -136,7 +136,7 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // judged pipeline (import-seeds.ts with a real VerdictsFile) and DELETE these entries when that wave
   // lands. T-0335 (2026-10-17) re-admitted `confirmation-view` via `import-seeds --replace` as a settled
   // plan-change card, no reservation read-back before a Confirm button (VerdictsFile
-  // `corpus/verdicts/2026-10-17t14-09-51z--t0335-confirmation-view-rejudge.json`, independent a2ui-review-agent judge).
+  // `corpus/verdicts/2026-10-17t14-18-28z--t0335-confirmation-view-settled.json`, independent a2ui-review-agent judge).
   //
   // GH #1206 (2026-08-17) — the four COMPOSITION PACK B seeds (`five-day-weather` · `restaurant-menu` ·
   // `travel-itinerary` · `wizard-step-progress`): the same pending-state shape (NO VERDICT SOUGHT YET,

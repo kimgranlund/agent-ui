@@ -484,7 +484,7 @@ const WIZARD_ID = 'ask-1'
 /** Frontier 9 — the BACKABLE MULTI-STEP wizard (GH #1192, req-a2ui-patterns.md R2 / ADR-0198's 2026-08-18
  *  amendment B1), repaired to grammar.md's CardFooter clause (the GH #1262 rulings pass, #1320 — the
  *  seed's original loose-Row nav buttons contradicted it, flagged for this follow-up repair): ONE ask
- *  surface for the WHOLE flow (posture (i), grammar.md's backable-multi-step clause) — days off → leave
+ *  surface for the WHOLE flow (posture (i), grammar.md's backable-multi-step clause), dates → leave
  *  type → submit, Back always free because nothing is committed until the flow-final confirm. Root is delivered
  *  ONCE as the stable wrapper ("root", never resent); the Card itself is non-root ("card"), one level
  *  down, card-anatomy in force on every step: CardContent ("ct", stable — its own children list never
@@ -494,7 +494,7 @@ const WIZARD_ID = 'ask-1'
  *  root-immutability rule). Every answer lives under the shared "/draft/*" data-model prefix, seeded once
  *  at scene 1 and never rewritten by a scene swap — so the bound Calendar/RadioGroup re-render the SAME
  *  still-present draft values when Back returns to an earlier scene: the worked round-trip below goes
- *  days → leave type → BACK to days (still showing the chosen range) → forward to leave type again (still
+ *  dates → leave type → BACK to dates (still showing the chosen range) → forward to leave type again (still
  *  showing the chosen type) → submit. The submit scene's receipt rides the CURRENT law's DescriptionList
  *  primitive (ADR-0201). Every mid-flow Next/Back turn here is a scene transition on this ONE still-open
  *  ask, never an answered ask (B1's carve-out) — "ask-1" is declared exactly once, on turn 1, and never
@@ -503,11 +503,11 @@ const WIZARD_ID = 'ask-1'
  *  batch that also creates its Radio children races ahead of them and clears the selection instead of
  *  reading it back) — proven by the real-renderer round-trip test, `backable-wizard.test.ts`. Repaired
  *  again for the sole ground a fresh judge sustained on this seed (GH #1262 second pass, a2ui-payload.md
- *  P7): "cal" and "leave_types" ship with NO accessible name of their own — the catalog declares no label prop
- *  on either — so each rides an ADR-0051 Field wrap, the only naming path: "f_dates" (label "First and
+ *  P7): "cal" and "leave_types" ship with NO accessible name of their own, the catalog declares no label prop
+ *  on either, so each rides an ADR-0051 Field wrap, the only naming path: "f_dates" (label "First and
  *  last day off") and "f_leave" (label "Leave type"). Both wraps are scene-local, exactly like "cal"/
- *  "leave_types" themselves — resent with "scene" on every occurrence of each control (turn 1's dates scene AND
- *  the BACK-to-dates resend; turn 2's leave-type scene AND the forward-again resend) — never touching root/
+ *  "leave_types" themselves, resent with "scene" on every occurrence of each control (turn 1's dates scene AND
+ *  the BACK-to-dates resend; turn 2's leave-type scene AND the forward-again resend), never touching root/
  *  card/ct.
  *  The two-button footers ("back2"/"next2" on the leave-type scene, "back3"/"commit" on the submit scene)
  *  ride one Row inside CardFooter ("nav2"/"nav3", gap "md", justify "end"), per the CardFooter
@@ -520,7 +520,7 @@ const WIZARD_ID = 'ask-1'
  *  is a pre-filled BookingForm; T-0289: the confirm settles as a BookingConfirmation). */
 export const backableWizardSeed: ExampleSeed = {
   name: 'backable-wizard',
-  description: 'A 3-step backable time-off request (days off, leave type, submit) on ONE ask surface: draft answers under /draft/*, a stable root>Card>CardContent scene container swapped by updateComponents, per-step nav Buttons in their own CardFooter (two-button steps in a Row inside it), Field-wrapped Calendar/RadioGroup controls (ADR-0051), and a BACK round-trip that leaves both prior answers untouched.',
+  description: 'A 3-step backable time-off request (dates, leave type, submit) on ONE ask surface: draft answers under /draft/*, a stable root>Card>CardContent scene container swapped by updateComponents, per-step nav Buttons in their own CardFooter (two-button steps in a Row inside it), Field-wrapped Calendar/RadioGroup controls (ADR-0051), and a BACK round-trip that leaves both prior answers untouched.',
   promptText: 'I need to request time off. Let me pick the days first, then the leave type, and step back to change either one before my manager sees the request.',
   surfaceId: WIZARD_ID,
   protocolVersion: 'v1.0',
@@ -557,7 +557,7 @@ export const backableWizardSeed: ExampleSeed = {
     { version: 'v1.0', updateDataModel: { surfaceId: WIZARD_ID, path: '/draft/from', value: '2026-08-21' } },
     { version: 'v1.0', updateDataModel: { surfaceId: WIZARD_ID, path: '/draft/to', value: '2026-08-24' } },
 
-    // turn 2 — scene 2 (leave type): "scene" AND "ft" are resent TOGETHER (never root/card/ct); /draft/from,
+    // turn 2, scene 2 (leave type): "scene" AND "ft" are resent TOGETHER (never root/card/ct); /draft/from,
     // /draft/to stay in the data model, untouched underneath. A ghost Back joins the solid Continue in the
     // CardFooter (the nav-row law, R2, satisfied via CardFooter per grammar.md's CardFooter clause). The
     // RadioGroup rides a Field wrap ("f_leave") for the same P7 reason as "f_dates" above. "leave_types"
@@ -578,17 +578,17 @@ export const backableWizardSeed: ExampleSeed = {
           { id: 'r2', component: 'Radio', value: 'personal', label: 'Personal · 3 days left' },
           { id: 'ft', component: 'CardFooter', children: ['nav2'] },
           { id: 'nav2', component: 'Row', gap: 'md', justify: 'end', children: ['back2', 'next2'] },
-          { id: 'back2', component: 'Button', variant: 'ghost', label: 'Back', action: { action: 'step', context: { to: 'days' } } },
+          { id: 'back2', component: 'Button', variant: 'ghost', label: 'Back', action: { action: 'step', context: { to: 'dates' } } },
           { id: 'next2', component: 'Button', variant: 'solid', label: 'Continue', action: { action: 'step', context: { to: 'submit' } } },
         ],
       },
     },
     // wire the value binding now that "r1"/"r2" are mounted: same children list (never touched, no
-    // dispose/remount), only "leave_types"'s own props differ from its previous record — a genuine prop
+    // dispose/remount), only "leave_types"'s own props differ from its previous record, a genuine prop
     // reconcile (RSR-C6), not a fresh mount, so the read finds its Radio children already present.
     { version: 'v1.0', updateComponents: { surfaceId: WIZARD_ID, components: [{ id: 'leave_types', component: 'RadioGroup', value: { path: '/draft/leave' }, children: ['r1', 'r2'] }] } },
 
-    // BACK from leave type to days: "scene" + "ft" swap to the dates shape again — IDENTICAL to turn 1's tree
+    // BACK from leave type to dates: "scene" + "ft" swap to the dates shape again, IDENTICAL to turn 1's tree
     // (the SAME "f_dates" Field wrap). /draft/from and /draft/to are STILL "2026-08-21"/"2026-08-24" (this
     // update never touches them), so the re-bound Calendar shows the range already chosen — the round-trip
     // B1's carve-out exists for.
@@ -606,8 +606,8 @@ export const backableWizardSeed: ExampleSeed = {
       },
     },
 
-    // forward again to leave type — the SAME scene-2 tree (the SAME "f_leave" Field wrap), built the SAME
-    // two-step way (a fresh "leave_types" mount here — the earlier one was disposed by the BACK swap — races its
+    // forward again to leave type, the SAME scene-2 tree (the SAME "f_leave" Field wrap), built the SAME
+    // two-step way (a fresh "leave_types" mount here, the earlier one was disposed by the BACK swap, races its
     // Radio children again too); /draft/leave is STILL "vacation" (the value already committed before the
     // detour), the second half of the round-trip proof.
     {
@@ -622,14 +622,14 @@ export const backableWizardSeed: ExampleSeed = {
           { id: 'r2', component: 'Radio', value: 'personal', label: 'Personal · 3 days left' },
           { id: 'ft', component: 'CardFooter', children: ['nav2'] },
           { id: 'nav2', component: 'Row', gap: 'md', justify: 'end', children: ['back2', 'next2'] },
-          { id: 'back2', component: 'Button', variant: 'ghost', label: 'Back', action: { action: 'step', context: { to: 'days' } } },
+          { id: 'back2', component: 'Button', variant: 'ghost', label: 'Back', action: { action: 'step', context: { to: 'dates' } } },
           { id: 'next2', component: 'Button', variant: 'solid', label: 'Continue', action: { action: 'step', context: { to: 'submit' } } },
         ],
       },
     },
     { version: 'v1.0', updateComponents: { surfaceId: WIZARD_ID, components: [{ id: 'leave_types', component: 'RadioGroup', value: { path: '/draft/leave' }, children: ['r1', 'r2'] }] } },
 
-    // the user kept the leave type and hit Continue — the receipt rows land in the draft (humanized,
+    // the user kept the leave type and hit Continue, the receipt rows land in the draft (humanized,
     // adjacent label/value per the receipt clause):
     {
       version: 'v1.0',
@@ -643,7 +643,7 @@ export const backableWizardSeed: ExampleSeed = {
       },
     },
 
-    // turn 3 — submit scene: the RECEIPT, current law's DescriptionList primitive (ADR-0201), plus the
+    // turn 3, submit scene: the RECEIPT, current law's DescriptionList primitive (ADR-0201), plus the
     // flow-final commit Button in the CardFooter (grammar's confirm-before-concluding law). Still the SAME
     // ask surface — the flow-final confirm on THIS turn is what starts the answered-ask freeze (B1); every
     // turn before it was a scene transition, never an answered ask.

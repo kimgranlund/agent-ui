@@ -51,23 +51,26 @@ and a payload omitting it fails validate. **Boundary:** a single hero image insi
 this pattern — that is the plain Image-in-Card idiom (`node-idioms.md`'s Image card); reach for the
 Swiper only when the user pages through a SET.
 
-## 2 · Confirmation view (seed: `confirmation-view`, pack A)
+## 2 · Settled record card (seed: `confirmation-view`, pack A)
 
 **Mechanism.** The full three-slot card a producer emits once a change has gone through:
-`Card > CardHeader` (identity title ONLY) + `CardContent` holding the ADR-0201 `DescriptionList`
-record + `CardFooter` holding follow-up actions, the card-anatomy clause (`grammar.md:138`) applied
-end to end. `DescriptionList.rows` is bindable (`{label, value}[]`, both required per its catalog
-entry), so the record is bound to a model array and a correction updates it in place by rewriting
-`/plan/rows`, never by resending the card. Values arrive HUMANIZED from the producer
-(`'$184.00 prorated to Mar 1, on the card ending 4242'`, never a raw number).
+`Card > CardHeader` (identity title plus a settled-status `Badge`) + `CardContent` holding the ADR-0201
+`DescriptionList` record + `CardFooter` holding follow-up actions, the card-anatomy clause applied end
+to end. The Badge is the settle shape grammar.md gives a confirmed receipt (the T-0318
+`frontier-booking-receipt` precedent). `DescriptionList.rows` is bindable (`{label, value}[]`, both
+required per its catalog entry), so the record is bound to a model array and a correction updates it in
+place by rewriting `/plan/rows`, never by resending the card. Values arrive HUMANIZED from the producer
+(`'$184.00 prorated to Mar 1, on the card ending 4242'`, never a raw number). Each follow-up names the
+record it acts on through a bound action `context`.
 
 **Worked shape** (seed source, verbatim):
 
 ```ts
-{ id: 'root', component: 'Card', elevation: '1', children: ['hd', 'ct', 'ft'] },
+{ id: 'head', component: 'Row', gap: 'sm', align: 'center', children: ['title', 'status'] },
+{ id: 'status', component: 'Badge', label: 'Active', intent: 'success' },
 { id: 'record', component: 'DescriptionList', rows: { path: '/plan/rows' } },
-{ id: 'btn_invoice', component: 'Button', variant: 'ghost', label: 'View invoice', action: { action: 'view_invoice' } },
-{ id: 'btn_seats', component: 'Button', variant: 'soft', label: 'Add seats', action: { action: 'add_seats' } },
+{ id: 'btn_invoice', component: 'Button', variant: 'ghost', label: 'View invoice', action: { action: 'view_invoice', context: { invoice: { path: '/plan/invoiceId' } } } },
+{ id: 'btn_seats', component: 'Button', variant: 'soft', label: 'Add seats', action: { action: 'add_seats', context: { plan: { path: '/plan/id' } } } },
 ```
 
 **Policies + consequences.** The footer carries follow-ups, never a commit: the change already
@@ -228,7 +231,7 @@ time-off request since T-0335; the seed puts the nav Buttons in a `CardFooter`, 
 { "id": "scene", "component": "Column", "gap": "md", "children": ["f_leave"] },
 { "id": "f_leave", "component": "Field", "label": "Leave type", "child": "leave_types" },
 { "id": "leave_types", "component": "RadioGroup", "children": ["r1", "r2"] },
-{ "id": "back2", "component": "Button", "variant": "ghost", "label": "Back", "action": { "action": "step", "context": { "to": "days" } } },
+{ "id": "back2", "component": "Button", "variant": "ghost", "label": "Back", "action": { "action": "step", "context": { "to": "dates" } } },
 { "id": "next2", "component": "Button", "variant": "solid", "label": "Continue", "action": { "action": "step", "context": { "to": "submit" } } }
 ```
 

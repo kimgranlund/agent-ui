@@ -11,9 +11,9 @@
 // (1) SLIDESHOW/GALLERY — Swiper > SwiperItem > Image, caption Text default-slotted over the Image's
 //     bottom scrim (the disposition row's full-bleed slide: image fills the SwiperItem; the scrim
 //     treatment is the Image control's own R2 contract, the frontier-image-hero-card idiom).
-// (2) CONFIRMATION VIEW — Card > CardHeader identity + CardContent record of a settled change (the ADR-0201
-//     DescriptionList primitive, rows bound + humanized) + CardFooter follow-up Button pair, no commit
-//     (T-0335: no booking read-back before a confirm). A COMPOSITION
+// (2) CONFIRMATION VIEW, a settled record since T-0335: Card > CardHeader identity and status Badge +
+//     CardContent record of a settled change (the ADR-0201 DescriptionList primitive, rows bound and
+//     humanized) + CardFooter follow-up Button pair with record-bound context, no commit. A COMPOSITION
 //     pattern, distinct from the frontier-booking-receipt primitive exemplar (#1185): this is the whole
 //     three-slot confirmation CARD, not the bare receipt node.
 // (3) TREND LIST — List > Row{Text label · Sparkline · Stat delta}, templated over the data model with
@@ -97,21 +97,23 @@ export const slideshowGallerySeed: ExampleSeed = {
 }
 
 const CONFIRM_ID = 'confirmation-view'
-/** Composition 2: the CONFIRMATION VIEW pattern, the full three-slot card a producer emits once a change has
- *  gone through (Card > CardHeader + CardContent record + CardFooter Button pair), grammar.md's card-anatomy
- *  law applied end to end. CardHeader carries ONLY the identity title, CardContent carries the substance (the
- *  ADR-0201 DescriptionList, rows BOUND so a later correction updates the record in place, values arriving
- *  HUMANIZED from the producer), and CardFooter carries follow-up actions only: a ghost secondary beside one
- *  soft primary, neither of them a commit. T-0335 (2026-10-17): re-admitted through the judged `--replace`
+/** Composition 2: the SETTLED RECORD card a producer emits once a change has gone through (Card > CardHeader
+ *  + CardContent record + CardFooter follow-ups), grammar.md's card-anatomy law applied end to end. The
+ *  CardHeader carries the identity title with a settled-status Badge beside it (the settle shape grammar.md
+ *  gives a confirmed receipt, and the T-0318 `frontier-booking-receipt` precedent). CardContent carries the
+ *  substance: the ADR-0201 DescriptionList, rows BOUND so a later correction updates the record in place,
+ *  values arriving HUMANIZED from the producer. CardFooter carries follow-up actions only, a ghost secondary
+ *  beside one soft primary, neither a commit; each names the record it acts on through a bound action
+ *  context (`/plan/id`, `/plan/invoiceId`). T-0335 (2026-10-17): re-admitted through the judged `--replace`
  *  exit as a settled plan change; it used to read a dinner reservation back before a Confirm button, which
  *  the rulings rule out (T-0266: a booking with every detail is a pre-filled BookingForm; T-0289: the
- *  confirm settles as a BookingConfirmation). Contrast `frontier-booking-receipt` (#1185, T-0318): that
- *  seed exercises the DescriptionList PRIMITIVE bare, with a status Badge and no buttons; this one is the
- *  whole card with its footer. */
+ *  confirm settles as a BookingConfirmation). Contrast `frontier-booking-receipt` (#1185, T-0318): that seed
+ *  exercises the DescriptionList PRIMITIVE bare, with no buttons; this one is the whole card with its
+ *  footer. */
 export const confirmationViewSeed: ExampleSeed = {
   name: 'confirmation-view',
   description:
-    'A settled plan-change card: CardHeader identity title, CardContent DescriptionList with bound humanized rows, CardFooter Row of a ghost and a soft follow-up Button, no commit (card-anatomy law end to end).',
+    'A settled plan-change record card: CardHeader title with an Active status Badge, CardContent DescriptionList with bound humanized rows, CardFooter Row of a ghost and a soft follow-up Button whose action context is bound to the plan record, no commit (card-anatomy law end to end).',
   promptText: 'We just switched the team to the Business plan. Which billing changes take effect now?',
   surfaceId: CONFIRM_ID,
   protocolVersion: 'v1.0',
@@ -124,6 +126,8 @@ export const confirmationViewSeed: ExampleSeed = {
         surfaceId: CONFIRM_ID,
         value: {
           plan: {
+            id: 'sub_business_2041',
+            invoiceId: 'INV-2026-1017',
             rows: [
               { label: 'Plan', value: 'Business, billed yearly' },
               { label: 'Seats', value: '12 of 15 in use' },
@@ -141,14 +145,16 @@ export const confirmationViewSeed: ExampleSeed = {
         surfaceId: CONFIRM_ID,
         components: [
           { id: 'root', component: 'Card', elevation: '1', children: ['hd', 'ct', 'ft'] },
-          { id: 'hd', component: 'CardHeader', children: ['title'] },
+          { id: 'hd', component: 'CardHeader', children: ['head'] },
+          { id: 'head', component: 'Row', gap: 'sm', align: 'center', children: ['title', 'status'] },
           { id: 'title', component: 'Text', variant: 'h4', text: 'Plan updated' },
+          { id: 'status', component: 'Badge', label: 'Active', intent: 'success' },
           { id: 'ct', component: 'CardContent', children: ['record'] },
           { id: 'record', component: 'DescriptionList', rows: { path: '/plan/rows' } },
           { id: 'ft', component: 'CardFooter', children: ['actions'] },
           { id: 'actions', component: 'Row', gap: 'md', justify: 'end', children: ['btn_invoice', 'btn_seats'] },
-          { id: 'btn_invoice', component: 'Button', variant: 'ghost', label: 'View invoice', action: { action: 'view_invoice' } },
-          { id: 'btn_seats', component: 'Button', variant: 'soft', label: 'Add seats', action: { action: 'add_seats' } },
+          { id: 'btn_invoice', component: 'Button', variant: 'ghost', label: 'View invoice', action: { action: 'view_invoice', context: { invoice: { path: '/plan/invoiceId' } } } },
+          { id: 'btn_seats', component: 'Button', variant: 'soft', label: 'Add seats', action: { action: 'add_seats', context: { plan: { path: '/plan/id' } } } },
         ],
       },
     },
