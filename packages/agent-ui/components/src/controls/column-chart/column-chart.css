@@ -75,6 +75,7 @@
   --ui-column-chart-projected-dash: var(--ui-chart-projected-dash);
   --ui-column-chart-highlight-ink: var(--md-sys-color-primary);
   --ui-column-chart-highlight-ink-on: var(--md-sys-color-primary-on-primary);
+  --ui-column-chart-callout-bg: var(--md-sys-color-primary-dim); /* the pill takes the deeper primary step: on-primary ink on plain primary is 3.25:1 in dark (T-0337), on -dim it clears 4.5:1 in both schemes */
   --ui-column-chart-series-1-ink: var(--ui-chart-series-1-ink);
   --ui-column-chart-series-2-ink: var(--ui-chart-series-2-ink);
   --ui-column-chart-series-3-ink: var(--ui-chart-series-3-ink);
@@ -275,7 +276,7 @@
     inset-inline-start: calc(var(--_cat-pct, 0) * 1%);
     inset-block-start: 0;
     translate: calc(var(--_cat-shift, -50) * 1%) 0;
-    background: var(--ui-column-chart-highlight-ink);
+    background: var(--ui-column-chart-callout-bg);
     color: var(--ui-column-chart-highlight-ink-on);
     display: flex;
     gap: 0.35ch;
