@@ -2,7 +2,7 @@
 id: T-0168
 title: "Lint rules for the 2026-10 rulings: disabled recipe fleet-wide, 3:1 field outline, icon vs glyph, calendar cap, table pager, pill coverage, round-3 proposals"
 type: feature         # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0167]    # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -34,11 +34,16 @@ Every standing dogfood ruling from 2026-10-13/14 has a lint rule with a negative
 ## Constraints
 - Rules derive thresholds from the ramp or named JSON fields, never repeated literals. No em dashes.
 
-## Acceptance criteria
-verifier: L3
+## Outcome
 
-- `npm run check` exits 0.
-- `node scripts/dogfood-compose.mjs selftest` exits 0, with cases for `caret-glyph` and `star-run`.
-- `node scripts/dogfood-compose.mjs --gate` exits 0.
-- `npx vitest run --config vitest.browser.config.ts --project site site/pages/dogfood-render.browser.test.ts` exits 0 in Chromium and WebKit, every new render rule measured at least once in the sweep, and every new negative control red on its plant and green on its twin.
-- `node -e "const r=require('./scripts/dogfood-rules.json');const d=require('fs').readFileSync('.claude/docs/references/dogfood-lint.md','utf8');const q=String.fromCharCode(96);const miss=[...r.render,...r.compose].map(x=>x.id).filter(id=>!d.includes(q+id+q));if(miss.length){console.error(miss);process.exit(1)}"` exits 0 (the reference lists every rule).
+2026-10-17 · lane: full L3 · verdict: pass · verifier: verifier-L3 (fable) · base: 946d95dc5ab6
+- Changed: 22 render rules and 2 compose rules for the 2026-10 rulings, each with a biting plant (#2085)
+- Commits: none
+- Check: 1 `npm run check` exits 0: pass
+- Check: 2 `node scripts/dogfood-compose.mjs selftest` exits 0, with cases for `caret-glyph` and `star-run`: pass
+- Check: 3 `node scripts/dogfood-compose.mjs --gate` exits 0: pass
+- Check: 4 render lint exits 0 in Chromium and WebKit, every new rule measured, every new negative control r...: pass
+- Check: 5 the reference lists every rule (`node -e "...dogfood-rules.json...dogfood-lint.md..."` exits 0): pass
+- Follow-up: note: site/pages/dogfood-render.browser.test.ts:63 SILHOUETTE_MIN = 1.3... -> notes.md
+- Follow-up: note: site/pages/radio-demo.ts:67,85 and... -> notes.md
+- Follow-up: note: Intent item 7 the OTP empty and disabled goldens: the builder... -> notes.md

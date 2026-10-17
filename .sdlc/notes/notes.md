@@ -135,3 +135,13 @@
 - decide: `.claude/docs/lld/a2ui-live-agent.lld.md:98,475,692-696` and `.claude/docs/spec/a2ui-live-agent.spec.md:255-257` note: history and changelog passages still name `NEGOTIATE_BLUE_SKY`, `calibrationExampleBullet`, `BLUE_SKY_CALIBRATION_IDS` and `miniSkillsFor` with old line numbers; the current-mode passages (LLD-C4 row, SPEC-R13 and the function comment) were repaired.
 - decide: `packages/agent-ui/a2ui/tools/agent/worker/index.ts:50,54` note: the worker still imports the two base `catalog.json` files without an import attribute; the bundle loads (`worker-bundle.test.ts` green), so this is a consistency point, not a defect.
 - decide: `packages/agent-ui/a2ui/src/agent/assets.gen.ts:25,40` note: the two regenerated embed lines for `card-game-sheet.md` and `settings-screen.md` carry em dashes inherited from those bodies (unchanged since the merge base; only the `calibration:` key was added), so the ticket added no em dash of its own.
+
+## T-0168: Lint rules for the 2026-10 rulings: disabled recipe fleet-wide, 3:1 field outline, icon vs glyph, calendar cap, table pager, pill coverage, round-3 proposals (2026-10-17)
+
+- note: site/pages/dogfood-render.browser.test.ts:63 `SILHOUETTE_MIN = 1.3` is a single test constant that slider-disabled now shares with disabled-edge and avatar-disc; the slider-disabled row in scripts/dogfood-rules.json names 1.3:1 in prose only, unlike the new rows' named numbers.
+- note: site/pages/radio-demo.ts:67,85 and site/pages/choice-card-demo.ts:60 keep pre-existing em dashes in visible UI copy outside the picker labels; picker-dash covers labels only (T-0147's "UI copy" half stays open, as dogfood-lint.md says).
+- note: Intent item 7 (the OTP empty and disabled goldens): the builder reports a fresh mint byte-identical to the committed goldens and no golden changed in the diff; not a criterion, not re-minted here.
+
+## T-0334: BANKROLL_MISMATCH and NATURAL_ACTIONS price a pontoon at 2:1 (round 9 cluster H) (2026-10-17)
+
+- note: scripts/e2e-admin/probe/replays has no pontoon fixture, so a recorded r9 pontoon payload was not replayed. Pontoon behavior is covered only by unit tests.

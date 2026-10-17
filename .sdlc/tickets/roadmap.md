@@ -5,7 +5,6 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 
 | ID | Ticket | Title | Type | Size | Pri | Depends on | Status |
 |---|---|---|---|---|---|---|---|
-| T-0168 | [0168-lint-rulings-coverage](0168-lint-rulings-coverage/handoff.md) | Lint rules for the 2026-10 rulings: disabled recipe fleet-wide, 3:1 field outline, icon vs glyph, calendar cap, table pager, pill coverage, round-3 proposals | feature | L3 | P2 | T-0167 | 🔵 ready (branch feat/0168-lint-rulings-coverage) |
 | T-0169 | [0169-lint-dead-plumbing](0169-lint-dead-plumbing/handoff.md) | Remove dead lint plumbing: adr_ratify, docs-grammar S8, census lane code, ADR wording in gates, [scale]/[density] bridge | chore | L2 | P3 | T-0152, T-0159 | 🔵 ready |
 | T-0176 | [0176-eval-scenarios-store](0176-eval-scenarios-store/handoff.md) | Agent eval framework 1: scenario format, replay in CI, runs.jsonl signal store, 15 persona smoke scenarios | feature | L3 | P1 | T-0174, T-0181 | 🔵 ready |
 | T-0177 | [0177-eval-report](0177-eval-report/handoff.md) | Agent eval framework 2: report page (matrix heatmap, failure codes, digest trends, links to trace and screenshots) | feature | L2 | P2 | T-0176 | 🔵 ready |
@@ -32,11 +31,10 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0330 | [0330-r9-dropped-surface-finding](0330-r9-dropped-surface-finding/handoff.md) | Feed a dropped surface's bound composite finding with SURFACE_DROPPED (round 9 cluster C) | bug | L2 | P2 | none | 🔵 ready |
 | T-0332 | [0332-r9-narration-hint-no-change](0332-r9-narration-hint-no-change/handoff.md) | NARRATION_HINT leaves the surface as it is when the reply needs no change (round 9 cluster E) | bug | L1 | P3 | none | 🔵 ready |
 | T-0333 | [0333-r9-booking-confirmation-caption](0333-r9-booking-confirmation-caption/handoff.md) | BOOKING_CONFIRMATION_MISSING fires on a confirm turn or a read-back, not caption words (round 9 cluster G) | bug | L1 | P2 | none | 🔵 ready (branch fix/0333-confirmation-caption) |
-| T-0334 | [0334-r9-pontoon-payout](0334-r9-pontoon-payout/handoff.md) | BANKROLL_MISMATCH and NATURAL_ACTIONS price a pontoon at 2:1 (round 9 cluster H) | bug | L1 | P3 | none | 🔵 ready (branch fix/0334-pontoon-payout) |
 | T-0335 | [0335-corpus-readback-records](0335-corpus-readback-records/handoff.md) | Replace confirmation-view and backable-wizard, which read back a booking before confirming | chore | L2 | P2 | none | 🔵 ready (branch chore/0335-readback-records) |
 | T-0336 | [0336-figure-parity-demos](0336-figure-parity-demos/handoff.md) | Site demos align captioned figures to a shared top edge (figure-parity allowlist debt) | chore | L1 | P3 | none | 🔵 ready |
 | T-0337 | [0337-column-chart-callout-contrast](0337-column-chart-callout-contrast/handoff.md) | Column-chart highlight callout ink meets 4.5:1 on its pill in dark mode (chip-opaque debt) | bug | L1 | P3 | none | 🔵 ready |
 | T-0338 | [0338-product-card-icon-box](0338-product-card-icon-box/handoff.md) | product-card icon header: 2n icon box or a ruled exemption (icon-box debt) | chore | L1 | P3 | none | ⏳ proposed |
 | T-0339 | [0339-gauge-rtl-layout](0339-gauge-rtl-layout/handoff.md) | ui-gauge in RTL keeps its rings on the left and its legend about 190px away | bug | L1 | P3 | none | 🔵 ready |
 
-Closed: 301 done, 4 dropped (git log or .NNNN-* folders)
+Closed: 303 done, 4 dropped (git log or .NNNN-* folders)
