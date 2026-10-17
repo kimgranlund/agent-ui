@@ -6,11 +6,12 @@
 // `EntryLibraryPack` plus entry-list's add-from-library menu).
 //
 // T-0160: a thin reader. Every authored pack is a `site/agent-content/packs/<id>/pack.json` of refs to
-// entry files, and the a2ui mini-skill and GenUI pack `.md` files are folded into the same generated
-// registry (`site/agent-content/registry.gen.ts`, `node scripts/generate-agent-content.mjs`), so this file
-// globs nothing and copies no text. What stays here is what is not content: the live overlays (the
-// Integrations and MCP-services getters) and the "Registered catalogs" pack mapped from the
-// `A2UI_CATALOG_OPTIONS` import (ADR-0170 cl.7, the bottom of ADMIN_LIBRARIES).
+// entry files, read through the generated registry (`node scripts/generate-agent-content.mjs`), so this
+// file copies no text. Two packs derive LIVE from the shipped a2ui `.md` registries instead (raw-globbed
+// below, never a second generated copy): the `a2ui-idioms` pack (`derived: mini-skill`) and the GenUI
+// packs. What else stays here is what is not content: the live overlays (the Integrations and
+// MCP-services getters) and the "Registered catalogs" pack mapped from the `A2UI_CATALOG_OPTIONS` import
+// (ADR-0170 cl.7, the bottom of ADMIN_LIBRARIES).
 import { ENTRY_KINDS } from '@agent-ui/app/agent-admin-entries'
 import { A2UI_CATALOG_OPTIONS } from '@agent-ui/app/agent-admin-schema'
 import type { EntryLibraryPack, NewEntryInput } from '@agent-ui/app/entry-data'
@@ -19,19 +20,49 @@ import type { EntryLibraryPack, NewEntryInput } from '@agent-ui/app/entry-data'
 // site overlay hands it, no restated inline literal. No runtime cycle: admin-live-runner.ts imports nothing
 // from this page.
 import type { LiveServiceRow } from '../lib/admin-live-runner.ts'
-import { packEntries, packRecord, packRecords, promptRecords } from '../agent-content/registry.ts'
-import type { PackRecord } from '../agent-content/schema.ts'
+import { packEntries, packRecord, packRecords, type RuntimePack } from '../agent-content/registry.ts'
+import { ENTRY_KINDS as CONTENT_ENTRY_KINDS, splitKeyValueFrontmatter, type PresetCategoryName } from '../agent-content/schema.ts'
 
-// ── pack #4 (genui-surface.spec.md SPEC-R9/R11, D4): the shipped GenUI pattern-source packs, one per
-// `@agent-ui/a2ui` `prompts/genui-packs/*.md` record in the registry. Each projects to ONE
-// `EntryLibraryPack` carrying ONE ready-to-add entry whose `content` is the pack body verbatim, mirroring
-// `@agent-ui/a2ui/agent`'s own `genuiPackLibrary` projection (SPEC-R11), reimplemented here because that
-// function's input type (`GenuiPatternPack`) is Node-loaded data, not something this page holds.
-const GENUI_PACK_LIBRARY: EntryLibraryPack[] = promptRecords('genui-pack').map((r) => {
-  const label = r.frontmatter['label'] ?? r.id
-  const description = r.frontmatter['description'] ?? ''
-  return { id: r.id, label, description, entries: [{ label, description, content: r.body }] }
-})
+// ── the `a2ui-idioms` pack (`derived: mini-skill`): the shipped A2UI composition idioms, derived LIVE from
+// the SAME `prompts/mini-skills/*.md` files `@agent-ui/a2ui`'s `MINI_SKILLS` loads node-side, raw-globbed
+// here by Vite (the registry's own loader is `node:fs`-based, ADR-0135 cl.11), so a registry edit flows
+// into the pack with zero hand-copying. The glob is one level deep, never recursive. The frontmatter split
+// is schema.ts's `splitKeyValueFrontmatter` (the a2ui single-line `key: value` format).
+const MINI_SKILL_SOURCES = import.meta.glob('../../packages/agent-ui/a2ui/src/agent/prompts/mini-skills/*.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>
+
+const MINI_SKILL_ENTRIES: NewEntryInput[] = Object.keys(MINI_SKILL_SOURCES)
+  .sort()
+  .flatMap((path) => {
+    const parsed = splitKeyValueFrontmatter(MINI_SKILL_SOURCES[path]!)
+    if (!parsed?.data['id']) return []
+    return [{ label: parsed.data['id'], description: parsed.data['triggers'] ?? '', content: parsed.body }]
+  })
+
+// ── pack #4 (genui-surface.spec.md SPEC-R9/R11, D4): the shipped GenUI pattern-source packs, derived LIVE
+// from `@agent-ui/a2ui`'s `prompts/genui-packs/*.md` by the same raw-glob technique (`GENUI_PACKS`' own
+// loader is `node:fs`-based, Node-only by SPEC-R9). Each pack projects to ONE `EntryLibraryPack` carrying
+// ONE ready-to-add entry whose `content` is the pack body verbatim, mirroring `@agent-ui/a2ui/agent`'s own
+// `genuiPackLibrary` projection (SPEC-R11), reimplemented here because that function's input type
+// (`GenuiPatternPack`) is Node-loaded data, not something this page holds.
+const GENUI_PACK_SOURCES = import.meta.glob('../../packages/agent-ui/a2ui/src/agent/prompts/genui-packs/*.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>
+
+const GENUI_PACK_LIBRARY: EntryLibraryPack[] = Object.keys(GENUI_PACK_SOURCES)
+  .sort()
+  .flatMap((path) => {
+    const parsed = splitKeyValueFrontmatter(GENUI_PACK_SOURCES[path]!)
+    if (!parsed?.data['id'] || !parsed.data['label']) return []
+    const label = parsed.data['label']
+    const description = parsed.data['description'] ?? ''
+    return [{ id: parsed.data['id'], label, description, entries: [{ label, description, content: parsed.body }] }]
+  })
 
 // ── the authored packs, read from site/agent-content/packs/ (hospitality landed with GH #46's trio, games
 // with the roster wave, commerce with T-0075). The named exports stay the module's surface for tests and
@@ -52,9 +83,10 @@ export const GAMES_RULES: readonly NewEntryInput[] = packEntries('game-rules')
 export const INTEGRATION_TOOLS: readonly NewEntryInput[] = packEntries('integrations')
 
 /** One authored pack as the menu takes it. */
-function libraryPack(record: PackRecord): EntryLibraryPack {
-  const { id, label, description, rejectOnCollision } = record.frontmatter
-  return { id, label, description, ...(rejectOnCollision === true ? { rejectOnCollision } : {}), entries: packEntries(id) }
+function libraryPack(record: RuntimePack): EntryLibraryPack {
+  const { id, label, description, rejectOnCollision, derived } = record.frontmatter
+  const entries = derived === 'mini-skill' ? MINI_SKILL_ENTRIES : packEntries(id)
+  return { id, label, description, ...(rejectOnCollision === true ? { rejectOnCollision } : {}), entries }
 }
 
 // GH #567 S6 (Kim's F1 ruling) — the DEV-only live-read override. `undefined` (the default, and the
@@ -114,10 +146,9 @@ export function setLiveServices(rows: readonly LiveServiceRow[] | undefined): vo
 
 /** GH #143: per-preset library scoping. Every OTHER preset (The Quant, The Curator, The Stylist, The Shopkeeper:
  *  dashboards/collections/tokens; none of them a hotel or a game) sees `undefined`: generic packs only,
- *  never a stray Hospitality or Games pack. Kept to exactly the two flavors the pack catalog actually
- *  has today — a THIRD flavor earns its own union member the day a third persona-flavored pack ships,
- *  never a bare string. */
-export type PresetCategory = 'hospitality' | 'games'
+ *  never a stray Hospitality or Games pack. The flavors are schema.ts's `PRESET_CATEGORIES` (T-0160),
+ *  the one list a pack.json `category` and a persona's `category` validate against. */
+export type PresetCategory = PresetCategoryName
 
 /** GH #143 — which packs are PERSONA-FLAVORED (relevant to one preset category only) vs GENERIC
  *  (relevant to every preset regardless of category). The split is each pack.json's own `category`
@@ -130,8 +161,7 @@ export type PresetCategory = 'hospitality' | 'games'
  *  a file: GenUI, MCP services, Registered catalogs) is generic by construction, the safe default for any
  *  future pack that doesn't explicitly opt into a flavor. */
 const FLAVORED_PACK_CATEGORY: Record<string, PresetCategory> = Object.fromEntries(
-  (['skill', 'workflow', 'resource', 'tool'] as const)
-    .flatMap((kind) => packRecords(kind))
+  CONTENT_ENTRY_KINDS.flatMap((kind) => packRecords(kind))
     .flatMap((r) => (r.frontmatter.category === undefined ? [] : [[r.id, r.frontmatter.category]])),
 )
 

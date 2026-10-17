@@ -2,7 +2,7 @@
   "id": "curator",
   "preset": "curator",
   "seedVersion": 1,
-  "seedDigest": "sha256:2e0fdfe4a37f15dcdecb5815b561d9bd8236226752f1d2b4a1a1f86ce3173a26",
+  "seedDigest": "sha256:81881cbdf3a5c96c88bf0ef47a874a020d8dc99d97520b3cd2f1763896fbcf49",
   "fragment": null,
   "selection": null,
   "noFragment": {

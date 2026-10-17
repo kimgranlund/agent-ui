@@ -1,50 +1,54 @@
 #!/usr/bin/env node
-// generate-agent-content.mjs: indexes the agent content (T-0160) as one committed TypeScript registry, so
-// every reader (the agent-admin presets and libraries, the Builder, Test Chat, a CLI) reads one source.
+// generate-agent-content.mjs: indexes the agent content (T-0160) as committed TypeScript, so every reader
+// (the agent-admin presets and libraries, the Builder, Test Chat, a CLI) reads one source.
 //
 // Outputs:
-//   site/agent-content/registry.gen.ts   AGENT_CONTENT: one record per file (kind, id, scope for a
-//                                        persona-local entry, version, digest, path, parsed frontmatter,
-//                                        body), sorted by path. The digest is the agent-content spec ACS-R4
-//                                        canonical form (`digestInput` in schema.ts).
-//   site/lib/agent-manifest/*.manifest.json, the two seed fields of each existing manifest that names a
-//                                        preset: `seedVersion` (the agent.md `version`) and `seedDigest`
-//                                        (the canonical digest of `personaSeedClosure`), persona-catalog-
-//                                        composition SPEC-R7. Never creates a manifest; the fragment and
-//                                        sidecar digests stay with the armed writer there.
+//   site/agent-content/registry.gen.ts          AGENT_CONTENT: the full records, for Node and tests (kind,
+//                                               id, scope for a persona-local entry, version, digest, path,
+//                                               parsed frontmatter, body), sorted by path. The digest is the
+//                                               ACS-R4 canonical form (`digestInput` in schema.ts).
+//   site/agent-content/registry.runtime.gen.ts  AGENT_CONTENT_RUNTIME: the browser projection
+//                                               (`runtimeRecord`): no path, digest, changelog or notes.
+//   site/lib/agent-manifest/*.manifest.json     `seedVersion` of each existing manifest that names a preset,
+//                                               from its agent.md `version` (persona-catalog-composition
+//                                               SPEC-R7), written through `formatManifest`. Never creates a
+//                                               manifest; the digests stay with the armed writer there.
 //
 // Discovery is by rule, never a list (the layout lives in site/agent-content/schema.ts and AGENTS.md):
-//   site/agent-content/personas/<id>/agent.md, packs/<id>/pack.json, <kind dir>/<id>/<KIND>.md and
-//   personas/<id>/<kind dir>/<entry>/<KIND>.md, plus the a2ui mini-skill and GenUI pack `.md` files read
-//   where they live (packages/agent-ui/a2ui/src/agent/prompts/{mini-skills,genui-packs}/).
-// Any other file under site/agent-content/ except AGENTS.md and the `.ts` modules is a problem.
+// every file under site/agent-content/ except dotfiles, AGENTS.md and the `.ts` modules must classify as a
+// persona, an entry or a pack. The a2ui mini-skills and GenUI packs are not indexed: the site reads them
+// through its raw glob, so a prompt edit has one generated copy (a2ui's assets.gen.ts).
 //
 // Usage:
-//   node scripts/generate-agent-content.mjs           validate, then write the registry
+//   node scripts/generate-agent-content.mjs           validate, then write the outputs that changed
 //   node scripts/generate-agent-content.mjs --check   validate and write nothing; exit 1 naming each
-//                                                     problem or a stale registry
-// Invalid content exits 1 in both modes and never reaches the registry.
+//                                                     problem or stale output
+// Invalid content exits 1 in both modes and never reaches an output.
 //
 // Every export is write-free so `site/agent-content/registry-freshness.test.ts` regenerates with the
 // IDENTICAL routine. Paths resolve from `process.cwd()` (the generate-agent-assets.mjs precedent). Emitted
 // values are JSON with every single quote, U+2028 and U+2029 escaped (the same precedent and reason).
 
-import { createHash } from 'node:crypto'
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
-import { CONTENT_ROOT, GENUI_PACKS_DIR, MINI_SKILLS_DIR, canonicalJson, classifyPath, parseContentFile, personaSeedClosure, validateContent } from '../site/agent-content/schema.ts'
+import { CONTENT_ROOT, classifyPath, parseContentFile, runtimeRecord, validateContent } from '../site/agent-content/schema.ts'
+import { sha256 } from '../site/agent-content/digest.ts'
+import { formatManifest } from '../site/lib/agent-manifest/format.ts'
 
 const REGEN = 'node scripts/generate-agent-content.mjs'
 
 /** Repo-relative output paths. */
 export const OUT_REGISTRY = `${CONTENT_ROOT}/registry.gen.ts`
+export const OUT_RUNTIME = `${CONTENT_ROOT}/registry.runtime.gen.ts`
 export const MANIFEST_DIR = 'site/lib/agent-manifest'
 
 const HEADER = `// GENERATED by scripts/generate-agent-content.mjs. DO NOT EDIT: run ${REGEN}`
 
-/** Files under `relDir` (recursive, name-sorted) as repo-relative POSIX paths. */
+/** Files under `relDir` (recursive, name-sorted, dotfiles and dot-directories skipped) as repo-relative
+ *  POSIX paths. */
 function walk(root, relDir, out = []) {
   if (!existsSync(`${root}/${relDir}`)) return out
   for (const name of readdirSync(`${root}/${relDir}`).sort()) {
+    if (name.startsWith('.')) continue
     const rel = `${relDir}/${name}`
     if (statSync(`${root}/${rel}`).isDirectory()) walk(root, rel, out)
     else out.push(rel)
@@ -52,28 +56,18 @@ function walk(root, relDir, out = []) {
   return out
 }
 
-/** `sha256:` plus the hex sha256 of `text` as UTF-8. */
-function sha256(text) {
-  return `sha256:${createHash('sha256').update(text, 'utf8').digest('hex')}`
-}
-
 /** Every content file as a record, plus the problems found reading and validating them. */
 export function discoverAgentContent(root = process.cwd()) {
   const problems = []
   const records = []
-  const paths = [
-    ...walk(root, CONTENT_ROOT).filter((p) => !p.endsWith('.ts') && p !== `${CONTENT_ROOT}/AGENTS.md`),
-    ...walk(root, MINI_SKILLS_DIR).filter((p) => p.endsWith('.md')),
-    ...walk(root, GENUI_PACKS_DIR).filter((p) => p.endsWith('.md')),
-  ].sort()
+  const paths = walk(root, CONTENT_ROOT).filter((p) => !p.endsWith('.ts') && p !== `${CONTENT_ROOT}/AGENTS.md`)
   for (const path of paths) {
     if (!classifyPath(path)) {
       problems.push(`${path}: not a content file (see ${CONTENT_ROOT}/AGENTS.md for the layout)`)
       continue
     }
     try {
-      const record = parseContentFile(path, readFileSync(`${root}/${path}`, 'utf8'), sha256)
-      if (record) records.push(record)
+      records.push(parseContentFile(path, readFileSync(`${root}/${path}`, 'utf8'), sha256))
     } catch (error) {
       problems.push(`${path}: ${error instanceof Error ? error.message : String(error)}`)
     }
@@ -87,37 +81,51 @@ function literal(value) {
   return JSON.stringify(value).replace(/'/g, '\\u0027').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029')
 }
 
-/** The registry module source (pure, deterministic: records in path order, fixed key order). */
+const byPath = (records) => [...records].sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))
+
+/** Fixed key order for an emitted record. */
+function ordered(r) {
+  return {
+    kind: r.kind,
+    id: r.id,
+    ...(r.scope === undefined ? {} : { scope: r.scope }),
+    version: r.version,
+    ...(r.digest === undefined ? {} : { digest: r.digest }),
+    ...(r.path === undefined ? {} : { path: r.path }),
+    frontmatter: r.frontmatter,
+    body: r.body,
+  }
+}
+
+/** The full registry module source (pure, deterministic: records in path order, fixed key order). */
 export function generateRegistryModule(records) {
-  const rows = [...records]
-    .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))
-    .map((r) => {
-      const ordered = {
-        kind: r.kind,
-        id: r.id,
-        ...(r.scope === undefined ? {} : { scope: r.scope }),
-        version: r.version,
-        digest: r.digest,
-        path: r.path,
-        frontmatter: r.frontmatter,
-        body: r.body,
-      }
-      return `  ${literal(ordered)},`
-    })
   return [
     HEADER,
-    `// Discovery: the layout in ${CONTENT_ROOT}/schema.ts (personas, entries, packs) plus ${MINI_SKILLS_DIR}/*.md and ${GENUI_PACKS_DIR}/*.md, sorted by path.`,
+    `// The full records for Node and tests; the browser reads registry.runtime.gen.ts. Discovery: the layout in ${CONTENT_ROOT}/schema.ts, sorted by path.`,
     "import type { ContentRecord } from './schema.ts'",
     'export const AGENT_CONTENT: readonly ContentRecord[] = [',
-    ...rows,
+    ...byPath(records).map((r) => `  ${literal(ordered(r))},`),
     ']',
     '',
   ].join('\n')
 }
 
-/** Each manifest that names a preset, with its two seed fields read from the registry: `[{ path, text }]`
- *  in file order, `text` the full new file (key order kept, two-space JSON, trailing newline). A manifest
- *  naming a persona the registry lacks is a problem, left to the drift gate's bijection leg to explain. */
+/** The browser projection module source: `runtimeRecord` of each record, in the same order. */
+export function generateRuntimeModule(records) {
+  return [
+    HEADER,
+    '// The browser projection of registry.gen.ts (runtimeRecord in schema.ts): no path, digest, changelog or notes.',
+    "import type { RuntimeRecord } from './schema.ts'",
+    'export const AGENT_CONTENT_RUNTIME: readonly RuntimeRecord[] = [',
+    ...byPath(records).map((r) => `  ${literal(ordered(runtimeRecord(r)))},`),
+    ']',
+    '',
+  ].join('\n')
+}
+
+/** Each manifest that names a preset, with its `seedVersion` read from the registry: `[{ path, text }]` in
+ *  file order, `text` the full file through `formatManifest`. A manifest that does not parse, or names a
+ *  persona the registry lacks, is a problem with its path. */
 export function manifestUpdates(records, root = process.cwd()) {
   const problems = []
   const updates = []
@@ -125,16 +133,20 @@ export function manifestUpdates(records, root = process.cwd()) {
   if (!existsSync(dir)) return { updates, problems }
   for (const file of readdirSync(dir).filter((f) => f.endsWith('.manifest.json')).sort()) {
     const path = `${MANIFEST_DIR}/${file}`
-    const manifest = JSON.parse(readFileSync(`${root}/${path}`, 'utf8'))
-    if (manifest.preset === null || manifest.preset === undefined) continue
+    let manifest
+    try {
+      manifest = JSON.parse(readFileSync(`${root}/${path}`, 'utf8'))
+    } catch (error) {
+      problems.push(`${path}: ${error instanceof Error ? error.message : String(error)}`)
+      continue
+    }
+    if (manifest === null || typeof manifest !== 'object' || manifest.preset === null || manifest.preset === undefined) continue
     const persona = records.find((r) => r.kind === 'persona' && r.id === manifest.preset)
     if (!persona) {
       problems.push(`${path}: preset ${manifest.preset} names no persona in ${CONTENT_ROOT}`)
       continue
     }
-    manifest.seedVersion = persona.version
-    manifest.seedDigest = sha256(canonicalJson(personaSeedClosure(records, persona.id)))
-    updates.push({ path, text: `${JSON.stringify(manifest, null, 2)}\n` })
+    updates.push({ path, text: formatManifest({ ...manifest, seedVersion: persona.version }) })
   }
   return { updates, problems }
 }
@@ -142,18 +154,18 @@ export function manifestUpdates(records, root = process.cwd()) {
 function main(args) {
   const root = process.cwd()
   const { records, problems } = discoverAgentContent(root)
-  for (const p of problems) console.error(`generate-agent-content: ${p}`)
-  if (problems.length > 0) {
+  const manifests = problems.length > 0 ? { updates: [], problems: [] } : manifestUpdates(records, root)
+  const all = [...problems, ...manifests.problems]
+  for (const p of all) console.error(`generate-agent-content: ${p}`)
+  if (all.length > 0) {
     process.exitCode = 1
     return
   }
-  const manifests = manifestUpdates(records, root)
-  for (const p of manifests.problems) console.error(`generate-agent-content: ${p}`)
-  if (manifests.problems.length > 0) {
-    process.exitCode = 1
-    return
-  }
-  const outputs = [{ path: OUT_REGISTRY, text: generateRegistryModule(records) }, ...manifests.updates]
+  const outputs = [
+    { path: OUT_REGISTRY, text: generateRegistryModule(records) },
+    { path: OUT_RUNTIME, text: generateRuntimeModule(records) },
+    ...manifests.updates,
+  ]
   const stale = outputs.filter(({ path, text }) => !existsSync(`${root}/${path}`) || readFileSync(`${root}/${path}`, 'utf8') !== text)
   if (args.includes('--check')) {
     for (const { path } of stale) console.error(`generate-agent-content: ${path} is stale; run ${REGEN}`)

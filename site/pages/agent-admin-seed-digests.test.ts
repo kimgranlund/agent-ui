@@ -3,8 +3,10 @@
 // change no seed: every assembled persona (the 15 roster presets and the Builder), the resolved preset
 // objects, the roster order and the library packs digest exactly as they did before the move. The table
 // below was captured from the TS constants at the T-0160 base, so a red here means a content file no
-// longer reproduces its seed. A deliberate seed edit updates the row in the same change (and its
-// `site/lib/agent-manifest/<id>.manifest.json` through the armed writer there).
+// longer reproduces its seed. A deliberate seed edit: change the content file, run
+// `node scripts/generate-agent-content.mjs` (the registries and the manifests' `seedVersion`), refresh the
+// manifest's `seedDigest` with the armed writer (site/lib/agent-manifest/agent-manifest.write.test.ts),
+// and update the row here in the same change.
 import { describe, it, expect } from 'vitest'
 import { AGENT_PRESETS, builderPersona, personaFromPreset } from './agent-admin-presets.ts'
 import { ADMIN_LIBRARIES, setLiveIntegrations, setLiveServices } from './agent-admin-libraries.ts'

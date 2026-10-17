@@ -2,7 +2,7 @@
   "id": "quizmaster",
   "preset": "quizmaster",
   "seedVersion": 6,
-  "seedDigest": "sha256:e8899d4407978409ef67f8e2f0903d07241dc5b5cdc313d1e4e97b8db53c4519",
+  "seedDigest": "sha256:03f652e96ca7b556fe3eedea06e544c011a4f47ab911c01aa91b7f6572ec84f8",
   "fragment": {
     "personaId": "quizmaster",
     "types": [

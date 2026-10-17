@@ -51,8 +51,8 @@ import type { Entry } from '@agent-ui/app/entry-data'
 // generated registry. A preset seeds from the SAME entry files the add-from-library menu offers
 // (agent-admin-libraries.ts reads the same packs): one authored source, zero drift (GH #46).
 import type { PresetCategory } from './agent-admin-libraries.ts'
-import { personaRecord, personaRecords, personaSections, PERSONA_SECTIONS, resolveRef } from '../agent-content/registry.ts'
-import type { PersonaRecord } from '../agent-content/schema.ts'
+import { personaRecord, personaRecords, personaSections, PERSONA_SECTIONS, resolveRef, type RuntimePersona } from '../agent-content/registry.ts'
+import type { EntryKind } from '../agent-content/schema.ts'
 // GH #497 — the concierge/croupier content personas seed their OWN local pattern set selection (the
 // `SHIPPED_PERSONA_CATALOGS` `personaId`, SPEC-R5) the same way every other persona-scoped config key
 // seeds: through `presetSeed`'s returned record, keyed by the schema's own storage key.
@@ -153,7 +153,7 @@ interface SeedEntry {
  *  id, which for an Integrations entry is the dev proxy's registry key (ADR-0168 cl.2 / LLD-C7, the
  *  three-facts law: an integration seeded under its human label would be dropped by the registry
  *  intersection, an armed tool silently inert) and for every other entry equals its label. */
-function seedEntries(record: PersonaRecord, kind: 'skill' | 'workflow' | 'resource' | 'tool'): SeedEntry[] {
+function seedEntries(record: RuntimePersona, kind: EntryKind): SeedEntry[] {
   return record.frontmatter[`${kind}s`].map((ref) => {
     const entry = resolveRef(ref, kind, record.id)
     const { label, description, availability } = entry.frontmatter
@@ -163,7 +163,7 @@ function seedEntries(record: PersonaRecord, kind: 'skill' | 'workflow' | 'resour
 
 /** One persona file as an `AgentPreset`. Optional fields stay ABSENT when the file omits them (never
  *  `undefined` or a default): `presetSeed` and `personaFromPreset` key on presence. */
-function presetFromRecord(record: PersonaRecord): AgentPreset {
+function presetFromRecord(record: RuntimePersona): AgentPreset {
   const fm = record.frontmatter
   const { foundation, sections } = personaSections(record.body)
   const houseFacts = sections[PERSONA_SECTIONS.houseFacts]

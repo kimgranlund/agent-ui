@@ -234,8 +234,12 @@ ticket against this SPEC runs that ticket's named tests and checks each cited `f
 ## 8 · Open items
 
 1. The content root's location, decided (T-0160): `site/agent-content/`. The presets and packs were page-local
-   site data, so they stay site-internal and the package DAG is untouched; the a2ui mini-skills and GenUI packs stay
-   where they are and are indexed in place. Its `AGENTS.md` is the authoring guide (ACS-R15).
+   site data, so they stay site-internal and the package DAG is untouched. Its `AGENTS.md` is the authoring guide
+   (ACS-R15). Two ACS-R4 points were narrowed in the T-0160 review: the a2ui mini-skills and GenUI packs stay where
+   they are and the site keeps reading them through its live raw glob (one generated copy, a2ui's `assets.gen.ts`,
+   per prompt edit), and the manifests take only `seedVersion` from the registry, since `seedDigest` must keep
+   pinning the assembled seed (assembly code changes included), which a Node generator cannot build. The browser
+   reads a runtime projection of the registry (`registry.runtime.gen.ts`) without paths, digests or changelogs.
 2. The frontmatter grammar, decided (T-0160, ACS-R3): one JSON object between `---` fences (valid YAML, parsed by
    `JSON.parse`); the a2ui prompt files keep their single-line `key: value` frontmatter.
 3. Whether `compile` returns a promise or digests in a separate step (T-0163, ACS-R12).

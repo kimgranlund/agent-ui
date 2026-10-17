@@ -13,10 +13,12 @@ This file is authoring context for a person or an agent editing the files here. 
 | `skills/<id>/SKILL.md`, `workflows/<id>/WORKFLOW.md`, `resources/<id>/RESOURCE.md`, `tools/<id>/TOOL.md` | skill, workflow, resource, tool | A library entry: a pack offers it and any persona may reference it. |
 | `packs/<id>/pack.json` | pack | Refs only, never copies. |
 | `schema.ts` | | The types, the frontmatter parser and the validator. |
-| `registry.gen.ts` | | Generated. Never edit it by hand. |
-| `registry.ts` | | The typed lookups every reader uses. |
+| `registry.gen.ts` | | Generated: the full records, for Node and tests. Never edit it by hand. |
+| `registry.runtime.gen.ts` | | Generated: the browser projection (no path, digest, changelog or notes). Never edit it by hand. |
+| `registry.ts` | | The typed lookups every runtime reader uses (over the projection). |
+| `digest.ts` | | The one sha256 helper (Node-side). |
 
-The registry also indexes the a2ui mini-skills and GenUI packs where they live (`packages/agent-ui/a2ui/src/agent/prompts/mini-skills/` and `genui-packs/`). Edit those through the `a2ui-prompt-authoring` skill; they are byte-pinned.
+The a2ui mini-skills and GenUI packs are not content files here: the agent-admin library reads them where they live (`packages/agent-ui/a2ui/src/agent/prompts/mini-skills/*.md` and `genui-packs/*.md`) through a raw glob, so a prompt edit has one generated copy (a2ui's `assets.gen.ts`). Edit those through the `a2ui-prompt-authoring` skill; they are byte-pinned. The `a2ui-idioms` pack is `"derived": "mini-skill"`. Dotfiles here are ignored.
 
 ## Frontmatter
 
@@ -58,12 +60,12 @@ A ref is `<id>@<version>`. `./<id>@<version>` names an entry under the persona's
 
 ## Change seed text
 
-Edit the file and run the generator. Decide whether the persona's `version` bumps: a bump drops users' persisted stores for that persona, so bump only when an existing store must not keep the old text, and add a `changelog` line saying why. The generator rewrites the manifests' `seedVersion` and `seedDigest`; `site/pages/agent-admin-seed-digests.test.ts` pins every assembled seed and needs its row updated for a deliberate change.
+Edit the file and run the generator. Decide whether the persona's `version` bumps: a bump drops users' persisted stores for that persona, so bump only when an existing store must not keep the old text, and add a `changelog` line saying why. The generator copies `version` into the manifest's `seedVersion`. The manifest's `seedDigest` pins the assembled seed (so a change to the assembly code reds it too): refresh it with the armed writer, `AGENT_MANIFEST_WRITE=1 npx vitest run --project site site/lib/agent-manifest/agent-manifest.write.test.ts`. `site/pages/agent-admin-seed-digests.test.ts` pins every assembled seed and needs its row updated for a deliberate change.
 
 ## Validate and generate
 
 ```
-node scripts/generate-agent-content.mjs           # validate, then write registry.gen.ts and the manifests' seed fields
+node scripts/generate-agent-content.mjs           # validate, then write both registries and the manifests' seedVersion
 node scripts/generate-agent-content.mjs --check   # validate and write nothing; exit 1 on a problem or stale output
 ```
 

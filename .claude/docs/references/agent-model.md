@@ -210,7 +210,7 @@ header pointing here.
   choosing guide; neither is generated from it.
 - **agent manifest**: the `<id>.manifest.json` file in `site/lib/agent-manifest/`, one per agent
   preset plus one for `fixture-demo`. It pins the preset's effective `seedVersion` and canonical
-  sha256 digests of its seed (the registry's seed closure, written with `seedVersion` by
+  sha256 digests of its assembled seed (its `seedVersion` copied from the persona agent.md by
   `node scripts/generate-agent-content.mjs`, T-0160), its persona catalog fragment's `catalog.json` and that fragment's
   `selection.json`; an agent with no fragment records why in `noFragment.why` (the ruling is ADR-0235
   cl.5, under the bar restated in

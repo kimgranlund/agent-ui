@@ -128,8 +128,8 @@ control's own surface must change (a prop the catalog wants to expose does not e
 | any `catalog.json` or `selection.json` | `RECAPTURE_BASELINE=1 npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/recapture-baseline.test.ts` — then `git diff` the baseline: ONLY inventory lines move | prompt-equivalence |
 | any `selection.json`, prompt file or components descriptor (after the recapture row above) | `node scripts/generate-agent-assets.mjs` | agent-assets-freshness |
 | any catalog, `selection.json`, persona, mini-skill, pack or corpus shard | `npm run generate:registry` | registry generate.test |
-| a persona fragment's `catalog.json` or `selection.json` | `AGENT_MANIFEST_WRITE=1 npx vitest run --project site site/lib/agent-manifest/agent-manifest.write.test.ts`, then `git diff site/lib/agent-manifest/`: only digests and derived facts move | agent-manifest |
-| a preset seed (any file under `site/agent-content/`) | `node scripts/generate-agent-content.mjs`: rewrites the registry and each manifest's `seedVersion` and `seedDigest`; a `seedVersion` bump is the persona agent.md's `version` | agent-manifest, registry-freshness |
+| a persona fragment's `catalog.json` or `selection.json`, or a preset seed (after the row below) | `AGENT_MANIFEST_WRITE=1 npx vitest run --project site site/lib/agent-manifest/agent-manifest.write.test.ts`, then `git diff site/lib/agent-manifest/`: only digests and derived facts move | agent-manifest |
+| a preset seed (any file under `site/agent-content/`) | `node scripts/generate-agent-content.mjs`: rewrites the registries and each manifest's `seedVersion`; a `seedVersion` bump is the persona agent.md's `version` | agent-manifest, registry-freshness |
 | a seed | `node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus/import-seeds.ts --verdicts <verdicts.json> [--replace <name>]` | admission-coverage |
 | the card | `node scripts/screenshot-a2ui-catalog.mjs --only <Type>` (dev server up) → re-grade | rubric re-check |
 

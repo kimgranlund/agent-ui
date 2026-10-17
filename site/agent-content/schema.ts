@@ -6,15 +6,16 @@
 //
 // The authored files live beside this module (`AGENTS.md` here is the authoring guide). Frontmatter is a
 // JSON object between `---` fences: valid YAML, so a SKILL.md stays an Agent Skills file, and parsed
-// with `JSON.parse`, so no YAML library is needed. The a2ui mini-skills and GenUI packs keep their own
-// single-line `key: value` frontmatter and are read where they live (`packages/agent-ui/a2ui/src/agent/
-// prompts/`); the registry carries them so every reader goes through one source.
+// with `JSON.parse`, so no YAML library is needed. The a2ui mini-skills and GenUI packs are not content
+// files: they keep their single-line `key: value` frontmatter (`splitKeyValueFrontmatter` below) and the
+// site reads them through its live raw glob, so a mini-skill edit has one generated copy (a2ui's
+// `assets.gen.ts`) and one generator.
 
 /** The capability entry kinds a persona references and a pack groups. */
 export const ENTRY_KINDS = ['skill', 'workflow', 'resource', 'tool'] as const
 export type EntryKind = (typeof ENTRY_KINDS)[number]
 
-export const CONTENT_KINDS = ['persona', ...ENTRY_KINDS, 'pack', 'mini-skill', 'genui-pack'] as const
+export const CONTENT_KINDS = ['persona', ...ENTRY_KINDS, 'pack'] as const
 export type ContentKind = (typeof CONTENT_KINDS)[number]
 
 /** Each entry kind's folder name and file name, at the content root or under a persona folder. */
@@ -25,13 +26,13 @@ export const ENTRY_LAYOUT: Record<EntryKind, { dir: string; file: string }> = {
   tool: { dir: 'tools', file: 'TOOL.md' },
 }
 
-/** Repo-relative roots. */
+/** Repo-relative content root. */
 export const CONTENT_ROOT = 'site/agent-content'
-export const MINI_SKILLS_DIR = 'packages/agent-ui/a2ui/src/agent/prompts/mini-skills'
-export const GENUI_PACKS_DIR = 'packages/agent-ui/a2ui/src/agent/prompts/genui-packs'
 
-export type PresetCategoryName = 'hospitality' | 'games'
-export const PRESET_CATEGORIES: readonly PresetCategoryName[] = ['hospitality', 'games']
+/** The persona-flavored pack categories (GH #143). A third flavor earns its own member the day a third
+ *  persona-flavored pack ships, never a bare string. */
+export const PRESET_CATEGORIES = ['hospitality', 'games'] as const
+export type PresetCategoryName = (typeof PRESET_CATEGORIES)[number]
 
 /** The persona body's named sections, in file order. The text before the first heading is the
  *  foundation. */
@@ -103,14 +104,16 @@ export interface PackFrontmatter {
   rejectOnCollision?: boolean
   /** Refs (`<id>@<version>`) to root entries of `kind`, in menu order. */
   entries?: string[]
-  /** Instead of `entries`: every record of this registry kind, in path order. */
+  /** Instead of `entries`: every a2ui mini-skill, in file order (read by the site's raw glob). */
   derived?: 'mini-skill'
 }
 
 interface RecordBase {
   id: string
   version: number
-  /** `sha256:` plus the hex sha256 of the file bytes. */
+  /** `sha256:` plus the hex sha256 of `digestInput(frontmatter, body)`: the frontmatter as canonical JSON,
+   *  a newline, then the body with LF line endings (ACS-R4). Not the file bytes, so JSON whitespace and key
+   *  order never move it. */
   digest: string
   /** Repo-relative POSIX path. */
   path: string
@@ -131,11 +134,21 @@ export interface PackRecord extends RecordBase {
   kind: 'pack'
   frontmatter: PackFrontmatter
 }
-export interface PromptRecord extends RecordBase {
-  kind: 'mini-skill' | 'genui-pack'
-  frontmatter: Record<string, string>
+export type ContentRecord = PersonaRecord | EntryRecord | PackRecord
+
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never
+
+/** A record as the browser registry carries it (`registry.runtime.gen.ts`): no `path` or `digest`, and a
+ *  persona without its authoring-only `changelog` and `notes`. */
+export type RuntimeRecord = DistributiveOmit<ContentRecord, 'path' | 'digest'>
+
+/** The runtime projection of one record. */
+export function runtimeRecord(record: ContentRecord): RuntimeRecord {
+  const { path: _path, digest: _digest, ...rest } = record
+  if (rest.kind !== 'persona') return rest
+  const { changelog: _changelog, notes: _notes, ...frontmatter } = rest.frontmatter
+  return { ...rest, frontmatter }
 }
-export type ContentRecord = PersonaRecord | EntryRecord | PackRecord | PromptRecord
 
 // ── canonical form and digests ──────────────────────────────────────────────────────────────────────
 
@@ -159,21 +172,6 @@ export function canonicalJson(value: unknown): string {
  *  newline, then the body with LF line endings (empty for a pack). The caller hashes it (sha256, `sha256:` plus hex). */
 export function digestInput(frontmatter: unknown, body: string): string {
   return `${canonicalJson(frontmatter)}\n${body.replace(/\r\n?/g, '\n')}`
-}
-
-/** What a persona's seed is made of: its own item digest and each entry it references, in ref order per
- *  kind. Its canonical digest is the agent manifest's `seedDigest` (persona-catalog-composition SPEC-R7). */
-export function personaSeedClosure(records: readonly ContentRecord[], id: string): { persona: string; entries: { kind: EntryKind; scope?: string; id: string; version: number; digest: string }[] } {
-  const persona = records.find((r): r is PersonaRecord => r.kind === 'persona' && r.id === id)
-  if (!persona) throw new Error(`no persona ${id}`)
-  const entries = ENTRY_KINDS.flatMap((kind) =>
-    persona.frontmatter[`${kind}s`].map((ref) => {
-      const e = findRef(records, ref, kind, id)
-      if (!e) throw new Error(`${id}: ref ${ref} names no ${kind}`)
-      return { kind, ...(e.scope === undefined ? {} : { scope: e.scope }), id: e.id, version: e.version, digest: e.digest }
-    }),
-  )
-  return { persona: persona.digest, entries }
 }
 
 // ── parsing ─────────────────────────────────────────────────────────────────────────────────────────
@@ -217,8 +215,6 @@ export function personaSections(body: string): { foundation: string; sections: R
 
 /** Where a repo-relative path sits in the layout, or null for a file the registry does not index. */
 export function classifyPath(path: string): { kind: ContentKind; id: string; scope?: string } | null {
-  if (path.startsWith(`${MINI_SKILLS_DIR}/`) && path.endsWith('.md')) return { kind: 'mini-skill', id: path.slice(MINI_SKILLS_DIR.length + 1, -3) }
-  if (path.startsWith(`${GENUI_PACKS_DIR}/`) && path.endsWith('.md')) return { kind: 'genui-pack', id: path.slice(GENUI_PACKS_DIR.length + 1, -3) }
   if (!path.startsWith(`${CONTENT_ROOT}/`)) return null
   const parts = path.slice(CONTENT_ROOT.length + 1).split('/')
   const entryAt = (dir: string, file: string): EntryKind | undefined =>
@@ -237,17 +233,10 @@ export function classifyPath(path: string): { kind: ContentKind; id: string; sco
 }
 
 /** One file as a registry record. `hash` maps the item's `digestInput` to its digest (the caller owns
- *  hashing, so this module stays free of `node:crypto`). Returns null for an a2ui prompt file without
- *  frontmatter or without the keys its reader needs (skipped, as the old raw glob skipped it). */
-export function parseContentFile(path: string, source: string, hash: (text: string) => string): ContentRecord | null {
+ *  hashing, `digest.ts`, so this module stays free of `node:crypto`). Throws on a file outside the grammar. */
+export function parseContentFile(path: string, source: string, hash: (text: string) => string): ContentRecord {
   const at = classifyPath(path)
   if (!at) throw new Error(`${path}: not a content path`)
-  if (at.kind === 'mini-skill' || at.kind === 'genui-pack') {
-    const parsed = splitKeyValueFrontmatter(source)
-    if (!parsed?.data['id'] || (at.kind === 'genui-pack' && !parsed.data['label'])) return null
-    const digest = hash(digestInput(parsed.data, parsed.body))
-    return { kind: at.kind, id: parsed.data['id'], version: 1, digest, path, frontmatter: parsed.data, body: parsed.body }
-  }
   if (at.kind === 'pack') {
     if (source.includes('\r')) throw new Error('contains a carriage return')
     const frontmatter = JSON.parse(source) as PackFrontmatter
@@ -285,12 +274,12 @@ export function parseRef(ref: string): { local: boolean; id: string; version: nu
   return m ? { local: m[1] !== undefined, id: m[2]!, version: Number(m[3]) } : null
 }
 
-/** Find the record a ref names, or null. */
-export function findRef(records: readonly ContentRecord[], ref: string, kind: EntryKind, scope?: string): EntryRecord | null {
+/** Find the record a ref names, or null. Works over full records and runtime projections alike. */
+export function findRef<R extends RuntimeRecord>(records: readonly R[], ref: string, kind: EntryKind, scope?: string): Extract<R, { kind: EntryKind }> | null {
   const parsed = parseRef(ref)
   if (!parsed || (parsed.local && scope === undefined)) return null
   const want = parsed.local ? scope : undefined
-  const hit = records.find((r): r is EntryRecord => r.kind === kind && r.id === parsed.id && (r as EntryRecord).scope === want)
+  const hit = records.find((r): r is Extract<R, { kind: EntryKind }> => r.kind === kind && r.id === parsed.id && (r as { scope?: string }).scope === want)
   return hit && hit.version === parsed.version ? hit : null
 }
 
@@ -398,7 +387,14 @@ export function validateContent(records: readonly ContentRecord[]): string[] {
     if (fm['disabledBuiltins'] !== undefined && !isStringArray(fm['disabledBuiltins'])) add(r, 'disabledBuiltins is not a string array')
     for (const k of ['changelog', 'notes']) if (fm[k] !== undefined && !isStringArray(fm[k])) add(r, `${k} is not a string array`)
     for (const kind of ENTRY_KINDS) refsCheck(r, fm[`${kind}s`], kind, `${kind}s`, r.id)
-    const { foundation, sections } = personaSections(r.body)
+    let split: ReturnType<typeof personaSections>
+    try {
+      split = personaSections(r.body)
+    } catch (error) {
+      add(r, error instanceof Error ? error.message : String(error))
+      continue
+    }
+    const { foundation, sections } = split
     if (foundation.trim() === '') add(r, 'no foundation text before the first section')
     const known: string[] = Object.values(PERSONA_SECTIONS)
     for (const heading of Object.keys(sections)) if (!known.includes(heading)) add(r, `unknown section ## ${heading}`)

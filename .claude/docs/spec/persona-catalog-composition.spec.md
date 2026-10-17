@@ -1,9 +1,9 @@
 # SPEC — Persona Catalog Composition (M-D)
 
 > Status: accepted · v0.10 · 2026-10-17 (v0.9 2026-10-12; v0.8 2026-10-12; v0.7 2026-10-08; v0.6 2026-10-07; v0.5 2026-10-06; v0.4 2026-10-06; v0.2 2026-08-06; v0.3 2026-10-05 adds SPEC-R1's optional `controls` records, `ControlRecord`, and SPEC-R2 AC7, the derived entry's control loader, ADR-0233, accepted) · Layer: SPEC (execution contract)
-> **v0.10 (2026-10-17):** SPEC-R7 amended by T-0160 (agent-content spec ACS-R4): the manifests' seed pair
-> (`seedVersion`, `seedDigest`) is generated from the agent-content registry, and `seedDigest` pins the persona's
-> seed closure; AC4 splits the writer's catalog half from the generator's seed half. No other clause moves.
+> **v0.10 (2026-10-17):** SPEC-R7 amended by T-0160 (agent-content spec ACS-R4): `seedVersion` is generated from
+> the agent-content registry; `seedDigest` still pins the assembled seed and stays with the armed writer. AC4 adds
+> the generator's half. No other clause moves.
 > **v0.9 (2026-10-12):** SPEC-R6 AC1 and AC2 repaired for T-0077: `a2ui-basic` now has its own `basic-dialect`
 > mini-skill (`catalogId: a2ui-basic`), so AC1 carries that one exception and AC2 no longer returns `[]` for a
 > Basic turn. No other clause moves.
@@ -360,11 +360,11 @@ fragment declares `fragment: null` with a `noFragment.why`; the ruling those why
 cl.5, under the promotion bar restated in
 `.claude/docs/decompositions/md-content-concierge-croupier-promotion.decomp.md:21-25` (proposed).
 The gate is `site/lib/agent-manifest/agent-manifest.test.ts` (the `site` vitest project, so
-`npm test`). The seed pair is read from the agent-content registry (agent-content spec ACS-R4, T-0160):
-`node scripts/generate-agent-content.mjs` writes `seedVersion` (the persona agent.md's `version`) and
-`seedDigest` (the canonical digest of the persona's seed closure: its agent.md item digest plus the item
-digest of every entry it references, `personaSeedClosure`), and its `--check` reds a stale pair. The rest
-of the manifest is hand-authored, and its fragment and sidecar digests are refreshed by the writer
+`npm test`). `seedVersion` is read from the agent-content registry (agent-content spec ACS-R4, T-0160):
+`node scripts/generate-agent-content.mjs` writes it from the persona agent.md's `version`, and its `--check`
+reds a stale one. `seedDigest` stays the canonical digest of the ASSEMBLED seed (`personaFromPreset`), so a
+change to the assembly code reds the gate as surely as a content edit. The rest of the manifest is
+hand-authored, and its digests are refreshed by the writer
 `AGENT_MANIFEST_WRITE=1 npx vitest run --project site site/lib/agent-manifest/agent-manifest.write.test.ts`.
 The deliberate-bump decision a seed change asks for sits in the content file itself: its `version` and
 `changelog`.
@@ -378,11 +378,11 @@ The deliberate-bump decision a seed change asks for sits in the content file its
   `SHIPPED_PERSONA_CATALOG_MANIFESTS`, the `catalog/personas/` folders holding a `catalog.json`, and
   the manifests' fragments), *when* the gate runs, *then* any id missing from one list reds on
   `list-coherence`.
-- **AC4** *Given* a deliberate fragment or sidecar change, *when* the armed writer runs, *then*
+- **AC4** *Given* a deliberate seed, fragment or sidecar change, *when* the armed writer runs, *then*
   it rewrites only the digests and the derived `types` and `targetCatalogs`; every id, nullness,
-  `why` and `seedVersion` stays byte-identical, and an unarmed run writes nothing. *Given* a seed
-  content change, *when* `node scripts/generate-agent-content.mjs` runs, *then* only the seed pair moves,
-  and `--check` reds until it has run. A `seedVersion` bump is the persona agent.md's `version`.
+  `why` and `seedVersion` stays byte-identical, and an unarmed run writes nothing. *Given* a persona's
+  agent.md `version` change, *when* `node scripts/generate-agent-content.mjs` runs, *then* only that
+  manifest's `seedVersion` moves, and `--check` reds until it has run.
 
 ## 4 · Non-functional requirements (SPEC-N)
 

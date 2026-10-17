@@ -370,7 +370,7 @@ exception citing ADR-0227 cl.5.
 | Skill-pack shelf | IndexedDB adapter | database `agent-ui-skill-packs`, keys `skill-packs:<packId>` | `skill-pack-store.ts` |
 | Teams | localStorage adapter | namespace `agent-ui-agent-teams`, key `<teamId>` | `agent-team.ts` |
 | Conversation history, Dialog Turns, Effort | element lifetime only | none | `agent-admin.ts` |
-| Seed content (presets, Builder preset, packs, mini-skills, GenUI packs): T-0160 | build time only, no runtime tier | the generated `site/agent-content/registry.gen.ts` over the content root `site/agent-content/` | `scripts/generate-agent-content.mjs` |
+| Seed content (presets, Builder preset, packs): T-0160 | build time only, no runtime tier | the generated `site/agent-content/registry.gen.ts` over the content root `site/agent-content/` | `scripts/generate-agent-content.mjs` |
 | User overlays on seeds: planned, T-0161 | localStorage adapter (large text on the IndexedDB adapter) | keyed by `id@baseVersion`; namespace chosen by T-0161 | the overlay store (planned) |
 
 Owner: ADR-0193 cl.2, cl.3, Amendment A1; ADR-0208 D3; ADR-0227 cl.2. The seed-content row is
@@ -554,4 +554,6 @@ Added 2026-10-14 (T-0182, against main `968a02d7`): the content-model drift the
 11. No turn trace or debug bundle records which content versions a turn ran with, and the debug bundle's
     `captures/` slot is never filled. Planned: T-0163 (ACS-R13).
 12. The agent manifests' digests are hand-refreshed by an armed writer (persona-catalog-composition SPEC-R7);
-    T-0160 derives them from the registry, which amends that clause when it lands.
+    T-0160 derives them from the registry, which amends that clause when it lands. Landed 2026-10-17 in part:
+    `seedVersion` is generated from the registry; `seedDigest` stays the assembled-seed digest the writer
+    refreshes, because the generator cannot assemble a seed and an assembly code change must still red it.
