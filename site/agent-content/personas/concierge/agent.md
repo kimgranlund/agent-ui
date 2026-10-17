@@ -42,6 +42,11 @@
     "9: T-0200: facility-info-card is one ServiceCard per facility; migrates pre-v9 stores.",
     "8: T-0159: gallery-swiper caption variant, the amenity-service-card ServiceCard skill; migrates pre-v8 stores.",
     "7: GH #1203: `booking-flow` names the Back affordance + settled receipt (ADR-0198 B1/B2); migrates pre-#1203 stores (6: GH #1171 arc rewrite; 5: GH #497 local pattern set)"
+  ],
+  "notes": [
+    "Upgraded IN PLACE to the Hotel Concierge (GH #46): same id, since persisted stores key on it.",
+    "localPatterns concierge: BookingForm and BookingConfirmation close the booking form idiom structurally (GH #497), so the concierge seeds every Hospitality skill except hotel-booking-form and teaches the idiom exactly once. The shared library entry stays (the restaurant picks it).",
+    "booking-flow is re-seeded (GH #1171): a step-arc playbook (scene-to-scene surface reuse, range Calendar dates, typed guests ask, rate pick, extras Column, confirm then flowEnd) the structural patterns do not carry."
   ]
 }
 ---

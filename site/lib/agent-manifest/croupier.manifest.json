@@ -2,7 +2,7 @@
   "id": "croupier",
   "preset": "croupier",
   "seedVersion": 15,
-  "seedDigest": "sha256:7255ba77fe34741b799b67c8960ae8e85737dd4161b95a7de601f3f049408e8b",
+  "seedDigest": "sha256:1d90a626108fd654acc094f24d01a0c112a6eda563aa1f86def24613367aa17d",
   "fragment": {
     "personaId": "croupier",
     "types": [

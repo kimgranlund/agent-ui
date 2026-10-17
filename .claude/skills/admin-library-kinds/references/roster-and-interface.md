@@ -15,7 +15,7 @@ points — a kind missing any of them ships a silent gap, not a build error:
 | `initialEntryValues()` | `entries.ts` `initialEntryValues()` | the store seed (`entries:<kind>`, usually `[]`) |
 | `CAPABILITY_KINDS` row | `agent-admin.ts` `CAPABILITY_KINDS` | the section itself — label, addLabel, liveHeading; array order IS DOM order |
 | preset seed map | `site/pages/agent-admin-presets.ts` `presetSeed` | seed-completeness: `presetSeed` enumerates EVERY kind's `entries:` key — a new kind owes a row here even when seeded `[]` (its own precedent comment says so) |
-| library pack (optional) | `site/pages/agent-admin-libraries.ts` (`ADMIN_LIBRARIES`) | ready-to-add entries; pure data through the same `entries.ts` `validateNewEntry` path |
+| library pack (optional) | `site/agent-content/packs/<id>/pack.json`, read by `site/pages/agent-admin-libraries.ts` (`ADMIN_LIBRARIES`) | ready-to-add entries; refs to entry files (T-0160), through the same `entries.ts` `validateNewEntry` path |
 
 A pack need not be a fixed authored array — nor page-authored at all. Three shipped patterns
 (the first two on the `tool` kind):

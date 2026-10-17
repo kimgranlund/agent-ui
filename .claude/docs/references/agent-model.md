@@ -210,7 +210,8 @@ header pointing here.
   choosing guide; neither is generated from it.
 - **agent manifest**: the `<id>.manifest.json` file in `site/lib/agent-manifest/`, one per agent
   preset plus one for `fixture-demo`. It pins the preset's effective `seedVersion` and canonical
-  sha256 digests of its seed, its persona catalog fragment's `catalog.json` and that fragment's
+  sha256 digests of its seed (the registry's seed closure, written with `seedVersion` by
+  `node scripts/generate-agent-content.mjs`, T-0160), its persona catalog fragment's `catalog.json` and that fragment's
   `selection.json`; an agent with no fragment records why in `noFragment.why` (the ruling is ADR-0235
   cl.5, under the bar restated in
   `.claude/docs/decompositions/md-content-concierge-croupier-promotion.decomp.md:21-25`, proposed).
@@ -260,10 +261,10 @@ header pointing here.
   content ([spec/agent-content.spec.md](../spec/agent-content.spec.md) ACS-R1, planned T-0160). Not an entry kind:
   `prompt-section`, `pattern-source` and `catalog` stay `ENTRY_KINDS` values that a persona file carries as body
   sections and fields.
-- **seed home**: where a preset's seed lives. Today it is the TypeScript constants in
-  `site/pages/agent-admin-presets.ts` and `agent-admin-libraries.ts`, with the `seedVersion` rationale in code
-  comments; planned (T-0160), it moves to content files whose frontmatter carries `version` and a `changelog:`
-  list, indexed by the generated content **registry** (`registry.gen.ts`, one row per item with its digest).
+- **seed home**: where a preset's seed lives: the content files under `site/agent-content/` (T-0160), a persona's
+  `agent.md` carrying `version` and a `changelog:` list, indexed by the generated content **registry**
+  (`site/agent-content/registry.gen.ts`, one row per item with its digest). `site/pages/agent-admin-presets.ts` and
+  `agent-admin-libraries.ts` are thin readers of it; the authoring guide is that folder's `AGENTS.md`.
 - **overlay**: a user's edits to one seed, stored as field-level ops keyed by `id@baseVersion`; every reader sees
   the **resolved view** `resolve(seed, overlay)`, and a seed update merges into it instead of wiping it
   (ACS-R6, ACS-R7, planned T-0161). Imports and duplicates are full records and carry no overlay.

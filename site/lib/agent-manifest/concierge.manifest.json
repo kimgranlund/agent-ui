@@ -2,7 +2,7 @@
   "id": "concierge",
   "preset": "concierge",
   "seedVersion": 17,
-  "seedDigest": "sha256:04c40e6690e3b27492c21a0746efaebc9b92f5e5c71f80923b4a28a147a9b4bc",
+  "seedDigest": "sha256:cff43097fde5d24f4e247868676e12c4f94ca6fd40754b084102ad70b26465d5",
   "fragment": {
     "personaId": "concierge",
     "types": [

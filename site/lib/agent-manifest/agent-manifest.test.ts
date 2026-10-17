@@ -2,11 +2,15 @@
 // vitest project. The real tree must show no drift between each `<id>.manifest.json` and the preset,
 // fragment and sidecar it pins; every leg has a planted-defect negative control (`bites: <leg>`).
 //
-// A red `seed-digest`, `fragment-digest`, `selection-digest`, `fragment-types` or `target-catalogs` after a
-// deliberate change: run the armed writer (agent-manifest.write.test.ts header), then decide by hand
-// whether the preset's `seedVersion` bumps (a bump drops users' persisted stores).
+// A red `seed-digest` or `seed-version` after a seed content change: run `node scripts/generate-agent-content.mjs`
+// (it writes both from the registry), having decided in the persona's agent.md whether its `version` bumps
+// (a bump drops users' persisted stores; the reason goes on its `changelog`). A red `fragment-digest`,
+// `selection-digest`, `fragment-types` or `target-catalogs` after a deliberate catalog change: run the armed
+// writer (agent-manifest.write.test.ts header).
 import { describe, it, expect } from 'vitest'
-import { AGENT_PRESETS, personaFromPreset } from '../../pages/agent-admin-presets.ts'
+import { AGENT_PRESETS } from '../../pages/agent-admin-presets.ts'
+import { AGENT_CONTENT } from '../../agent-content/registry.gen.ts'
+import { personaSeedClosure } from '../../agent-content/schema.ts'
 import {
   canonicalDigest,
   driftFindings,
@@ -70,7 +74,7 @@ describe('agent manifests: the drift gate', () => {
 
   it('bites: seed-digest', () => {
     const input = clone()
-    ;(input.presets.find((p) => p.id === 'quant')!.seed as Record<string, unknown>)['label'] = 'Another Quant'
+    ;(input.presets.find((p) => p.id === 'quant')!.closure as { persona: string }).persona = `sha256:${'0'.repeat(64)}`
     expect(legsOf(input)).toContain('seed-digest')
   })
 
@@ -115,7 +119,7 @@ describe('agent manifests: the drift gate', () => {
 
   it('the seed digest is deterministic', () => {
     for (const p of AGENT_PRESETS) {
-      expect(canonicalDigest(personaFromPreset(p))).toBe(canonicalDigest(personaFromPreset(p)))
+      expect(canonicalDigest(personaSeedClosure(AGENT_CONTENT, p.id))).toBe(canonicalDigest(personaSeedClosure(AGENT_CONTENT, p.id)))
     }
   })
 

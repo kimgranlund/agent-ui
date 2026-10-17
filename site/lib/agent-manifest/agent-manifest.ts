@@ -1,15 +1,22 @@
 // site/lib/agent-manifest/agent-manifest.ts: one agent manifest per agent preset (GH #1812). The four
-// members of an agent (its `AGENT_PRESETS` config, that preset's `seedVersion`, its persona catalog
-// fragment `catalog.json`, and that fragment's `selection.json` sidecar) live in different places and share
-// no pin, so a change to one never forced a look at the others. Each `<id>.manifest.json` here names all
-// four and pins each by a canonical content digest; `agent-manifest.test.ts` is the drift gate that holds
-// them in agreement, and `agent-manifest.write.test.ts` is the armed writer that refreshes the digests
-// after a deliberate change.
+// members of an agent (its seed content, that preset's `seedVersion`, its persona catalog fragment
+// `catalog.json`, and that fragment's `selection.json` sidecar) live in different places and share no pin,
+// so a change to one never forced a look at the others. Each `<id>.manifest.json` here names all four and
+// pins each by a canonical content digest; `agent-manifest.test.ts` is the drift gate that holds them in
+// agreement.
+//
+// Two writers (T-0160, persona-catalog-composition SPEC-R7): `node scripts/generate-agent-content.mjs`
+// writes the seed pair from the agent-content registry (`seedVersion` is the persona's agent.md `version`,
+// `seedDigest` the canonical digest of its `personaSeedClosure`: the persona file's item digest plus every
+// entry it references), and `agent-manifest.write.test.ts` is the armed writer that refreshes the fragment
+// and sidecar digests after a deliberate catalog change.
 //
 // Consumer-owned on purpose: two members live in `site/` and two in `@agent-ui/a2ui`, and a2ui may never
 // import site. The a2ui `PersonaCatalogManifest` (the Node-safe fragment triple) is a different thing and
 // stays untouched.
-import { AGENT_PRESETS, personaFromPreset } from '../../pages/agent-admin-presets.ts'
+import { AGENT_PRESETS } from '../../pages/agent-admin-presets.ts'
+import { AGENT_CONTENT } from '../../agent-content/registry.gen.ts'
+import { personaSeedClosure } from '../../agent-content/schema.ts'
 import { SHIPPED_PERSONA_CATALOGS, SHIPPED_PERSONA_CATALOG_MANIFESTS } from '@agent-ui/a2ui'
 // @ts-expect-error - node:crypto is typed via @types/node; vitest/node resolves it at runtime (site/tsconfig.json carries no node types, see build-css.ts)
 import { createHash } from 'node:crypto'
@@ -57,7 +64,9 @@ export interface DriftFinding {
 /** Everything the gate reads, as plain JSON data (so a test can clone it and plant one defect). */
 export interface DriftInput {
   manifests: { file: string; manifest: unknown }[]
-  presets: { id: string; seedVersion: number; localPatterns?: string; seed: unknown }[]
+  /** `closure` is the preset's `personaSeedClosure` from the agent-content registry: what `seedDigest`
+   *  pins. */
+  presets: { id: string; seedVersion: number; localPatterns?: string; closure: unknown }[]
   folders: { id: string; catalog: unknown; selection: unknown }[]
   shippedPackageIds: string[]
   shippedManifests: { personaId: string; targetCatalogs: string[] }[]
@@ -105,7 +114,7 @@ export function readTreeInput(): DriftInput {
     // The effective version `personaStore` compares (agent-admin-presets.ts `wanted`).
     seedVersion: p.seedVersion ?? 1,
     ...(p.localPatterns === undefined ? {} : { localPatterns: p.localPatterns }),
-    seed: JSON.parse(JSON.stringify(personaFromPreset(p))) as unknown,
+    closure: JSON.parse(JSON.stringify(personaSeedClosure(AGENT_CONTENT, p.id))) as unknown,
   }))
   const folders = (readdirSync(PERSONAS_DIR) as string[])
     .filter((id) => existsSync(`${PERSONAS_DIR}/${id}/catalog.json`))
@@ -254,7 +263,7 @@ export function driftFindings(input: DriftInput): DriftFinding[] {
     }
     if (m === undefined) continue
     if (m.seedVersion !== p.seedVersion) add('seed-version', p.id, `manifest seedVersion ${String(m.seedVersion)} is not the preset's effective ${p.seedVersion}`)
-    if (m.seedDigest !== canonicalDigest(p.seed)) add('seed-digest', p.id, 'seedDigest does not match personaFromPreset')
+    if (m.seedDigest !== canonicalDigest(p.closure)) add('seed-digest', p.id, 'seedDigest does not match the registry seed closure; run node scripts/generate-agent-content.mjs')
   }
 
   // list-coherence: the four persona id lists are one set.
@@ -280,7 +289,7 @@ export function refreshManifest(manifest: AgentManifest, input: DriftInput): Age
   const shipped = fragment === null ? undefined : input.shippedManifests.find((s) => s.personaId === fragment.personaId)
   return {
     ...manifest,
-    seedDigest: preset === undefined ? manifest.seedDigest : canonicalDigest(preset.seed),
+    seedDigest: preset === undefined ? manifest.seedDigest : canonicalDigest(preset.closure),
     fragment:
       fragment === null
         ? null

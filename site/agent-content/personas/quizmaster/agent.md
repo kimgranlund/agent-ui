@@ -24,6 +24,9 @@
     "4: T-0082 (ADR-0243 Amendment 1): the QuestionCard answer, header and in-card Check answer Button; migrates pre-v4 stores.",
     "3: T-0074 (ADR-0243): one QuestionCard per round.",
     "2: T-0036 (2026-10-08): T-0030 moved this preset to claude-haiku-5-5 without a bump, so saved Quizmasters stayed on Haiku 4.5; migrates pre-v2 stores (Kim chose the bump, which drops user edits to this persona)"
+  ],
+  "notes": [
+    "model claude-haiku-5-5 (T-0030, version 2 by T-0036)."
   ]
 }
 ---

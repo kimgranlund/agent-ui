@@ -42,6 +42,13 @@
     "8: T-0073 (ADR-0243): the blackjack table is one CardTable, taught by the card-layout and game-table-chrome skills; migrates pre-v8 stores.",
     "7: T-0020: a natural blackjack ends the round on the deal (surfaceStyle, round-loop and the blackjack rules entry); no mini-skill carries it, so a pre-v7 store would never hear it; migrates pre-v7 stores.",
     "6: one surface per round (Kim 2026-10-04), supersedes #525's one-persistent-surface surfaceStyle; #525's bankroll opt-in + cross-session resume carry over; migrates pre-v6 stores. T-0016 (GH #1795) edited the hand/total seed text WITHOUT a bump: existing stores get the data-driven hand teaching from the server-composed card-layout/game-table-chrome mini-skills and the ADR-0238 hand check, so no store needs dropping"
+  ],
+  "notes": [
+    "category games: a card table is thematically a game even though it predates the games-roster wave (GH #143).",
+    "localPatterns croupier: PlayingCard closes the glyph-formatting idiom structurally (GH #497); the CardTable composite draws the whole blackjack table (T-0073, ADR-0243).",
+    "bankroll: opts into the persistent cross-session bankroll capability (GH #525), croupier enabled first.",
+    "The card-layout and game-table-chrome skills mirror the byte-pinned card-layout.md and game-table-chrome.md mini-skills (the recapture flow). CardTable holds a dealer and a player hand only, so poker keeps the Card frame with PlayingCard hands.",
+    "resources: every game-rules entry seeds enabled. The random pick draws from the ENABLED rules resources, so toggling one off takes that game off the table. A new game-rules entry joins the rotation only once it is added here."
   ]
 }
 ---

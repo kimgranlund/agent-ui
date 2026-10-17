@@ -67,7 +67,10 @@ than you meant to, and an armed run on an UNCHANGED tree is a byte-identical no-
   `ui-*` tag (`Option`, `MenuItem`) throws there.
 - **Regenerate the embedded assets after a prompt or sidecar edit.** Run `node scripts/generate-agent-assets.mjs`
   from the repo root: it rewrites `src/agent/assets.gen.ts`, which `src/agent/agent-assets-freshness.test.ts`
-  and the `--check` leg of `npm run check:scripts` hold byte-equal to the files on disk.
+  and the `--check` leg of `npm run check:scripts` hold byte-equal to the files on disk. A mini-skill or GenUI
+  pack edit also moves the agent-content registry the admin's library packs read (T-0160), so run
+  `node scripts/generate-agent-content.mjs` too (`site/agent-content/registry-freshness.test.ts`, and its own
+  `--check` leg).
 - **The whole composed prompt has a character budget too.** `PROMPT_CHAR_BUDGET_BASE` and
   `PROMPT_CHAR_BUDGET_DERIVED` in `src/agent/prompt-budget.ts` (ADR-0234) cap the worst-case composition,
   gated by `src/live-agent/prompt-budget.test.ts`. When an edit reds it, re-author tersely or re-measure

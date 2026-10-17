@@ -5,12 +5,14 @@
 //
 //   AGENT_MANIFEST_WRITE=1 npx vitest run --project site site/lib/agent-manifest/agent-manifest.write.test.ts
 //
-// The rule: run it after a deliberate seed, fragment or sidecar change, never to green a red gate you do
-// not understand. It rewrites every existing `*.manifest.json` (always, even when the bytes are unchanged)
-// through `refreshManifest`, so only the digests and derived facts move; it never creates a manifest. A
-// `seedVersion` bump stays a human edit to the manifest, because the bump drops users' persisted stores
-// (`personaStore` in site/pages/agent-admin-presets.ts). On an unchanged tree an armed run is a
-// byte-identical no-op.
+// The rule: run it after a deliberate fragment or sidecar change, never to green a red gate you do not
+// understand. It rewrites every existing `*.manifest.json` (always, even when the bytes are unchanged)
+// through `refreshManifest`, so only the digests and derived facts move; it never creates a manifest. The
+// seed pair (`seedVersion`, `seedDigest`) is written by `node scripts/generate-agent-content.mjs` from the
+// agent-content registry (T-0160); this writer recomputes the same `seedDigest` and keeps `seedVersion` as
+// written. A `seedVersion` bump is the persona agent.md's `version`, because the bump drops users'
+// persisted stores (`personaStore` in site/pages/agent-admin-presets.ts). On an unchanged tree an armed
+// run is a byte-identical no-op.
 import { describe, it } from 'vitest'
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime (site/tsconfig.json carries no node types)
 import { writeFileSync } from 'node:fs'

@@ -4,9 +4,11 @@
 // mutating the tree, so the equality and the empty problem list cannot pass vacuously.
 import { describe, it, expect } from 'vitest'
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime (site/tsconfig.json carries no node types)
-import { readFileSync } from 'node:fs'
-import { discoverAgentContent, generateRegistryModule, OUT_REGISTRY } from '../../scripts/generate-agent-content.mjs'
-import { validateContent, type ContentRecord, type PersonaRecord, type PackRecord, type EntryRecord } from './schema.ts'
+import { existsSync, readFileSync } from 'node:fs'
+// @ts-expect-error - see above
+import { createHash } from 'node:crypto'
+import { discoverAgentContent, generateRegistryModule, manifestUpdates, OUT_REGISTRY } from '../../scripts/generate-agent-content.mjs'
+import { canonicalJson, parseContentFile, personaSeedClosure, validateContent, type ContentRecord, type PersonaRecord, type PackRecord, type EntryRecord } from './schema.ts'
 import { AGENT_CONTENT } from './registry.gen.ts'
 
 declare const process: { cwd(): string }
@@ -17,6 +19,7 @@ const discovered = discoverAgentContent()
 const records = (): ContentRecord[] => JSON.parse(JSON.stringify(discovered.records)) as ContentRecord[]
 const persona = (rs: ContentRecord[], id: string): PersonaRecord => rs.find((r): r is PersonaRecord => r.kind === 'persona' && r.id === id)!
 const pack = (rs: ContentRecord[], id: string): PackRecord => rs.find((r): r is PackRecord => r.kind === 'pack' && r.id === id)!
+const sha256 = (text: string): string => `sha256:${createHash('sha256').update(text, 'utf8').digest('hex') as string}`
 
 describe('agent-content registry: freshness and schema', () => {
   it('the committed registry carries the GENERATED header', () => {
@@ -36,6 +39,27 @@ describe('agent-content registry: freshness and schema', () => {
     expect(discovered.records.filter((r) => r.kind === 'pack').length).toBeGreaterThanOrEqual(9)
     expect(discovered.records.some((r) => r.kind === 'mini-skill')).toBe(true)
     expect(discovered.records.some((r) => r.kind === 'genui-pack')).toBe(true)
+  })
+
+  it('every agent manifest carries the registry seed pair', () => {
+    const { updates, problems } = manifestUpdates(discovered.records)
+    expect(problems).toEqual([])
+    expect(updates).toHaveLength(15)
+    for (const { path, text } of updates) expect(readFileSync(`${process.cwd()}/${path}`, 'utf8'), `stale ${path}: run node scripts/generate-agent-content.mjs`).toBe(text)
+  })
+
+  it('bites: an entry edit moves the seed digest of every persona that references it', () => {
+    const path = 'site/agent-content/skills/menu-card/SKILL.md'
+    const before = sha256(canonicalJson(personaSeedClosure(discovered.records, 'restaurant')))
+    const edited = parseContentFile(path, `${readFileSync(`${process.cwd()}/${path}`, 'utf8')}x`, sha256)!
+    const rs = discovered.records.map((r) => (r.path === path ? edited : r))
+    expect(sha256(canonicalJson(personaSeedClosure(rs, 'restaurant')))).not.toBe(before)
+    expect(sha256(canonicalJson(personaSeedClosure(rs, 'quant')))).toBe(sha256(canonicalJson(personaSeedClosure(discovered.records, 'quant'))))
+  })
+
+  it('the content root AGENTS.md exists and produces no registry row (ACS-R15)', () => {
+    expect(existsSync(`${process.cwd()}/site/agent-content/AGENTS.md`)).toBe(true)
+    expect(discovered.records.some((r) => r.path.endsWith('AGENTS.md'))).toBe(false)
   })
 
   it('the real tree has no schema problems', () => {
@@ -87,6 +111,12 @@ describe('agent-content registry: freshness and schema', () => {
     const p = persona(rs, 'croupier')
     p.frontmatter.tools = []
     expect(validateContent(rs).join('\n')).toContain('croupier never references this entry')
+  })
+
+  it('bites: an invocable root entry (a library add carries no availability)', () => {
+    const rs = records()
+    rs.find((r): r is EntryRecord => r.kind === 'skill' && r.id === 'menu-card')!.frontmatter.availability = 'invocable'
+    expect(validateContent(rs).join('\n')).toContain('a root entry is context')
   })
 
   it('bites: an entry whose name is not its folder', () => {

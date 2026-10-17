@@ -24,6 +24,9 @@
     "4: T-0200: board-grid puts ships remaining and shots fired in one GameHud; migrates pre-v4 stores.",
     "3: T-0128 (ADR-0243 Amendment 4): the board is one BoardGrid with actionName, a cell click an action with {row, col}, not a Grid of cell Buttons; migrates pre-v3 stores.",
     "2: T-0089 (ADR-0244): the board-grid End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores"
+  ],
+  "notes": [
+    "Surface style (GH #144): the opening turn used to ask for both 6x6 boards at once (72 clickable cells), reliably enough malformed cells that the turn burned its whole self-correct budget. Turn one renders one board only; the second joins once a shot has landed."
   ]
 }
 ---

@@ -2,7 +2,8 @@
 // CLI runs in a scratch copy of the content roots, so the real tree is never mutated:
 //   (a) `--check` exits 0 on an unedited copy;
 //   (b) `--check` exits 1 on a hand-edited registry.gen.ts (the T-0160 negative control);
-//   (c) `--check` and a plain write both exit 1 on invalid content, and the write leaves the registry alone.
+//   (c) `--check` and a plain write both exit 1 on invalid content, and the write leaves the registry alone;
+//   (d) `--check` exits 1 on a hand-edited manifest seed digest, and a write restores it.
 
 import { describe, it, expect, afterAll } from 'vitest'
 import { spawnSync } from 'node:child_process'
@@ -12,7 +13,7 @@ import { join } from 'node:path'
 import { OUT_REGISTRY } from './generate-agent-content.mjs'
 
 const SCRIPT = join(process.cwd(), 'scripts/generate-agent-content.mjs')
-const ROOTS = ['site/agent-content', 'packages/agent-ui/a2ui/src/agent/prompts/mini-skills', 'packages/agent-ui/a2ui/src/agent/prompts/genui-packs']
+const ROOTS = ['site/agent-content', 'site/lib/agent-manifest', 'packages/agent-ui/a2ui/src/agent/prompts/mini-skills', 'packages/agent-ui/a2ui/src/agent/prompts/genui-packs']
 
 const scratch = []
 afterAll(() => {
@@ -42,6 +43,18 @@ describe('generate-agent-content CLI', () => {
     const r = run(dir, '--check')
     expect(r.status).toBe(1)
     expect(r.stderr).toContain(`${OUT_REGISTRY} is stale`)
+  })
+
+  it('--check exits 1 on a hand-edited manifest seed digest, and a write restores it', () => {
+    const dir = copyTree()
+    const path = join(dir, 'site/lib/agent-manifest/quant.manifest.json')
+    const original = readFileSync(path, 'utf8')
+    writeFileSync(path, original.replace(/"seedDigest": "sha256:[0-9a-f]{64}"/, `"seedDigest": "sha256:${'0'.repeat(64)}"`))
+    const check = run(dir, '--check')
+    expect(check.status).toBe(1)
+    expect(check.stderr).toContain('quant.manifest.json is stale')
+    expect(run(dir).status).toBe(0)
+    expect(readFileSync(path, 'utf8')).toBe(original)
   })
 
   it('invalid content fails both modes and the write leaves the registry alone', () => {

@@ -74,7 +74,7 @@ build dependency (no YAML library). T-0160 picks either a small declared subset 
 or JSON frontmatter; whichever it picks, the validator refuses any file outside the chosen grammar with a named
 reason, never a best-effort parse. Planned: T-0160.
 
-**ACS-R4 (registry, digests, drift gate).** `scripts/generate-agent-assets.mjs` reads the content root and emits
+**ACS-R4 (registry, digests, drift gate).** `scripts/generate-agent-content.mjs` reads the content root and emits
 `registry.gen.ts`: one row per item with `id`, `kind`, `version`, `digest`, `path`, the parsed frontmatter and the
 body. The item digest is a sha256 over the item's canonical form (LF line endings, frontmatter as canonical JSON
 with sorted keys, then the body), the same canonicalization family `site/lib/agent-manifest/agent-manifest.ts`
@@ -233,9 +233,11 @@ ticket against this SPEC runs that ticket's named tests and checks each cited `f
 
 ## 8 · Open items
 
-1. The content root's location (T-0160): inside `@agent-ui/app` or beside the a2ui mini-skills, whichever keeps the
-   DAG; site-internal content stays site-internal.
-2. The frontmatter grammar choice, subset or JSON (T-0160, ACS-R3).
+1. The content root's location, decided (T-0160): `site/agent-content/`. The presets and packs were page-local
+   site data, so they stay site-internal and the package DAG is untouched; the a2ui mini-skills and GenUI packs stay
+   where they are and are indexed in place. Its `AGENTS.md` is the authoring guide (ACS-R15).
+2. The frontmatter grammar, decided (T-0160, ACS-R3): one JSON object between `---` fences (valid YAML, parsed by
+   `JSON.parse`); the a2ui prompt files keep their single-line `key: value` frontmatter.
 3. Whether `compile` returns a promise or digests in a separate step (T-0163, ACS-R12).
 4. Context loading, decided (T-0231): skills, playbooks (workflows) and resources reach the prompt as index lines
    only (ADR-0190), so an index-only entry reaches the model as its label and one-line description, and its content
