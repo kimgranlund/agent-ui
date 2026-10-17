@@ -158,3 +158,62 @@ describe('validate-payload: deleteSurface frees the id graph (ADR-0064 amendment
     expect(failures).toEqual([{ code: 'IDGRAPH', path: 's:root-missing' }])
   })
 })
+
+// T-0247: a derived catalog id (`<base>--<persona>`) loads only when a shipped persona set derives it, through the
+// hosts' own derive step. The two-domain leg lives in `catalog-files.test.ts` (no domain ships in the real tree yet,
+// so the subprocess here can only prove a domain id is refused).
+describe('validate-payload --catalog <derived id> (T-0247): real subprocess runs', () => {
+  vi.setConfig({ testTimeout: 30_000 })
+
+  let dir: string
+  let stylistPath: string
+
+  beforeAll(() => {
+    dir = mkdtempSync(join(tmpdir(), 'a2ui-validate-derived-'))
+    stylistPath = join(dir, 'stylist.json')
+    writeFileSync(
+      stylistPath,
+      JSON.stringify([
+        { version: 'v1.0', createSurface: { surfaceId: 's', catalogId: 'agent-ui--stylist' } },
+        { version: 'v1.0', updateComponents: { surfaceId: 's', components: [{ id: 'root', component: 'ContrastPair', foreground: '#000', background: '#fff', label: 'AA', sample: 'Aa' }] } },
+      ]),
+    )
+  })
+  afterAll(() => {
+    rmSync(dir, { recursive: true, force: true })
+    vi.resetConfig()
+  })
+
+  const run = (args: string[]): { status: number | null; stdout: string; stderr: string } => {
+    const r = spawnSync('node', ['--experimental-strip-types', SCRIPT, ...args], { cwd: REAL_ROOT, encoding: 'utf8' })
+    return { status: r.status, stdout: r.stdout, stderr: r.stderr }
+  }
+
+  it('a persona payload exits 0 under agent-ui--stylist and 1 (CATALOG) under the bare base: the persona fragment is composed', () => {
+    const ok = run([stylistPath, '--catalog', 'agent-ui--stylist'])
+    expect(ok.status, ok.stdout + ok.stderr).toBe(0)
+    expect(JSON.parse(ok.stdout)).toMatchObject({ ok: true })
+    const base = run([stylistPath, '--catalog', 'agent-ui'])
+    expect(base.status).toBe(1)
+    expect((JSON.parse(base.stdout) as { code: string }[]).every((f) => f.code === 'CATALOG')).toBe(true)
+  })
+
+  it('a persona the hosts would not derive exits 1 with "no such persona or domain": a base it does not target, a typo, an unshipped domain pair', () => {
+    for (const id of ['a2ui-basic--stylist', 'agent-ui--stylst', 'agent-ui--design+games', 'agent-ui--games+design']) {
+      const r = run([stylistPath, '--catalog', id])
+      expect(r.status, id).toBe(1)
+      expect(r.stderr, id).toMatch(/no such persona or domain/)
+      expect(r.stderr.trim().split('\n'), id).toHaveLength(1)
+      expect(r.stdout, id).toBe('')
+    }
+  })
+
+  it('an id outside the grammar still exits 1 as an unknown catalog and prints no verdict', () => {
+    for (const id of ['bogus', 'bogus--stylist']) {
+      const r = run([stylistPath, '--catalog', id])
+      expect(r.status, id).toBe(1)
+      expect(r.stderr, id).toMatch(/unknown catalog/)
+      expect(r.stdout, id).toBe('')
+    }
+  })
+})

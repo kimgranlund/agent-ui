@@ -18,16 +18,26 @@
 // `loadCatalogById` composes it over its base with the SAME `composeCatalog` the renderer and the server hosts
 // use, so a persona seed is admitted against exactly the catalog a live persona turn validates against.
 //
+// T-0247: `loadDerivedCatalogById` loads a derived id the hosts derive, not only the registered seed shards: a
+// `<base>--<persona>` or `<base>--<d1>+<d2>` id resolves ONLY when its persona or domains are in
+// `SHIPPED_PERSONA_CATALOG_MANIFESTS` / `SHIPPED_DOMAIN_CATALOG_MANIFESTS` and target that base, through the hosts'
+// own derive steps (`composePersonaCatalogDocs`, `composeDomainCatalogDocs`), so no second copy of those rules
+// lives here. The manifests import `catalog.json` without an import attribute, so `loadShippedManifests` first
+// registers a Node load hook that supplies it. This is the catalog only: a domain's `semanticChecks` are not run
+// by `validate-payload.ts`, so a payload can pass here and still fail a live turn's checks.
+//
 // Paths are repo-root-relative (the CLIs run from the repo root, `process.cwd()`), so a sandbox repo
 // root (the `import-seeds.test.ts` subprocess legs) resolves them against its own tree.
 //
 // Zero new deps (SPEC-N5). Plain `.ts`, run via Node type-stripping (`erasableSyntaxOnly`, ADR-0062).
 
 import { readFileSync } from 'node:fs'
+import { registerHooks } from 'node:module'
 import { join } from 'node:path'
 import { loadCatalog } from '../src/catalog/catalog.ts'
 import type { Catalog } from '../src/catalog/catalog.ts'
-import { composeCatalog, loadCatalogFragment } from '../src/catalog/compose.ts'
+import { composeCatalog, composeDomainCatalogDocs, composePersonaCatalogDocs, loadCatalogFragment } from '../src/catalog/compose.ts'
+import type { DomainCatalogManifest, PersonaCatalogManifest } from '../src/catalog/compose.ts'
 import { splitCatalogId } from '../src/catalog/catalog-id.ts'
 import type { BaseCatalogId, SeedCatalogId } from '../src/examples/types.ts'
 
@@ -88,4 +98,36 @@ export function createCatalogResolver(repoRoot: string): (id: SeedCatalogId) => 
     }
     return catalog
   }
+}
+
+/** The shipped persona and domain manifests (the host derive steps' inputs). */
+export interface ShippedManifests {
+  personas: readonly PersonaCatalogManifest[]
+  domains: readonly DomainCatalogManifest[]
+}
+
+/** Import the shipped manifests under plain Node. Their `catalog.json` imports carry no import attribute, which
+ *  Node's native ESM loader rejects (`ERR_IMPORT_ATTRIBUTE_MISSING`), so a load hook supplies `type: 'json'` first. */
+export async function loadShippedManifests(): Promise<ShippedManifests> {
+  registerHooks({
+    load: (url, context, next) =>
+      url.endsWith('.json') && context.importAttributes?.type === undefined ? next(url, { ...context, importAttributes: { type: 'json' } }) : next(url, context),
+  })
+  const personas = await import('../src/catalog/personas/manifests.ts')
+  const domains = await import('../src/catalog/domains/manifests.ts')
+  return { personas: personas.SHIPPED_PERSONA_CATALOG_MANIFESTS, domains: domains.SHIPPED_DOMAIN_CATALOG_MANIFESTS }
+}
+
+/** Load a derived catalog id outside the seed registry: `<base>--<persona>` for a shipped persona that targets
+ *  `<base>`, or `<base>--<d1>+<d2>` for shipped domains that all target it, composed by the hosts' own derive
+ *  steps over the registered base documents. `undefined` when the id derives to nothing (a base the registry lacks,
+ *  an unshipped persona or domain, a persona that does not target the base, a non-canonical domain spelling);
+ *  a compose failure (a collision, a bad fragment) throws with its real message. */
+export function loadDerivedCatalogById(repoRoot: string, id: string, shipped: ShippedManifests): Catalog | undefined {
+  const { base, tail } = splitCatalogId(id)
+  if (tail === undefined || !(BASE_CATALOG_IDS as readonly string[]).includes(base)) return undefined
+  const bases = new Map<string, Catalog>(BASE_CATALOG_IDS.map((baseId) => [baseId, loadCatalogById(repoRoot, baseId)]))
+  const persona = shipped.personas.find((p) => p.personaId === tail)
+  const docs = persona !== undefined ? composePersonaCatalogDocs(bases, [persona]) : composeDomainCatalogDocs(bases, shipped.domains)
+  return docs.get(id)
 }
