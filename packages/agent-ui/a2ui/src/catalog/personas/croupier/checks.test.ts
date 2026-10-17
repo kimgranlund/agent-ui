@@ -1234,3 +1234,97 @@ describe('croupier checks: a poker table is never judged by the blackjack strip 
     expect(blackjack[0]!.message).not.toMatch(/poker/)
   })
 })
+
+describe('croupier rules check: a poker showdown settles in the turn it is reached (T-0346)', () => {
+  const C = (rank: string, suit: string, faceDown = false) => ({ rank, suit, ...(faceDown ? { faceDown } : {}) })
+  const hand = [C('A', 'hearts'), C('K', 'diamonds'), C('J', 'clubs'), C('9', 'spades')]
+  const board = [C('10', 'hearts'), C('5', 'spades'), C('2', 'diamonds'), C('7', 'clubs'), C('Q', 'spades')]
+  // The :104 deal turn of round 10 (regress-croupier-omaha-haiku-1): a Card, not a CardTable.
+  const deal: A2uiOutput = [
+    { version: 'v1.0', createSurface: { surfaceId: 'table-1', catalogId: 'agent-ui--croupier', sendDataModel: true } },
+    { version: 'v1.0', updateDataModel: { surfaceId: 'table-1', value: { bankroll: 990, pot: 20, playerHand: hand, board: [] } } },
+    { version: 'v1.0', updateComponents: { surfaceId: 'table-1', components: [
+      { id: 'root', component: 'Card', children: ['hdr', 'body', 'foot'] },
+      { id: 'hdr', component: 'CardHeader', children: ['title', 'phase'] },
+      { id: 'title', component: 'Text', text: 'Omaha', variant: 'h4' },
+      { id: 'phase', component: 'Badge', label: 'Pre-flop', intent: 'info' },
+      { id: 'body', component: 'CardContent', children: ['hand', 'board', 'status'] },
+      { id: 'hand', component: 'Row', children: { path: '/playerHand', componentId: 'holeCard' } },
+      { id: 'holeCard', component: 'PlayingCard', rank: { path: 'rank' }, suit: { path: 'suit' } },
+      { id: 'board', component: 'Row', children: { path: '/board', componentId: 'boardCard' } },
+      { id: 'boardCard', component: 'PlayingCard', rank: { path: 'rank' }, suit: { path: 'suit' } },
+      { id: 'status', component: 'Text', text: 'No board cards yet. Your move before the flop.', variant: 'body' },
+      { id: 'foot', component: 'CardFooter', children: ['actRow'] },
+      { id: 'actRow', component: 'Row', children: ['checkBtn', 'betBtn', 'foldBtn'] },
+      { id: 'checkBtn', component: 'Button', label: 'Check', variant: 'solid', action: { action: 'check' } },
+      { id: 'betBtn', component: 'Button', label: 'Bet 20', variant: 'soft', action: { action: 'bet', context: { amount: 20 } } },
+      { id: 'foldBtn', component: 'Button', label: 'Fold', variant: 'ghost', action: { action: 'fold' } },
+    ] } },
+  ] as A2uiOutput
+  const street = (label: string, status: string, data: Record<string, unknown>, button: Record<string, unknown>): A2uiOutput => [
+    { version: 'v1.0', updateDataModel: { surfaceId: 'table-1', value: { bankroll: 950, pot: 60, playerHand: hand, board, ...data } } },
+    { version: 'v1.0', updateComponents: { surfaceId: 'table-1', components: [
+      { id: 'phase', component: 'Badge', label, intent: 'info' },
+      { id: 'status', component: 'Text', text: status, variant: 'body' },
+      { id: 'betBtn', component: 'Button', variant: 'soft', ...button },
+    ] } },
+  ] as A2uiOutput
+  const session: Session = { turns: [{ role: 'user', content: 'Let\'s play Omaha.' }, { role: 'assistant', content: toJsonl(deal) }] }
+  const SHOWDOWN_CODES = ['SHOWDOWN_UNSETTLED']
+  const judge = (sess: Session, output: A2uiOutput) =>
+    croupierSemanticChecks
+      .flatMap((c) => c.check({ surfaces: semanticSurfaceViews(sess, output), intent: 'Check, or call if there is a bet.' }))
+      .filter((f) => SHOWDOWN_CODES.includes(f.code))
+  const showdown = (output: A2uiOutput) => judge(session, output)
+  // :108 round 2, as recorded: phase Showdown, the opponent's hand never dealt, a button to deal it.
+  const recorded = street('Showdown', "River checked through. Showdown: your best hand is A-K-Q-10-7, high card. Pot 60. Deal the opponent's hand to settle.", {}, {
+    label: "Deal opponent's hand", action: { action: 'deal_opponent' },
+  })
+  const up = [C('K', 'hearts'), C('K', 'clubs'), C('8', 'spades'), C('3', 'diamonds')]
+  const result = 'Showdown: the opponent shows K-K-8-3 and a pair of kings beats your ace high. You lose 40, bankroll 950.'
+
+  it('the :108 round 2 showdown (opponent hand never dealt, no result) is one SHOWDOWN_UNSETTLED asking for the reveal and the result', () => {
+    const f = showdown(recorded)
+    expect(f.map((x) => [x.code, x.path])).toEqual([['SHOWDOWN_UNSETTLED', 'table-1:phase']])
+    expect(f[0]!.message).toMatch(/opponent's hand is still hidden/)
+    expect(f[0]!.message).toMatch(/this turn/)
+  })
+
+  it('a showdown whose opponent cards are all face down, or that states no result, is unsettled', () => {
+    const down = up.map((c) => ({ ...c, faceDown: true }))
+    expect(showdown(street('Showdown', result, { opponentHand: down }, { label: 'Deal again', action: { action: 'deal_again' } })).map((x) => x.code)).toEqual(['SHOWDOWN_UNSETTLED'])
+    const silent = showdown(street('Showdown', 'Showdown: the opponent turns over K-K-8-3.', { opponentHand: up }, { label: 'Deal again', action: { action: 'deal_again' } }))
+    expect(silent[0]!.message).toMatch(/no result is stated/)
+  })
+
+  it('a settled showdown gives none whatever its Button says', () => {
+    for (const label of ['Deal again', 'Deal hand', 'Show hand']) {
+      expect(showdown(street('Showdown', result, { opponentHand: up }, { label, action: { action: label.toLowerCase().replace(' ', '_') } }))).toEqual([])
+    }
+  })
+
+  it('a bound phase Badge and a CardTable at the showdown are judged the same way', () => {
+    const bound: A2uiOutput = [
+      { version: 'v1.0', updateDataModel: { surfaceId: 'table-1', value: { bankroll: 950, pot: 60, playerHand: hand, board, phaseLabel: 'Showdown' } } },
+      { version: 'v1.0', updateComponents: { surfaceId: 'table-1', components: [{ id: 'phase', component: 'Badge', label: { path: '/phaseLabel' } }] } },
+    ] as A2uiOutput
+    expect(showdown(bound).map((x) => x.path)).toEqual(['table-1:phase'])
+    const table = (value: Record<string, unknown>): A2uiOutput => [
+      { version: 'v1.0', createSurface: { surfaceId: 'table-2', catalogId: 'agent-ui--croupier' } },
+      { version: 'v1.0', updateDataModel: { surfaceId: 'table-2', value } },
+      { version: 'v1.0', updateComponents: { surfaceId: 'table-2', components: [
+        { id: 'root', component: 'CardTable', title: 'Omaha', phase: 'playing', status: { path: '/status' }, bankroll: { path: '/bankroll' }, bet: { path: '/pot' }, dealerHand: { path: '/dealerHand' }, playerHand: { path: '/playerHand' } },
+      ] } },
+    ] as A2uiOutput
+    const down = up.map((c) => ({ ...c, faceDown: true }))
+    expect(judge({ turns: [] }, table({ bankroll: 950, pot: 60, status: 'Showdown: deal the opponent hand.', playerHand: hand, dealerHand: down })).map((x) => x.path)).toEqual(['table-2:root'])
+    expect(judge({ turns: [] }, table({ bankroll: 950, pot: 60, status: result, playerHand: hand, dealerHand: up }))).toEqual([])
+  })
+
+  it('a Pre-showdown street, an earlier street and a table that names no poker game are not judged', () => {
+    expect(showdown(street('Pre-showdown', 'Pre-showdown: one more bet.', {}, { label: 'Bet 20', action: { action: 'bet' } }))).toEqual([])
+    expect(showdown(street('River', 'River: Q♠. Your move.', {}, { label: 'Check', action: { action: 'check' } }))).toEqual([])
+    const unnamed: Session = { turns: [{ role: 'assistant', content: toJsonl(deal).replace('"Omaha"', '"Table"') }] }
+    expect(judge(unnamed, recorded)).toEqual([])
+  })
+})

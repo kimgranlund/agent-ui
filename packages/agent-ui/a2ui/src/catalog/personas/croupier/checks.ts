@@ -922,6 +922,8 @@ export const croupierActionApplied: SemanticCheck = {
 }
 
 const POKER_GAMES = /\b(poker|stud|hold ?['’]?em|holdem|omaha|razz|five[- ]card draw|draw poker)\b/i
+/** A surface whose literal words name a poker game: the gate of the poker-only checks. */
+const isPokerView = (view: SurfaceView): boolean => POKER_GAMES.test(literalWords(view.components.values()))
 const DRAW_GAMES = /\b(five[- ]card draw|draw poker|triple draw|badugi)\b/i
 
 interface DeckCard {
@@ -949,7 +951,7 @@ function deckCards(node: unknown, pointer: string, out: DeckCard[], depth = 0): 
 /** CARD_DUPLICATE: a poker deal is one deck, so a rank and suit appear once (Sonnet 5.5 Omaha dealt four face-down
  *  2 of clubs as placeholders). Judged only on a surface that names a poker game; a blackjack shoe holds several decks. */
 function duplicateCards(view: SurfaceView): SemanticFinding[] {
-  if (!POKER_GAMES.test(literalWords(view.components.values()))) return []
+  if (!isPokerView(view)) return []
   const seen = new Map<string, DeckCard[]>()
   for (const c of deckCards(view.dataModel, '', [])) {
     const key = cardName(c)
@@ -1068,11 +1070,49 @@ function boughtFaceUp(view: SurfaceView, action: SemanticAction): SemanticFindin
   return findings
 }
 
+const SHOWDOWN = /(?<![\w-])showdown(?![\w-])/i
+const OPPONENT_PATH = /opponent|dealer|house|villain|rival/i
+const RESULT_WORDS = /\b(wins?|won|lose[sd]?|lost|beats?|split|ties?|tied|push|chop)\b/i
+
+/** A component's string prop, literal or bound. */
+const stringProp = (view: SurfaceView, c: A2uiComponent, key: string): string => {
+  const v = resolveProp(c[key], view.dataModel, undefined)
+  return typeof v === 'string' ? v : ''
+}
+
+/** SHOWDOWN_UNSETTLED (T-0346; round 10 :108, Haiku 5.5 Omaha): a poker table at the showdown settles in the turn it
+ *  reaches it. The showdown is a Badge label, or a CardTable phase or status (literal or bound), reading the word
+ *  "showdown" ("Pre-showdown" is a street before). The table is unsettled when the opponent's hand is missing, empty or
+ *  all face down in the data model, or no text on the surface states a result. A settled showdown gives none, whatever
+ *  its Buttons say. */
+function showdownUnsettled(view: SurfaceView): SemanticFinding[] {
+  if (!isPokerView(view)) return []
+  const comps = [...view.components.values()]
+  const at = comps.find((c) =>
+    c.component === 'Badge' ? SHOWDOWN.test(stringProp(view, c, 'label')) : c.component === 'CardTable' && (SHOWDOWN.test(stringProp(view, c, 'phase')) || SHOWDOWN.test(stringProp(view, c, 'status'))),
+  )
+  if (at === undefined) return []
+  const opponent = deckCards(view.dataModel, '', []).filter((c) => OPPONENT_PATH.test(c.path))
+  const hidden = opponent.length === 0 || opponent.every((c) => c.faceDown)
+  const stated = comps.some((c) => ['text', 'label', 'title', 'status', 'result'].some((k) => RESULT_WORDS.test(stringProp(view, c, k))))
+  if (!hidden && stated) return []
+  return [
+    {
+      code: 'SHOWDOWN_UNSETTLED',
+      path: `${view.surfaceId}:${at.id}`,
+      message:
+        `${view.surfaceId} is at the showdown but ${hidden ? "the opponent's hand is still hidden" : 'no result is stated'}. Reveal the opponent's hand in this turn: put its cards face up in the data model, ` +
+        `state who wins and the new bankroll, and offer Deal again.`,
+    },
+  ]
+}
+
 /** T-0219: what the Croupier states agrees with the cards and the game's rules. */
 export const croupierRules: SemanticCheck = {
   id: 'croupier-rules',
   requires: ['CardTable'],
-  check: (input) => input.surfaces.flatMap((view) => [...resultClaims(view), ...(input.action === undefined ? [] : boughtFaceUp(view, input.action))]),
+  check: (input) =>
+    input.surfaces.flatMap((view) => [...resultClaims(view), ...showdownUnsettled(view), ...(input.action === undefined ? [] : boughtFaceUp(view, input.action))]),
 }
 
 export const croupierSemanticChecks: readonly SemanticCheck[] = [croupierHandConsistency, croupierBetControls, croupierActionApplied, croupierDeck, croupierRules]
