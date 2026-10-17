@@ -33,6 +33,11 @@
   rides `check:scripts`. Home: `scripts/e2e-admin/README.md`, T-0174. A live round of many probes runs through
   `probe/run-capped.ts <live-commands.sh> --cap <usd> --round <slug>` and archives into `.sdlc/evals/rounds/`
   (T-0225, T-0241; README, Live rounds).
+- `npm run eval:signals -- --round <folder> [--against <folder>]`: keyless tables over the committed round
+  archive (pass rate per scenario and preset by model, mixed cells, failing checks, retry codes, spend and
+  latency per turn, section digests), and churn against a baseline round; `--floor <tag>=<rate>` and
+  `--max-drop <delta>` exit 1 on a miss. Each archived round also gets them as `signals.md`. Home:
+  `scripts/e2e-admin/probe/signals.ts`, README Live rounds, SPEC CL-R4 and CL-R9 (T-0342).
 - `npm run traces`: the last live agent turns from the dev proxy's git-ignored trace log
   (`.agent-traces/YYYY-MM-DD.jsonl`, one redacted line per turn, on under `npm run dev`, `A2UI_AGENT_TRACES=0`
   turns it off); `-- --full 1` prints the newest turn in full (T-0151). The prompt text each line's digests name

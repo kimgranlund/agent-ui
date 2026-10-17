@@ -1,7 +1,7 @@
 # SPEC: Agent closed-loop testing (scenarios, checks, signal rows, replay and live)
 
-> Status: proposed · v0.2 · 2026-10-15 · Layer: SPEC (execution contract) · solo seat, sdlc-lite run `spec-closed-loop` (T-0181); upserted by T-0237 and T-0243
-> Scope: the loop that drives a real agent turn (live or replayed), checks it, records one signal row and turns a live failure into a keyless regression. Shipped base: T-0174 (`npm run chat:probe`), the live round runner and archive (T-0225, T-0241), the producer check families (T-0208, T-0229, T-0230) and the trace routing block (T-0239). Planned on this contract: T-0176 (scenario format, runner, signal store), T-0177 (report page), T-0178 (judged checks), T-0179 (live matrix, baselines, affected selection), T-0163 (bundle digests).
+> Status: proposed · v0.2 · 2026-10-15 · Layer: SPEC (execution contract) · solo seat, sdlc-lite run `spec-closed-loop` (T-0181); upserted by T-0237, T-0243 and T-0342
+> Scope: the loop that drives a real agent turn (live or replayed), checks it, records one signal row and turns a live failure into a keyless regression. Shipped base: T-0174 (`npm run chat:probe`), the live round runner and archive (T-0225, T-0241), the producer check families (T-0208, T-0229, T-0230) and the trace routing block (T-0239). Signals over the round archive and the baseline comparison: T-0342. Planned on this contract (the 2026-10-17 re-scope closed T-0176, T-0177 and T-0179): T-0343 (scenario tags and smoke scenarios), T-0178 (judged checks), T-0163 (bundle digests and affected selection). The rows below that still cite T-0176 or T-0179 are repaired by T-0343 (CL-R1, R5 to R7) and T-0163 (CL-R10).
 > Decisions cite their tickets; the ADR system is frozen (T-0164) and this SPEC adds no ADR clause. Holds unchanged: ADR-0073 cl.5 (keys and `produce()` stay server-side and never enter devtools), the devtools capture contract ([`devtools-harness.spec.md`](./devtools-harness.spec.md)), the A2UI test kit format ([`packages/agent-ui/a2ui/tools/testkit/README.md`](../../../packages/agent-ui/a2ui/tools/testkit/README.md)).
 > IDs are file-scoped `CL-R#` and `CL-N#`. Each requirement is marked **shipped** (with its code) or **planned** (with its ticket). When this SPEC disagrees with the tree, the tree wins and this file is repaired.
 > Terms: [`references/agent-model.md`](../references/agent-model.md) §3 (probe fixture, eval scenario, signal row, check).
@@ -11,7 +11,7 @@
 - Eval scenario: one agent use case as data: the persona, the models and efforts it runs on, its tags, the steps a user takes and the checks each turn must pass. The unit the runner (T-0176) plays and the signal store counts.
 - Probe fixture: the `agent-ui-chat-probe` v1 file a probe run replays: the preset, the steps and, per produce request, the wire `lines` plus the model `rounds` behind them (`scripts/e2e-admin/probe/model.ts`, `ProbeFixture`).
 - Check: one named, deterministic or judged verdict over one turn record, with a status of `pass`, `fail`, `warn` or `skip`.
-- Signal row: one line of `.agent-evals/runs.jsonl`, written per scenario run per sample; the store every aggregate, report and baseline reads.
+- Signal row: one probe run as `scripts/e2e-admin/probe/signals.ts` joins it from the committed round archive (its ledger row, report and trace lines, CL-R4); every aggregate, report and baseline reads it, and it is never stored on its own.
 - Replay: every model call answered from recorded rounds or lines; keyless, no network to a provider. Live: the dev proxy calls the provider with its server-side key and spends credit.
 
 ## 2. Requirements
@@ -76,33 +76,27 @@ The text-shape leak (T-0229) is a producer repair, not a check: a meta-line afte
 
 - AC1: `npx vitest run --project scripts scripts/e2e-admin/probe/replays/` exits 0 (shipped).
 
-### CL-R4: the signal row (planned, T-0176)
+### CL-R4: the signal row (shipped, T-0342)
 
-Every scenario run appends one row per sample to `.agent-evals/runs.jsonl` at the repo root, git-ignored like `.agent-traces/` (only `.agent-traces/` is ignored today; T-0176 adds the line). Row, `v: 1`:
+The committed round archive is the signal store (CL-R11): there is no separate `.agent-evals/` file. A signal row is one probe run joined in memory, never stored, by `scripts/e2e-admin/probe/signals.ts`: its `ledger.jsonl` row, its `runs/<name>/report.json` (joined by `out`) and its trace lines (joined by the row's `traces` ranges into `traces/<day>.jsonl`). A round with no ledger (r1, r2, t0208) is read from its reports alone, with cost and turns unknown. Where each field lives:
 
-| Field | Type | Meaning |
+| Field | Home | Meaning |
 |---|---|---|
-| `runId` | string | one id per runner invocation; every row of the invocation shares it |
-| `at` | ISO string | row write time |
-| `scenario` | string | eval scenario `id` |
-| `persona` | string | preset id |
-| `model`, `effort` | string | as sent, read back from the produce request |
-| `mode` | `replay` or `live` | |
-| `sample` | integer | 1..N within the run |
-| `digest` | string | prompt bundle digest (T-0163); until then the assembled-prompt sha256, with `digestKind: 'bundle' or 'prompt'` |
-| `checks` | `{check, turn, status, detail?}[]` | every CL-R2 result |
-| `verdict` | `pass`, `fail` or `expected-fail` | |
-| `expectedFail` | string, optional | the `T-NNNN` the scenario names |
-| `retries` | `{count, codes[]}` | self-correct rounds and their failure codes |
-| `tokens` | `{in, out}` | summed provider usage |
-| `costUsd` | number or null | `tokens` times the price table; null in replay |
-| `latencyMs`, `ttftMs` | number | turn wall time, time to first wire line |
-| `traceIds` | string[] | `<day>.jsonl:<line>` refs into `.agent-traces/` (live only) |
-| `screenshots` | string[] | paths relative to the repo root |
+| `runId` | ledger, report, each trace line | the id the probe sent as `x-a2ui-run-id` (T-0259); absent before T-0259 |
+| `scenario`, `sample` | ledger (from T-0342), else derived from `name` | `<scenario>-<model family>-<n>` or `<scenario>-<n>`; a name with no numeric tail is its own scenario, sample 1 |
+| `agent`, `model` | ledger, report | preset id and model id as sent |
+| `effort` | ledger (from T-0342) | the `--effort` the command passed, else `default`; each trace line carries the effective effort |
+| `checks` | report | every CL-R2 result, `{check, turn, status, detail}` |
+| `verdict` | ledger, report | `pass`, `fail`, or null when the probe wrote no report (a miss, counted as a fail) |
+| `retries` | trace lines, `rounds[].status` and `rounds[].failures[].code` | each failed round and its codes; `trace.failureCodes` names the codes a turn shipped with (`*_UNCORRECTED`, SURFACE_DEGRADED) |
+| `tokens`, `costUsd` | ledger | summed provider usage and its estimate at `PRICES` (`probe/ledger.ts`) |
+| `latencyMs` | trace lines, `ms` | turn wall time; no field records time to first token, so there is no `ttftMs` |
+| `digest` | trace lines, `routing.sections[].digest` | per prompt section; a halted turn carries none. Bundle digests are T-0163 |
+| `screenshots` | report, `turns[].screenshot` | absolute paths into the local evidence cache (T-0256) |
 
-The row never carries a key, a header or the system prompt. A signal row is per scenario run; a trace line (T-0151, `tools/agent/trace-log.ts`) is per live turn; `traceIds` links them.
+The row never carries a key, a header or the system prompt. `npm run eval:signals -- --round <folder>` prints pass rate per scenario x model and per preset x model with sample counts, mixed cells, a histogram of failing checks, producer retry codes as fired / saved / extra USD, spend and latency per turn, and section digests per persona; `--json` prints the same as data. The runner writes the same tables as `signals.md` into each round at archive time.
 
-- AC1: a keyless test writes rows from a replay run and `npm run eval:signals` reads them back: pass rate per scenario x model, flaky (mixed) cells, failure-code histogram, retry and retry-surface-loss rates, cost and latency per turn.
+- AC1: `npx vitest run --project scripts scripts/e2e-admin/probe/signals.test.mjs` exits 0 (shipped): two fixture round folders, one without a ledger, assert cell counts, a mixed cell, histogram counts, retry tallies, churn transitions and a floor miss that exits 1; the committed r8 and r9 rounds reproduce r9's hand-written `report.md` (22 / 28 / 27 of 29, churn 6 / 6 / 4 / 71).
 
 ### CL-R5: `expectedFail: T-NNNN` (planned, T-0176)
 
@@ -134,11 +128,13 @@ Calibration: each rubric ships a seeded known-good and known-bad transcript set;
 
 - AC1: three rubrics (croupier, concierge, quizmaster) with calibration sets; the live selftest passes and reports its cost.
 
-### CL-R9: baselines and pass-rate floors (planned, T-0179)
+### CL-R9: baselines and pass-rate floors (shipped, T-0342)
 
-`--save-baseline <name>` stores per-cell (scenario x model x effort) pass rates and metrics. A later run compares against the latest baseline. Floors reuse the `floorMet` reading of [`lld/genui-b3-judged-eval.lld.md`](../lld/genui-b3-judged-eval.lld.md) §5 (code: `tools/corpus-genui/legs/report.ts`): a cell passes when at least k of its at most N samples pass, a miss (no output, halt) counts against the cell rather than being dropped, a cell with zero samples fails rather than being skipped, and the run's floor is met only when every cell passes. The floor is per tag (for example `smoke`: 0.9 over N samples); a cell also fails when its pass rate drops by more than a set delta from the baseline. `expected-fail` samples are excluded from a floor and reported beside it.
+The baseline is a committed round: it already pins the commit, the prices and the prompt digests, so there is no `--save-baseline` store. `npm run eval:signals -- --round <folder> --against <baseline folder>` prints the churn of every cell (scenario x model family x effort): fail to pass, pass to fail, fail to fail, pass to pass, plus cells in only one round. A cell passes for churn only when every sample passed.
 
-- AC1: a keyless test on a fixture store asserts planning order (regression, smoke, capability), cap stop and the baseline comparison.
+Gates are opt-in flags and reuse the `floorMet` reading of [`lld/genui-b3-judged-eval.lld.md`](../lld/genui-b3-judged-eval.lld.md) §5 (code: `tools/corpus-genui/legs/report.ts`): `--floor <tag>=<rate>` fails a cell whose pass rate is under its tag's floor (`all` covers every tag without its own), and `--max-drop <delta>` fails a cell whose pass rate fell by more than the delta from the baseline. A miss (no report) counts against the cell, a baseline cell with zero samples now fails its floor rather than being skipped, and a cell with fewer than `--min-samples` samples (default 3) is reported, not gated, since a one-sample cell is noise. Any gated miss exits 1. Until scenarios carry tags (T-0343), the tag is read from the scenario name prefix: `regress-` regression, `routing-` routing, `long-` long, else other. `expected-fail` samples (CL-R5) are not in the archive yet.
+
+- AC1: the CL-R4 test asserts the churn transitions, a floor miss and a drop that exit 1, and a one-sample cell left ungated (shipped).
 
 ### CL-R10: digest-affected selection (planned, T-0179; depends T-0163)
 
@@ -152,7 +148,7 @@ Phase 1, the run:
 
 1. Scenarios: `scripts/e2e-admin/probe/scenarios/<preset>.ts` (CL-R1, shipped meanwhile); `round.ts` prints `live-commands.sh`, Haiku first, then Sonnet, then Opus, so a stop at the cap leaves the cheap cells filled.
 2. The capped runner (CL-R7): `run-capped.ts <live-commands.sh> --cap <usd> --round <slug>`, run from the main checkout because lane worktrees are reaped. It skips a run whose `report.json` exists, so a restart resumes.
-3. The archive (T-0241): the round home is `.sdlc/evals/rounds/<YYYY-MM-DD>-<slug>/` (the date is the round start). After every run, and again on a cap stop or a crash, the runner writes `traces/<day>.jsonl` (exactly the round window's `.agent-traces` lines), `ledger.jsonl` (one row per run: scenario, agent, model, exit code, verdict, 1-based line ranges into `traces/`, tokens, `costUsd` at `PRICES`), `round.json` (commit, cap, stop reason, window, price table and source, totals) and `README.md`, the round's entry file (every file present, its provenance and how to read it). `runs/<name>/` keeps `report.json` and `fixture.json` in git; `runs/*/*.png` is ignored by `.sdlc/evals/.gitignore`. The rounds archived by hand before T-0241 (r1, r2 and the T-0208 probe) carry `traces/`, `runs/`, `report.md` and a `README.md` written by `run-capped.ts --describe`, with no ledger or `round.json`.
+3. The archive (T-0241): the round home is `.sdlc/evals/rounds/<YYYY-MM-DD>-<slug>/` (the date is the round start). After every run, and again on a cap stop or a crash, the runner writes `traces/<day>.jsonl` (exactly the round window's `.agent-traces` lines), `ledger.jsonl` (one row per run: scenario, sample, effort, agent, model, exit code, verdict, 1-based line ranges into `traces/`, tokens, `costUsd` at `PRICES`), `round.json` (commit, cap, stop reason, window, price table and source, totals), `signals.md` (the round's tables, CL-R4, T-0342) and `README.md`, the round's entry file (every file present, its provenance and how to read it). `runs/<name>/` keeps `report.json` and `fixture.json` in git; `runs/*/*.png` is ignored by `.sdlc/evals/.gitignore`. The rounds archived by hand before T-0241 (r1, r2 and the T-0208 probe) carry `traces/`, `runs/`, `report.md` and a `README.md` written by `run-capped.ts --describe`, with no ledger or `round.json`.
 4. The index: `.sdlc/evals/README.md`, regenerated by the runner on every archive (or `run-capped.ts --index .sdlc/evals`), lists every round (date, ticket, agents, models, runs, pass, spend when known). It is generated; never edit it by hand.
 
 Phase 2, the follow-through:
@@ -187,7 +183,7 @@ Expected routing (T-0260): a scenario step may declare the routing its turn shou
 
 ## 4. Acceptance summary
 
-Keyless, running today: CL-R2 AC1, CL-R3 AC1, CL-R11 AC1 and CL-R12 AC1 and AC2, plus the round-cap half of CL-R7 AC1 (`run-capped.test.mjs`, T-0225) and the producer check families' unit tests (`composite-moments.test.ts`, `hidden-state-checks.test.ts`). Keyless, planned: CL-R1, R4, R5 and R6 AC1, and the per-run half of CL-R7 AC1, landing with T-0176 and T-0179 under `npm test` or `check:scripts`. Live and manual: a capped round on a real key (CL-R11; rounds so far in `.sdlc/evals/README.md`), CL-R8's judge selftest and T-0179's baseline run, each reporting its cost.
+Keyless, running today: CL-R2 AC1, CL-R3 AC1, CL-R4 AC1, CL-R9 AC1, CL-R11 AC1 and CL-R12 AC1 and AC2, plus the round-cap half of CL-R7 AC1 (`run-capped.test.mjs`, T-0225) and the producer check families' unit tests (`composite-moments.test.ts`, `hidden-state-checks.test.ts`). Keyless, planned: CL-R1, R5 and R6 AC1, and the per-run half of CL-R7 AC1, landing with T-0176 and T-0179 under `npm test` or `check:scripts`. Live and manual: a capped round on a real key (CL-R11; rounds so far in `.sdlc/evals/README.md`), and CL-R8's judge selftest, each reporting its cost.
 
 ## 5. Model notes (seen live)
 

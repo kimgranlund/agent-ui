@@ -41,3 +41,10 @@ Re-scope of T-0176 to T-0179 (Kim 2026-10-17), architect record .sdlc/runtime/ta
 
 ## Constraints
 Never read or print .env; live legs only under their cap; keys never enter devtools.
+
+## Acceptance criteria
+- `npm run check` exits 0.
+- `npx vitest run --project scripts scripts/e2e-admin/probe/signals.test.mjs` exits 0: two fixture round folders (`scripts/e2e-admin/probe/fixtures/signals/rounds/`, one without a ledger) assert cell counts, a mixed cell, the failing-check histogram, retry tallies, churn transitions and a floor miss that exits 1.
+- `npm run eval:signals -- --round 2026-10-17-r9-matrix --against 2026-10-16-r8-matrix` exits 0; its By model line gives 22, 28 and 27 of 29 for Haiku, Sonnet and Opus, and its churn table counts 6 / 6 / 4 / 71.
+- `npx vitest run --project scripts scripts/e2e-admin/` exits 0 (run-capped writes `signals.md` and the ledger carries `sample` and `effort`).
+- `npm run eval:signals -- --round 2026-10-17-t0329-old` exits 0 and shows one scenario cell for the arm's 30 samples, plus one for its pontoon witness.

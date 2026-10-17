@@ -5,7 +5,7 @@ import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, write
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { describeCommands, describeEvals, describeRound, estimateSpend, listRound, parseCommands, roundStart, runCapped, runRound, shellWords, traceSpend, writeRoundReadme } from './run-capped.ts'
+import { describeCommands, describeEvals, describeRound, estimateSpend, listRound, parseCommands, roundStart, runCapped, runRecord, runRound, shellWords, traceSpend, writeRoundReadme } from './run-capped.ts'
 
 const line = (at, model, usage) => JSON.stringify({ at, model, usage })
 const SCRIPT = ['#!/usr/bin/env bash', '# header', '', ...[1, 2, 3, 4, 5].map((i) => `npm run chat:probe -- --agent croupier --say hi --out runs/r${i} --name r${i}`)].join('\n')
@@ -68,6 +68,14 @@ describe('run-capped', () => {
     expect(result).toMatchObject({ ran: 3, skipped: 2, capped: false })
   })
 
+  // T-0342: a T-0329 sample name buckets into its arm's scenario, and the ledger keeps the sample and the effort.
+  it('records the scenario, sample and effort a probe command names', () => {
+    const r = runRecord('npm run chat:probe -- --agent croupier --model claude-haiku-5-5 --effort high --say hi --out runs/t0329-mix-7 --name t0329-mix-7', 0, 'a', 'b', 'pass')
+    expect([r.scenario, r.sample, r.effort]).toEqual(['t0329-mix', 7, 'high'])
+    const d = runRecord('npm run chat:probe -- --agent croupier --say hi --out runs/x --name regress-croupier-spanish-21-opus-2', 1, 'a', 'b', 'fail')
+    expect([d.scenario, d.sample, d.effort]).toEqual(['regress-croupier-spanish-21', 2, 'default'])
+  })
+
   it('keeps the round start across a restart', () => {
     const file = join(mkdtempSync(join(tmpdir(), 'run-capped-')), 'runs', '.capped-start')
     expect(roundStart(file, () => '2026-10-14T10:00:00.000Z')).toBe('2026-10-14T10:00:00.000Z')
@@ -125,6 +133,8 @@ describe('run-capped', () => {
         ['admiral-salvo', 'admiral', 'claude-sonnet-5-5', 1, 'fail'],
       ])
       expect(ledger.map((r) => r.traces)).toEqual([1, 3, 5].map((from) => [{ file: 'traces/2026-10-14.jsonl', from, to: from + 1 }]))
+      // T-0342: the sample the name ends in, and the effort the command passed (none here: the default).
+      expect(ledger.map((r) => [r.sample, r.effort])).toEqual([[1, 'default'], [1, 'default'], [1, 'default']])
       expect(ledger[0].tokens).toEqual({ input: 200_000, output: 200_000, cacheRead: 0, cacheCreation: 0 })
       // Haiku: 0.2M x $0.10 + 0.2M x $0.50; Sonnet: 0.2M x $2 + 0.2M x $10.
       expect(ledger.map((r) => r.costUsd)).toEqual([0.12, 2.4, 2.4])
@@ -237,7 +247,7 @@ describe('run-capped', () => {
       })
       const dir = join(root, '.sdlc', 'rr')
       const readme = readFileSync(join(dir, 'README.md'), 'utf8')
-      expect(listRound(dir)).toEqual(['README.md', 'ledger.jsonl', 'round.json', 'runs/croupier-deal-haiku-1/fixture.json', 'runs/croupier-deal-haiku-1/report.json', 'traces/2026-10-14.jsonl'])
+      expect(listRound(dir)).toEqual(['README.md', 'ledger.jsonl', 'round.json', 'runs/croupier-deal-haiku-1/fixture.json', 'runs/croupier-deal-haiku-1/report.json', 'signals.md', 'traces/2026-10-14.jsonl'])
       expect(readme).toContain('local evidence cache')
       expect(claimed(readme)).toEqual(listRound(dir))
       expect(readme).toContain('commit `abc123`')

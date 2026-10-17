@@ -177,9 +177,10 @@ header pointing here.
   `expect-component`, `render-lint`, `reasoning`; `CHECK_NAMES` in `probe/model.ts`), status `pass`, `fail`, `warn` or `skip` (CL-R2). Not a **semantic check** (a
   persona's in-loop domain check that feeds a self-correct round), not the A2UI protocol's `checks`, and
   not a kit finding code.
-- **signal row**: one line of `.agent-evals/runs.jsonl` per eval scenario run per sample: the checks,
-  verdict, retries, tokens, cost, latency, digest and links (T-0176, planned; CL-R4). A trace line is per
-  live turn (`.agent-traces/`, T-0151); a signal row is per scenario run and links its trace lines by id.
+- **signal row**: one probe run as `scripts/e2e-admin/probe/signals.ts` joins it from the committed round
+  archive: its ledger row, report and trace lines, with the checks, verdict, retries, tokens, cost, latency
+  and section digests (T-0342; CL-R4). It is never stored on its own. A trace line is per live turn
+  (`.agent-traces/`, T-0151); a signal row is per probe run and links its trace lines by ledger range.
 - **roster**: two senses, both about agents. The **agent roster** is the ordered `AgentRecord` list
   (`AgentRosterView`); the **team roster** is an `AgentTeam`'s `members`. A capability list is
   never a roster: the composer's `@`/`/` option lists are `EntryRosters`, an entry-side name.
