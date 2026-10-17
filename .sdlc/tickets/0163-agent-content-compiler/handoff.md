@@ -22,6 +22,8 @@ Every place that runs an agent builds its prompt the same way, and every turn sa
 - Non-goals: memory, evals redesign, publishing.
 - Done when: `npm run check` exit 0; a test that Test Chat, proxy and CLI produce the same digest for the same agent and overlay; trace line carries digest (unit test on the trace writer); debug zip contains captures; `packages/agent-ui/a2ui/src/live-agent`, `site/lib/admin-live-runner*`, `site/pages/agent-admin-*`, `packages/agent-ui/a2ui/tools/agent` tests exit 0; `npm run e2e:admin` exit 0.
 
+- Also: `--affected` in `scripts/e2e-admin/probe/scenarios/plan.ts` once `compile()` digests exist (SPEC CL-R10), moved from T-0179 by the 2026-10-17 eval re-scope.
+
 ## Context
 - Trust boundary: keys and `produce()` never enter devtools; the proxy sits at `/__a2ui/agent` (ADR-0073). Prompt equivalence baseline changes only through the `a2ui-prompt-authoring` flow.
 

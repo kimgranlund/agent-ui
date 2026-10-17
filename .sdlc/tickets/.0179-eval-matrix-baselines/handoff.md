@@ -2,7 +2,7 @@
 id: T-0179
 title: "Agent eval framework 4: live matrix (personas x models x efforts x N) under a $5 cap, baselines, pass-rate floors, digest-affected selection"
 type: feature         # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0176, T-0163]  # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -25,3 +25,9 @@ Before a prompt or content change lands, the live matrix shows whether behaviour
 
 ## Constraints
 - Never exceed the cap; zero new dependencies. No em dashes.
+
+## Outcome
+
+2026-10-17 · lane: full L2 · verdict: closed by reason (Covered or superseded by the 2026-10-17 eval re-scope (live rounds, run-capped, replays); remaining work in the new eval-signals and eval-smoke-scenarios tickets and T-0178) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

@@ -2,7 +2,7 @@
 id: T-0176
 title: "Agent eval framework 1: scenario format, replay in CI, runs.jsonl signal store, 15 persona smoke scenarios"
 type: feature         # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: [T-0174, T-0181]  # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -29,3 +29,9 @@ First piece of the agent eval framework Kim approved 2026-10-14 (order: scenario
 
 ## Constraints
 - Zero new dependencies. Never print keys. No em dashes.
+
+## Outcome
+
+2026-10-17 · lane: full L3 · verdict: closed by reason (Covered or superseded by the 2026-10-17 eval re-scope (live rounds, run-capped, replays); remaining work in the new eval-signals and eval-smoke-scenarios tickets and T-0178) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

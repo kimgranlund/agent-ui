@@ -2,7 +2,7 @@
 id: T-0177
 title: "Agent eval framework 2: report page (matrix heatmap, failure codes, digest trends, links to trace and screenshots)"
 type: feature         # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0176]    # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -25,3 +25,9 @@ One page shows what the eval runs mean: where agents fail, how often, on which m
 
 ## Constraints
 - Zero new dependencies; no network at view time. No em dashes.
+
+## Outcome
+
+2026-10-17 · lane: full L2 · verdict: closed by reason (Covered or superseded by the 2026-10-17 eval re-scope (live rounds, run-capped, replays); remaining work in the new eval-signals and eval-smoke-scenarios tickets and T-0178) · verifier: none · base: none
+- Changed: see commits
+- Commits: none
