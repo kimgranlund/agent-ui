@@ -21,6 +21,10 @@
 // T-0322: a row's `pricedRows` reads the turn's words too: on a services ask (the row's `ask.cue`), priced rows in a
 // DescriptionList or a List are the ProductCard moment, while the facility hours list (no price, no services ask)
 // stays clean.
+//
+// T-0333: the BookingConfirmation row reads its settled words only from status signals (`settledSignals`), so a caption
+// that says "confirmed" or "booked" is no hand-built confirmation (round 9 cluster G), and the BookingForm row stands aside
+// for a surface that already holds one.
 
 import type { A2uiComponent } from '../protocol.ts'
 import { readPointer } from './semantic-check.ts'
@@ -62,10 +66,22 @@ export interface CompositeMoment {
   /** T-0322: on a turn whose words match `ask.cue`, a component of `types` that lists a row matching `cue` (a priced
    *  DescriptionList row, a priced List item), while the surface words match `words`. */
   readonly pricedRows?: { readonly types: readonly string[]; readonly cue: RegExp }
+  /** T-0333: read `words` only from settled-status signals (a Badge, a Card or CardHeader title, a heading Text h1 to h5),
+   *  never caption or body Text, so a note that says "can be confirmed with the front desk" is no settled booking. */
+  readonly settledSignals?: boolean
+  /** T-0333: skip the surface when it holds a settled-status signal, unless a live read-back confirm is still on it (that is
+   *  not settled), so the BookingConfirmation repair and this one never fire together. */
+  readonly standsAsideForSettled?: boolean
+  /** T-0333: skip the surface while a live read-back confirm is on it: the BookingForm row owns that shape. */
+  readonly standsAsideForReadBack?: boolean
   /** T-0313: the turn words that ask for this moment (`cue`), its short name (the SURFACE_MISSING path), the surface that
    *  answers it, and its precedence when one turn's words ask for two moments (lowest first). */
   readonly ask?: { readonly moment: string; readonly cue: RegExp; readonly surface: string; readonly rank: number }
 }
+
+/** T-0333: the past-state words of a settled booking ("Booked" Badge, "Spa booking confirmed" title); the noun
+ *  "confirmation" is no settled state ("Booking confirmation" heads a read-back that still asks to confirm). */
+const SETTLED_WORDS = /\b(confirmed|booked|reserved)\b/i
 
 const BOOKING_INPUTS = ['TextField', 'Calendar', 'Select', 'ComboBox', 'Slider', 'RadioGroup', 'ChoiceGroup'] as const
 
@@ -77,6 +93,8 @@ const SERVICES_ASK = /\b(services|treatments|amenities|menu)\b/i
 /** The guest asks to book ("Book a 60-minute massage on Thursday at 15:00"; T-0282: "I'd like a table at Vela"). */
 const BOOK_ASK = /\b(book|reserve|reservation)\b|\b(i'?d|i would|we'?d|we would) like (a|an) (table|room|treatment|massage|tour|appointment)\b/i
 
+const BOOKING_READ_BACK: NonNullable<CompositeMoment['readBack']> = { types: ['DescriptionList'], action: /^confirm/i, cue: /\bconfirm\b/i }
+
 export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
   {
     composite: 'BookingForm',
@@ -85,11 +103,12 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
       'with its fields list (date, time, choice and party size), its value bound to the details the guest already gave so they ' +
       'arrive pre-filled, and one submit action, and drop the hand-built inputs or read-back.',
     lacks: ['BookingConfirmation'],
+    standsAsideForSettled: true,
     inputs: { types: BOOKING_INPUTS, min: 2 },
     // T-0266: a fully specified ask read back as a DescriptionList with a confirm Button is still this moment.
     // T-0331: the Button is keyed on its action (round 9 :84 "Book now" is `confirm_booking` with `submit`; r5 ask-3 is
     // `confirm_boat_tour`), so an info CTA ("Reserve a table" `start_intent`, "Book now" `book_listing`) stays clean.
-    readBack: { types: ['DescriptionList'], action: /^confirm/i, cue: /\bconfirm\b/i },
+    readBack: BOOKING_READ_BACK,
     words: /\b(book|booking|reserve|reservation|guest|guests|party)\b/i,
     ask: { moment: 'booking', cue: BOOK_ASK, rank: 2, surface: 'a BookingForm with its value bound to the details the guest already gave, so they arrive pre-filled' },
   },
@@ -103,7 +122,9 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
     lacks: ['BookingForm'],
     notInside: ['Card'],
     noInputs: BOOKING_INPUTS,
-    words: /\b(confirmed|booked|reserved|confirmation)\b/i,
+    words: SETTLED_WORDS,
+    settledSignals: true,
+    standsAsideForReadBack: true,
     ask: {
       moment: 'confirm',
       cue: CONFIRM_ASK,
@@ -183,6 +204,10 @@ function rowTexts(c: A2uiComponent, view: SurfaceView): string[] {
   })
 }
 
+/** T-0333: a settled-status signal: a Badge, a Card or CardHeader title, or a heading Text (h1 to h5), never caption or body Text. */
+const isSettledSignal = (c: A2uiComponent): boolean =>
+  c.component === 'Badge' || c.component === 'Card' || c.component === 'CardHeader' || (c.component === 'Text' && /^h[1-5]$/.test(String(c['variant'] ?? '')))
+
 /** A prop as written, or read from the data model when bound (`{path}`). */
 function bound(v: unknown, view: SurfaceView): unknown {
   const path = boundPath(v)
@@ -203,7 +228,7 @@ function buttonWords(c: A2uiComponent, view: SurfaceView): string {
     .join(' ')
 }
 
-/** T-0331: whether a Button submits the read-back: its action submits or is named like a confirm or booking, else a
+/** T-0331: whether a Button submits the read-back: its action submits or is named like a confirm, else a
  *  label fallback for an action that starts no intent. */
 function submitsReadBack(c: A2uiComponent, view: SurfaceView, rb: NonNullable<CompositeMoment['readBack']>): boolean {
   const action = c['action']
@@ -222,7 +247,14 @@ function strays(m: CompositeMoment, view: SurfaceView, intent: string | undefine
   if (m.noInputs !== undefined && m.noInputs.some((t) => types.has(t))) return []
   // The composite's and the required types' own props never count as words.
   const own = new Set([m.composite, ...(m.requires ?? [])])
-  const worded = comps.filter((c) => !own.has(c.component) && (m.wordTypes === undefined || m.wordTypes.includes(c.component)))
+  const worded = comps.filter(
+    (c) => !own.has(c.component) && (m.wordTypes === undefined || m.wordTypes.includes(c.component)) && (m.settledSignals !== true || isSettledSignal(c)),
+  )
+  const liveReadBack = (): boolean =>
+    comps.some((c) => BOOKING_READ_BACK.types.includes(c.component)) &&
+    comps.some((c) => c.component === 'Button' && submitsReadBack(c, view, BOOKING_READ_BACK))
+  if (m.standsAsideForReadBack === true && liveReadBack()) return []
+  if (m.standsAsideForSettled === true && comps.some((c) => isSettledSignal(c) && SETTLED_WORDS.test(wordsOf(c))) && !liveReadBack()) return []
   const surfaceWords = worded.map(wordsOf).join(' ')
 
   if (m.gridOf !== undefined || m.inputCue !== undefined) {
