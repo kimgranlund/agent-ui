@@ -835,16 +835,15 @@ describe('T-0172: structured render_surface, prose routing, surface loss', () =>
     expect((err as ProduceHalt).failures).toContainEqual({ code: 'SURFACE_DROPPED', path: 'ask-1' })
   })
 
-  it('T-0328: narration flags no surface, so a narrated ask-1 dropped for a new surface is still SURFACE_DROPPED', async () => {
+  it('T-0332: a narrated ask-1 is held, not rebuilt: the narration repair asks for the reply alone and ships ask-1', async () => {
     const { provider, reqs } = scripted([
       { text: 'The form is on ask-1.', call: [surface(ASK_VALID)] },
       { text: 'Booking.', call: [surface(ASK2_VALID)] },
-      { text: 'Booking.', call: [surface(`${ASK_VALID}\n${ASK2_VALID}`)] },
     ])
     const lines = await run(intentOf('book a table'), provider)
     expect(lastUserMessage(reqs()[1]!)).toMatch(/NARRATED_MECHANICS/)
-    expect(lastUserMessage(reqs()[2]!)).toMatch(/SURFACE_DROPPED at ask-1/)
-    expect(contentOf(lines)).toEqual([...ASK_VALID.split('\n'), ...ASK2_VALID.split('\n')])
+    expect(toolNames(reqs()[1]!)).toBeUndefined()
+    expect(contentOf(lines)).toEqual(ASK_VALID.split('\n'))
   })
 
   it('T-0328: a flagged surface answered in prose is still SURFACE_DROPPED (nothing rebuilt it)', async () => {
