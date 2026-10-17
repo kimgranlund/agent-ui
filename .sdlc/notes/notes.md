@@ -120,3 +120,10 @@
 ## T-0326: Live round 9: full matrix after the round 8 fixes ($42 cap) (2026-10-17)
 
 - decide: `.sdlc/tickets/0326-live-round-9/handoff.md` criterion 5 names plugin 0.24.0, whose `tickets.py check` now reports the roadmap stale against the 0.24.3 roadmap. Point it at the current plugin.
+
+## T-0318: Replace two corpus records that teach what the rulings forbid (frontier-booking-receipt, frontier-greet-card) (2026-10-17)
+
+- decide: `confirmation-view` and `backable-wizard` still read back a booking before confirming and still rank on booking confirm turns (builder's Open section); outside this ticket.
+- note: `catalog-frontier.ts` receipt record name stays `frontier-booking-receipt` while its content is an expense claim; the builder keeps it because `--replace` keys on the name. The judge's low notes (description says "settled" while the Badge says "Submitted"; literal Badge label) are unfixed by design.
+- note: pins in `retrieve-presets.test.ts` now compare only a defensible prefix for four rows, which weakens those pins to rank 1-2; the dropped ranks are named in comments.
+- 2026-10-17 Kim ruling T-0329 (blackjack opening): wording keeps blackjack as the subject of the CardTable mandate (not a leading condition, not an unconditional head with a poker exception), within the 200-token budget, preserving the T-0323 scoping. Measurement relative and attribution first: OLD, NEW and MIX arms now (about $0.50), then the candidate; pass when CAND beats NEW by 3+ of 10 and is within 1 of OLD; a fail comes back to Kim.

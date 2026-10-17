@@ -2,7 +2,7 @@
 id: T-0329
 title: "Haiku blackjack openings back on the CardTable after the T-0323 wording (round 9 cluster B)"
 type: bug             # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -23,3 +23,6 @@ Kim 2026-10-17: debate a wording fix (Opus proposal, a different-family challeng
 
 ## Constraints
 Poker stays on the Card frame (T-0323 ruling).
+
+## Debate
+Proposal: .sdlc/runtime/tasks/0329-r9-blackjack-opening-wording/architect-L1.md (Opus). Challenge: plan-reviewer-L1.md (fable, blocked on three decisions). Kim 2026-10-17: blackjack as the subject of the mandate (option b; keep T-0323 scoping, 800 chars, pins at mini-skills.test.ts:620-690, name the final test titles); relative measurement with OLD, NEW, MIX first (about $0.50), then CAND, $3 cap; a failing CAND returns to Kim, no third guess. Rename the T-0323 test titles explicitly.
