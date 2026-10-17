@@ -253,3 +253,21 @@
 - decide: Kim, the old-version migration (ACS-R7) now keeps a user's old stored seed values under a `seedChanged` flag instead of wiping them. A user on Quizmaster v1 keeps `claude-haiku-4-5` (a retired model default) until T-0162 offers "take seed". The old behavior, which Kim chose in the Quizmaster v2 comment, is gone. Alternatives are to ship per-version field digests in the generator, or to accept the flag as is. The solo already listed the digest idea as undone.
 - note: ACS-R8 per-op `source` provenance is not recorded yet. The solo flagged this and left it to T-0162. The Goal does not need it.
 - note: `agent-roster-source.ts:4` is one line longer than the surrounding comment wrap. This is cosmetic.
+
+## GitHub issue sweep (Kim, 2026-10-17)
+- #1890, #1910, #1938, #1939 closed as done (evidence in each close comment).
+- #1941: marks move to ui-glyph children, not mask tokens (T-0351).
+- #1940: a part declares its own size step, not a per-part token (T-0352).
+- #1937: keep the "one release" gate; T-0353 is blocked until the first published release.
+
+## T-0340: Dark primary under on-primary is 3.25:1: buttons, calendar day, segmented control and checkbox text fail AA (2026-10-17)
+
+- decide: packages/agent-ui/components/src/controls/radio/radio.browser.test.ts:274 the "default: one solid circle" test runs in the light scheme, where primary and primary-fill are both 550, so it would also pass against a ring-on-primary build; carried from verifier-L3.md.
+- decide: packages/agent-ui/components/src/controls/switch/switch.css:72-75 and packages/agent-ui/components/src/controls/playing-card/playing-card.css:65-66 still put on-primary ink on plain `primary` (dark 450); builder's exemption, Kim to confirm; carried from verifier-L3.md.
+- decide: ui-button light pressed 650 -> 750 not built (packages/agent-ui/components/src/controls/button/button.css:32-34 keeps the light hover/pressed collapse); carried from verifier-L3.md.
+- note: before-themes.png was shot at 10:46, between the round 1 and round 2 commits; verifier-L3.md read it as the 450 legs for all ten packs, and its md5 differs from after-themes.png.
+
+## T-0347: Scripted card scenarios skip the rest of a hand when a natural settles it (round 10 cluster D) (2026-10-17)
+
+- note: the remaining :101 failure (settled pontoon natural on table-2 shipped no Deal again button, so the click hit table-1's history button) is an agent/check gap outside this ticket: the scenario's Deal again step is correct, and a settled table with no way forward is an agent output defect that a check should name. File a follow-up ticket.
+- note: the replays did not exist at the base, so red-first for #1 was not shown in a base worktree; skip.test.mjs exercises the marked/unmarked split.

@@ -2,7 +2,7 @@
 id: T-0340
 title: "Dark primary under on-primary is 3.25:1: buttons, calendar day, segmented control and checkbox text fail AA"
 type: bug             # feature | bug | chore | spike | idea
-status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -33,3 +33,18 @@ Kim 2026-10-17: darken dark primary (around 600 to 650) with the same on-primary
 - `npx vitest run --config vitest.browser.config.ts --project packages packages/agent-ui/components/src/controls/button packages/agent-ui/components/src/controls/checkbox packages/agent-ui/components/src/controls/radio` exits 0 (ui-button solid reads the fill ladder, never the ink roles' dark legs; checked checkbox and radio are one solid fill; a set `--ui-radio-ink` recolours ring and fill).
 - `npx vitest run --config vitest.browser.config.ts --project site site/pages/dogfood-render.browser.test.ts site/lib/theme-pack-apply.browser.test.ts` exits 0.
 - Before/after dark screenshots (controls, button rest/hover/pressed, one primary button per theme pack) sit in the run artifacts dir.
+
+## Outcome
+
+2026-10-17 · lane: full L2 · verdict: pass · verifier: verifier-L2 (sonnet) · base: 3ddba942c531
+- Changed: Dark on-primary fills clear WCAG AA through new primary-fill roles (#2105)
+- Commits: none
+- Check: 1 token vitest trio exits 0 (fill gates, pack fill legs and fixed point, per-leg refusals, negative...: pass
+- Check: 2 `npm run check` exits 0: pass
+- Check: 3 browser button/checkbox/radio shard exits 0: pass
+- Check: 4 browser site shard (dogfood-render, theme-pack-apply) exits 0: pass
+- Check: 5 before/after dark screenshots (controls, button rest/hover/pressed, one primary button per theme ...: pass
+- Follow-up: decide: packages/agent-ui/components/src/controls/radio/radio.browser.test.... -> notes.md
+- Follow-up: decide: packages/agent-ui/components/src/controls/switch/switch.css:72-75... -> notes.md
+- Follow-up: decide: ui-button light pressed 650 -> 750 not built... -> notes.md
+- Follow-up: note: before-themes.png was shot at 10:46, between the round 1 and round... -> notes.md

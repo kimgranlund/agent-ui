@@ -1,0 +1,26 @@
+---
+id: T-0352
+title: "Card action parts declare their own size step inside a data-tier region (GH #1940)"
+type: bug             # feature | bug | chore | spike | idea
+status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
+priority: P2         # P1 | P2 | P3
+depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
+created: 2026-10-17
+router: .sdlc/tickets/AGENTS.md  # how to claim and close this ticket
+---
+
+## Goal
+A card's action part keeps its own size step inside a `data-tier` region, so the service-card action stays at its intended height instead of growing from 24 to 28.
+
+## Intent
+- Do: let a part declare its own step (a `data-scale` or `data-size` on the part that resolves against the region's ramp like any control), and apply it to the service-card, product-card and board-grid action parts (for example `service-card.css:89`, `--ui-service-card-action-height`).
+- Non-goals: new per-part tokens (Kim ruled for the part declaring its step, 2026-10-17); changes to the ramp itself.
+- Done when: a test asserts the service-card action height outside and inside a `data-tier="widget"` region matches its declared step; the same holds for product-card and board-grid; `npm run check` plus those three control folders' tests exit 0; a before and after screenshot in a widget region.
+- If Do needs more steps than this level allows (L1-L2 3, L3 6, L4 10, L5 15), file two tickets.
+
+## Context
+GH #1940 (closed into this ticket). Found in lane a06 (T-0099) of the ADR-0245 campaign: parts read the card's own n, and `data-size` on a part cannot change it. Ramp: sm 24 / md 32 / lg 40, widget register 20 / 24 / 28 (AGENTS.md Inner loop).
+
+## Constraints
+The foundations census gate stays green; no one-off heights.
