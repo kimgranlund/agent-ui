@@ -3,8 +3,9 @@
 // provider. Test only: the loop is not refactored unless a property reds.
 // - I1, scoped to the turn: every surface an earlier round of this turn created is kept, updated or explicitly deleted
 //   in the round that ships. A turn that halts or degrades to text ships no round, so I1 holds there trivially.
-//   T-0328 (Kim 2026-10-17, amends T-0317): a surface every creating round flagged never shipped, so a shipped round
-//   that builds a new id in its place has rebuilt it under that id, not dropped it.
+//   T-0328 (Kim 2026-10-17, amends T-0317): a surface a defect failure named in every round that created it never
+//   shipped, so it may be missing when the shipped round holds a surface first created after it with the same root
+//   type, one replacement per surface. Narration and a genui failure name no defect, so they never excuse a surface.
 // - I2: the shipped lines never update a surface that neither the session nor the shipped lines created (T-0305).
 // - The T-0302 pin: when the last round fails and an earlier round of the turn validated with nothing dropped, that
 //   round's lines ship and the trace ends with EARLIER_ROUND_SHIPPED. T-0321 (Kim 2026-10-16): never a round a semantic
@@ -14,7 +15,8 @@
 // round that shipped is read off the lines, never assumed.
 // T-0317 (Kim's L1 ruling, 2026-10-16): the three I1 classes this enumeration found (a failure-named surface dropped,
 // an id-graph fault blamed on the wrong surface, a round sent back for SURFACE_DROPPED keeping none of its own) are
-// fixed, so no counterexample is allowed. T-0328 narrows the first class to a surface some round built unflagged.
+// fixed, so no counterexample is allowed. T-0328 narrows the first class to a surface some round built unflagged or
+// that nothing replaced; the flag table below is written from the shapes, not from produce().
 
 import { describe, expect, it } from 'vitest'
 import { produce, ProduceHalt } from '../agent/produce.ts'
@@ -28,6 +30,7 @@ const V = 'v1.0'
 const OPEN = 'open-1'
 const A = 'ask-1'
 const B = 'ask-2'
+const C = 'ask-3'
 
 const create = (sid: string): A2uiServerMessage => ({ version: V, createSurface: { surfaceId: sid, catalogId: 'agent-ui' } })
 const root = (sid: string, text: string): A2uiServerMessage =>
@@ -55,6 +58,13 @@ const SHAPES = {
   AbrokenB: (r: number) => [create(A), broken(A), create(B), root(B, `B r${r}`)],
   ABbroken: (r: number) => [create(A), root(A, `A r${r}`), create(B), broken(B)],
   B: (r: number) => [create(B), root(B, `B r${r}`)],
+  /** T-0328: A valid, but the reply names ask-1 (NARRATED_MECHANICS, which flags no surface). */
+  Anarr: (r: number) => [create(A), root(A, `A r${r}`)],
+  /** T-0328: ABbroken plus a genui line with no html (GENUI_ENVELOPE, no surface path) on the text transport. */
+  AgenuiBbroken: (r: number) => [create(A), root(A, `A r${r}`), create(B), broken(B)],
+  /** T-0328: a third id, so a rename can take two repair rounds (Cbroken, then C). */
+  C: (r: number) => [create(C), root(C, `C r${r}`)],
+  Cbroken: () => [create(C), broken(C)],
   O: (r: number) => [root(OPEN, `open r${r}`)],
   Aorphan: (r: number) => [root(A, `A r${r}`)],
   delA: () => [{ version: V, deleteSurface: { surfaceId: A } } as A2uiServerMessage],
@@ -85,15 +95,17 @@ function scripted(shapes: readonly Shape[], transport: Transport): Scripted {
       n += 1
       const shape = shapes[r]!
       const payload = SHAPES[shape](r)
-      const note = `{"a2uiMeta":{"note":"Step ${r}."}}`
+      const reply = shape === 'Anarr' ? `Step ${r}. The board is on ${A}.` : `Step ${r}.`
+      const note = `{"a2uiMeta":{"note":"${reply}"}}`
       if (transport === 'text' || payload === undefined || req.executeTool === undefined) {
+        const genui = shape === 'AgenuiBbroken' ? '{"genui":{"surfaceId":"x"}}\n' : ''
         if (payload === undefined) yield note
-        else yield `${note}\n${payload === null ? '{"version":"v1.0","createSurface":' : payload.map((m) => JSON.stringify(m)).join('\n')}`
+        else yield `${note}\n${genui}${payload === null ? '{"version":"v1.0","createSurface":' : payload.map((m) => JSON.stringify(m)).join('\n')}`
         return
       }
       const target = shape === 'O' ? (transport === 'toolString' ? JSON.stringify({ surfaceId: OPEN }) : OPEN) : undefined
       const messages = payload === null ? '[{"version":"v1.0","createSurface":' : transport === 'toolString' ? JSON.stringify(payload) : payload
-      await req.executeTool('render_surface', { reply: `Step ${r}.`, messages, ...(target !== undefined ? { target } : {}) }, req.signal)
+      await req.executeTool('render_surface', { reply, messages, ...(target !== undefined ? { target } : {}) }, req.signal)
     },
   }
   return { provider, calls: () => n }
@@ -131,8 +143,15 @@ function createdBy(shape: Shape, r: number): string[] {
   return payload.flatMap((m) => ('createSurface' in m && !HELD.has(m.createSurface.surfaceId) && !deleted.has(m.createSurface.surfaceId) ? [m.createSurface.surfaceId] : []))
 }
 
-/** The surfaces a shape's own failure names: the flagCheck finding or the `root->gone` id-graph fault. */
-const FLAGGED: Partial<Record<Shape, string[]>> = { Aflag: [A], Abroken: [A], AbrokenB: [A], ABbroken: [B] }
+/** T-0328: the surfaces a shape's own defect failure names: the flagCheck finding or the `root->gone` id-graph fault.
+ *  Anarr's narration and AgenuiBbroken's genui failure name no defect, so they flag nothing more. */
+const FLAGGED: Partial<Record<Shape, string[]>> = { Aflag: [A], Abroken: [A], AbrokenB: [A], ABbroken: [B], AgenuiBbroken: [B], Cbroken: [C] }
+
+/** A surface's root component type in a shape's payload. */
+function rootOf(shape: Shape, r: number, sid: string): string | undefined {
+  for (const m of SHAPES[shape](r) ?? []) if ('updateComponents' in m && m.updateComponents.surfaceId === sid) return m.updateComponents.components.find((c) => c.id === 'root')?.component as string | undefined
+  return undefined
+}
 
 /** The round whose lines shipped. The last round run, unless an earlier round shipped (T-0302): then the latest round
  *  whose payload is the shipped content (each round's texts carry its index; only index-free shapes can tie). */
@@ -149,11 +168,23 @@ function violations(shapes: readonly Shape[], outcome: Outcome): string[] {
   const k = shippedRound(shapes, outcome)
   if (k === undefined) return [`shipped lines match no single round: ${JSON.stringify(outcome.content)}`]
   const named = new Set(outcome.content.map(sidOf))
-  const earlier = new Set(shapes.slice(0, k).flatMap((s, j) => createdBy(s, j)))
+  const created = (sid: string): number[] => shapes.slice(0, k + 1).flatMap((s, j) => (createdBy(s, j).includes(sid) ? [j] : []))
   const clean = new Set(shapes.slice(0, k).flatMap((s, j) => createdBy(s, j).filter((sid) => !(FLAGGED[s] ?? []).includes(sid))))
-  const rebuilt = createdBy(shapes[k]!, k).some((sid) => !earlier.has(sid)) // T-0328: the shipped round builds a new id
+  // T-0328: a never-clean missing surface is excused by one shipped surface first created after its last creation
+  // with the same root type; each shipped surface excuses at most one.
+  const used = new Set<string>()
+  const missing = [...new Set(shapes.slice(0, k).flatMap((s, j) => createdBy(s, j)))].filter((sid) => !named.has(sid))
+  const excused = new Set<string>()
+  for (const sid of missing) {
+    if (clean.has(sid)) continue
+    const last = created(sid).filter((j) => j < k).at(-1)!
+    const by = createdBy(shapes[k]!, k).find((n) => !used.has(n) && created(n)[0]! > last && rootOf(shapes[k]!, k, n) === rootOf(shapes[last]!, last, sid))
+    if (by === undefined) continue
+    used.add(by)
+    excused.add(sid)
+  }
   for (let j = 0; j < k; j++)
-    for (const sid of createdBy(shapes[j]!, j)) if (!named.has(sid) && (clean.has(sid) || !rebuilt)) out.push(`I1: ${sid} (created in round ${j}) is missing from shipped round ${k}`)
+    for (const sid of createdBy(shapes[j]!, j)) if (!named.has(sid) && !excused.has(sid)) out.push(`I1: ${sid} (created in round ${j}) is missing from shipped round ${k}`)
   const known = new Set(HELD)
   for (const m of outcome.content) {
     if ('createSurface' in m) known.add(m.createSurface.surfaceId)
@@ -204,6 +235,12 @@ describe('T-0314: the repair loop keeps the turn invariant over every enumerated
     // T-0328: a new id excuses only a surface that never shipped; one an earlier round built unflagged still counts.
     expect(violations(['A', 'B'], lost)).toEqual(['I1: ask-1 (created in round 0) is missing from shipped round 1'])
     expect(violations(['Aflag', 'B'], lost)).toEqual([])
+    // T-0328: narration flags nothing, a different root type replaces nothing, and one surface replaces one.
+    expect(violations(['Anarr', 'B'], lost)).toEqual(['I1: ask-1 (created in round 0) is missing from shipped round 1'])
+    expect(violations(['Abroken', 'B'], lost)).toEqual(['I1: ask-1 (created in round 0) is missing from shipped round 1'])
+    const renamed: Outcome = { kind: 'shipped', content: SHAPES.C(2), failureCodes: [], rounds: 3 }
+    expect(violations(['Aflag', 'Cbroken', 'C'], renamed)).toEqual([])
+    expect(violations(['Aflag', 'B', 'C'], renamed)).toEqual(['I1: ask-2 (created in round 1) is missing from shipped round 2'])
     const orphan: Outcome = { kind: 'shipped', content: SHAPES.Aorphan(0), failureCodes: [], rounds: 1 }
     expect(violations(['Aorphan'], orphan)).toEqual(['I2: shipped an update to ask-1, which nothing created'])
   })
