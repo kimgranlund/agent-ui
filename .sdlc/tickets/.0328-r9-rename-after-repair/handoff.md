@@ -2,7 +2,7 @@
 id: T-0328
 title: "A same-turn repair that rebuilds a flagged surface under a new id must not halt (round 9 cluster A)"
 type: bug             # feature | bug | chore | spike | idea
-status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -26,11 +26,19 @@ Kim 2026-10-17 ruling: a surface rebuilt under a new id within the same turn is 
 ## Constraints
 The invariant for shipped surfaces stays (Kim L1: invariant wins). grammar.md untouched.
 
-## Acceptance criteria
-verifier: L3
+## Outcome
 
-- `npx vitest run scripts/e2e-admin/probe/replays/croupier-haiku-rename-halts.test.mjs` exits 0: the round 9 :1 replay ships round 2's CardTable on `table-1`, no halt, no `ask-1` line (red before the fix: ProduceHalt SURFACE_DROPPED).
-- `npx vitest run packages/agent-ui/a2ui/src/live-agent/produce-response-type.test.ts -t T-0328` exits 0: a flagged surface left out by a round that first builds a new id ships (single, two-round and chained renames, CONTAINMENT, the Row oscillation); one new id retires one flagged surface; a round with no new id, an unflagged `ask-1`, `ask-1` beside an unattributable genui failure, a narrated `ask-1` and a flagged `ask-1` answered in prose all halt or repair with `SURFACE_DROPPED`.
-- `npx vitest run scripts/e2e-admin/probe/replays/concierge-booking-surface-loss.test.mjs` exits 0: round 2 builds no new id, so the hand-built booking on ask-1 is still SURFACE_DROPPED and never ships.
-- `npx vitest run packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent scripts/e2e-admin/probe` exits 0 (the property test's I1 oracle amended to the new-id rule, with narration, genui and rename shapes in 2-round sequences; `lexicographer-haiku-fleet-check` re-pinned: its third round's `ask-2` now ships).
-- `npm run check` exits 0.
+2026-10-17 · lane: full L2 · verdict: pass · verifier: verifier-L3 (fable) · base: 67c6b1ff3d49
+- Changed: A flagged-only surface may vanish only when a round builds a new id (one per id); clean surfaces stay protected (#2087)
+- Commits: none
+- Check: 1 `npx vitest run scripts/e2e-admin/probe/replays/croupier-haiku-rename-halts.test.mjs` exits 0: pass
+- Check: 2 `npx vitest run packages/agent-ui/a2ui/src/live-agent/produce-response-type.test.ts -t T-0328` ex...: pass
+- Check: 3 `npx vitest run scripts/e2e-admin/probe/replays/concierge-booking-surface-loss.test.mjs` exits 0: pass
+- Check: 4 `npx vitest run packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent scripts/e2...: pass
+- Check: 5 `npm run check` exits 0: pass
+- Follow-up: fix-now: packages/agent-ui/a2ui/src/live-agent/produce-forced-surface.test.t... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/src/agent/produce.ts:1864 a requested... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/src/agent/produce.ts:1864 a retirement... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/src/agent/produce.ts:1863 a failed rename... -> notes.md
+- Follow-up: note: packages/agent-ui/a2ui/src/agent/produce.ts:1284 identical defects... -> notes.md
+- Follow-up: note: packages/agent-ui/a2ui/src/live-agent/produce-loop-property.test.ts... -> notes.md
