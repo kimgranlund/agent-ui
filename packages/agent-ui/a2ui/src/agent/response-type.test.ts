@@ -6,6 +6,7 @@ import {
   RESPONSE_TYPES,
   classifyResponse,
   detectUserOverride,
+  domainSurfaceNouns,
   isLegacyShape,
   openSurfacesNote,
   renderSurfaceJsonl,
@@ -151,26 +152,36 @@ describe('lexicon round 2', () => {
   })
 })
 
-describe('playing cards are not UI cards (T-0348)', () => {
-  it.each(["Show me the dealer's hole card.", "show me the player's card", "build me John's card"])(
-    'a possessive heads the card, no override: %s',
-    (t) => expect(detectUserOverride(intent(t))).toBeUndefined(),
-  )
-  const withPlayingCard = { catalogTypes: ['Card', 'PlayingCard', 'CardTable'] }
-  it.each(['show me the hole card', 'show me a playing card', 'show me the community card', 'show me a face-down card'])(
-    'a game word with PlayingCard in the catalog: %s',
-    (t) => expect(detectUserOverride(intent(t), withPlayingCard)).toBeUndefined(),
-  )
-  it('a game word without PlayingCard in the catalog still reads as a surface noun', () => {
-    expect(detectUserOverride(intent('show me the hole card'))).toBe('surface')
-    expect(detectUserOverride(intent('show me the hole card'), { catalogTypes: ['Card'] })).toBe('surface')
+describe('a noun a catalog domain type owns is not a surface noun there (T-0348)', () => {
+  const croupier = ['Card', 'Text', 'PlayingCard', 'CardTable']
+  const base = ['Card', 'Text', 'ProductCard', 'ResultCard', 'Table']
+  it('domainSurfaceNouns reads domain types homed outside the default catalog', () => {
+    expect(domainSurfaceNouns(croupier)).toEqual(['card', 'table'])
+    expect(domainSurfaceNouns(['BookingForm', 'Card'])).toEqual(['form'])
+    expect(domainSurfaceNouns(base)).toEqual([])
+    expect(domainSurfaceNouns([])).toEqual([])
   })
-  it.each(['show me a summary card', 'show me a pricing card', 'as a card', 'make me a profile card'])(
-    'still surface with PlayingCard in the catalog: %s',
-    (t) => expect(detectUserOverride(intent(t), withPlayingCard)).toBe('surface'),
+  it.each([
+    "Show me the dealer's hole card.",
+    'show me the cards',
+    "show me the players' cards",
+    'I have no card to play',
+    'show me the table',
+  ])('croupier: no override for %s', (t) => expect(detectUserOverride(intent(t), croupier)).toBeUndefined())
+  it.each(["show me today's summary card", 'show me a summary card', 'as a card', 'Show me the dealer\'s hole card.'])(
+    'default catalog: surface for %s',
+    (t) => expect(detectUserOverride(intent(t), base)).toBe('surface'),
   )
-  it('a game word does not hide another surface noun in the same turn', () => {
-    expect(detectUserOverride(intent("show me the hole card as a table"), withPlayingCard)).toBe('surface')
+  it('no catalog types keeps the plain lexicon', () => {
+    expect(detectUserOverride(intent('show me the cards'))).toBe('surface')
+    expect(detectUserOverride(intent('no card please'))).toBe('text')
+  })
+  it('a non-domain noun in the same sentence still forces a surface', () => {
+    expect(detectUserOverride(intent('show me the hole card and a pricing chart'), croupier)).toBe('surface')
+    expect(detectUserOverride(intent('show me the hole card and the cards'), croupier)).toBeUndefined()
+  })
+  it('text phrases other than the owned noun still apply', () => {
+    expect(detectUserOverride(intent('just tell me the hole card'), croupier)).toBe('text')
   })
 })
 
