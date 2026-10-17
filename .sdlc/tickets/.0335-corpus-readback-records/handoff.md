@@ -2,7 +2,7 @@
 id: T-0335
 title: "Replace confirmation-view and backable-wizard, which read back a booking before confirming"
 type: chore           # feature | bug | chore | spike | idea
-status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -26,8 +26,17 @@ Kim 2026-10-17: replace both the way T-0318 did (judged --replace, fresh a2ui-re
 ## Constraints
 grammar.md is byte-pinned; do not touch it.
 
-## Acceptance criteria
-- `node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus/import-seeds.ts` exits 0 as the all-E_DUP no-op (96 already present): both replaced records are admitted and judged.
-- `npx vitest run packages/agent-ui/a2ui/src/corpus packages/agent-ui/a2ui/tools/corpus packages/agent-ui/a2ui/src/examples` exits 0: the corpus shard gate, the re-pinned retrieval prefixes, the backable-wizard real-renderer proof, and the T-0335 case that five booking confirm phrasings on `agent-ui--concierge` and `agent-ui` retrieve neither `confirmation-view` nor `backable-wizard` (red on the pre-T-0335 shard, 10 of 10).
-- `node scripts/dogfood-compose.mjs --gate` exits 0.
-- `npm run check` exits 0.
+## Outcome
+
+2026-10-17 · lane: full L2 · verdict: pass · verifier: verifier-L2 (sonnet) · base: 67c6b1ff3d49
+- Changed: confirmation-view is a settled plan record, backable-wizard a time-off request; booking confirm turns no longer retrieve them (#2084)
+- Commits: none
+- Check: 1 import-seeds no-op: pass
+- Check: 2 corpus, tools/corpus and examples vitest: pass
+- Check: 3 dogfood gate: pass
+- Check: 4 npm run check: pass
+- Follow-up: decide: Goal check: confirmation-view composition-pack-a.ts is now a... -> notes.md
+- Follow-up: decide: Retrieval: the old records are what the T-0335 test fails on 10 of... -> notes.md
+- Follow-up: note: the judge verdict files carry only judgedBy: a2ui-review-agent, so... -> notes.md
+- Follow-up: note: the solo report records that backable-wizard's final review scene... -> notes.md
+- Follow-up: note: composition-patterns.md cites grammar.md:138 for the card-anatomy... -> notes.md

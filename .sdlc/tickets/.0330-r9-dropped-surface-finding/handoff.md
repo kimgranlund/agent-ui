@@ -2,11 +2,13 @@
 id: T-0330
 title: "Feed a dropped surface's bound composite finding with SURFACE_DROPPED (round 9 cluster C)"
 type: bug             # feature | bug | chore | spike | idea
-status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
 created: 2026-10-17
+branch: fix/0330-dropped-surface-finding
+worktree: ../agent-ui.worktrees/wave-w330
 router: .sdlc/tickets/AGENTS.md  # how to claim and close this ticket
 ---
 
@@ -24,7 +26,12 @@ produce.ts :697, :1111, :1724. Round 9 :157 (long-spa-services-haiku): round 1 r
 ## Constraints
 None.
 
-## Acceptance criteria
-- `npx vitest run packages/agent-ui/a2ui/src/live-agent/produce-dropped-finding.test.ts` exits 0, and fails on the parent commit (the :157 round 3 request lacks the restated BOOKING_FORM_MISSING).
-- `npm run check` exits 0.
-- `npx vitest run packages/agent-ui/a2ui/src/agent packages/agent-ui/a2ui/src/live-agent` exits 0.
+## Outcome
+
+2026-10-17 · lane: full L2 · verdict: pass · verifier: verifier-L2 (sonnet) · base: 99910ea777cd
+- Changed: SURFACE_DROPPED repair restates the dropped surface's unanswered composite finding in one sentence (#2093)
+- Commits: 40107b4 T-0330: record lane wave-w330
+- Check: 1 new test passes and is red at the parent: pass
+- Check: 2 `npm run check`: pass
+- Check: 3 agent + live-agent folders: pass
+- Follow-up: note: .sdlc/runtime/tasks/0330-r9-dropped-surface-finding/verifier-L2.run... -> notes.md

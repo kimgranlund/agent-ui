@@ -145,3 +145,55 @@
 ## T-0334: BANKROLL_MISMATCH and NATURAL_ACTIONS price a pontoon at 2:1 (round 9 cluster H) (2026-10-17)
 
 - note: scripts/e2e-admin/probe/replays has no pontoon fixture, so a recorded r9 pontoon payload was not replayed. Pontoon behavior is covered only by unit tests.
+
+## T-0328: A same-turn repair that rebuilds a flagged surface under a new id must not halt (round 9 cluster A) (2026-10-17)
+
+- fix-now: packages/agent-ui/a2ui/src/live-agent/produce-forced-surface.test.ts:47 the comment "only a surface that would have shipped counts, so the round drops the clean ask-1, not the flagged ask-2" describes commit 1's rule, not the shipped one: a round 2 of `ask-1` alone builds no new id, so the flagged `ask-2` is still `SURFACE_DROPPED at ask-2` (the base scenario passes on HEAD). Restore the original scenario or reword.
+- decide: packages/agent-ui/a2ui/src/agent/produce.ts:1864 a requested surface can be silently lost when it is flagged-only and an unrelated id appears: probe P1 (round 1 `ask-1` IDGRAPH plus clean `greet-1`; round 2 `greet-1` plus new `info-1`) ships `greet-1`, `info-1`, trace `failureCodes ["IDGRAPH"]`, no halt. By design under the one-per-new-id rule (replacement matching removed in review round 2); the persona semantic checks are the remaining net.
+- decide: packages/agent-ui/a2ui/src/agent/produce.ts:1864 a retirement leaves no trace tally (P1's trace shows only `IDGRAPH`), so a retired surface is invisible to trace review; the solo report lists the missing `SURFACE_REPLACED` tally as open.
+- decide: packages/agent-ui/a2ui/src/agent/produce.ts:1863 a failed rename followed by a return to the fixed original id halts: probe P4 (`ask-1` IDGRAPH; new `table-1` CATALOG; fixed `ask-1`) halts `SURFACE_DROPPED at table-1` because round 3 builds no new id. Rule-consistent, over-conservative for a live oscillation.
+- note: packages/agent-ui/a2ui/src/agent/produce.ts:1284 identical defects in two surfaces are unattributable (P3b: `root->gone` in `ask-1` and `ask-2` names both, flags neither), so a double rename halts `SURFACE_DROPPED at ask-1, ask-2`; with distinct defects two new ids retire both (P3). The safe direction, as the spec REV states.
+- note: packages/agent-ui/a2ui/src/live-agent/produce-loop-property.test.ts:19 the T-0328 shapes run in 2-round sequences only; the three-round chained rename is covered by produce-response-type.test.ts and by the oracle-only assertion at :243.
+
+## T-0333: BOOKING_CONFIRMATION_MISSING fires on a confirm turn or a read-back, not caption words (round 9 cluster G) (2026-10-17)
+
+- note: the handoff wording ":85 still fires" now means BOOKING_FORM_MISSING fires on :85, not BOOKING_CONFIRMATION_MISSING. This matches the lead's stated goal.
+- note: redck.py deviations was run, and the output had no red-checkpoint line to act on.
+- note: hand-built confirmations whose settled word sits only in body Text (no heading variant) no longer fire. The fixtures were updated to h4 to show this is deliberate.
+- 2026-10-17 follow-ups from local code review (not ticketed): composite-moments submitsReadBack also treats a `confirm_cancellation` action or an "Add to calendar" `submit: true` Button as a read-back confirm; a "Confirm availability" label on an info CTA with a non-start_intent action still matches the label fallback; `bound()` in composite-moments duplicates croupier `resolveProp` with different semantics (relative template paths). Gauge: the render lint's legend-gap does not check which edge the rings sit on (only gauge.browser.test.ts guards the T-0339 anchor); a dir toggle with no resize re-anchors on the next resize.
+
+## T-0330: Feed a dropped surface's bound composite finding with SURFACE_DROPPED (round 9 cluster C) (2026-10-17)
+
+- note: `.sdlc/runtime/tasks/0330-r9-dropped-surface-finding/verifier-L2.running` marker and throwaway worktree were mine to clean; the base worktree was removed and the tmp prefix is empty.
+
+## T-0337: Column-chart highlight callout ink meets 4.5:1 on its pill in dark mode (chip-opaque debt) (2026-10-17)
+
+- decide: packages/agent-ui/components/src/controls/column-chart/column-chart.css:78 `black 25%` is a named-color operand under a "no literals" constraint; the alternative `--md-sys-color-primary-dim` is a token role but drops re-theme following. Pick one ruling for derived dim steps.
+- note: packages/agent-ui/components/src/controls/column-chart/column-chart.css:77 `--ui-column-chart-highlight-ink-on` was renamed to `--ui-column-chart-callout-ink`; any external override of the old name silently stops applying (builder reports it was undocumented).
+
+## T-0335: Replace confirmation-view and backable-wizard, which read back a booking before confirming (2026-10-17)
+
+- decide: Goal check: confirmation-view (`composition-pack-a.ts`) is now a settled plan-change record with an "Active" success Badge in the header and no commit. Its follow-up Buttons (ghost "View invoice", soft "Add seats") carry action contexts bound to `/plan/invoiceId` and `/plan/id`. That is the T-0318 settled-record shape. backable-wizard is a time-off request: no booking, hotel or reservation vocabulary in either record.
+- decide: Retrieval: the old records are what the T-0335 test fails on (10 of 10), and the new corpus passes it.
+- note: the judge verdict files carry only `judgedBy: a2ui-review-agent`, so independence from the seed author rests on the solo report's claim of fresh judge runs (not observable from the artifacts).
+- note: the solo report records that backable-wizard's final review scene still reads a summary back before "Submit request". That is the non-booking confirm step grammar.md teaches, and it is outside this goal.
+- note: `composition-patterns.md` cites `grammar.md:138` for the card-anatomy clause, which is stale; the solo report says it was stale before this ticket.
+
+## T-0332: NARRATION_HINT leaves the surface as it is when the reply needs no change (round 9 cluster E) (2026-10-17)
+
+- decide: `packages/agent-ui/a2ui/src/agent/produce.ts:1907-1917` (note-only branch): a tool-mode say turn answered in prose that claims a change on an open surface and names its id, with no payload and no semantic finding, now ships with no surface change and a reworded reply that still claims it. Observed in a throwaway worktree at HEAD with the croupier checks on: intent "Rename the table to Kim's table and show my chips as euros.", round 1 `Done: table-3 is now titled Kim's table...` with no call; the repair call offered no tool (`round2 tools undefined`), the scripted model's updateComponents for table-3 could not land, wire `[]`, note `Done: the table is now titled Kim's table and your chips show as euros.`, trace `["NARRATED_MECHANICS"]`. Before this change the full repair offered `render_surface`. Typed moves, clicks and openings are caught first by `typedMoveFindings`/ACTION_NOT_APPLIED/SURFACE_MISSING, so this is the one path where a needed update is silently lost: a prose claim no persona check names. Either accept the trade (the :182 false creation was the worse failure) or add a check that a note-only narrated reply on a say turn with a `target`-less claim of change keeps the full repair.
+- fix-now: `.claude/docs/spec/response-type-selection.spec.md:143` AC3e now lists "an unflagged `ask-1`" twice (the narrated `ask-1` item was replaced rather than removed); drop the second.
+- note: `scripts/e2e-admin/probe/replays/croupier-haiku-surface-id-in-reply.json` turn 8 drops the live prose round, so the replay no longer exercises ACTION_NOT_APPLIED followed by the reply-only narration round; a fixture keeping round 1 prose, round 2 the live call, round 3 the cut reply could pin that interplay and stay closer to the record (not run here).
+- note: `packages/agent-ui/a2ui/src/agent/produce.ts:683` "Send only your reply to the user again" reads as "repeat it" on first pass; "Write your reply to the user again" or "Send a new reply" is less ambiguous.
+- note: `packages/agent-ui/a2ui/src/agent/produce.ts:1529-1554` `narrationReplyRound` yields `retry` and `sent` progress lines but does not thread provider events through `interleaveProgress`, so a `progress: 'full'` consumer sees no `started`/`reasoning` for the narration call.
+
+## T-0339: ui-gauge in RTL keeps its rings on the left and its legend about 190px away (2026-10-17)
+
+- note: packages/agent-ui/components/src/controls/gauge/gauge.ts: a direction flip with no box change does not re-anchor until the next ResizeObserver tick (the post-mount test changes inline-size to trigger it). In practice low impact: a dir change usually comes with a page/locale re-render or reflow that resizes, but a pure `dir` toggle on a fixed-width container leaves the rings on the wrong edge until something resizes.
+- fix-now: packages/agent-ui/components/src/controls/gauge/gauge.ts:108 comment cites `#syncAnchor`, which does not exist (the logic is `#anchor()` plus `#syncScale`).
+- decide: site/pages/dogfood-render.browser.test.ts: with the anchor reverted, the dogfood legend-gap sweep (`-t "legend-gap"` 4 passed; `-t "demo/gauge"` 2 passed) stayed green, so the sweep and the rtl clean twin do not catch this regression; only gauge.browser.test.ts bites. The `legend-gap, rtl` plant proves the rule reports a padded legend, not that it measures the rings' edge.
+
+## T-0336: Site demos align captioned figures to a shared top edge (figure-parity allowlist debt) (2026-10-17)
+
+- note: shots/after/button-chromium.png: captions are bottom-aligned (`margin-block-start:auto`), so when a caption wraps to two lines ("size=\"md\" (default)") the first lines are not level. Only the caption bottoms line up.
+- decide: scripts/dogfood-render-allowlist.json:3: the icon-demo figure-parity entry is still owned by T-0336, which is closing. Re-own it to a standing ruling or a ticket so the owner reference does not go stale.
