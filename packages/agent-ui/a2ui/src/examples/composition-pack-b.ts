@@ -25,7 +25,7 @@
 // (2) RESTAURANT/DRINKS MENU — a Column of sections: Text heading + List > Row{Column{name, desc} ·
 //     price}, price right-aligned via the Row's justify (NO dot leaders in v1, the disposition row's
 //     call), the long tail section behind a Disclosure. Prices arrive HUMANIZED from the producer
-//     ('€9.50', never 9.5 — the confirmation-view receipt precedent).
+//     ('€9.50', never 9.5, the humanized-value rule every receipt and record seed follows).
 // (3) ITINERARY — Timeline > TimelineItem events + a typed-Badge detail Card for the up-next event.
 //     Catalog reality vs. the disposition sketch: `TimelineItem` is a LEAF row (no ChildList — its
 //     catalog entry carries only status/label/description/timestamp/icon), so "Badge type · Card detail

@@ -331,7 +331,7 @@ const RECEIPT_ID = 'expense-claim-receipt'
  *  `client-travel`), with a settled-status Badge beside the heading and no buttons: the action is done, so
  *  nothing is left to commit. Contrast `receipt-order-summary` (a List of templated line items, an
  *  itemized COLLECTION); this is the flat label/value RECORD shape, and `confirmation-view` is the
- *  pre-commit confirm card.
+ *  whole three-slot card of a settled change.
  *  T-0318 (2026-10-17): this record used to read back a hotel booking before a Confirm-booking Button,
  *  which a Concierge turn retrieves and the rulings forbid (T-0266: a booking ask gets the BookingForm
  *  pre-filled for the guest to confirm, never a read-back Card; T-0289: the guest's confirm settles it as
@@ -484,8 +484,8 @@ const WIZARD_ID = 'ask-1'
 /** Frontier 9 — the BACKABLE MULTI-STEP wizard (GH #1192, req-a2ui-patterns.md R2 / ADR-0198's 2026-08-18
  *  amendment B1), repaired to grammar.md's CardFooter clause (the GH #1262 rulings pass, #1320 — the
  *  seed's original loose-Row nav buttons contradicted it, flagged for this follow-up repair): ONE ask
- *  surface for the WHOLE flow (posture (i), grammar.md's backable-multi-step clause) — dates → room →
- *  confirm, Back always free because nothing is committed until the flow-final confirm. Root is delivered
+ *  surface for the WHOLE flow (posture (i), grammar.md's backable-multi-step clause), dates → leave
+ *  type → submit, Back always free because nothing is committed until the flow-final confirm. Root is delivered
  *  ONCE as the stable wrapper ("root", never resent); the Card itself is non-root ("card"), one level
  *  down, card-anatomy in force on every step: CardContent ("ct", stable — its own children list never
  *  changes) holds the growing "scene" subtree, and CardFooter ("ft") carries the per-step nav Buttons
@@ -494,32 +494,34 @@ const WIZARD_ID = 'ask-1'
  *  root-immutability rule). Every answer lives under the shared "/draft/*" data-model prefix, seeded once
  *  at scene 1 and never rewritten by a scene swap — so the bound Calendar/RadioGroup re-render the SAME
  *  still-present draft values when Back returns to an earlier scene: the worked round-trip below goes
- *  dates → room → BACK to dates (still showing the chosen range) → forward to room again (still showing
- *  the chosen room) → confirm. The confirm scene's receipt rides the CURRENT law's DescriptionList
+ *  dates → leave type → BACK to dates (still showing the chosen range) → forward to leave type again (still
+ *  showing the chosen type) → submit. The submit scene's receipt rides the CURRENT law's DescriptionList
  *  primitive (ADR-0201). Every mid-flow Next/Back turn here is a scene transition on this ONE still-open
  *  ask, never an answered ask (B1's carve-out) — "ask-1" is declared exactly once, on turn 1, and never
- *  re-declared. "rooms" (RadioGroup) is built WITHOUT its value binding, wired in a SEPARATE immediately-
+ *  re-declared. "leave_types" (RadioGroup) is built WITHOUT its value binding, wired in a SEPARATE immediately-
  *  following resend (radioGroupFactory's documented mount-order limitation: a value bound in the SAME
  *  batch that also creates its Radio children races ahead of them and clears the selection instead of
  *  reading it back) — proven by the real-renderer round-trip test, `backable-wizard.test.ts`. Repaired
  *  again for the sole ground a fresh judge sustained on this seed (GH #1262 second pass, a2ui-payload.md
- *  P7): "cal" and "rooms" ship with NO accessible name of their own — the catalog declares no label prop
- *  on either — so each rides an ADR-0051 Field wrap, the only naming path: "f_dates" (label "Check-in —
- *  check-out", the booking-reservation precedent, catalog-coverage.ts) and "f_room" (label "Room type",
- *  the frontier-card-anatomy-ask precedent, above). Both wraps are scene-local, exactly like "cal"/
- *  "rooms" themselves — resent with "scene" on every occurrence of each control (turn 1's dates scene AND
- *  the BACK-to-dates resend; turn 2's room scene AND the forward-again resend) — never touching root/
+ *  P7): "cal" and "leave_types" ship with NO accessible name of their own, the catalog declares no label prop
+ *  on either, so each rides an ADR-0051 Field wrap, the only naming path: "f_dates" (label "First and
+ *  last day off") and "f_leave" (label "Leave type"). Both wraps are scene-local, exactly like "cal"/
+ *  "leave_types" themselves, resent with "scene" on every occurrence of each control (turn 1's dates scene AND
+ *  the BACK-to-dates resend; turn 2's leave-type scene AND the forward-again resend), never touching root/
  *  card/ct.
- *  The two-button footers ("back2"/"next2" on the room scene, "back3"/"commit" on the confirm scene)
+ *  The two-button footers ("back2"/"next2" on the leave-type scene, "back3"/"commit" on the submit scene)
  *  ride one Row inside CardFooter ("nav2"/"nav3", gap "md", justify "end"), per the CardFooter
  *  multi-action rule (node-idioms.md, GH #1475; a2ui-payload.md P4 since 1.6): bare Button siblings
  *  stack full-width. Each Row is resent with its "ft" whenever the step's buttons change; the
  *  single-button dates footer keeps "next1" as the footer's direct child. Re-admitted through the
- *  judged `--replace` path (GH #1787, the GH #1475 greet-card precedent). */
+ *  judged `--replace` path (GH #1787, the GH #1475 greet-card precedent). T-0335 (2026-10-17): re-admitted
+ *  through the judged `--replace` exit as a time-off request; it used to book a hotel stay and end on a
+ *  booking read-back with "Confirm booking", which the rulings rule out (T-0266: a booking with every detail
+ *  is a pre-filled BookingForm; T-0289: the confirm settles as a BookingConfirmation). */
 export const backableWizardSeed: ExampleSeed = {
   name: 'backable-wizard',
-  description: 'A 3-step backable wizard (dates → room → confirm) on ONE ask surface: draft answers under /draft/*, a stable root>Card>CardContent scene container swapped by updateComponents, per-step nav Buttons in their own CardFooter (two-button steps in a Row inside it), Field-wrapped Calendar/RadioGroup controls (ADR-0051), and a BACK round-trip that leaves both prior answers untouched.',
-  promptText: 'Let\'s book a stay — start with the dates, then I\'ll pick a room, and I can always go back to change something before I confirm.',
+  description: 'A 3-step backable time-off request (dates, leave type, submit) on ONE ask surface: draft answers under /draft/*, a stable root>Card>CardContent scene container swapped by updateComponents, per-step nav Buttons in their own CardFooter (two-button steps in a Row inside it), Field-wrapped Calendar/RadioGroup controls (ADR-0051), and a BACK round-trip that leaves both prior answers untouched.',
+  promptText: 'Request time off: pick the days, then leave type; let me step back to change either.',
   surfaceId: WIZARD_ID,
   protocolVersion: 'v1.0',
   catalogId: 'agent-ui',
@@ -532,7 +534,7 @@ export const backableWizardSeed: ExampleSeed = {
     // Field wrap ("f_dates") — its own catalog row declares no label prop, so the Field is the only
     // accessible-name path (ADR-0051, a2ui-payload.md P7).
     { version: 'v1.0', createSurface: { surfaceId: WIZARD_ID, catalogId: 'agent-ui', sendDataModel: true } },
-    { version: 'v1.0', updateDataModel: { surfaceId: WIZARD_ID, value: { draft: { from: '', to: '', room: 'deluxe' } } } },
+    { version: 'v1.0', updateDataModel: { surfaceId: WIZARD_ID, value: { draft: { from: '', to: '', leave: 'vacation' } } } },
     {
       version: 'v1.0',
       updateComponents: {
@@ -542,10 +544,10 @@ export const backableWizardSeed: ExampleSeed = {
           { id: 'card', component: 'Card', elevation: '1', children: ['ct', 'ft'] },
           { id: 'ct', component: 'CardContent', children: ['scene'] },
           { id: 'scene', component: 'Column', gap: 'md', children: ['f_dates'] },
-          { id: 'f_dates', component: 'Field', label: 'Check-in — check-out', child: 'cal' },
+          { id: 'f_dates', component: 'Field', label: 'First and last day off', child: 'cal' },
           { id: 'cal', component: 'Calendar', mode: 'range', valueStart: { path: '/draft/from' }, valueEnd: { path: '/draft/to' } },
           { id: 'ft', component: 'CardFooter', children: ['next1'] },
-          { id: 'next1', component: 'Button', variant: 'solid', label: 'Continue', action: { action: 'step', context: { to: 'room' } } },
+          { id: 'next1', component: 'Button', variant: 'solid', label: 'Continue', action: { action: 'step', context: { to: 'leave' } } },
         ],
       },
     },
@@ -555,10 +557,10 @@ export const backableWizardSeed: ExampleSeed = {
     { version: 'v1.0', updateDataModel: { surfaceId: WIZARD_ID, path: '/draft/from', value: '2026-08-21' } },
     { version: 'v1.0', updateDataModel: { surfaceId: WIZARD_ID, path: '/draft/to', value: '2026-08-24' } },
 
-    // turn 2 — scene 2 (room): "scene" AND "ft" are resent TOGETHER (never root/card/ct); /draft/from,
+    // turn 2, scene 2 (leave type): "scene" AND "ft" are resent TOGETHER (never root/card/ct); /draft/from,
     // /draft/to stay in the data model, untouched underneath. A ghost Back joins the solid Continue in the
     // CardFooter (the nav-row law, R2, satisfied via CardFooter per grammar.md's CardFooter clause). The
-    // RadioGroup rides a Field wrap ("f_room") for the same P7 reason as "f_dates" above. "rooms"
+    // RadioGroup rides a Field wrap ("f_leave") for the same P7 reason as "f_dates" above. "leave_types"
     // mounts WITHOUT its "value" binding here, on purpose (radioGroupFactory's documented limitation:
     // RadioGroup.value applies at MOUNT time, before its just-declared Radio children exist in the light DOM
     // yet, so a value bound in the SAME batch that also creates those children silently clears the selection
@@ -569,24 +571,24 @@ export const backableWizardSeed: ExampleSeed = {
       updateComponents: {
         surfaceId: WIZARD_ID,
         components: [
-          { id: 'scene', component: 'Column', gap: 'md', children: ['f_room'] },
-          { id: 'f_room', component: 'Field', label: 'Room type', child: 'rooms' },
-          { id: 'rooms', component: 'RadioGroup', children: ['r1', 'r2'] },
-          { id: 'r1', component: 'Radio', value: 'standard', label: 'Standard · €180' },
-          { id: 'r2', component: 'Radio', value: 'deluxe', label: 'Deluxe King · €240' },
+          { id: 'scene', component: 'Column', gap: 'md', children: ['f_leave'] },
+          { id: 'f_leave', component: 'Field', label: 'Leave type', child: 'leave_types' },
+          { id: 'leave_types', component: 'RadioGroup', children: ['r1', 'r2'] },
+          { id: 'r1', component: 'Radio', value: 'vacation', label: 'Vacation · 18 days left' },
+          { id: 'r2', component: 'Radio', value: 'personal', label: 'Personal · 3 days left' },
           { id: 'ft', component: 'CardFooter', children: ['nav2'] },
           { id: 'nav2', component: 'Row', gap: 'md', justify: 'end', children: ['back2', 'next2'] },
           { id: 'back2', component: 'Button', variant: 'ghost', label: 'Back', action: { action: 'step', context: { to: 'dates' } } },
-          { id: 'next2', component: 'Button', variant: 'solid', label: 'Continue', action: { action: 'step', context: { to: 'confirm' } } },
+          { id: 'next2', component: 'Button', variant: 'solid', label: 'Continue', action: { action: 'step', context: { to: 'submit' } } },
         ],
       },
     },
     // wire the value binding now that "r1"/"r2" are mounted: same children list (never touched, no
-    // dispose/remount), only "rooms"'s own props differ from its previous record — a genuine prop
+    // dispose/remount), only "leave_types"'s own props differ from its previous record, a genuine prop
     // reconcile (RSR-C6), not a fresh mount, so the read finds its Radio children already present.
-    { version: 'v1.0', updateComponents: { surfaceId: WIZARD_ID, components: [{ id: 'rooms', component: 'RadioGroup', value: { path: '/draft/room' }, children: ['r1', 'r2'] }] } },
+    { version: 'v1.0', updateComponents: { surfaceId: WIZARD_ID, components: [{ id: 'leave_types', component: 'RadioGroup', value: { path: '/draft/leave' }, children: ['r1', 'r2'] }] } },
 
-    // BACK from room to dates: "scene" + "ft" swap to the dates shape again — IDENTICAL to turn 1's tree
+    // BACK from leave type to dates: "scene" + "ft" swap to the dates shape again, IDENTICAL to turn 1's tree
     // (the SAME "f_dates" Field wrap). /draft/from and /draft/to are STILL "2026-08-21"/"2026-08-24" (this
     // update never touches them), so the re-bound Calendar shows the range already chosen — the round-trip
     // B1's carve-out exists for.
@@ -596,38 +598,38 @@ export const backableWizardSeed: ExampleSeed = {
         surfaceId: WIZARD_ID,
         components: [
           { id: 'scene', component: 'Column', gap: 'md', children: ['f_dates'] },
-          { id: 'f_dates', component: 'Field', label: 'Check-in — check-out', child: 'cal' },
+          { id: 'f_dates', component: 'Field', label: 'First and last day off', child: 'cal' },
           { id: 'cal', component: 'Calendar', mode: 'range', valueStart: { path: '/draft/from' }, valueEnd: { path: '/draft/to' } },
           { id: 'ft', component: 'CardFooter', children: ['next1'] },
-          { id: 'next1', component: 'Button', variant: 'solid', label: 'Continue', action: { action: 'step', context: { to: 'room' } } },
+          { id: 'next1', component: 'Button', variant: 'solid', label: 'Continue', action: { action: 'step', context: { to: 'leave' } } },
         ],
       },
     },
 
-    // forward again to room — the SAME scene-2 tree (the SAME "f_room" Field wrap), built the SAME
-    // two-step way (a fresh "rooms" mount here — the earlier one was disposed by the BACK swap — races its
-    // Radio children again too); /draft/room is STILL "deluxe" (the value already committed before the
+    // forward again to leave type, the SAME scene-2 tree (the SAME "f_leave" Field wrap), built the SAME
+    // two-step way (a fresh "leave_types" mount here, the earlier one was disposed by the BACK swap, races its
+    // Radio children again too); /draft/leave is STILL "vacation" (the value already committed before the
     // detour), the second half of the round-trip proof.
     {
       version: 'v1.0',
       updateComponents: {
         surfaceId: WIZARD_ID,
         components: [
-          { id: 'scene', component: 'Column', gap: 'md', children: ['f_room'] },
-          { id: 'f_room', component: 'Field', label: 'Room type', child: 'rooms' },
-          { id: 'rooms', component: 'RadioGroup', children: ['r1', 'r2'] },
-          { id: 'r1', component: 'Radio', value: 'standard', label: 'Standard · €180' },
-          { id: 'r2', component: 'Radio', value: 'deluxe', label: 'Deluxe King · €240' },
+          { id: 'scene', component: 'Column', gap: 'md', children: ['f_leave'] },
+          { id: 'f_leave', component: 'Field', label: 'Leave type', child: 'leave_types' },
+          { id: 'leave_types', component: 'RadioGroup', children: ['r1', 'r2'] },
+          { id: 'r1', component: 'Radio', value: 'vacation', label: 'Vacation · 18 days left' },
+          { id: 'r2', component: 'Radio', value: 'personal', label: 'Personal · 3 days left' },
           { id: 'ft', component: 'CardFooter', children: ['nav2'] },
           { id: 'nav2', component: 'Row', gap: 'md', justify: 'end', children: ['back2', 'next2'] },
           { id: 'back2', component: 'Button', variant: 'ghost', label: 'Back', action: { action: 'step', context: { to: 'dates' } } },
-          { id: 'next2', component: 'Button', variant: 'solid', label: 'Continue', action: { action: 'step', context: { to: 'confirm' } } },
+          { id: 'next2', component: 'Button', variant: 'solid', label: 'Continue', action: { action: 'step', context: { to: 'submit' } } },
         ],
       },
     },
-    { version: 'v1.0', updateComponents: { surfaceId: WIZARD_ID, components: [{ id: 'rooms', component: 'RadioGroup', value: { path: '/draft/room' }, children: ['r1', 'r2'] }] } },
+    { version: 'v1.0', updateComponents: { surfaceId: WIZARD_ID, components: [{ id: 'leave_types', component: 'RadioGroup', value: { path: '/draft/leave' }, children: ['r1', 'r2'] }] } },
 
-    // the user confirmed the room and hit Continue — the receipt rows land in the draft (humanized,
+    // the user kept the leave type and hit Continue, the receipt rows land in the draft (humanized,
     // adjacent label/value per the receipt clause):
     {
       version: 'v1.0',
@@ -635,13 +637,13 @@ export const backableWizardSeed: ExampleSeed = {
         surfaceId: WIZARD_ID,
         path: '/draft/rows',
         value: [
-          { label: 'Dates', value: '21–24 Aug · 3 nights' },
-          { label: 'Room', value: 'Deluxe King · €240/night' },
+          { label: 'Days off', value: 'Fri 21 Aug to Mon 24 Aug · 2 working days' },
+          { label: 'Leave type', value: 'Vacation' },
         ],
       },
     },
 
-    // turn 3 — confirm scene: the RECEIPT, current law's DescriptionList primitive (ADR-0201), plus the
+    // turn 3, submit scene: the RECEIPT, current law's DescriptionList primitive (ADR-0201), plus the
     // flow-final commit Button in the CardFooter (grammar's confirm-before-concluding law). Still the SAME
     // ask surface — the flow-final confirm on THIS turn is what starts the answered-ask freeze (B1); every
     // turn before it was a scene transition, never an answered ask.
@@ -654,8 +656,8 @@ export const backableWizardSeed: ExampleSeed = {
           { id: 'rcpt', component: 'DescriptionList', rows: { path: '/draft/rows' } },
           { id: 'ft', component: 'CardFooter', children: ['nav3'] },
           { id: 'nav3', component: 'Row', gap: 'md', justify: 'end', children: ['back3', 'commit'] },
-          { id: 'back3', component: 'Button', variant: 'ghost', label: 'Back', action: { action: 'step', context: { to: 'room' } } },
-          { id: 'commit', component: 'Button', variant: 'solid', label: 'Confirm booking', action: { action: 'commit' } },
+          { id: 'back3', component: 'Button', variant: 'ghost', label: 'Back', action: { action: 'step', context: { to: 'leave' } } },
+          { id: 'commit', component: 'Button', variant: 'solid', label: 'Submit request', action: { action: 'commit' } },
         ],
       },
     },

@@ -51,32 +51,35 @@ and a payload omitting it fails validate. **Boundary:** a single hero image insi
 this pattern — that is the plain Image-in-Card idiom (`node-idioms.md`'s Image card); reach for the
 Swiper only when the user pages through a SET.
 
-## 2 · Confirmation view (seed: `confirmation-view`, pack A)
+## 2 · Settled record card (seed: `confirmation-view`, pack A)
 
-**Mechanism.** The full three-slot confirmation card a producer emits when a flow reaches its
-confirm step: `Card > CardHeader` (identity title ONLY) + `CardContent` holding the ADR-0201
-`DescriptionList` receipt + `CardFooter` holding the action pair — the card-anatomy clause
-(`grammar.md:138`) applied end to end. `DescriptionList.rows` is bindable
-(`{label, value}[]`, both required per its catalog entry), so the receipt is bound to a model
-array and an amend-answer turn updates the summary in place by rewriting `/reservation/rows` —
-never by resending the card. Values arrive HUMANIZED from the producer
-(`'€40.00 — refundable until Aug 21'`, never a raw number).
+**Mechanism.** The full three-slot card a producer emits once a change has gone through:
+`Card > CardHeader` (identity title plus a settled-status `Badge`) + `CardContent` holding the ADR-0201
+`DescriptionList` record + `CardFooter` holding follow-up actions, the card-anatomy clause applied end
+to end. The Badge is the settle shape grammar.md gives a confirmed receipt (the T-0318
+`frontier-booking-receipt` precedent). `DescriptionList.rows` is bindable (`{label, value}[]`, both
+required per its catalog entry), so the record is bound to a model array and a correction updates it in
+place by rewriting `/plan/rows`, never by resending the card. Values arrive HUMANIZED from the producer
+(`'$184.00 prorated to Mar 1, on the card ending 4242'`, never a raw number). Each follow-up names the
+record it acts on through a bound action `context`.
 
 **Worked shape** (seed source, verbatim):
 
 ```ts
-{ id: 'root', component: 'Card', elevation: '1', children: ['hd', 'ct', 'ft'] },
-{ id: 'receipt', component: 'DescriptionList', rows: { path: '/reservation/rows' } },
-{ id: 'btn_back', component: 'Button', variant: 'ghost', label: 'Change details', action: { action: 'edit_reservation', wantResponse: false } },
-{ id: 'btn_confirm', component: 'Button', variant: 'solid', label: 'Confirm reservation', action: { action: 'confirm_reservation' } },
+{ id: 'head', component: 'Row', gap: 'sm', align: 'center', children: ['title', 'status'] },
+{ id: 'status', component: 'Badge', label: 'Active', intent: 'success' },
+{ id: 'record', component: 'DescriptionList', rows: { path: '/plan/rows' } },
+{ id: 'btn_invoice', component: 'Button', variant: 'ghost', label: 'View invoice', action: { action: 'view_invoice', context: { invoice: { path: '/plan/invoiceId' } } } },
+{ id: 'btn_seats', component: 'Button', variant: 'soft', label: 'Add seats', action: { action: 'add_seats', context: { plan: { path: '/plan/id' } } } },
 ```
 
-**Policies + consequences.** Exactly ONE solid commit button, ghost go-back beside it (the
-confirm-before-concluding law's flow-final commit); the go-back action carries
-`wantResponse: false`. **Boundary:** the `frontier-booking-receipt` seed (#1185) exercises the
-DescriptionList PRIMITIVE bare — this section is the whole three-slot confirmation CARD a flow's
-confirm step emits. If the ask is "show the receipt data" mid-conversation, the bare primitive
-suffices; if the ask is "let me confirm/commit", emit this pattern.
+**Policies + consequences.** The footer carries follow-ups, never a commit: the change already
+happened. T-0335 (2026-10-17) replaced the seed's dinner-reservation read-back with a Confirm
+button: a booking with every detail is a pre-filled BookingForm (T-0266) and its confirm settles as
+a BookingConfirmation (T-0289), so no booking read-back is taught here. A non-booking confirm step
+follows grammar.md's confirm-before-concluding law. **Boundary:** the `frontier-booking-receipt`
+seed (#1185, T-0318) exercises the DescriptionList PRIMITIVE bare, with a status Badge and no
+buttons; this section is the whole three-slot CARD with its footer.
 
 ## 3 · Trend list (seed: `trend-list`, pack A)
 
@@ -221,15 +224,15 @@ No pack seed backs this section any more; it keeps only the boundary. One wizard
 `Column > Progress` (`value`/`max` bound) + title + `RadioGroup` on the step's OWN data path (each step binds a
 DISTINCT path) + `Row{ghost Back · solid Next}`.
 
-Worked shape, from the `backable-wizard` seed's step nodes (`catalog-frontier.ts`, `backableWizardSeed`;
-the seed puts the nav Buttons in a `CardFooter`, the snapshot form may use a `Row`):
+Worked shape, from the `backable-wizard` seed's step nodes (`catalog-frontier.ts`, `backableWizardSeed`, a
+time-off request since T-0335; the seed puts the nav Buttons in a `CardFooter`, the snapshot form may use a `Row`):
 
 ```json
-{ "id": "scene", "component": "Column", "gap": "md", "children": ["f_room"] },
-{ "id": "f_room", "component": "Field", "label": "Room type", "child": "rooms" },
-{ "id": "rooms", "component": "RadioGroup", "children": ["r1", "r2"] },
+{ "id": "scene", "component": "Column", "gap": "md", "children": ["f_leave"] },
+{ "id": "f_leave", "component": "Field", "label": "Leave type", "child": "leave_types" },
+{ "id": "leave_types", "component": "RadioGroup", "children": ["r1", "r2"] },
 { "id": "back2", "component": "Button", "variant": "ghost", "label": "Back", "action": { "action": "step", "context": { "to": "dates" } } },
-{ "id": "next2", "component": "Button", "variant": "solid", "label": "Continue", "action": { "action": "step", "context": { "to": "confirm" } } }
+{ "id": "next2", "component": "Button", "variant": "solid", "label": "Continue", "action": { "action": "step", "context": { "to": "submit" } } }
 ```
 
 **Presentation vs. protocol (the known confusable — get this boundary right).** This pattern is
