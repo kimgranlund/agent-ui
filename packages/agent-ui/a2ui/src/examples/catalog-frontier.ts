@@ -323,28 +323,31 @@ export const roundOutcomeToastSeed: ExampleSeed = {
   ],
 }
 
-const RECEIPT_ID = 'frontier-booking-receipt'
+const RECEIPT_ID = 'expense-claim-receipt'
 /** Frontier 6: the DESCRIPTION-LIST receipt (ADR-0201, GH #1185: the key-value receipt primitive the
- *  GH #1174 grammar composition pattern was written to be superseded by): a confirm-step expense-claim
- *  summary as ONE `DescriptionList` node, `rows` BOUND to the data model (an amend-answer turn updates the
- *  receipt in place, never re-emits the tree), values arriving HUMANIZED from the producer ("Attached",
- *  never `true`; "Client travel", never `client-travel`), plus the single commit Button the grammar's
- *  confirm-before-concluding law mandates. Contrast `receipt-order-summary` (a List of templated line
- *  items, an itemized COLLECTION); this is the flat label/value RECORD shape.
+ *  GH #1174 grammar composition pattern was written to be superseded by): a SETTLED expense-claim receipt
+ *  looked up after the claim was filed, as ONE `DescriptionList` node, `rows` BOUND to the data model,
+ *  values arriving HUMANIZED from the producer ("Attached", never `true`; "Client travel", never
+ *  `client-travel`), with a settled-status Badge beside the heading and no buttons: the action is done, so
+ *  nothing is left to commit. Contrast `receipt-order-summary` (a List of templated line items, an
+ *  itemized COLLECTION); this is the flat label/value RECORD shape, and `confirmation-view` is the
+ *  pre-commit confirm card.
  *  T-0318 (2026-10-17): this record used to read back a hotel booking before a Confirm-booking Button,
  *  which a Concierge turn retrieves and the rulings forbid (T-0266: a booking ask gets the BookingForm
  *  pre-filled for the guest to confirm, never a read-back Card; T-0289: the guest's confirm settles it as
- *  a BookingConfirmation). It was re-admitted through the judged `--replace` exit on a conclusive action
- *  no persona composite governs; the name stays because `--replace` keys on it. */
+ *  a BookingConfirmation). T-0318 re-admitted it through the judged `--replace` exit twice: first as a
+ *  pre-commit expense-claim summary with a Submit-claim Button, which the lane review sent back because
+ *  it kept the read-back-then-commit shape, then as this post-commit lookup receipt. The record name stays
+ *  because `--replace` keys on it. */
 export const bookingReceiptSeed: ExampleSeed = {
   name: 'frontier-booking-receipt',
-  description: 'A confirm-step expense-claim receipt: one DescriptionList with data-bound humanized rows (label secondary, value adjacent; a valueless field never renders) and the single Submit-claim commit Button.',
-  promptText: 'That covers the whole claim. Show me the summary so I can submit it.',
+  description: 'A settled expense-claim receipt looked up after filing: a heading with a Submitted status Badge, then one DescriptionList with data-bound humanized rows including the claim reference; no buttons, since nothing is left to commit.',
+  promptText: 'Pull up the receipt for the expense claim I filed on Tuesday.',
   surfaceId: RECEIPT_ID,
   protocolVersion: 'v1.0',
   catalogId: 'agent-ui',
   messages: [
-    { version: 'v1.0', createSurface: { surfaceId: RECEIPT_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    { version: 'v1.0', createSurface: { surfaceId: RECEIPT_ID, catalogId: 'agent-ui' } },
     {
       version: 'v1.0',
       updateDataModel: {
@@ -352,8 +355,9 @@ export const bookingReceiptSeed: ExampleSeed = {
         value: {
           claim: {
             rows: [
+              { label: 'Reference', value: 'EXP-20418' },
+              { label: 'Filed', value: 'Tue, Oct 13' },
               { label: 'Merchant', value: 'Northline Rail' },
-              { label: 'Date', value: 'Tue, Oct 13' },
               { label: 'Category', value: 'Client travel' },
               { label: 'Receipt', value: 'Attached' },
               { label: 'Reimburse to', value: 'Checking ending 4417' },
@@ -368,11 +372,11 @@ export const bookingReceiptSeed: ExampleSeed = {
       updateComponents: {
         surfaceId: RECEIPT_ID,
         components: [
-          { id: 'root', component: 'Column', gap: 'md', children: ['heading', 'receipt', 'controls'] },
+          { id: 'root', component: 'Column', gap: 'md', children: ['head', 'receipt'] },
+          { id: 'head', component: 'Row', gap: 'sm', align: 'center', children: ['heading', 'status'] },
           { id: 'heading', component: 'Text', variant: 'h4', text: 'Expense claim' },
+          { id: 'status', component: 'Badge', label: 'Submitted', intent: 'success' },
           { id: 'receipt', component: 'DescriptionList', rows: { path: '/claim/rows' } },
-          { id: 'controls', component: 'Row', gap: 'md', justify: 'end', children: ['btn_submit'] },
-          { id: 'btn_submit', component: 'Button', variant: 'solid', label: 'Submit claim', action: { action: 'submit_claim' } },
         ],
       },
     },

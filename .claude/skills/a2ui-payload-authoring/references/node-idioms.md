@@ -323,7 +323,7 @@ that idiom is deliberately MORE than a bare fact list.
 ```json
 { "id": "specs", "component": "DescriptionList", "rows": { "path": "/product/specs" } }
 ```
-Real: `examples/catalog-frontier.ts:339` (`frontier-booking-receipt`, an expense-claim DescriptionList),
+Real: `examples/catalog-frontier.ts:379` (`frontier-booking-receipt`, the settled expense-claim DescriptionList node),
 `examples/high-frequency-patterns.ts:67-75` (`comparison-pricing-table`, Table).
 
 ## Variant-picker — SegmentedControl vs Select (GH #1377)
