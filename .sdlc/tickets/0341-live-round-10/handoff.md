@@ -31,4 +31,4 @@ Phase 1 (solo, keyless):
 - `node --experimental-strip-types scripts/e2e-admin/probe/run-capped.ts --describe .sdlc/evals/rounds/2026-10-17-r10-targeted/live-commands.sh` exits 0 (33 runs parse as live probes).
 - `npm run check` exits 0.
 
-Phase 2 (deferred to the conductor's live run, not runnable keyless): round.json spend <= 10 and stop done; report.md has the churn table against round 9 and one mechanism metric per fix.
+Phase 2: `.sdlc/evals/rounds/2026-10-17-r10-targeted/round.json` has `totals.costUsd` <= 10 ($7.22) and `stop` done; its report.md has the generated churn table against round 9 (`npm run eval:signals -- --round 2026-10-17-r10-targeted --against 2026-10-17-r9-matrix --min-samples 1` exits 0), one mechanism metric per fix, the 3-sample results, the provider-error quarantine line and the fog clusters with one proposed ticket each; `.sdlc/evals/fog/2026-10-17-r10-targeted.json` names the published fog report.
