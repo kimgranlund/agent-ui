@@ -11,10 +11,10 @@
 // T-0274 pinned the Lexicographer give-up turns: the game-over exemplar (a ResultCard revealing the word) ranks first.
 // T-0318: a pin holds only the ranks a reader can defend for its turn and compares that prefix; the ranks after it are
 // known poor (zero-signal padding off the turn's domain) and are named in a comment on the row, never pinned as correct.
-// T-0315: each pin passes the preset's hidden-state keys, so another game's board no longer frames a Mentalist turn.
+// T-0315: each pin passes the preset's hidden-state keys; the Mentalist row moved to the T-0315 describe (no board frames).
 import { describe, it, expect } from 'vitest'
 import { readdirSync, readFileSync } from 'node:fs'
-import { retrieve } from './retrieve.ts'
+import { retrieve, committedSecretKeys, secretKeysNamedIn } from './retrieve.ts'
 import type { CorpusRecord } from './record.ts'
 import { CATALOG_LAYER_MAP } from '../catalog/layers.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
@@ -39,9 +39,13 @@ function typesOf(catalogId: string): string[] {
   return [...Object.keys(defaultCatalog.components), ...Object.entries(CATALOG_LAYER_MAP).filter(([, r]) => r.home === home).map(([t]) => t)]
 }
 
-// T-0315: the `/secret/<key>` names each preset's foundation declares (`produce()` parses them from `personaSystem`),
-// restated like the catalog id. Every other shipped preset declares none.
-const HIDDEN_STATE: Readonly<Record<string, readonly string[]>> = { lexicographer: ['word'], admiral: ['fleet', 'playerFleet'] }
+// T-0315: the `/secret/<key>` names each shipped preset's foundation declares, read from the real foundations in
+// `site/pages/agent-admin-presets.ts` (the package sits below the site, so the source text is parsed, not imported) through
+// the same `secretKeysNamedIn` `produce()` applies. A preset absent from the table declares none.
+const PRESETS_SRC = readFileSync(`${process.cwd()}/site/pages/agent-admin-presets.ts`, 'utf8') as string
+const HIDDEN_STATE: Readonly<Record<string, readonly string[]>> = Object.fromEntries(
+  [...PRESETS_SRC.matchAll(/\n {4}id: '([\w-]+)',[\s\S]*?\n {4}foundation:\n([\s\S]*?)\n {4}surfaceStyle:/g)].map(([, id, body]) => [id!, secretKeysNamedIn(body!)]),
+)
 const hiddenStateOf = (preset: string): readonly string[] => HIDDEN_STATE[preset] ?? []
 
 const PINS: readonly (readonly [preset: string, catalogId: string, turn: string, top: readonly string[]])[] = [
@@ -56,9 +60,6 @@ const PINS: readonly (readonly [preset: string, catalogId: string, turn: string,
   // Known poor (T-0318): rank 3 is frontier-product-card-rooms, off the collection domain.
   ['curator', 'agent-ui', 'Show me the highlights of the collection', ['customer-review-card', 'slideshow-gallery']],
   ['shopkeeper', 'agent-ui', 'Show me the product options', ['frontier-choice-group-rooms', 'frontier-column-chart-revenue', 'frontier-product-card-rooms']],
-  // Known poor (T-0318): all three ranks are zero-signal padding for a Twenty Questions HUD (wallet-summary-card,
-  // frontier-button-icon-actions, structured-container-trip-summary). T-0315 dropped the word board, another game's.
-  ['mentalist', 'agent-ui', 'Read my mind', []],
   // Known poor (T-0318): ranks 2 and 3 are plan-and-execute-plan and the expense-claim receipt, neither an offer surface.
   ['negotiator', 'agent-ui', 'I offer 200 for it', ['frontier-suggestions-chips']],
   ['lexicographer', 'agent-ui', 'My guess is CRANE', ['domain-lexicographer-word-board', 'frontier-button-icon-actions', 'frontier-pane-switcher']],
@@ -177,7 +178,19 @@ describe('retrieve: a game turn never frames another game\'s board (T-0315)', ()
     expect(top3('lexicographer', turn)).toContain('domain-lexicographer-word-board')
   })
 
-  it('mentalist "Read my mind" frames neither board: it keeps no hidden state', () => {
-    expect(top3('mentalist', 'Read my mind').filter((n) => WORD.includes(n) || FLEET.includes(n))).toEqual([])
+  it('the preset table is read from the real foundations', () => {
+    expect(HIDDEN_STATE['lexicographer']).toEqual(['word'])
+    expect(HIDDEN_STATE['admiral']).toEqual(['fleet', 'playerFleet'])
+    expect(HIDDEN_STATE['mentalist']).toEqual([])
+    expect(PINS.every(([preset]) => Object.hasOwn(HIDDEN_STATE, preset))).toBe(true)
+  })
+
+  // Known poor (T-0318): the Mentalist's top 3 for "Read my mind" is zero-signal padding for a Twenty Questions HUD
+  // (wallet-summary-card, frontier-button-icon-actions, structured-container-trip-summary), so no rank is pinned. T-0315
+  // holds only that no record committing hidden state frames: the Mentalist keeps none.
+  it('mentalist "Read my mind" frames no record that commits hidden state', () => {
+    const got = retrieve(shard, { intent: 'Read my mind', k: 3, catalogId: 'agent-ui', protocolVersion: 'v1.0', componentTypes: typesOf('agent-ui'), hiddenState: hiddenStateOf('mentalist') })
+    expect(got.length).toBeGreaterThan(0)
+    expect(got.filter((r) => committedSecretKeys(r).length > 0).map((r) => r.name)).toEqual([])
   })
 })

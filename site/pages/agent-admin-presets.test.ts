@@ -12,6 +12,7 @@ import { DEFAULT_PROMPT_SECTIONS, ENTRY_KINDS, composeLiveSystemPrompt } from '@
 import { entriesStoreKey, type Entry } from '@agent-ui/app/entry-data'
 import { lintSectionContent } from '@agent-ui/app/agent-admin-prompt-lint'
 import { SELECTION_PROJECTION } from '@agent-ui/a2ui/registry'
+import { committedSecretKeys, secretKeysNamedIn, type CorpusRecord } from '@agent-ui/a2ui/corpus'
 import {
   AGENT_PRESETS,
   deleteImportedPersona,
@@ -482,35 +483,27 @@ describe('the Croupier table entries scope the CardTable to blackjack (T-0323)',
   })
 })
 
-// T-0315: `produce()` scopes retrieval by the `/secret` keys a persona section names (`secretKeysNamedIn` in
-// `@agent-ui/a2ui`'s `corpus/retrieve.ts`, restated here because the site has no corpus alias), so a shipped game
-// exemplar frames only for a persona that names its keys. This pin couples the two sides: every key a shipped exemplar
-// commits is named by some shipped preset's foundation, so a reworded foundation cannot silently orphan its own board.
-describe('every hidden-state key a shipped exemplar commits is named by a shipped preset (T-0315)', () => {
-  type Line = { updateDataModel?: { path?: string; value?: unknown } }
-  type Rec = { name: string; a2uiOutput?: Line[]; priorOutput?: Line[] }
-  const keysOf = (v: unknown): string[] => (typeof v === 'object' && v !== null && !Array.isArray(v) ? Object.keys(v) : [])
-  const commitsOf = (r: Rec): string[] =>
-    [...(r.priorOutput ?? []), ...(r.a2uiOutput ?? [])].flatMap(({ updateDataModel: u }) => {
-      if (u === undefined) return []
-      if (u.path === undefined || u.path === '' || u.path === '/') return keysOf((u.value as { secret?: unknown } | undefined)?.secret)
-      if (u.path === '/secret') return keysOf(u.value)
-      return u.path.startsWith('/secret/') ? [u.path.split('/')[2]!] : []
-    })
+// T-0315: `produce()` scopes retrieval by the `/secret` keys a persona's foundation names (`secretKeysNamedIn`), so a
+// shipped game exemplar frames only for a persona that names every key it commits (`committedSecretKeys`). This pin
+// couples the two sides through the same helpers: each `domain-<preset>-*` exemplar that commits hidden state belongs
+// to a shipped preset whose own foundation names every committed key, so a reworded foundation cannot orphan its board.
+describe('every hidden-state key a shipped exemplar commits is named by its own preset (T-0315)', () => {
   const SHARD_DIR = `${process.cwd()}/packages/agent-ui/a2ui/corpus/exemplar/v1_0`
-  const committed = (readdirSync(SHARD_DIR) as string[])
+  const keyed = (readdirSync(SHARD_DIR) as string[])
     .filter((f) => f.endsWith('.jsonl'))
     .flatMap((f) => (readFileSync(`${SHARD_DIR}/${f}`, 'utf8') as string).split('\n'))
     .filter((l) => l.trim() !== '')
-    .map((l) => JSON.parse(l) as Rec)
-    .flatMap((r) => [...new Set(commitsOf(r))].map((k) => [r.name, k] as const))
-  const named = new Set(AGENT_PRESETS.flatMap((p) => [...p.foundation.matchAll(/\/secret\/([A-Za-z_]\w*)/g)].map((m) => m[1]!)))
+    .map((l) => JSON.parse(l) as CorpusRecord)
+    .filter((r) => committedSecretKeys(r).length > 0)
 
   it('the shipped shards commit hidden state (the pin is not vacuous)', () => {
-    expect(committed.length).toBeGreaterThan(0)
+    expect(keyed.length).toBeGreaterThan(0)
   })
 
-  it.each(committed)('%s commits /secret/%s, which a preset foundation names', (_name, key) => {
-    expect(named.has(key)).toBe(true)
+  it.each(keyed.map((r) => [r.name, r] as const))('%s: its preset foundation names every key it commits', (name, rec) => {
+    const preset = AGENT_PRESETS.find((p) => name.startsWith(`domain-${p.id}-`))
+    expect(preset, `${name} names no shipped preset (domain-<preset>-*)`).toBeDefined()
+    const named = secretKeysNamedIn(preset!.foundation)
+    expect(committedSecretKeys(rec).filter((k) => !named.includes(k))).toEqual([])
   })
 })

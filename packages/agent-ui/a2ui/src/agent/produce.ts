@@ -480,11 +480,21 @@ function userContent(input: TurnInput): string {
  *  strictly on `meta.catalogId`, so a Basic turn retrieves zero exemplars (no `a2ui-basic` shard yet —
  *  a named follow-up) and `fewShot` degrades to its designed empty arm; no exemplars beats
  *  wrong-dialect exemplars. */
+/** T-0315: the persona's `## Foundation` block (`composeLiveSystemPrompt`), up to the next `## ` heading; `''` when it
+ *  has none. Only the foundation declares hidden state: capability, skill, team or draft text never adds or drops a key. */
+function foundationOf(personaSystem: string): string {
+  const lines = personaSystem.split('\n')
+  const at = lines.findIndex((l) => l.trim() === '## Foundation')
+  if (at < 0) return ''
+  const end = lines.findIndex((l, i) => i > at && l.startsWith('## '))
+  return lines.slice(at + 1, end < 0 ? undefined : end).join('\n')
+}
+
 function queryOf(input: TurnInput, k: number, catalog: Catalog, personaSystem?: string): RetrieveQuery {
   // T-0202 (CA-R4): `componentTypes` keeps every retrieved exemplar inside the effective catalog's types.
-  // T-0315: `hiddenState` is the `/secret` keys the persona section names, so another game's exemplar never frames;
+  // T-0315: `hiddenState` is the `/secret` keys the persona's foundation names, so another game's exemplar never frames;
   // no persona section leaves the field off and the query byte-identical.
-  const persona = personaSystem?.trim() ? { hiddenState: secretKeysNamedIn(personaSystem) } : {}
+  const persona = personaSystem?.trim() ? { hiddenState: secretKeysNamedIn(foundationOf(personaSystem)) } : {}
   return { intent: userContent(input), k, catalogId: catalog.catalogId, protocolVersion: PROTOCOL_VERSION, componentTypes: Object.keys(catalog.components), ...persona }
 }
 

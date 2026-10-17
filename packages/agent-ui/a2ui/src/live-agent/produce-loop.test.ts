@@ -2153,6 +2153,14 @@ describe('produce: the retrieval query carries the persona\'s hidden-state keys 
     expect((await queryFor(persona)).hiddenState).toEqual(['fleet', 'playerFleet'])
   })
 
+  it('only the Foundation block declares keys: a mention in another section neither adds nor drops one', async () => {
+    const persona =
+      '## Capabilities\nA skill may write /secret/word.\n\n## Foundation\nCommit your fleet at /secret/fleet.\n\n## Team\nThe teammate reads /secret/playerFleet.'
+    expect((await queryFor(persona)).hiddenState).toEqual(['fleet'])
+    expect((await queryFor('## Foundation\nYou are a host.\n\n## Skills\nWrite the answer at /secret/word.')).hiddenState).toEqual([])
+    expect((await queryFor('A persona with no Foundation heading at /secret/word.')).hiddenState).toEqual([])
+  })
+
   it('a persona naming no /secret path sends []', async () => {
     expect((await queryFor('## Foundation\nYou are a friendly concierge.')).hiddenState).toEqual([])
   })

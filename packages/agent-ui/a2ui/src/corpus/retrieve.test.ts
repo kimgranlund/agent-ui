@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { retrieve } from './retrieve.ts'
+import { retrieve, secretKeysNamedIn, committedSecretKeys } from './retrieve.ts'
 import type { RetrieveQuery } from './retrieve.ts'
 import type { CorpusRecord } from './record.ts'
 
@@ -561,5 +561,23 @@ describe('retrieve: the hidden-state scope rule (T-0315)', () => {
     const run = (hiddenState: readonly string[]): string[] => retrieve([rec], query({ intent: 'a new game board', facet: 'multi-turn', hiddenState })).map((r) => r.name)
     expect(run(['fleet', 'playerFleet'])).toEqual([])
     expect(run(['word'])).toEqual(['mt-word'])
+  })
+
+  it('one key grammar on both sides: a hyphenated key is named and committed as the same key', () => {
+    const rec = commits(exemplar({ name: 'hyphen', promptText: 'a new game board' }), 'a2uiOutput', '/secret/hand-cards/0', 'x')
+    expect(secretKeysNamedIn('Commit it at /secret/hand-cards, then read /secret/hand-cards.')).toEqual(['hand-cards'])
+    expect(committedSecretKeys(rec)).toEqual(['hand-cards'])
+    expect(retrieve([rec], query({ intent: 'a new game board', hiddenState: secretKeysNamedIn('at /secret/hand-cards.') })).map((r) => r.name)).toEqual(['hyphen'])
+    expect(retrieve([rec], query({ intent: 'a new game board', hiddenState: ['hand'] }))).toEqual([])
+  })
+
+  it('a scalar or array committed whole at /secret is the opaque key, in scope only where the persona declares /secret', () => {
+    const scalar = commits(exemplar({ name: 'scalar', promptText: 'a new game board' }), 'a2uiOutput', '/secret', 'crane')
+    const rootArray = commits(exemplar({ name: 'root-array', promptText: 'a new game board' }), 'a2uiOutput', undefined, { secret: [1, 2] })
+    expect(committedSecretKeys(scalar)).toEqual(['*'])
+    expect(committedSecretKeys(rootArray)).toEqual(['*'])
+    const run = (hiddenState: readonly string[]): string[] => retrieve([scalar, rootArray], query({ intent: 'a new game board', hiddenState })).map((r) => r.name).sort()
+    expect(run(['word', 'fleet'])).toEqual([])
+    expect(run(secretKeysNamedIn('Keep the answer at /secret, bound to nothing.'))).toEqual(['root-array', 'scalar'])
   })
 })
