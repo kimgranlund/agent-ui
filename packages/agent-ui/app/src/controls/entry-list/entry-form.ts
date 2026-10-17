@@ -68,8 +68,9 @@ export interface EntryFormHandlers {
    *  boolean ADR-0164 cl.3 pins: nothing in this arc is async, and the add form branches on the raw
    *  return, so a `Promise` would be always-truthy — resetting the form on a rejection, the exact defect
    *  the boolean return exists to prevent. Every existing single-argument implementation stays valid by
-   *  TS structural typing (§6.1's non-decision). */
-  onAdd(input: NewEntryInput, context?: { rejectOnCollision?: boolean }): boolean
+   *  TS structural typing (§6.1's non-decision). T-0162: the library menu also names itself
+   *  (`source: 'pack'`), so the caller records the entry's provenance (agent-content ACS-R8). */
+  onAdd(input: NewEntryInput, context?: { rejectOnCollision?: boolean; source?: 'pack' }): boolean
   /** GH #850 / capability-availability-tagging.spec.md SPEC-R2 — the per-entry AVAILABILITY write, called
    *  with the mode the entry is being flipped TO. OPTIONAL, the additive-optional law `EntryListOptions`
    *  follows: absent ⇒ an opted-in section with no writer wired can never paint a mode the store does not

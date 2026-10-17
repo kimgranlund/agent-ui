@@ -56,6 +56,7 @@
     "./agent-admin-team": "./src/controls/agent-admin/agent-team.ts",
     "./agent-admin-roster-source": "./src/controls/agent-admin/agent-roster-source.ts",
     "./agent-admin-overlay": "./src/controls/agent-admin/agent-overlay.ts",
+    "./agent-admin-content-fields": "./src/controls/agent-admin/content-fields.ts",
     "./document-extraction": "./src/lib/document-extraction.ts",
     "./document-extraction-docx": "./src/lib/document-extraction-docx.ts",
     "./document-budget": "./src/lib/document-budget.ts"

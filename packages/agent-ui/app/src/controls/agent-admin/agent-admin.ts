@@ -261,7 +261,10 @@ import {
   type Entry,
   type EntryLibraryPack,
 } from '../entry-list/entry-data.ts'
-import { mountEntryList, showAddError, type EntryListSection } from '../entry-list/entry-list.ts'
+import { mountEntryList, showAddError, type EntryListSection, type EntryRowMark } from '../entry-list/entry-list.ts'
+// T-0162: the per-place provenance an overlay store (or a whole-record store) answers (ACS-R8).
+import { writeFrom, type OverlayPath, type Provenance, type ProvenanceReader } from './agent-overlay.ts'
+import { PERSONA_FIELD_BY_KEY } from './content-fields.ts'
 import { lintPromptSections } from './prompt-lint.ts'
 // GH #1197 (ADR-0203 cl.1/cl.2 / req-agent-teams.md R5) — the Team pane (list/create/edit/delete,
 // validation-closed) plus the compose-side wiring: `#teams` is this element's own cache of the pane's
@@ -1015,6 +1018,7 @@ export class UIAgentAdminElement extends UIElement {
           this.#modelSettingsEl.hidden = modelSchema === undefined
         }
         this.#rewireAllSections(store)
+        this.#rewireProvenance(store)
         // GH #1212 — warm the IndexedDB-routed resource cache for whatever this store currently holds
         // (a reload, or a persona switch onto a store that already carries routed entries), then
         // re-render the resource section once every fetch has settled. Fire-and-forget by design: the
@@ -1044,6 +1048,11 @@ export class UIAgentAdminElement extends UIElement {
     this.#contextUnsub = undefined
     this.#authoringUnsub?.()
     this.#authoringUnsub = undefined
+    this.#provenanceUnsub?.()
+    this.#provenanceUnsub = undefined
+    this.#provenanceStore = undefined
+    this.#provenanceObserver?.disconnect()
+    this.#provenanceObserver = undefined
   }
 
   /** GH #646, now feeding the pane-nav and settings-nav `ui-tabs` strips' `link()` calls (the
@@ -1191,6 +1200,7 @@ export class UIAgentAdminElement extends UIElement {
     // heading/entry-section-heading) retired with the fold summaries that replaced them.
     const agentSwitch = document.createElement('ui-switch') as HTMLElement & { checked: boolean }
     agentSwitch.setAttribute('data-part', 'agent-enabled')
+    agentSwitch.setAttribute('data-field', AGENT_ENABLED_KEY) // T-0162: the persona kind schema row it edits
     // GH #226/ADR-0158 — the heading-row placement is DECLARATIVE now: `slot="summary"` marks the switch
     // and ui-disclosure itself adopts it into the summary part at connect, re-adopts it across any heal
     // rebuild, and owns the toggle-click-≠-fold activation guard (the app-side placeSummaryControl
@@ -1234,6 +1244,7 @@ export class UIAgentAdminElement extends UIElement {
     // Content renders/rerenders from the store.
     const modelGrid = document.createElement('div')
     modelGrid.setAttribute('data-part', 'model-grid')
+    modelGrid.setAttribute('data-field', `model ${MODELS_INCLUDED_KEY}`)
     this.#modelGrid = modelGrid
     const promptSections = this.#makeSection(ENTRY_KINDS.promptSection, 'Add section')
 
@@ -1299,7 +1310,7 @@ export class UIAgentAdminElement extends UIElement {
       return { group, detail }
     }
 
-    const markdown = surfaceRow('markdown', 'Markdown', 'markdown')
+    const markdown = surfaceRow('markdown', fieldLabel(SURFACE_MARKDOWN_KEY), 'markdown')
     markdown.toggle.addEventListener('change', () => {
       this.store?.set(SURFACE_MARKDOWN_KEY, markdown.toggle.checked)
       this.#applyMasterStates(this.store)
@@ -1307,7 +1318,7 @@ export class UIAgentAdminElement extends UIElement {
     })
     this.#surfaceMarkdownSwitch = markdown.toggle
 
-    const a2ui = surfaceRow('a2ui', 'A2UI', 'a2ui')
+    const a2ui = surfaceRow('a2ui', fieldLabel(SURFACE_A2UI_KEY), 'a2ui')
     a2ui.toggle.addEventListener('change', () => {
       this.store?.set(SURFACE_A2UI_KEY, a2ui.toggle.checked)
       this.#applyMasterStates(this.store)
@@ -1329,7 +1340,7 @@ export class UIAgentAdminElement extends UIElement {
     // opts in, `isGenuiSurfaceEnabled`) replaces the PRD-gated `disabled` lock. The pattern-source PICK
     // itself lives in the "Pattern sources" capability section below (CAPABILITY_KINDS, D4's "From
     // library" affordance) — this row is only the modality's own on/off switch, mirroring markdown/a2ui.
-    const genui = surfaceRow('genui', 'GenUI', 'genui')
+    const genui = surfaceRow('genui', fieldLabel(SURFACE_GENUI_KEY), 'genui')
     genui.toggle.checked = false // the inverse default (OFF) — applyMasterStates re-applies the real stored value below
     genui.toggle.addEventListener('change', () => {
       this.store?.set(SURFACE_GENUI_KEY, genui.toggle.checked)
@@ -1355,7 +1366,7 @@ export class UIAgentAdminElement extends UIElement {
     // one grammar is the file's own convention (`surface-label` names every modality row's label alike).
     // The old name was referenced by nothing — no CSS, no test, not the descriptor's parts block.
     genuiDogfoodLabel.setAttribute('data-part', 'surface-detail-label')
-    genuiDogfoodLabel.textContent = 'Use agent-ui components'
+    genuiDogfoodLabel.textContent = fieldLabel(SURFACE_GENUI_DOGFOOD_KEY)
     const genuiDogfoodSwitch = document.createElement('ui-switch') as HTMLElement & { checked: boolean; disabled: boolean }
     genuiDogfoodSwitch.setAttribute('data-part', 'surface-genui-dogfood-toggle')
     genuiDogfoodSwitch.setAttribute('aria-label', 'Use agent-ui components in the GenUI frame')
@@ -1389,7 +1400,7 @@ export class UIAgentAdminElement extends UIElement {
     // DELIBERATELY independent of the A2UI master (no dim, no disable): the planner is a turn-SHAPE knob
     // the host loop reads, not an output modality — planner-ON + A2UI-OFF is legal here; the future
     // admin-side runner slice owns deciding whether that combo degrades or dims (review note, 2026-08-08).
-    const planner = surfaceRow('planner', 'Planner', 'planner')
+    const planner = surfaceRow('planner', fieldLabel(SURFACE_PLANNER_KEY), 'planner')
     planner.toggle.checked = false // the inverse default (OFF) — applyMasterStates re-applies the real stored value below
     planner.toggle.addEventListener('change', () => {
       this.store?.set(SURFACE_PLANNER_KEY, planner.toggle.checked)
@@ -1408,7 +1419,7 @@ export class UIAgentAdminElement extends UIElement {
     // The gate governs TEACHING (the composed prompt's personaPatch arm) and is ONE conjunct of
     // consumption; it never authorizes a write on its own. A patch declared outside the dedicated
     // authoring context is ignored with this switch ON — see `#runSurfaceTurn`'s apply loop.
-    const authoring = surfaceRow('authoring', 'Authoring', 'authoring')
+    const authoring = surfaceRow('authoring', fieldLabel(SURFACE_AUTHORING_KEY), 'authoring')
     authoring.toggle.checked = false // the inverse default (OFF) — applyMasterStates re-applies the stored value
     authoring.toggle.addEventListener('change', () => {
       this.store?.set(SURFACE_AUTHORING_KEY, authoring.toggle.checked)
@@ -1423,7 +1434,7 @@ export class UIAgentAdminElement extends UIElement {
     // must render byte-identical to today's shipped chat look (the ticket's own "zero visual change
     // unset" requirement). Threads into `ui-conversation`'s own reflected `bubbles` prop below
     // (`#applyMasterStates`) — never a bare component prop on its own, per Kim's ruling 1.
-    const bubbles = surfaceRow('bubbles', 'Chat bubbles', 'bubbles')
+    const bubbles = surfaceRow('bubbles', fieldLabel(SURFACE_BUBBLES_KEY), 'bubbles')
     bubbles.toggle.addEventListener('change', () => {
       this.store?.set(SURFACE_BUBBLES_KEY, bubbles.toggle.checked)
       this.#applyMasterStates(this.store)
@@ -1454,7 +1465,7 @@ export class UIAgentAdminElement extends UIElement {
     })
     const prefersLabel = document.createElement('span')
     prefersLabel.setAttribute('data-part', 'surface-label')
-    prefersLabel.textContent = 'Response type'
+    prefersLabel.textContent = fieldLabel(PREFERS_KEY)
     const prefersSpacer = document.createElement('span')
     prefersSpacer.setAttribute('data-part', 'surface-spacer')
     prefersRow.append(prefersLabel, prefersSpacer, prefersPicker)
@@ -1471,7 +1482,7 @@ export class UIAgentAdminElement extends UIElement {
     bankrollRow.setAttribute('data-part', 'bankroll-row')
     const bankrollLabel = document.createElement('span')
     bankrollLabel.setAttribute('data-part', 'bankroll-label')
-    bankrollLabel.textContent = 'Stored bankroll'
+    bankrollLabel.textContent = fieldLabel(BANKROLL_KEY)
     const bankrollSpacer = document.createElement('span')
     bankrollSpacer.setAttribute('data-part', 'surface-spacer')
     const bankrollReset = document.createElement('ui-button') as UIButtonElement
@@ -1492,6 +1503,19 @@ export class UIAgentAdminElement extends UIElement {
     bankrollItem.append(buildAdminHelpForSummary('bankroll'))
     this.#bankrollItem = bankrollItem as HTMLElement & { hidden: boolean }
 
+    // T-0162: each row names the persona kind schema row it edits (the pane coverage test reads these).
+    const fieldRows: ReadonlyArray<[HTMLElement, string]> = [
+      [markdown.row, SURFACE_MARKDOWN_KEY],
+      [a2ui.row, SURFACE_A2UI_KEY],
+      [genui.row, SURFACE_GENUI_KEY],
+      [genuiDogfoodRow, SURFACE_GENUI_DOGFOOD_KEY],
+      [planner.row, SURFACE_PLANNER_KEY],
+      [authoring.row, SURFACE_AUTHORING_KEY],
+      [bubbles.row, SURFACE_BUBBLES_KEY],
+      [prefersRow, PREFERS_KEY],
+      [bankrollRow, BANKROLL_KEY],
+    ]
+    for (const [row, key] of fieldRows) row.setAttribute('data-field', key)
     surfaceOptions.append(markdown.row, a2uiGroup.group, genuiGroup.group, planner.row, authoring.row, bubbles.row, prefersRow)
 
     // GH #225/#226 — each Settings section is a heading-row fold (the GH #222 Context pattern applied to
@@ -1643,6 +1667,7 @@ export class UIAgentAdminElement extends UIElement {
       // reads.)
       const kindSwitch = document.createElement('ui-switch') as HTMLElement & { checked: boolean }
       kindSwitch.setAttribute('data-part', 'kind-enabled')
+      kindSwitch.setAttribute('data-field', kindEnabledKey(kind))
       kindSwitch.setAttribute('slot', 'summary')
       kindSwitch.setAttribute('aria-label', `${label} enabled`)
       kindSwitch.checked = true
@@ -2957,7 +2982,8 @@ export class UIAgentAdminElement extends UIElement {
           showAddError(section, result.error)
           return false
         }
-        this.#updateEntries(kind, (entries) => [...entries, result.entry])
+        // T-0162: a library add is recorded as the pack's (ACS-R8); a hand-authored one as the user's.
+        this.#updateEntries(kind, (entries) => [...entries, result.entry], context?.source)
         return true
       },
       // GH #850/SPEC-R2 — the per-entry AVAILABILITY write, through the SAME read→transform→persist seam
@@ -3022,8 +3048,195 @@ export class UIAgentAdminElement extends UIElement {
         entryDrawer: hasDrawerCrud(kind),
       },
     )
+    // T-0162: the persona kind schema rows this section edits (the catalog section is also the one
+    // writer of the selection, ADR-0170 cl.6).
+    section.host.setAttribute('data-field', isCatalog ? `${entriesStoreKey(kind)} ${A2UI_CATALOG_KEY}` : entriesStoreKey(kind))
     this.#capabilitySections.set(kind, section)
     return section
+  }
+
+  // ── T-0162: provenance, the modified marker, the diff and reset (agent-content ACS-R8, ACS-R10) ─────────
+  // Every pane control names its persona kind schema row (`data-field`). After each store change, and
+  // whenever a settings section regenerates its rows, each control is stamped `data-provenance` (seed,
+  // pack, imported, duplicate, builder, user) and a place that differs from its seed gets a strip: who
+  // changed it, a Modified (or Seed changed) marker, the seed value it differs from, and Reset (Take seed
+  // on a seedChanged place, which drops the op so the place reads the new seed). Entry rows get the same
+  // strip through the entry list's row marks. The strips are cached by content, so a pass that finds
+  // nothing new mutates nothing. A pass runs on a store write, and on a settings unit regenerating its rows
+  // (the observer below reacts only to a `[data-field]` control arriving or a strip being dropped, never to
+  // an edit inside a field). A runtime row (`runtime` in the schema: the bankroll the agent's games keep)
+  // is game state, not an edit, so it carries no provenance and never gets a strip.
+
+  #provenanceQueued = false
+  #provenanceObserver: MutationObserver | undefined
+  #provenanceUnsub: (() => void) | undefined
+  #provenanceStore: SettingsStore | undefined
+  /** anchor (or `key|entryId`) → its strip and the signature it was built for. */
+  #provenanceStrips = new Map<HTMLElement | string, { signature: string; element: HTMLElement; reset: () => void }>()
+
+  #scheduleProvenance(): void {
+    if (this.#provenanceQueued) return
+    this.#provenanceQueued = true
+    queueMicrotask(() => {
+      this.#provenanceQueued = false
+      this.#renderProvenance()
+    })
+  }
+
+  /** Watch the store and the two settings units (they regenerate their rows on a schema or store change). */
+  #rewireProvenance(store: SettingsStore | undefined): void {
+    if (this.#provenanceStore !== store) {
+      this.#provenanceUnsub?.()
+      this.#provenanceUnsub = store?.subscribe?.(() => this.#scheduleProvenance())
+      this.#provenanceStore = store
+    }
+    if (this.#provenanceObserver === undefined && typeof MutationObserver !== 'undefined') {
+      this.#provenanceObserver = new MutationObserver((records) => {
+        if (records.some(regeneratedRows)) this.#scheduleProvenance()
+      })
+      for (const unit of [this.#settingsEl, this.#modelSettingsEl]) if (unit) this.#provenanceObserver.observe(unit, { childList: true, subtree: true })
+    }
+    this.#scheduleProvenance()
+  }
+
+  #renderProvenance(): void {
+    const pane = this.#settingsPane
+    if (pane === null) return
+    const store = this.store as (SettingsStore & Partial<ProvenanceReader>) | undefined
+    const modified = store?.modified?.() ?? []
+    const live = new Set<HTMLElement | string>()
+    for (const anchor of pane.querySelectorAll<HTMLElement>('[data-field]')) {
+      if (anchor.closest('[data-entry-mark], [data-part="field-provenance"]')) continue
+      const keys = (anchor.getAttribute('data-field') ?? '').split(' ').filter((k) => k !== '' && PERSONA_FIELD_BY_KEY.get(k)?.runtime !== true)
+      if (keys.length === 0) {
+        anchor.removeAttribute('data-provenance')
+        continue
+      }
+      const list = keys.find((k) => k.startsWith('entries:'))
+      // A list control's own places are its order and its removed seed entries (no row shows those); an
+      // added or edited entry's places belong to that entry's row.
+      const places = modified.filter((p) => keys.includes(p.key) && (p.key !== list ? p.entryId === undefined : p.entryId === undefined || p.change === 'removed'))
+      const provenance = places.length > 0 ? sourceOfPlaces(places) : (store?.provenance?.({ key: keys[0]! }) ?? 'seed')
+      if (anchor.getAttribute('data-provenance') !== provenance) anchor.setAttribute('data-provenance', provenance)
+      if (places.length > 0 && store?.reset !== undefined) {
+        live.add(anchor)
+        this.#placeStrip(anchor, this.#stripSpec(store, places))
+      }
+      if (list !== undefined) this.#markEntryRows(list, store, modified, live)
+    }
+    for (const [owner, strip] of this.#provenanceStrips) {
+      if (live.has(owner)) continue
+      strip.element.remove()
+      this.#provenanceStrips.delete(owner)
+    }
+    for (const [kind, section] of this.#capabilitySections) {
+      if (!live.has(`marks:${entriesStoreKey(kind)}`)) section.showRowMarks(new Map())
+    }
+  }
+
+  /** The strip for one control's modified places: their source (`mixed` when they differ: ops carry no
+   *  time, so no newest is known), Seed changed when the seed moved under any of them, the seed value (a
+   *  scalar) or what changed (a list), and the reset. */
+  #stripSpec(store: SettingsStore & Partial<ProvenanceReader>, places: readonly OverlayPath[]): ProvenanceStripSpec {
+    const conflict = places.find((p) => p.seedChanged !== undefined)
+    const scalar = places.find((p) => p.entryId === undefined && p.change === undefined)
+    const removed = places.filter((p) => p.change === 'removed').length
+    const diff: string[] = []
+    if (conflict !== undefined && conflict.entryId === undefined && conflict.change === undefined) diff.push(`Seed now: ${formatSeedValue(conflict.seedChanged?.seed)}`)
+    else if (scalar !== undefined) diff.push(`Seed: ${formatSeedValue(store.seedValue?.(scalar.key))}`)
+    if (removed > 0) diff.push(`${removed} seed ${removed === 1 ? 'entry' : 'entries'} removed`)
+    if (places.some((p) => p.change === 'order')) diff.push('order changed')
+    return {
+      provenance: sourceOfPlaces(places),
+      conflict: conflict !== undefined,
+      diff: diff.join(', '),
+      // Exactly the places this strip names: a scalar key whole, a removed seed entry back, the order back.
+      // An added or edited entry keeps its own row's reset.
+      reset: () => {
+        for (const p of places) {
+          if (p.entryId === undefined && p.change === undefined) store.reset?.({ key: p.key })
+          else if (p.change === 'removed') store.reset?.({ key: p.key, entryId: p.entryId })
+          else if (p.change === 'order') store.reset?.({ key: p.key, order: true })
+        }
+      },
+    }
+  }
+
+  /** Each entry row of `key`'s section: its provenance, and a strip on an added or edited entry. */
+  #markEntryRows(key: string, store: (SettingsStore & Partial<ProvenanceReader>) | undefined, modified: readonly OverlayPath[], live: Set<HTMLElement | string>): void {
+    const section = this.#capabilitySections.get(key.slice('entries:'.length))
+    if (section === undefined) return
+    live.add(`marks:${key}`)
+    const marks = new Map<string, EntryRowMark>()
+    for (const entry of readEntries(store, key.slice('entries:'.length))) {
+      const places = modified.filter((p) => p.key === key && p.entryId === entry.id)
+      const provenance: Provenance = places[0] !== undefined ? (places[0].source ?? 'user') : (store?.provenance?.({ key, entryId: entry.id }) ?? 'seed')
+      if (places.length === 0 || store?.reset === undefined) {
+        marks.set(entry.id, { provenance })
+        continue
+      }
+      const owner = `${key}|${entry.id}`
+      live.add(owner)
+      const conflict = places.find((p) => p.seedChanged !== undefined)
+      const added = places.some((p) => p.change === 'added')
+      const fields = places.filter((p) => p.field !== undefined).map((p) => p.field!)
+      const spec: ProvenanceStripSpec = {
+        provenance,
+        conflict: conflict !== undefined,
+        diff: added ? (conflict ? 'Removed from the seed, kept as yours' : 'Added') : `Changed: ${fields.join(', ')}`,
+        reset: () => store.reset?.({ key, entryId: entry.id }),
+      }
+      marks.set(entry.id, { provenance, element: this.#stripFor(owner, spec) })
+    }
+    section.showRowMarks(marks)
+  }
+
+  /** Place (or keep) `anchor`'s strip: after the control, or at the top of its fold for a heading-row switch. */
+  #placeStrip(anchor: HTMLElement, spec: ProvenanceStripSpec): void {
+    const strip = this.#stripFor(anchor, spec)
+    if (anchor.getAttribute('slot') === 'summary') {
+      const body = anchor.closest('[data-part="settings-item"]')?.querySelector<HTMLElement>(':scope > [data-part="details"] > [data-part="body"]')
+      if (body) {
+        if (body.firstElementChild !== strip) body.prepend(strip)
+        return
+      }
+    }
+    if (anchor.nextElementSibling !== strip) anchor.after(strip)
+  }
+
+  /** The strip for `owner`, rebuilt only when what it shows changed. */
+  #stripFor(owner: HTMLElement | string, spec: ProvenanceStripSpec): HTMLElement {
+    const signature = JSON.stringify([spec.provenance, spec.conflict, spec.diff])
+    const cached = this.#provenanceStrips.get(owner)
+    if (cached !== undefined && cached.signature === signature) {
+      cached.reset = spec.reset
+      return cached.element
+    }
+    const strip = document.createElement('div')
+    strip.setAttribute('data-part', 'field-provenance')
+    strip.setAttribute('data-provenance', spec.provenance)
+    const record = { signature, element: strip, reset: spec.reset }
+    const source = document.createElement('span')
+    source.setAttribute('data-part', 'provenance-source')
+    source.textContent = PROVENANCE_LABELS[spec.provenance]
+    const marker = document.createElement('span')
+    marker.setAttribute('data-part', 'provenance-marker')
+    marker.textContent = spec.conflict ? 'Seed changed' : 'Modified'
+    const diff = document.createElement('span')
+    diff.setAttribute('data-part', 'provenance-diff')
+    diff.textContent = spec.diff
+    const spacer = document.createElement('span')
+    spacer.setAttribute('data-part', 'surface-spacer')
+    const reset = document.createElement('ui-button') as UIButtonElement
+    reset.setAttribute('variant', 'soft')
+    reset.setAttribute('size', 'sm')
+    reset.setAttribute('data-part', 'provenance-reset')
+    reset.textContent = spec.conflict ? 'Take seed' : 'Reset'
+    reset.addEventListener('click', () => record.reset())
+    strip.append(source, marker, diff, spacer, reset)
+    if (cached !== undefined) cached.element.replaceWith(strip)
+    this.#provenanceStrips.set(owner, record)
+    return strip
   }
 
   /** Read → transform → persist one kind's entry list. `store.subscribe` (armed by `#rewireAllSections`)
@@ -3033,10 +3246,10 @@ export class UIAgentAdminElement extends UIElement {
    *  store that omits it would otherwise never re-render after this write (add/delete/toggle would
    *  persist but never visibly appear). Falls back to a direct render ONLY when this store genuinely has
    *  no `subscribe` to rely on. */
-  #updateEntries(kind: string, updater: (entries: Entry[]) => Entry[]): void {
+  #updateEntries(kind: string, updater: (entries: Entry[]) => Entry[], source?: 'pack'): void {
     const store = this.store
     const current = readEntries(store, kind)
-    store?.set(entriesStoreKey(kind), updater(current))
+    if (store !== undefined) writeFrom(store, entriesStoreKey(kind), updater(current), source ?? 'user')
     if (store !== undefined && store.subscribe === undefined) {
       this.#renders.get(kind)?.()
       // GH #419 — and re-derive the modality lint against the NEW content (a fixed section's warning must
@@ -4958,6 +5171,53 @@ function splitModelSection(schema: SettingsSchema | undefined): [SettingsSchema 
   const model = schema?.version === 1 ? schema.sections.find((section) => section.id === 'model') : undefined
   if (schema === undefined || model === undefined) return [schema, undefined]
   return [{ ...schema, sections: schema.sections.filter((section) => section !== model) }, { ...schema, sections: [model] }]
+}
+
+/** T-0162: a pane row's label, from its persona kind schema row (ACS-R10: one field definition). */
+function fieldLabel(key: string): string {
+  return PERSONA_FIELD_BY_KEY.get(key)?.label ?? key
+}
+
+/** T-0162: the one source of a control's modified places, or `mixed` when two surfaces wrote them. */
+function sourceOfPlaces(places: readonly OverlayPath[]): Provenance | 'mixed' {
+  const sources = new Set(places.map((p) => p.source ?? 'user'))
+  return sources.size === 1 ? [...sources][0]! : 'mixed'
+}
+
+/** T-0162: a settings unit regenerated its rows (a `[data-field]` control arrived) or a provenance strip was
+ *  dropped with the rows it sat beside; any other mutation (typing, a validation message) is not one. */
+function regeneratedRows(record: MutationRecord): boolean {
+  const field = (node: Node): boolean => node instanceof Element && (node.matches('[data-field]') || node.querySelector('[data-field]') !== null)
+  const strip = (node: Node): boolean => node instanceof Element && node.getAttribute('data-part') === 'field-provenance'
+  return [...record.addedNodes].some(field) || [...record.removedNodes].some(strip)
+}
+
+/** T-0162: what one provenance strip shows (`#stripFor`). */
+interface ProvenanceStripSpec {
+  provenance: Provenance | 'mixed'
+  conflict: boolean
+  diff: string
+  reset: () => void
+}
+
+/** T-0162: the provenance a strip names (agent-content ACS-R8); a user edit reads "Edited". */
+const PROVENANCE_LABELS: Readonly<Record<Provenance | 'mixed', string>> = {
+  mixed: 'Mixed',
+  seed: 'Seed',
+  pack: 'Pack',
+  imported: 'Imported',
+  duplicate: 'Duplicate',
+  builder: 'Builder',
+  user: 'Edited',
+}
+
+/** A seed value as one short line for the diff: on/off for a switch, quoted and clipped text, unset for
+ *  no value. */
+function formatSeedValue(value: unknown): string {
+  if (value === undefined || value === null) return 'unset'
+  if (typeof value === 'boolean') return value ? 'on' : 'off'
+  const text = typeof value === 'string' ? `"${value}"` : JSON.stringify(value)
+  return text.length > 48 ? `${text.slice(0, 47)}…` : text
 }
 
 function settingsItem(key: string, summary: string, ...content: HTMLElement[]): HTMLElement {

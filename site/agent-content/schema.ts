@@ -2,7 +2,9 @@
 // content kind, the zero-dependency frontmatter parser and the validator. Two consumers: the generator
 // (`scripts/generate-agent-content.mjs`, which imports this file under Node's type stripping and refuses
 // to write a registry from invalid content) and the site readers (`registry.ts` and the agent-admin pages).
-// It imports nothing, so both runtimes can load it.
+// Its one import is the kind schema (`@agent-ui/app/agent-admin-content-fields`, T-0162): each kind's
+// fields, defined once for this validator, the settings form and the Builder's patch gate. That module
+// imports nothing, so both runtimes can still load this one.
 //
 // The authored files live beside this module (`AGENTS.md` here is the authoring guide). Frontmatter is a
 // JSON object between `---` fences: valid YAML, so a SKILL.md stays an Agent Skills file, and parsed
@@ -11,9 +13,21 @@
 // site reads them through its live raw glob, so a mini-skill edit has one generated copy (a2ui's
 // `assets.gen.ts`) and one generator.
 
-/** The capability entry kinds a persona references and a pack groups. */
-export const ENTRY_KINDS = ['skill', 'workflow', 'resource', 'tool'] as const
+import {
+  CONTENT_ENTRY_KINDS,
+  ENTRY_FIELDS,
+  ID_PATTERN as ID,
+  PACK_FIELDS,
+  PERSONA_FIELDS,
+  PRESET_CATEGORIES,
+  REF_PATTERN as REF,
+  checkFrontmatter,
+} from '@agent-ui/app/agent-admin-content-fields'
+
+/** The capability entry kinds a persona references and a pack groups (defined once, in the kind schema). */
+export const ENTRY_KINDS = CONTENT_ENTRY_KINDS
 export type EntryKind = (typeof ENTRY_KINDS)[number]
+export { ID_PATTERN, PRESET_CATEGORIES } from '@agent-ui/app/agent-admin-content-fields'
 
 export const CONTENT_KINDS = ['persona', ...ENTRY_KINDS, 'pack'] as const
 export type ContentKind = (typeof CONTENT_KINDS)[number]
@@ -29,9 +43,7 @@ export const ENTRY_LAYOUT: Record<EntryKind, { dir: string; file: string }> = {
 /** Repo-relative content root. */
 export const CONTENT_ROOT = 'site/agent-content'
 
-/** The persona-flavored pack categories (GH #143). A third flavor earns its own member the day a third
- *  persona-flavored pack ships, never a bare string. */
-export const PRESET_CATEGORIES = ['hospitality', 'games'] as const
+/** The persona-flavored pack categories (GH #143; the list lives in the kind schema). */
 export type PresetCategoryName = (typeof PRESET_CATEGORIES)[number]
 
 /** The persona body's named sections, in file order. The text before the first heading is the
@@ -251,21 +263,9 @@ export function parseContentFile(path: string, source: string, hash: (text: stri
 
 // ── validation ──────────────────────────────────────────────────────────────────────────────────────
 
-const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
-const REF = /^(\.\/)?([a-z0-9]+(?:-[a-z0-9]+)*)@([1-9][0-9]*)$/
-
 const isObject = (v: unknown): v is Record<string, unknown> => v !== null && typeof v === 'object' && !Array.isArray(v)
 const isStringArray = (v: unknown): v is string[] => Array.isArray(v) && v.every((s) => typeof s === 'string')
 const isVersion = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 1
-
-const CONFIG_KEYS = ['name', 'model', 'toolsEnabled', 'effort', 'thinking', 'showReasoning', 'maxTokens', 'cacheTtl']
-const PERSONA_KEYS = ['id', 'version', 'order', 'roster', 'label', 'tagline', 'category', ...CONFIG_KEYS, 'localPatterns', 'domains', 'bankroll', 'disabledBuiltins', 'skills', 'workflows', 'resources', 'tools', 'changelog', 'notes']
-const ENTRY_KEYS = ['name', 'description', 'id', 'version', 'kind', 'availability', 'label']
-const PACK_KEYS = ['id', 'version', 'kind', 'order', 'label', 'description', 'category', 'rejectOnCollision', 'entries', 'derived']
-
-function unknownKeys(o: Record<string, unknown>, allowed: string[]): string[] {
-  return Object.keys(o).filter((k) => !allowed.includes(k))
-}
 
 /** Parse a ref against the registry: `./<id>@<v>` names an entry under the persona's own folder,
  *  `<id>@<v>` a root entry. */
@@ -296,11 +296,12 @@ export function validateContent(records: readonly ContentRecord[]): string[] {
     seen.add(key)
   }
 
+  // The list's shape is the kind schema's (`checkFrontmatter`); this checks that each well-formed ref
+  // names a record.
   const refsCheck = (r: ContentRecord, list: unknown, kind: EntryKind, field: string, scope?: string): void => {
-    if (!isStringArray(list)) return add(r, `${field} is not a string array`)
+    if (!isStringArray(list)) return
     for (const ref of list) {
-      if (!parseRef(ref)) add(r, `${field} ref ${ref} is not <id>@<version> or ./<id>@<version>`)
-      else if (!findRef(records, ref, kind, scope)) add(r, `${field} ref ${ref} names no ${kind} at that version`)
+      if (parseRef(ref) && !findRef(records, ref, kind, scope)) add(r, `${field} ref ${ref} names no ${kind} at that version`)
     }
   }
 
@@ -313,18 +314,10 @@ export function validateContent(records: readonly ContentRecord[]): string[] {
       add(r, 'pack.json is not an object')
       continue
     }
-    for (const k of unknownKeys(fm, PACK_KEYS)) add(r, `unknown key ${k}`)
+    for (const problem of checkFrontmatter(PACK_FIELDS, fm)) add(r, problem)
     if (fm['id'] !== r.id) add(r, `id ${String(fm['id'])} is not the folder name ${r.id}`)
-    if (!isVersion(fm['version'])) add(r, 'version is not a positive integer')
-    if (!ENTRY_KINDS.includes(fm['kind'] as EntryKind)) add(r, `kind ${String(fm['kind'])} is not an entry kind`)
-    if (!isVersion(fm['order'])) add(r, 'order is not a positive integer')
-    else packOrders.set(String(fm['kind']), [...(packOrders.get(String(fm['kind'])) ?? []), fm['order']])
-    if (typeof fm['label'] !== 'string' || fm['label'] === '') add(r, 'label is not a non-empty string')
-    if (typeof fm['description'] !== 'string') add(r, 'description is not a string')
-    if (fm['category'] !== undefined && !PRESET_CATEGORIES.includes(fm['category'] as PresetCategoryName)) add(r, `category ${String(fm['category'])} is unknown`)
-    if (fm['rejectOnCollision'] !== undefined && fm['rejectOnCollision'] !== true) add(r, 'rejectOnCollision is not true when present')
+    if (isVersion(fm['order'])) packOrders.set(String(fm['kind']), [...(packOrders.get(String(fm['kind'])) ?? []), fm['order']])
     if ((fm['entries'] === undefined) === (fm['derived'] === undefined)) add(r, 'needs exactly one of entries and derived')
-    if (fm['derived'] !== undefined && fm['derived'] !== 'mini-skill') add(r, `derived ${String(fm['derived'])} is unknown`)
     if (fm['derived'] === 'mini-skill' && fm['kind'] !== 'skill') add(r, 'a mini-skill pack is kind skill')
     if (fm['entries'] !== undefined && ENTRY_KINDS.includes(fm['kind'] as EntryKind)) {
       refsCheck(r, fm['entries'], fm['kind'] as EntryKind, 'entries')
@@ -343,17 +336,13 @@ export function validateContent(records: readonly ContentRecord[]): string[] {
       add(r, 'frontmatter is not an object')
       continue
     }
-    for (const k of unknownKeys(fm, ENTRY_KEYS)) add(r, `unknown key ${k}`)
+    for (const problem of checkFrontmatter(ENTRY_FIELDS, fm)) add(r, problem)
     if (!ID.test(e.id)) add(r, `folder name ${e.id} is not lowercase-hyphenated`)
     if (fm['id'] !== e.id) add(r, `id ${String(fm['id'])} is not the folder name ${e.id}`)
     if (fm['name'] !== e.id) add(r, `name ${String(fm['name'])} is not the folder name ${e.id}`)
     if (fm['kind'] !== e.kind) add(r, `kind ${String(fm['kind'])} is not the folder kind ${e.kind}`)
-    if (!isVersion(fm['version'])) add(r, 'version is not a positive integer')
-    if (typeof fm['description'] !== 'string') add(r, 'description is not a string')
-    else if (fm['description'].length > 1024) add(r, 'description is over 1024 characters (Agent Skills limit)')
-    if (typeof fm['label'] !== 'string' || fm['label'] === '') add(r, 'label is not a non-empty string')
-    if (fm['availability'] !== 'context' && fm['availability'] !== 'invocable') add(r, `availability ${String(fm['availability'])} is not context or invocable`)
-    else if (e.scope === undefined && fm['availability'] !== 'context') add(r, 'a root entry is context (a library add carries no availability)')
+    if (typeof fm['description'] === 'string' && fm['description'].length > 1024) add(r, 'description is over 1024 characters (Agent Skills limit)')
+    if (e.scope === undefined && fm['availability'] === 'invocable') add(r, 'a root entry is context (a library add carries no availability)')
     if (e.scope === undefined && !packed.has(`${e.kind}|${e.id}`)) add(r, 'a root entry no pack offers (move it under its persona)')
     if (e.scope !== undefined && fm['label'] !== e.id) add(r, 'a persona-local entry label is its id')
   }
@@ -366,26 +355,15 @@ export function validateContent(records: readonly ContentRecord[]): string[] {
       add(r, 'frontmatter is not an object')
       continue
     }
-    for (const k of unknownKeys(fm, PERSONA_KEYS)) add(r, `unknown key ${k}`)
+    // Keys, required fields and value shapes: the persona kind schema, the same rows the settings form
+    // and the Builder's patch gate read (T-0162, ACS-R10).
+    for (const problem of checkFrontmatter(PERSONA_FIELDS, fm)) add(r, problem)
     if (!ID.test(r.id)) add(r, `folder name ${r.id} is not lowercase-hyphenated`)
     if (fm['id'] !== r.id) add(r, `id ${String(fm['id'])} is not the folder name ${r.id}`)
-    if (!isVersion(fm['version'])) add(r, 'version is not a positive integer')
-    if (fm['roster'] !== undefined && fm['roster'] !== false) add(r, 'roster is false when present')
     if (fm['roster'] === false) {
       if (fm['order'] !== undefined) add(r, 'a persona outside the roster has no order')
-    } else if (!isVersion(fm['order'])) add(r, 'order is not a positive integer')
-    else orders.push(fm['order'])
-    for (const k of ['label', 'tagline']) if (typeof fm[k] !== 'string' || fm[k] === '') add(r, `${k} is not a non-empty string`)
-    if (fm['category'] !== undefined && !PRESET_CATEGORIES.includes(fm['category'] as PresetCategoryName)) add(r, `category ${String(fm['category'])} is unknown`)
-    if (typeof fm['name'] !== 'string' || typeof fm['model'] !== 'string' || typeof fm['toolsEnabled'] !== 'boolean') add(r, 'needs name, model and toolsEnabled')
-    for (const k of ['effort', 'thinking', 'cacheTtl']) if (fm[k] !== undefined && typeof fm[k] !== 'string') add(r, `${k} is not a string`)
-    if (fm['showReasoning'] !== undefined && typeof fm['showReasoning'] !== 'boolean') add(r, 'showReasoning is not a boolean')
-    if (fm['maxTokens'] !== undefined && !isVersion(fm['maxTokens'])) add(r, 'maxTokens is not a positive integer')
-    if (fm['localPatterns'] !== undefined && typeof fm['localPatterns'] !== 'string') add(r, 'localPatterns is not a string')
-    if (fm['domains'] !== undefined && !isStringArray(fm['domains'])) add(r, 'domains is not a string array')
-    if (fm['bankroll'] !== undefined && fm['bankroll'] !== true) add(r, 'bankroll is true when present')
-    if (fm['disabledBuiltins'] !== undefined && !isStringArray(fm['disabledBuiltins'])) add(r, 'disabledBuiltins is not a string array')
-    for (const k of ['changelog', 'notes']) if (fm[k] !== undefined && !isStringArray(fm[k])) add(r, `${k} is not a string array`)
+    } else if (fm['order'] === undefined) add(r, 'order is required in the roster')
+    else if (isVersion(fm['order'])) orders.push(fm['order'])
     for (const kind of ENTRY_KINDS) refsCheck(r, fm[`${kind}s`], kind, `${kind}s`, r.id)
     let split: ReturnType<typeof personaSections>
     try {

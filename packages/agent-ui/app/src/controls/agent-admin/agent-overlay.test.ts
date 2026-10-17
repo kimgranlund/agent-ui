@@ -10,6 +10,7 @@ import {
   emptyOverlay,
   modifiedPaths,
   parseOverlay,
+  provenanceAt,
   rebaseOverlay,
   resetPath,
   resolveOverlay,
@@ -296,5 +297,72 @@ describe('createOverlayStore: the SettingsStore every reader goes through', () =
     expect(parseOverlay(null)).toBeUndefined()
     expect(parseOverlay({ format: 9 })).toBeUndefined()
     expect(parseOverlay('x')).toBeUndefined()
+  })
+})
+
+// ── T-0162: per-op source and provenance (ACS-R8) ─────────────────────────────────────────────────────
+
+describe('ACS-R8: every op records the surface that wrote it', () => {
+  const seed = { name: 'Seed', effort: 'medium', 'entries:skill': [entry('menu', 'Menu.', 0), entry('wine', 'Wine.', 1)] }
+  const base = (): AgentOverlay => emptyOverlay('a', 1, seed)
+
+  it('a user write stores no source (the pre-T-0162 shape) and reads user; builder and pack are recorded', () => {
+    let o = setOverlayKey(seed, base(), 'name', 'Mine')
+    expect(o.values['name']).toEqual({ value: 'Mine', base: 'Seed' })
+    expect(provenanceAt(o, { key: 'name' })).toBe('user')
+    o = setOverlayKey(seed, o, 'effort', 'low', 'builder')
+    expect(o.values['effort']?.source).toBe('builder')
+    expect(provenanceAt(o, { key: 'effort' })).toBe('builder')
+    expect(provenanceAt(o, { key: 'model' })).toBe('seed')
+    o = setOverlayKey(seed, o, 'entries:skill', [...seed['entries:skill'], entry('cheese', 'Cheese.', 2)], 'pack')
+    expect(provenanceAt(o, { key: 'entries:skill', entryId: 'cheese' })).toBe('pack')
+    expect(provenanceAt(o, { key: 'entries:skill', entryId: 'menu' })).toBe('seed')
+  })
+
+  it('a later write that leaves an entry as it was keeps that entry\'s source; a changed entry takes the new one', () => {
+    const withPack = setOverlayKey(seed, base(), 'entries:skill', [...seed['entries:skill'], entry('cheese', 'Cheese.', 2)], 'pack')
+    const userEdit = setOverlayKey(seed, withPack, 'entries:skill', [entry('menu', 'Menu, edited.', 0), entry('wine', 'Wine.', 1), entry('cheese', 'Cheese.', 2)])
+    expect(provenanceAt(userEdit, { key: 'entries:skill', entryId: 'cheese' })).toBe('pack')
+    expect(provenanceAt(userEdit, { key: 'entries:skill', entryId: 'menu' })).toBe('user')
+    expect(provenanceAt(userEdit, { key: 'entries:skill', entryId: 'menu', field: 'content' })).toBe('user')
+    expect(provenanceAt(userEdit, { key: 'entries:skill', entryId: 'menu', field: 'label' })).toBe('seed')
+    expect(modifiedPaths(userEdit).find((p) => p.entryId === 'cheese')).toEqual({ key: 'entries:skill', entryId: 'cheese', change: 'added', source: 'pack' })
+  })
+
+  it('re-writing a scalar to the value it holds keeps its source; a new value takes the writer\'s', () => {
+    const store = createOverlayStore({ seed, overlay: base() })
+    store.setFrom('model', 'claude-opus-5-5', 'builder')
+    store.set('model', 'claude-opus-5-5')
+    expect(provenanceAt(store.overlay(), { key: 'model' })).toBe('builder')
+    store.set('model', 'claude-sonnet-5-5')
+    expect(provenanceAt(store.overlay(), { key: 'model' })).toBe('user')
+  })
+
+  it('a seed update keeps each op\'s source, flagged or not', () => {
+    const o = setOverlayKey(seed, base(), 'effort', 'low', 'builder')
+    const next = rebaseOverlay(o, { ...seed, effort: 'high' }, 'a', 2)
+    expect(next.values['effort']).toMatchObject({ value: 'low', source: 'builder', seedChanged: { base: 'medium', seed: 'high' } })
+    const kept = rebaseOverlay(o, { ...seed, name: 'Seed 2' }, 'a', 2)
+    expect(kept.values['effort']?.source).toBe('builder')
+  })
+
+  it('parseOverlay refuses an unknown source', () => {
+    const o = setOverlayKey(seed, base(), 'effort', 'low', 'builder')
+    expect(parseOverlay(JSON.parse(JSON.stringify(o)))).toBeDefined()
+    expect(parseOverlay({ ...o, values: { effort: { value: 'low', source: 'model' } } })).toBeUndefined()
+  })
+
+  it('reset of a list order drops the order alone; Take seed on a flagged field resolves to the new seed', () => {
+    const reordered = setOverlayKey(seed, base(), 'entries:skill', [entry('wine', 'Wine, edited.', 1), entry('menu', 'Menu.', 0)])
+    expect(reordered.lists['entries:skill']?.order).toEqual(['wine', 'menu'])
+    const orderBack = resetPath(reordered, { key: 'entries:skill', order: true })
+    expect(orderBack.lists['entries:skill']?.order).toBeUndefined()
+    expect(orderBack.lists['entries:skill']?.entries['wine']?.op).toBe('patch')
+
+    const store = createOverlayStore({ seed: { ...seed, effort: 'high' }, overlay: rebaseOverlay(setOverlayKey(seed, base(), 'effort', 'low'), { ...seed, effort: 'high' }, 'a', 2) })
+    expect(store.modified()).toEqual([{ key: 'effort', seedChanged: { base: 'medium', seed: 'high', user: 'low' } }])
+    store.reset({ key: 'effort' })
+    expect(store.get('effort')).toBe('high')
+    expect(store.modified()).toEqual([])
   })
 })

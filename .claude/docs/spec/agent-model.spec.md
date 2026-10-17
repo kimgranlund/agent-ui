@@ -162,8 +162,11 @@ required, default `Untitled agent`) and, T-0185, a `model` section generated fro
 model accepts it. Temperature is retired (the 5.5 models accept only 1.0); a stored temperature is ignored. Model selection and the
 per-model inclusion record live on the Model grid under `model` and `modelsIncluded`, not in the schema; the
 `toolsEnabled` field left the schema when kind-level master switches arrived. The Agent help card's summary and facts
-are projected from this schema, never restated. Owner: ADR-0131 cl.1 as amended by Kim's 2026-07-19 rev.2/rev.5
-rulings; `agent-admin-schema.ts:agentConfigSchema`, `ADMIN_HELP.agent`.
+are projected from this schema, never restated. T-0162 (agent-content ACS-R10): both sections are derived from the
+persona kind schema (`content-fields.ts:PERSONA_FIELDS`, its `agent` and `model` rows with their layout hints), the
+one field definition the content validator, the persona file's key set and the Builder's patch gate also read.
+Owner: ADR-0131 cl.1 as amended by Kim's 2026-07-19 rev.2/rev.5 rulings; `agent-admin-schema.ts:agentConfigSchema`,
+`ADMIN_HELP.agent`.
 
 ### 3.4 Capabilities
 
@@ -550,7 +553,7 @@ Added 2026-10-14 (T-0182, against main `968a02d7`): the content-model drift the
    `saveTeamMutation`. Planned: T-0161 (ACS-R9). Landed 2026-10-17: the pane writes through the page's
    `teamStore` (`setTeamStore`), the same mutations, and `teamsResource` is live.
 10. The settings forms are hand-written (`agentConfigSchema`, SPEC-R11) beside the data they edit. Planned: T-0162
-    (ACS-R10).
+    (ACS-R10). Landed 2026-10-17: they derive from the persona kind schema, with provenance, diff and reset per row.
 11. No turn trace or debug bundle records which content versions a turn ran with, and the debug bundle's
     `captures/` slot is never filled. Planned: T-0163 (ACS-R13).
 12. The agent manifests' digests are hand-refreshed by an armed writer (persona-catalog-composition SPEC-R7);

@@ -53,6 +53,8 @@ import {
   type OverlayAddress,
   type OverlayPath,
   type OverlayStore,
+  type Provenance,
+  type ProvenanceReader,
 } from '@agent-ui/app/agent-admin-overlay'
 import { ENTRY_KINDS, DEFAULT_PROMPT_SECTIONS } from '@agent-ui/app/agent-admin-entries'
 import { entriesStoreKey } from '@agent-ui/app/entry-data'
@@ -396,6 +398,14 @@ function overlayStoreFor(persona: Persona): OverlayStore {
   return createOverlayStore({ seed, overlay, persist: (next) => rosterSource.writeOverlaySync(id, next) })
 }
 
+/** T-0162 (ACS-R8): a whole-record store answers one provenance for every place: how the record was
+ *  minted. A blank agent's values are the user's from the start; a record minted before T-0162 recorded no
+ *  origin and reads `imported`. No seed sits under it, so it offers no reset and no diff. */
+function withRecordProvenance(store: SettingsStore, persona: Persona): SettingsStore & ProvenanceReader {
+  const provenance: Provenance = persona.origin === 'duplicate' ? 'duplicate' : persona.origin === 'new' ? 'user' : 'imported'
+  return Object.assign(store, { provenance: (): Provenance => provenance })
+}
+
 /** The persona's store, cached per id so switching away and back keeps one live instance. A shipped
  *  persona reads seed plus overlay (`overlayStoreFor`); an imported or duplicated one is a full record
  *  (its seed IS the user's), so its own persisted keys win over that seed, memory-store.ts's parity law. */
@@ -404,7 +414,7 @@ export function personaStore(persona: Persona): SettingsStore {
   if (!store) {
     if (persona.imported === true) {
       rosterSource.writeSeedVersionSync(persona.id, persona.seedVersion ?? 1)
-      store = createMemoryStore({ initial: persona.seed, persistKey: persistKeyFor(persona.id) })
+      store = withRecordProvenance(createMemoryStore({ initial: persona.seed, persistKey: persistKeyFor(persona.id) }), persona)
     } else store = overlayStoreFor(persona)
     // GH #921 — bump the modified-at marker on every REAL write (never on construction itself — a fresh
     // store's seed read is not an edit). `subscribe` is optional on `SettingsStore`; both store kinds

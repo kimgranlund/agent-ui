@@ -65,6 +65,9 @@ export interface AgentRecord {
   seedVersion?: number
   /** True for a persona minted by an import — a library record, not a shipped preset. */
   imported?: boolean
+  /** T-0162: how a library record was minted, its whole-record provenance (agent-content ACS-R8). Absent
+   *  on a record minted before T-0162, which reads `imported`. */
+  origin?: 'imported' | 'duplicate' | 'new'
   /** ISO timestamp stamped at mint/import/duplicate time; absent for a shipped preset. */
   createdAt?: string
 }

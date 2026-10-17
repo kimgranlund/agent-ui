@@ -5406,8 +5406,8 @@ describe('per-pack rejectOnCollision (S3, LLD-C5, SPEC-R6) — the flag opts in 
     expect(entries.map((e) => e.id), 'a second add suffix-dedups, unchanged by S3').toEqual(['grid-idiom', 'grid-idiom-2'])
   })
 
-  it('entry-list.ts threading (unit) — the select handler forwards the pack flag as onAdd\'s optional context; an unflagged pack forwards undefined', () => {
-    const calls: Array<{ input: NewEntryInput; context: { rejectOnCollision?: boolean } | undefined }> = []
+  it('entry-list.ts threading (unit): the select handler forwards the pack flag and the pack source as onAdd\'s optional context', () => {
+    const calls: Array<{ input: NewEntryInput; context: { rejectOnCollision?: boolean; source?: 'pack' } | undefined }> = []
     const capturing: EntryListHandlers = {
       onToggle: () => {},
       onContentChange: () => {},
@@ -5424,8 +5424,8 @@ describe('per-pack rejectOnCollision (S3, LLD-C5, SPEC-R6) — the flag opts in 
     menu.dispatchEvent(new CustomEvent('select', { detail: { value: 'plain:0', index: 0 } }))
 
     expect(calls).toHaveLength(2)
-    expect(calls[0]!.context, 'a flagged pack forwards { rejectOnCollision: true }').toEqual({ rejectOnCollision: true })
-    expect(calls[1]!.context, 'an unflagged pack forwards undefined — the pre-#783 call, byte-identical').toBeUndefined()
+    expect(calls[0]!.context, 'a flagged pack forwards { rejectOnCollision: true } and its source').toEqual({ rejectOnCollision: true, source: 'pack' })
+    expect(calls[1]!.context, 'an unflagged pack forwards only its source (T-0162)').toEqual({ source: 'pack' })
   })
 })
 

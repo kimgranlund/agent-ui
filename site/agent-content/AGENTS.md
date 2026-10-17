@@ -12,7 +12,8 @@ This file is authoring context for a person or an agent editing the files here. 
 | `personas/<id>/<kind dir>/<entry>/<FILE>` | skill, workflow, resource, tool | An entry only this persona seeds. |
 | `skills/<id>/SKILL.md`, `workflows/<id>/WORKFLOW.md`, `resources/<id>/RESOURCE.md`, `tools/<id>/TOOL.md` | skill, workflow, resource, tool | A library entry: a pack offers it and any persona may reference it. |
 | `packs/<id>/pack.json` | pack | Refs only, never copies. |
-| `schema.ts` | | The types, the frontmatter parser and the validator. |
+| `schema.ts` | | The types, the frontmatter parser and the validator. Each kind's fields come from the kind schema, `@agent-ui/app/agent-admin-content-fields` (T-0162): the same rows the settings form and the Builder's patch gate read. |
+| `seed-file.ts` | | The file writer: `formatContentFile`, and `personaSeedFiles` (an exported persona file as a seed folder). |
 | `registry.gen.ts` | | Generated: the full records, for Node and tests. Never edit it by hand. |
 | `registry.runtime.gen.ts` | | Generated: the browser projection (no path, digest, changelog or notes). Never edit it by hand. |
 | `registry.ts` | | The typed lookups every runtime reader uses (over the projection). |
@@ -61,6 +62,19 @@ A ref is `<id>@<version>`. `./<id>@<version>` names an entry under the persona's
 ## Change seed text
 
 Edit the file and run the generator. A user's edits are an overlay over the seed (T-0161), so a seed change never drops them: on the next load every field the user did not edit takes the new text, an edited field keeps the user's value, and a field both changed keeps the user's value flagged `seedChanged`. That merge runs on any seed change, bumped or not. Bump the persona's `version` when the change is a new seed release, and add a `changelog` line saying why. The generator copies `version` into the manifest's `seedVersion`. The manifest's `seedDigest` pins the assembled seed (so a change to the assembly code reds it too): refresh it with the armed writer, `AGENT_MANIFEST_WRITE=1 npx vitest run --project site site/lib/agent-manifest/agent-manifest.write.test.ts`. `site/pages/agent-admin-seed-digests.test.ts` pins every assembled seed and needs its row updated for a deliberate change.
+
+## The CLI
+
+```
+node scripts/agent-content.mjs validate                     # every content file, the same validator as the generator
+node scripts/agent-content.mjs new <id> [--label <label>]   # a blank roster persona at the next order
+node scripts/agent-content.mjs new <id> --from <file>       # an exported persona file (the Builder's export) as a seed folder
+node scripts/agent-content.mjs add-skill <id> --persona <p> # a persona-local skill, referenced as ./<id>@1
+node scripts/agent-content.mjs add-skill <id> --pack <pack> # a library skill offered by a skill pack
+node scripts/agent-content.mjs compile-check                # validate, then the registries' and manifests' freshness
+```
+
+Every command takes `--root <dir>` (default: the current directory) and exits 1 on a content problem. `add-skill` needs exactly one of `--persona` and `--pack`, refuses a skill file that already exists unless `--force`, and never lists a ref twice. `new --from` lists each value the seed format cannot carry (switches, the model grid's record, builtin sections other than Foundation, an entry's display label); edit the files it writes, then run the generator and add the manifest.
 
 ## Validate and generate
 

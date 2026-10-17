@@ -1032,6 +1032,30 @@
     flex: 0 0 auto;
   }
 
+  /* T-0162: a modified place's provenance strip (who changed it, the marker, the seed it differs from,
+     Reset): one secondary line under the control it describes, the entry-description plane (small type,
+     label ink), so a row reads as itself first and its history second. */
+  [data-part='field-provenance'] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ui-agent-admin-row-gap);
+    font-size: var(--md-sys-typescale-body-small-size);
+    color: var(--ui-agent-admin-label-ink);
+  }
+
+  [data-part='provenance-source'],
+  [data-part='provenance-marker'] {
+    flex: 0 0 auto;
+    font-weight: var(--md-sys-typescale-label-small-weight, 500);
+  }
+
+  [data-part='provenance-diff'] {
+    flex: 0 1 auto;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
   /* GH #845 (LLD-C7/C8) — "Delete Agent"'s config-surface row: `reset-agent-row`'s anatomy verbatim,
      including the GH #709 whole-row [hidden] override (same failure class, same cure). */
   [data-part='delete-agent-row'] {
