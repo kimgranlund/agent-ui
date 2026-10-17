@@ -38,12 +38,15 @@ describe('ui-theme-provider — base class + tag (SPEC-R1)', () => {
 })
 
 describe('ui-theme-provider — props schema (SPEC-R2)', () => {
-  it('AC1: a fresh, never-touched instance reads "" on all four properties', () => {
+  it('AC1: a fresh, never-touched instance reads "" on both properties', () => {
     const el = mount()
     expect(el.scheme).toBe('')
-    expect(el.scale).toBe('')
-    expect(el.density).toBe('')
     expect(el.theme).toBe('')
+  })
+
+  it('T-0169: the retired scale and density carriers are gone from the props schema', () => {
+    const names = Object.keys((customElements.get('ui-theme-provider') as unknown as { props: object }).props)
+    expect(names.sort()).toEqual(['scheme', 'theme'])
   })
 
   it('AC2: property→attribute and attribute→property reflection both hold, for every axis', () => {
@@ -53,10 +56,6 @@ describe('ui-theme-provider — props schema (SPEC-R2)', () => {
     el.setAttribute('scheme', 'light')
     expect(el.scheme).toBe('light')
 
-    el.scale = 'ui-lg'
-    expect(el.getAttribute('scale')).toBe('ui-lg') // foundations-alias
-    el.density = 'compact'
-    expect(el.getAttribute('density')).toBe('compact') // foundations-alias
     el.theme = 'acme'
     expect(el.getAttribute('theme')).toBe('acme')
     el.setAttribute('theme', 'other-package')
@@ -67,10 +66,6 @@ describe('ui-theme-provider — props schema (SPEC-R2)', () => {
     const el = mount()
     expect(() => el.setAttribute('scheme', 'not-a-real-scheme')).not.toThrow()
     expect(el.scheme).toBe('')
-    expect(() => el.setAttribute('scale', 'bogus')).not.toThrow() // foundations-alias
-    expect(el.scale).toBe('')
-    expect(() => el.setAttribute('density', 'roomy')).not.toThrow() // foundations-alias
-    expect(el.density).toBe('')
   })
 })
 
@@ -105,29 +100,20 @@ describe('ui-theme-provider — the scheme→color-scheme mapping, unset-inherit
   })
 })
 
-describe('ui-theme-provider — scale/density are pure carriers, zero JS-side effect (SPEC-R4)', () => {
-  it('AC1: neither "scale" nor "density" is read inside a this.effect(...) call or any other reactive callback in the source', () => {
+describe('ui-theme-provider — the one effect reads only scheme (LLD-C2)', () => {
+  it('the single this.effect(...) body reads this.scheme and no other axis', () => {
     // The ONE effect this component establishes (LLD-C2) is a single-statement `this.style.colorScheme = …`
-    // reading only `this.scheme`. Assert the effect body text contains neither axis name.
+    // reading only `this.scheme`.
     const effectMatch = SRC.match(/this\.effect\(\(\) => \{([\s\S]*?)\}\)/)
     expect(effectMatch, 'expected exactly one this.effect(...) call in theme-provider.ts').not.toBeNull()
     const body = effectMatch![1]!
-    expect(body).not.toContain('this.scale')
-    expect(body).not.toContain('this.density')
+    expect(body).not.toContain('this.theme')
     expect(body).toContain('this.scheme')
-  })
-
-  it('setting scale/density writes only the attribute — no side effect, no thrown error, no colorScheme change', () => {
-    const el = mount('<ui-theme-provider scheme="dark"></ui-theme-provider>')
-    const before = el.style.colorScheme
-    el.scale = 'content-lg'
-    el.density = 'spacious'
-    expect(el.style.colorScheme).toBe(before)
   })
 })
 
 describe('ui-theme-provider — theme stays the reserved, inert seam (SPEC-R5)', () => {
-  it('AC1: any string, including an unregistered name, causes no visual change beyond scheme/scale/density', () => {
+  it('AC1: any string, including an unregistered name, causes no visual change beyond scheme', () => {
     const el = mount('<ui-theme-provider scheme="light"></ui-theme-provider>')
     const before = el.style.colorScheme
     expect(() => {
@@ -140,13 +126,13 @@ describe('ui-theme-provider — theme stays the reserved, inert seam (SPEC-R5)',
 describe('ui-theme-provider — empty-attribute vs absent-attribute (LOW-1)', () => {
   it('never-touched (absent attribute) and explicitly-set-to-"" (present, empty attribute) both resolve to the identical "" property, but are NOT DOM-identical', () => {
     const neverTouched = mount()
-    expect(neverTouched.hasAttribute('scale')).toBe(false) // foundations-alias
-    expect(neverTouched.scale).toBe('')
+    expect(neverTouched.hasAttribute('theme')).toBe(false)
+    expect(neverTouched.theme).toBe('')
 
-    const explicitEmpty = mount('<ui-theme-provider scale=""></ui-theme-provider>') // foundations-alias
-    expect(explicitEmpty.hasAttribute('scale')).toBe(true) // present, empty — genuinely different DOM shape // foundations-alias
-    expect(explicitEmpty.getAttribute('scale')).toBe('') // foundations-alias
-    expect(explicitEmpty.scale).toBe('') // same resolved property value as the never-touched case
+    const explicitEmpty = mount('<ui-theme-provider theme=""></ui-theme-provider>')
+    expect(explicitEmpty.hasAttribute('theme')).toBe(true) // present, empty: genuinely different DOM shape
+    expect(explicitEmpty.getAttribute('theme')).toBe('')
+    expect(explicitEmpty.theme).toBe('') // same resolved property value as the never-touched case
   })
 
   it('an explicit property write to "" ALSO reflects out a real, present, empty attribute (reflectOut always runs on an explicit set)', () => {

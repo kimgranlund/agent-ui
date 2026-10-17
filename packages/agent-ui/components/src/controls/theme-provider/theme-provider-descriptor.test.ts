@@ -27,7 +27,7 @@ const css = readFileSync(`${DIR}/theme-provider.css`, 'utf8') as string
 
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
-const ATTR_NAMES = ['scheme', 'scale', 'density', 'theme']
+const ATTR_NAMES = ['scheme', 'theme']
 
 describe('theme-provider.md descriptor — structural validity', () => {
   it('has a leading frontmatter fence and a prose body', () => {

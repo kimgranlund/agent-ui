@@ -106,6 +106,9 @@ over the site-local predecessor. *(ADR-0117 cl.3, the F3 fork)*
 `dimensions.css`'s `[scale]`/`[density]` selectors, unmodified by this SPEC. *(ADR-0117 cl.3)*
 - **AC1** *Given* a grep of `theme-provider.ts`, *then* neither `scale` nor `density` is read inside a
   `this.effect(...)` call or any other reactive callback — reflection is the whole story.
+- **Retired (T-0169, 2026-10-17):** ADR-0245 deprecated both carriers and the foundations bridge's axes
+  selectors that gave them meaning; T-0169 removed the selectors and the two props. A subtree sizes with
+  `data-tier`, `data-scale` and `data-density` on any wrapper.
 
 **SPEC-R5 — `theme` stays the reserved, inert seam.** The component MUST reflect `theme` as a free string
 with zero rendering effect; this SPEC does not admit any `[theme='<name>']` CSS layer or package-resolution

@@ -236,8 +236,8 @@ and the scroll-fade mask; it loses the fixed inset and paddings and density-inva
 rewritten against `resolve()`; the per-control geometry pins, the 36-cell browser leg and the census gate
 (`scripts/foundations-census.mjs`) ride the gates; `scripts/foundations-probe.mjs` classes every sized control
 against its clause 3 rule. **Open:** the W7 cleanup (`var(<derived>, <today>)` collapses to `var(<derived>)`;
-the bridge, `[scale]`, `[density]`, the `glyph` alias and the `legacy` opt-out retire; the px-literal rule
-enforces), one release after the cut with no rollback used.
+the bridge and the `legacy` opt-out retire; the px-literal rule enforces), one release after the cut with no
+rollback used. T-0169 already retired the `[scale]` / `[density]` selectors and the `glyph` alias.
 
 ### 5.1 · Migration policy
 

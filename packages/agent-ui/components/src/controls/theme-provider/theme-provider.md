@@ -8,9 +8,9 @@ description: A coordination element that establishes a color-scheme subtree for 
 tier: container         # geometry.md Container/layout band — no control height, no --md-sys-space opinion (the ui-form-provider precedent)
 extends: UIElement      # NOT UIFormElement (carries no value/validity of its own) and NOT UIContainerElement (paints no surface of its own) — same reasoning ADR-0050 already ratified for ui-form-provider
 uses: []
-# marginal: ui-theme-provider adds a small delta to the self-defining ui-* family (measured via `npm run size`'s leave-one-out per-control marginal, tree-shaken) — a single reflected-scheme effect plus three pure-carrier reflections, materially smaller than ui-form-provider's registry-backed footprint.
+# marginal: ui-theme-provider adds a small delta to the self-defining ui-* family (measured via `npm run size`'s leave-one-out per-control marginal, tree-shaken) — a single reflected-scheme effect plus one pure-carrier reflection, materially smaller than ui-form-provider's registry-backed footprint.
 
-attributes:            # attributes-as-API — mirrors theme-provider.ts `static props`; all four default to
+attributes:            # attributes-as-API — mirrors theme-provider.ts `static props`; both default to
                         # '' (unset is a real, first-class, in-vocabulary state — SPEC §2, never a JS fallback)
   - name: scheme
     type: enum
@@ -18,27 +18,13 @@ attributes:            # attributes-as-API — mirrors theme-provider.ts `static
     default: ''
     reflect: true      # reflects; the ONE axis with a JS-side effect (SPEC-R3) — '' clears any inline
                         # color-scheme override rather than defaulting to 'light' (the load-bearing fix)
-  - name: scale
-    type: enum
-    values: ['', ui-sm, ui-md, ui-lg, content-sm, content-md, content-lg]
-    default: ''
-    reflect: true      # reflects; pure carrier (SPEC-R4) — dimensions.css's [scale] selectors key off the
-                        # attribute directly, zero JS-side effect
-    deprecated: true   # ADR-0245 cl.10d: the foundations bridge maps it onto tier and scale until W7; new code
-                        # sets data-tier and data-scale. The dogfood fleet line leaves it out (T-0159).
-  - name: density
-    type: enum
-    values: ['', compact, comfortable, spacious]
-    default: ''
-    reflect: true      # reflects; pure carrier (SPEC-R4), same shape as scale
-    deprecated: true   # ADR-0245 cl.10d: bridged onto data-density until W7; new code sets data-density.
   - name: theme
     type: string
     default: ''
     reflect: true      # reflects; the RESERVED package seam (ADR-0079 cl.3 / SPEC-R5) — wired but inert
                         # until a future [theme='<name>'] CSS layer ships
 
-properties: []            # attribute reflection is the entire public surface — no method/getter beyond the four typed accessors static props installs
+properties: []            # attribute reflection is the entire public surface — no method/getter beyond the two typed accessors static props installs
 
 events: []                 # a pure coordination/carrier element emits nothing of its own
 
@@ -71,8 +57,7 @@ forcedColors: No forced-colors rules needed — the provider paints no surface o
 
 `ui-theme-provider` is a theming element that sets a `color-scheme` subtree; size a subtree with
 `data-tier` and `data-scale` on a wrapper. It is a pure coordination/carrier layer: the `scheme` axis, a
-theme package seam (`theme`), and two attribute carriers (`scale`/`density`) deprecated by ADR-0245,
-promoted from the docs site's own `site/lib/theme-provider.ts` wrapper (ADR-0117).
+theme package seam (`theme`), promoted from the docs site's own `site/lib/theme-provider.ts` wrapper (ADR-0117).
 
 ```html
 <ui-theme-provider scheme="dark">
@@ -89,12 +74,8 @@ promoted from the docs site's own `site/lib/theme-provider.ts` wrapper (ADR-0117
   an unwrapped or unset provider imposes no override and its subtree inherits the ambient scheme: the
   page's own, or an ancestor provider's, if this one nests inside another. An out-of-vocabulary value set
   directly via `setAttribute` fails open to `''` (inherit), never fails closed to a named value, never throws.
-- **`scale`** — the six ADR-0032 tiers (`ui-sm … content-lg`), default `''`. A pure attribute carrier: no
-  JS-side effect. `dimensions.css`'s `[scale]` selectors key off the attribute directly — any wrapper
-  element (not just this one) already carries the same mechanism. Deprecated by ADR-0245: the foundations
-  bridge maps it onto tier and scale until W7; new code sets `data-tier` and `data-scale` on a wrapper.
-- **`density`** — `'' | compact | comfortable | spacious'`, default `''`. Same pure-carrier shape as `scale`.
-  Deprecated the same way; new code sets `data-density`.
+- The `scale` and `density` carriers (deprecated by ADR-0245) were removed in T-0169: size a subtree with
+  `data-tier`, `data-scale` and `data-density` on any wrapper.
 - **`theme`** — a free string, default `''`. The **package seam** (ADR-0079 cl.3, ADR-0141): swaps whole
   token palettes. This component itself stays a pure carrier — no JS-side effect, no built-in pack registry
   — it only sets the attribute a `[theme='<name>']` CSS layer selects on; loading and injecting that layer's
@@ -104,7 +85,7 @@ promoted from the docs site's own `site/lib/theme-provider.ts` wrapper (ADR-0117
 
 ## Attribute ↔ property reflection
 
-All four axes are typed, reflected `static props` (`el.scheme = 'dark'` and
+Both axes are typed, reflected `static props` (`el.scheme = 'dark'` and
 `setAttribute('scheme', 'dark')` behave identically) — the same `UIElement`/`static props` contract every
 other shipped control carries, buying the descriptor↔props trip-wire and `family-coherence.test.ts`
 participation for free.

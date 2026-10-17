@@ -143,10 +143,10 @@ describe('foundations.gen.css: the cut and the legacy opt-out (ADR-0245 clause 1
     )
   })
 
-  it('the retired [density] maps onto data-density: compact moves m one tier step down, never n', () => {
+  it('T-0169: a retired [density] attribute no longer moves anything; the root register holds', () => {
     const legacyAxis = 'density' // built, not spelled, so this proof is not itself a use of the retired axis
     const wrap = `<div ${legacyAxis}="compact"><span data-probe></span></div>`
-    expect(labelled(readTokens(wrap))).toEqual(labelled(cell(rootResolve('md', 'compact'))))
+    expect(labelled(readTokens(wrap))).toEqual(labelled(cell(rootResolve('md'))))
   })
 
   it('inside [data-foundations="legacy"] every derived token is undefined, so each fallback wins', () => {

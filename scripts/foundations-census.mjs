@@ -5,16 +5,16 @@
 // renamed `glyph` prop (`glyph`) and the retired `[scale]` / `[density]` axes (`axes`).
 //
 // The gate reads scripts/foundations-allowlist.json: a flat object, one `"<path>#<rule>": "<why>"` entry per
-// line in sorted order, so each Wave 1 lane deletes only its own lines. It fails on a finding whose key is not
+// line in sorted order, so a lane deletes only its own lines. It fails on a finding whose key is not
 // listed (new drift) and on a listed key that no longer finds anything (a stale entry: the lane fixed the file
 // and must delete the line). The allowlist starts as every violator on day one, so the gate starts green.
 //
 // Usage:
-//   node scripts/foundations-census.mjs                    print the count per rule and per lane
+//   node scripts/foundations-census.mjs                    print the count per rule
 //   node scripts/foundations-census.mjs --list             also print every <path>#<rule> with its first line
 //   node scripts/foundations-census.mjs --gate             exit 1 on any unlisted finding or stale entry
 //   node scripts/foundations-census.mjs --write-allowlist  rewrite the allowlist to the current findings,
-//                                                          keeping existing reasons (day one and the cut only)
+//                                                          keeping existing reasons; a new key gets a TODO reason
 //   node scripts/foundations-census.mjs selftest           prove the rules and the gate diff bite
 //   --root <dir>        scan another tree (a scratch copy for a negative control); default: this repo
 //   --allowlist <file>  read another allowlist; default: <root>/scripts/foundations-allowlist.json
@@ -29,43 +29,8 @@ const SCAN_DIRS = ['packages', 'site']
 const SKIP_DIRS = new Set(['node_modules', '__baselines__', '__fixtures__', '__screenshots__', 'public'])
 const SKIP_FILE = /\.gen\.|(?:^|\/)dogfood-assets\.ts$/
 
-// The Wave 1 partition (.sdlc/foundations-campaign-plan.md); a path outside it names no lane.
-const CONTROLS = 'packages/agent-ui/components/src/controls/'
-const LANES = {
-  a01: 'text-field textarea select combo-box multi-select otp-field field suggestions button toggle segmented-control segment pagination toolbar split rating',
-  a02: 'checkbox radio switch slider slider-multi progress gauge choice-card choice-group color-picker',
-  a03: 'badge avatar icon stat swatch image video audio attachment file-drop sparkline text',
-  a04: 'menu tabs breadcrumb tree list source-list drill ladder swiper calendar table description-list timeline timeline-item status-stream grid row column',
-  a05: 'card modal drawer popover tooltip toast form-popover form-provider command-modal disclosure sandbox-frame',
-  a06: 'product-card board-grid game-hud playing-card service-card _chart bar-chart column-chart line-chart pie-chart',
-}
-const PACKAGE_LANES = { a07: 'packages/agent-ui/app/', a08: 'packages/agent-ui/a2ui/', a09: 'packages/agent-ui/code/', a10: 'site/' }
-
-export function laneOf(path) {
-  if (path.startsWith(CONTROLS)) {
-    const folder = path.slice(CONTROLS.length).split('/')[0]
-    for (const [lane, folders] of Object.entries(LANES)) if (folders.split(' ').includes(folder)) return lane
-    return null
-  }
-  for (const [lane, prefix] of Object.entries(PACKAGE_LANES)) if (path.startsWith(prefix)) return lane
-  return null
-}
-
-const ALIAS = new Set([
-  'packages/agent-ui/components/src/controls/icon/icon.md#glyph',
-  'packages/agent-ui/components/src/controls/icon/icon.test.ts#glyph',
-  'packages/agent-ui/icons/src/glyph-usage-coverage.test.ts#glyph',
-])
-
-/** The day-one reason for a key (an existing reason is always kept). */
-export function reasonFor(key) {
-  const [path, rule] = key.split('#')
-  if (ALIAS.has(key)) return 'the deprecated glyph alias, its descriptor row and the proofs that it still resolves; they stay until the W7 cleanup (ADR-0245 cl.10d)'
-  if (path.startsWith('packages/agent-ui/shared/src/tokens/')) return `the hand-tabled source the cut (W6) and cleanup (W7) retire (ADR-0245 cl.10b), ${rule}`
-  const lane = laneOf(path)
-  if (lane) return `lane ${lane} migrates it in Wave 1 (${rule})`
-  return `outside the Wave 1 lane partition; the lane-plan step assigns it before dispatch (ADR-0245 cl.10b), ${rule}`
-}
+/** The reason a new allowlist key starts with (an existing reason is always kept); a lane replaces it. */
+const NEW_REASON = 'TODO: name the owning ticket'
 
 function walk(dir, root, out) {
   let entries
@@ -130,7 +95,7 @@ function main() {
 
   if (process.argv.includes('--write-allowlist')) {
     const old = readAllowlist(allowFile)
-    const next = Object.fromEntries([...found.keys()].map((k) => [k, old[k] ?? reasonFor(k)]))
+    const next = Object.fromEntries([...found.keys()].map((k) => [k, old[k] ?? NEW_REASON]))
     writeFileSync(allowFile, formatAllowlist(next))
     console.log(`foundations-census: wrote ${Object.keys(next).length} entries to ${relative(root, allowFile)}`)
     return
@@ -152,17 +117,9 @@ function main() {
   }
 
   const byRule = Object.fromEntries(RULES.map((r) => [r, 0]))
-  const byLane = {}
-  for (const key of found.keys()) {
-    const [path, rule] = key.split('#')
-    byRule[rule]++
-    const lane = laneOf(path) ?? 'none'
-    byLane[lane] = (byLane[lane] ?? new Set()).add(path)
-  }
+  for (const key of found.keys()) byRule[key.split('#')[1]]++
   console.log(`foundations census: ${files.size} files still on the old foundations`)
   for (const r of RULES) console.log(`  ${r.padEnd(6)} ${byRule[r]} files`)
-  console.log('  by lane:')
-  for (const lane of Object.keys(byLane).sort()) console.log(`    ${lane.padEnd(4)} ${byLane[lane].size} files`)
   if (process.argv.includes('--list')) for (const [k, f] of found) console.log(`${k} (${f.count}) line ${f.line}: ${f.text}`)
 }
 
@@ -196,7 +153,6 @@ function selftest() {
   check('gate: an unlisted finding and a stale entry are both reported', d.unlisted.join() === 'b#px' && d.stale.join() === 'c#glyph')
   check('gate: a listed finding is green', gateDiff(['a#px'], ['a#px']).unlisted.length + gateDiff(['a#px'], ['a#px']).stale.length === 0)
   check('allowlist: one entry per line, sorted, valid JSON', formatAllowlist({ 'b#px': 'y', 'a#px': 'x' }) === '{\n  "a#px": "x",\n  "b#px": "y"\n}\n' && JSON.parse(formatAllowlist({ a: 'b' })).a === 'b')
-  check('lanes: a control folder, a package and an unassigned folder', laneOf(`${CONTROLS}button/button.css`) === 'a01' && laneOf('site/x.ts') === 'a10' && laneOf(`${CONTROLS}_surface/x.css`) === null)
   console.log(failures === 0 ? 'selftest: all green' : `selftest: ${failures} failure(s)`)
   if (failures) process.exit(1)
 }

@@ -9,15 +9,11 @@ extends: UIElement     # a non-interactive display LEAF — NOT form-associated 
 uses: []
 # marginal: ui-icon adds 513 B gz (1546 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without ui-icon's export — it + the @agent-ui/icons resolve/registry/types path it pulls in, zero Phosphor bytes — subpath-only) — within budget: family total 22193 B gz / 22528 B gz (scripts/measure-size.mjs); the family total stays gated each run.
 
-attributes:            # attributes-as-API, mirrors icon.ts `static props` (symbol, glyph, label)
+attributes:            # attributes-as-API, mirrors icon.ts `static props` (symbol, label)
   - name: symbol
     type: string
     default: ''
     reflect: false     # NOT reflected: an empty symbol clears the host; a set symbol re-resolves via setIcon() (@agent-ui/icons). Deliberately a plain string, not an enum: a consumer's own pack can register names beyond the shipped set (ADR-0065 clause 5). The prop ui-glyph also takes (ADR-0245 cl.4)
-  - name: glyph
-    type: string
-    default: ''
-    reflect: false     # DEPRECATED alias of `symbol` (ADR-0245 cl.4), read only when `symbol` is empty; accepted until the W7 cleanup removes it (foundations-alias)
   - name: label
     type: string
     default: ''

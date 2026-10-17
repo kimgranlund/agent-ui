@@ -23,7 +23,7 @@ const css = readFileSync(`${ICN}/icon.css`, 'utf8') as string
 
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
-const ATTR_NAMES = ['symbol', 'glyph', 'label']
+const ATTR_NAMES = ['symbol', 'label']
 
 describe('icon.md descriptor — structural validity (s8)', () => {
   it('has a leading frontmatter fence and a prose body', () => {
@@ -55,7 +55,7 @@ describe('icon.md descriptor — structural validity (s8)', () => {
 })
 
 describe('icon.md descriptor — contract↔props trip-wire (s10)', () => {
-  it('attributes[] is a faithful bijection with UIIconElement.props (symbol, glyph, label)', () => {
+  it('attributes[] is a faithful bijection with UIIconElement.props (symbol, label)', () => {
     expect(parsed.attributes.map((a) => a.name)).toEqual(ATTR_NAMES)
     expect(compareDescriptorToProps(parsed.attributes, UIIconElement.props)).toEqual([])
   })
@@ -70,9 +70,9 @@ describe('icon.md descriptor — contract↔props trip-wire (s10)', () => {
   })
 
   it('a drifted attribute FAILS the trip-wire (negative control — reflect + default)', () => {
-    const flipReflect = parsed.attributes.map((a) => (a.name === 'glyph' ? { ...a, reflect: true } : { ...a }))
+    const flipReflect = parsed.attributes.map((a) => (a.name === 'symbol' ? { ...a, reflect: true } : { ...a }))
     expect(compareDescriptorToProps(flipReflect, UIIconElement.props)).toContainEqual(
-      expect.objectContaining({ code: 'DRIFT_REFLECT', path: 'attributes.glyph.reflect' }),
+      expect.objectContaining({ code: 'DRIFT_REFLECT', path: 'attributes.symbol.reflect' }),
     )
     const flipDefault = parsed.attributes.map((a) => (a.name === 'label' ? { ...a, default: 'x' } : { ...a }))
     expect(compareDescriptorToProps(flipDefault, UIIconElement.props)).toContainEqual(
@@ -81,9 +81,9 @@ describe('icon.md descriptor — contract↔props trip-wire (s10)', () => {
   })
 
   it('a removed or added attribute FAILS the trip-wire (negative control — bijection both ways)', () => {
-    const dropName = parsed.attributes.filter((a) => a.name !== 'glyph')
+    const dropName = parsed.attributes.filter((a) => a.name !== 'symbol')
     expect(compareDescriptorToProps(dropName, UIIconElement.props)).toContainEqual(
-      expect.objectContaining({ code: 'DRIFT_MISSING', path: 'attributes.glyph' }),
+      expect.objectContaining({ code: 'DRIFT_MISSING', path: 'attributes.symbol' }),
     )
     const addBogus = [...parsed.attributes, { name: 'bogus', type: 'string', default: '', reflect: false }]
     expect(compareDescriptorToProps(addBogus, UIIconElement.props)).toContainEqual(

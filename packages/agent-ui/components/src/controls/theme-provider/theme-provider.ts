@@ -6,25 +6,20 @@
 // Promotes site/lib/theme-provider.ts's CONTRACT (not its file) to a shipped `@agent-ui/components`
 // control, with one deliberate behavioral fix (SPEC-R3): `scheme` unset no longer collapses to light — it
 // clears any inline override and lets `color-scheme` inherit (the page default, or an ancestor provider's,
-// if nested). `scale`/`density`/`theme` are pure attribute carriers with zero JS-side effect (SPEC-R4/R5) —
-// the foundations bridge's `[scale]`/`[density]` selectors (ADR-0245 cl.10d: deprecated, mapped onto tier and
-// scale for one release after the cut, removed at W7; new code sets `data-tier`/`data-scale`) and a future
-// `[theme='<name>']` package layer read them directly; this class does nothing beyond reflecting them.
+// if nested). `theme` is a pure attribute carrier with zero JS-side effect (SPEC-R5): a future
+// `[theme='<name>']` package layer reads it directly; this class does nothing beyond reflecting it. The
+// deprecated `scale`/`density` carriers retired with the foundations bridge's axes (ADR-0245 cl.10d, T-0169);
+// size a subtree with `data-tier`/`data-scale`/`data-density` on any wrapper.
 //
 // `controls → dom` is the allowed import direction (this control needs no trait).
 
 import { UIElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 
 const SCHEMES = ['', 'light', 'dark'] as const
-const SCALES = ['', 'ui-sm', 'ui-md', 'ui-lg', 'content-sm', 'content-md', 'content-lg'] as const // ADR-0032
-const DENSITIES = ['', 'compact', 'comfortable', 'spacious'] as const
 
 const props = {
   // The ONE prop with a JS-side effect (below) — SPEC-R3.
   scheme: { ...prop.enum(SCHEMES, ''), reflect: true },
-  // Pure carriers — reflected, zero effect; the foundations bridge maps [scale]/[density] until W7 (SPEC-R4, ADR-0245).
-  scale: { ...prop.enum(SCALES, ''), reflect: true },
-  density: { ...prop.enum(DENSITIES, ''), reflect: true },
   // The reserved package seam (ADR-0079 cl.3 / SPEC-R5) — free string, inert until a future [theme=] layer ships.
   theme: { ...prop.string(''), reflect: true },
 } satisfies PropsSchema
