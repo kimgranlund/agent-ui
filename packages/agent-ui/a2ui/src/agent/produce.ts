@@ -1449,7 +1449,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   // RTS-R6: the effective override. The intent's own words win as the latest instruction, else the request's
   // `responsePreference` ('auto' means none). The persona hint `prefers` never reaches the offer.
   const override =
-    detectUserOverride(input) ??
+    detectUserOverride(input, { catalogTypes: Object.keys(deps.catalog.components) }) ??
     (opts.responsePreference === 'text' || opts.responsePreference === 'surface' ? opts.responsePreference : undefined)
   // RTS-R1: `render_surface` is offered on every a2ui-enabled turn unless the user asked for text. Integration
   // tools count only with an executor (the GH #49 both-or-neither contract), so a turn that never had live

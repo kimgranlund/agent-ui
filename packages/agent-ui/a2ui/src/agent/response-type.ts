@@ -156,12 +156,29 @@ const SURFACE_RE = lexicon(
   `(?:${alt(SURFACE_PHRASES)}|${GATED_RE})`,
 )
 
-/** The user's explicit ask for text or a surface, from an intent turn's words. Text wins a tie (PRD-G2). */
-export function detectUserOverride(input: TurnInput): 'text' | 'surface' | undefined {
+/** Words that make `card` a playing card, not a UI card ("the hole card"). Read only when the catalog has `PlayingCard`. */
+const GAME_CARD_WORDS = [
+  'hole', 'playing', 'community', 'face-up', 'face-down', 'wild', 'trump', 'tarot', 'poker', 'blackjack',
+  'dealer', 'player', 'deck', 'hand', 'flop', 'river', 'burn',
+]
+/** A possessive before `card` ("the dealer's hole card", "John's card") is a card someone holds, never a surface. */
+const POSSESSIVE_CARD_RE = /\b[\w-]+'s\s+(?:[\w-]+\s+)?cards?\b/gi
+const GAME_CARD_RE = new RegExp(`\\b(?:${GAME_CARD_WORDS.map(escape).join('|')})\\s+cards?\\b`, 'gi')
+
+/** What the override reads about the turn's catalog: its component type names. */
+export interface OverrideOptions {
+  catalogTypes?: readonly string[]
+}
+
+/** The user's explicit ask for text or a surface, from an intent turn's words. Text wins a tie (PRD-G2). A playing card
+ *  is not a UI card (T-0348): a possessive always, and a game word when the catalog has `PlayingCard`. */
+export function detectUserOverride(input: TurnInput, opts?: OverrideOptions): 'text' | 'surface' | undefined {
   if (input.kind !== 'intent') return undefined
   const text = input.text.replace(/’/g, "'")
   if (TEXT_RE.test(text)) return 'text'
-  if (SURFACE_RE.test(text)) return 'surface'
+  let surfaceText = text.replace(POSSESSIVE_CARD_RE, ' ')
+  if (opts?.catalogTypes?.includes('PlayingCard') === true) surfaceText = surfaceText.replace(GAME_CARD_RE, ' ')
+  if (SURFACE_RE.test(surfaceText)) return 'surface'
   return undefined
 }
 

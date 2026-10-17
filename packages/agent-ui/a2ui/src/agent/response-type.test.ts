@@ -151,6 +151,29 @@ describe('lexicon round 2', () => {
   })
 })
 
+describe('playing cards are not UI cards (T-0348)', () => {
+  it.each(["Show me the dealer's hole card.", "show me the player's card", "build me John's card"])(
+    'a possessive heads the card, no override: %s',
+    (t) => expect(detectUserOverride(intent(t))).toBeUndefined(),
+  )
+  const withPlayingCard = { catalogTypes: ['Card', 'PlayingCard', 'CardTable'] }
+  it.each(['show me the hole card', 'show me a playing card', 'show me the community card', 'show me a face-down card'])(
+    'a game word with PlayingCard in the catalog: %s',
+    (t) => expect(detectUserOverride(intent(t), withPlayingCard)).toBeUndefined(),
+  )
+  it('a game word without PlayingCard in the catalog still reads as a surface noun', () => {
+    expect(detectUserOverride(intent('show me the hole card'))).toBe('surface')
+    expect(detectUserOverride(intent('show me the hole card'), { catalogTypes: ['Card'] })).toBe('surface')
+  })
+  it.each(['show me a summary card', 'show me a pricing card', 'as a card', 'make me a profile card'])(
+    'still surface with PlayingCard in the catalog: %s',
+    (t) => expect(detectUserOverride(intent(t), withPlayingCard)).toBe('surface'),
+  )
+  it('a game word does not hide another surface noun in the same turn', () => {
+    expect(detectUserOverride(intent("show me the hole card as a table"), withPlayingCard)).toBe('surface')
+  })
+})
+
 describe('classifyResponse', () => {
   it('maps the two flags', () => {
     expect(classifyResponse(true, true)).toBe('both')
