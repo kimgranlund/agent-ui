@@ -2,7 +2,7 @@
 id: T-0209
 title: "One source per concept: layer membership, calibration bullets, persona list; mini-skill ranking stability test"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -37,3 +37,20 @@ verifier: L3
 
 ## Constraints
 No em dashes. Never hand-edit generated files; rerun their scripts. Live spend only through `chat:probe` under the stated cap.
+
+## Outcome
+
+2026-10-17 · lane: full L2 · verdict: pass · verifier: verifier-L3 (fable) · base: 946d95dc5ab6
+- Changed: One source per concept: calibration flag, derived core with a classified snapshot, import-free persona ids; ranking stability pins (#2080)
+- Commits: none
+- Check: 1 `git grep -nE "BLUE_SKY_CALIBRATION_IDS|calibrationExampleBullet|miniSkillsFor|NEGOTIATE_BLUE_SKY...: pass
+- Check: 2 `git grep -n "SHIPPED_PERSONA_IDS" -- packages/agent-ui/a2ui/src/agent/selection-guidance.ts` exi...: pass
+- Check: 3 `npx vitest run prompt-equivalence.test.ts system-prompt-grammar.test.ts layers.test.ts selection...: pass
+- Check: 4 `npx vitest run mini-skills.test.ts -t "ranking stability"` exits 0: pass
+- Check: 5 `npx vitest run packages/agent-ui/a2ui/src` exits 0: pass
+- Check: 6 `npm run check` exits 0: pass
+- Follow-up: decide: packages/agent-ui/a2ui/src/agent/mini-skills.ts:94-98,113-121 note... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/src/catalog/layers.test.ts:56-71 note... -> notes.md
+- Follow-up: decide: .claude/docs/lld/a2ui-live-agent.lld.md:98,475,692-696 and... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/tools/agent/worker/index.ts:50,54 note: the... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/src/agent/assets.gen.ts:25,40 note: the two... -> notes.md

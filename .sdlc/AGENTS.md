@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:577fc8dcbfe1 -->
+<!-- sdlc-lite:managed:start v1 sha256:8fe5ef5c2fd3 -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -9,7 +9,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
 
 ## Stages
 
-- proposed: 13
+- proposed: 12
   - T-0187 split-pane demo stacks or scrolls at 400px instead of overflowing the column (0187-split-pane-narrow-fit)
   - T-0188 line-chart projected dash: user-unit dash or a ruled screen-px exemption (0188-line-chart-projected-dash)
   - T-0189 playing-card corner index: a type floor or a ruled pictorial exemption (0189-playing-card-type-floor)
@@ -21,7 +21,6 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0198 Step flow pattern: step n of m, Back and Next, shared /draft data (0198-step-flow)
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (0199-itinerary-compare)
   - T-0315 Admiral and Lexicographer share the agent-ui catalog: 'New game' ranks the word board first on the Admiral's opening (0315-shared-catalog-cross-game-retrieval)
-  - T-0329 Haiku blackjack openings back on the CardTable after the T-0323 wording (round 9 cluster B) (0329-r9-blackjack-opening-wording)
   - T-0338 product-card icon header: 2n icon box or a ruled exemption (icon-box debt) (0338-product-card-icon-box)
 - ready: 21
   - T-0160 Agent content as files: extract preset and pack seeds to .md manifests with a generated, drift-gated registry (0160-agent-content-files)
@@ -35,8 +34,8 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0178 Agent eval framework 3: judged checks with a pinned judge model, rubrics per persona, seeded known-bad transcripts (0178-eval-judged-checks)
   - T-0179 Agent eval framework 4: live matrix (personas x models x efforts x N) under a $5 cap, baselines, pass-rate floors, digest-affected selection (0179-eval-matrix-baselines)
   - T-0203 Composer model controls: thinking off and show reasoning in the effort menu, web search and fetch toggles, server tools in requests, mid-conversation effort header (0203-composer-model-controls)
-  - T-0209 One source per concept: layer membership, calibration bullets, persona list; mini-skill ranking stability test (0209-context-single-source), branch chore/0209-context-single-source
   - T-0328 A same-turn repair that rebuilds a flagged surface under a new id must not halt (round 9 cluster A) (0328-r9-rename-after-repair), branch fix/0328-rename-after-repair
+  - T-0329 Haiku blackjack openings back on the CardTable after the T-0323 wording (round 9 cluster B) (0329-r9-blackjack-opening-wording)
   - T-0330 Feed a dropped surface's bound composite finding with SURFACE_DROPPED (round 9 cluster C) (0330-r9-dropped-surface-finding)
   - T-0331 BookingForm read-back check matches booking verbs and the confirm_booking action (round 9 cluster D) (0331-r9-bookingform-readback-cue), branch fix/0331-readback-cue
   - T-0332 NARRATION_HINT leaves the surface as it is when the reply needs no change (round 9 cluster E) (0332-r9-narration-hint-no-change)
@@ -48,7 +47,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
 - claimed: 0
 - paused: 0
 - blocked: 0
-- done: 299
+- done: 300
 - dropped: 4
 
 ## Procedures
