@@ -170,3 +170,11 @@
 
 - decide: packages/agent-ui/components/src/controls/column-chart/column-chart.css:78 `black 25%` is a named-color operand under a "no literals" constraint; the alternative `--md-sys-color-primary-dim` is a token role but drops re-theme following. Pick one ruling for derived dim steps.
 - note: packages/agent-ui/components/src/controls/column-chart/column-chart.css:77 `--ui-column-chart-highlight-ink-on` was renamed to `--ui-column-chart-callout-ink`; any external override of the old name silently stops applying (builder reports it was undocumented).
+
+## T-0335: Replace confirmation-view and backable-wizard, which read back a booking before confirming (2026-10-17)
+
+- decide: Goal check: confirmation-view (`composition-pack-a.ts`) is now a settled plan-change record with an "Active" success Badge in the header and no commit. Its follow-up Buttons (ghost "View invoice", soft "Add seats") carry action contexts bound to `/plan/invoiceId` and `/plan/id`. That is the T-0318 settled-record shape. backable-wizard is a time-off request: no booking, hotel or reservation vocabulary in either record.
+- decide: Retrieval: the old records are what the T-0335 test fails on (10 of 10), and the new corpus passes it.
+- note: the judge verdict files carry only `judgedBy: a2ui-review-agent`, so independence from the seed author rests on the solo report's claim of fresh judge runs (not observable from the artifacts).
+- note: the solo report records that backable-wizard's final review scene still reads a summary back before "Submit request". That is the non-booking confirm step grammar.md teaches, and it is outside this goal.
+- note: `composition-patterns.md` cites `grammar.md:138` for the card-anatomy clause, which is stale; the solo report says it was stale before this ticket.

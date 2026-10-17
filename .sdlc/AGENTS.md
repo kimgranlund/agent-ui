@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:2df268fce6a5 -->
+<!-- sdlc-lite:managed:start v1 sha256:b97a77d3d0d3 -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -23,7 +23,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0315 Admiral and Lexicographer share the agent-ui catalog: 'New game' ranks the word board first on the Admiral's opening (0315-shared-catalog-cross-game-retrieval)
   - T-0338 product-card icon header: 2n icon box or a ruled exemption (icon-box debt) (0338-product-card-icon-box)
   - T-0340 Dark primary under on-primary is 3.25:1: buttons, calendar day, segmented control and checkbox text fail AA (0340-dark-primary-on-primary-contrast)
-- ready: 15
+- ready: 14
   - T-0160 Agent content as files: extract preset and pack seeds to .md manifests with a generated, drift-gated registry (0160-agent-content-files)
   - T-0161 Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind (0161-agent-content-overlays)
   - T-0162 Settings pane forms generated from each content kind's schema, with provenance, diff and reset (0162-agent-content-schema-forms)
@@ -36,13 +36,12 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0203 Composer model controls: thinking off and show reasoning in the effort menu, web search and fetch toggles, server tools in requests, mid-conversation effort header (0203-composer-model-controls)
   - T-0329 Haiku blackjack openings back on the CardTable after the T-0323 wording (round 9 cluster B) (0329-r9-blackjack-opening-wording), branch fix/0329-blackjack-opening-wording
   - T-0332 NARRATION_HINT leaves the surface as it is when the reply needs no change (round 9 cluster E) (0332-r9-narration-hint-no-change), branch fix/0332-narration-hint
-  - T-0335 Replace confirmation-view and backable-wizard, which read back a booking before confirming (0335-corpus-readback-records), branch chore/0335-readback-records
   - T-0336 Site demos align captioned figures to a shared top edge (figure-parity allowlist debt) (0336-figure-parity-demos), branch fix/0336-figure-parity
   - T-0339 ui-gauge in RTL keeps its rings on the left and its legend about 190px away (0339-gauge-rtl-layout), branch fix/0339-gauge-rtl
 - claimed: 0
 - paused: 0
 - blocked: 0
-- done: 307
+- done: 308
 - dropped: 4
 
 ## Procedures
