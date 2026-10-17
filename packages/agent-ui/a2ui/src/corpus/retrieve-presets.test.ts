@@ -39,12 +39,16 @@ function typesOf(catalogId: string): string[] {
   return [...Object.keys(defaultCatalog.components), ...Object.entries(CATALOG_LAYER_MAP).filter(([, r]) => r.home === home).map(([t]) => t)]
 }
 
-// T-0315: the `/secret/<key>` names each shipped preset's foundation declares, read from the real foundations in
-// `site/pages/agent-admin-presets.ts` (the package sits below the site, so the source text is parsed, not imported) through
-// the same `secretKeysNamedIn` `produce()` applies. A preset absent from the table declares none.
-const PRESETS_SRC = readFileSync(`${process.cwd()}/site/pages/agent-admin-presets.ts`, 'utf8') as string
+// T-0315: the `/secret/<key>` names each shipped preset's foundation declares, read from the persona rows of the
+// generated agent-content registry (`site/agent-content/registry.gen.ts`, T-0160; a persona's foundation is its body
+// up to the first `## ` heading). The package sits below the site, so the rows are parsed, not imported, through the
+// same `secretKeysNamedIn` `produce()` applies. A preset absent from the table declares none.
+const REGISTRY_SRC = readFileSync(`${process.cwd()}/site/agent-content/registry.gen.ts`, 'utf8') as string
 const HIDDEN_STATE: Readonly<Record<string, readonly string[]>> = Object.fromEntries(
-  [...PRESETS_SRC.matchAll(/\n {4}id: '([\w-]+)',[\s\S]*?\n {4}foundation:\n([\s\S]*?)\n {4}surfaceStyle:/g)].map(([, id, body]) => [id!, secretKeysNamedIn(body!)]),
+  REGISTRY_SRC.split('\n')
+    .filter((l) => l.startsWith('  {"kind":"persona"'))
+    .map((l) => JSON.parse(l.trim().replace(/,$/, '')) as { id: string; body: string })
+    .map(({ id, body }) => [id, secretKeysNamedIn(body.split(/^## /m)[0]!)]),
 )
 const hiddenStateOf = (preset: string): readonly string[] => HIDDEN_STATE[preset] ?? []
 
