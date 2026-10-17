@@ -11,6 +11,8 @@ import { produce } from '../../../src/agent/produce.ts'
 import { withTurnDeadline, TURN_DEADLINE_MS } from '../../../src/agent/deadlines.ts'
 import type { ProduceDeps } from '../../../src/agent/produce.ts'
 import { normalizeModelSettings } from '../../../src/agent/model-capabilities.ts'
+// T-0163 (agent-content SPEC ACS-R12): the same bundle digest the browser stamps and the dev proxy records.
+import { BUNDLE_DIGEST_HEADER, bundleDigest, bundleFromWire } from '../../../src/agent/agent-bundle.ts'
 import { formatErrorLine } from '../../../src/agent/meta-line.ts'
 import { resolvePair, validateProvidersConfig } from '../providers-config.ts'
 import type { ProvidersConfig } from '../providers-config.ts'
@@ -222,7 +224,9 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
     console.error('/chat turn failed:', err)
     return json(500, { error: failureMessageFor(err) })
   }
-  return json(200, { text })
+  const res = json(200, { text })
+  res.headers.set(BUNDLE_DIGEST_HEADER, await bundleDigest(bundleFromWire({ system, model, modelSettings: chatModelSettings, integrations: chatIntegrations })))
+  return res
 }
 
 // GH #103 (review finding): produce()'s only statements capable of throwing BEFORE its first `yield` are
@@ -389,7 +393,10 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
     }
   })()
 
-  return new Response(readable, { status: 200, headers: { 'content-type': 'application/x-ndjson' } })
+  // T-0163: a turn that names a persona answers with its recomputed bundle digest.
+  const digestHeader: Record<string, string> =
+    typeof personaSystem === 'string' ? { [BUNDLE_DIGEST_HEADER]: await bundleDigest(bundleFromWire({ system: personaSystem, model, modelSettings, integrations })) } : {}
+  return new Response(readable, { status: 200, headers: { 'content-type': 'application/x-ndjson', ...digestHeader } })
 }
 
 export default {

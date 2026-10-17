@@ -59,3 +59,21 @@ export function packEntries(id: string): NewEntryInput[] {
   if (fm.derived !== undefined) throw new Error(`agent-content: pack ${id} is derived (${fm.derived}); its reader supplies the entries`)
   return (fm.entries ?? []).map((ref) => entryInput(resolveRef(ref, fm.kind)))
 }
+
+/** T-0163: a persona's content manifest for the one compiler (`@agent-ui/app/agent-admin-compile`): its seed
+ *  version and the seed version of every entry it refs, keyed by kind then entry id (the store entry id).
+ *  The resolution reads the versions from here; the browser registry carries no item digests, so the
+ *  compiler digests each item as composed. */
+export function personaContentManifest(id: string): { id: string; version: number; source: 'seed'; items: Record<string, Record<string, number>> } {
+  const record = personaRecord(id)
+  const items: Record<string, Record<string, number>> = {}
+  for (const kind of ['skill', 'workflow', 'resource', 'tool'] as const) {
+    const versions: Record<string, number> = {}
+    for (const ref of record.frontmatter[`${kind}s`]) {
+      const entry = resolveRef(ref, kind, record.id)
+      versions[entry.id] = entry.version
+    }
+    items[kind] = versions
+  }
+  return { id, version: record.version, source: 'seed', items }
+}

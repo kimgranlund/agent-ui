@@ -12,6 +12,9 @@
 // files: they keep their single-line `key: value` frontmatter (`splitKeyValueFrontmatter` below) and the
 // site reads them through its live raw glob, so a mini-skill edit has one generated copy (a2ui's
 // `assets.gen.ts`) and one generator.
+// T-0163: the one canonical JSON lives with the corpus canonicalizer (zero-dep, no runtime imports, so the
+// Node generator loads it by path too).
+import { canonicalJson } from '../../packages/agent-ui/a2ui/src/corpus/canonical.ts'
 
 import {
   CONTENT_ENTRY_KINDS,
@@ -164,21 +167,9 @@ export function runtimeRecord(record: ContentRecord): RuntimeRecord {
 
 // ── canonical form and digests ──────────────────────────────────────────────────────────────────────
 
-function sortKeys(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(sortKeys)
-  if (value !== null && typeof value === 'object') {
-    const out: Record<string, unknown> = {}
-    const obj = value as Record<string, unknown>
-    for (const key of Object.keys(obj).sort()) if (obj[key] !== undefined) out[key] = sortKeys(obj[key])
-    return out
-  }
-  return value
-}
-
-/** Sorted-key, undefined-dropped, unspaced JSON (the `site/lib/agent-manifest/agent-manifest.ts` rule). */
-export function canonicalJson(value: unknown): string {
-  return JSON.stringify(sortKeys(value))
-}
+/** Sorted-key, undefined-dropped, unspaced JSON (the `site/lib/agent-manifest/agent-manifest.ts` rule): the
+ *  repo's one implementation (T-0163), so a registry item digest and a compiler item digest share their bytes. */
+export { canonicalJson }
 
 /** The text an item digest is taken over (agent-content spec ACS-R4): the frontmatter as canonical JSON, a
  *  newline, then the body with LF line endings (empty for a pack). The caller hashes it (sha256, `sha256:` plus hex). */

@@ -84,3 +84,13 @@ node scripts/generate-agent-content.mjs --check   # validate and write nothing; 
 ```
 
 `--check` rides `npm run check` (`check:scripts`), and `registry-freshness.test.ts` holds the same equality in the site tests.
+
+## Compile
+
+```
+node scripts/agent-content.mjs compile <persona-id>                    # the bundle digest, then the resolution
+node scripts/agent-content.mjs compile <persona-id> --overlay <file>   # seed plus a stored overlay (JSON)
+node scripts/agent-content.mjs compile <persona-id> --json             # { digest, resolution, bundle }
+```
+
+The one compiler (`@agent-ui/app/agent-admin-compile`, T-0163) builds an agent's bundle: the system prompt, model, model settings and integrations one turn sends. Test Chat stamps every live request with that bundle's digest and resolution (each item with its version, digest and source), the dev proxy recomputes the digest from the request and records both in the trace line (`npm run traces`), and this CLI prints the same digest for the same persona and overlay.

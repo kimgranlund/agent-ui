@@ -25,11 +25,13 @@ import {
   readUpstreamError,
   redactSecrets,
   serializeTraceLine,
+  traceBundle,
   tracesEnabled,
 } from '../../tools/agent/trace-log.ts'
+import { bundleDigest, bundleFromWire } from '../agent/agent-bundle.ts'
 import type { AgentTraceLine } from '../../tools/agent/trace-log.ts'
 import { newRunId, readRunId, RUN_ID_HEADER, withRunId } from '../../tools/agent/run-id.ts'
-import { runCli } from '../../tools/agent/traces-cli.ts'
+import { formatFull, formatTable, runCli } from '../../tools/agent/traces-cli.ts'
 import type { AgentProvider, ProviderEvent } from '../agent/agent-transport.ts'
 
 declare const process: { cwd(): string; env: Record<string, string | undefined> }
@@ -602,5 +604,71 @@ describe('stop reason, max_tokens and the prompt store (T-0311)', () => {
       expect(readFileSync(path, 'utf8').length).toBeLessThanOrEqual(x.chars)
     }
     for (const name of readdirSync(join(dir, PROMPT_STORE_DIR))) expect(readFileSync(join(dir, PROMPT_STORE_DIR, name), 'utf8')).not.toContain(KEY)
+  })
+})
+
+// ── T-0163 (agent-content SPEC ACS-R13): every turn names its content ─────────────────────────────────
+
+describe('the trace line carries the bundle digest and the resolution (T-0163)', () => {
+  const body = { system: 'You deal cards.', model: 'claude-haiku-5-5', modelSettings: { maxTokens: 900 }, integrations: ['weather'] }
+  const row = (digest: string) => ({ id: 'croupier', kind: 'persona', version: 15, digest, source: 'seed' as const })
+
+  it('the writer records the digest recomputed from the body, the client stamp and the resolution', async () => {
+    const digest = await bundleDigest(bundleFromWire(body))
+    const trace = new TurnTraceCollector({ route: 'chat', provider: 'anthropic', model: body.model, user: 'deal' })
+    trace.noteBundle(await traceBundle({ ...body, bundleDigest: digest, resolution: [row(digest), { bogus: true }] }))
+    const line = trace.finish()
+    expect(line.bundle).toEqual({ digest, claimed: digest, resolution: [row(digest)] })
+    expect(line.warnings.filter((w) => w.startsWith('bundle digest mismatch'))).toEqual([])
+    const tmp = mkdtempSync(join(tmpdir(), 'agent-traces-bundle-'))
+    try {
+      appendTraceLine(tmp, line)
+      const [written] = readdirSync(tmp)
+        .filter((n) => n.endsWith('.jsonl'))
+        .flatMap((n) => readFileSync(join(tmp, n), 'utf8').split('\n').filter(Boolean))
+        .map((l) => JSON.parse(l) as AgentTraceLine)
+      expect(written!.bundle!.digest).toBe(digest)
+      expect(formatTable([written!], 1)).toContain(digest.slice('sha256:'.length, 'sha256:'.length + 12))
+      expect(formatFull(written!)).toContain(`bundle: ${digest}`)
+      expect(formatFull(written!)).toContain('persona croupier@15  seed')
+    } finally {
+      rmSync(tmp, { recursive: true, force: true })
+    }
+  })
+
+  it('a body that does not digest to its claim is recorded with a mismatch warning', async () => {
+    const claimed = await bundleDigest(bundleFromWire(body))
+    const trace = new TurnTraceCollector({ route: 'chat', provider: 'anthropic', model: body.model, user: 'deal' })
+    trace.noteBundle(await traceBundle({ ...body, system: 'You deal cards. Edited.', bundleDigest: claimed }))
+    const line = trace.finish()
+    expect(line.bundle!.digest).not.toBe(claimed)
+    expect(line.bundle!.claimed).toBe(claimed)
+    expect(line.warnings.some((w) => w.startsWith('bundle digest mismatch'))).toBe(true)
+  })
+
+  it('the /chat route records a bundle only when the turn names an agent (a label or a stamp)', async () => {
+    state.error = new Error('stop after the trace')
+    const chatBody = { system: body.system, model: 'claude-sonnet-5-5', messages: [{ role: 'user', content: 'deal' }] }
+    await post('/chat', chatBody)
+    expect(writtenLines().at(-1)!.bundle).toBeUndefined()
+    const claimed = await bundleDigest(bundleFromWire(chatBody))
+    await post('/chat', { ...chatBody, bundleDigest: claimed })
+    expect(writtenLines().at(-1)!.bundle).toEqual({ digest: claimed, claimed })
+  })
+
+  it('the proxy records the bundle of a produce turn that names a persona', async () => {
+    state.error = new Error('stop after the trace')
+    const claimed = await bundleDigest(bundleFromWire({ system: body.system, model: 'claude-sonnet-5-5', integrations: [] }))
+    await post('/produce', {
+      input: { kind: 'intent', text: 'deal', session: { turns: [] } },
+      provider: 'anthropic',
+      model: 'claude-sonnet-5-5',
+      personaSystem: body.system,
+      integrations: [],
+      bundleDigest: claimed,
+      resolution: [row(claimed)],
+    })
+    const last = writtenLines().at(-1)!
+    expect(last.bundle).toEqual({ digest: claimed, claimed, resolution: [row(claimed)] })
   })
 })

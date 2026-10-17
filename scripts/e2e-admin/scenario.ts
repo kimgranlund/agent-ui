@@ -18,12 +18,17 @@ export type ScriptedRespond = { lines: string[] } | { text: string } | { status:
 
 export interface ScriptedTurn {
   endpoint: 'produce' | 'chat'
-  match?: { mission?: boolean; inputKind?: 'intent' | 'client'; textIncludes?: string }
+  /** `agent` (T-0163) pins the agent content the turn must run with, `<id>@sha256:<hex>`: a request whose
+   *  `bundleDigest` differs is reported as drifted, never silently answered. */
+  match?: { mission?: boolean; inputKind?: 'intent' | 'client'; textIncludes?: string; agent?: string }
   respond: ScriptedRespond
   delayMs?: number
 }
 
 export const DEFAULT_STATUS = { available: true, providers: 1 } as const
+
+/** T-0163: an `agent@digest` pin, `<id>@sha256:<64 hex>` (the bundle digest the request body carries). */
+export const AGENT_PIN = /^[a-z0-9][a-z0-9-]*@sha256:[0-9a-f]{64}$/
 
 /** The red every flow assertion, page-object wait and post-flow wire check raises. A negative control
  *  counts only this class as the expected red; any other throw is a crash. */
@@ -97,7 +102,7 @@ function parseTurn(value: unknown, path: string): ScriptedTurn {
   if (value.match !== undefined) {
     const match = value.match
     if (!isObject(match)) throw new ScenarioError(`${path}.match`, 'must be an object')
-    onlyKeys(match, ['mission', 'inputKind', 'textIncludes'], `${path}.match`)
+    onlyKeys(match, ['mission', 'inputKind', 'textIncludes', 'agent'], `${path}.match`)
     if (match.mission !== undefined && typeof match.mission !== 'boolean') {
       throw new ScenarioError(`${path}.match.mission`, 'must be a boolean')
     }
@@ -107,7 +112,11 @@ function parseTurn(value: unknown, path: string): ScriptedTurn {
     if (match.textIncludes !== undefined && typeof match.textIncludes !== 'string') {
       throw new ScenarioError(`${path}.match.textIncludes`, 'must be a string')
     }
+    if (match.agent !== undefined && (typeof match.agent !== 'string' || !AGENT_PIN.test(match.agent))) {
+      throw new ScenarioError(`${path}.match.agent`, 'must be "<id>@sha256:<64 hex>"')
+    }
     turn.match = {
+      ...(match.agent !== undefined ? { agent: match.agent as string } : {}),
       ...(match.mission !== undefined ? { mission: match.mission as boolean } : {}),
       ...(match.inputKind !== undefined ? { inputKind: match.inputKind as 'intent' | 'client' } : {}),
       ...(match.textIncludes !== undefined ? { textIncludes: match.textIncludes as string } : {}),

@@ -150,21 +150,29 @@ any parallel assembly path retires. `bundle.system` is byte-identical to today's
 (agent-model SPEC-R21) for the same inputs; the compiler wraps the composition laws of agent-model §3.5, it does
 not restate or change them. `resolution` lists every item that went in: `{ id, kind, version, digest, source }`,
 where `source` is a provenance value (ACS-R8). The compiler is environment-neutral (browser, Node, Worker), holds
-no key, and never calls `produce()`. Planned: T-0163.
+no key, and never calls `produce()`. Landed (T-0163): `@agent-ui/app/agent-admin-compile` (`compile`, and
+`compileStore`, the synchronous projection Test Chat's live arms and Context view call); the dev proxy and the
+Worker receive the composed prompt and recompute the digest from the request body, so no parallel assembly path
+remains.
 
 **ACS-R12 (the bundle digest).** The bundle digest is a sha256 over the canonical bundle, computed with Web Crypto
 `SubtleCrypto.digest('SHA-256')`, which exists in all four environments with no dependency. Because that call is
 async, `compile` either returns a promise or computes the digest in one async step over its pure output; T-0163
 picks, and the result is identical either way. Test Chat, the proxy and the CLI produce the same digest for the
-same agent and overlay. Planned: T-0163.
+same agent and overlay. Landed (T-0163): the digest is the one async step over the synchronous `compileStore`
+output (`@agent-ui/a2ui/agent/agent-bundle`); the bundle is the fields the request body carries (system, model,
+model settings, integrations), so a host recomputes it from the body.
 
 **ACS-R13 (every turn names its content).** Every turn trace line (`.agent-traces/`, T-0151,
 `packages/agent-ui/a2ui/tools/agent/trace-log.ts`) and the admin debug bundle record the bundle digest and the
 resolution; `npm run traces` prints them. The debug bundle also carries the devtools captures (agent-model
 SPEC-R27's `captures/` family, a slot `buildDebugBundle` never fills today). Test Chat's context view shows the
 resolution. e2e:admin fixtures and agent-behavior eval legs may pin `agent@digest` and report a mismatch instead of
-drifting silently; the eval contract that consumes the digest (digest-affected selection) is T-0181's. Planned:
-T-0163.
+drifting silently; the eval contract that consumes the digest (digest-affected selection) is T-0181's. Landed
+(T-0163): the trace line's `bundle` (`digest` recomputed by the proxy, the client's `claimed` stamp, the
+`resolution`), the debug bundle's `content/` and `captures/` families, the Context view's agent item, and the
+e2e:admin `match.agent` pin. A resolution row an overlay op changed reads that op's source (T-0162's per-op
+`user`, `builder`, `pack`). Open: the agent-behavior eval legs carry no pin yet.
 
 ### 3.5 Constraints
 
@@ -242,7 +250,8 @@ ticket against this SPEC runs that ticket's named tests and checks each cited `f
    reads a runtime projection of the registry (`registry.runtime.gen.ts`) without paths, digests or changelogs.
 2. The frontmatter grammar, decided (T-0160, ACS-R3): one JSON object between `---` fences (valid YAML, parsed by
    `JSON.parse`); the a2ui prompt files keep their single-line `key: value` frontmatter.
-3. Whether `compile` returns a promise or digests in a separate step (T-0163, ACS-R12).
+3. The digest step, decided (T-0163, ACS-R12): `compile` returns a promise, and its synchronous core
+   `compileStore` digests in one separate async step (`bundleDigest`), so the live arms stay synchronous.
 4. Context loading, decided (T-0231): skills, playbooks (workflows) and resources reach the prompt as index lines
    only (ADR-0190), so an index-only entry reaches the model as its label and one-line description, and its content
    loads only when the user names it. Live round 2 (T-0225) showed the cost: the Concierge said it lacked hours its

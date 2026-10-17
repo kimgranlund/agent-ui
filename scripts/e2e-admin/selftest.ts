@@ -130,6 +130,45 @@ export async function runSelftest(): Promise<number> {
     return refusedShape && refusedEnv && passes
   })
 
+  await attempt('an agent@digest pin answers a matching digest and reports a drifted one (T-0163)', async () => {
+    const digest = `sha256:${'a'.repeat(64)}`
+    let refused = false
+    try {
+      parseScenario(JSON.stringify({ kind: 'agent-ui-admin-scenario', version: 1, name: 'x', turns: [{ endpoint: 'chat', match: { agent: 'concierge' }, respond: { text: 'hi' } }] }))
+    } catch (err) {
+      refused = err instanceof ScenarioError && err.path === 'turns[0].match.agent'
+    }
+    const pinned = parseScenario(
+      JSON.stringify({
+        kind: 'agent-ui-admin-scenario',
+        version: 1,
+        name: 'x',
+        turns: [
+          { endpoint: 'chat', match: { agent: `concierge@${digest}` }, respond: { text: 'same' } },
+          { endpoint: 'chat', match: { agent: `concierge@${digest}` }, respond: { text: 'drift' } },
+        ],
+      }),
+    )
+    const state = createInterceptState(pinned, ORIGIN)
+    const same = fakeRoute('POST', `${ORIGIN}/__a2ui/agent/chat`, { messages: [], bundleDigest: digest })
+    await handleRoute(state, same.route)
+    const drifted = fakeRoute('POST', `${ORIGIN}/__a2ui/agent/chat`, { messages: [], bundleDigest: `sha256:${'b'.repeat(64)}` })
+    await handleRoute(state, drifted.route)
+    const wire: WireLog = { entries: state.wire.entries, consumed: state.wire.consumed, ready: Promise.resolve() }
+    let red = false
+    try {
+      assertWireClean(wire)
+    } catch (err) {
+      red = err instanceof FlowAssertion && err.message.includes('drifted')
+    }
+    return (
+      refused &&
+      state.wire.entries.map((e) => e.outcome).join(',') === 'fulfilled,drifted' &&
+      String(drifted.calls.fulfilled[0]?.body).includes('agent drifted') &&
+      red
+    )
+  })
+
   await attempt('intercept aborts a non-origin request', async () => {
     const state = createInterceptState(scenarioOf([]), ORIGIN)
     const { route, calls } = fakeRoute('GET', 'https://example.com/e2e-admin-probe')

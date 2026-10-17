@@ -238,16 +238,18 @@ import {
   buildEntryRosters,
   parseCapabilityRowId,
   composeSystemPrompt,
-  composeLiveSystemPrompt,
   pickedPatternSource,
   resolveTurnReferences,
   hasAvailabilityMode,
   hasDrawerCrud,
   hasRenamableName,
-  type LiveCapabilityGroup,
-  type LiveBankrollState,
   type ReferenceGroup,
 } from './entries.ts'
+// T-0163: the one agent compiler (agent-content SPEC ACS-R11): every live arm and the Context view build the
+// agent's bundle through it, and the Context view shows its resolution.
+import { compileStore, resolution, type CompiledBundle, type ContentManifest } from './agent-compile.ts'
+import { bundleDigest, canonicalBundle, canonicalJson, type AgentBundle, type BundleStamp } from '@agent-ui/a2ui/agent/agent-bundle'
+import type { OverlayStore } from './agent-overlay.ts'
 // ADR-0164 cl.2/cl.7 — the generic data core + the section-shell mount function both moved to the shared
 // `entry-list/` folder (a `settings/` sibling, public `./entry-data`/`./entry-list` subpaths); this
 // element is that extraction's first CONSUMER now, not its owner.
@@ -327,6 +329,10 @@ const agentAdminProps = {
   // + the peeled prose note) and the wire lines drive `AgentTurnHandle.ingestLine` — REAL inline surfaces
   // (ADR-0129) instead of a prose reply.
   agentSurfaceTurn: { ...prop.json<AdminAgentSurfaceTurn | undefined>(undefined), attribute: false as const },
+  // T-0163 (agent-content SPEC ACS-R13): the active agent's content manifest (id, seed version, provenance,
+  // each content item's seed version), injected by the page from its registry. The Context view's agent
+  // item shows the bundle digest and resolution it yields; absent, the view shows neither.
+  contentManifest: { ...prop.json<ContentManifest | undefined>(undefined), attribute: false as const },
   // GH #47/#48 — entry-library packs, keyed by entry kind (skill/workflow/...). Non-reflected pure
   // type-carrier (the schema/store precedent). The section SHELL is still built once at compose time
   // (`#makeSection`, the sections' build-once law) — but GH #143 made the add-from-library MENU inside
@@ -357,27 +363,26 @@ const agentAdminProps = {
 /** The five ENTRY_KINDS instantiations, each paired with its display copy — the single source of truth
  *  `#compose()`/the reactive effect both iterate, so a future 6th kind (ADR-0132 Fork 2's extensibility)
  *  is one array entry, never new list/toggle/author/render code. */
-const CAPABILITY_KINDS: ReadonlyArray<{ kind: string; label: string; addLabel: string; liveHeading: string }> = [
-  { kind: ENTRY_KINDS.skill, label: 'Skills', addLabel: 'Add skill', liveHeading: 'Skills available to you' },
-  { kind: ENTRY_KINDS.workflow, label: 'Workflows', addLabel: 'Add workflow', liveHeading: 'Workflows available to you' },
-  { kind: ENTRY_KINDS.resource, label: 'Resources', addLabel: 'Add resource', liveHeading: 'Resources available to you' },
-  { kind: ENTRY_KINDS.tool, label: 'Tools', addLabel: 'Add tool', liveHeading: 'Tools available to you' },
+const CAPABILITY_KINDS: ReadonlyArray<{ kind: string; label: string; addLabel: string }> = [
+  { kind: ENTRY_KINDS.skill, label: 'Skills', addLabel: 'Add skill' },
+  { kind: ENTRY_KINDS.workflow, label: 'Workflows', addLabel: 'Add workflow' },
+  { kind: ENTRY_KINDS.resource, label: 'Resources', addLabel: 'Add resource' },
+  { kind: ENTRY_KINDS.tool, label: 'Tools', addLabel: 'Add tool' },
   // genui-surface.spec.md SPEC-R11 (D3/D4) — reuses this SAME generic entry-list section machinery for the
   // GenUI pattern-source picker ("no new list/toggle/author code"): the fold, the add-from-library menu
   // (`genuiPackLibrary`-projected packs), the master switch, and the live-apply store discipline are ALL
-  // the existing per-kind mechanism, zero new code. `liveHeading` here is UNUSED in practice — see
-  // `#capabilityGroups`' own filter, which excludes this ONE kind from the generic capability projection
-  // (its picked entry's body composes through the DEDICATED genui prompt block instead, SPEC-R10 — never
-  // BOTH, which would double-inject the identical prose, the exact ADR-0091 §4 defect class).
-  { kind: ENTRY_KINDS.patternSource, label: 'Pattern sources', addLabel: 'Add pattern source', liveHeading: 'Pattern sources available to you' },
+  // the existing per-kind mechanism, zero new code. It never joins the generic capability projection
+  // (`agent-compile.ts` `LIVE_CAPABILITY_HEADINGS`): its picked entry's body composes through the DEDICATED
+  // genui prompt block instead, SPEC-R10 (never BOTH, which would double-inject the identical prose, the
+  // exact ADR-0091 §4 defect class).
+  { kind: ENTRY_KINDS.patternSource, label: 'Pattern sources', addLabel: 'Add pattern source' },
   // ADR-0170 cl.1 — the A2UI catalog LIBRARY. It rides this SAME machinery with three single-line row
   // exceptions, each named at its own site below: (a) NO master switch is minted for it — the A2UI
   // surface toggle is the gate (cl.5, `#compose`); (b) its section suppresses the authoring form and the
   // per-entry editor (cl.8, `#makeSection`); (c) its toggle/delete write the ONE persisted selection key
   // instead of per-entry flags (cl.3, `#selectCatalog`/`#deleteCatalog`). `addLabel` is dead text under
-  // (b) — supplied for the row shape; `liveHeading` is unused in practice, like pattern-source's:
-  // `#capabilityGroups` excludes this kind (cl.5), because a catalog selection threads as `catalogId` on
-  // the wire and never as prompt prose.
+  // (b), supplied for the row shape. Like pattern-source it never joins the capability projection (cl.5),
+  // because a catalog selection threads as `catalogId` on the wire and never as prompt prose.
   //
   // GH #488 — this array's ORDER no longer decides this kind's DOM placement: `#compose`'s capability
   // loop special-cases `kind === ENTRY_KINDS.catalog` and mounts its section directly adjacent to the
@@ -385,7 +390,7 @@ const CAPABILITY_KINDS: ReadonlyArray<{ kind: string; label: string; addLabel: s
   // + its own catalog choice, replacing the earlier placement in a separate "Catalogs" section far below
   // the modality it configures). `label` still names this kind's Context: System item
   // (`#renderContextSystem`); it just no longer labels a top-level Settings fold.
-  { kind: ENTRY_KINDS.catalog, label: 'Catalogs', addLabel: 'Add catalog', liveHeading: 'Catalogs available to you' },
+  { kind: ENTRY_KINDS.catalog, label: 'Catalogs', addLabel: 'Add catalog' },
 ]
 
 // GH #866 — `TURN_LOG_CAP` moved to `agent-admin-schema.ts` (imported above): the Context: Dialog help
@@ -842,6 +847,10 @@ export class UIAgentAdminElement extends UIElement {
    *  every arm (stub, live, surface), failures included. Element-lifetime, never persisted. `n` is a
    *  MONOTONIC turn number (the vision frame's 04→01), stable as the bounded ring drops its oldest. */
   #turnLog: Array<{ n: number; arm: 'stub' | 'live' | 'surface'; request: unknown; response: unknown }> = []
+  // T-0163: the Context view's content stamp, keyed by everything it is computed from; the digest is async,
+  // so a render shows the last settled stamp for the same key and a pending key re-renders when it settles.
+  #contentStamp: { key: string; stamp: BundleStamp } | undefined
+  #contentStampPending: string | undefined
   #turnCounter = 0
 
   #unsubscribes: Map<string, () => void> = new Map()
@@ -1147,6 +1156,7 @@ export class UIAgentAdminElement extends UIElement {
     conversation.onEffortChange((id) => {
       this.#effort = id as EffortLevel
       conversation.effort = this.#effort
+      this.#renderContextSystem() // T-0163: the effort bounds the model settings the Context view's digest covers
     })
     // Surface client messages (an action click inside a mounted ui-surface-host, bubbled per LLD-C4) run
     // the NEXT surface turn — the Hit/Stand loop (TKT-0076). Callback registration, never a CustomEvent
@@ -2996,7 +3006,7 @@ export class UIAgentAdminElement extends UIElement {
       // GH #848 — the DISPLAY-NAME write, through that SAME one-writer seam. `renameEntry` (entry-data.ts)
       // owns the whole law: the trim, the empty-label refusal, and above all leaving every OTHER member
       // alone — `id` (so a renamed live tool keeps carrying its registry id on the `integrations` wire,
-      // `#enabledToolIds`, and an id that is an ADR-0185 namespaced service ref keeps that ref verbatim) and
+      // `ambientToolIds` (agent-compile.ts), and an id that is an ADR-0185 namespaced service ref keeps that ref verbatim) and
       // `availability` (a renamed invocable entry stays invocable — the two writes above and here are
       // orthogonal by construction, never a read-modify-write that drops the other's field). Every label
       // surface (the live prompt's `### {label}` blocks, the snapshot's per-kind lists, the Context: System
@@ -3663,7 +3673,7 @@ export class UIAgentAdminElement extends UIElement {
    *  every arm passes through) against the DRIVING context's store, by `id`, fail-closed. The resolution
    *  produces exactly two things: the FRAMED text — which is what every arm sends, what the log records,
    *  and what `#recordTurn` writes into history, so a follow-up turn keeps the attachment without
-   *  re-mentioning it — and this turn's invoked TOOL ids, unioned into `integrations` by `#turnIntegrations`.
+   *  re-mentioning it, and this turn's invoked TOOL ids, unioned into `integrations` by the compiler (`compileStore`).
    *  A turn with no resolved reference frames to the typed text byte-identically, so every pre-S3 call site
    *  (and every programmatic submit) behaves exactly as before. */
   #handleSubmit(text: string, origin: 'chat' | 'copilot', references?: readonly TurnReference[]): void {
@@ -3672,7 +3682,7 @@ export class UIAgentAdminElement extends UIElement {
     // GH #644 — `history` is this call's context-scoped array (test vs. authoring); every read/append
     // below goes through it rather than `this.#history` directly, so the two contexts' model memory never
     // cross-pollinate.
-    const { store, conversation, history } = this.#contextFor(origin)
+    const { store, conversation, history, session } = this.#contextFor(origin)
     if (!conversation) return
     // Vision rev.5 — the Agent master switch ("active/available or not", Kim's ruling): the composer is
     // already busy-disabled via `conversation.disabled`, so this is the belt (a programmatic submit).
@@ -3754,20 +3764,22 @@ export class UIAgentAdminElement extends UIElement {
     // projection, ADR-0136 Fork 3) and never stored in history; `history` carries PRIOR turns only, so a
     // mid-conversation config switch applies next-turn-only by construction (Q4). The in-flight busy-lock
     // (TKT-0034, auto-tracked off beginAgentTurn) disables the composer until finalize()/fail() runs.
+    const bundle = this.#compileFor(store, config.model, resolved.toolIds)
     const request: AdminTurnRequest = {
       text: framedText,
-      system: this.#personaSystemFor(store, sections),
+      system: this.#personaSystemFor(store, bundle),
       model: config.model,
       effort: this.#effort,
       // T-0185: the agent's model settings, checked against the model's capability row.
-      modelSettings: resolveModelSettings(store, config.model, this.#effort),
+      modelSettings: bundle.modelSettings,
       // ADR-0168 cl.5 / GH #402 — the prose arm forwards enablement too (it was the one live arm the
       // tool toggle never reached: a silent no-op). LLD-C7: the wire carries entry IDS, not labels —
-      // `#turnIntegrations` is the SAME master-gated fresh read the surface arm uses, so the two arms can
+      // the compiler's integrations are the SAME master-gated fresh read the surface arm uses, so the two arms can
       // never drift. NOT `config.tools`: that stays the enabled LABELS (its own doc comment's contract),
       // which the stub arm and the turn logger want for human display.
-      integrations: this.#turnIntegrations(store, resolved.toolIds),
+      integrations: bundle.integrations,
       history: [...history],
+      ...(session === 'authoring' ? { session } : {}),
     }
     void (async () => {
       try {
@@ -3873,17 +3885,17 @@ export class UIAgentAdminElement extends UIElement {
     } else if (!a2uiOn && !genuiOn) {
       return
     }
-    const sections = readEntries(store, ENTRY_KINDS.promptSection)
+    const bundle = this.#compileFor(store, this.#modelFor(store), invokedToolIds)
     const request = {
       turn,
-      personaSystem: this.#personaSystemFor(store, sections),
+      personaSystem: this.#personaSystemFor(store, bundle),
       // GH #880 — the DRIVING context's read, exactly as the prose arm's snapshot above does it.
       model: this.#modelFor(store),
       // The composer's Effort picker selection (see AdminSurfaceTurnRequest.effort) — the same dial the
       // plain-chat arm (`#handleSubmit`'s `AdminTurnRequest`) already threads.
       effort: this.#effort,
       // T-0185: the agent's model settings, the prose arm's read.
-      modelSettings: resolveModelSettings(store, this.#modelFor(store), this.#effort),
+      modelSettings: bundle.modelSettings,
       // RTS-R7: the persona's response type hint, a FRESH sanitized read (the live-apply law). Always the
       // sanitized value here; the runner drops the key on `auto`.
       prefers: sanitizePrefers(store?.get(PREFERS_KEY)),
@@ -3898,7 +3910,7 @@ export class UIAgentAdminElement extends UIElement {
       // two), master-gated on the tool kind's switch: the proxy intersects with its registry; a
       // non-registry id is inert. A FRESH store read (the live-apply law), shared with the prose arm.
       // GH #849/SPEC-R4 — plus THIS turn's invoked tool ids, unioned by the same shared projection.
-      integrations: this.#turnIntegrations(store, invokedToolIds),
+      integrations: bundle.integrations,
       // genui-surface.spec.md SPEC-R10/R11 — a FRESH store read (the live-apply law): `enabled` gates
       // whether the runner composes the genui teaching block at all; `sourceBody`, when present, is the
       // D3-picked `pattern-source` entry's `content` VERBATIM (never a pack id — `pickedPatternSource`
@@ -4211,48 +4223,21 @@ export class UIAgentAdminElement extends UIElement {
    *  the user may hand-edit the same draft between turns, that projection has to be re-read per turn
    *  rather than accumulated from what the model itself has patched. This is the host side of SPEC-R29's
    *  incremental merge law. */
-  #personaSystemFor(store: SettingsStore | undefined, sections: readonly Entry[]): string {
-    const persona = composeLiveSystemPrompt(sections, this.#capabilityGroups(store), this.#bankrollForPrompt(store), this.#teamPromptContextFor())
+  #personaSystemFor(store: SettingsStore | undefined, bundle: AgentBundle): string {
     const isAuthoringContext = this.authoringStore !== undefined && store === this.authoringStore
-    return isAuthoringContext ? `${persona}\n\n${draftStateBlock(this.store)}` : persona
+    return isAuthoringContext ? `${bundle.system}\n\n${draftStateBlock(this.store)}` : bundle.system
   }
 
-  /** Each capability kind's raw store slice + its live `##` group heading + its MASTER switch (vision
-   *  rev.5), for `composeLiveSystemPrompt` (which does the AMBIENT filter — enabled AND in-context since
-   *  GH #850/SPEC-R3 — plus the sort and the master-gate itself).
-   *  EXCLUDES `pattern-source` (genui-surface SPEC-R10/R11): that kind's picked entry composes through
-   *  the DEDICATED genui prompt block (`#runSurfaceTurn`'s own `pickedPatternSource` read) instead of the
-   *  generic `## Pattern sources available to you` capability projection — including it here too would
-   *  double-inject the identical body in one prompt (the exact ADR-0091 §4 defect class).
-   *  EXCLUDES `catalog` too (ADR-0170 cl.5): the catalog selection threads as `catalogId` on the wire (the
-   *  server picks the registered catalog and the producer stamps it, ADR-0169 cl.3/4) — never as prompt
-   *  prose. Projecting the roster here would teach the model about catalogs it cannot choose between. */
-  #capabilityGroups(store: SettingsStore | undefined): LiveCapabilityGroup[] {
-    return CAPABILITY_KINDS.filter(({ kind }) => kind !== ENTRY_KINDS.patternSource && kind !== ENTRY_KINDS.catalog).map(({ kind, liveHeading }) => ({
-      kind,
-      heading: liveHeading,
-      entries: readEntries(store, kind),
-      enabled: isEnabledFlag(store?.get(kindEnabledKey(kind))),
-    }))
-  }
-
-  /** GH #525 (bootstrap fix, 2026-08-07 live-proof finding) — the bankroll teaching input for the composed
-   *  prompt at turn start, applied at EVERY `composeLiveSystemPrompt` call site (the prose arm, the surface
-   *  arm, the Context: System snapshot) so the three can never read three different answers to "does this
-   *  turn teach /bankroll right now". `undefined` unless the persona opted in AND A2UI is currently on —
-   *  the SAME `a2uiOn` condition the post-turn mirror itself gates on (`#runSurfaceTurn`, below):
-   *  modality-correct, no A2UI renderer available this turn ⇒ no data-model path to teach. Capable+A2UI-on
-   *  ALWAYS returns an object (never gated on whether a figure is stored yet — the bootstrap fix itself:
-   *  the path must be taught BEFORE a first value ever exists, or nothing would ever settle there). */
-  #bankrollForPrompt(store: SettingsStore | undefined): LiveBankrollState | undefined {
-    if (!isBankrollCapable(store?.get(BANKROLL_CAPABLE_KEY))) return undefined
-    if (!isEnabledFlag(store?.get(SURFACE_A2UI_KEY))) return undefined
-    return { stored: sanitizeBankroll(store?.get(BANKROLL_KEY)) }
+  /** T-0163 (agent-content SPEC ACS-R11): the turn's bundle from the one compiler (`agent-compile.ts`): the
+   *  composed prompt, the model settings and the integrations every live arm sends. The authoring context's
+   *  draft block is turn context, not agent content, so `#personaSystemFor` adds it after. */
+  #compileFor(store: SettingsStore | undefined, model: string, invokedToolIds?: readonly string[]): CompiledBundle {
+    return compileStore(store, { model, effort: this.#effort, team: this.#teamPromptContextFor(), ...(invokedToolIds === undefined ? {} : { invokedToolIds }) })
   }
 
   /** GH #1197 (ADR-0203 cl.2 — the honest minimal wiring `#1194` deliberately deferred) — the team-prompt
    *  input for EVERY `composeLiveSystemPrompt` call site, the same "one projection, never three answers"
-   *  law `#bankrollForPrompt` just above already states for its own optional input. `undefined` unless the
+   *  law the compiler's `bankrollForPrompt` already states for its own optional input. `undefined` unless the
    *  CURRENTLY ACTIVE agent (`#pendingRoster.activeId`, read AT INVOKE TIME — the same "never captured
    *  once" law every other `#pendingRoster` consumer already follows) is some loaded team's own `gmAgentId`
    *  — `composeSystemPrompt`'s own `isTeamGm` gate would reach the same answer, but finding the team here
@@ -4260,8 +4245,8 @@ export class UIAgentAdminElement extends UIElement {
    *  straight off the SAME roster the header's agent-select renders (`AgentRosterEntry.id`/`.label`) —
    *  this element already owns that projection; teams carry no separate name of their own for a member
    *  (`agent-team.ts`'s `AgentTeamMember` is `{agentId, role, routingDescription}` only). */
-  #teamPromptContextFor(): TeamPromptContext | undefined {
-    const activeId = this.#pendingRoster?.activeId
+  #teamPromptContextFor(agentId?: string): TeamPromptContext | undefined {
+    const activeId = agentId ?? this.#pendingRoster?.activeId
     if (activeId === undefined || activeId === '') return undefined
     const team = this.#teams.find((t) => t.gmAgentId === activeId)
     if (team === undefined) return undefined
@@ -4272,45 +4257,10 @@ export class UIAgentAdminElement extends UIElement {
     return { team, activeAgentId: activeId, memberSnapshots }
   }
 
-  /** ADR-0168 cl.2 / LLD-C7 — the ENABLEMENT WIRE projection, shared by BOTH live arms (`#handleSubmit`'s
-   *  prose request and `#runSurfaceTurn`'s surface request) so they can never drift into two different
-   *  answers for "what is enabled right now". A FRESH store read (the live-apply law), master-gated on the
-   *  tool kind's switch (the SAME switch that gates the kind's prompt projection).
-   *
-   *  GH #850/SPEC-R3(b) — the per-entry filter is `isAmbient` (enabled AND in-context), not bare
-   *  `e.enabled`: an enabled but USER-INVOCABLE tool forwards no id ambiently, on BOTH arms at once,
-   *  because both read this ONE projection. Its id reaches a request only when that turn invokes it
-   *  (SPEC-R4, slice S3) — until then the tool is genuinely dark, which is the mode's contract.
-   *
-   *  It forwards each ambient entry's `id`, NEVER its `label`. The id is the stable wire vocabulary the
-   *  host's `resolveIntegrations` intersects against its registry; the label is human display text that a
-   *  user may freely edit. They were the same string until this slice — forwarding the label worked only
-   *  by that coincidence, so a prettier label silently disarmed the tool. The component stays entirely
-   *  generic here: it knows nothing of registries or integration ids, it just forwards the stable key
-   *  instead of the display name. A non-registry id is inert downstream (the fail-closed intersection). */
-  #enabledToolIds(store: SettingsStore | undefined): string[] {
-    if (!isEnabledFlag(store?.get(kindEnabledKey(ENTRY_KINDS.tool)))) return []
-    return readEntries(store, ENTRY_KINDS.tool)
-      .filter(isAmbient)
-      .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
-      .map((e) => e.id)
-  }
-
-  /** GH #849/SPEC-R4 — ONE turn's `integrations`: the AMBIENT projection above, plus whatever tool entries
-   *  this turn's `/` invocations resolved to (already fail-closed by `resolveTurnReferences` — a deleted,
-   *  disabled or master-off tool never reaches here), deduped. Shared by BOTH live arms for the same
-   *  anti-drift reason `#enabledToolIds` is, and ambient-first so a turn with no invocation produces the
-   *  byte-identical list it always did. Nothing persists: the next turn calls this again with no ids. */
-  #turnIntegrations(store: SettingsStore | undefined, invokedToolIds?: readonly string[]): string[] {
-    const ambient = this.#enabledToolIds(store)
-    if (invokedToolIds === undefined || invokedToolIds.length === 0) return ambient
-    return [...new Set([...ambient, ...invokedToolIds])]
-  }
-
   /** GH #849/SPEC-R8 — each MAPPED kind's raw store slice + its MASTER switch, for the two reference
-   *  projections (`buildEntryRosters` for the menus, `resolveTurnReferences` at send). The
-   *  `#capabilityGroups` division of labor exactly: this method does the FRESH store reads, `entries.ts`
-   *  does the filter/sort/projection. Its own kind list rather than `#capabilityGroups`' — that one exists
+   *  projections (`buildEntryRosters` for the menus, `resolveTurnReferences` at send). The compiler's
+   *  `liveCapabilityGroups` division of labor exactly: this method does the FRESH store reads, `entries.ts`
+   *  does the filter/sort/projection. Its own kind list rather than `liveCapabilityGroups`': that one exists
    *  to compose PROMPT prose and excludes kinds for prompt-shaped reasons (double-injection, wire-threaded
    *  selection), which are not this projection's reasons (`MENTIONABLE_KINDS`/`INVOCABLE_KINDS`, entries.ts). */
   #referenceGroups(store: SettingsStore | undefined): ReferenceGroup[] {
@@ -4503,7 +4453,9 @@ export class UIAgentAdminElement extends UIElement {
       openStates.set(el.getAttribute('data-item') ?? '', el.open)
     }
     const items: HTMLElement[] = []
-    const sections = readEntries(store, ENTRY_KINDS.promptSection)
+    // T-0163: compiled once, with the inputs a turn on this store compiles with (`#compileFor`), so the view's
+    // prompt and digest are the ones the next turn sends.
+    const bundle = this.#compileFor(store, this.#modelFor(store))
     items.push(
       contextItem(
         'agent',
@@ -4527,7 +4479,10 @@ export class UIAgentAdminElement extends UIElement {
             // ADR-0178 cl.3 — the authoring gate's own on/off state, the same introspection law.
             authoring: isAuthoringSurfaceEnabled(store?.get(SURFACE_AUTHORING_KEY)),
           },
-          systemPrompt: composeLiveSystemPrompt(sections, this.#capabilityGroups(store), this.#bankrollForPrompt(store), this.#teamPromptContextFor()),
+          systemPrompt: this.#personaSystemFor(store, bundle),
+          // T-0163: which content versions the turn runs with, and from where (ACS-R13). Filled in once the
+          // async digest settles (`#contentStampFor`); absent without an injected `contentManifest`.
+          ...(this.#contentStampFor(store, bundle) ?? {}),
         },
         openStates.get('agent') ?? true,
         // GH #866 — its OWN record, not the Agent tab's: this item is the compiled, read-only projection,
@@ -4561,6 +4516,49 @@ export class UIAgentAdminElement extends UIElement {
       )
     }
     host.replaceChildren(...items)
+  }
+
+  /** T-0163: `{ content: { digest, resolution } }` for the Context view's agent item: the digest of the bundle
+   *  a turn on this store sends (the same `#compileFor` inputs, the composer's effort included, and the same
+   *  `#personaSystemFor` prompt) and every item that went in with its version and source (ACS-R13). Computed
+   *  off the render path (Web Crypto is async): the first render for a new key returns `undefined` and
+   *  re-renders once the stamp settles; a failed digest (no `crypto.subtle` on an insecure origin) shows no
+   *  stamp. `undefined` too without an injected `contentManifest`. Keyed on the bundle's digest input, the
+   *  effort and the overlay paths, never on entry bodies. */
+  #contentStampFor(store: SettingsStore | undefined, compiled: CompiledBundle): { content: BundleStamp } | undefined {
+    const manifest = this.contentManifest
+    if (manifest === undefined || store === undefined) return undefined
+    const bundle: AgentBundle = { ...compiled, system: this.#personaSystemFor(store, compiled) }
+    const modified = typeof (store as Partial<OverlayStore>).modified === 'function' ? (store as OverlayStore).modified() : []
+    const key = `${canonicalJson(manifest)}\u0000${canonicalBundle(bundle)}\u0000${this.#effort}\u0000${canonicalJson(modified)}`
+    if (this.#contentStamp?.key === key) return { content: this.#contentStamp.stamp }
+    if (this.#contentStampPending !== key) {
+      this.#contentStampPending = key
+      Promise.all([bundleDigest(bundle), resolution(manifest, store, bundle, modified)]).then(
+        ([digest, rows]) => {
+          if (this.#contentStampPending !== key) return
+          this.#contentStampPending = undefined
+          this.#contentStamp = { key, stamp: { digest, resolution: rows } }
+          this.#renderContextSystem()
+        },
+        () => {
+          if (this.#contentStampPending === key) this.#contentStampPending = undefined
+        },
+      )
+    }
+    return undefined
+  }
+
+  /** T-0163: the bundle a live turn on `store` would send for agent `agentId`, with the same inputs
+   *  `#compileFor` uses: the composer's effort for the active agent (any other agent starts from its own
+   *  default effort, as the composer would on a switch), and the team section when that agent is its team's
+   *  GM. The page's debug export stamps each roster agent with it. */
+  turnBundle(store: SettingsStore | undefined, agentId: string): AgentBundle {
+    const active = this.#pendingRoster?.activeId === agentId
+    const model = this.#modelFor(store)
+    const team = this.#teamPromptContextFor(agentId)
+    const bundle = compileStore(store, { model, ...(active ? { effort: this.#effort } : {}), ...(team === undefined ? {} : { team }) })
+    return { ...bundle, system: this.#personaSystemFor(store, bundle) }
   }
 
   /** Rebuild the Dialog Turns view (the Context: Dialog tab) from `#turnLog`, NEWEST FIRST with

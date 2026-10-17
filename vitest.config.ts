@@ -196,6 +196,9 @@ export default defineConfig({
       // T-0185: the a2ui `./agent/model-capabilities` subpath, the pure per-model capability table the
       // agent-admin settings pane reads; placed before `./agent` for the same prefix-match reason.
       '@agent-ui/a2ui/agent/model-capabilities': r('./packages/agent-ui/a2ui/src/agent/model-capabilities.ts'),
+      // T-0163: the a2ui `./agent/agent-bundle` subpath, the zero-dep bundle digest the compiler, the proxy and
+      // the Worker share; placed before `./agent` for the same prefix-match reason.
+      '@agent-ui/a2ui/agent/agent-bundle': r('./packages/agent-ui/a2ui/src/agent/agent-bundle.ts'),
       // The a2ui `./agent/agent-transport` subpath (ADR-0137's seam file, browser-safe pure types +
       // zero node imports) — mirrors the package's exports map, placed BEFORE the broader `./agent`
       // entry for the same prefix-match reason as `meta-line`/`genui-line` above. `@agent-ui/devtools`

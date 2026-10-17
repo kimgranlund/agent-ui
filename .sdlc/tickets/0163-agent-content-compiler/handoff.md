@@ -29,3 +29,13 @@ Every place that runs an agent builds its prompt the same way, and every turn sa
 
 ## Constraints
 - Zero dependencies; the compiler is environment-neutral (browser, Node, Worker). No em dashes.
+
+## Acceptance criteria
+- `npm run check` exits 0.
+- `npx vitest run --project site site/lib/agent-compile.test.ts` exits 0: Test Chat (the real ui-agent-admin and site runner), the dev proxy (its trace line) and the CLI (the agent-content compile verb, spawned) produce the same digest for the same agent and overlay, and the debug bundle carries the turn's devtools capture.
+- `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/agent-trace.test.ts` exits 0: the trace writer's line carries the bundle digest and resolution, a mismatch warns, and the traces CLI prints both.
+- `npx vitest run --project packages packages/agent-ui/app/src/controls/agent-admin/agent-compile.test.ts` exits 0: `bundle.system` equals `composeLiveSystemPrompt` for the same store, and the resolution marks overlay edits `user`.
+- `npx vitest run packages/agent-ui/a2ui/src/live-agent site/lib/admin-live-runner site/pages/agent-admin- packages/agent-ui/a2ui/tools/agent packages/agent-ui/app/src/controls/agent-admin` exits 0.
+- `node scripts/e2e-admin.mjs selftest` exits 0, including the `agent@digest` pin case.
+- `npm run e2e:admin` exits 0.
+- `node scripts/agent-content.mjs compile concierge` exits 0.

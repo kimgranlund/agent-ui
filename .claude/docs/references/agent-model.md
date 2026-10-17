@@ -270,7 +270,7 @@ header pointing here.
   (ACS-R6, ACS-R7, planned T-0161). Imports and duplicates are full records and carry no overlay.
 - **bundle digest**: the sha256 of everything one turn sends about an agent, as built by the one compiler
   `compile(agentManifest, overlay)`; each turn trace records it with a **resolution** (every item's id, kind,
-  version, digest and source) (ACS-R11 to R13, planned T-0163). Not the agent manifest's seed digest, which pins
+  version, digest and source) (ACS-R11 to R13, T-0163; `npm run traces` prints both). Not the agent manifest's seed digest, which pins
   one preset's seed, nor a registry item digest, which pins one file.
 
 ## 4 · Seams, and why each exists

@@ -34,7 +34,7 @@ export interface RoutableContext {
 }
 
 export type WireEndpoint = 'status' | 'integrations' | 'produce' | 'chat' | 'other-a2ui' | 'external'
-export type WireOutcome = 'fulfilled' | 'aborted' | 'unmatched' | 'exhausted'
+export type WireOutcome = 'fulfilled' | 'aborted' | 'unmatched' | 'exhausted' | 'drifted'
 
 export interface WireEntry {
   seq: number
@@ -98,6 +98,16 @@ function requestText(endpoint: 'produce' | 'chat', body: unknown): string {
   if (endpoint === 'produce') return b.input?.kind === 'intent' && typeof b.input.text === 'string' ? b.input.text : ''
   const last = Array.isArray(b.messages) ? b.messages.at(-1) : undefined
   return typeof last?.content === 'string' ? last.content : ''
+}
+
+/** T-0163: why a request drifted from the turn's `match.agent` pin (its `bundleDigest` is not the pinned
+ *  one), or `undefined` when the turn pins nothing or the digest agrees. */
+export function agentDrift(turn: ScriptedTurn, body: unknown): string | undefined {
+  const pin = turn.match?.agent
+  if (pin === undefined) return undefined
+  const want = pin.slice(pin.indexOf('@') + 1)
+  const sent = (body as { bundleDigest?: unknown } | undefined)?.bundleDigest
+  return sent === want ? undefined : `pinned ${pin}, the request sent ${typeof sent === 'string' ? sent : 'no bundleDigest'}`
 }
 
 /** Whether a request satisfies a scripted turn's `match` (absent `match` matches everything). */
@@ -183,6 +193,12 @@ export async function handleRoute(state: InterceptState, route: RouteLike): Prom
         return
       }
       const turn = turns[index]!
+      const drift = agentDrift(turn, body)
+      if (drift !== undefined) {
+        log('drifted', index)
+        await route.fulfill(json(500, { error: `e2e-admin: turns[${index}] agent drifted: ${drift}` }))
+        return
+      }
       if (!matchesTurn(turn, body)) {
         log('unmatched', index)
         await route.fulfill(json(500, { error: `e2e-admin: request did not match turns[${index}].match` }))

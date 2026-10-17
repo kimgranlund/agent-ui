@@ -17,9 +17,17 @@
 //       file is refused unless --force; a ref already listed is never listed twice. Then validate.
 //   node scripts/agent-content.mjs compile-check [--root <dir>]
 //       Validate, then check the generated registries and the manifests' seedVersion are current (the
-//       generator's --check). The bundle digest leg arrives with the compiler (T-0163).
+//       generator's --check). On this repo's own tree it then compiles every shipped persona through the one
+//       compiler (T-0163) and fails on one that does not compile; a --root copy has no site modules to load,
+//       so it stops after the file checks.
+//   node scripts/agent-content.mjs compile <persona-id> [--overlay <file>] [--json]
+//       The one agent compiler (T-0163, ACS-R11) over this repo's seed files: the bundle digest, then the
+//       resolution (each item's kind, id@version, source and digest); --overlay compiles seed plus a stored
+//       overlay (JSON); --json prints { digest, resolution, bundle }. For the same agent and overlay it prints
+//       the digest Test Chat stamps and the dev proxy records.
 //
-// Exit codes: 0 = valid, 1 = a content problem or stale output, 2 = usage. A write that would leave the
+// Exit codes: 0 = valid, 1 = a content problem or stale output (compile: an unknown persona or an unreadable
+// overlay), 2 = usage. A write that would leave the
 // content invalid is still written and reported, so the author sees the file the validator names.
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -28,16 +36,20 @@ import { CONTENT_ROOT, ENTRY_LAYOUT, ID_PATTERN, parseRef } from '../site/agent-
 import { formatContentFile, personaSeedFiles } from '../site/agent-content/seed-file.ts'
 import { OUT_REGISTRY, OUT_RUNTIME, discoverAgentContent, generateRegistryModule, generateRuntimeModule, manifestUpdates } from './generate-agent-content.mjs'
 
-const USAGE = `usage: node scripts/agent-content.mjs <validate | new <id> | add-skill <id> | compile-check> [options]
+const USAGE = `usage: node scripts/agent-content.mjs <validate | new <id> | add-skill <id> | compile-check | compile <id>> [options]
   validate        [--root <dir>]
   new <id>        [--label <label>] [--from <persona file>] [--root <dir>]
   add-skill <id>  (--persona <id> | --pack <id>) [--description <text>] [--force] [--root <dir>]
-  compile-check   [--root <dir>]`
+  compile-check   [--root <dir>]
+  compile <id>    [--overlay <file>] [--json]`
 
 class UsageError extends Error {}
 
 /** The options that take no value. */
-const SWITCHES = new Set(['force'])
+const SWITCHES = new Set(['force', 'json'])
+
+/** This repo's root: the compiler loads its site modules from here, never from a --root copy. */
+const REPO_ROOT = resolve(import.meta.dirname, '..')
 
 /** `argv` as a command, one positional and `--flag value` options (a switch such as `--force` is `true`). */
 export function parseArgs(argv) {
@@ -151,7 +163,7 @@ function addSkill(root, id, options, out) {
   write(root, packPath, `${JSON.stringify(pack, null, 2)}\n`, out)
 }
 
-function compileCheck(root, out) {
+async function compileCheck(root, out) {
   const { records, code } = validate(root, out)
   if (code !== 0) return 1
   const manifests = manifestUpdates(records, root)
@@ -159,11 +171,66 @@ function compileCheck(root, out) {
   const outputs = [{ path: OUT_REGISTRY, text: generateRegistryModule(records) }, { path: OUT_RUNTIME, text: generateRuntimeModule(records) }, ...manifests.updates]
   const stale = outputs.filter(({ path, text }) => !existsSync(`${root}/${path}`) || readFileSync(`${root}/${path}`, 'utf8') !== text)
   for (const { path } of stale) out.error(`agent-content: ${path} is stale; run node scripts/generate-agent-content.mjs`)
-  return manifests.problems.length > 0 || stale.length > 0 ? 1 : 0
+  if (manifests.problems.length > 0 || stale.length > 0) return 1
+  if (root !== REPO_ROOT) return 0
+  // T-0163: every shipped persona through the one compiler, on the tree the files above just checked.
+  const { compileAgent } = await loadSite('site/lib/agent-compile.ts')
+  const ids = records.filter((r) => r.kind === 'persona').map((r) => r.id)
+  let failed = 0
+  for (const id of ids) {
+    try {
+      await compileAgent(id)
+    } catch (error) {
+      failed++
+      out.error(`agent-content: persona ${id} does not compile: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
+  if (failed === 0) out.log(`agent-content: ${ids.length} personas compile`)
+  return failed === 0 ? 0 : 1
 }
 
-/** Run one command; returns the exit code. `out` defaults to the console (tests pass a recorder). */
-export function run(argv, cwd = process.cwd(), out = console) {
+/** Load a site module through Vite's module runner over a jsdom window (both existing dev dependencies):
+ *  the compiler's modules are site TypeScript that imports JSON and the component layer. */
+async function loadSite(path) {
+  const { JSDOM } = await import('jsdom')
+  const { window } = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/' })
+  for (const key of ['window', 'document', 'HTMLElement', 'customElements', 'Node', 'Element', 'CSSStyleSheet', 'localStorage', 'MutationObserver', 'getComputedStyle', 'DocumentFragment', 'ShadowRoot', 'Event', 'CustomEvent', 'EventTarget']) {
+    if (!(key in globalThis)) globalThis[key] = key === 'window' ? window : window[key]
+  }
+  const { runnerImport } = await import('vite')
+  const { module } = await runnerImport(resolve(REPO_ROOT, path), { configFile: false, root: REPO_ROOT, logLevel: 'error' })
+  return module
+}
+
+/** T-0163: compile one shipped persona (seed plus an optional overlay file) and print its digest and
+ *  resolution, or `{ digest, resolution, bundle }` with --json. */
+async function compile(id, options, out) {
+  requireId(id, 'compile <id>')
+  let overlay
+  if (options.overlay !== undefined) {
+    try {
+      overlay = JSON.parse(readFileSync(resolve(options.overlay), 'utf8'))
+    } catch (error) {
+      out.error(`agent-content: cannot read overlay ${options.overlay}: ${error instanceof Error ? error.message : String(error)}`)
+      return 1
+    }
+  }
+  const { compileAgent, shippedPersona } = await loadSite('site/lib/agent-compile.ts')
+  if (shippedPersona(id) === undefined) {
+    out.error(`agent-content: no shipped persona ${id}`)
+    return 1
+  }
+  const result = await compileAgent(id, overlay)
+  if (options.json === true) out.log(JSON.stringify({ digest: result.digest, resolution: result.resolution, bundle: result.bundle }, null, 2))
+  else {
+    out.log(result.digest)
+    for (const r of result.resolution) out.log(`  ${r.kind} ${r.id}${r.version !== null ? `@${r.version}` : ''}  ${r.source}  ${r.digest}`)
+  }
+  return 0
+}
+
+/** Run one command; resolves to the exit code. `out` defaults to the console (tests pass a recorder). */
+export async function run(argv, cwd = process.cwd(), out = console) {
   try {
     const { command, options, positional } = parseArgs(argv)
     const root = resolve(cwd, options.root ?? '.')
@@ -177,7 +244,9 @@ export function run(argv, cwd = process.cwd(), out = console) {
         addSkill(root, positional[0], options, out)
         return validate(root, out).code
       case 'compile-check':
-        return compileCheck(root, out)
+        return await compileCheck(root, out)
+      case 'compile':
+        return await compile(positional[0], options, out)
       default:
         throw new UsageError(command === undefined ? 'no command' : `unknown command ${command}`)
     }
@@ -189,4 +258,8 @@ export function run(argv, cwd = process.cwd(), out = console) {
   }
 }
 
-if (process.argv[1]?.endsWith('agent-content.mjs')) process.exitCode = run(process.argv.slice(2))
+if (process.argv[1]?.endsWith('agent-content.mjs')) {
+  process.exitCode = await run(process.argv.slice(2))
+  // The compiler's component modules leave timers and observers behind; the result is printed, so leave now.
+  process.exit(process.exitCode)
+}

@@ -312,6 +312,14 @@ function stableStringify(value: unknown): string {
   return encode(value) ?? 'null'
 }
 
+/** T-0163: the repo's one canonical JSON (sorted keys, `undefined` members dropped, no whitespace), shared by
+ *  the agent bundle digest (`../agent/agent-bundle.ts`), the agent overlay's equality and fingerprint
+ *  (`@agent-ui/app` agent-overlay.ts) and the agent-content registry digests (`site/agent-content/schema.ts`),
+ *  so an item digest and a registry seed digest are taken over the same bytes. */
+export function canonicalJson(value: unknown): string {
+  return stableStringify(value)
+}
+
 async function sha256Hex(text: string): Promise<string> {
   const bytes = new TextEncoder().encode(text)
   const digest = await globalThis.crypto.subtle.digest('SHA-256', bytes)
