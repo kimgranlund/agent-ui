@@ -23,3 +23,8 @@ produce.ts :697, :1111, :1724. Round 9 :157 (long-spa-services-haiku): round 1 r
 
 ## Constraints
 None.
+
+## Acceptance criteria
+- `npx vitest run packages/agent-ui/a2ui/src/live-agent/produce-dropped-finding.test.ts` exits 0, and fails on the parent commit (the :157 round 3 request lacks the restated BOOKING_FORM_MISSING).
+- `npm run check` exits 0.
+- `npx vitest run packages/agent-ui/a2ui/src/agent packages/agent-ui/a2ui/src/live-agent` exits 0.
