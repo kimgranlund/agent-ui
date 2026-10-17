@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync } from 'node:fs'
-import { repointDarkPrimary } from '../../tools/themes/wrap-pack.ts'
+import { repointFill } from '../../tools/themes/wrap-pack.ts'
 declare const process: { cwd(): string }
 
 // theme-packs.test.ts — ADR-0141/TKT-0087's STANDING parity gate: every `[theme='<name>']` pack under
@@ -153,11 +153,13 @@ describe('theme-packs.test.ts — the ADR-0141 parity gate', () => {
   })
 })
 
-// T-0340 (Kim 2026-10-17): every primary FILL carries on-primary text, so each pack's (and the default's) dark fill
-// legs clear WCAG-AA 4.5:1 against the dark on-primary leg, and the dark ladder darkens rest -> hover -> pressed.
-// The contrast math here is a second derivation, independent of wrap-pack.ts's repointDarkPrimary: it reads the
-// declared role legs and primitives of each file and recomputes OKLCH -> sRGB -> WCAG luminance itself.
-describe('theme-packs.test.ts: dark primary fills clear 4.5:1 under on-primary (T-0340)', () => {
+// T-0340 (Kim 2026-10-17): the primary FILL ladder (`--md-sys-color-primary-fill`, `-fill-hover`, `-fill-active`)
+// carries on-primary text, so in each pack and the default its states clear WCAG-AA 4.5:1 in both schemes and the
+// dark ladder darkens rest -> hover -> pressed. `primary` and `-hover` stay the ink and indicator roles and keep
+// their pre-T-0340 ratio over the dark neutral surface. The contrast math here is a second derivation, independent
+// of wrap-pack.ts's repointFill: it reads each file's declared legs and primitives and recomputes OKLCH -> sRGB ->
+// WCAG luminance itself.
+describe('theme-packs.test.ts: the primary fill ladder clears 4.5:1 under on-primary (T-0340)', () => {
   const AA = 4.5
   const lum = ([L, C, H]: number[]): number => {
     const h = ((H as number) * Math.PI) / 180, a = (C as number) * Math.cos(h), b = (C as number) * Math.sin(h)
@@ -171,51 +173,68 @@ describe('theme-packs.test.ts: dark primary fills clear 4.5:1 under on-primary (
     ].map((c) => Math.min(1, Math.max(0, c)))
     return 0.2126 * (lin[0] as number) + 0.7152 * (lin[1] as number) + 0.0722 * (lin[2] as number)
   }
-  const stopOf = (css: string, stop: string): number[] => {
-    const m = css.match(new RegExp(`--md-sys-color-primary-${stop}:\\s*oklch\\(([-\\d.]+)\\s+([-\\d.]+)\\s+([-\\d.]+)`))
-    if (!m) throw new Error(`primitive primary-${stop} not found`)
+  const stopOf = (css: string, family: string, stop: string): number[] => {
+    const m = css.match(new RegExp(`--md-sys-color-${family}-${stop}:\\s*oklch\\(([-\\d.]+)\\s+([-\\d.]+)\\s+([-\\d.]+)`))
+    if (!m) throw new Error(`primitive ${family}-${stop} not found`)
     return [Number(m[1]), Number(m[2]), Number(m[3])]
   }
-  const darkLeg = (css: string, role: string): string => {
-    const m = css.match(new RegExp(`--md-sys-color-${role}:\\s*light-dark\\(\\s*var\\(--md-sys-color-primary-\\d+\\)\\s*,\\s*var\\(--md-sys-color-primary-(\\d+)\\)\\s*\\)`))
-    if (!m) throw new Error(`role ${role} not a two-leg primary light-dark()`)
-    return m[1] as string
+  const legsOf = (css: string, role: string, family = 'primary'): [string, string] => {
+    const m = css.match(new RegExp(`--md-sys-color-${role}:\\s*light-dark\\(\\s*var\\(--md-sys-color-${family}-(\\d+)\\)\\s*,\\s*var\\(--md-sys-color-${family}-(\\d+)\\)\\s*\\)`))
+    if (!m) throw new Error(`role ${role} not a two-leg ${family} light-dark()`)
+    return [m[1] as string, m[2] as string]
   }
-  const ratio = (css: string, fillStop: string, inkStop: string): number => {
-    const f = lum(stopOf(css, fillStop)), i = lum(stopOf(css, inkStop))
-    return (Math.max(f, i) + 0.05) / (Math.min(f, i) + 0.05)
+  const ratioOf = (a: number[], b: number[]): number => {
+    const x = lum(a), y = lum(b)
+    return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05)
   }
-  // [fill role, ink role]: rest, ui-button hover (-dim), ui-switch hover (-hover), pressed (-active)
-  const PAIRS = [
-    ['primary', 'primary-on-primary'],
-    ['primary-dim', 'primary-on-primary-hover'],
-    ['primary-hover', 'primary-on-primary-hover'],
-    ['primary-active', 'primary-on-primary-active'],
+  const FILL_PAIRS = [
+    ['primary-fill', 'primary-on-primary'],
+    ['primary-fill-hover', 'primary-on-primary-hover'],
+    ['primary-fill-active', 'primary-on-primary-active'],
   ] as const
-  const sources = [['tokens.css', TOKENS_CSS], ...packFiles().map((f) => [`themes/${f}`, readFileSync(`${THEMES_DIR}/${f}`, 'utf8')])]
+  const sources = [['tokens.css', TOKENS_CSS], ...packFiles().map((f) => [`themes/${f}`, readFileSync(`${THEMES_DIR}/${f}`, 'utf8')])] as const
 
   for (const [file, css] of sources) {
-    describe(file as string, () => {
-      for (const [fill, ink] of PAIRS) {
-        it(`dark ${fill} clears 4.5:1 under ${ink}`, () => {
-          const f = darkLeg(css as string, fill), i = darkLeg(css as string, ink)
-          const r = ratio(css as string, f, i)
-          expect(r, `dark ${ink}(${i}) on ${fill}(${f}) = ${r.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA)
+    describe(file, () => {
+      for (const [fill, ink] of FILL_PAIRS) {
+        it(`${fill} clears 4.5:1 under ${ink} in both schemes`, () => {
+          for (const k of [0, 1] as const) {
+            const f = legsOf(css, fill)[k], i = legsOf(css, ink)[k]
+            const r = ratioOf(stopOf(css, 'primary', f), stopOf(css, 'primary', i))
+            expect(r, `${k ? 'dark' : 'light'} ${ink}(${i}) on ${fill}(${f}) = ${r.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA)
+          }
         })
       }
-      it('dark ladder darkens rest -> hover -> pressed, each step distinct', () => {
-        const [rest, dim, hover, active] = PAIRS.map(([fill]) => Number(darkLeg(css as string, fill)))
-        expect(dim, 'button hover (-dim) not darker than rest').toBeGreaterThan(rest as number)
-        expect(hover, 'hover not darker than rest').toBeGreaterThan(rest as number)
-        expect(active, 'pressed not darker than hover').toBeGreaterThan(Math.max(dim as number, hover as number))
+      it('the light legs equal primary / -dim / -high and the dark ladder darkens rest -> hover -> pressed', () => {
+        expect(legsOf(css, 'primary-fill')[0]).toBe(legsOf(css, 'primary')[0])
+        expect(legsOf(css, 'primary-fill-hover')[0]).toBe(legsOf(css, 'primary-dim')[0])
+        expect(legsOf(css, 'primary-fill-active')[0]).toBe(legsOf(css, 'primary-high')[0])
+        const [rest, hover, pressed] = FILL_PAIRS.map(([fill]) => Number(legsOf(css, fill)[1]))
+        expect(hover, 'dark hover not darker than rest').toBeGreaterThan(rest as number)
+        expect(pressed, 'dark pressed not darker than hover').toBeGreaterThan(hover as number)
       })
-      it('NEGATIVE control: the stock export legs (rest 450, hover 350, pressed 250) fail 4.5:1 on this ramp', () => {
-        const ink = darkLeg(css as string, 'primary-on-primary')
-        for (const stop of ['450', '350', '250']) expect(ratio(css as string, stop, ink), `primary-${stop}`).toBeLessThan(AA)
+      it('primary and -hover keep their pre-T-0340 ratio (450, 350) over the dark neutral surface as ink/indicator', () => {
+        const surface = stopOf(css, 'neutral', legsOf(css, 'neutral-surface', 'neutral')[1])
+        for (const [role, was] of [['primary', '450'], ['primary-hover', '350']] as const) {
+          const now = legsOf(css, role)[1]
+          expect(ratioOf(stopOf(css, 'primary', now), surface), `${role}(${now})`).toBeGreaterThanOrEqual(ratioOf(stopOf(css, 'primary', was), surface) - 1e-9)
+        }
       })
-      it('is a fixed point of wrap-pack.ts repointDarkPrimary (the derived legs, not a hand edit)', () => {
-        expect(repointDarkPrimary(css as string)).toBe(css)
+      it('NEGATIVE control: the plain primary dark leg fails 4.5:1 under on-primary, and a 600 ink loses ratio over the surface', () => {
+        const ink = stopOf(css, 'primary', legsOf(css, 'primary-on-primary')[1])
+        expect(ratioOf(stopOf(css, 'primary', legsOf(css, 'primary')[1]), ink)).toBeLessThan(AA)
+        const surface = stopOf(css, 'neutral', legsOf(css, 'neutral-surface', 'neutral')[1])
+        expect(ratioOf(stopOf(css, 'primary', '600'), surface)).toBeLessThan(ratioOf(stopOf(css, 'primary', '450'), surface))
+      })
+      it('is a fixed point of wrap-pack.ts repointFill (the derived legs, not a hand edit)', () => {
+        expect(repointFill(css)).toBe(css)
       })
     })
   }
+
+  it('NEGATIVE control: a stock pack with no fill roles is NOT a fixed point (repointFill adds them)', () => {
+    const stock = TOKENS_CSS.replace(/^\s*--md-sys-color-primary-fill(-hover|-active)?:[^;]*;\n/gm, '')
+    expect(stock).not.toBe(TOKENS_CSS)
+    expect(repointFill(stock)).not.toBe(stock)
+  })
 })

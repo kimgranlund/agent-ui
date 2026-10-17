@@ -77,9 +77,9 @@
      Amendment 2) under the legacy opt-out. A filled primary pill. */
   --ui-product-card-action-height: var(--md-sys-height, var(--md-sys-height-lg));
   --ui-product-card-action-font: var(--md-sys-type-control, var(--md-sys-font-lg));
-  --ui-product-card-action-bg: var(--md-sys-color-primary);
-  --ui-product-card-action-bg-hover: var(--md-sys-color-primary-high);
-  --ui-product-card-action-bg-active: var(--md-sys-color-primary-dim);
+  --ui-product-card-action-bg: var(--md-sys-color-primary-fill); /* T-0340: the fill ladder under on-primary ink */
+  --ui-product-card-action-bg-hover: var(--md-sys-color-primary-fill-hover);
+  --ui-product-card-action-bg-active: var(--md-sys-color-primary-fill-active);
   --ui-product-card-action-ink: var(--md-sys-color-primary-on-primary);
   --ui-product-card-action-border: transparent;
 

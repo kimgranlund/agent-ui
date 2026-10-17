@@ -44,8 +44,8 @@
   inline-size: 1.6rem;
   block-size: 1.6rem;
   border-radius: 50%;
-  background: var(--md-sys-color-primary);
-  color: var(--md-sys-color-primary-on-primary); /* the canonical ink for a --md-sys-color-primary fill (button.css) — NOT --md-sys-color-on-primary (no such role) */
+  background: var(--md-sys-color-primary-fill);
+  color: var(--md-sys-color-primary-on-primary); /* the canonical ink for a --md-sys-color-primary-fill fill (button.css); NOT --md-sys-color-on-primary (no such role) */
   font-size: 0.85rem;
   font-weight: 700;
 }

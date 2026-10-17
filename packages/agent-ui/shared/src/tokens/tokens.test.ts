@@ -175,8 +175,8 @@ describe('tokens.css — the composed surface stays WCAG-AA (ADR-0015 cl.3 — t
 })
 
 // tok-selected (ADR-0048) — the AA-guaranteed persistent-SELECTED accent fill. The accent ANCHOR pair
-// (--md-sys-color-primary + --md-sys-color-primary-on-primary/white) used to drop to 3.25:1 in dark (dark leg 450), below
-// the 4.5:1 bar for real TEXT; T-0340 moved that leg to 600 and gates the anchor pair below too.
+// (--md-sys-color-primary + --md-sys-color-primary-on-primary/white) drops to 3.25:1 in dark (dark leg 450), below
+// the 4.5:1 bar for real TEXT; it stays the ink/indicator role, and T-0340's primary-fill ladder carries on-primary text.
 // The ui-calendar selected-day NUMERAL is text, so it reads a DEDICATED --md-sys-color-primary-selected whose BOTH
 // light-dark() legs clear AA against --md-sys-color-primary-on-primary. This probe re-derives the contrast from the
 // DECLARED role legs (not hardcoded stops), so a future repoint re-runs the math. Same OKLCH→sRGB→WCAG path
@@ -228,57 +228,74 @@ describe('tokens.css — the AA-guaranteed --md-sys-color-primary-selected fill 
     expect(dark, `dark: on-primary(${inkD}) on selected(${fillD}) = ${dark.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA)
   })
 
-  // T-0340: the plain anchor pair is the gate now. ui-button's solid fill and ui-checkbox's checked box set
-  // on-primary ink on --md-sys-color-primary, so its dark leg moved 450 -> 600 (Kim 2026-10-17) to clear 4.5:1.
-  it('the plain --md-sys-color-primary anchor pair clears WCAG-AA (>=4.5:1) against on-primary TEXT in BOTH light and dark (T-0340)', () => {
-    const [anchorL, anchorD] = legsOf('primary')
-    const [inkL, inkD] = legsOf('primary-on-primary')
-    const light = contrast(gammaOf(inkL), gammaOf(anchorL))
-    const dark = contrast(gammaOf(inkD), gammaOf(anchorD))
-    expect(light, `light: on-primary(${inkL}) on --md-sys-color-primary(${anchorL}) = ${light.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA)
-    expect(dark, `dark: on-primary(${inkD}) on --md-sys-color-primary(${anchorD}) = ${dark.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA)
-  })
-
-  it('NEGATIVE control: the retired dark anchor (450) FAILS the 4.5:1 bar against on-primary, so the gate above has teeth', () => {
+  it('NEGATIVE control: the plain --md-sys-color-primary anchor pair FAILS the 4.5:1 TEXT bar in dark (why the fill roles exist)', () => {
+    const [, anchorD] = legsOf('primary') // the ink and indicator role, dark leg 450
     const [, inkD] = legsOf('primary-on-primary')
-    const dark = contrast(gammaOf(inkD), gammaOf('450'))
-    expect(dark, `dark: on-primary(${inkD}) on primary-450 = ${dark.toFixed(2)}:1`).toBeLessThan(AA)
+    const dark = contrast(gammaOf(inkD), gammaOf(anchorD))
+    expect(dark, `dark: on-primary(${inkD}) on --md-sys-color-primary(${anchorD}) = ${dark.toFixed(2)}:1`).toBeLessThan(AA)
   })
 
-  // T-0340 round 2: the dark fill STATES carry on-primary text too. ui-button's solid hover reads -dim, its pressed
-  // fill reads -active in dark (button.css), and ui-switch's track hover reads -hover. Each dark pair clears AA and
-  // the ladder darkens rest -> hover -> pressed, so hover differs from rest and pressed from hover.
-  const STATE_PAIRS = [
-    ['primary-dim', 'primary-on-primary-hover'],
-    ['primary-hover', 'primary-on-primary-hover'],
-    ['primary-active', 'primary-on-primary-active'],
+  // T-0340: the FILL ladder under on-primary text (ui-button solid rest/hover/pressed, checked checkbox and radio,
+  // choice-card badge, product-card action, column-chart callout). Each state clears AA in both schemes, and the
+  // dark ladder darkens rest -> hover -> pressed.
+  const FILL_PAIRS = [
+    ['primary-fill', 'primary-on-primary'],
+    ['primary-fill-hover', 'primary-on-primary-hover'],
+    ['primary-fill-active', 'primary-on-primary-active'],
   ] as const
-  for (const [fill, ink] of STATE_PAIRS) {
-    it(`dark --md-sys-color-${fill} clears WCAG-AA (>=4.5:1) against --md-sys-color-${ink} TEXT (T-0340)`, () => {
-      const [, fillD] = legsOf(fill)
-      const [, inkD] = legsOf(ink)
+  for (const [fill, ink] of FILL_PAIRS) {
+    it(`--md-sys-color-${fill} clears WCAG-AA (>=4.5:1) against --md-sys-color-${ink} TEXT in BOTH schemes (T-0340)`, () => {
+      const [fillL, fillD] = legsOf(fill)
+      const [inkL, inkD] = legsOf(ink)
+      const light = contrast(gammaOf(inkL), gammaOf(fillL))
       const dark = contrast(gammaOf(inkD), gammaOf(fillD))
+      expect(light, `light: ${ink}(${inkL}) on ${fill}(${fillL}) = ${light.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA)
       expect(dark, `dark: ${ink}(${inkD}) on ${fill}(${fillD}) = ${dark.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA)
     })
   }
 
-  it('dark fill ladder darkens rest -> hover -> pressed, each step distinct (T-0340)', () => {
-    const rest = Number(legsOf('primary')[1])
-    const hover = Number(legsOf('primary-hover')[1])
-    const buttonHover = Number(legsOf('primary-dim')[1])
-    const pressed = Number(legsOf('primary-active')[1])
-    expect(hover, 'dark hover is not darker than rest').toBeGreaterThan(rest)
-    expect(buttonHover, 'dark button hover (-dim) is not darker than rest').toBeGreaterThan(rest)
-    expect(pressed, 'dark pressed is not darker than hover').toBeGreaterThan(hover)
-    expect(pressed, 'dark pressed is not darker than button hover (-dim)').toBeGreaterThan(buttonHover)
+  it('the fill ladder keeps the light accent ladder (primary / -dim / -high) and darkens rest -> hover -> pressed in dark (T-0340)', () => {
+    expect(legsOf('primary-fill')[0]).toBe(legsOf('primary')[0])
+    expect(legsOf('primary-fill-hover')[0]).toBe(legsOf('primary-dim')[0])
+    expect(legsOf('primary-fill-active')[0]).toBe(legsOf('primary-high')[0])
+    const [rest, hover, pressed] = FILL_PAIRS.map(([fill]) => Number(legsOf(fill)[1]))
+    expect(hover, 'dark hover is not darker than rest').toBeGreaterThan(rest as number)
+    expect(pressed, 'dark pressed is not darker than hover').toBeGreaterThan(hover as number)
   })
 
-  it('NEGATIVE control: the retired dark state legs (hover 350, pressed 250, button pressed -high 400) FAIL 4.5:1', () => {
-    const [, inkD] = legsOf('primary-on-primary-hover')
-    for (const stop of ['350', '250', '400']) {
+  it('NEGATIVE control: the plain-role dark legs the fill ladder replaced (450, 400, 350, 250) fail AA under on-primary', () => {
+    const [, inkD] = legsOf('primary-on-primary')
+    for (const stop of ['450', '400', '350', '250']) {
       const dark = contrast(gammaOf(inkD), gammaOf(stop))
       expect(dark, `dark: on-primary(${inkD}) on primary-${stop} = ${dark.toFixed(2)}:1`).toBeLessThan(AA)
     }
+  })
+
+  // T-0340 code review: `primary` and `-hover` stay the INK and INDICATOR roles (links, tabs, progress, radio ring,
+  // checkbox border, switch hover track). Over the dark neutral surface they keep their pre-T-0340 ratio (450, 350).
+  const oklchOf = (family: string, stop: string): [number, number, number] => {
+    const m = bare.match(new RegExp(`--md-sys-color-${family}-${stop}:\\s*oklch\\(([-\\d.]+)\\s+([-\\d.]+)\\s+([-\\d.]+)`))
+    if (!m) throw new Error(`primitive --md-sys-color-${family}-${stop} not found`)
+    return [parseFloat(m[1]), parseFloat(m[2]), parseFloat(m[3])]
+  }
+  const surfaceD = (): number[] => {
+    const m = rootBlock.match(/--md-sys-color-neutral-surface:\s*light-dark\(\s*var\(--md-sys-color-neutral-\d+\)\s*,\s*var\(--md-sys-color-neutral-(\d+)\)\s*\)/)
+    if (!m) throw new Error('--md-sys-color-neutral-surface not a two-leg neutral light-dark()')
+    return oklchToLin(oklchOf('neutral', m[1] as string)).map(toGamma)
+  }
+  const PRE_T0340 = [['primary', '450'], ['primary-hover', '350']] as const
+  for (const [role, was] of PRE_T0340) {
+    it(`dark --md-sys-color-${role} as ink/indicator keeps its pre-T-0340 ratio over the dark neutral surface (primary-${was})`, () => {
+      const [, now] = legsOf(role)
+      const ratio = contrast(gammaOf(now), surfaceD())
+      const before = contrast(gammaOf(was), surfaceD())
+      expect(ratio, `dark ${role}(${now}) on surface = ${ratio.toFixed(2)}:1, was ${before.toFixed(2)}:1`).toBeGreaterThanOrEqual(before - 1e-9)
+    })
+  }
+
+  it('NEGATIVE control: a 600 ink (the reverted T-0340 round 1 anchor) loses ratio over the dark surface', () => {
+    expect(contrast(gammaOf('600'), surfaceD())).toBeLessThan(contrast(gammaOf('450'), surfaceD()))
+    expect(contrast(gammaOf('700'), surfaceD())).toBeLessThan(contrast(gammaOf('350'), surfaceD()))
   })
 })
 

@@ -26,7 +26,7 @@
      (the design-system's primary fill); the ink is the on-primary pair for readability (WCAG AA). */
   --ui-checkbox-bg: transparent;
   --ui-checkbox-border: var(--md-sys-color-neutral-high);
-  --ui-checkbox-bg-checked: var(--md-sys-color-primary);
+  --ui-checkbox-bg-checked: var(--md-sys-color-primary-fill); /* T-0340: the fill role under on-primary ink */
   --ui-checkbox-border-checked: var(--md-sys-color-primary);
   --ui-checkbox-ink: var(--md-sys-color-primary-on-primary); /* checkmark / indeterminate-dash fill */
 

@@ -58,13 +58,15 @@ export function extractRootBody(css: string): string {
   return body
 }
 
-// T-0340 (Kim 2026-10-17): a stock UT export pairs dark primary 450 with on-primary 050 (about 3.2:1), and its
-// dark hover/active legs step LIGHTER (350/250). Every primary fill carries on-primary text, so the wrap repoints
-// the dark legs of the three fill roles onto the pack's OWN ramp: rest is the lightest stop from 600 down that
-// clears 4.5:1 against the dark on-primary leg, hover is rest + 100 and active is rest + 150 (darkening, the light
-// ladder's direction). The stops are read from the pack's primitives, never tabled here.
-export const DARK_FILL_FLOOR = 600
+// T-0340 (Kim 2026-10-17): a stock UT export has no fill role for on-primary text, and its dark `primary` (450)
+// carries that text at about 3.2:1. `primary` stays the ink and indicator role; the wrap adds the FILL ladder
+// (`--md-sys-color-primary-fill`, `-fill-hover`, `-fill-active`) derived from the pack's OWN ramp. Light legs copy
+// the pack's `primary` / `-dim` / `-high` light legs (ui-button's light ladder). The dark rest is the first stop,
+// walking away from the on-primary ink from DARK_FILL_START (darker for a light ink, lighter for a dark ink), that
+// clears 4.5:1; hover and pressed step 100 and 150 further the same way. Nothing is tabled here.
+export const DARK_FILL_START = { darker: 600, lighter: 400 } as const
 export const AA_TEXT = 4.5
+const FILL_ROLES = ['primary-fill', 'primary-fill-hover', 'primary-fill-active'] as const
 
 type Oklch = [number, number, number]
 
@@ -87,40 +89,56 @@ const contrastOf = (x: Oklch, y: Oklch): number => {
   return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
 }
 
-/** Repoint the dark legs of `--md-sys-color-primary`, `-hover` and `-active` so on-primary text clears AA. */
-export function repointDarkPrimary(body: string): string {
-  if (!/--md-sys-color-primary:/.test(body)) return body // no primary family declared: nothing to repoint
+const pad = (n: number): string => String(n).padStart(3, '0')
+
+/** Write the derived `--md-sys-color-primary-fill{,-hover,-active}` roles into a pack body (inserted after
+ *  `--md-sys-color-primary-active`, or replaced in place). A body with no `primary` role is returned as is. */
+export function repointFill(body: string): string {
+  if (!/--md-sys-color-primary:/.test(body)) return body // no primary family declared: nothing to derive
   const ramp = new Map<number, Oklch>()
   for (const m of body.matchAll(/--md-sys-color-primary-(\d{3}):\s*oklch\(([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\)/g)) {
     ramp.set(Number(m[1]), [Number(m[2]), Number(m[3]), Number(m[4])])
   }
-  const leg = (role: string): RegExpMatchArray => {
-    const m = body.match(new RegExp(`(--md-sys-color-${role}:\\s*light-dark\\(var\\(--md-sys-color-primary-\\d{3}\\),\\s*var\\(--md-sys-color-primary-)(\\d{3})(\\)\\);)`))
+  const legs = (role: string): [string, string] => {
+    const m = body.match(new RegExp(`--md-sys-color-${role}:\\s*light-dark\\(var\\(--md-sys-color-primary-(\\d{3})\\),\\s*var\\(--md-sys-color-primary-(\\d{3})\\)\\);`))
     if (!m) throw new Error(`wrap-pack: --md-sys-color-${role} is not a two-leg primary light-dark() role`)
-    return m
+    return [m[1]!, m[2]!]
   }
-  const ink = ramp.get(Number(leg('primary-on-primary')[2]))
+  const ink = ramp.get(Number(legs('primary-on-primary')[1]))
   if (!ink) throw new Error('wrap-pack: the dark on-primary leg has no primitive in the ramp')
   const stops = [...ramp.keys()].sort((a, b) => a - b)
-  const rest = stops.find((n) => n >= DARK_FILL_FLOOR && contrastOf(ramp.get(n)!, ink) >= AA_TEXT)
-  if (rest === undefined) throw new Error(`wrap-pack: no primary stop from ${DARK_FILL_FLOOR} clears ${AA_TEXT}:1 against on-primary`)
+  const mid = ramp.get(500) ?? ramp.get(stops[Math.floor(stops.length / 2)]!)!
+  const way = luminance(ink) >= luminance(mid) ? 'darker' : 'lighter'
+  const sign = way === 'darker' ? 1 : -1
+  const start = DARK_FILL_START[way]
+  const walk = way === 'darker' ? stops.filter((n) => n >= start) : stops.filter((n) => n <= start).reverse()
+  const rest = walk.find((n) => contrastOf(ramp.get(n)!, ink) >= AA_TEXT)
+  if (rest === undefined) {
+    throw new Error(`wrap-pack: no primary stop ${way} than ${start} clears ${AA_TEXT}:1 against the dark on-primary ink; this pack needs a hand-picked fill`)
+  }
   const step = (n: number): number => {
-    if (!ramp.has(n)) throw new Error(`wrap-pack: the primary ramp has no ${n} stop`)
+    if (!ramp.has(n)) throw new Error(`wrap-pack: the primary ramp has no ${pad(n)} stop for the fill ladder (rest ${pad(rest)}, ${way})`)
     return n
   }
+  const dark = [rest, step(rest + sign * 100), step(rest + sign * 150)]
+  const light = [legs('primary')[0], legs('primary-dim')[0], legs('primary-high')[0]]
+  const decl = FILL_ROLES.map((r, i) => `--md-sys-color-${r}: light-dark(var(--md-sys-color-primary-${light[i]}), var(--md-sys-color-primary-${pad(dark[i]!)}));`)
+
   let out = body
-  for (const [role, stop] of [['primary', rest], ['primary-hover', step(rest + 100)], ['primary-active', step(rest + 150)]] as const) {
-    const m = leg(role)
-    out = out.replace(m[0], `${m[1]}${stop}${m[3]}`)
+  if (/--md-sys-color-primary-fill:/.test(out)) {
+    FILL_ROLES.forEach((r, i) => { out = out.replace(new RegExp(`--md-sys-color-${r}:[^;]*;`), decl[i]!) })
+    return out
   }
-  return out
+  const anchor = out.match(/^([ \t]*)--md-sys-color-primary-active:[^;]*;$/m)
+  if (!anchor) throw new Error('wrap-pack: no --md-sys-color-primary-active declaration to place the fill roles after')
+  return out.replace(anchor[0], [anchor[0], ...decl.map((d) => `${anchor[1]}${d}`)].join('\n'))
 }
 
 /** Wrap a UT export's `:root` body under `[theme='<name>']`, 2-space re-indented to match this repo's
  *  CSS convention (ADR-0003 — the same indent every hand-authored token block already uses). */
 export function wrapPack(name: string, exportCss: string): string {
   if (!NAME_RE.test(name)) throw new Error(`wrap-pack: "${name}" is not a legal theme name (kebab, lowercase, [a-z0-9-]+)`)
-  const body = repointDarkPrimary(extractRootBody(exportCss))
+  const body = repointFill(extractRootBody(exportCss))
   const lines = body
     .split('\n')
     .map((l) => l.trim())
@@ -139,14 +157,19 @@ export function wrapPack(name: string, exportCss: string): string {
   )
 }
 
-/** `--repoint [name...]`: apply repointDarkPrimary to committed packs (all of them when none is named), for
+/** `--repoint [name...]`: apply repointFill to committed packs (all of them when none is named), for
  *  packs wrapped before the repoint existed; idempotent, so a re-run leaves the files byte-identical. */
 function repointCommitted(names: string[]): void {
+  const bad = names.filter((n) => !NAME_RE.test(n))
+  if (bad.length > 0) {
+    console.error(`wrap-pack: --repoint name(s) not a legal theme name (kebab, lowercase, [a-z0-9-]+): ${bad.join(', ')}`)
+    process.exit(1)
+  }
   const files = names.length > 0 ? names.map((n) => `${n}.css`) : readdirSync(THEMES_DIR).filter((f) => f.endsWith('.css'))
   for (const file of files) {
     const path = `${THEMES_DIR}/${file}`
     const before = readFileSync(path, 'utf8')
-    const after = repointDarkPrimary(before)
+    const after = repointFill(before)
     if (after !== before) writeFileSync(path, after)
     console.log(`wrap-pack: ${after === before ? 'unchanged' : 'repointed'} ${path}`)
   }

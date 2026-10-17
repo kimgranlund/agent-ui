@@ -78,7 +78,7 @@ variants on the `primary` family:
 
 | `ui-button` variant | `--ui-button-bg` | `-bg-hover` | `-bg-active` |
 |---|---|---|---|
-| **solid** (filled) | `--md-sys-color-primary` | `--md-sys-color-primary-dim` | `--md-sys-color-primary-high` |
+| **solid** (filled) | `--md-sys-color-primary-fill` | `--md-sys-color-primary-fill-hover` | `--md-sys-color-primary-fill-active` |
 | **soft** (tonal) | `--md-sys-color-primary-container-low` | `--md-sys-color-primary-container` | `--md-sys-color-primary-container-high` |
 | **ghost** (text) | `transparent` | `--md-sys-color-primary-container-low` | `--md-sys-color-primary-container` |
 
@@ -100,10 +100,12 @@ variants on the `primary` family:
 > or re-derive its own per the family-role pattern — never assume the generic `-dim`/`-high` ladder
 > is collapse-free for the `primary` family in light scheme.
 >
-> **T-0340 (2026-10-17, Kim):** every primary fill carries on-primary text, so its dark legs clear 4.5:1. Dark
-> `--md-sys-color-primary` is 600, `-hover` 700 and `-active` 750 (a darkening ladder, as in light), in tokens.css and,
-> through `wrap-pack.ts`'s `repointDarkPrimary`, in every theme pack. `ui-button`'s solid pressed fill reads
-> `light-dark(-high, -active)`: light keeps the Amendment 2 ladder, dark leaves `-high` (dark 400, an ink role).
+> **T-0340 (2026-10-17, Kim):** a fill that carries on-primary text reads the primary FILL ladder,
+> `--md-sys-color-primary-fill` / `-fill-hover` / `-fill-active`: dark 600 / 700 / 750, each at 4.5:1 or better, and
+> light legs equal to `primary` / `-dim` / `-high`, so the light Amendment 2 ladder (and its collapse) is unchanged.
+> `ui-button` solid's row in the table above reads it, as do the checked checkbox and radio fill. `primary`, `-hover`
+> and `-active` stay the ink and indicator roles at their stock legs. Theme packs get the ladder from `wrap-pack.ts`'s
+> `repointFill`.
 
 ### Disabled holds at idle (no lift)
 
