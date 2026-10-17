@@ -2,7 +2,7 @@
 id: T-0331
 title: "BookingForm read-back check matches booking verbs and the confirm_booking action (round 9 cluster D)"
 type: bug             # feature | bug | chore | spike | idea
-status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -25,3 +25,12 @@ packages/agent-ui/a2ui/src/catalog/composite-moments.ts:88, the readBack cue `/\
 
 ## Constraints
 None.
+
+## Outcome
+
+2026-10-17 · lane: full L1 · verdict: pass · verifier: verifier-L1 (opus) · base: 67c6b1ff3d49
+- Changed: BookingForm read-back confirm keys on submit or a confirm action; info CTAs stay quiet (#2082)
+- Commits: none
+- Check: 1 A composite-moments test on the :84 round 3 payload, red first: pass
+- Check: 2 Existing cases stay green: pass
+- Check: 3 `npm run check` plus the touched folders' tests exit 0: pass
