@@ -5406,7 +5406,7 @@ describe('per-pack rejectOnCollision (S3, LLD-C5, SPEC-R6) — the flag opts in 
     expect(entries.map((e) => e.id), 'a second add suffix-dedups, unchanged by S3').toEqual(['grid-idiom', 'grid-idiom-2'])
   })
 
-  it('entry-list.ts threading (unit) — the select handler forwards the pack flag and the pack source as onAdd\'s optional context', () => {
+  it('entry-list.ts threading (unit): the select handler forwards the pack flag and the pack source as onAdd\'s optional context', () => {
     const calls: Array<{ input: NewEntryInput; context: { rejectOnCollision?: boolean; source?: 'pack' } | undefined }> = []
     const capturing: EntryListHandlers = {
       onToggle: () => {},

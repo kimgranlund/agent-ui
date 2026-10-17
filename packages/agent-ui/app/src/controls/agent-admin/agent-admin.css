@@ -1032,7 +1032,7 @@
     flex: 0 0 auto;
   }
 
-  /* T-0162 — a modified place's provenance strip (who changed it, the marker, the seed it differs from,
+  /* T-0162: a modified place's provenance strip (who changed it, the marker, the seed it differs from,
      Reset): one secondary line under the control it describes, the entry-description plane (small type,
      label ink), so a row reads as itself first and its history second. */
   [data-part='field-provenance'] {

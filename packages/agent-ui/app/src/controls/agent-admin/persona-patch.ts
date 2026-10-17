@@ -90,7 +90,7 @@ export interface PersonaStateReader {
   get(key: string): unknown
 }
 
-/** The read/write surface `applyPersonaPatch` needs — `SettingsStore`'s `get`/`set`, nothing else. The
+/** The read/write surface `applyPersonaPatch` needs: `SettingsStore`'s `get`/`set`, nothing else. The
  *  `source` argument (T-0162, ACS-R8) tells an overlay store the write is the Builder's; a plain store
  *  ignores it. */
 export interface PersonaStateStore extends PersonaStateReader {

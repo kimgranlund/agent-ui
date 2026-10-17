@@ -265,6 +265,26 @@ ticket against this SPEC runs that ticket's named tests and checks each cited `f
    edit that field. An entry patch keeps its whole base entry, which case 5 needs to keep the user's entry. At a
    lower stored version (ACS-R7's migration) a seed entry missing from the stored list is not read as a user
    removal (a later version may have added it), so that branch records no removals and no order. ACS-R8's
-   per-op `source` is not recorded yet: every write reaches the store through `SettingsStore.set`, which carries
-   no source, so the provenance plumbing stays with T-0162. The Teams pane takes its store through
-   `ui-agent-admin`'s `setTeamStore`; the page's store writes through the `teamsResource` mutations.
+   per-op `source` landed with T-0162 (item 7). The Teams pane takes its store through `ui-agent-admin`'s
+   `setTeamStore`; the page's store writes through the `teamsResource` mutations.
+7. Schema forms, decided (T-0162, ACS-R8 and ACS-R10). Each kind's fields are declared once in
+   `@agent-ui/app/agent-admin-content-fields` (`content-fields.ts`: `PERSONA_FIELDS`, `ENTRY_FIELDS`,
+   `PACK_FIELDS`, `checkFieldValue`), an import-free module because `app` cannot import the site and the
+   content validator runs under Node. A persona row names its store key, its `agent.md` key, its value type and
+   its home (the pane place that edits it, or `seed`, `state` or `file`). Readers: the content validator and the
+   CLI (`checkFrontmatter`), the Agent and Model settings sections (`agentConfigSchema`, the `agent` and `model`
+   rows plus their layout hints), `PERSONA_STATE_KEYS` (the `state` rows, so the persona file and the Builder's
+   patch vocabulary are the schema's), and the patch gate's filter 2 (`checkFieldValue`, plus a fixpoint over
+   the shipped reader for `model`, the catalog, the local patterns and the bankroll). The coverage law is
+   pane-wide: every pane-homed row has a control carrying `data-field`, and every `data-field` names one
+   (`provenance.browser.test.ts`). Each op records its `source` (`builder` from the patch gate, `pack` from the
+   library menu, `user` stored as no member, so a user op keeps its T-0161 shape); a whole-record store (an
+   import, a duplicate, a blank new agent) answers one provenance from the record's `origin`. A modified place
+   shows a strip with its source, a Modified or Seed changed marker, the seed value and Reset; on a seed-changed
+   place Reset reads "Take seed" and drops the op, whose base already moved to the new seed. A seed place shows
+   no strip (its `data-provenance` says seed), so an unedited pane reads as it did. A seed entry the user removed
+   and a reordered list show on the list's own strip. The CLI is `scripts/agent-content.mjs`; the Builder export
+   is the persona file, and `new <id> --from <file>` writes it as a seed folder, listing every value the seed
+   format cannot carry (switches, the model grid's record, builtin sections other than Foundation, an entry's
+   display label) instead of adding frontmatter keys for them. `compile-check` is validate plus the generator's
+   freshness check until the compiler's digest leg lands (T-0163).

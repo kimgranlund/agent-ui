@@ -860,7 +860,7 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
       }
     }
     applyNotices() // GH #419 — a rebuild must not drop a live notice (the map outlives any one render)
-    applyRowMarks() // T-0162 — nor a provenance mark
+    applyRowMarks() // T-0162: nor a provenance mark
     // GH #564 — a `rejectOnCollision` kind's add/delete just changed what's "already in the list"; rebuild
     // the picker so a newly-collided row disables (or a deleted one re-enables), never a stale menu. Gated
     // on the flag so every other kind's render stays exactly as before (no picker rebuild at all).

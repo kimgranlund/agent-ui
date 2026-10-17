@@ -26,6 +26,10 @@
   paths) replayed from fixtures in `scripts/e2e-admin/`; outside the six shards, local only, no CI job.
 - `npm run e2e:admin:record`: captures a new admin fixture from the live model; manual, needs a key in `.env`,
   never run in CI.
+- `node scripts/agent-content.mjs validate | new <id> | add-skill <id> | compile-check`: the agent content CLI
+  (T-0162) over `site/agent-content/`, the same validator as the generator; `new <id> --from <persona file>`
+  writes an exported agent as a seed folder. Keyless, local; its test rides the `scripts` project
+  (`scripts/agent-content.test.mjs`). Usage in `site/agent-content/AGENTS.md`.
 - `npm run chat:probe -- --agent <preset> --model <id> --say "<text>" [--click <label>]`: drives the real Test Chat
   headless (live spends API credit; `--replay <fixture>` is keyless), writes a report, screenshots and named
   checks (no halt, no A2UI JSON as prose, no surface lost to self-correct, render lint), exit 1 on a fail;
