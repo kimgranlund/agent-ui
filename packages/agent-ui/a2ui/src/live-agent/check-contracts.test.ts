@@ -582,6 +582,9 @@ const PROBES: Record<string, readonly Fixture[]> = {
         }),
       ],
     },
+    // T-0323: the poker arms of the new-round and opening repair texts.
+    { catalog: CROUPIER, action: { name: 'deal_again', surfaceId: 'table-1', context: { newRound: true }, dataModel: { bankroll: 1060 } }, output: [] },
+    { catalog: CROUPIER, intent: "Let's play five-card draw.", output: [] },
   ],
   'word-move-applied': [
     { catalog: UI, session: wordSession, intent: 'I give up.', target: 'word-1', output: [] },
@@ -606,10 +609,6 @@ const PROBES: Record<string, readonly Fixture[]> = {
   'croupier-bet-controls': [
     { catalog: CROUPIER, output: dealtPoker(['checkBtn', 'betBtn', 'foldBtn']) },
     { catalog: CROUPIER, output: dealtPoker() },
-  ],
-  'croupier-action-applied': [
-    { catalog: CROUPIER, action: { name: 'deal_again', surfaceId: 'table-1', context: { newRound: true }, dataModel: { bankroll: 1060 } }, output: [] },
-    { catalog: CROUPIER, intent: "Let's play five-card draw.", output: [] },
   ],
 }
 
