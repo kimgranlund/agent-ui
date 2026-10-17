@@ -402,12 +402,24 @@ describe('croupier hand check: the CardTable arm (ADR-0243)', () => {
       })
     const pontoon = judge({ turns: [] }, natural('Pontoon'))[0]!
     expect(pontoon.code).toBe('NATURAL_ACTIONS')
-    expect(pontoon.message).toContain('are a natural pontoon')
+    expect(pontoon.message).toContain('are a pontoon, which ends')
     expect(pontoon.message).toContain('the player wins 2:1 unless the dealer also has a pontoon, then the dealer wins the tie')
     expect(pontoon.message).toContain('with no Twist, Stick or Buy')
     expect(pontoon.message).not.toMatch(/push|3:2|Hit, Stand/)
+    // A buy is a move only as a card move, and only in pontoon: "Buy chips" never counts.
+    const withBuys = natural('Pontoon')
+    tableComponents(withBuys).push(
+      { id: 'buyBtn', component: 'Button', label: 'Buy a card', action: { event: { name: 'buy' } } },
+      { id: 'chipsBtn', component: 'Button', label: 'Buy chips', action: { event: { name: 'buy_chips' } } },
+    )
+    const listed = judge({ turns: [] }, withBuys)[0]!.message
+    expect(listed).toContain('buyBtn (buy)')
+    expect(listed).not.toContain('chipsBtn')
+    const blackjackBuys = natural('Blackjack')
+    tableComponents(blackjackBuys).push({ id: 'buyBtn', component: 'Button', label: 'Buy a card', action: { event: { name: 'buy' } } })
+    expect(judge({ turns: [] }, blackjackBuys)[0]!.message).not.toContain('buyBtn')
     const blackjack = judge({ turns: [] }, natural('Blackjack'))[0]!
-    expect(blackjack.message).toContain('the player wins 3:2 unless the dealer also has 21, then a push')
+    expect(blackjack.message).toContain('the player wins 3:2 unless the dealer also has a natural blackjack, then a push')
     expect(blackjack.message).toContain('with no Hit, Stand or Double')
   })
 
@@ -571,6 +583,18 @@ describe('croupier bet controls: a playing table offers the moves (T-0233)', () 
     expect(run(payload([table(['twist', 'stick']), button('twist', 'Twist'), button('stick', 'Stick')], { phase: 'playing', playerHand: [C('9'), C('7')] }))).toEqual([])
     const beside = [{ id: 'col', component: 'Column', children: ['root', 'moves'] }, table([]), { id: 'moves', component: 'Row', children: ['hit'] }, button('hit', 'Hit')]
     expect(run(payload(beside, { phase: 'playing', playerHand: [C('9'), C('7')] }))).toEqual([])
+  })
+
+  it('T-0334: Buy and Buy a card are moves in pontoon only; Buy chips and Buy in are moves nowhere', () => {
+    const hand = { phase: 'playing', playerHand: [C('9'), C('7')] }
+    const on = (title: string, ...buttons: [string, string][]) =>
+      run(payload([{ ...table([]), title }, ...buttons.map(([id, label]) => button(id, label))], hand)).map((f) => f.code)
+    expect(on('Pontoon', ['buy', 'Buy'])).toEqual([])
+    expect(on('Pontoon', ['b2', 'Buy a card'])).toEqual([])
+    expect(on('Pontoon', ['buy_card', 'Get one'])).toEqual([])
+    expect(on('Pontoon', ['c1', 'Buy chips'], ['c2', 'Buy in'])).toEqual(['MOVES_MISSING'])
+    expect(on('Blackjack', ['buy', 'Buy'])).toEqual(['MOVES_MISSING'])
+    expect(on('Blackjack', ['c1', 'Buy chips'])).toEqual(['MOVES_MISSING'])
   })
 
   it('a settled, betting, natural or bust table has no moves to offer and passes', () => {
@@ -745,6 +769,26 @@ describe('croupier action check: settlement pays out from the click-time bankrol
       expect(deal(bound(1075, 'Blackjack'))).toEqual([])
     })
 
+    it('an untitled table under a Pontoon heading is a pontoon table; a heading elsewhere is not enough', () => {
+      const heading = (text: string, variant = 'h1') => ({ id: 'head', component: 'Text', variant, text })
+      const untitled = (bankroll: number, extra: Record<string, unknown>[]) => {
+        const out = titled(undefined, bankroll, nat, hard, extra)
+        delete (out[1] as { updateComponents: { components: Record<string, unknown>[] } }).updateComponents.components[0]!['title']
+        return out
+      }
+      expect(deal(untitled(1100, [heading('Pontoon')]))).toEqual([])
+      expect(deal(untitled(1075, [heading('Blackjack'), { id: 'p', component: 'Text', variant: 'body', text: 'pontoon' }]))).toEqual([])
+      expect(deal(untitled(1075, [{ id: 'p', component: 'Text', variant: 'body', text: 'Pontoon' }]))).toEqual([])
+    })
+
+    it('BUY_CARD_FACE_UP still fires for an untitled table under a Pontoon heading', () => {
+      const out = titled(undefined, 700, [C('10'), C('5'), C('4')], dealer17, [{ id: 'head', component: 'Text', variant: 'h2', text: 'Pontoon' }], { phase: 'playing' })
+      delete (out[1] as { updateComponents: { components: Record<string, unknown>[] } }).updateComponents.components[0]!['title']
+      const act = { name: 'buy', surfaceId: 'table-1', context: {}, dataModel: { bankroll: 800, bet: 100, phase: 'playing', playerHand: [C('10'), C('5')] } }
+      const f = croupierSemanticChecks.flatMap((c) => c.check({ surfaces: semanticSurfaceViews({ turns: [] }, out), action: act }))
+      expect(codes(f.filter((x) => x.code === 'BUY_CARD_FACE_UP'))).toEqual(['BUY_CARD_FACE_UP'])
+    })
+
     it('words that mention pontoon do not make a blackjack table a pontoon table', () => {
       const note = { id: 'note', component: 'Text', text: 'Pontoon, twenty-one and Spanish 21 are all on the menu.' }
       expect(deal(titled('Blackjack (they call it pontoon in the UK)', 1075, nat, hard))).toEqual([])
@@ -765,11 +809,31 @@ describe('croupier action check: settlement pays out from the click-time bankrol
       expect(run(titled('Blackjack', 1000, tie, tie), 'stand', playing(950))).toEqual([])
     })
 
+    it('a second buy adds the original stake, not the bet the first buy raised (900 to 1,150 on 50, bought twice)', () => {
+      const bought = (n: number) => Array.from({ length: n }, () => ({ rank: '2', suit: 'clubs', faceDown: true }))
+      const twice = { bankroll: 900, bet: 100, phase: 'playing', playerHand: [C('5'), C('4'), ...bought(1)] }
+      expect(run(titled('Pontoon', 1150, win, dealer17), 'buy', twice)).toEqual([])
+      const wrong = run(titled('Pontoon', 1200, win, dealer17), 'buy', twice)
+      expect(codes(wrong)).toEqual(['BANKROLL_MISMATCH'])
+      expect(wrong[0]!.message).toMatch(/stake of 150, so the bankroll goes from 900 to 1150 \(50 taken out now, 300 paid back\)/)
+    })
+
+    it('a five-card trick pays 2:1 and beats a higher dealer hand, but not a banker pontoon; blackjack has no trick', () => {
+      const trick = [C('2'), C('3'), C('4'), C('5'), C('4')] // 18 on five cards
+      const dealer20 = [C('K'), C('Q')]
+      expect(run(titled('Pontoon', 1100, trick, dealer20), 'twist', playing(950))).toEqual([])
+      const flat = run(titled('Pontoon', 950, trick, dealer20), 'twist', playing(950))
+      expect(flat[0]!.message).toMatch(/a five-card trick \(2:1\) on a stake of 50/)
+      expect(run(titled('Pontoon', 950, trick, [C('A', 'hearts'), C('K')]), 'twist', playing(950))).toEqual([])
+      expect(run(titled('Pontoon', 950, [C('9'), C('8')], [C('2'), C('3'), C('4'), C('5'), C('4')]), 'stick', playing(950))).toEqual([])
+      expect(run(titled('Blackjack', 950, trick, dealer20), 'hit', playing(950))).toEqual([])
+    })
+
     it('a pontoon buy adds a stake equal to the bet (950 to 1,100 on a bought 50 win); a hit does not', () => {
       expect(run(titled('Pontoon', 1100, win, dealer17), 'buy', playing(950))).toEqual([])
       expect(codes(run(titled('Pontoon', 1050, win, dealer17), 'buy', playing(950)))).toEqual(['BANKROLL_MISMATCH'])
       expect(run(titled('Pontoon', 1050, win, dealer17), 'twist', playing(950))).toEqual([])
-      expect(codes(run(titled('Blackjack', 1100, win, dealer17), 'buy', playing(950)))).toEqual(['BANKROLL_MISMATCH'])
+      expect(run(titled('Blackjack', 1100, win, dealer17), 'buy', playing(950))).toEqual([]) // buy is no blackjack move
     })
   })
 
