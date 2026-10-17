@@ -112,7 +112,7 @@ const validationNote = el('p', {}, [
 ])
 
 // ── [5] the axis specimens — size × state ────────────────────────────────────────────────────────────────────
-const sizes = el('ui-row', { gap: 'sm', align: 'end', wrap: '' }, [
+const sizes = el('ui-row', { gap: 'sm', align: 'stretch', wrap: '' }, [
   captioned('size="sm"', el('ui-text-field', { size: 'sm', label: 'Small', placeholder: 'sm' })),
   captioned('size="md" (default)', el('ui-text-field', { label: 'Medium', placeholder: 'md' })),
   captioned('size="lg"', el('ui-text-field', { size: 'lg', label: 'Large', placeholder: 'lg' })),

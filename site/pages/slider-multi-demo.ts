@@ -99,7 +99,7 @@ const sized = (size: string): HTMLElement => {
   applyDemoWidth(s, '12rem')
   return s
 }
-const sizeRow = el('div', { style: 'display:flex; gap:var(--md-sys-space-xl); align-items:flex-end; flex-wrap:wrap;' }, [
+const sizeRow = el('div', { style: 'display:flex; gap:var(--md-sys-space-xl); flex-wrap:wrap;' }, [
   captioned('size="sm"', sized('sm')),
   captioned('size="md"', sized('md')),
   captioned('size="lg"', sized('lg')),

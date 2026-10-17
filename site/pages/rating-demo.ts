@@ -86,7 +86,7 @@ const sized = (size: string): HTMLElement => {
   applyDemoWidth(s, '8rem')
   return s
 }
-const sizeRow = el('div', { style: 'display:flex; gap:var(--md-sys-space-xl); align-items:flex-end; flex-wrap:wrap;' }, [
+const sizeRow = el('div', { style: 'display:flex; gap:var(--md-sys-space-xl); flex-wrap:wrap;' }, [
   captioned('size="sm"', sized('sm')),
   captioned('size="md"', sized('md')),
   captioned('size="lg"', sized('lg')),
@@ -95,7 +95,7 @@ const sizeRow = el('div', { style: 'display:flex; gap:var(--md-sys-space-xl); al
 // ── states — disabled + a bare row (no label) ───────────────────────────────────────────────────────────
 const disabled = el('ui-rating', { name: 'locked', label: 'Reliability (locked)', max: '5', value: '2', disabled: '' })
 const bare = el('ui-rating', { name: 'bare', 'aria-label': 'Quality', max: '5', value: '3' })
-const stateRow = el('div', { style: 'display:flex; gap:var(--md-sys-space-xl); align-items:flex-end; flex-wrap:wrap;' }, [
+const stateRow = el('div', { style: 'display:flex; gap:var(--md-sys-space-xl); flex-wrap:wrap;' }, [
   captioned('disabled', disabled),
   captioned('aria-label only (no visible label)', bare),
 ])
