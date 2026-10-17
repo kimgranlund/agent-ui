@@ -5,6 +5,7 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 
 | ID | Ticket | Title | Type | Size | Pri | Depends on | Status |
 |---|---|---|---|---|---|---|---|
+| T-0168 | [0168-lint-rulings-coverage](0168-lint-rulings-coverage/handoff.md) | Lint rules for the 2026-10 rulings: disabled recipe fleet-wide, 3:1 field outline, icon vs glyph, calendar cap, table pager, pill coverage, round-3 proposals | feature | L3 | P2 | T-0167 | 🔵 ready (branch feat/0168-lint-rulings-coverage) |
 | T-0169 | [0169-lint-dead-plumbing](0169-lint-dead-plumbing/handoff.md) | Remove dead lint plumbing: adr_ratify, docs-grammar S8, census lane code, ADR wording in gates, [scale]/[density] bridge | chore | L2 | P3 | T-0152, T-0159 | 🔵 ready |
 | T-0176 | [0176-eval-scenarios-store](0176-eval-scenarios-store/handoff.md) | Agent eval framework 1: scenario format, replay in CI, runs.jsonl signal store, 15 persona smoke scenarios | feature | L3 | P1 | T-0174, T-0181 | 🔵 ready |
 | T-0177 | [0177-eval-report](0177-eval-report/handoff.md) | Agent eval framework 2: report page (matrix heatmap, failure codes, digest trends, links to trace and screenshots) | feature | L2 | P2 | T-0176 | 🔵 ready |
@@ -25,16 +26,17 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0198 | [0198-step-flow](0198-step-flow/handoff.md) | Step flow pattern: step n of m, Back and Next, shared /draft data | feature | L3 | P3 | T-0197 | ⏳ proposed |
 | T-0199 | [0199-itinerary-compare](0199-itinerary-compare/handoff.md) | Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper | feature | L3 | P3 | T-0193 | ⏳ proposed |
 | T-0203 | [0203-composer-model-controls](0203-composer-model-controls/handoff.md) | Composer model controls: thinking off and show reasoning in the effort menu, web search and fetch toggles, server tools in requests, mid-conversation effort header | feature | L2 | P2 | T-0185 | 🔵 ready |
+| T-0209 | [0209-context-single-source](0209-context-single-source/handoff.md) | One source per concept: layer membership, calibration bullets, persona list; mini-skill ranking stability test | chore | L2 | P2 | none | 🔵 ready (branch chore/0209-context-single-source) |
 | T-0315 | [0315-shared-catalog-cross-game-retrieval](0315-shared-catalog-cross-game-retrieval/handoff.md) | Admiral and Lexicographer share the agent-ui catalog: 'New game' ranks the word board first on the Admiral's opening | bug | L2 | P2 | none | ⏳ proposed |
 | T-0328 | [0328-r9-rename-after-repair](0328-r9-rename-after-repair/handoff.md) | A same-turn repair that rebuilds a flagged surface under a new id must not halt (round 9 cluster A) | bug | L2 | P1 | none | 🔵 ready (branch fix/0328-rename-after-repair) |
-| T-0329 | [0329-r9-blackjack-opening-wording](0329-r9-blackjack-opening-wording/handoff.md) | Haiku blackjack openings back on the CardTable after the T-0323 wording (round 9 cluster B) | bug | L2 | P1 | none | 🔵 ready (branch fix/0329-blackjack-opening-wording) |
 | T-0330 | [0330-r9-dropped-surface-finding](0330-r9-dropped-surface-finding/handoff.md) | Feed a dropped surface's bound composite finding with SURFACE_DROPPED (round 9 cluster C) | bug | L2 | P2 | none | 🔵 ready |
+| T-0331 | [0331-r9-bookingform-readback-cue](0331-r9-bookingform-readback-cue/handoff.md) | BookingForm read-back check matches booking verbs and the confirm_booking action (round 9 cluster D) | bug | L1 | P2 | none | 🔵 ready (branch fix/0331-readback-cue) |
 | T-0332 | [0332-r9-narration-hint-no-change](0332-r9-narration-hint-no-change/handoff.md) | NARRATION_HINT leaves the surface as it is when the reply needs no change (round 9 cluster E) | bug | L1 | P3 | none | 🔵 ready |
-| T-0333 | [0333-r9-booking-confirmation-caption](0333-r9-booking-confirmation-caption/handoff.md) | BOOKING_CONFIRMATION_MISSING fires on a confirm turn or a read-back, not caption words (round 9 cluster G) | bug | L1 | P2 | none | 🔵 ready (branch fix/0333-confirmation-caption) |
+| T-0333 | [0333-r9-booking-confirmation-caption](0333-r9-booking-confirmation-caption/handoff.md) | BOOKING_CONFIRMATION_MISSING fires on a confirm turn or a read-back, not caption words (round 9 cluster G) | bug | L1 | P2 | none | 🔵 ready |
+| T-0334 | [0334-r9-pontoon-payout](0334-r9-pontoon-payout/handoff.md) | BANKROLL_MISMATCH and NATURAL_ACTIONS price a pontoon at 2:1 (round 9 cluster H) | bug | L1 | P3 | none | 🔵 ready (branch fix/0334-pontoon-payout) |
 | T-0335 | [0335-corpus-readback-records](0335-corpus-readback-records/handoff.md) | Replace confirmation-view and backable-wizard, which read back a booking before confirming | chore | L2 | P2 | none | 🔵 ready (branch chore/0335-readback-records) |
-| T-0336 | [0336-figure-parity-demos](0336-figure-parity-demos/handoff.md) | Site demos align captioned figures to a shared top edge (figure-parity allowlist debt) | chore | L1 | P3 | none | 🔵 ready (branch fix/0336-figure-parity) |
-| T-0337 | [0337-column-chart-callout-contrast](0337-column-chart-callout-contrast/handoff.md) | Column-chart highlight callout ink meets 4.5:1 on its pill in dark mode (chip-opaque debt) | bug | L1 | P3 | none | 🔵 ready (branch fix/0337-callout-contrast) |
+| T-0336 | [0336-figure-parity-demos](0336-figure-parity-demos/handoff.md) | Site demos align captioned figures to a shared top edge (figure-parity allowlist debt) | chore | L1 | P3 | none | 🔵 ready |
+| T-0337 | [0337-column-chart-callout-contrast](0337-column-chart-callout-contrast/handoff.md) | Column-chart highlight callout ink meets 4.5:1 on its pill in dark mode (chip-opaque debt) | bug | L1 | P3 | none | 🔵 ready |
 | T-0338 | [0338-product-card-icon-box](0338-product-card-icon-box/handoff.md) | product-card icon header: 2n icon box or a ruled exemption (icon-box debt) | chore | L1 | P3 | none | ⏳ proposed |
-| T-0339 | [0339-gauge-rtl-layout](0339-gauge-rtl-layout/handoff.md) | ui-gauge in RTL keeps its rings on the left and its legend about 190px away | bug | L1 | P3 | none | 🔵 ready (branch fix/0339-gauge-rtl) |
 
-Closed: 303 done, 4 dropped (git log or .NNNN-* folders)
+Closed: 300 done, 4 dropped (git log or .NNNN-* folders)
