@@ -87,8 +87,8 @@
 // The reply becomes the outgoing `note` (the model-authored note when the text is empty). On the first round,
 // with no integration tool live, reply text also streams as `{"a2uiMeta":{"textDelta":...}}` lines while it
 // arrives (RTS-R5). A capture payload still invalid at the bound degrades to its text with `SURFACE_DEGRADED`
-// (RTS-R8), unless an earlier round validated and dropped no surface: that round ships whole, tallied
-// `EARLIER_ROUND_SHIPPED` (T-0302). The user override (RTS-R6) withholds the tool or forces it (`SURFACE_REQUESTED`), and
+// (RTS-R8), unless an earlier round validated, dropped no surface and has no semantic finding: that round ships whole,
+// tallied `EARLIER_ROUND_SHIPPED` (T-0302, narrowed by T-0321). The user override (RTS-R6) withholds the tool or forces it (`SURFACE_REQUESTED`), and
 // `onRepairRound` may swap a repair round's effort or model (RTS-R9).
 
 import type { A2uiServerMessage, A2uiOutput } from '../protocol.ts'
@@ -1385,7 +1385,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   // meta-line and prose through every repair round, round 6 :2), so this repair round forces `render_surface`. The
   // adapter sends the choice only where the model takes one: never with thinking on (the API rejects it). T-0301: so
   // the forced round asks for thinking off; the adapter keeps it only where the model's capability row allows it.
-  // T-0310: round 1 of a Haiku click turn is forced too (set below, once the turn's action is read).
+  // T-0310: round 1 of a Haiku click turn is forced too (set below, once the turn's action is read). T-0321: so is the
+  // repair round after a SURFACE_DROPPED round (r8 :169 answered two of them in prose with thinking on).
   let forceSurfaceRound = false
   let surfaceRequestedFedBack = false // RTS-R6: the ONE correction round a surface override with no payload gets
   let textJsonlIgnored = false // RTS-R3: sticky, a capture round's text channel carried wire or genui lines that were dropped
@@ -1414,17 +1415,29 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   const boundComposites = new Map<string, SemanticFinding>()
   // RTS-R8: the last capture round's reply and declarations, kept for the degrade at the bound.
   let degrade: Pick<ReturnType<typeof peelMetaLine>, 'plan' | 'personaPatch' | 'flowEnd' | 'team' | 'target'> & { note: string } | undefined
-  // T-0302: the last round whose payload passed the validator and dropped no surface, shipped whole (tallied
-  // EARLIER_ROUND_SHIPPED) when the last round would otherwise halt: it fails to parse, fails schema, or drops a
-  // surface (round 6 :170, BOOKING_FORM_MISSING, PARSE, then a meta-line alone). A semantic finding never rules it out.
-  let fallback:
-    | (Pick<ReturnType<typeof peelMetaLine>, 'note' | 'ask' | 'plan' | 'personaPatch' | 'flowEnd' | 'team' | 'target'> & {
-        output: A2uiOutput
-        healed: number
-        genuiLine: string | undefined
-        roundTarget: string | undefined
-      })
-    | undefined
+  // T-0302: the rounds whose payload passed the validator and dropped no surface. When the last round would otherwise
+  // halt (it fails to parse, fails schema, or drops a surface) the latest of them ships whole, tallied
+  // EARLIER_ROUND_SHIPPED. T-0321 (Kim 2026-10-16): never one a semantic check fails, judged at the bound with the turn's
+  // bound composites (r8 :169 shipped a BOOKING_FORM_MISSING read-back, so the guest never saw the form); with none
+  // left the turn degrades or halts as it would with no candidate.
+  type FallbackRound = Pick<ReturnType<typeof peelMetaLine>, 'note' | 'ask' | 'plan' | 'personaPatch' | 'flowEnd' | 'team' | 'target'> & {
+    output: A2uiOutput
+    healed: number
+    genuiLine: string | undefined
+    roundTarget: string | undefined
+  }
+  const fallbacks: FallbackRound[] = []
+  let shipping: { fb: FallbackRound; errored: boolean } | undefined
+  const shippableFallback = (): { fb: FallbackRound; errored: boolean } | undefined => {
+    for (let i = fallbacks.length - 1; i >= 0; i--) {
+      const fb = fallbacks[i]!
+      if (deps.semanticChecks === undefined || deps.semanticChecks.length === 0) return { fb, errored: false }
+      const surfaces = semanticSurfaceViews(input.session, fb.output)
+      const semantic = runSemanticChecks(deps.semanticChecks, { surfaces, ...(turnAction !== undefined ? { action: turnAction } : {}), ...(turnIntent !== undefined ? { intent: turnIntent } : {}), ...(fb.roundTarget !== undefined ? { target: fb.roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}) })
+      if (withBoundComposites(semantic.findings, boundComposites, surfaces).length === 0) return { fb, errored: semantic.errored.length > 0 }
+    }
+    return undefined
+  }
   for (let round = 0; round < opts.maxRounds; round++) {
     const failuresFedBack = failures // what THIS round's prompt carried back — the trace's failureCodes
     const forceSurface = forceSurfaceRound
@@ -1705,12 +1718,17 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         continue
       }
       // T-0281: a repair round with no payload after a round that built a surface has dropped it. One more round while
-      // one is left (the hint says to resend it), else a halt that says so, as a valid round that drops one (T-0172),
-      // unless an earlier valid round can ship (T-0302).
+      // one is left (the hint says to resend it, and T-0321 forces render_surface), else a halt that says so, as a valid
+      // round that drops one (T-0172), unless an earlier valid round can ship (T-0302).
       if (builtSurfaces.size > 0 && genuiLine === undefined) {
         failures = [...builtSurfaces].map((sid) => ({ code: 'SURFACE_DROPPED', path: sid }))
-        if (round < opts.maxRounds - 1) continue
-        if (fallback === undefined) throw new ProduceHalt(failures)
+        if (round < opts.maxRounds - 1) {
+          lastCaptureRound = offeredTools !== undefined
+          forceSurfaceRound = offeredTools !== undefined // T-0321
+          continue
+        }
+        shipping = shippableFallback()
+        if (shipping === undefined) throw new ProduceHalt(failures)
         break // T-0302: the earlier valid round ships below
       }
       // GH #1168, T-0309 (Kim's N1 ruling, 2026-10-16): a closing turn missing `flowEnd` gets it from the producer,
@@ -1819,16 +1837,21 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     const verdict = uncreated.length > 0 ? { valid: false, failures: [...validated.failures, ...uncreated] } : validated
     if (verdict.valid) {
       // T-0172: a valid round that lost a surface an earlier round of this turn created is not a success.
-      // One more round while one is left (the repair names the surface), else a halt that says so, unless an earlier
-      // valid round can ship (T-0302).
+      // One more round while one is left (the repair names the surface, and T-0321 forces render_surface), else a halt
+      // that says so, unless an earlier valid round can ship (T-0302).
       if (dropped.length > 0) {
         failures = dropped.map((sid) => ({ code: 'SURFACE_DROPPED', path: sid }))
-        if (round < opts.maxRounds - 1) continue
-        if (fallback === undefined) throw new ProduceHalt(failures)
+        if (round < opts.maxRounds - 1) {
+          lastCaptureRound = offeredTools !== undefined
+          forceSurfaceRound = offeredTools !== undefined // T-0321
+          continue
+        }
+        shipping = shippableFallback()
+        if (shipping === undefined) throw new ProduceHalt(failures)
         break // T-0302: the earlier valid round ships below
       }
       const capturedTarget = captured?.target !== undefined ? { surfaceId: captured.target } : undefined
-      fallback = { output: assembled.output, healed: assembled.healedCount, note, ask, plan, personaPatch, flowEnd, team, target: target ?? capturedTarget, genuiLine, roundTarget } // T-0302
+      fallbacks.push({ output: assembled.output, healed: assembled.healedCount, note, ask, plan, personaPatch, flowEnd, team, target: target ?? capturedTarget, genuiLine, roundTarget }) // T-0302
       // ADR-0097 §3 FEED_SCOPE gate — AFTER the shared validator, BEFORE anything streams. A violation is
       // a self-correct round (never a stream), exactly like a validator failure. T-0299: on the last round, with no
       // round left to repair it, the repair FEED_SCOPE_HINT asks for is made here: the ask is dropped and the surface
@@ -1932,23 +1955,20 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     // below, since that only fires when the A2UI verdict itself is still invalid at round exhaustion).
     failures = genuiPeel.failure !== undefined ? [...verdict.failures, genuiPeel.failure] : verdict.failures // SPEC-R4 — self-correct: feed the structured failures back
   }
-  // T-0302: the bound is spent with an earlier valid round on hand. It ships as a last round would: a feed-scope
-  // failure drops the ask (FEED_SCOPE_RESCOPED), a semantic finding is tallied (SEMANTIC_UNCORRECTED), a net-no-op group
-  // is stripped, and the trace carries the last round's codes plus EARLIER_ROUND_SHIPPED.
-  if (fallback !== undefined) {
-    const fb = fallback
+  // T-0302: the bound is spent with an earlier valid round on hand that no semantic check fails (T-0321). It ships as a
+  // last round would: a feed-scope failure drops the ask (FEED_SCOPE_RESCOPED), a throwing check is tallied
+  // (SEMANTIC_CHECK_ERROR), a net-no-op group is stripped, and the trace carries the last round's codes plus
+  // EARLIER_ROUND_SHIPPED.
+  shipping ??= shippableFallback()
+  if (shipping !== undefined) {
+    const { fb } = shipping
     const tally: string[] = []
     let fbAsk = fb.ask
     if (fbAsk !== undefined && feedScopeFailures(fbAsk, fb.output).length > 0) {
       fbAsk = undefined
       tally.push('FEED_SCOPE_RESCOPED')
     }
-    if (deps.semanticChecks !== undefined && deps.semanticChecks.length > 0) {
-      const surfaces = semanticSurfaceViews(input.session, fb.output)
-      const semantic = runSemanticChecks(deps.semanticChecks, { surfaces, ...(turnAction !== undefined ? { action: turnAction } : {}), ...(turnIntent !== undefined ? { intent: turnIntent } : {}), ...(fb.roundTarget !== undefined ? { target: fb.roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}) })
-      if (withBoundComposites(semantic.findings, boundComposites, surfaces).length > 0) tally.push('SEMANTIC_UNCORRECTED')
-      if (semantic.errored.length > 0) tally.push('SEMANTIC_CHECK_ERROR')
-    }
+    if (shipping.errored) tally.push('SEMANTIC_CHECK_ERROR')
     const netNoop = netNoOpSurfaceIds(fb.output, input.session)
     if (netNoop.size > 0) tally.push('NET_NOOP_STRIPPED')
     const { finalAsk, shippedOutput } = shipSet(fb.output, fbAsk, netNoop, input.session)

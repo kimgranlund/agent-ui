@@ -6,20 +6,19 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: round 8 cluster B (T-0319, 2026-10-16-r8-matrix :169, Haiku 5.5). Round 1 builds ask-1 as a DescriptionList
-// read-back and gets BOOKING_FORM_MISSING; rounds 2 and 3 answer in prose (SURFACE_DROPPED), unforced, with thinking on;
-// the T-0302 fallback then ships round 1, the read-back the composite check already failed, so the guest never sees a
-// BookingForm. Pinned to today's behavior; forcing render_surface after SURFACE_DROPPED, or a fallback that skips a
-// round with a semantic finding, flips it.
-const trace = (record) => record.lines.map((l) => JSON.parse(l)).map((l) => l.a2uiMeta?.trace).find((t) => t !== undefined)
+// Round 8 cluster B (T-0319, 2026-10-16-r8-matrix :169, Haiku 5.5). Round 1 builds ask-1 as a DescriptionList read-back
+// and gets BOOKING_FORM_MISSING; rounds 2 and 3 answer in prose (SURFACE_DROPPED), unforced, with thinking on; the T-0302
+// fallback then shipped round 1, the read-back the composite check already failed, so the guest never saw a BookingForm.
+// T-0321 (Kim 2026-10-16): live, round 3 is now forced (render_surface, thinking off), but the replay feeds the recorded
+// prose; and the fallback never ships a round a check failed, so with no other valid round the turn halts with
+// SURFACE_DROPPED (the T-0281 rule) instead of shipping the read-back.
+const halt = (record) => record.lines.map((l) => JSON.parse(l)).map((l) => l.a2uiMeta?.error).find((e) => e !== undefined)
 const surfaceLines = (record) => record.lines.map((l) => JSON.parse(l)).filter((m) => m.createSurface ?? m.updateComponents ?? m.updateDataModel)
 
-it('concierge-haiku-fallback-ships-readback: after two prose repair rounds the fallback ships the failed read-back', async () => {
+it('concierge-haiku-fallback-ships-readback: after two prose repair rounds the failed read-back is never shipped', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./concierge-haiku-fallback-ships-readback.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed).toEqual([])
-  expect(trace(report.records[0])).toMatchObject({ rounds: 3, failureCodes: ['SURFACE_DROPPED', 'SEMANTIC_UNCORRECTED', 'EARLIER_ROUND_SHIPPED'] })
-  const types = surfaceLines(report.records[0]).flatMap((m) => m.updateComponents?.components ?? []).map((c) => c.component)
-  expect(types).toContain('DescriptionList')
-  expect(types).not.toContain('BookingForm')
+  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual(['no-halt:0'])
+  expect(halt(report.records[0])).toMatch(/SURFACE_DROPPED/)
+  expect(surfaceLines(report.records[0])).toEqual([])
 })

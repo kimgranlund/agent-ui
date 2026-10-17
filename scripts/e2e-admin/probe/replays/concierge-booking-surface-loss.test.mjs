@@ -6,18 +6,21 @@
 // created in a round but never shipped. A live model gets the repair and answers with a BookingForm.
 // T-0317 (Kim's L1 ruling, 2026-10-16): a later round that leaves ask-1 out is sent back as SURFACE_DROPPED, failure-named
 // or not, so the recorded rounds that drop it no longer ship: the earlier round that built ask-1 ships, tallied
-// EARLIER_ROUND_SHIPPED, and the no-surface-loss check that recorded the loss passes.
+// EARLIER_ROUND_SHIPPED, and the no-surface-loss check that recorded the loss passes. T-0321 (Kim 2026-10-16): that
+// round is the hand-built form BOOKING_FORM_MISSING sent back, and the fallback never ships a round a check failed, so
+// turn 1 halts with SURFACE_DROPPED (live, the round after the drop is now forced to render_surface); ask-1 is still
+// never shipped short of a BookingForm.
 import { readFileSync } from 'node:fs'
 import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-const trace = (record) => record.lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
+const halt = (record) => record.lines.map((l) => JSON.parse(l)).map((l) => l.a2uiMeta?.error).find((e) => e !== undefined)
 
-it('concierge-booking-surface-loss: the recorded turns replay, the hand-built booking form sent back, never lost', async () => {
+it('concierge-booking-surface-loss: the recorded turns replay, the hand-built booking form sent back and never shipped', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./concierge-booking-surface-loss.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual([])
-  expect(trace(report.records[1])).toMatchObject({ rounds: 3, failureCodes: ['SURFACE_DROPPED', 'SEMANTIC_UNCORRECTED', 'EARLIER_ROUND_SHIPPED'] })
-  expect(report.records[1].lines.some((l) => JSON.parse(l).createSurface?.surfaceId === 'ask-1')).toBe(true)
+  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual(['no-halt:1'])
+  expect(halt(report.records[1])).toMatch(/SURFACE_DROPPED/)
+  expect(report.records[1].lines.some((l) => JSON.parse(l).createSurface !== undefined)).toBe(false)
 })

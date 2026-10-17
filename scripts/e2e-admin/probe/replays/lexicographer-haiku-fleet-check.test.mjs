@@ -12,12 +12,15 @@ import { offlineReplay } from '../trace.ts'
 // check now skips a surface with a word cue and no committed fleet, so the recorded rounds replay to a clean third
 // round: no FLEET_SECRET_MISSING. T-0317 (Kim's L1 ruling, 2026-10-16): the third round renames the board ask-1 to
 // ask-2, which drops the ask-1 the earlier rounds built, so it is sent back as SURFACE_DROPPED and, with no round left,
-// the second round's ask-1 ships, tallied EARLIER_ROUND_SHIPPED with its GAME_HUD_MISSING finding as SEMANTIC_UNCORRECTED.
+// the second round's ask-1 shipped, tallied EARLIER_ROUND_SHIPPED with its GAME_HUD_MISSING finding as SEMANTIC_UNCORRECTED.
+// T-0321 (Kim 2026-10-16): the fallback never ships a round a check failed, and both earlier rounds have a finding, so
+// the recorded third round halts with SURFACE_DROPPED (live, that round is now forced to render_surface). Still no
+// FLEET_SECRET_MISSING: the halt carries only the drop.
 it('lexicographer-haiku-fleet-check: a word board gets no Battleship fleet check', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./lexicographer-haiku-fleet-check.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual([])
-  const trace = report.records[1].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
-  expect(trace).toMatchObject({ rounds: 3, failureCodes: ['SURFACE_DROPPED', 'SEMANTIC_UNCORRECTED', 'TEXT_JSONL_IGNORED', 'EARLIER_ROUND_SHIPPED'] })
-  expect(report.records[1].lines.some((l) => JSON.parse(l).createSurface?.surfaceId === 'ask-1')).toBe(true)
+  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual(['no-halt:1'])
+  const error = report.records[1].lines.map((l) => JSON.parse(l).a2uiMeta?.error).find((e) => e !== undefined)
+  expect(error).toMatch(/\(SURFACE_DROPPED\)$/)
+  expect(report.records[1].lines.some((l) => JSON.parse(l).createSurface !== undefined)).toBe(false)
 })
