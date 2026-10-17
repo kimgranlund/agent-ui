@@ -2,9 +2,8 @@
 // grid built PROGRAMMATICALLY: the size axis iterates the PARSED `size` enum from text-field.md (so adding a
 // step to the descriptor adds its row for free), crossed with the real statically-renderable states (empty,
 // filled, + leading icon, readonly, disabled). Completeness is provable from structure: |sizes| × |columns|.
-// Below the matrix: the optional-adornment anatomy (the leading/trailing slot POSITIONS) and a [scale]/[density]
-// subtree-geometry demo (ADR-0007) — text-field's density-bearing quantity is the adornment↔editor gap, so the
-// [density] leg leads with a leading icon to make the gap delta visible.
+// Below the matrix: the optional-adornment anatomy (the leading/trailing slot POSITIONS) and a data-scale /
+// data-tier subtree-geometry demo (ADR-0245; the retired [scale]/[density] axes left in T-0169).
 //
 // Every specimen is given a page-supplied display width via applyDemoWidth (the ADR-0021 width rationale — a
 // ~20ch floor, layout owns the width above it — lives there, once) — layout context, not a restyle; all
@@ -235,8 +234,8 @@ function typeSection(): HTMLElement {
   return section
 }
 
-// ── subtree geometry (ADR-0007) — [scale] resizes the frame; [density] resizes the adornment↔editor gap ───────
-function geometryRow(attr: 'scale' | 'density', value: string | null): HTMLElement {
+// ── subtree geometry (ADR-0245): data-scale steps the region's scale; data-tier switches its tier ─────────────
+function geometryRow(attr: 'data-scale' | 'data-tier', value: string | null): HTMLElement {
   const row = document.createElement('div')
   row.className = 'geo-row'
 
@@ -248,13 +247,13 @@ function geometryRow(attr: 'scale' | 'density', value: string | null): HTMLEleme
   const cluster = document.createElement('div')
   cluster.className = 'geo-cluster'
   if (value !== null) cluster.setAttribute(attr, value)
-  // A leading icon makes the [density] gap delta visible (the gap is the density-bearing quantity).
+  // A leading icon shows the icon box stepping with the frame.
   cluster.append(makeField({ size: 'md', value: 'Field', leading: true }))
   row.append(cluster)
   return row
 }
 
-function geometryBlock(title: string, note: string, attr: 'scale' | 'density', values: readonly (string | null)[]): HTMLElement {
+function geometryBlock(title: string, note: string, attr: 'data-scale' | 'data-tier', values: readonly (string | null)[]): HTMLElement {
   const block = document.createElement('div')
   block.className = 'geo-block'
   const heading = document.createElement('h3')
@@ -274,7 +273,7 @@ const { content } = mountPage({
     'Every size × state of ui-text-field — empty, filled, with a leading icon, readonly, and disabled — built ' +
     'programmatically from the parsed size enum (' + (sizes.join(' · ') || 'no sizes parsed') + '). Below: the ' +
     'optional leading/trailing adornment anatomy, the ' + types.length + ' [type] variants (their auto-adornments, ' +
-    'inputmode & codec), and a [scale] / [density] subtree-geometry demo (ADR-0007).',
+    'inputmode & codec), and a data-scale / data-tier subtree-geometry demo (ADR-0245).',
 })
 
 // [1] The matrix — one section per parsed size.
@@ -286,27 +285,28 @@ content.append(anatomySection())
 // [3] The `type` variants — the type-resolver's adornments/inputmode/codec, iterated over the parsed type enum.
 content.append(typeSection())
 
-// [4] The subtree-geometry demo — [scale] resizes the frame; [density] resizes only the adornment↔editor gap.
+// [4] The subtree-geometry demo: data-scale steps the region's scale; data-tier switches its tier.
 const geometry = document.createElement('section')
 geometry.className = 'geometry-demo'
 const geoHeading = document.createElement('h2')
-geoHeading.textContent = 'Subtree geometry — [scale] & [density] (ADR-0007)'
+geoHeading.textContent = 'Subtree geometry: data-scale and data-tier (ADR-0245)'
 geometry.append(geoHeading)
 geometry.append(
   geometryBlock(
-    '[scale] — the frame multiplier',
-    'An ancestor [scale] selects a frame tier — the tight ui-* control band or the generous content-* reading ' +
-      'band (ADR-0032) — and the per-subtree ramp recomputes both the frame (height) and the font.',
-    'scale',
-    [null, 'ui-sm', 'ui-lg', 'content-lg'],
+    '[data-scale] (the scale step)',
+    'An ancestor data-scale steps the region one scale down or up (ADR-0245): every control under it derives ' +
+      'its height, type and icon from the new n.',
+    'data-scale',
+    [null, 'sm', 'lg'],
   ),
 )
 geometry.append(
   geometryBlock(
-    '[density] — the rhythm multiplier',
-    'An ancestor [density] multiplies ONLY the adornment↔editor gap; the frame holds. Watch the icon-to-editor spacing.',
-    'density',
-    [null, 'compact', 'spacious'],
+    '[data-tier] (the register)',
+    'An ancestor data-tier switches the region to another register: widget is the A2UI canvas band, content ' +
+      'the reading band; the scale steps inside each tier.',
+    'data-tier',
+    [null, 'widget', 'content'],
   ),
 )
 content.append(geometry)

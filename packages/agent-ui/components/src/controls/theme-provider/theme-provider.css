@@ -29,8 +29,8 @@
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-theme-provider): the ink re-root, nothing else ════════════════ */
 /* Still no --ui-theme-provider-* token chain (SPEC-R6 as amended by ADR-0148): a pure coordination/carrier
-   element has no visual voice of its own. `scale`/`density` ride the ambient [scale]/[density] selectors in
-   dimensions.css, unmodified by this sheet (SPEC-R4); `theme` is wired but inert (SPEC-R5). The single
+   element has no visual voice of its own. `theme` is wired but inert (SPEC-R5); the retired
+   `scale`/`density` carriers left with T-0169. The single
    declaration below is the SCHEME-BOUNDARY INK RE-ROOT (banner §[1]) — inherited-ink re-resolution at the
    provider's own color-scheme, not a painted surface. */
 :where(ui-theme-provider) {

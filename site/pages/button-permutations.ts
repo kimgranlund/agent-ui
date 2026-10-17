@@ -2,7 +2,7 @@
 // ui-button matrix — every size × variant × disabled, bare-label AND with the optional leading icon slot
 // (3 × 3 × 2 × 2 = 36 live controls) — the structural anatomy axis: FORWARD [ icon | label | caret ] AND its
 // REVERSED [ caret | label | icon ] (position ⊥ role — ADR-0006 host-as-grid, extended by ADR-0012), and a
-// [scale]/[density] subtree-geometry demo (ADR-0007).
+// data-scale / data-tier subtree-geometry demo (ADR-0245; the retired [scale]/[density] axes left in T-0169).
 //
 // The matrix is built PROGRAMMATICALLY (loops over the size/variant/column arrays) rather than hand-written,
 // so completeness is provable from the structure: |sizes| × |variants| × |columns| = 3 × 3 × 4 = 36.
@@ -211,11 +211,10 @@ function anatomySection(title: string, anatomies: readonly Anatomy[]): HTMLEleme
   return section
 }
 
-// A geometry-demo row: a labelled caption + a cluster wrapper carrying [scale=…] or [density=…] on an
-// ANCESTOR of the buttons. The derived ramp lives on `*` (dimensions.css), so each button re-substitutes the
-// multiplier it inherits — the subtree repointing visibly recomputes the frame ([scale]) or the icon↔label
-// gap ([density]). Icon buttons are used so the density gap delta is visible (the gap is density-bearing).
-function geometryRow(attr: 'scale' | 'density', value: string | null): HTMLElement {
+// A geometry-demo row: a labelled caption + a cluster wrapper carrying data-scale or data-tier on an
+// ANCESTOR of the buttons. Every element derives from its own n (foundations.gen.css), so the subtree
+// repointing visibly recomputes the frame, the type and the icon.
+function geometryRow(attr: 'data-scale' | 'data-tier', value: string | null): HTMLElement {
   const row = document.createElement('div')
   row.className = 'geo-row'
 
@@ -237,7 +236,7 @@ function geometryRow(attr: 'scale' | 'density', value: string | null): HTMLEleme
 function geometryBlock(
   title: string,
   note: string,
-  attr: 'scale' | 'density',
+  attr: 'data-scale' | 'data-tier',
   values: readonly (string | null)[],
 ): HTMLElement {
   const block = document.createElement('div')
@@ -261,7 +260,7 @@ const { content } = mountPage({
   intro:
     'Every size × variant × disabled combination of ui-button — bare-label and with the optional leading ' +
     'icon slot (36 live controls) — the [ icon | label | caret ] structural anatomy and its reversed ' +
-    '[ caret | label | icon ] (position ⊥ role), and a [scale] / [density] subtree-geometry demo (ADR-0007).',
+    '[ caret | label | icon ] (position ⊥ role), and a data-scale / data-tier subtree-geometry demo (ADR-0245).',
 })
 
 // [1] The full matrix — one section per size.
@@ -272,27 +271,28 @@ for (const size of sizes) content.append(sizeSection(size))
 content.append(anatomySection('Anatomy — [ icon | label | caret ]', forwardAnatomies))
 content.append(anatomySection('Anatomy (reversed) — [ caret | label | icon ]', reversedAnatomies))
 
-// [3] The subtree-geometry demo — [scale] resizes the frame; [density] resizes only the icon↔label gap.
+// [3] The subtree-geometry demo: data-scale steps the region's scale; data-tier switches its tier.
 const geometry = document.createElement('section')
 geometry.className = 'geometry-demo'
 const geoHeading = document.createElement('h2')
-geoHeading.textContent = 'Subtree geometry — [scale] & [density] (ADR-0007)'
+geoHeading.textContent = 'Subtree geometry: data-scale and data-tier (ADR-0245)'
 geometry.append(geoHeading)
 geometry.append(
   geometryBlock(
-    '[scale] — the frame multiplier',
-    'An ancestor [scale] selects a frame tier — the tight ui-* control band or the generous content-* reading ' +
-      'band (ADR-0032) — and the per-subtree ramp recomputes both the frame (height) and the font.',
-    'scale',
-    [null, 'ui-sm', 'ui-lg', 'content-lg'],
+    '[data-scale] (the scale step)',
+    'An ancestor data-scale steps the region one scale down or up (ADR-0245): every control under it derives ' +
+      'its height, type and icon from the new n.',
+    'data-scale',
+    [null, 'sm', 'lg'],
   ),
 )
 geometry.append(
   geometryBlock(
-    '[density] — the rhythm multiplier',
-    'An ancestor [density] multiplies ONLY the icon↔label gap; the frame holds. Watch the icon-to-label spacing.',
-    'density',
-    [null, 'compact', 'spacious'],
+    '[data-tier] (the register)',
+    'An ancestor data-tier switches the region to another register: widget is the A2UI canvas band, content ' +
+      'the reading band; the scale steps inside each tier.',
+    'data-tier',
+    [null, 'widget', 'content'],
   ),
 )
 content.append(geometry)

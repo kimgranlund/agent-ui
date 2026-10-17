@@ -40,7 +40,7 @@ describe('UIIconElement — upgrade + typed props', () => {
   })
 })
 
-describe('UIIconElement: symbol, and glyph as its deprecated alias (ADR-0245 cl.4)', () => {
+describe('UIIconElement: symbol (ADR-0245 cl.4; the glyph alias retired in T-0169)', () => {
   it('symbol defaults to empty and resolves + injects the pack svg', () => {
     const el = new ProbeIcon()
     expect(el.symbol).toBe('')
@@ -58,23 +58,15 @@ describe('UIIconElement: symbol, and glyph as its deprecated alias (ADR-0245 cl.
     wrap.remove()
   })
 
-  it('symbol wins over the alias; the alias is read only while symbol is empty', async () => {
-    const el = new ProbeIcon()
-    el.glyph = 'x' // foundations-alias: the deprecated alias must still resolve until W7 (ADR-0245 cl.10d)
-    el.symbol = 'check'
-    document.body.append(el)
-    expect(el.querySelector('path')?.getAttribute('data-icon')).toBe('check')
-    el.symbol = ''
-    await el.updateComplete
-    expect(el.querySelector('path')?.getAttribute('data-icon')).toBe('x')
-    el.remove()
+  it('T-0169: the deprecated glyph alias is gone from the props schema', () => {
+    expect(Object.keys((customElements.get('ui-icon') as unknown as { props: object }).props).sort()).toEqual(['label', 'symbol'])
   })
 })
 
 describe('UIIconElement — glyph-driven svg injection (LLD-C5)', () => {
   it('a set glyph resolves + injects the pack svg synchronously on connect', () => {
     const el = new ProbeIcon()
-    el.glyph = 'caret-down'
+    el.symbol = 'caret-down'
     document.body.append(el)
     const svg = el.querySelector('svg')
     expect(svg).not.toBeNull()
@@ -93,11 +85,11 @@ describe('UIIconElement — glyph-driven svg injection (LLD-C5)', () => {
 
   it('changing glyph re-resolves to the new icon (reactive effect)', async () => {
     const el = new ProbeIcon()
-    el.glyph = 'x'
+    el.symbol = 'x'
     document.body.append(el)
     expect(el.querySelector('path')?.getAttribute('data-icon')).toBe('x')
 
-    el.glyph = 'eye'
+    el.symbol = 'eye'
     await el.updateComplete
     expect(el.querySelector('path')?.getAttribute('data-icon')).toBe('eye')
     el.remove()
@@ -105,11 +97,11 @@ describe('UIIconElement — glyph-driven svg injection (LLD-C5)', () => {
 
   it('clearing glyph back to empty removes the injected svg (reactive)', async () => {
     const el = new ProbeIcon()
-    el.glyph = 'check'
+    el.symbol = 'check'
     document.body.append(el)
     expect(el.querySelector('svg')).not.toBeNull()
 
-    el.glyph = ''
+    el.symbol = ''
     await el.updateComplete
     expect(el.querySelector('svg')).toBeNull()
     el.remove()
@@ -117,7 +109,7 @@ describe('UIIconElement — glyph-driven svg injection (LLD-C5)', () => {
 
   it('an unregistered glyph resolves to a non-throwing data-icon-missing svg (resolve.ts contract)', () => {
     const el = new ProbeIcon()
-    el.glyph = 'not-a-real-icon'
+    el.symbol = 'not-a-real-icon'
     expect(() => document.body.append(el)).not.toThrow()
     expect(el.querySelector('svg')?.getAttribute('data-icon-missing')).toBe('not-a-real-icon')
     el.remove()
@@ -170,7 +162,7 @@ describe('UIIconElement — label-driven ARIA via internals (LLD-C5)', () => {
 describe('UIIconElement — zero residue across connect/disconnect', () => {
   it('both effects die on disconnect; reconnect re-installs exactly once (not stacked)', async () => {
     const el = new ProbeIcon()
-    el.glyph = 'check'
+    el.symbol = 'check'
     el.label = 'Done'
     document.body.append(el)
     await el.updateComplete
@@ -178,7 +170,7 @@ describe('UIIconElement — zero residue across connect/disconnect', () => {
     expect(el.probeInternals.role).toBe('img')
 
     el.remove() // disconnect → the connection scope is disposed → both effects die with it
-    el.glyph = 'x' // mutate WHILE disconnected
+    el.symbol = 'x' // mutate WHILE disconnected
     el.label = ''
     await el.updateComplete // give any leaked effect a chance to flush
 

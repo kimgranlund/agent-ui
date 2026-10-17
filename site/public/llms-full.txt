@@ -2919,9 +2919,9 @@ active pack's SVG body and injects it as its only child. A functional mark (a ch
 ## Resolution
 
 `symbol` is a plain string (not a closed enum) resolved through `@agent-ui/icons`' active pack:
-`setIcon(this, symbol)` on every change; an empty `symbol` clears the host. The old `glyph` attribute is a
-deprecated alias, read only when `symbol` is empty, and is removed one release after the foundations cut
-(ADR-0245 clause 10d). An unregistered name resolves to
+`setIcon(this, symbol)` on every change; an empty `symbol` clears the host. **Breaking (T-0169):** the
+deprecated `glyph` alias is removed (ADR-0245 clause 10d); `<ui-icon glyph>` and `el.glyph` no longer render
+anything, so set `symbol`. An unregistered name resolves to
 a non-throwing empty `<svg data-icon-missing>` rather than breaking the render (`resolveIcon`,
 `@agent-ui/icons`). The shipped default is the Phosphor pack (`@agent-ui/icons/phosphor`), covering the
 current `ICON_NAMES` set (`@agent-ui/icons/src/types.ts` — the source of truth; twenty names as of the
@@ -6975,8 +6975,7 @@ value.length)`.
 
 `ui-theme-provider` is a theming element that sets a `color-scheme` subtree; size a subtree with
 `data-tier` and `data-scale` on a wrapper. It is a pure coordination/carrier layer: the `scheme` axis, a
-theme package seam (`theme`), and two attribute carriers (`scale`/`density`) deprecated by ADR-0245,
-promoted from the docs site's own `site/lib/theme-provider.ts` wrapper (ADR-0117).
+theme package seam (`theme`), promoted from the docs site's own `site/lib/theme-provider.ts` wrapper (ADR-0117).
 
 ```html
 <ui-theme-provider scheme="dark">
@@ -6993,12 +6992,9 @@ promoted from the docs site's own `site/lib/theme-provider.ts` wrapper (ADR-0117
   an unwrapped or unset provider imposes no override and its subtree inherits the ambient scheme: the
   page's own, or an ancestor provider's, if this one nests inside another. An out-of-vocabulary value set
   directly via `setAttribute` fails open to `''` (inherit), never fails closed to a named value, never throws.
-- **`scale`** — the six ADR-0032 tiers (`ui-sm … content-lg`), default `''`. A pure attribute carrier: no
-  JS-side effect. `dimensions.css`'s `[scale]` selectors key off the attribute directly — any wrapper
-  element (not just this one) already carries the same mechanism. Deprecated by ADR-0245: the foundations
-  bridge maps it onto tier and scale until W7; new code sets `data-tier` and `data-scale` on a wrapper.
-- **`density`** — `'' | compact | comfortable | spacious'`, default `''`. Same pure-carrier shape as `scale`.
-  Deprecated the same way; new code sets `data-density`.
+- **Breaking (T-0169):** the `scale` and `density` carriers (deprecated by ADR-0245) are removed, along with
+  the `[scale]` / `[density]` selectors that gave them meaning; the attributes now do nothing. Size a subtree
+  with `data-tier`, `data-scale` and `data-density` on any wrapper.
 - **`theme`** — a free string, default `''`. The **package seam** (ADR-0079 cl.3, ADR-0141): swaps whole
   token palettes. This component itself stays a pure carrier — no JS-side effect, no built-in pack registry
   — it only sets the attribute a `[theme='<name>']` CSS layer selects on; loading and injecting that layer's
@@ -7008,7 +7004,7 @@ promoted from the docs site's own `site/lib/theme-provider.ts` wrapper (ADR-0117
 
 ## Attribute ↔ property reflection
 
-All four axes are typed, reflected `static props` (`el.scheme = 'dark'` and
+Both axes are typed, reflected `static props` (`el.scheme = 'dark'` and
 `setAttribute('scheme', 'dark')` behave identically) — the same `UIElement`/`static props` contract every
 other shipped control carries, buying the descriptor↔props trip-wire and `family-coherence.test.ts`
 participation for free.

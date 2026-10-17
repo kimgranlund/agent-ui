@@ -62,7 +62,7 @@ stands. Everything below §1a describes how the log ran before the freeze, so a 
 in its owning reference doc or skill. The rules below describe the frozen set as it stands. One
 file per ADR, `NNNN-short-kebab-title.md`; `NNNN` is a zero-padded sequential integer, never
 reused; `0000-template.md` was the template. Known gaps stay gaps (the
-`KNOWN_GAPS` allowlist in `site/lib/docs-grammar.test.ts` S8 is their home). The `Repairs:` cell
+`docs-grammar.test.ts` S8 contiguity check that listed them retired with the freeze, T-0169). The `Repairs:` cell
 links the owning-doc IDs the change edits (`PRD-G#`/`SPEC-R#`/`LLD-C#`) — the ADR records *why*,
 the owning doc still holds the *fact*.
 

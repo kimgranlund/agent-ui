@@ -5,23 +5,23 @@
 // script never runs). Same reverse-coupling fs-read pattern + walk()/derived-SET shape as
 // `@agent-ui/components`'s `site-coverage.test.ts` (the derived-inventory precedent this file follows).
 //
-// ADR-0245 cl.4 follow-through (T-0093): the icon-name prop is now `symbol` (with `glyph` its deprecated
-// alias), so every form below reads both spellings; the scan covers every package's src, not only app/; and
-// the two forms the first version missed, `setAttribute('glyph' | 'symbol', 'name')` and `.glyph = 'name'` /
-// `.symbol = 'name'`, are read too. A `symbol` aimed at `ui-glyph` (the nearest preceding element name is
+// ADR-0245 cl.4 follow-through (T-0093): the icon-name prop is now `symbol` (the deprecated `glyph` alias
+// retired in T-0169, so only `symbol` is read); the scan covers every package's src, not only app/; and
+// the two forms the first version missed, `setAttribute('symbol', 'name')` and `.symbol = 'name'`, are
+// read too. A `symbol` aimed at `ui-glyph` (the nearest preceding element name is
 // ui-glyph) names a functional mark and resolves against the closed mark set, not the Phosphor roster.
 // Test files are not consumers (they plant unresolvable names on purpose) and are skipped.
 //
 // Extraction is grep-derived, in two tiers:
-//   (1) DIRECT literals: `glyph: 'name'` (object-property call sites, the `el()` specimen idiom),
-//       `glyph="name"` (template/HTML-string call sites), `setAttribute('glyph', 'name')` and
-//       `.glyph = 'name'`, each also spelled `symbol`. `data-glyph` (an unrelated CSS-hook attribute some
+//   (1) DIRECT literals: `symbol: 'name'` (object-property call sites, the `el()` specimen idiom),
+//       `symbol="name"` (template/HTML-string call sites), `setAttribute('symbol', 'name')` and
+//       `.symbol = 'name'`. `data-glyph` (an unrelated CSS-hook attribute some
 //       controls use, e.g. ui-super-shell's toggle) is explicitly excluded.
 //   (2) INDIRECT literals — a local per-page helper (e.g. command-modal-demo.ts's `commandOption`)
-//       often forwards a NAMED PARAMETER into `glyph: paramName`. This tier locates the parameter's
+//       often forwards a NAMED PARAMETER into `symbol: paramName`. This tier locates the parameter's
 //       index in the enclosing function's declaration, then reads the string-literal argument at that
 //       same index from every call site of that function in the same file. This is exactly the shape
-//       `/command-modal-demo` uses for its Actions row (`el('ui-icon', { glyph: icon, ... })` inside
+//       `/command-modal-demo` uses for its Actions row (`el('ui-icon', { symbol: icon, ... })` inside
 //       `commandOption(value, icon, label, shortcut, keywords)`) — without this tier the gate could not
 //       see `sign-out`/`share` at all and would not "bite" on a revert of the vendoring step.
 //
@@ -67,10 +67,10 @@ function walk(dir: string): string[] {
 }
 
 const DIRECT_FORMS = [
-  /(?<![\w-])(?:glyph|symbol):\s*['"]([\w-]+)['"]/g, // { glyph: 'x' } / { symbol: 'x' }
-  /(?<![\w-])(?:glyph|symbol)=['"]([\w-]+)['"]/g, // glyph="x" / symbol="x"
-  /\bsetAttribute\(\s*['"](?:glyph|symbol)['"]\s*,\s*['"]([\w-]+)['"]/g, // setAttribute('symbol', 'x')
-  /\.(?:glyph|symbol)\s*=\s*['"]([\w-]+)['"]/g, // el.symbol = 'x'
+  /(?<![\w-])symbol:\s*['"]([\w-]+)['"]/g, // { symbol: 'x' }
+  /(?<![\w-])symbol=['"]([\w-]+)['"]/g, // symbol="x"
+  /\bsetAttribute\(\s*['"]symbol['"]\s*,\s*['"]([\w-]+)['"]/g, // setAttribute('symbol', 'x')
+  /\.symbol\s*=\s*['"]([\w-]+)['"]/g, // el.symbol = 'x'
 ]
 
 /** The element a literal at `index` is aimed at: the nearest `ui-icon` / `ui-glyph` mention before it. */
@@ -149,11 +149,11 @@ function extractCallArgs(src: string, openIdx: number): string {
   return src.slice(openIdx + 1, i)
 }
 
-/** INDIRECT literals: a local helper forwards a named parameter into `glyph: paramName`; resolve every
+/** INDIRECT literals: a local helper forwards a named parameter into `symbol: paramName`; resolve every
  *  string-literal argument at that parameter's index from every call site of the helper in `src`. */
 export function indirectGlyphLiterals(src: string): string[] {
   const out: string[] = []
-  const identRe = /(?<![\w-])(?:glyph|symbol):\s*([a-zA-Z_$][\w$]*)\b/g
+  const identRe = /(?<![\w-])symbol:\s*([a-zA-Z_$][\w$]*)\b/g
   const idents = new Set<string>()
   let im: RegExpExecArray | null
   while ((im = identRe.exec(src))) idents.add(im[1])
@@ -237,6 +237,9 @@ describe('glyph-usage coverage (GH #1508) — every glyph a site/app consumer as
     expect(USAGES.length).toBeGreaterThan(0)
     expect(USAGES.some((u) => u.glyph === 'house')).toBe(true) // command-modal-demo's Navigation row
     expect(USAGES.some((u) => u.glyph === 'check')).toBe(true) // component-preview.ts's generic swatch
+    // T-0169: agent-admin's PANE_IDENTITY table keys its pane icons as `symbol:`, so the scan still sees them
+    const admin = USAGES.filter((u) => u.file.endsWith('agent-admin/agent-admin.ts')).map((u) => u.glyph)
+    expect(admin).toEqual(expect.arrayContaining(['chats-circle', 'gear-six', 'robot']))
   })
 
   it('the INDIRECT tier resolves command-modal-demo.ts\'s commandOption(value, icon, …) forwarding', () => {
@@ -277,16 +280,16 @@ describe('glyph-usage coverage — the bite proof (synthetic revert of the GH #1
 
 describe('glyph-usage coverage — the extraction predicates BITE (synthetic negative controls)', () => {
   it('directGlyphLiterals reads both the object-property and HTML-attribute spellings', () => {
-    expect(directGlyphLiterals(`el('ui-icon', { glyph: 'house' })`)).toEqual(['house']) // foundations-alias
-    expect(directGlyphLiterals(`<ui-icon glyph="paperclip">`)).toEqual(['paperclip']) // foundations-alias
+    expect(directGlyphLiterals(`el('ui-icon', { symbol: 'house' })`)).toEqual(['house'])
+    expect(directGlyphLiterals(`<ui-icon symbol="paperclip">`)).toEqual(['paperclip'])
   })
 
   it('ADR-0245 cl.4: directGlyphLiterals reads the symbol spelling and the setAttribute and property forms', () => {
     expect(directGlyphLiterals(`el('ui-icon', { symbol: 'house' })`)).toEqual(['house'])
     expect(directGlyphLiterals(`<ui-icon symbol="paperclip">`)).toEqual(['paperclip'])
-    expect(directGlyphLiterals(`icon.setAttribute('glyph', 'gear')`)).toEqual(['gear']) // foundations-alias
+    expect(directGlyphLiterals(`icon.setAttribute('symbol', 'gear')`)).toEqual(['gear'])
     expect(directGlyphLiterals(`icon.setAttribute("symbol", "bell")`)).toEqual(['bell'])
-    expect(directGlyphLiterals(`icon.glyph = 'x'; icon.symbol = 'eye'`).sort()).toEqual(['eye', 'x']) // foundations-alias
+    expect(directGlyphLiterals(`icon.symbol = 'x'; other.symbol = 'eye'`).sort()).toEqual(['eye', 'x'])
   })
 
   it('ADR-0245 cl.5: a symbol aimed at ui-glyph is a mark, not an icon name', () => {
@@ -304,7 +307,7 @@ describe('glyph-usage coverage — the extraction predicates BITE (synthetic neg
   it('indirectGlyphLiterals resolves a bare-identifier glyph forwarded through a named function parameter', () => {
     const src = [
       'function commandOption(value, icon, label) {',
-      "  return el('ui-icon', { glyph: icon })", // foundations-alias
+      "  return el('ui-icon', { symbol: icon })",
       '}',
       "commandOption('logout', 'sign-out', 'Log out')",
       "commandOption('share', 'share', 'Share file')",
@@ -314,7 +317,7 @@ describe('glyph-usage coverage — the extraction predicates BITE (synthetic neg
 
   it('indirectGlyphLiterals ignores a non-literal (dynamic) call argument rather than crashing', () => {
     const src = [
-      'function opt(icon) { return el("ui-icon", { glyph: icon }) }', // foundations-alias
+      'function opt(icon) { return el("ui-icon", { symbol: icon }) }',
       'const dynamicName = computeIt()',
       'opt(dynamicName)',
       "opt('house')",

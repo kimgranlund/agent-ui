@@ -10,7 +10,8 @@
 //           other than inside a derived token's fallback (clause 9's sibling rule, report shape)
 //   glyph   ui-icon's `glyph` prop, renamed `symbol` (clause 4): the attribute, the object key, the property,
 //           the attribute calls and the descriptor row
-//   axes    the retired `[scale]` and `[density]` attributes (clause 2): selectors, markup and attribute calls
+//   axes    the retired `[scale]` and `[density]` attributes (clause 2): selectors, markup, attribute calls and an
+//           attribute-name union type that feeds a call through a variable (T-0169)
 // Comments are blanked before matching in code and stylesheets (offsets kept), so prose about an old name is
 // not a use of it.
 
@@ -26,7 +27,7 @@ export const LEGACY_TO_DERIVED = [
   [/--md-sys-widget-inset(?![\w-])/, '--md-sys-c'],
 ]
 
-/** Every derived token foundations.gen.css declares (generate-foundations.mjs). */
+/** Every derived token foundations.gen.css declares (generate-foundations.mjs); foundations.test.ts fails when they drift. */
 export const DERIVED = new Set([
   'n', 'm', 'c', 'height', 'inset', 'label-inset', 'radius', 'control-radius', 'icon-box', 'glyph-box', 'glyph-stroke', 'corner-shape',
   'checkbox-radius',
@@ -179,9 +180,12 @@ const AXES_SELECTOR = /\[(?:scale|density)(?=[\]=~|^$*])/g
 const AXES_VALUED_SELECTOR = /\[(?:scale|density)(?=[~|^$*]?=)/g
 const AXES_MARKUP = /(?<![\w.$[-])(?:scale|density)=["']/g
 const AXES_CALL = /\b(?:set|get|has|remove|toggle)Attribute\(\s*['"](?:scale|density)['"]/g
+// T-0169: an attribute name passed through a variable typed as a union of the retired names
+// (`attr: 'scale' | 'density'`, then `setAttribute(attr, v)`), which the call form above cannot see.
+const AXES_UNION = /['"](?:scale|density)['"](?=\s*\|)|(?<=\|\s*)['"](?:scale|density)['"]/g
 const AXES_FORMS = {
   css: [AXES_SELECTOR],
-  code: [AXES_VALUED_SELECTOR, AXES_MARKUP, AXES_CALL],
+  code: [AXES_VALUED_SELECTOR, AXES_MARKUP, AXES_CALL, AXES_UNION],
   html: [AXES_VALUED_SELECTOR, AXES_MARKUP, AXES_CALL],
   md: [AXES_MARKUP],
 }

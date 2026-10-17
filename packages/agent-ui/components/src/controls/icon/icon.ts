@@ -3,11 +3,10 @@
 // SVG body and injects it via `setIcon` (the cross-package edge the layering trip-wire admits — icons
 // as a second lower-tier sibling, mirroring components → shared). Light-DOM, self-defining, no traits.
 //
-// Three props, two connected() effects, nothing else:
+// Two props, two connected() effects, nothing else:
 //   • `symbol`: the icon name (ADR-0245 cl.4 renamed it from `glyph`, so the word glyph names only the
-//     functional-mark element ui-glyph, which takes the same `symbol` prop). `glyph` stays a deprecated
-//     alias for one release after the cut: the effect resolves `symbol || glyph`. It re-runs setIcon on
-//     every change; empty clears the host. Live pack-swap reactivity is DEFERRED (ADR-0065 clause 4): the
+//     functional-mark element ui-glyph, which takes the same `symbol` prop; the deprecated `glyph` alias
+//     was removed by T-0169). It re-runs setIcon on every change; empty clears the host. Live pack-swap reactivity is DEFERRED (ADR-0065 clause 4): the
 //     registry exposes no subscribable signal, so an already-rendered <ui-icon> does not auto-update when a
 //     pack is swapped AFTER first render; re-setting `symbol` reflects a swap.
 //   • `label` — decorative by default (aria-hidden, no role); non-empty makes the icon MEANINGFUL
@@ -28,7 +27,6 @@ import { setIcon, type IconName } from '@agent-ui/icons'
 
 const props = {
   symbol: prop.string(''), // an IconName; empty → renders nothing (clears the host). ADR-0245 cl.4: the icon-name prop, shared with ui-glyph (`name` stays reserved fleet-wide for the FORM name, TKT-0069; the A2UI catalog keeps the wire field `name`, mapped to `symbol`)
-  glyph: prop.string(''), // DEPRECATED alias of `symbol` (ADR-0245 cl.4), read only when `symbol` is empty; removed at W7
   label: { ...prop.string(''), reflect: true }, // non-empty → meaningful: role=img + aria-label; empty → decorative (aria-hidden)
 } satisfies PropsSchema
 
@@ -37,9 +35,9 @@ export class UIIconElement extends UIElement {
   static props = props
 
   protected override connected(): void {
-    // symbol effect: (re)inject the active pack's svg on symbol (or the deprecated glyph) change; empty clears the host.
+    // symbol effect: (re)inject the active pack's svg on symbol change; empty clears the host.
     this.effect(() => {
-      const name = this.symbol || this.glyph
+      const name = this.symbol
       if (name) setIcon(this, name as IconName)
       else this.replaceChildren()
     })

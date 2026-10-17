@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { CFG, check, resolve, type Resolved } from './scale.mjs'
 import { BRIDGE_REL, LEGACY, OUT_REL, ROOT_DEFAULT, renderBridgeCss, renderFoundationsCss } from '../../../../../scripts/generate-foundations.mjs'
-import { GLYPH_FLOOR, ROOT_REGISTER, STEP, glyphBox } from '../../../../../scripts/lib/foundations-rules.mjs'
+import { DERIVED, GLYPH_FLOOR, ROOT_REGISTER, STEP, glyphBox } from '../../../../../scripts/lib/foundations-rules.mjs'
 
 // ADR-0245 clause 1, 10a and 10c: the config gate, the generated-file drift gate, the cut and the bridge.
 // The 36-cell computed leg (tokens equal resolve() in both engines) is foundations.browser.test.ts.
@@ -98,29 +98,31 @@ describe('foundations: generated-file drift and the cut (ADR-0245 clause 10a)', 
     expect(dark.replace(/\/\*[\s\S]*?\*\//g, '')).not.toMatch(/:root/)
   })
 
-  it('the bridge aliases every legacy name, maps every [scale] value and pins today in the legacy opt-out', () => {
+  it('the bridge aliases every legacy name and pins today in the legacy opt-out', () => {
     const alias = bridge.slice(bridge.indexOf(':root,'), bridge.indexOf("[data-foundations='legacy'] {"))
     const legacy = bridge.slice(bridge.indexOf("[data-foundations='legacy'] {"))
     for (const name of Object.keys(LEGACY)) {
       expect(alias, name).toMatch(new RegExp(`\\n  ${name}: `))
       expect(legacy, name).toContain(`  ${name}: ${LEGACY[name as keyof typeof LEGACY]};`)
     }
-    // the retired attribute name is built, not spelled, so this proof is not itself a use of the axis
-    const legacyAxis = 'scale'
-    const values = ['ui-sm', 'ui-md', 'ui-lg', 'content-sm', 'content-md', 'content-lg']
-    expect(selectorsOf(bridge)).toEqual(expect.arrayContaining(values.map((v) => `[${legacyAxis}='${v}']`)))
     expect(legacy).toContain('  --md-sys-n: initial;')
     expect(legacy).toContain('  --md-sys-m: initial;')
     expect(legacy).toContain('  --md-sys-tier-n0: initial;')
     expect(legacy).toContain('  --md-sys-density-d: initial;')
   })
 
-  it('the retired [density] maps onto data-density (container spacing only), never onto the scale', () => {
-    const legacyAxis = 'density'
-    expect(bridge).toContain(`[${legacyAxis}='compact'] { --md-sys-density-d: -1; }`)
-    expect(bridge).toContain(`[${legacyAxis}='spacious'] { --md-sys-density-d: 1; }`)
-    const densityRules = bridge.split('\n').filter((line) => line.startsWith(`[${legacyAxis}=`))
-    expect(densityRules.join('\n')).not.toContain('--md-sys-scale-s')
+  it('T-0169: the retired [scale] and [density] axes have no selector in either sheet', () => {
+    // a bare or valued selector anywhere in a compound (`[scale]`, `x [density='compact']`, `:is([scale])`)
+    const retired = /\[(scale|density)[\]=]/
+    for (const sheet of [committed, bridge]) {
+      expect(selectorsOf(sheet).filter((sel) => retired.test(sel))).toEqual([])
+    }
+  })
+
+  it('DERIVED (the lints\' derived-token set) is exactly the names the derived block declares', () => {
+    const block = committed.slice(committed.lastIndexOf('{'), committed.lastIndexOf('}'))
+    const declared = [...block.matchAll(/^ {2}(--md-sys-[\w-]+):/gm)].map((m) => m[1])
+    expect([...DERIVED].sort()).toEqual(declared.sort())
   })
 
   it('declares every ADR-0245 clause 1 output name (Amendment 3: m, and the section and group labels; Amendment 4: the label inset and the chip level; Amendment 5: the control pill and the checkbox radius)', () => {

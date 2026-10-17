@@ -18,7 +18,7 @@ npm install @agent-ui-kit/icons
 import '@agent-ui-kit/icons/phosphor' // registers the Phosphor pack (self-registering side-effect import)
 ```
 
-Then any `ui-icon` from `@agent-ui-kit/components` resolves its `symbol` through the registered pack (ADR-0245 renamed the prop from `glyph`, kept as a deprecated alias until W7):
+Then any `ui-icon` from `@agent-ui-kit/components` resolves its `symbol` through the registered pack (ADR-0245 renamed the prop from `glyph`; the alias was removed in T-0169):
 
 ```html
 <ui-icon symbol="plus"></ui-icon>

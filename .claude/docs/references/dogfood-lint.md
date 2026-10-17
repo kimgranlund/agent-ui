@@ -22,7 +22,7 @@ Layer 1 and `npm run test:eval-catalog` are local and merge-queue gates, not CI:
 ## The rules table
 
 `scripts/dogfood-rules.json` holds both lint layers: `render` (layer 1) and `compose` (layer 2). Each render rule
-names its source rule (in the `adr` field), its selector, what it measures and the expected value; every geometry value is computed
+names its source rule (in the `source` field), its selector, what it measures and the expected value; every geometry value is computed
 from `resolve(tier, scale, size, density)` in `packages/agent-ui/shared/src/tokens/scale.mjs` at the element's
 register (the nearest `data-tier`, `data-scale`, `data-size` or `size`, and `data-density` on the element or an
 ancestor; at the root the shared `ROOT_REGISTER` of `scripts/lib/foundations-rules.mjs`, the generator's root inputs,
@@ -145,9 +145,9 @@ the `--md-sys-space-*` steps, exempted 6 and left 22 compose entries owned by T-
 
 ## How to add a rule
 
-1. Add the row to `scripts/dogfood-rules.json` under `render` or `compose`, citing in its `adr`
+1. Add the row to `scripts/dogfood-rules.json` under `render` or `compose`, citing in its `source`
    field the rule it enforces: the ticket and the reference-doc rule (`geometry.md`, this file), or an existing
-   ADR clause. ADRs are frozen (T-0164); the field keeps its name and takes free text.
+   ADR clause. ADRs are frozen (T-0164); the field (renamed from `adr` in T-0169) takes free text.
 2. Write its check: a function in `CHECKS` of `site/pages/dogfood-render.browser.test.ts`, or a branch of
    `findingsIn` in `scripts/dogfood-compose.mjs`.
 3. Write its negative control: a `PLANTS` entry (a planted violation and a clean twin) in the render test, or

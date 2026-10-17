@@ -7,8 +7,8 @@ import { describe, it, expect } from 'vitest'
 //   S1 RETIRED (ADR-0145, 2026-07-18) — the ticket YAML grammar check this label used to own. The
 //      TICKET tier moved to GitHub Issues; `.claude/docs/tickets/` is now a frozen historical
 //      archive nothing ever edits again, so there is nothing left to validate on every run. Left
-//      as a named gap here (the KNOWN_GAPS allowlist pattern S8 already uses below) rather than
-//      renumbering S2-S8 down by one — the label is a citation, not a position.
+//      as a named gap here rather than renumbering S2-S8 down by one: the label is a citation,
+//      not a position.
 //   S2 SPEC/LLD/PRD header: the first blockquote region carries exactly one status keyword
 //      ∈ {proposed,accepted,superseded} (dialect-agnostic — three header dialects are legal, §1 of the
 //      standards skill; a MISSING keyword is the defect this catches).
@@ -24,8 +24,8 @@ import { describe, it, expect } from 'vitest'
 //      ("archived"/"archive") — history may be cited, never as live authority. (Manifest M10.)
 //   S6 lowercase tkt-#### prose cites (paths/filenames exempt) — promoted from hygiene at M7.
 //   S7 skill invocation-dial completeness — promoted from hygiene at M8 (backlog cleared Phase 3).
-//   S8 ADR numbering contiguity against a KNOWN_GAPS allowlist ([108] — history, never renumbered);
-//      a NEW gap fails (manifest M9).
+//   S8 RETIRED (T-0169, 2026-10-17): ADR numbering contiguity against a KNOWN_GAPS allowlist. The ADR
+//      folder is frozen (T-0164), so no new number can open a gap; the label stays as a named gap.
 //   S9 skill exemplar paths resolve: every backticked REPO-RELATIVE path in a skill table row's
 //      last cell (the "Owner · exemplar" column) exists on disk. Minted 2026-07-30 for the M-A PRD
 //      (PRD-G5) after review found that PRD citing S3 as this gate — S3 cannot fire here twice over:
@@ -227,37 +227,6 @@ describe('STRUCTURAL — S5-S9 (S5-S8 promoted at Phase 5, manifest M7-M10; S9 m
     }
     expect(missing, missing.join(', ')).toEqual([])
   })
-  it('S8: ADR numbering contiguous modulo the KNOWN_GAPS allowlist', () => {
-    // 108: history — a numbering-race casualty, never renumbered.
-    // 151: reserved by PR #45's ADR-0151 (shell archetypes M5, unmerged on branch
-    // adr-0150-shell-archetypes-intake) — this branch's own live-agent-Worker ADR claimed 0151 first
-    // in-worktree and was renumbered to 0152 on discovering the collision, leaving this gap until #45 merges.
-    // 155: reserved by PR #183's ADR-0155 (shell responsive band ladder, in-flight 2026-07-20) —
-    // ADR-0156 (app-shell deprecation) skipped it to avoid the merge collision, leaving this gap until #183 merges.
-    // 173: reserved by the concurrent docs-483-descriptor-inversion branch's ADR-0173 (in-flight
-    // 2026-08-06, a parallel docs lane not present in this worktree) — this branch's ADR-0174 is
-    // pinned by the dispatching orchestrator to avoid colliding with it, leaving this gap until
-    // that branch merges.
-    // 183: reserved by PR #743's ADR-0183 (View Transitions family, GH #740, in-flight 2026-08-12) —
-    // this branch's ADR-0184 (GH #737) numbered past it to avoid the merge collision, leaving this
-    // gap until #743 merges.
-    // 188: reserved by PR #852's ADR-0188 (ui-drawer component-design intake, GH #845, in-flight
-    // 2026-08-13, further along) — this branch's tool-description-standard ADR (GH #847) claimed
-    // 0188 first in-worktree and was renumbered to 0189 on discovering the collision, leaving this
-    // gap until #852 merges.
-    // 209-212: reserved in flight by open PRs #1357 (ADR-0209, Disclosure summary-slot children),
-    // #1360 (ADR-0210, FileDrop), #1364 (ADR-0211, Drill/DrillPanel), #1367 (ADR-0212, RadioGroup
-    // child discovery) — the design/1369-1371-agent-widget-adrs lane's ADR-0213/0214 were
-    // host-assigned PAST them (2026-08-19) to avoid four merge collisions, leaving these gaps
-    // until those PRs merge — inert once they land (the 192/193 precedent).
-    const KNOWN_GAPS = new Set([108, 151, 155, 173, 183, 188, 192, 193, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 221, 233, 235, 236]) // 108/151/155/173/183/188 history · 192/193 reserved-in-flight (GH #959/#975) · 209-220 reserved-in-flight by the 2026-08-19 catalog-design lanes (PRs #1357/#1360/#1364/#1367/#1381/#1384/#1385; 215/218/221 RELEASED — permanent gaps, no PR will land them; 221 entered the Set when ADR-0222 landed and made it a mechanical gap) — inert once each lands · 233 reserved-in-flight by the no-barrels lane (ADR-0233), inert once it lands (the 192/193 precedent) · 235/236 reserved-in-flight by the T-0012 (persona manifest) and T-0014 lanes, which ADR-0237 (capability registry) numbered past, inert once each lands (the 233 precedent)
-    const nums = readdirSync(`${DOCS}/adr`).map((f: string) => /^(\d{4})-/.exec(f)?.[1]).filter(Boolean).map(Number).sort((a: number, b: number) => a - b) as number[]
-    const newGaps: number[] = []
-    for (let n = nums[0]!; n <= nums[nums.length - 1]!; n++)
-      if (!nums.includes(n) && !KNOWN_GAPS.has(n)) newGaps.push(n)
-    expect(newGaps, `NEW ADR numbering gaps: ${newGaps.join(', ')}`).toEqual([])
-  })
-
   it('S9: every repo-relative exemplar path cited in a skill table resolves', () => {
     const dangling: string[] = []
     let checked = 0

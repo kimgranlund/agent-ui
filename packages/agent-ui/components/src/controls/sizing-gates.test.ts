@@ -18,8 +18,8 @@ declare const process: { cwd(): string }
 // migration-wave row (Appendix §B's 15) has landed across slices 0–3, so the gate no longer REPORTS
 // known debt, it ENFORCES: any width opinion outside the ratified clause 3(d)/4 tables — a NEW
 // inline-posture host or an out-of-role floor — is a build defect from day one, full stop. (The DEBT
-// table + its exact-match plumbing stay in the file, permanently empty, as the ratchet: a future ADR
-// amendment is the only way a row re-enters it — see the naming/styling-gates sibling gates for the
+// table + its exact-match plumbing stay in the file, permanently empty, as the ratchet: a ticket that
+// names the row and its source (ADRs are frozen, T-0164) is the only way a row re-enters it — see the naming/styling-gates sibling gates for the
 // same "empty allowlist as a standing ratchet" shape.)
 
 const ROOT = process.cwd()
@@ -113,7 +113,7 @@ function scanSheet(name: string, css: string): Violation[] {
   return out
 }
 
-// ── The ratified tables (ADR-0223 clauses 3(d) + 4 — closed lists, extended only by ADR) ────────────
+// ── The ratified tables (ADR-0223 clauses 3(d) + 4 — closed lists, extended only by a ticket) ────────
 
 /** Clause 4 — R4 exemptions: hosts whose inline-level posture or floor IS their ratified nature. */
 const R4_EXEMPT_INLINE = new Set([
@@ -135,7 +135,7 @@ const WHOLE_SHAPE_FLOORS = new Set([
   'slider', 'slider-multi', 'timeline', 'status-stream', 'stat', 'attachment',
   // ADR-0229 cl.6 — the two role-(d) rows this ADR names: `ui-column-chart` (wave 1) + `ui-gauge`
   // (wave 3, this build — both now real, shipped controls; the sizing-gates.test.ts own "extended only
-  // by ADR, and only for a REAL control" discipline is satisfied for both rows).
+  // by a ticket, and only for a REAL control" discipline is satisfied for both rows).
   'column-chart', 'gauge',
 ])
 
@@ -144,7 +144,7 @@ const WHOLE_SHAPE_FLOORS = new Set([
 //    (0: ui-text-field · 1: textarea/select/combo-box/multi-select/conversation-composer +
 //    form-popover trigger · 2: button/toggle/checkbox/radio/switch/pagination/calendar ·
 //    3: stat/attachment). The exact-match test below still keeps it honest in BOTH directions — it
-//    stays empty going forward; only a future ADR amendment may add a row back. ─────────────────────
+//    stays empty going forward; only a ticket naming its source may add a row back. ─────────────────────
 const DEBT: Record<string, string[]> = {}
 
 describe('sizing gates — Fill by Default (ADR-0223 cl.5, slice-3 ENFORCING — DEBT table EMPTY)', () => {

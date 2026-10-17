@@ -290,7 +290,7 @@ TKT-0069 item 1) and EXECUTED same day: the fleet-wide §3 reservation STANDS; a
 `ui-progress.value`→`current` · `ui-tab.value`→`key`, the eighth — found at execution, the
 swiper-item comment's own cited precedent; ADR-0245 cl.4 then renamed `ui-icon.glyph`→`symbol`, shipped at the
 2026-10-13 cut: `symbol` is the prop of `ui-icon` (pack art) and of the new `ui-glyph` (a functional mark from
-the closed twelve-mark set), `glyph` stays a deprecated alias on `ui-icon` until the W7 cleanup, and the word
+the closed twelve-mark set), the deprecated `glyph` alias on `ui-icon` retired in T-0169, and the word
 "glyph" now names one thing, the functional-mark element and its box (`--md-sys-glyph-box`)). The A2UI catalog keeps its shipped WIRE field names
 (`Icon.name`, `Stat.value`, …): `catalog.json`'s `mapsTo` + `mappedAccessorFactory` translate
 wire→prop at apply time, so every corpus record and taught idiom stays valid — the ONE catalog-vs-

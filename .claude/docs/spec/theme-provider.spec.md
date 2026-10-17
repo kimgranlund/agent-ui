@@ -39,23 +39,23 @@ mechanics or page prose, which the LLD owns.
 
 ## 2. Definitions
 
-- **Axis** — one of the four independent attributes the component carries: `scheme`, `scale`, `density`,
-  `theme`.
-- **Unset** — an axis whose resolved value is the empty string `''` — the shared default of all four axes.
+- **Axis** — one of the two independent attributes the component carries: `scheme` and `theme` (the
+  `scale` and `density` carriers retired in T-0169; size a subtree with `data-tier` / `data-scale`).
+- **Unset** — an axis whose resolved value is the empty string `''` — the shared default of both axes.
   Distinct from any named value; **unset means "impose no override," never "impose the first named value."**
   Reached two ways that are behaviorally equivalent but NOT DOM-identical (LOW-1, precisely stated so no
   implementer assumes "unset" means "attribute absent"): (a) the attribute is never touched — the DOM
   attribute is genuinely absent, and the property reads `''` only via the enum codec's fallback-to-`values[0]`
   path (`props.ts`'s `enumType.from`); (b) the attribute (or property) is explicitly set to `''` — `reflectOut`
   always runs on an explicit set (the enum codec's `to` never returns `null`), so the DOM carries a REAL,
-  PRESENT `scale=""` (or `scheme=""`/`density=""`) attribute, not an absent one. Both resolve to the identical
-  `''` property value and both are harmless for `dimensions.css`'s VALUE-specific selectors (`[scale=ui-lg]`
+  PRESENT `theme=""` (or `scheme=""`) attribute, not an absent one. Both resolve to the identical
+  `''` property value and both are harmless for a VALUE-specific selector (`[theme='<name>']`
   etc. — an empty attribute matches none of them, same as no attribute), so no functional distinction is
   normative here — but a test asserting "unset ⇒ no attribute" would be WRONG for case (b) and must not be
   written that way.
 - **Pure carrier** — an axis with zero JS-side effect: the component reflects it to an attribute and does
-  nothing else; a separate stylesheet ([scale]/[density] selectors in `dimensions.css`, a future
-  `[theme='<name>']` package layer) reads the attribute. `scale`, `density`, and `theme` are pure carriers.
+  nothing else; a separate stylesheet (a future `[theme='<name>']` package layer) reads the attribute.
+  `theme` is a pure carrier.
   `scheme` is not — it drives one component-owned effect (§3.1).
 - **The reserved seam** — the `theme` axis: wired (attribute exists, reflects, descriptor-documented) but
   inert (no CSS layer in the fleet matches any value it can hold) until a future multi-theme package system
@@ -75,14 +75,13 @@ guard), living at `packages/agent-ui/components/src/controls/theme-provider/`. *
 - **AC2** *Given* an instance, *then* it is NOT `instanceof UIFormElement` and carries no `formAssociated`
   behavior.
 
-**SPEC-R2 — Props schema.** The component MUST declare exactly four `static props`, each a reflected,
+**SPEC-R2 — Props schema.** The component MUST declare exactly two `static props`, each a reflected,
 attribute-synced prop with `values[0]`-default-first ordering where enumerated: `scheme: enum(['','light',
-'dark'], '')`, `scale: enum(['', 'ui-sm','ui-md','ui-lg','content-sm','content-md','content-lg'], '')`,
-`density: enum(['','compact','comfortable','spacious'], '')`, `theme: string('')`. *(ADR-0117 cl.3)*
-- **AC1** *Given* no attribute is set on a fresh instance, *then* all four properties read `''`.
+'dark'], '')` and `theme: string('')`. *(ADR-0117 cl.3; the `scale` and `density` enums retired in T-0169)*
+- **AC1** *Given* no attribute is set on a fresh instance, *then* both properties read `''`.
 - **AC2** *Given* `el.scheme = 'dark'`, *then* `el.getAttribute('scheme') === 'dark'` (property→attribute
   reflection) and the reverse (`setAttribute('scheme','dark')` → `el.scheme === 'dark'`).
-- **AC3** *Given* an out-of-vocabulary `scheme`/`scale`/`density` attribute value is set directly via
+- **AC3** *Given* an out-of-vocabulary `scheme` attribute value is set directly via
   `setAttribute`, *then* the property resolves to `''` (fail-open to unset, never a crash, never a
   fail-closed coercion to a named value).
 
@@ -106,12 +105,15 @@ over the site-local predecessor. *(ADR-0117 cl.3, the F3 fork)*
 `dimensions.css`'s `[scale]`/`[density]` selectors, unmodified by this SPEC. *(ADR-0117 cl.3)*
 - **AC1** *Given* a grep of `theme-provider.ts`, *then* neither `scale` nor `density` is read inside a
   `this.effect(...)` call or any other reactive callback — reflection is the whole story.
+- **Retired (T-0169, 2026-10-17):** ADR-0245 deprecated both carriers and the foundations bridge's axes
+  selectors that gave them meaning; T-0169 removed the selectors and the two props. A subtree sizes with
+  `data-tier`, `data-scale` and `data-density` on any wrapper.
 
 **SPEC-R5 — `theme` stays the reserved, inert seam.** The component MUST reflect `theme` as a free string
 with zero rendering effect; this SPEC does not admit any `[theme='<name>']` CSS layer or package-resolution
 mechanism. *(ADR-0117 cl.3, ADR-0079 cl.3 F2b — explicitly out of scope)*
 - **AC1** *Given* `theme` set to any string, including an unregistered name, *then* no visual change results
-  beyond what `scheme`/`scale`/`density` already produce (degrades silently — no layer matches, nothing
+  beyond what `scheme` already produces (degrades silently — no layer matches, nothing
   breaks, matching today's gallery behavior).
 
 **SPEC-R6 — Layout and token surface.** The component's own stylesheet MUST declare exactly one rule

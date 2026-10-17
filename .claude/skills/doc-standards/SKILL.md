@@ -37,8 +37,8 @@ which file.
 - **ADR (frozen)**: blockquote TABLE, six fixed rows; vocabulary `proposed · accepted ·
   superseded · deprecated`. The Status cells are history: no cell is flipped any more, and an
   amendment still marked `proposed` at the freeze stays as written (`references/adr-log-mechanics.md`
-  lists each one and where its live rule now sits). `scripts/adr_ratify.py` is retired with the
-  system; its selftest still runs in `check:scripts`.
+  lists each one and where its live rule now sits). `scripts/adr_ratify.py` retired with the
+  system and was deleted with its selftest (T-0169).
 - **Ticket, current (ADR-0145)** — GitHub Issues, not files; `.claude/docs/tickets/` is a frozen
   historical archive. `status`/`kind`/`size` map onto native GitHub primitives (labels, close
   reason) — never a parallel taxonomy.
@@ -67,7 +67,7 @@ stale ADR clause is not repaired in the ADR; the owning reference doc states the
 | `references/status-dialects.md` (§1 / §1c / §1d / §2) | reading a frozen ADR's status · flipping a ticket · SPEC/LLD/PRD status — the per-type dialect table + the current GitHub-Issue ticket mapping; where a decision is recorded now; the IDR platform-intent-only rule + PRD granularity ladder (§1d, Kim 2026-08-18); why a shipped SPEC still reads `proposed` |
 | `references/adr-log-mechanics.md` (§1b) | the frozen ADR log: no-index rule (Kim's 2026-08-13 no-README ruling), numbering history, the amendments left unflipped at the freeze and where each live rule sits |
 | `references/id-spine-and-ticket-contracts.md` (§3 / §4) | citing an ID (`ADR-####` / `SPEC-R#` / `LLD-C#` / `PRD-G#`\|`D#` / `TKT-####`) or the supersession/extension vocabulary; a ticket or Issue's required sections by kind (feature vs bug) |
-| `references/gates-and-citation-law.md` (§5 / §5b / §6) | which gate enforces what (`adr.test.ts`, `docs-grammar.test.ts`, the retired status-guard hook and `adr_ratify.py`); the cite-by-stable-anchor law (GH #757); the archive/historical-record rule |
+| `references/gates-and-citation-law.md` (§5 / §5b / §6) | which gate enforces what (`adr.test.ts`, `docs-grammar.test.ts`, the retired status-guard hook and the deleted `adr_ratify.py`); the cite-by-stable-anchor law (GH #757); the archive/historical-record rule |
 
 NOT for the document types' generic contracts, owned by the docs plugin's doc-writing-rules skill
 (not loaded in this repo since PR #1791), or component-code law (`component-standards`).
