@@ -237,7 +237,7 @@ const CONTRACTS: Record<string, Contract> = {
       catalog: CONCIERGE,
       output: surface('confirm-1', CONCIERGE, [
         { id: 'root', component: 'Card', children: ['t', 'when'] },
-        { id: 't', component: 'Text', text: 'Your table is confirmed' },
+        { id: 't', component: 'Text', text: 'Your table is confirmed', variant: 'h4' },
         { id: 'when', component: 'Text', text: 'Friday at 8 pm, four guests' },
       ]),
     },

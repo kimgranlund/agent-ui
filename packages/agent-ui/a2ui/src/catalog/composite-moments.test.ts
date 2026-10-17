@@ -33,7 +33,7 @@ const HAND_BUILT: Record<string, A2uiComponent[]> = {
   ],
   BookingConfirmation: [
     { id: 'root', component: 'Card', children: ['t', 'when'] },
-    { id: 't', component: 'Text', text: 'Your table is confirmed' },
+    { id: 't', component: 'Text', text: 'Your table is confirmed', variant: 'h4' },
     { id: 'when', component: 'Text', text: 'Friday at 8pm' },
   ],
   BoardGrid: [
@@ -271,9 +271,9 @@ describe('composite moment checks (T-0208)', () => {
     }
   })
 
-  it('a read-back titled "Booking confirmation" with a confirm_booking submit still yields BOOKING_FORM_MISSING', () => {
-    // The title's words also ask the BookingConfirmation row (as before T-0331), so the form finding is checked by membership.
-    expect(codes(withButton(R9_84, 'title', { text: 'Booking confirmation' }))).toContain('BOOKING_FORM_MISSING')
+  it('a read-back titled "Booking confirmation" with a confirm_booking submit still yields BOOKING_FORM_MISSING, alone', () => {
+    // T-0333: the noun "confirmation" is no settled state, and a live read-back confirm is never settled.
+    expect(codes(withButton(R9_84, 'title', { text: 'Booking confirmation' }))).toEqual(['BOOKING_FORM_MISSING'])
   })
 
   it('negative control: a "Book now" info card whose action is book_listing yields none', () => {
@@ -283,7 +283,7 @@ describe('composite moment checks (T-0208)', () => {
   it('negative control: a hand-built confirmation with a "Reserve another table" Button yields only BOOKING_CONFIRMATION_MISSING', () => {
     const settled: A2uiComponent[] = [
       { id: 'root', component: 'Card', children: ['t', 'rows', 'again'] },
-      { id: 't', component: 'Text', text: 'Your table is confirmed' },
+      { id: 't', component: 'Text', text: 'Your table is confirmed', variant: 'h4' },
       { id: 'rows', component: 'DescriptionList', rows: [{ label: 'Restaurant', value: 'Vela' }, { label: 'Time', value: '19:30' }] },
       { id: 'again', component: 'Button', label: 'Reserve another table', action: { action: 'book_another_table' } },
     ]
@@ -513,5 +513,96 @@ describe('a services ask answered with priced rows in another type (T-0322)', ()
     expect(run(SPA_LIST, 'Is late check-out possible?')).toEqual([])
     expect(run(SPA_LIST)).toEqual([])
     expect(run([...SPA_LIST, ...COMPOSED['ProductCard']!.map((c) => ({ ...c, id: `p-${c.id}` }))], SERVICES_ASK)).toEqual([])
+  })
+})
+
+// T-0333 (live round 9 cluster G): BOOKING_CONFIRMATION_MISSING read every Text, so a caption that says "confirmed" or "booked"
+// fired it (:491 Opus, :257 Sonnet). The row now reads settled words only from status signals: a Badge, a Card or CardHeader
+// title, a heading Text (h1 to h5). The BookingForm row stands aside for a settled surface, and this row for a live read-back confirm.
+describe('BOOKING_CONFIRMATION_MISSING reads settled-status signals, not captions (T-0333)', () => {
+  const findings = (components: A2uiComponent[], intent?: string) =>
+    runSemanticChecks(compositeMomentChecks, { surfaces: [view(components, 'ask-1')], ...(intent !== undefined ? { intent } : {}) }).findings.map((f) => f.code)
+
+  // Round 9 :491 (routing-long-session-opus-1, round 1): "Which restaurants and bars does the hotel have?"
+  const R9_491: A2uiComponent[] = [
+    { id: 'root', component: 'Card', children: ['hdr', 'content'] },
+    { id: 'hdr', component: 'CardHeader', children: ['title'] },
+    { id: 'title', component: 'Text', text: 'Dining at the Grand Meridian', variant: 'h4' },
+    { id: 'content', component: 'CardContent', children: ['list', 'note'] },
+    { id: 'list', component: 'DescriptionList', rows: [{ label: 'Vela', value: 'Fine-dining restaurant' }, { label: 'Quay Bar', value: 'Casual dining and drinks' }] },
+    { id: 'note', component: 'Text', text: 'Opening hours can be confirmed with the front desk.', variant: 'caption' },
+  ]
+  // Round 9 :257 (regress-concierge-facilities-then-tour-sonnet-1, round 3): "What services could I add for the rest of my stay?"
+  const R9_257: A2uiComponent[] = [
+    { id: 'root', component: 'Card', elevation: '1', children: ['hdr', 'content'] },
+    { id: 'hdr', component: 'CardHeader', children: ['title'] },
+    { id: 'title', component: 'Text', text: 'Add to your stay', variant: 'h4' },
+    { id: 'content', component: 'CardContent', children: ['col'] },
+    { id: 'col', component: 'Column', gap: 'md', children: ['tourList', 'note'] },
+    { id: 'tourList', component: 'DescriptionList', rows: [{ label: 'Old Town walking tour', value: 'Daily at 10:00 from the lobby' }, { label: 'Harbor cruise', value: 'Daily at 17:00' }] },
+    { id: 'note', component: 'Text', variant: 'caption', text: 'Spa treatments should be booked at least a day ahead in season.' },
+  ]
+  // Round 9 :85 (regress-concierge-facilities-then-tour-haiku-1, round 1): "Confirm it, the details are right." settled the
+  // open read-back (still holding its "Book now" confirm_booking Button) with a "Booked" Badge in its footer.
+  const R9_85: A2uiComponent[] = [
+    { id: 'root', component: 'Card', children: ['hdr', 'content', 'footer'] },
+    { id: 'hdr', component: 'CardHeader', children: ['title'] },
+    { id: 'title', component: 'Text', text: 'Book your boat tour', variant: 'h4' },
+    { id: 'content', component: 'CardContent', children: ['summary'] },
+    { id: 'summary', component: 'DescriptionList', rows: [{ label: 'Tour', value: 'Half-day coastal boat tour' }, { label: 'Guests', value: '2' }] },
+    { id: 'footer', component: 'CardFooter', children: ['settled'] },
+    { id: 'settled', component: 'Badge', label: 'Booked', intent: 'success' },
+    { id: 'bookBtn', component: 'Button', label: 'Book now', variant: 'solid', action: { action: 'confirm_booking', context: { booking: { path: '/booking' } }, submit: true } },
+  ]
+
+  it(':491 and :257 give no finding, with or without a turn', () => {
+    expect(findings(R9_491)).toEqual([])
+    expect(findings(R9_257)).toEqual([])
+    expect(findings(R9_491, 'Which restaurants and bars does the hotel have?')).toEqual([])
+    expect(findings(R9_257, 'What services could I add for the rest of my stay?')).toEqual([])
+  })
+
+  it(':85 (a "Booked" Badge beside the live "Book now" confirm_booking Button) yields exactly BOOKING_FORM_MISSING', () => {
+    // A live read-back confirm is not settled: the BookingForm row fires and the confirmation row stands aside.
+    expect(findings(R9_85, 'Confirm it, the details are right.')).toEqual(['BOOKING_FORM_MISSING'])
+    expect(findings(R9_85)).toEqual(['BOOKING_FORM_MISSING'])
+  })
+
+  it('the same Badge with the Button gone is a settled hand-built confirmation: exactly BOOKING_CONFIRMATION_MISSING', () => {
+    expect(findings(R9_85.filter((c) => c.id !== 'bookBtn'), 'Confirm it, the details are right.')).toEqual(['BOOKING_CONFIRMATION_MISSING'])
+  })
+
+  it('a "Book a massage" ask answered with a hand-built Booked card still fires', () => {
+    const fake: A2uiComponent[] = [
+      { id: 'root', component: 'Card', children: ['badge', 'rows'] },
+      { id: 'badge', component: 'Badge', label: 'Booked', intent: 'success' },
+      { id: 'rows', component: 'DescriptionList', rows: [{ label: 'Treatment', value: 'Massage, 60 min' }, { label: 'Time', value: 'Thursday 15:00' }] },
+    ]
+    expect(findings(fake, 'Book a 60-minute massage on Thursday at 15:00')).toEqual(['BOOKING_CONFIRMATION_MISSING'])
+    expect(findings(fake)).toEqual(['BOOKING_CONFIRMATION_MISSING'])
+  })
+
+  it('a dining list whose caption says "hours can be confirmed" on a "please confirm the table" turn gives nothing', () => {
+    expect(findings(R9_491, 'Yes, please confirm the table.')).toEqual([])
+  })
+
+  it('a Card title or a heading Text reads as a settled signal; a caption or body Text does not', () => {
+    const rows: A2uiComponent = { id: 'rows', component: 'DescriptionList', rows: [{ label: 'Time', value: '19:30' }] }
+    expect(findings([{ id: 'root', component: 'Card', title: 'Table confirmed', children: ['rows'] }, rows])).toEqual(['BOOKING_CONFIRMATION_MISSING'])
+    for (const variant of ['caption', 'body']) {
+      expect(findings([{ id: 'root', component: 'Column', children: ['t', 'rows'] }, { id: 't', component: 'Text', text: 'Table confirmed', variant }, rows])).toEqual([])
+    }
+  })
+
+  it('"confirmation" is no settled word; "confirmed" in a heading is', () => {
+    const rows: A2uiComponent = { id: 'rows', component: 'DescriptionList', rows: [{ label: 'Time', value: '19:30' }] }
+    const col = (text: string): A2uiComponent[] => [{ id: 'root', component: 'Column', children: ['t', 'rows'] }, { id: 't', component: 'Text', text, variant: 'h4' }, rows]
+    expect(findings(col('Booking confirmation'))).toEqual([])
+    expect(findings(col('Table confirmed'))).toEqual(['BOOKING_CONFIRMATION_MISSING'])
+  })
+
+  it('the BookingForm row still fires on an unsettled read-back (no Badge)', () => {
+    const unsettled = R9_85.filter((c) => c.id !== 'settled').map((c) => (c.id === 'footer' ? { ...c, children: ['bookBtn'] } : c))
+    expect(findings(unsettled)).toEqual(['BOOKING_FORM_MISSING'])
   })
 })
