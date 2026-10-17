@@ -663,6 +663,11 @@ const TOOL_PARSE_HINT =
   ' Reminder: `messages` is an ARRAY of A2UI message objects, one message per entry, never a JSON string ' +
   'and never JSONL text.'
 
+/** T-0344: the PARSE ask when the round's `messages` was a string that does not parse, in place of TOOL_PARSE_HINT and
+ *  ahead of the `messagesParseNote` pinpoint. Round 10 :193 got the pinpoint then the reminder three times and resent a
+ *  hand-edited string each time, one `}` short again; the harness never edits the string (Kim 2026-10-17). */
+const STRING_PARSE_ASK = ' Send `messages` as an array of A2UI message objects, one object per entry, not as a string.'
+
 /** RTS-R8: the repair tail for a round whose payload came from `render_surface`, in place of the legacy
  *  "Re-emit the COMPLETE corrected A2UI JSONL" sentence (which legacy rounds keep, byte for byte). T-0217:
  *  the repaired round's reply replaces the rejected one's, so it must not open "Corrected:" or name an id.
@@ -742,7 +747,7 @@ function messagesFor(
       .map((f) => `${f.code}${f.path ? ` at ${f.path}` : ''}${expectedTypeNote(f, catalog, lastOutput)}${misplacedSurfaceIdNote(f, lastOutput)}${f.detail ? `: ${f.detail}` : ''}`)
       .join('; ')
     const hint =
-      (failures.some((f) => f.code === 'PARSE') ? (toolRound ? `${parseNote !== undefined ? ` ${parseNote}` : ''}${TOOL_PARSE_HINT}` : PARSE_HINT) : '') + // T-0304: where the string broke
+      (failures.some((f) => f.code === 'PARSE') ? (toolRound ? (parseNote !== undefined ? `${STRING_PARSE_ASK} ${parseNote}` : TOOL_PARSE_HINT) : PARSE_HINT) : '') + // T-0304, T-0344: ask for the array, then where the string broke
       idgraphHint(failures) +
       (failures.some((f) => f.code === 'NET_NOOP') ? NET_NOOP_HINT : '') + // GH #1142 — the net-no-op correction round's guidance
       (failures.some((f) => f.code === 'NARRATED_MECHANICS') ? NARRATION_HINT : '') + // T-0234: a narrated reply's guidance

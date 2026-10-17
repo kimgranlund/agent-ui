@@ -914,7 +914,7 @@ describe('T-0304: a render_surface `messages` sent as one JSON string', () => {
     expect(lastUserMessage(reqs()[1]!)).toContain(
       'Your `messages` was not valid JSON: a closing } is missing in message 1 (its createSurface), so it is still open where message 2 begins.',
     )
-    expect(lastUserMessage(reqs()[1]!)).toMatch(/`messages` is an ARRAY of A2UI message objects/)
+    expect(lastUserMessage(reqs()[1]!)).toContain('Send `messages` as an array of A2UI message objects, one object per entry, not as a string.')
     expect(contentOf(lines)).toEqual(VALID.split('\n'))
     expect(finalMeta(lines).trace?.failureCodes).toEqual(['PARSE'])
   })
@@ -927,6 +927,29 @@ describe('T-0304: a render_surface `messages` sent as one JSON string', () => {
     ])
     const lines = await run(NEUTRAL, provider)
     expect(calls()).toBe(2)
+    expect(contentOf(lines)).toEqual(VALID.split('\n'))
+    expect(finalMeta(lines).trace?.failureCodes).toEqual(['PARSE'])
+  })
+})
+
+describe('T-0344: a PARSE repair on a string `messages` asks for an array first', () => {
+  const objects = (jsonl: string): Record<string, unknown>[] => jsonl.split('\n').map((l) => JSON.parse(l) as Record<string, unknown>)
+  // Round 10 :193 round 1 (Sonnet 5.5), verbatim: one `}` short where message 2 begins; rounds 2 and 3 resent a string.
+  const R10_193 =
+    '[{"version":"v1.0","updateDataModel":{"surfaceId":"table-1","value":{"bankroll":940,"pot":0,"street":"Showdown","stats":[{"label":"Pot","value":0},{"label":"Net this hand","value":-60},{"label":"Street","value":"Showdown"}],"dealerHand":[{"rank":"A","suit":"spades","faceDown":false},{"rank":"K","suit":"clubs","faceDown":false}],"playerHand":[{"rank":"J","suit":"hearts","faceDown":false},{"rank":"10","suit":"hearts","faceDown":false}],"board":[{"rank":"Q","suit":"hearts","faceDown":false},{"rank":"9","suit":"diamonds","faceDown":false},{"rank":"3","suit":"hearts","faceDown":false},{"rank":"2","suit":"clubs","faceDown":false},{"rank":"7","suit":"diamonds","faceDown":false}],"result":"Dealer wins the 120 pot with ace-high (A K Q 9 7) over your queen-high (Q J 10 9 7). You lose 60 chips this hand. Bankroll: 940."}},{"version":"v1.0","updateComponents":{"surfaceId":"table-1","components":[{"id":"streetBadge","component":"Badge","label":"Showdown","intent":"danger"},{"id":"hud","component":"GameHud","title":"Heads-up vs dealer","status":"Dealer wins","statusIntent":"danger","stats":{"path":"/stats"}},{"id":"actions","component":"Row","gap":"sm","justify":"end","children":["dealBtn"]},{"id":"dealBtn","component":"Button","label":"Deal again","variant":"solid","action":{"action":"deal_again","context":{"newRound":true}}}]}]'
+  const ASK = 'Send `messages` as an array of A2UI message objects, one object per entry, not as a string.'
+  const NOTE = 'Your `messages` was not valid JSON: a closing } is missing in message 1 (its updateDataModel), so it is still open where message 2 begins.'
+
+  it('the repair asks for an array of objects before it names where the string broke', async () => {
+    const { provider, calls, reqs } = scripted([
+      { text: 'Showdown.', call: [{ name: 'render_surface', input: { reply: 'Showdown.', target: 'table-1', messages: R10_193 } }] },
+      { text: 'Showdown.', call: [{ name: 'render_surface', input: { reply: 'Showdown.', messages: objects(VALID) } }] },
+    ])
+    const lines = await run(NEUTRAL, provider)
+    expect(calls()).toBe(2)
+    const repair = lastUserMessage(reqs()[1]!)
+    expect(repair).toContain(`${ASK} ${NOTE}`)
+    expect(repair).not.toMatch(/Reminder: `messages` is an ARRAY/)
     expect(contentOf(lines)).toEqual(VALID.split('\n'))
     expect(finalMeta(lines).trace?.failureCodes).toEqual(['PARSE'])
   })

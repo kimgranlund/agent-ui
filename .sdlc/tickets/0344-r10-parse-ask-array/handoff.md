@@ -25,3 +25,10 @@ Kim 2026-10-17 ruling: the repair asks for an array; the producer never edits mo
 
 ## Constraints
 None beyond AGENTS.md.
+
+## Acceptance criteria
+verifier: L3
+- (red) `npx vitest run packages/agent-ui/a2ui/src/live-agent/produce-response-type.test.ts -t "T-0344"` exits 0: on the round 10 :193 round 1 string, round 2's repair request carries the new ask ("Send messages as an array of A2UI message objects, one object per entry, not as a string", messages in code quotes) directly before the unchanged messagesParseNote sentence, and no longer the old Reminder line; the turn ships on the array round, trace failureCodes PARSE.
+- `npx vitest run packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent` exits 0.
+- `npx vitest run --project scripts scripts/e2e-admin/probe/replays/croupier-sonnet-messages-string.test.mjs` exits 0.
+- `npm run check` exits 0.
