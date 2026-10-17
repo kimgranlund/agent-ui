@@ -6,6 +6,7 @@ import {
   RESPONSE_TYPES,
   classifyResponse,
   detectUserOverride,
+  domainSurfaceNouns,
   isLegacyShape,
   openSurfacesNote,
   renderSurfaceJsonl,
@@ -148,6 +149,39 @@ describe('lexicon round 2', () => {
   it.each(['just tell me', 'text only'])('text: %s', (t) => expect(detectUserOverride(intent(t))).toBe('text'))
   it('text wins a tie', () => {
     expect(detectUserOverride(intent('show me a table, text only'))).toBe('text')
+  })
+})
+
+describe('a noun a catalog domain type owns is not a surface noun there (T-0348)', () => {
+  const croupier = ['Card', 'Text', 'PlayingCard', 'CardTable']
+  const base = ['Card', 'Text', 'ProductCard', 'ResultCard', 'Table']
+  it('domainSurfaceNouns reads domain types homed outside the default catalog', () => {
+    expect(domainSurfaceNouns(croupier)).toEqual(['card', 'table'])
+    expect(domainSurfaceNouns(['BookingForm', 'Card'])).toEqual(['form'])
+    expect(domainSurfaceNouns(base)).toEqual([])
+    expect(domainSurfaceNouns([])).toEqual([])
+  })
+  it.each([
+    "Show me the dealer's hole card.",
+    'show me the cards',
+    "show me the players' cards",
+    'I have no card to play',
+    'show me the table',
+  ])('croupier: no override for %s', (t) => expect(detectUserOverride(intent(t), croupier)).toBeUndefined())
+  it.each(["show me today's summary card", 'show me a summary card', 'as a card', 'Show me the dealer\'s hole card.'])(
+    'default catalog: surface for %s',
+    (t) => expect(detectUserOverride(intent(t), base)).toBe('surface'),
+  )
+  it('no catalog types keeps the plain lexicon', () => {
+    expect(detectUserOverride(intent('show me the cards'))).toBe('surface')
+    expect(detectUserOverride(intent('no card please'))).toBe('text')
+  })
+  it('a non-domain noun in the same sentence still forces a surface', () => {
+    expect(detectUserOverride(intent('show me the hole card and a pricing chart'), croupier)).toBe('surface')
+    expect(detectUserOverride(intent('show me the hole card and the cards'), croupier)).toBeUndefined()
+  })
+  it('text phrases other than the owned noun still apply', () => {
+    expect(detectUserOverride(intent('just tell me the hole card'), croupier)).toBe('text')
   })
 })
 

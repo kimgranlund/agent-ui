@@ -1,8 +1,9 @@
 /**
  * Response type selection (SPEC RTS-R1, RTS-R6; LLD section 2). Pure helpers: the response-type
  * vocabulary, the `render_surface` tool the model calls when (and only when) the UI changes, the
- * user-override lexicon, and the legacy-shape sniff. Zero value imports.
+ * user-override lexicon, and the legacy-shape sniff. One value import: the pure catalog layer map.
  */
+import { CATALOG_LAYER_MAP } from '../catalog/layers.ts'
 import type { ToolDef, TurnInput } from './agent-transport.ts'
 
 /** What one turn produced: plain text, an A2UI surface, or text then a surface. */
@@ -148,20 +149,61 @@ const NOUN_END = "(?=\\s*(?:$|[.,!?;:])|\\s+(?:of|for|with|to|that|which|as|from
 const escape = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 const alt = (phrases: readonly string[]): string => `(?:${phrases.map(escape).join('|')})`
 const lexicon = (pattern: string): RegExp => new RegExp(`(?<![\\w'])${pattern}(?![\\w'])`, 'i')
-const GATED_RE =
-  `${alt(GATED_SURFACE_VERBS)}\\s+(?:(?:a|an|the|some)\\s+)?(?:(?!${alt(NON_MODIFIERS)}\\b)[\\w'-]+\\s+){0,2}` +
-  `(?:list(?!\\s+of\\b)|${alt(SURFACE_NOUNS.filter((n) => n !== 'list'))})s?(?!\\s+of\\s+contents)${NOUN_END}`
-const TEXT_RE = lexicon(alt(TEXT_PHRASES))
-const SURFACE_RE = lexicon(
-  `(?:${alt(SURFACE_PHRASES)}|${GATED_RE})`,
-)
 
-/** The user's explicit ask for text or a surface, from an intent turn's words. Text wins a tie (PRD-G2). */
-export function detectUserOverride(input: TurnInput): 'text' | 'surface' | undefined {
+/**
+ * T-0348: the surface nouns a catalog's domain types own. A type the layer map homes outside the default catalog
+ * ("PlayingCard", "CardTable", "BookingForm") is that domain's own word, so a noun that is one of its camel-case parts
+ * ("card", "table", "form") names the domain thing in that catalog, never a UI surface.
+ */
+export function domainSurfaceNouns(catalogTypes: readonly string[]): readonly string[] {
+  const nouns = new Set<string>()
+  for (const type of catalogTypes) {
+    const row = Object.hasOwn(CATALOG_LAYER_MAP, type) ? CATALOG_LAYER_MAP[type]! : undefined
+    if (row?.layer !== 'domain' || row.home === 'default') continue
+    for (const part of type.match(/[A-Z][a-z]+|[A-Z]+(?![a-z])|[a-z]+/g) ?? []) {
+      if (SURFACE_NOUNS.includes(part.toLowerCase())) nouns.add(part.toLowerCase())
+    }
+  }
+  return [...nouns].sort()
+}
+
+interface Lexicon {
+  text: RegExp
+  surface: RegExp
+}
+
+const lexicons = new Map<string, Lexicon>()
+
+/** The text and surface lexicons with `owned` nouns removed: out of the gated rule, out of the "as a ..." phrases and out of "no card".
+ *  A phrase that opens on an owned noun may still lead into another surface ask ("show me the hole card and a pricing chart"). */
+function lexiconFor(owned: readonly string[]): Lexicon {
+  const key = owned.join(',')
+  let lex = lexicons.get(key)
+  if (lex === undefined) {
+    const nouns = SURFACE_NOUNS.filter((n) => !owned.includes(n))
+    const modifiers = `(?:(?!${alt(NON_MODIFIERS)}\\b)[\\w'-]+\\s+)`
+    const article = '(?:(?:a|an|the|some)\\s+)?'
+    const lead =
+      owned.length === 0 ? '' : `(?:${article}${modifiers}{0,2}${alt(owned)}s?\\s+and\\s+)?`
+    const gated =
+      `${alt(GATED_SURFACE_VERBS)}\\s+${lead}${article}${modifiers}{0,2}` +
+      `(?:${nouns.includes('list') ? 'list(?!\\s+of\\b)|' : ''}${alt(nouns.filter((n) => n !== 'list'))})s?(?!\\s+of\\s+contents)${NOUN_END}`
+    const phrases = SURFACE_PHRASES.filter((p) => !owned.some((n) => p.endsWith(` ${n}`)))
+    const textPhrases = TEXT_PHRASES.filter((p) => !owned.some((n) => p === `no ${n}`))
+    lex = { text: lexicon(alt(textPhrases)), surface: lexicon(`(?:${alt(phrases)}|${gated})`) }
+    lexicons.set(key, lex)
+  }
+  return lex
+}
+
+/** The user's explicit ask for text or a surface, from an intent turn's words. Text wins a tie (PRD-G2). `catalogTypes`
+ *  is the turn's catalog: a noun its domain types own (`domainSurfaceNouns`) is not read as a surface or text word. */
+export function detectUserOverride(input: TurnInput, catalogTypes?: readonly string[]): 'text' | 'surface' | undefined {
   if (input.kind !== 'intent') return undefined
   const text = input.text.replace(/’/g, "'")
-  if (TEXT_RE.test(text)) return 'text'
-  if (SURFACE_RE.test(text)) return 'surface'
+  const lex = lexiconFor(catalogTypes === undefined ? [] : domainSurfaceNouns(catalogTypes))
+  if (lex.text.test(text)) return 'text'
+  if (lex.surface.test(text)) return 'surface'
   return undefined
 }
 
