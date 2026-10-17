@@ -44,7 +44,8 @@
     "regen:dogfood-assets": "node scripts/build-dogfood-assets.mjs",
     "generate:registry": "node --experimental-strip-types packages/agent-ui/a2ui/tools/registry/generate.ts",
     "eval:genui-corpus": "node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus-genui/eval-genui-corpus.ts",
-    "eval:agent-behavior": "node --experimental-strip-types packages/agent-ui/a2ui/tools/agent-eval/eval-agent-behavior.ts"
+    "eval:agent-behavior": "node --experimental-strip-types packages/agent-ui/a2ui/tools/agent-eval/eval-agent-behavior.ts",
+    "eval:signals": "node --experimental-strip-types scripts/e2e-admin/probe/signals.ts"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",

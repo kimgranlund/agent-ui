@@ -5,7 +5,7 @@ import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, write
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { describeCommands, describeEvals, describeRound, estimateSpend, listRound, parseCommands, roundStart, runCapped, runRound, shellWords, traceSpend, writeRoundReadme } from './run-capped.ts'
+import { describeCommands, describeEvals, describeRound, estimateSpend, listRound, parseCommands, roundStart, runCapped, runRecord, runRound, shellWords, traceSpend, writeRoundReadme } from './run-capped.ts'
 
 const line = (at, model, usage) => JSON.stringify({ at, model, usage })
 const SCRIPT = ['#!/usr/bin/env bash', '# header', '', ...[1, 2, 3, 4, 5].map((i) => `npm run chat:probe -- --agent croupier --say hi --out runs/r${i} --name r${i}`)].join('\n')
@@ -68,6 +68,15 @@ describe('run-capped', () => {
     expect(result).toMatchObject({ ran: 3, skipped: 2, capped: false })
   })
 
+  // T-0342: the ledger keeps the sample and the effort; a bare numeric tail stays in the scenario until the archive
+  // sees siblings with the same stem (the archive test below buckets T-0329-style samples).
+  it('records the scenario, sample and effort a probe command names', () => {
+    const r = runRecord('npm run chat:probe -- --agent croupier --model claude-haiku-5-5 --effort high --say hi --out runs/t0329-mix-7 --name t0329-mix-7', 0, 'a', 'b', 'pass')
+    expect([r.scenario, r.sample, r.effort]).toEqual(['t0329-mix-7', 1, 'high'])
+    const d = runRecord('npm run chat:probe -- --agent croupier --say hi --out runs/x --name regress-croupier-spanish-21-opus-2', 1, 'a', 'b', 'fail')
+    expect([d.scenario, d.sample, d.effort]).toEqual(['regress-croupier-spanish-21', 2, 'default'])
+  })
+
   it('keeps the round start across a restart', () => {
     const file = join(mkdtempSync(join(tmpdir(), 'run-capped-')), 'runs', '.capped-start')
     expect(roundStart(file, () => '2026-10-14T10:00:00.000Z')).toBe('2026-10-14T10:00:00.000Z')
@@ -125,6 +134,8 @@ describe('run-capped', () => {
         ['admiral-salvo', 'admiral', 'claude-sonnet-5-5', 1, 'fail'],
       ])
       expect(ledger.map((r) => r.traces)).toEqual([1, 3, 5].map((from) => [{ file: 'traces/2026-10-14.jsonl', from, to: from + 1 }]))
+      // T-0342: the sample the name ends in, and the effort the command passed (none here: the default).
+      expect(ledger.map((r) => [r.sample, r.effort])).toEqual([[1, 'default'], [1, 'default'], [1, 'default']])
       expect(ledger[0].tokens).toEqual({ input: 200_000, output: 200_000, cacheRead: 0, cacheCreation: 0 })
       // Haiku: 0.2M x $0.10 + 0.2M x $0.50; Sonnet: 0.2M x $2 + 0.2M x $10.
       expect(ledger.map((r) => r.costUsd)).toEqual([0.12, 2.4, 2.4])
@@ -196,6 +207,38 @@ describe('run-capped', () => {
       expect(() => runRound({ root, liveCommands: 'live.sh', commands: parseCommands(ROUND), cap: 100, since: SINCE, exec: crashing, commit: 'abc123', now })).toThrow('probe crashed')
       expect(JSON.parse(readFileSync(join(round, 'round.json'), 'utf8'))).toMatchObject({ stop: 'crash', totals: { runs: 1 } })
     })
+
+    // T-0342: bare-numbered samples bucket into one scenario once the ledger holds their siblings, and signals.md is
+    // written once, by the final archive, not after every run.
+    it('buckets T-0329-style samples by their siblings and writes signals.md only at the end', () => {
+      const root = mkdtempSync(join(tmpdir(), 'run-capped-samples-'))
+      mkdirSync(join(root, '.agent-traces'))
+      let tick = 0
+      const now = () => `2026-10-14T12:${String(tick++).padStart(2, '0')}:00.000Z`
+      const names = ['t0329-mix-1', 't0329-mix-2', 't0329-mix-pontoon']
+      const script = names.map((n) => `npm run chat:probe -- --agent croupier --model claude-haiku-5-5 --say hi --out .sdlc/tq/runs/${n} --name ${n}`).join('\n')
+      const dir = join(root, '.sdlc', 'tq')
+      const seen = []
+      runRound({
+        root,
+        liveCommands: 'live.sh',
+        commands: parseCommands(script),
+        cap: 100,
+        since: '2026-10-14T12:00:00.000Z',
+        commit: 'abc123',
+        now,
+        exec: (cmd) => {
+          seen.push(existsSync(join(dir, 'signals.md')))
+          const out = join(root, /--out (\S+)/.exec(cmd)[1])
+          mkdirSync(out, { recursive: true })
+          writeFileSync(join(out, 'report.json'), JSON.stringify({ verdict: 'pass', agent: 'croupier', model: 'claude-haiku-5-5' }))
+          return 0
+        },
+      })
+      expect(seen).toEqual([false, false, false])
+      expect(read(join(dir, 'ledger.jsonl')).map((r) => [r.scenario, r.sample])).toEqual([['t0329-mix', 1], ['t0329-mix', 2], ['t0329-mix-pontoon', 1]])
+      expect(readFileSync(join(dir, 'signals.md'), 'utf8')).toContain('| t0329-mix | 2 of 2 |')
+    })
   })
 
   // T-0241 scope addition: the README names exactly the files in the folder, no more and no fewer.
@@ -237,7 +280,7 @@ describe('run-capped', () => {
       })
       const dir = join(root, '.sdlc', 'rr')
       const readme = readFileSync(join(dir, 'README.md'), 'utf8')
-      expect(listRound(dir)).toEqual(['README.md', 'ledger.jsonl', 'round.json', 'runs/croupier-deal-haiku-1/fixture.json', 'runs/croupier-deal-haiku-1/report.json', 'traces/2026-10-14.jsonl'])
+      expect(listRound(dir)).toEqual(['README.md', 'ledger.jsonl', 'round.json', 'runs/croupier-deal-haiku-1/fixture.json', 'runs/croupier-deal-haiku-1/report.json', 'signals.md', 'traces/2026-10-14.jsonl'])
       expect(readme).toContain('local evidence cache')
       expect(claimed(readme)).toEqual(listRound(dir))
       expect(readme).toContain('commit `abc123`')

@@ -1,0 +1,1 @@
+{"kind":"agent-ui-chat-probe-report","version":1,"name":"regress-e-haiku-1","mode":"live","agent":"concierge","model":"claude-haiku-5-5","at":"2026-01-01T10:00:00.000Z","checks":[{"check":"no-halt","turn":0,"status":"pass"}],"turns":[],"verdict":"pass"}
