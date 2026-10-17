@@ -20,7 +20,7 @@ Gates carry no code for finished campaigns or the retired ADR workflow.
   3. `scripts/foundations-census.mjs` lane plumbing (`LANES`, `PACKAGE_LANES`, `laneOf`, `reasonFor`, about :33-67) and `SCALE_TO_TIER` in `scripts/lib/foundations-rules.mjs`: delete if nothing reads them; derive `DERIVED` from the tokens `generate-foundations` emits instead of a hand list.
   4. ADR wording in gates: `sizing-gates.test.ts` ("extended only by ADR" lists) and `dogfood-rules.json` `adr` fields become `source` (ticket or reference doc); derive `WHOLE_SHAPE_FLOORS` from descriptors if practical.
   5. Retire the `[scale]` / `[density]` bridge (deprecated for one release by ADR-0245; T-0159 removes the last producer teaching): the bridge CSS, `theme-provider` props, `foundations.test.ts:99-121`, `foundations.browser.test.ts:146`, the 16 `foundations-alias` markers. Confirm no consumer reads them first (rg across packages and site).
-- Done when: `npm run check` exit 0; `npm test` for touched folders exit 0; foundations browser tests exit 0 in both engines; `rg -n "\[scale\]|\[density\]|adr_ratify" packages site scripts` returns only changelog or frozen-history lines.
+- Done when: `npm run check` exit 0; `npm test` for touched folders exit 0; foundations browser tests exit 0 in both engines; `node scripts/foundations-census.mjs --gate` exit 0 (replaces the rg span, which counted comments; team-lead 2026-10-17).
 
 ## Context
 - Lint audit 2026-10-14. Start after T-0152 and T-0159 (both touch the bridge or producer). Commit locally, never push.

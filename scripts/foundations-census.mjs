@@ -12,9 +12,11 @@
 // Usage:
 //   node scripts/foundations-census.mjs                    print the count per rule
 //   node scripts/foundations-census.mjs --list             also print every <path>#<rule> with its first line
-//   node scripts/foundations-census.mjs --gate             exit 1 on any unlisted finding or stale entry
+//   node scripts/foundations-census.mjs --gate             exit 1 on any unlisted finding, stale entry or
+//                                                          reason that names no owner
 //   node scripts/foundations-census.mjs --write-allowlist  rewrite the allowlist to the current findings,
-//                                                          keeping existing reasons; a new key gets a TODO reason
+//                                                          keeping existing reasons; new keys need
+//                                                          --reason naming an owner (hasOwner)
 //   node scripts/foundations-census.mjs selftest           prove the rules and the gate diff bite
 //   --root <dir>        scan another tree (a scratch copy for a negative control); default: this repo
 //   --allowlist <file>  read another allowlist; default: <root>/scripts/foundations-allowlist.json
@@ -22,15 +24,12 @@
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { join, relative } from 'node:path'
-import { RULES, findingsIn, kindOf, lineOf } from './lib/foundations-rules.mjs'
+import { RULES, findingsIn, hasOwner, kindOf, lineOf } from './lib/foundations-rules.mjs'
 
 const REPO = fileURLToPath(new URL('..', import.meta.url))
 const SCAN_DIRS = ['packages', 'site']
 const SKIP_DIRS = new Set(['node_modules', '__baselines__', '__fixtures__', '__screenshots__', 'public'])
 const SKIP_FILE = /\.gen\.|(?:^|\/)dogfood-assets\.ts$/
-
-/** The reason a new allowlist key starts with (an existing reason is always kept); a lane replaces it. */
-const NEW_REASON = 'TODO: name the owning ticket'
 
 function walk(dir, root, out) {
   let entries
@@ -70,6 +69,18 @@ export function gateDiff(foundKeys, allowKeys) {
   return { unlisted: [...found].filter((k) => !allow.has(k)), stale: [...allow].filter((k) => !found.has(k)) }
 }
 
+/** The allowlist --write-allowlist writes: existing reasons kept, each new key given `reason`, which must name an
+ *  owner (hasOwner, the dogfood gates' check: a T-NNNN ticket, an ADR-NNNN or a ruling). Returns null when a new key
+ *  needs a reason and `reason` names no owner, so nothing is written. */
+export function nextAllowlist(foundKeys, old, reason) {
+  const keys = [...foundKeys]
+  if (keys.some((k) => !(k in old)) && !hasOwner(reason)) return null
+  return Object.fromEntries(keys.map((k) => [k, old[k] ?? reason]))
+}
+
+/** Allowlist keys whose reason names no owner. */
+export const unreasoned = (allow) => Object.keys(allow).filter((k) => !hasOwner(allow[k]))
+
 export function readAllowlist(file) {
   if (!existsSync(file)) return {}
   return JSON.parse(readFileSync(file, 'utf8'))
@@ -94,22 +105,28 @@ function main() {
   const files = new Set([...found.keys()].map((k) => k.split('#')[0]))
 
   if (process.argv.includes('--write-allowlist')) {
-    const old = readAllowlist(allowFile)
-    const next = Object.fromEntries([...found.keys()].map((k) => [k, old[k] ?? NEW_REASON]))
+    const next = nextAllowlist(found.keys(), readAllowlist(allowFile), argValue('--reason'))
+    if (next === null) {
+      console.error('foundations-census --write-allowlist: a new key needs --reason "<why>" naming its owner (T-NNNN, ADR-NNNN or a ruling)')
+      process.exit(1)
+    }
     writeFileSync(allowFile, formatAllowlist(next))
     console.log(`foundations-census: wrote ${Object.keys(next).length} entries to ${relative(root, allowFile)}`)
     return
   }
 
   if (process.argv.includes('--gate')) {
-    const { unlisted, stale } = gateDiff(found.keys(), Object.keys(readAllowlist(allowFile)))
+    const allow = readAllowlist(allowFile)
+    const { unlisted, stale } = gateDiff(found.keys(), Object.keys(allow))
+    const noOwner = unreasoned(allow)
+    for (const k of noOwner) console.error(`unreasoned: ${k} names no owner (T-NNNN, ADR-NNNN or a ruling)`)
     for (const k of unlisted) {
       const f = found.get(k)
       console.error(`unlisted: ${k} (${f.count}) line ${f.line}: ${f.text}`)
     }
     for (const k of stale) console.error(`stale: ${k} no longer finds anything; delete its allowlist line`)
-    if (unlisted.length || stale.length) {
-      console.error(`foundations-census --gate: ${unlisted.length} unlisted, ${stale.length} stale (ADR-0245; fix the file or the allowlist line)`)
+    if (unlisted.length || stale.length || noOwner.length) {
+      console.error(`foundations-census --gate: ${unlisted.length} unlisted, ${stale.length} stale, ${noOwner.length} unreasoned (ADR-0245; fix the file or the allowlist line)`)
       process.exit(1)
     }
     console.log(`foundations-census --gate: green, ${found.size} allowlisted findings in ${files.size} files`)
@@ -146,12 +163,17 @@ function selftest() {
   check('axes: a marked deprecated carrier line passes, an unmarked one is still found', rule('a.ts', `el.setAttribute('scale', 'ui-lg') // foundations-alias\nel.setAttribute('density', 'compact')`, 'axes') === 1)
   check('glyph: a glyph field not aimed at ui-icon passes', rule('a.ts', `const s = { glyph: '9♠' }; r.glyph; this.#part.glyph = el`, 'glyph') === 0)
   check('axes: selector, markup and attribute call are found', rule('a.ts', `q('[scale="ui-lg"]'); h('<div density="compact">'); e.setAttribute('scale', 'x')`, 'axes') === 3)
+  check('axes: an attribute name union fed to setAttribute through a variable is found', rule('a.ts', `function row(attr: 'scale' | 'density', v: string) { el.setAttribute(attr, v) }`, 'axes') === 2)
+  check('axes: a union of other names and a string array of the names pass', rule('a.ts', `type T = 'rotate' | 'translate'; const names = ['scale', 'density']`, 'axes') === 0)
   check('axes: a css selector is found', rule('a.css', ':is([scale="ui-lg"]) x { color: red; }', 'axes') === 1)
   check('axes: data-scale, transform scale() and --md-sys-scale pass', rule('a.css', 'x[data-scale="sm"] { transform: scale(2); font-size: calc(1px * var(--md-sys-scale)); }', 'axes') === 0)
   check('axes: a test title or comment naming [scale] passes', rule('a.ts', `it('no [size]/[scale] selector', () => {}) // [density]`, 'axes') === 0)
   const d = gateDiff(['a#px', 'b#px'], ['a#px', 'c#glyph'])
   check('gate: an unlisted finding and a stale entry are both reported', d.unlisted.join() === 'b#px' && d.stale.join() === 'c#glyph')
   check('gate: a listed finding is green', gateDiff(['a#px'], ['a#px']).unlisted.length + gateDiff(['a#px'], ['a#px']).stale.length === 0)
+  check('allowlist: a new key with no owner in --reason writes nothing; a TODO reason is refused', nextAllowlist(['a#px'], {}, undefined) === null && nextAllowlist(['a#px'], {}, 'TODO: name the owning ticket') === null)
+  check('allowlist: a new key takes an owned --reason, an existing reason is kept', JSON.stringify(nextAllowlist(['a#px', 'b#px'], { 'a#px': 'T-0001 keeps it' }, 'T-0169 ruling')) === JSON.stringify({ 'a#px': 'T-0001 keeps it', 'b#px': 'T-0169 ruling' }))
+  check('gate: an allowlist reason that names no owner is reported', unreasoned({ 'a#px': 'TODO', 'b#px': 'T-0169' }).join() === 'a#px')
   check('allowlist: one entry per line, sorted, valid JSON', formatAllowlist({ 'b#px': 'y', 'a#px': 'x' }) === '{\n  "a#px": "x",\n  "b#px": "y"\n}\n' && JSON.parse(formatAllowlist({ a: 'b' })).a === 'b')
   console.log(failures === 0 ? 'selftest: all green' : `selftest: ${failures} failure(s)`)
   if (failures) process.exit(1)

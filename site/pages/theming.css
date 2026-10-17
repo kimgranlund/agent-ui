@@ -1,4 +1,4 @@
-/* theming.css — page-local chrome for the theming guide: the side-by-side scheme panels, the scale/density
+/* theming.css — page-local chrome for the theming guide: the side-by-side scheme panels, the tier/scale
  * axis clusters, and the override demo. Never restyles a ui-* control's internals — only lays out around the
  * real controls each demo mounts. Imported after _page.ts, so it reads the foundation roles. */
 

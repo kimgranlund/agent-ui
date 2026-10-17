@@ -74,8 +74,9 @@ theme package seam (`theme`), promoted from the docs site's own `site/lib/theme-
   an unwrapped or unset provider imposes no override and its subtree inherits the ambient scheme: the
   page's own, or an ancestor provider's, if this one nests inside another. An out-of-vocabulary value set
   directly via `setAttribute` fails open to `''` (inherit), never fails closed to a named value, never throws.
-- The `scale` and `density` carriers (deprecated by ADR-0245) were removed in T-0169: size a subtree with
-  `data-tier`, `data-scale` and `data-density` on any wrapper.
+- **Breaking (T-0169):** the `scale` and `density` carriers (deprecated by ADR-0245) are removed, along with
+  the `[scale]` / `[density]` selectors that gave them meaning; the attributes now do nothing. Size a subtree
+  with `data-tier`, `data-scale` and `data-density` on any wrapper.
 - **`theme`** — a free string, default `''`. The **package seam** (ADR-0079 cl.3, ADR-0141): swaps whole
   token palettes. This component itself stays a pure carrier — no JS-side effect, no built-in pack registry
   — it only sets the attribute a `[theme='<name>']` CSS layer selects on; loading and injecting that layer's

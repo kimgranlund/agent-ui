@@ -284,13 +284,13 @@ import { locationFor, type FieldLocation } from './field-location.ts'
  *  consumed by every DOM-order, `data-show` composition, and primary-repoint site below. */
 type Pane = 'chat' | 'settings' | 'copilot'
 const PANE_ORDER: readonly Pane[] = ['chat', 'settings', 'copilot']
-/** S7-c (LLD §16.1) — each pane's identity glyph + label, the ONE table both header renderings (the wide
+/** S7-c (LLD §16.1) — each pane's identity icon symbol + label, the ONE table both header renderings (the wide
  *  pills and the narrow segments) read from, so the two can never drift onto different icons/copy for the
  *  same pane. */
-const PANE_IDENTITY: Record<Pane, { glyph: string; label: string }> = {
-  chat: { glyph: 'chats-circle', label: 'Chat' },
-  settings: { glyph: 'gear-six', label: 'Settings' },
-  copilot: { glyph: 'robot', label: 'Co-pilot' },
+const PANE_IDENTITY: Record<Pane, { symbol: string; label: string }> = {
+  chat: { symbol: 'chats-circle', label: 'Chat' },
+  settings: { symbol: 'gear-six', label: 'Settings' },
+  copilot: { symbol: 'robot', label: 'Co-pilot' },
 }
 
 /**
@@ -1900,12 +1900,12 @@ export class UIAgentAdminElement extends UIElement {
     const panePills = document.createElement('div')
     panePills.setAttribute('data-part', 'pane-pills')
     for (const pane of PANE_ORDER) {
-      const { glyph, label } = PANE_IDENTITY[pane]
+      const { symbol, label } = PANE_IDENTITY[pane]
       const pill = document.createElement('ui-toggle') as UIToggleElement
       pill.setAttribute('data-pane', pane)
       const identityIcon = document.createElement('ui-icon')
       identityIcon.setAttribute('slot', 'icon')
-      identityIcon.setAttribute('symbol', glyph)
+      identityIcon.setAttribute('symbol', symbol)
       const stateIcon = document.createElement('ui-icon') as UIIconElement
       stateIcon.setAttribute('slot', 'state-icon')
       // The pill's own visible label text IS its accessible name (toggle.md's `label` slot) — no
@@ -1951,7 +1951,7 @@ export class UIAgentAdminElement extends UIElement {
     paneSegments.setAttribute('data-part', 'pane-segments')
     paneSegments.setAttribute('aria-label', 'Visible pane')
     for (const pane of PANE_ORDER) {
-      const { glyph, label } = PANE_IDENTITY[pane]
+      const { symbol, label } = PANE_IDENTITY[pane]
       const segment = document.createElement('ui-segment') as UISegmentElement
       segment.setAttribute('value', pane)
       // Icon-only (LLD §16.4 done-when: "every icon-only affordance... carries an asserted accessible
@@ -1960,7 +1960,7 @@ export class UIAgentAdminElement extends UIElement {
       // ui-switch/ui-button, e.g. `agentSwitch`/`overflowTrigger` below) is the real name source.
       segment.setAttribute('aria-label', label)
       const segmentIcon = document.createElement('ui-icon')
-      segmentIcon.setAttribute('symbol', glyph)
+      segmentIcon.setAttribute('symbol', symbol)
       segment.append(segmentIcon)
       paneSegments.append(segment)
     }

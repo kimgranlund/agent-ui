@@ -237,6 +237,9 @@ describe('glyph-usage coverage (GH #1508) — every glyph a site/app consumer as
     expect(USAGES.length).toBeGreaterThan(0)
     expect(USAGES.some((u) => u.glyph === 'house')).toBe(true) // command-modal-demo's Navigation row
     expect(USAGES.some((u) => u.glyph === 'check')).toBe(true) // component-preview.ts's generic swatch
+    // T-0169: agent-admin's PANE_IDENTITY table keys its pane icons as `symbol:`, so the scan still sees them
+    const admin = USAGES.filter((u) => u.file.endsWith('agent-admin/agent-admin.ts')).map((u) => u.glyph)
+    expect(admin).toEqual(expect.arrayContaining(['chats-circle', 'gear-six', 'robot']))
   })
 
   it('the INDIRECT tier resolves command-modal-demo.ts\'s commandOption(value, icon, …) forwarding', () => {

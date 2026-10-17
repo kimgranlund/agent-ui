@@ -1,4 +1,4 @@
-// site/pages/theming.ts — the theming guide: ui-theme-provider's three live axes (scheme/scale/density), how the
+// site/pages/theming.ts — the theming guide: ui-theme-provider's scheme axis, sizing a subtree with data-tier/data-scale, how the
 // --md-sys-color-{family}-{role} role system is shaped, how a consumer overrides a token at a subtree, and how
 // theme packs swap whole token palettes (ADR-0141/TKT-0087) — this site's own header picker is the live demo.
 // Live demos throughout — the scheme demo puts a real light and a real dark
@@ -17,8 +17,8 @@ import { el } from '../lib/specimens.ts'
 const { content } = mountPage({
   title: 'Theming',
   intro:
-    'One theming subtree, three live axes: scheme (light/dark), scale, and density. This page shows each in a ' +
-    'real, running subtree — never a static screenshot.',
+    'One theming subtree: scheme (light/dark) on ui-theme-provider, and size through data-tier and data-scale ' +
+    'on any wrapper. This page shows each in a real, running subtree, never a static screenshot.',
 })
 
 content.append(
@@ -26,9 +26,9 @@ content.append(
     'ui-theme-provider is a real, shipped control (@agent-ui/components/controls/theme-provider) — a pure ' +
       'coordination/carrier element with no visual voice of its own. scheme is the one axis with a JS-side ' +
       'effect (it maps to the element’s own color-scheme, which every light-dark() token resolves against per ' +
-      'subtree via inheritance — an unset scheme imposes no override and inherits the ambient scheme). scale ' +
-      'and density are pure attribute carriers: dimensions.css’s [scale]/[density] selectors key off them in ' +
-      'CSS alone.',
+      'subtree via inheritance — an unset scheme imposes no override and inherits the ambient scheme). theme is ' +
+      'the reserved package seam. Size is not a provider axis: data-tier and data-scale on any wrapper set it ' +
+      '(ADR-0245).',
   ),
 )
 
@@ -74,19 +74,19 @@ function schemeCard(scheme: 'light' | 'dark'): HTMLElement {
 
 content.append(el('div', { class: 'theming-scheme-row' }, [schemeCard('light'), schemeCard('dark')]))
 
-// ── 2 · scale & density — a compact demo of both remaining axes ─────────────────────────────────────────────
-content.append(heading(2, '2 · scale & density'))
+// ── 2 · tier & scale: sizing a subtree with data-tier and data-scale (ADR-0245) ──────────────────────────────
+content.append(heading(2, '2 · tier & scale'))
 content.append(
   el('p', {}, [
     document.createTextNode(
-      'scale re-tables a control’s frame (height + font + icon) to a different §1 row; density multiplies only ' +
-        'the icon-to-label rhythm gap, never the frame. Both are plain attributes on any ancestor — ' +
-        'ui-theme-provider carries them for free, but any wrapper element works identically.',
+      'data-tier picks the register (widget, product, content) and data-scale steps it (sm, md, lg); every ' +
+        'control under the wrapper derives its height, type and icon from the new n. Both are plain attributes ' +
+        'on any ancestor element.',
     ),
   ]),
 )
 
-function axisRow(attr: 'scale' | 'density', value: string): HTMLElement {
+function axisRow(attr: 'data-tier' | 'data-scale', value: string): HTMLElement {
   const cluster = el('div', { class: 'theming-axis-cluster' })
   cluster.setAttribute(attr, value)
   const label = el('span', { class: 'theming-axis-label' }, [document.createTextNode(`[${attr}="${value}"]`)])
@@ -97,21 +97,21 @@ function axisRow(attr: 'scale' | 'density', value: string): HTMLElement {
   return cluster
 }
 content.append(
-  el('div', { class: 'theming-axis-row' }, [axisRow('scale', 'ui-sm'), axisRow('scale', 'ui-md'), axisRow('scale', 'content-lg')]),
+  el('div', { class: 'theming-axis-row' }, [axisRow('data-tier', 'widget'), axisRow('data-tier', 'product'), axisRow('data-tier', 'content')]),
 )
 content.append(
-  el('div', { class: 'theming-axis-row' }, [axisRow('density', 'compact'), axisRow('density', 'comfortable'), axisRow('density', 'spacious')]),
+  el('div', { class: 'theming-axis-row' }, [axisRow('data-scale', 'sm'), axisRow('data-scale', 'md'), axisRow('data-scale', 'lg')]),
 )
 content.append(
   el('p', { class: 'theming-note' }, [
-    document.createTextNode('The full [scale] × [size] stepping — every combination, tabulated — lives on the '),
+    document.createTextNode('The full tier × scale × size stepping, every combination tabulated, lives on the '),
     (() => {
       const a = document.createElement('a')
       a.href = './sizing.html'
       a.textContent = 'sizing guide'
       return a
     })(),
-    // GH #728 — the [scale]-riding -size leg's own reference: the live typescale specimens.
+    // GH #728: the scale-riding -size leg's own reference, the live typescale specimens.
     document.createTextNode('; the type scale the -size leg rescales is rendered live on the '),
     (() => {
       const a = document.createElement('a')

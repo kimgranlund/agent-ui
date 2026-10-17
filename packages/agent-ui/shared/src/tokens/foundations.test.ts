@@ -112,10 +112,10 @@ describe('foundations: generated-file drift and the cut (ADR-0245 clause 10a)', 
   })
 
   it('T-0169: the retired [scale] and [density] axes have no selector in either sheet', () => {
-    // the retired attribute names are built, not spelled, so this proof is not itself a use of the axes
-    const axes = ['scale', 'density'].map((a) => `[${a}`)
+    // a bare or valued selector anywhere in a compound (`[scale]`, `x [density='compact']`, `:is([scale])`)
+    const retired = /\[(scale|density)[\]=]/
     for (const sheet of [committed, bridge]) {
-      expect(selectorsOf(sheet).filter((sel) => axes.some((a) => sel.includes(a + '=') || sel === a + ']'))).toEqual([])
+      expect(selectorsOf(sheet).filter((sel) => retired.test(sel))).toEqual([])
     }
   })
 

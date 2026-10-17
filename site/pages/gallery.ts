@@ -7,8 +7,8 @@ import '../lib/component-gallery.ts' // self-defining <component-gallery> (+ <ui
 const { content } = mountPage({
   title: 'Component gallery',
   intro:
-    'Every shipped ui-* control, live and filterable, themed through one <ui-theme-provider> (scheme · scale · ' +
-    'density). Derived from the same descriptors the per-component doc pages read — a new control appears ' +
+    'Every shipped ui-* control, live and filterable, themed through one <ui-theme-provider> (scheme), ' +
+    'sized through data-tier and data-scale. Derived from the same descriptors the per-component doc pages read — a new control appears ' +
     'here automatically.',
 })
 

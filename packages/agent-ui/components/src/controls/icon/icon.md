@@ -1,7 +1,7 @@
 ---
 # icon.md frontmatter — the attributes-as-API descriptor for ui-icon (ADR-0004 / ADR-0065 / ADR-0066).
 # The machine-checkable public surface lives HERE (frontmatter); the prose below the fence is the /site
-# doc. The `attributes[]` block MUST mirror icon.ts `static props` (symbol/glyph/label); the contract↔props
+# doc. The `attributes[]` block MUST mirror icon.ts `static props` (symbol/label); the contract↔props
 # trip-wire (icon-descriptor.test.ts) targets this fence. Field set per .claude/docs/plan.md §10 / ADR-0004.
 tag: ui-icon
 tier: display          # geometry size-class (Display band — NO control frame/height; geometry.md lists "icon" as a Display example)
@@ -64,9 +64,9 @@ active pack's SVG body and injects it as its only child. A functional mark (a ch
 ## Resolution
 
 `symbol` is a plain string (not a closed enum) resolved through `@agent-ui/icons`' active pack:
-`setIcon(this, symbol)` on every change; an empty `symbol` clears the host. The old `glyph` attribute is a
-deprecated alias, read only when `symbol` is empty, and is removed one release after the foundations cut
-(ADR-0245 clause 10d). An unregistered name resolves to
+`setIcon(this, symbol)` on every change; an empty `symbol` clears the host. **Breaking (T-0169):** the
+deprecated `glyph` alias is removed (ADR-0245 clause 10d); `<ui-icon glyph>` and `el.glyph` no longer render
+anything, so set `symbol`. An unregistered name resolves to
 a non-throwing empty `<svg data-icon-missing>` rather than breaking the render (`resolveIcon`,
 `@agent-ui/icons`). The shipped default is the Phosphor pack (`@agent-ui/icons/phosphor`), covering the
 current `ICON_NAMES` set (`@agent-ui/icons/src/types.ts` — the source of truth; twenty names as of the
