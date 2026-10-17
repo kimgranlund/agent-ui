@@ -1306,6 +1306,11 @@ const PLANTS: Record<string, { bad: string; good: string; width?: number; rule?:
     good: '<div dir="rtl" style="inline-size: 900px"><ui-calendar value="2026-10-14"></ui-calendar></div>',
     width: 1000,
   },
+  'legend-gap, rtl': {
+    rule: 'legend-gap',
+    bad: `<div dir="rtl" style="inline-size: 640px"><style>ui-gauge.planted [data-part='legend'] { padding-inline-start: 420px !important }</style><ui-gauge class="planted" data='[{"label":"CPU","value":72},{"label":"Memory","value":40}]'></ui-gauge></div>`,
+    good: `<div dir="rtl" style="inline-size: 640px"><ui-gauge data='[{"label":"CPU","value":72},{"label":"Memory","value":40}]'></ui-gauge></div>`,
+  },
   'unframed-inset, rtl': {
     rule: 'unframed-inset',
     bad: `<div dir="rtl"><ui-board-grid rows="1" cols="3" style="padding: 6px" cells='${LETTERS}'></ui-board-grid></div>`,

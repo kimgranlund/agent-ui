@@ -52,7 +52,7 @@ export interface GaugeRing extends GaugeDatum {
    *  circumference exactly one dash. */
   circumference: number
   /** `circumference * (1 - clampedValue / 100)` — the `stroke-dashoffset` that reveals exactly
-   *  `clampedValue` percent of the circle, clockwise from 12 o'clock (paired with a -90deg rotation
+   *  `clampedValue` percent of the circle, clockwise from 12 o'clock in either text direction (paired with a -90deg rotation
    *  at the render boundary). */
   dashOffset: number
   /** 1..6, cycling — indexes `--ui-gauge-series-{tokenIndex}-ink` (cl.4's outer→inner ramp step). */

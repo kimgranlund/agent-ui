@@ -83,9 +83,17 @@ export class UIGaugeElement extends UIElement {
     }
   }
 
+  /** The rings sit on the box's start edge: the physical left in ltr, the right in rtl. The computed direction
+   *  decides (a `dir` attribute or a CSS-only `direction: rtl` both land here), and the arcs sweep clockwise either way. */
+  #anchor(): string {
+    return getComputedStyle(this).direction === 'rtl' ? 'xMaxYMid meet' : 'xMinYMid meet'
+  }
+
   #syncScale(): void {
     const svg = this.querySelector('svg[data-part="rings"]')
     if (!svg) return
+    const anchor = this.#anchor()
+    if (svg.getAttribute('preserveAspectRatio') !== anchor) svg.setAttribute('preserveAspectRatio', anchor)
     const box = svg.getBoundingClientRect()
     const scale = Math.min(box.width, box.height) / VIEWBOX_SIZE
     if (!(scale > 0) || Math.abs(scale - this.#scale) < 1e-3) return
@@ -97,7 +105,8 @@ export class UIGaugeElement extends UIElement {
 
   /** Layer 1 — the aria-hidden, zero-inset SVG rings: one track circle + one rounded-cap progress
    *  circle per datum, OUTER→INNER in data order (ADR-0229 cl.4). `preserveAspectRatio="xMinYMid meet"`
-   *  pins the ring drawing to the box's start edge (letterboxing any extra width to the end side) so a
+   *  (`xMaxYMid` under a computed `direction: rtl`, see #anchor() (re-read in #syncScale)) pins the ring drawing to the box's start edge
+   *  (letterboxing any extra width to the end side) so a
    *  wide host reserves real, empty room for the legend layer WITHOUT shrinking the ring's own
    *  coordinate system or this layer's own full-bleed element box (ADR-0228 cl.2/cl.3's rejected
    *  "residual-gutter" alternative — the ring never shrinks to make room). The HOST carries role=list;
@@ -105,7 +114,7 @@ export class UIGaugeElement extends UIElement {
   #ringsNode(g: GaugeGeometry): SVGSVGElement {
     const svg = document.createElementNS(SVG_NS, 'svg')
     svg.setAttribute('viewBox', `0 0 ${VIEWBOX_SIZE} ${VIEWBOX_SIZE}`)
-    svg.setAttribute('preserveAspectRatio', 'xMinYMid meet')
+    svg.setAttribute('preserveAspectRatio', this.#anchor())
     svg.setAttribute('data-part', 'rings')
     svg.setAttribute('aria-hidden', 'true')
     svg.setAttribute('focusable', 'false')
@@ -130,7 +139,7 @@ export class UIGaugeElement extends UIElement {
       track.setAttribute('r', String(ring.radius))
       svg.append(track)
 
-      // Rotated -90deg so every ring's sweep starts at 12 o'clock and runs clockwise (the standard
+      // Rotated -90deg so every ring's sweep starts at 12 o'clock and runs clockwise in either text direction (the standard
       // SVG stroke-dasharray/stroke-dashoffset radial-gauge technique).
       const progress = document.createElementNS(SVG_NS, 'circle')
       progress.setAttribute('data-part', 'progress')
