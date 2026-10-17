@@ -153,13 +153,13 @@ describe('theme-packs.test.ts — the ADR-0141 parity gate', () => {
   })
 })
 
-// T-0340 (Kim 2026-10-17): the primary FILL ladder (`--md-sys-color-primary-fill`, `-fill-hover`, `-fill-active`)
-// carries on-primary text, so in each pack and the default its states clear WCAG-AA 4.5:1 in both schemes and the
-// dark ladder darkens rest -> hover -> pressed. `primary` and `-hover` stay the ink and indicator roles and keep
-// their pre-T-0340 ratio over the dark neutral surface. The contrast math here is a second derivation, independent
-// of wrap-pack.ts's repointFill: it reads each file's declared legs and primitives and recomputes OKLCH -> sRGB ->
-// WCAG luminance itself.
-describe('theme-packs.test.ts: the primary fill ladder clears 4.5:1 under on-primary (T-0340)', () => {
+// T-0340 (Kim 2026-10-17): what each THEME PACK must satisfy (the default's own fill gates live in tokens.test.ts).
+// (1) every leg of the primary FILL ladder (`--md-sys-color-primary-fill`, `-fill-hover`, `-fill-active`), light and
+// dark, clears WCAG-AA 4.5:1 under its matching on-primary leg; (2) the ink and indicator roles keep the legs the
+// pack was wrapped with before T-0340; (3) the pack is a fixed point of wrap-pack.ts's repointFill. The contrast math
+// is a second derivation, independent of repointFill: it reads each pack's declared legs and primitives and
+// recomputes OKLCH -> sRGB -> WCAG luminance itself.
+describe('theme-packs.test.ts: each pack primary fill ladder clears 4.5:1 under on-primary (T-0340)', () => {
   const AA = 4.5
   const lum = ([L, C, H]: number[]): number => {
     const h = ((H as number) * Math.PI) / 180, a = (C as number) * Math.cos(h), b = (C as number) * Math.sin(h)
@@ -173,14 +173,14 @@ describe('theme-packs.test.ts: the primary fill ladder clears 4.5:1 under on-pri
     ].map((c) => Math.min(1, Math.max(0, c)))
     return 0.2126 * (lin[0] as number) + 0.7152 * (lin[1] as number) + 0.0722 * (lin[2] as number)
   }
-  const stopOf = (css: string, family: string, stop: string): number[] => {
-    const m = css.match(new RegExp(`--md-sys-color-${family}-${stop}:\\s*oklch\\(([-\\d.]+)\\s+([-\\d.]+)\\s+([-\\d.]+)`))
-    if (!m) throw new Error(`primitive ${family}-${stop} not found`)
+  const stopOf = (css: string, stop: string): number[] => {
+    const m = css.match(new RegExp(`--md-sys-color-primary-${stop}:\\s*oklch\\(([-\\d.]+)\\s+([-\\d.]+)\\s+([-\\d.]+)`))
+    if (!m) throw new Error(`primitive primary-${stop} not found`)
     return [Number(m[1]), Number(m[2]), Number(m[3])]
   }
-  const legsOf = (css: string, role: string, family = 'primary'): [string, string] => {
-    const m = css.match(new RegExp(`--md-sys-color-${role}:\\s*light-dark\\(\\s*var\\(--md-sys-color-${family}-(\\d+)\\)\\s*,\\s*var\\(--md-sys-color-${family}-(\\d+)\\)\\s*\\)`))
-    if (!m) throw new Error(`role ${role} not a two-leg ${family} light-dark()`)
+  const legsOf = (css: string, role: string): [string, string] => {
+    const m = css.match(new RegExp(`--md-sys-color-${role}:\\s*light-dark\\(\\s*var\\(--md-sys-color-primary-(\\d+)\\)\\s*,\\s*var\\(--md-sys-color-primary-(\\d+)\\)\\s*\\)`))
+    if (!m) throw new Error(`role ${role} not a two-leg primary light-dark()`)
     return [m[1] as string, m[2] as string]
   }
   const ratioOf = (a: number[], b: number[]): number => {
@@ -192,39 +192,36 @@ describe('theme-packs.test.ts: the primary fill ladder clears 4.5:1 under on-pri
     ['primary-fill-hover', 'primary-on-primary-hover'],
     ['primary-fill-active', 'primary-on-primary-active'],
   ] as const
-  const sources = [['tokens.css', TOKENS_CSS], ...packFiles().map((f) => [`themes/${f}`, readFileSync(`${THEMES_DIR}/${f}`, 'utf8')])] as const
-
-  for (const [file, css] of sources) {
-    describe(file, () => {
-      for (const [fill, ink] of FILL_PAIRS) {
-        it(`${fill} clears 4.5:1 under ${ink} in both schemes`, () => {
-          for (const k of [0, 1] as const) {
-            const f = legsOf(css, fill)[k], i = legsOf(css, ink)[k]
-            const r = ratioOf(stopOf(css, 'primary', f), stopOf(css, 'primary', i))
-            expect(r, `${k ? 'dark' : 'light'} ${ink}(${i}) on ${fill}(${f}) = ${r.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA)
-          }
-        })
+  /** Every fill leg below 4.5:1 under its matching on-primary leg, as `role scheme fill/ink = ratio`. */
+  const fillMisses = (css: string): string[] => {
+    const out: string[] = []
+    for (const [fill, ink] of FILL_PAIRS) {
+      for (const k of [0, 1] as const) {
+        const f = legsOf(css, fill)[k], i = legsOf(css, ink)[k]
+        const r = ratioOf(stopOf(css, f), stopOf(css, i))
+        if (r < AA) out.push(`${fill} ${k ? 'dark' : 'light'} ${f}/${i} = ${r.toFixed(2)}:1`)
       }
-      it('the light legs equal primary / -dim / -high and the dark ladder darkens rest -> hover -> pressed', () => {
-        expect(legsOf(css, 'primary-fill')[0]).toBe(legsOf(css, 'primary')[0])
-        expect(legsOf(css, 'primary-fill-hover')[0]).toBe(legsOf(css, 'primary-dim')[0])
-        expect(legsOf(css, 'primary-fill-active')[0]).toBe(legsOf(css, 'primary-high')[0])
-        const [rest, hover, pressed] = FILL_PAIRS.map(([fill]) => Number(legsOf(css, fill)[1]))
-        expect(hover, 'dark hover not darker than rest').toBeGreaterThan(rest as number)
-        expect(pressed, 'dark pressed not darker than hover').toBeGreaterThan(hover as number)
+    }
+    return out
+  }
+  // The ink and indicator legs every pack was wrapped with before T-0340 (the stock UT export's role legs, identical
+  // across all ten packs at commit 3ddba942c). T-0340 adds fill roles; it never moves these.
+  const PRE_T0340_LEGS = {
+    'primary': ['550', '450'],
+    'primary-dim': ['650', '700'],
+    'primary-high': ['650', '400'],
+    'primary-hover': ['650', '350'],
+    'primary-active': ['750', '250'],
+  } as const
+
+  for (const file of packFiles()) {
+    describe(`themes/${file}`, () => {
+      const css = readFileSync(`${THEMES_DIR}/${file}`, 'utf8')
+      it('every fill leg, light and dark, clears 4.5:1 under its matching on-primary leg', () => {
+        expect(fillMisses(css)).toEqual([])
       })
-      it('primary and -hover keep their pre-T-0340 ratio (450, 350) over the dark neutral surface as ink/indicator', () => {
-        const surface = stopOf(css, 'neutral', legsOf(css, 'neutral-surface', 'neutral')[1])
-        for (const [role, was] of [['primary', '450'], ['primary-hover', '350']] as const) {
-          const now = legsOf(css, role)[1]
-          expect(ratioOf(stopOf(css, 'primary', now), surface), `${role}(${now})`).toBeGreaterThanOrEqual(ratioOf(stopOf(css, 'primary', was), surface) - 1e-9)
-        }
-      })
-      it('NEGATIVE control: the plain primary dark leg fails 4.5:1 under on-primary, and a 600 ink loses ratio over the surface', () => {
-        const ink = stopOf(css, 'primary', legsOf(css, 'primary-on-primary')[1])
-        expect(ratioOf(stopOf(css, 'primary', legsOf(css, 'primary')[1]), ink)).toBeLessThan(AA)
-        const surface = stopOf(css, 'neutral', legsOf(css, 'neutral-surface', 'neutral')[1])
-        expect(ratioOf(stopOf(css, 'primary', '600'), surface)).toBeLessThan(ratioOf(stopOf(css, 'primary', '450'), surface))
+      it('the ink and indicator roles keep their pre-T-0340 legs', () => {
+        for (const [role, was] of Object.entries(PRE_T0340_LEGS)) expect(legsOf(css, role), role).toEqual(was)
       })
       it('is a fixed point of wrap-pack.ts repointFill (the derived legs, not a hand edit)', () => {
         expect(repointFill(css)).toBe(css)
@@ -232,9 +229,15 @@ describe('theme-packs.test.ts: the primary fill ladder clears 4.5:1 under on-pri
     })
   }
 
-  it('NEGATIVE control: a stock pack with no fill roles is NOT a fixed point (repointFill adds them)', () => {
-    const stock = TOKENS_CSS.replace(/^\s*--md-sys-color-primary-fill(-hover|-active)?:[^;]*;\n/gm, '')
-    expect(stock).not.toBe(TOKENS_CSS)
+  const sample = readFileSync(`${THEMES_DIR}/${packFiles()[0]}`, 'utf8')
+  it('NEGATIVE control: a pack whose dark fill rest is the ink role (450) fails the fill check', () => {
+    const bad = sample.replace(/(--md-sys-color-primary-fill: light-dark\(var\(--md-sys-color-primary-\d+\), var\(--md-sys-color-primary-)\d+/, '$1450')
+    expect(bad).not.toBe(sample)
+    expect(fillMisses(bad).join(' ')).toMatch(/primary-fill dark 450/)
+  })
+  it('NEGATIVE control: a pack with no fill roles is NOT a fixed point (repointFill adds them)', () => {
+    const stock = sample.replace(/^\s*--md-sys-color-primary-fill(-hover|-active)?:[^;]*;\n/gm, '')
+    expect(stock).not.toBe(sample)
     expect(repointFill(stock)).not.toBe(stock)
   })
 })

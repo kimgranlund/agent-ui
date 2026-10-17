@@ -44,10 +44,11 @@
   /* Border: idle ring colour. */
   --ui-radio-border: var(--md-sys-color-neutral-on-surface-variant);
 
-  /* Ink: the checked ring + FILL repoint (matches ui-switch's filled-track pattern). */
-  --ui-radio-ink: var(--md-sys-color-primary);
-  /* Fill: the checked interior; [disabled] splits it from the ring (T-0139). */
-  --ui-radio-fill: var(--md-sys-color-primary-fill); /* T-0340: the fill role under the on-primary dot */
+  /* Ink: --ui-radio-ink is an author hook, unset by default. Set, it recolours the hover ring AND the checked ring
+     and fill (matches ui-switch's filled-track pattern). Unset (T-0340), the hover ring falls back to the primary
+     indicator role and the checked circle to the primary FILL role, which carries the on-primary dot at 4.5:1+. */
+  /* Fill: the checked interior, the ink when set; [disabled] splits it from the ring (T-0139). */
+  --ui-radio-fill: var(--ui-radio-ink, var(--md-sys-color-primary-fill));
 
   /* Dot: the checked glyph — BRIGHT on-primary, the ui-switch checked-thumb role (2026-07-07 fix). Was
      `--ui-radio-ink` reused (same blue as the ring/fill it sits on) — a same-hue dot never reads as a
@@ -129,12 +130,12 @@
 
   /* [checked] is the reflected attribute (boolean prop, reflect=true). :state(checked) is the
      custom-state equivalent (absent in jsdom; browser-only). Both selectors ensure coverage.
-     The circle fills solid primary (ring border + interior both --ui-radio-ink) — the same "filled
-     track" treatment ui-switch gives its checked track; the ::after dot below is what reads as the
+     The circle fills solid (ring border + interior both --ui-radio-ink when set, else the primary fill role,
+     T-0340): the same "filled track" treatment ui-switch gives its checked track; the ::after dot below is what reads as the
      distinct indicator, not a same-hue box-shadow annulus (the 2026-07-07 fix). */
   :scope:is([checked])::before,
   :scope:state(checked)::before {
-    border-color: var(--ui-radio-ink);
+    border-color: var(--ui-radio-ink, var(--md-sys-color-primary-fill));
     background: var(--ui-radio-fill);
   }
 
@@ -169,10 +170,11 @@
 
   /* ── Interaction states ──────────────────────────────────────────────────────────────────────── */
 
-  /* hover: subtle border lift — repoint border to the ink colour (matches native <input type=radio>
-     hover treatment: the ring reinforces intent before click). No background change (no filled bg). */
-  :scope:hover::before {
-    border-color: var(--ui-radio-ink);
+  /* hover: subtle border lift; repoint an UNCHECKED ring to the ink colour, the primary indicator role by default
+     (matches native <input type=radio> hover treatment: the ring reinforces intent before click). No background
+     change (no filled bg). A checked circle keeps its solid fill ring (T-0340); the :where() costs no specificity. */
+  :scope:where(:not([checked], :state(checked))):hover::before {
+    border-color: var(--ui-radio-ink, var(--md-sys-color-primary));
   }
 
   /* Focus ring (ADR-0009): fleet-wide shared `:focus-visible` outline on the HOST (covers the circle

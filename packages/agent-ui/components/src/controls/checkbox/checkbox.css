@@ -22,12 +22,14 @@
   --ui-checkbox-box: var(--md-sys-icon-box, var(--md-sys-compact-md));
 
   /* Colour channel: unchecked = neutral border on transparent; checked/indeterminate = primary fill + ink.
-     The border-color and bg-checked ride the same --md-sys-color-primary ladder step as button.css's solid variant
-     (the design-system's primary fill); the ink is the on-primary pair for readability (WCAG AA). */
+     The checked border-color and bg-checked ride --md-sys-color-primary-fill, button.css's solid fill (T-0340), so
+     the box is one solid colour; the ink is the on-primary pair for readability (WCAG AA). The unchecked hover
+     border stays on the primary indicator role. */
   --ui-checkbox-bg: transparent;
   --ui-checkbox-border: var(--md-sys-color-neutral-high);
   --ui-checkbox-bg-checked: var(--md-sys-color-primary-fill); /* T-0340: the fill role under on-primary ink */
-  --ui-checkbox-border-checked: var(--md-sys-color-primary);
+  --ui-checkbox-border-checked: var(--md-sys-color-primary-fill);
+  --ui-checkbox-border-hover: var(--md-sys-color-primary);
   --ui-checkbox-ink: var(--md-sys-color-primary-on-primary); /* checkmark / indeterminate-dash fill */
 
   /* Label gap — the rhythm between the box and the optional label text (density-bearing, via --md-sys-gap-md). */
@@ -115,7 +117,7 @@
       border-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
   }
 
-  /* Checked: fill the box with the primary colour (border disappears into the fill). */
+  /* Checked: fill the box with the primary fill role (the border is the same role, so it disappears into the fill). */
   :scope:state(checked)::before {
     background-color: var(--ui-checkbox-bg-checked);
     border-color: var(--ui-checkbox-border-checked);
@@ -127,9 +129,10 @@
     border-color: var(--ui-checkbox-border-checked);
   }
 
-  /* Hover (TKT-0047) — border-color lift toward the checked colour, the radio.css precedent: same
-     Indicator-class idle shape (border + transparent bg), so the same mechanism ports directly. Invisible
-     while checked (the border already blends into the same-colour fill) — harmless, no state gate needed.
+  /* Hover (TKT-0047): border-color lift to the primary indicator role (--ui-checkbox-border-hover), the radio.css
+     precedent: same Indicator-class idle shape (border + transparent bg), so the same mechanism ports directly.
+     Gated to the unchecked box inside :where() (zero specificity): a checked or indeterminate box keeps its solid
+     fill-role border (T-0340).
      Disabled is pointer-inert (below), so :hover never matches it. Authored BEFORE the user-invalid rule
      below (component-reviewer MINOR fix) — equal specificity (0,2,1) means source order decides which
      wins on hover+user-invalid, and the danger signal must win (the text-field.css:205-208 precedent:
@@ -137,8 +140,8 @@
   /* The answered exclusion rides inside :where() — zero specificity cost, so this rule stays at
      (0,2,1), equal with user-invalid below, and source order keeps deciding (GH #1120: a bare
      :not() here lifted hover to (0,3,1) and masked the danger border). */
-  :scope:where(:not(:state(answered))):hover::before {
-    border-color: var(--ui-checkbox-border-checked);
+  :scope:where(:not(:state(answered), :state(checked), :state(indeterminate))):hover::before {
+    border-color: var(--ui-checkbox-border-hover);
   }
 
   /* user-invalid (ADR-0051) — the danger border, appearing only AFTER the first interaction. Cannot

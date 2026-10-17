@@ -72,7 +72,9 @@ describe('repointFill', () => {
 --md-sys-color-primary-dim: light-dark(var(--md-sys-color-primary-650), var(--md-sys-color-primary-700));
 --md-sys-color-primary-high: light-dark(var(--md-sys-color-primary-650), var(--md-sys-color-primary-400));
 --md-sys-color-primary-active: light-dark(var(--md-sys-color-primary-750), var(--md-sys-color-primary-250));
---md-sys-color-primary-on-primary: light-dark(var(--md-sys-color-primary-050), var(--md-sys-color-primary-${ink}));`
+--md-sys-color-primary-on-primary: light-dark(var(--md-sys-color-primary-050), var(--md-sys-color-primary-${ink}));
+--md-sys-color-primary-on-primary-hover: light-dark(var(--md-sys-color-primary-050), var(--md-sys-color-primary-${ink}));
+--md-sys-color-primary-on-primary-active: light-dark(var(--md-sys-color-primary-050), var(--md-sys-color-primary-${ink}));`
   const STOPS = { '050': 1, '250': 0.82, '300': 0.78, '350': 0.74, '400': 0.69, '450': 0.65, '500': 0.6, '550': 0.56, '600': 0.52, '650': 0.47, '700': 0.43, '750': 0.38, '800': 0.33, '950': 0.15 }
   const fill = (out: string, role: string) => out.match(new RegExp(`--md-sys-color-${role}: light-dark\\(var\\(--md-sys-color-primary-(\\d+)\\), var\\(--md-sys-color-primary-(\\d+)\\)\\);`))?.slice(1)
 
@@ -112,5 +114,23 @@ describe('repointFill', () => {
     expect(() => repointFill(ramp(flat) + roles())).toThrow(/clears 4.5:1 .*hand-picked fill/)
     const { '700': _gone, ...holed } = STOPS
     expect(() => repointFill(ramp(holed) + roles())).toThrow(/no 700 stop for the fill ladder/)
+  })
+
+  it('checks every LIGHT leg against its on-primary leg too, and refuses a light fill below 4.5:1', () => {
+    const paleLight = ramp({ ...STOPS, '550': 0.8 }) + roles() // light rest = primary's light leg 550, now too pale
+    expect(() => repointFill(paleLight)).toThrow(/primary-fill light leg primary-550 is .* under primary-on-primary/)
+  })
+
+  it('checks each dark leg against its OWN on-primary leg (a pressed ink that fails is refused)', () => {
+    const body = ramp(STOPS) + roles().replace(
+      '--md-sys-color-primary-on-primary-active: light-dark(var(--md-sys-color-primary-050), var(--md-sys-color-primary-050));',
+      '--md-sys-color-primary-on-primary-active: light-dark(var(--md-sys-color-primary-050), var(--md-sys-color-primary-650));',
+    )
+    expect(() => repointFill(body)).toThrow(/primary-fill-active dark leg .* under primary-on-primary-active/)
+  })
+
+  it('refuses a pack that declares only some of the three fill roles', () => {
+    const partial = repointFill(ramp(STOPS) + roles()).replace(/^--md-sys-color-primary-fill-hover:[^;]*;\n/m, '')
+    expect(() => repointFill(partial)).toThrow(/declares .* but not primary-fill-hover; a fill ladder is all three roles or none/)
   })
 })

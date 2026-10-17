@@ -63,10 +63,12 @@ export function extractRootBody(css: string): string {
 // (`--md-sys-color-primary-fill`, `-fill-hover`, `-fill-active`) derived from the pack's OWN ramp. Light legs copy
 // the pack's `primary` / `-dim` / `-high` light legs (ui-button's light ladder). The dark rest is the first stop,
 // walking away from the on-primary ink from DARK_FILL_START (darker for a light ink, lighter for a dark ink), that
-// clears 4.5:1; hover and pressed step 100 and 150 further the same way. Nothing is tabled here.
+// clears 4.5:1; hover and pressed step 100 and 150 further the same way. Every leg, light and dark, is then checked
+// against its matching on-primary leg, and a miss (or a pack with only some fill roles) refuses. Nothing is tabled.
 export const DARK_FILL_START = { darker: 600, lighter: 400 } as const
 export const AA_TEXT = 4.5
 const FILL_ROLES = ['primary-fill', 'primary-fill-hover', 'primary-fill-active'] as const
+const INK_ROLES = ['primary-on-primary', 'primary-on-primary-hover', 'primary-on-primary-active'] as const
 
 type Oklch = [number, number, number]
 
@@ -120,14 +122,31 @@ export function repointFill(body: string): string {
     if (!ramp.has(n)) throw new Error(`wrap-pack: the primary ramp has no ${pad(n)} stop for the fill ladder (rest ${pad(rest)}, ${way})`)
     return n
   }
-  const dark = [rest, step(rest + sign * 100), step(rest + sign * 150)]
+  const dark = [rest, step(rest + sign * 100), step(rest + sign * 150)].map(pad)
   const light = [legs('primary')[0], legs('primary-dim')[0], legs('primary-high')[0]]
-  const decl = FILL_ROLES.map((r, i) => `--md-sys-color-${r}: light-dark(var(--md-sys-color-primary-${light[i]}), var(--md-sys-color-primary-${pad(dark[i]!)}));`)
+  // every leg, light and dark, against its matching on-primary leg (rest, hover, pressed); refuse on any miss
+  INK_ROLES.forEach((inkRole, i) => {
+    const inkLegs = legs(inkRole)
+    for (const [scheme, fill, inkStop] of [['light', light[i]!, inkLegs[0]], ['dark', dark[i]!, inkLegs[1]]] as const) {
+      const f = ramp.get(Number(fill)), k = ramp.get(Number(inkStop))
+      if (!f || !k) throw new Error(`wrap-pack: ${FILL_ROLES[i]} ${scheme} leg ${fill} or its ink ${inkStop} has no primitive in the ramp`)
+      const r = contrastOf(f, k)
+      if (r < AA_TEXT) {
+        throw new Error(`wrap-pack: ${FILL_ROLES[i]} ${scheme} leg primary-${fill} is ${r.toFixed(2)}:1 under ${inkRole} (primary-${inkStop}), below ${AA_TEXT}:1; this pack needs a hand-picked fill`)
+      }
+    }
+  })
+  const decl = FILL_ROLES.map((r, i) => `--md-sys-color-${r}: light-dark(var(--md-sys-color-primary-${light[i]}), var(--md-sys-color-primary-${dark[i]}));`)
 
   let out = body
-  if (/--md-sys-color-primary-fill:/.test(out)) {
+  const present = FILL_ROLES.filter((r) => new RegExp(`--md-sys-color-${r}:`).test(out))
+  if (present.length === FILL_ROLES.length) {
     FILL_ROLES.forEach((r, i) => { out = out.replace(new RegExp(`--md-sys-color-${r}:[^;]*;`), decl[i]!) })
     return out
+  }
+  if (present.length > 0) {
+    const missing = FILL_ROLES.filter((r) => !present.includes(r))
+    throw new Error(`wrap-pack: the pack declares ${present.join(', ')} but not ${missing.join(', ')}; a fill ladder is all three roles or none`)
   }
   const anchor = out.match(/^([ \t]*)--md-sys-color-primary-active:[^;]*;$/m)
   if (!anchor) throw new Error('wrap-pack: no --md-sys-color-primary-active declaration to place the fill roles after')
