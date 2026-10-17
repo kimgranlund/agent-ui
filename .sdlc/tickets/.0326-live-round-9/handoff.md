@@ -2,7 +2,7 @@
 id: T-0326
 title: "Live round 9: full matrix after the round 8 fixes ($42 cap)"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -31,10 +31,22 @@ No prompt or code fixes in this ticket. Screenshots stay out of the repo.
 - `test -s .sdlc/evals/rounds/2026-10-17-r9-matrix/report.md` exits 0, and the report holds the matrix against rounds 6 and 8, the per-ticket table for T-0320 to T-0325, the T-0321 halt count against round 8 and the churn against round 8.
 - `jq -e '.reportId and (.round == "2026-10-17-r9-matrix")' .sdlc/evals/fog/2026-10-17-r9-matrix.json` exits 0.
 - `jq -e '.totals.costUsd <= 42 and .stop == "done"' .sdlc/evals/rounds/2026-10-17-r9-matrix/round.json` exits 0.
-- `python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.24.0/scripts/tickets.py --root .sdlc check` exits 0.
+- `python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.24.3/scripts/tickets.py --root .sdlc check` exits 0.
 - `npm run check` exits 0.
 
 ## Done when
 - The round folder holds traces, ledger, round.json, runs/, README and report.md with the matrix, the per-ticket table and the halt count; spend at or under $42.
 - The fog report is published and its id recorded.
-- `python3 ~/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.24.0/scripts/tickets.py --root .sdlc check` and `npm run check` exit 0.
+- `python3 ~/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.24.3/scripts/tickets.py --root .sdlc check` and `npm run check` exit 0.
+
+## Outcome
+
+2026-10-17 · lane: full L2 · verdict: pass · verifier: verifier-L2 (sonnet) · base: 6bfd0f52205a
+- Changed: Live round 9: 77 of 87 (same as round 8), $36.69; halts 0 to 6 on Haiku; clusters filed as T-0328 to T-0334
+- Commits: 5454a3a T-0326: Live round 9: full matrix after the round 8 fixes ($42 cap); acbbf57 T-0326: Live round 9 generator and commands (round 8's 87 runs, $42 cap)
+- Check: 1 `npx vitest run --project scripts scripts/e2e-admin/probe` exits 0: pass
+- Check: 2 report.md exists and holds the matrix against rounds 6 and 8, the T-0320 to T-0325 table, the hal...: pass
+- Check: 3 fog report: pass
+- Check: 4 spend and stop: pass
+- Check: 6 `npm run check` exits 0: pass
+- Follow-up: decide: .sdlc/tickets/0326-live-round-9/handoff.md criterion 5 names plugin... -> notes.md
