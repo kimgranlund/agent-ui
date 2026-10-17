@@ -45,8 +45,10 @@ export interface CompositeMoment {
   readonly wordTypes?: readonly string[]
   /** At least `min` components of `types`. */
   readonly inputs?: { readonly types: readonly string[]; readonly min: number }
-  /** Or, with none of `inputs.types` present, a read-back: a component of `types` beside a Button whose label matches `cue`. */
-  readonly readBack?: { readonly types: readonly string[]; readonly cue: RegExp }
+  /** Or, with none of `inputs.types` present, a read-back: a component of `types` beside a Button that submits it (T-0331:
+   *  `action.submit`, or an action name matching `action`; else, as a fallback, a label matching `cue` unless the action
+   *  is `start_intent`, an info CTA). */
+  readonly readBack?: { readonly types: readonly string[]; readonly action: RegExp; readonly cue: RegExp }
   /** Types the surface must not hold. */
   readonly noInputs?: readonly string[]
   /** An input of `types` whose label, name or bound path matches `cue`, while the surface words match `words`. */
@@ -85,7 +87,9 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
     lacks: ['BookingConfirmation'],
     inputs: { types: BOOKING_INPUTS, min: 2 },
     // T-0266: a fully specified ask read back as a DescriptionList with a confirm Button is still this moment.
-    readBack: { types: ['DescriptionList'], cue: /\bconfirm\b/i },
+    // T-0331: the Button is keyed on its action (round 9 :84 "Book now" is `confirm_booking` with `submit`; r5 ask-3 is
+    // `confirm_boat_tour`), so an info CTA ("Reserve a table" `start_intent`, "Book now" `book_listing`) stays clean.
+    readBack: { types: ['DescriptionList'], action: /^confirm/i, cue: /\bconfirm\b/i },
     words: /\b(book|booking|reserve|reservation|guest|guests|party)\b/i,
     ask: { moment: 'booking', cue: BOOK_ASK, rank: 2, surface: 'a BookingForm with its value bound to the details the guest already gave, so they arrive pre-filled' },
   },
@@ -169,9 +173,7 @@ const kebab = (type: string): string => type.replace(/([a-z0-9])([A-Z])/g, '$1-$
 /** T-0322: the row texts a DescriptionList (its literal or bound `rows`) or a List (its children's words) lists. */
 function rowTexts(c: A2uiComponent, view: SurfaceView): string[] {
   if (c.component === 'DescriptionList') {
-    const raw = c['rows']
-    const path = boundPath(raw)
-    const rows = Array.isArray(raw) ? raw : path.startsWith('/') ? readPointer(view.dataModel, path) : undefined
+    const rows = bound(c['rows'], view)
     if (!Array.isArray(rows)) return []
     return rows.map((r) => (typeof r === 'object' && r !== null ? ['label', 'value'].map((k) => String((r as Record<string, unknown>)[k] ?? '')).join(' ') : ''))
   }
@@ -179,6 +181,36 @@ function rowTexts(c: A2uiComponent, view: SurfaceView): string[] {
     const child = view.components.get(id)
     return child === undefined ? '' : [wordsOf(child), ...childIds(child).map((g) => wordsOf(view.components.get(g) ?? { id: g, component: '' }))].join(' ')
   })
+}
+
+/** A prop as written, or read from the data model when bound (`{path}`). */
+function bound(v: unknown, view: SurfaceView): unknown {
+  const path = boundPath(v)
+  return path === '' ? v : path.startsWith('/') ? readPointer(view.dataModel, path) : undefined
+}
+
+const stringOf = (v: unknown, view: SurfaceView): string => {
+  const b = bound(v, view)
+  return typeof b === 'string' ? b : ''
+}
+
+/** A Button's words: its `label` (literal or bound), else the text of its `child` or `children`. */
+function buttonWords(c: A2uiComponent, view: SurfaceView): string {
+  const label = stringOf(c['label'], view)
+  if (label !== '') return label
+  return childIds(c)
+    .map((id) => stringOf(view.components.get(id)?.['text'], view))
+    .join(' ')
+}
+
+/** T-0331: whether a Button submits the read-back: its action submits or is named like a confirm or booking, else a
+ *  label fallback for an action that starts no intent. */
+function submitsReadBack(c: A2uiComponent, view: SurfaceView, rb: NonNullable<CompositeMoment['readBack']>): boolean {
+  const action = c['action']
+  const a = typeof action === 'object' && action !== null ? (action as Record<string, unknown>) : {}
+  const name = typeof a['action'] === 'string' ? a['action'] : ''
+  if (a['submit'] === true || rb.action.test(name)) return true
+  return name !== 'start_intent' && rb.cue.test(buttonWords(c, view))
 }
 
 /** The components of `view` that hand-build `m`'s moment, or `[]` when the row does not fire. */
@@ -226,9 +258,9 @@ function strays(m: CompositeMoment, view: SurfaceView, intent: string | undefine
     const inputs = comps.filter((c) => m.inputs!.types.includes(c.component))
     if (inputs.length >= m.inputs.min) return inputs
     if (m.readBack === undefined || inputs.length > 0) return []
-    const { types: rowTypes, cue } = m.readBack
-    const rows = comps.filter((c) => rowTypes.includes(c.component))
-    const confirms = comps.filter((c) => c.component === 'Button' && typeof c['label'] === 'string' && cue.test(c['label']))
+    const rb = m.readBack
+    const rows = comps.filter((c) => rb.types.includes(c.component))
+    const confirms = comps.filter((c) => c.component === 'Button' && submitsReadBack(c, view, rb))
     return rows.length > 0 && confirms.length > 0 ? [...rows, ...confirms] : []
   }
   return m.words === undefined ? [] : worded.filter((c) => m.words!.test(wordsOf(c)))

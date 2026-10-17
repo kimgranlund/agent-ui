@@ -167,8 +167,134 @@ describe('composite moment checks (T-0208)', () => {
     expect(f!.message).toContain('pre-filled')
   })
 
+  // T-0331: round 9 :84 (regress-concierge-facilities-then-tour-haiku-1, ask-1, forced round 3) ships this read-back:
+  // a "Book now" Button whose action is `confirm_booking` with `submit`. The old label cue (`confirm`) let it through.
+  const R9_84: A2uiComponent[] = [
+    { id: 'root', component: 'Card', children: ['hdr', 'content', 'footer'] },
+    { id: 'hdr', component: 'CardHeader', children: ['title'] },
+    { id: 'title', component: 'Text', text: 'Book your boat tour', variant: 'h4' },
+    { id: 'content', component: 'CardContent', children: ['summary'] },
+    {
+      id: 'summary',
+      component: 'DescriptionList',
+      rows: [
+        { label: 'Tour', value: 'Half-day coastal boat tour' },
+        { label: 'Date', value: 'Saturday 21 November 2026' },
+        { label: 'Guests', value: '2' },
+        { label: 'Name', value: 'Alex Moreau' },
+      ],
+    },
+    { id: 'footer', component: 'CardFooter', children: ['bookBtn'] },
+    {
+      id: 'bookBtn',
+      component: 'Button',
+      label: 'Book now',
+      variant: 'solid',
+      action: { action: 'confirm_booking', context: { booking: { path: '/booking' } }, submit: true },
+    },
+  ]
+  const withButton = (base: A2uiComponent[], id: string, patch: Partial<A2uiComponent>): A2uiComponent[] =>
+    base.map((c) => (c.id === id ? { ...c, ...patch } : c))
+
+  it('the :84 round 3 read-back ("Book now", confirm_booking) yields BOOKING_FORM_MISSING', () => {
+    expect(codes(R9_84)).toEqual(['BOOKING_FORM_MISSING'])
+  })
+
+  it('a submit Button or an action starting with confirm is the read-back confirm, whatever its label or style', () => {
+    const action = (a: Record<string, unknown>) => withButton(R9_84, 'bookBtn', { label: 'Go', action: a })
+    expect(codes(action({ action: 'confirm_boat_tour', submit: true }))).toEqual(['BOOKING_FORM_MISSING'])
+    expect(codes(action({ action: 'send_it', submit: true }))).toEqual(['BOOKING_FORM_MISSING'])
+    expect(codes(action({ action: 'confirm_boat_tour' }))).toEqual(['BOOKING_FORM_MISSING'])
+    for (const name of ['confirm', 'confirmBooking', 'confirm-booking', 'Confirm_Booking']) {
+      expect(codes(action({ action: name }))).toEqual(['BOOKING_FORM_MISSING'])
+    }
+    expect(codes(action({ action: 'book_boat_tour' }))).toEqual([])
+  })
+
+  it('reads a bound label and a child Text label (the label fallback)', () => {
+    const noAction = { action: { action: 'go' } }
+    const bound = withButton(R9_84, 'bookBtn', { label: { path: '/ui/cta' }, ...noAction })
+    const dataModel = { ui: { cta: 'Confirm booking' } }
+    expect(runSemanticChecks(compositeMomentChecks, { surfaces: [{ ...view(bound), dataModel }] }).findings.map((f) => f.code)).toEqual(['BOOKING_FORM_MISSING'])
+    const child = [...withButton(R9_84, 'bookBtn', { label: undefined, child: 'cta', ...noAction }), { id: 'cta', component: 'Text', text: 'Confirm booking' }]
+    expect(codes(child)).toEqual(['BOOKING_FORM_MISSING'])
+  })
+
+  it('the r5 ask-3 read-back (confirm_boat_tour, "Book now") yields BOOKING_FORM_MISSING', () => {
+    expect(
+      codes([
+        { id: 'root', component: 'Card', children: ['head', 'body', 'foot'] },
+        { id: 'head', component: 'CardHeader', children: ['title'] },
+        { id: 'title', component: 'Text', variant: 'h4', text: 'Half-day coastal boat tour' },
+        { id: 'body', component: 'CardContent', children: ['list'] },
+        {
+          id: 'list',
+          component: 'DescriptionList',
+          rows: [
+            { label: 'Tour', value: 'Half-day coastal boat tour' },
+            { label: 'Name', value: 'Alex Moreau' },
+            { label: 'Departure', value: 'To be confirmed by the front desk' },
+          ],
+        },
+        { id: 'foot', component: 'CardFooter', child: 'btn' },
+        { id: 'btn', component: 'Button', label: 'Book now', variant: 'solid', action: { action: 'confirm_boat_tour', submit: true, context: { booking: { path: '/booking' } } } },
+      ]),
+    ).toEqual(['BOOKING_FORM_MISSING'])
+  })
+
+  // The r8 routing-long-session-opus-1 `dining-info` card: an info list with an intent-starting CTA.
+  const DINING_INFO: A2uiComponent[] = [
+    { id: 'root', component: 'Card', children: ['hdr', 'content', 'footer'] },
+    { id: 'hdr', component: 'CardHeader', children: ['title'] },
+    { id: 'title', component: 'Text', text: 'Dining at the Grand Meridian', variant: 'h4' },
+    { id: 'content', component: 'CardContent', children: ['list'] },
+    {
+      id: 'list',
+      component: 'DescriptionList',
+      rows: [
+        { label: 'Vela', value: 'Fine-dining restaurant' },
+        { label: 'The Quay Bar', value: 'Casual bar for drinks and lighter meals' },
+      ],
+    },
+    { id: 'footer', component: 'CardFooter', children: ['reserve'] },
+    { id: 'reserve', component: 'Button', label: 'Reserve a table', variant: 'solid', action: { action: 'start_intent', context: { intent: 'reserve_table' } } },
+  ]
+
+  it('negative control: the r8 dining-info card (a "Reserve a table" start_intent CTA, no submit) yields none', () => {
+    expect(codes(DINING_INFO)).toEqual([])
+  })
+
+  it('negative control: "Book now" and "Reserve a table" CTAs with no submit yield none', () => {
+    for (const label of ['Book now', 'Reserve a table', 'Reserve']) {
+      expect(codes(withButton(DINING_INFO, 'reserve', { label }))).toEqual([])
+      expect(codes(withButton(DINING_INFO, 'reserve', { label, action: { action: 'start_intent', context: { intent: 'book' } } }))).toEqual([])
+    }
+  })
+
+  it('a read-back titled "Booking confirmation" with a confirm_booking submit still yields BOOKING_FORM_MISSING', () => {
+    // The title's words also ask the BookingConfirmation row (as before T-0331), so the form finding is checked by membership.
+    expect(codes(withButton(R9_84, 'title', { text: 'Booking confirmation' }))).toContain('BOOKING_FORM_MISSING')
+  })
+
+  it('negative control: a "Book now" info card whose action is book_listing yields none', () => {
+    expect(codes(withButton(DINING_INFO, 'reserve', { label: 'Book now', action: { action: 'book_listing', context: { id: 'villa' } } }))).toEqual([])
+  })
+
+  it('negative control: a hand-built confirmation with a "Reserve another table" Button yields only BOOKING_CONFIRMATION_MISSING', () => {
+    const settled: A2uiComponent[] = [
+      { id: 'root', component: 'Card', children: ['t', 'rows', 'again'] },
+      { id: 't', component: 'Text', text: 'Your table is confirmed' },
+      { id: 'rows', component: 'DescriptionList', rows: [{ label: 'Restaurant', value: 'Vela' }, { label: 'Time', value: '19:30' }] },
+      { id: 'again', component: 'Button', label: 'Reserve another table', action: { action: 'book_another_table' } },
+    ]
+    expect(codes(settled)).toEqual(['BOOKING_CONFIRMATION_MISSING'])
+  })
+
   it('negative control: a booking-worded DescriptionList with no confirm Button yields none', () => {
-    const info = READ_BACK.map((c) => (c.id === 'confirm' ? { ...c, label: 'Book a treatment' } : c))
+    // An info CTA: it starts an intent and submits nothing, so it is no read-back confirm (T-0331: by action, not label).
+    const info = READ_BACK.map((c) =>
+      c.id === 'confirm' ? { ...c, label: 'Book a treatment', action: { action: 'start_intent', context: { intent: 'book_treatment' } } } : c,
+    )
     expect(codes(info)).toEqual([])
     expect(codes(READ_BACK.filter((c) => c.id !== 'confirm'))).toEqual([])
   })
