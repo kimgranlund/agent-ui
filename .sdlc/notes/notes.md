@@ -253,3 +253,9 @@
 - decide: Kim, the old-version migration (ACS-R7) now keeps a user's old stored seed values under a `seedChanged` flag instead of wiping them. A user on Quizmaster v1 keeps `claude-haiku-4-5` (a retired model default) until T-0162 offers "take seed". The old behavior, which Kim chose in the Quizmaster v2 comment, is gone. Alternatives are to ship per-version field digests in the generator, or to accept the flag as is. The solo already listed the digest idea as undone.
 - note: ACS-R8 per-op `source` provenance is not recorded yet. The solo flagged this and left it to T-0162. The Goal does not need it.
 - note: `agent-roster-source.ts:4` is one line longer than the surrounding comment wrap. This is cosmetic.
+
+## GitHub issue sweep (Kim, 2026-10-17)
+- #1890, #1910, #1938, #1939 closed as done (evidence in each close comment).
+- #1941: marks move to ui-glyph children, not mask tokens (T-0351).
+- #1940: a part declares its own size step, not a per-part token (T-0352).
+- #1937: keep the "one release" gate; T-0353 is blocked until the first published release.
