@@ -2135,3 +2135,37 @@ describe('produce() reasoning excerpts as their own opt-in (T-0021/ADR-0240, pro
     expect(progressOf(lines)).toEqual([])
   })
 })
+
+// T-0315: the retrieval query carries the `/secret/<key>` names the persona section declares, so `retrieve` can drop
+// another game's exemplar. No persona section leaves the query without the field (byte-identical to before).
+describe('produce: the retrieval query carries the persona\'s hidden-state keys (T-0315)', () => {
+  async function queryFor(personaSystem: string | undefined): Promise<Record<string, unknown>> {
+    const seen: Record<string, unknown>[] = []
+    const { provider } = stubProvider([VALID])
+    const deps: ProduceDeps = { provider, retrieve: (q) => (seen.push(q as unknown as Record<string, unknown>), []), catalog: defaultCatalog }
+    for await (const _ of produce(intent, deps, { maxRounds: 1, ...(personaSystem === undefined ? {} : { personaSystem }) })) void _
+    expect(seen).toHaveLength(1)
+    return seen[0]!
+  }
+
+  it('a persona naming /secret paths sends those keys, deduplicated', async () => {
+    const persona = '## Foundation\nCommit both fleets at /secret/fleet and /secret/playerFleet. Read /secret/fleet before marking a shot.'
+    expect((await queryFor(persona)).hiddenState).toEqual(['fleet', 'playerFleet'])
+  })
+
+  it('only the Foundation block declares keys: a mention in another section neither adds nor drops one', async () => {
+    const persona =
+      '## Capabilities\nA skill may write /secret/word.\n\n## Foundation\nCommit your fleet at /secret/fleet.\n\n## Team\nThe teammate reads /secret/playerFleet.'
+    expect((await queryFor(persona)).hiddenState).toEqual(['fleet'])
+    expect((await queryFor('## Foundation\nYou are a host.\n\n## Skills\nWrite the answer at /secret/word.')).hiddenState).toEqual([])
+    expect((await queryFor('A persona with no Foundation heading at /secret/word.')).hiddenState).toEqual([])
+  })
+
+  it('a persona naming no /secret path sends []', async () => {
+    expect((await queryFor('## Foundation\nYou are a friendly concierge.')).hiddenState).toEqual([])
+  })
+
+  it.each([undefined, '', '  \n'])('no persona section (%j) sends no hiddenState field', async (personaSystem) => {
+    expect(Object.hasOwn(await queryFor(personaSystem), 'hiddenState')).toBe(false)
+  })
+})

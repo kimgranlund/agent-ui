@@ -11,9 +11,10 @@
 // T-0274 pinned the Lexicographer give-up turns: the game-over exemplar (a ResultCard revealing the word) ranks first.
 // T-0318: a pin holds only the ranks a reader can defend for its turn and compares that prefix; the ranks after it are
 // known poor (zero-signal padding off the turn's domain) and are named in a comment on the row, never pinned as correct.
+// T-0315: each pin passes the preset's hidden-state keys; the Mentalist row moved to the T-0315 describe (no board frames).
 import { describe, it, expect } from 'vitest'
 import { readdirSync, readFileSync } from 'node:fs'
-import { retrieve } from './retrieve.ts'
+import { retrieve, committedSecretKeys, secretKeysNamedIn } from './retrieve.ts'
 import type { CorpusRecord } from './record.ts'
 import { CATALOG_LAYER_MAP } from '../catalog/layers.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
@@ -38,6 +39,19 @@ function typesOf(catalogId: string): string[] {
   return [...Object.keys(defaultCatalog.components), ...Object.entries(CATALOG_LAYER_MAP).filter(([, r]) => r.home === home).map(([t]) => t)]
 }
 
+// T-0315: the `/secret/<key>` names each shipped preset's foundation declares, read from the persona rows of the
+// generated agent-content registry (`site/agent-content/registry.gen.ts`, T-0160; a persona's foundation is its body
+// up to the first `## ` heading). The package sits below the site, so the rows are parsed, not imported, through the
+// same `secretKeysNamedIn` `produce()` applies. A preset absent from the table declares none.
+const REGISTRY_SRC = readFileSync(`${process.cwd()}/site/agent-content/registry.gen.ts`, 'utf8') as string
+const HIDDEN_STATE: Readonly<Record<string, readonly string[]>> = Object.fromEntries(
+  REGISTRY_SRC.split('\n')
+    .filter((l) => l.startsWith('  {"kind":"persona"'))
+    .map((l) => JSON.parse(l.trim().replace(/,$/, '')) as { id: string; body: string })
+    .map(({ id, body }) => [id, secretKeysNamedIn(body.split(/^## /m)[0]!)]),
+)
+const hiddenStateOf = (preset: string): readonly string[] => HIDDEN_STATE[preset] ?? []
+
 const PINS: readonly (readonly [preset: string, catalogId: string, turn: string, top: readonly string[]])[] = [
   ['croupier', 'agent-ui--croupier', 'Deal again', ['domain-croupier-card-table-round', 'frontier-round-outcome']],
   ['concierge', 'agent-ui--concierge', 'Book me a spa treatment for tomorrow afternoon', ['domain-concierge-booking-request', 'frontier-service-gateway', 'invite-decline-then-focus-block']],
@@ -50,7 +64,6 @@ const PINS: readonly (readonly [preset: string, catalogId: string, turn: string,
   // Known poor (T-0318): rank 3 is frontier-product-card-rooms, off the collection domain.
   ['curator', 'agent-ui', 'Show me the highlights of the collection', ['customer-review-card', 'slideshow-gallery']],
   ['shopkeeper', 'agent-ui', 'Show me the product options', ['frontier-choice-group-rooms', 'frontier-column-chart-revenue', 'frontier-product-card-rooms']],
-  ['mentalist', 'agent-ui', 'Read my mind', ['domain-lexicographer-word-board', 'wallet-summary-card', 'frontier-button-icon-actions']],
   // Known poor (T-0318): ranks 2 and 3 are plan-and-execute-plan and the expense-claim receipt, neither an offer surface.
   ['negotiator', 'agent-ui', 'I offer 200 for it', ['frontier-suggestions-chips']],
   ['lexicographer', 'agent-ui', 'My guess is CRANE', ['domain-lexicographer-word-board', 'frontier-button-icon-actions', 'frontier-pane-switcher']],
@@ -65,8 +78,8 @@ const PINS: readonly (readonly [preset: string, catalogId: string, turn: string,
 ]
 
 describe('retrieve: the shipped-preset ranking pin (T-0238)', () => {
-  it.each(PINS)('%s (%s) on "%s"', (_preset, catalogId, turn, top) => {
-    const got = retrieve(shard, { intent: turn, k: 3, catalogId, protocolVersion: 'v1.0', componentTypes: typesOf(catalogId) })
+  it.each(PINS)('%s (%s) on "%s"', (preset, catalogId, turn, top) => {
+    const got = retrieve(shard, { intent: turn, k: 3, catalogId, protocolVersion: 'v1.0', componentTypes: typesOf(catalogId), hiddenState: hiddenStateOf(preset) })
     expect(got.slice(0, top.length).map((r) => r.name)).toEqual(top)
   })
 })
@@ -135,5 +148,53 @@ describe('retrieve: a games preset ranks its own composite family first (T-0253)
 
   it('quizmaster: the top 3 is not two boards', () => {
     expect(top3('agent-ui--quizmaster', 'Next question please').filter((r) => uses(r, 'BoardGrid')).length).toBeLessThan(2)
+  })
+})
+
+// T-0315: the Admiral and the Lexicographer share the base catalog and both games' types, so before T-0315 retrieval
+// split them on the turn text alone: "New game of Battleship." ranked the word board first on the Admiral's opening.
+// A turn now frames only records whose committed `/secret` keys its persona declares.
+describe('retrieve: a game turn never frames another game\'s board (T-0315)', () => {
+  const WORD = ['domain-lexicographer-word-board', 'domain-lexicographer-game-over']
+  const FLEET = ['domain-admiral-battleship-board']
+  const top3 = (preset: string, turn: string): string[] =>
+    retrieve(shard, { intent: turn, k: 3, catalogId: 'agent-ui', protocolVersion: 'v1.0', componentTypes: typesOf('agent-ui'), hiddenState: hiddenStateOf(preset) }).map((r) => r.name)
+
+  it.each(['New game', 'New game.', 'Start a new game.', 'Start a new game of Battleship.', 'New game of Battleship.', 'I surrender.', 'Play again'])(
+    'admiral "%s" frames no word-game record',
+    (turn) => {
+      expect(top3('admiral', turn).filter((n) => WORD.includes(n))).toEqual([])
+    },
+  )
+
+  it('admiral "New game of Battleship." still frames its own board', () => {
+    expect(top3('admiral', 'New game of Battleship.')).toContain('domain-admiral-battleship-board')
+  })
+
+  it.each(['My guess is CRANE', 'I give up.', 'Show me the word.', 'Start a new word game.', 'New word game, please.', 'New game', 'Play again', 'Fire at B3'])(
+    'lexicographer "%s" frames no Battleship record',
+    (turn) => {
+      expect(top3('lexicographer', turn).filter((n) => FLEET.includes(n))).toEqual([])
+    },
+  )
+
+  it.each(['Start a new word game.', 'New word game, please.'])('lexicographer opening "%s" still frames the word board', (turn) => {
+    expect(top3('lexicographer', turn)).toContain('domain-lexicographer-word-board')
+  })
+
+  it('the preset table is read from the real foundations', () => {
+    expect(HIDDEN_STATE['lexicographer']).toEqual(['word'])
+    expect(HIDDEN_STATE['admiral']).toEqual(['fleet', 'playerFleet'])
+    expect(HIDDEN_STATE['mentalist']).toEqual([])
+    expect(PINS.every(([preset]) => Object.hasOwn(HIDDEN_STATE, preset))).toBe(true)
+  })
+
+  // Known poor (T-0318): the Mentalist's top 3 for "Read my mind" is zero-signal padding for a Twenty Questions HUD
+  // (wallet-summary-card, frontier-button-icon-actions, structured-container-trip-summary), so no rank is pinned. T-0315
+  // holds only that no record committing hidden state frames: the Mentalist keeps none.
+  it('mentalist "Read my mind" frames no record that commits hidden state', () => {
+    const got = retrieve(shard, { intent: 'Read my mind', k: 3, catalogId: 'agent-ui', protocolVersion: 'v1.0', componentTypes: typesOf('agent-ui'), hiddenState: hiddenStateOf('mentalist') })
+    expect(got.length).toBeGreaterThan(0)
+    expect(got.filter((r) => committedSecretKeys(r).length > 0).map((r) => r.name)).toEqual([])
   })
 })

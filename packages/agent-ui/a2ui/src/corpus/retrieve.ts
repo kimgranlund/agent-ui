@@ -46,6 +46,12 @@
 //
 // T-0273: another game's composite (a board on a card table's turn) never surfaces on a family turn. Under T-0253 it
 // competed with the rest on a positive score, so "Hit." ranked the Battleship board second on shared vocabulary.
+//
+// T-0315: the hidden-state rule. The Admiral and the Lexicographer share the base catalog and both games' types, so no
+// rule above tells them apart, and "New game of Battleship." ranked the word board first on the Admiral's opening. A game
+// commits its hidden answer at `/secret/<key>` (T-0230), and a persona's foundation names those paths. `produce()`
+// passes the keys its persona names as `hiddenState`, and a record that commits a key outside them is another game's and
+// out of scope. Omitted (no persona section) means no filter, so every caller without one is byte-identical.
 
 import type { CorpusRecord, ModelVisibleFacet } from './record.ts'
 import { baseCatalogId } from './base-id.ts'
@@ -64,6 +70,9 @@ export interface RetrieveQuery {
    *  `meta.componentsUsed` names a type outside it is never retrieved, so an exemplar never teaches a type the
    *  turn cannot emit (a base turn after a type moved to a domain). Omitted: no type filter. */
   componentTypes?: readonly string[]
+  /** T-0315: the `/secret` keys the turn's persona keeps (`secretKeysNamedIn` over its foundation). When given, a record
+   *  committing a `/secret` key outside it is never retrieved. Omitted: no filter. */
+  hiddenState?: readonly string[]
 }
 
 function documentText(rec: CorpusRecord): string {
@@ -79,6 +88,51 @@ function recordDomains(rec: CorpusRecord): string[] {
     if (row?.layer === 'domain' && row.domain !== undefined) out.add(row.domain)
   }
   return [...out]
+}
+
+/** T-0315: one key grammar for both sides. A key is the path segment after `/secret/`, letters, digits, `_` and `-`,
+ *  ending at the next `/`, whitespace or other punctuation. A bare `/secret` names the whole object, the opaque key. */
+const SECRET_KEY = String.raw`[\w-]+`
+const SECRET_NAMED = new RegExp(String.raw`\/secret(?:\/(${SECRET_KEY}))?(?![\w-])`, 'g')
+const SECRET_WRITE = new RegExp(String.raw`^\/secret\/(${SECRET_KEY})`)
+/** T-0315: the key standing for a `/secret` committed or declared whole (a scalar, an array, or a bare `/secret`). */
+export const OPAQUE_SECRET_KEY = '*'
+
+/** T-0315: the `/secret/<key>` names a text declares (a persona's foundation), first occurrence order, deduplicated. A
+ *  bare `/secret` declares the opaque key. */
+export function secretKeysNamedIn(text: string): string[] {
+  return [...new Set([...text.matchAll(SECRET_NAMED)].map((m) => m[1] ?? OPAQUE_SECRET_KEY))]
+}
+
+const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
+const committedCache = new WeakMap<CorpusRecord, string[]>()
+
+/** T-0315: the `/secret` keys a record commits in its data model, read from `a2uiOutput` and a multi-turn record's
+ *  `priorOutput`: a root write's `secret` object, a `/secret` write's object, or a `/secret/<key>` write. A scalar or
+ *  array written whole (a root `secret` or a `/secret` value that is not an object) is the opaque key. Cached per record. */
+export function committedSecretKeys(rec: CorpusRecord): string[] {
+  const hit = committedCache.get(rec)
+  if (hit !== undefined) return hit
+  const out = new Set<string>()
+  const whole = (v: unknown): void => {
+    if (isObject(v)) for (const k of Object.keys(v)) out.add(k)
+    else out.add(OPAQUE_SECRET_KEY)
+  }
+  for (const msg of [...(rec.priorOutput ?? []), ...(rec.a2uiOutput ?? [])]) {
+    if (!('updateDataModel' in msg)) continue
+    const { path, value } = msg.updateDataModel
+    if (path === undefined || path === '' || path === '/') {
+      if (isObject(value) && Object.hasOwn(value, 'secret')) whole(value['secret'])
+    } else if (path === '/secret') {
+      whole(value)
+    } else {
+      const key = SECRET_WRITE.exec(path)?.[1]
+      if (key !== undefined) out.add(key)
+    }
+  }
+  const keys = [...out]
+  committedCache.set(rec, keys)
+  return keys
 }
 
 /** T-0253: the domains whose composites are rival families (one game each), ranked by the persona's own family. */
@@ -102,6 +156,7 @@ function familyTypes(catalogId: string): Set<string> {
  * only records that score above zero. Fewer than `k` results is the honest answer when nothing else matches.
  * T-0253: on a persona turn whose fragment homes domain types, a games record ranks first only if it uses one of them;
  * T-0273: a games record that uses none of them is out of scope on that turn.
+ * T-0315: when `query.hiddenState` is given, a record committing a `/secret` key outside it is out of scope.
  *
  * Never throws. Resolves to `[]` for: an empty `records` input, an empty scope after filtering
  * (SPEC-R11 AC2), `query.k <= 0`, or a query whose tokens share zero vocabulary with the scope — a
@@ -116,13 +171,15 @@ export function retrieve(records: readonly CorpusRecord[], query: RetrieveQuery)
   const facet: ModelVisibleFacet = query.facet ?? 'exemplar'
   const base = baseCatalogId(query.catalogId) // ADR-0243 cl.3: a derived `<base>--<persona>` query draws from the base shard
   const emittable = query.componentTypes === undefined ? undefined : new Set(query.componentTypes)
+  const kept = query.hiddenState === undefined ? undefined : new Set(query.hiddenState)
   const scope = records.filter(
     (r) =>
       (r.meta.catalogId === base || r.meta.catalogId === query.catalogId) && // T-0240: a persona shard only on its own turn
       r.meta.protocolVersion === query.protocolVersion &&
       r.meta.facet === facet &&
       r.meta.status !== 'quarantined' &&
-      (emittable === undefined || (r.meta.componentsUsed ?? []).every((t) => emittable.has(t))),
+      (emittable === undefined || (r.meta.componentsUsed ?? []).every((t) => emittable.has(t))) &&
+      (kept === undefined || committedSecretKeys(r).every((k) => kept.has(k))), // T-0315: another game's hidden state
   )
   if (scope.length === 0) return []
 

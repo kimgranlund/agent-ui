@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { retrieve } from './retrieve.ts'
+import { retrieve, secretKeysNamedIn, committedSecretKeys } from './retrieve.ts'
 import type { RetrieveQuery } from './retrieve.ts'
 import type { CorpusRecord } from './record.ts'
 
@@ -522,5 +522,62 @@ describe('retrieve: the persona-shard scope rule (T-0240)', () => {
   it('a persona record on another base stays out of scope', () => {
     const names = retrieve(records, query({ intent: 'deal a hand of cards', catalogId: 'a2ui-basic--croupier' })).map((r) => r.name)
     expect(names).toEqual(['basic-croupier'])
+  })
+})
+
+// T-0315: the hidden-state scope rule. A record that commits `/secret/<key>` in its data model is another game's on a
+// turn whose persona keeps none of those keys. `hiddenState` is the keys the persona names; omitted, no filter applies.
+describe('retrieve: the hidden-state scope rule (T-0315)', () => {
+  const commits = (rec: CorpusRecord, field: 'a2uiOutput' | 'priorOutput', path: string | undefined, value: unknown): CorpusRecord => ({
+    ...rec,
+    [field]: [...(rec[field] ?? []), { version: 'v1.0', updateDataModel: { surfaceId: 's1', ...(path === undefined ? {} : { path }), value } }],
+  })
+  const records = [
+    commits(exemplar({ name: 'word-board', promptText: 'a new game board' }), 'a2uiOutput', undefined, { board: {}, secret: { word: 'crane' } }),
+    commits(exemplar({ name: 'fleet-board', promptText: 'a new game board' }), 'a2uiOutput', '/secret', { fleet: [], playerFleet: [] }),
+    commits(exemplar({ name: 'fleet-only', promptText: 'a new game board' }), 'a2uiOutput', '/secret/fleet', []),
+    commits(exemplar({ name: 'plain-board', promptText: 'a new game board' }), 'a2uiOutput', '/board', { cells: [] }),
+  ]
+  const names = (hiddenState?: readonly string[]): string[] =>
+    retrieve(records, query({ intent: 'a new game board', ...(hiddenState === undefined ? {} : { hiddenState }) })).map((r) => r.name).sort()
+
+  it('omitted, every record stays in scope', () => {
+    expect(names()).toEqual(['fleet-board', 'fleet-only', 'plain-board', 'word-board'])
+  })
+
+  it('[] keeps only the records that commit no hidden state', () => {
+    expect(names([])).toEqual(['plain-board'])
+  })
+
+  it('a record whose committed keys are all declared stays; one with an undeclared key drops', () => {
+    expect(names(['fleet', 'playerFleet'])).toEqual(['fleet-board', 'fleet-only', 'plain-board'])
+    expect(names(['word'])).toEqual(['plain-board', 'word-board'])
+    expect(names(['fleet'])).toEqual(['fleet-only', 'plain-board'])
+  })
+
+  it('a multi-turn record whose priorOutput commits the key is scoped by it too', () => {
+    const base = ofFacet('multi-turn', 'mt-word', 'a new game board')
+    const rec = commits({ ...base, a2uiOutput: [{ version: 'v1.0', updateDataModel: { surfaceId: 's1', path: '/board', value: {} } }] }, 'priorOutput', '/secret/word', 'crane')
+    const run = (hiddenState: readonly string[]): string[] => retrieve([rec], query({ intent: 'a new game board', facet: 'multi-turn', hiddenState })).map((r) => r.name)
+    expect(run(['fleet', 'playerFleet'])).toEqual([])
+    expect(run(['word'])).toEqual(['mt-word'])
+  })
+
+  it('one key grammar on both sides: a hyphenated key is named and committed as the same key', () => {
+    const rec = commits(exemplar({ name: 'hyphen', promptText: 'a new game board' }), 'a2uiOutput', '/secret/hand-cards/0', 'x')
+    expect(secretKeysNamedIn('Commit it at /secret/hand-cards, then read /secret/hand-cards.')).toEqual(['hand-cards'])
+    expect(committedSecretKeys(rec)).toEqual(['hand-cards'])
+    expect(retrieve([rec], query({ intent: 'a new game board', hiddenState: secretKeysNamedIn('at /secret/hand-cards.') })).map((r) => r.name)).toEqual(['hyphen'])
+    expect(retrieve([rec], query({ intent: 'a new game board', hiddenState: ['hand'] }))).toEqual([])
+  })
+
+  it('a scalar or array committed whole at /secret is the opaque key, in scope only where the persona declares /secret', () => {
+    const scalar = commits(exemplar({ name: 'scalar', promptText: 'a new game board' }), 'a2uiOutput', '/secret', 'crane')
+    const rootArray = commits(exemplar({ name: 'root-array', promptText: 'a new game board' }), 'a2uiOutput', undefined, { secret: [1, 2] })
+    expect(committedSecretKeys(scalar)).toEqual(['*'])
+    expect(committedSecretKeys(rootArray)).toEqual(['*'])
+    const run = (hiddenState: readonly string[]): string[] => retrieve([scalar, rootArray], query({ intent: 'a new game board', hiddenState })).map((r) => r.name).sort()
+    expect(run(['word', 'fleet'])).toEqual([])
+    expect(run(secretKeysNamedIn('Keep the answer at /secret, bound to nothing.'))).toEqual(['root-array', 'scalar'])
   })
 })

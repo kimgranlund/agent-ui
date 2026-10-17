@@ -12,6 +12,7 @@ import { DEFAULT_PROMPT_SECTIONS, ENTRY_KINDS, composeLiveSystemPrompt } from '@
 import { entriesStoreKey, type Entry } from '@agent-ui/app/entry-data'
 import { lintSectionContent } from '@agent-ui/app/agent-admin-prompt-lint'
 import { SELECTION_PROJECTION } from '@agent-ui/a2ui/registry'
+import { committedSecretKeys, secretKeysNamedIn, type CorpusRecord } from '@agent-ui/a2ui/corpus'
 import {
   AGENT_PRESETS,
   deleteImportedPersona,
@@ -479,5 +480,30 @@ describe('the Croupier table entries scope the CardTable to blackjack (T-0323)',
 
   it('the bump migrates saved Croupier stores', () => {
     expect(croupier.seedVersion).toBe(15)
+  })
+})
+
+// T-0315: `produce()` scopes retrieval by the `/secret` keys a persona's foundation names (`secretKeysNamedIn`), so a
+// shipped game exemplar frames only for a persona that names every key it commits (`committedSecretKeys`). This pin
+// couples the two sides through the same helpers: each `domain-<preset>-*` exemplar that commits hidden state belongs
+// to a shipped preset whose own foundation names every committed key, so a reworded foundation cannot orphan its board.
+describe('every hidden-state key a shipped exemplar commits is named by its own preset (T-0315)', () => {
+  const SHARD_DIR = `${process.cwd()}/packages/agent-ui/a2ui/corpus/exemplar/v1_0`
+  const keyed = (readdirSync(SHARD_DIR) as string[])
+    .filter((f) => f.endsWith('.jsonl'))
+    .flatMap((f) => (readFileSync(`${SHARD_DIR}/${f}`, 'utf8') as string).split('\n'))
+    .filter((l) => l.trim() !== '')
+    .map((l) => JSON.parse(l) as CorpusRecord)
+    .filter((r) => committedSecretKeys(r).length > 0)
+
+  it('the shipped shards commit hidden state (the pin is not vacuous)', () => {
+    expect(keyed.length).toBeGreaterThan(0)
+  })
+
+  it.each(keyed.map((r) => [r.name, r] as const))('%s: its preset foundation names every key it commits', (name, rec) => {
+    const preset = AGENT_PRESETS.find((p) => name.startsWith(`domain-${p.id}-`))
+    expect(preset, `${name} names no shipped preset (domain-<preset>-*)`).toBeDefined()
+    const named = secretKeysNamedIn(preset!.foundation)
+    expect(committedSecretKeys(rec).filter((k) => !named.includes(k))).toEqual([])
   })
 })
