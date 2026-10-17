@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:51f6910dbc57 -->
+<!-- sdlc-lite:managed:start v1 sha256:073156c09b8f -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -22,7 +22,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (0199-itinerary-compare)
   - T-0315 Admiral and Lexicographer share the agent-ui catalog: 'New game' ranks the word board first on the Admiral's opening (0315-shared-catalog-cross-game-retrieval)
   - T-0338 product-card icon header: 2n icon box or a ruled exemption (icon-box debt) (0338-product-card-icon-box)
-- ready: 21
+- ready: 22
   - T-0160 Agent content as files: extract preset and pack seeds to .md manifests with a generated, drift-gated registry (0160-agent-content-files)
   - T-0161 Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind (0161-agent-content-overlays)
   - T-0162 Settings pane forms generated from each content kind's schema, with provenance, diff and reset (0162-agent-content-schema-forms)
@@ -44,6 +44,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0335 Replace confirmation-view and backable-wizard, which read back a booking before confirming (0335-corpus-readback-records), branch chore/0335-readback-records
   - T-0336 Site demos align captioned figures to a shared top edge (figure-parity allowlist debt) (0336-figure-parity-demos)
   - T-0337 Column-chart highlight callout ink meets 4.5:1 on its pill in dark mode (chip-opaque debt) (0337-column-chart-callout-contrast)
+  - T-0339 ui-gauge in RTL keeps its rings on the left and its legend about 190px away (0339-gauge-rtl-layout)
 - claimed: 0
 - paused: 0
 - blocked: 0
