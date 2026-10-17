@@ -83,16 +83,22 @@
   --ui-service-card-dot-gap: var(--md-sys-space-sm); /* dot ↔ title, inside the heading row */
   --ui-service-card-menu-gap: var(--md-sys-space-sm); /* body ↔ the optional menu column */
 
-  /* The action row — takes the CONTROL height (ADR-0224 cl.5's "pattern tier" clause: the one
-     control-height row a pattern-tier surface owns), the button.css `sm` ramp (a trailing pill, not the
-     card's own full-height lever). */
-  --ui-service-card-action-height: var(--md-sys-height, var(--md-sys-height-sm));
-  --ui-service-card-action-font: var(--md-sys-type-control, var(--md-sys-font-sm));
-  --ui-service-card-action-gap: var(--md-sys-inset, var(--md-sys-gap-sm)); /* the → glyph ↔ label gap */
+  /* The action row's geometry tokens (height, font, glyph gap) sit on the action part below, not here. */
   --ui-service-card-action-bg: var(--md-sys-color-neutral-surface-higher); /* neutral TONAL chip (Amendment cl.A3) — status colour stays on the dot alone */
   --ui-service-card-action-bg-hover: var(--md-sys-color-neutral-surface-highest);
   --ui-service-card-action-bg-active: var(--md-sys-color-neutral-surface-highest);
   --ui-service-card-action-ink: var(--md-sys-color-neutral-on-surface);
+}
+
+/* The action row: takes the CONTROL height (ADR-0224 cl.5's "pattern tier" clause: the one
+   control-height row a pattern-tier surface owns), the button.css `sm` step (a trailing pill, not the
+   card's own full-height lever). The part declares that step itself (`data-size="sm"`, service-card.ts),
+   so these tokens resolve ON the part against the region's ramp like any control, never the card's own n
+   (T-0352). */
+:where(ui-service-card > [data-part='action']) {
+  --ui-service-card-action-height: var(--md-sys-height, var(--md-sys-height-sm));
+  --ui-service-card-action-font: var(--md-sys-type-control, var(--md-sys-font-sm));
+  --ui-service-card-action-gap: var(--md-sys-inset, var(--md-sys-gap-sm)); /* the → glyph ↔ label gap */
 }
 
 /* :not([available]) — the availability law's WHOLE colour repoint, in ONE cascade step (ADR-0224 cl.4):
