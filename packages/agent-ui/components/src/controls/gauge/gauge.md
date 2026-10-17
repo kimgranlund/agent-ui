@@ -118,10 +118,10 @@ The **rings layer** — the concentric SVG marks — spans the host box edge-to-
 element box is never shrunk to reserve legend room). The **legend layer** — every label/value row, real
 DOM text — floats **on top**, inset from all four edges by ONE knob (`--ui-gauge-chrome-inset`,
 aliasing the shared `--ui-chart-chrome-inset`). The ring drawing itself is pinned to the box's start edge
-(`preserveAspectRatio="xMinYMid meet"`), so a wide host letterboxes genuinely empty room past the rings for
+(`preserveAspectRatio="xMinYMid meet"`, `xMaxYMid` under `direction: rtl`), so a wide host letterboxes genuinely empty room past the rings for
 the legend — no shrinking, no overlap, by construction. The legend rows start one `--ui-gauge-legend-gap`
 (the group margin) past the outer ring, measured by gauge.ts as `--_gauge-ring-end`, so the rings and their
-key read as one start-aligned group however wide the box is (T-0149); under `dir="rtl"` the rings layer mirrors onto the right edge (T-0339). With no data the gauge still draws
+key read as one start-aligned group however wide the box is (T-0149). With no data the gauge still draws
 its outer track at 0% (a `data-empty` track circle), so an empty gauge reads as a gauge, not a failed render. Dropping this chart into a padding-less `ui-card`-style container reproduces the board
 geometry with zero consumer CSS.
 

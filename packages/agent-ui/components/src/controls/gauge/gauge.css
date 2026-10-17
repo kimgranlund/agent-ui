@@ -24,7 +24,7 @@
  * ALSO a full-box layer, but padded by `--ui-gauge-chrome-inset` from all four edges, its rows starting just
  * past the outer ring (T-0149, `--_gauge-ring-end` from gauge.ts), so rings and legend read as one group — Kim's zero-padding-container contract
  * (ADR-0228 cl.3), realized as a mechanism, never a host padding opinion. `preserveAspectRatio="xMinYMid
- * meet"` (gauge.ts) pins the ring drawing itself to the box's START edge, so a wide host's extra width
+ * meet"` (`xMaxYMid` under a computed `direction: rtl`, set by gauge.ts) pins the ring drawing itself to the box's START edge, so a wide host's extra width
  * letterboxes into genuinely empty room past the rings for the legend column to occupy without visually
  * colliding with them: no shrinking, no overlap, by construction. The rings layer is out of flow, so the host
  * is as tall as its floor or its legend (a square svg in flow made the box square and left no room). Below a 28em
@@ -102,14 +102,6 @@
        and the rings fill that box from the start edge. */
     position: absolute;
     inset: 0;
-  }
-
-  /* `preserveAspectRatio` pins the drawing to the PHYSICAL left, so under dir=rtl the rings stayed on the left
-     while the legend's logical inline-start padding moved to the right (about 190px apart, T-0339). Mirror the
-     layer instead: the rings land on the start edge in either direction (the arcs sweep the mirrored way, as an
-     RTL progress mark does) and the legend, already laid out by logical edges, follows beside them. */
-  :scope:dir(rtl) svg[data-part='rings'] {
-    transform: scaleX(-1);
   }
 
   :scope [data-part='track'] {
