@@ -5,24 +5,30 @@ type: feature         # feature | bug | chore | spike | idea
 status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
-depends: [T-0176]    # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
+depends: [T-0342]
 created: 2026-10-14
 router: .sdlc/AGENTS.md  # how to claim and close this ticket
 ---
 
 ## Goal
-Checks that need judgement (persona voice, game rules followed, asked before acting, answered the question) run as scored, reproducible signals, and the judge itself is tested.
+Judged checks on committed round transcripts (re-scoped 2026-10-17).
 
 ## Intent
+**C. Judged checks on round transcripts** (L2, P3, depends A; replaces T-0178's body)
+- Goal: criteria no deterministic check can reach (persona voice, answered the question, asked before acting where no BOOKING_* check fires) become scored, calibrated signals.
 - Do:
-  - A `judge` expectation type in the scenario format: rubric id, threshold. Rubrics as data per persona or capability (e.g. blackjack rules: dealer stands on 17, natural pays 3:2, bankroll arithmetic; concierge: confirms before booking).
-  - Judge runs through the dev proxy with a pinned model and temperature, returns per-criterion scores with quoted evidence; results go into the run row.
-  - Calibration: seeded known-good and known-bad transcripts per rubric; `npm run eval:judge -- selftest` must score bad below threshold and good above, live only (keyed), and is counted against the $5 cap.
-  - Deterministic first: any rule checkable from the data model or surface (bankroll after a hand, card totals) is a deterministic check in T-0176 format, not a judge.
-- Done when: `npm run check` exit 0; judge selftest live run passes and its cost is reported; three persona rubrics (croupier, concierge, quizmaster) with calibration sets; documented.
+  1. Rubric documents per persona for croupier, concierge and lexicographer. Quizmaster only after B.
+  2. An `eval:judge` CLI on the `corpus-genui/legs/judge.ts` pattern: rubric read verbatim, provider injected, the key read only in the CLI's keyed arm as `eval-agent-behavior.ts` does, never in devtools. Pinned model and temperature.
+  3. It writes `runs/<name>/judge.json` with per-criterion scores and quoted evidence, and `signals.ts` reads it.
+  4. Calibration sets are cited committed round runs, known-good passes and known-bad fails, not authored transcripts.
+  5. Repair SPEC CL-R8.
+- Done when:
+  - `npm run check` exits 0.
+  - A keyless stub-provider test asserts the `judge.json` shape and the threshold verdict.
+  - `npm run eval:judge -- selftest` (live) scores every bad case under its threshold and every good case over, and reports a cost under $5.
 
 ## Context
-- Keys server-side only (ADR-0073). Commit off origin/main, never push.
+Re-scope record .sdlc/runtime/tasks/0176-eval-scenarios-store/architect-L1.md.
 
 ## Constraints
-- Zero new dependencies. No em dashes.
+Keys only in the CLI's keyed arm, never devtools.
