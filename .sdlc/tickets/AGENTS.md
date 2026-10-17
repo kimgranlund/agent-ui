@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:a1f623f1d7a1 -->
+<!-- sdlc-lite:managed:start v1 sha256:ae6fb4aa7b84 -->
 # Tickets
 
 One folder per ticket: `<slug>/` or `NNNN-<slug>/` while open, `.NNNN-<slug>/` once closed. Stage counts and the open tickets are in `../AGENTS.md`. `tickets.py roadmap` generates this block: do not edit inside it.
@@ -8,9 +8,9 @@ One folder per ticket: `<slug>/` or `NNNN-<slug>/` while open, `.NNNN-<slug>/` o
 ## Procedures
 
 Folder layout:
-- The top of `.sdlc` holds only ticket and task folders (a folder with a `handoff.md` or `plan-doc.md`), `AGENTS.md`, `CLAUDE.md`, `config`, `roadmap.md`, `board.md`, `notes.md`, `notes/`, `fleet.json`, `gate-ledger.jsonl`, `messages/`, `runtime/`, `supervisor/`, `evals/`, `proposals/`, `goals/`, `tickets/`, `work/`, `archive/`, and `_`- or `.`-prefixed entries. A `top_level_allow: <glob>, ...` line in `.sdlc/config` allows more.
-- Run records (role results, attempts, `runs.jsonl`, `skips.md`) go in the git-ignored records dir `.sdlc/runtime/tasks/<folder>/` (`<plugin-root>/scripts/order.py records-dir .sdlc/tickets/<folder>` prints it). Notes go to `.sdlc/notes/notes.md`, an answer to another agent goes by `messages.py send`, anything else into `archive/`.
-- `python3 <plugin-root>/scripts/tickets.py --root .sdlc check` warns on any other top-level entry; `python3 <plugin-root>/scripts/tickets.py --root .sdlc tidy` lists its move into `archive/` and `python3 <plugin-root>/scripts/tickets.py --root .sdlc tidy --apply` makes it. Move nothing under `.sdlc` while a `*.running` marker exists: a role is using it.
+- The top of `.sdlc` holds only `AGENTS.md`, `CLAUDE.md`, `config`, `layout.md`, `board.md`, `tickets/`, `work/`, `notes/`, `messages/`, `runtime/`, `supervisor/`, `evals/`, `proposals/`, `dogfood/`, and `_`- or `.`-prefixed entries; ticket folders go in `tickets/`, task folders in `work/`. A `top_level_allow:` line only keeps `tidy` from moving a name; `check` still reports it.
+- Run records (role results, attempts, `runs.jsonl`, `skips.md`) go in the git-ignored records dir `.sdlc/runtime/tasks/<folder>/` (`<plugin-root>/scripts/order.py records-dir .sdlc/tickets/<folder>` prints it). Notes go to `.sdlc/notes/notes.md`, an answer to another agent goes by `messages.py send`, anything else into `work/archive/`.
+- `python3 <plugin-root>/scripts/tickets.py --root .sdlc check` warns on any other top-level entry; `python3 <plugin-root>/scripts/tickets.py --root .sdlc tidy` lists its move into `work/archive/` and `python3 <plugin-root>/scripts/tickets.py --root .sdlc tidy --apply` makes it. Move nothing under `.sdlc` while a `*.running` marker exists: a role is using it.
 
 Create a ticket:
 1. Run `python3 <plugin-root>/scripts/tickets.py --root .sdlc new <feature|bug|chore|spike|idea> <slug> "<title>"`. Never pick an id by hand: `new` stamps the next id above every worktree's.
@@ -24,7 +24,7 @@ status: proposed | ready | claimed | paused | blocked | done | dropped
 
 Claim a ticket:
 1. Open its `handoff.md`. A `claimed_by:` front matter line means another agent holds it: pick another ticket or ask the user.
-2. Run `python3 <plugin-root>/scripts/tickets.py --root .sdlc claim <id> --by <agent>`, the agent one lowercase word (`claude`, `codex`, `astra`). It sets `status: claimed`, writes `claimed_by: <agent> <YYYY-MM-DD>` directly after `created:`, and runs `roadmap`. To take over a stale claim, add `--handover --reason "<why>"`.
+2. Run `python3 <plugin-root>/scripts/tickets.py --root .sdlc claim <id>`; `--by <agent>` names the claimant and wins, else it takes `$SDLC_HOST`, else the host (`claude:<session8>`, `codex:<thread>`). In git it first reserves `refs/sdlc/claims/<id>`, so a claim from any worktree refuses naming the holder. It sets `status: claimed`, writes `claimed_by: <agent> <YYYY-MM-DD>` directly after `created:`, and runs `roadmap`. To take over a stale claim, add `--handover --reason "<why>"`.
 3. Start the work through `run.sh`, which puts it in progress: `<plugin-root>/scripts/run.sh planner <level> .sdlc/tickets/<folder>/handoff.md`, or `/sdlc-lite:chain .sdlc/tickets/<folder>`. Progress shows on `/board`.
 4. Release: `python3 <plugin-root>/scripts/tickets.py --root .sdlc release <id>`. Pause: set `status: paused` and add a one-line `paused_reason:`, then rerun `roadmap`.
 

@@ -108,3 +108,10 @@
 - T-0323 (2026-10-16, after the proposer and adversary debate): poker stays on a Card frame; CardTable is the blackjack family's table. Scope the CardTable mini-skills and persona entries to the blackjack family, poker checks skip the blackjack strip rules and get DEALT_IN_BETTING, and the ACTION_NOT_APPLIED repair text gets a poker branch.
 - T-0321 (2026-10-16): accepted that a turn with no clean round halts or degrades rather than shipping a check-failed surface; round 9 counts halts against round 8 and the choice is revisited if halts rise.
 - Kim 2026-10-17: every lane gets a local Claude code review (/code-review medium on the lane branch against main) after its verifier passes and before it ships. Confirmed bugs go back to the solo once, then a reverify; low-severity items go to notes and never block.
+- 2026-10-17: closed-loop-run skill upserted with the live series lessons (experiment-series, live-evaluation, diagnosis, records references; updates-log). Verifier fable L3 pass; fix-now applied. Record: .sdlc/runtime/tasks/closed-loop-run-series/.
+- 2026-10-17: Kim: install sdlc-lite 0.24.3 after round 9 closes (then tickets.py roadmap once, drop the lane-open reset workaround).
+
+## T-0247: validate-payload --catalog cannot load persona catalog ids (<base>--<persona>) (2026-10-17)
+
+- note: redck.py deviations printed no process deviation lines.
+- note: packages/agent-ui/a2ui/tools/catalog-files.test.ts the two-domain test calls heal and validateA2ui directly rather than the CLI, since no domain pair ships in the real tree; it mirrors the CLI path.

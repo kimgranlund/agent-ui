@@ -2,7 +2,7 @@
 id: T-0205
 title: "Context archaeology: how the a2ui producer builds context and routes"
 type: spike           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -26,3 +26,9 @@ A map, with evidence, of how the a2ui producer builds model context and decides 
 
 ## Output
 Findings with file:line and commit evidence, a layer table, a per-turn assembly diagram, and a ranked list of stability risks each with the smallest structural fix (e.g. move a rule from prose to a registry edge or a check).
+
+## Outcome
+
+2026-10-17 · lane: full L1 · verdict: closed by reason (Answered by the archaeologist L1 run in .sdlc/runtime/tasks/context-archaeology/archaeologist-L1.md and the routing architecture review that followed) · verifier: none · base: none
+- Changed: see commits
+- Commits: none
