@@ -15,12 +15,19 @@ import { offlineReplay } from '../trace.ts'
 // the second round's ask-1 shipped, tallied EARLIER_ROUND_SHIPPED with its GAME_HUD_MISSING finding as SEMANTIC_UNCORRECTED.
 // T-0321 (Kim 2026-10-16): the fallback never ships a round a check failed, and both earlier rounds have a finding, so
 // the recorded third round halts with SURFACE_DROPPED (live, that round is now forced to render_surface). Still no
-// FLEET_SECRET_MISSING: the halt carries only the drop.
+// FLEET_SECRET_MISSING: the halt carries only the drop. T-0328 (Kim 2026-10-17, amends T-0317): a surface rebuilt under
+// a new id within the same turn is not a drop, and only flagged rounds built ask-1, so the third round's ask-2 board
+// (with the GameHud round 2's GAME_HUD_MISSING asked for) ships, and still no FLEET_SECRET_MISSING.
 it('lexicographer-haiku-fleet-check: a word board gets no Battleship fleet check', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./lexicographer-haiku-fleet-check.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual(['no-halt:1'])
-  const error = report.records[1].lines.map((l) => JSON.parse(l).a2uiMeta?.error).find((e) => e !== undefined)
-  expect(error).toMatch(/\(SURFACE_DROPPED\)$/)
-  expect(report.records[1].lines.some((l) => JSON.parse(l).createSurface !== undefined)).toBe(false)
+  expect(report.failed).toEqual([])
+  const shipped = report.records[1].lines.map((l) => JSON.parse(l))
+  const trace = shipped.find((m) => m.a2uiMeta?.trace !== undefined).a2uiMeta.trace
+  expect(trace.rounds).toBe(3)
+  expect(trace.failureCodes).not.toContain('FLEET_SECRET_MISSING')
+  expect(trace.failureCodes).not.toContain('SURFACE_DROPPED')
+  expect(shipped.filter((m) => m.createSurface !== undefined).map((m) => m.createSurface.surfaceId)).toEqual(['ask-2'])
+  const components = shipped.flatMap((m) => m.updateComponents?.components ?? [])
+  expect(components.some((c) => c.component === 'GameHud')).toBe(true)
 })

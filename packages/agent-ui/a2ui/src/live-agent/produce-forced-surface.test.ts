@@ -176,10 +176,11 @@ describe('produce(): T-0321 a SURFACE_DROPPED repair round is forced; the fallba
 
   it('a valid round that drops a built surface is followed by a forced round too', async () => {
     const both = `{"a2uiMeta":{"note":"Here it is."}}\n${surface('ask-1', 'Your booking form')}\n${surface('ask-2', 'flagged read-back')}`
-    const one = `{"a2uiMeta":{"note":"Here it is."}}\n${surface('ask-1', 'Your booking form')}`
+    // T-0328: only a surface that would have shipped counts, so the round drops the clean ask-1, not the flagged ask-2.
+    const one = `{"a2uiMeta":{"note":"Here it is."}}\n${surface('ask-2', 'Your read-back')}`
     const { reqs, bodies } = await turn([both, one, both.replace('flagged read-back', 'Your read-back')], 3)
     expect(bodies).toHaveLength(3)
-    expect(reqs[2]!.messages.at(-1)!.content).toContain('SURFACE_DROPPED at ask-2')
+    expect(reqs[2]!.messages.at(-1)!.content).toContain('SURFACE_DROPPED at ask-1')
     expect(bodies[2]!.thinking).toEqual({ type: 'disabled' })
     expect(bodies[2]!.tool_choice).toEqual(FORCED)
   })
