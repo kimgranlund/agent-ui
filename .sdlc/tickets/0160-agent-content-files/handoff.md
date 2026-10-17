@@ -34,3 +34,12 @@ Agent-admin seed content (15 presets, the Builder preset, library packs) lives a
 
 ## Constraints
 - Zero runtime dependencies (no YAML library: parse a small frontmatter subset, or author frontmatter as JSON). Package DAG unchanged. No em dashes.
+
+## Acceptance criteria
+- `npm run check` exits 0 (its `check:scripts` runs `node scripts/generate-agent-content.mjs --check`).
+- `node scripts/generate-agent-content.mjs --check` exits 0 on the tree.
+- `npx vitest run --project scripts scripts/generate-agent-content.test.mjs` exits 0: `--check` exits 1 on a hand-edited `registry.gen.ts` and on a hand-edited manifest seed digest, and invalid content fails both modes (negative controls in a scratch copy).
+- `npx vitest run --project site site/pages/agent-admin- site/lib/agent-manifest site/lib/capability-registry.test.ts site/agent-content site/pages/persona-library-pattern.test.ts` exits 0, including `site/pages/agent-admin-seed-digests.test.ts` (every assembled seed of the 15 presets and the Builder, the preset objects, the roster order and the library packs equal their pre-move digests).
+- `npx vitest run --config vitest.browser.config.ts --project site site/pages/agent-admin-` exits 0.
+- `npx vitest run --project packages packages/agent-ui/app/src/controls/agent-admin` exits 0.
+- `npm run e2e:admin` exits 0.
