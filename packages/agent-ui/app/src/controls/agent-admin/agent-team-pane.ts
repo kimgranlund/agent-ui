@@ -17,23 +17,24 @@
 // the acceptance's exact wording ("deleting a member agent flags, not silently drops, the dangling
 // reference").
 //
-// Persistence lives HERE, not in the caller: this pane calls `agent-team.ts`'s pure module functions
-// directly rather than routing every read/write through `agent-admin.ts` (there is no store-subscription
-// seam to share — teams persist on their OWN `StorageAdapter` namespace, `agent-team.ts`'s own header). The
-// one thing the caller DOES own is `onTeamsChanged`: agent-admin.ts caches the fresh team list itself (its
-// own `#teams` field) so the LIVE turn's system-prompt compose path (a synchronous read,
-// `composeLiveSystemPrompt`) never has to await this pane's own async storage round-trip.
+// Persistence goes through an injected `AgentTeamStore` (T-0161: one write path): the page hands in a store
+// over its own teams `resource()` and mutations, the same ones the Builder's `handleTeamDeclared` writes
+// through, so the two paths can never diverge; with none injected the pane uses a store straight over
+// `createAgentTeamSource()`. It never calls `agent-team.ts`'s module functions itself. The one thing the
+// caller DOES own is `onTeamsChanged`: agent-admin.ts caches the fresh team list itself (its own `#teams`
+// field) so the LIVE turn's system-prompt compose path (a synchronous read, `composeLiveSystemPrompt`) never
+// has to await this pane's own async storage round-trip.
 
 import type { UIButtonElement } from '@agent-ui/components/controls/button'
 import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 import type { UIFieldElement } from '@agent-ui/components/controls/field'
 import type { UISelectElement } from '@agent-ui/components/controls/select'
 import {
-  deleteAgentTeam,
-  loadAgentTeams,
-  saveAgentTeam,
+  agentTeamStoreOver,
+  createAgentTeamSource,
   type AgentTeam,
   type AgentTeamMember,
+  type AgentTeamStore,
   type AgentTeamValidationIssue,
 } from './agent-team.ts'
 
@@ -78,6 +79,10 @@ export interface AgentTeamPaneOptions {
    *  the mint failed (the pick resets to nothing-selected, never a dangling catalog value). Required for
    *  the catalog section to render at all — a catalog without a mint path would be a dead menu. */
   instantiateFromCatalog?(entryId: string): Promise<KnownAgent | undefined>
+  /** T-0161 — the store every team read and write goes through, read AT INVOKE TIME (a page may register
+   *  its own after the pane is built). Omit, or return `undefined`, for a store straight over
+   *  `createAgentTeamSource()`. */
+  getTeamStore?(): AgentTeamStore | undefined
 }
 
 export interface AgentTeamPane {
@@ -213,6 +218,8 @@ function defaultRoleFor(entry: TeamCatalogEntry): string {
 }
 
 export function buildAgentTeamPane(options: AgentTeamPaneOptions): AgentTeamPane {
+  let fallbackStore: AgentTeamStore | undefined
+  const teamStore = (): AgentTeamStore => options.getTeamStore?.() ?? (fallbackStore ??= agentTeamStoreOver(createAgentTeamSource()))
   const host = document.createElement('div')
   host.setAttribute('data-part', 'team-pane')
 
@@ -397,8 +404,8 @@ export function buildAgentTeamPane(options: AgentTeamPaneOptions): AgentTeamPane
       const deleteBtn = button('team-card-delete', 'Delete', 'soft')
       deleteBtn.addEventListener('click', () => {
         void (async () => {
-          await deleteAgentTeam(team.id)
-          currentTeams = await loadAgentTeams()
+          await teamStore().remove(team.id)
+          currentTeams = await teamStore().list()
           options.onTeamsChanged?.(currentTeams)
           renderList()
         })()
@@ -451,15 +458,15 @@ export function buildAgentTeamPane(options: AgentTeamPaneOptions): AgentTeamPane
           ...(row.instructionsField.value.trim().length > 0 ? { instructions: row.instructionsField.value } : {}),
         })),
       }
-      // VALIDATION CLOSED (`agent-team.ts`'s own law): `saveAgentTeam` never persists an invalid team —
+      // VALIDATION CLOSED (`agent-team.ts`'s own law): the store never persists an invalid team —
       // a rejection surfaces every issue inline and leaves the form open with every typed field intact,
       // the SAME "reject visibly, never silently discard" law `entry-list.ts`'s `submitAdd` already holds.
-      const result = await saveAgentTeam(team, knownAgents.map((agent) => agent.id))
+      const result = await teamStore().save(team, knownAgents.map((agent) => agent.id))
       if (!result.valid) {
         showFormErrors(result.issues)
         return
       }
-      currentTeams = await loadAgentTeams()
+      currentTeams = await teamStore().list()
       options.onTeamsChanged?.(currentTeams)
       closeForm()
       renderList()
@@ -486,7 +493,7 @@ export function buildAgentTeamPane(options: AgentTeamPaneOptions): AgentTeamPane
   return {
     host,
     async refresh(): Promise<void> {
-      currentTeams = await loadAgentTeams()
+      currentTeams = await teamStore().list()
       options.onTeamsChanged?.(currentTeams)
       renderList()
     },

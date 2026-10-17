@@ -57,7 +57,7 @@ import type { AdminAgentSurfaceTurn, TeamDeclaration } from '@agent-ui/app/agent
 // GH #1196 (ADR-0203 clause 4) — the team record this page's team-shaped mint path persists; ADR-0227
 // wave 2 (GH #1545): the records now reach this page as a DataSource — the read is ONE `resource()`
 // and `handleTeamDeclared` writes through a `mutation()` (same keys, same validation-closed law).
-import { AgentTeamValidationError, createAgentTeamSource, type AgentTeam } from '@agent-ui/app/agent-admin-team'
+import { AgentTeamValidationError, createAgentTeamSource, type AgentTeam, type AgentTeamStore } from '@agent-ui/app/agent-admin-team'
 import type { UIToastRegionElement } from '@agent-ui/components/controls/toast-region'
 // GH #845 (LLD-C15/§7) — the Edit Agents drawer's vehicle: `ui-drawer` (ADR-0188), COMPOSED byte-unmodified.
 // Its content (the roster rows and every management verb on them) is page-owned by that control's own fence.
@@ -338,14 +338,15 @@ effect(() => {
 })
 
 // ── ADR-0227 wave 2 (GH #1545): the AgentTeam records read through ONE resource ────────────────────────
-// `createAgentTeamSource` wraps the SAME `agent-ui-agent-teams` localStorage records (keys unchanged);
-// `handleTeamDeclared` writes through the mutation below. No `live` leg — the one page-side consumer is
-// the mint path's collision scan, which refetches explicitly for cross-tab freshness at the moment it
-// actually mints (the old fresh `loadAgentTeams()` read, now riding the resource's own read path).
+// `createAgentTeamSource` wraps the SAME `agent-ui-agent-teams` localStorage records (keys unchanged).
+// T-0161: ONE write path. The Team pane (through `teamStore`, registered on the admin below) and
+// `handleTeamDeclared` both write through the mutations here, and the resource has a `live` leg (the
+// source's cross-tab subscribe), so a team another tab saves reaches the pane without a reload. The mint
+// path's collision scan still refetches explicitly at the moment it mints.
 const teamSource = createAgentTeamSource()
 const TEAMS_KEY = 'agent-admin/teams'
 const teamsStore = createStore()
-const teamsResource = resource<readonly AgentTeam[]>(TEAMS_KEY, teamSource.view, { store: teamsStore })
+const teamsResource = resource<readonly AgentTeam[]>(TEAMS_KEY, teamSource.view, { store: teamsStore, live: true })
 
 // The team write: validation-closed create (the source THROWS AgentTeamValidationError — nothing lands
 // on an invalid record) settling with the same atomic read-back mirror commit the roster and shelf
@@ -358,6 +359,52 @@ const saveTeamMutation = mutation(
   },
   { store: teamsStore },
 )
+
+// The team delete, the same read-back commit.
+const removeTeamMutation = mutation(
+  async (id: string, ctx) => {
+    await teamSource.remove(id, ctx)
+    teamsStore.commit(TEAMS_KEY, await teamSource.view.read(TEAMS_KEY, ctx))
+    return id
+  },
+  { store: teamsStore },
+)
+
+/** The team mutations, exported so a test can prove both write paths run them. */
+export const teamMutations = { save: saveTeamMutation, remove: removeTeamMutation }
+
+/** The Team pane's store: reads the one teams resource and writes through the mutations above. A save
+ *  refusal comes back as the validation issues (the pane shows them inline); any other failure throws. */
+export const teamStore: AgentTeamStore = {
+  async list() {
+    if (teamsResource.data.peek() === undefined) await teamsResource.refetch()
+    const error = teamsResource.error.peek()
+    if (teamsResource.status.peek() === 'error' && error !== undefined) throw error
+    return teamsResource.data.peek() ?? []
+  },
+  async save(team, knownAgentIds) {
+    if ((await saveTeamMutation.run({ team, knownAgentIds })) !== undefined) return { valid: true, issues: [] }
+    const cause = saveTeamMutation.error.peek()?.cause
+    if (cause instanceof AgentTeamValidationError) return { valid: false, issues: cause.issues }
+    throw saveTeamMutation.error.peek() ?? new Error('agent-admin: the team could not be saved')
+  },
+  async remove(id) {
+    if ((await removeTeamMutation.run(id)) === undefined) throw removeTeamMutation.error.peek() ?? new Error('agent-admin: the team could not be deleted')
+  },
+  // A change of the resource's value (a write here, the Builder's, or another tab's through the live leg)
+  // wakes the listener; the first run only subscribes. Deferred so the pane's refresh reads outside the effect.
+  subscribe(listener) {
+    let primed = false
+    return effect(() => {
+      void teamsResource.data.value
+      if (!primed) {
+        primed = true
+        return
+      }
+      queueMicrotask(listener)
+    })
+  },
+}
 
 // Armed by the DEV overlay below once a live key probes available; re-invoked per persona switch so each
 // persona's SURFACE session (TKT-0076 — the runner closure owns the a2ui transcript) starts clean.
@@ -452,6 +499,8 @@ admin.setAgentCatalog({
       .map((p) => ({ id: p.id, label: p.label, tagline: p.tagline, ...(p.category === undefined ? {} : { category: p.category }) })),
   instantiate: async (id) => instantiateCatalogPersona(id),
 })
+// T-0161 — the Team pane writes through the page's one team owner (the mutations above), never its own.
+admin.setTeamStore(teamStore)
 
 admin.onAgentSelect((id) => {
   const persona = currentRoster().find((p) => p.id === id)

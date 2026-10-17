@@ -13,7 +13,7 @@
 // packages/…/agent-admin-authoring.test.ts's own `team` consumption suite) produces ≥2 member agents +
 // 1 GM + 1 team record in the store, every member's routingDescription non-empty, and the single-agent
 // flow is unaffected (nothing here runs, and no team ever exists, unless this function is called).
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { installDialogPolyfill } from '@agent-ui/shared/testing/dialog-polyfill'
 import { personaRoster } from './agent-admin-presets.ts'
 import { loadAgentTeams } from '@agent-ui/app/agent-admin-team'
@@ -27,6 +27,7 @@ import { loadAgentTeams } from '@agent-ui/app/agent-admin-team'
 // agent-admin-app-drawer.test.ts precedent already uses, strictly AFTER the stubs are live.
 let mintTeamId: (label: string, takenIds: ReadonlySet<string>) => string
 let handleTeamDeclared: (team: { label: string; tagline?: string; members: { name: string; role: string; routingDescription: string }[] }) => Promise<void>
+let pageModule: typeof import('./agent-admin-app.ts')
 
 // ── the jsdom stubs (installed BEFORE the page module boots — it mounts at import time), the
 // agent-admin-app-drawer.test.ts precedent verbatim ─────────────────────────────────────────────────────
@@ -55,6 +56,7 @@ beforeAll(async () => {
   }
 
   const mod = await import('./agent-admin-app.ts')
+  pageModule = mod
   mintTeamId = mod.mintTeamId
   handleTeamDeclared = mod.handleTeamDeclared
   await mod.bootProbeSettled // GH #1767 — the page's boot probe settles inside the file, not during teardown
@@ -147,5 +149,36 @@ describe('handleTeamDeclared — mint N members + designate the GM + save a vali
 
     expect(rosterIds()).toEqual(beforeIds)
     expect((await loadAgentTeams()).length).toBe(beforeTeamCount)
+  })
+})
+
+// ── T-0161: the Team pane and the Builder write teams through the SAME mutation ───────────────────────
+describe('one team write path: the Team pane and handleTeamDeclared share the teams resource mutations (T-0161)', () => {
+  it('the page registers its team store on the admin; a save through it and a Builder declaration both run the one save mutation', async () => {
+    const run = vi.spyOn(pageModule.teamMutations.save, 'run')
+    const known = personaRoster().map((p) => p.id)
+    const result = await pageModule.teamStore.save(
+      { id: 'pane-team', label: 'Pane Team', gmAgentId: known[0]!, members: [{ agentId: known[1]!, role: 'Helper', routingDescription: 'Use for help.' }] },
+      known,
+    )
+    expect(result.valid).toBe(true)
+    expect(run).toHaveBeenCalledTimes(1)
+    expect((await loadAgentTeams()).some((t) => t.id === 'pane-team')).toBe(true)
+    // The admin's Team pane reads the same store: its list re-renders from the resource change.
+    await vi.waitFor(() => {
+      const titles = [...document.querySelectorAll('[data-part="team-card-title"]')].map((el) => el.textContent)
+      expect(titles).toContain('Pane Team')
+    })
+
+    await handleTeamDeclared({ label: 'Builder Team', members: [{ name: 'Scout', role: 'Scout', routingDescription: 'Use to look around.' }] })
+    expect(run, 'the Builder path rides the same mutation').toHaveBeenCalledTimes(2)
+
+    const refused = await pageModule.teamStore.save({ id: 'bad', label: 'Bad', gmAgentId: 'nobody', members: [] }, known)
+    expect(refused.valid, 'a refusal comes back as issues, nothing lands').toBe(false)
+    expect((await loadAgentTeams()).some((t) => t.id === 'bad')).toBe(false)
+
+    await pageModule.teamStore.remove('pane-team')
+    expect((await loadAgentTeams()).some((t) => t.id === 'pane-team')).toBe(false)
+    run.mockRestore()
   })
 })

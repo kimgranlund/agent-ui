@@ -268,8 +268,8 @@ import { lintPromptSections } from './prompt-lint.ts'
 // last-loaded team list (populated by `onTeamsChanged`), read SYNCHRONOUSLY by `#teamPromptContextFor`
 // so a turn's live system-prompt compose (a sync call) never has to await the pane's own async storage
 // round-trip.
-import { buildAgentTeamPane, type KnownAgent, type TeamCatalogEntry } from './agent-team-pane.ts'
-import type { AgentTeam } from './agent-team.ts'
+import { buildAgentTeamPane, type AgentTeamPane, type KnownAgent, type TeamCatalogEntry } from './agent-team-pane.ts'
+import type { AgentTeam, AgentTeamStore } from './agent-team.ts'
 import type { TeamMemberSnapshot, TeamPromptContext } from './agent-team-prompt.ts'
 // ADR-0178 cl.2 — the three-filter apply gate + the canonical key set it enumerates (LLD-C1). A pure
 // module: store in, writes out, a report back — this element owns WHEN it may run, never HOW it filters.
@@ -683,6 +683,12 @@ export class UIAgentAdminElement extends UIElement {
   // `#personaSystemFor`/the live-arm compose call sites are not, so this cache is what lets a turn's
   // compose step see a just-saved team without awaiting a fresh storage round-trip.
   #teams: readonly AgentTeam[] = []
+  // T-0161 — the page's team store (`setTeamStore`): the Team pane reads and writes through it AT INVOKE
+  // TIME, so the pane and the page's own team writes share one owner. Its `subscribe` re-renders the pane
+  // on a change made elsewhere (another write path, another tab).
+  #teamStore: AgentTeamStore | undefined
+  #teamStoreUnsubscribe: (() => void) | undefined
+  #teamPane: AgentTeamPane | undefined
   #agentSelectEl: UISelectElement | null = null
   // Keyed by pane so `#applyHeaderPaneState` (`#applyPaneVisibility`'s own mirror step) can write pressed/
   // selected state onto the right control without re-querying the DOM every render.
@@ -1687,7 +1693,9 @@ export class UIAgentAdminElement extends UIElement {
         this.#teams = teams
         this.#renderContextSystem()
       },
+      getTeamStore: (): AgentTeamStore | undefined => this.#teamStore,
     })
+    this.#teamPane = teamPane
     void teamPane.refresh()
     const teamItem = settingsItem('team', 'Teams', teamPane.host)
     capabilitiesContent.append(teamItem)
@@ -4476,6 +4484,20 @@ export class UIAgentAdminElement extends UIElement {
    */
   setAgentCatalog(catalog: AgentCatalogSource | undefined): void {
     this.#agentCatalog = catalog
+  }
+
+  /**
+   * T-0161 — register (or clear, `undefined`) the store the Team pane reads and writes teams through, so a
+   * page routes the pane's writes through the same owner as its own (one write path). Safe before or after
+   * connect: the pane reads it at invoke time, and a registration after the pane exists refreshes it. The
+   * store's `subscribe`, when present, refreshes the pane on a change made elsewhere.
+   */
+  setTeamStore(store: AgentTeamStore | undefined): void {
+    this.#teamStoreUnsubscribe?.()
+    this.#teamStoreUnsubscribe = undefined
+    this.#teamStore = store
+    if (store?.subscribe) this.#teamStoreUnsubscribe = store.subscribe(() => void this.#teamPane?.refresh())
+    void this.#teamPane?.refresh()
   }
 
   /**
