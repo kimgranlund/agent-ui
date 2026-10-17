@@ -21,6 +21,8 @@
 //   revealed for settlement). One finding names both faults. A player hand the check cannot resolve is
 //   never a natural; a dealer hand it cannot resolve is never judged for a hole card. T-0276: a surface whose
 //   words name another game (hold'em, Omaha, stud) and no blackjack-family game is never judged for a natural.
+//   T-0334: the CardTable's own title (literal or bound) picks the game rules (`gameRules`): pontoon pays a natural 2:1,
+//   the banker wins every tie, a buy adds a stake equal to the bet, and a natural forbids Twist, Stick and Buy.
 //
 // - HAND_BINDING (ADR-0243): a CardTable's `dealerHand`/`playerHand` must be a `{path}` binding to
 //   `/dealerHand` (resp. `/playerHand`), so a draw is a list append. A literal list or another pointer fails.
@@ -259,15 +261,68 @@ function isNatural(cards: readonly Card[]): boolean {
   return aces === 1 && tens === 1
 }
 
-const MOVE_WORDS: ReadonlySet<string> = new Set(['hit', 'stand', 'double'])
+/** T-0334: the rules that differ across the blackjack family, resolved once per view from the table's own game. */
+interface GameRules {
+  game: 'blackjack' | 'pontoon'
+  /** What a natural returns per unit of stake, the stake included (3:2 is 2.5, pontoon's 2:1 is 3). */
+  naturalMultiplier: number
+  /** Pontoon's banker takes every tie, a natural against a natural included. */
+  bankerWinsTies: boolean
+  /** Pontoon's buy: a face-down card for an added stake equal to the bet. */
+  buy: boolean
+  /** What a natural forbids: the game's move words, as tokens and as the Buttons the repair names. */
+  moveWords: ReadonlySet<string>
+  moveLabels: string
+}
+
+const BLACKJACK_RULES: GameRules = {
+  game: 'blackjack',
+  naturalMultiplier: 2.5,
+  bankerWinsTies: false,
+  buy: false,
+  moveWords: new Set(['hit', 'stand', 'double']),
+  moveLabels: 'Hit, Stand or Double',
+}
+const PONTOON_RULES: GameRules = {
+  game: 'pontoon',
+  naturalMultiplier: 3,
+  bankerWinsTies: true,
+  buy: true,
+  moveWords: new Set(['hit', 'stand', 'double', 'twist', 'stick', 'buy']),
+  moveLabels: 'Twist, Stick or Buy',
+}
+
+const rulesByView = new WeakMap<SurfaceView, GameRules>()
+
+/** The game a CardTable plays comes from its own `title` (or `game`), literal or bound, and the first family game
+ *  that title names wins: "Pontoon (British blackjack)" is pontoon, "Blackjack (pontoon in the UK)" is blackjack.
+ *  Words elsewhere on the surface (a picker listing several games) never decide it; no title means blackjack. */
+function gameRules(view: SurfaceView): GameRules {
+  const known = rulesByView.get(view)
+  if (known !== undefined) return known
+  let found = BLACKJACK_RULES
+  for (const comp of view.components.values()) {
+    if (comp.component !== 'CardTable') continue
+    const named = [comp['title'], comp['game']]
+      .map((v) => resolveProp(v, view.dataModel, undefined))
+      .filter((v): v is string => typeof v === 'string')
+      .map((v) => /\b(pontoon|blackjack|black jack|spanish 21|twenty[- ]one)\b/i.exec(v)?.[1]?.toLowerCase())
+      .find((v) => v !== undefined)
+    if (named === undefined) continue
+    found = named === 'pontoon' ? PONTOON_RULES : BLACKJACK_RULES
+    break
+  }
+  rulesByView.set(view, found)
+  return found
+}
 
 /** The move word a Button carries in its id or its label (`hitBtn`, `stand-button`, "Double down"), or
  *  `undefined`. Tokens split on case changes and non-letters, so "Standings" and "Deal again" do not match. */
-function moveWord(comp: A2uiComponent, dataModel: unknown): string | undefined {
+function moveWord(comp: A2uiComponent, dataModel: unknown, words: ReadonlySet<string>): string | undefined {
   const label = resolveProp(comp['label'], dataModel, undefined)
   for (const text of [comp.id, typeof label === 'string' ? label : '']) {
     const tokens = text.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase().split(/[^a-z]+/)
-    const word = tokens.find((t) => MOVE_WORDS.has(t))
+    const word = tokens.find((t) => words.has(t))
     if (word !== undefined) return word
   }
   return undefined
@@ -276,10 +331,11 @@ function moveWord(comp: A2uiComponent, dataModel: unknown): string | undefined {
 /** NATURAL_ACTIONS: the player's two-card 21 ends the round, so no move button and no face-down dealer card. */
 function naturalFinding(view: SurfaceView, hand: HandContainer, dealer: readonly HandContainer[]): SemanticFinding | undefined {
   if (hand.cards === undefined || !isNatural(hand.cards)) return undefined
+  const rules = gameRules(view)
   const moves: { id: string; word: string }[] = []
   for (const comp of view.components.values()) {
     if (comp.component !== 'Button') continue
-    const word = moveWord(comp, view.dataModel)
+    const word = moveWord(comp, view.dataModel, rules.moveWords)
     if (word !== undefined) moves.push({ id: comp.id, word })
   }
   const hole = dealer.find((d) => d.cards?.some((c) => c.faceDown) === true)
@@ -291,9 +347,11 @@ function naturalFinding(view: SurfaceView, hand: HandContainer, dealer: readonly
     code: 'NATURAL_ACTIONS',
     path: `${view.surfaceId}:${moves[0]?.id ?? hole!.id}`,
     message:
-      `The player's cards in ${hand.id} (${describeCards(hand.cards)}) are a natural blackjack, which ends the round on the deal, but the surface ${faults.join(' and ')}. ` +
-      `Settle the round in this same turn: turn the dealer's hole card face up, state the result (the player wins ${isPontoon(view) ? '2:1' : '3:2'} unless the dealer also has 21, then a push) with the chip delta and the updated bankroll, ` +
-      `and leave only the Deal again Button in the actions row, with no Hit, Stand or Double.`,
+      `The player's cards in ${hand.id} (${describeCards(hand.cards)}) are a natural ${rules.game === 'pontoon' ? 'pontoon' : 'blackjack'}, which ends the round on the deal, but the surface ${faults.join(' and ')}. ` +
+      `Settle the round in this same turn: turn the dealer's hole card face up, state the result (${
+        rules.bankerWinsTies ? 'the player wins 2:1 unless the dealer also has a pontoon, then the dealer wins the tie' : 'the player wins 3:2 unless the dealer also has 21, then a push'
+      }) with the chip delta and the updated bankroll, ` +
+      `and leave only the Deal again Button in the actions row, with no ${rules.moveLabels}.`,
   }
 }
 
@@ -531,7 +589,7 @@ export const croupierBetControls: SemanticCheck = {
 }
 
 const DEAL_ACTION = /^(deal|place_?bet|bet|deal_blackjack)$/i
-const MOVE_ACTION = /^(hit|stand|double|double_?down)$/i
+const MOVE_ACTION = /^(hit|stand|double|double_?down|twist|stick|buy(_?card)?)$/i // T-0334: pontoon's Twist, Stick and Buy settle a round too
 const NEW_ROUND_ACTION = /^(deal_?again|new_?round|next_?round)$/i
 const finiteNumber = (v: unknown): number | undefined => (typeof v === 'number' && Number.isFinite(v) ? v : undefined)
 
@@ -647,7 +705,8 @@ function actionApplied(surfaces: readonly SurfaceView[], action: SemanticAction)
         path: `${view.surfaceId}:${path ?? table.id}`,
         message:
           `The bankroll reads ${after} after a bet of ${bet} from ${before}. The deal takes the bet out of the bankroll: write ${before - bet}. ` +
-          `Settlement later pays the bet back with the winnings (2x the bet for a win, 2.5x for a natural or 3x for a pontoon, 1x for a push).`,
+          `Settlement later pays the bet back with the winnings (2x the bet for a win, ${gameRules(view).naturalMultiplier}x for a natural, ` +
+          `${gameRules(view).bankerWinsTies ? 'nothing for a tie, which the dealer wins' : '1x for a push'}).`,
       })
   }
   return findings
@@ -667,20 +726,19 @@ function cardsAt(dataModel: unknown, path: string | undefined): Card[] | undefin
   return cards.every((c): c is Card => c !== undefined) ? cards : undefined
 }
 
-/** T-0334: a surface whose words name pontoon, whose natural pays 2:1 where blackjack and Spanish 21 pay 3:2. */
-const isPontoon = (view: SurfaceView): boolean => /\bpontoon\b/i.test(literalWords(view.components.values()))
-
-/** What a settled round pays back on a stake already taken out at the deal: 2x on a win, 2.5x on a natural (3x in
- *  pontoon, 2:1), the stake on a push, nothing on a loss, with the result in words for the repair sentence. */
-function payout(player: readonly Card[], dealer: readonly Card[], stake: number, pontoon = false): { amount: number; result: string } {
+/** What a settled round pays back on a stake already taken out at the deal: 2x on a win, the game's natural
+ *  multiplier on a natural (2.5x, or 3x in pontoon), the stake on a push (a loss in pontoon, where the banker
+ *  wins every tie), nothing on a loss, with the result in words for the repair sentence. */
+function payout(player: readonly Card[], dealer: readonly Card[], stake: number, rules: GameRules): { amount: number; result: string } {
   const p = bestTotal(player)
   const d = bestTotal(dealer)
   if (p > 21) return { amount: 0, result: `a bust (${p})` }
-  if (isNatural(player) && !isNatural(dealer)) return pontoon ? { amount: stake * 3, result: 'a pontoon (2:1)' } : { amount: stake * 2.5, result: 'a natural' }
+  if (isNatural(player) && !isNatural(dealer))
+    return { amount: stake * rules.naturalMultiplier, result: rules.game === 'pontoon' ? 'a pontoon (2:1)' : 'a natural' }
   if (isNatural(dealer) && !isNatural(player)) return { amount: 0, result: 'a loss to the dealer\'s natural' }
   if (d > 21) return { amount: stake * 2, result: `a win (the dealer bust on ${d})` }
   if (p > d) return { amount: stake * 2, result: `a win (${p} over ${d})` }
-  if (p === d) return { amount: stake, result: `a push (${p})` }
+  if (p === d) return rules.bankerWinsTies ? { amount: 0, result: `a loss (the dealer wins the tie at ${p})` } : { amount: stake, result: `a push (${p})` }
   return { amount: 0, result: `a loss (${p} under ${d})` }
 }
 
@@ -718,10 +776,11 @@ function settleFinding(view: SurfaceView, table: A2uiComponent, action: Semantic
   const player = cardsAt(view.dataModel, bindingPath(table['playerHand']))
   const dealer = cardsAt(view.dataModel, bindingPath(table['dealerHand']))
   if (before === undefined || after === undefined || player === undefined || dealer === undefined || bet === undefined || bet <= 0) return undefined
-  const doubled = /^double/i.test(action.name)
+  const rules = gameRules(view)
+  const doubled = /^double/i.test(action.name) || (rules.buy && BUY_ACTION.test(action.name)) // a pontoon buy adds a stake equal to the bet
   const stake = doubled ? bet * 2 : bet
   const takenNow = deal ? bet : doubled ? bet : 0 // the stake leaves the bankroll at the deal; a double adds one more
-  const { amount, result } = payout(player, dealer, stake, isPontoon(view))
+  const { amount, result } = payout(player, dealer, stake, rules)
   const expected = before - takenNow + amount
   if (after === expected) return undefined
   return {
@@ -963,7 +1022,7 @@ const BUY_ACTION = /^buy(_?card)?$/i
  *  table appends only face-down player cards (Sonnet 5.5 bought a card face up). */
 function boughtFaceUp(view: SurfaceView, action: SemanticAction): SemanticFinding[] {
   if (view.surfaceId !== action.surfaceId || !BUY_ACTION.test(action.name)) return []
-  if (!/\bpontoon\b/i.test(literalWords(view.components.values()))) return []
+  if (!gameRules(view).buy) return []
   const findings: SemanticFinding[] = []
   for (const table of view.components.values()) {
     if (table.component !== 'CardTable') continue

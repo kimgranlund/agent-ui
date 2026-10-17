@@ -393,6 +393,24 @@ describe('croupier hand check: the CardTable arm (ADR-0243)', () => {
     expect(findings[0]!.message).toContain("states 18, but the player's cards in root (K, 7) total 17")
   })
 
+  it('CardTable: NATURAL_ACTIONS on a pontoon names 2:1, the dealer winning the tie, and Twist, Stick or Buy (T-0334)', () => {
+    const natural = (title: string) =>
+      table((root, data) => {
+        root['title'] = title
+        data['playerHand'] = [{ rank: 'A', suit: 'spades' }, { rank: 'K', suit: 'hearts' }]
+        data['playerTotal'] = 21
+      })
+    const pontoon = judge({ turns: [] }, natural('Pontoon'))[0]!
+    expect(pontoon.code).toBe('NATURAL_ACTIONS')
+    expect(pontoon.message).toContain('are a natural pontoon')
+    expect(pontoon.message).toContain('the player wins 2:1 unless the dealer also has a pontoon, then the dealer wins the tie')
+    expect(pontoon.message).toContain('with no Twist, Stick or Buy')
+    expect(pontoon.message).not.toMatch(/push|3:2|Hit, Stand/)
+    const blackjack = judge({ turns: [] }, natural('Blackjack'))[0]!
+    expect(blackjack.message).toContain('the player wins 3:2 unless the dealer also has 21, then a push')
+    expect(blackjack.message).toContain('with no Hit, Stand or Double')
+  })
+
   it('CardTable: NATURAL_ACTIONS for a natural that still has a Hit Button child', () => {
     const natural = table((_, data) => {
       data['playerHand'] = [{ rank: 'A', suit: 'spades' }, { rank: 'K', suit: 'hearts' }]
@@ -696,21 +714,63 @@ describe('croupier action check: settlement pays out from the click-time bankrol
     expect(run(settle(1025, [C('A'), C('K')], [C('9'), C('7')]), 'deal', { bankroll: 1000, bet: 50, phase: 'betting' }, { bet: 50 }).map((f) => f.code)).toEqual(['BANKROLL_MISMATCH'])
   })
 
-  // T-0334 (live round 9 :27): a pontoon (an ace and a ten-card) pays 2:1, so the deal on 50 from 1,000 reads 1,100.
-  it('T-0334: a pontoon natural pays 2:1 (1,000 to 1,100 on 50); blackjack and Spanish 21 stay at 3:2', () => {
-    const titled = (title: string, bankroll: number): A2uiOutput => {
-      const out = settle(bankroll, [C('A'), C('K')], [C('9'), C('7')])
-      ;(out[1] as { updateComponents: { components: Record<string, unknown>[] } }).updateComponents.components = [{ ...table, title }]
+  // T-0334 (live round 9 :27): the table's own title picks the game; a pontoon natural pays 2:1, the banker wins every
+  // tie, and a buy adds a stake equal to the bet. Words elsewhere on the surface never pick the game.
+  describe('T-0334: pontoon rules, decided by the CardTable title', () => {
+    const titled = (title: unknown, bankroll: number, player: unknown[], dealer: unknown[], extra: Record<string, unknown>[] = [], value: Record<string, unknown> = {}): A2uiOutput => {
+      const out = settle(bankroll, player, dealer)
+      ;(out[1] as { updateComponents: { components: Record<string, unknown>[] } }).updateComponents.components = [{ ...table, title }, ...extra]
+      Object.assign((out[2] as { updateDataModel: { value: Record<string, unknown> } }).updateDataModel.value, value)
       return out
     }
     const deal = (output: A2uiOutput) => run(output, 'deal', { bankroll: 1000, bet: 50, phase: 'betting' }, { bet: 50 })
-    expect(deal(titled('Pontoon', 1100))).toEqual([])
-    const wrong = deal(titled('Pontoon', 1075))
-    expect(wrong.map((f) => f.code)).toEqual(['BANKROLL_MISMATCH'])
-    expect(wrong[0]!.message).toMatch(/a pontoon \(2:1\) on a stake of 50, so the bankroll goes from 1000 to 1100/)
-    expect(deal(titled('Blackjack', 1075))).toEqual([])
-    expect(deal(titled('Spanish 21', 1075))).toEqual([])
-    expect(deal(titled('Blackjack', 1100)).map((f) => f.code)).toEqual(['BANKROLL_MISMATCH'])
+    const nat = [C('A'), C('K')]
+    const hard = [C('9'), C('7')]
+    const codes = (fs: readonly { code: string }[]) => fs.map((f) => f.code)
+
+    it('a pontoon natural pays 2:1 (1,000 to 1,100 on 50); blackjack and Spanish 21 stay at 3:2', () => {
+      expect(deal(titled('Pontoon', 1100, nat, hard))).toEqual([])
+      const wrong = deal(titled('Pontoon', 1075, nat, hard))
+      expect(codes(wrong)).toEqual(['BANKROLL_MISMATCH'])
+      expect(wrong[0]!.message).toMatch(/a pontoon \(2:1\) on a stake of 50, so the bankroll goes from 1000 to 1100/)
+      expect(deal(titled('Blackjack', 1075, nat, hard))).toEqual([])
+      expect(deal(titled('Spanish 21', 1075, nat, hard))).toEqual([])
+      expect(codes(deal(titled('Blackjack', 1100, nat, hard)))).toEqual(['BANKROLL_MISMATCH'])
+    })
+
+    it('a title bound to the data model decides the game too', () => {
+      const bound = (bankroll: number, game: string) => titled({ path: '/game' }, bankroll, nat, hard, [], { game })
+      expect(deal(bound(1100, 'Pontoon'))).toEqual([])
+      expect(codes(deal(bound(1075, 'Pontoon')))).toEqual(['BANKROLL_MISMATCH'])
+      expect(deal(bound(1075, 'Blackjack'))).toEqual([])
+    })
+
+    it('words that mention pontoon do not make a blackjack table a pontoon table', () => {
+      const note = { id: 'note', component: 'Text', text: 'Pontoon, twenty-one and Spanish 21 are all on the menu.' }
+      expect(deal(titled('Blackjack (they call it pontoon in the UK)', 1075, nat, hard))).toEqual([])
+      expect(deal(titled('Blackjack', 1075, nat, hard, [note]))).toEqual([])
+      expect(codes(deal(titled('Blackjack', 1100, nat, hard, [note])))).toEqual(['BANKROLL_MISMATCH'])
+      expect(deal(titled('Pontoon (British blackjack)', 1100, nat, hard))).toEqual([])
+    })
+
+    it('the banker wins ties in pontoon: a pontoon against a pontoon and a 19-19 tie lose the stake', () => {
+      expect(deal(titled('Pontoon', 950, nat, [C('A', 'hearts'), C('Q')]))).toEqual([])
+      expect(codes(deal(titled('Pontoon', 1000, nat, [C('A', 'hearts'), C('Q')])))).toEqual(['BANKROLL_MISMATCH'])
+      expect(deal(titled('Blackjack', 1000, nat, [C('A', 'hearts'), C('Q')]))).toEqual([])
+      const tie = [C('K'), C('9')]
+      expect(run(titled('Pontoon', 950, tie, tie), 'stand', playing(950))).toEqual([])
+      const wrong = run(titled('Pontoon', 1000, tie, tie), 'stand', playing(950))
+      expect(codes(wrong)).toEqual(['BANKROLL_MISMATCH'])
+      expect(wrong[0]!.message).toMatch(/the dealer wins the tie at 19/)
+      expect(run(titled('Blackjack', 1000, tie, tie), 'stand', playing(950))).toEqual([])
+    })
+
+    it('a pontoon buy adds a stake equal to the bet (950 to 1,100 on a bought 50 win); a hit does not', () => {
+      expect(run(titled('Pontoon', 1100, win, dealer17), 'buy', playing(950))).toEqual([])
+      expect(codes(run(titled('Pontoon', 1050, win, dealer17), 'buy', playing(950)))).toEqual(['BANKROLL_MISMATCH'])
+      expect(run(titled('Pontoon', 1050, win, dealer17), 'twist', playing(950))).toEqual([])
+      expect(codes(run(titled('Blackjack', 1100, win, dealer17), 'buy', playing(950)))).toEqual(['BANKROLL_MISMATCH'])
+    })
   })
 
   it('a double takes one more stake and pays on twice the bet (950 to 1,100 on a doubled 50 win)', () => {
